@@ -86,6 +86,7 @@ plausibly covers means the table needs a new row in the same change.
 | `mob/combat_profile.ts` | mob combat profile selection, effective melee reach, and the general chase/attack profile runner |
 | `mob/reachability.ts` | the unreachable-target stall detector (`chaseStalledUnreachable` over `Entity.chaseStall`): the classic evade trigger consumed by `mob/combat_profile.ts`'s engaged postludes; draws no rng |
 | `mob/locomotion.ts` | `updateMob` dispatcher, `resetEvadingMob`, flee recovery, spawn-block; `onBossDeath` points-at `encounters/nythraxis` |
+| `mob/move_toward.ts` | `moveToward`, the shared one-tick mover every chase, flee, leash, pet and companion step pays (the slide fan around props, the waterline and steep-wall gates, the swimmer surface ride); `Sim` keeps the thin delegate for its internal callers; draws no rng |
 | `mob/` behavior siblings | a new mob behavior is another sibling the dispatcher routes to, never a branch inside `locomotion.ts`: `ambient.ts` (decorative wanderers, e.g. the Highwatch stable horses: never hostile, never combat), `charge.ts` (the heroic anti-kite gap closer, stamped only on HEROIC spawns, zero rng), `healer_channel.ts` (scripted interruptible mob channels), `dragonkin_brood.ts` + `egg_hatchling.ts`, `idle_rng.ts`, `chain_pull_transit.ts` (with `instances/boss_chain_pull.ts`) |
 | `mob/mob_swing.ts` | the mob on-hit affix cascade (`runMobSwingAffixes`); the base hit-table shell stays on `Sim` |
 | `mob/lifecycle.ts` | `respawnMob`, despawn summoned adds, frenzy packmates, death-throes, corpse detonate |
@@ -151,6 +152,7 @@ plausibly covers means the table needs a new row in the same change.
 | `mob/rift_escape_window.ts` | the rift boss escape-window seam: `riftEscapeWindowActive` (is a telegraph in flight), the stomp/aoePulse windup constants + `resetRiftMechanicWindups`, and `impairedZoneFuseMult` (impairment-scaled death-zone fuses); consumed by the `mob/locomotion.ts` drivers, the anti-kite snare hold, and the `mob/mob_swing.ts` control-proc suppression; draws NO rng |
 | `professions/` | gathering/crafting/enchanting/salvage/archetypes; governed by its own `CLAUDE.md` (hooks `drainGatheringGrants` into the per-player tick) |
 | `pvp/` | WARFARE honor currency + combat-rating rules (`honor.ts` behind the seam; pure rating math in `power.ts`; the Highwatch quartermaster spawn); governed by its own `CLAUDE.md` |
+| `freehold/` | Freeholds and Guildhalls housing: the live `ctx.freeholds` record map and its load/snapshot/evict lifecycle (`state.ts`, the guild-bank idiom), the shared shapes (`types.ts`) and one command body per housing wire command (`commands.ts`, each resolving the caller and deciding nothing until its numbered owner lands); governed by its own `CLAUDE.md` |
 
 ### Pure leaves (no `SimContext`; a Vitest imports them directly)
 A leaf is any `src/sim` file with no `sim_context` import; `threat.ts`/`spatial.ts`/
@@ -244,10 +246,15 @@ foreign hot paths, reachable via `SimContext`):
 - `applyTaunt`: player ability/effect, pet, and pet-attack paths.
 - `meleeSwing`: body lives in `combat/auto_attack.ts`; `Sim` keeps the thin delegate
   because both the auto-attack driver and the `castAbility` weaponStrike path use it.
-- `moveToward` / `fleeMoveSpeed`: shared movement entries used by mob/pet/companion/NPC.
+- `moveToward` / `fleeMoveSpeed`: shared movement entries used by mob/pet/companion/NPC
+  (`moveToward`'s body lives in `mob/move_toward.ts`; `Sim` keeps the thin delegate for
+  its internal callers, the `meleeSwing` shape).
 
 If you ever find a `SimContext` member with zero consumers, that is dead scaffolding:
 remove the declaration AND its binding in the same change, then re-run the parity gate.
+Standing exception: `ctx.freeholdsEnabled` (the housing host opt-in) lands consumer-free by
+design and keeps its binding; its first consumers are the furnisher stock (03) and the
+Eastbrook gate prompt (06), which read it when they land.
 
 ## Determinism as it bites here
 - Randomness: `this.rng` only; `time`/`tickCount` are sim-clock fields advanced by `tick()`, use them, not wall-clock. The banned-API list is enforced mechanically by `tests/architecture.test.ts`.

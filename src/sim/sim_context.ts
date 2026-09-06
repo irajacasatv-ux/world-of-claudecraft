@@ -17,6 +17,7 @@ import type { LetterDef } from './content/letters';
 import type { TalentModifiers } from './content/talents';
 import type { DeedRuntime } from './deeds';
 import type { DelayedEvent, GroundAoE } from './entity_roster';
+import type { FreeholdState } from './freehold/types';
 import type { GuildBankState } from './guild_bank';
 import type { PendingLootRoll } from './loot/loot_roll';
 import type { MarketListing } from './market';
@@ -327,6 +328,11 @@ export interface SimContextPrimitives {
   // greeting sweep only force-ferries fresh characters where a live world
   // turned it on; tests, parity traces, and the RL env keep it off.
   readonly compulsoryTutorial: boolean;
+  // The housing host opt-in (SimConfig.freeholdsEnabled, D85): a dark realm
+  // boots with it false so no housing spawn or gate reaches a player. Tests and
+  // parity traces default off; the stock offline world and the headless env opt
+  // in; the realm maps it from its env. Read-only, exactly the resolved Sim.cfg field.
+  readonly freeholdsEnabled: boolean;
   readonly marketListings: MarketListing[];
   // Bank system: the live array of every `banker: true` NPC id, seeded by
   // the Sim ctor NPC loop. bank.ts reads it to gate deposit/withdraw/buy-slots on
@@ -378,6 +384,11 @@ export interface SimContextPrimitives {
   // `nextCommissionOrderId` is the id counter, read-write like nextLootRollId.
   readonly commissionOrderBoard: CommissionOrder[];
   nextCommissionOrderId: number;
+  // Freehold records: owner key -> live FreeholdState (freehold/state.ts owns
+  // the ONE load path, the snapshot and the evict; the server feeds it per
+  // realm in 07). Sim-owned Map mutated in place, never reassigned, so a live
+  // read-only view like guildBanks. Empty on every host until 05.
+  readonly freeholds: Map<string, FreeholdState>;
 }
 
 // Cross-system callbacks. Each signature mirrors the still-on-`Sim` method it
@@ -1458,6 +1469,9 @@ export function createSimContext(host: SimContextHost): SimContext {
     get compulsoryTutorial() {
       return host.compulsoryTutorial;
     },
+    get freeholdsEnabled() {
+      return host.freeholdsEnabled;
+    },
     get marketListings() {
       return host.marketListings;
     },
@@ -1466,6 +1480,9 @@ export function createSimContext(host: SimContextHost): SimContext {
     },
     get guildBanks() {
       return host.guildBanks;
+    },
+    get freeholds() {
+      return host.freeholds;
     },
     get deedDirtyPids() {
       return host.deedDirtyPids;

@@ -1,0 +1,299 @@
+// Dark-host pins for src/sim/freehold/ and the IWorldHousing members on Sim.
+// This change registers housing on every host without lighting any behavior,
+// so the decisive assertions are absence: null descriptors, one shared clock
+// base, ten stubs that neither mutate, emit nor draw, a lit and a dark Sim on
+// one seed that agree, a record lifecycle that is a pure value round-trip, and
+// a source scan that keeps the sim core and its three sibling housing modules
+// free of store vocabulary and the sim core free of wall clocks.
+
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import {
+  defaultFreeholdState,
+  evictFreehold,
+  type FreeholdState,
+  loadFreehold,
+  serializeFreehold,
+} from '../src/sim/freehold';
+import { Sim } from '../src/sim/sim';
+import type { SimContext } from '../src/sim/sim_context';
+import type { SimEvent } from '../src/sim/types';
+
+const makeSim = () => new Sim({ seed: 1, playerClass: 'warrior' });
+// A source-free event the drain control queues by hand; emit pushes it as is.
+const CONTROL_EVENT: SimEvent = { type: 'respawn' };
+
+// Everything a stub could plausibly touch, as a value snapshot: the serialized
+// character (bags, gold, equipment, quests, professions), the live position
+// and heading, the housing map, and the sim clock.
+function snapshot(sim: Sim, pid: number) {
+  const e = sim.entities.get(pid);
+  return {
+    character: JSON.parse(JSON.stringify(sim.serializeCharacter(pid))),
+    pos: e ? { ...e.pos } : null,
+    facing: e?.facing ?? null,
+    hp: e?.hp ?? null,
+    freeholds: [...sim.freeholds.entries()],
+    entities: sim.entities.size,
+    time: sim.time,
+    tickCount: sim.tickCount,
+  };
+}
+
+// The ten command stubs, each invoked the way the server does (explicit pid)
+// and the way the offline IWorld caller does (no pid, the primaryId default).
+const STUBS: ReadonlyArray<[string, (sim: Sim, pid?: number) => void]> = [
+  ['freeholdEnter', (sim, pid) => sim.freeholdEnter(pid)],
+  ['freeholdLeave', (sim, pid) => sim.freeholdLeave(pid)],
+  ['placeFurnishing', (sim, pid) => sim.placeFurnishing(0, 1, 2, 3, 0.5, pid)],
+  ['moveFurnishing', (sim, pid) => sim.moveFurnishing(7, 1, 2, 3, 0.5, pid)],
+  ['removeFurnishing', (sim, pid) => sim.removeFurnishing(7, pid)],
+  ['undoPlacement', (sim, pid) => sim.undoPlacement(pid)],
+  ['redoPlacement', (sim, pid) => sim.redoPlacement(pid)],
+  ['payLedger', (sim, pid) => sim.payLedger(pid)],
+  ['setVisitPolicy', (sim, pid) => sim.setVisitPolicy('open', pid)],
+  ['setFreeholdBuildPresence', (sim, pid) => sim.setFreeholdBuildPresence(true, pid)],
+];
+
+describe('IWorldHousing on the offline Sim (dark)', () => {
+  it('reads null descriptors, an empty record map, and the farm clock base', () => {
+    const sim = makeSim();
+    expect(sim.myFreehold).toBeNull();
+    expect(sim.freeholdLayout).toBeNull();
+    expect(sim.freeholds.size).toBe(0);
+    expect(sim.housingNowMs()).toBe(sim.farmNowMs());
+    for (let i = 0; i < 25; i++) sim.tick();
+    expect(sim.housingNowMs()).toBe(sim.farmNowMs());
+    expect(sim.housingNowMs()).toBe(Math.floor(sim.time * 1000));
+  });
+
+  it('housingNowMs is the host lockout clock, byte for byte with farmNowMs', () => {
+    const sim = new Sim({ seed: 1, playerClass: 'warrior', lockoutNowMs: () => 1_725_000_000_000 });
+    expect(sim.housingNowMs()).toBe(1_725_000_000_000);
+    expect(sim.farmNowMs()).toBe(1_725_000_000_000);
+  });
+
+  it('exposes every member as a real prototype method or getter (the IWORLD_MEMBERS probe)', () => {
+    for (const name of ['myFreehold', 'freeholdLayout']) {
+      expect(typeof Object.getOwnPropertyDescriptor(Sim.prototype, name)?.get).toBe('function');
+    }
+    for (const name of ['housingNowMs', ...STUBS.map(([n]) => n)]) {
+      expect(typeof Object.getOwnPropertyDescriptor(Sim.prototype, name)?.value).toBe('function');
+    }
+  });
+
+  it('every stub changes nothing, emits nothing and draws no rng, with an explicit pid and with the default', () => {
+    const sim = makeSim();
+    const pid = sim.primaryId;
+    let draws = 0;
+    sim.rng.setObserver(() => {
+      draws++;
+    });
+    sim.drainEvents(); // the ctor's own events are not the stubs'
+    try {
+      for (const [name, call] of STUBS) {
+        const before = snapshot(sim, pid);
+        call(sim, pid);
+        call(sim);
+        call(sim, 999_999); // an unknown pid resolves to nobody and is ignored
+        expect(snapshot(sim, pid), name).toEqual(before);
+        expect(draws, name).toBe(0);
+        // The one player-visible channel a value snapshot cannot see.
+        expect(sim.drainEvents(), name).toEqual([]);
+      }
+      // Positive controls: the observer is wired to THIS sim's stream, so one
+      // direct draw is counted, and the drain sees an event this sim queues.
+      // Without these the zeros and the empty drains above prove nothing.
+      sim.rng.next();
+      expect(draws).toBe(1);
+      sim.emit(CONTROL_EVENT);
+      expect(sim.drainEvents()).toEqual([CONTROL_EVENT]);
+    } finally {
+      sim.rng.setObserver(null);
+    }
+  });
+
+  it('the Sim-owned record map is the ctx live view and stays empty across ticks', () => {
+    const sim = makeSim();
+    expect(sim.ctx.freeholds).toBe(sim.freeholds);
+    for (let i = 0; i < 40; i++) sim.tick();
+    expect(sim.freeholds.size).toBe(0);
+    expect(sim.ctx.freeholdsEnabled).toBe(false);
+  });
+
+  // The offline world and the headless env boot the flag true while every
+  // test and parity trace boots it false. Nothing reads it yet, so a lit Sim
+  // and a dark Sim on one seed must stay indistinguishable; the first
+  // behavioral read owes a lit parity scenario (src/sim/freehold/CLAUDE.md).
+  it('a lit Sim and a dark Sim on one seed agree after the same ticks and stubs', () => {
+    const dark = new Sim({ seed: 1, playerClass: 'warrior' });
+    const lit = new Sim({ seed: 1, playerClass: 'warrior', freeholdsEnabled: true });
+    expect(dark.ctx.freeholdsEnabled).toBe(false);
+    expect(lit.ctx.freeholdsEnabled).toBe(true);
+    const run = (sim: Sim) => {
+      for (let i = 0; i < 20; i++) sim.tick();
+      for (const [, call] of STUBS) call(sim);
+      for (let i = 0; i < 20; i++) sim.tick();
+    };
+    run(dark);
+    run(lit);
+    const positions = (sim: Sim) =>
+      [...sim.entities.values()]
+        .sort((a, b) => a.id - b.id)
+        .map((e) => ({ id: e.id, pos: { ...e.pos }, facing: e.facing, hp: e.hp }));
+    expect(lit.tickCount).toBe(40);
+    expect(lit.tickCount).toBe(dark.tickCount);
+    expect(snapshot(lit, lit.primaryId)).toEqual(snapshot(dark, dark.primaryId));
+    const litPositions = positions(lit);
+    expect(litPositions.length).toBeGreaterThan(1); // the player and the world's mobs
+    expect(litPositions).toEqual(positions(dark));
+    expect(lit.rng.next()).toBe(dark.rng.next()); // the same stream position too
+  });
+});
+
+describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
+  const fakeCtx = () => {
+    const freeholds = new Map<string, FreeholdState>();
+    return { ctx: { freeholds } as unknown as SimContext, freeholds };
+  };
+
+  it('defaultFreeholdState is the free tier-0 Inn Room, exactly', () => {
+    expect(defaultFreeholdState('acct:1', 'plot-1')).toEqual({
+      ownerKey: 'acct:1',
+      plotId: 'plot-1',
+      tier: 'inn_room',
+      layout: [],
+      trophies: [],
+      condition: 100,
+      conditionStampDay: 0,
+      ledgerPaidThroughDay: 0,
+      ledgerPrepaidWeeks: 0,
+      visitPolicy: 'closed',
+      isDecorating: false,
+      rev: 0,
+    });
+  });
+
+  it('load then serialize round-trips an equal VALUE copy that aliases nothing', () => {
+    const { ctx, freeholds } = fakeCtx();
+    const input = defaultFreeholdState('acct:1', 'plot-1');
+    input.layout.push({ placementId: 3, itemId: 'oak_chair', x: 1, y: 0, z: 2, yaw: 0.25 });
+    input.trophies.push({ plinth: 1, trophyId: 'boar_head' });
+    input.rev = 4;
+    loadFreehold(ctx, 'acct:1', input);
+    const live = freeholds.get('acct:1');
+    expect(live).toEqual(input);
+    expect(live).not.toBe(input);
+    expect(live?.layout).not.toBe(input.layout);
+    expect(live?.layout[0]).not.toBe(input.layout[0]);
+    input.layout[0].x = 99; // the caller's object is not the live record
+    expect(live?.layout[0].x).toBe(1);
+
+    const out = serializeFreehold(ctx, 'acct:1');
+    expect(out).toEqual(live);
+    expect(out).not.toBe(live);
+    expect(out?.layout[0]).not.toBe(live?.layout[0]);
+    if (out) out.layout[0].yaw = 3; // the snapshot is not the live record either
+    expect(live?.layout[0].yaw).toBe(0.25);
+  });
+
+  it('serialize of an unloaded owner is null (the caller skips the write)', () => {
+    const { ctx } = fakeCtx();
+    expect(serializeFreehold(ctx, 'acct:none')).toBeNull();
+  });
+
+  it('is load-once: a live record is never overwritten until evicted', () => {
+    const { ctx, freeholds } = fakeCtx();
+    loadFreehold(ctx, 'acct:1', defaultFreeholdState('acct:1', 'plot-1'));
+    const second = {
+      ...defaultFreeholdState('acct:1', 'plot-2'),
+      tier: 'cottage' as const,
+      rev: 9,
+    };
+    loadFreehold(ctx, 'acct:1', second);
+    expect(freeholds.get('acct:1')?.plotId).toBe('plot-1');
+    expect(freeholds.get('acct:1')?.tier).toBe('inn_room');
+    evictFreehold(ctx, 'acct:1');
+    expect(freeholds.has('acct:1')).toBe(false);
+    expect(serializeFreehold(ctx, 'acct:1')).toBeNull();
+    loadFreehold(ctx, 'acct:1', second);
+    expect(freeholds.get('acct:1')?.tier).toBe('cottage');
+    expect(freeholds.get('acct:1')?.rev).toBe(9);
+  });
+
+  it('pins the live ownerKey to the map key and ignores an empty key', () => {
+    const { ctx, freeholds } = fakeCtx();
+    loadFreehold(ctx, 'acct:2', defaultFreeholdState('acct:mismatch', 'plot-1'));
+    expect(freeholds.get('acct:2')?.ownerKey).toBe('acct:2');
+    loadFreehold(ctx, '', defaultFreeholdState('', 'plot-9'));
+    expect(freeholds.size).toBe(1);
+    expect(freeholds.has('')).toBe(false);
+    evictFreehold(ctx, 'acct:never'); // evicting nothing is a no-op, never a throw
+    expect(freeholds.size).toBe(1);
+  });
+});
+
+describe('src/sim/freehold/ source scan', () => {
+  const dir = join(__dirname, '..', 'src', 'sim', 'freehold');
+  // Block comments first (a `/*` inside a // comment cannot open a false block),
+  // then // line comments, keeping :// protocol slashes (the tests/bank_audit
+  // helper).
+  const codeOnly = (src: string): string =>
+    src.replace(/^[ \t]*\/\*[\s\S]*?\*\/[ \t]*$/gm, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+  const files = readdirSync(dir).sort();
+
+  it('covers the whole directory', () => {
+    expect(files).toEqual(['CLAUDE.md', 'commands.ts', 'index.ts', 'state.ts', 'types.ts']);
+  });
+
+  it('carries no store or ledger-service vocabulary in any file, comments included', () => {
+    const banned = /wallet|token|\$WOC|\bmint\b|holder|marketplace|on-chain|solana/i;
+    for (const f of files) {
+      const text = readFileSync(join(dir, f), 'utf8');
+      expect(text.match(banned)?.[0] ?? null, f).toBeNull();
+    }
+  });
+
+  it('reads no wall clock and draws nothing outside Rng in any code line', () => {
+    const banned = /Math\.random|Date\.now|performance\.now|\.rng\b/;
+    for (const f of files.filter((n) => n.endsWith('.ts'))) {
+      const code = codeOnly(readFileSync(join(dir, f), 'utf8'));
+      // Anti-vacuity: the stripper left real code behind, so an over-eager
+      // regex cannot turn this scan into a pass over an empty string.
+      expect(code, f).toContain('export ');
+      expect(code.match(banned)?.[0] ?? null, f).toBeNull();
+    }
+  });
+
+  // The three sibling housing modules outside src/sim/ (the facet, the client
+  // decode home, the server guard) carry the same vocabulary risk and are
+  // scanned as TEXT, never imported. `token` is also the house word for a wire
+  // command name and a rate-limit unit, so that idiom is stripped first and
+  // only the bare (store) sense stays banned. A bare `housing token` is
+  // deliberately NOT exempt: that is the exact phrase a store-flavored line
+  // would use, so a sibling meaning the wire sense says `housing wire token`.
+  it('keeps the three sibling housing modules free of the same vocabulary', () => {
+    const banned = /wallet|token|\$WOC|\bmint\b|holder|marketplace|on-chain|solana/i;
+    const wireIdiom = /\b(?:wire|lane|command|command-lane) tokens?\b|\btoken-set\b/gi;
+    // The allowlist's own edges, so a widened alternation cannot quietly turn
+    // this scan vacuous: the wire phrasing is exempt, the bare phrase is not.
+    expect('the ten housing wire tokens and the token-set'.replace(wireIdiom, '')).not.toMatch(
+      banned,
+    );
+    expect('bought with a housing token'.replace(wireIdiom, '')).toMatch(banned);
+    // A second banned dimension, so widening the alternation to another word
+    // (say `|wallet`) cannot exempt it while the token probes stay green.
+    expect('a wallet balance'.replace(wireIdiom, '')).toMatch(banned);
+    const siblings = [
+      join(__dirname, '..', 'src', 'world_api', 'housing.ts'),
+      join(__dirname, '..', 'src', 'net', 'freehold_snapshot_wire.ts'),
+      join(__dirname, '..', 'server', 'freehold_wire.ts'),
+    ];
+    for (const f of siblings) {
+      const text = readFileSync(f, 'utf8');
+      expect(text, f).toContain('export ');
+      expect(text.replace(wireIdiom, '').match(banned)?.[0] ?? null, f).toBeNull();
+    }
+  });
+});

@@ -7921,6 +7921,12 @@ export interface SimConfig {
   // Default OFF so deterministic tests, parity traces, and the RL env never
   // teleport a fresh character mid-scenario unless they opt in.
   compulsoryTutorial?: boolean;
+  // Live worlds: enable the housing systems under src/sim/freehold/. The
+  // stock offline world and the headless env pass true (D3); the server maps its
+  // realm env (D85: a dark realm boots false, so no housing spawn or gate
+  // reaches a player). Default OFF so deterministic tests and parity traces
+  // keep a housing-free world unless a host opts in.
+  freeholdsEnabled?: boolean;
   // Host-computed next raid-reset instant for a given lockout "now" (epoch ms). The
   // authoritative server uses its realm-local 3 AM daily reset; offline/headless omit
   // this and fall back to a flat 24h day. Keeps the time zone out of the sim core.

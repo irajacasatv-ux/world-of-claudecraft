@@ -106,8 +106,11 @@ describe('mob.update high-load regression budget', () => {
     );
     sim.addEntity(egg);
 
-    // ctx.moveToward is bound at Sim construction, so the ctx property IS the
-    // seam every caller reaches; patching the instance method would miss it.
+    // ctx.moveToward is bound at Sim construction, so the ctx property is the
+    // seam every MODULE caller reaches (the mob wander step among them);
+    // patching the instance method would miss those. The two Sim-internal
+    // callers, the flee path and the pet follow in src/sim/sim.ts, call the
+    // module directly through Sim.moveToward, so a ctx spy does not see them.
     const inner = sim.ctx.moveToward;
     let eggSteps = 0;
     let moverSteps = 0;

@@ -8,6 +8,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { createDeedRuntime } from '../src/sim/deeds';
+import { defaultFreeholdState } from '../src/sim/freehold';
 import { createMobScanCounters } from '../src/sim/mob/scan_counters';
 import { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
@@ -348,11 +349,13 @@ function makeFakeHost() {
     nextLootRollId: 1,
     devCommands: false,
     compulsoryTutorial: false,
+    freeholdsEnabled: false,
     marketListings: [],
     commissionOrderBoard: [],
     nextCommissionOrderId: 1,
     bankerIds: [],
     guildBanks: new Map(),
+    freeholds: new Map(),
     deedDirtyPids: new Set<number>(),
     deedDirtyKeys: new Map<number, Set<string>>(),
     worldBossEntityIds: [],
@@ -637,6 +640,27 @@ describe('createSimContext (isolated, fake host)', () => {
     expect(ctx.guildBanks.get(3)).toEqual({ treasury: 0, inventory: [], purchasedSlots: 0 });
   });
 
+  it('exposes freeholds as a live shared view (the guildBanks idiom)', () => {
+    const { host } = makeFakeHost();
+    const ctx = createSimContext(host);
+    expect(ctx.freeholds).toBe(host.freeholds);
+    host.freeholds.set('acct:1', defaultFreeholdState('acct:1', 'plot-1'));
+    expect(ctx.freeholds.get('acct:1')).toEqual(defaultFreeholdState('acct:1', 'plot-1'));
+    // Mutation through the ctx side is visible on the host side too: one map.
+    ctx.freeholds.delete('acct:1');
+    expect(host.freeholds.size).toBe(0);
+  });
+
+  it('reads freeholdsEnabled through to the host (the compulsoryTutorial boot-flag shape)', () => {
+    const { host } = makeFakeHost();
+    const ctx = createSimContext(host);
+    expect(ctx.freeholdsEnabled).toBe(false);
+    // The fake host is a plain literal, so flipping the field proves the getter
+    // reads through rather than snapshotting at construction.
+    (host as { freeholdsEnabled: boolean }).freeholdsEnabled = true;
+    expect(ctx.freeholdsEnabled).toBe(true);
+  });
+
   it('passes every callback through to the host by identity (no rewrapping)', () => {
     const { host } = makeFakeHost();
     const ctx = createSimContext(host);
@@ -695,6 +719,24 @@ describe('Sim.ctx (real seam delegation)', () => {
     expect(sim.ctx.tickCount).toBe(1);
     expect(sim.ctx.tickCount).toBe(sim.tickCount);
     expect(sim.ctx.time).toBe(sim.time);
+  });
+
+  it('exposes freeholds as the Sim-owned live map and freeholdsEnabled as the ctor opt-in', () => {
+    const sim = makeSim();
+    expect(sim.ctx.freeholds).toBe(sim.freeholds); // one map: the multi-Sim isolation contract
+    expect(sim.ctx.freeholds.size).toBe(0);
+    sim.freeholds.set('acct:1', defaultFreeholdState('acct:1', 'plot-1'));
+    expect(sim.ctx.freeholds.get('acct:1')?.tier).toBe('inn_room');
+    expect(sim.ctx.freeholdsEnabled).toBe(false); // D85: off unless the host opts in
+    const live = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      freeholdsEnabled: true,
+    });
+    expect(live.ctx.freeholdsEnabled).toBe(true);
+    expect(live.freeholds).not.toBe(sim.freeholds);
+    expect(live.freeholds.size).toBe(0);
   });
 
   it('emit delegates to the Sim event queue', () => {

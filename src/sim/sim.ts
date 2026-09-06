@@ -273,6 +273,13 @@ import * as escortMod from './escort';
 import { initEscorts as initEscortsImpl, updateEscorts as updateEscortsImpl } from './escort';
 import { fleeSpeed } from './flee_speed';
 import { formatMoney } from './format_money';
+import type {
+  FreeholdLayoutView,
+  FreeholdState,
+  FreeholdView,
+  FreeholdVisitPolicy,
+} from './freehold';
+import * as freeholdMod from './freehold';
 import * as groundAoeReadouts from './ground_aoe_readouts';
 import type { GuildBankState, GuildMembership } from './guild_bank';
 import * as guildBankMod from './guild_bank';
@@ -345,6 +352,7 @@ import {
   updateMob as updateMobFn,
 } from './mob/locomotion';
 import { runMobSwingAffixes } from './mob/mob_swing';
+import { moveToward as moveTowardImpl } from './mob/move_toward';
 import { applyPlayerDummyVitals } from './mob/practice_dummies';
 import { questGateBlocksAggro, questGateBlocksCombat } from './mob/quest_gated_aggro';
 import {
@@ -395,14 +403,12 @@ import * as petAi from './pet/pet_ai';
 import * as petCommands from './pet/pet_commands';
 import type { MatchPetSnapshot } from './pet/pet_match_return';
 import type { PetReturnSnapshot } from './pet/pet_return';
-import { floorHeightAt } from './physics/character';
 import {
   isSwimming as isSwimmingImpl,
   moveSpeedMult as moveSpeedMultImpl,
   type PlayerMotionDeps,
   SWIM_SPEED_MULT,
   stepPlayerMotion,
-  swimSurfaceY,
 } from './player_motion';
 import { livePlaytimeSeconds } from './playtime';
 import {
@@ -842,23 +848,14 @@ import {
 } from './types';
 import type { VendorBuyOptions } from './vendor_buy_stack';
 import * as weaponStowMod from './weapon_stow';
-import {
-  groundHeight,
-  nearSteepWalls,
-  terrainSteepnessAt,
-  waterLevel,
-  waterLevelAt,
-} from './world';
+import { groundHeight, waterLevel, waterLevelAt } from './world';
 
 // TRIVIAL_LEVEL_GAP moved to mob/targeting.ts (used only by isTrivialTo).
 // CORPSE_DURATION moved to combat/damage.ts (C1; used only by the death path).
 // LEASH_DISTANCE / DUNGEON_LEASH_DISTANCE moved to types.ts (M2; shared with mob/locomotion.ts).
 // EVADE_SPEED_MULT / EVADE_STALL_TIMEOUT moved to mob/locomotion.ts (M2; slice-only).
-// Heading offsets (radians) a mob tries when its straight path is blocked, so it
-// can slide around a prop instead of pinning on it. Desired heading (0) first;
-// only evaluated past the first entry when that straight step is obstructed.
-const MOVE_SLIDE_FAN = [0, 0.5, -0.5, 1.0, -1.0, 1.6, -1.6];
 // BACKPEDAL_MULT moved to player_motion.ts (MV1; read only by the movement kernel).
+// MOVE_SLIDE_FAN moved to mob/move_toward.ts (with moveToward's body).
 // Low-HP flee ("fear"): a cowardly mob at or below this HP fraction panics, turns
 // and runs from its attacker for FLEE_DURATION seconds at FLEE_SPEED_MULT speed,
 // rallying same-family allies it runs past (mob/social_aggro.ts). It flees only once
@@ -973,9 +970,9 @@ const MAX_CLIMB_SLOPE = PLAYER_MAX_CLIMB_SLOPE;
 // POTION_COOLDOWN moved to items.ts (W2) with the useItem potion branch.
 // PACK_FRENZY_AURA_ID moved to mob/lifecycle.ts (M4; used only by frenzyPackmates).
 // BLOOD_FRENZY_AURA_ID moved to combat/damage.ts (C1; used only by maybeFrenzyOnHit).
-// swimSurfaceY / SWIM_SPEED_MULT moved to player_motion.ts (MV1) and imported back
-// (follow trailing + the mob/pet water paths still read them here). swimSurfaceY
-// carries v0.22.0's location-aware form (waterLevelAt) in its new home.
+// swimSurfaceY / SWIM_SPEED_MULT moved to player_motion.ts (MV1); SWIM_SPEED_MULT is
+// imported back (follow trailing reads it here) while swimSurfaceY, which carries
+// v0.22.0's location-aware form (waterLevelAt), is now read only by mob/move_toward.ts.
 const SWIM_DEPTH = PLAYER_SWIM_DEPTH; // ground this far under the water line = deep water
 // DOOR_TRIGGER_RADIUS moved to instances/dungeons.ts (I1: read only by updateDoorTriggers).
 // NYTHRAXIS_PARTY_INTERACT_RANGE / NYTHRAXIS_VISION_LINE_DELAY moved to
@@ -2029,6 +2026,10 @@ export class Sim {
   // DB) and exposed as a live SimContext view. Always empty offline: guilds are
   // a server social system, so the offline sim never creates a book.
   guildBanks: Map<number, GuildBankState> = new Map();
+  // Freehold records: owner key -> live FreeholdState (freehold/state.ts owns the
+  // ONE load path, the snapshot and the evict; the server feeds it per realm in
+  // 07) and exposed as a live SimContext view. Empty on every host until 05.
+  freeholds: Map<string, FreeholdState> = new Map();
   /** When true, /dev level|tp|give chat commands are accepted (local dev only). */
   readonly devCommands: boolean;
   // Entities spawned by the last /dev sandbox (dummy + practice bots), so re-running
@@ -2120,6 +2121,7 @@ export class Sim {
       worldBossAtBoot: cfg.worldBossAtBoot ?? false,
       riftPortals: cfg.riftPortals ?? false,
       compulsoryTutorial: cfg.compulsoryTutorial ?? false,
+      freeholdsEnabled: cfg.freeholdsEnabled ?? false,
       lockoutNowMs: cfg.lockoutNowMs ?? (() => Math.floor(this.time * 1000)),
       raidResetMs: cfg.raidResetMs ?? ((nowMs: number) => nowMs + DEFAULT_RAID_LOCKOUT_MS),
       weeklyRaidResetMs:
@@ -5200,6 +5202,9 @@ export class Sim {
       get compulsoryTutorial() {
         return sim.cfg.compulsoryTutorial;
       },
+      get freeholdsEnabled() {
+        return sim.cfg.freeholdsEnabled;
+      },
       get marketListings() {
         return sim.marketListings;
       },
@@ -5223,6 +5228,11 @@ export class Sim {
       // through the guild_bank.ts helpers. Sim-owned, never reassigned.
       get guildBanks() {
         return sim.guildBanks;
+      },
+      // Freehold record map: owner key -> live record, read and written only
+      // through the freehold/state.ts helpers. Sim-owned, never reassigned.
+      get freeholds() {
+        return sim.freeholds;
       },
       // Book of Deeds live views (all mutated in place, never reassigned).
       get deedDirtyPids() {
@@ -5440,8 +5450,8 @@ export class Sim {
       // late-bound lifecycle arrows live in the death-lifecycle block below.
       refreshKnownAbilities: sim.refreshKnownAbilities.bind(sim),
       syncPetLevel: sim.syncPetLevel.bind(sim),
-      // M2 mob locomotion seam (all still on Sim; owners flip points-at later).
-      moveToward: sim.moveToward.bind(sim),
+      // M2 mob locomotion seam (moveToward points at mob/move_toward.ts; the rest still on Sim).
+      moveToward: (e, dest, speed, ignore) => moveTowardImpl(sim.ctx, e, dest, speed, ignore),
       mobSwing: sim.mobSwing.bind(sim),
       updateRangedPetAttack: sim.updateRangedPetAttack.bind(sim),
       fleeMoveSpeed: sim.fleeMoveSpeed.bind(sim),
@@ -8025,105 +8035,10 @@ export class Sim {
     pet.swingTimer = spell.every;
   }
 
-  // Step `e` one tick toward `dest`. With `ignoreObstacles`, the mover phases
-  // straight through props — used to free a stuck evader, and forced on for
-  // templates flagged `phasesThroughObstacles` (mountain-sized world bosses
-  // that must never wedge on a collider mid-chase). Returns true on arrival.
+  // Step `e` one tick toward `dest`: the body lives in mob/move_toward.ts (the
+  // ctx binding calls it directly). Kept for the two internal callers.
   private moveToward(e: Entity, dest: Vec3, speed: number, ignoreObstacles = false): boolean {
-    if (!ignoreObstacles && MOBS[e.templateId]?.phasesThroughObstacles) ignoreObstacles = true;
-    const d = dist2d(e.pos, dest);
-    if (d < 0.3) return true;
-    const desired = angleTo(e.pos, dest);
-    e.facing = desired;
-    const step = Math.min(speed * DT, d);
-    const canSwim = this.mobCanSwim(MOBS[e.templateId]);
-
-    if (ignoreObstacles) {
-      const nx = e.pos.x + Math.sin(desired) * step;
-      const nz = e.pos.z + Math.cos(desired) * step;
-      e.pos.x = nx;
-      e.pos.z = nz;
-      const g = groundHeight(nx, nz, this.cfg.seed);
-      e.pos.y = Math.max(g, swimSurfaceY(nx, nz, this.cfg.seed)); // ride the surface while phasing, don't sink under terrain/water
-      return d - step < 0.3;
-    }
-    // Mobs have no nav mesh. Try the straight path first; only if a prop or the
-    // waterline eats it do we fan the heading out and take the best slide AROUND
-    // the obstacle. That lets a mob round the camp props to reach its target
-    // instead of pinning on them. Open-ground movers take the first branch.
-    let bestX = e.pos.x,
-      bestZ = e.pos.z,
-      bestProgress = 1e-3;
-    // Swimmers ride the water surface, so slope checks clamp submerged ground
-    // to the waterline (a sloped lake bed is not a wall; see pathfind rideHeight).
-    // The waterline itself is terrain/feature-aware: outside a declared lake's
-    // footprint there is no waterline at all, so a dry sunken feature never
-    // reads as a shore.
-    const ride = (x: number, z: number, h: number): number => {
-      const wl = waterLevelAt(x, z, this.cfg.seed);
-      return canSwim && h < wl ? wl : h;
-    };
-    let h0 = Number.NaN; // lazily sampled: only steep cells pay for heights
-    for (const off of MOVE_SLIDE_FAN) {
-      const a = desired + off;
-      const nx = e.pos.x + Math.sin(a) * step;
-      const nz = e.pos.z + Math.cos(a) * step;
-      // landlocked creatures stop at the waterline instead of walking under it
-      if (
-        !canSwim &&
-        groundHeight(nx, nz, this.cfg.seed) < waterLevelAt(nx, nz, this.cfg.seed) - SWIM_DEPTH
-      ) {
-        continue;
-      }
-      // Mobs, pets, and feared players obey the wall rule too: no uphill step
-      // onto unwalkably steep ground. Screened to the wall bands so the hot
-      // open-world fan pays nothing; inside a band the memoized cell steepness
-      // screens next, and only actual wall cells pay for exact heights. This
-      // is a NEW gate for these movers, so the finer per-step cliff check
-      // players get is not replicated here.
-      if (nearSteepWalls(nx, nz) && terrainSteepnessAt(nx, nz, this.cfg.seed) > MAX_CLIMB_SLOPE) {
-        if (Number.isNaN(h0))
-          h0 = ride(e.pos.x, e.pos.z, groundHeight(e.pos.x, e.pos.z, this.cfg.seed));
-        if (ride(nx, nz, groundHeight(nx, nz, this.cfg.seed)) > h0) continue;
-      }
-      // The Great Maze's hedge walls are hard for mobs too (the maze patrol
-      // knights pace their dead ends instead of drifting through a hedge).
-      // resolveMovePoint now does that on its own: the hedges are real collider
-      // boxes, so this no longer needs its own segment test, and keeping one
-      // would reject every candidate for a body that ever ended up inside a
-      // hedge, leaving it stuck instead of letting the push-out carry it clear.
-      const r = this.resolveMovePoint(nx, nz, BODY_RADIUS, e);
-      const progress = d - Math.hypot(r.x - dest.x, r.z - dest.z);
-      if (progress > bestProgress) {
-        bestProgress = progress;
-        bestX = r.x;
-        bestZ = r.z;
-      }
-      if (off === 0 && progress >= step - 1e-3) break; // straight path is clear
-    }
-    e.pos.x = bestX;
-    e.pos.z = bestZ;
-    // The floor a body rests on, which for a PLAYER includes the standable prop
-    // top underfoot, not just the terrain. Feared players are moved through here
-    // and return early from the player step, so `stepPlayerMotion` and its whole
-    // vertical pass never run for the duration: snapping to raw terrain dropped
-    // anyone feared off a rampart deck several yards INSIDE the rampart, where
-    // swept collision then refused every direction once the fear ended (from
-    // inside a volume every direction is a surface). Same expression the vertical
-    // pass and climb.ts already land against.
-    //
-    // Scoped to players deliberately: mobs and pets keep the terrain snap they
-    // have always had, so their movement, and the parity draw order with it, is
-    // untouched.
-    const g =
-      e.kind === 'player'
-        ? floorHeightAt(this.cfg.seed, bestX, bestZ, BODY_RADIUS, e.pos.y + 1e-3)
-        : groundHeight(bestX, bestZ, this.cfg.seed);
-    e.pos.y =
-      canSwim && g < waterLevelAt(bestX, bestZ, this.cfg.seed) - SWIM_DEPTH
-        ? swimSurfaceY(bestX, bestZ, this.cfg.seed)
-        : g;
-    return dist2d(e.pos, dest) < 0.3;
+    return moveTowardImpl(this.ctx, e, dest, speed, ignoreObstacles);
   }
 
   // blockedTowardSpawn moved to mob/locomotion.ts (M2; called only by the evade arm).
@@ -11950,6 +11865,68 @@ export class Sim {
     const r = this.ctx.resolve(pid);
     if (!r) return;
     consumeFeastAction(this.ctx, r.e, r.meta, feastId);
+  }
+
+  // Housing (IWorldHousing). Dark on this host: both descriptors read null until
+  // 05 and 08a light them; every command delegates into src/sim/freehold/, where
+  // the body resolves the caller and decides nothing. housingNowMs is the farmNowMs clock base.
+  get myFreehold(): FreeholdView | null {
+    return null;
+  }
+
+  get freeholdLayout(): FreeholdLayoutView | null {
+    return null;
+  }
+
+  housingNowMs(): number {
+    return this.lockoutNowMs();
+  }
+
+  freeholdEnter(pid?: number): void {
+    freeholdMod.freeholdEnter(this.ctx, pid ?? this.primaryId);
+  }
+
+  freeholdLeave(pid?: number): void {
+    freeholdMod.freeholdLeave(this.ctx, pid ?? this.primaryId);
+  }
+
+  placeFurnishing(slot: number, x: number, y: number, z: number, yaw: number, pid?: number): void {
+    freeholdMod.placeFurnishing(this.ctx, pid ?? this.primaryId, slot, x, y, z, yaw);
+  }
+
+  moveFurnishing(
+    placementId: number,
+    x: number,
+    y: number,
+    z: number,
+    yaw: number,
+    pid?: number,
+  ): void {
+    freeholdMod.moveFurnishing(this.ctx, pid ?? this.primaryId, placementId, x, y, z, yaw);
+  }
+
+  removeFurnishing(placementId: number, pid?: number): void {
+    freeholdMod.removeFurnishing(this.ctx, pid ?? this.primaryId, placementId);
+  }
+
+  undoPlacement(pid?: number): void {
+    freeholdMod.undoPlacement(this.ctx, pid ?? this.primaryId);
+  }
+
+  redoPlacement(pid?: number): void {
+    freeholdMod.redoPlacement(this.ctx, pid ?? this.primaryId);
+  }
+
+  payLedger(pid?: number): void {
+    freeholdMod.payLedger(this.ctx, pid ?? this.primaryId);
+  }
+
+  setVisitPolicy(policy: FreeholdVisitPolicy, pid?: number): void {
+    freeholdMod.setVisitPolicy(this.ctx, pid ?? this.primaryId, policy);
+  }
+
+  setFreeholdBuildPresence(active: boolean, pid?: number): void {
+    freeholdMod.setFreeholdBuildPresence(this.ctx, pid ?? this.primaryId, active);
   }
 
   // Slot an effect onto one gathering profession's tool, consuming one charm
