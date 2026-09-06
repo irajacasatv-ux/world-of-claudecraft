@@ -14,7 +14,7 @@ Fernando approved R01-R46 on 2026-09-06; the answered ruling sheet records his e
 and the final legal/Codex-asset/Codex-image additions D73-D75. The independent review of
 2026-09-06 added D76-D93 (state.md "Settlement round 2", ruling sheet R47-R64; D93 is the
 fix round's coordinator ruling on the second home's upgrade path): they are applied
-throughout the packet as recommended dispositions and await Fernando's word. The proposal,
+throughout the packet as recommended dispositions, approved by Fernando on 2026-09-06. The proposal,
 deck and research appendices at HEAD are the settled propagation of the text adopted on
 2026-09-05 at revision 383fd7da83, edited in place on 2026-09-06; audit-record.md "Adopted
 proposal and in-place propagation" lists the sections changed and the decision behind

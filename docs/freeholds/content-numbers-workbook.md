@@ -1,7 +1,7 @@
 # Freeholds numeric provenance and calibration workbook
 
 Status: approved, UNBUILT packet handoff under R01 to R46 and the round-2 dispositions
-D76-D93 (R47-R64, applied as recommended and awaiting Fernando's word). This is a filled inventory
+D76-D93 (R47-R64, applied as recommended and approved on 2026-09-06). This is a filled inventory
 of existing working targets, verified source baselines and concrete unsigned production
 artifacts. It contains no invented final balance values. [state.md](state.md) owns
 adopted numbers and decisions; [content-manifest.md](content-manifest.md) owns exact

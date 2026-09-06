@@ -190,7 +190,7 @@ in-place propagation".
 
 The [locked state](state.md) preserves D1 through D26 and records D1 through D93 (D76
 through D92 from the 2026-09-06 independent review and D93 from the fix round's
-coordinator ruling, applied as recommended dispositions and awaiting Fernando's word), all
+coordinator ruling, applied as recommended dispositions and approved by Fernando on 2026-09-06), all
 answered recommendations, source-first corrections and precise engineering refinements.
 External counsel, published Terms, service acceptance and calibration artifacts are named
 production/release gates. They are not unanswered product questions, fabricated signatures
@@ -316,7 +316,7 @@ guild history against hard delete, the war table client seam, the default Inn Ro
 that only 07 created (D81), and the buyer-capacity precondition of the deed contract.
 Every decision gap the review exposed is recorded as D76 through D93 (state.md "Settlement
 round 2", ruling sheet R47-R64) with its recommended disposition applied throughout the
-packet and its word column awaiting Fernando's word; the fix round's own coordinator
+packet and its word column recording Fernando's 2026-09-06 approval; the fix round's own coordinator
 ruling D93 (R64) settles the second home's upgrade path at ceil(1.5x) with no second-home
 upgrade refusal; no D1-D75 or R01-R46 row was reopened.
 

@@ -24,9 +24,9 @@
 > The nine rulings in section 12 are unchanged and its addendum was corrected under D29. Sections
 > 1, 2, 4, 5, 6 and 11 carry propagation edits (D15, D27 to D31, D33, D43, D44, D47, D48, D52 to
 > D63, D69 and D20), and the 2026-09-06 review round added D76 to D93 citations where a sentence
-> changed. D76 to D93 (R47 to R64) are applied as recommended dispositions and await Fernando's
-> word (state.md, "Current phase"); every sentence below that cites one of them carries that
-> status. The player deck and the six research appendices were edited the same day; appendix
+> changed. D76 to D93 (R47 to R64) are applied as recommended dispositions and were approved by
+> Fernando on 2026-09-06 (state.md, "Current phase"); every sentence below that cites one of
+> them carries that status. The player deck and the six research appendices were edited the same day; appendix
 > text rewritten after capture is marked Superseded with its decision beside the retained
 > original.
 

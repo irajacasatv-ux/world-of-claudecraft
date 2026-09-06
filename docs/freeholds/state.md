@@ -35,9 +35,9 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 Phase 01 (`phase-01-foundation.md`): NOT STARTED. R01-R46 and D73-D75 are approved;
-D76-D93 (settlement round 2, R47-R64) are applied as recommended dispositions and await
-Fernando's word. The review-fix round of 2026-09-06 is applied across the packet and is
-awaiting its fresh review. Implementation remains unbuilt; the branch stays local.
+D76-D93 (settlement round 2, R47-R64) were approved by Fernando on 2026-09-06 with the words
+"approve all recommendations R47-R64"; the review-fix round is applied across the packet,
+freshly reviewed and committed locally. Implementation remains unbuilt; the branch stays local.
 
 ## Settle audit facts (verified 2026-09-05 and 2026-09-06)
 These facts were recorded before dependent implementation instructions changed. They
@@ -634,8 +634,8 @@ unchanged.
 The independent packet review of 2026-09-06 found decision gaps that no D1-D75 or R01-R46
 row covered. Each is recorded here with its recommended disposition applied throughout the
 packet; the ruling sheet's second round (R47-R64) carries the exact question and the word
-column. A row whose word column still reads "awaiting Fernando's word" is an owned
-approval item, not an open design question.
+column; Fernando approved R47-R64 on 2026-09-06 ("approve all recommendations R47-R64"),
+so every round-2 row is settled.
 
 - D76 **Visitor friend admission (R47).** The friend admission fact is: the named owner
   character's outgoing friend list contains the visitor's character

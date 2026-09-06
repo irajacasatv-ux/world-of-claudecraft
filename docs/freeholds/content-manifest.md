@@ -1,7 +1,7 @@
 # Freeholds content manifest
 
 Status: approved, UNBUILT packet artifact under the answered R01 to R46 rulings and the
-round-2 dispositions D76-D93 (R47-R64, applied as recommended and awaiting Fernando's word).
+round-2 dispositions D76-D93 (R47-R64, applied as recommended and approved on 2026-09-06).
 Existing source IDs below were inspected at 7d140843d2. Every
 `freehold_` ID, housing page ID, asset filename and recipe named as planned below is
 NEW work. No housing item, reference approval, art or gameplay implementation is

@@ -1,7 +1,7 @@
 # Freeholds and Guildhalls: adopted proposal and tree context
 
 The packet is settled by D1-D93 in [state.md](state.md) ("Locked decisions" for D1-D75 and
-"Settlement round 2" for D76-D93, which await Fernando's word). The complete answered
+"Settlement round 2" for D76-D93, approved on 2026-09-06). The complete answered
 [ruling sheet](ruling-sheet.md) records Fernando's 2026-09-06 approval, his additions and
 the round-2 rows R47-R64 (D93, R64, is the fix round's coordinator ruling). Every
 decision, D1 and D9 included, is defined in state.md and never here; cite state.md for any

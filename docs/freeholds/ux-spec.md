@@ -3,7 +3,7 @@
 Status: approved, UNBUILT design. Fernando approved R01 through R46 on
 2026-09-06, with the final Codex artwork closeout and legal-team handoff additions.
 D76 to D93 (ruling-sheet R47 to R64) are propagated here as the round-2 settled
-dispositions recorded in state.md "Settlement round 2", awaiting Fernando's word.
+dispositions recorded in state.md "Settlement round 2", approved by Fernando on 2026-09-06.
 [state.md](state.md) owns the locked decisions; [ruling-sheet.md](ruling-sheet.md)
 records the answered questions. Implementation, measured calibration, final asset
 approval and external sign-offs remain the concrete producing files' deliverables
