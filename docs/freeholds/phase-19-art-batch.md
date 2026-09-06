@@ -4,10 +4,10 @@ Wave A, the Cottage MVP. The spec is `progress.md` "19 Art batch"; the decision 
 `brainstorm.md` D13 (art is the long pole and gets stand-ins; furnishing and trophy GLBs
 land in this dedicated phase through the `image-to-glb` skill, replacing the Phase 09
 stand-in kit through the one model registry). This phase ships a GLB for every wave A
-furnishing (about eighteen), the MVP trophy props, and the Cottage and Inn Room dressing,
+furnishing (the accepted eighteen-piece roster), the MVP trophy props, and the Cottage and Inn Room dressing,
 each with its fingerprint pin and prewarm home, then measures the asset budget, the perf
-tour, and the LOW-preset phone inside the Cottage. The references are O5 (Fernando owns
-them); no reference, no asset.
+tour, and the LOW-preset phone inside the Cottage. The art-brief.md reference manifest names each source, producing owner and
+release artifact; missing reference or rights blocks final asset acceptance.
 
 ### Starter Prompt
 ```
@@ -15,16 +15,27 @@ This is Phase 19 of the Freeholds and Guildhalls feature: the art batch (furnish
 trophy GLBs through the image-to-glb pipeline, the model registry fill, fingerprint
 pins, prewarm homes, the asset budget, the perf tour, the LOW-preset phone check).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: add the keyword `ultracode` to this session; the phase is batch-heavy (about
-thirty assets across four families, each a full pipeline run with its own pin).
+Harness: Codex, not Claude. Codex MUST execute all asset creation, regeneration and
+asset fixes in this file. Follow AGENTS.md and the root/directory CLAUDE.md repository
+contracts plus .agents/skills/woc-image-to-glb/SKILL.md; this prompt names no model.
+Orchestration: Codex assigns disjoint asset-family ownership and preserves the full
+reference, sculpt, export, optimization, fingerprint and visual-review gates.
 
 Goal: replace every stand-in with a shipped, texture-free, deterministic GLB produced
 the way the banker chest and the Eastbrook kit were produced, pinned by sha256 and
 source fingerprint, loaded through a prewarm home so the Cottage draws nothing for the
 first time after the curtain, within the byte and triangle budgets locked before
 building, with the phone holding frame rate at LOW inside the Cottage.
+
+Asset execution: every step that creates or regenerates shipping GLBs, reference
+artwork, icons or images MUST be done by Codex, not Claude. Use
+.agents/skills/woc-image-to-glb/SKILL.md and its shared canonical workflow for GLBs;
+use Codex image generation for raster artwork. Capture actual rendered screenshots
+as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
+phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
+icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
+That final sweep does not postpone artwork owned here.44b revisits the completed result
+for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -38,7 +49,7 @@ STEP 0 - PRE-FLIGHT:
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/ (a lockfile change also moves every source fingerprint: see the gotcha below).
-- Confirm the O5 references exist (Fernando's furniture references, the trophy family
+- Confirm the art-brief.md manifest references exist (Fernando's furniture references, the trophy family
   references, the Cottage and Inn Room dressing references) with rights and provenance;
   if any family has none, STOP for that family and record it (never invent a reference).
 - Memory scan: MEMORY.md and entries on the image-to-glb pipeline (PR #2356), the
@@ -50,7 +61,8 @@ STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "19 Art batch"), and this
   file
-- .claude/skills/image-to-glb/SKILL.md (the operating procedure, the nine steps, the
+- .agents/skills/woc-image-to-glb/SKILL.md (Codex entry point), then its canonical
+  .claude/skills/image-to-glb/SKILL.md (shared procedure, not a Claude execution mandate; the
   fingerprint contract), docs/image-to-glb-asset-workflow.md (the runbook),
   scripts/assets/CLAUDE.md (the pipeline rules), docs/design/eastbrook-vale-rebuild/imagegen-prompts.md
   and imagegen-provenance.md (the provenance record shape), CREDITS.md (the row shape)
@@ -91,55 +103,92 @@ tri, 2 materials, 33 KB), re-read from the pin suites
 tests/render_glb_replacement_assets.test.ts and tests/eastbrook_mailbox_asset.test.ts
 before locking a family budget (reference points, not targets); the registry fill shape and the
 prewarm home recipe; the perf tour entry option for a Cottage route; the phone capture
-recipe (Android emulation, LOW preset seeded before goto, ids never English text).
+recipe (Chromium with iOS-profile emulation, LOW seeded before goto, ids never English
+text). Android evidence requires an explicit userAgent/profile variant; neither
+emulation is Safari execution or physical-device proof.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Batch-heavy: use a Workflow if the harness offers one, otherwise a parallel Agent
-fan-out of four family slices, each given ONLY the Explore summary, its references,
-and its own family directory (disjoint by construction), with the coordinator owning
-every shared file:
-- Agent VENDOR: scripts/assets/freehold_basics/ for the Phase 03 vendor furnishings
-  (bed, table, two chairs, rug, lantern, chest prop, bookshelf): the batch exporter
-  recipe, budgets locked first, the sculpt spec per prop through the img2threejs strict
-  gates, a purpose-built factory per prop merged into 2 to 4 material buckets with
-  vertex colors, floor-seated at Y=0, centered, +Z front, stable mesh names,
-  Socket_* nodes, the spec with keepExtras true, the export into public/models/props/,
-  raw and shipped validation from four angles against the reference at the 0.70
-  per-critical-feature threshold, and tests/freehold_basics_asset.test.ts pinning every
-  prop (bytes, sha256, triangles, primitives, materials, COLOR_0, zero textures,
-  meshopt, bounds, live fingerprint).
-- Agent CRAFTED: scripts/assets/freehold_crafted/ for the Phase 04 ten crafted
-  furnishings, the same recipe and pin (tests/freehold_crafted_asset.test.ts).
-- Agent TROPHIES: scripts/assets/freehold_trophies/ for the Phase 17 MVP trophy props by
-  family (bust, mounted head, paddock marker, armor stand, plaque), the same recipe and
-  pin (tests/freehold_trophies_asset.test.ts); a family prop is shared by its members
-  through the registry, never one GLB per deed.
-- Agent DRESSING: scripts/assets/freehold_dressing/ for the Cottage and Inn Room static
-  decor keys in the Phase 06 layouts (the hearth, the door, the strongbox and station
-  anchors, the plinth), the same recipe and pin (tests/freehold_dressing_asset.test.ts),
-  seated on the interior floor constant plus the authored lift, never terrainHeight.
-The coordinator, after every family lands: fill the src/render/freehold/ model
-registry so every shipped key resolves to its GLB and no stand-in remains for a shipped
-id (a pin sweeps the content keys against the registry); give every family a prewarm
-home through registerDeferredPreload beside the furnishing view's construction (never
-an eager registerPreload, never a bare scene add); convert materials through surfaceMat
-at both tiers; refresh the media manifest with `node scripts/build_media_manifest.mjs
-generate`; append one CREDITS.md row per asset with its provenance; run
-`node scripts/asset_budget.mjs --json` and record the exact byte and triangle delta
-(the aggregate stays red on pre-existing overages: report the delta, never claim it
-passed); run `npm run perf:tour` with the Cottage route and record zero live-program
-events; capture the LOW-preset phone check inside the Cottage with the mobile rig
-(Android emulation, the low preset and graphicsDefaultApplied seeded before goto,
-compact and tablet boxes, elements by id) and record the frame numbers in progress.md
-as a per-step series, not a summary. Every agent writes any report longer than a screen
-to a file and replies with the path plus a short summary. Never `mode: "plan"` on
-teammates.
+Assign disjoint file ownership and integrate shared pins last.
+Read ux-spec.md and the locked decisions in state.md through the context reader.
+NEW paths/symbols below are planned deliverables, not existing tree anchors.
+
+Deliverables (at most five):
+1. Codex vendor asset family. Codex creates the shipping art and consumes the content/art reference manifest's
+   exact eight vendor IDs and individual reference briefs. scripts/assets/freehold_basics/
+   uses the deterministic batch exporter with scoped model factories, strict image-to-glb
+   intake, rights/provenance and material/triangle/byte budget artifacts measured before
+   export. The roster is bed/table/two chairs/rug/lantern/chest/bookshelf as the accepted
+   manifest binds them. No reference or balance budget is invented by an asset worker.
+2. Codex crafted asset family. Codex uses scripts/assets/freehold_crafted/ for final
+   models for the ten accepted Wave A crafted outputs, including the three pattern
+   recipes inside those ten, never three extra outputs. Reconcile ID/model/footprint/
+   radius/anchor measurements with03/04 and collision truth; walkthrough rugs are
+   explicit. Maintain the protected Masterwrought and ten-profession content mapping.
+3. Codex source-complete trophy family. Codex uses scripts/assets/freehold_trophies/ for final
+   shared bust/head/marker/stand/plaque models for every generic display17 ships.
+   No false feat is granted to fill a new account's case. Bespoke23 forms have explicit
+   later manifest rows; all Wave A IDs resolve now with approved lineage and readable
+   known/unknown provenance in the HUD. A generic final family model is an intentional
+   completed design, distinct from a temporary placeholder.
+4. Codex Inn Room/Cottage dressing. Codex uses scripts/assets/freehold_dressing/ for the
+   complete shell-linked hearth/door/strongbox/station/plinth/bed dressing with equal
+   material/art quality in both tiers, warm plaster/timber, quiet cool window edge,
+   clear arrival/circulation and meaningful display sightlines from ux-spec.md.
+   Measure authored grid/room bounds, model bounds/radii and protected door/arrival
+   paths into the content manifest before integration. Use the inherited interior
+   grade/daylight and sampled arrival cue from06/09; no unsupported light/camera
+   literal. Three authored emitters is only a ceiling: the global sink may admit two
+   on iOS or fewer under pressure. LOW still shows all furnishings, ghost, blocked
+   reason and bounds; material/ambient/key fallback keeps the room readable.
+   Structural collision/arrival safety and prepared actionable representations
+   must be ready before reveal. Directional/hemi/spot/rect lighting stays boot-owned;
+   point-light allocation/retirement uses09's scheduled budget/gates and actual global
+   sink, preserving LOW fairness. Baseline compact/tablet capture is Chromium with an
+   iOS profile, not Android, Safari or physical-device proof. Android claims require an
+   explicit userAgent/profile variant. Ordinary online arrival's additional cosmetic settle
+   wait stays zero; bounded offline wait does not guarantee all optional art. Late
+   optional cosmetics use prepared gate-owned stand-ins until final assets are ready;
+   do not confuse runtime preparation fallback with permission to ship placeholder art.
+   First confirmed Inn and first Cottage tier get the approved automatic/skippable
+   safe hearth view; ordinary return/visitor entry stay static. Movement/look/cancel
+   resumes input immediately while existing DIRECTOR_RELEASE_TIME blends camera offset
+   out safely; reduced motion starts no directive. Audio/copy dedupe by accepted entry
+   identity, never join time: consume a permitted fresh directive at most once.
+   Snapshot/resume/replay grants no new cue; commit-before-ACK loss may omit visible
+   or audio feedback for an accepted entry.
+   Consume07c/08a's nullable freshArrivalPresentation exactly: acceptedTransitionId,
+   playWelcomeCue:true and firstTierViewEligible. Only that fresh directive can welcome;
+   only a true firstTierViewEligible grants the tier view. Positive historical
+   firstTierAtAdmission on snapshot/resume never grants a new cue/view. A committed
+   winning tier mark followed by lost ACK may skip presentation; do not replay it.
+   The typed public GameAudio arrival method and sanctioned sample pipeline belong
+   to 06/09; this asset work consumes them and adds no private-method audio shortcut.
+5. Registry/prewarm and evidence. Codex completes shipping artwork and replaces every
+   shipped-ID stand-in via the existing
+   src/render/freehold registry, registerDeferredPreload and gated_scene_attach;
+   surfaceMat supports both material tiers. Freeze family fingerprint lists, export
+   keepExtras/socket and centered floor bounds, optimize/validate raw and shipped GLBs,
+   and pin bytes/sha256/triangles/primitives/materials/COLOR_0/zero textures/animations/
+   skins/meshopt and live fingerprint. Keep the strict four-angle critical-feature
+   threshold owned by the asset skill. Refresh media manifest and per-asset CREDITS/
+   provenance; record exact budget delta without claiming pre-existing aggregate red
+   passed. Capture Inn/Cottage LOW/high plus actual iOS light-pressure fallback and
+   zero live-program tour evidence. Missing reference/rights or failed final art keeps
+   this implementation and Wave A release blocked; it is never a completed family
+   with an indefinite art deferral. Render and frontend reviews inspect the final
+   registry, screenshots and measured bounds; do not duplicate the coordinator tour.
+   Record final Codex asset provenance now.44a's final-artwork-audit.md must recheck
+   every housing-created icon/image and residual fallback against the completed feature
+   before44b prepares docs/prd/woc/freehold-final-legal-handoff.md. It is an additional
+   completion sweep, never permission to ship an unfinished19 family.
 
 INVARIANTS THIS PHASE MUST KEEP:
 - Every new GPU producer is a client of the scheduler: a prewarm home or a gate for
   every material a live frame can draw for the first time after the curtain; no bare
-  scene add; no light added or removed after boot (the Phase 09 rig stays within three
-  point lights at LOW through point_light_budget.ts).
+  scene add. Directional/hemi/spot/rect lights remain boot-owned.09's point lights may
+  be allocated/retired only through its scheduled point_light_budget.ts and attachment/
+  prewarm gates, within both authored ceiling and current global sink allocation.
+  No bare per-frame point-light creation or blanket ban on the permitted09 lifecycle.
 - The fingerprint contract: every asset stamps a sha256 source fingerprint over its
   pinned file list; tests recompute it live; any edit to a fingerprinted file (the
   factory, entry, exporter, spec, build_assets.mjs, the shared atlas, pnpm-lock.yaml)
@@ -166,6 +215,9 @@ Out of scope (do NOT do in this phase):
   interior (Phase 21).
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
+Required named reviewers for this file: frontend-seam-reviewer, render-performance-reviewer,
+content-obligations-reviewer,
+test-coverage-auditor, qa-checklist.
 - Run: `npx tsc --noEmit`; per family `npx vitest run tests/freehold_basics_asset.test.ts`,
   `npx vitest run tests/freehold_crafted_asset.test.ts`, `npx vitest run
   tests/freehold_trophies_asset.test.ts`, `npx vitest run tests/freehold_dressing_asset.test.ts`;
@@ -182,8 +234,10 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   render-performance-reviewer (prewarm homes, residency, the light budget, the tour
   evidence, the phone series); the dispatch table adds frontend-seam-reviewer if
   presentation code under src/render/ changed beyond the registry fill. Prompt each for
-  COVERAGE not filtering; each writes its report to a file. Do not commit until no
-  BLOCKING issues remain.
+  COVERAGE not filtering; each writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
+  locked rulings and the fixes have fresh review.
+
+- Required reviewers for the complete settled diff: render-performance-reviewer, frontend-seam-reviewer and content-obligations-reviewer.
 
 STEP 4 - COMMIT CADENCE:
 5 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -194,9 +248,14 @@ commit per family keeps a re-mint reviewable):
 - feat(assets): ship the trophy family props with fingerprint pins
 - feat(assets): ship the Cottage and Inn Room dressing with fingerprint pins
 - feat(render): resolve every freehold model key to its shipped GLB with a prewarm home
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Then run the shared contribution gate from docs/qa-gate.md, including
+`node scripts/gate_select.mjs` when required, and `npm run ci:changed` after the LAST
+commit as the Stop-hook floor; record exact exit codes.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
+- [ ] Every one of the five settled STEP 2 deliverables and all linked ux-spec.md states
+  has implementation, decisive evidence and a fresh review; earlier summary prose never
+  overrides the settled contract. Numeric references match state.md and approved artifacts.
 - [ ] Every model key in furnishings.ts, trophies.ts, and the two layouts in
   src/sim/content/freehold/layouts.ts resolves to a
   shipped GLB under public/models/props/; the registry sweep finds no stand-in for a
@@ -207,33 +266,32 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] `npx gltf-transform validate` is clean on every shipped GLB; the media manifest is
   regenerated; one CREDITS.md row and one provenance record per asset.
 - [ ] Every family has a prewarm home; `npm run perf:tour` through the Cottage records
-  zero live-program events; the point-light count at LOW is at most three.
+  zero live-program events; authored emitters are at most three, and actual lights stay within the live global
+  sink allocation, including two-or-fewer iOS pressure fallback.
 - [ ] The asset budget delta is recorded exactly in progress.md (bytes and triangles per
   family) with the pre-existing aggregate red stated as pre-existing.
 - [ ] The LOW-preset phone series inside the Cottage is recorded per step in
-  progress.md, captured with Android emulation and the low preset seeded before goto;
+  progress.md, captured in Chromium with iOS-profile emulation and LOW seeded before goto;
   the compact and tablet screenshots are committed under docs/screenshots/.
 - [ ] renderer.ts is untouched (diff shows no change); the monolith ceilings are
   unchanged or lower.
-- [ ] All STEP 3 suites green; render-performance-reviewer reports no BLOCKING.
+- [ ] All STEP 3 suites green; render-performance-reviewer confirms ALL findings, including nits, are resolved and freshly reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 19, the budget delta table, the phone
-  series, the screenshot paths, any family deferred for a missing reference) and
+  series, the screenshot paths, any missing-reference release blocker) and
   docs/freeholds/state.md (the per-phase ledger row 19: the family directories, the
-  pin tests, the registry fill, the prewarm homes; O5 marked per family as landed or
-  waiting on a reference).
+  pin tests, the registry fill, the prewarm homes; the art manifest completeness and release-gate status).
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+End with: phase status, files touched, validation results, review verdicts, external release gates, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-19-qa.md
 
 STOPPING RULES:
-- Stop for a family whose references are missing or lack rights and provenance; ship
-  the other families in full and record the gap (never invent a reference, never ship
-  a scaffold as the asset).
+- Stop that family for missing reference/rights/provenance and finish independent
+  authorized work. Record a blocking art artifact; this implementation and Wave A
+  cannot pass until every shipped ID has final approved art.
 - Stop if an asset cannot meet the 0.70 per-critical-feature threshold from four angles
   within budget; a global average never excuses a failed identity feature.
 - Stop if a fingerprinted shared file must change in a way that would re-mint families

@@ -5,14 +5,14 @@ decision is `brainstorm.md` D9 (one pure client module, a seven-distribution mat
 `HudFeatures` row, a client gate STRICTER than the Claudium store's `!NATIVE_APP` rule)
 and the store-safe rules of proposal section 8. This phase ships the module the three
 existing gates fold into, the seven-row matrix test, the source pins that keep housing
-behind the gates, the "earn" copy denial, and the O4 (Seeker) verdict. It ships NO
+behind the gates, the "earn" copy denial, and the locked Seeker use-only capability. It ships NO
 purchase surface: those arrive in Phases 15 and 16 behind what this map allows.
 
 ### Starter Prompt
 ```
 This is Phase 14 of the Freeholds and Guildhalls feature: the distribution surface map
 (src/game/distribution_surfaces.ts, the seven-distribution matrix,
-HudFeatures.freeholdPurchaseEnabled, the source pins, the copy scan, the O4 verdict).
+HudFeatures.freeholdPurchaseEnabled, the source pins, the copy scan, the locked Seeker use-only capability).
 
 Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
 block for effort and fan-out; this prompt names no model.
@@ -23,6 +23,16 @@ existing distribution gate calls without changing its verdict, pin the answer fo
 seven distributions through the real Electron config stamps, and prove by source pins
 that no wallet, $WOC, on-chain deed (mint, trade, holder), or marketplace string ships in a housing path a native,
 Steam, or Epic build can reach.
+
+Asset execution: every step that creates or regenerates shipping GLBs, reference
+artwork, icons or images MUST be done by Codex, not Claude. Use
+.agents/skills/woc-image-to-glb/SKILL.md and its shared canonical workflow for GLBs;
+use Codex image generation for raster artwork. Capture actual rendered screenshots
+as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
+phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
+icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
+That final sweep does not postpone artwork owned here.44b revisits the completed result
+for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -85,68 +95,87 @@ Claudium store attaches only when !NATIVE_APP, so no Claudium purchase surface e
 any native build, Seeker included); every place the word "earn" could be scanned.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, two slices, each given ONLY the Explore summary and its own
-files (disjoint except src/main.ts and state.md, which the coordinator edits last):
-- Agent MAP: src/game/distribution_surfaces.ts (pure, DOM-free, no src/net import:
-  resolveDistributionSurfaces({ nativeApp, desktopApp, walletEnabled, mobileCapabilities,
-  desktopProbes })
-  returning { wallet, exchange, claudiumStore, freeholdPurchase,
-  freeholdManageOnWebsiteLine, deedSurfaces }, every arm failing closed on a missing or
-  throwing probe; freeholdPurchase true ONLY where claudiumStore is true AND the build is
-  the web or the website desktop stamp; freeholdManageOnWebsiteLine true wherever the
-  house is usable but freeholdPurchase is false; deedSurfaces true on the web and the
-  literal 'website' desktop stamp only (D21: the Seeker row is OFF for deeds) and unused
-  until Wave D; the wallet row echoes walletEnabled); the composition direction:
-  resolveWalletCapability stays in src/net UNTOUCHED, main.ts calls it, passes its
-  result in as walletEnabled, and injects the map's rows; only wocMarketAttachAllowed
-  (src/game) and the main.ts Claudium attach read the map, with NO verdict change (their
-  existing suites stay green untouched); tests/distribution_surfaces.test.ts with one
-  `it` per
-  distribution (web, website desktop, Steam, Epic, App Store, Google Play, Seeker dApp
-  Store) driven through the REAL electron/desktop_config.cjs stamps and the real
-  normalizeSolanaMobileCapabilities, plus a per-dimension fail-closed case.
-- Agent PINS: HudFeatures.freeholdPurchaseEnabled and freeholdManageOnWebsite rows in
-  src/ui/hud.ts with the src/main.ts injection (the dailyRewardsEnabled shape, the
-  coordinator applies the main.ts line); tests/freehold_store_gates.test.ts: source-text
-  pins that no housing module under src/ui/hud/housing/, src/game/distribution_surfaces.ts,
-  or the hudChrome.housing namespace carries a wallet, $WOC, on-chain deed (mint, trade, holder), or marketplace
-  string reachable when freeholdPurchase is false (a POSITIVE allowlist of the web-only
-  files, never a "not in scope" exemption; the scanned strings are the on-chain ones,
-  wallet, $WOC, token, mint, on-chain, NFT, holder, Charter deed, marketplace, Exchange;
-  the bare word deed is NEVER scanned because the Book of Deeds ships in every build), the "earn" denial over every
-  hudChrome.housing.* English value, and a pin that main.ts never reads the map inside
-  src/net; the O4 write-up (STEP 5) for state.md.
-Every agent writes any report longer than a screen to a file and replies with the path
-plus a short summary. Never `mode: "plan"` on teammates.
+Assign disjoint file ownership and integrate shared pins last.
+Read ux-spec.md and the locked decisions in state.md through the context reader.
+NEW paths/symbols below are planned deliverables, not existing tree anchors.
+
+Deliverables (at most five):
+1. Independent surface capabilities. distribution_surfaces.ts is the pure
+   src/game junction receiving walletEnabled and verified shell/mobile probes.
+   Keep existing wallet, exchange and claudiumStore verdicts unchanged. Housing has
+   independent usable, freeholdPurchase, freeholdManageOnWebsiteLine and deedSurfaces
+   capabilities; purchase is browser web/website-distributed desktop only. Seeker is
+   use-only with deeds off. Missing/throwing/malformed/unknown probes fail closed.
+   Housing use remains behind the accepted entitlement-model release gate. Website
+   management is not inferred from purchase denial: denied storefronts default off
+   until the complete destination/flow has written approval in the surface artifact.
+2. Composition and source boundaries. HudFeatures injects housing-use, purchase and
+   approved management rows through main.ts; no UI reader branches on NATIVE_APP or
+   distribution strings. resolveWalletCapability stays in src/net, which never imports
+   src/game. The server does not trust client platform claims as payment authority.
+   Existing wallet/Exchange/store behavior remains unchanged while the housing map
+   governs its complete optional purchase model.
+3. Seven-distribution matrix and absence proof. tests/distribution_surfaces.test.ts
+   drives actual Electron stamps and normalizeSolanaMobileCapabilities for web,
+   website desktop, Steam, Epic, App Store, Google Play and Seeker. Assert every field,
+   missing-input dimension and independently approved management outcome. Denied
+   housing purchase means no row, handler, quote request, fetched catalog, hidden DOM,
+   error/money copy or accessibility node. Positive path allowlists and mutation
+   probes prove source scans cannot exempt an unclassified housing path.
+4. Exact language and approval artifacts. All visible housing labels use
+   hudChrome.housing.* as specified in ux-spec.md; neutral management copy is shown
+   only where its independent capability permits it. Purchase benefits describe
+   cosmetic, convenience and access; no earn/income/yield or native/Steam/Epic token,
+   wallet or on-chain-deed marketing. Ordinary Book of Deeds source names remain
+   gameplay. Cross-link the counsel memo, Terms/listing and accepted service artifacts
+   in state.md; their external acceptance is a release gate, not an implementation
+   question or a claim of platform approval.
+   Preserve literal D9: the game server stays unaware of distribution. Existing
+   account auth, Origin/UA/JSON, linked platform accounts and desktop capability probes
+   cannot authenticate a checkout channel. The economy service's NEW issuer/verifier
+   owns opaque account/purpose/SKU/policy/quote/operation-bound authorization; the game
+   receives only the validated effect through its narrow host seam. The signed service
+   artifact names exactly which fact is proven; the current tree has no such complete
+   issuer/verifier. Unknown eligibility refuses new spend while confirmed payments
+   keep original-key recovery. UI absence and this payment authority are separate gates.
+5. Regression and accessibility proof. Preserve existing wallet/Exchange/Claudium
+   tests, pin new HudFeatures wiring and source scans, and test absent submodels
+   through DOM, accessibility and recorded requests as well as pure booleans. Run
+   frontend-seam-reviewer and privacy-security-review, followed by fresh fix review.
+   Exact money-gate and service-price rules below apply to implementation and QA.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- The three money gates: (1) counsel sign-off before FREEHOLDS_ENABLED is set in
-  production and before any store submission carrying housing copy (this phase changes
-  nothing there); (2) the fail-closed flag defaulting off stays pinned (Phase 01) and
-  this map is a SECOND, client-side gate on top of it, never a replacement; (3) the
-  per-distribution surface map is pinned by the seven-row matrix from this phase on.
+- The three money gates: (1) written counsel acceptance, published accepted Terms/
+  listing artifacts and the accepted economy-service contract before production enable
+  or any housing-bearing store submission; external sign-off status lives in state.md;
+  (2) FREEHOLDS_ENABLED defaults off and the server refuses/hides housing purchases
+  while dark; (3) the seven-distribution surface map independently gates housing use,
+  purchase and approved website management, including complete submodel/handler/
+  catalog/DOM/accessibility/error absence on denied surfaces. These are cumulative.
 - The economy service owns prices and token math: the map answers "may this build show
   a purchase surface", never "what does it cost".
 - Store policy: no purchase surface and no wallet, $WOC, on-chain deed, or marketplace string in
-  any App Store, Google Play, Steam, or Epic path; no "earn" language; the house is
-  usable everywhere; the manage-on-the-website line is neutral copy.
+  any App Store, Google Play, Steam, or Epic path; no "earn" language; housing use follows its approved entitlement release gate; a neutral website line
+  still requires independently approved management capability.
 - The server never learns the distribution (the map is client-only); nothing in
   src/sim/ or server/ changes.
 - src/net never imports src/game; the map lives in src/game/ and is injected through
   main.ts (the firewall), never read inside src/net.
 - Graphics and tier knobs stay gameplay-neutral (untouched here).
-- i18n: the policy in docs/freeholds/implementation-plan.md; the one English key this
-  phase may add is hudChrome.housing.manageOnWebsite (neutral, no store name).
+- i18n: the policy in docs/freeholds/implementation-plan.md; the management English key is
+  hudChrome.housing.steward.manageWebsite (neutral, no store name).
 - The word "phase" appears in no code, comment, commit, or PR text.
 
 Out of scope (do NOT do in this phase):
 - Any Claudium branch, SKU, or purchase flow (Phase 15).
 - Any window, store row, button, or panel (Phase 16).
-- Native billing, a native IAP SKU, or a Seeker wallet rail for housing: the O4 verdict
-  is recorded, not built.
+- Native billing, a native IAP SKU, or a Seeker wallet rail for housing: the locked Seeker use-only capability
+  is already locked; no native housing billing is in scope.
 - Deed surfaces beyond the map row (Wave D).
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
+Required named reviewers for this file: privacy-security-review, frontend-seam-reviewer,
+test-coverage-auditor, qa-checklist.
 - Run: `npx tsc --noEmit`; `npx vitest run tests/distribution_surfaces.test.ts`;
   `npx vitest run tests/freehold_store_gates.test.ts`; `npx vitest run
   tests/wallet_connection_view.test.ts tests/woc_market_wiring.test.ts
@@ -159,8 +188,10 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
   frontend-seam-reviewer (the HudFeatures rows and the main.ts firewall) and
   privacy-security-review (the store-policy pins and the fail-closed arms). Prompt each
-  for COVERAGE not filtering; each writes its report to a file. Do not commit until no
-  BLOCKING issues remain.
+  for COVERAGE not filtering; each writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
+  locked rulings and the fixes have fresh review.
+
+- Required reviewers for the complete settled diff: frontend-seam-reviewer and privacy-security-review.
 
 STEP 4 - COMMIT CADENCE:
 3 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -168,9 +199,14 @@ STEP 4 - COMMIT CADENCE:
 - feat(game): resolve every distribution surface from one pure map
 - feat(ui): add the freehold purchase and manage-on-website HUD features
 - test(client): pin the housing store policy per distribution
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Then run the shared contribution gate from docs/qa-gate.md, including
+`node scripts/gate_select.mjs` when required, and `npm run ci:changed` after the LAST
+commit as the Stop-hook floor; record exact exit codes.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
+- [ ] Every one of the five settled STEP 2 deliverables and all linked ux-spec.md states
+  has implementation, decisive evidence and a fresh review; earlier summary prose never
+  overrides the settled contract. Numeric references match state.md and approved artifacts.
 - [ ] tests/distribution_surfaces.test.ts has exactly seven distribution cases driven
   through the real Electron stamps and the real capability normalizer, each asserting
   every field of the map by literal, plus a fail-closed case per input dimension.
@@ -184,27 +220,26 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   or marketplace string is planted in a housing path outside the web-only allowlist, and
   when "earn" is planted in a hudChrome.housing.* value (prove both with a temporary
   mutation, then revert).
-- [ ] O4 recorded in state.md: from the real code the Seeker dApp Store build has no
-  Claudium purchase surface (the store attaches only when !NATIVE_APP), so its row is
-  "usable, manage on the website" until native billing exists; Fernando rules on any
-  change.
-- [ ] All STEP 3 suites green; both reviewers report no BLOCKING.
+- [ ] The locked Seeker row is use-only, deeds off and management off unless the
+  complete destination/flow has written approval. Independent management authorization
+  is pinned; no implicit purchase-denied fallback or native billing deferral remains.
+- [ ] All STEP 3 suites green; all triggered reviewers confirm ALL findings, including nits, are resolved and freshly reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 14, notes, deferrals) and
   docs/freeholds/state.md (the per-phase ledger row 14: the module, the two HudFeatures
-  rows, the two test files, the i18n key; the O4 verdict under OPEN items).
+  rows, the two test files, the i18n key; the locked Seeker use-only capability under Locked decisions and release gates).
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+End with: phase status, files touched, validation results, review verdicts, external release gates, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-14-qa.md
 
 STOPPING RULES:
 - Stop and ask if folding an existing gate into the map would change ANY existing
   verdict (the fold is move-not-rewrite; a verdict change is a Fernando decision).
-- Stop if the tree proves a Seeker purchase surface exists that section 8 would allow;
-  record it and ask before widening freeholdPurchase.
+- Stop if a changed tree invalidates the approved distribution matrix; record the
+  fact in state.md before dependent edits. Existing wallet support never widens
+  the locked Seeker housing purchase capability.
 - Do not push the branch; never merge a PR.
 ```

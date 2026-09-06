@@ -1,13 +1,268 @@
 # Phase 29: Guildhall purchase and upkeep
 
-Wave C, Guildhalls. The spec is `progress.md` "29 Guildhall purchase and upkeep" (coarser
-than wave A: settle unknowns in STEP 1 and record them in `state.md` before
-implementing); the decisions are `state.md` and `brainstorm.md` (D1: the Charter rides the
+Wave C, Guildhalls. The spec is `progress.md` "29 Guildhall purchase and upkeep" (apply the locked choices and verified source facts before implementing); the decisions are `state.md` Locked decisions and the approved artifact manifests (D1: the Charter rides the
 spend route; ruling 3: the service settles). This phase ships the pooled Claudium purchase
 (roughly 3x the freehold figure, service-priced) from the Hall Fund with officer approval,
 2x decay for a Guildhall, the Steward's Ledger paid from the Hall Fund, member donations
-(materials, gold, Claudium) with a weekly per-member cap, and a contribution log with
+(materials, gold, Claudium) with a weekly per-account cap across alts, and a contribution log with
 retention. It is a money phase (the three gates apply) and a persistence phase.
+
+## Settled delivery and acceptance contract
+
+Service debit/credit and pooled balance are authoritative, projected as absolute
+versioned results with stale-response rejection. Officers authorize paid projects;
+members can contribute within the signed schedule and read the contribution ledger.
+The anti-dominance target is one current weekly Hall Ledger-equivalent per account per
+realm week across all alts (state TUNING). This file produces exact resource/gold and
+service-owned currency allowance, rounding, quote version and cap-reset fixtures in
+the calibration artifact; enable waits for Fernando/service acceptance. Never convert
+gold or materials to token value in game. Material/gold donation, cap accounting and
+donor audit commit atomically. Currency donation intent and receipt share 07a's sole durable recovery rail extended by 15. Race two alts, two officers, two realms and a timeout after service debit.
+
+Contributions retain the adopted ninety-day audit window while durable cap/receipt
+authority survives required replay and rollover. Inventory query/index paths for guild
+read ordering, global created_at prune, account-leading export/delete and reverse FKs;
+register indexed bounded prune once after listen and test real concurrent PG behavior.
+Guild wear uses the same 07b lifecycle owner extended with guild-scoped eligible-member
+observations and history; it never sums individual account grace or adds another
+coordinator/store. The 13a calendar supplies finalized suspension coverage without
+catch-up debt. At condition
+30 amenities work; below 30 they pause; entry, building and undo always remain available.
+
+The three money gates apply to every SKU, handler and purchase view in this file:
+(1) written counsel acceptance before production enable or housing-bearing store
+submission; (2) FREEHOLDS_ENABLED defaults off and refuses both dispatch arms and
+removes catalog rows while dark; (3) the seven-distribution capability map permits
+purchase only on browser web and website-distributed desktop. Seeker is use-only.
+Published Terms and accepted economy-service contract/catalog are additional release
+gates. Website management is an independent approved capability, default off on denied
+storefronts. Native, Steam and Epic receive no purchase submodel, hidden DOM, fetched
+catalog, handler, accessibility text or on-chain marketing. Purchase copy promises
+cosmetic, convenience and access only, never earn, income or yield. The economy
+service owns every price and all token math; expectedCostClaudium is only a forwarded
+quote fingerprint. Illustrative USD, 3x and other working targets never compute cost.
+Use the single 07a durable operation/receipt rail extended by 15: bind account, opaque
+plot/guild target, operation and quote version; persist intent before spend; retry
+ambiguity with the same key; apply effect and receipt atomically. No DB client or lock
+spans service IO, and live key arrays are not permanent replay authority.
+
+Before implementation decisions and again on the finished diff, dispatch
+database-performance-reviewer, paired with migration-safety and privacy-security-review.
+Reuse 07a's global plot ownership fence and commitFreeholdMutation seam: character FIFO before
+the required shared-resource serialization, no held DB client while queueing,
+07a actual touch-set ordering preserved,
+lease/revision/fund/receipt refusal aborting every resource and housing write. No stale
+CAS reload may erase an acknowledged transfer. Bound rows, strings, descriptor bytes,
+query results and queue admission from the measured docs/freeholds/content-manifest.md; preserve
+unsupported stored rows safely. One running save plus one pending dirty generation,
+shared background admission and workload deadlines apply to every producer. Record the
+query/index inventory (scope, predicate, order, limit, expected rows, index), reverse
+FK/export/delete access, retention and largest legal fixtures. Disposable Postgres
+proof must cover crash/interleave, competing realms, lease/CAS refusal, cancellation,
+queue pressure, query counts and seeded plans; fake-pool assertions alone are insufficient.
+
+Every gameplay quantity comes from state.md Content numbers or the approved docs/freeholds/content-manifest.md
+and docs/freeholds/content-numbers-workbook.md. This file produces its owned exact-ID, quantity,
+derivation/rounding, reference and approval rows before runtime enable. Fernando owns
+gameplay calibration; the economy service owns prices/currency allowance. Measurements
+come from approved room/model bounds. Missing measurements or signatures are concrete
+artifact/release gates, never permission to invent a balance literal or reopen a choice.
+All material inputs remain obtainable or tradable without requiring a profession;
+Perfecting keystones, gear intermediates and quickening catalysts remain excluded.
+
+Follow docs/freeholds/ux-spec.md as the visual and interaction source. Reuse the actual
+shared window and PainterHost families, theme tokens, content-signature dirty model,
+focus restoration and nontrapping build companion. Every player string is an English
+hudChrome.housing.* key (item/entity/guide source domains keep their canonical keys);
+tooltips follow docs/design/tooltip-writing.md. Capture desktop, compact and tablet
+targets from the shared housing helper with stable IDs at LOW, including empty,
+loading, refused, locked, visitor, reconnect and success states relevant here. Required
+after-shots fail if missing. Use shape/text as well as color for actionable state;
+40x40 touch controls respect safe areas, keyboard/gamepad order and reduced motion.
+Three authored emitters is a ceiling subject to the existing light sink/global budget,
+including iOS two and pressure one; unchanged ghost, blocked reason and occupancy
+information must remain legible through ambient grade, materials and silhouettes.
+
+## Deliverables (at most five):
+
+1. Service-owned pooled purchase and durable recovery.
+2. Atomic capped material/gold/currency contributions.
+3. Guild condition and immutable Hall Ledger settlement.
+4. Indexed retained donor audit, export/delete and recovery proof.
+5. Member/officer Steward/store UX and authority evidence.
+
+## Shared authority and persistence dependency
+
+This file extends the single producer from 07a, not a second account or guild payment
+system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
+server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
+durable intent, applied identities, global claim fencing and atomic effects. Phase15
+adds service quote/receipt fields to those rows; later files consume them. No separate
+guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
+Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
+Preserve explicit character pre-lock before nonce fencing, bank-ledger classification
+before guild replay, and the actual market/mail, storage advisory/receipt, custody,
+FK/unique/deferred-trigger ordering of every carried legacy effect. Never substitute
+a generic accounts/characters/guilds/receipts lock hierarchy. No client is held while
+joining serialization; no lock/client spans service IO. Reuse admitted cancellation-
+aware work and retain original operation identity across crash/timeout/eligibility change.
+
+07 owns capability-aware save/export/deactivation/restore preservation; 07b owns
+account lifecycle and immutable protection history. Unsupported/oversized/unknown
+source rows remain original and read-only with a bounded diagnostic/reference; do not
+reset them to empty history, a free Inn or fresh grace. Character delete preserves
+account records; soft deactivation/restore, authorized hard deletion and export remain
+distinct. Follow the minimum-capable-release/rollout artifact; old binaries merely
+leaving normalized rows untouched do not prove compatible save or lifecycle behavior.
+Rollback quiesces new mutations while preserving accepted recovery identities.
+
+Paired QA must cover the actual legacy transaction participants, lease/CAS/nonce
+failure, pending/replayed operations, concurrent accounts/alts/realms, partial failure,
+oversized/unknown version preservation and minimum-capable rollout/rollback fixtures.
+Database, persistence and security reviewers inspect these exact before/final diffs.
+
+## Existing lifecycle, upkeep history and finality contract
+
+Consume 07b's single lifecycle owner and 13/13a's single upkeep-calendar owner.
+NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provides the
+committed immutable protection source, and createFreeholdLifecycleCoordinator captures
+authenticated observation time before queueing. Derive a return before presence
+advances; stale observations, fenced sessions and replay cannot mint grace. The
+accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
+and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
+and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
+or account calendar ingress, source-history array on plots, polling job or receipt store.
+
+Every plot/checkpoint/immutable bill and prepaid credit retains original calendarId,
+schemaVersion, resetPolicyId and committed lifecycle/authority/finalized-prefix identity.
+Union overlapping lifecycle absence/grace and service suspension ranges exactly;
+never add independent totals or use only latest grace for a dormant plot. Historical
+condition/checkpoint changes, bill classification and credit consumption/carry require
+irrevocably finalized source facts. Covered but mutable tails support read-only preview
+only. Missing history, unknown binding or time beyond coverage is explicit not-ready,
+never zero outage. A future-credit purchase uses an accepted published schedule without
+requiring future time to be finalized; its later consumption requires final history.
+
+Recheck lifecycle and compatible calendar-head FOR SHARE guards inside 07a's reviewed
+composition hook through commit. The calendar-only writer takes FOR UPDATE and never
+account/plot/receipt locks; loaders release reads before writer queues. Retain exact
+indexed history/prefix facts with bounded probes across multi-year absence/open outage,
+not per-day/week loops, lifetime loads or foreign-plot rewrites. Keep source history
+until lossless dependency-aware rebase proves dormant plots/credits/recovery safe.
+Current-generation revision/digest/watermark install and exact current/superseded/
+conflict/pending ACK semantics belong only to 13a. An older response cannot replace a
+newer projection or claim readiness. Owner/public builders allowlist safe fields and
+reject operator-evidence, secret and private-diagnostic sentinels even on owner wire.
+
+Paired QA verifies repeated absence/return cycles, overlapping protection, original
+calendar across realm/zone change, open multi-year suspension, missing versus empty
+coverage, unfinalized history refusal, future-credit purchase, credit carry, stale
+process install and restart/rollout. UI may show a keyed pending state while existing
+entry/build/undo remain available; durable payment retains original operation recovery.
+
+## Guild lifecycle extension of the existing owner
+
+Phase28a extends the SAME 07b lifecycle core/coordinator/DB owner with separate
+guild_freehold_lifecycle and guild_freehold_lifecycle_history relations. Never change
+the account-keyed primary identity or sum personal account grace into guild protection.
+Phase29 consumes this committed guild source through 13/13a's existing typed upkeep
+projection. The producer is the dedicated 28a lifecycle deliverable; 29 owns its upkeep
+consumer and integration proof. No competing lifecycle module, timer, ingress or
+receipt authority. The same schema-version, source-binding, history/finality and
+capability-preservation contracts apply to guild scope.
+
+Any current guild member's authenticated gameplay presence is eligible, independent
+of donor amount, officer rank or tenure. Capture observation time, authenticated
+account/character identity, process/session/lease generation, stable guild binding and
+server-controlled membership incarnation/evidence before queues. Phase28a owns this
+narrow membership-incarnation/fencing extension at the actual mutation hooks. A local
+guildStampSeq or a later roster lookup alone is not historical membership evidence.
+Adding an offline member
+does not fabricate gameplay presence. Membership removal settles the last eligible
+observation at the removal boundary before invalidating that binding; a later roster
+read cannot manufacture past membership. Keep immutable return/protection boundaries
+separate from coalesced periodic latest-presence writes. One admitted character
+observation touches at most its current guild; batch membership-key probes and coalesce
+periodic work once per dirty guild, never full display-roster loads or one head write
+per member. Current policy changes use committed, generation-aware invalidation.
+
+Verified source seams: server/social_db.ts::PgSocialDb.guildMembership is the
+character-keyed lookup; guildMembers uses server/guild_roster_cache.ts::GuildRosterCache
+for display. server/social.ts::SocialTransport.onGuildMembershipChanged publishes
+committed changes to the GameServer guildStampSeq/Sim.setPlayerGuildMembership hook;
+src/sim/guild_bank.ts::stampGuildMembership remains the Sim stamping implementation.
+The new durable membership incarnation composes with those seams; it is not falsely
+described as already shipped. Rank-only changes do not restart grace, and a member
+joining a different guild copies neither prior-guild nor personal grace. Unprovable
+queued eligibility stays unresolved/not-ready with original evidence preserved.
+
+Extend the existing lifecycle planner/coordinator/load/page/advance APIs with a typed
+account-or-guild scope and separate static SQL branches. The account tables remain
+account-keyed. The guild head is keyed by guild_id and history by guild/transition
+generation with indexed bounded time/generation pages. The same
+server/freehold_lifecycle_binding.ts::resolveFreeholdLifecycleBinding resolves the
+guild's accepted durable identity/registry binding, never an observer's account binding.
+installCommittedLifecycleProjection installs only nonregressing, internally consistent
+current-generation scope state. Member ghall exposes authorized derived condition/
+protection facts, never individual observation identities or lifetime history.
+
+Add the guild head/history participants only at the compatible reviewed suffix of
+07a's actual membership/save touch sets: addGuildMemberAtomic's guild-parent lock,
+removeGuildMember's deletion, transferGuildLeader's parent plus member updates,
+deleteGuild's cascades and onGuildMembershipChanged delivery. No blanket head-first
+hierarchy. Retain guild lifecycle references with RESTRICT while hall/checkpoint/
+credit/recovery dependencies remain, and extend the existing disband guard to require
+an explicit safe disposition/materialization before dependency-aware cleanup. This
+adds no automatic house/content loss policy. Deleting an observing character/account
+must not cascade the guild's protection history. Preserve original guild source IDs
+and finalized intervals across dormant load, restart and administrative recovery.
+
+28a produces the exact schema/query/FK/lock/bounds/retention extension in the existing
+07b lifecycle DB contract, with reviewed literal measurements in MEASURE-BOUNDS;
+it does not create another artifact owner. 29 tests current-member activity, offline
+roster additions, removal at the observation boundary, all members absent/returning,
+concurrent alts/realms, long dormant hall, overlapping outage, stale revision/finality,
+disband refusal, observer deletion and bounded periodic load. Database/persistence/
+security review before and after, plus disposable-PG concurrency evidence, are required.
+
+## Literal D9 and original-operation money authority
+
+The game server and Sim remain ignorant of physical distribution. The future economy
+service owns eligibility verification and opaque authorization bound to account,
+purpose/SKU, policy, quote and operation, with issuer/verifier conformance in the
+accepted service artifact. A first-party web checkout session alone is insufficient.
+Client channel labels, Origin, UA, arbitrary JSON, linked Steam/Epic accounts and the
+game-service secret never prove eligibility; do not add a trusted channel field to the
+game server. The client capability map controls presentation, not purchase authority.
+Unknown eligibility refuses NEW spend. Already accepted payments recover under their
+original operation after session/authorization expiry or eligibility change.
+
+Use the service response protocol specified in 15: authenticated bounded decoding,
+complete original operation/fingerprint/target/effect validation and terminal-state
+classification. A malformed/nonterminal reply is neither a grant nor proof of no
+debit. Written signed acceptance is not runtime cryptographic verification. The 07
+developer fixture cannot mint a paid receipt or satisfy online service authorization.
+Keep all three money gates: counsel before enable/store submission, default-off
+FREEHOLDS_ENABLED on both dispatch arms/catalog, and the seven-distribution surface map.
+Published Terms, accepted service catalog/contract and issuer/verifier evidence remain
+release gates; the final legal-team handoff in 44b does not postpone these earlier gates.
+The economy service owns every price and all token math; expectedCostClaudium is only
+the forwarded literal quote fingerprint. Test false client claims, unknown eligibility,
+malformed/ambiguous replies and successful original-operation recovery on both arms.
+
+## Required Codex asset execution
+
+Every step in this file that creates or replaces a GLB, icon, image, texture, reference
+sheet, room/interior or trophy/furnishing art must be executed by Codex, not Claude.
+Use the repository image-to-GLB and image-generation workflows, approved art-brief.md,
+measured model manifests, export/optimization/fingerprint/prewarm and in-game proof.
+The paired QA verifies the asset-generating step used Codex and all final-art evidence.
+If a QA fix creates or replaces an asset, that fix step also runs in Codex, not Claude.
+Final wave acceptance still requires complete shipping art. The final Codex placeholder
+icon/image sweep in 44a verifies and replaces any feature-created remnants; it does
+not excuse an earlier incomplete paid product or relax an earlier final-art gate.
+This packet is documentation only; no shipping asset is generated by this audit.
 
 ### Starter Prompt
 ```
@@ -17,7 +272,7 @@ Hall Fund, member donations with a weekly cap, the contribution log with retenti
 
 Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
 block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase (four slices over the Phase 13, 15, and 28 seams).
+ULTRACODE: not needed for this phase (four slices over the Phase 13/13a, 15, and 28 seams).
 
 Goal: let a guild buy its Meeting Hall from the pooled Hall Fund exactly once, keep it
 up through a ledger the fund pays with materials any member may donate under a weekly
@@ -68,12 +323,9 @@ Spawn one Explore agent to read and summarize:
   tests/server/main_retention_wiring.test.ts, tests/freehold_ledger.test.ts,
   tests/freehold_condition.test.ts, tests/freehold_hall_fund.test.ts,
   tests/provisioner_firewall.test.ts, tests/monolith_budget.test.ts
-The agent returns, and the session records in state.md BEFORE implementing: how the
-pooled purchase settles at the economy service (a Claudium donation is an individual
-spend the service records per member and the game credits to the fund; the purchase
-then redeems fund credit against the service-priced SKU, or the service exposes a pooled
-balance: an O1 contract item; build against the Phase 15 fake-service harness either
-way and never compute a price); the officer-approval shape (the spend route checks the
+The agent returns, and the session records in state.md BEFORE implementing: the locked service-owned guild pooled balance and debit/credit ledger
+contract (the game receives an absolute versioned balance and never redeems local
+credit as authority); the Phase 15 fake-service harness implements that exact draft; the officer-approval shape (the spend route checks the
 session's rank; the store surface shows the row to officers only); the contributions
 table shape (`guild_hall_contributions`: guild id, account id, kind, item id, amount,
 created_at; an index on guild id and created_at; a retention window env key with a
@@ -81,19 +333,25 @@ positive default; the prune primitive) and its export row; the weekly cap as a m
 of one ledger (the state.md rule, TUNING) keyed on the realm week; the extraction
 candidates for every coordinator line.
 
+Database review runs before implementation decisions and again on the finished diff.
+
+The reader must include every contract and deliverable section above this Starter
+Prompt in its returned acceptance table, including sole authority ownership, D9,
+history/finality and required Codex asset execution where applicable.
+
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 Parallel Agent fan-out, four slices, each given ONLY the Explore summary and its own
 files; the coordinator edits the shared pin files last (src/world_api.ts,
 tests/world_api_parity.test.ts, tests/snapshots.test.ts, tests/monolith_budget.test.ts,
 docs/prd/woc/freehold-service-contract.md, the parity goldens):
 - Agent SIM: condition_core.ts takes the decay rate from the tier (2 per realm day for a
-  Guildhall, 1 for a freehold; the pause and grace rules unchanged); ledger.ts pays a
+  Guildhall, 1 for a freehold; the unchanged pause/grace rules evaluated from 07b/13a committed history); ledger.ts pays a
   Guildhall's ledger from the Hall Fund's material slots through the one planner (the
   fund as the carried pool, no vault), officer rank required; hall_fund.ts gains the
   `hall_fund_donate` command (materials from bags through the item_copy_ref tri-state,
-  gold from meta.copper; a Claudium credit only ever arrives as a server grant), the
-  weekly per-member cap keyed on the realm week (settled in STEP 1 as a multiple of one
-  ledger, the state.md rule) with a text-free `donation_capped` refusal appended to
+  gold from meta.copper; an absolute revisioned Claudium balance only ever arrives from verified service outcome), the
+  weekly per-account cap across alts keyed on the realm week (one current weekly Hall Ledger-equivalent per account across alts,
+  with resource/currency allowance and rounding from the signed calibration schedule) with a text-free `donation_capped` refusal appended to
   freeholdDeniedLineKey in src/ui/hud/housing/housing_view.ts (D26), a bounded in-record
   contribution ledger; text-free freeholdGranted and
   freeholdDenied reasons; tests/freehold_hall_fund.test.ts, tests/freehold_ledger.test.ts,
@@ -101,8 +359,9 @@ docs/prd/woc/freehold-service-contract.md, the parity goldens):
 - Agent SERVER-MONEY: the `guildhall_charter_meeting_hall` SKU in charters.ts (no price,
   no copy) and the `hall_fund_donation_claudium` SKU (repeatable) under spend kind
   freehold; grant.ts gains `freeholdGrantGuildhall(ctx, guildKey, skuId, purchaseKey,
-  { dryRun })` (exactly-once through the purchase key on the guild record) and
-  `hallFundGrantClaudium(ctx, guildKey, amount, purchaseKey)`; the spend branch checks
+  { dryRun })` (exactly-once through the durable housing intent/receipt rail) and
+  `hallFundApplyConfirmedBalance(ctx, guildKey, absoluteBalance, serviceRevision, operationId)`
+  (NEW planned grant helper; never increment a game-authoritative currency amount); the spend branch checks
   the session's rank for the purchase, dry-runs before the spend, applies after a
   definitive result, refuses while dark and drops both SKUs from the store filter; a
   `freehold` telemetry source row for the new commands; tests/server/freehold_gates.test.ts
@@ -122,14 +381,15 @@ plus a short summary. Never `mode: "plan"` on teammates.
 
 INVARIANTS THIS PHASE MUST KEEP:
 - The three money gates: (1) counsel sign-off before FREEHOLDS_ENABLED is set in
-  production and before any store submission carrying housing copy (OPEN); (2) the
+  production and before any store submission carrying housing copy (tracked release gate); (2) the
   fail-closed flag defaulting off refuses both SKUs at the spend branch and hides them
   in the store filter, pinned; (3) the per-distribution surface map pinned by tests keeps
   the purchase and donation surfaces off every native, Steam, and Epic build. The
   economy service owns prices and token math: the game forwards expectedCostClaudium as
   a fingerprint and never computes a peg, a burn, a split, or the 3x.
-- Exactly-once: the purchase key on the guild record; a replay grants once; a second
-  purchase refuses; a donation credit is applied once per purchase key.
+- Exactly-once: durable housing receipt/recovery authority; replay and restart grant
+  once, a second entitlement refuses, and a confirmed donation balance revision applies
+  once without trusting a bounded live key array.
 - Server authority: rank from the session stamp; the cap and the week from the realm
   calendar; nothing trusted from the payload.
 - Persistence: additive idempotent DDL, an index for the prune predicate, a retention
@@ -137,9 +397,10 @@ INVARIANTS THIS PHASE MUST KEEP:
 - Determinism: no Rng; the week is ctx.resetDay; no wall clock in src/sim/.
 - Never a Perfecting keystone, gear intermediate, or catalyst in the Guildhall ledger
   (the same schedule table, swept); never destroy: condition 0 still opens the hall.
-- Store policy: no "earn" language; no timed loss; nothing repossessed.
+- Store policy: no "earn" language in purchase benefits; no timed loss; nothing repossessed.
 - i18n: the policy in docs/freeholds/implementation-plan.md; text-free events (D10).
-- Monolith: src/sim/sim.ts, server/game.ts, and src/net/online.ts are at ZERO slack.
+- Monolith: src/sim/sim.ts, server/game.ts, and src/net/online.ts use the current verified
+  tests/monolith_budget.test.ts ceilings.
 - Working numbers (roughly 3x, the weekly cap, the retention window) are state.md
   values; the economy service and Fernando own the finals.
 - The word "phase" appears in no code, comment, commit, or PR text.
@@ -147,6 +408,7 @@ INVARIANTS THIS PHASE MUST KEEP:
 Out of scope (do NOT do in this phase):
 - Hall amenities and boards (Phase 30); guild deeds (Phase 31); Great Hall, Bastion, and
   build projects (Phase 32); any gold rail for the purchase.
+
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/architecture.test.ts
@@ -165,12 +427,13 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts`; `npm run
   i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts`; the pg-armed twin
   after `npm run db:up`; screenshots for the store row and the Guildhall Steward panel.
-- Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
-  privacy-security-review (the spend branch, rank checks, the log), database-performance-reviewer
-  (the contributions table, the prune, the index), plus migration-safety (DDL) and
-  server-hot-path-reviewer (the growing table and the donation path) because the diff
-  touches those surfaces. Prompt each for COVERAGE not filtering; each writes its report
-  to a file. Do not commit until no BLOCKING issues remain.
+- Required reviewers: privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, architecture-reviewer, cross-platform-sync, frontend-seam-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist. Each reports COVERAGE to a file.
+  Apply ALL findings including nits; a fresh reviewer reads every fix. The actual diff
+  may trigger additional specialists; database review runs before decisions and again
+  on the finished diff for database surfaces.
+
+Shared pre-merge bar: run node scripts/gate_select.mjs (or deeper npm run gate);
+ci:changed is additional evidence, never its substitute. Record the exact exit.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -185,16 +448,16 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] tests/server/freehold_gates.test.ts proves on both dispatch arms: a member is
   refused the purchase, an officer's purchase grants once, a replayed key grants once, a
   second purchase refuses, price drift refuses, the flag dark refuses and hides the SKUs.
-- [ ] tests/freehold_hall_fund.test.ts proves the cap per member per realm week by fresh
-  literals, the rollover across resetDay, material and gold donations, a Claudium credit
-  only through the grant, and the Guildhall ledger paid from the fund by an officer and
+- [ ] tests/freehold_hall_fund.test.ts proves the cap per account across alts per realm week by fresh
+  literals, the rollover across resetDay, material and gold donations, an absolute revisioned Claudium balance
+  only through the verified service-result grant, and the Guildhall ledger paid from the fund by an officer and
   refused for a member; tests/freehold_condition.test.ts pins 2 per day for a Guildhall.
 - [ ] tests/server/main_retention_wiring.test.ts registers the prune exactly once after
   listen with the window from config; tests/server/freehold_db.test.ts pins the DDL and
   the prune primitive (fake pool and pg twin); the export row is in.
-- [ ] docs/prd/woc/freehold-service-contract.md carries the two SKUs and the settlement question (O1).
-- [ ] All STEP 3 suites green; the reviewers report no BLOCKING; the ceilings did not
-  rise; state.md records the STEP 1 decisions.
+- [ ] docs/prd/woc/freehold-service-contract.md carries the two SKUs, accepted pooled-balance protocol and signed cap schedule.
+- [ ] All STEP 3 suites green; the reviewers confirm ALL findings, including nits, are resolved and freshly reviewed; the ceilings did not
+  rise; state.md records the verified implementation facts and accepted artifact rows.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 29, notes, deferrals) and
@@ -203,13 +466,13 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+End with: phase status, files touched, validation results, review verdicts, tracked artifact/release
+gates, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-29-qa.md
 
 STOPPING RULES:
-- Stop and ask if the pooled purchase cannot settle without the game computing a price,
-  a burn, or a split (that math belongs to the economy service; record it under O1).
+- A service-contract mismatch fails integration acceptance and keeps production off;
+  complete the concrete signed-service handoff without adding game-side price arithmetic.
 - Stop if the contribution log cannot be bounded and retained (a growing table without
   a retention story is a defect).
 - Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.

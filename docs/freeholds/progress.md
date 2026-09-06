@@ -1,37 +1,57 @@
 # Freeholds and Guildhalls: progress
 
+Implementation has not started. Product settlement and external sign-off are distinct
+from implementation and QA completion. No completed date, passing runtime verdict or
+built feature is recorded by this packet audit.
+
 ## Status
+
+There are 56 bounded work items and 56 paired QA rows. All 112 rows are Not started;
+44 original numeric items retain their IDs and twelve suffixed pairs are inserted into
+the chain. The current next implementation is
+[phase-01-foundation.md](phase-01-foundation.md).
+
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
 | 01 Foundation | Not started | | | |
 | 01 QA | Not started | | | |
 | 02 Furnishing item kind | Not started | | | |
 | 02 QA | Not started | | | |
-| 03 Content: tiers and basics | Not started | | | |
+| 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Not started | | | |
 | 03 QA | Not started | | | |
-| 04 Content: crafted and patterns | Not started | | | |
+| 04 Content: crafted furnishings and quartermaster patterns | Not started | | | |
 | 04 QA | Not started | | | |
 | 05 Instance claim | Not started | | | |
 | 05 QA | Not started | | | |
-| 06 Interiors, gate, Hearth Key | Not started | | | |
+| 06 Interiors, the Eastbrook gate, the Hearth Key | Not started | | | |
 | 06 QA | Not started | | | |
 | 07 Persistence | Not started | | | |
 | 07 QA | Not started | | | |
-| 08 Layout and placement sim | Not started | | | |
+| 07a Transactional mutations and global claim fencing | Not started | | | |
+| 07a QA | Not started | | | |
+| 07b Account lifecycle and protection history | Not started | | | |
+| 07b QA | Not started | | | |
+| 07c Account first-tier arrival eligibility | Not started | | | |
+| 07c QA | Not started | | | |
+| 08 Layout core and placement commands | Not started | | | |
 | 08 QA | Not started | | | |
-| 09 Render furnishings | Not started | | | |
+| 08a Public descriptors and consumer-correct wire state | Not started | | | |
+| 08a QA | Not started | | | |
+| 09 Render: furnishing view, light rig, ghost | Not started | | | |
 | 09 QA | Not started | | | |
 | 10 Furnishing colliders | Not started | | | |
 | 10 QA | Not started | | | |
 | 11 Build mode UI | Not started | | | |
 | 11 QA | Not started | | | |
-| 12 Strongbox and station | Not started | | | |
+| 12 Strongbox and station amenities | Not started | | | |
 | 12 QA | Not started | | | |
-| 13 Condition and ledger core | Not started | | | |
+| 13 Condition and the Steward's Ledger core | Not started | | | |
 | 13 QA | Not started | | | |
+| 13a Authoritative upkeep calendar | Not started | | | |
+| 13a QA | Not started | | | |
 | 14 Distribution surface map | Not started | | | |
 | 14 QA | Not started | | | |
-| 15 Claudium: Charter and Call | Not started | | | |
+| 15 Claudium: the Freehold Charter and the Master Builder's Call | Not started | | | |
 | 15 QA | Not started | | | |
 | 16 Steward panel and store surfaces | Not started | | | |
 | 16 QA | Not started | | | |
@@ -41,658 +61,1023 @@
 | 18 QA | Not started | | | |
 | 19 Art batch | Not started | | | |
 | 19 QA | Not started | | | |
-| 20 Wave A close (MVP PR) | Not started | | | |
+| 20 Wave A close | Not started | | | |
 | 20 QA | Not started | | | |
-| 21 Lodge tier and upgrade | Not started | | | |
+| 21 Lodge tier and the upgrade build project | Not started | | | |
 | 21 QA | Not started | | | |
-| 22 Furnishings across all crafts | Not started | | | |
+| 22 Furnishings across all ten crafts and the R8 pattern channels | Not started | | | |
 | 22 QA | Not started | | | |
-| 23 Legend Stand and trophy families | Not started | | | |
+| 23 Legend Stand and the remaining trophy families | Not started | | | |
 | 23 QA | Not started | | | |
 | 24 Kitchen Garden tableau | Not started | | | |
 | 24 QA | Not started | | | |
 | 25 Build mode v2 | Not started | | | |
 | 25 QA | Not started | | | |
+| 25a Twelve-week prepay and the Fenbridge gate | Not started | | | |
+| 25a QA | Not started | | | |
 | 26 Open-house visiting | Not started | | | |
 | 26 QA | Not started | | | |
 | 27 Wave B close | Not started | | | |
 | 27 QA | Not started | | | |
-| 28 Guild owner kind and Hall Fund | Not started | | | |
+| 28 The guild owner kind, the Meeting Hall, the Hall Fund | Not started | | | |
 | 28 QA | Not started | | | |
+| 28a Guild lifecycle and membership evidence | Not started | | | |
+| 28a QA | Not started | | | |
 | 29 Guildhall purchase and upkeep | Not started | | | |
 | 29 QA | Not started | | | |
 | 30 Hall amenities | Not started | | | |
 | 30 QA | Not started | | | |
-| 31 Guild deeds and first-kill trophies | Not started | | | |
+| 30a Hall boards | Not started | | | |
+| 30a QA | Not started | | | |
+| 31 Guild-level deeds and first-kill trophies | Not started | | | |
 | 31 QA | Not started | | | |
-| 32 Hall and Manor tiers | Not started | | | |
+| 32 Great Hall, Manor, Bastion tiers and build projects | Not started | | | |
 | 32 QA | Not started | | | |
+| 32a Project rewards and direct vault access | Not started | | | |
+| 32a QA | Not started | | | |
 | 33 Wave C close | Not started | | | |
 | 33 QA | Not started | | | |
-| 34 Wards | Not started | | | |
+| 34 Wards: shared neighborhoods and exteriors | Not started | | | |
 | 34 QA | Not started | | | |
 | 35 Ward favor and Endeavors | Not started | | | |
 | 35 QA | Not started | | | |
 | 36 Showcases and guest books | Not started | | | |
 | 36 QA | Not started | | | |
-| 37 Charter service contract | Not started | | | |
+| 37 On-chain Freehold Charter: service contract, ledger table, geo-exclusion | Not started | | | |
 | 37 QA | Not started | | | |
-| 38 Charter mint and trading | Not started | | | |
+| 38 Charter mint surface and marketplace trading (web only) | Not started | | | |
 | 38 QA | Not started | | | |
 | 39 Wave D close | Not started | | | |
 | 39 QA | Not started | | | |
-| 40 Keep and Citadel tiers | Not started | | | |
+| 40 Keep and Citadel tiers, prestige deeds | Not started | | | |
 | 40 QA | Not started | | | |
-| 41 Dye station and layout sharing | Not started | | | |
+| 41 Dye station | Not started | | | |
 | 41 QA | Not started | | | |
+| 41a Layout saves and public sharing | Not started | | | |
+| 41a QA | Not started | | | |
 | 42 Second freehold SKU | Not started | | | |
 | 42 QA | Not started | | | |
-| 43 Carpenter and Mason | Not started | | | |
+| 43 Existing-craft coverage and future expansion handoff | Not started | | | |
 | 43 QA | Not started | | | |
-| 44 Wave E close (final, teardown offer) | Not started | | | |
+| 44 Wave E integration close | Not started | | | |
 | 44 QA | Not started | | | |
+| 44a Final Codex artwork | Not started | | | |
+| 44a QA | Not started | | | |
+| 44b Final legal revisit and handoff | Not started | | | |
+| 44b QA | Not started | | | |
 
 ## Per-phase deliverables and acceptance (the spec each phase file expands)
 
-### Wave A: the Cottage MVP
+These summaries preserve each implementation file's five-or-fewer coherent outputs.
+The linked implementation and QA carry the exact modules, tests, input/UX states and
+runtime acceptance; state.md owns decisions and numbers, and ux-spec owns presentation.
+This index does not add a sixth deliverable or silently substitute a summary for the
+full file. Every implementation must complete its entire scoped acceptance and shared
+gate; every QA applies all findings and has a fresh reviewer verify the fix round.
+
+For each row, record actual commit range, commands/exit codes, executed and skipped
+checks, evidence paths and reviewer verdicts. Unsigned external artifacts retain their
+named release gate. A future measured/calibrated value requires the workbook's source,
+owner and approval evidence before activation, never an inferred TUNING literal.
+
+### Wave A: Cottage MVP
 
 #### 01 Foundation
-Deliverables:
-- `src/world_api/housing.ts`: `IWorldHousing` with the MVP member set (`myFreehold`,
-  `freeholdLayout`, `housingNowMs()`, `freeholdEnter`, `freeholdLeave`, `placeFurnishing`,
-  `moveFurnishing`, `removeFurnishing`, `undoPlacement`, `payLedger`, `freeholdTrophies`,
-  `freeholdVisitors`, `setVisitPolicy`), types-only imports, barrel edits, `COMMAND_NAMES`
-  and `COMMAND_FACETS` rows, stub implementations on `Sim` (thin delegates into the
-  module) and `ClientWorld` (one-line `cmd` sends and null mirrors), parity pin updated.
-- `src/sim/freehold/` skeleton behind `SimContext`: `types.ts`, `state.ts`, `index.ts`,
-  `CLAUDE.md`; `ctx.freeholds` live map primitive plus its `sim_context.test.ts` pins;
-  the `src/sim/CLAUDE.md` system-table row; the extraction that pays for the new
-  `sim.ts` delegates and lowers the ceiling.
-- `server/freehold_config.ts` `freeholdsEnabled(env)` (strict `'1'`, read live), the
-  `freehold.disabled` error code through `npm run new:endpoint` (with its English
-  `apiError.freehold.disabled` leaf and `API_ERROR_KEYS` row), `.env.example` row, and a
-  dispatch-time refusal of every housing command while dark (the `refusedRiftForgeCommand`
-  shape) in a new `server/freehold_wire.ts` with case labels only in `game.ts`.
-- `headless/CLAUDE.md` housing cut paragraph beside the farming cut, and an `ACTIONS`
-  exclusion `it` in `tests/env_protocol.test.ts`.
-- The scaffolded `GET /api/freehold` status stub kept as a registry-only route answering
-  `freehold.disabled` while dark; `src/net/freehold_snapshot_wire.ts` created with the
-  null mirrors and an empty strict-decode allowlist (Phase 08 fills it).
-Acceptance:
-- [ ] `tests/world_api_parity.test.ts`, `tests/command_schema.test.ts`,
-  `tests/command_facets.test.ts`, `tests/sim_context.test.ts`,
-  `tests/monolith_budget.test.ts` (ceiling lowered), `tests/architecture.test.ts` green.
-- [ ] Every housing command refuses at dispatch with `FREEHOLDS_ENABLED` unset, pinned.
-- [ ] `tests/env_protocol.test.ts` pins that `ACTIONS` carries no housing verb.
-- [ ] No behavior yet: `myFreehold` is null on both hosts; the S3 guard passes.
+
+Implementation: [phase-01-foundation.md](phase-01-foundation.md). Paired audit: [phase-01-qa.md](phase-01-qa.md).
+
+Deliverables (at most five):
+
+1. Housing facet, command registry and null mirrors.
+2. SimContext subsystem and extraction pins.
+3. Authenticated scaffold and dark dispatch.
+4. RL exclusion and parity evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-01-qa.md: [phase-02-furnishing-item-kind.md](phase-02-furnishing-item-kind.md).
 
 #### 02 Furnishing item kind
-Deliverables:
-- `FurnishingItemDef extends BaseItemDef { kind: 'furnishing'; furnishing: { footprint,
-  r (required; 0 means walk-through), decorCost, surface: 'floor', plinth?: boolean } ;
-  use?: never; feast?: never }` in
-  `src/sim/types.ts`, `'furnishing'` on `ItemKind`, added to the `OtherItemDef` Exclude
-  list, appended to the `ItemDef` union.
-- The two compile-time records (`KIND_RANK`, `ITEM_KIND_LABEL_KEYS` with the English
-  `itemUi.kind.furnishing` key), `UNSTACKED_KINDS` membership (one per slot), a
-  `furnishing` market browse chip and bag chip decision, the icon fallback arm, and
-  explicit refusal arms pinned in disenchant, salvage, sunder, perfect, equip, and the
-  Exchange eligibility (furnishings are Exchange-eligible per the mount rule, D25,
-  pinned here once and never reopened), plus bank, guild bank, trade, mail, and market
-  storability (tradable, storable). Placement is the `place_furnishing` command (Phase
-  08); a furnishing has no `use` arm.
-- A `src/ui/hud/housing/furnishing_tooltip_view.ts` pure core (footprint, decor cost,
-  surface, provenance line) on the `recipe_pattern_tooltip_view.ts` precedent, wired
-  through the tooltip composer without growing `hud.ts`.
-- Test fixture item only (no shipped ids yet): `tests/furnishing_item_kind.test.ts`
-  sweeps every consumer group with a synthetic def.
-Acceptance:
-- [ ] `tsc` clean with the new kind in both exhaustive records.
-- [ ] `tests/market_filters.test.ts`, `tests/item_name_color.test.ts`,
-  `tests/furnishing_item_kind.test.ts` green; every refusal arm has a negative case.
-- [ ] No shipped item carries the new kind yet (no art obligation triggered).
+
+Implementation: [phase-02-furnishing-item-kind.md](phase-02-furnishing-item-kind.md). Paired audit: [phase-02-qa.md](phase-02-qa.md).
+
+Deliverables (at most five):
+
+1. Narrow furnishing type and complete consumer census.
+2. Kind labels, market filter and All-only ordinary bags.
+3. Tooltip core and decisive English-key fixtures.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-02-qa.md: [phase-03-content-tiers-and-basics.md](phase-03-content-tiers-and-basics.md).
 
 #### 03 Content: tiers, Charter SKU, ledger schedule, vendor basics
-Deliverables:
-- `src/sim/content/freehold/tiers.ts` (`FREEHOLD_TIERS`: `inn_room` and `cottage` with
-  rooms, decor budget, plinths, amenity slots, upkeep flag; deep-frozen; ids are frozen
-  save keys), `charters.ts` (`FREEHOLD_CHARTERS`: `freehold_charter_cottage`, tier only,
-  no price, no copy; `isKnownFreeholdCharterId`), `ledger_schedule.ts` (the seeded weekly
-  material order per line: ore, wood, herb, hide, cloth, fish, produce at tiers 1 and 2
-  with `fine_` twins; stack counts flagged TUNING), merged by `data.ts` where applicable.
-- `furnishings.ts`: about eight vendor-basic furnishings (a bed, a table, two chairs, a
-  rug, a lantern, a chest prop, a bookshelf) with footprint, `r`, decor cost, and a
-  stand-in model key, sold for gold by a new Eastbrook furnisher vendor row.
-- Every content obligation: WebP icons plus `mapping.json` provenance for every new item
-  id, the "Homesteader" deed family opener (first furnishing placed, first Cottage),
-  Reliquary Hearth shelf pages for furnishing items, `npm run wiki:content` plus
-  `guide.*` keys, `world_entity_i18n.ts` rows for the vendor, non-Latin name fills where
-  wordy (M16).
-- `tests/freehold_content.test.ts`: literal pins for tiers, charters, schedule ids, the
-  keystone exclusion sweep, the power-neutral sweep (no stat, buff, or drop field on any
-  furnishing), the deep-frozen and no-price negative pins.
-Acceptance:
-- [ ] `tests/item_icons.test.ts`, `tests/item_art_consistency.test.ts`,
-  `tests/deeds_content.test.ts`, `tests/reliquary_content.test.ts`, `tests/guide.test.ts`,
-  `tests/provisioner_firewall.test.ts` (with a new ledger-schedule arm) green.
-- [ ] `content-obligations-reviewer` reports no BLOCKING.
-- [ ] No furnishing names a Perfecting keystone, gear intermediate, or catalyst.
+
+Implementation: [phase-03-content-tiers-and-basics.md](phase-03-content-tiers-and-basics.md). Paired audit: [phase-03-qa.md](phase-03-qa.md).
+
+Deliverables (at most five):
+
+1. Frozen tiers and price-free Charter allowlist.
+2. Realm-week schedule and numeric-source worksheet.
+3. Eight vendor outputs with all same-change content obligations.
+4. Homesteader opener and complete new Hearth shelf.
+5. Literal source/firewall/economy evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-03-qa.md: [phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md).
 
 #### 04 Content: crafted furnishings and quartermaster patterns
-Deliverables:
-- Ten crafted furnishings, one per craft on the proposal's mapping (weaponcrafting rack,
-  armorcrafting stand or brazier, tailoring rug or banner, leatherworking chair,
-  engineering lamp or clock, alchemy glass lamp, inscription painting or map,
-  jewelcrafting chandelier, cooking feast table prop, enchanting glow light), each a
-  `furnishing_recipes.ts` recipe on an existing craft with tier 1 to 3 materials and
-  produce where the craft is a consumable line; recipes learnable from the existing
-  trainers except the three below.
-- Three patterns (`furnishing_patterns.ts`, `RecipeItemDef` rows `pattern_<output>`) on
-  the Heroic Quartermaster's deterministic row (D13: no luck-gated faucet in the MVP).
-- Art (WebP icons plus provenance) for the ten items and three patterns; deeds and
-  Reliquary rows where the contract requires; wiki regen; name fills.
-- Channel and economy contracts: `tests/apex_pattern_channels.test.ts` referential
-  sweep, `tests/recipe_pattern_items.test.ts` shipped-content sweeps,
-  `tests/recipe_economy.test.ts`, the provisioner firewall arm covering furnishing
-  recipes (produce allowed, keystones never).
-Acceptance:
-- [ ] Every new recipe resolves through `resolvePatternLearn` or a trainer row; every
-  pattern is Marks-purchasable; no pattern takes a Reliquary page.
-- [ ] Content suites green; `content-obligations-reviewer` no BLOCKING.
+
+Implementation: [phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md). Paired audit: [phase-04-qa.md](phase-04-qa.md).
+
+Deliverables (at most five):
+
+1. Ten craft outputs and approved recipes.
+2. Three Marks-only patterns within those outputs.
+3. All icon/name/originality/Hearth/wiki obligations.
+4. Acquisition/channel/economy/firewall evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-04-qa.md: [phase-05-instance-claim.md](phase-05-instance-claim.md).
 
 #### 05 Instance claim
-Deliverables:
-- `src/sim/content/freehold/dungeons.ts`: `freehold_inn_room` (index 15) and
-  `freehold_cottage` (index 16) `DungeonDef` records with empty spawns, placeholder
-  interiors (Phase 06 supplies the layouts), `guideVisible: false`, absent from the
-  Dungeon Finder; `DungeonDef.claimKey?: 'party' | 'owner'` appended.
-- `meta.freeholdOwnerKey` stamped at `addPlayer` from a host option (`account:<id>`
-  online via `joinMeta`, `entity:<pid>` offline), `META_EXCLUDE` row; `freeholdKeyFor`
-  and owner-keyed `enterDungeon` behaviour in `src/sim/freehold/instance.ts` (claim,
-  rehydrate from the live record, descriptor); guests enter under the owner's key.
-- Commands `freehold_enter` (from the gate door or the Hearth Key; tier picks the def)
-  and `freehold_leave` wired through the facet, `server/freehold_wire.ts`,
-  `JAILED_BLOCKED_COMMANDS` (the `HEAVY_SELF_CMDS` rows land in Phase 08 with the `fhold`
-  key); text-free `freeholdDenied` reasons declared in append-only order
-  (`no_freehold`, `locked`, `cooldown`, `visitors_full`, `not_friend`, `dead`, `combat`),
-  each reason's emitting phase named where it is not this one.
-- Tests: slim-world instance suite (claim by owner key across two characters of one
-  owner, party membership ignored, reap after `INSTANCE_EMPTY_TIMEOUT`, relog rebinds),
-  a determinism case, a parity scenario `freehold_claim`.
-Acceptance:
-- [ ] `tests/dungeons.test.ts` unchanged and green; the new suite green; goldens
-  regenerated in their own commit.
-- [ ] `architecture-reviewer` and `cross-platform-sync` no BLOCKING.
+
+Implementation: [phase-05-instance-claim.md](phase-05-instance-claim.md). Paired audit: [phase-05-qa.md](phase-05-qa.md).
+
+Deliverables (at most five):
+
+1. Owner-claim dungeon records and exclusions.
+2. Deterministic host-stamped claim/reap behavior.
+3. Dark dispatch, jailed refusal and account-session sharing.
+4. Safe arrival identity and parity evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-05-qa.md: [phase-06-interiors-gate-and-hearth-key.md](phase-06-interiors-gate-and-hearth-key.md).
 
 #### 06 Interiors, the Eastbrook gate, the Hearth Key
-Deliverables:
-- `INN_ROOM_LAYOUT` and `COTTAGE_LAYOUT` (`DungeonLayout` with `rooms`, `doors`, static
-  `decor` with measured radii, plinth anchors as named decor keys, the hearth anchor),
-  lift functions, the `interior` union members, `STATIC_INTERIOR_COLLIDERS` entries,
-  `groundHeight` arms; render variants (`dawnhold` grammar) and a dressing module under
-  `src/render/freehold/`, built on proximity through the existing gated loop.
-- The Eastbrook Freehold Gate: a `dungeon_door`-style interactable on the quay that
-  calls `freehold_enter` for the owner (tier-routed) with the section 8 "manage on the
-  website" line reserved for later phases; leaving returns to the gate used.
-- The Hearth Key: a `tool` item granted with every freehold record (holding it is the
-  credential; using it consumes nothing), cooldown literal pinned, refused in combat and
-  while dead, a payload-aware jailed check for `use_item` carrying the key beside
-  `freehold_enter` in `JAILED_BLOCKED_COMMANDS`; entity and item names in i18n.
-- Tests: layout derivation (walls, doors, colliders deterministic), the gate and key
-  gates, `tests/renderer_compile_gate.test.ts` for the new interiors.
-Acceptance:
-- [ ] Walking into the gate enters the Inn Room offline and online; the Hearth Key works
-  from any zone and drops you at the gate on leave.
-- [ ] `render-performance-reviewer` no BLOCKING (interiors ride `attachSceneGroupGated`).
+
+Implementation: [phase-06-interiors-gate-and-hearth-key.md](phase-06-interiors-gate-and-hearth-key.md). Paired audit: [phase-06-qa.md](phase-06-qa.md).
+
+Deliverables (at most five):
+
+1. Measured layouts, collision/lift and safe poses.
+2. Explicit gate interaction and owned Hearth Key.
+3. Prepared shared-family interior dressing.
+4. Plant-sheet gate prompt, feedback and content obligations.
+5. Offline/online/input and visual proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-06-qa.md: [phase-07-persistence.md](phase-07-persistence.md).
 
 #### 07 Persistence
-Deliverables:
-- `server/freehold_db.ts`: `FREEHOLD_SCHEMA` (`account_freeholds`: `account_id INT PK
-  REFERENCES accounts(id) ON DELETE CASCADE`, `tier TEXT`, `layout JSONB CHECK object`,
-  `trophies JSONB`, `condition INT`, `condition_stamp_day INT`, `ledger_paid_week INT`,
-  `prepaid_weeks INT`, `last_seen_day INT` (written at join and leave, the away-pause
-  source), `hearth_key_ready_ms BIGINT`, `visit_policy TEXT`, `rev BIGINT`,
-  `updated_at`; keep-forever comment; index on `ledger_paid_week`), applied by
-  `ensureSchema` after
-  `SCHEMA`; `freeholdForAccount`, `upsertFreehold` (rev compare-and-swap), a pg-armed
-  twin suite; `exportAccountData` row.
-- Load at fresh join beside `bankBonusFactsForAccount` into `joinMeta`;
-  `loadFreehold(ctx, ownerKey, raw)` / `serializeFreehold(ctx, ownerKey)` /
-  `evictFreehold` in `src/sim/freehold/state.ts` with `normalizeFreehold` (allowlists on
-  tier, furnishing ids, plinth ids, cell bounds; condition clamp; the day and week
-  stamps clamped to today and this week, `hearth_key_ready_ms` in the host clock base;
-  never destroys).
-- Save path: a per-owner serial writer on the server (autosave cadence, leave, shutdown),
-  the rev refusal surfaced as a dev-channel warning, eviction when the last character of
-  the account leaves. Offline hosts persist nothing (a fresh offline Sim starts with the
-  default Inn Room record; pinned), per D16.
-- `/dev freehold <tier>` under `ALLOW_DEV_COMMANDS=1` (D24): a tier setter in
-  `state.ts` used by the dev command on both the offline and the server dev path,
-  refused without the flag (pinned); Phase 15's grant reuses the setter.
-- Tests: round trip, one-corrupt-dimension-per-arm, pre-feature account loads the Inn
-  Room default, the cross-clock pin, rev conflict refused, delete cascade.
-Acceptance:
-- [ ] `migration-safety`, `database-performance-reviewer`, `privacy-security-review` no
-  BLOCKING; `tests/server/main_retention_wiring.test.ts` unchanged (keep-forever stated).
-- [ ] A house survives server restart and relog online; a fresh offline or headless Sim starts with the default Inn Room record (pinned).
+
+Implementation: [phase-07-persistence.md](phase-07-persistence.md). Paired audit: [phase-07-qa.md](phase-07-qa.md).
+
+Deliverables (at most five):
+
+1. Stable plot/account Hearth identity and bounded schema/query inventory.
+2. Versioned preservation-oriented load and serialization.
+3. Single-flight load and coalesced admitted save.
+4. Lifecycle, recovery, export/delete and observability.
+5. Housing-only developer bridge, ordinary Inn and dev-command proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-07-qa.md: [phase-07a-transactional-mutation-boundary.md](phase-07a-transactional-mutation-boundary.md).
+
+#### 07a Transactional mutations and global claim fencing
+
+Implementation: [phase-07a-transactional-mutation-boundary.md](phase-07a-transactional-mutation-boundary.md). Paired audit: [phase-07a-qa.md](phase-07a-qa.md).
+
+Deliverables (at most five):
+
+1. Global active-claim fencing.
+2. Legacy-touch-set-preserving atomic mutation and account Hearth entry.
+3. Durable operation intent and retained receipt authority.
+4. Bounded original-identity recovery and post-commit acknowledgment.
+5. Real-PG lock/lease/crash/replay evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-07a-qa.md: [phase-07b-account-lifecycle.md](phase-07b-account-lifecycle.md).
+
+#### 07b Account lifecycle and protection history
+
+Implementation: [phase-07b-account-lifecycle.md](phase-07b-account-lifecycle.md). Paired audit: [phase-07b-qa.md](phase-07b-qa.md).
+
+Deliverables (at most five):
+
+1. Account lifecycle head, immutable history and bounded loaders.
+2. Captured-observation pure planner and sole durable writer.
+3. Authenticated admission and periodic/leave/shutdown coordinator.
+4. Accepted source binding and monotonic generation-safe projection.
+5. Lifecycle/rollout/PG proof and exact DB contract.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-07b-qa.md: [phase-07c-arrival-eligibility.md](phase-07c-arrival-eligibility.md).
+
+#### 07c Account first-tier arrival eligibility
+
+Implementation: [phase-07c-arrival-eligibility.md](phase-07c-arrival-eligibility.md). Paired audit: [phase-07c-qa.md](phase-07c-qa.md).
+
+Deliverables (at most five):
+
+1. Normalized account+tier schema and safe bounded loader.
+2. Conflict-safe mark inside accepted owner-entry transaction.
+3. Historical facts and fresh arrival presentation contract.
+4. Private isolated offline/headless mirror integration.
+5. Race/replay/privacy/lifecycle/PG evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-07c-qa.md: [phase-08-layout-and-placement-sim.md](phase-08-layout-and-placement-sim.md).
 
 #### 08 Layout core and placement commands
-Deliverables:
-- `src/sim/freehold/layout_core.ts` (pure leaf, no `sim_context`): room-local cell grid
-  from `AuthoredRoom` bounds (pitch literal pinned), `snapToCell`, `yawStep` (15 degrees,
-  wrapped), `clampToRoom`, footprint overlap by `r`, decor budget accounting, plinth slot
-  rules, `validatePlacement` returning text-free reason ids; `undo` as a bounded stack of
-  inverse operations per owner session.
-- `placement.ts` commands `place_furnishing` (consume exactly one copy from the named
-  slot, `item_copy_ref` tri-state), `move_furnishing`, `remove_furnishing` (return the
-  copy to bags or refuse `bags_full` without removing), `undo_placement`; owner-only
-  gate (a visitor refuses `not_owner`); `not_owner`, `bags_full`, and `item_locked` (the
-  lock-aware item-copy twin) are appended to the `freeholdDenied` enum here; placement
-  never locks on condition (D22); `locked` stays the Phase 05 amenity lockout id.
-- The `freeholdState` descriptor event (pid-scoped: owner key, tier, origin, layout rows
-  `{ id, furnishingId, cell, yaw }`, condition summary), emitted on enter, on every
-  accepted change, and re-sent on resume, plus the `freeholdGranted { kind }` variant
-  declared beside it (Phase 12 emits kind `station`, Phase 13 kind `ledger`); `server/freehold_wire.ts` emitter; strict
-  decode `src/net/freehold_snapshot_wire.ts` into `ClientWorld.freeholdLayout`;
-  `ALL_DELTA_KEYS` row for `fhold`; `tests/freehold_command_chain_online.test.ts`.
-- Tests: every validation arm with a negative case, no refusal path mutates, same seed
-  same layout on both hosts, `tests/freehold_determinism.test.ts`.
-Acceptance:
-- [ ] Place, move, remove, undo work offline and online with the descriptor mirrored.
-- [ ] `architecture-reviewer`, `cross-platform-sync`, `server-hot-path-reviewer` no
-  BLOCKING; `tests/snapshots.test.ts` and `tests/bandwidth.test.ts` green.
+
+Implementation: [phase-08-layout-and-placement-sim.md](phase-08-layout-and-placement-sim.md). Paired audit: [phase-08-qa.md](phase-08-qa.md).
+
+Deliverables (at most five):
+
+1. Measured pure bounded geometry.
+2. Exact-copy place/move/remove plans.
+3. Bounded confirmed-session undo/redo.
+4. Atomic placement commands and authoritative ephemeral build presence.
+5. Geometry/custody/parity evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-08-qa.md: [phase-08a-descriptor-and-wire.md](phase-08a-descriptor-and-wire.md).
+
+#### 08a Public descriptors and consumer-correct wire state
+
+Implementation: [phase-08a-descriptor-and-wire.md](phase-08a-descriptor-and-wire.md). Paired audit: [phase-08a-qa.md](phase-08a-qa.md).
+
+Deliverables (at most five):
+
+1. Public/private housing models.
+2. Per-consumer initial/resume/revision publication.
+3. Strict bounded decode and stale-generation refusal.
+4. Real command/heavy-self/snapshot integration.
+5. Wire-chain/privacy/byte and serialization evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-08a-qa.md: [phase-09-render-furnishings.md](phase-09-render-furnishings.md).
 
 #### 09 Render: furnishing view, light rig, ghost
-Deliverables:
-- `src/render/freehold/furnishings.ts` (`FurnishingVisuals` modelled on
-  `FarmPatchVisuals`: per-viewer `sync()` from `IWorldHousing.freeholdLayout` keyed by a
-  content signature, `attachSceneGroupGated`, program anchors, clones of a loader-cached
-  template per furnishing model key, seated on the interior floor constant plus the
-  authored lift, torn down on leave) and `furnishing_layout_core.ts` in
-  `RENDER_PURE_CORES` (signature diff, seat math, yaw).
-- A stand-in kit (a small procedural set keyed by furnishing family) so every furnishing
-  renders before Phase 19's art, with the model key resolved through one registry the art
-  phase later fills.
-- The interior light rig (hearth plus at most two more point lights at LOW) through
-  `point_light_budget.ts`; the placement ghost visual (`furnishing_ghost_visual.ts`,
-  rotation-aware footprint, valid and blocked states) driven by a renderer setter.
-- Tests: `tests/furnishing_layout_core.test.ts`, the `RENDER_PURE_CORES` registration,
-  `tests/renderer_compile_gate.test.ts` arm, an offline tour with zero `live-program`
-  events.
-Acceptance:
-- [ ] `render-performance-reviewer` and `frontend-seam-reviewer` no BLOCKING.
-- [ ] `npm run perf:tour` through the Cottage shows no compile hitch.
+
+Implementation: [phase-09-render-furnishings.md](phase-09-render-furnishings.md). Paired audit: [phase-09-qa.md](phase-09-qa.md).
+
+Deliverables (at most five):
+
+1. Identity-aware pure visual core and view.
+2. Prepared model registry and generic trophy interface.
+3. Hearth/daylight grade under the global light budget.
+4. Shape-readable tier-invariant ghost.
+5. Safe first-arrival camera/audio/input and visual proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-09-qa.md: [phase-10-furnishing-colliders.md](phase-10-furnishing-colliders.md).
 
 #### 10 Furnishing colliders
-Deliverables:
-- Generalise the runtime collider region registry beyond the rift band (a sibling
-  lookup keyed by instance origin, or a parameterised `setRiftRegion` family renamed to
-  `setRuntimeRegion` with the rift as its first client and no behaviour change), pinned
-  by the existing rift collider suites staying green.
-- `instance.ts` publishes `authoredColliders(rooms, doors, ownerDecor,
-  DUNGEON_WALL_HW)` for the owner's placed furnishings on every claim and every accepted
-  layout change under one collision token per claim (D17), and clears on free; the client publishes the same set from the
-  descriptor through `applyFreeholdStateEvent` (both hosts collide identically).
-- Tests: a placed table blocks movement on both hosts; removal clears; the rift suites
-  unchanged; determinism of the collider set from the descriptor.
-Acceptance:
-- [ ] `architecture-reviewer`, `cross-platform-sync` no BLOCKING; rift collider tests
-  green.
+
+Implementation: [phase-10-furnishing-colliders.md](phase-10-furnishing-colliders.md). Paired audit: [phase-10-qa.md](phase-10-qa.md).
+
+Deliverables (at most five):
+
+1. Runtime collider sibling and rift aliases.
+2. Per-claim server collision identity.
+3. Client identity/generation lifecycle.
+4. Bounded movement/sight/pathing integration.
+5. Two-host/rift/adjacent-claim proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-10-qa.md: [phase-11-build-mode-ui.md](phase-11-build-mode-ui.md).
 
 #### 11 Build mode UI
-Deliverables:
-- `src/ui/hud/housing/` (barrel, `CLAUDE.md`): `build_mode_controller.ts` (a
-  `GroundAimController`-shaped controller parameterised for placement: subject =
-  furnishing, `projectPlacement` = `layout_core.snapToCell`, `castAt` = `placeFurnishing`),
-  `build_mode_view.ts` pure core (mode state, selection, yaw, undo availability),
-  `build_mode_painter.ts` (the strip: rotate left, rotate right, confirm, remove, undo,
-  cancel via the `ActionBarPainter` family), `furnishing_palette_view.ts` +
-  `furnishing_palette_window.ts` (bags family filtered to `kind === 'furnishing'`, docked
-  companion, not a "window" for the mobile aim-release rule).
-- Input: `toggleBuildMode`, `rotateFurnishingLeft`, `rotateFurnishingRight` in
-  `BIND_ACTIONS` with `Input.dispatchEdge` cases and `main.ts` wiring; pad hooks through
-  the existing `GamepadCallbacks` placement members (bumpers yaw, d-pad nudge); touch
-  through `MobileControls` pointer ownership (drag moves the ghost, tap confirms) plus the
-  40x40 confirm/rotate/cancel strip with safe-area insets.
-- i18n: `hudChrome.housing.build.*` English keys; `hud_update_drive` rows for any polled
-  painter; mobile sheet decisions; `scripts/pr_shot_targets.mjs` entries.
-- Tests: view core, controller, keybind defaults, `tests/mobile_window_coverage.test.ts`,
-  `tests/hud_update_drive.test.ts`; screenshots (desktop, compact, tablet).
-Acceptance:
-- [ ] A furnishing can be placed, rotated, nudged, removed, and undone with mouse, pad,
-  and touch; the ghost shows blocked cells; nothing is predicted client-side.
-- [ ] `frontend-seam-reviewer` no BLOCKING; screenshots committed.
+
+Implementation: [phase-11-build-mode-ui.md](phase-11-build-mode-ui.md). Paired audit: [phase-11-qa.md](phase-11-qa.md).
+
+Deliverables (at most five):
+
+1. Build session and detached bounded camera.
+2. Companion palette, placed-object selection and budget meters.
+3. Shared pointer/touch/pad arbitration and action strip.
+4. Shared theme, focus and accessibility.
+5. Real-HUD capture helper and command/input evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-11-qa.md: [phase-12-strongbox-and-station.md](phase-12-strongbox-and-station.md).
 
 #### 12 Strongbox and station amenities
-Deliverables:
-- `amenities.ts`: the Strongbox interactable (a `kind: 'object'` entity spawned on claim
-  at the layout's strongbox anchor, visible to every viewer in the claim) satisfying
-  `nearBanker` for the owner only (a `freeholdStrongboxSatisfies` arm beside the banker scan, pinned so a visitor is
-  refused); the station amenity slot (`build_station` command choosing one of the six
-  `StationType`s, a `StationDef`-shaped anchor composed into the crafting gate's station
-  list and `inRangeStationTypes` for the owner; `resolveTrain` untouched; the choice
-  persists as a `station` field inside the layout JSONB with a normalize allowlist arm in
-  `state.ts`, so `migration-safety` reviews this phase); the D18 vault craft gate arm;
-  `freeholdGranted { kind: 'station' }` on build.
-- The amenity lock rule: below condition 30 both refuse with `locked` (the Steward
-  explains in Phase 16).
-- Facet: `buildStation`, `myAmenities`; wire and decode; content: the station props on
-  the Cottage decor anchors.
-- Tests: bank ops at the Strongbox for the owner, refused for a visitor and below 30;
-  crafting at the home station with bags-then-vault; training refused at home;
-  `tests/professions_crafting_hub.test.ts` unchanged.
-Acceptance:
-- [ ] `architecture-reviewer`, `cross-platform-sync` no BLOCKING.
+
+Implementation: [phase-12-strongbox-and-station.md](phase-12-strongbox-and-station.md). Paired audit: [phase-12-qa.md](phase-12-qa.md).
+
+Deliverables (at most five):
+
+1. Personal-bank-only built-in Strongbox.
+2. Station slot and craft projection.
+3. Explicit authorized personal-vault crafting.
+4. Shared interaction and wire lifecycle.
+5. Owner/visitor/proximity/condition boundary proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-12-qa.md: [phase-13-condition-and-ledger-core.md](phase-13-condition-and-ledger-core.md).
 
 #### 13 Condition and the Steward's Ledger core
-Deliverables:
-- `condition_core.ts` (pure): `conditionAt(conditionStampDay, lastSeenDay, resetDay)`, the 7-day away pause, the
-  3 repair-free days on return, lockout at 30, never below 0, never destroys.
-- `ledger_core.ts` (pure): `ledgerWeekOf(resetDay)` on the realm weekly reset, the seeded
-  weekly line order from `ledger_schedule.ts` (deterministic hash, no `Rng`), `planLedger`
-  legs via `planReagentSourceDraw` per line with explicit `gradeIds` for produce, base
-  before `fine_`, `null` on shortfall; prepay accounting (4 weeks in wave A); "repairing
-  from 93 costs the same as from 60".
-- `ledger.ts` `pay_ledger` command (bags then vault, one batch, lock-aware then raw
-  `item_locked` twin, Phase 08's id), `freeholdGranted { kind: 'ledger', weeks }` and
-  the `short` `freeholdDenied` reason (the only one this phase appends; `not_owner` and
-  `item_locked` are Phase 08's, `locked` is the Phase 05 amenity id the ledger never
-  emits); the stamps
-  are `conditionStampDay`, `ledgerPaidWeek`, `lastSeenDay` (the Phase 07 columns); the
-  calendar feed supplies `resetDay` on every host (settle the offline and headless feed
-  in STEP 1); ledger state on the record and in the `fhold` key.
-- Tests: `tests/freehold_condition.test.ts`, `tests/freehold_ledger.test.ts` (rollover
-  across `resetDay`, pause and grace, the keystone exclusion sweep of every possible
-  schedule week, one planner per file), determinism.
-Acceptance:
-- [ ] `architecture-reviewer`, `cross-platform-sync` no BLOCKING;
-  `tests/provisioner_firewall.test.ts` green with the ledger arm.
+
+Implementation: [phase-13-condition-and-ledger-core.md](phase-13-condition-and-ledger-core.md). Paired audit: [phase-13-qa.md](phase-13-qa.md).
+
+Deliverables (at most five):
+
+1. Absence/grace/outage-aware condition.
+2. Published realm-week schedule and source planner.
+3. Atomic material payment and immutable prepay.
+4. Correlated calendar/wire/persistence state.
+5. Boundary/restart/PG evidence and the future upkeep-calendar DB contract.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-13-qa.md: [phase-13a-authoritative-upkeep-calendar.md](phase-13a-authoritative-upkeep-calendar.md).
+
+#### 13a Authoritative upkeep calendar
+
+Implementation: [phase-13a-authoritative-upkeep-calendar.md](phase-13a-authoritative-upkeep-calendar.md). Paired audit: [phase-13a-qa.md](phase-13a-qa.md).
+
+Deliverables (at most five):
+
+1. Shared durable calendar history and finalized bounded projection.
+2. Private pre-body and DB-admitted authority ingress.
+3. Monotonic process-generation publication and exact ACK.
+4. Legacy binding/lifecycle/rollout preservation.
+5. Integrated PG/security/performance acceptance artifact.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-13a-qa.md: [phase-14-distribution-surface-map.md](phase-14-distribution-surface-map.md).
 
 #### 14 Distribution surface map
-Deliverables:
-- `src/game/distribution_surfaces.ts` (pure): `resolveDistributionSurfaces({ nativeApp,
-  desktopApp, mobileCapabilities, desktopProbes })` returning `{ wallet, exchange,
-  claudiumStore, freeholdPurchase, freeholdManageOnWebsiteLine, deedSurfaces }`, folding
-  the three existing answers (`resolveWalletCapability`, `wocMarketAttachAllowed`, the
-  `!NATIVE_APP` Claudium attach) into one module the existing gates call (no behaviour
-  change for them, pinned by their suites).
-- `HudFeatures.freeholdPurchaseEnabled` and `freeholdManageOnWebsite` rows injected from
-  `main.ts`; a seven-row matrix test (web, website desktop, Steam, Epic, App Store,
-  Google Play, Seeker dApp Store) through the real Electron config stamps; source pins
-  that no wallet, $WOC, on-chain deed (mint, trade, holder), or marketplace string ships in a housing path reachable
-  by a native or Steam or Epic build; the "earn" scan over `hudChrome.housing.*` and the
-  token-string pins live in a new `tests/freehold_store_gates.test.ts` (there is no
-  `copy:scan` script; the pre-push copy scan covers dashes and emojis only).
-- Resolve O4 (the Seeker row) from the real code and record the verdict in `state.md`.
-Acceptance:
-- [ ] `tests/distribution_surfaces.test.ts`, `tests/freehold_store_gates.test.ts`,
-  `tests/wallet_connection_view.test.ts`,
-  `tests/woc_market_wiring.test.ts`, `tests/client_shell.test.ts` green.
-- [ ] `frontend-seam-reviewer`, `privacy-security-review` no BLOCKING.
+
+Implementation: [phase-14-distribution-surface-map.md](phase-14-distribution-surface-map.md). Paired audit: [phase-14-qa.md](phase-14-qa.md).
+
+Deliverables (at most five):
+
+1. Independent distribution capabilities.
+2. Complete composition/source boundaries.
+3. Seven distributions and unknown fail-closed proof.
+4. Approved keyed language and handoff artifacts.
+5. Accessibility and regression evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-14-qa.md: [phase-15-claudium-charter-and-call.md](phase-15-claudium-charter-and-call.md).
 
 #### 15 Claudium: the Freehold Charter and the Master Builder's Call
-Deliverables:
-- Spend kind `freehold` in `parseSpendKind`, both `claudium_proxy.ts` unions, and the
-  store filter with `isKnownFreeholdCharterId`; the `kind === 'freehold'` branch in
-  `handleClaudiumApi` with a `freeholdGrant` runtime hook: for the Charter, a
-  once-per-account service grant mirrored into `account_freeholds` (tier `cottage`) by
-  `src/sim/freehold/grant.ts` `freeholdGrantCharter(ctx, ownerKey, charterId,
-  purchaseKey, { dryRun })` and healed by the store-open reconcile; for the Master
-  Builder's Call (`freehold_master_builders_call`, repeatable), a repair-to-full grant
-  applied through the sim after a definitive spend with the purchase key stored in the
-  record for exactly-once.
-- Flag gating (`freeholdsEnabled` refuses the branch and drops the SKUs from the store
-  filter), a `freehold` source in `economy_telemetry.ts`, a
-  `docs/prd/woc/freehold-service-contract.md` (a durable PRD-side artifact, never torn
-  down with the packet) stating the two SKUs, the kind, the fingerprint rule, and the settlement policy line for
-  the economy service (O1), a fake-service test harness.
-- Tests: `tests/server/freehold_gates.test.ts` (both dispatch arms identical, unknown
-  SKU refused, price drift refused, replay grants once, flag dark refuses), the sim grant
-  suite through `sim.ctx`.
-Acceptance:
-- [ ] `privacy-security-review`, `migration-safety`, `database-performance-reviewer` no
-  BLOCKING; `tests/server/claudium.test.ts` and `tests/server/storage_gates.test.ts`
-  unchanged and green.
+
+Implementation: [phase-15-claudium-charter-and-call.md](phase-15-claudium-charter-and-call.md). Paired audit: [phase-15-qa.md](phase-15-qa.md).
+
+Deliverables (at most five):
+
+1. Extend the shared durable operation boundary.
+2. Confirmed Charter and Call effects.
+3. Service spend and original-identity reconciliation.
+4. Accepted opaque authorization/catalog/growth contract.
+5. Service ambiguity/crash/race proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-15-qa.md: [phase-16-steward-panel-and-store-surfaces.md](phase-16-steward-panel-and-store-surfaces.md).
 
 #### 16 Steward panel and store surfaces
-Deliverables:
-- `steward_panel_view.ts` (pure, `PlantSheetWindow` family: hearth-flame condition
-  meter, next ledger due via `housingNowMs()`, have/need rows across bags and vault,
-  affordability, prepay weeks, the lockout explanation) and `steward_panel_window.ts`
-  (buttons: pay from bags, pay from vault, prepay, Master Builder's Call; send-once per
-  activation; re-arm on `freeholdDenied`, close on `freeholdGranted`), opened by
-  proximity to the hearth anchor read from the layout data (no entity, the
-  `farm_bed_interact` idiom); `hudChrome.housing.steward.*` keys; numbers through
-  `formatNumber` and `formatDateTime`.
-- Store surfaces per Phase 14: the Freehold Charter row in the WOC Store window (web and
-  website desktop only; `charter_card_view.ts` family), the Master Builder's Call button
-  present only where `freeholdPurchaseEnabled`, the neutral "manage on the website" line
-  where `freeholdManageOnWebsite`, no purchase surface elsewhere; mobile sheet rules;
-  screenshots.
-- Tests: view core, window send-once, the surface matrix through the HUD features, the
-  a11y rows; `tests/woc_store_window_contract.test.ts` extended.
-Acceptance:
-- [ ] `frontend-seam-reviewer` no BLOCKING; every store build shows exactly what section
-  8 allows, pinned.
+
+Implementation: [phase-16-steward-panel-and-store-surfaces.md](phase-16-steward-panel-and-store-surfaces.md). Paired audit: [phase-16-qa.md](phase-16-qa.md).
+
+Deliverables (at most five):
+
+1. Authoritative source-specific Steward view.
+2. Focused correlated decision window.
+3. Complete approved Charter/Call submodels.
+4. Shared design and mobile behavior.
+5. Exact Steward/store screenshots and command proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-16-qa.md: [phase-17-trophies.md](phase-17-trophies.md).
 
 #### 17 Trophies
-Deliverables:
-- `src/sim/content/freehold/trophies.ts` (`TROPHY_DEFS`: trophy id, source kind and id,
-  prop model key, finish; the twelve ready families reduced to the MVP set: boss busts,
-  `slain:*` mounted heads, mount paddock markers, armor-set stands, curator plaques,
-  farming and legendmaker plaques where already earned), `trophy_eligibility.ts` (pure
-  mapping from `deedsEarned`, `illuminatedPages`, marks, owned mounts, the `perfected`
-  stamp), `trophies.ts` `syncTrophyUnlocks(ctx, meta)` after the join retro block and on
-  first entry, `retro: true` events, plinth placement through the layout core (plinth
-  slots cost no budget; the Inn Room's three plinths).
-- Provenance tooltip (deed name and day, page, mark, maker) as a
-  `trophy_tooltip_view.ts` core; a Trophies tab in the palette; stand-in props.
-- Tests: eligibility table pins, retro grant idempotent and draws no rng, a visitor sees
-  the owner's trophies, `tests/deeds_content.test.ts` re-pinned for the Homesteader rows.
-Acceptance:
-- [ ] `architecture-reviewer`, `content-obligations-reviewer`, `frontend-seam-reviewer`
-  no BLOCKING; trophies are never items and never tradable, pinned.
+
+Implementation: [phase-17-trophies.md](phase-17-trophies.md). Paired audit: [phase-17-qa.md](phase-17-qa.md).
+
+Deliverables (at most five):
+
+1. Source-complete trophy catalog.
+2. Account-wide live/retro eligibility and truthful provenance.
+3. Record-only plinth and public projection.
+4. Collection/tooltip selection and focus UX.
+5. Account/source/PG/screenshot evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-17-qa.md: [phase-18-visiting.md](phase-18-visiting.md).
 
 #### 18 Visiting
-Deliverables:
-- `visiting.ts`: the `friends` policy (default) and `private`; `setVisitPolicy` command;
-  `freehold_enter` for a visitor resolves the owner by name through the gate (friend
-  check server-stamped through the social service, offline no-op), cap 8 from the live
-  `enteredBy` roster, visitors are read-only (every placement, pay, and amenity command
-  refuses `not_owner`), the who-is-home line in `freeholdVisitors`.
-- Server: the friend predicate stamped at dispatch (never trusted from the client),
-  `HEAVY_SELF_EVENTS` for visitor arrivals, no persisted visitor log (D8).
-- UI: visit prompt on the gate (enter own plot or a friend's by name), the visitor cap
-  refusal toast, `hudChrome.housing.visit.*` keys.
-- Tests: policy arms, cap, read-only enforcement per command, offline no-op pin, the
-  online two-session test.
-Acceptance:
-- [ ] `privacy-security-review`, `cross-platform-sync`, `server-hot-path-reviewer` no
-  BLOCKING.
+
+Implementation: [phase-18-visiting.md](phase-18-visiting.md). Paired audit: [phase-18-qa.md](phase-18-qa.md).
+
+Deliverables (at most five):
+
+1. Admission, revocation and explicit End visit.
+2. Bounded offline-owner lookup and global authority.
+3. Policy/operation/wire lifecycle.
+4. Find home/Enter and guest read-only experience.
+5. Real two-client/PG/privacy/input proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-18-qa.md: [phase-19-art-batch.md](phase-19-art-batch.md).
 
 #### 19 Art batch
-Deliverables (batch-heavy: run with `ultracode`):
-- GLB models through the `image-to-glb` skill for every wave A furnishing (about
-  eighteen), the MVP trophy props, and the Cottage and Inn Room dressing; registered in
-  the furnishing model registry, replacing stand-ins; fingerprint pins; prewarm homes.
-- `npm run asset:budget`, `npm run perf:tour`, and the LOW-preset phone check inside the
-  Cottage (mobile screenshot rig), with the numbers recorded in `progress.md`.
-Acceptance:
-- [ ] `render-performance-reviewer` no BLOCKING; asset budget and fingerprint suites
-  green; no stand-in remains for a shipped id.
+
+Implementation: [phase-19-art-batch.md](phase-19-art-batch.md). Paired audit: [phase-19-qa.md](phase-19-qa.md).
+
+Deliverables (at most five):
+
+1. Final vendor asset family.
+2. Final crafted asset family.
+3. Source-complete trophy asset family.
+4. Final Inn/Cottage dressing.
+5. Registry/prewarm/performance and visual evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-19-qa.md: [phase-20-wave-a-close.md](phase-20-wave-a-close.md).
 
 #### 20 Wave A close
-Deliverables:
-- The whole-feature matrix (`qa-checklist.md`) over the wave A diff with results in
-  `progress.md`; the guide and wiki pass; before/after screenshots (desktop and mobile)
-  through `pr-screenshots`; `docs/prd/woc/freehold-service-contract.md` handed to the
-  economy service (O1); the counsel checklist (O2) attached to the PR body as OPEN.
-- The MVP PR off the base branch following `.github/PULL_REQUEST_TEMPLATE.md` with
-  `FREEHOLDS_ENABLED` defaulting off, opened only after Fernando's push go; CI watched
-  to green. No merge.
-Acceptance:
-- [ ] Matrix all green; `qa-checklist` PASS; PR open and CI green; `state.md` records
-  the wave B branching choice.
 
-### Wave B: the Lodge tier and the rest of the first wave
+Implementation: [phase-20-wave-a-close.md](phase-20-wave-a-close.md). Paired audit: [phase-20-qa.md](phase-20-qa.md).
+
+Deliverables (at most five):
+
+1. Whole Wave A readiness matrix including all five suffixes.
+2. Exact screenshot and composed-input matrix.
+3. Signed handoffs and measured calibration report.
+4. Durable budget review and authorized release preparation.
+5. Fresh coverage/fix review and recorded handoff.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-20-qa.md: [phase-21-lodge-tier-and-upgrade.md](phase-21-lodge-tier-and-upgrade.md).
+
+### Wave B: Lodge, furnishings and visiting
 
 #### 21 Lodge tier and the upgrade build project
-Deliverables: the `lodge` tier record (2 rooms, budget 120, 8 plinths, 2 amenity slots,
-`LODGE_LAYOUT` and interior); `upgrade_projects.ts` (a Claudium fee SKU
-`freehold_upgrade_lodge` plus a materials bill of tier 3 and 4 fine materials and tier 4
-produce, contributed over time through a `contribute_upgrade` command with a progress
-record, completing on the last contribution; layout carry-over keeps every placed
-furnishing that still fits and returns the rest to bags); the second amenity slot.
-Acceptance: keystone exclusion sweep over the bill; upgrade exactly-once; the Cottage
-layout survives; reviewers no BLOCKING.
+
+Implementation: [phase-21-lodge-tier-and-upgrade.md](phase-21-lodge-tier-and-upgrade.md). Paired audit: [phase-21-qa.md](phase-21-qa.md).
+
+Deliverables (at most five):
+
+1. Lodge tier/layout/final art.
+2. Approved bill and service fee contract.
+3. Atomic upgrade and exact-copy carry-over.
+4. Durable receipts and public progress.
+5. Steward preview/custody/parity proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-21-qa.md: [phase-22-furnishings-all-crafts.md](phase-22-furnishings-all-crafts.md).
 
 #### 22 Furnishings across all ten crafts and the R8 pattern channels
-Deliverables (batch-heavy, `ultracode`): about twenty more furnishings (two per craft
-plus Farming produce props and garden markers), rare patterns on the three R8 channels
-(raid tail groups, rift clear draws, the Heroic Quartermaster) with the D13 valve, art
-and every content obligation, the market chip proven at volume.
-Acceptance: channel and economy suites green; `content-obligations-reviewer` no BLOCKING.
+
+Implementation: [phase-22-furnishings-all-crafts.md](phase-22-furnishings-all-crafts.md). Paired audit: [phase-22-qa.md](phase-22-qa.md).
+
+Deliverables (at most five):
+
+1. Exactly twenty further outputs including produce decoration.
+2. Named raid or rift source plus Marks per rare pattern.
+3. Final art and all content obligations.
+4. Complete catalog/market/performance evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-22-qa.md: [phase-23-legend-stand-and-trophy-families.md](phase-23-legend-stand-and-trophy-families.md).
 
 #### 23 Legend Stand and the remaining trophy families
-Deliverables: the Legend Stand (a named Perfected legendary with the player's name and
-the Maker's Bond `craftedBy` on the plaque; the item stays in the owner's possession and
-the stand reads the instance), the Harvestmaster golden sheaf, the four regional
-first-harvest markers, the grandmaster workshop banners, finishes (bronze, silver,
-gilded) by normal, heroic, and rift S-rank, the remaining ready families, the in-world
-cosmetic wear below condition 30 (cold hearth light, dull trophy finishes, D22); art.
-Acceptance: eligibility pins for every family; no trophy is an item; reviewers no
-BLOCKING.
+
+Implementation: [phase-23-legend-stand-and-trophy-families.md](phase-23-legend-stand-and-trophy-families.md). Paired audit: [phase-23-qa.md](phase-23-qa.md).
+
+Deliverables (at most five):
+
+1. Bespoke forms replacing generic Wave A trophies.
+2. Legend Stand and actual-item displays.
+3. Mount/title/farming/profession forms.
+4. Truthful source/day/difficulty and final finishes.
+5. Account sync/custody/visual evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-23-qa.md: [phase-24-kitchen-garden-tableau.md](phase-24-kitchen-garden-tableau.md).
 
 #### 24 Kitchen Garden tableau
-Deliverables: `garden_view.ts` (projection over the owner's real `myFarmPlots` through
-`farmGrowthStage` and `status`; zero beds, pinned against `FARM_PATCHES` and the calendar
-model), the Harvest Journal board prop, the farmer NPC as the Steward's flavor (no
-vendor, no service), the render tableau in the Cottage garden anchor.
-Acceptance: `tests/professions_farming.test.ts` and `tests/professions_zone_rollout.test.ts`
-unchanged; reviewers no BLOCKING.
+
+Implementation: [phase-24-kitchen-garden-tableau.md](phase-24-kitchen-garden-tableau.md). Paired audit: [phase-24-qa.md](phase-24-qa.md).
+
+Deliverables (at most five):
+
+1. Bounded shared account-owner farm source and freshness.
+2. Safe public owner-garden projection.
+3. Current-character Harvest Journal and flavor NPC.
+4. Final measured tableau and props.
+5. Zero-bed/source/privacy/fairness/input proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-24-qa.md: [phase-25-build-mode-v2.md](phase-25-build-mode-v2.md).
 
 #### 25 Build mode v2
-Deliverables: wall and table-top surface snapping (`surface: 'wall' | 'table'` on
-furnishing defs, the layout core's surface rules, parenting), redo, the capacity meter,
-advanced mode (free rotation), twelve-week prepay, the Fenbridge Freehold Gate.
-Acceptance: every new validation arm negative-tested; both hosts regenerate identically;
-reviewers no BLOCKING.
+
+Implementation: [phase-25-build-mode-v2.md](phase-25-build-mode-v2.md). Paired audit: [phase-25-qa.md](phase-25-qa.md).
+
+Deliverables (at most five):
+
+1. Typed floor/wall/table/fixed-ceiling support.
+2. Atomic parent/child transforms and compatible storage.
+3. Free planar/yaw plus retained snapped mode.
+4. Extend session history, ghost and surface capacity.
+5. Validator/persistence/collision/input proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-25-qa.md: [phase-25a-prepay-and-fenbridge-gate.md](phase-25a-prepay-and-fenbridge-gate.md).
+
+#### 25a Twelve-week prepay and the Fenbridge gate
+
+Implementation: [phase-25a-prepay-and-fenbridge-gate.md](phase-25a-prepay-and-fenbridge-gate.md). Paired audit: [phase-25a-qa.md](phase-25a-qa.md).
+
+Deliverables (at most five):
+
+1. Twelve-week immutable material prepay.
+2. Steward batch/source and atomic receipt evidence.
+3. Measured Fenbridge gate and return routing.
+4. Final gate art/content/input proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-25a-qa.md: [phase-26-open-house-visiting.md](phase-26-open-house-visiting.md).
 
 #### 26 Open-house visiting
-Deliverables: the `guild` and `public` policies, caps by tier (8 to 24), the door knock
-and "who is home" line, the visit prompt listing open houses of friends and guildmates,
-rate limits on public entry.
-Acceptance: `privacy-security-review` and `server-hot-path-reviewer` no BLOCKING.
+
+Implementation: [phase-26-open-house-visiting.md](phase-26-open-house-visiting.md). Paired audit: [phase-26-qa.md](phase-26-qa.md).
+
+Deliverables (at most five):
+
+1. Guild/public policies and admission caps.
+2. Bounded current-permission on-open list.
+3. Offline-owner authoritative visit lifecycle.
+4. Knock limits, End visit and revocation.
+5. Shared visitor/Steward and multi-client proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-26-qa.md: [phase-27-wave-b-close.md](phase-27-wave-b-close.md).
 
 #### 27 Wave B close
-Deliverables: the matrix, screenshots, the wave B PR (or stacked branch per `state.md`).
+
+Implementation: [phase-27-wave-b-close.md](phase-27-wave-b-close.md). Paired audit: [phase-27-qa.md](phase-27-qa.md).
+
+Deliverables (at most five):
+
+1. Whole Wave B matrix including 25a.
+2. Required screenshots.
+3. Wiki and signed-artifact readiness.
+4. Reviewed fixes and fresh verification.
+5. Reviewable release package with separately authorized publication.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-27-qa.md: [phase-28-guild-owner-kind-and-hall-fund.md](phase-28-guild-owner-kind-and-hall-fund.md).
 
 ### Wave C: Guildhalls
 
 #### 28 The guild owner kind, the Meeting Hall, the Hall Fund
-Deliverables: owner kind `guild` on the same record type (`guildhall:guild:<id>` key,
-`claimKey: 'owner'` resolving the guild id from the session-only `guildMembership`
-stamp), the `meeting_hall` tier and layout, rank permissions (leader and officer edit,
-members view, the `GUILD_BANK_EDIT_RANKS` family), the Hall Fund escrow (materials plus
-a Claudium balance, a member-readable ledger) persisted beside `guild_banks` with the
-escrow-delta merge idiom.
-Acceptance: `migration-safety`, `privacy-security-review`, `architecture-reviewer` no
-BLOCKING.
+
+Implementation: [phase-28-guild-owner-kind-and-hall-fund.md](phase-28-guild-owner-kind-and-hall-fund.md). Paired audit: [phase-28-qa.md](phase-28-qa.md).
+
+Deliverables (at most five):
+
+1. Stable guild plot and claim identity.
+2. Rank and assigned member-plinth permissions.
+3. Meeting Hall layout and final art.
+4. Service-currency mirror and material/gold Hall Fund.
+5. Atomic bounded hydration/persistence/parity proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-28-qa.md: [phase-28a-guild-lifecycle-and-membership.md](phase-28a-guild-lifecycle-and-membership.md).
+
+#### 28a Guild lifecycle and membership evidence
+
+Implementation: [phase-28a-guild-lifecycle-and-membership.md](phase-28a-guild-lifecycle-and-membership.md). Paired audit: [phase-28a-qa.md](phase-28a-qa.md).
+
+Deliverables (at most five):
+
+1. Guild-keyed lifecycle head and immutable protection history.
+2. Committed membership-incarnation and revocation evidence.
+3. Bounded admitted observations and monotonic installation.
+4. Original guild binding, shared calendar and safe disband.
+5. Real-Postgres authority, locks, retention and load proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-28a-qa.md: [phase-29-guildhall-purchase-and-upkeep.md](phase-29-guildhall-purchase-and-upkeep.md).
 
 #### 29 Guildhall purchase and upkeep
-Deliverables: pooled Claudium purchase (roughly 3x, service-priced) from the Hall Fund
-with officer approval, 2x decay, ledger paid from the Hall Fund, member donations
-(materials, gold, Claudium) with a weekly per-member cap and a contribution log with
-retention.
-Acceptance: exactly-once purchase; retention registered; reviewers no BLOCKING.
+
+Implementation: [phase-29-guildhall-purchase-and-upkeep.md](phase-29-guildhall-purchase-and-upkeep.md). Paired audit: [phase-29-qa.md](phase-29-qa.md).
+
+Deliverables (at most five):
+
+1. Service-owned pooled purchase and recovery.
+2. Atomic capped contributions across alts.
+3. Guild condition and immutable Hall Ledger.
+4. Indexed donor audit/export/delete/retention.
+5. Member/officer authority and Steward proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-29-qa.md: [phase-30-hall-amenities.md](phase-30-hall-amenities.md).
 
 #### 30 Hall amenities
-Deliverables: the guild bank chest (guild bank access at the hall), the feast hall long
-table (the shipped feast object; Well Fed is the only buff), hall-shared stations (a new
-predicate over members present in the hall, never the private party predicate), the
-muster board, the calendar board, the pledge-board mirror, the war table (read-only
-mirrors of existing guild data).
-Acceptance: `architecture-reviewer`, `frontend-seam-reviewer` no BLOCKING.
+
+Implementation: [phase-30-hall-amenities.md](phase-30-hall-amenities.md). Paired audit: [phase-30-qa.md](phase-30-qa.md).
+
+Deliverables (at most five):
+
+1. Guild-bank-only chest.
+2. Existing feast with unchanged Well Fed.
+3. Members craft from their own authorized vault.
+4. Final amenity art and service-boundary proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-30-qa.md: [phase-30a-hall-boards.md](phase-30a-hall-boards.md).
+
+#### 30a Hall boards
+
+Implementation: [phase-30a-hall-boards.md](phase-30a-hall-boards.md). Paired audit: [phase-30a-qa.md](phase-30a-qa.md).
+
+Deliverables (at most five):
+
+1. Muster roster board.
+2. Guild event calendar board.
+3. Member-readable pledge board.
+4. Authorized lockout and recorded-first-kill war table.
+5. Final board art/privacy/input evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-30a-qa.md: [phase-31-guild-deeds-and-first-kill-trophies.md](phase-31-guild-deeds-and-first-kill-trophies.md).
 
 #### 31 Guild-level deeds and first-kill trophies
-Deliverables: a guild-level deed record (new `guild_deeds` table and sim state; today
-every deed is per character), first-kill banners and raid statues from the guild's
-first clears, the hall trophy plinths.
-Acceptance: `migration-safety`, `content-obligations-reviewer` no BLOCKING.
+
+Implementation: [phase-31-guild-deeds-and-first-kill-trophies.md](phase-31-guild-deeds-and-first-kill-trophies.md). Paired audit: [phase-31-qa.md](phase-31-qa.md).
+
+Deliverables (at most five):
+
+1. Guild-at-clear participant observation.
+2. Append-only deed/source proof.
+3. Bounded durable first-clear deduplication.
+4. Final guild trophies and member-plinth custody.
+5. War-table live/retro/multi-guild proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-31-qa.md: [phase-32-hall-and-manor-tiers.md](phase-32-hall-and-manor-tiers.md).
 
 #### 32 Great Hall, Manor, Bastion tiers and build projects
-Deliverables: `great_hall` (guild uncommon), `manor` (freehold rare) and `bastion`
-(guild rare) tiers with layouts, multi-week build projects with a shared progress bar,
-project trophies, guild-only vendors that visit when a project completes, the Materials
-Vault chest at Manor.
-Acceptance: content and reviewer gates.
+
+Implementation: [phase-32-hall-and-manor-tiers.md](phase-32-hall-and-manor-tiers.md). Paired audit: [phase-32-qa.md](phase-32-qa.md).
+
+Deliverables (at most five):
+
+1. Three tier/layout records.
+2. Approved project bills and service fees.
+3. Atomic completion and exact-copy carry-over.
+4. Final interiors and project progress.
+5. Money/persistence/custody/parity proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-32-qa.md: [phase-32a-project-rewards-and-vault.md](phase-32a-project-rewards-and-vault.md).
+
+#### 32a Project rewards and direct vault access
+
+Implementation: [phase-32a-project-rewards-and-vault.md](phase-32a-project-rewards-and-vault.md). Paired audit: [phase-32a-qa.md](phase-32a-qa.md).
+
+Deliverables (at most five):
+
+1. Durable project-completion trophies.
+2. Cosmetic furnishing vendor unlocks.
+3. Service-specific Manor/Bastion direct vault access.
+4. Final art/content/unlock/custody proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-32a-qa.md: [phase-33-wave-c-close.md](phase-33-wave-c-close.md).
 
 #### 33 Wave C close
-Deliverables: the matrix, screenshots, the wave C PR.
 
-### Wave D: Wards and Charters
+Implementation: [phase-33-wave-c-close.md](phase-33-wave-c-close.md). Paired audit: [phase-33-qa.md](phase-33-qa.md).
+
+Deliverables (at most five):
+
+1. Whole Wave C matrix including 28a, 30a and 32a.
+2. Required screenshots.
+3. Wiki and accepted artifact inventory.
+4. Reviewed fixes and fresh verification.
+5. Reviewable release package with separately authorized publication.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-33-qa.md: [phase-34-wards.md](phase-34-wards.md).
+
+### Wave D: Wards and optional Charters
 
 #### 34 Wards: shared neighborhoods and exteriors
-Deliverables: a ward instance kind (24 to 50 freehold exteriors around a square with a
-Guildhall anchor plot), exterior shells per tier, ward assignment and reassignment
-rules, the ward as the enter point for member plots.
-Acceptance: `server-hot-path-reviewer`, `render-performance-reviewer` no BLOCKING.
+
+Implementation: [phase-34-wards.md](phase-34-wards.md). Paired audit: [phase-34-qa.md](phase-34-qa.md).
+
+Deliverables (at most five):
+
+1. Measured ward geometry and public descriptor.
+2. Race-safe bounded membership allocation.
+3. Admitted-occupant capacity and door/wire authority.
+4. Final exterior/marker art and shared UI.
+5. Real-PG capacity/lock and low-tier evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-34-qa.md: [phase-35-ward-favor-and-endeavors.md](phase-35-ward-favor-and-endeavors.md).
 
 #### 35 Ward favor and Endeavors
-Deliverables: the ward favor bar (raises every member's decor budget on a published
-cadence), monthly ward Endeavors (shared goals with cosmetic rewards only).
-Acceptance: never-sell-power sweep; reviewers no BLOCKING.
+
+Implementation: [phase-35-ward-favor-and-endeavors.md](phase-35-ward-favor-and-endeavors.md). Paired audit: [phase-35-qa.md](phase-35-qa.md).
+
+Deliverables (at most five):
+
+1. Permanent capacity and independent monthly content.
+2. Identified bounded progress/contribution rules.
+3. Durable completion and member awards.
+4. Shared public progress and cosmetic rewards.
+5. Boundary/replay/retention/content evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-35-qa.md: [phase-36-showcases-and-guest-books.md](phase-36-showcases-and-guest-books.md).
 
 #### 36 Showcases and guest books
-Deliverables: the seasonal Showcase vote with a trophy-decor reward, the guest book with
-reactions ONLY (no free text, so no moderation surface; bounded per plot, retention
-registered).
-Acceptance: `privacy-security-review`, `database-performance-reviewer` no BLOCKING.
+
+Implementation: [phase-36-showcases-and-guest-books.md](phase-36-showcases-and-guest-books.md). Paired audit: [phase-36-qa.md](phase-36-qa.md).
+
+Deliverables (at most five):
+
+1. Realm Showcase eligibility and vote identity.
+2. Durable season close and bounded rewards.
+3. Serialized capped guest reactions.
+4. Private-safe projection and shared UI.
+5. Real-PG concurrency/retention/moderation proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-36-qa.md: [phase-37-charter-service-contract.md](phase-37-charter-service-contract.md).
 
 #### 37 On-chain Freehold Charter: service contract, ledger table, geo-exclusion
-Deliverables: the economy-service mint and verify contract (Metaplex Core asset with
-Permanent Freeze and Permanent Burn delegates, collection royalties to the treasury),
-the `freehold_deeds` table (claim once, re-verify at use), the geo-exclusion list
-(South Korea, following the Epic Games Store list), counsel memo gate recorded as OPEN,
-`FREEHOLD_DEEDS_ENABLED` flag default off. No client surface yet.
-Acceptance: `privacy-security-review`, `migration-safety` no BLOCKING; no `src/sim/`
-change (the token firewall).
+
+Implementation: [phase-37-charter-service-contract.md](phase-37-charter-service-contract.md). Paired audit: [phase-37-qa.md](phase-37-qa.md).
+
+Deliverables (at most five):
+
+1. Signed service/counsel/territory contract readiness.
+2. Durable asset/operation/recovery records.
+3. Typed proxy and trusted service verification.
+4. Per-asset authority and no-lapse-loss policy.
+5. Bounded service/PG/geo/refusal proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-37-qa.md: [phase-38-charter-mint-and-trading.md](phase-38-charter-mint-and-trading.md).
 
 #### 38 Charter mint surface and marketplace trading (web only)
-Deliverables: the web-only mint surface behind the Exchange gate, deed trading as the
-marketplace's "serialized collectible" category (3 percent burned, 7 percent treasury,
-90 percent seller), holder flair on the exterior read-only, the distribution matrix
-extended so no native, Steam, or Epic build reaches any of it.
-Acceptance: the seven-row matrix green; `privacy-security-review` no BLOCKING.
+
+Implementation: [phase-38-charter-mint-and-trading.md](phase-38-charter-mint-and-trading.md). Paired audit: [phase-38-qa.md](phase-38-qa.md).
+
+Deliverables (at most five):
+
+1. Immutable furnished-sale and safe-custody manifest.
+2. Prepare/freeze/quote/settle/cancel/recovery flow.
+3. Atomic server entitlement and exact-copy transfer.
+4. Approved web-only mint/trade/flair UI.
+5. Receipt/race/privacy/render and denial proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-38-qa.md: [phase-39-wave-d-close.md](phase-39-wave-d-close.md).
 
 #### 39 Wave D close
-Deliverables: the matrix, screenshots, the wave D PR.
 
-### Wave E: depth
+Implementation: [phase-39-wave-d-close.md](phase-39-wave-d-close.md). Paired audit: [phase-39-qa.md](phase-39-qa.md).
+
+Deliverables (at most five):
+
+1. Whole Wave D validation.
+2. Final UX/input evidence.
+3. Wiki and content freshness.
+4. Fresh reviews and signed-artifact inventory.
+5. Local release documentation and separately authorized publication.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-39-qa.md: [phase-40-keep-and-citadel-tiers.md](phase-40-keep-and-citadel-tiers.md).
+
+### Wave E: Housing depth and program close
 
 #### 40 Keep and Citadel tiers, prestige deeds
-Deliverables: `keep` and `citadel` (freehold) and `fortress` and guild `citadel` tiers
-with courtyard and tower layouts, the prestige-deed gate on the top two tiers (the deed
-choice is a Fernando ruling recorded before the phase starts), budgets 300 and 420.
-Acceptance: content and render gates.
 
-#### 41 Dye station and layout sharing
-Deliverables: the alchemy dye station amenity and dye recipes, dye slots on furnishing
-defs, layout save, load, and share (a layout descriptor export the marketplace never
-touches).
-Acceptance: reviewers no BLOCKING.
+Implementation: [phase-40-keep-and-citadel-tiers.md](phase-40-keep-and-citadel-tiers.md). Paired audit: [phase-40-qa.md](phase-40-qa.md).
+
+Deliverables (at most five):
+
+1. Final personal/guild top-tier layouts.
+2. Exact existing account/guild prestige predicates.
+3. Approved bills and atomic custody.
+4. Final courtyard/tower art and shared upgrade UI.
+5. Money/authority/persistence/LOW evidence.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-40-qa.md: [phase-41-dye-station-and-layout-sharing.md](phase-41-dye-station-and-layout-sharing.md).
+
+#### 41 Dye station
+
+Implementation: [phase-41-dye-station-and-layout-sharing.md](phase-41-dye-station-and-layout-sharing.md). Paired audit: [phase-41-qa.md](phase-41-qa.md).
+
+Deliverables (at most five):
+
+1. Approved dye palette and recipes.
+2. Condition/proximity-aware dye station.
+3. Exact-copy tint/material handling.
+4. Wire/custody/final-art/input proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-41-qa.md: [phase-41a-layout-save-and-sharing.md](phase-41a-layout-save-and-sharing.md).
+
+#### 41a Layout saves and public sharing
+
+Implementation: [phase-41a-layout-save-and-sharing.md](phase-41a-layout-save-and-sharing.md). Paired audit: [phase-41a-qa.md](phase-41a-qa.md).
+
+Deliverables (at most five):
+
+1. Bounded private saved layouts.
+2. Public versioned share codec.
+3. Preview and atomic use of existing item copies.
+4. Input/privacy/custody/persistence proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-41a-qa.md: [phase-42-second-freehold-sku.md](phase-42-second-freehold-sku.md).
 
 #### 42 Second freehold SKU
-Deliverables: a second freehold per account with a progressive upkeep schedule (the
-ArcheAge lesson), keyed `account:<id>:2`.
-Acceptance: exactly-once purchase; ledger arms; reviewers no BLOCKING.
 
-#### 43 Carpenter and Mason (conditional)
-Deliverables: only if the measured furnishing demand (wave A's four-week measurement
-plus wave B) proves out and Fernando rules for it: the two off-wheel crafts with their
-recipes on the existing professions seams.
-Acceptance: content gates; otherwise the phase records "skipped by ruling".
+Implementation: [phase-42-second-freehold-sku.md](phase-42-second-freehold-sku.md). Paired audit: [phase-42-qa.md](phase-42-qa.md).
 
-#### 44 Wave E close
-Deliverables: the final matrix, the packet teardown offer (surface deferrals first; on
-confirmation `git rm -r docs/freeholds/` in its own commit), the wave E PR.
+Deliverables (at most five):
+
+1. Stable second-plot admission and primary-first facet.
+2. Independent plot upkeep with shared account Hearth cooldown.
+3. Service-authorized durable second-SKU effect.
+4. Boundary/restart/overflow/authority proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-42-qa.md: [phase-43-carpenter-and-mason.md](phase-43-carpenter-and-mason.md).
+
+#### 43 Existing-craft coverage and future expansion handoff
+
+Implementation: [phase-43-carpenter-and-mason.md](phase-43-carpenter-and-mason.md). Paired audit: [phase-43-qa.md](phase-43-qa.md).
+
+Deliverables (at most five):
+
+1. Existing-craft coverage and measured future handoff.
+2. Separately authorized expansion evidence contract.
+3. No-new-professions consistency proof.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-43-qa.md: [phase-44-wave-e-close.md](phase-44-wave-e-close.md).
+
+#### 44 Wave E integration close
+
+Implementation: [phase-44-wave-e-close.md](phase-44-wave-e-close.md). Paired audit: [phase-44-qa.md](phase-44-qa.md).
+
+Deliverables (at most five):
+
+1. Final wave and complete-program validation.
+2. Final UX/input evidence.
+3. Wiki and content freshness.
+4. Fresh review and durable artifact preservation.
+5. Local release documentation and separately authorized publication.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-44-qa.md: [phase-44a-final-codex-artwork.md](phase-44a-final-codex-artwork.md).
+
+#### 44a Final Codex artwork
+
+Implementation: [phase-44a-final-codex-artwork.md](phase-44a-final-codex-artwork.md). Paired audit: [phase-44a-qa.md](phase-44a-qa.md).
+
+Deliverables (at most five):
+
+1. Exhaustive feature-created visual inventory.
+2. Final Codex placeholder image production.
+3. Existing asset pipeline and provenance integration.
+4. In-context viewport/input/theme/LOW proof.
+5. Zero remaining placeholders and fresh review.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-44a-qa.md: [phase-44b-final-legal-handoff.md](phase-44b-final-legal-handoff.md).
+
+#### 44b Final legal revisit and handoff
+
+Implementation: [phase-44b-final-legal-handoff.md](phase-44b-final-legal-handoff.md). Paired audit: [phase-44b-qa.md](phase-44b-qa.md).
+
+Deliverables (at most five):
+
+1. Completed-feature legal evidence matrix.
+2. Terms and player-copy revisit.
+3. Final service/platform/territory conformance.
+4. Concrete legal-team handoff and release tracking.
+5. Complete chain and durable preservation audit.
+
+Acceptance: every linked implementation checkbox and its paired QA must pass;
+the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+After phase-44b-qa.md: the program ends; no automatic deletion, push or merge.
+
+## Load-bearing handoffs and verified seams
+
+07 owns stable plot and separate account Hearth storage, bounded recovery and the
+housing-only developer bridge.
+07a owns global claim fencing and atomic mutations/receipts; every later resource or
+paid effect reuses it. 07b owns account lifecycle/history and 07c owns account+tier
+arrival eligibility. 13a owns durable finalized calendar ingress/delivery; 13 consumes
+its safe projection. 08 owns placement/history and ephemeral build-presence authority; 08a owns the
+public/private wire and isDecorating boolean.
+25a owns twelve-week prepay/Fenbridge, 28a the guild lifecycle/membership extension,
+30a boards, 32a completion rewards/direct vault,
+and 41a bounded layout saves/sharing. No later file may silently move those duties back
+into its unsuffixed predecessor.
+
+The first-tier arrival marker is bounded private account-scoped auxiliary state owned
+by 07c, marked inside 07a accepted-owner-entry commit and consumed by 08a/09. Database,
+persistence and security review must verify the concrete account store, known-tier bounds,
+absent-legacy default, FK/unique waits and mark-before-ACK atomicity. Sale or transfer
+neither inherits nor clears the account marker; guest, reconnect and replay do not mint
+eligibility. The optional presentation may be skipped after commit-before-ACK failure;
+recovery must not replay it. A plot row or Sim mirror cannot redefine account scope.
+
+The verified first-domain scaffold remains:
+`npm run new:endpoint -- --domain freehold --method GET --path /api/freehold`.
+Keep generated freehold.invalid_input and its catalog/mapping/parity rows. Move generated
+server/freehold.ts and tests/server/freehold.test.ts to server/freehold_routes.ts and
+tests/server/freehold_routes.test.ts, repairing registry and test imports. Add
+freehold.disabled separately to ERROR_CODES, API_ERROR_KEYS, the English apiError.freehold
+block, EXPECTED_CODES and KNOWN_CODES. Later freehold routes extend the existing domain
+by hand; the generator does not append into its existing catalog block.
+
+The fresh-join load reuses the injected bankBonusForAccount pattern in server/ws_auth.ts;
+server/main.ts binds computeBankBonus(await bankBonusFactsForAccount(id)), with the facts
+export in server/db.ts and computation in server/bank_entitlements.ts. The freehold load
+has its own injected callback and bounded single-flight admission. Offline permission
+uses the separate explicit local bridge, not a presumed browser copy of the server env.
+
+## Close evidence and durable artifacts
+
+20 covers all Wave A pairs including 07a/08a and the exact desktop/compact/tablet,
+input/focus/motion/LOW/denied-surface screenshot variants in ux-spec. 27 includes 25a;
+33 includes 30a/32a; 39 covers the optional-deed release gates; 44 includes 41a and
+runs the complete-program matrix. Screenshot fixtures are not evidence that audio,
+multiplayer, service recovery, PG interleaves or a real device were exercised.
+
+Every close records the six handoff documents indexed in README, content/art/numeric
+sources, signed external gate status, measured budgets and fresh fix review. The 44
+preservation contract keeps the UX, locked decisions, content/numeric/art, audit and
+all external handoffs intact before any separately approved scaffolding removal.

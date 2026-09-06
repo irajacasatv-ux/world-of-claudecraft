@@ -1,26 +1,96 @@
 # Freeholds and Guildhalls: whole-feature integration matrix
 
-Run once at every wave close (phases 20, 27, 33, 39, 44) over the whole wave's diff, and
-once more at packet completion. Each row is verified by a check that can actually run;
-"looks done" is not a verdict. Record the result table in `progress.md` under the close
-phase.
+Run this matrix at 20, 27, 33, 39 and 44 over each full wave, including every suffixed pair;
+44 also runs the complete-program matrix. The settlement audit validates the unbuilt
+packet's contracts, links, anchors and review findings; it does not run or claim future
+feature behavior. Record each actual command, exit code, executed/skipped status and
+artifact path in progress. A required check that could not run is not a pass.
 
-| Area | Check | How |
+## Evidence floor
+
+- Run the implementation's scoped suites and node scripts/gate_select.mjs before calling
+  implementation ready; npm run gate is the deeper option. ci:changed/CI/Stop/reviewer
+  output never replaces shared tests, typecheck, builds, i18n or security checks.
+- Use the canonical root/directory QA contract, .claude/hooks/qa-stop.sh through the
+  active runtime's Stop adapter, and git diff --check on exact owned paths. The Stop floor
+  checks uncommitted additions including untracked text for forbidden punctuation/emoji,
+  .only, debugger and sim random/wall clocks. Passing it is not a runtime test result.
+- Every claimed behavior has a decisive assertion, literal expected value and failure
+  control. Real-PG requirements set TEST_DATABASE_URL in a disposable private schema and
+  verify passing tests actually ran; local gate does not set that variable automatically.
+- Every required specialist from implementation-plan finishes. Apply ALL findings,
+  including nits, and have a fresh reviewer read the entire fix round. Before settlement
+  completion run a fresh whole-packet COVERAGE review and a second fresh fix-round review.
+
+## Shared runtime matrix
+
+| Area | Required evidence | Commands or owning proof |
 |---|---|---|
-| Three-host parity | Every `IWorldHousing` member exists with the same kind on `Sim` and `ClientWorld`; the headless env excludes housing | `npx vitest run tests/world_api_parity.test.ts tests/env_protocol.test.ts` |
-| Determinism | Same seed, same house on both hosts; no `Rng` draw from house content; no wall clock in `src/sim/freehold/`; layout regeneration from the descriptor is byte-identical across hosts | `npx vitest run tests/architecture.test.ts tests/freehold_determinism.test.ts` (the suite Phase 08 adds) |
-| Server authority | Every placement, pay, repair, enter, and visit outcome is decided in the sim on the server; the client predicts nothing; the payload-field chain test passes | `npx vitest run tests/freehold_command_chain_online.test.ts tests/command_schema.test.ts tests/command_facets.test.ts` |
-| Wire and snapshots | Every new self key is in `ALL_DELTA_KEYS` with its `TERSE_TO_IWORLD` row and a round-trip arm; the descriptor event is re-sent on resume; bandwidth pins unchanged | `npx vitest run tests/snapshots.test.ts tests/bandwidth.test.ts` |
-| Persistence | Additive idempotent DDL, the `account_freeholds` round trip, load-side allowlists drop a tampered row without destroying the house, the account export includes the row, account delete cascades, retention registered or keep-forever stated | `npx vitest run tests/server/freehold_db.test.ts tests/server/main_retention_wiring.test.ts` plus the pg-armed twin with `TEST_DATABASE_URL` set |
-| Money and store policy | `FREEHOLDS_ENABLED` defaults off and refuses every housing route and command while dark; the seven-distribution surface matrix passes; no wallet, $WOC, on-chain deed (mint, trade, holder), or marketplace string in a housing path reachable on App Store, Google Play, Steam, or Epic; no "earn" language in housing copy; the economy service owns every price | `npx vitest run tests/distribution_surfaces.test.ts tests/freehold_store_gates.test.ts tests/client_shell.test.ts` (the "earn" scan and the token-string pins live in `tests/freehold_store_gates.test.ts`; the bare word deed is never scanned because the Book of Deeds ships in every build; the pre-push copy scan covers dashes and emojis only) |
-| Never-sell-power | No amenity or furnishing changes a combat, progression, gathering, or drop number; the only buff in a house is the feast's Well Fed | `npx vitest run tests/freehold_content.test.ts` (the power-neutral sweep) |
-| Keystone exclusion | No ledger line, furnishing bill, or upgrade bill names `wyrmfall_core`, `sundered_essence`, `makers_ember`, a gear intermediate, or the quickening catalyst | `npx vitest run tests/provisioner_firewall.test.ts` |
-| Farming calendar | Zero new farm beds; `FARMING_GAIN_SCHEDULE` unchanged | `npx vitest run tests/professions_farming.test.ts tests/professions_zone_rollout.test.ts` |
-| Never destroy | Condition 0 still opens the door; no path removes a furnishing, trophy, or the record except the owner's remove command | `npx vitest run tests/freehold_condition.test.ts` |
-| Content obligations | Every new item id has committed WebP art and a provenance row; deeds (Homesteader family) and Reliquary pages present; wiki regen fresh; world-entity names; name fills for wordy English | `npx vitest run tests/item_icons.test.ts tests/item_art_consistency.test.ts tests/deeds_content.test.ts tests/reliquary_content.test.ts tests/guide.test.ts` and the `content-obligations-reviewer` agent |
-| i18n | Every new player string is an English `hudChrome.housing.*` (or item/entity) key; no locale overlay edited; M16 fills where forced; the S3 guard passes | `npm run i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts tests/localization_fixes.test.ts tests/api_error_code_parity.test.ts` |
-| Render and perf | The furnishing view is a scheduler client; no `live-program` events on an offline tour through the Cottage; interior lights within the point-light budget (three at LOW); monolith ceilings not raised | `npm run perf:tour`, `npx vitest run tests/renderer_compile_gate.test.ts tests/monolith_budget.test.ts`, the `render-performance-reviewer` agent |
-| Mobile | Landscape build mode with a 40x40 confirm/rotate/cancel strip; palette and Steward panel are mobile sheets; LOW-preset phone holds frame rate inside the Cottage | `node scripts/pr_screenshots.mjs` (compact and tablet targets), `node scripts/mobile_input_zoom_check.mjs` |
-| Classic fidelity | Vocabulary matches ruling 9; the decor budget, plinth counts, and visitor caps match the tier table; no shipped surface uses the banned land phrase | `grep -rn "real estate" src/ server/ public/` returns nothing (docs are excluded: the proposal and this packet spell the phrase in their naming rules); the PR body is read by hand; tier table pinned by `tests/freehold_content.test.ts` |
-| Gate | Biome on changed files green, `tsc` clean, CI green on the wave PR | `npm run ci:changed`, `npx tsc --noEmit`, `gh pr checks --watch` |
-| Deploy (only if deployed) | `/api/status` healthy; `FREEHOLDS_ENABLED` remains unset in production until counsel signs off | `DEPLOY.md` |
+| Facet/hosts/RL | Same IWorld member kinds and command/event behavior in both worlds; headless housing verbs remain excluded. | npx vitest run tests/world_api_parity.test.ts tests/env_protocol.test.ts tests/command_schema.test.ts tests/command_facets.test.ts |
+| Pure deterministic placement | Shared bounded geometry/plan, exact-copy placement/session undo/redo, no condition gate or refusal mutation, safe occupied paths. | tests/architecture.test.ts, tests/freehold_layout_core.test.ts, tests/freehold_placement.test.ts, tests/freehold_placement_history.test.ts and tests/freehold_determinism.test.ts owned 08. |
+| Server authority | Placement, pay, repair, entry and visits commit under current server authority; client visual preview cannot commit custody or entitlement. | The actual command-frame chain and server refusal/control cases in 08a/12/13/15/18, including forged payload fields. |
+| Wire and consumers | Real raw frame chain, public/private separation, opaque plot IDs, first empty/revision 0 delivery, equal-layout identity change, absent/null/resume/stale-generation semantics; no repeated shared serialization. | tests/freehold_command_chain_online.test.ts, tests/freehold_snapshot_wire.test.ts, tests/snapshots.test.ts and tests/bandwidth.test.ts owned 08a. Fresh ALL_DELTA_KEYS/count/TERSE_TO_IWORLD/source-scrape pins. |
+| Persistent ownership | Stable account/plot/public identity, versioned bounds, preserved unsupported/oversized owned data, coalesced admission and cancellation, export/delete/retention/query plans. | tests/server/freehold_db.test.ts, tests/server/freehold_db.pg.test.ts, tests/server/freehold_persist.test.ts, tests/freehold_state.test.ts and tests/server/main_retention_wiring.test.ts owned 07; fake plus real PG. |
+| Atomic custody/fences | One global authoritative claim, legacy touch-set lock order and nonce pre-lock, every resource/effect/receipt half or none, discoverable original-key recovery, no client across service IO. | tests/server/freehold_mutation.test.ts, tests/server/freehold_mutation.pg.test.ts and tests/server/freehold_claim.pg.test.ts owned 07a; real competing-process/crash/interleave proof. |
+| Account-wide arrival marker | One bounded private account-scoped source preserves first-tier UX across plots and transfers; known-tier bounds, empty legacy default, atomic mark before ACK, unique/FK waits and account-only deletion; no guest/reconnect/replay eligibility; historical firstTierAtAdmission never derives freshArrivalPresentation. New arrivals may welcome, while only the tier winner grants first-tier view; snapshot/resume/replay projection has no fresh directive. | 07b/07c/07a/08a/09 DB, persistence and security review plus real PG/offline/arrival tests; Sim mirror and plot saves are not a second authority; commit-before-ACK loss may skip optional presentation. |
+| Developer fixtures | Exact flag and real loopback socket/Host bridge; strict same-origin boolean; failure/cancel preserves ordinary Inn; both permissions; no production/preview endpoint; server dev-save behavior unchanged. | tests/freehold_dev_authorization.test.ts, tests/freehold_dev_bootstrap.test.ts, tests/freehold_dev_grant.test.ts, tests/freehold_offline_default.test.ts, tests/vite_dev_watch.test.ts, tests/dockerignore_context.test.ts and actual flag-off/on/build/preview browser fixtures owned 07. |
+| Condition and Ledger | Realm-week shared produce-inclusive approved schedule; source mode agrees with affordance/confirmation/deduction; immutable prepay, prior absence/grace, suspension and boundary 30; no debt catch-up or loss. | 13's exact calendar/ledger/PG suites, service upkeepSuspensions contract and 20 calibration evidence; 25a extends twelve-week boundary through thirteenth refusal. |
+| Money and platform | All three cumulative gates and service-only price math; full denied submodels/handlers/catalog/DOM/error/aria absence; native server entitlement independent of optional chain; opaque verified service authorization. | tests/distribution_surfaces.test.ts, tests/freehold_store_gates.test.ts, tests/client_shell.test.ts and 15/21/29/32/37/38/40/42 real service/PG recovery proof, paired QA and signed artifacts. |
+| Content and protected inputs | Exact approved output/acquisition inventory, Hearth full consumer contract without phantom cap, no power or protected keystone/intermediate/catalyst input; zero new farm beds and unchanged craft/station/training rules. | tests/freehold_content.test.ts, tests/provisioner_firewall.test.ts, tests/professions_farming.test.ts, tests/professions_zone_rollout.test.ts and each content phase's pinned channel/recipe suites. |
+| Ownership and classic fidelity | Condition zero preserves entry and decoration; no upkeep-driven repossession or removal. Approved owner operations retain exact custody. Vocabulary follows ruling 9, tier budgets/plinths/visitor caps match state, existing feast behavior is unchanged. | tests/freehold_condition.test.ts, tests/freehold_content.test.ts and the actual custody tests; rg -n "real estate" src/ server/ public/ yields no shipped product match, while docs may state the naming rule. |
+| Content obligations | Every shipped ID has final art/provenance, names/originality, deeds/Reliquary/source discovery, wiki and required M16 fills; patterns/trophy records do not receive furnishing pages. | tests/item_icons.test.ts, tests/item_art_consistency.test.ts, tests/deeds_content.test.ts, tests/reliquary_content.test.ts and tests/guide.test.ts; content reviewer and final art manifest. |
+| Trophies and visits | Account-wide source-complete truthful provenance and unknown/history/spoiler arms; generic-to-final timing; offline-owner visits, fresh ACL/revocation, all owner sessions excluded from guest count, read-only guests. | 17/18/23/26 actual account/PG/two-client tests and screenshot states; guest ghost/history/material/identity privacy checks. |
+| Guilds and wards | Rank and own-member plinth custody, guild-at-clear proof, service-owned pooled ledger, atomic caps; bounded unique ward allocation/admitted occupants; permanent Favor and deduplicated awards. | 28 through 35 plus 28a/30a/32a exact PG race/plan/replay and live authority tests; no stale cached authorization or graphics culling of admitted occupants. |
+| Social, sale and sharing | Realm-season vote identity, transactional capped reactions/retention, current privacy; exact furnished-sale/custody manifests, per-asset authority; bounded share codec and existing-copy application, independent second plots/shared Hearth. | 36/37/38/41a/42 real concurrency/recovery/custody/privacy tests and signed territory/authority acceptance. |
+| i18n and tooltips | Every visible sink uses exact English housing or existing shared namespace; numbers/dates use formatter with realm calendar; tooltip live mechanic/source; no casual locale/generated edit. | npm run i18n:gen; tests/i18n_completeness.test.ts, tests/localization_fixes.test.ts, tests/api_error_code_parity.test.ts and tooltip review. |
+| Render and physics fairness | Same colliders at all presets, exact claim/generation teardown, initialized model registry; scheduler/prewarm and global live light budget, LOW iOS/pressure fallback; no loss of actionable ghost/bounds/reason/identity. | 10's rift/collider two-host suites, tests/renderer_compile_gate.test.ts, tests/point_light_budget.test.ts, tests/monolith_budget.test.ts; npm run perf:tour and npm run asset:budget when applicable. |
+| First moment, input and sound | Safe structural reveal, zero extra ordinary online cosmetic wait, prepared readable optional-art fallback; first-tier versus return/visitor camera table, immediate input with safe director blend, sampled/mute-respecting cue deduplication. | tests/freehold_arrival.test.ts, tests/teleport_camera.test.ts, tests/camera_director_core.test.ts, SFX manifest/check and actual audio/composed-input evidence; screenshots alone cannot prove audio. |
+| UI and screenshots | Actual shared family/tokens, companion arbitration, object selection, keyboard/focus, tap-only/pad and safe areas; all transient states have unique one-capture/one-image variants, exact art-only diff selection. | 09/11/16/17/18 registry/helper entries and ux-spec expanded manifest; node scripts/pr_screenshots.mjs; node scripts/mobile_input_zoom_check.mjs; real composed pad/touch tests and LOW device evidence. |
+
+Account Hearth uses 07/07a's one account participant, including cross-alt/process/
+destination PG races and export/deactivation/restore/transfer exclusions. Cached plot
+mirrors never authorize or reset cooldown. Physical/refused/already-home entry spends
+none. Build presence uses01/08/08a's set_freehold_build_presence command and public
+isDecorating only; two-client cleanup/reconnect/stale/permission/private-field proof is
+required. All findings including nits close with fresh fix review; no deferred-nit PASS.
+
+Capture acceptance is staged: 09 proves 12 real day/night room variants; 11 proves 89,
+16 proves 178, 17 proves 226, 18 proves 330 and 20 verifies the full 330. All scenes have an
+exact fixture and asserted state; no early target pretends that later UI exists. The
+key inventory is 329. Baseline mobile evidence is Chromium with iOS-profile emulation;
+Android requires an explicit profile variant and neither proves a physical device.
+
+## Wave and artifact acceptance
+
+| Close | Required scope and handoffs |
+|---|---|
+| 20 | All 25 Wave A pairs including 07a/07b/07c/08a/13a. Exact desktop 1600x900, compact 874x402 and tablet 1180x820 baseline sizes from state, all UX target variants and per-input/theme/motion/LOW/denied cases; final art, sampled audio, two-client authority and real PG. Signed initial service/counsel/Terms/listing gates; measured four-week calibration and every-second-release budget review artifact. |
+| 27 | All Wave B pairs including 25a; final expanded furnishings/trophy art, shared typed surfaces, immutable prepay/Fenbridge and current-authority visiting. |
+| 33 | All Wave C pairs including 28a/30a/32a; guild authority/Fund/custody, recorded first kills, boards, projects/direct vault and accepted fee/bill/art artifacts. |
+| 39 | All Wave D pairs; bounded ward/social PG proof, signed deed/territory/irreversible authority, exact sale custody and native-independent entitlement. |
+| 44 | Wave E integration through 44 QA including 41a; complete-program runtime matrix; 44a/44b remain mandatory afterward; no new professions, existing-craft handoff, every durable UX/decision/content/numeric/art/audit/external source preserved. No automatic cleanup or publication. |
+|44a | Codex inventory and replacement of every feature-created placeholder icon/image, existing provenance pipeline, all affected UX/LOW screenshots and zero unexplained residuals. |
+|44b | Completed-feature Terms/legal/service/platform/territory revisit; concrete legal-team bundle/cover note, truthful delivered/accepted tracking, final chain/preservation audit and paired QA. Earlier release gates remain mandatory. |
+
+Use README's six exact external handoff paths. Legal, Terms, territory and service
+signature/publication fields remain unsigned until their actual owners accept them;
+that does not reopen a product question or imply approval. New balance inputs require
+an exact signed workbook row before runtime activation. Deliberate omissions must match
+state, proposal/deck and every dependent implementation/QA.
+
+## Packet-only settlement checks
+
+Validate the actual complete file set, including all twelve suffix pairs, ux-spec and
+the JSON key/shot manifests. No scratch-only file counts as an applied deliverable. README
+links and every pair must resolve, all STEP 0..7 appear once in every starter prompt, every
+STEP 7 follows the exact ordered chain, and every implementation has at most five genuine
+outputs. Recheck paths and exported symbols against the synced tree, distinguishing
+explicit NEW names. Reconcile all decisions/rulings, source promises, numeric/artifacts,
+reviewer triggers, money gates and screenshot/key inventories across every file.
+
+The parent performs fresh whole-packet COVERAGE review, applies every finding including
+nits, and obtains a second fresh fix-round review before the final lint/anchor/copy/Stop
+checks and local scoped commit. A preparatory scratch review is not either final review.
+Record exact commands/outcomes and any unavailable required evidence without inventing
+runtime passes. Keep the branch local, preserve all durable contracts, and report the
+full next implementation path to phase-01-foundation.md after this audit finishes.

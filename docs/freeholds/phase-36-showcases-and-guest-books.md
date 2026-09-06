@@ -1,26 +1,17 @@
-# Phase 36: Showcases and guest books
+# Phase 36: realm Showcases and bounded guest books
 
-Wave D, Wards and Charters. The spec is `progress.md` "36 Showcases and guest books"; the
-decisions are `state.md` and `brainstorm.md` (D5 account state, D8 nothing ticks, D10
-text-free events, the Phase 34 ward and the Phase 26 visit policies). This phase ships
-the seasonal Showcase vote with a trophy-decor reward and the guest book with reactions
-ONLY (a closed reaction enum, no free text, so no moderation surface; bounded per plot,
-retention registered).
+This implementation file and its QA are the complete contract for this bounded slice.
+The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
+are authoritative. Nothing in this planning packet is marked built.
 
 ### Starter Prompt
 ```
-This is Phase 36 of the Freeholds and Guildhalls feature: Showcases and guest books (the
-seasonal Showcase vote and its trophy reward; the bounded guest book with reactions
-only, a closed enum and no free text).
+This is Phase 36 of the Freeholds and Guildhalls feature: realm Showcases and bounded guest books.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase.
+Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
+fan-out; this prompt names no model.
 
-Goal: add two social surfaces that are server-owned rows behind RouteDefs (a vote per
-member per season, a bounded guest book of reactions per plot) with block-list
-filtering, retention, and account-export coverage, a closed reaction enum pinned by a
-test, and a Showcase winner computed deterministically at season close.
+Goal: offer opt-in realm exhibitions and considerate guest reactions with current privacy checks, durable season results and concurrency-safe bounded storage.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -39,7 +30,14 @@ STEP 0 - PRE-FLIGHT:
 - Memory scan: MEMORY.md and entries on the RouteDef scaffold and surface inventory,
   retention registration, cached reads and busts, Postgres gotchas, test-pin traps.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
+ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
+in this phase, including GLBs, references, icons and images, must be executed by
+Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
+provenance, runtime registration, fingerprint and in-context checks. This planning
+audit creates no game assets. Final art is required here;44a is a residual sweep,
+not permission to leave a placeholder for a later phase.
+
+STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "36 Showcases and guest
   books"), and this file
@@ -58,81 +56,180 @@ Spawn one Explore agent to read and summarize:
 - src/ui/mailbox_window.ts or the cold-window family src/ui/CLAUDE.md names,
   src/ui/hud/housing/ (the ward panel), tests/server/http/surface_inventory.ts,
   tests/server/main_retention_wiring.test.ts, tests/api_error_code_parity.test.ts
-The agent returns: the route recipe with the exact middleware order for an owner-gated
-write and a privacy-filtered read of another owner's plot addressed by an opaque plot
-id (never an account id); the block-list filter to reuse verbatim; the retention
-registration and prune primitive shapes; the bounded-log idiom; the trophy source id
-shape; the cold window family to copy; the extraction candidates. Settle in STEP 1 and
-record in state.md before implementing: the season definition (the realm's existing
-seasonal cadence if one exists, else a 13-week window from a published anchor day, the
-state.md working value), the guest book cap per plot (working: 50 entries, oldest
-pruned on insert), the closed reaction set (working: a handful of ids such as wave,
-cheer, admire; no free text, ever), and the per-author daily rate.
+- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
+  artifacts referenced by state.md that this slice consumes.
+The agent returns: the existing RouteDef/error-registry recipe, current social predicates, trusted
+calendar feed, cold-window family and query/index inventory. The settled Showcase is
+realm-wide opt-in with one account vote per realm season, no self-vote and no reset
+by ward movement. Seasons last 13 weeks from the published realm weekly anchor.
+Tie-break earliest valid entry, then stable plot ID. Guest reactions are exactly
+wave/cheer/admire, one per account per plot per realm day, with 50 retained entries.
+These adopted tuning values live in state; dates are fed by authority.
+All design rulings are locked; a missing required signed artifact keeps its release
+gate closed and produces a named validation result, never a guessed runtime value.
+Database review is required BEFORE implementation decisions and again on the finished
+diff, including changes to callers, persisted JSON, caches or workload even when SQL
+text stays unchanged. Reuse 07a's global plot fence and reviewed actual legacy
+touch-set, including caller-owned saves, character prelocks/nonces, bank-ledger
+classification, guild replay and storage/custody effects. Preserve character FIFO
+entry and the proved new-participant suffix, never a replacement generic lock order.
+Never enter a queue holding a DB client or hold locks
+across service IO. Bound admitted work, acquisition/query/transaction deadlines,
+projection keys, rows and bytes; background producers use shared admission and
+cancellation. Retain one running plus one pending dirty generation, not unbounded
+FIFO writes. Supply a query/index inventory (scope, predicates, order, limit, expected
+cardinality and supporting index), reverse-FK export/delete access and retention for
+every growing shape. Disposable-PG concurrency, plans, query counts and maximum legal
+payload evidence are acceptance, not satisfied by fake-pool tests.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last):
-- Agent SERVER-DB: server/freehold_social_db.ts (FREEHOLD_SOCIAL_SCHEMA: freehold_showcase_entries
-  keyed (season, ward_id, owner_account_id); freehold_showcase_votes keyed (season,
-  ward_id, voter_account_id) so one vote per member per season; freehold_guest_book (id,
-  plot_owner_account_id, author_account_id, author_character_name, reaction SMALLINT
-  with a CHECK against the closed enum, created_at; NO text column) with an index on
-  (plot_owner_account_id, created_at); all FKs ON DELETE CASCADE; additive idempotent
-  DDL), the insert path that prunes the oldest beyond the cap in the same transaction,
-  the prune primitives and their server/main.ts retention rows (votes after N seasons,
-  guest-book rows after the configured window), the exportAccountData rows (entries
-  authored, votes cast, own plot's book), the cached read per plot with a bust on write,
-  tests/server/freehold_social_db.test.ts plus the pg twin.
-- Agent SERVER-ROUTES: `npm run new:endpoint` for the routes in server/freehold_routes.ts,
-  never keyed by an account id (the Phase 18 existence-oracle rule: no account id and no
-  friend list on the wire): GET /api/freehold/plot/:plotId/guest-book, with plotId the
-  opaque plot id the Phase 34 ward descriptor carries (or the owner's character name
-  resolved server-side), privacy-filtered by the plot's visit policy and the viewer's
-  block and ignore lists, where an unknown, a private, and a blocked plot answer one
-  identical 404; POST /api/freehold/plot/:plotId/guest-book (activeGuard, rateLimit,
-  withBody carrying ONLY a reaction id; an id outside the closed enum refuses with a
-  stable code before any insert; the author must be a current visitor allowed by the
-  policy or a friend, both resolved server-side); DELETE /api/freehold/guest-book/:id
-  (owner only through requireOwned); POST /api/freehold/showcase/enter and /vote (one
-  vote per season; the voter must be a ward member; the entry named by plot id); error
-  codes freehold.guest_book_* and freehold.showcase_* with English leaves; the surface
-  inventory rows; tests/server/freehold_social_routes.test.ts (fakeCtx, FakeDb).
-- Agent SIM+CLIENT: src/sim/freehold/showcase_tally_core.ts (a pure deterministic tally
-  with a tie-break by earliest entry; the server calls it at season close and grants the
-  winner's trophy with source showcase:<season> through the trophy record), the closed
-  reaction enum as one exported list the routes, the DDL CHECK, and the window all read
-  (pinned by a test with literal ids), the guest book window (the cold window family,
-  reactions as icons with t() labels, no hover-only information, no text input anywhere),
-  the Showcase entry and vote controls in the ward panel, the mobile sheet decisions,
-  hudChrome.housing.* keys, pr_shot_targets entries.
-The coordinator edits last: tests/server/http/surface_inventory.ts,
-tests/monolith_budget.test.ts, the retention wiring pin. Every agent writes any report
-longer than a screen to a file and replies with the path plus a short summary. Never
-`mode: "plan"` on teammates.
+Deliverables (at most five):
+Assign disjoint implementation ownership by the following 5 deliverables.
+The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
+finish. Workers receive only the context report and owned files, preserve others' edits,
+and return full reports to the scratchpad with a path and short summary.
+1. Showcase persistence and close: NEW server/freehold_social_db.ts owns
+   freehold_showcase_entries keyed by realm/season/opaque plot ID,
+   freehold_showcase_votes uniquely keyed (realm, season, voter_account_id),
+   freehold_showcase_results with immutable close identity, and
+   freehold_showcase_awards with durable per-award replay identity. Eligibility
+   is explicit opt-in and current public permission; no self-vote or ward-hop reset.
+   Tally from accepted votes, tie-break entry time then stable plot ID, persist close
+   identity/result before reward, and deliver lazily or through bounded checkpointed
+   jobs. Entry consent removal/private status prevents further exhibition/voting;
+   close excludes entries without current consent. No reward of gameplay power.
+2. Guest book persistence: NEW freehold_guest_book_entries holds only the closed
+   reaction enum wave/cheer/admire and public entry fields, with no free-text column
+   or input. NEW freehold_guest_book_daily_claims under the same DB owner carries
+   the retention-independent unique (account_id, plot_id, realm_day_id) consumption
+   marker. The globally stable realm_day_id preserves its signed CAL-SOCIAL source
+   calendar/reset binding across policy revisions; calendar_id and reset_id remain
+   immutable source references, never an alternate key that restores eligibility.
+   CAL-SOCIAL specifies authenticated day authority, the shared nonregressing
+   admission/closed-day watermark and supported peer/retry horizon before activation.
+   Never accept a client day, serving-realm guess or regressible process clock.
+   In one 07a transaction, recheck current authority/input, acquire the reviewed
+   plot participant, recheck current authority/day under the fence, conflict-safely
+   claim the day, append the visible entry and
+   deterministically prune oldest-created/id entries to 50. Any failure rolls back
+   claim, append and prune together. The marker survives visible pruning, owner or
+   moderation deletion and restart. Names obey existing moderation, blocks and
+   privacy; unknown reactions and excessive payloads refuse before admission.
+3. Routes, privacy and growth: hand-extend the existing freehold RouteDef domain;
+   do not rerun the scaffold against its existing error catalog. Register routes and
+   every new stable error in the five Phase 01 catalogs/pins. Owner delete uses
+   requireOwned; all reads/writes reapply current visit policy, blocks/ignores and
+   consent. Unknown/private/blocked plots return the same 404. Bounded projection
+   caches never authorize access; rate/admission-limit high-entropy plot keys.
+   Inventory every growing relation separately: freehold_showcase_entries,
+   freehold_showcase_votes, freehold_showcase_results, freehold_showcase_awards,
+   freehold_guest_book_entries and freehold_guest_book_daily_claims. Entries/votes
+   fold only after durable close; result/award identities retain replay authority.
+   Visible guest entries prune on insert and accepted retention policy. NEW
+   pruneFreeholdGuestBookDailyClaims in server/freehold_social_db.ts is an indexed,
+   bounded retention_sweep producer; a day becomes eligible only after the signed
+   authority's nonregressing closed-day watermark and supported delayed/retry/
+   restart/rolling-release paths make readmission impossible. Every capable peer
+   rejects expired captured attempts, including after waiting for the plot fence;
+   policy/clock regression cannot reopen a retired day. Cleanup fails closed if
+   that proof is unavailable. No guessed TTL or client timestamp authorizes cleanup.
+   Supply exact predicates/order/limits, expiry and account/plot reverse-FK indexes,
+   row/byte bounds, export/delete treatment and aggregate admitted cleanup work for
+   every relation. Erasure removes allowed personal data without reopening any
+   surviving account's admission or replay identity. Register every bounded prune
+   through existing shared retention admission and cancellation.
+4. Social windows and reward presentation: server-fed Showcase list/vote and guest
+   book cold windows use ux-spec later-wave Steward/list family with explicit opt-in,
+   no-vote/used/closed/locked/empty/loading/error states, public provenance and
+   read-only guest mode. All strings are keyed; source names obey spoiler rules;
+   trophy-decor reward content/art/source obligations are fulfilled. Add
+   desktop/compact/tablet captures and source pins for no text input. Changed reward
+   props use the existing scheduler, prewarm and retirement contract, with repeated
+   entry/leave proving no resource growth. Record measured LOW frame/GPU and
+   actionable-visibility evidence against the approved workbook budget.
+5. Proof: route inventory/error parity, same-seed tally and cross-host reward pins,
+   fakeCtx unit cases and disposable-PG vote/guest insert/season-close races. Test
+   self-vote, second character, ward moves, opt-out/private close, duplicate worker,
+   crash before/after award and concurrent 50-entry cap. A posts, 50 other authors
+   displace A, then A's alt/process/restarted session remains refused that day;
+   repeat after owner/moderation deletion, pruning/cleanup races and rollover.
+   The next authoritative day permits one new reaction. Prove stale captured-day
+   refusal and rollback after claim insertion. Disposable PG records actual query
+   plans/counts, lock waits, peak admitted work, row/byte growth, reverse-FK cascades,
+   all relation retention jobs and account export/delete at approved cardinality.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- Reactions only: no free-text field exists on the guest book table, its routes, its
-  wire, or its window (the ruling recorded in progress.md "36"); the reaction set is a
-  closed enum pinned by a test; there is therefore no moderation surface to build.
-- Privacy: blocked and ignored authors never render for the viewer; a reader sees only
-  what the plot's visit policy allows; the owner can delete any entry; parameterized SQL
-  only; the Phase 18 existence-oracle rule (an unknown, a private, and a blocked plot
-  answer one identical 404; no account id and no friend list ever on the wire; routes
-  are keyed by an opaque plot id).
-- Persistence gates: additive idempotent DDL, an index for every predicate, retention
-  registered for both growing tables, exportAccountData rows, cascade on account delete.
-- Hot paths: no per-tick DB read; the book read is cached per plot and busted on write;
-  the insert bounds the table at the cap (a growing table without a bound is a defect).
-- Never sell power: the Showcase reward is a trophy prop; trophies are earned, never
-  sold; nothing destroyed (an entry the owner deletes is the owner's choice).
-- Determinism where the sim is touched (the tally core draws no Rng); the i18n policy in
-  docs/freeholds/implementation-plan.md; token firewall; vocabulary fixed; "phase" in no
-  code, comment, commit, or PR text; monolith ceilings LOWER after this phase.
+Every player-visible string, including error, aria, tooltip and empty-state text,
+uses an English hudChrome.housing.* key and the formatters from src/ui/i18n.ts.
+Tooltips follow docs/design/tooltip-writing.md. Reuse docs/freeholds/ux-spec.md and the
+shared family/painter/window lifecycle, focus return, keyboard/gamepad, touch safe-area,
+reduced-motion and graphics-fairness contracts; do not fork the theme. New paths,
+symbols, wire fields, tables and tests under housing/freehold are PLANNED unless an
+earlier completed ledger row owns them. Re-find every existing anchor in the tree.
+No power sale, keystone/gear-intermediate/quickening-catalyst bill, new farm bed,
+repossession or calendar destruction. Sim stays deterministic and token-free; all
+server player events are keyed data. Coordinators compose siblings and never grow
+past their pinned ceilings. Fresh tests use literal expectations and negative controls.
 
-Out of scope (do NOT do in this phase):
-- Free text in the guest book or on the exterior (never; the ruling is reactions only);
-  a public showcase feed outside the ward; deed or holder surfaces (Phases 37 and 38); a
-  persisted "who visited" log beyond the book.
+
+Out of scope:
+Any behavior beyond these deliverables, any invented balance rate, and any production flag enable.
+
+ACCOUNT AUTHORITY, CALENDAR AND RECOVERY ACCEPTANCE:
+Consume 07b's single account lifecycle authority: NEW
+server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/loadFreeholdLifecycleProtectionPage/
+advanceFreeholdLifecycleOnClient, coordinated by
+server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator and the accepted
+server/freehold_lifecycle_binding.ts::resolveFreeholdLifecycleBinding policy registry.
+Capture authenticated observations before queues; committed monotonic transitions,
+not authentication login or a plot-local last-seen field, authorize account grace.
+Immutable multi-return history or lossless prefix facts cover dormant/foreign plots;
+union overlapping lifecycle protection and service suspensions exactly, never sum
+independent credits, force-write foreign plots or restart grace on an alt/plot switch.
+
+07c's NEW server/freehold_arrival_db.ts::loadFreeholdArrivalTiers/
+markFreeholdArrivalTierOnClient owns normalized account+tier marks, separate from
+lifecycle and plot saves. Only the committed accepted-owner-entry insert winner
+has first-tier eligibility. NEW arrivals may receive a private freshArrivalPresentation
+directive; snapshot/resume/replay set it null even with firstTierAtAdmission history.
+Commit-before-ACK can skip presentation; no exactly-once visible/audio promise and
+no permanent receipt for routine visits. Second plots and transfers do not duplicate,
+copy or clear account arrival marks or seller lifecycle history.
+
+13/13a own shared source calendar/history/checkpoint evaluation. Preserve calendarId,
+schemaVersion/resetPolicyId and immutable prepaid bill/rate/material/receipt identities
+across foreign-realm claims and transfers. No rebinding to serving realm/browser zone.
+Historical dependencies of durable condition/bill/credit effects must be irrevocably
+finalized and read at consistent committed calendar/lifecycle revisions; unfinalized,
+missing or unsupported coverage keeps the affected effect pending. A future-credit
+purchase does not require future time to be finalized. Long absences/outages use
+bounded indexed prefix probes, never lifetime scans or absent-day/week loops.
+Calendar-only exclusive writers and compatible shared mutation readers follow 07a's
+actual legacy touch-set proof; no invented reverse lock hierarchy. Current-generation
+projection/ACK identity cannot regress after delayed loads or superseded delivery.
+Server-only operator evidence, secrets and diagnostics never reach either owner or
+visitor wire: explicit allowlist builders and distinctive sentinel tests prove it.
+
+At a sale/ownership transfer, materialize the old owner's condition at the transfer
+boundary from finalized original calendar/lifecycle history; preserve source calendar
+and immutable credits, retain seller account history, and apply buyer lifecycle only
+prospectively without copying grace. Unknown authority holds application for bounded
+original-operation recovery/accepted compensation, never a replacement charge or
+silent calendar reset. Current local custody/fence guards still apply.
+Character deletion, soft deactivation, restoration, true account deletion and export
+are separate: deactivation is not an FK cascade; restored history/credits/receipts keep
+their meaning. Explicit housing export loaders expose allowed facts only. Unknown or
+oversized originals remain durable/read-only with bounded diagnostic/reference, not
+empty/new-home defaults or filtered destructive arrival-set rewrites.
+07's persistence-rollout-contract.md and 07b's lifecycle-policy-binding.md/
+lifecycle-db-contract.md plus 13a's upkeep-calendar-db-contract.md name minimum
+capable releases, measured bounds, exact schema/save fixtures and accepted policies.
+Enable only a proven capable rollout; unchanged normalized rows do not prove an old
+binary implements lifecycle, export or saves. Rollback quiesces NEW effects and
+preserves accepted original-operation recovery identities and supported recovery.
+Each consuming implementation/QA runs relevant two-character/two-plot/two-realm,
+dormant-history, delayed-generation, finality/transfer, deactivation/restore/export
+and capable/uncapable-release fixtures through real composition and disposable PG.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/server/freehold_social_db.test.ts
@@ -144,50 +241,45 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts`; the pg-armed
   twin with TEST_DATABASE_URL set after `npm run db:up`; `npm run i18n:gen` then
   `npx vitest run tests/i18n_completeness.test.ts`; `node scripts/pr_screenshots.mjs`.
-- Spawn review agents per docs/freeholds/implementation-plan.md: privacy-security-review,
-  database-performance-reviewer, plus migration-safety (DDL), server-hot-path-reviewer
-  (the per-request reads and the bound), and frontend-seam-reviewer (src/ui/). Prompt
-  each for COVERAGE not filtering; each writes its report to a file. Do not commit until
-  no BLOCKING issues remain.
+- Run node scripts/gate_select.mjs before completion; npm run ci:changed is not a
+  substitute. Re-run only affected checks after fixes, then verify the final head.
+- Dispatch architecture-reviewer, cross-platform-sync, migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor and qa-checklist
+  for the stated surfaces; actual additional surfaces trigger their canonical reviewer.
+  Database review runs before decisions and again on the completed diff. Every report
+  uses COVERAGE, BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT, saved to a file.
+  Apply ALL findings including nits; a fresh reviewer reads the fix round.
 
 STEP 4 - COMMIT CADENCE:
-4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
-`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- feat(server): add the bounded guest book and Showcase tables with retention
-- feat(server): add the guest book and Showcase routes with the closed reaction enum
-- feat(ui): add the guest book window and the Showcase controls to the ward panel
-- test(server): pin the reaction enum, block filtering, the vote rail, and the tally tie-break
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Commit each coherent owned deliverable with a scoped Conventional Commit and a body.
+Stage EXPLICIT task paths, never git add -A. No coauthor trailer, em dash, en dash,
+emoji, or word "phase" appears in a commit message. Keep generated output with its
+authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] A guest-book post carries only a reaction id; an id outside the closed enum is
-  refused with a stable code before any insert; the enum is pinned by literal ids with a
-  can-fail control; the post is rate-limited and refused from a non-visitor; a blocked
-  author's entry is absent from the victim's read; the owner's delete works and a
-  stranger's delete answers 404; no text column, field, or input exists (grep pinned).
-- [ ] The book never exceeds the cap (insert 51, read 50, the oldest gone); retention
-  rows registered for both tables (wiring pin green); the account export includes the
-  rows; delete cascades (pg twin).
-- [ ] One vote per member per season is a database rail (a second vote conflicts);
-  the tally is deterministic with the tie-break pinned; the winner's trophy carries the
-  season source id and appears on the plinth once.
-- [ ] Windows render on desktop and as mobile sheets; screenshots committed.
-- [ ] All STEP 3 suites green; every reviewer reports no BLOCKING.
+STEP 5 - ACCEPTANCE CRITERIA:
+- [ ] Realm-wide opt-in and account/realm/season uniqueness, no self-vote/hop reset, 13-week anchor and deterministic tie-break pass literal and real-PG race tests.
+  Use equal accepted vote totals and equal valid entry timestamps with opposing
+  identity orders: plot-a has entry-z and plot-z has entry-a. The stable plot-a result
+  must win regardless of insertion/query order, process or restart; choosing entry-a
+  must fail. Run this literal comparator and real-PG close/replay fixture.
+- [ ] Close result and award identity persist before bounded reward delivery; opt-out/current ACL and duplicate/restart cases preserve privacy and exactly-once reward.
+- [ ] wave/cheer/admire, one reaction/account/plot/day and concurrent 50-entry cap are enforced at DB/route/window boundaries with no free-text field.
+- [ ] All six named social relations have indexed lifecycle, export/delete and row/byte/retention evidence; daily claims survive display deletion/pruning and retire only after nonregressing authority closes every readmission path. Current block/ignore/visit checks prevent cache authorization.
+- [ ] All keyed window states, desktop/compact/tablet captures, content/parity checks, reviews and contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 36, notes, deferrals) and
-  docs/freeholds/state.md (ledger row 36: endpoints, tables, error codes, i18n keys; the
-  season, cap, reaction set, and rate decisions).
-- Record surprising rules learned in memory for the next session.
+Update progress.md row 36 and state.md's implementation ledger with actual paths,
+commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+Record facts learned; do not reopen the locked product rulings or mark a release gate
+accepted without its signed artifact. Numeric tables are literal, provenance-backed
+and approved before activation.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+Report status, touched files, exact validation commands and outcomes, reviewer verdicts,
+tracked release gates and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-36-qa.md
 
 STOPPING RULES:
-- Stop and ask if any deliverable would need free text in the guest book; the ruling is
-  reactions only and a text field is never added on a session's own judgment.
-- Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
-- Do not push the branch; never merge a PR.
+A failed acceptance check stops completion. Preserve state on failed mutation, decode,
+quote, capacity, lease or revision checks. No widening of a monolith ceiling or silent
+change to a locked ruling. Do not push the branch or open/merge a PR in this slice.
 ```

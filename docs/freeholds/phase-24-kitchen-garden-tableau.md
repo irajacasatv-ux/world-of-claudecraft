@@ -3,22 +3,180 @@
 Wave B, the Lodge tier and the rest of the first wave. The spec is `progress.md` "24
 Kitchen Garden tableau"; the decisions are `state.md` (the Kitchen Garden plants nothing:
 zero beds) and `brainstorm.md`. This phase ships `garden_view.ts` (a pure projection over
-the owner's real `myFarmPlots` through `farmGrowthStage` and `status`), the Harvest
+the account owner's bounded farm-source aggregate through unchanged growth/status functions), the Harvest
 Journal board prop, the farmer NPC as the Steward's flavor (no vendor, no service), and
 the render tableau at the Cottage and Lodge garden anchors. It adds no bed, no crop, and
 no farming rule; the farming calendar model stays pinned exactly as it is.
 
+## Settled delivery and acceptance contract
+
+Follow docs/freeholds/ux-spec.md as the visual and interaction source. Reuse the actual
+shared window and PainterHost families, theme tokens, content-signature dirty model,
+focus restoration and nontrapping build companion. Every player string is an English
+hudChrome.housing.* key (item/entity/guide source domains keep their canonical keys);
+tooltips follow docs/design/tooltip-writing.md. Capture desktop, compact and tablet
+targets from the shared housing helper with stable IDs at LOW, including empty,
+loading, refused, locked, visitor, reconnect and success states relevant here. Required
+after-shots fail if missing. Use shape/text as well as color for actionable state;
+40x40 touch controls respect safe areas, keyboard/gamepad order and reduced motion.
+Three authored emitters is a ceiling subject to the existing light sink/global budget,
+including iOS two and pressure one; unchanged ghost, blocked reason and occupancy
+information must remain legible through ambient grade, materials and silhouettes.
+
+## Deliverables (at most five):
+
+1. Bounded shared account-owner farm source with explicit freshness.
+2. Single safe public owner-garden projection with private fields excluded.
+3. Current-character owner-only Harvest Journal board and flavor NPC.
+4. Final measured garden tableau and prop art.
+5. Zero-bed, source-authority, privacy, fairness and interaction evidence.
+
+## Account-owner garden source and freshness contract
+
+D52/R26 uses all eligible characters of the home's owning account. The exported src/world_api/farming.ts::IWorldFarming interface and its myFarmPlots
+member, together with src/sim/professions/farm_projection.ts, describe
+current-character PlayerMeta.farmPlots/save projections; neither is an account-owner
+aggregate. The verified source fact is recorded in state.md. Never read the visitor's
+myFarmPlots or choose an arbitrary primary character.
+
+Reuse the NEW 17-owned shared account-source boundary:
+server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage and
+server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. This file adds
+fixed versioned static farmPlots and farming-proficiency extraction to that projection,
+including the existing legacy skill fallback semantics. Keep hidden survival/yield data
+server-side only where the existing projectFarmPlots status derivation needs it. Do not
+call listCharactersAllRealms or SELECT whole character state. Keyset pages by character
+id, scoped to the account; measure the candidate (account_id, id) access index, exact
+rows/bytes/query limits and multi-realm character cardinality in MEASURE-BOUNDS. The
+existing per-realm character cap is not an account-global cap. No SQL runs per growth
+step, render frame, descriptor snapshot, visitor or farm bed.
+
+Aggregate with internal (sourceCharacterId, bedId) identity so two owner alts with the
+same bed ID remain distinct. A currently authoritative, generation-fenced local Sim
+source supplies that character's farm map and farming skill and replaces its ENTIRE
+saved slice, including an empty map after harvest. Foreign/nonlocal sources remain
+saved snapshots. Compute stage/status with the unchanged projectFarmPlots,
+farmGrowthStage and host farm-clock contract; time-derived stage changes do not make
+a saved source live and never imply remote unflushed plant/harvest/skill changes are
+known. No farm rule, slot, crop, water/harvest action or extra bed is introduced.
+
+Use 17's bounded keyed single-flight cache, shared admission, cancellation, freshness
+and refresh/invalidation owner so trophy and garden readers join the same page flight.
+On a relevant successful local plant/harvest/dev farm change, farming-proficiency change,
+committed changed-source save/create/delete, or session load/leave/takeover, install an
+available committed source slice with a generation fence or invalidate its account/source
+epoch. Coalesce to one dirty account refresh; an unrelated position/gear autosave does
+not invalidate the garden. A late page cannot resurrect harvested, deleted or replaced
+source data. Cross-process commits use 17's bounded refresh/invalidation mechanism;
+without live source transport they remain honestly saved. This file adds no poller,
+per-visitor listener, full-account reload per save or second account-source cache.
+
+The descriptor explicitly picks opaque visualId, bedId, cropId, stage, status and
+live/saved/unavailable freshness, sorted by the stable source-qualified internal key.
+Opaque visualId must not encode a character/account ID. Exclude raw source identities,
+observation timestamps, skill, private timers, hidden slots and survivalRoll/yieldSeed
+from both owner and guest wire. Public rows are the same owner-derived tableau for all
+viewers. Empty is valid only after a complete successful source read proves no plots;
+incomplete/over-budget/failed source is explicitly unavailable or incomplete, never
+false empty, first-character-only or a visitor's replacement garden. Use ux-spec's
+keyed loading/empty/saved/unavailable states and screenshot these at LOW.
+
+The owner action opens the CURRENT CHARACTER's existing private Harvest Journal;
+account aggregation grants no ability to open another alt's journal. Guests have no
+journal action and only inspect the public owner tableau. Offline/headless adapters
+use their actual available owned-character sources without pretending to load online
+account data; an unavailable account source is explicit and never another player's.
+
+Paired QA proves two owner alts with conflicting crops in the same bed IDs, concurrent
+sessions, unrelated visitor farms, owner offline, remote saved snapshots, skill-derived
+ready/withered status, successful empty after harvest, reconnect/takeover, stale page
+completion after delete/harvest, missing and over-budget pages, and exact public key sets.
+Assert no SQL during growth/render/snapshot and bounded shared flight/query counts with
+concurrent trophy/garden viewers. Run disposable-Postgres static projection/keyset/index
+fixtures, including multi-realm accounts, plus before/final database-performance,
+persistence and privacy-security review. Captured original stored rows remain untouched.
+
+## Exact garden string and source-state acceptance
+
+Use the canonical ux-spec.md garden mapping below. These are approved future English
+hudChrome.housing.garden.* sources, not a claim that an unbuilt runtime tooltip ships
+now. Implement the matching source predicate and rendered tooltip together, following
+docs/design/tooltip-writing.md. No separate synonym keys or timer-bearing fallback.
+
+| Key | Exact English |
+| --- | --- |
+| hudChrome.housing.garden.title | Kitchen Garden |
+| hudChrome.housing.garden.loading | Loading the garden... |
+| hudChrome.housing.garden.empty | No garden beds are recorded. |
+| hudChrome.housing.garden.live | Current garden |
+| hudChrome.housing.garden.saved | Saved garden |
+| hudChrome.housing.garden.mixed | Some beds use saved records. |
+| hudChrome.housing.garden.incomplete | Some garden beds could not be loaded. |
+| hudChrome.housing.garden.unavailable | The garden is unavailable right now. |
+| hudChrome.housing.garden.openJournal | Open {journal} |
+| hudChrome.housing.garden.liveTooltip | These beds use their owner's current garden records. |
+| hudChrome.housing.garden.savedTooltip | These beds use saved garden records. Changes made elsewhere may not appear yet. |
+| hudChrome.housing.garden.mixedTooltip | Some beds use current records and others use saved records. Changes made elsewhere may not appear yet. |
+| hudChrome.housing.garden.savedStatus | {status} (saved) |
+| hudChrome.housing.garden.savedReadyTooltip | This bed appears ready from saved garden records. Changes made elsewhere may not appear yet. |
+| hudChrome.housing.garden.journalTooltip | Open your current character's {journal}. |
+| hudChrome.housing.garden.growing | Growing |
+
+Resolve {journal} through existing hudChrome.harvestJournal.title. Resolve ready and
+withered status through existing hudChrome.harvestJournal.ready and
+hudChrome.harvestJournal.withered. Growing uses hudChrome.housing.garden.growing;
+never use hudChrome.harvestJournal.growing because that source contains a private timer.
+No timestamp, hidden farm data or raw source identifier enters a placeholder.
+
+Apply aggregate source-state precedence from the shared loader result: before any
+result use loading; whole-source failure uses unavailable; any incomplete coverage
+uses incomplete while retaining only honest known rows; complete zero rows uses empty;
+complete nonempty all-live/all-saved/mixed coverage uses live/saved/mixed respectively.
+An empty local replacement after harvest does not erase another owner's-character slice,
+and an unavailable page can never produce confirmed complete-empty. All viewers see
+the same owner-derived source state; only the current character owner gets openJournal
+with journalTooltip and the existing private Journal action.
+
+Each saved row ALWAYS wraps its localized status in savedStatus, including accessible
+text and a saved-ready glow. A saved ready row also uses savedReadyTooltip; the ready
+appearance cannot imply that remote unflushed changes are current. Live, saved and mixed
+aggregate labels use their matching explanatory tooltips. Incomplete/unavailable state
+does not expand Journal authority or introduce any harvest control. Existing current-character
+Journal admission is independent of the public aggregate status; privacy rules still apply.
+
+Decisive rendered fixtures cover initial loading, complete empty, wholly live, wholly
+saved, mixed live/saved, partial/incomplete and failed/unavailable sources. Independently
+pin a saved ready row's visual label, tooltip and accessible name, timer-free growing,
+localized {journal}/{status} values and the owner-current-character versus guest action.
+Assert the exact public descriptor key set, no private sentinel in DOM/accessibility or
+placeholders, and no empty fallback on missing pages. Capture these states in the later
+wave B acceptance evidence at desktop, compact and tablet sizes at LOW; the canonical
+UX manifest owns target identities, so do not invent an unregistered screenshot alias.
+
+## Required Codex asset execution
+
+Every step in this file that creates or replaces a GLB, icon, image, texture, reference
+sheet, room/interior or trophy/furnishing art must be executed by Codex, not Claude.
+Use the repository image-to-GLB and image-generation workflows, approved art-brief.md,
+measured model manifests, export/optimization/fingerprint/prewarm and in-game proof.
+The paired QA verifies the asset-generating step used Codex and all final-art evidence.
+If a QA fix creates or replaces an asset, that fix step also runs in Codex, not Claude.
+Final wave acceptance still requires complete shipping art. The final Codex placeholder
+icon/image sweep in 44a verifies and replaces any feature-created remnants; it does
+not excuse an earlier incomplete paid product or relax an earlier final-art gate.
+This packet is documentation only; no shipping asset is generated by this audit.
+
 ### Starter Prompt
 ```
 This is Phase 24 of the Freeholds and Guildhalls feature: the Kitchen Garden tableau
-(the garden projection over the owner's real farm plots, the Harvest Journal board, the
+(the garden projection over the account owner's authoritative or saved farm sources, the Harvest Journal board, the
 farmer NPC, the render tableau at the garden anchor).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Codex. All asset generation must be done by Codex, not Claude. Follow the root CLAUDE.md "Working style and effort by model"
 block for effort and fan-out; this prompt names no model.
 ULTRACODE: not needed for this phase (three small slices over known seams).
 
-Goal: show the owner's real farm beds growing inside the freehold as a living tableau
+Goal: show the account owner's farm beds inside the freehold with truthful source freshness
 (growth stage, ready glow, withered warning, the Harvest Journal on a board, a farmer
 NPC for flavor) while adding zero beds and touching no farming number.
 
@@ -72,24 +230,32 @@ Spawn one Explore agent to read and summarize:
   tests/professions_farming_state.test.ts, tests/farm_ready.test.ts,
   tests/monolith_budget.test.ts, tests/renderer_compile_gate.test.ts
 The agent returns: the projection functions and their exact signatures; the bed roster
-and schedule pins that must stay byte-identical; whether the owner's plots already
-reach the client (fplot) so the owner's tableau can project client-side, and what a
-visitor would need (a garden block on the descriptor with explicit picks: bed id, crop
-id, stage, status, never a hidden slot); the interactable spawn recipe from amenities.ts
+and schedule pins that must stay byte-identical; the 17-owned account source loader,
+its bounded static farm/skill extraction and generation invalidation; the account aggregate
+and exact safe public fields/freshness from the settled contract above; the interactable spawn recipe from amenities.ts
 and the NPC spawn shape; the crop kit meshes and the fairness rule; the interact funnel
 shape; the extraction candidates that pay for any coordinator line.
 
+Database review runs before implementation decisions and again on the finished diff.
+
+The reader must include every contract and deliverable section above this Starter
+Prompt in its returned acceptance table, including sole authority ownership, D9,
+history/finality and required Codex asset execution where applicable.
+
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
+Parallel Agent fan-out, four slices, each given ONLY the Explore summary and its own
 files; the coordinator edits the shared pin files last (tests/world_api_parity.test.ts
 if a member changes, tests/snapshots.test.ts, tests/monolith_budget.test.ts, goldens):
+- Agent SOURCE: extend the exact 17-owned loader and fixed projection above with
+  normalized farm maps and farming proficiency, whole-character authoritative overlays,
+  shared bounded invalidation and explicit freshness. Own source/DB/PG/query-count tests;
+  preserve stored payloads and farming rules. No second cache or independent query loop.
 - Agent SIM: src/sim/freehold/garden_view.ts (a pure leaf, no sim_context import:
-  `projectGardenTableau(plots: readonly FarmPlotView[], nowMs)` returning rows of bed
-  id, crop id, stage via farmGrowthStage, and status, sorted by bed id, a frozen EMPTY
-  singleton, explicit field picks); settle in STEP 1 whether the owner's client projects
-  from its own myFarmPlots and only visitors need the descriptor garden block, or the
-  block rides the descriptor for everyone (recommend the block for everyone so both
-  hosts regenerate one tableau; record the choice in state.md); the Harvest Journal
+  NEW projectGardenTableau consumes the normalized source-qualified account rows and
+  host farm clock, returning only the allowlisted public fields/freshness above with
+  stable compound-source order and a frozen EMPTY only for complete successful emptiness);
+  the owner-derived public garden block rides the descriptor for everyone, so both
+  hosts use the same pure projection over their explicit available source; the Harvest Journal
   board as a `kind: 'object'` interactable spawned on claim at the garden anchor
   (templateId `harvest_journal_board`, lootable false, respawnTimer Infinity, appended to
   the claim's objectIds so free tears it down); the farmer NPC as a DungeonNpcSpawn on
@@ -102,7 +268,7 @@ if a member changes, tests/snapshots.test.ts, tests/monolith_budget.test.ts, gol
   FAIRNESS note, attachSceneGroupGated with program anchors, torn down on leave) with
   its pure core in RENDER_PURE_CORES; the board and farmer props through the registry
   with prewarm homes; the interact funnel row opening the existing Harvest Journal
-  surface from the board (measured with the sim's own distance); the
+  only for the owner and current character; guests inspect the read-only owner tableau (measured with the sim's own distance); the
   tests/renderer_compile_gate.test.ts arm; `npm run perf:tour`.
 - Agent CONTENT: the garden anchors on the Cottage and Lodge layouts (decor keys with
   measured r for the board and the beds' tableau footprint), src/ui/world_entity_i18n.ts
@@ -131,7 +297,8 @@ INVARIANTS THIS PHASE MUST KEEP:
   regen plus guide keys; no item, so no WebP, deed, or Reliquary obligation unless a
   Homesteader deed is added (then append at the END of deeds.ts and re-pin).
 - i18n: the policy in docs/freeholds/implementation-plan.md; text-free events (D10).
-- Monolith: src/sim/sim.ts, server/game.ts, and src/net/online.ts are at ZERO slack; a
+- Monolith: src/sim/sim.ts, server/game.ts, and src/net/online.ts use the current verified
+  tests/monolith_budget.test.ts ceilings; a
   delegate, case label, or mirror line pays with an extraction and a lowered ceiling.
 - The word "phase" appears in no code, comment, commit, or PR text.
 
@@ -140,6 +307,7 @@ Out of scope (do NOT do in this phase):
 - Produce props and garden markers as furnishings (Phase 22 shipped them); the
   Harvestmaster sheaf and first-harvest markers (Phase 23); guild feast halls (Phase 30).
 - A vendor, a service, or gossip that changes state on the farmer NPC.
+
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/architecture.test.ts
@@ -155,12 +323,15 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run
   tests/i18n_completeness.test.ts`; `npm run perf:tour`; parity goldens regenerated in
   their own commit if the descriptor emit changed.
-- Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
-  architecture-reviewer (garden_view purity, the spawn recipe, determinism),
-  render-performance-reviewer (the tableau painter, the props, the prewarm homes), plus
-  cross-platform-sync if the descriptor gained the garden block (the dispatch table
-  row). Prompt each for COVERAGE not filtering; each writes its report to a file. Do
-  not commit until no BLOCKING issues remain.
+- Required reviewers: architecture-reviewer, render-performance-reviewer, content-obligations-reviewer, frontend-seam-reviewer, cross-platform-sync, privacy-security-review, server-hot-path-reviewer, database-performance-reviewer, migration-safety, test-coverage-auditor, qa-checklist. Each reports COVERAGE to a file.
+  Apply ALL findings including nits; a fresh reviewer reads every fix. The actual diff
+  may trigger additional specialists; database review runs before decisions and again
+  on the finished diff for database surfaces.
+
+Run the extended 17 account-source loader suites and disposable PostgreSQL twins
+with TEST_DATABASE_URL armed, plus the exact source/freshness/query-count evidence above.
+Shared pre-merge bar: node scripts/gate_select.mjs (or deeper npm run gate); record
+the exact exit. ci:changed is additional evidence, never its substitute.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -172,16 +343,17 @@ STEP 4 - COMMIT CADENCE:
 Then `npm run ci:changed` after the LAST commit; read the exit code.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] tests/freehold_garden_view.test.ts proves the tableau rows equal the owner's plots
-  one to one (none added, none dropped), carry no hidden slot, sort by bed id, and are
-  the frozen EMPTY singleton for no plots; garden_view imports no content table.
+- [ ] tests/freehold_garden_view.test.ts proves the tableau rows equal the complete approved account-owner source
+  one to one (none added or dropped), preserve same-bed alts through source-qualified
+  identity, expose only safe public fields/freshness, and use EMPTY only for proven
+  complete emptiness; missing/incomplete sources are unavailable. garden_view imports no content table.
 - [ ] tests/professions_farming.test.ts and tests/professions_zone_rollout.test.ts are
   unchanged (git diff shows no edit) and green; FARM_BED_IDS literal count unchanged.
-- [ ] The board opens the existing Harvest Journal surface from inside the freehold on
-  both hosts; the farmer NPC has no vendor row and no service (pinned).
+- [ ] The owner board opens the current character's existing Harvest Journal on both hosts; a guest
+  sees only the owner tableau and cannot open private journal controls; the farmer NPC has no vendor row and no service (pinned).
 - [ ] The tableau renders growth, ready, and withered states at LOW and at the top
   preset (the fairness pin); `npm run perf:tour` shows no live-program event.
-- [ ] All STEP 3 suites green; the reviewers report no BLOCKING; the ceilings did not
+- [ ] All STEP 3 suites green; the reviewers confirm ALL findings, including nits, are resolved and freshly reviewed; the ceilings did not
   rise.
 
 STEP 6 - DOC UPDATES + MEMORY:
@@ -191,8 +363,8 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+End with: phase status, files touched, validation results, review verdicts, tracked artifact/release
+gates, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-24-qa.md
 
 STOPPING RULES:

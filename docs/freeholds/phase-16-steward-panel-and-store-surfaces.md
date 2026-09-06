@@ -7,8 +7,76 @@ Steward panel: the hearth-flame condition meter, next ledger due, have and need 
 bags and vault, one-click pay from bags, pay from vault, and the Master Builder's Call).
 This phase ships the panel on the `PlantSheetWindow` family, the Freehold Charter row in
 the WOC Store window where Phase 14 allows it, the Call button where purchase is enabled,
-the neutral manage-on-the-website line elsewhere, and the screenshots. Nothing here
+the neutral management line only where its independent capability is approved
+(otherwise absent by default), and the screenshots. Nothing here
 predicts an outcome: the panel mirrors the Phase 13 planner and the sim decides.
+
+## Exact screenshot integration contract
+
+These are NEW planned helper APIs.09 introduces the common helper, constructor,
+visual selector and one import/spread in scripts/pr_shot_targets.mjs, initially with
+its functional interior-only capture subset.11 extends that same
+scripts/lib/pr_shot_housing.mjs build target;16/17/18 append their own functional
+descriptors as their UI lands. Never register a later nonfunctional UI target. No new screenshot runner or multi-image capture API is introduced.
+The registry has one optional-clip result and one image per uniquely keyed variant.
+
+Registration is cumulative by actual producer: file 09 registers the interior
+baseline subset (12 variants); file 11 extends the same target to 89; file 16
+reaches 178; file 17 reaches 226; file 18 reaches 330. File 20 verifies the complete
+330-variant inventory. Earlier files require only their registered working subset,
+never nonfunctional future UI. These are derived inventory counts, not new gameplay
+or tuning values.
+
+The common housingVariants, housingVisualWhen and supplied beforeLoad are
+owned initially by09 and extended by11 exactly as ux-spec.md section11 defines them.
+Append only this file's implemented target; validate the registered cumulative subset
+of 178 working variants. Later UI targets register only when their producer lands:
+
+```js
+{
+  key: 'housing-steward-store',
+  label: 'Steward material sources and permitted Charter surfaces',
+  when: [
+    ...housingVisualWhen,
+    'src/ui/hud/housing/steward_panel_',
+    'src/ui/charter_store_view.ts',
+    'src/ui/woc_store_view.ts',
+    'src/ui/daily_rewards_window.ts',
+    'src/game/distribution_surfaces.ts',
+    'src/sim/freehold/condition_core.ts',
+    'src/sim/freehold/ledger_core.ts',
+  ],
+  variants: [
+    ...housingVariants([
+      'steward-bags', 'steward-vault', 'steward-automatic',
+      'steward-vault-unavailable', 'steward-prepay-review',
+      'steward-condition-30', 'steward-condition-29', 'steward-inn',
+      'steward-pending', 'steward-refused', 'steward-reconnect',
+      'charter-ready', 'charter-pending', 'charter-cancelled',
+      'charter-reconciling', 'charter-reconciled',
+      'charter-quote-unavailable', 'charter-quote-expired',
+    ]),
+    ...housingVariants(['charter-ready', 'charter-reconciled'], {
+      surface: 'website-desktop', views: housingDesktop,
+    }),
+    ...housingDeniedSurfaces.flatMap((surface) =>
+      housingVariants(['charter-denied'], { surface })),
+    ...housingVariants(['steward-condition-29'], { theme: 'parchment' }),
+    ...housingVariants(['steward-condition-29'], { theme: 'highContrast' }),
+    ...housingVariants(['steward-condition-29'], { forcedColors: 'active' }),
+    ...housingVariants(['steward-condition-29'], { motion: 'reduce' }),
+    ...housingVariants(['steward-prepay-review'], { input: 'keyboard' }),
+  ],
+  capture: captureHousingStewardStore,
+},
+```
+
+Every captureHousing* stages exactly variant.scene through its real UI/authority
+fixture, asserts the matching state and returns one optional-clip result. Interior
+scenes use 09's full-viewport {}; UI scenes return { clip: '#ui' }. Missing required
+after-state throws. The registered working subset must include every exact
+target/variant and identity dimension for its producers;20 verifies the full union.
+No callback side shot or sequence-to-last-state substitute.
 
 ### Starter Prompt
 ```
@@ -24,8 +92,19 @@ ULTRACODE: not needed for this phase (three UI slices on existing families).
 Goal: give the owner one window at the hearth that shows condition, the next ledger
 due, have and need across bags and vault, prepay, and the pay buttons, plus the
 Charter and Call purchase surfaces exactly where the distribution map allows them and a
-neutral line everywhere else, all English t() keys, all numbers formatted, mobile as a
+neutral management line only under its independently approved capability, absent by
+default otherwise; all English t() keys, all numbers formatted, mobile as a
 sheet, with before and after screenshots.
+
+Asset execution: every step that creates or regenerates shipping GLBs, reference
+artwork, icons or images MUST be done by Codex, not Claude. Use
+.agents/skills/woc-image-to-glb/SKILL.md and its shared canonical workflow for GLBs;
+use Codex image generation for raster artwork. Capture actual rendered screenshots
+as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
+phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
+icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
+That final sweep does not postpone artwork owned here.44b revisits the completed result
+for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -74,7 +153,7 @@ Spawn one Explore agent to read and summarize:
   src/ui/hud.ts HudFeatures (freeholdPurchaseEnabled, freeholdManageOnWebsite from
   Phase 14) and the dailyRewardsEnabled consumer
 - src/ui/i18n.catalog/hud_chrome.ts (the housing namespace; the bank and farming
-  namespaces as models), src/ui/i18n/ formatters (formatNumber, formatDateTime,
+  namespaces as models), src/ui/i18n.ts formatters (formatNumber, formatDateTime,
   formatMoney), src/ui/CLAUDE.md (PainterHost, write elision, the perf budget, the
   item-cell mark family), src/ui/hud/CLAUDE.md, src/styles/CLAUDE.md,
   src/styles/hud.mobile.css (the mobile sheet base selector list),
@@ -93,57 +172,89 @@ decision recipe, the pr_shot_targets entry shape, the Hud composition lines a ne
 costs and the extraction that pays for them, the i18n formatter imports.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files (disjoint except src/ui/hud.ts, the housing barrel, and the catalog module, which
-the coordinator edits last):
-- Agent PANEL: src/ui/hud/housing/steward_panel_view.ts (pure, UI_PURE_CORES: the
-  hearth-flame meter from conditionAt, next ledger due from the fhold week and
-  housingNowMs(), have and need rows across bags and vault from the Phase 13 planner
-  with the SAME gradeIds and order, affordability per source, prepay weeks up to 4, the
-  lockout explanation below 30, the away-pause and grace notes, the Call row only when
-  freeholdPurchaseEnabled, the manage-on-website row only when freeholdManageOnWebsite)
-  and steward_panel_window.ts (the PlantSheetWindow painter: buttons pay from bags, pay
-  from vault, prepay, Master Builder's Call; send-once per activation with aria-busy;
-  re-arm on freeholdDenied, close on freeholdGranted; opened by proximity to the hearth
-  ANCHOR read from the layout data through tryNearbyInteraction with a pure decide pair,
-  the farm_bed_interact idiom, no entity); rows appended to the one freeholdDeniedLineKey
-  and freeholdGrantedLineKey selectors in src/ui/hud/housing/housing_view.ts (D26: never
-  a second selector or namespace); tests for the core against both
-  Sim-shaped and ClientWorld-shaped inputs and for the window's send-once guard.
-- Agent STORE: the Freehold Charter row in the WOC Store window through the
-  charter_card_view.ts family (web and website desktop only, gated by
-  HudFeatures.freeholdPurchaseEnabled, never by a distribution string), the spend
-  issued through the existing claudiumPurchase hooks with kind freehold and the row's
-  expectedCostClaudium as the fingerprint, the refusal and granted lines through the
-  charter text selectors, the Call button's spend from the panel through the same
-  hooks; the neutral manage-on-website line in the panel and the store where
-  freeholdManageOnWebsite; tests/woc_store_window_contract.test.ts extended (the row
-  appears with purchase enabled, is absent otherwise, and the fingerprint is the row's
-  price verbatim), the a11y rows.
-- Agent MOBILE+I18N: hudChrome.housing.steward.* and hudChrome.housing.store.* English
-  keys (no "earn", no token word, no store name in the neutral line), the M16 fills only
-  where a value is wordy, `npm run i18n:gen`; the styles section in
-  src/styles/components.css and the mobile sheet membership in hud.mobile.css (or a
-  reasoned MOBILE_WINDOW_EXCEPTIONS entry), safe-area insets, 40x40 targets, 16px
-  inputs; the scripts/pr_shot_targets.mjs entries (desktop, compact, tablet) for the
-  panel and the store row; the pr-screenshots capture committed under docs/screenshots/
-  with the lowest graphics preset seeded and elements found by ids, never English text.
-The coordinator edits last: src/ui/hud.ts (compose the window through the housing
-barrel, feed the freeholdDenied and freeholdGranted arms, pay each line with an
-extraction and lower the ceiling), the housing index.ts barrel, the hud_update_drive
-registry row if the panel is polled. Every agent writes any report longer than a screen
-to a file and replies with the path plus a short summary. Never `mode: "plan"` on
-teammates.
+Assign disjoint file ownership and integrate shared pins last.
+Read ux-spec.md and the locked decisions in state.md through the context reader.
+NEW paths/symbols below are planned deliverables, not existing tree anchors.
+
+Deliverables (at most five):
+1. Authoritative Steward view. steward_panel_view.ts mirrors13's same source-mode
+   planner, immutable bill/version and authority-calendar stamps. Show a hearth-flame
+   condition meter, next Ledger due, bags/vault have/need per material, source-specific
+   affordability, bags-only/vault-only/automatic payment, and complete fixed prepay
+   batch up to four future weeks. Inn Room has no upkeep. At30 amenities work; below 30
+   explain the pause while entry, building and belongings stay safe. Show absence,
+   return-grace and service-suspension status without a pay-or-lose tone. All numeric
+   values are state/content data, displayed via formatNumber/formatDateTime/formatMoney
+   imported from src/ui/i18n.ts; housingNowMs() supplies compatible calendar time.
+   Authoritative timestamps/calendar identities are formatted by client locale in
+   the intended realm timezone, including due date, paid-through and shifted outage
+   coverage. A wholly suspended bill period carries its existing prepaid credit
+   forward unchanged; a partially active week keeps its fixed voluntary repair bill,
+   no back-bill accumulation. The refreshing Ledger key keeps old rows readable without
+   authorizing stale payment. Vault-unavailable aria retains known bag count. The
+   condition tooltip limits its promise to condition itself: independent entry/access
+   rules still apply. The 16px floor applies to coarse input/select/textarea, not all text.
+2. Focused decision window. steward_panel_window.ts uses PlantSheetWindow's cold
+   lifecycle and the real .window.panel family, not bank's nontrapping exception.
+   Hearth interaction opens via the shared press funnel and authored anchor; proximity
+   alone does not open a window. Pin nearby-without-interaction and out-of-range
+   interaction as closed; only an explicit accepted in-range press opens it. Preserve
+   draft source/weeks and focused action on
+   relocalize, skip disabled controls and return focus on close. A blocking payment
+   confirmation uses installPromptDialog and always clears inert ownership. Pending
+   sends carry operationId+plotId+kind correlation; unrelated grants/denials do not
+   close/rearm the panel and late responses never reopen it. Matching success refreshes
+   the readable paid state; matching refusal preserves the selection for correction.
+   Loading, empty, error, locked, visitor read-only, pending, success and reconnect
+   states all have hudChrome.housing.* keys and explicit ux-spec.md acceptance.
+3. Approved Charter and Call submodels. WOC Store uses charter_card_view.ts and
+   existing purchase hooks with kind freehold and exact service quote fingerprint.
+   Charter and panel Call appear only on browser web/website desktop, only with live
+   catalog availability and the independent purchase capability. Quote unavailable,
+   changed-price, confirmation, cancel, pending and recovered-result states are keyed;
+   receipt effect names the current bill credit or repair-only result and never
+   implies extra prepay. A denied surface has no purchase node/handler/catalog fetch,
+   hidden DOM, aria/error copy or fallback wallet vocabulary. Neutral website
+   management appears only when its independently approved capability permits it.
+   NEW src/ui/charter_store_view.ts is the housing purchase submodel sibling,
+   composed by existing woc_store_view.ts and charter_card_view.ts. The source file
+   does not exist yet: existing tests/charter_store_view.test.ts currently exercises
+   those shipped storage-charter helpers. Extend its integration arms without erasing
+   existing storage behavior and add focused tests for the new housing module.
+   Receipt action hudChrome.housing.charter.showGate opens the existing map,
+   selects/highlights the real Eastbrook housing marker and focuses marker detail.
+   It never teleports, invokes Hearth Key, clears cooldown or bypasses entry rules.
+   If map/marker is unavailable, keep receipt and show charter.mapUnavailable with retry.
+   Quote expiry uses charter.quoteExpired; only a valid actual amount comparison may
+   select charter.priceChanged. An expired quote does not assert a price change.
+   Visitors never see another owner's purchase state; any permitted account Store
+   remains the visitor's own account context outside the visit flow. Source/copy
+   actions and the Visitors-tab extension from 18 preserve shared selected-tab/focus.
+4. Shared design and mobile behavior. Apply ux-spec.md's mapped current/target theme
+   contract, hearth visual language and exact hudChrome.housing.steward/charter keys.
+   Source tables preserve row identity and item marks; no hover-only affordability
+   or restriction. Trap/return uses the shared FocusManager, gamepad topmost dialog
+   navigation and keyboard order from the spec. Mobile sheet membership is explicit,
+   all targets 40x40, inputs 16px and safe areas honored; low motion/static themes retain
+   every action. Register pure/DOM modules, relocalize and any actual polled drive;
+   pay coordinator growth by extraction.
+5. Steward/store proof and screenshots. Tests pair every displayed source mode with
+   the actual planner and prove exactly-once send, wrong-operation reply immunity,
+   source-shortfall/no-loss, prepay cap, no-upkeep, condition 30/29 and outage display.
+   Seven capability rows run through real HUD/store hooks with DOM/accessibility/
+   network absence assertions. Add the exact housing-steward-store helper entry below
+   and path-selection pins; capture desktop/compact/tablet all payment states plus
+   permitted/denied store, unavailable quote, classic/parchment/highContrast and
+   keyboard/touch/pad focus. Run frontend and privacy review plus fresh fix review.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- The three money gates: (1) counsel sign-off before FREEHOLDS_ENABLED is set in
-  production and before any store submission carrying housing copy (the store row ships
-  dark behind the server flag and the client map); (2) the fail-closed flag defaulting
-  off (the server refuses while dark; the client shows the row only where the map
-  allows AND the store says the SKU exists); (3) the per-distribution surface map: every
-  purchase surface in this phase reads HudFeatures.freeholdPurchaseEnabled, never
-  NATIVE_APP or a distribution string, pinned by the surface matrix through the HUD
-  features.
+- The three money gates: (1) written counsel acceptance, published accepted Terms/
+  listing artifacts and the accepted economy-service contract before production enable
+  or any housing-bearing store submission; external sign-off status lives in state.md;
+  (2) FREEHOLDS_ENABLED defaults off and the server refuses/hides housing purchases
+  while dark; (3) the seven-distribution surface map independently gates housing use,
+  purchase and approved website management, including complete submodel/handler/
+  catalog/DOM/accessibility/error absence on denied surfaces. These are cumulative.
 - The economy service owns prices and token math: the panel and the store render the
   service's price and forward it as the fingerprint; the client never derives a price,
   a discount, or a burn.
@@ -172,6 +283,8 @@ Out of scope (do NOT do in this phase):
 - Native billing or any purchase surface where the map says no.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
+Required named reviewers for this file: privacy-security-review, frontend-seam-reviewer,
+test-coverage-auditor, qa-checklist.
 - Run: `npx tsc --noEmit`; `npx vitest run tests/steward_panel_view.test.ts`;
   `npx vitest run tests/steward_panel_window.test.ts`; `npx vitest run
   tests/woc_store_window_contract.test.ts tests/charter_store_view.test.ts
@@ -187,8 +300,9 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
   frontend-seam-reviewer (pure-core completeness, the painter recipe, write elision,
   the perf budget, mobile, i18n sink classification). Prompt it for COVERAGE not
-  filtering; it writes its report to a file. Do not commit until no BLOCKING issues
-  remain.
+  filtering; it writes its report to a file. Do not commit until ALL findings, including nits, are resolved and the fixes have fresh review.
+
+- Required reviewers for the complete settled diff: frontend-seam-reviewer and privacy-security-review.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -197,28 +311,37 @@ STEP 4 - COMMIT CADENCE:
 - feat(ui): show the Freehold Charter and the Master Builder's Call where the map allows
 - feat(styles): make the Steward panel a mobile sheet with safe-area insets
 - docs(screenshots): capture the Steward panel and the Charter row on desktop and mobile
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Then run the shared contribution gate from docs/qa-gate.md, including
+`node scripts/gate_select.mjs` when required, and `npm run ci:changed` after the LAST
+commit as the Stop-hook floor; record exact exit codes.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] The panel opens by proximity to the layout's hearth anchor (no entity), shows
+- [ ] Every one of the five settled STEP 2 deliverables and all linked ux-spec.md states
+  has implementation, decisive evidence and a fresh review; earlier summary prose never
+  overrides the settled contract. Numeric references match state.md and approved artifacts.
+- [ ] Only explicit interact while in range of the layout's hearth anchor opens the
+  panel (no entity). Merely approaching, waiting nearby or interacting out of range
+  keeps it closed. The accepted interaction shows
   condition, the next due date through
   housingNowMs(), have and need rows that equal the Phase 13 planner's legs for the
   same inventory (a paired pin), affordability per source, prepay up to 4, and the
   lockout explanation below 30.
-- [ ] Each button sends exactly once per activation, re-arms on freeholdDenied, and
-  closes on freeholdGranted (pinned with a fake world).
+- [ ] Each button sends once per operation. Only matching operationId/plotId/kind
+  replies settle pending state; unrelated/late replies preserve focus/draft and never
+  reopen or close another operation. Matching success visibly refreshes paid state.
 - [ ] With freeholdPurchaseEnabled true the Charter row and the Call button render and
   forward the store price verbatim as the fingerprint; with it false neither renders
   and, where freeholdManageOnWebsite is true, the neutral line does (the seven-row
   matrix through HudFeatures in tests/woc_store_window_contract.test.ts).
-- [ ] No wallet, $WOC, deed, marketplace, or "earn" string in the new keys
+- [ ] No wallet, $WOC, on-chain-deed marketing, marketplace, or purchase "earn" string
+  in reachable purchase keys; ordinary Book of Deeds provenance remains valid
   (tests/freehold_store_gates.test.ts still green after the keys land).
 - [ ] The window id has a mobile sheet decision; targets are 40x40; inputs 16px; the
   zoom check passes; screenshots (desktop, compact, tablet) are committed under
   docs/screenshots/ and named in progress.md.
 - [ ] hud.ts is not longer than before; the panel is in UI_PURE_CORES and
   UI_DOM_MODULES; the drive registry row exists if polled.
-- [ ] All STEP 3 suites green; frontend-seam-reviewer reports no BLOCKING.
+- [ ] All STEP 3 suites green; frontend-seam-reviewer confirms ALL findings, including nits, are resolved and freshly reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 16, notes, deferrals, the screenshot
@@ -227,8 +350,7 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+End with: phase status, files touched, validation results, review verdicts, external release gates, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-16-qa.md
 
 STOPPING RULES:

@@ -1,26 +1,17 @@
-# Phase 42: the second freehold SKU
+# Phase 42: second freehold admission and shared Hearth cooldown
 
-Wave E, depth. The spec is `progress.md` "42 Second freehold SKU"; the decisions are
-`state.md` and `brainstorm.md` (D1 the Charter purchase shape, D5 account state, D9 the
-surface map, D16 the owner-keyed map). This is a money phase: it ships a second freehold
-per account keyed `account:<id>:2`, bought as a second Charter SKU the economy service
-prices, with a progressive upkeep schedule (the ArcheAge lesson: the second plot's ledger
-costs more, published, never a timed loss).
+This implementation file and its QA are the complete contract for this bounded slice.
+The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
+are authoritative. Nothing in this planning packet is marked built.
 
 ### Starter Prompt
 ```
-This is Phase 42 of the Freeholds and Guildhalls feature: the second freehold SKU (a
-second plot per account keyed account:<id>:2, its Charter SKU, and the progressive
-upkeep schedule).
+This is Phase 42 of the Freeholds and Guildhalls feature: second freehold admission and shared Hearth cooldown.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase.
+Harness: Claude Code. Follow the root CLAUDE.md working-style block for effort and
+fan-out; this prompt names no model.
 
-Goal: let an account own a second freehold through the existing Charter grant path,
-exactly once, with its own ward slot, ledger, condition, and visit policy, and a
-published progressive upkeep multiplier, without a second implementation of anything the
-first plot already has.
+Goal: admit a second personal plot on the existing stable identity and custody seams, with independent home state and the approved progressive Ledger.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -40,7 +31,7 @@ STEP 0 - PRE-FLIGHT:
   grants, migration safety and guarded constraint changes, world_api parity pins, the
   distribution matrix, test-pin traps.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
+STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "42 Second freehold SKU"),
   and this file
@@ -52,70 +43,238 @@ Spawn one Explore agent to read and summarize:
   Hearth Key module from Phase 06
 - src/world_api/housing.ts (myFreehold and every member that assumes one plot),
   src/net/online.ts (the fhold mirror), src/net/freehold_snapshot_wire.ts,
-  server/freehold_wire.ts (emitFreeholdSelfKeys), server/freehold_db.ts (account_freeholds
-  keyed by account_id; the rev CAS upsert), server/db.ts (exportAccountData),
+  server/freehold_wire.ts (emitFreeholdSelfKeys), server/freehold_db.ts (Phase 07 stable plot identity and indexed account/plot lookup;
+  the rev CAS upsert), server/db.ts (exportAccountData),
   server/claudium.ts (the freehold spend arm and the store filter), server/ws_auth.ts
   (freeholdForAccount at fresh join)
 - src/game/distribution_surfaces.ts, src/ui/hud/housing/ (the steward panel and the
   store surfaces from Phase 16), tests/freehold_grant.test.ts, tests/freehold_ledger.test.ts,
   tests/server/freehold_db.test.ts, tests/world_api_parity.test.ts
-The agent returns: every place that assumes one plot per account (facet, mirror, self
-key, the join read, the ward assignment, the Hearth Key, the steward panel); the key
-change the table needs (a plot_index column with the primary key widened through the
-guarded DO block idiom, never a bare DROP, versus a sibling table); the grant path and
-how a distinct purchase key makes the second SKU exactly-once; the extraction
-candidates. Settle in STEP 1 and record in state.md before implementing: the facet
-shape (the packet default: myFreeholds as an array with the primary first and
-myFreehold kept as the primary alias so no existing consumer changes), the persisted
-key shape, the upkeep multiplier for the second plot (working: 1.5x stacks, TUNING,
-Fernando owns the finals), and the Hearth Key destination rule (the packet default:
-the primary, with a choice in the steward panel).
+- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
+  artifacts referenced by state.md that this slice consumes.
+- Required durable artifacts: docs/freeholds/content-manifest.md,
+  docs/freeholds/content-numbers-workbook.md, docs/freeholds/art-brief.md and
+  docs/freeholds/ux-spec.md; docs/prd/woc/freehold-service-contract.md,
+  docs/prd/woc/freehold-counsel-memo.md, docs/prd/woc/freehold-terms-amendment.md,
+  docs/prd/woc/freehold-store-listing-drafts.md,
+  docs/prd/woc/freehold-deed-service-contract.md and
+  docs/prd/woc/freehold-territory-authority-schedule.md.
+The agent returns: all primary-only admission assumptions, the existing Phase 07 stable opaque
+plot identity, bounded account/plot-index lookup, fenced grants and Phase 15 receipts.
+No primary-key migration is introduced here. myFreeholds is primary-first and
+myFreehold remains the primary alias. Each second-plot approved integer material line
+is ceil(primary schedule line * 1.5), fixed with its schedule/prepay version, never
+service token math. The Hearth Key defaults primary, destination is chosen in Steward
+and its existing 60-minute cooldown is account-shared across homes and alts.
+All design rulings are locked; a missing required signed artifact keeps its release
+gate closed and produces a named validation result, never a guessed runtime value.
+Database review is required BEFORE implementation decisions and again on the finished
+diff, including changes to callers, persisted JSON, caches or workload even when SQL
+text stays unchanged. Reuse 07a's global plot fence and reviewed actual legacy
+touch-set, including caller-owned saves, character prelocks/nonces, bank-ledger
+classification, guild replay and storage/custody effects. Preserve character FIFO
+entry and the proved new-participant suffix, never a replacement generic lock order.
+Never enter a queue holding a DB client or hold locks
+across service IO. Bound admitted work, acquisition/query/transaction deadlines,
+projection keys, rows and bytes; background producers use shared admission and
+cancellation. Retain one running plus one pending dirty generation, not unbounded
+FIFO writes. Supply a query/index inventory (scope, predicates, order, limit, expected
+cardinality and supporting index), reverse-FK export/delete access and retention for
+every growing shape. Disposable-PG concurrency, plans, query counts and maximum legal
+payload evidence are acceptance, not satisfied by fake-pool tests.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last):
-- Agent SIM: the second owner key account:<id>:2 through the existing map (no second
-  map), the plotIndex on the record, the ledger multiplier applied in ledger_core.ts
-  from a content table row (never a literal in logic), independent condition, prepay,
-  and visit policy per plot, the second Charter SKU freehold_charter_second in
-  charters.ts (no price, no copy; granted only when the first is owned, a dry-run
-  refusal otherwise), the facet change per the settled shape with Sim delegates, the
-  Hearth Key destination rule, tests/freehold_second_plot.test.ts (exactly-once,
-  independent ledgers, the multiplier by literal, same-seed twin run).
-- Agent SERVER+NET: the key change in server/freehold_db.ts (additive, idempotent, the
-  guarded constraint idiom; the rev CAS per row), the join read returning both rows, the
-  self key carrying both plots (the strict decode extended; ALL_DELTA_KEYS untouched if
-  the key's shape widens in place, else the new key pinned), the spend arm accepting the
-  second SKU with a distinct purchase key and the store filter showing it only when the
-  first Charter is owned, the exportAccountData rows, tests/server/ plus the pg twin.
-- Agent UI: the steward panel switching between plots, the store surface for the second
-  SKU on the distributions the Phase 14 matrix allows and nowhere else (the matrix
-  extended by one row per distribution for the second SKU), the mobile sheet decision,
-  hudChrome.housing.* keys, pr_shot_targets entries.
-The coordinator edits last: tests/world_api_parity.test.ts (five edits),
-tests/snapshots.test.ts, tests/distribution_surfaces.test.ts, tests/monolith_budget.test.ts,
-parity goldens in their own commit. Every agent writes any report longer than a screen
-to a file and replies with the path plus a short summary. Never `mode: "plan"` on
-teammates.
+Deliverables (at most five):
+Assign disjoint implementation ownership by the following 4 deliverables.
+The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
+finish. Workers receive only the context report and owned files, preserve others' edits,
+and return full reports to the scratchpad with a path and short summary.
+1. Second-plot admission: use Phase 07 account+plot-index lookup and stable public
+   plotId through the same ctx.freeholds map/fence. Initial primary remains unchanged;
+   the freehold_charter_second content SKU admits a second only when primary is
+   owned, rejects a third and carries no literal price or purchase copy. myFreeholds
+   is primary-first; myFreehold is the byte-compatible primary alias. Do not expose
+   account:<id> keys on public wire or replace earlier ward/deed/social plot IDs.
+2. Independent plot upkeep and shared account lifecycle: second plot has its own
+   condition checkpoint, Ledger version, prepay, visit policy and ward slot, but
+   consumes the SAME 07b committed account lifecycle/protection history and 07c
+   normalized account arrival-tier marks. It creates no plot-local grace/presence
+   store, first-tier history or ordinary-visit receipt. The content-owned 1.5 multiplier applies ceil
+   separately to every integer line of the approved primary schedule; no floating
+   inventory quantity, cross-plot credit, retroactive prepaid repricing or stale
+   bill fallback. Hearth Key destination defaults primary with explicit Steward
+   selection; consume 07's NEW server/freehold_hearth_db.ts owner, with
+   FREEHOLD_HEARTH_SCHEMA, loadFreeholdHearth and advanceFreeholdHearthOnClient.
+   Its normalized account_freehold_hearth(account_id PK/FK, ready_at_ms, revision)
+   is the SAME authority across both homes, alts and realms; no plot owns a cooldown
+   and cached private UI is only a committed mirror. 07a checks/advances this account
+   participant atomically with accepted remote Hearth entry under the reviewed
+   actual touch-set, using the authoritative transaction's epoch clock observed
+   after account acquisition and nonregressing clock admission. Commit precedes ACK.
+   Refused entry, already-home no-op and physical-gate entry advance nothing.
+   Disconnect/restart retains the approved 60-minute duration; offline/headless use
+   isolated injected host-clock state with that same duration. Transfer/cancel/
+   recovery never copy or clear either seller or buyer cooldown. Character deletion
+   preserves it;07b soft deactivation/restore, explicit account export and true
+   account hard-delete remain distinct reviewed lifecycle paths.
+   A second plot cannot restart return grace or first-tier
+   presentation; both consume committed account revisions and private fresh-arrival
+   directives, never replay historical eligibility on resume. Preserve each plot's
+   source calendar/reset identity and immutable credit attribution. Finalized
+   historical coverage and the exact union of lifecycle/service protection guard
+   durable effects; missing/unsupported history stays pending/read-only, never
+   empty-outage data or a guessed serving-realm binding. Existing combat/travel
+   admission stays intact.
+3. Durable grant and bounded mirror: second SKU follows the accepted service catalog,
+   durable intent/receipt and atomic account/plot/character transfer seam, current
+   ownership/fence and fresh quote. No bounded purchase-key array guarantees replay.
+   Join returns at most the approved two plot projections via indexed lookup;
+   strict self-wire decode and both-world facet/command pins preserve old primary
+   consumers. Existing exports/delete include both stable rows, receipts retain replay
+   authority and all load/save/background limits continue to apply.
+4. Steward/store UX and proof: independent plot tabs/status, destination selection,
+   current second-plot material bill and initial/owned/pending/error quote states use
+   ux-spec family. Purchase submodel exists only on approved browser/website builds;
+   second-SKU tests cover all seven distributions and denied DOM/catalog/handlers.
+   Literal odd/even ceil cases and deterministic twin/old-new wire cases accompany
+   real-PG concurrent purchase/CAS recovery. Extend 07's freehold_hearth_db unit/PG
+   suites: simultaneous same-account alts/processes/realms/destinations produce one
+   accepted cooldown advance; refused entry changes neither location nor clock.
+   Pin stale UI, restart, commit-before-ACK, physical-gate/no-op, seller/buyer transfer,
+   deactivation/restore/export and clock regression. Record bounded indexed account
+   loads, query/lock/FK waits and capable-release fixtures. Prove no third plot, stale
+   quotation, first-home mutation or custody loss. Capture desktop/
+   compact/tablet plot switch/Hearth selection and denied-store absence.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- The three money gates: (1) counsel sign-off before enable, including the store copy
-  for the second SKU; (2) FREEHOLDS_ENABLED default off, refusing the grant while dark,
-  pinned; (3) the per-distribution surface map pinned with the second SKU row (no
-  purchase surface on App Store, Google Play, Steam, or Epic). The economy service owns
-  prices and token math; the game forwards expectedCostClaudium as a fingerprint.
-- Exactly-once: a replayed purchase key grants nothing twice; the second SKU without the
-  first is refused before any spend.
-- Never sell power: the second plot adds decor space only; nothing repossessed, nothing
-  destroyed, no timed loss (the multiplier raises the bill, never a penalty).
-- Determinism; server authority; the token firewall; persistence gates (additive DDL,
-  the guarded constraint idiom, export rows, cascade); the i18n policy in
-  docs/freeholds/implementation-plan.md; vocabulary fixed; "phase" in no code, comment,
-  commit, or PR text; monolith ceilings LOWER after this phase.
+Every player-visible string, including error, aria, tooltip and empty-state text,
+uses an English hudChrome.housing.* key and the formatters from src/ui/i18n.ts.
+Tooltips follow docs/design/tooltip-writing.md. Reuse docs/freeholds/ux-spec.md and the
+shared family/painter/window lifecycle, focus return, keyboard/gamepad, touch safe-area,
+reduced-motion and graphics-fairness contracts; do not fork the theme. New paths,
+symbols, wire fields, tables and tests under housing/freehold are PLANNED unless an
+earlier completed ledger row owns them. Re-find every existing anchor in the tree.
+No power sale, keystone/gear-intermediate/quickening-catalyst bill, new farm bed,
+repossession or calendar destruction. Sim stays deterministic and token-free; all
+server player events are keyed data. Coordinators compose siblings and never grow
+past their pinned ceilings. Fresh tests use literal expectations and negative controls.
+The three money gates apply to EVERY priced action: (1) signed counsel acceptance,
+published Terms and accepted economy-service contract/catalog before production enable
+or housing storefront submission; (2) fail-closed live flags, default off, refusing
+every NEW priced action while dark; original accepted-operation recovery
+remains admitted under the recorded immutable outcome; (3) independent per-distribution use, purchase,
+website-management and deed capabilities, pinned for all seven distributions. Charter
+and Call checkout is browser web and website-distributed desktop only. Seeker is
+use-only with deeds off. App Store, Google Play, Steam and Epic have no purchase or
+deed submodel, catalog fetch, handler, hidden DOM, error or accessibility purchase
+text. Website management is independently approved and defaults off on denied stores.
+No housing copy on native, Steam or Epic names a token, wallet or on-chain deed.
+Purchase benefits use cosmetic, convenience and access language, never earn/income/yield.
+The economy service owns every price, conversion, fee, royalty, burn and split. The
+game forwards opaque IDs and versioned quote fingerprints, never computes token math
+or substitutes a stale quote. Durable discoverable intent precedes spend; housing
+receipt authority and effects commit through the NEW 07a operation/mutation
+producers, consumed by the Phase 15 purchase and Phase 37 deed adapters.
+No bounded live key array provides replay authority and no lock spans service IO.
+Unknown, expired or changed quotes for NEW spend require a fresh quote and
+explicit confirmation; an accepted original operation recovers without a new debit.
 
-Out of scope (do NOT do in this phase):
-- A third plot or any plot count above two; a second Guildhall; Carpenter and Mason
-  (Phase 43); any price or multiplier final (Fernando and the service own them).
+Out of scope:
+Any behavior beyond these deliverables, any invented balance rate, and any production flag enable.
+
+PROPOSED SERVICE AUTHORIZATION AND RECOVERY CONTRACT:
+Preserve literal D9: the game server receives no distribution/channel label,
+country assertion or physical-client attestation. The NEW external economy-service
+issuer/verifier and policy module verify an actual eligible checkout session and
+current territory under signed policy; the signed acceptance names their exact
+external repository/module or interface-artifact identity and conformance proof.
+Account auth, Origin, user agent, client JSON, linked stores, a desktop bridge
+capability and an outgoing server secret are not physical-distribution proof.
+The service binds NEW checkoutAuthorization to account, purpose/kind, SKU, policy
+version, accepted quote, operation and full plot/guild/custody fingerprint. The game
+consumes only the opaque protected reference and service-verified allow/refusal/effect;
+it never issues eligibility from headers, accepts a channel JSON field or logs/exposes
+the authorization. Unknown/malformed/unverified eligibility refuses NEW spend.
+The adapter authenticates the actual service response and bounds decode before
+validating the complete operation/effect/fingerprint. A signed acceptance document
+is not proof of runtime cryptographic validation. Malformed or nonterminal results
+never grant a local effect or prove that no debit occurred; preserve the original
+operation for bounded status discovery and recovery.
+
+NEW source ownership is explicit: 07a's
+server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation owns
+protected authorization binding, fingerprint and durable receipt authority;
+server/freehold_mutation.ts::commitFreeholdMutation owns atomic local effects.
+Phase 15's NEW server/freehold_purchases.ts is the initial opaque quote/status/
+authorization consumer; NEW server/freehold_deed_proxy.ts is the later deed consumer
+of that same verified boundary. No game geo or distribution-attestation module is
+introduced. These are proposed producers, not existing exports; read prepared
+phase-07a-transactional-mutation-boundary.md and its QA before implementation.
+
+Dark flags and unknown/current eligibility refuse new paid actions, not recovery of
+an already accepted original operation. Receipt/status discovery, local application
+or accepted compensation use its immutable outcome and original protected binding
+without a new checkout session or debit. Current local entitlement, ownership, fence
+and custody guards still apply. Rejected/expired new quotes need fresh confirmation;
+an accepted historical quote is not a fallback new purchase. Both service conformance
+and game tests cover forged eligibility inputs, cross-binding reuse, policy/territory/
+expiry changes before new spend, and accepted-operation recovery after those changes.
+
+ACCOUNT AUTHORITY, CALENDAR AND RECOVERY ACCEPTANCE:
+Consume 07b's single account lifecycle authority: NEW
+server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/loadFreeholdLifecycleProtectionPage/
+advanceFreeholdLifecycleOnClient, coordinated by
+server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator and the accepted
+server/freehold_lifecycle_binding.ts::resolveFreeholdLifecycleBinding policy registry.
+Capture authenticated observations before queues; committed monotonic transitions,
+not authentication login or a plot-local last-seen field, authorize account grace.
+Immutable multi-return history or lossless prefix facts cover dormant/foreign plots;
+union overlapping lifecycle protection and service suspensions exactly, never sum
+independent credits, force-write foreign plots or restart grace on an alt/plot switch.
+
+07c's NEW server/freehold_arrival_db.ts::loadFreeholdArrivalTiers/
+markFreeholdArrivalTierOnClient owns normalized account+tier marks, separate from
+lifecycle and plot saves. Only the committed accepted-owner-entry insert winner
+has first-tier eligibility. NEW arrivals may receive a private freshArrivalPresentation
+directive; snapshot/resume/replay set it null even with firstTierAtAdmission history.
+Commit-before-ACK can skip presentation; no exactly-once visible/audio promise and
+no permanent receipt for routine visits. Second plots and transfers do not duplicate,
+copy or clear account arrival marks or seller lifecycle history.
+
+13/13a own shared source calendar/history/checkpoint evaluation. Preserve calendarId,
+schemaVersion/resetPolicyId and immutable prepaid bill/rate/material/receipt identities
+across foreign-realm claims and transfers. No rebinding to serving realm/browser zone.
+Historical dependencies of durable condition/bill/credit effects must be irrevocably
+finalized and read at consistent committed calendar/lifecycle revisions; unfinalized,
+missing or unsupported coverage keeps the affected effect pending. A future-credit
+purchase does not require future time to be finalized. Long absences/outages use
+bounded indexed prefix probes, never lifetime scans or absent-day/week loops.
+Calendar-only exclusive writers and compatible shared mutation readers follow 07a's
+actual legacy touch-set proof; no invented reverse lock hierarchy. Current-generation
+projection/ACK identity cannot regress after delayed loads or superseded delivery.
+Server-only operator evidence, secrets and diagnostics never reach either owner or
+visitor wire: explicit allowlist builders and distinctive sentinel tests prove it.
+
+At a sale/ownership transfer, materialize the old owner's condition at the transfer
+boundary from finalized original calendar/lifecycle history; preserve source calendar
+and immutable credits, retain seller account history, and apply buyer lifecycle only
+prospectively without copying grace. Unknown authority holds application for bounded
+original-operation recovery/accepted compensation, never a replacement charge or
+silent calendar reset. Current local custody/fence guards still apply.
+Character deletion, soft deactivation, restoration, true account deletion and export
+are separate: deactivation is not an FK cascade; restored history/credits/receipts keep
+their meaning. Explicit housing export loaders expose allowed facts only. Unknown or
+oversized originals remain durable/read-only with bounded diagnostic/reference, not
+empty/new-home defaults or filtered destructive arrival-set rewrites.
+07's persistence-rollout-contract.md and 07b's lifecycle-policy-binding.md/
+lifecycle-db-contract.md plus 13a's upkeep-calendar-db-contract.md name minimum
+capable releases, measured bounds, exact schema/save fixtures and accepted policies.
+Enable only a proven capable rollout; unchanged normalized rows do not prove an old
+binary implements lifecycle, export or saves. Rollback quiesces NEW effects and
+preserves accepted original-operation recovery identities and supported recovery.
+Each consuming implementation/QA runs relevant two-character/two-plot/two-realm,
+dormant-history, delayed-generation, finality/transfer, deactivation/restore/export
+and capable/uncapable-release fixtures through real composition and disposable PG.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/architecture.test.ts
@@ -125,57 +284,48 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/command_schema.test.ts tests/command_facets.test.ts tests/snapshots.test.ts
   tests/freehold_command_chain_online.test.ts tests/distribution_surfaces.test.ts
   tests/freehold_store_gates.test.ts tests/client_shell.test.ts tests/server/freehold_db.test.ts
+  tests/server/freehold_hearth_db.test.ts tests/server/freehold_hearth_db.pg.test.ts
   tests/server/storage_gates.test.ts tests/server/http/surface_inventory.test.ts
   tests/api_error_code_parity.test.ts tests/localization_fixes.test.ts
   tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts` plus the
   tests/server/ suites added and the pg-armed twin with TEST_DATABASE_URL set; `npm run
   i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts`; `node scripts/pr_screenshots.mjs`;
   parity goldens if regenerated.
-- Spawn review agents per docs/freeholds/implementation-plan.md: privacy-security-review,
-  architecture-reviewer, plus migration-safety (the key change), cross-platform-sync
-  (facet and wire), and frontend-seam-reviewer (src/ui/). Prompt each for COVERAGE not
-  filtering; each writes its report to a file. Do not commit until no BLOCKING issues
-  remain.
+- Run node scripts/gate_select.mjs before completion; npm run ci:changed is not a
+  substitute. Re-run only affected checks after fixes, then verify the final head.
+- Dispatch content-obligations-reviewer, architecture-reviewer, cross-platform-sync, migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, frontend-seam-reviewer, test-coverage-auditor and qa-checklist
+  for the stated surfaces; actual additional surfaces trigger their canonical reviewer.
+  Database review runs before decisions and again on the completed diff. Every report
+  uses COVERAGE, BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT, saved to a file.
+  Apply ALL findings including nits; a fresh reviewer reads the fix round.
 
 STEP 4 - COMMIT CADENCE:
-4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
-`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- feat(sim): support a second freehold per account with a progressive ledger multiplier
-- feat(server): persist two plots per account and grant the second Charter exactly once
-- feat(ui): switch the steward panel between plots and gate the second SKU by distribution
-- test(sim): pin the second Charter rail, independent ledgers, and the multiplier
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Commit each coherent owned deliverable with a scoped Conventional Commit and a body.
+Stage EXPLICIT task paths, never git add -A. No coauthor trailer, em dash, en dash,
+emoji, or word "phase" appears in a commit message. Keep generated output with its
+authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] The second Charter grants exactly once (a replayed key and a third attempt grant
-  nothing), refuses without the first, and refuses while FREEHOLDS_ENABLED is dark
-  (pinned per case).
-- [ ] The second plot has its own ward slot, ledger, condition, prepay, and visit
-  policy; its bill is the first plot's times the pinned multiplier; a same-seed twin run
-  agrees; nothing on the first plot changes.
-- [ ] The key change is additive and idempotent, applies twice cleanly (pg twin), and
-  every existing row loads as plot 1; the export includes both rows; delete cascades.
-- [ ] The surface matrix carries the second SKU row per distribution; no purchase
-  surface on App Store, Google Play, Steam, or Epic; the panel switches plots on desktop
-  and as a mobile sheet; screenshots committed.
-- [ ] All STEP 3 suites green; every reviewer reports no BLOCKING.
+STEP 5 - ACCEPTANCE CRITERIA:
+- [ ] Second grant reuses stable identity from07, is exactly-once under real-PG concurrent/restart receipt tests, refuses without primary or at the two-plot cap, and leaves all primary consumers unchanged.
+- [ ] Independent state/ward/visits and per-line ceil(1.5) with immutable prepaid versions pass literal odd/even boundary tests; no stale quote or schedule fallback.
+- [ ] Hearth defaults primary and both destinations atomically consume the same 07 account_freehold_hearth row through 07a. The 60-minute account history survives alt/realm/restart/transfer; stale mirrors never authorize, refused/no-op/gate entry never advances, and concurrent PG entry/clock/lifecycle/rollout proofs pass with existing combat restrictions.
+- [ ] Bounded two-row join/export/delete, strict wire/parity, seven-distribution complete surface absence and desktop/compact/tablet states pass all three money gates/service-price checks.
+- [ ] All suites, real-PG plans/custody evidence, reviews and contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 42, notes, deferrals) and
-  docs/freeholds/state.md (ledger row 42: facet members, wire keys, the SKU, columns,
-  i18n keys; the facet, key, multiplier, and Hearth Key decisions; the OPEN counsel gate
-  extended to the second SKU's store copy).
-- Record surprising rules learned in memory for the next session.
+Update progress.md row 42 and state.md's implementation ledger with actual paths,
+commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+Record facts learned; do not reopen the locked product rulings or mark a release gate
+accepted without its signed artifact. Numeric tables are literal, provenance-backed
+and approved before activation.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+Report status, touched files, exact validation commands and outcomes, reviewer verdicts,
+tracked release gates and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-42-qa.md
 
 STOPPING RULES:
-- Stop and ask if widening the primary key needs anything but the guarded DO block
-  idiom (a destructive DDL step is a maintainer decision).
-- Stop if any consumer of myFreehold would have to change behavior for a one-plot
-  account; the alias must keep them byte-identical.
-- Do not push the branch; never merge a PR.
+A failed acceptance check stops completion. Preserve state on failed mutation, decode,
+quote, capacity, lease or revision checks. No widening of a monolith ceiling or silent
+change to a locked ruling. Do not push the branch or open/merge a PR in this slice.
 ```

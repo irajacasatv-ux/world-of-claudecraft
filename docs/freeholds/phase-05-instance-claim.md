@@ -55,15 +55,19 @@ Spawn one Explore agent to read and summarize:
   updateDoorTriggers, resetDungeonInstances, instanceAt, instanceClaimContains),
   src/sim/instances/instance_slot.ts, src/sim/data.ts (instanceOrigin, instanceOriginX,
   DUNGEON_OVERFLOW_X_BASE, dungeonAt, the DUNGEONS merge and DUNGEON_LIST,
-  INSTANCE_SLOT_COUNT, instanceSlotForZ, FINDER_ACTIVITIES), the dungeon def tables
+  INSTANCE_SLOT_COUNT, instanceSlotForZ), src/sim/content/dungeon_finder.ts
+  (FINDER_ACTIVITIES), the dungeon def tables
   (DUNGEON_DEFS, TEMPLE_DUNGEON_DEFS, WILDHEART_DUNGEON_DEFS; the Dawnhold record as the
   walk-in model), src/sim/vault_craft_gate.ts (header only), src/sim/colliders.ts
   (isInstancedRegion, instanceLocal by x band), src/sim/world.ts (the groundHeight
   dungeon branch)
 - server/game.ts (join and planJoin, the addPlayer call and joinMeta, the dispatch
   preamble: JAILED_BLOCKED_COMMANDS, refusedRiftForgeCommand, heavySelfMarkOnReceipt,
-  the freehold case labels from Phase 01), server/ws_auth.ts (joinMeta assembly beside
-  bankBonusFactsForAccount), server/freehold_wire.ts (Phase 01), server/heavy_self.ts
+  the freehold case labels from Phase 01), server/ws_auth.ts (fresh-join joinMeta
+  assembly beside the injected bankBonusForAccount callback), server/main.ts (the
+  callback bound to computeBankBonus(await bankBonusFactsForAccount(id))),
+  server/db.ts (bankBonusFactsForAccount export), server/bank_entitlements.ts
+  (computeBankBonus export), server/freehold_wire.ts (Phase 01), server/heavy_self.ts
   (HEAVY_SELF_CMDS and the vault_buy_upgrade rationale), server/farming_commands.ts (the
   accept-return shape), server/linkdead.ts, server/CLAUDE.md "Hot paths"
 - src/net/online.ts (the freeholdEnter and freeholdLeave one-liners; the dungeonEntrySeq
@@ -88,6 +92,27 @@ the extraction candidates in sim.ts and game.ts that pay for the new lines; how
 resetDungeonInstances and FINDER_ACTIVITIES must ignore the new defs.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
+
+Deliverables (at most five):
+1. The two owner-claim DungeonDefs and all content/finder/reset/parity exclusions.
+2. Host-stamped owner resolution and deterministic claim/leave/reap behavior.
+3. Thin flag-gated server dispatch, jailed refusal and same-account session sharing.
+4. The authoritative arrival identity/pose and decisive offline/online parity tests.
+
+A slot is a runtime cache, not durable ownership. 07 gives every plot stable public
+identity; 07a fences one active authoritative plot claim across realms. Before 07a,
+production online entry stays disabled even if the development flag is set. The server
+cannot turn a full runtime pool or foreign-realm fence into a new ownership queue or
+loss: emit an append-only busy/retry reason, leaving state and location unchanged.
+All sessions stamped to the owner account resolve the same primary plot and are excluded
+from the later visitor count. Different account stamps cannot request an internal owner
+key through client payloads. The offline entity key is stable within its Sim only.
+
+Reuse the existing confirmed dungeonEntrySeq arrival identity and an authored safe
+position/facing with entry. 07 assigns the public plot ID that08a adds to the descriptor. 06 and 09 consume it for gate handoff and camera/audio;
+resume of the same arrival must not replay the welcome. The event must not expose raw
+account/guild keys. Preserve the verified bankBonusForAccount callback path in STEP 1.
+
 Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
 files (disjoint except the shared pin files the coordinator edits last):
 - Agent CONTENT: src/sim/types.ts `DungeonDef.claimKey?: 'party' | 'owner'` (append-only,
@@ -183,11 +208,22 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
   architecture-reviewer (the enterDungeon branch, the stamp writer, the extractions),
   cross-platform-sync (the event, the enter path on both hosts, the parity scenario),
-  server-hot-path-reviewer (updateInstances with 48 more slots, the join stamp); the
+  server-hot-path-reviewer (updateInstances with the remeasured slot allocation from the actual DUNGEON_LIST, the join stamp); the
   dispatch table adds content-obligations-reviewer (two src/sim/content/ records) and
   privacy-security-review (the join stamp and the jailed set). Prompt each for COVERAGE
-  not filtering; each writes its report to a file. Do not commit until no BLOCKING issues
-  remain.
+  not filtering; each writes its report to a file. Do not commit until all findings, including nits, are resolved and freshly reviewed.
+
+FINAL REVIEW AND COMPLETION CONTRACT:
+- Required reviewers for the actual promised surfaces: architecture-reviewer, cross-platform-sync, server-hot-path-reviewer, content-obligations-reviewer, privacy-security-review, test-coverage-auditor, qa-checklist.
+  Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
+  nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
+  ownership examples; this complete roster is the minimum finishing dispatch.
+- Database performance reviews happen before implementation decisions and on the finished
+  diff whenever SQL/call sites/stored shapes/queues/locks/timeouts/growth change; pair
+  migration-safety and privacy-security-review for persistence/authority changes.
+- Run node scripts/gate_select.mjs before calling this contribution complete, as well as
+  every scoped/PG/visual/SFX check named here. Report exact commands and outcomes. A
+  skipped required suite or a reviewer report alone is not a passing shared gate.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -210,8 +246,7 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] freeholdOwnerKey is in META_EXCLUDE with a justification; the S3 guard passes with
   the enter and leave lines covered.
 - [ ] sim.ts and game.ts ceilings are LOWER than before; online.ts unchanged.
-- [ ] All STEP 3 suites green; architecture-reviewer and cross-platform-sync report no
-  BLOCKING (the other reviewers likewise).
+- [ ] All STEP 3 suites green; architecture-reviewer and cross-platform-sync confirm ALL findings, including nits, are resolved and freshly reviewed (the other reviewers likewise).
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 05, notes, deferrals) and

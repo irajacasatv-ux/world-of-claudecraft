@@ -8,7 +8,7 @@ SKU allowlist and a new spend kind `freehold`; the storage pending-row machinery
 reused) and `state.md` D16 (the row with a rev compare-and-swap). This phase ships the
 spend kind on the server, the two grants through the sim, the telemetry source, the flag
 gating, and `docs/prd/woc/freehold-service-contract.md` (a durable PRD-side artifact,
-never torn down with the packet) for the economy service (O1). It ships
+never torn down with the packet) for the accepted service-contract handoff. It ships
 NO client surface (Phase 16) and tests against a fake service.
 
 ### Starter Prompt
@@ -27,6 +27,16 @@ full), through the existing Claudium spend route with a new kind, and land each 
 the account row and the live sim exactly once, while the game forwards a price
 fingerprint and computes no price, peg, burn, or split.
 
+Asset execution: every step that creates or regenerates shipping GLBs, reference
+artwork, icons or images MUST be done by Codex, not Claude. Use
+.agents/skills/woc-image-to-glb/SKILL.md and its shared canonical workflow for GLBs;
+use Codex image generation for raster artwork. Capture actual rendered screenshots
+as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
+phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
+icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
+That final sweep does not postpone artwork owned here.44b revisits the completed result
+for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
+
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
   (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
@@ -43,6 +53,9 @@ STEP 0 - PRE-FLIGHT:
   storage purchase flow, the FOR KEY SHARE locked wait, the pg twin), the storage SKUs
   service half (PR #32), the woc marketplace dev deploy being MAINNET, Postgres gotchas,
   server/tests gotchas, test-pin traps.
+
+- Invoke database-performance-reviewer before storage/query/lock/cadence decisions;
+  send the scoped diff surface and approved artifacts, then review the finished diff.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
@@ -68,7 +81,7 @@ Spawn one Explore agent to read and summarize:
 - src/sim/content/freehold/charters.ts (Phase 03: FREEHOLD_CHARTERS,
   isKnownFreeholdCharterId, no price, no copy), src/sim/content/storage_charters.ts (the
   twin), src/sim/bank.ts (bankGrantStorageSlots and StorageGrantResult: the dryRun
-  contract and the appliedStorageKeys exactly-once argument), src/sim/freehold/state.ts
+  contract and the live appliedStorageKeys adjunct, not durable replay authority), src/sim/freehold/state.ts
   and types.ts (the record: tier, condition stamp, the applied purchase keys field to
   add), src/sim/freehold/condition_core.ts (Phase 13: the repair-to-full arm)
 - server/economy_telemetry.ts (COPPER_FLOW_SOURCES and SOURCE_BY_COMMAND),
@@ -89,70 +102,112 @@ shape used by storage_gates.test.ts; the extraction that pays for any server/gam
 line (none expected: the purchase path is REST, not WS).
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files (disjoint except server/main.ts and the error-code snapshot, which the coordinator
-edits last):
-- Agent SERVER: parseSpendKind admits 'freehold'; both claudium_proxy.ts unions and the
-  store filter gain the kind with isKnownFreeholdCharterId and the Master Builder's Call
-  id (`freehold_master_builders_call`, a content constant in charters.ts, never a price);
-  the kind === 'freehold' branch in handleClaudiumApi beside the storage branch: unknown
-  SKU refused as unknown_item, the expectedCostClaudium fingerprint forwarded verbatim,
-  the flag dark refuses with a typed body and the store filter drops both SKUs while
-  dark, the missing runtime hook fails closed as unavailable; the store-open reconcile
-  mirrors an owned Charter into the account row through the new freeholdGrant hook (the
-  grantWeaponSkins twin, ONLY after the service reports owned); the live-apply host
-  closure in a new server/freehold_purchases.ts (the storagePurchaseHost shape, small:
-  resolve the live owner session through resolveLiveCharacterFrom, dry-run the sim
-  grant, spend, apply on a definitive grant, persist through upsertFreehold, refuse
-  no_live_character for the Call, never a pending row); COPPER_FLOW_SOURCES gains
-  'freehold' with SOURCE_BY_COMMAND rows for every housing command that can move copper;
-  tests/server/freehold_gates.test.ts (both dispatch arms identical, unknown SKU
-  refused, price drift refused by the fake service, replay of the same idempotency key
-  grants once, flag dark refuses and hides the SKUs, the tampered owned:true store row
-  never reaches the mirror).
-- Agent SIM: src/sim/freehold/grant.ts with freeholdGrantCharter(ctx, ownerKey,
-  charterId, purchaseKey, { dryRun }) (tier inn_room to cottage in place, trophies and
-  layout carried over per D2, refuses already_granted on a second Charter and
-  unknown_sku on a foreign id) and freeholdGrantRepair(ctx, ownerKey, purchaseKey,
-  { dryRun }) (condition to 100 through condition_core, stamp reset), both returning a
-  StorageGrantResult-shaped union, the purchase key stored in the record's
-  appliedPurchaseKeys (the appliedStorageKeys exactly-once argument), reachable only
-  through ctx (never on COMMAND_NAMES, never on IWorld), pinned; the normalizeFreehold
-  arm for the new field (bounded, deduped, never destroys); the sim grant suite driven
-  through sim.ctx (the tests/storage_charters.test.ts model: dry run mutates nothing,
-  apply once, replay refused, determinism, zero Rng).
-- Agent DOCS+DB: docs/prd/woc/freehold-service-contract.md (a durable PRD-side artifact,
-  never torn down with the packet; the handoff to the economy service,
-  O1: the two SKU ids under spend kind freehold, that the Charter is once-per-account
-  and the service records owned, that the Call is repeatable with no owned row, the
-  fingerprint rule (the game forwards expectedCostClaudium and the service refuses
-  price_changed), the settlement policy line as ruling 3 states it (fiat and SOL
-  proceeds convert to $WOC and a published share burns; counsel and the service gate the
-  mechanism; the working burn share is 25 percent per ruling 8), the illustrative $20
-  Cottage price as a working number the service owns, and the kind_mismatch obligation
-  on the service side); the freehold_db.ts arms the grants need (tier upsert with rev
-  CAS, the applied keys column or JSONB field, an index only if a predicate needs one)
-  with the fake-pool and pg-armed twin cases; the .env.example row unchanged (the flag
-  exists since Phase 01).
-The coordinator edits last: server/main.ts (the configureClaudiumRuntime call gains the
-two hooks; the legacy ladder stays a call, never inline logic), the error-code snapshot
-in tests/server/http/error_codes.test.ts if a code was appended, and
-tests/server/main_retention_wiring.test.ts if a table changed. Every agent writes any
-report longer than a screen to a file and replies with the path plus a short summary.
-Never `mode: "plan"` on teammates.
+Assign disjoint file ownership and integrate shared pins last.
+Read ux-spec.md and the locked decisions in state.md through the context reader.
+NEW paths/symbols below are planned deliverables, not existing tree anchors.
+
+Deliverables (at most five):
+1. Extend the existing durable housing operation boundary. Phase 07a owns
+   server/freehold_mutation.ts::commitFreeholdMutation and
+   server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation.
+   Extend those records for the service: bind immutable operationId/idempotency key,
+   account, opaque plotId, SKU, operation fingerprint, expected durable revision and
+   globally fenced owner generation before repeated spend. Persist discoverable
+   intent before service IO, release DB clients/locks, then call the service. The
+   authoritative service outcome and target grant receipt commit atomically before
+   live mirrors acknowledge success. appliedPurchaseKeys may be a bounded live adjunct;
+   it is never replay authority. Retain compact durable identities unless a signed
+   service replay horizon permits proven safe tombstone/compaction. Do not copy the
+   storage purchase pending-row/ladder/queue subsystem or create a second housing
+   transaction framework.
+   Preserve 07a's real legacy transaction touch set/relative locks, bank-ledger
+   classifier before guild replay and existing storage/custody tail. Use its reviewed
+   housing composition hook before COMMIT with the concrete participant manifest and
+   disposable-PG proof. runFencedCharacterUpdate from
+   server/character_save_statement.ts owns pre-lock/nonce fencing; beginCharacterSaveTx
+   supplies deadlines, not that fence. Never replace this with an unchecked InitPlan
+   or an invented generic account/character/guild/receipt lock hierarchy.
+   Consume13a's sole server/freehold_upkeep_ingress.ts calendar boundary and13's safe
+   src/sim/freehold/state.ts projection. source calendarId/schemaVersion/resetPolicyId
+   and committed lifecycle/authority revisions retain original bill/receipt identity.
+   Every historical dependency of durable condition/bill/credit evaluation/consumption
+   must be irrevocably finalized; otherwise hold the affected local effect pending.
+   Buying future credits does not require future finality. The mutable covered tail is
+   never durable authority. The07a effect transaction uses compatible calendar-head
+   FOR SHARE and lifecycle guards at the reviewed hook, rechecks finalized dependencies
+   and lower revision CAS, and preserves original-key recovery without another debit.
+   No second interval store, receipt journal, poll or calendar migration.13a's guarded
+   process-generation/revision/digest install and exact current/superseded/conflicting
+   ACKs are the sole source of live calendar status. A confirmed payment keeps its
+   agreed recovery guarantee while local application waits for irrevocable facts.
+   Service responses must be authenticated and bounded-decoded with full original
+   operation fingerprint/effect validation. Malformed/nonterminal status is neither
+   a grant nor proof of no debit. Existing claudium_proxy.ts outgoing credential,
+   timeout and redirect refusal do not implement this NEW receipt/status protocol;
+   written signed acceptance is not cryptographic runtime response verification.
+2. Confirmed grant core. freeholdGrantCharter upgrades the existing Inn Room to
+   Cottage once per account, carrying approved exact furnishings and trophy records
+   in place. freeholdGrantRepair sets condition 100 and satisfies the current unpaid
+   Ledger bill, adds no future credit and consumes no future prepay. If this week's
+   bill is already paid, the immutable quoted result explicitly says repair-only.
+   Dry runs mutate nothing; grants remain server-only ctx operations, absent from
+   COMMAND_NAMES and IWorld. Charter owned reconciliation requires service authority,
+   never an unverified client/store row. A new Call requires a valid admitted target
+   session; an already-confirmed receipt still recovers after that session disconnects.
+3. Spend/reconcile integration. parseSpendKind, both claudium_proxy unions, store
+   filtering and both dispatch paths add known freehold SKUs behind the default-off
+   flag. freehold_purchases.ts uses the shared operation boundary, live-owner resolver
+   and literal service quote fingerprint; unknown SKU, kind mismatch, quote drift,
+   missing hook and unaccepted gates fail closed. Ambiguous debit retries/reconciles
+   only the original operation key, never issues a replacement charge. Store-open
+   Charter reconciliation and bounded background receipt recovery share admitted,
+   cancellation-aware work; no lock spans network IO and no per-tick SQL is added.
+   Telemetry records housing copper sources without computing service money values.
+4. Accepted service contract and growth rails. Validate the already-produced durable
+   docs/prd/woc/freehold-service-contract.md: initial SKU catalog/versioned quotes,
+   once-owned Charter versus repeatable Call, exact current-bill repair effect,
+   account/plot/guild-bound idempotency, immutable outcomes, refund and ambiguity
+   rules, published conversion/burn policy and outage intervals. Service acceptance,
+   counsel and published Terms remain explicit release gates in state.md. Inventory
+   actual receipt/recovery queries, predicates, ordering, limits, indexes, retention,
+   row/encoded-byte bounds and monitoring for growth, oldest pending intent, queue
+   wait, pool wait and failures. Reuse07's admission/deadline and export/delete policy.
+   Literal D9 retains game-server ignorance of distribution. Service-owned NEW
+   verification yields opaque account/purpose/SKU/policy/quote/operation-bound
+   authorization, independently of client labels and UI capability. The service
+   artifact must identify its issuer/verifier, conformance evidence and exact fact
+   authorized before release; no current trusted channel field is invented. Unknown
+   eligibility refuses a new charge, but an already confirmed payment remains
+   recoverable under the original identity.
+   No housing SQL runs per tick, render frame or viewer refresh. Store-open/status and
+   original-operation recovery may issue explicitly admitted bounded queries through
+   the shared operation/projection owners. Account/operation single-flight, request
+   cancellation and measured connection/query/index/result limits bound demand; no
+   independent UI scan or poller. Recovery always keeps the original operation identity
+   and immutable receipt. Record receipt growth and accepted retention semantics.
+5. Crash/race proof. Fake-service tests prove both route paths, tampered ownership,
+   quote drift and disabled catalogs. Disposable-PG tests prove service-confirmed
+   effect+receipt atomicity, timeout after debit, restart before/after grant, owner
+   disconnect, same-key cross-process races, stale CAS/global-fence refusal and replay
+   after live-array compaction. A failed apply stays discoverable for original-key
+   recovery with neither loss nor duplicate effect. Run database review before/final,
+   migration-safety, privacy-security-review and architecture review of grant purity;
+   preserve existing storage behavior tests unchanged.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- The three money gates: (1) counsel sign-off before FREEHOLDS_ENABLED is set in
-  production and before any store submission carrying housing copy (this phase ships
-  dark and states it in freehold-service-contract.md); (2) the fail-closed flag defaulting off:
-  freeholdsEnabled refuses the branch and hides both SKUs from the store while dark,
-  pinned; (3) the per-distribution surface map (Phase 14) stays the client gate and the
-  server treats a spend identically from every build.
+- The three money gates: (1) written counsel acceptance, published accepted Terms/
+  listing artifacts and the accepted economy-service contract before production enable
+  or any housing-bearing store submission; external sign-off status lives in state.md;
+  (2) FREEHOLDS_ENABLED defaults off and the server refuses/hides housing purchases
+  while dark; (3) the seven-distribution surface map independently gates housing use,
+  purchase and approved website management, including complete submodel/handler/
+  catalog/DOM/accessibility/error absence on denied surfaces. These are cumulative.
 - The economy service owns prices and token math: the game forwards expectedCostClaudium
   as a fingerprint and never computes a peg, a burn, a split, or a price; no price
   literal in src/sim/content/freehold/charters.ts (a negative property pin).
-- Exactly-once: the purchase key is stored in the same record the entitlement lives in;
-  a replay grants once; the rev compare-and-swap refuses a stale write, never merges.
+- Exactly-once: durable operation receipt identity is replay authority; target effect and applied
+  receipt commit atomically. A bounded live key array cannot authorize recovery or
+  forget an old effect. Stale CAS/global-fence refusal leaves recoverable intent intact.
 - Server authority and the storage-slot pattern: a purchased effect arrives as a
   server-applied grant after the service confirms; the grant functions are never on
   COMMAND_NAMES or IWorld.
@@ -163,10 +218,11 @@ INVARIANTS THIS PHASE MUST KEEP:
 - Persistence gate: additive idempotent DDL only, JSONB back-compat for older rows, an
   exportAccountData row already present (Phase 07), keep-forever stated.
 - i18n: the policy in docs/freeholds/implementation-plan.md; refusal reasons are stable
-  tokens the client localizes (the storage vocabulary), any new apiError leaf English
-  only through the scaffold.
-- Hot paths: no per-request DB read outside the existing spend route, no new unbounded
-  table, no per-tick work.
+  tokens the client localizes (the storage vocabulary), new freehold apiError leaves append by hand to the existing domain catalog and
+  mappings, preserving scaffold names; rerunning the generator for an existing domain fails.
+- Hot paths: zero tick/render/viewer SQL; admitted bounded store-open/status and
+  original-operation recovery queries use shared owners, single-flight/cancellation and
+  measured query/index/result limits. Preserve original identity and receipt growth rails.
 - The word "phase" appears in no code, comment, commit, or PR text.
 
 Out of scope (do NOT do in this phase):
@@ -178,6 +234,12 @@ Out of scope (do NOT do in this phase):
   (Wave D).
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
+Required named reviewers for this file: architecture-reviewer, privacy-security-review,
+database-performance-reviewer, migration-safety, server-hot-path-reviewer,
+test-coverage-auditor, qa-checklist.
+Database-performance-reviewer runs before implementation decisions and again on the
+finished diff; pair with migration-safety and privacy-security-review as listed.
+The QA session inspects those reports and dispatches a fresh review of every fix.
 - Run: `npx tsc --noEmit`; `npx vitest run tests/server/freehold_gates.test.ts`;
   `npx vitest run tests/freehold_grant.test.ts` (the sim grant suite); `npx vitest run
   tests/server/claudium.test.ts tests/server/storage_gates.test.ts
@@ -193,8 +255,14 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   privacy-security-review (the spend branch, the fingerprint, the reconcile trust
   boundary, the flag), migration-safety (the record field and any DDL), and
   database-performance-reviewer (the upsert, the CAS, any index). Prompt each for
-  COVERAGE not filtering; each writes its report to a file. Do not commit until no
-  BLOCKING issues remain.
+  COVERAGE not filtering; each writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
+  locked rulings and the fixes have fresh review.
+
+- Required reviewers for the complete settled diff: architecture-reviewer, privacy-security-review, migration-safety,
+  database-performance-reviewer and server-hot-path-reviewer.
+  Database performance reviews happen before implementation decisions and again on
+  the finished diff; persistence/security pair on stored/authority surfaces. Runtime
+  PG evidence, bounded workload/query/index/byte limits and cancellation are required.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -203,43 +271,48 @@ STEP 4 - COMMIT CADENCE:
 - feat(server): add the freehold Claudium spend kind behind the flag
 - feat(server): mirror the Charter into the account row and book freehold telemetry
 - docs(prd): write the freehold service contract for the two housing SKUs
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Then run the shared contribution gate from docs/qa-gate.md, including
+`node scripts/gate_select.mjs` when required, and `npm run ci:changed` after the LAST
+commit as the Stop-hook floor; record exact exit codes.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
+- [ ] Every one of the five settled STEP 2 deliverables and all linked ux-spec.md states
+  has implementation, decisive evidence and a fresh review; earlier summary prose never
+  overrides the settled contract. Numeric references match state.md and approved artifacts.
 - [ ] A Charter spend through the fake service lands tier cottage in account_freeholds
   and in the live record when the owner is online, once; a replayed key grants once; a
   second Charter refuses already_granted; the store-open reconcile heals a deleted
   mirror ONLY after the service reports owned (the tampered row case).
-- [ ] A Master Builder's Call spend repairs to 100 through the sim after a definitive
-  grant, refuses no_live_character when the owner is offline, stores the key, and a
-  replay repairs nothing twice.
+- [ ] A Call requires a valid admitted target when initiated, restores100 and credits
+  this unpaid bill exactly once, preserves future prepay, and recovers original-key
+  confirmed intent after disconnect/restart. An already-paid bill has an explicit
+  quoted repair-only outcome; no duplicate grant after live-array compaction.
 - [ ] Unknown SKU, price drift (the fake service answers price_changed), and the dark
   flag refuse through BOTH dispatch arms identically; the store filter hides both SKUs
   while dark.
 - [ ] tests/server/claudium.test.ts and tests/server/storage_gates.test.ts pass
   UNCHANGED; the pg-armed twin passes.
 - [ ] docs/prd/woc/freehold-service-contract.md exists with the two SKUs, the kind, the
-  fingerprint rule, the settlement policy line, and is marked as the O1 handoff.
+  fingerprint rule, the settlement policy line, and is marked as the service contract handoff.
 - [ ] No price literal in src/sim/content/freehold/; no on-chain word (the state.md
   firewall scope) in src/sim/ (tests/architecture.test.ts); the grant functions are absent from COMMAND_NAMES and
   IWORLD_MEMBERS (pinned).
-- [ ] All STEP 3 suites green; the three reviewers report no BLOCKING.
+- [ ] All STEP 3 suites green; all triggered reviewers confirm ALL findings, including nits, are resolved and freshly reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 15, notes, deferrals) and
   docs/freeholds/state.md (the per-phase ledger row 15: the spend kind, the two SKU ids,
-  the hook names, the telemetry source, the record field, any code; O1 marked "contract
-  written, service rows pending").
+  the hook names, the telemetry source, the record field, any code; the service artifact and its unaccepted/accepted release gate status).
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+End with: phase status, files touched, validation results, review verdicts, external release gates, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-15-qa.md
 
 STOPPING RULES:
-- Stop and ask if exactly-once cannot be guaranteed without the storage pending-row
-  machinery (D1 forbids reusing it; a new durable receipt table is a maintainer call).
+- Stop if a repeated purchase lacks durable discoverable intent and atomic receipt/
+  target application through 07a. The housing-specific durable extension is authorized;
+  copying the storage pending-row subsystem is outside the locked design.
 - Stop if any path would compute a price, peg, burn, or split in the game.
 - Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
 - Do not push the branch; never merge a PR.

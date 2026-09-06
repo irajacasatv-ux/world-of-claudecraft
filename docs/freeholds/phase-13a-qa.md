@@ -1,0 +1,239 @@
+# Phase 13a QA: authoritative upkeep calendar
+
+Audit phase-13a-authoritative-upkeep-calendar.md in full. Verdict goes in progress.md;
+14 starts only after the implementation and this QA close.
+
+### Starter Prompt
+```
+Harness: Claude Code. Follow root CLAUDE.md "Working style and effort by model";
+this prompt names no model. Audit every deliverable, exact accepted ruling and proof.
+
+Asset execution: every step that creates or regenerates shipping GLBs, reference
+artwork, icons or images MUST be done by Codex, not Claude. Use
+.agents/skills/woc-image-to-glb/SKILL.md and its shared canonical workflow for GLBs;
+use Codex image generation for raster artwork. Capture actual rendered screenshots
+as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
+phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
+icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
+That final sweep does not postpone artwork owned here.44b revisits the completed result
+for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
+
+STEP 0 - PRE-FLIGHT:
+- Work in the packet worktree named in docs/freeholds/state.md
+  (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
+  feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
+  session may share this checkout).
+- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
+  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
+  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
+  merge it, and delete the dependency block from state.md. After any non-empty merge run
+  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
+  patches/.
+- Memory scan: MEMORY.md and entries on the provisioner firewall, "one planner per file",
+  the farm watch fee, the monolith ratchet, ALL_DELTA_KEYS conflicts, parity goldens,
+  test-pin traps (constant self-comparison, mutation harness must prove tests ran).
+
+- Invoke database-performance-reviewer before storage/query/lock/cadence decisions;
+  send the scoped diff surface and approved artifacts, then review the finished diff.
+
+STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
+Spawn one reader for state.md, progress.md, the13/07a/07b/07c contracts, ux-spec.md,
+docs/prd/woc/freehold-service-contract.md and this file. A source reader verifies all
+NEW producers from their preceding pairs and reads the actual calendar, lifecycle,
+wire, HTTP/body/auth/rate/admission/deadline, deploy/user-data.sh, account export and
+ensureSchema seams. Return actual symbol ownership, rollout limits, full touch set,
+calendars/protection preservation, public-route deny and both dispatch paths. Read the
+root and directory CLAUDE guidance before source work. No source meaning is inferred
+from a planned export or external acceptance document.
+
+STEP 2 - AUDIT (fresh reviewers, COVERAGE, all findings to files):
+Verify the entire contract below against the actual complete diff and emitted artifacts.
+No implementation echo, copied constant or narrative substitutes for a decisive test.
+
+Deliverables (at most five):
+1. Durable shared authority and bounded historical projection. Extend
+   server/freehold_db.ts::FREEHOLD_SCHEMA; NEW applyFreeholdUpkeepCalendar,
+   loadFreeholdUpkeepCalendar and server-only FreeholdUpkeepAuthoritySuspension own
+   calendar head, source history and normalized exact prefix summaries. The server-only
+   record carries suspensionId/authorityVersion/calendarId/scope/reasonCode/startMs/
+   endMs/revisionId/operatorEvidenceRef.13's FreeholdUpkeepSuspension is a separate
+   allowlisted safe interval; private evidence does not enter src/sim or player wire.
+   Finalized coverage is irrevocable. Preserve the explicit13 finality rule through
+   every historical dependency of durable condition/bill/credit evaluation/consumption;
+   mutable covered tail authorizes no such effect. Future credit purchase does not need
+   future finality. Keep coverageStartMs <= finalizedThroughMs <= coveredThroughMs;
+   watermarks/revisions never regress. Closing an open interval cannot rewrite finalized
+   history. Invalid backfill/conflicting prefix requires separately reviewed bounded
+   repair, never ordinary apply. Same-revision fingerprint identity, predecessor checks,
+   schema/reset policy and original calendar/checkpoint/credit identity are durable.
+   Indexed cumulative union/protection and wholly-protected-period facts permit bounded
+   predecessor/endpoint/credit-rank queries without all-history or absent-day/week loops.
+   Combine immutable07b lifecycle coverage with service coverage as a union; independent
+   subtraction must not double-credit overlap. No force-saving foreign claimed plots.
+   Keep shared history with measured growth until every dormant plot, credit, replay and
+   mixed-release dependency is losslessly rebased. No TTL/newest-N clipping, head deletion
+   or reuse while referenced. Include13's literal pre-upkeep/unknown-shape fixture rules.
+2. Private bounded authority ingress. NEW server/freehold_upkeep_ingress.ts exports
+   createFreeholdUpkeepIngress, configureFreeholdUpkeepIngressRuntime,
+   handleFreeholdUpkeepIngress, routes and FreeholdUpkeepIngressBudget for
+   POST /internal/freeholds/upkeep-calendar. Existing
+   server/http/middleware/require_internal_secret.ts::requireInternalSecretFailClosed
+   consumes the NEW dedicated header/env pair FREEHOLD_UPKEEP_SECRET_HEADER=
+   'x-woc-freehold-upkeep-secret' and FREEHOLD_UPKEEP_SECRET_ENV=
+   'FREEHOLD_UPKEEP_SERVICE_SECRET'. Unset/wrong secret refuses before body work;
+   no fallback/echo/log or inferred dual-key rotation. This authenticates calendar
+   ingress only, never checkout, geography or running distribution.
+   AFTER secret validation and BEFORE body read, JSON parse or digest, the factory's
+   measured pre-body rate/concurrency admission takes an immediate permit or refuses;
+   no waiter queue. Fixed configured producer identity, not arbitrary attacker keys,
+   bounds admission state. Reuse server/ratelimit.ts::rateLimitNow and
+   windowedRateLimitOutcome conventions; no global DB limiter work at this step.
+   FreeholdUpkeepIngressBudget names maxInFlightBodies/maxRequestsPerWindow/windowMs,
+   supplied by the measured acceptance artifact, not invented numbers. Hold the permit
+   through response/error/abort and release once, so duplicate/digest/raw-body work is
+   included. Then withBody()/DEFAULT_JSON_BODY_MAX_BYTES bound each body; strict shape
+   and measured record/field/result bounds precede the separate shared DB
+   BackgroundDbGate.tryAcquire permit. No new pool, independent DB gate or queue.
+   server/freehold_db.ts::FreeholdUpkeepDbBudget names acquireTimeoutMs,
+   lockTimeoutMs/statementTimeoutMs/idleTransactionTimeoutMs/transactionWallTimeoutMs;
+   small-workload measured values, not the heavy-save allowance. The factory owns abort,
+   acquisition deadline and eventual late-client release; existing
+   server/db_transaction_deadline.ts::createDbTransactionDeadline/backendCancelViaPool
+   owns checked-out transaction wall/cancel with local lock/statement/idle backstops.
+   Register the leaf plus thin legacy dispatch; both use the same guard/handler/catalog.
+   Do not reopen public /internal/*: existing deploy/user-data.sh denies that prefix.
+   The game operator and economy-service deployment owner jointly produce the private,
+   authenticated encrypted per-generation delivery acceptance in
+   docs/freeholds/upkeep-calendar-db-contract.md and
+   docs/prd/woc/freehold-service-contract.md. Name private/loopback routing, authenticated
+   recipient identity, generation registration/expiry, key configuration, bounded
+   retry/ACK/reconciliation and public-deny regression evidence. A signed acceptance
+   document is not proof that runtime responses carry cryptographic signatures.
+3. Monotonic host publication and exact acknowledgments. Existing
+   server/sim_calendar_feed.ts::SimCalendarSink/feedRealmCalendar installs a readonly
+   committed projection using server/raid_reset.ts and
+   server/realm.ts::REALM_RESET_TIME_ZONE policy; existing
+   src/game/utc_day.ts::feedSimCalendar takes explicit offline fixture input. Add the
+   missing deterministic headless caller fixture without Date.now/new action. Hosts
+   receive safe projection only, no IO/history walk/per-owner allocation in callbacks.
+   Installation is one guarded atomic swap bound to actual processGeneration,
+   calendarId, authorityVersion, committed digest and lifecycle revision. An async
+   completion from an old generation, lower revision or regressing watermark is
+   discarded; same revision with a different digest is a conflict. A load ofv1 that
+   finishes afterv2 never replacesv2, even ifv1 was a legitimate duplicate. Only a
+   consistent committed projection satisfying current lifecycle/head guards installs.
+   ACK semantics are exact: current duplicate matching current durable digest installs
+   or verifies that head and replies current with requestedRevision/requestedDigest,
+   installedRevision/installedDigest and actual processGeneration. A historical duplicate
+   matching its retained immutable digest replies superseded ONLY after a verified newer
+   current head is installed, naming both identities. It never installs the old payload
+   or claims the requested historical revision is current. Same revision/different
+   digest, unknown historical identity, gap or unknown schema refuses with no installation
+   ACK. If required load/finality/recovery is incomplete, reply pending/refusal without
+   claiming installed authority. A new accepted head uses the same current ACK only
+   after commit and guarded installation. Recheck installed identity at ACK construction;
+   a concurrent newer install is explicitly superseded, not a false old acknowledgment.
+   The service sends to every live generation, including idle rolling peers; duplicate
+   DB commit still requires recipient install/verify. Bootstrap reaches ready only after
+   current committed coverage loads. Mutation/claim revision/finality guards supplement
+   delivery; they do not replace it. Beyond coverage/finality hold affected effects,
+   never infer service health from silence. No polling, per-tick SQL, new pool or LISTEN.
+   Calendar writer uses head FOR UPDATE and only history/summary rows, never account/
+   plot/receipt locks;07a consumers use compatible FOR SHARE source heads through commit.
+   Multiple source IDs sort only in the reviewed new-participant suffix. Loaders release
+   shared snapshots before other queues; recovery/maintenance cannot invert head-to-plot
+   order. Apply guards inspect finalized dependencies again under those same locks.
+4. Migration, account lifecycle and rollout preservation. Consume07b's
+   server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/advanceFreeholdLifecycleOnClient/
+   loadFreeholdLifecycleProtectionPage and server/freehold_lifecycle.ts::
+   createFreeholdLifecycleCoordinator, whose captureAdmissionObservation,
+   flushPresenceObservations and releaseSession use captured observedAtMs before queues.
+   Its installCommittedLifecycleProjection refuses stale generation/revision. Consume
+   server/freehold_lifecycle_admission.ts::prepareFreeholdLifecycleAdmission/
+   commitFreeholdLifecycleAdmission/cancelFreeholdLifecycleAdmission for accepted
+   gameplay entry, not authentication login or latest-only/plot-local grace.
+   Original binding uses07b's server/freehold_lifecycle_binding.ts::
+   resolveFreeholdLifecycleBinding and docs/freeholds/lifecycle-policy-binding.md;13a never
+   guesses a timezone/source calendar. Literal old07 rows with unbound_no_history remain
+   no-upkeep until accepted prospective binding commits. Ambiguous populated or unknown/
+   future checkpoint/credit state stays original/read-only, not an inferred reset/fresh
+   house. Oversized recovery keeps original row plus bounded diagnostic/reference, not
+   a supposedly bounded second blob forced to contain the original. Repeated migration,
+   boot and every periodic/leave/shutdown/caller-owned save preserve these facts.
+   Character deletion preserves account lifecycle/arrival records. Soft deactivation,
+   restoration, hard deletion, export and anti-replay retention are distinct operations
+   supplied by07b/07c/07a.13a extends existing server/db.ts::exportAccountData through
+   explicit housing/lifecycle/checkpoint/credit projections, excluding operator evidence,
+   secrets and private diagnostics. Sale materializes condition at its transfer boundary,
+   preserves source calendar/immutable credit identity, and applies buyer lifecycle only
+   prospectively; seller history remains, buyer grace is not copied. Unsupported stored
+   tier IDs are preserved separately from accepted writer vocabulary.07c's arrival mark
+   represents committed first-entry eligibility, not visual completion; ordinary visit
+   replay never mints another directive/receipt. Name a minimum capable release/compatible
+   rollout before enable: old release code is not assumed to understand new normalized
+   state or housing presence/export. Rollback quiesces new effects while preserving
+   original pending recovery identity; it does not promise old-binary housing semantics.
+5. Integrated evidence and release artifact. Produce
+   docs/freeholds/upkeep-calendar-db-contract.md with actual SQL/index/EXPLAIN and scoped
+   acquisition/query/lock/wall/body/digest/duplicate/concurrency/bytes/growth measurements,
+   immutable-prefix and retained-history proof, safe projection schemas, private delivery
+   acceptance and named minimum capable rollout. Add NEW
+   tests/server/freehold_upkeep_ingress.test.ts and
+   tests/server/freehold_upkeep_calendar_db.test.ts and
+   tests/server/freehold_upkeep_calendar_db.pg.test.ts; extend calendar/reset host tests,
+   freehold_condition/freehold_ledger and actual self/public wire tests. Pin finality
+   tail correction between load/commit; future prepay without future finality;v1 load,
+   v2 install,v1 resume; old-generation completion; all current/superseded/conflicting
+   ACK arms and exact digest/generation; wrong secret before permit/body, overload before
+   parse/digest, permit release on abort/error, duplicate storms and peak shared pool.
+   Distinct evidence/secret/private-diagnostic sentinels never reach self/public wire.
+   PG proof covers shared readers/calendar-only writer, actual touch-set/queue order,
+   cancellation/late checkout/commit ambiguity; literal legacy/populated/repeat boot,
+   periodic/leave/shutdown/failure round trips; two-character/plot/realm lifecycle races;
+   dormant multiple-cycle union, DST, long open outage and immutable credit carry.
+   DDL remains additive/idempotent under the existing ensureSchema advisory lock after
+   parent tables and before final growth-budget fragment. Service acceptance supplies
+   exact finality/identity/coverage/delivery facts before enable; no new rate, cap,
+   timezone or outage policy is invented. All findings/nits and fresh fix review are
+   implementation obligations; this prepared packet is not an executed runtime verdict.
+
+STEP 3 - VALIDATION:
+Required named reviewers for this file: architecture-reviewer, cross-platform-sync,
+privacy-security-review, database-performance-reviewer, migration-safety,
+server-hot-path-reviewer, test-coverage-auditor, qa-checklist.
+Database-performance-reviewer runs before implementation decisions and on the finished
+diff, paired with persistence/security. Each review covers every finding and nit;
+a fresh reviewer reads fixes. Inspect parent evidence; do not duplicate shared gates.
+Run the implementation's full scoped proof and required shared contribution gate.
+Verify actual runtime evidence and honest release gates; do not duplicate parent runs.
+
+STEP 4 - FIX:
+Apply ALL findings including nits. Re-run affected checks and have a fresh reviewer
+read every fix. Use scoped Conventional Commits with a body and explicit paths; never
+`git add -A`, and the word "phase" never appears in a commit message. No push/PR.
+Run `npm run ci:changed` after the last commit and record its exact exit code.
+
+STEP 5 - ACCEPTANCE:
+External signatures stay explicit release gates attached to completed handoff artifacts;
+they are not deferred review findings. PASS requires ALL findings, including nits,
+resolved and a fresh review of the complete fix round.
+
+- [ ] Every implementation deliverable/acceptance criterion has decisive evidence.
+- [ ] Finality, every ACK/install arm, body admission, private routing/public deny,
+  evidence-safe encoders, lifecycle union and migration/rollback preservation are checked.
+- [ ] Every finding and nit is resolved consistently with locked rulings;
+  the whole fix round has fresh review and external gates remain truthful.
+
+STEP 6 - DOC UPDATES + MEMORY:
+Record13a QA verdict, counts/fixes, artifact versions and actual remaining release gates
+in progress.md/state.md; record source lessons and updated next-file chain.
+
+STEP 7 - FINAL RESPONSE FORMAT:
+End with verdict, evidence, findings/fixes and FULL PATH of next file:
+/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-14-distribution-surface-map.md
+
+STOPPING RULES:
+A failing verdict returns to the13a implementation with findings. No guessed calendar,
+limit or balance rule, no source-only proof reported as runtime PASS, no push/PR.
+```

@@ -2,6 +2,12 @@
 
 # Codebase research: crypto rails, guilds, bank, holder tiers, telemetry
 
+> **Dated research, not implementation authority.** Captured 2026-09-05. The
+> [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
+> record the requirements adopted on 2026-09-06. Historical
+> code inventories, editor capabilities, opinions and market figures below are context,
+> not current API guarantees, WOC tuning approval or legal/store approval.
+
 Worktree: /Users/fernando/orca/workspaces/world-of-claudecraft/add-real-estate (read-only survey, 2026-09-05).
 
 ## 1. Claudium purchase rails and catalog
@@ -52,7 +58,27 @@ Worktree: /Users/fernando/orca/workspaces/world-of-claudecraft/add-real-estate (
 - `src/net/economy_sdk.ts:startClaudiumPurchase` + `src/net/stripe_checkout.ts`: Stripe, SOL, USDC, $WOC checkout already wired in `src/main.ts`.
 - `src/sim/guild_bank.ts:requireOfficerBook` / `GUILD_BANK_EDIT_RANKS` / `stampGuildMembership`: guild-house permissions.
 - `guild_banks` JSONB-per-guild persistence (`server/social_db.ts`) and `bank_ledger` container audit rows.
-- `server/seeker_entitlement.ts` + `seeker_ownership_verifier.ts` + `seeker_entitlement_claims`: on-chain deed claim-once, re-verify-on-use.
+- Seeker entitlement modules are historical chain-verification precedents only. Native housing access is a server entitlement, never optional-deed verification. Adopted Seeker housing is use-only; unrelated wallet rails do not authorize housing purchase. D9 keeps distribution labels out of the game server; the new eligible-checkout verifier belongs to the service.
 - `server/bank_entitlements.ts:BANK_BONUS_SOURCES`: account-fact bonus registry.
 - `src/world_api/<domain>.ts` facet + `tests/world_api_parity.test.ts` + `src/sim/sim_context.ts` for the new sim system and IWorld surface.
 - `server/economy_telemetry.ts:SOURCE_BY_COMMAND` and `account_wealth` for reporting.
+
+## Adopted housing boundaries
+
+The initial Charter mirrors an account entitlement under D1. Repeated Calls and pooled
+Hall Fund operations additionally require durable receipts, discoverable intent and
+exactly-once recovery; do not copy a bounded receipt cache as replay authority. The service
+owns guild Claudium balance and currency arithmetic. Officers authorize projects; member
+plinth rights are a separate personal-display permission. Fund and donation limits require
+the accepted calibration artifact. Current wallet or linked-account facts do not prove
+checkout distribution eligibility. These are adopted implementation obligations, not shipped APIs.
+
+The adopted implementation split gives 28 guild/fund setup and 28a the 07b-family
+guild lifecycle extension. Guild head/history SQL is guild-keyed and separate from
+account lifecycle. All current ordinary members qualify through admitted gameplay
+even with the hall unloaded; membership-incarnation fencing preserves valid
+observations across leave/kick/rejoin/disband without inventing historical membership.
+Files 29/13a union committed guild protection with service outages. No personal
+grace aggregation, offline-join activity, full-roster write fan-out or new pool is
+authorized. The [service contract](../freehold-service-contract.md#guild-lifecycle-authority-and-membership-transitions)
+names the exact adopted future ownership and required database evidence.

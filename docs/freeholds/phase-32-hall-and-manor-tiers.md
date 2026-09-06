@@ -1,177 +1,349 @@
-# Phase 32: Great Hall, Manor, Bastion tiers and build projects
+# Phase 32: Great Hall, Manor and Bastion upgrade projects
 
-Wave C, Guildhalls. The spec is `progress.md` "32 Great Hall, Manor, Bastion tiers and
-build projects"; the decisions are `state.md` and `brainstorm.md` (D2 in-place upgrades,
-D6 for the chest, D7 for stations, the Phase 21 upgrade project, the Phase 29 Hall Fund).
-This phase ships the uncommon and rare rungs of both ladders (`great_hall`, `manor`,
-`bastion`), multi-week build projects with a shared progress bar, project trophies,
-guild-only vendors that visit when a project completes, and the Materials Vault chest.
+Wave C. This implementation file and its paired QA own only the deliverables
+below. The locked decisions, content numbers, content-manifest.md,
+content-numbers-workbook.md, art-brief.md and ux-spec.md are authoritative. Every
+acceptance row applies to the paired QA; nothing is built by this planning packet.
+
+## Deliverables (at most five):
+
+1. Three tier records and measured layouts as one ladder batch.
+2. Exact approved project bills plus versioned service fee rows.
+3. Atomic shared project/contribution/completion and exact-copy carry-over.
+4. Final three-interior dressing with the shared project progress UI.
+5. Durable server/persistence, cross-host, money-gate and custody evidence.
+
+## Shared authority and persistence dependency
+
+This file extends the single producer from 07a, not a second account or guild payment
+system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
+server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
+durable intent, applied identities, global claim fencing and atomic effects. Phase15
+adds service quote/receipt fields to those rows; later files consume them. No separate
+guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
+Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
+Preserve explicit character pre-lock before nonce fencing, bank-ledger classification
+before guild replay, and the actual market/mail, storage advisory/receipt, custody,
+FK/unique/deferred-trigger ordering of every carried legacy effect. Never substitute
+a generic accounts/characters/guilds/receipts lock hierarchy. No client is held while
+joining serialization; no lock/client spans service IO. Reuse admitted cancellation-
+aware work and retain original operation identity across crash/timeout/eligibility change.
+
+07 owns capability-aware save/export/deactivation/restore preservation; 07b owns
+account lifecycle and immutable protection history. Unsupported/oversized/unknown
+source rows remain original and read-only with a bounded diagnostic/reference; do not
+reset them to empty history, a free Inn or fresh grace. Character delete preserves
+account records; soft deactivation/restore, authorized hard deletion and export remain
+distinct. Follow the minimum-capable-release/rollout artifact; old binaries merely
+leaving normalized rows untouched do not prove compatible save or lifecycle behavior.
+Rollback quiesces new mutations while preserving accepted recovery identities.
+
+Paired QA must cover the actual legacy transaction participants, lease/CAS/nonce
+failure, pending/replayed operations, concurrent accounts/alts/realms, partial failure,
+oversized/unknown version preservation and minimum-capable rollout/rollback fixtures.
+Database, persistence and security reviewers inspect these exact before/final diffs.
+
+## Existing lifecycle, upkeep history and finality contract
+
+Consume 07b's single lifecycle owner and 13/13a's single upkeep-calendar owner.
+NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provides the
+committed immutable protection source, and createFreeholdLifecycleCoordinator captures
+authenticated observation time before queueing. Derive a return before presence
+advances; stale observations, fenced sessions and replay cannot mint grace. The
+accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
+and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
+and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
+or account calendar ingress, source-history array on plots, polling job or receipt store.
+
+Every plot/checkpoint/immutable bill and prepaid credit retains original calendarId,
+schemaVersion, resetPolicyId and committed lifecycle/authority/finalized-prefix identity.
+Union overlapping lifecycle absence/grace and service suspension ranges exactly;
+never add independent totals or use only latest grace for a dormant plot. Historical
+condition/checkpoint changes, bill classification and credit consumption/carry require
+irrevocably finalized source facts. Covered but mutable tails support read-only preview
+only. Missing history, unknown binding or time beyond coverage is explicit not-ready,
+never zero outage. A future-credit purchase uses an accepted published schedule without
+requiring future time to be finalized; its later consumption requires final history.
+
+Recheck lifecycle and compatible calendar-head FOR SHARE guards inside 07a's reviewed
+composition hook through commit. The calendar-only writer takes FOR UPDATE and never
+account/plot/receipt locks; loaders release reads before writer queues. Retain exact
+indexed history/prefix facts with bounded probes across multi-year absence/open outage,
+not per-day/week loops, lifetime loads or foreign-plot rewrites. Keep source history
+until lossless dependency-aware rebase proves dormant plots/credits/recovery safe.
+Current-generation revision/digest/watermark install and exact current/superseded/
+conflict/pending ACK semantics belong only to 13a. An older response cannot replace a
+newer projection or claim readiness. Owner/public builders allowlist safe fields and
+reject operator-evidence, secret and private-diagnostic sentinels even on owner wire.
+
+Paired QA verifies repeated absence/return cycles, overlapping protection, original
+calendar across realm/zone change, open multi-year suspension, missing versus empty
+coverage, unfinalized history refusal, future-credit purchase, credit carry, stale
+process install and restart/rollout. UI may show a keyed pending state while existing
+entry/build/undo remain available; durable payment retains original operation recovery.
+
+## Literal D9 and original-operation money authority
+
+The game server and Sim remain ignorant of physical distribution. The future economy
+service owns eligibility verification and opaque authorization bound to account,
+purpose/SKU, policy, quote and operation, with issuer/verifier conformance in the
+accepted service artifact. A first-party web checkout session alone is insufficient.
+Client channel labels, Origin, UA, arbitrary JSON, linked Steam/Epic accounts and the
+game-service secret never prove eligibility; do not add a trusted channel field to the
+game server. The client capability map controls presentation, not purchase authority.
+Unknown eligibility refuses NEW spend. Already accepted payments recover under their
+original operation after session/authorization expiry or eligibility change.
+
+Use the service response protocol specified in 15: authenticated bounded decoding,
+complete original operation/fingerprint/target/effect validation and terminal-state
+classification. A malformed/nonterminal reply is neither a grant nor proof of no
+debit. Written signed acceptance is not runtime cryptographic verification. The 07
+developer fixture cannot mint a paid receipt or satisfy online service authorization.
+Keep all three money gates: counsel before enable/store submission, default-off
+FREEHOLDS_ENABLED on both dispatch arms/catalog, and the seven-distribution surface map.
+Published Terms, accepted service catalog/contract and issuer/verifier evidence remain
+release gates; the final legal-team handoff in 44b does not postpone these earlier gates.
+The economy service owns every price and all token math; expectedCostClaudium is only
+the forwarded literal quote fingerprint. Test false client claims, unknown eligibility,
+malformed/ambiguous replies and successful original-operation recovery on both arms.
+
+## Arrival consumer dependency
+
+Use the 07c account-wide normalized arrival-tier owner, not a plot-local seen set.
+NEW server/freehold_arrival_db.ts::markFreeholdArrivalTierOnClient is the conflict-safe
+insert inside 07a's accepted-owner-entry; only its committed insert winner gets fresh
+first-tier eligibility. 08a's private result separates historical firstTierAtAdmission
+from nullable freshArrivalPresentation carrying acceptedTransitionId, playWelcomeCue
+and firstTierViewEligible. Confirmed dungeonEntrySeq and destination plot match before
+the camera/audio consumer acts. Each new accepted arrival may welcome; snapshots,
+resume and replay carry null and never restart sound/camera. Commit-before-ACK may
+skip presentation, so do not claim exactly-once visible delivery. Visitors create no
+account tier mark; no permanent receipt is added for routine arrivals. A new tier,
+Fenbridge entry or second account session reuses this same authority and safe handback.
+Pair tests cover two accounts, same-account alts/concurrent realms, returning tier,
+guest, rejected entry, commit-before-ACK and reconnect. Asset/view execution is Codex.
+
+## Required Codex asset execution
+
+Every step in this file that creates or replaces a GLB, icon, image, texture, reference
+sheet, room/interior or trophy/furnishing art must be executed by Codex, not Claude.
+Use the repository image-to-GLB and image-generation workflows, approved art-brief.md,
+measured model manifests, export/optimization/fingerprint/prewarm and in-game proof.
+The paired QA verifies the asset-generating step used Codex and all final-art evidence.
+If a QA fix creates or replaces an asset, that fix step also runs in Codex, not Claude.
+Final wave acceptance still requires complete shipping art. The final Codex placeholder
+icon/image sweep in 44a verifies and replaces any feature-created remnants; it does
+not excuse an earlier incomplete paid product or relax an earlier final-art gate.
+This packet is documentation only; no shipping asset is generated by this audit.
 
 ### Starter Prompt
 ```
-This is Phase 32 of the Freeholds and Guildhalls feature: Great Hall, Manor, Bastion
-tiers and build projects (three tiers with layouts, shared multi-week projects, project
-trophies, visiting vendors, the Materials Vault chest).
+This is Phase 32 of Freeholds and Guildhalls: Great Hall, Manor and Bastion upgrade projects.
+Harness: Codex. All asset generation must be done by Codex, not Claude. Follow the root CLAUDE.md working-style capability block;
+this prompt names no model. Parallelize bounded owners, integrate and verify centrally.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase.
-
-Goal: extend both tier ladders to their rare rung on the seams Phases 21, 28, and 29
-built (in-place upgrade projects, the Hall Fund), with every bill free of Perfecting
-keystones, every project deterministic across realm weeks, and nothing ever lost.
+Goal: implement exactly the settled deliverables and acceptance below with no guessed
+decision, unsupported number, unresolved finding or unreviewed fix.
 
 STEP 0 - PRE-FLIGHT:
-- Work in the packet worktree named in docs/freeholds/state.md
-  (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
-  feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
-  session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
-- If state.md "Push policy" records a stacked wave branch, work on that branch instead of
-  feature/freeholds.
-- Memory scan: MEMORY.md and entries on content obligations, the provisioner firewall,
-  interior layouts and colliders, point-light budgets, the escrow-delta idiom, test-pin
-  traps.
+- Use the packet worktree and wave C branch recorded in state.md. Run git status
+  --short; if dirty, stop and ask before edits. Preserve unrelated work.
+- git fetch origin --prune, then sync per state.md "Worktree, base, and merge-forward":
+  origin/feature/masterwrought while PR #3872 is open, otherwise newest origin/release/**
+  and remove the dependency block after merge. Run release-merge-audit after a nonempty
+  merge and pnpm install --frozen-lockfile if patches/ moved. Never use main.
+- Read root and applicable local CLAUDE.md in full; memory scan MEMORY.md, freeholds
+  packet entry, test-pin traps, apply ALL findings, review the review-fix round.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
-Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md, docs/freeholds/progress.md (only "32 Great Hall, Manor,
-  Bastion tiers and build projects"), and this file
-- src/sim/content/freehold/tiers.ts, charters.ts, dungeons.ts, trophies.ts (the ladder as
-  extended by Phases 21 and 28; the indices in use), src/sim/content/freehold/layouts.ts
-  (the Lodge and Meeting Hall layouts, D23) and src/sim/dungeon_layout.ts (the helpers
-  only: DAWNHOLD_LAYOUT as the model, authoredLiftAt, layoutColliders),
-  src/sim/colliders.ts (STATIC_INTERIOR_COLLIDERS), src/sim/world.ts (the groundHeight
-  interior arms), src/render/dungeon.ts (the variant union) and the freehold dressing
-  modules under src/render/freehold/
-- src/sim/freehold/: the Phase 21 upgrade project module (state, bill, fee grant, layout
-  carry-over), the Phase 28 and 29 Hall Fund and donation modules, amenities.ts (the
-  station slot and the D6 strongbox arm), instance.ts (claim rehydrate, DungeonNpcSpawn)
-- src/sim/bank.ts and the vault modules (nearBanker, the vault proximity gate,
-  vault_craft_gate.ts), server/vault_wire.ts (emitVaultSelfKeys), server/claudium.ts (the
-  freehold spend arm from Phase 15 and 21), src/sim/content/professions.ts (the vendor
-  and NPC record shapes; grep the vendor tables data.ts merges)
-- src/ui/hud/housing/ (the steward panel and the Phase 21 project view),
-  tests/freehold_content.test.ts, tests/freehold_upgrade.test.ts, tests/provisioner_firewall.test.ts
-The agent returns: the tier row fields and the working numbers already pinned; the six
-layout touch points per interior; the Phase 21 project state machine and how Phase 29
-pays a guild bill from the Hall Fund; the vault gate composition for a chest (the D6
-twin); the vendor NPC record and how a conditional spawn is expressed at claim
-rehydrate; three free DungeonDef indices; the project-trophy prop shape; the extraction
-candidates that pay for new delegates. Settle in STEP 1 and record in state.md: the
-materials bill per tier (tier 3 and 4 fine materials and tier 4 produce, flagged TUNING,
-Fernando owns the finals) and whether a guild project accepts contributions from every
-member or only the Hall Fund.
+STEP 1 - LOAD CONTEXT THROUGH AGENTS:
+Have a reader summarize this file, its QA, state.md locked decisions and content numbers,
+progress.md row 32, implementation-plan.md reviewer matrix, qa-checklist.md, ux-spec.md,
+content-manifest.md, content-numbers-workbook.md and art-brief.md. Do not read planning
+coordinators directly. The reader verifies current source anchors below and returns a
+promised-versus-live table, exact prior module contracts and proposed own-file changes.
+Record any changed tree fact in state.md before editing dependent feature files.
 
-STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, four slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last):
-- Agent CONTENT: tiers.ts rows (great_hall: rooms 2, budget 120, plinths 8, amenity 2;
-  manor and bastion: rooms 3, budget 200, plinths 14, amenity 3, the state.md working
-  values), the three upgrade SKUs in charters.ts (no price, no copy; the economy service
-  owns prices), three DungeonDefs (spawns: [], guideVisible: false, claimKey: 'owner',
-  absent from FINDER_ACTIVITIES), the bills, project trophies in trophies.ts, the
-  Homesteader deeds for Manor and Bastion, wiki regen and guide keys, art through the
-  image-to-glb skill or registered stand-ins (D13), world-entity names for the vendors.
-- Agent SIM: the three layouts in src/sim/content/freehold/layouts.ts (D23) with lifts,
-  STATIC_INTERIOR_COLLIDERS entries, groundHeight arms; src/sim/freehold/build_project.ts generalised from Phase 21 (a shared progress
-  model, contributions merged through the Phase 29 escrow-delta idiom, weeks counted on
-  ctx.resetDay through the realm weekly boundary, completion when bill and fee are both
-  settled); the visiting vendor spawned at claim rehydrate only when the project key is in
-  the record; the Materials Vault chest in amenities.ts composing into the vault
-  proximity gate (a D6 twin, negative-tested for a visitor and below condition 30);
-  tests/freehold_build_project.test.ts and the tier pins in tests/freehold_content.test.ts.
-- Agent CLIENT: the three render variants and dressing within the point-light budget,
-  the project tab in the steward panel with the shared bar (guild and freehold), the
-  mobile sheet decision, hudChrome.housing.* keys, pr_shot_targets entries.
-- Agent SERVER: the spend arm for the three SKUs riding the Phase 21 upgrade grant, pooled
-  from the Hall Fund for guilds per Phase 29, exactly-once by purchase key; the vault self
-  key emitted inside an owned Manor claim through the emitVaultSelfKeys gate arm; tests
-  under tests/server/.
-The coordinator edits last: tests/world_api_parity.test.ts if the facet grows,
-tests/snapshots.test.ts if a key changes, tests/monolith_budget.test.ts. Every agent
-writes any report longer than a screen to a file and replies with the path plus a
-short summary. Never `mode: "plan"` on teammates.
+Earlier planned sources: src/sim/content/freehold/tiers.ts, charters.ts, dungeons.ts,
+upgrade_projects.ts and layouts.ts; src/sim/freehold/upgrade.ts, hall_fund.ts, grant.ts,
+permissions.ts, state.ts and instance.ts; server/freehold_db.ts, server/freehold_wire.ts,
+server/claudium.ts; src/ui/hud/housing/steward_panel_view.ts and project view from 21;
+src/render/freehold/. Existing source: src/sim/rift/authored.ts exports authoredLiftAt;
+src/sim/dungeon_layout.ts consumes authored layout helpers, src/sim/colliders.ts,
+src/sim/world.ts and src/render/dungeon.ts own thin geometry integration arms.
+NEW planned src/sim/freehold/build_project.ts generalizes the already-tested upgrade
+state machine behind its existing seam; tests/freehold_build_project.test.ts pins it.
 
-INVARIANTS THIS PHASE MUST KEEP:
-- Determinism: no Rng in tiers, projects, or vendor visits; weeks come from ctx.resetDay.
-- Never sell power: vendors sell furnishings and cosmetics only; the project trophy is
-  earned; no amenity changes a combat, progression, gathering, or drop number.
-- Keystone exclusion in every bill (wyrmfall_core, sundered_essence, makers_ember, gear
-  intermediates, the quickening catalyst), pinned by the provisioner firewall arm.
-- Nothing destroyed: an unfinished project keeps every contribution forever; no expiry.
-- Money gates for the upgrade SKUs: counsel sign-off before enable, FREEHOLDS_ENABLED
-  default off, the surface map pinned; the economy service owns prices and token math;
-  the token firewall holds in src/sim/.
-- Server authority; the i18n policy in docs/freeholds/implementation-plan.md; vocabulary
-  fixed; "phase" in no code, comment, commit, or PR text; zero farm beds; monolith
-  ceilings LOWER after this phase.
+Before implementation decisions, dispatch database-performance-reviewer with the query,
+stored-shape and workload proposal when those surfaces apply; pair persistence/security.
+Reuse the named settled rules. Missing measurements/signatures are owned artifact gates,
+never a request to let an implementer choose a new balance value.
 
-Out of scope (do NOT do in this phase):
-- Keep, Citadel, Fortress (Phase 40); wards (Phase 34); dyes (Phase 41); a second
-  freehold (Phase 42); guild deeds (done in Phase 31).
+The reader must include every contract and deliverable section above this Starter
+Prompt in its returned acceptance table, including sole authority ownership, D9,
+history/finality and required Codex asset execution where applicable.
 
-STEP 3 - VALIDATION + REVIEW DISPATCH:
-- Run: `npx tsc --noEmit`; `npx vitest run tests/architecture.test.ts
-  tests/sim_context.test.ts tests/monolith_budget.test.ts tests/freehold_content.test.ts
-  tests/freehold_build_project.test.ts tests/freehold_upgrade.test.ts
-  tests/provisioner_firewall.test.ts tests/item_icons.test.ts tests/item_art_consistency.test.ts
-  tests/deeds_content.test.ts tests/reliquary_content.test.ts tests/recipe_economy.test.ts
-  tests/market_filters.test.ts tests/world_api_parity.test.ts tests/snapshots.test.ts
-  tests/renderer_compile_gate.test.ts tests/hud_update_drive.test.ts
-  tests/mobile_window_coverage.test.ts tests/localization_fixes.test.ts` plus the
-  tests/server/ suites the SERVER slice added; `npm run wiki:content` then `npx vitest run
-  tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts`;
-  `npm run perf:tour`; `node scripts/pr_screenshots.mjs`.
-- Spawn review agents per docs/freeholds/implementation-plan.md: content-obligations-reviewer,
-  architecture-reviewer, plus render-performance-reviewer (new interiors are GPU
-  producers), frontend-seam-reviewer (src/ui/), and privacy-security-review (server/).
-  Prompt each for COVERAGE not filtering; each writes its report to a file. Do not commit
-  until no BLOCKING issues remain.
+STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
+- CONTENT/LAYOUT owner: append great_hall (2 rooms,120 decor,8 plinths,2 amenities),
+  manor and bastion (3 rooms,200 decor,14 plinths,3 amenities) from state Content numbers.
+  Use next verified free DungeonDef indexes, record them before touching consumers;
+  no guessed index literal. Layouts and lifts remain content, with the six interior
+  integration seams, empty spawns, owner claim, guideVisible false and no Finder row.
+  This file completes exact tier/bill/fee-ID rows in content-manifest.md and derived
+  quantities/rounding/reference/approval rows in content-numbers-workbook.md. Eligible
+  gather-tier-three node fine materials and separately sourced tier-four crop produce retain the exclusion firewall
+  and profession-independent acquisition. Service owns actual fee/quote values.
+- SIM/TRANSFER owner: generalize 21's project state behind a small tested module.
+  Contributions accumulate permanently until approved bill and confirmed fee are both
+  satisfied, whichever arrives last; completion is immediate, with no artificial
+  multi-week duration or forced waiting. Members donate to the Hall Fund through 29;
+  officers authorize project payments from that fund, never a parallel direct-to-project
+  contribution rail. Respect current rank, the signed per-account cap schedule and
+  separate service balance revision. Exact fitting furnishing copies and member trophy
+  provenance carry across. Preview overflow and refuse before new mutation if bags
+  cannot hold safe returns. No mail custody branch. Full completion/custody/receipt
+  effects commit together; no expiry, lost contribution or duplicate grant.
+- SERVER owner: append the three price-free SKU rows and draft service-contract
+  outcomes, use 07a's sole durable intent/receipt boundary extended by 15 and 07a's global plot fence/atomic
+  save. Unknown SKU, stale quote, replay, second upgrade, wrong rank/unverified service authorization and dark
+  flag refuse on both dispatch arms. Guild service quotes bind the guild plot and
+  pooled debit; game performs no 3x conversion. Preserve project state across rolling
+  versions, crash/restart, pending service results and already-paid bill versions.
+- CLIENT/ART owner: final authored interiors, warm hearth/daylight, measured floor/
+  clearance and scheduler-prepared dressing preserve LOW beauty and fairness. Shared
+  Steward project tab shows exact have/need, selected source/fund, confirmed fee,
+  pending/refused, overflow preview and immediate completion. No multi-week timer or
+  pay-or-lose tone. Add real desktop/compact/tablet screenshots to the shared helper.
+  Project trophies, cosmetic visiting stock and direct Materials Vault chest move
+  to 32a; no duplicate implementation owner.
+
+INVARIANTS AND CLOSED ACCEPTANCE CONTRACT:
+The three money gates apply to every SKU, handler and purchase view in this file:
+(1) written counsel acceptance before production enable or housing-bearing store
+submission; (2) FREEHOLDS_ENABLED defaults off and refuses both dispatch arms and
+removes catalog rows while dark; (3) the seven-distribution capability map permits
+purchase only on browser web and website-distributed desktop. Seeker is use-only.
+Published Terms and accepted economy-service contract/catalog are additional release
+gates. Website management is an independent approved capability, default off on denied
+storefronts. Native, Steam and Epic receive no purchase submodel, hidden DOM, fetched
+catalog, handler, accessibility text or on-chain marketing. Purchase copy promises
+cosmetic, convenience and access only, never earn, income or yield. The economy
+service owns every price and all token math; expectedCostClaudium is only a forwarded
+quote fingerprint. Illustrative USD, 3x and other working targets never compute cost.
+Use the single 07a durable operation/receipt rail extended by 15: bind account, opaque
+plot/guild target, operation and quote version; persist intent before spend; retry
+ambiguity with the same key; apply effect and receipt atomically. No DB client or lock
+spans service IO, and live key arrays are not permanent replay authority.
+
+Before implementation decisions and again on the finished diff, dispatch
+database-performance-reviewer, paired with migration-safety and privacy-security-review.
+Reuse 07a's global plot ownership fence and commitFreeholdMutation seam: character FIFO before
+the required shared-resource serialization, no held DB client while queueing,
+07a actual touch-set ordering preserved,
+lease/revision/fund/receipt refusal aborting every resource and housing write. No stale
+CAS reload may erase an acknowledged transfer. Bound rows, strings, descriptor bytes,
+query results and queue admission from the measured docs/freeholds/content-manifest.md; preserve
+unsupported stored rows safely. One running save plus one pending dirty generation,
+shared background admission and workload deadlines apply to every producer. Record the
+query/index inventory (scope, predicate, order, limit, expected rows, index), reverse
+FK/export/delete access, retention and largest legal fixtures. Disposable Postgres
+proof must cover crash/interleave, competing realms, lease/CAS refusal, cancellation,
+queue pressure, query counts and seeded plans; fake-pool assertions alone are insufficient.
+
+Every gameplay quantity comes from state.md Content numbers or the approved docs/freeholds/content-manifest.md
+and docs/freeholds/content-numbers-workbook.md. This file produces its owned exact-ID, quantity,
+derivation/rounding, reference and approval rows before runtime enable. Fernando owns
+gameplay calibration; the economy service owns prices/currency allowance. Measurements
+come from approved room/model bounds. Missing measurements or signatures are concrete
+artifact/release gates, never permission to invent a balance literal or reopen a choice.
+All material inputs remain obtainable or tradable without requiring a profession;
+Perfecting keystones, gear intermediates and quickening catalysts remain excluded.
+
+Follow docs/freeholds/ux-spec.md as the visual and interaction source. Reuse the actual
+shared window and PainterHost families, theme tokens, content-signature dirty model,
+focus restoration and nontrapping build companion. Every player string is an English
+hudChrome.housing.* key (item/entity/guide source domains keep their canonical keys);
+tooltips follow docs/design/tooltip-writing.md. Capture desktop, compact and tablet
+targets from the shared housing helper with stable IDs at LOW, including empty,
+loading, refused, locked, visitor, reconnect and success states relevant here. Required
+after-shots fail if missing. Use shape/text as well as color for actionable state;
+40x40 touch controls respect safe areas, keyboard/gamepad order and reduced motion.
+Three authored emitters is a ceiling subject to the existing light sink/global budget,
+including iOS two and pressure one; unchanged ghost, blocked reason and occupancy
+information must remain legible through ambient grade, materials and silhouettes.
+
+Every new logic block is a small module behind existing SimContext/IWorld/PainterHost/
+renderer seams. Render/UI consume IWorld only; both Sim and ClientWorld implement the
+facet and headless keeps the housing exclusion/no-op contract. No DOM/Three in sim,
+no wall clock or Math.random there; host calendar inputs preserve clock domains.
+Re-find monolith ceilings rather than quoting stale slack; never raise one, pay thin
+delegates with safe extraction and lower the ceiling. Every changed content record
+carries its same-change obligations and naming originality. No generated artifact or
+locale overlay is hand-edited; canonical M16 exception remains applicable. No em dash,
+en dash, emoji or forbidden purchase vocabulary. No shipped stand-in counts as final art.
+
+STEP 3 - VALIDATION AND REVIEW:
+- npx tsc --noEmit, then the focused suites below (new names are planned tests owned by
+  this file or its recorded predecessor; run each with bounded workers and read exits):
+npx vitest run tests/freehold_content.test.ts tests/freehold_build_project.test.ts
+tests/freehold_upgrade.test.ts tests/freehold_hall_fund.test.ts
+tests/server/freehold_gates.test.ts tests/server/freehold_db.test.ts
+tests/provisioner_firewall.test.ts tests/world_api_parity.test.ts
+tests/freehold_command_chain_online.test.ts tests/snapshots.test.ts
+tests/renderer_compile_gate.test.ts tests/hud_update_drive.test.ts
+tests/mobile_window_coverage.test.ts tests/architecture.test.ts
+tests/sim_context.test.ts tests/monolith_budget.test.ts tests/localization_fixes.test.ts
+tests/deeds_content.test.ts tests/reliquary_content.test.ts
+- npm run i18n:gen, then npx vitest run tests/i18n_completeness.test.ts;
+  npm run wiki:content, then npx vitest run tests/guide.test.ts for content changes.
+- Run the disposable-Postgres twins ARMED with TEST_DATABASE_URL after npm run db:up
+  for persisted changes. Capture the query/lock/recovery/bound evidence above.
+- Run npm run asset:budget, npm run perf:tour and node scripts/pr_screenshots.mjs for
+  the owned visual targets; node scripts/mobile_input_zoom_check.mjs against npm run dev.
+  Re-pin parity goldens in their own reviewed commit only when sampled behavior changes.
+- Required reviewers: architecture-reviewer, cross-platform-sync, privacy-security-review, migration-safety, database-performance-reviewer, server-hot-path-reviewer, content-obligations-reviewer, render-performance-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist.
+  Each reports COVERAGE to a file with BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT.
+  Database review repeats on the finished diff. Apply ALL findings including nits;
+  a fresh reviewer reads all fixes. The actual diff may trigger additional reviewers.
+- Run node scripts/gate_select.mjs (or deeper npm run gate) as the shared pre-merge bar
+  after integration; npm run ci:changed after the last commit is additional evidence,
+  never a substitute. Record exact command, exit and proof path for every acceptance.
+
+Shared pre-merge bar: run node scripts/gate_select.mjs (or deeper npm run gate);
+ci:changed is additional evidence, never its substitute. Record the exact exit.
 
 STEP 4 - COMMIT CADENCE:
-5 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
-`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- feat(content): add the Great Hall, Manor, and Bastion tiers with their build bills
-- feat(sim): add shared build projects, visiting vendors, and the Materials Vault chest
-- feat(render): dress the three new interiors within the light budget
-- feat(ui): show shared project progress in the steward panel
-- test(sim): pin the keystone exclusion and the exactly-once upgrade grant
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Only when implementation commits are authorized: Conventional Commits with scope and
+body, explicit owned paths, never git add -A, no coauthor trailer, and the word "phase"
+nowhere in messages. Separate behavior/content, generated fingerprints and verification
+as coherent reviewed commits. Never push, open or merge a PR from this file.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] The tier table (rooms, budget, plinths, amenity slots) is pinned by fresh literals
-  for all three tiers; the layouts derive their colliders (what you see is what you bump).
-- [ ] A project completes only when bill and fee are both settled, across two realm
-  weeks, identically on a same-seed twin run; two members' contributions merge without
-  loss (escrow-delta pin).
-- [ ] The vendor NPC spawns at claim only after completion; the Materials Vault chest
-  opens the vault inside the owner's Manor and never for a visitor or below condition 30.
-- [ ] No bill names a keystone, a gear intermediate, or the catalyst (firewall arm green).
-- [ ] Three point lights at LOW in every new interior; no live-program events on the
-  perf tour; screenshots committed under docs/screenshots/.
-- [ ] All STEP 3 suites green; every reviewer reports no BLOCKING.
+STEP 5 - ACCEPTANCE:
+- [ ] Fresh literal tier pins and exact approved manifests cover all three tiers;
+  rendered walls, floors and colliders share measured content and protected circulation.
+- [ ] Bill-first and fee-first complete immediately when both are confirmed, with no
+  new elapsed-time requirement; concurrent members contribute through the capped fund,
+  officers approve, all contributed value and exact copies survive refusal/restart.
+- [ ] PG races/crash/lease/CAS and durable receipt replay prove one completion and
+  atomic resource/overflow custody; both dispatch arms enforce every money/surface gate.
+- [ ] Required project/interior screenshots show pending/refused/overflow/member/officer
+  states and LOW/reduced-motion behavior; global light budget and prewarm/perf evidence pass.
+- [ ] Content, i18n/wiki, all tests, shared gate and complete fresh review pass; no
+  reward/vendor/vault work is hidden here beyond the explicit 32a dependency.
 
-STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 32, notes, deferrals) and
-  docs/freeholds/state.md (ledger row 32; the content numbers table gains the three
-  tiers; the bill and contribution decisions).
-- Record surprising rules learned in memory for the next session.
+STEP 6 - DOC UPDATES AND MEMORY:
+Record row 32, exact files/symbols/tests/command outcomes, approved artifact rows and
+review evidence in progress.md/state.md; keep built status honest. Preserve all prior
+decisions and next links. Record surprising repository rules in the authorized memory.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+Report status, files, exact checks/results, review and fresh-fix verdicts, any unmet
+release artifact gate, and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-32-qa.md
 
 STOPPING RULES:
-- Stop and ask if a bill cannot be filled from tier 3 and 4 materials without a gear
-  intermediate; never widen the firewall.
-- Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
-- Do not push the branch; never merge a PR.
+- A missing required proof or artifact keeps this contribution incomplete; do not
+  invent a value, fake a source, discard custody or weaken an acceptance row.
+- Never raise a monolith ceiling, mutate a foreign owner or bypass current authority.
+- Keep the branch local; never push, open or merge a PR.
 ```

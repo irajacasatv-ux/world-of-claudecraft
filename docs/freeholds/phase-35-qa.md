@@ -1,97 +1,146 @@
-# Phase 35 QA: audit ward favor and Endeavors
+# Phase 35 QA: audit permanent ward Favor and monthly Endeavors
 
-Audits `phase-35-ward-favor-and-endeavors.md`. Verdict goes in `progress.md` (row
-"35 QA"). The next implementation phase never starts before this file has run.
+Audits `phase-35-ward-favor-and-endeavors.md`. Record the verdict in `progress.md` row "35 QA".
+The next implementation starts only after this audit passes.
 
 ### Starter Prompt
 ```
-This is Phase 35 (QA) of the Freeholds and Guildhalls feature: audit ward favor and
-Endeavors.
-
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-
-Goal: audit the Phase 35 diff for correctness against every deliverable and acceptance
-criterion in docs/freeholds/progress.md "35 Ward favor and Endeavors", missing tests,
-dead code, determinism, the never-sell-power rule, and three-host parity; fix what the
-audit finds; record a verdict.
+This is Phase 35 QA of the Freeholds and Guildhalls feature.
+Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Goal: verify every promised deliverable, adversarial failure case and settled ruling
+against the real implementation diff; fix all findings and review the fix round.
 
 STEP 0 - PRE-FLIGHT:
-- Work in the packet worktree named in docs/freeholds/state.md, on branch
-  feature/freeholds (or the stacked wave branch state.md records). Verify `git status`
-  is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
-  while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
-- Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
-  "apply ALL findings", "guard exemptions must be positive".
+Work in the state.md worktree/branch. Verify git status is clean; ask if it is dirty.
+Sync per state.md "Worktree, base, and merge-forward"; after a non-empty merge run the
+release-merge-audit skill and install frozen dependencies if patches/ moved. Scan memory
+for test-pin traps, "apply ALL findings" and "review the review-fix round".
+
+ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
+in this phase, including GLBs, references, icons and images, must be executed by
+Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
+provenance, runtime registration, fingerprint and in-context checks. This planning
+audit creates no game assets. Final art is required here;44a is a residual sweep,
+not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
-Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md, docs/freeholds/progress.md ("35" and its row),
-  docs/freeholds/phase-35-ward-favor-and-endeavors.md (what was promised)
-- the Phase 35 diff: `git log --oneline <phase-start>..HEAD`, `git diff <phase-start>..HEAD
-  --stat`, then the full diff of every touched file (the commits named in progress.md
-  row 35)
-- the pins the diff claims: tests/freehold_ward_favor.test.ts, tests/freehold_content.test.ts
-  (the power-neutral sweep), tests/freehold_wards.test.ts, tests/sim_context.test.ts,
-  tests/snapshots.test.ts, the tests/server/ suites the diff added
-The agent returns: the promised-versus-delivered table per deliverable, the list of new
-symbols and where each is consumed, every test added with what it asserts, and any
-TODO, unused import, or stub.
+Spawn one Explore agent over state.md, progress.md row 35, ux-spec.md, the implementation
+file, referenced signed artifacts, the complete scoped diff and all claimed tests.
+Return to a scratch report: promised/delivered table, each new symbol's actual consumer,
+each test's assertion and failure control, changed anchors, unused code and gate evidence.
 
-STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report to a
-file and replying with the path plus a short summary; prompt each for COVERAGE: report
-every issue including low-severity and uncertain ones; ranking happens later):
-- CORRECTNESS: favor is credited only from the settled events and never from a
-  purchase; the month boundary comes from the calendar feed, never Date; the decor bonus
-  gates new placements only and never removes an existing one; Endeavor completion is
-  read-time and rewards land exactly once per member; concurrent progress merges through
-  the escrow-delta idiom; the descriptor fields decode strictly; extractions are
-  move-not-rewrite.
-- TEST COVERAGE: the power-neutral sweep is POSITIVE (every reward id must appear in an
-  allowlist of cosmetic prop ids, never "not in a forbidden list"); a can-fail control
-  exists for the sweep; literal rank steps written fresh; a same-seed twin run with a
-  work-happened anchor; per-dimension negatives (a purchase event credits nothing, a
-  counter below target completes nothing, a second completion grants nothing).
-- DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
-  import invariant, the token firewall, the word "phase" in any code, comment, or commit
-  message, em dashes or emojis, generated files hand-edited, the freehold/ CLAUDE.md rows,
-  the hud_update_drive registration for the ward panel.
-Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
-the diff touched (architecture-reviewer, cross-platform-sync, privacy-security-review,
-migration-safety, frontend-seam-reviewer, test-coverage-auditor), and finally
-qa-checklist (the completion gate), all for COVERAGE, all to files.
+STEP 2 - AUDIT:
+Deliverables (at most five):
+1. Complete promised/delivered and adversarial correctness report.
+2. Decisive test, runtime-evidence and hygiene coverage report.
+3. Applied fixes, fresh fix review and recorded final gate verdict.
+
+Fan out three read-only coverage auditors: correctness, test coverage, and hygiene.
+Each reports every issue, including uncertain issues and nits, with severity/confidence
+and evidence to a file. Audit these specific requirements:
+- Calendar rollover must not decay Favor or capacity; independent month/season keys
+  stay deterministic across leap/month boundaries with injected authority data.
+- Exact approved content rows, event fingerprints and distinct-visit dedupe exclude
+  bought Calls, repeated visits and alts as repeat credit. Positive cosmetic allowlist
+  must fail for a power reward and contain every actual reward.
+- Real-PG same-event and completion races, restart and absent members prove atomic
+  dedupe/progress and durable lazy awards. No eager all-member rewrite or unbounded
+  startup load; compacted counters retain permanent rank and award replay identity.
+- The panel, tooltip keys, hidden-source silhouettes, wire fields and max-size fixtures
+  match ux-spec and both-world pins; each new reward has final art/source obligations.
+- Every changed reward prop uses scheduled prewarm and retirement; repeated
+  entry/leave does not grow resources. Verify measured LOW frame/GPU budget and
+  actionable visibility with render-performance-reviewer using actual evidence.
+Audit strict decode, malformed/max-size preservation, current authorization, keyed
+player strings, focus return and all input modes where UI exists, deterministic
+three-host parity, no monolith growth, and test-pin freshness where applicable.
+Dispatch architecture-reviewer, cross-platform-sync, migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor and qa-checklist
+for the actual surfaces, including persistence/DB review of JSON or caller changes.
+Database performance must have reviewed decisions and the finished diff; fake pools
+do not prove locks, query plans or concurrency.
+
+ACCOUNT AUTHORITY, CALENDAR AND RECOVERY ACCEPTANCE:
+Consume 07b's single account lifecycle authority: NEW
+server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/loadFreeholdLifecycleProtectionPage/
+advanceFreeholdLifecycleOnClient, coordinated by
+server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator and the accepted
+server/freehold_lifecycle_binding.ts::resolveFreeholdLifecycleBinding policy registry.
+Capture authenticated observations before queues; committed monotonic transitions,
+not authentication login or a plot-local last-seen field, authorize account grace.
+Immutable multi-return history or lossless prefix facts cover dormant/foreign plots;
+union overlapping lifecycle protection and service suspensions exactly, never sum
+independent credits, force-write foreign plots or restart grace on an alt/plot switch.
+
+07c's NEW server/freehold_arrival_db.ts::loadFreeholdArrivalTiers/
+markFreeholdArrivalTierOnClient owns normalized account+tier marks, separate from
+lifecycle and plot saves. Only the committed accepted-owner-entry insert winner
+has first-tier eligibility. NEW arrivals may receive a private freshArrivalPresentation
+directive; snapshot/resume/replay set it null even with firstTierAtAdmission history.
+Commit-before-ACK can skip presentation; no exactly-once visible/audio promise and
+no permanent receipt for routine visits. Second plots and transfers do not duplicate,
+copy or clear account arrival marks or seller lifecycle history.
+
+13/13a own shared source calendar/history/checkpoint evaluation. Preserve calendarId,
+schemaVersion/resetPolicyId and immutable prepaid bill/rate/material/receipt identities
+across foreign-realm claims and transfers. No rebinding to serving realm/browser zone.
+Historical dependencies of durable condition/bill/credit effects must be irrevocably
+finalized and read at consistent committed calendar/lifecycle revisions; unfinalized,
+missing or unsupported coverage keeps the affected effect pending. A future-credit
+purchase does not require future time to be finalized. Long absences/outages use
+bounded indexed prefix probes, never lifetime scans or absent-day/week loops.
+Calendar-only exclusive writers and compatible shared mutation readers follow 07a's
+actual legacy touch-set proof; no invented reverse lock hierarchy. Current-generation
+projection/ACK identity cannot regress after delayed loads or superseded delivery.
+Server-only operator evidence, secrets and diagnostics never reach either owner or
+visitor wire: explicit allowlist builders and distinctive sentinel tests prove it.
+
+At a sale/ownership transfer, materialize the old owner's condition at the transfer
+boundary from finalized original calendar/lifecycle history; preserve source calendar
+and immutable credits, retain seller account history, and apply buyer lifecycle only
+prospectively without copying grace. Unknown authority holds application for bounded
+original-operation recovery/accepted compensation, never a replacement charge or
+silent calendar reset. Current local custody/fence guards still apply.
+Character deletion, soft deactivation, restoration, true account deletion and export
+are separate: deactivation is not an FK cascade; restored history/credits/receipts keep
+their meaning. Explicit housing export loaders expose allowed facts only. Unknown or
+oversized originals remain durable/read-only with bounded diagnostic/reference, not
+empty/new-home defaults or filtered destructive arrival-set rewrites.
+07's persistence-rollout-contract.md and 07b's lifecycle-policy-binding.md/
+lifecycle-db-contract.md plus 13a's upkeep-calendar-db-contract.md name minimum
+capable releases, measured bounds, exact schema/save fixtures and accepted policies.
+Enable only a proven capable rollout; unchanged normalized rows do not prove an old
+binary implements lifecycle, export or saves. Rollback quiesces NEW effects and
+preserves accepted original-operation recovery identities and supported recovery.
+Each consuming implementation/QA runs relevant two-character/two-plot/two-realm,
+dormant-history, delayed-generation, finality/transfer, deactivation/restore/export
+and capable/uncapable-release fixtures through real composition and disposable PG.
 
 STEP 3 - VALIDATION:
-- Run the Phase 35 STEP 3 suite list plus `npx tsc --noEmit` and the pg-armed twin with
-  TEST_DATABASE_URL set.
+Run every implementation STEP 3 command and required disposable-PG evidence. Record
+exact commands, exit codes and evidence paths; an env-skipped suite is not runtime
+proof. Run node scripts/gate_select.mjs before completion.
 
 STEP 4 - FIX:
-- Apply ALL BLOCKING and SHOULD-FIX items (and the nits unless a nit contradicts a
-  locked decision, in which case record it). Re-run the validation matrix. Commit fixes
-  separately from the verdict, Conventional Commits with scope and body, EXPLICIT paths,
-  never `git add -A`, the word "phase" nowhere. Then review the fix commits with a FRESH
-  reviewer (fixes are unreviewed code until someone reads them). `npm run ci:changed`
-  after the last commit; read the exit code.
+Apply ALL findings including nits. Re-run affected checks. A fresh reviewer reads the
+fix commits before completion. Commit fixes separately using scoped Conventional
+Commits with bodies and EXPLICIT paths, no coauthor trailer, no word "phase".
+Run npm run ci:changed after the last commit and read the exit code.
 
 STEP 5 - ACCEPTANCE:
-- [ ] Every Phase 35 acceptance box is verified by a check that ran, not by inspection.
-- [ ] No BLOCKING or SHOULD-FIX item remains open; deferred nits are listed with a reason.
-- [ ] The fix commits were reviewed.
+- [ ] Every implementation acceptance has a decisive recorded check and evidence.
+- [ ] All findings are applied; contradictions with a locked ruling are resolved in
+  the report without silently changing that ruling. No unresolved implementation gap.
+- [ ] The fresh fix review passes and the shared contribution gate passes.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- progress.md row "35 QA": verdict (PASS / PASS-WITH-FOLLOWUPS / FAIL), counts found and
-  fixed, deferred items. state.md: anything the fixes changed in the ledger row.
-- Record surprising rules learned in memory.
+Record PASS or FAIL, findings/fixes, actual commands, evidence and tracked release gates
+in progress.md row "35 QA" and state.md's ledger. Preserve signed-artifact status.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: the QA verdict, counts found and fixed, deferred items, and the FULL PATH of
-the next file to run:
+Report verdict, findings and fixes, exact checks, gate status and FULL PATH of next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-36-showcases-and-guest-books.md
 
 STOPPING RULES:
-- A FAIL verdict stops the packet: record it and name the Phase 35 file as the next file
-  to re-run with the findings attached.
-- Do not push the branch; never merge a PR.
+A FAIL verdict reruns the owning implementation with the findings attached. Do not
+push the branch or open/merge a PR in this audit.
 ```

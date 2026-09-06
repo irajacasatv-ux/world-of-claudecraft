@@ -2,7 +2,7 @@
 
 Wave A, the Cottage MVP. The spec is `progress.md` "03 Content: tiers, Charter SKU, ledger
 schedule, vendor basics"; the decisions are `state.md` (the tier table, the working numbers,
-D17's radius on every def) and `brainstorm.md` (D1, D2, D13, O3, O7). This is a CONTENT phase:
+D17's radius on every def) and `state.md` (D1, D2, D13 and the settled content rulings). This is a CONTENT phase:
 it ships the first furnishing ids and therefore every same-change content obligation (art,
 deeds, Reliquary, wiki, names). No logic beyond pure lookups.
 
@@ -12,9 +12,9 @@ This is Phase 03 of the Freeholds and Guildhalls feature: content (the tier ladd
 Freehold Charter SKU allowlist, the Steward's Ledger schedule table, the vendor-basic
 furnishings and the Eastbrook furnisher, every content obligation).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase (three slices; the art batch is about eight icons).
+Harness: Codex. Asset generation in this implementation must use Codex, not Claude.
+Follow AGENTS.md and root/directory CLAUDE.md repository contracts; use the active Codex
+model and the existing image/model/SFX pipelines, provenance and quality gates.
 
 Goal: land the declarative records every later phase reads (tiers, charters, the ledger
 schedule, the first furnishings) under src/sim/content/freehold/, sold for gold by a new
@@ -41,7 +41,7 @@ STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md (the tier table and working numbers, the seams), docs/freeholds/
   progress.md (only "03 Content: tiers, Charter SKU, ledger schedule, vendor basics"),
-  docs/freeholds/brainstorm.md (O3 and O7 only), and this file
+  docs/freeholds/content-manifest.md, docs/freeholds/art-brief.md, and this file
 - src/sim/content/CLAUDE.md, src/sim/content/farm_patches.ts (the deep-frozen table served
   by reference, FARM_BED_IDS as the allowlist), src/sim/content/farm_crops.ts (produce ids
   and their fine_ twins), src/sim/content/storage_charters.ts (STORAGE_SKUS,
@@ -78,6 +78,30 @@ which lines have none); the keystone and gear-intermediate literals; the wiki re
 guide key recipe.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
+
+Deliverables (at most five):
+1. Deep-frozen Inn Room/Cottage tiers and the price-free Charter allowlist.
+2. The versioned realm-week eligible-ID schedule and exact calibration worksheet rows.
+3. Exactly eight vendor furnishings and the furnisher, with all same-change content art,
+   naming, wiki, provenance and originality obligations per shipped ID.
+4. The Homesteader opener and the NEW Hearth shelf across its complete consumer census.
+5. Literal content/firewall/economy/source-freeze tests and the approved manifest evidence.
+
+content-manifest.md owns exact item IDs, eight vendor forms, later ten craft outputs,
+recipe acquisition, permitted numeric sources and approval gates. art-brief.md owns
+material family, model reference and collision/measurement briefs; 19 produces the final
+reference sheets/GLBs. Freeze each source row before its runtime data is enabled: source
+path+symbol or measured report, derivation, rounding, result, owner and approving artifact.
+Missing numeric approval keeps that content disabled; it is a tracked release gate, not
+an invitation to invent a TUNING constant. Exactly eighteen Wave A furnishing outputs
+ship across 03/04; three patterns teach three of the ten crafted outputs.
+
+The Hearth shelf is a new literal shelf ID, not an already-shipped one. Append its
+catalog and navigation order without moving existing page IDs; furnishing ITEM pages
+qualify, patterns and trophy RECORDS do not. Preserve hidden-source discovery rules in
+names, search, tooltips and accessibility. Recompute fingerprints from the authored
+inventory; existing page/watch/recommendation totals are not capacity limits.
+
 Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
 files (disjoint except the shared pin files the coordinator edits last):
 - Agent TABLES: src/sim/content/freehold/{tiers.ts,charters.ts,ledger_schedule.ts}.
@@ -88,14 +112,18 @@ files (disjoint except the shared pin files the coordinator edits last):
   copy), isKnownFreeholdCharterId, the STORAGE_SKUS twin. ledger_schedule.ts: one line
   per gathering family (ore, wood, herb, hide, cloth, fish, produce), each listing tier 1
   and 2 ids in a published order with base grade before its fine_ twin (explicit gradeIds
-  for produce, plain ids where no fine twin exists), a seeded weekly order function that is
-  a pure hash of the week index (no Rng), and stack counts flagged TUNING in the
-  FARM_WATCH_FEE_BY_TIER manner (the economy service and Fernando own the finals).
+  for produce, plain ids where no fine twin exists), a versioned realm-week schedule independent of owner, with produce on every bill
+  and allowed rotating nonproduce families within the approved three-to-five-line
+  target. Base-before-fine ID order is explicit. Exact trial quantities come only
+  from content-manifest.md numeric provenance/calibration rows; approved schedule
+  versions and prepaid bills are immutable. No quantity defaults to inventory stackSize.
+  The economy service and Fernando sign literal bills before production enable; 13
+  validates the schedule and 20 records the four-week calibration evidence.
   Tests: tests/freehold_content.test.ts (literal pins for tier values, charter ids, schedule
   ids per line, the keystone and gear-intermediate exclusion sweep over every possible
   schedule week, the deep-frozen and no-price negative pins) and the ledger-schedule arm in
   tests/provisioner_firewall.test.ts.
-- Agent FURNISHINGS: src/sim/content/freehold/furnishings.ts with about eight
+- Agent FURNISHINGS: src/sim/content/freehold/furnishings.ts with exactly eight
   vendor-basic FurnishingItemDef rows (a bed, a table, two chairs, a rug, a lantern, a
   chest prop, a bookshelf): footprint, a measured collision radius `r` on EVERY def (required;
   `r: 0` means walk-through, the rug), decor
@@ -109,7 +137,9 @@ files (disjoint except the shared pin files the coordinator edits last):
   (appended at the END with DEED_ORDER rows: first furnishing placed, first Cottage;
   cosmetic-only, trigger kinds that later phases raise, never power), the Reliquary Hearth
   shelf pages for the furnishing items in src/sim/content/reliquary.ts (patterns never;
-  a page count over the shelf contract goes back to Fernando, O7), non-Latin name fills
+  the new Hearth shelf is implemented across its actual catalog, navigation, order,
+  localization, source and completion consumers; no global page cap exists, so never
+  infer one from a watch/recommendation limit or an old literal count), non-Latin name fills
   where an English name is wordy (M16), and the guide.* prose keys the wiki needs.
 The coordinator runs last: `npm run wiki:content`, the count re-pins in
 tests/deeds_content.test.ts and tests/reliquary_content.test.ts, and tests/item_icons.test.ts.
@@ -142,6 +172,15 @@ Out of scope (do NOT do in this phase):
   Charter purchase branch (Phase 15), trophies (Phase 17), GLB models (Phase 19).
 - Any src/sim/freehold/ logic that reads these tables.
 
+
+CODEX ASSET EXECUTION (D74/D75):
+- Any generated model/GLB, texture, reference image, icon/image or sampled asset in this
+  implementation is executed by Codex through the existing repository pipeline, including
+  provenance, deterministic export/fingerprint and in-context quality/performance checks.
+  QA verifies that execution evidence. The final 44a Codex pass rechecks and replaces
+  all feature-created placeholder icons/images; it does not waive this producer's
+  same-change or per-wave final-asset obligations. No asset is generated in the packet audit.
+
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/freehold_content.test.ts
   tests/furnishing_item_kind.test.ts tests/item_icons.test.ts
@@ -153,8 +192,20 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`.
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
   content-obligations-reviewer (the whole obligation list against the diff). Prompt it
-  for COVERAGE not filtering; it writes its report to a file. Do not commit until no
-  BLOCKING issues remain.
+  for COVERAGE not filtering; it writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
+  locked rulings and the fixes have fresh review.
+
+FINAL REVIEW AND COMPLETION CONTRACT:
+- Required reviewers for the actual promised surfaces: content-obligations-reviewer, architecture-reviewer, cross-platform-sync, frontend-seam-reviewer, test-coverage-auditor, qa-checklist.
+  Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
+  nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
+  ownership examples; this complete roster is the minimum finishing dispatch.
+- Database performance reviews happen before implementation decisions and on the finished
+  diff whenever SQL/call sites/stored shapes/queues/locks/timeouts/growth change; pair
+  migration-safety and privacy-security-review for persistence/authority changes.
+- Run node scripts/gate_select.mjs before calling this contribution complete, as well as
+  every scoped/PG/visual/SFX check named here. Report exact commands and outcomes. A
+  skipped required suite or a reviewer report alone is not a passing shared gate.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -171,8 +222,8 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   tests/provisioner_firewall.test.ts (with the new ledger-schedule arm) are green.
 - [ ] tests/freehold_content.test.ts pins every tier value, charter id, and schedule id by
   fresh literal; the keystone sweep covers every schedule week; every furnishing def carries
-  a numeric `r` (the rug carries 0); no def has a price, buff, or stat field.
-- [ ] content-obligations-reviewer reports no BLOCKING.
+  a numeric `r` (the rug carries 0); no Charter def has a price or copy field, and no furnishing has a buff or stat field.
+- [ ] content-obligations-reviewer confirms all findings resolved and the fresh fix review passed.
 - [ ] `grep -rn "wyrmfall_core\|sundered_essence\|makers_ember\|quickening"
   src/sim/content/freehold/` returns nothing.
 - [ ] Every new item id has a committed WebP and a mapping.json provenance row; the vendor
@@ -180,9 +231,9 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] All STEP 3 suites green.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 03, notes, deferrals, the O7 page count)
+- Update docs/freeholds/progress.md (status row 03, notes, deferrals, the exact Hearth page inventory)
   and docs/freeholds/state.md (the per-phase ledger row 03: new files, item ids, the
-  vendor id, deed ids, page ids, i18n keys; the TUNING stack counts as working values).
+  vendor id, deed ids, page ids, i18n keys; the source-freeze and calibration artifact, its owner and release evidence).
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
@@ -191,8 +242,9 @@ items, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-03-qa.md
 
 STOPPING RULES:
-- Stop and ask if the Hearth shelf would exceed the Reliquary page contract (O7 goes to
-  Fernando) or if a ledger line has no keystone-free tier 1 or 2 id.
+- A ledger family without an eligible protected-envelope-safe input fails the content
+  artifact acceptance; production remains gated until its owner-approved source row exists.
+  The Hearth shelf has no invented total-page ceiling.
 - Stop if the icon pipeline cannot produce a provenance row for an id (never commit a
   WebP without one).
 - Do not push the branch; never merge a PR.

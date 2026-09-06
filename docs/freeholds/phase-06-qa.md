@@ -9,8 +9,9 @@ This is Phase 06 (QA) of the Freeholds and Guildhalls feature: audit the interio
 two layouts, derived colliders, render variants and dressing), the Eastbrook Freehold
 Gate, the Hearth Key, and the refusal toasts.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
+Harness: Codex. Asset generation in this implementation must use Codex, not Claude.
+Follow AGENTS.md and root/directory CLAUDE.md repository contracts; use the active Codex
+model and the existing image/model/SFX pipelines, provenance and quality gates.
 
 Goal: audit the Phase 06 diff for correctness against every deliverable and acceptance
 criterion in docs/freeholds/progress.md "06 Interiors, the Eastbrook gate, the Hearth Key",
@@ -59,8 +60,13 @@ every issue including low-severity and uncertain ones; ranking happens later):
   cottage-tier record enters index 16, an inn-room record index 15); the key enters from
   any zone, consumes nothing, and refuses dead, combat, and cooldown with no teleport;
   the item def lives in src/sim/content/freehold/items.ts and the use arm in
-  src/sim/freehold/hearth_key.ts (D23); the cooldown stamp is hearth_key_ready_ms on the
-  live record in the host clock base, compared through ctx.lockoutNowMs() only, and the
+  src/sim/freehold/hearth_key.ts (D23); the cooldown belongs to isolated account host-clock state offline and 07/07a durable
+  account authority online; a plot field never authorizes admission. Pin the isolated
+  offline/headless injected ctx.lockoutNowMs() behavior and committed online display
+  mirror separately. 07/07a's later online acceptance exclusively uses its database
+  epoch after the account participant lock; a Sim/display clock or stale mirror must
+  never authorize a remote entry. Preserve that host seam now; its real-PG clock-
+  disagreement/race proof belongs to 07a, not an unavailable 06 dependency. The
   cooldown equals the state.md working value (60 minutes); the key is granted once per
   character and re-granted
   when absent; leaving lands at the gate; a jailed session's use_item on the key is
@@ -73,11 +79,11 @@ every issue including low-severity and uncertain ones; ranking happens later):
   gate landing, the cooldown written fresh as the state.md working value, a reason token
   per refusal); the
   determinism test compares two independent derivations, never one against itself; the
-  online arm drives the real dispatch for the walk-in and for use_item; the jailed pin
+  online arm drives the real dispatch for gate confirmation and for use_item; the jailed pin
   toggles the session flag and asserts no teleport; the perf tour result is recorded with
-  zero live-program events; missing negatives (a non-owner walking into the gate with no
-  record gets no_freehold; use_item with a non-key item ignores the freehold arm; a key
-  use inside the freehold is a no-op or a defined refusal).
+  zero live-program events; missing negatives (a non-owner confirming a gate destination without authority
+  gets the correct refusal; use_item with a non-key item ignores the freehold arm; a key
+  use while already at the selected home is a no-op with no cooldown change).
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
   import invariant (no render import in src/sim/, no sim mutation from src/render/), the
   word "phase" or "rent" or the banned two-word land phrase from ruling 9 in any code,
@@ -93,33 +99,101 @@ privacy-security-review, test-coverage-auditor), and finally qa-checklist (the c
 gate), all for COVERAGE,
 all to files.
 
+SETTLED COVERAGE ADDITIONS:
+- Walk through proximity without interacting and assert zero teleport. Drive explicit
+  gate confirm offline and through real dispatch, plus keyboard/pad/touch cancel/focus
+  return. Own/friend row states and authoritative pending/error/full/busy/recovery states
+  match ux-spec; friend lookup is enabled by 18 before Wave A close, never guessed here.
+- Measure both safe entry/facing/door/path layouts against art-brief and the workbook;
+  blocked paths or overlapping occupied arrival positions cannot pass content validation.
+- Verify confirmed dungeonEntrySeq handoff and same-arrival resume identity. Its
+  downstream 07c/08a/09 contract permits at most one consumption of a delivered fresh
+  directive, with optional camera only for the committed account/tier winner. Static
+  return/visitor, snapshot/resume/replay and commit-before-ACK omission cannot acquire
+  a new view/cue from historical identity alone. Preserve owner authority when using
+  a key and already-at-home no-op with unchanged cooldown. Inspect 40x40 touch
+  targets, safe areas and all keyed prompt/refusal strings in screenshots.
+- Lighting/camera/sampled welcome is explicitly owned by 09; 06 may not falsely claim
+  final arrival beauty from a shell-only screenshot. The final18/19/20 handoff is named.
+
+<!-- core-ux-gate-qa:start -->
+GATE UX FIX-ROUND COVERAGE:
+- Verify plant-sheet decision-window family and housing_view.ts/visit_prompt_view.ts
+  ownership. Name-field Enter runs Find home; explicit Enter is absent until the matching
+  authorized result. Focus/announce the result, then Tab to Enter. Editing the name
+  invalidates result/capability immediately. Race two lookups and verify older request/
+  normalized-name responses cannot replace or authorize the current draft; failure keeps
+  the name for retry and actual entry repeats authority.
+- An active Hearth Key cooldown cannot lock the physical gate. Condition-only pause
+  does not prevent entry/build while all independent admission rules still apply.
+- Delayed online cosmetics add no settle wait: structural safety and prepared readable
+  representations gate reveal, optional art finishes later. Bounded offline wait and
+  ordinary arrival do not inherit the special first-spawn establishing-shot wait.
+<!-- core-ux-gate-qa:end -->
+
+
+CODEX ASSET EXECUTION (D74/D75):
+- Any generated model/GLB, texture, reference image, icon/image or sampled asset in this
+  implementation is executed by Codex through the existing repository pipeline, including
+  provenance, deterministic export/fingerprint and in-context quality/performance checks.
+  QA verifies that execution evidence. The final 44a Codex pass rechecks and replaces
+  all feature-created placeholder icons/images; it does not waive this producer's
+  same-change or per-wave final-asset obligations. No asset is generated in the packet audit.
+
+HEARTH KEY CREDENTIAL AND SHARED-ACCOUNT PROOF:
+Inventory regrant restores a usable shortcut only; current account/plot admission is
+the authority. Test a held/transferred/forged key with no ownership, an absent key with
+authorized physical entry, and regrant without minting an entitlement. Remote-key entry
+uses 07/07a's account participant and committed private mirror; no plot save can reset
+it. Two alts and later two destinations share the duration. Already-home/refused/key-
+cooling physical-gate paths do not consume cooldown. This pair's offline behavior is
+proved now; online production admission requires the completed 07/07a authority proof.
+
 STEP 3 - VALIDATION:
 - Run the Phase 06 STEP 3 suite list plus `npx tsc --noEmit`; `npm run i18n:gen` and
   `npm run wiki:content` followed by `git status --porcelain` (a dirty file means a stale
   regen); `npm run perf:tour` through both interiors once more.
 
+FINAL REVIEW AND COMPLETION CONTRACT:
+- Required reviewers for the actual promised surfaces: architecture-reviewer, cross-platform-sync, render-performance-reviewer, content-obligations-reviewer, frontend-seam-reviewer, privacy-security-review, server-hot-path-reviewer, test-coverage-auditor, qa-checklist.
+  Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
+  nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
+  ownership examples; this complete roster is the minimum finishing dispatch.
+- Database performance reviews happen before implementation decisions and on the finished
+  diff whenever SQL/call sites/stored shapes/queues/locks/timeouts/growth change; pair
+  migration-safety and privacy-security-review for persistence/authority changes.
+- Run node scripts/gate_select.mjs before calling this contribution complete, as well as
+  every scoped/PG/visual/SFX check named here. Report exact commands and outcomes. A
+  skipped required suite or a reviewer report alone is not a passing shared gate.
+
 STEP 4 - FIX:
-- Apply ALL BLOCKING and SHOULD-FIX items (and the nits unless a nit contradicts a
-  locked decision, in which case record it). Re-run the validation matrix. Commit fixes
+- Apply ALL findings, including nits. Resolve a conflict with a locked decision
+  explicitly before PASS; a recorded conflict is not a deferred fix. Re-run the validation matrix. Commit fixes
   separately from the verdict, Conventional Commits with scope and body, EXPLICIT paths,
   never `git add -A`, the word "phase" nowhere; a fix that changes a visual re-captures
   the screenshots. Then review the fix commits with a FRESH reviewer (fixes are
   unreviewed code until someone reads them). `npm run ci:changed` after the last commit;
   read the exit code.
 
+REVIEW COMPLETION CONTRACT:
+All findings, including nits, must be resolved and the entire fix round independently
+reviewed before PASS. External signatures remain named release-gated artifacts, never
+deferred review findings. Record found/resolved counts and the fresh reviewer verdict.
+
 STEP 5 - ACCEPTANCE:
 - [ ] Every Phase 06 acceptance box is verified by a check that ran, not by inspection.
 - [ ] Both enter paths work offline and online in a test that ran; the jailed arm is pinned.
-- [ ] No BLOCKING or SHOULD-FIX item remains open; deferred nits are listed with a reason.
+- [ ] Every finding, including every nit, is resolved and a fresh reviewer has verified
+  the complete fix round. No deferred review finding remains.
 - [ ] The fix commits were reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- progress.md row "06 QA": verdict (PASS / PASS-WITH-FOLLOWUPS / FAIL), counts found and
-  fixed, deferred items. state.md: anything the fixes changed in the ledger row.
+- progress.md row "06 QA": verdict (PASS / FAIL), counts found and
+  fixed, and the fresh fix-review evidence. state.md: anything the fixes changed in the ledger row.
 - Record surprising rules learned in memory.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: the QA verdict, counts found and fixed, deferred items, and the FULL PATH of
+End with: the QA verdict, counts found and fixed, fresh fix-review evidence, and the FULL PATH of
 the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-07-persistence.md
 

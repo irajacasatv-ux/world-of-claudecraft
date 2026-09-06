@@ -84,30 +84,60 @@ the diff touched (architecture-reviewer, cross-platform-sync, privacy-security-r
 test-coverage-auditor), and finally qa-checklist (the completion gate), all for
 COVERAGE, all to files.
 
+SETTLED COVERAGE ADDITIONS:
+- The sibling/band resolver choice is closed. Exercise exact band/slot boundaries,
+  adjacent claims and outside-band positions so no clamped lookup aliases a neighbor.
+- First empty/revision 0 consumer registers correctly; equal-row different-origin/claim swaps,
+  out-of-order descriptor, leave/disconnect/account switch and late generation all leave
+  the correct region or no region. No visual load/quality change alters physics.
+- Publish precedes first admitted movement and only follows a committed safe layout.
+  Place beside an owner/guest and near door/arrival paths to prove rejection before
+  collider mutation; all refusals preserve old region/state. Compare both hosts at LOW.
+- Prove O(1) candidate lookup and zero per-tick republish with real call counters, and
+  five unchanged rift suites with a can-fail equivalence test rather than reviewer word.
+
 STEP 3 - VALIDATION:
 - Run the Phase 10 STEP 3 suite list plus `npx tsc --noEmit`; confirm from the vitest
   summary that every rift suite RAN and passed.
 
+FINAL REVIEW AND COMPLETION CONTRACT:
+- Required reviewers for the actual promised surfaces: architecture-reviewer, cross-platform-sync, privacy-security-review, test-coverage-auditor, qa-checklist.
+  Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
+  nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
+  ownership examples; this complete roster is the minimum finishing dispatch.
+- Database performance reviews happen before implementation decisions and on the finished
+  diff whenever SQL/call sites/stored shapes/queues/locks/timeouts/growth change; pair
+  migration-safety and privacy-security-review for persistence/authority changes.
+- Run node scripts/gate_select.mjs before calling this contribution complete, as well as
+  every scoped/PG/visual/SFX check named here. Report exact commands and outcomes. A
+  skipped required suite or a reviewer report alone is not a passing shared gate.
+
 STEP 4 - FIX:
-- Apply ALL BLOCKING and SHOULD-FIX items (and the nits unless a nit contradicts a
-  locked decision, in which case record it). Re-run the validation matrix. Commit fixes
+- Apply ALL findings, including nits. Resolve a conflict with a locked decision
+  explicitly before PASS; a recorded conflict is not a deferred fix. Re-run the validation matrix. Commit fixes
   separately from the verdict, Conventional Commits with scope and body, EXPLICIT paths,
   never `git add -A`, the word "phase" nowhere. Then review the fix commits with a FRESH
   reviewer (fixes are unreviewed code until someone reads them). `npm run ci:changed`
   after the last commit; read the exit code.
 
+REVIEW COMPLETION CONTRACT:
+All findings, including nits, must be resolved and the entire fix round independently
+reviewed before PASS. External signatures remain named release-gated artifacts, never
+deferred review findings. Record found/resolved counts and the fresh reviewer verdict.
+
 STEP 5 - ACCEPTANCE:
 - [ ] Every Phase 10 acceptance box is verified by a check that ran, not by inspection.
-- [ ] No BLOCKING or SHOULD-FIX item remains open; deferred nits are listed with a reason.
+- [ ] Every finding, including every nit, is resolved and a fresh reviewer has verified
+  the complete fix round. No deferred review finding remains.
 - [ ] The fix commits were reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- progress.md row "10 QA": verdict (PASS / PASS-WITH-FOLLOWUPS / FAIL), counts found and
-  fixed, deferred items. state.md: anything the fixes changed in the ledger row.
+- progress.md row "10 QA": verdict (PASS / FAIL), counts found and
+  fixed, and the fresh fix-review evidence. state.md: anything the fixes changed in the ledger row.
 - Record surprising rules learned in memory.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: the QA verdict, counts found and fixed, deferred items, and the FULL PATH of
+End with: the QA verdict, counts found and fixed, fresh fix-review evidence, and the FULL PATH of
 the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-11-build-mode-ui.md
 

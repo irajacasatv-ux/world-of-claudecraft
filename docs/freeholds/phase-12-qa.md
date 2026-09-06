@@ -19,6 +19,16 @@ explicit vault arm and its negatives, the amenity lock, determinism of the spawn
 three-host parity, and the monolith ratchet; fix what the audit finds; record a
 verdict.
 
+Asset execution: every step that creates or regenerates shipping GLBs, reference
+artwork, icons or images MUST be done by Codex, not Claude. Use
+.agents/skills/woc-image-to-glb/SKILL.md and its shared canonical workflow for GLBs;
+use Codex image generation for raster artwork. Capture actual rendered screenshots
+as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
+phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
+icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
+That final sweep does not postpone artwork owned here.44b revisits the completed result
+for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
+
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
@@ -50,72 +60,112 @@ the vault arm as written with its position among the existing arms, every test a
 with what it asserts, and any TODO, unused import, second reach rule, or second
 sourcing planner.
 
-STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report to a
-file and replying with the path plus a short summary; prompt each for COVERAGE: report
-every issue including low-severity and uncertain ones; ranking happens later):
-- CORRECTNESS: every deliverable and acceptance criterion actually met; banker
-  proximity is still ONE reach rule (grep for a second BANKER_RANGE comparison); the
-  Strongbox entity is visible to every viewer in the claim and satisfies the gate only
-  for a viewer whose OWN owner key claims the plot, within range, with amenities
-  unlocked; the built station persists as the `station` field inside the layout JSONB
-  with a normalize allowlist arm in state.ts; build_station emits freeholdGranted
-  { kind: 'station' } on the Phase 08 variant; the station joins exactly the craft admission
-  and the in-range read and never isAtAnyStation or resolveTrain; recipes and
-  STATION_TYPE_BY_CRAFT untouched; reagent sourcing at home goes through
-  planReagentSourceDraw (no second walk); the vault arm sits after the membership arms
-  and before the geometry backstop, is a POSITIVE predicate (owner key match AND built
-  station AND unlocked), costs one claim lookup, and every negative (visitor, no
-  station, locked) stays refused; the amenity lock reads the stored condition through
-  one predicate both amenities share; the spawns draw no Rng, keep respawnTimer
-  Infinity, and ride inst.objectIds; no amenity changes a combat, progression,
-  gathering, or drop number (read every new constant); the extractions are
-  move-not-rewrite.
-- TEST COVERAGE: each claimed pin has a DECISIVE assertion that fails on regression
-  (per-arm negatives each proving the OTHER arms still pass; the visitor case uses a
-  SECOND account's owner key inside the same claim, not an out-of-range owner; the
-  below-30 case sits at 29 and a control at 30; the bags-then-vault pin asserts the
-  vault decrement AND the bag decrement in order; the crafting-hub pin is proven
-  unchanged by diff, not by rerun alone; the respawn sweep pin advances ticks past one
-  second); orphaned tests; missing negative cases (build_station with an unknown type
-  string, a second build_station, the owner's alt on the same account using the
-  Strongbox, the guild bank at the Strongbox, a dead owner, a tampered `station` value
-  inside the layout JSONB dropping only that field, a visitor who sees the Strongbox
-  entity in their snapshot yet is refused at it).
-- DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
-  import invariant, a reason id emitted nowhere, an English literal in any emit (the S3
-  guard), an entity name outside world_entity_i18n.ts, the word "phase" in any code,
-  comment, or commit message, em dashes or emojis, generated files hand-edited,
-  src/sim/freehold/CLAUDE.md and the vault gate header updated, the monolith ceilings
-  lowered and not raised.
-Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
-the diff touched (architecture-reviewer, cross-platform-sync, privacy-security-review,
-migration-safety for the persisted `station` field, test-coverage-auditor), and finally
-qa-checklist (the completion gate), all for COVERAGE, all to files.
+STEP 2 - AUDIT (fresh parallel reviewers, COVERAGE, all findings to files):
+- CORRECTNESS reads every one of the five settled deliverables in
+  phase-12-strongbox-and-station.md, all its STEP 5 criteria, the linked ux-spec.md
+  states and state.md decisions against the full diff. Every promised behavior must
+  have a named implementation consumer; a copied constant or stated intention is not
+  delivery. Specifically audit this exact settled contract:
+
+Deliverables (at most five):
+1. Built-in Strongbox access. amenities.ts spawns the claim-scoped visible object
+   at the authored anchor, tracks it in inst.objectIds and keeps respawnTimer Infinity.
+   freeholdStrongboxSatisfies checks owner, current claim, BANKER_RANGE and condition.
+   Strongbox is personal-bank access with no extra capacity and no amenity-slot cost.
+   Separate service authorization from shared geometry: do not broaden nearBanker so
+   materials_vault.ts or guild_bank.ts inherit this right. Personal-bank operations,
+   bankInfoFor and bankInfoWireRevFor consume the capability-specific home-bank arm;
+   town banker behavior and nearBankerTemplateId remain unchanged. A visitor can see
+   the prop but cannot open or mutate personal banking.
+2. Station slot and crafting projection. build_station fills the Cottage's one
+   amenity slot from the six allowed StationTypes and is owner-only. The persisted
+   station field has a positive normalizer allowlist. freeholdStationsFor composes
+   into evaluateCraftAdmission and the HUD in-range read only. The existing town
+   station list, isAtAnyStation, resolveTrain and Maker's Bond unbind never inherit
+   home permissions. The Strongbox and one station coexist. Entry and building still
+   work at zero condition; only the amenity service is paused below 30, available at 30.
+3. Explicit personal vault crafting arm. vaultDrawBlocked checks owned current claim,
+   built valid station and available amenity after membership arms and before geometry
+   fallback; the cvault projection uses the same cheap read. Material consumption
+   retains one planReagentSourceDraw. Home crafting can draw the owner's personal
+   vault without opening direct Materials Vault management. Direct vault chest access
+   is the later Manor amenity; guild bank access requires the later guild chest plus
+   membership, never a Strongbox. Phase 30 extends station access to permitted guild
+   members drawing their own vault, without sharing private vault data.
+4. Thin interaction and wire integration. strongbox_interact.ts uses the shared press
+   funnel and real bank window. buildStation/myAmenities, build_station, text-free
+   grants/denials, descriptor amenity rows and mst projection traverse IWorld, both
+   worlds, command tags, server dispatch and strict decoder together. Claim teardown
+   removes both objects. Denied/paused hints use hudChrome.housing.* through the one
+   selector and existing window/focus family in ux-spec.md.
+   Interior tooltips branch on the actual service authorization/condition model:
+   owner-ready, visitor read-only and condition-paused are distinct keys. A mere
+   hearth asset or inaccessible owner service does not imply condition lockout.
+   Low condition alone cannot prevent entry/decoration; independent admission rules
+   still apply. Only form controls input/select/textarea have the coarse 16px floor.
+   Station persistence distinguishes absent/default, malformed known-schema and valid
+   unsupported future identifiers. Preserve a future owned station's original record
+   read-only under07's capability/recovery contract; do not drop it, construct an empty
+   station or grant a second station. Pin original value/ownership through load/save,
+   denied mutation and recovery, separately from absent and known malformed fixtures.
+5. Boundary proof. Pin owner/visitor/out-of-range/condition 29/30 for banking and
+   crafting; assert personal bank allowed while direct vault and guild bank stay
+   denied at Strongbox. Pin simultaneous Strongbox+station, second station refusal,
+   no town training/unbind bypass, cvault owner-only data and zero new per-tick SQL.
+   Rerun bank/vault/guild authorization and station online suites, command/wire parity,
+   persistence normalization and object teardown. Invoke database-performance-reviewer
+   before storage/caller decisions and on finished diff, alongside architecture,
+   cross-platform, privacy, migration and frontend reviewers for these surfaces.
+
+- TEST COVERAGE verifies decisive literal/source and negative assertions for every
+  boundary above, including actual work before equality, real async/race outcomes and
+  honest unknown/denied states. Missing before/after capture, skipped environment test,
+  unaccepted release gate or absent artifact is explicit, never silently PASS.
+- HYGIENE checks source anchors and imports, ownership, no dead/TODO code, actual
+  monolith ceilings, all i18n render sinks and generated-artifact obligations, no
+  em/en dash or emoji and no forbidden purchase language. Cross-check every numeric
+  literal to state.md Content numbers or its measured/accepted artifact.
+Then dispatch every reviewer the implementation STEP 3 and canonical surface matrix
+requires, including test-coverage-auditor and qa-checklist. Do not run duplicate shared
+commands; inspect parent evidence. Apply ALL findings, including nits, then a fresh
+reviewer reads the fixes before the verdict.
 
 STEP 3 - VALIDATION:
+Required named reviewers for this file: architecture-reviewer, cross-platform-sync,
+privacy-security-review, database-performance-reviewer, migration-safety,
+server-hot-path-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist.
+Database-performance-reviewer runs before implementation decisions and again on the
+finished diff; pair with migration-safety and privacy-security-review as listed.
+The QA session inspects those reports and dispatches a fresh review of every fix.
 - Run the Phase 12 STEP 3 suite list plus `npx tsc --noEmit`; run tests/parity clean
   and confirm any golden commit stands alone.
 
 STEP 4 - FIX:
-- Apply ALL BLOCKING and SHOULD-FIX items (and the nits unless a nit contradicts a
-  locked decision, in which case record it). Re-run the validation matrix. Commit fixes
+- Resolve ALL findings, including NICE-TO-HAVE items and nits. Correct any conflict
+  with a locked decision consistently before PASS; never defer the finding. Re-run the validation matrix. Commit fixes
   separately from the verdict, Conventional Commits with scope and body, EXPLICIT paths,
   never `git add -A`, the word "phase" nowhere. Then review the fix commits with a FRESH
   reviewer (fixes are unreviewed code until someone reads them). `npm run ci:changed`
   after the last commit; read the exit code.
 
 STEP 5 - ACCEPTANCE:
+External signatures stay explicit release gates attached to completed handoff artifacts;
+they are not deferred review findings. PASS requires ALL findings, including nits,
+resolved and a fresh review of the complete fix round.
+
+- [ ] The complete five-deliverable settled contract above, exact screenshot entries and
+  ux-spec.md states are checked against real evidence; no unresolved scope ruling remains.
 - [ ] Every Phase 12 acceptance box is verified by a check that ran, not by inspection.
-- [ ] No BLOCKING or SHOULD-FIX item remains open; deferred nits are listed with a reason.
+- [ ] ALL findings, including nits, are resolved; a fresh reviewer has reviewed the fix round.
 - [ ] The fix commits were reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- progress.md row "12 QA": verdict (PASS / PASS-WITH-FOLLOWUPS / FAIL), counts found and
-  fixed, deferred items. state.md: anything the fixes changed in the ledger row.
+- progress.md row "12 QA": verdict (PASS / FAIL), counts found and
+  fixed, external release gates. state.md: anything the fixes changed in the ledger row.
 - Record surprising rules learned in memory.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: the QA verdict, counts found and fixed, deferred items, and the FULL PATH of
+End with: the QA verdict, counts found and fixed, external release gates, and the FULL PATH of
 the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-13-condition-and-ledger-core.md
 

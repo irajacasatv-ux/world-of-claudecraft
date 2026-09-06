@@ -1,7 +1,7 @@
 # Phase 04: content, the crafted furnishings and the quartermaster patterns
 
 Wave A, the Cottage MVP. The spec is `progress.md` "04 Content: crafted furnishings and
-quartermaster patterns"; the decisions are `brainstorm.md` D13 and D14 (one recipe per
+quartermaster patterns"; the decisions are `state.md` D13 and D14 (one recipe per
 existing craft, patterns are `kind: 'recipe'` rows on the deterministic quartermaster row, no
 luck-gated faucet in the MVP) and `state.md` (keystone exclusion, recipes and `stationType`
 gates unchanged). This is a CONTENT phase with the full same-change obligation list; it also
@@ -12,9 +12,9 @@ extends the channel, economy, and provisioner contracts to cover furnishing reci
 This is Phase 04 of the Freeholds and Guildhalls feature: content (ten crafted furnishings,
 one per craft, and three furnishing patterns on the Heroic Quartermaster's row).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase (thirteen ids and recipes over known content shapes).
+Harness: Codex. Asset generation in this implementation must use Codex, not Claude.
+Follow AGENTS.md and root/directory CLAUDE.md repository contracts; use the active Codex
+model and the existing image/model/SFX pipelines, provenance and quality gates.
 
 Goal: give every one of the ten crafts a furnishing recipe on its existing trainer and
 station seams, put three of those recipes behind pattern items sold deterministically by the
@@ -41,7 +41,7 @@ STEP 0 - PRE-FLIGHT:
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "04 Content: crafted furnishings
-  and quartermaster patterns"), docs/freeholds/brainstorm.md (D13, D14, O7), and this file
+  and quartermaster patterns"), docs/freeholds/state.md (D13, D14 and the settled Hearth shelf contract), and this file
 - src/sim/content/apex_patterns.ts (the id contract `pattern_<output>`, the per-craft
   prefixes, the header count literal that must stay true), src/sim/content/farm_patterns.ts
   (the narrow RecipeItemDef table as the model), src/sim/professions/pattern_items.ts
@@ -80,13 +80,33 @@ carve-out predicate and the arm that lets a furnishing recipe bill produce while
 every keystone; the Hearth shelf append recipe and the count pins; the art invocation.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
+
+Deliverables (at most five):
+1. Exactly ten crafted furnishing outputs, one per existing craft, with approved recipe
+   and station/acquisition rows from content-manifest.md.
+2. Exactly three pattern items within those ten outputs and deterministic Marks stock.
+3. All same-change icon/provenance/name/originality/Hearth-page/wiki obligations.
+4. Literal recipe/channel/economy/firewall and acquisition behavior evidence.
+
+Consume the exact roster and pattern selection in content-manifest.md and art-brief.md;
+phrases such as stand-or-brazier describe historical options only and are replaced by the
+manifest's selected form. Every material count, skill threshold, Marks price, sellValue,
+decor cost and geometry value has a named source+derivation+rounding or signed calibration
+row before activation. Do not claim classic-era authority for original housing rates.
+Verify pattern sellValue against the shipped pattern contract rather than assuming it.
+Wave A remains Marks-only, never a raid/rift/delve luck faucet. The later Wave B manifest
+adds one named raid OR rift luck channel plus Marks per rare pattern and counts all produce
+props inside its twenty outputs. Every shipped wave closes on final art, never indefinitely
+on a stand-in. The jewelcrafting Wave A output is the floor-supported jewel lamp. The chandelier
+belongs to the twenty-output Wave B roster and uses fixed ceiling anchors introduced
+in 25; never invent a floor stand or duplicate acquisition for it.
+
 Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
 files (disjoint except the shared pin files the coordinator edits last):
 - Agent RECIPES: the ten FurnishingItemDef rows appended to
-  src/sim/content/freehold/furnishings.ts on the proposal's mapping (weaponcrafting rack,
-  armorcrafting stand or brazier, tailoring rug or banner, leatherworking chair,
-  engineering lamp or clock, alchemy glass lamp, inscription painting or map, jewelcrafting
-  chandelier, cooking feast-table prop, enchanting glow light; each with footprint, `r`,
+  src/sim/content/freehold/furnishings.ts on the proposal's mapping (the exact ten-craft
+  forms in content-manifest.md, including the floor-supported jewel lamp in Wave A;
+  no unresolved stand/brazier, rug/banner, lamp/clock or painting/map alternatives; each with footprint, `r`,
   decorCost, a stand-in model key, tradable), and src/sim/content/freehold/
   furnishing_recipes.ts: one recipe per craft on the existing craft id and its existing
   station type, tier 1 to 3 materials, produce only on the consumable crafts, seven rows
@@ -105,8 +125,7 @@ files (disjoint except the shared pin files the coordinator edits last):
   trainer-taught), and the channel-sweep arm if STEP 1 found one is needed.
 - Agent ART AND OBLIGATIONS: WebP icons plus mapping.json provenance for the ten
   furnishing ids and the three pattern ids; English names in the item-names catalog with
-  M16 fills where wordy; Hearth shelf pages for the ten furnishing items (patterns never;
-  O7 if the shelf overflows); the guide.* prose keys; the power-neutral sweep and the
+  M16 fills where wordy; Hearth shelf pages for the ten furnishing items (patterns never; append the exact manifest page inventory without a phantom global cap); the guide.* prose keys; the power-neutral sweep and the
   r-on-every-def pin extended in tests/freehold_content.test.ts.
 The coordinator runs last: the furnishing-recipe arm in tests/provisioner_firewall.test.ts
 (produce allowed on the consumable crafts, keystones and gear intermediates never, a
@@ -135,10 +154,20 @@ INVARIANTS THIS PHASE MUST KEEP:
 
 Out of scope (do NOT do in this phase):
 - The R8 luck channels (raid tail groups, rift clear draws): Phase 22.
-- The remaining furnishings across crafts (Phase 22), produce props (Phase 24).
+- Exactly twenty additional Wave B outputs, including its produce props/markers
+  (Phase 22); Phase 24 renders the existing farm tableau and adds no extra furniture roster.
 - Any placement or build-mode behavior (the place_furnishing command in Phase 08, build mode
   in Phase 11; a furnishing never gains a use arm); GLB models (Phase 19).
 - Carpenter and Mason (Phase 43).
+
+
+CODEX ASSET EXECUTION (D74/D75):
+- Any generated model/GLB, texture, reference image, icon/image or sampled asset in this
+  implementation is executed by Codex through the existing repository pipeline, including
+  provenance, deterministic export/fingerprint and in-context quality/performance checks.
+  QA verifies that execution evidence. The final 44a Codex pass rechecks and replaces
+  all feature-created placeholder icons/images; it does not waive this producer's
+  same-change or per-wave final-asset obligations. No asset is generated in the packet audit.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/freehold_content.test.ts
@@ -153,8 +182,20 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`.
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
   content-obligations-reviewer (the obligation list, referential integrity through the
-  merged catalog, the classic-era balance of the bills). Prompt it for COVERAGE not
-  filtering; it writes its report to a file. Do not commit until no BLOCKING issues remain.
+  merged catalog, the explicit source derivation and approval of every bill). Prompt it for COVERAGE not
+  filtering; it writes its report to a file. Do not commit until all findings, including nits, are resolved and freshly reviewed.
+
+FINAL REVIEW AND COMPLETION CONTRACT:
+- Required reviewers for the actual promised surfaces: content-obligations-reviewer, test-coverage-auditor, qa-checklist.
+  Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
+  nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
+  ownership examples; this complete roster is the minimum finishing dispatch.
+- Database performance reviews happen before implementation decisions and on the finished
+  diff whenever SQL/call sites/stored shapes/queues/locks/timeouts/growth change; pair
+  migration-safety and privacy-security-review for persistence/authority changes.
+- Run node scripts/gate_select.mjs before calling this contribution complete, as well as
+  every scoped/PG/visual/SFX check named here. Report exact commands and outcomes. A
+  skipped required suite or a reviewer report alone is not a passing shared gate.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -173,7 +214,7 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] tests/apex_pattern_channels.test.ts, tests/recipe_pattern_items.test.ts,
   tests/recipe_economy.test.ts, and tests/provisioner_firewall.test.ts (with the furnishing
   arm) are green; the apex header count literal is unchanged and still true.
-- [ ] content-obligations-reviewer reports no BLOCKING.
+- [ ] content-obligations-reviewer confirms all findings resolved and the fresh fix review passed.
 - [ ] `grep -rn "wyrmfall_core\|sundered_essence\|makers_ember\|quickening"
   src/sim/content/freehold/` returns nothing; no bill names a billet, plating, cording,
   bolt, setting, or chassis id.
@@ -184,7 +225,7 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 04, notes, deferrals) and
   docs/freeholds/state.md (the per-phase ledger row 04: new files, the thirteen ids, the
-  recipe ids, the quartermaster rows, page ids, i18n keys; the O7 page tally).
+  recipe ids, the quartermaster rows, page ids, i18n keys; the exact Hearth page inventory).
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
@@ -195,7 +236,7 @@ items, and the FULL PATH of the next file to run:
 STOPPING RULES:
 - Stop and ask if the channel sweep cannot accept a quartermaster-only pattern without
   weakening an existing pin (D13 must hold without a luck channel; never loosen the sweep).
-- Stop if a craft has no keystone-free tier 1 to 3 material set for its bill, or if the
-  Hearth shelf overflows the page contract (O7 goes to Fernando).
+- Stop if a craft has no keystone-free tier 1 to 3 material set for its bill, or a required numeric source/approved calibration row is absent (the documented
+  content release gate remains closed until that artifact exists).
 - Do not push the branch; never merge a PR.
 ```

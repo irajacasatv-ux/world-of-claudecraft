@@ -1,26 +1,17 @@
-# Phase 43: Carpenter and Mason (conditional on furnishing demand and a ruling)
+# Phase 43: future craft expansion handoff, no new professions
 
-Wave E, depth. The spec is `progress.md` "43 Carpenter and Mason (conditional)"; the
-decisions are `state.md` and `brainstorm.md` (D14: a furnishing recipe belongs to an
-existing craft; Carpenter and Mason stay a wave E OPTION). This phase runs only if the
-measured furnishing demand (wave A's four-week measurement plus wave B) proved out AND
-Fernando ruled for it, with the ruling recorded in `state.md`. If the ruling is no, the
-phase records "skipped by ruling" and ends. If it is yes, it ships the two off-wheel
-crafts with furnishing-only recipes on the existing professions seams.
+This implementation file and its QA are the complete contract for this bounded slice.
+The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
+are authoritative. Nothing in this planning packet is marked built.
 
 ### Starter Prompt
 ```
-This is Phase 43 of the Freeholds and Guildhalls feature: Carpenter and Mason (the two
-off-wheel crafts with furnishing-only recipes), conditional on the ruling recorded in
-state.md.
+This is Phase 43 of the Freeholds and Guildhalls feature: future craft expansion handoff, no new professions.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase (batch-heavy content, but a fan-out suffices).
+Harness: Claude Code. Follow the root CLAUDE.md working-style block for effort and
+fan-out; this prompt names no model.
 
-Goal: if and only if the ruling is yes, add Carpenter and Mason beside the ten-craft
-ring without touching the ring's geometry or any existing recipe's station gate, with
-every recipe outputting a furnishing and every pattern reaching a deterministic faucet.
+Goal: close the optional Carpenter/Mason scope by producing a measured future-expansion handoff while this packet ships its full furnishing program through the existing ten professions.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -36,135 +27,110 @@ STEP 0 - PRE-FLIGHT:
   patches/.
 - If state.md "Push policy" records a stacked wave branch, work on that branch instead of
   feature/freeholds.
-- THE RULING GATE: read state.md "Locked decisions" for the Carpenter and Mason ruling.
-  ABSENT: STOP and ask Fernando; implement nothing. NO: write "skipped by ruling" with
-  the date and the ruling text into docs/freeholds/progress.md rows 43 and 43 QA and
-  the status table, commit it alone as `docs(freeholds): record the Carpenter and Mason
-  ruling` (with a body), skip STEPS 1 to 5, do STEP 6 and STEP 7, and end. YES: continue.
 - Memory scan: MEMORY.md and entries on content obligations, the R8 pattern channels
   and D13, the station gate composition, the professions tuning packet, test-pin traps.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
+STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md (the ruling and any scope it names), docs/freeholds/progress.md
-  (only "43 Carpenter and Mason"), and this file
-- src/sim/content/professions.ts (CraftDef and CRAFT_RING: the fixed ring where opposites
-  sit five apart; STATIONS, STATION_TYPE_BY_CRAFT with its load-bearing key order,
-  STATION_RADIUS), src/sim/professions/wheel.ts (gainCraftSkill, normalizeCraftSkills,
-  isSpecialized), src/sim/professions/stations.ts, training.ts (resolveTrain,
-  TRAINING_FEE_BY_TIER, teachTierMet), crafting.ts (evaluateCraftAdmission),
-  pattern_items.ts, src/sim/content/apex_patterns.ts and farm_patterns.ts (the channel
-  doctrine headers), src/sim/content/freehold/furnishing_recipes.ts and
-  furnishing_patterns.ts (Phases 04 and 22), src/sim/content/deeds.ts (the grandmaster
-  deed rows per craft), src/sim/material_ids.ts
-- src/ui/hud/professions/ (the professions window craft rows), src/ui/i18n.catalog/
-  (the professions domain), src/ui/world_entity_i18n.ts (trainer names)
-- tests/professions_crafting_hub.test.ts (the six stations by literal),
-  tests/professions_zone_rollout.test.ts, tests/apex_pattern_channels.test.ts,
-  tests/recipe_pattern_items.test.ts, tests/recipe_economy.test.ts,
-  tests/provisioner_firewall.test.ts, tests/deeds_content.test.ts
-The agent returns: how a craft can exist OFF the ring (a CraftDef flag or a sibling
-table the skill functions admit, with no pole, no adjacency, no specialization) without
-changing CRAFT_RING's literal pin; the station decision space (new StationType values
-sawmill and masonry with town placements in rolled-out zones and master NPCs, versus
-reusing existing types) and which existing tests re-pin; the trainer and recipe
-shapes; the pattern channel obligations; the frozen skill key names (carpentry,
-masonry). Settle in STEP 1 and record in state.md before implementing: the off-wheel
-mechanism, the station types and their placements, the recipe list (furnishings only,
-working: ten per craft, every bill keystone-free), and maxSkill.
+- docs/freeholds/state.md, progress.md row 43, content-manifest.md,
+  content-numbers-workbook.md and art-brief.md; the adopted proposal's optional
+  Carpenter/Mason paragraph, the prior wave content and measured economy reports.
+- The CURRENT existing profession, station, skill-save, recipe/pattern and content
+  obligation seams through their directory-local CLAUDE.md guidance. Inventory the
+  actual ten-profession furnishing assignment and cite existing paths/symbols/tests.
+- Completed contributor/reviewer evidence for furniture access without a profession,
+  current training gates and the protected material/keystone envelope.
+- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
+  artifacts referenced by state.md that this slice consumes.
+The agent returns: the explicit locked exclusion of Carpenter/Mason from this packet, existing
+craft coverage and measured demand/capacity evidence. No skill cap, station family,
+recipe count or new balance rate is chosen here. The future handoff is an artifact
+of this slice, not an unanswered question or conditional implementation branch.
+All design rulings are locked; a missing required signed artifact keeps its release
+gate closed and produces a named validation result, never a guessed runtime value.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last):
-- Agent CONTENT: the two CraftDef rows in the settled off-wheel home, the station rows
-  and master NPCs, trainers, the recipes (output kind furnishing only; bills from
-  market-listable materials; never a keystone, a gear intermediate, or the catalyst),
-  the patterns as RecipeItemDef rows with a trainer-taught deterministic faucet plus
-  the R8 channels under D13, the furnishing items with art and provenance, the
-  grandmaster deeds, world-entity names, wiki regen and guide keys, the provisioner
-  firewall arm.
-- Agent SIM: the off-wheel admission in wheel.ts and the skill normalizer (frozen keys),
-  the station gate rows, train resolution at the new stations, the specialization
-  refusal for off-wheel crafts (pinned), tests/professions_off_wheel.test.ts (gain to
-  maxSkill, no specialization, train only at the station, recipes resolve, same-seed
-  twin run, the ring literal unchanged).
-- Agent UI: the professions window rows for the two crafts, the craft map order, the
-  i18n keys in the professions domain, pr_shot_targets entries, the mobile check.
-The coordinator edits last: tests/professions_crafting_hub.test.ts (the station
-literals), tests/professions_zone_rollout.test.ts, tests/deeds_content.test.ts counts,
-tests/monolith_budget.test.ts. Every agent writes any report longer than a screen to a
-file and replies with the path plus a short summary. Never `mode: "plan"` on teammates.
+Deliverables (at most five):
+Assign disjoint implementation ownership by the following 3 deliverables.
+The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
+finish. Workers receive only the context report and owned files, preserve others' edits,
+and return full reports to the scratchpad with a path and short summary.
+1. Coverage and evidence artifact: create planned docs/prd/woc/freehold-craft-expansion-handoff.md
+   recording the locked no-new-professions scope, all current furnishing assignments,
+   acquisition alternatives, measured use/economy findings and actual source/test
+   anchors. Explicitly preserve profession-free ownership and upgrade access. Existing
+   ten professions deliver the complete approved packet; no Carpenter/Mason content
+   or skill-save enum is added.
+2. Future decision contract: document the evidence, affected station/training/skill-
+   save/content/UI/parity/persistence seams and numeric-provenance worksheet a NEW
+   separately authorized expansion would need. Reference existing rates only as
+   evidence, never propose unapproved caps, twenty recipes or market projections.
+   Name Fernando as future product owner and the applicable content, architecture,
+   database, persistence and frontend review responsibilities. This future scope
+   does not hold this packet open or imply a promised release.
+3. Consistency and proof: cross-check the actual content manifest, guide and deck
+   against the locked scope; remove any conditional claim that Carpenter/Mason ships
+   here. Verify all handoff links/anchors and current furnishing coverage. Record
+   explicit no-implementation diff evidence and reviewer verdicts; leave every skill,
+   station, recipe, player key and implementation file untouched.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- Never sell power and the R5 envelope: every recipe of both crafts outputs a
-  furnishing; none outputs gear, a gear intermediate, or a consumable with a number.
-- Existing recipes and their stationType gates unchanged; the ring geometry unchanged
-  (CRAFT_RING's literal pin stays green untouched).
-- R18: every furnishing stays market-listable; no ledger or upgrade bill ever requires
-  the new crafts.
-- Keystone exclusion in every bill; zero farm beds; determinism (no Rng in content or
-  gates); the content obligations (deeds, art with provenance, wiki, names, fills).
-- The i18n policy in docs/freeholds/implementation-plan.md; token firewall; vocabulary
-  fixed; "phase" in no code, comment, commit, or PR text; monolith ceilings never raised.
+Every player-visible string, including error, aria, tooltip and empty-state text,
+uses an English hudChrome.housing.* key and the formatters from src/ui/i18n.ts.
+Tooltips follow docs/design/tooltip-writing.md. Reuse docs/freeholds/ux-spec.md and the
+shared family/painter/window lifecycle, focus return, keyboard/gamepad, touch safe-area,
+reduced-motion and graphics-fairness contracts; do not fork the theme. New paths,
+symbols, wire fields, tables and tests under housing/freehold are PLANNED unless an
+earlier completed ledger row owns them. Re-find every existing anchor in the tree.
+No power sale, keystone/gear-intermediate/quickening-catalyst bill, new farm bed,
+repossession or calendar destruction. Sim stays deterministic and token-free; all
+server player events are keyed data. Coordinators compose siblings and never grow
+past their pinned ceilings. Fresh tests use literal expectations and negative controls.
 
-Out of scope (do NOT do in this phase):
-- Gear or consumable recipes for the new crafts (never); specialization or ring
-  adjacency for off-wheel crafts; a ring re-layout; any change to a shipped craft.
+
+Out of scope:
+Any Carpenter/Mason implementation, new craft-specific numbers, new station/skill/save/UI schema, or promise to ship a separate expansion.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
-- Run: `npx tsc --noEmit`; `npx vitest run tests/architecture.test.ts
-  tests/monolith_budget.test.ts tests/professions_off_wheel.test.ts
-  tests/professions_crafting_hub.test.ts tests/professions_zone_rollout.test.ts
-  tests/apex_pattern_channels.test.ts tests/recipe_pattern_items.test.ts
-  tests/recipe_economy.test.ts tests/provisioner_firewall.test.ts tests/market_filters.test.ts
-  tests/item_icons.test.ts tests/item_art_consistency.test.ts tests/deeds_content.test.ts
-  tests/reliquary_content.test.ts tests/freehold_content.test.ts tests/localization_fixes.test.ts
-  tests/hud_update_drive.test.ts`; `npm run wiki:content` then `npx vitest run
-  tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts`;
-  `node scripts/pr_screenshots.mjs`; parity goldens if a sampled field changed.
-- Spawn review agents per docs/freeholds/implementation-plan.md: content-obligations-reviewer,
-  plus architecture-reviewer (src/sim/ gates) and frontend-seam-reviewer (src/ui/).
-  Prompt each for COVERAGE not filtering; each writes its report to a file. Do not commit
-  until no BLOCKING issues remain.
+- Verify every handoff path/symbol/test citation against the current tree and run
+  git diff --check over its explicit paths. Run the packet link/STEP/next-chain/copy
+  lint and the Stop-hook floor. Confirm the scoped diff is docs-only.
+- Follow docs/qa-gate.md for the docs-only change, including node scripts/gate_select.mjs
+  when selected; record any justified not-applicable runtime checks rather than
+  pretending new profession tests ran.
+- Run node scripts/gate_select.mjs before completion; npm run ci:changed is not a
+  substitute. Re-run only affected checks after fixes, then verify the final head.
+- Dispatch content-obligations-reviewer, architecture-reviewer, test-coverage-auditor and qa-checklist
+  for the stated surfaces; actual additional surfaces trigger their canonical reviewer.
+  No runtime/database change is authorized by this handoff. Every report
+  uses COVERAGE, BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT, saved to a file.
+  Apply ALL findings including nits; a fresh reviewer reads the fix round.
 
 STEP 4 - COMMIT CADENCE:
-4 commits (or the single ruling commit on the skip path), Conventional Commits with
-scope and a body, EXPLICIT paths, never `git add -A`, no em dashes or emojis, the word
-"phase" nowhere in the message:
-- feat(content): add the Carpenter and Mason off-wheel crafts with furnishing recipes
-- feat(sim): admit off-wheel crafts in the skill, station, and training gates
-- feat(ui): list Carpenter and Mason in the professions window
-- test(sim): pin the off-wheel gates and the furnishing-only recipe rule
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Commit each coherent owned deliverable with a scoped Conventional Commit and a body.
+Stage EXPLICIT task paths, never git add -A. No coauthor trailer, em dash, en dash,
+emoji, or word "phase" appears in a commit message. Keep generated output with its
+authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] The ruling is recorded in state.md and the path taken (built or skipped) is
-  recorded in progress.md.
-- [ ] Both crafts train only at their station, gain to maxSkill with frozen skill keys,
-  refuse specialization, and resolve their recipes; the CRAFT_RING literal pin is
-  unchanged; a same-seed twin run agrees.
-- [ ] A sweep pins that every recipe of both crafts outputs kind furnishing and names
-  no keystone, gear intermediate, or catalyst (with a can-fail control).
-- [ ] Every pattern reaches a deterministic faucet (the channels sweep green); every
-  new item id has committed art and a provenance row; deeds, names, and the wiki are
-  fresh; content-obligations-reviewer reports no BLOCKING.
-- [ ] Screenshots committed; all STEP 3 suites green; every reviewer reports no BLOCKING.
+STEP 5 - ACCEPTANCE CRITERIA:
+- [ ] The future craft handoff exists with measured evidence, actual anchors, existing-ten-profession coverage and explicit no-new-professions scope.
+- [ ] No skill cap/station/recipe count/rate is invented and no conditional Carpenter/Mason shipping promise remains in the packet or adopted proposal/deck.
+- [ ] Only the planned handoff and packet status documentation change; all link/copy checks, fresh content/architecture/test review and proportional contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 43, "built" or "skipped by ruling" with
-  the date, notes, deferrals) and docs/freeholds/state.md (ledger row 43; the
-  off-wheel, station, recipe, and maxSkill decisions, or the skip).
-- Record surprising rules learned in memory for the next session.
+Update progress.md row 43 and state.md's implementation ledger with actual paths,
+commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+Record facts learned; do not reopen the locked product rulings or mark a release gate
+accepted without its signed artifact. Numeric tables are literal, provenance-backed
+and approved before activation.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status (built, or skipped by ruling), files touched, validation
-results, review verdicts, deferred items, and the FULL PATH of the next file to run:
+Report status, touched files, exact validation commands and outcomes, reviewer verdicts,
+tracked release gates and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-43-qa.md
 
 STOPPING RULES:
-- Stop before STEP 1 if the ruling is absent; ask Fernando.
-- Stop and ask if an off-wheel craft cannot be admitted without changing CRAFT_RING or
-  a shipped craft's skill functions in a behavior-changing way.
-- Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
-- Do not push the branch; never merge a PR.
+A failed acceptance check stops completion. Preserve state on failed mutation, decode,
+quote, capacity, lease or revision checks. No widening of a monolith ceiling or silent
+change to a locked ruling. Do not push the branch or open/merge a PR in this slice.
 ```

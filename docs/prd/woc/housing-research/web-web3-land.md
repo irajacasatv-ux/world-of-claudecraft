@@ -2,9 +2,18 @@
 
 # Web3 virtual land, housing, and game-token design: research report
 
+> **Dated research, not implementation authority.** Captured 2026-09-05. The
+> [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
+> record the requirements adopted on 2026-09-06. Historical
+> code inventories, editor capabilities, opinions and market figures below are context,
+> not current API guarantees, WOC tuning approval or legal/store approval.
+
 Date: 2026-09-05. Sources are 2024 to 2026 unless marked older. Claims that rest on search snippets or secondary write-ups (DappRadar, Medium, the Star Atlas Q2 2026 economy PDF, and the Pixels fandom page were blocked to fetch) are marked where used.
 
-Headline: every pre-gameplay land sale lost 85 to 99 percent of value; the models that held (Pixels, Big Time SPACE, MapleStory N) make the plot or token a mandatory production input with no yield attached; the mobile stores forbid NFT-unlocked features, Steam bans deed surfaces outright, and the SEC's March 2026 taxonomy exempts in-game items only if they carry no revenue share.
+Scope: the examples below are dated reports, several secondary or unverified. They do
+not establish that every land project failed, forecast WOC prices, or prove a legal
+exemption. WOC retains no rent/profit rights and server-entitlement access as product
+constraints; signed current platform/legal acceptance remains mandatory.
 
 ## 1. Virtual land history and outcomes
 
@@ -35,22 +44,42 @@ Headline: every pre-gameplay land sale lost 85 to 99 percent of value; the model
 - **Staking or locking for perks.** Star Atlas POLIS locker is vote-escrow (https://coinmarketcap.com/cmc-ai/star-atlas-polis/latest-updates/, secondary); Illuvium stakers can take sILV2 spendable in-game (https://medium.com/illuvium/28-everything-you-need-to-know-about-staking-ilv-6669594b2fac); Pixels auto-stakes in-game balances and routes withdrawal fees to stakers (above).
 - **USD-denominated upkeep paid in token** (the Helium pattern) creates recurring buy demand that self-adjusts to price; the risk is that if upkeep is also payable in materials, the token leg is optional and demand vanishes in a downturn.
 - **Buybacks.** Ronin about $4.5M RON buybacks from Sept 2025 (https://finance.yahoo.com/news/ron-crypto-parabolic-ronin-reveals-204503011.html); YGG $1.1M in Q4 2025 (https://coinmarketcap.com/cmc-ai/yield-guild-games/latest-updates/) yet shut YGG Play on 31 Jul 2026 (https://decrypt.co/372852/yield-guild-kills-crypto-game-publishing-arm-lays-off-35-ai-pivot); Illuvium IIP-22 daily vault buybacks (https://portal.illuvium.io/governance/iip-22); buybacks became widespread in 2025 (https://www.dwf-labs.com/research/547-token-buybacks-in-web3). Buybacks support price, not demand.
-- **Revenue share is the securities trigger.** Stoner Cats was charged partly over royalty-driven promotion (above); the SEC's 17 Mar 2026 release excludes "digital collectibles" and "digital tools" (in-game items, access rights) from securities status unless they carry revenue share or fractionalization (https://www.gtlaw.com/en/insights/2026/3/sec-clarifies-status-of-crypto-assets-under-federal-securities-laws-signals-potential-exemptive-and-safe-harbor-framework). Illuvium's 5% landowner share is exactly that pattern.
+- **Legal interpretation requires counsel.** The original secondary summary at https://www.gtlaw.com/en/insights/2026/3/sec-clarifies-status-of-crypto-assets-under-federal-securities-laws-signals-potential-exemptive-and-safe-harbor-framework is historical context, not a finding that all in-game items without profit rights are exempt. The complete WOC rights, transactions and promotion need current primary-law analysis; no single economic attribute settles classification.
 - **Counter-argument.** Fiat/SOL-only land with optional $WOC upkeep gives the token no mandatory path. Delphi recommends removing speculative token design and using stable-value payments (above); a16z frames app-token demand as "cash flows" from fees on legitimate activity (https://a16zcrypto.com/posts/article/guide-to-tokens/, Aug 2024). The synthesis from Immutable, Helium, and MapleStory: price in USD, settle every land purchase and upkeep by auto-buying $WOC with the fiat or SOL and burning or treasuring it, so demand exists without any player holding or selling $WOC and without selling power.
 
-## 4. Regulatory and platform constraints (2026)
+## 4. Policy verification and proposed WOC boundary (2026-09-05)
 
-- **US SEC.** Yuga probe closed 3 Mar 2025 (https://decrypt.co/308539/bored-ape-creator-yuga-labs-says-sec-closing-investigation-in-huge-win-for-nft-sector). 17 Mar 2026 interpretive release: collectibles and tools are not securities absent profit rights; Atkins proposed startup, fundraising (~$75M) and investment-contract safe harbors (https://www.sec.gov/newsroom/speeches-statements/atkins-remarks-regulation-crypto-assets-031726; https://www.sullcrom.com/insights/memo/2026/March/SEC-Clarifies-Application-Securities-Laws-Crypto-Assets). CLARITY Act section 602 gives NFTs including "in-game or in-application item" a safe harbor, excluding fractional and mass-minted fundraising series; engrossed, not signed, as of 26 Jun 2026 (https://crokefairchild.com/2026/06/nfts-after-clarity/); current status not verified.
-- **EU MiCA.** Utility token means access only; a public offer needs a notified white paper unless the token accesses a good already available or a limited merchant network (Art. 4(3)(c),(d)); NFTs are outside unless fractionalized or a fungible series (https://wag3s.io/blog/mica-utility-tokens; https://www.esma.europa.eu/esmas-activities/digital-finance-and-innovation/markets-crypto-assets-regulation-mica; ESMA qualification guidelines 19 Mar 2025: https://www.esma.europa.eu/sites/default/files/2025-03/ESMA75453128700-1323_Guidelines_on_the_conditions_and_criteria_for_the_qualification_of_CAs_as_FIs.pdf). Deeds must be genuinely unique.
-- **Steam.** Onboarding rule 13 still bans "applications built on blockchain technology that issue or allow exchange of cryptocurrencies or NFTs" (https://partner.steamgames.com/doc/gettingstarted/onboarding); studios ship stripped builds (https://decrypt.co/153196/crypto-nft-games-still-launching-steam-despite-ongoing-ban).
-- **Epic.** Allowed, with an AO-rating carve-out since Dec 2023; blockchain games cannot use Epic payments, cannot link marketplaces, and are unavailable in China and South Korea (https://playtoearn.com/news/epic-games-store-revises-policies; https://chainplay.gg/blog/epic-games-store-blockchain-guidelines-web3-games/; 175 listed titles by Sept 2024: https://www.blockchaingamer.biz/news/34430/175-blockchain-games-epic-games-store/).
-- **Apple.** 3.1.1: NFT minting and listing only via IAP; users may view own NFTs "provided that NFT ownership does not unlock features or functionality within the app"; external purchase links barred except on the US storefront (https://developer.apple.com/app-store/review/guidelines/), the US exception following the Apr 2025 contempt ruling (https://decrypt.co/317589/apple-loosens-nft-crypto-ios-app-rules); the Ninth Circuit upheld it in Dec 2025 but let Apple seek a "reasonable" commission, with zero-commission links continuing pending remand (https://www.fenwick.com/insights/publications/ninth-circuit-largely-upholds-ruling-in-epic-v-apple; https://appleinsider.com/articles/26/04/29/app-store-policy-must-change-as-epic-convinces-us-circuit-court-to-reverse-stay). Mining, ICOs, and crypto task rewards remain barred (3.1.5).
-- **Google Play.** Must declare tokenized assets, may not "promote or glamorize" earning, cannot take money for a chance at assets of unknown value (NFT loot boxes) (https://support.google.com/googleplay/android-developer/answer/13607354; 2023 policy launch: https://android-developers.googleblog.com/2023/07/new-blockchain-based-content-opportunities-google-play.html).
-- **Implication.** Sell deeds on the web only; on iOS and Android sell housing as a server-side entitlement via IAP or Claudium, with any deed NFT a mirror that unlocks nothing in the app; the Steam build carries no wallet or deed surface; exclude Korea; never sell house loot boxes.
+- **US/EU:** this survey provides no securities, MiCA or CLARITY safe-harbor opinion. A
+  unique plot tuple or collection membership cannot decide legal fungibility. Current
+  legislation and authority remain counsel-artifact verification work. Original trails:
+  [SEC remarks](https://www.sec.gov/newsroom/speeches-statements/atkins-remarks-regulation-crypto-assets-031726),
+  [ESMA MiCA](https://www.esma.europa.eu/esmas-activities/digital-finance-and-innovation/markets-crypto-assets-regulation-mica).
+- **Apple:** review the actual entitlement/checkout flow against 3.1.1, 3.1.1(a), 3.1.3(b)
+  and 3.1.5. Multiplatform content has in-app-availability conditions; server entitlement
+  alone does not establish approval. The old blanket mining/ICO ban was overbroad; the
+  guidelines have specific permitted categories and qualifications. [Apple guidelines](https://developer.apple.com/app-store/review/guidelines/).
+- **Google Play:** declaration/disclosure depends on the actual tokenized-asset behavior;
+  returns from trading/play cannot be glamorized. WOC's no-earn marketing rule is stronger
+  editorial scope, not a literal ban on ordinary achievement wording. [Google policy](https://support.google.com/googleplay/android-developer/answer/13607354).
+- **Steam:** item 13 prohibits blockchain applications issuing or exchanging crypto/NFTs.
+  The packet's absent wallet/deed/purchase surfaces do not themselves prove acceptance.
+  [Steam onboarding](https://partner.steamgames.com/doc/gettingstarted/onboarding).
+- **Epic:** official general guidelines require the Blockchain Addendum. The exact current
+  blockchain page could not be retrieved in the source verification. Historical third-party
+  marketplace-link and country summaries above are not present-day authority; the packet's
+  no-purchase/no-deed row is its own stricter product choice.
+- **Seeker:** unrelated wallet capability is not a housing integration. The relocated current
+  publisher policy needs verification in the signed handoff; adopted housing is use-only.
+- **Implementation scope:** browser web and website desktop checkout only; other distributions
+  use-only subject to the accepted entitlement model. No native billing work. Management
+  links are independently approved and default off. Optional deeds require signed supported-
+  country authority with unknown-country refusal, never a Korea-only legal assumption.
+- No paid randomized property, rent, fractional rights or investment promises. Counsel,
+  Terms, service and listing acceptance gate release; no acceptance is claimed by this lane.
 
 ## 5. Solana specifics
 
-- **Standard.** Metaplex Core: one account per asset, about 0.0029 SOL to mint, plugins for enforced Royalties (allow/deny lists), Permanent Freeze Delegate (soulbound), Permanent Transfer and Burn Delegates (issuer authority for lapsed upkeep) (https://www.metaplex.com/docs/smart-contracts/core; https://www.metaplex.com/docs/smart-contracts/core/guides/create-soulbound-nft-asset; https://developers.metaplex.com/core/plugins/permanent-freeze-delegate; https://developers.metaplex.com/smart-contracts/core/plugins/permanent-transfer-delegate). Bubblegum v2 cNFTs: about 8.5 SOL per 1M-leaf tree (about 0.00001 SOL each), 0.34 SOL for 16,384, weaker wallet support (https://www.metaplex.com/docs/smart-contracts/bubblegum-v2; https://www.quicknode.com/guides/solana-development/nfts/mint-compressed-nft). Token-2022 non-transferable plus permanent delegate gives a revocable soulbound fungible (https://solana.com/docs/tokens/extensions/non-transferrable-tokens; https://dev.to/lymah/soulbound-credentials-on-solana-building-revocable-tokens-with-non-transferable-permanent-5h2a).
+- **Chosen later standard:** Metaplex Core. Its approximate 0.0029 SOL base-asset benchmark is dated context; the service quotes plugins, fees and storage. Per-asset permanent freeze/burn capabilities configured at mint do not authorize automatic lapse destruction. Individual restrictions cannot be implemented by freezing the entire collection. [Core](https://www.metaplex.com/docs/core), [Permanent Freeze Delegate](https://www.metaplex.com/docs/smart-contracts/core/plugins/permanent-freeze-delegate), [Permanent Burn Delegate](https://www.metaplex.com/docs/smart-contracts/core/plugins/permanent-burn-delegate). Other historical compression cost figures are not adopted housing tariffs.
 - **Royalties.** Magic Eden and Tensor treat royalties as optional unless the collection enforces them via MIP-1 or Core (https://help.magiceden.io/en/articles/6645652-understanding-optional-royalties-on-magic-eden-how-royalties-work-on-me; https://www.theblock.co/post/177414/solana-nft-platform-magic-eden-opts-for-optional-royalty-payments).
 - **Precedents.** Star Atlas Claim Stakes (USD-priced, section 1); Honeyland minted 4,001 Land NFTs in 2024, market cap about $367k (https://www.coingecko.com/en/nft/honeyland-land); Nyan Heroes shut 16 May 2025, Genesis Cats down 70%+ (https://decrypt.co/320501/solana-game-nyan-heroes-shuts-down); Aurory rebranded from Seekers of Tokane in Oct 2025, no land (https://solanacompass.com/projects/aurory).
 - **MapleStory N (Avalanche Henesys L1, live 15 May 2025).** Items are NFTs; NXPC Fission is the sole item source, Fusion redeems; NESO is the soft currency; 20% of quarterly revenue is burned (https://decrypt.co/320289/maplestory-n-game-avalanche-surging-nxpc-token; burn article above; Reactor fusion relaunch Jan 2026: https://medium.com/maplestory-universe/announcement-reactor-item-fusion-relaunch-advance-guide-c8031bc5fec1). No housing system found.
@@ -61,20 +90,23 @@ Headline: every pre-gameplay land sale lost 85 to 99 percent of value; the model
 - EnterDAO LandWorks (Decentraland/Voxels rental protocol) and MetaOasis DAO (35 Sandbox plots) were 2022 experiments (https://medium.com/enterdao/enabling-permissionless-land-renting-through-landworks-7a2a428bb0a2; IEEE above); no 2024+ activity verified.
 - Star Atlas DACs pool ships and claim stakes under multisig treasuries with on-chain voting (https://aephia.com/star-atlas/guilds-in-star-atlas/): the only living precedent, still pre-launch. Solana Squads-multisig deed ownership for a guild hall: no game precedent found.
 
-## Design rules for a web3 housing feature in 2026
+## Adopted WOC constraints, external acceptance gates remain
 
-1. Ship housing gameplay before any deed sale; every pre-gameplay land sale here (Otherside, Ember Sword, Illuvium Zero) lost 85 to 99% (CoinGecko; PCGamesN).
-2. Do not fix total supply; add plots per zone as population grows, because fixed scarcity priced out late players and still collapsed (IEEE Spectrum; CoinGecko).
-3. Use three tiers, not five; Big Time's five-tier SPACE confused pricing and most tiers went underwater within months (GamesTX).
-4. Make the plot a production input (crafting, storage, convenience), never a passive yield source: Pixels land held, Axie staked land dumped (docs.pixels.xyz; BlockchainGamer.biz).
-5. Price land and upkeep in USD but settle by auto-buying $WOC with the fiat or SOL and burning or treasuring it (Immutable fee model; Helium Data Credits).
-6. Make $WOC the only path for something everyone wants, as MapleStory's Fission is the only item source; a token leg that is one option among materials goes to zero demand in a downturn (PlayToEarn NXPC burn).
-7. Never attach revenue share, rent yield, or fractional ownership to a deed; that is the SEC's stated disqualifier and the Stoner Cats fact pattern (GT Law; WSGR).
-8. Keep deeds unique (coordinates, layout) so they sit outside MiCA and inside CLARITY section 602, not a 10k identical series (Wag3s; Croke Fairchild).
-9. Mint deeds as Metaplex Core assets with Permanent Freeze and Burn delegates so the server can freeze a lapsed plot and re-issue it (Metaplex docs).
-10. Enforce royalties at the collection level or accept that Magic Eden and Tensor make them optional (Magic Eden help).
-11. On iOS and Android, housing is an IAP or Claudium entitlement and NFT ownership unlocks nothing in-app; deeds are sold and shown on the web only (Apple 3.1.1; Google Play policy).
-12. Ship the Steam build with no wallet, deed, or marketplace surface (Steamworks rule 13); Epic allows it but bars Epic payments and marketplace links (PlayToEarn).
-13. No house loot boxes or randomized plot drops for money (Google Play gambling rule).
-14. If rentals exist, cap the landlord's take and keep full progression for the renter, since rentals hollowed Axie and Pixels (YGG Medium; docs.pixels.xyz).
-15. Guild halls are server-side entitlements owned by the guild record; put a deed behind a multisig only with a named working precedent, and the only live one (Star Atlas DACs) is pre-launch (Aephia).
+1. Ship useful housing before optional deed transfer. Historical losses are not a WOC forecast.
+2. Keep account entitlements available without artificial land scarcity; finite runtime claims
+   return busy/retry. Five sequential tiers follow the adopted proposal, not this lane's old
+   three-SKU recommendation.
+3. No new power, farm beds, rent, revenue share or fractional rights. Existing crafts provide
+   furnishings; seasonal sets, delve patterns and new Carpenter/Mason crafts are excluded.
+4. Service owns all quote/conversion/burn/treasury values. No game-side token arithmetic,
+   mandatory player wallet for home use or guaranteed token-price effect.
+5. Signed counsel/Terms/service/territory acceptance gates the complete flow. Unique metadata
+   is a technical requirement, never automatic SEC/MiCA/CLARITY approval.
+6. Optional deeds use individually authorized per-asset delegate rights. No lapse burn or
+   native chain-gated entry. Irreversible burn needs separately recorded authority.
+7. Voluntary furnished sale uses an immutable shell/tier/eligible-copy manifest; trophies,
+   personal/bound/locked copies and omitted goods stay with the seller in verified custody.
+8. Browser web and website desktop are the adopted checkout/deed surfaces. Seeker and the
+   other storefront builds are use-only; default-off management has separate approval.
+9. Guild ownership and pooled currency remain service/server records with role checks and
+   member plinth rights, not a speculative multisig property system.

@@ -1,0 +1,5392 @@
+[
+  {
+    "target": "housing-build-mode",
+    "key": "interior-inn-day-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-inn-day",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-inn-day-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-inn-day",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-inn-day-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-inn-day",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-inn-night-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-inn-night",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-inn-night-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-inn-night",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-inn-night-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-inn-night",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-cottage-day-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-cottage-day",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-cottage-day-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-cottage-day",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-cottage-day-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-cottage-day",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-cottage-night-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-cottage-night",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-cottage-night-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-cottage-night",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "interior-cottage-night-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "interior-cottage-night",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-empty-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-empty",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-empty-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-empty",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-empty-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-empty",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-ready-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-ready",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-ready-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-ready",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-ready-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-ready",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-decor-full-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-decor-full",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-decor-full-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-decor-full",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-decor-full-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-decor-full",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-plinth-full-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-plinth-full",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-plinth-full-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-plinth-full",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-plinth-full-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-plinth-full",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-amenity-full-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-amenity-full",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-amenity-full-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-amenity-full",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-amenity-full-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-amenity-full",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-placed-selected-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-placed-selected",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-placed-selected-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-placed-selected",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-placed-selected-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-placed-selected",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-move-preview-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-move-preview",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-move-preview-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-move-preview",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-move-preview-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-move-preview",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-remove-review-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-remove-review",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-remove-review-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-remove-review",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-remove-review-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-remove-review",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-remove-refused-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-remove-refused",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-remove-refused-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-remove-refused",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-remove-refused-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-remove-refused",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-confirmed-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-confirmed",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-confirmed-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-confirmed",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-confirmed-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-confirmed",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-undone-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-undone",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-undone-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-undone",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-undone-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-undone",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-redone-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-redone",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-redone-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-redone",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-redone-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-redone",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-stale-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-stale",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-stale-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-stale",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-history-stale-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-history-stale",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-pending-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-pending",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-pending-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-pending",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-pending-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-pending",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-refused-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-refused",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-refused-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-refused",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-refused-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-refused",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-reconnect-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-reconnect",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-reconnect-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-reconnect",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-reconnect-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "build-reconnect",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-desktop-parchment-low-normal-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "desktop",
+    "theme": "parchment",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-compact-parchment-low-normal-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "compact",
+    "theme": "parchment",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-tablet-parchment-low-normal-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "tablet",
+    "theme": "parchment",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-desktop-highContrast-low-normal-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "desktop",
+    "theme": "highContrast",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-compact-highContrast-low-normal-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "compact",
+    "theme": "highContrast",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-tablet-highContrast-low-normal-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "tablet",
+    "theme": "highContrast",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-desktop-classic-low-normal-pointer-web-normal-active",
+    "scene": "build-blocked",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "active"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-compact-classic-low-normal-pointer-web-normal-active",
+    "scene": "build-blocked",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "active",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-tablet-classic-low-normal-pointer-web-normal-active",
+    "scene": "build-blocked",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "active",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-desktop-classic-low-reduce-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-compact-classic-low-reduce-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-tablet-classic-low-reduce-pointer-web-normal-none",
+    "scene": "build-blocked",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-ready-desktop-classic-high-normal-pointer-web-normal-none",
+    "scene": "build-ready",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "high",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-ready-compact-classic-high-normal-pointer-web-normal-none",
+    "scene": "build-ready",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "high",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-ready-tablet-classic-high-normal-pointer-web-normal-none",
+    "scene": "build-ready",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "high",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-desktop-classic-low-normal-pointer-web-ios-effective-one-none",
+    "scene": "build-blocked",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "ios-effective-one",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-compact-classic-low-normal-pointer-web-ios-effective-one-none",
+    "scene": "build-blocked",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "ios-effective-one",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-blocked-tablet-classic-low-normal-pointer-web-ios-effective-one-none",
+    "scene": "build-blocked",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "ios-effective-one",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-keyboard-focused-desktop-classic-low-normal-keyboard-web-normal-none",
+    "scene": "build-keyboard-focused",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-keyboard-focused-compact-classic-low-normal-keyboard-web-normal-none",
+    "scene": "build-keyboard-focused",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-keyboard-focused-tablet-classic-low-normal-keyboard-web-normal-none",
+    "scene": "build-keyboard-focused",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-pad-placement-desktop-classic-low-normal-gamepad-web-normal-none",
+    "scene": "build-pad-placement",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "gamepad",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-pad-placement-compact-classic-low-normal-gamepad-web-normal-none",
+    "scene": "build-pad-placement",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "gamepad",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-pad-placement-tablet-classic-low-normal-gamepad-web-normal-none",
+    "scene": "build-pad-placement",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "gamepad",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-touch-controls-compact-classic-low-normal-touch-web-normal-none",
+    "scene": "build-touch-controls",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "touch",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-build-mode",
+    "key": "build-touch-controls-tablet-classic-low-normal-touch-web-normal-none",
+    "scene": "build-touch-controls",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "touch",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-bags-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-bags",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-bags-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-bags",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-bags-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-bags",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-vault-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-vault",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-vault-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-vault",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-vault-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-vault",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-automatic-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-automatic",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-automatic-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-automatic",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-automatic-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-automatic",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-vault-unavailable-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-vault-unavailable",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-vault-unavailable-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-vault-unavailable",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-vault-unavailable-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-vault-unavailable",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-prepay-review-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-prepay-review",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-prepay-review-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-prepay-review",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-prepay-review-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-prepay-review",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-30-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-30",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-30-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-30",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-30-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-30",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-inn-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-inn",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-inn-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-inn",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-inn-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-inn",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-pending-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-pending",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-pending-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-pending",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-pending-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-pending",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-refused-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-refused",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-refused-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-refused",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-refused-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-refused",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-reconnect-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-reconnect",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-reconnect-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-reconnect",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-reconnect-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "steward-reconnect",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-ready-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-ready",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-ready-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-ready",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-ready-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-ready",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-pending-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-pending",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-pending-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-pending",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-pending-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-pending",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-cancelled-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-cancelled",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-cancelled-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-cancelled",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-cancelled-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-cancelled",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-reconciling-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-reconciling",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-reconciling-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-reconciling",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-reconciling-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-reconciling",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-reconciled-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-reconciled",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-reconciled-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-reconciled",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-reconciled-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-reconciled",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-quote-unavailable-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-quote-unavailable",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-quote-unavailable-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-quote-unavailable",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-quote-unavailable-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-quote-unavailable",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-quote-expired-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-quote-expired",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-quote-expired-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-quote-expired",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-quote-expired-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "charter-quote-expired",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-ready-desktop-classic-low-normal-pointer-website-desktop-normal-none",
+    "scene": "charter-ready",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "website-desktop",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-reconciled-desktop-classic-low-normal-pointer-website-desktop-normal-none",
+    "scene": "charter-reconciled",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "website-desktop",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-desktop-classic-low-normal-pointer-ios-app-store-normal-none",
+    "scene": "charter-denied",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "ios-app-store",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-compact-classic-low-normal-pointer-ios-app-store-normal-none",
+    "scene": "charter-denied",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "ios-app-store",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-tablet-classic-low-normal-pointer-ios-app-store-normal-none",
+    "scene": "charter-denied",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "ios-app-store",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-desktop-classic-low-normal-pointer-google-play-normal-none",
+    "scene": "charter-denied",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "google-play",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-compact-classic-low-normal-pointer-google-play-normal-none",
+    "scene": "charter-denied",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "google-play",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-tablet-classic-low-normal-pointer-google-play-normal-none",
+    "scene": "charter-denied",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "google-play",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-desktop-classic-low-normal-pointer-steam-normal-none",
+    "scene": "charter-denied",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "steam",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-compact-classic-low-normal-pointer-steam-normal-none",
+    "scene": "charter-denied",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "steam",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-tablet-classic-low-normal-pointer-steam-normal-none",
+    "scene": "charter-denied",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "steam",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-desktop-classic-low-normal-pointer-epic-normal-none",
+    "scene": "charter-denied",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "epic",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-compact-classic-low-normal-pointer-epic-normal-none",
+    "scene": "charter-denied",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "epic",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-tablet-classic-low-normal-pointer-epic-normal-none",
+    "scene": "charter-denied",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "epic",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-desktop-classic-low-normal-pointer-seeker-normal-none",
+    "scene": "charter-denied",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "seeker",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-compact-classic-low-normal-pointer-seeker-normal-none",
+    "scene": "charter-denied",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "seeker",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-tablet-classic-low-normal-pointer-seeker-normal-none",
+    "scene": "charter-denied",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "seeker",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-desktop-classic-low-normal-pointer-unknown-normal-none",
+    "scene": "charter-denied",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "unknown",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-compact-classic-low-normal-pointer-unknown-normal-none",
+    "scene": "charter-denied",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "unknown",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "charter-denied-tablet-classic-low-normal-pointer-unknown-normal-none",
+    "scene": "charter-denied",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "unknown",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-desktop-parchment-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "desktop",
+    "theme": "parchment",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-compact-parchment-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "compact",
+    "theme": "parchment",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-tablet-parchment-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "tablet",
+    "theme": "parchment",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-desktop-highContrast-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "desktop",
+    "theme": "highContrast",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-compact-highContrast-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "compact",
+    "theme": "highContrast",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-tablet-highContrast-low-normal-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "tablet",
+    "theme": "highContrast",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-desktop-classic-low-normal-pointer-web-normal-active",
+    "scene": "steward-condition-29",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "active"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-compact-classic-low-normal-pointer-web-normal-active",
+    "scene": "steward-condition-29",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "active",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-tablet-classic-low-normal-pointer-web-normal-active",
+    "scene": "steward-condition-29",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "active",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-desktop-classic-low-reduce-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-compact-classic-low-reduce-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-condition-29-tablet-classic-low-reduce-pointer-web-normal-none",
+    "scene": "steward-condition-29",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-prepay-review-desktop-classic-low-normal-keyboard-web-normal-none",
+    "scene": "steward-prepay-review",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-prepay-review-compact-classic-low-normal-keyboard-web-normal-none",
+    "scene": "steward-prepay-review",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-steward-store",
+    "key": "steward-prepay-review-tablet-classic-low-normal-keyboard-web-normal-none",
+    "scene": "steward-prepay-review",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-owned-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-owned",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-owned-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-owned",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-owned-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-owned",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-unearned-known-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-unearned-known",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-unearned-known-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-unearned-known",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-unearned-known-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-unearned-known",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-hidden-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-hidden",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-hidden-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-hidden",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-hidden-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-hidden",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-unknown-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-unknown",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-unknown-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-unknown",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-unknown-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-unknown",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-maker-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-maker",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-maker-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-maker",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-maker-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-maker",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-possession-inactive-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-possession-inactive",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-possession-inactive-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-possession-inactive",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-possession-inactive-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-possession-inactive",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-plinth-preview-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-plinth-preview",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-plinth-preview-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-plinth-preview",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-plinth-preview-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-plinth-preview",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-replace-review-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-replace-review",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-replace-review-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-replace-review",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-replace-review-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-replace-review",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-clear-review-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-clear-review",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-clear-review-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-clear-review",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-clear-review-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-clear-review",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-refreshing-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-refreshing",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-refreshing-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-refreshing",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-refreshing-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "trophies-refreshing",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-desktop-parchment-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "desktop",
+    "theme": "parchment",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-compact-parchment-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "compact",
+    "theme": "parchment",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-tablet-parchment-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "tablet",
+    "theme": "parchment",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-desktop-highContrast-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "desktop",
+    "theme": "highContrast",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-compact-highContrast-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "compact",
+    "theme": "highContrast",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-tablet-highContrast-low-normal-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "tablet",
+    "theme": "highContrast",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-desktop-classic-low-normal-pointer-web-normal-active",
+    "scene": "trophies-provenance-known",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "active"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-compact-classic-low-normal-pointer-web-normal-active",
+    "scene": "trophies-provenance-known",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "active",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-tablet-classic-low-normal-pointer-web-normal-active",
+    "scene": "trophies-provenance-known",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "active",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-desktop-classic-low-reduce-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-compact-classic-low-reduce-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-provenance-known-tablet-classic-low-reduce-pointer-web-normal-none",
+    "scene": "trophies-provenance-known",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-grid-focused-desktop-classic-low-normal-keyboard-web-normal-none",
+    "scene": "trophies-grid-focused",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-grid-focused-compact-classic-low-normal-keyboard-web-normal-none",
+    "scene": "trophies-grid-focused",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-trophies",
+    "key": "trophies-grid-focused-tablet-classic-low-normal-keyboard-web-normal-none",
+    "scene": "trophies-grid-focused",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-own-choice-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-own-choice",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-own-choice-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-own-choice",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-own-choice-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-own-choice",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-friend-empty-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-friend-empty",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-friend-empty-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-friend-empty",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-friend-empty-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-friend-empty",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-pending-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-pending",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-pending-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-pending",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-pending-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-pending",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-ready-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-ready",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-ready-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-ready",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-ready-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-ready",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-stale-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-stale",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-stale-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-stale",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-stale-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-stale",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-refused-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-refused",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-refused-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-refused",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-refused-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "gate-lookup-refused",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-inn",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-inn",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-inn",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-cottage",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-cottage",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-cottage",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-ordinary-return-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-ordinary-return",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-ordinary-return-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-ordinary-return",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-ordinary-return-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-ordinary-return",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-visitor-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-visitor",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-visitor-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-visitor",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-visitor-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-visitor",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-online-delayed-cosmetics-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-online-delayed-cosmetics",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-online-delayed-cosmetics-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-online-delayed-cosmetics",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-online-delayed-cosmetics-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "arrival-online-delayed-cosmetics",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-read-only-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-read-only",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-read-only-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-read-only",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-read-only-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-read-only",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-owner-away-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-owner-away",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-owner-away-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-owner-away",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-owner-away-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-owner-away",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-owner-building-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-owner-building",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-owner-building-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-owner-building",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-owner-building-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-owner-building",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-full-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-full",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-full-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-full",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-full-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-full",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-private-refused-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-private-refused",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-private-refused-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-private-refused",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-private-refused-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-private-refused",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-draft-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-draft",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-draft-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-draft",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-draft-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-draft",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-pending-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-pending",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-pending-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-pending",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-pending-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-pending",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-saved-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-saved",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-saved-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-saved",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-saved-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-saved",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-refused-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-refused",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-refused-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-refused",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-policy-refused-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-policy-refused",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-end-review-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-end-review",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-end-review-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-end-review",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-end-review-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-end-review",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-end-pending-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-end-pending",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-end-pending-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-end-pending",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-end-pending-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-end-pending",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-end-succeeded-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-end-succeeded",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-end-succeeded-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-end-succeeded",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-end-succeeded-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-end-succeeded",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-revoked-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-revoked",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-revoked-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-revoked",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "visit-revoked-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "visit-revoked",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "entry-pending-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "entry-pending",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "entry-pending-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "entry-pending",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "entry-pending-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "entry-pending",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "entry-error-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "entry-error",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "entry-error-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "entry-error",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "entry-error-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "entry-error",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "entry-busy-desktop-classic-low-normal-pointer-web-normal-none",
+    "scene": "entry-busy",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "entry-busy-compact-classic-low-normal-pointer-web-normal-none",
+    "scene": "entry-busy",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "entry-busy-tablet-classic-low-normal-pointer-web-normal-none",
+    "scene": "entry-busy",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-desktop-classic-low-reduce-pointer-web-normal-none",
+    "scene": "arrival-inn",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-compact-classic-low-reduce-pointer-web-normal-none",
+    "scene": "arrival-inn",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-tablet-classic-low-reduce-pointer-web-normal-none",
+    "scene": "arrival-inn",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-desktop-classic-low-reduce-pointer-web-normal-none",
+    "scene": "arrival-cottage",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-compact-classic-low-reduce-pointer-web-normal-none",
+    "scene": "arrival-cottage",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-tablet-classic-low-reduce-pointer-web-normal-none",
+    "scene": "arrival-cottage",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "reduce",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-desktop-classic-low-normal-pointer-web-ios-effective-one-none",
+    "scene": "arrival-inn",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "ios-effective-one",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-compact-classic-low-normal-pointer-web-ios-effective-one-none",
+    "scene": "arrival-inn",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "ios-effective-one",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-tablet-classic-low-normal-pointer-web-ios-effective-one-none",
+    "scene": "arrival-inn",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "ios-effective-one",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-desktop-classic-low-normal-pointer-web-ios-effective-one-none",
+    "scene": "arrival-cottage",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "ios-effective-one",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-compact-classic-low-normal-pointer-web-ios-effective-one-none",
+    "scene": "arrival-cottage",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "ios-effective-one",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-tablet-classic-low-normal-pointer-web-ios-effective-one-none",
+    "scene": "arrival-cottage",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "ios-effective-one",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-desktop-classic-high-normal-pointer-web-normal-none",
+    "scene": "arrival-inn",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "high",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-compact-classic-high-normal-pointer-web-normal-none",
+    "scene": "arrival-inn",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "high",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-inn-tablet-classic-high-normal-pointer-web-normal-none",
+    "scene": "arrival-inn",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "high",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-desktop-classic-high-normal-pointer-web-normal-none",
+    "scene": "arrival-cottage",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "high",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-compact-classic-high-normal-pointer-web-normal-none",
+    "scene": "arrival-cottage",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "high",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "arrival-cottage-tablet-classic-high-normal-pointer-web-normal-none",
+    "scene": "arrival-cottage",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "high",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-ready-desktop-classic-low-normal-keyboard-web-normal-none",
+    "scene": "gate-lookup-ready",
+    "view": "desktop",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none"
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-ready-compact-classic-low-normal-keyboard-web-normal-none",
+    "scene": "gate-lookup-ready",
+    "view": "compact",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "gate-lookup-ready-tablet-classic-low-normal-keyboard-web-normal-none",
+    "scene": "gate-lookup-ready",
+    "view": "tablet",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "keyboard",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "portrait-rotation-gate-compact-portrait-classic-low-normal-pointer-web-normal-none",
+    "scene": "portrait-rotation-gate",
+    "view": "compact-portrait",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 402,
+      "height": 874
+    }
+  },
+  {
+    "target": "housing-visiting",
+    "key": "portrait-rotation-gate-tablet-portrait-classic-low-normal-pointer-web-normal-none",
+    "scene": "portrait-rotation-gate",
+    "view": "tablet-portrait",
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "mobile": true,
+    "viewport": {
+      "width": 820,
+      "height": 1180
+    }
+  }
+]

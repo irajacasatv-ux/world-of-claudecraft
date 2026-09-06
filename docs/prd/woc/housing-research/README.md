@@ -1,11 +1,17 @@
 # Housing research index (Freeholds and Guildhalls)
 
-Everything the Freeholds and Guildhalls proposal rests on, in one place. Start with the
-proposal, then read a lane only when you need its sources.
+> **Dated research, not implementation authority.** Captured 2026-09-05. The
+> [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
+> record the requirements adopted on 2026-09-06. Historical
+> code inventories, editor capabilities, opinions and market figures below are context,
+> not current API guarantees, WOC tuning approval or legal/store approval.
+
+Historical source trails for the proposal. Start with state and the proposal for current
+decision status; use each lane for its dated evidence and explicit corrections.
 
 | File | What it is |
 |---|---|
-| `../freeholds-and-guildhalls-research.md` | The proposal: rulings adopted 2026-09-05, the PR #3872 re-read, the store-safe model, the MVP slice (section 13), the roadmap, the engineering blueprint. |
+| `../freeholds-and-guildhalls-research.md` | The proposal: rulings adopted 2026-09-05, the PR #3872 re-read, the adopted distribution model and release gates, the MVP slice (section 13), the roadmap, the engineering blueprint. |
 | `../freeholds-and-guildhalls-deck.html` | The player-facing announcement deck (thirteen slides, arrow keys or scroll, prints one slide per page). No internal detail, no prices. |
 | `code-crypto-guilds.md` | Codebase lane: Claudium rails, the token firewall, guilds and the guild bank, bank storage, holder tiers, the Seeker entitlement, telemetry. |
 | `code-content-systems.md` | Codebase lane: Reliquary and Deeds, professions and materials, the absence of durability, items and rarity, cosmetics, mail, gold sinks. |
@@ -19,6 +25,10 @@ plus PR #3872 at head `0f53c92ff7`); the three web lanes were fetched the same d
 unverified claims inline. The named seams and constants are anchors to verify, not
 promises: check them against the tree before building on them.
 
-Status, rulings, and the next step live in the proposal's status block and section 12.
-The next step is the Phase 0 PRD off release/v0.42.0 once PR #3872 merges; while that PR
-is open, base the packet branch on its head.
+Current status, dependency sync and next-file ownership live in
+[progress](../../../freeholds/progress.md) and [state](../../../freeholds/state.md).
+Fernando approved R01 through R46 on 2026-09-06. The proposal is aligned to those
+requirements; nothing is implemented or submitted to a store by this documentation
+work. All asset generation uses Codex. The packet closes with final placeholder
+icon/image replacement in 44a, then a completed-implementation Terms/legal and
+rights/provenance bundle for the legal team in 44b. Earlier release gates remain.

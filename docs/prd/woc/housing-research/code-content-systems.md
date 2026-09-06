@@ -2,6 +2,12 @@
 
 # Housing research report: content systems (code-content-systems)
 
+> **Dated research, not implementation authority.** Captured 2026-09-05. The
+> [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
+> record the requirements adopted on 2026-09-06. Historical
+> code inventories, editor capabilities, opinions and market figures below are context,
+> not current API guarantees, WOC tuning approval or legal/store approval.
+
 Read-only research over the worktree `add-real-estate`. All paths are relative to the worktree root. Sections match the seven questions from team-lead.
 
 ## 1. Reliquary and Book of Deeds
@@ -28,7 +34,7 @@ Read-only research over the worktree `add-real-estate`. All paths are relative t
 
 ## 2. Professions
 
-- Crafts: `src/sim/content/professions.ts:CRAFT_RING` (`CraftDef` {id, name, pole, maxSkill}) = engineering, alchemy, cooking, leatherworking, tailoring, inscription, enchanting, jewelcrafting, weaponcrafting, armorcrafting. Jewelcrafting and inscription have zero recipes (placeholders until the post-level-20 zone expansion). Archetype pairs in `src/sim/professions/archetype.ts`. Gathering: `GATHERING_PROFESSIONS` mining, logging, herbalism (maxSkill 100) and fishing (maxSkill 200); `GATHERING_PROFESSION_IDS`.
+- Crafts: `src/sim/content/professions.ts:CRAFT_RING` (`CraftDef` {id, name, pole, maxSkill}) = engineering, alchemy, cooking, leatherworking, tailoring, inscription, enchanting, jewelcrafting, weaponcrafting, armorcrafting. The original pre-Masterwrought zero-recipe observation for jewelcrafting/inscription is superseded by the proposal section 3 re-read; housing extends their existing nonempty craft lines. Archetype pairs in `src/sim/professions/archetype.ts`. Gathering: `GATHERING_PROFESSIONS` mining, logging, herbalism (maxSkill 100) and fishing (maxSkill 200); `GATHERING_PROFESSION_IDS`.
 - Node materials: `src/sim/professions/material_grades.ts:MATERIAL_GRADES` (yield lookup `gathering_materials.ts:NODE_MATERIAL_TABLE` / `nodeMaterialFor(type, zoneId)`, node types `src/sim/content/gather_nodes.ts:GATHER_NODE_TYPES` ore | wood | herb, `GatherNodeDef` {id, zoneId, type, pos, level, tier}):
   - ore: `copper_ore` (tier 1) / `iron_ore` (2) / `thorium_ore` (3), plus the refined `arcanite_bar`;
   - wood: `ironbark_log` (1) / `ashwood_log` (2) / `elderwood_log` (3);
@@ -89,10 +95,25 @@ The three personal-storage tables are boot-overridable via `server/storage_price
 - SimContext system module with state on PlayerMeta or a per-realm world_state JSONB row: PostOffice, Market, and Reliquary are the templates (`src/sim/CLAUDE.md`; never a method bank on `sim.ts`).
 - `ctx.resetDay` (host-fed, 3 AM realm time) for a deterministic daily upkeep rollover that compares a persisted date string; `raidResetMs` for absolute deadlines.
 - `StationDef` records plus `inRangeStationTypes(stations, pos)` / `isAtStation` for house crafting stations; the recipe `stationType` gate needs no change.
-- `ItemKind` extension with `OtherItemDef`, a new `ItemUse` arm, and `markItemDiscovered` / `isCataloguedRelicItem` to decide what counts as a trophy; `deedsEarned` for title plaques.
-- `PostOffice.mailSystemParcel` with `custodyRef` for refunds, evictions, and deliveries to offline characters.
+- Add only the adopted `furnishing` kind; patterns reuse `recipe`, and trophies are free non-item records. Initial account-wide trophy coverage sweeps the actual deed/relic discriminants, including item, mark, mount, weapon skin, title, set/rank and Perfected sources, with known/unknown provenance and live refresh. Bespoke models/finishes arrive later.
+- `PostOffice.mailSystemParcel` with `custodyRef` is an exact-copy delivery precedent, not authorization for evictions or proof of an atomic housing transfer. Upkeep never repossesses. Adopted upgrades refuse unsafe overflow before spending; voluntary furnished sales require a verified custody manifest and recovery contract.
 - `server/storage_purchases.ts` idempotent Claudium purchase flow plus a data-as-code SKU allowlist for a Claudium or $WOC upkeep rail.
-- `accounts.cosmetics` JSONB plus the `self.cosmetics` wire for account-level unlocks; the character blob (30 s autosave, sparse omit-empty fields) for per-character placement state.
+- Account-grant mirror precedents do not make housing character-owned. Adopted housing is account/guild scoped with stable plot identity; placement/inventory and durable receipt effects need the adopted atomic persistence boundary and replay authority.
 - `src/sim/prop_layout.ts:SubProp` (shared by `src/sim/colliders.ts` and `src/render/props.ts`) for placeable furniture with collision; `MailboxDef` / `StationDef` for authored fixtures; new GLBs through the image-to-glb skill.
 - `planGradeRemoval` / `countAcrossGrades` for consuming upkeep materials across fine grades; `bagPools` and the Materials Vault taxonomy for what counts as a material.
 - Guild persistence: `server/social_db.ts` guilds table, guild bank load/save seam `server/guild_bank_state.ts` for guild-scoped housing state.
+
+The adopted content manifest and art brief now require Codex, not Claude, for
+every shipping asset-generating implementation file, including GLBs and item art.
+File 44a inventories and replaces all feature-created placeholder icons/images
+with final Codex artwork and verifies them in the completed experience. File 44b
+then includes the final rights/provenance inventory with the complete Terms/legal
+evidence bundle for the legal team; earlier art and release gates remain in force.
+
+First-review source correction: upper node fine grades in existing
+`src/sim/professions/material_grades.ts::MATERIAL_GRADES` stop at gather tier 3
+(fine_thorium_ore, fine_elderwood_log, fine_sunpetal_herb). Upper farm produce
+uses the distinct existing `src/sim/content/farm_crops.ts::FARM_CROPS` rows and
+`fineProduceItemId`; tier-4 crops do not establish tier-4 node grades. The NEW17/24
+account source loader aggregates the owner's farm records; current-character
+`myFarmPlots` never supplies the whole account or a guest's unrelated character.

@@ -8,8 +8,9 @@ next implementation phase never starts before this file has run.
 This is Phase 02 (QA) of the Freeholds and Guildhalls feature: audit the furnishing item
 kind (the narrow def, every kind consumer arm, the tooltip core, the consumer sweep).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
+Harness: Codex. Asset generation in this implementation must use Codex, not Claude.
+Follow AGENTS.md and root/directory CLAUDE.md repository contracts; use the active Codex
+model and the existing image/model/SFX pipelines, provenance and quality gates.
 
 Goal: audit the Phase 02 diff for correctness against every deliverable and acceptance
 criterion in docs/freeholds/progress.md "02 Furnishing item kind", missing tests, dead
@@ -70,31 +71,66 @@ the diff touched (cross-platform-sync, architecture-reviewer, frontend-seam-revi
 test-coverage-auditor), and
 finally qa-checklist (the completion gate), all for COVERAGE, all to files.
 
+SETTLED COVERAGE ADDITIONS:
+- Pin relative rank immediately after tool without changing existing relative order;
+  ordinary bags remain All-only, while market filtering explicitly accepts furnishing.
+- Inspect every tooltip branch and require the approved English housing-key inventory,
+  resolved measurements/costs and tooltip-writing compliance. No false two-leaf pin.
+- Prove no furnishing instance can cross into equip/use/consumable power behavior and
+  no shared tooltip field invents a footprint or cost missing from the source manifest.
+
+
+CODEX ASSET EXECUTION (D74/D75):
+- Any generated model/GLB, texture, reference image, icon/image or sampled asset in this
+  implementation is executed by Codex through the existing repository pipeline, including
+  provenance, deterministic export/fingerprint and in-context quality/performance checks.
+  QA verifies that execution evidence. The final 44a Codex pass rechecks and replaces
+  all feature-created placeholder icons/images; it does not waive this producer's
+  same-change or per-wave final-asset obligations. No asset is generated in the packet audit.
+
 STEP 3 - VALIDATION:
 - Run the Phase 02 STEP 3 suite list plus `npx tsc --noEmit`, and `npm run i18n:gen`
   followed by `git status --porcelain` (a dirty generated file means a stale regen).
 
+FINAL REVIEW AND COMPLETION CONTRACT:
+- Required reviewers for the actual promised surfaces: cross-platform-sync, architecture-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist.
+  Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
+  nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
+  ownership examples; this complete roster is the minimum finishing dispatch.
+- Database performance reviews happen before implementation decisions and on the finished
+  diff whenever SQL/call sites/stored shapes/queues/locks/timeouts/growth change; pair
+  migration-safety and privacy-security-review for persistence/authority changes.
+- Run node scripts/gate_select.mjs before calling this contribution complete, as well as
+  every scoped/PG/visual/SFX check named here. Report exact commands and outcomes. A
+  skipped required suite or a reviewer report alone is not a passing shared gate.
+
 STEP 4 - FIX:
-- Apply ALL BLOCKING and SHOULD-FIX items (and the nits unless a nit contradicts a
-  locked decision, in which case record it). Re-run the validation matrix. Commit fixes
+- Apply ALL findings, including nits. Resolve a conflict with a locked decision
+  explicitly before PASS; a recorded conflict is not a deferred fix. Re-run the validation matrix. Commit fixes
   separately from the verdict, Conventional Commits with scope and body, EXPLICIT paths,
   never `git add -A`, the word "phase" nowhere. Then review the fix commits with a FRESH
   reviewer (fixes are unreviewed code until someone reads them). `npm run ci:changed`
   after the last commit; read the exit code.
 
+REVIEW COMPLETION CONTRACT:
+All findings, including nits, must be resolved and the entire fix round independently
+reviewed before PASS. External signatures remain named release-gated artifacts, never
+deferred review findings. Record found/resolved counts and the fresh reviewer verdict.
+
 STEP 5 - ACCEPTANCE:
 - [ ] Every Phase 02 acceptance box is verified by a check that ran, not by inspection.
 - [ ] The consumer census shows no MISSED site.
-- [ ] No BLOCKING or SHOULD-FIX item remains open; deferred nits are listed with a reason.
+- [ ] Every finding, including every nit, is resolved and a fresh reviewer has verified
+  the complete fix round. No deferred review finding remains.
 - [ ] The fix commits were reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- progress.md row "02 QA": verdict (PASS / PASS-WITH-FOLLOWUPS / FAIL), counts found and
-  fixed, deferred items. state.md: anything the fixes changed in the ledger row.
+- progress.md row "02 QA": verdict (PASS / FAIL), counts found and
+  fixed, and the fresh fix-review evidence. state.md: anything the fixes changed in the ledger row.
 - Record surprising rules learned in memory.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: the QA verdict, counts found and fixed, deferred items, and the FULL PATH of
+End with: the QA verdict, counts found and fixed, fresh fix-review evidence, and the FULL PATH of
 the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-03-content-tiers-and-basics.md
 

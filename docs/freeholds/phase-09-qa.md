@@ -3,13 +3,169 @@
 Audits `phase-09-render-furnishings.md`. Verdict goes in `progress.md` (row "09 QA").
 The next implementation phase never starts before this file has run.
 
+## Exact interior capture producer (09, C04/F03)
+
+This pair produces NEW scripts/lib/pr_shot_housing.mjs::housingReviewTargets and the
+one import/spread in scripts/pr_shot_targets.mjs. It registers only twelve functioning
+interior variants. 11 extends this same target to 89, 16 reaches 178, 17 reaches 226,
+18 reaches 330 and 20 verifies the complete 330. No unavailable build, Steward,
+trophy or visiting UI is registered early. Counts derive from the UX manifest.
+
+```js
+import { housingReviewTargets, isHousingVisualPath } from './lib/pr_shot_housing.mjs';
+
+// In TARGETS:
+...housingReviewTargets({
+  beforeLoad: lowGraphicsSeed,
+  dismissOverlays: dismissEntryOverlays,
+}),
+```
+
+Reuse the exact NEW helper-owned constructor and shared art selector from ux-spec.md
+section 11. All named fixture helpers below are produced here; existing source commands
+and getters remain source anchors. Baseline mobile captures are Chromium with the
+runner's default iPhone/iOS profile. 09 implements only the functional interior fixture
+arms; later producers extend the same exhaustive scene dispatch instead of registering
+inert cases. Future-only helper constants are introduced when their consumer ships.
+
+```js
+const housingInteriorScenes = [
+  'interior-inn-day', 'interior-inn-night',
+  'interior-cottage-day', 'interior-cottage-night',
+];
+const housingViews = [
+  { key: 'desktop', width: 1600, height: 900, mobile: false },
+  { key: 'compact', width: 874, height: 402, mobile: true },
+  { key: 'tablet', width: 1180, height: 820, mobile: true },
+];
+
+function housingVariants(scenes, options = {}) {
+  const {
+    views = housingViews, theme = 'classic', graphics = 'low',
+    motion = 'normal', input = 'pointer', surface = 'web',
+    light = 'normal', forcedColors = 'none',
+  } = options;
+  return scenes.flatMap((scene) => views.map((view) => ({
+    key: [scene, view.key, theme, graphics, motion, input, surface, light,
+      forcedColors].join('-'),
+    scene, view: view.key, theme, graphics, motion, input, surface, light,
+    forcedColors,
+    ...(view.mobile ? {
+      mobile: true, viewport: { width: view.width, height: view.height },
+    } : {}),
+    async beforeLoad(page) {
+      if (!view.mobile) {
+        await page.setViewport({ width: view.width, height: view.height });
+      }
+      await beforeLoad(page);
+      await housingSeedVariant(page, {
+        scene, view: view.key, theme, graphics, motion, input, surface, light,
+        forcedColors,
+      });
+    },
+  })));
+}
+
+```
+
+```js
+const housingVisualWhen = [
+  'src/render/freehold/furnishings.ts',
+  'src/render/freehold/furnishing_layout_core.ts',
+  'src/render/freehold/furnishing_models.ts',
+  'src/render/freehold/furnishing_ghost_visual.ts',
+  'src/render/freehold/interior_dressing.ts',
+  'src/render/freehold/interior_light_rig.ts',
+  'src/sim/content/freehold/layouts.ts',
+  'src/sim/content/freehold/furnishings.ts',
+  'scripts/assets/freehold_basics/',
+  'scripts/assets/freehold_crafted/',
+  'scripts/assets/freehold_dressing/',
+  'scripts/assets/freehold_trophies/',
+  'scripts/assets/specs/freehold_basics.json',
+  'scripts/assets/specs/freehold_crafted.json',
+  'scripts/assets/specs/freehold_dressing.json',
+  'scripts/assets/specs/freehold_trophies.json',
+  'public/models/props/freehold_',
+  'public/ui/items/freehold_',
+  'public/ui/items/pattern_freehold_',
+  'public/ui/items/mapping.json',
+  'src/render/assets/manifest.generated.ts',
+  'docs/freeholds/art/',
+  'src/styles/components.css',
+  'src/styles/hud.css',
+  'src/styles/hud.mobile.css',
+  'scripts/lib/pr_shot_housing.mjs',
+];
+```
+
+File 09 initially registers exactly the following descriptor instead of the later
+build descriptor in ux-spec.md section 11 and phase-11-build-mode-ui.md. It uses the
+same constructor, shared when inventory and target key. No other housing target is
+registered in 09. File 11 replaces this descriptor's variants/capture with its
+extended build definition; it does not append a duplicate target.
+
+```js
+{
+  key: 'housing-build-mode',
+  label: 'Housing interior day and night',
+  when: [...housingVisualWhen],
+  variants: housingVariants(housingInteriorScenes),
+  capture: captureHousingInterior,
+},
+```
+
+The exact callback uses NEW09-owned fixture/assertion functions in that shared
+helper and the actual runner's optional-clip return contract:
+
+```js
+async function captureHousingInterior(page, variant) {
+  await prepareHousingInteriorFixture(page, variant);
+  await assertHousingInteriorFixture(page, variant);
+  return {}; // Full viewport; the runner writes one image after this returns.
+}
+// In 11's captureHousingBuild, before the build-only fixture path:
+if (housingInteriorScenes.includes(variant.scene)) {
+  return captureHousingInterior(page, variant);
+}
+```
+
+prepareHousingInteriorFixture enters the real free Inn or permission-gated offline
+Cottage, dismisses ordinary overlays, and settles into the measured static room
+view without replaying a fresh camera/cue. It never opens or calls build UI. It sends
+existing DEV commands /daynight moon half plus /daynight day or /daynight night
+through the actual chat route, src/game/daynight_dev_command.ts::tryDayNightDevCommand.
+It invents no clock storage key. assertHousingInteriorFixture checks actual tier,
+scene and structural readiness, and checks src/render/day_night_clock.ts exports
+dayNightPhaseOverride/currentDayNightPhase against the command's existing named
+preset. The actual renderer grade/window/hearth/LOW fallback must match that state.
+These existing source presets add no housing balance number. Overrides stay fixed
+until the runner writes its image; normal per-variant page teardown clears them,
+never cleanup before capture. The four scenes differ in actual layout and pinned
+clock state, not just filenames. They show steady room art and remain distinct from
+the visiting target's fresh-arrival/cue acceptance scenes.
+
+09 also exports NEW isHousingVisualPath from that helper, derived from the single
+housingVisualWhen inventory. The existing classifyDiff visual-path selection consumes
+that predicate, alongside the target when-match path; no second path list or generic
+all-asset fallback is added. 11 extends the same owner/inventory/tests when build UI
+ships. Art-only diffs must select the functioning interior target already in09.
+
+09 extends tests/pr_shot_targets.test.ts with the exact twelve emitted keys, unique
+one-image records and required art-path selection. Real browser proof must assert the
+source tier/room/clock and resulting rendered grade before every capture; a relabeled
+identical frame, side shot or cleared override before capture fails. A missing required
+after-state throws. The paired QA checks this exact source block and executed captures.
+This helper/capture evidence belongs to deliverable 5, not an additional output.
+
 ### Starter Prompt
 ```
 This is Phase 09 (QA) of the Freeholds and Guildhalls feature: audit render (the
 furnishing view, the stand-in kit, the interior light rig, the placement ghost).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
+Harness: Codex. Asset generation in this implementation must use Codex, not Claude.
+Follow AGENTS.md and root/directory CLAUDE.md repository contracts; use the active Codex
+model and the existing image/model/SFX pipelines, provenance and quality gates.
 
 Goal: audit the Phase 09 diff for correctness against every deliverable and acceptance
 criterion in docs/freeholds/progress.md "09 Render: furnishing view, light rig, ghost",
@@ -79,32 +235,136 @@ the diff touched (render-performance-reviewer, frontend-seam-reviewer,
 test-coverage-auditor), and finally qa-checklist (the completion gate), all for
 COVERAGE, all to files.
 
+SETTLED COVERAGE ADDITIONS:
+- Start a new visual consumer at empty/revision 0; switch two equal-row plots with distinct
+  origin/claim IDs; resolve an old prepared GLB after leave. Verify initialized registry,
+  relocation/teardown, no late attach and unchanged hot path allocation/serialization.
+- Three authored emitters is a ceiling inside the global budget. Force LOW iOS two
+  lights and pressure one light; entry/door/floor/plinth identity and actionable ghost
+  footprint, non-color blocked hatch/reason and budgets remain equally readable.
+- Verify condition 100/30/29/0 and realm-day/night without a sim wall clock or render-side
+  ownership/condition mutation. Every numeric grade/path is inherited or measured in
+  state/workbook, not locally guessed. Generic trophy builder preparation grants nothing.
+- Exercise confirmed arrival facing before input, keyboard-turn reset, any-input skip,
+  reduced-motion static view and duplicate resume/late generation. Exactly one keyed
+  welcome and sampled cue plays; mute/interfaceSfx are respected and no private audio
+  method or oscillator bypasses the catalog/manifest/gain/speed conformance pipeline.
+- Require the Inn/Cottage first-moment and LOW screenshots plus real audio evidence;
+  one happy shell shot cannot prove skip, error, reduced motion or audible cue behavior.
+
+<!-- core-ux-arrival-qa:start -->
+ARRIVAL AND CAPTURE FIX-ROUND COVERAGE:
+- Verify the approved table explicitly: first Inn/first Cottage safe automatic view,
+  ordinary own returns/visitors static, reconnect/replay no new view/cue, refusal only.
+  Reduced motion/unsafe path starts no directive. Any movement/look/confirm/cancel
+  resumes ordinary input immediately while DIRECTOR_RELEASE_TIME blends the offset
+  safely; test that actual behavior rather than assuming instant pose restoration.
+- Accepted operation/transition plus destination identity deduplicates welcome across
+  retries/resume, while repeated distinct returns still play once each. First-tier
+  completion cannot replay after reconnect; unknown/missing audio preserves keyed text.
+  Use arrival.welcome versus arrival.visitor truthfully; no visitor owner celebration.
+- Delay optional art online and prove zero extra cosmetic settle wait with structural
+  safety and readable prepared representations. Offline wait retains its existing bound.
+- Require tests/freehold_arrival.test.ts, tests/camera_director_core.test.ts and
+  tests/teleport_camera.test.ts plus real composed input, sampled cue and mute evidence.
+- Reconcile each screenshot against one exact target/variant identity. No multiple-image
+  side callback or invented fixture setup. Exercise isHousingVisualPath selection through
+  09's shared owner for art-only/renderer/model/core/style changes and exact manifest
+  prefixes. Cottage capture uses 07's real flag/loopback bridge and command, not a setter.
+<!-- core-ux-arrival-qa:end -->
+
+ACCOUNT ARRIVAL AND PRIVATE PROJECTION CONTRACT:
+- 07c owns normalized account+tier committed first-tier eligibility through 07a; 07b
+  owns account lifecycle/history. Neither source is a plot-save array or renderer state.
+- Preserve acceptedTransitionId, destination public plot ID and confirmed dungeonEntrySeq.
+  Keep historical firstTierAtAdmission separate from nullable freshArrivalPresentation.
+  Its FreeholdArrivalPresentation carries acceptedTransitionId, playWelcomeCue: true
+  and firstTierViewEligible. A NEW owner/visitor acceptance may carry ordinary welcome;
+  only an owner winning the committed tier insert may set firstTierViewEligible true.
+  Snapshot/resume/replay always set freshArrivalPresentation null. Reconnect/replayed historical positive acceptance, including
+  on a new client, emits no new directive or welcome cue. Distinct accepted ordinary
+  returns may issue their ordinary cue once. Cosmetic callbacks never mint authority.
+- Commit-before-ACK is at-most-once eligibility: a crash may skip the optional view.
+  No visible-completion guarantee or permanent routine-entry receipt is introduced.
+- Allowlist both self/private and public encoders: no full mark set, account keys, operator
+  evidence, service secret or recovery diagnostics. Test distinctive evidence sentinels
+  through actual frame encoders and decoders, not merely a type-level omission.
+- Install committed lifecycle/calendar projections only for the current generation and
+  consistent nonregressing revision/finality/coverage. v1 load after v2 install and stale
+  historical duplicate cannot regress state or ACK false installation. Calendar 13a
+  distinguishes requested revision from explicit newer installed revision/digest.
+- Required database-performance-reviewer before design and on the finished diff,
+  migration-safety and privacy-security-review cover source scope, bounds/defaults,
+  actual mark commit, encoder privacy and new-client replay. Authority owns calendar
+  meaning; locale formatting never changes original source identity or billing facts.
+
+- Give a fresh client a historical positive first-tier acceptance and assert no new
+  camera/welcome. Crash after mark commit before ACK may skip the optional view without
+  deleting ownership or regranting eligibility; render completion cannot write a mark.
+
+
+CODEX ASSET EXECUTION (D74/D75):
+- Any generated model/GLB, texture, reference image, icon/image or sampled asset in this
+  implementation is executed by Codex through the existing repository pipeline, including
+  provenance, deterministic export/fingerprint and in-context quality/performance checks.
+  QA verifies that execution evidence. The final 44a Codex pass rechecks and replaces
+  all feature-created placeholder icons/images; it does not waive this producer's
+  same-change or per-wave final-asset obligations. No asset is generated in the packet audit.
+
+CAPTURE AND SAMPLED-AUDIO OWNERSHIP:
+Baseline compact/tablet evidence is Chromium running the default iPhone user-agent/iOS
+profile from pr_screenshots.mjs. An Android claim requires an explicit variant.userAgent
+and a recorded Android profile assertion; emulation is not Safari or physical hardware.
+09 owns sampled housing_arrival, its provenance/manifest and the public
+GameAudio.playHousingArrival method. 19 only consumes and verifies that finished output.
+Verify mute/interfaceSfx and actual recorded cue audio independently of screenshots.
+
 STEP 3 - VALIDATION:
+- Also dispatch gate-integrity-reviewer for the shared screenshot selector/classifyDiff
+  changes and required-capture failure behavior, using the actual scoped diff evidence.
 - Run the Phase 09 STEP 3 suite list plus `npx tsc --noEmit`; re-run `npm run perf:tour`
   through the Cottage yourself and compare with the recorded evidence; re-run the
   Eastbrook re-mint script and confirm it prints the pinned literals.
 
+FINAL REVIEW AND COMPLETION CONTRACT:
+- Required reviewers for the actual promised surfaces: render-performance-reviewer, frontend-seam-reviewer, cross-platform-sync, content-obligations-reviewer, test-coverage-auditor, qa-checklist.
+  Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
+  nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
+  ownership examples; this complete roster is the minimum finishing dispatch.
+- Database performance reviews happen before implementation decisions and on the finished
+  diff whenever SQL/call sites/stored shapes/queues/locks/timeouts/growth change; pair
+  migration-safety and privacy-security-review for persistence/authority changes.
+- Run node scripts/gate_select.mjs before calling this contribution complete, as well as
+  every scoped/PG/visual/SFX check named here. Report exact commands and outcomes. A
+  skipped required suite or a reviewer report alone is not a passing shared gate.
+
 STEP 4 - FIX:
-- Apply ALL BLOCKING and SHOULD-FIX items (and the nits unless a nit contradicts a
-  locked decision, in which case record it). Re-run the validation matrix. Commit fixes
+- Apply ALL findings, including nits. Resolve a conflict with a locked decision
+  explicitly before PASS; a recorded conflict is not a deferred fix. Re-run the validation matrix. Commit fixes
   separately from the verdict, Conventional Commits with scope and body, EXPLICIT paths,
   never `git add -A`, the word "phase" nowhere. A fix that touches renderer.ts owes a
   fresh re-mint commit. Then review the fix commits with a FRESH reviewer (fixes are
   unreviewed code until someone reads them). `npm run ci:changed` after the last commit;
   read the exit code.
 
+REVIEW COMPLETION CONTRACT:
+All findings, including nits, must be resolved and the entire fix round independently
+reviewed before PASS. External signatures remain named release-gated artifacts, never
+deferred review findings. Record found/resolved counts and the fresh reviewer verdict.
+
 STEP 5 - ACCEPTANCE:
 - [ ] Every Phase 09 acceptance box is verified by a check that ran, not by inspection.
-- [ ] No BLOCKING or SHOULD-FIX item remains open; deferred nits are listed with a reason.
+- [ ] Every finding, including every nit, is resolved and a fresh reviewer has verified
+  the complete fix round. No deferred review finding remains.
 - [ ] The fix commits were reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- progress.md row "09 QA": verdict (PASS / PASS-WITH-FOLLOWUPS / FAIL), counts found and
-  fixed, deferred items. state.md: anything the fixes changed in the ledger row.
+- progress.md row "09 QA": verdict (PASS / FAIL), counts found and
+  fixed, and the fresh fix-review evidence. state.md: anything the fixes changed in the ledger row.
 - Record surprising rules learned in memory.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: the QA verdict, counts found and fixed, deferred items, and the FULL PATH of
+End with: the QA verdict, counts found and fixed, fresh fix-review evidence, and the FULL PATH of
 the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-10-furnishing-colliders.md
 

@@ -1,0 +1,1318 @@
+[
+  {
+    "key": "hudChrome.housing.common.close",
+    "value": "Close"
+  },
+  {
+    "key": "hudChrome.housing.common.cancel",
+    "value": "Cancel"
+  },
+  {
+    "key": "hudChrome.housing.common.back",
+    "value": "Back"
+  },
+  {
+    "key": "hudChrome.housing.common.retry",
+    "value": "Try again"
+  },
+  {
+    "key": "hudChrome.housing.common.loading",
+    "value": "Loading your home..."
+  },
+  {
+    "key": "hudChrome.housing.common.pending",
+    "value": "Waiting for confirmation..."
+  },
+  {
+    "key": "hudChrome.housing.common.reconnecting",
+    "value": "Reconnecting. Your saved home is safe."
+  },
+  {
+    "key": "hudChrome.housing.common.readOnly",
+    "value": "Read only"
+  },
+  {
+    "key": "hudChrome.housing.common.unavailable",
+    "value": "This is unavailable right now."
+  },
+  {
+    "key": "hudChrome.housing.common.unknown",
+    "value": "Unknown"
+  },
+  {
+    "key": "hudChrome.housing.common.selected",
+    "value": "Selected: {name}"
+  },
+  {
+    "key": "hudChrome.housing.common.closeAria",
+    "value": "Close {window}"
+  },
+  {
+    "key": "hudChrome.housing.denied.unavailable",
+    "value": "This home is unavailable right now. Try again later."
+  },
+  {
+    "key": "hudChrome.housing.denied.busy",
+    "value": "This home is active elsewhere or still opening. Try again shortly."
+  },
+  {
+    "key": "hudChrome.housing.denied.permission",
+    "value": "You cannot use this here."
+  },
+  {
+    "key": "hudChrome.housing.denied.ownershipChanged",
+    "value": "Your access changed. Your last confirmed changes are saved."
+  },
+  {
+    "key": "hudChrome.housing.denied.changed",
+    "value": "Your home changed before this action finished. Review it and try again."
+  },
+  {
+    "key": "hudChrome.housing.denied.materials",
+    "value": "You do not have enough materials in the selected source."
+  },
+  {
+    "key": "hudChrome.housing.denied.bagsFull",
+    "value": "Make room in your bags before removing this furnishing."
+  },
+  {
+    "key": "hudChrome.housing.denied.condition",
+    "value": "Restore your home's condition to use this amenity."
+  },
+  {
+    "key": "hudChrome.housing.denied.offlinePurchase",
+    "value": "Purchases need an online connection."
+  },
+  {
+    "key": "hudChrome.housing.granted.placed",
+    "value": "{item} placed."
+  },
+  {
+    "key": "hudChrome.housing.granted.moved",
+    "value": "{item} moved."
+  },
+  {
+    "key": "hudChrome.housing.granted.removed",
+    "value": "{item} returned to your bags."
+  },
+  {
+    "key": "hudChrome.housing.granted.ledgerPaid",
+    "value": "Your Ledger is paid."
+  },
+  {
+    "key": "hudChrome.housing.granted.prepaid",
+    "value": "Your Ledger is paid through {date}."
+  },
+  {
+    "key": "hudChrome.housing.granted.call",
+    "value": "Your home's condition is restored."
+  },
+  {
+    "key": "hudChrome.housing.gate.title",
+    "value": "Choose a home"
+  },
+  {
+    "key": "hudChrome.housing.gate.own",
+    "value": "My home"
+  },
+  {
+    "key": "hudChrome.housing.gate.visit",
+    "value": "Visit a friend"
+  },
+  {
+    "key": "hudChrome.housing.gate.name",
+    "value": "Character name"
+  },
+  {
+    "key": "hudChrome.housing.gate.namePlaceholder",
+    "value": "Enter a character name"
+  },
+  {
+    "key": "hudChrome.housing.gate.nameRequired",
+    "value": "Enter a character name to visit."
+  },
+  {
+    "key": "hudChrome.housing.gate.homeChoice",
+    "value": "Choose your home"
+  },
+  {
+    "key": "hudChrome.housing.gate.lookup",
+    "value": "Find home"
+  },
+  {
+    "key": "hudChrome.housing.gate.lookupPending",
+    "value": "Finding your friend's home..."
+  },
+  {
+    "key": "hudChrome.housing.gate.lookupChanged",
+    "value": "Find this character's home before entering."
+  },
+  {
+    "key": "hudChrome.housing.gate.result",
+    "value": "Home belonging to {name}"
+  },
+  {
+    "key": "hudChrome.housing.gate.enter",
+    "value": "Enter"
+  },
+  {
+    "key": "hudChrome.housing.gate.loading",
+    "value": "Opening the door..."
+  },
+  {
+    "key": "hudChrome.housing.gate.marker",
+    "value": "Freeholds gate"
+  },
+  {
+    "key": "hudChrome.housing.gate.interact",
+    "value": "Choose a home"
+  },
+  {
+    "key": "hudChrome.housing.arrival.welcome",
+    "value": "Welcome home, {name}."
+  },
+  {
+    "key": "hudChrome.housing.arrival.visitor",
+    "value": "Welcome to {name}'s home."
+  },
+  {
+    "key": "hudChrome.housing.arrival.skip",
+    "value": "Skip arrival view"
+  },
+  {
+    "key": "hudChrome.housing.arrival.ready",
+    "value": "Your home is ready to explore."
+  },
+  {
+    "key": "hudChrome.housing.hearthKey.tooltip",
+    "value": "Return to your selected home. You cannot use this while in combat, dead or in jail. Your homes share its cooldown."
+  },
+  {
+    "key": "hudChrome.housing.hearthKey.destination",
+    "value": "Destination: {home}"
+  },
+  {
+    "key": "hudChrome.housing.build.title",
+    "value": "Build mode"
+  },
+  {
+    "key": "hudChrome.housing.build.enter",
+    "value": "Build"
+  },
+  {
+    "key": "hudChrome.housing.build.leave",
+    "value": "Finish building"
+  },
+  {
+    "key": "hudChrome.housing.build.furnishings",
+    "value": "Furnishings"
+  },
+  {
+    "key": "hudChrome.housing.build.trophies",
+    "value": "Trophies"
+  },
+  {
+    "key": "hudChrome.housing.build.amenityTab",
+    "value": "Amenities"
+  },
+  {
+    "key": "hudChrome.housing.build.search",
+    "value": "Search furnishings"
+  },
+  {
+    "key": "hudChrome.housing.build.searchPlaceholder",
+    "value": "Search by name"
+  },
+  {
+    "key": "hudChrome.housing.build.clearSearch",
+    "value": "Clear search"
+  },
+  {
+    "key": "hudChrome.housing.build.category",
+    "value": "Furnishing category"
+  },
+  {
+    "key": "hudChrome.housing.build.palette",
+    "value": "Choose a furnishing"
+  },
+  {
+    "key": "hudChrome.housing.build.collectionHelp",
+    "value": "Use the arrow keys to move between furnishings. Press Enter to select one."
+  },
+  {
+    "key": "hudChrome.housing.build.placedObjects",
+    "value": "Placed furnishings"
+  },
+  {
+    "key": "hudChrome.housing.build.selectPlaced",
+    "value": "Select {item}"
+  },
+  {
+    "key": "hudChrome.housing.build.selectedPlaced",
+    "value": "Selected placed furnishing: {item}."
+  },
+  {
+    "key": "hudChrome.housing.build.moveSelected",
+    "value": "Move furnishing"
+  },
+  {
+    "key": "hudChrome.housing.build.replaceTrophy",
+    "value": "Replace trophy"
+  },
+  {
+    "key": "hudChrome.housing.build.clearTrophy",
+    "value": "Clear plinth"
+  },
+  {
+    "key": "hudChrome.housing.build.returnTooltip",
+    "value": "Return this exact furnishing to your bags. You need enough bag space."
+  },
+  {
+    "key": "hudChrome.housing.build.proposalReplaced",
+    "value": "Previous placement preview cancelled. {item} is selected."
+  },
+  {
+    "key": "hudChrome.housing.build.selectionPending",
+    "value": "Wait for this placement to finish before changing selection."
+  },
+  {
+    "key": "hudChrome.housing.build.surfaceFloor",
+    "value": "Floor"
+  },
+  {
+    "key": "hudChrome.housing.build.surfaceWall",
+    "value": "Wall"
+  },
+  {
+    "key": "hudChrome.housing.build.surfaceTabletop",
+    "value": "Tabletop"
+  },
+  {
+    "key": "hudChrome.housing.build.surfaceCeiling",
+    "value": "Ceiling"
+  },
+  {
+    "key": "hudChrome.housing.build.paletteOpen",
+    "value": "Open furnishing palette"
+  },
+  {
+    "key": "hudChrome.housing.build.empty",
+    "value": "Find furnishings at vendors or make them with crafting recipes."
+  },
+  {
+    "key": "hudChrome.housing.build.noResults",
+    "value": "No furnishings match your search."
+  },
+  {
+    "key": "hudChrome.housing.build.selectedCopy",
+    "value": "{item}, {marks}, {count} available"
+  },
+  {
+    "key": "hudChrome.housing.build.selectedCopyNoMarks",
+    "value": "{item}, {count} available"
+  },
+  {
+    "key": "hudChrome.housing.build.confirm",
+    "value": "Place"
+  },
+  {
+    "key": "hudChrome.housing.build.confirmMove",
+    "value": "Move"
+  },
+  {
+    "key": "hudChrome.housing.build.remove",
+    "value": "Return to bags"
+  },
+  {
+    "key": "hudChrome.housing.build.rotate",
+    "value": "Rotate clockwise"
+  },
+  {
+    "key": "hudChrome.housing.build.rotateBack",
+    "value": "Rotate counterclockwise"
+  },
+  {
+    "key": "hudChrome.housing.build.cancel",
+    "value": "Cancel placement"
+  },
+  {
+    "key": "hudChrome.housing.build.nudge",
+    "value": "Nudge"
+  },
+  {
+    "key": "hudChrome.housing.build.nudgeForward",
+    "value": "Nudge forward"
+  },
+  {
+    "key": "hudChrome.housing.build.nudgeBack",
+    "value": "Nudge backward"
+  },
+  {
+    "key": "hudChrome.housing.build.nudgeLeft",
+    "value": "Nudge left"
+  },
+  {
+    "key": "hudChrome.housing.build.nudgeRight",
+    "value": "Nudge right"
+  },
+  {
+    "key": "hudChrome.housing.build.snap",
+    "value": "Snap to grid"
+  },
+  {
+    "key": "hudChrome.housing.build.undo",
+    "value": "Undo"
+  },
+  {
+    "key": "hudChrome.housing.build.redo",
+    "value": "Redo"
+  },
+  {
+    "key": "hudChrome.housing.build.undoEmpty",
+    "value": "There are no placement changes to undo."
+  },
+  {
+    "key": "hudChrome.housing.build.redoEmpty",
+    "value": "There are no placement changes to redo."
+  },
+  {
+    "key": "hudChrome.housing.build.historyChanged",
+    "value": "Your home changed. Placement history has been reset."
+  },
+  {
+    "key": "hudChrome.housing.build.historyTooltip",
+    "value": "Undo confirmed placement changes from this building session. Payments and purchases are not included."
+  },
+  {
+    "key": "hudChrome.housing.build.saving",
+    "value": "Saving placement..."
+  },
+  {
+    "key": "hudChrome.housing.build.preparing",
+    "value": "Preparing furnishing preview..."
+  },
+  {
+    "key": "hudChrome.housing.build.valid",
+    "value": "Ready to place."
+  },
+  {
+    "key": "hudChrome.housing.build.placementReason",
+    "value": "Placement: {reason}"
+  },
+  {
+    "key": "hudChrome.housing.build.decor",
+    "value": "Decor: {used} of {limit}"
+  },
+  {
+    "key": "hudChrome.housing.build.plinths",
+    "value": "Plinths: {used} of {limit}"
+  },
+  {
+    "key": "hudChrome.housing.build.amenities",
+    "value": "Amenities: {used} of {limit}"
+  },
+  {
+    "key": "hudChrome.housing.build.decorTooltip",
+    "value": "This furnishing uses {cost} decor. You have {remaining} decor available."
+  },
+  {
+    "key": "hudChrome.housing.build.plinthTooltip",
+    "value": "Display trophies on your home's plinths. {used} of {limit} are in use."
+  },
+  {
+    "key": "hudChrome.housing.build.amenityTooltip",
+    "value": "Installed stations use amenity slots. Your built-in Strongbox does not use a slot."
+  },
+  {
+    "key": "hudChrome.housing.build.camera",
+    "value": "Build camera"
+  },
+  {
+    "key": "hudChrome.housing.build.cameraHint",
+    "value": "Move the view to inspect your placement."
+  },
+  {
+    "key": "hudChrome.housing.build.controlsAria",
+    "value": "Placement controls for {item}"
+  },
+  {
+    "key": "hudChrome.housing.build.fixed",
+    "value": "This is part of your home and cannot be moved."
+  },
+  {
+    "key": "hudChrome.housing.denied.placementBlocked",
+    "value": "Something is in the way."
+  },
+  {
+    "key": "hudChrome.housing.denied.outsideRoom",
+    "value": "Place this inside the room."
+  },
+  {
+    "key": "hudChrome.housing.denied.doorway",
+    "value": "Keep the doorway and arrival path clear."
+  },
+  {
+    "key": "hudChrome.housing.denied.occupied",
+    "value": "Someone is standing in that space."
+  },
+  {
+    "key": "hudChrome.housing.denied.decorFull",
+    "value": "This needs {needed} decor. You have {remaining} available."
+  },
+  {
+    "key": "hudChrome.housing.denied.plinthFull",
+    "value": "Every plinth is in use."
+  },
+  {
+    "key": "hudChrome.housing.denied.amenityFull",
+    "value": "Every amenity slot is in use."
+  },
+  {
+    "key": "hudChrome.housing.denied.wrongSurface",
+    "value": "This furnishing needs a {surface} surface."
+  },
+  {
+    "key": "hudChrome.housing.denied.copyMissing",
+    "value": "This furnishing is no longer available."
+  },
+  {
+    "key": "hudChrome.housing.denied.childrenPresent",
+    "value": "Move the furnishings on this piece before removing it."
+  },
+  {
+    "key": "hudChrome.housing.steward.title",
+    "value": "Steward"
+  },
+  {
+    "key": "hudChrome.housing.steward.householdTab",
+    "value": "Household"
+  },
+  {
+    "key": "hudChrome.housing.steward.visitorsTab",
+    "value": "Visitors"
+  },
+  {
+    "key": "hudChrome.housing.steward.condition",
+    "value": "Condition: {condition} of {maximum}"
+  },
+  {
+    "key": "hudChrome.housing.steward.conditionTooltip",
+    "value": "Amenities work at {threshold} condition or higher. Below that, amenities pause. Low condition does not prevent entry or decoration. Upkeep never removes your home or belongings."
+  },
+  {
+    "key": "hudChrome.housing.steward.amenitiesReady",
+    "value": "Amenities are available."
+  },
+  {
+    "key": "hudChrome.housing.steward.amenitiesPaused",
+    "value": "Amenities are paused until your home's condition is restored."
+  },
+  {
+    "key": "hudChrome.housing.steward.nextDue",
+    "value": "Next Ledger due: {date}"
+  },
+  {
+    "key": "hudChrome.housing.steward.coveredThrough",
+    "value": "Ledger paid through {date}."
+  },
+  {
+    "key": "hudChrome.housing.steward.noUpkeep",
+    "value": "Your Inn Room has no upkeep."
+  },
+  {
+    "key": "hudChrome.housing.steward.currentPaid",
+    "value": "This week's Ledger is paid."
+  },
+  {
+    "key": "hudChrome.housing.steward.ledger",
+    "value": "Weekly Ledger"
+  },
+  {
+    "key": "hudChrome.housing.steward.needed",
+    "value": "Needed"
+  },
+  {
+    "key": "hudChrome.housing.steward.bags",
+    "value": "Bags"
+  },
+  {
+    "key": "hudChrome.housing.steward.vault",
+    "value": "Materials Vault"
+  },
+  {
+    "key": "hudChrome.housing.steward.rowAria",
+    "value": "{item}: need {needed}; {bags} in bags; {vault} in Materials Vault."
+  },
+  {
+    "key": "hudChrome.housing.steward.rowUnavailableAria",
+    "value": "{item}: need {needed}; {bags} in bags; Materials Vault balance is unavailable."
+  },
+  {
+    "key": "hudChrome.housing.steward.haveNeed",
+    "value": "Have {have} of {need}."
+  },
+  {
+    "key": "hudChrome.housing.steward.source",
+    "value": "Pay using"
+  },
+  {
+    "key": "hudChrome.housing.steward.bagsOnly",
+    "value": "Bags only"
+  },
+  {
+    "key": "hudChrome.housing.steward.vaultOnly",
+    "value": "Materials Vault only"
+  },
+  {
+    "key": "hudChrome.housing.steward.automatic",
+    "value": "Bags, then Materials Vault"
+  },
+  {
+    "key": "hudChrome.housing.steward.payBags",
+    "value": "Pay from bags"
+  },
+  {
+    "key": "hudChrome.housing.steward.payVault",
+    "value": "Pay from vault"
+  },
+  {
+    "key": "hudChrome.housing.steward.payAutomatic",
+    "value": "Pay from bags and vault"
+  },
+  {
+    "key": "hudChrome.housing.steward.sourceTooltip",
+    "value": "Automatic payment takes matching materials from your bags first, then your Materials Vault. Review the listed amounts before confirming."
+  },
+  {
+    "key": "hudChrome.housing.steward.prepay",
+    "value": "Prepay Ledger"
+  },
+  {
+    "key": "hudChrome.housing.steward.prepayWeeks",
+    "value": "Weeks to cover: {weeks}"
+  },
+  {
+    "key": "hudChrome.housing.steward.prepayLimit",
+    "value": "You can cover up to {limit} weeks."
+  },
+  {
+    "key": "hudChrome.housing.steward.review",
+    "value": "Review material payment"
+  },
+  {
+    "key": "hudChrome.housing.steward.reviewThrough",
+    "value": "Cover your Ledger through {date} using {source}."
+  },
+  {
+    "key": "hudChrome.housing.steward.confirm",
+    "value": "Confirm material payment"
+  },
+  {
+    "key": "hudChrome.housing.steward.pending",
+    "value": "Confirming your Ledger payment..."
+  },
+  {
+    "key": "hudChrome.housing.steward.refreshing",
+    "value": "Updating your Ledger and material balances..."
+  },
+  {
+    "key": "hudChrome.housing.steward.outagePause",
+    "value": "Upkeep is paused while the market service is unavailable. No missed upkeep will be added later."
+  },
+  {
+    "key": "hudChrome.housing.steward.absencePause",
+    "value": "Wear is paused while you are away."
+  },
+  {
+    "key": "hudChrome.housing.steward.returnGrace",
+    "value": "Wear is paused until {date} while you settle back in."
+  },
+  {
+    "key": "hudChrome.housing.steward.call",
+    "value": "Master Builder's Call"
+  },
+  {
+    "key": "hudChrome.housing.steward.callCurrentTooltip",
+    "value": "Pay the current unpaid Ledger and restore condition to {maximum}. Future prepaid weeks stay unchanged."
+  },
+  {
+    "key": "hudChrome.housing.steward.callRepairTooltip",
+    "value": "Restore condition to {maximum}. Your current Ledger is already paid. Future prepaid weeks stay unchanged."
+  },
+  {
+    "key": "hudChrome.housing.steward.reviewCall",
+    "value": "Review Master Builder's Call"
+  },
+  {
+    "key": "hudChrome.housing.steward.manageWebsite",
+    "value": "Manage on the website"
+  },
+  {
+    "key": "hudChrome.housing.steward.manageWebsiteAria",
+    "value": "Open approved home management on the website"
+  },
+  {
+    "key": "hudChrome.housing.steward.visitor",
+    "value": "Only the owner can manage this home's Ledger."
+  },
+  {
+    "key": "hudChrome.housing.steward.hearthDestination",
+    "value": "Hearth Key destination"
+  },
+  {
+    "key": "hudChrome.housing.trophies.title",
+    "value": "Trophy case"
+  },
+  {
+    "key": "hudChrome.housing.trophies.search",
+    "value": "Search trophies"
+  },
+  {
+    "key": "hudChrome.housing.trophies.collectionHelp",
+    "value": "Use the arrow keys to move between trophies. Press Enter to inspect one."
+  },
+  {
+    "key": "hudChrome.housing.trophies.refreshing",
+    "value": "Updating your trophy collection..."
+  },
+  {
+    "key": "hudChrome.housing.trophies.empty",
+    "value": "Your adventures will fill these shelves."
+  },
+  {
+    "key": "hudChrome.housing.trophies.noResults",
+    "value": "No trophies match your search."
+  },
+  {
+    "key": "hudChrome.housing.trophies.achievedBy",
+    "value": "Achieved by {name}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.achievedOn",
+    "value": "Achieved on {date}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.characterUnknown",
+    "value": "Original character unknown."
+  },
+  {
+    "key": "hudChrome.housing.trophies.dateUnknown",
+    "value": "Original date unknown."
+  },
+  {
+    "key": "hudChrome.housing.trophies.deed",
+    "value": "{deedLabel}: {deed}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.page",
+    "value": "{pageLabel}: {page}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.mark",
+    "value": "{markLabel}: {mark}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.item",
+    "value": "Displayed item: {item}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.titleSource",
+    "value": "Title: {title}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.mountSource",
+    "value": "Mount: {mount}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.unearned",
+    "value": "Complete {deed} to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireDeed",
+    "value": "Complete {deed} to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireTitle",
+    "value": "Unlock {title} to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requirePage",
+    "value": "Complete {page} to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireSlain",
+    "value": "Defeat {creature} to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireMasterwork",
+    "value": "Craft a Masterwork item to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireMasterworkCraft",
+    "value": "Craft a Masterwork item with {craft} to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireGatherEvent",
+    "value": "Find {find} through {profession} to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireGoldenHarvest",
+    "value": "Gather a golden harvest from a farm bed to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requirePerfectSpecimen",
+    "value": "Harvest a perfect specimen from a fallen creature to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireSet",
+    "value": "Complete the {set} collection to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireItemAcquired",
+    "value": "Find {item} to unlock this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireItemOwned",
+    "value": "Own {item} to activate this display."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireMount",
+    "value": "Collect {mount} to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requireRank",
+    "value": "Reach {rank} in {collection} to display this trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.requirePerfected",
+    "value": "Own a qualifying named Perfected item to activate this display."
+  },
+  {
+    "key": "hudChrome.housing.trophies.setSource",
+    "value": "Armor set: {set}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.rankSource",
+    "value": "{collection}: {rank}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.maker",
+    "value": "Made by {maker}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.namedItem",
+    "value": "Named item: {name}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.makerUnknown",
+    "value": "Original maker unknown."
+  },
+  {
+    "key": "hudChrome.housing.trophies.nameUnknown",
+    "value": "Original item name unknown."
+  },
+  {
+    "key": "hudChrome.housing.trophies.inactive",
+    "value": "This display is inactive because its required item is no longer owned."
+  },
+  {
+    "key": "hudChrome.housing.trophies.hidden",
+    "value": "A trophy for an undiscovered accomplishment."
+  },
+  {
+    "key": "hudChrome.housing.trophies.unknownSource",
+    "value": "This trophy's original source is unknown."
+  },
+  {
+    "key": "hudChrome.housing.trophies.place",
+    "value": "Place on a plinth"
+  },
+  {
+    "key": "hudChrome.housing.trophies.choosePlinth",
+    "value": "Choose a plinth for {trophy}."
+  },
+  {
+    "key": "hudChrome.housing.trophies.plinthFull",
+    "value": "Every plinth is in use."
+  },
+  {
+    "key": "hudChrome.housing.trophies.ownedAria",
+    "value": "{trophy}. Available to display. {source}."
+  },
+  {
+    "key": "hudChrome.housing.trophies.unearnedAria",
+    "value": "{trophy}. Not yet available. {requirement}."
+  },
+  {
+    "key": "hudChrome.housing.trophies.hiddenAria",
+    "value": "Undiscovered trophy."
+  },
+  {
+    "key": "hudChrome.housing.trophies.inspectAria",
+    "value": "Inspect {trophy}"
+  },
+  {
+    "key": "hudChrome.housing.trophies.placeTooltip",
+    "value": "Display this accomplishment on a free plinth. Removing the display keeps your trophy unlocked."
+  },
+  {
+    "key": "hudChrome.housing.trophies.possessionRequired",
+    "value": "This display is active while you own {item}."
+  },
+  {
+    "key": "hudChrome.housing.visit.title",
+    "value": "Visit a home"
+  },
+  {
+    "key": "hudChrome.housing.visit.occupancy",
+    "value": "Visitors: {count} of {limit}"
+  },
+  {
+    "key": "hudChrome.housing.visit.occupancyTooltip",
+    "value": "The visitor limit does not count characters on the owner's account."
+  },
+  {
+    "key": "hudChrome.housing.visit.home",
+    "value": "At home: {names}"
+  },
+  {
+    "key": "hudChrome.housing.visit.quiet",
+    "value": "No one else is home."
+  },
+  {
+    "key": "hudChrome.housing.visit.full",
+    "value": "This home is full. Try again later."
+  },
+  {
+    "key": "hudChrome.housing.visit.unavailable",
+    "value": "This home is not available to visit."
+  },
+  {
+    "key": "hudChrome.housing.visit.ownerAway",
+    "value": "The owner is away. You are welcome to visit."
+  },
+  {
+    "key": "hudChrome.housing.visit.guest",
+    "value": "You are visiting {name}."
+  },
+  {
+    "key": "hudChrome.housing.visit.leave",
+    "value": "Leave home"
+  },
+  {
+    "key": "hudChrome.housing.visit.ownerBuilding",
+    "value": "{name} is decorating."
+  },
+  {
+    "key": "hudChrome.housing.visit.policy",
+    "value": "Who can visit"
+  },
+  {
+    "key": "hudChrome.housing.visit.private",
+    "value": "Private"
+  },
+  {
+    "key": "hudChrome.housing.visit.friends",
+    "value": "Friends"
+  },
+  {
+    "key": "hudChrome.housing.visit.guild",
+    "value": "Guild"
+  },
+  {
+    "key": "hudChrome.housing.visit.public",
+    "value": "Public"
+  },
+  {
+    "key": "hudChrome.housing.visit.endVisit",
+    "value": "End visit"
+  },
+  {
+    "key": "hudChrome.housing.visit.endVisitAria",
+    "value": "End {name}'s visit"
+  },
+  {
+    "key": "hudChrome.housing.visit.endConfirm",
+    "value": "Return {name} to the gate?"
+  },
+  {
+    "key": "hudChrome.housing.visit.ended",
+    "value": "Your visit has ended. You have returned to the gate."
+  },
+  {
+    "key": "hudChrome.housing.visit.pending",
+    "value": "Confirming entry..."
+  },
+  {
+    "key": "hudChrome.housing.visit.endPending",
+    "value": "Ending {name}'s visit..."
+  },
+  {
+    "key": "hudChrome.housing.visit.endSucceeded",
+    "value": "{name}'s visit has ended."
+  },
+  {
+    "key": "hudChrome.housing.visit.policyPending",
+    "value": "Updating who can visit..."
+  },
+  {
+    "key": "hudChrome.housing.visit.policySaved",
+    "value": "Visiting policy updated."
+  },
+  {
+    "key": "hudChrome.housing.visit.policyConfirmed",
+    "value": "Current policy: {policy}"
+  },
+  {
+    "key": "hudChrome.housing.visit.policyDraft",
+    "value": "Selected policy: {policy}"
+  },
+  {
+    "key": "hudChrome.housing.visit.applyPolicy",
+    "value": "Apply visiting policy"
+  },
+  {
+    "key": "hudChrome.housing.visit.roster",
+    "value": "Guests at home"
+  },
+  {
+    "key": "hudChrome.housing.visit.rosterEmpty",
+    "value": "No guests are here."
+  },
+  {
+    "key": "hudChrome.housing.visit.privateExisting",
+    "value": "Current guests may stay until they leave or you end their visit."
+  },
+  {
+    "key": "hudChrome.housing.visit.readOnlyTooltip",
+    "value": "Inspect this home's furnishings and trophies. Only the owner can change them."
+  },
+  {
+    "key": "hudChrome.housing.visit.ownerService",
+    "value": "This service is for the home's owner."
+  },
+  {
+    "key": "hudChrome.housing.charter.title",
+    "value": "Freehold Charter"
+  },
+  {
+    "key": "hudChrome.housing.charter.summary",
+    "value": "Open a Cottage to furnish, display your trophies and welcome friends."
+  },
+  {
+    "key": "hudChrome.housing.charter.boundary",
+    "value": "A cosmetic home with convenience and access features. It grants no combat power."
+  },
+  {
+    "key": "hudChrome.housing.charter.freeRoom",
+    "value": "An Inn Room is free for every account."
+  },
+  {
+    "key": "hudChrome.housing.charter.artAria",
+    "value": "Cottage interior with a hearth and space for your furnishings"
+  },
+  {
+    "key": "hudChrome.housing.charter.review",
+    "value": "Review purchase"
+  },
+  {
+    "key": "hudChrome.housing.charter.price",
+    "value": "Price: {price}"
+  },
+  {
+    "key": "hudChrome.housing.charter.quoteLoading",
+    "value": "Loading current price..."
+  },
+  {
+    "key": "hudChrome.housing.charter.quoteExpired",
+    "value": "This quote has expired. Review the current quote before confirming."
+  },
+  {
+    "key": "hudChrome.housing.charter.priceChanged",
+    "value": "The price has changed. Review the new price before confirming."
+  },
+  {
+    "key": "hudChrome.housing.charter.confirm",
+    "value": "Confirm purchase"
+  },
+  {
+    "key": "hudChrome.housing.charter.pending",
+    "value": "Your purchase is being confirmed."
+  },
+  {
+    "key": "hudChrome.housing.charter.reconciling",
+    "value": "Checking your original purchase. You do not need to buy again."
+  },
+  {
+    "key": "hudChrome.housing.charter.received",
+    "value": "Your Cottage is ready."
+  },
+  {
+    "key": "hudChrome.housing.charter.owned",
+    "value": "This account already has a Cottage or a larger home."
+  },
+  {
+    "key": "hudChrome.housing.charter.cancelled",
+    "value": "Purchase cancelled."
+  },
+  {
+    "key": "hudChrome.housing.charter.unavailable",
+    "value": "This purchase is unavailable right now."
+  },
+  {
+    "key": "hudChrome.housing.charter.receipt",
+    "value": "Purchase confirmation"
+  },
+  {
+    "key": "hudChrome.housing.charter.mapUnavailable",
+    "value": "The gate could not be shown on the map. Try again."
+  },
+  {
+    "key": "hudChrome.housing.charter.showGate",
+    "value": "Show gate on map"
+  },
+  {
+    "key": "hudChrome.housing.interior.door",
+    "value": "Home door"
+  },
+  {
+    "key": "hudChrome.housing.interior.hearth",
+    "value": "Hearth"
+  },
+  {
+    "key": "hudChrome.housing.interior.strongbox",
+    "value": "Strongbox"
+  },
+  {
+    "key": "hudChrome.housing.interior.strongboxTooltip",
+    "value": "Open your personal bank here. This does not add storage space."
+  },
+  {
+    "key": "hudChrome.housing.interior.stationTooltip",
+    "value": "Use this home's {station}. Recipes keep their normal skill and training requirements."
+  },
+  {
+    "key": "hudChrome.housing.interior.strongboxVisitorTooltip",
+    "value": "This Strongbox opens the owner's personal bank. Guests cannot use it."
+  },
+  {
+    "key": "hudChrome.housing.interior.strongboxPausedTooltip",
+    "value": "This Strongbox is paused by the home's condition. The owner can restore condition to use it."
+  },
+  {
+    "key": "hudChrome.housing.interior.stationVisitorTooltip",
+    "value": "This station is for the home's authorized users."
+  },
+  {
+    "key": "hudChrome.housing.interior.stationPausedTooltip",
+    "value": "This station is paused by the home's condition. The owner can restore condition to use it."
+  },
+  {
+    "key": "hudChrome.housing.interior.plinth",
+    "value": "Trophy plinth"
+  },
+  {
+    "key": "hudChrome.housing.interior.emptyPlinth",
+    "value": "An empty plinth for one of your trophies."
+  },
+  {
+    "key": "hudChrome.housing.interior.amenityPaused",
+    "value": "This amenity is paused. The owner can restore the home's condition."
+  },
+  {
+    "key": "hudChrome.housing.interior.preparing",
+    "value": "Preparing the room..."
+  },
+  {
+    "key": "hudChrome.housing.garden.title",
+    "value": "Kitchen Garden"
+  },
+  {
+    "key": "hudChrome.housing.garden.loading",
+    "value": "Loading the garden..."
+  },
+  {
+    "key": "hudChrome.housing.garden.empty",
+    "value": "No garden beds are recorded."
+  },
+  {
+    "key": "hudChrome.housing.garden.live",
+    "value": "Current garden"
+  },
+  {
+    "key": "hudChrome.housing.garden.saved",
+    "value": "Saved garden"
+  },
+  {
+    "key": "hudChrome.housing.garden.mixed",
+    "value": "Some beds use saved records."
+  },
+  {
+    "key": "hudChrome.housing.garden.incomplete",
+    "value": "Some garden beds could not be loaded."
+  },
+  {
+    "key": "hudChrome.housing.garden.unavailable",
+    "value": "The garden is unavailable right now."
+  },
+  {
+    "key": "hudChrome.housing.garden.openJournal",
+    "value": "Open {journal}"
+  },
+  {
+    "key": "hudChrome.housing.garden.liveTooltip",
+    "value": "These beds use their owner's current garden records."
+  },
+  {
+    "key": "hudChrome.housing.garden.savedTooltip",
+    "value": "These beds use saved garden records. Changes made elsewhere may not appear yet."
+  },
+  {
+    "key": "hudChrome.housing.garden.mixedTooltip",
+    "value": "Some beds use current records and others use saved records. Changes made elsewhere may not appear yet."
+  },
+  {
+    "key": "hudChrome.housing.garden.savedStatus",
+    "value": "{status} (saved)"
+  },
+  {
+    "key": "hudChrome.housing.garden.savedReadyTooltip",
+    "value": "This bed appears ready from saved garden records. Changes made elsewhere may not appear yet."
+  },
+  {
+    "key": "hudChrome.housing.garden.journalTooltip",
+    "value": "Open your current character's {journal}."
+  },
+  {
+    "key": "hudChrome.housing.garden.growing",
+    "value": "Growing"
+  },
+  {
+    "key": "hudChrome.housing.guild.title",
+    "value": "Guildhall"
+  },
+  {
+    "key": "hudChrome.housing.guild.fund",
+    "value": "Hall Fund"
+  },
+  {
+    "key": "hudChrome.housing.guild.projects",
+    "value": "Hall projects"
+  },
+  {
+    "key": "hudChrome.housing.guild.contributions",
+    "value": "Contributions"
+  },
+  {
+    "key": "hudChrome.housing.guild.warTable",
+    "value": "War table"
+  },
+  {
+    "key": "hudChrome.housing.guild.noRecords",
+    "value": "Your guild has no records here yet."
+  },
+  {
+    "key": "hudChrome.housing.guild.officerRequired",
+    "value": "A guild officer can manage this project."
+  },
+  {
+    "key": "hudChrome.housing.guild.ownPlinth",
+    "value": "Your assigned trophy plinth"
+  },
+  {
+    "key": "hudChrome.housing.ward.title",
+    "value": "Neighborhood"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavors",
+    "value": "Neighborhood Endeavors"
+  },
+  {
+    "key": "hudChrome.housing.ward.favor",
+    "value": "Neighborhood Favor"
+  },
+  {
+    "key": "hudChrome.housing.showcase.title",
+    "value": "Home Showcase"
+  },
+  {
+    "key": "hudChrome.housing.showcase.enter",
+    "value": "Enter your home"
+  },
+  {
+    "key": "hudChrome.housing.showcase.consent",
+    "value": "Make this home's approved public display visible in the Showcase?"
+  },
+  {
+    "key": "hudChrome.housing.showcase.vote",
+    "value": "Vote for this home"
+  },
+  {
+    "key": "hudChrome.housing.showcase.noEntries",
+    "value": "No homes have entered this Showcase yet."
+  },
+  {
+    "key": "hudChrome.housing.showcase.voted",
+    "value": "Your vote is recorded."
+  },
+  {
+    "key": "hudChrome.housing.guestBook.title",
+    "value": "Guest book"
+  },
+  {
+    "key": "hudChrome.housing.guestBook.empty",
+    "value": "Leave a friendly reaction for the owner."
+  },
+  {
+    "key": "hudChrome.housing.guestBook.wave",
+    "value": "Wave"
+  },
+  {
+    "key": "hudChrome.housing.guestBook.cheer",
+    "value": "Cheer"
+  },
+  {
+    "key": "hudChrome.housing.guestBook.admire",
+    "value": "Admire"
+  },
+  {
+    "key": "hudChrome.housing.guestBook.recorded",
+    "value": "Your reaction is recorded."
+  },
+  {
+    "key": "hudChrome.housing.layouts.title",
+    "value": "Layouts"
+  },
+  {
+    "key": "hudChrome.housing.layouts.save",
+    "value": "Save layout"
+  },
+  {
+    "key": "hudChrome.housing.layouts.load",
+    "value": "Load layout"
+  },
+  {
+    "key": "hudChrome.housing.layouts.share",
+    "value": "Share layout"
+  },
+  {
+    "key": "hudChrome.housing.layouts.review",
+    "value": "Review layout changes"
+  },
+  {
+    "key": "hudChrome.housing.layouts.shortfall",
+    "value": "You need {count} more of {item} for this layout."
+  },
+  {
+    "key": "hudChrome.housing.dyes.title",
+    "value": "Dye station"
+  },
+  {
+    "key": "hudChrome.housing.dyes.apply",
+    "value": "Apply dye"
+  },
+  {
+    "key": "hudChrome.housing.dyes.review",
+    "value": "Review dye use"
+  }
+]

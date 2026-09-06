@@ -1,212 +1,280 @@
-# Phase 30: hall amenities
+# Phase 30: guild chest, feast table and shared stations
 
-Wave C, Guildhalls. The spec is `progress.md` "30 Hall amenities" (coarser than wave A:
-settle unknowns in STEP 1 and record them in `state.md` before implementing); the
-decisions are `state.md` (D6, D7, D18) and `brainstorm.md`. This phase ships the guild
-bank chest (guild bank access at the hall), the feast hall long table (the shipped feast
-object; Well Fed is the only buff), hall-shared stations (a new predicate over members
-present in the hall, never the private party predicate), and four boards that are
-read-only mirrors of existing guild data: the muster board, the calendar board, the
-pledge-board mirror, and the war table.
+Wave C. This implementation file and its paired QA own only the deliverables
+below. The locked decisions, content numbers, content-manifest.md,
+content-numbers-workbook.md, art-brief.md and ux-spec.md are authoritative. Every
+acceptance row applies to the paired QA; nothing is built by this planning packet.
+
+## Deliverables (at most five):
+
+1. Guild-bank-only chest with service-specific authorization and condition/proximity gates.
+2. Existing feast object at the authored long table with unchanged Well Fed behavior.
+3. Hall-member station predicate and crafting from each member's own Materials Vault.
+4. Final amenity art/anchors and shared HUD interaction/permission evidence.
+
+## Shared authority and persistence dependency
+
+This file extends the single producer from 07a, not a second account or guild payment
+system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
+server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
+durable intent, applied identities, global claim fencing and atomic effects. Phase15
+adds service quote/receipt fields to those rows; later files consume them. No separate
+guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
+Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
+Preserve explicit character pre-lock before nonce fencing, bank-ledger classification
+before guild replay, and the actual market/mail, storage advisory/receipt, custody,
+FK/unique/deferred-trigger ordering of every carried legacy effect. Never substitute
+a generic accounts/characters/guilds/receipts lock hierarchy. No client is held while
+joining serialization; no lock/client spans service IO. Reuse admitted cancellation-
+aware work and retain original operation identity across crash/timeout/eligibility change.
+
+07 owns capability-aware save/export/deactivation/restore preservation; 07b owns
+account lifecycle and immutable protection history. Unsupported/oversized/unknown
+source rows remain original and read-only with a bounded diagnostic/reference; do not
+reset them to empty history, a free Inn or fresh grace. Character delete preserves
+account records; soft deactivation/restore, authorized hard deletion and export remain
+distinct. Follow the minimum-capable-release/rollout artifact; old binaries merely
+leaving normalized rows untouched do not prove compatible save or lifecycle behavior.
+Rollback quiesces new mutations while preserving accepted recovery identities.
+
+Paired QA must cover the actual legacy transaction participants, lease/CAS/nonce
+failure, pending/replayed operations, concurrent accounts/alts/realms, partial failure,
+oversized/unknown version preservation and minimum-capable rollout/rollback fixtures.
+Database, persistence and security reviewers inspect these exact before/final diffs.
+
+## Existing lifecycle, upkeep history and finality contract
+
+Consume 07b's single lifecycle owner and 13/13a's single upkeep-calendar owner.
+NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provides the
+committed immutable protection source, and createFreeholdLifecycleCoordinator captures
+authenticated observation time before queueing. Derive a return before presence
+advances; stale observations, fenced sessions and replay cannot mint grace. The
+accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
+and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
+and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
+or account calendar ingress, source-history array on plots, polling job or receipt store.
+
+Every plot/checkpoint/immutable bill and prepaid credit retains original calendarId,
+schemaVersion, resetPolicyId and committed lifecycle/authority/finalized-prefix identity.
+Union overlapping lifecycle absence/grace and service suspension ranges exactly;
+never add independent totals or use only latest grace for a dormant plot. Historical
+condition/checkpoint changes, bill classification and credit consumption/carry require
+irrevocably finalized source facts. Covered but mutable tails support read-only preview
+only. Missing history, unknown binding or time beyond coverage is explicit not-ready,
+never zero outage. A future-credit purchase uses an accepted published schedule without
+requiring future time to be finalized; its later consumption requires final history.
+
+Recheck lifecycle and compatible calendar-head FOR SHARE guards inside 07a's reviewed
+composition hook through commit. The calendar-only writer takes FOR UPDATE and never
+account/plot/receipt locks; loaders release reads before writer queues. Retain exact
+indexed history/prefix facts with bounded probes across multi-year absence/open outage,
+not per-day/week loops, lifetime loads or foreign-plot rewrites. Keep source history
+until lossless dependency-aware rebase proves dormant plots/credits/recovery safe.
+Current-generation revision/digest/watermark install and exact current/superseded/
+conflict/pending ACK semantics belong only to 13a. An older response cannot replace a
+newer projection or claim readiness. Owner/public builders allowlist safe fields and
+reject operator-evidence, secret and private-diagnostic sentinels even on owner wire.
+
+Paired QA verifies repeated absence/return cycles, overlapping protection, original
+calendar across realm/zone change, open multi-year suspension, missing versus empty
+coverage, unfinalized history refusal, future-credit purchase, credit carry, stale
+process install and restart/rollout. UI may show a keyed pending state while existing
+entry/build/undo remain available; durable payment retains original operation recovery.
+
+## Required Codex asset execution
+
+Every step in this file that creates or replaces a GLB, icon, image, texture, reference
+sheet, room/interior or trophy/furnishing art must be executed by Codex, not Claude.
+Use the repository image-to-GLB and image-generation workflows, approved art-brief.md,
+measured model manifests, export/optimization/fingerprint/prewarm and in-game proof.
+The paired QA verifies the asset-generating step used Codex and all final-art evidence.
+If a QA fix creates or replaces an asset, that fix step also runs in Codex, not Claude.
+Final wave acceptance still requires complete shipping art. The final Codex placeholder
+icon/image sweep in 44a verifies and replaces any feature-created remnants; it does
+not excuse an earlier incomplete paid product or relax an earlier final-art gate.
+This packet is documentation only; no shipping asset is generated by this audit.
 
 ### Starter Prompt
 ```
-This is Phase 30 of the Freeholds and Guildhalls feature: hall amenities (the guild bank
-chest, the feast hall long table, hall-shared stations, the muster board, the calendar
-board, the pledge-board mirror, the war table).
+This is Phase 30 of Freeholds and Guildhalls: guild chest, feast table and shared stations.
+Harness: Codex. All asset generation must be done by Codex, not Claude. Follow the root CLAUDE.md working-style capability block;
+this prompt names no model. Parallelize bounded owners, integrate and verify centrally.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase (three slices over the Phase 12 and 28 seams).
-
-Goal: make the Meeting Hall useful: guild bank access at a chest, a feast night at the
-long table, crafting stations every member present in the hall may use, and boards that
-open the guild's existing roster, calendar, pledges, and standings, with no new data
-path, no new buff, and no number changed.
+Goal: implement exactly the settled deliverables and acceptance below with no guessed
+decision, unsupported number, unresolved finding or unreviewed fix.
 
 STEP 0 - PRE-FLIGHT:
-- Work in the packet worktree named in docs/freeholds/state.md
-  (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
-  feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
-  session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
-- If state.md "Push policy" records a stacked wave C branch, work on that branch instead
-  of feature/freeholds; the merge-forward rule is unchanged.
-- Memory scan: MEMORY.md and entries on the monolith ratchet, the UI cluster of the
-  gotcha catalog (window families, mobile sheets, the drive registry), the render
-  scheduler rules, test-pin traps, the vault craft gate arm (D18).
+- Use the packet worktree and wave C branch recorded in state.md. Run git status
+  --short; if dirty, stop and ask before edits. Preserve unrelated work.
+- git fetch origin --prune, then sync per state.md "Worktree, base, and merge-forward":
+  origin/feature/masterwrought while PR #3872 is open, otherwise newest origin/release/**
+  and remove the dependency block after merge. Run release-merge-audit after a nonempty
+  merge and pnpm install --frozen-lockfile if patches/ moved. Never use main.
+- Read root and applicable local CLAUDE.md in full; memory scan MEMORY.md, freeholds
+  packet entry, test-pin traps, apply ALL findings, review the review-fix round.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
-Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md (the Phase 28 and 29 decisions), docs/freeholds/progress.md
-  (only "30 Hall amenities"), and this file
-- src/sim/freehold/amenities.ts (the Strongbox arm beside nearBanker, the station
-  amenity slot, the D18 vault arm), permissions.ts, instance.ts (the claim's enteredBy
-  roster and objectIds), the MEETING_HALL_LAYOUT anchors reserved in Phase 28 in
-  src/sim/content/freehold/layouts.ts (D23), src/sim/bank.ts (nearBanker, bankerIds), src/sim/guild_bank.ts (guildBankInfoFor and
-  its nearBanker use), src/sim/professions/stations.ts (isAtStation, inRangeStationTypes,
-  isAtAnyStation), src/sim/professions/mobile_station.ts (partySharedStationSatisfies
-  and the private partySharedStationFor it wraps), src/sim/professions/crafting.ts (the
-  station arms in evaluateCraftAdmission), src/sim/vault_craft_gate.ts,
-  src/sim/professions/feast.ts (placeFeastAction, the room-roster registration,
-  FARM_FEAST_ITEM_ID) and feast_placement.ts
-- server/guild_roster.ts (guildRosterCached: the muster board source), server/social.ts
-  and server/social_db.ts (guild_events and GuildEventRow: the calendar board source;
-  guild_pledges and the pledge ladder: the pledge-board source; the guild standings or
-  leaderboard read: the war table source), src/ui/calendar_view.ts and calendar_window.ts,
-  src/ui/guild_leaderboard_view.ts, the guild roster and pledge windows (grep the guild
-  window family under src/ui/), src/ui/guild_bank_window.ts
-- src/game/nearby_interaction.ts (the interact funnel), src/ui/hud/professions/
-  feast_title.ts and tests/entity_display_name.test.ts (the templateId title map),
-  src/ui/world_entity_i18n.ts, src/ui/i18n.catalog/hud_chrome.ts, src/render/freehold/
-  (the registry and prewarm homes), src/render/CLAUDE.md ("GPU work")
-- tests/freehold_strongbox.test.ts and tests/freehold_station.test.ts (the Phase 12
-  suites), tests/professions_crafting_hub.test.ts,
-  tests/mobile_station_party.test.ts, tests/mobile_station_walk.test.ts,
-  tests/craft_from_vault.test.ts, tests/professions_feast.test.ts,
-  tests/feast_object_lifecycle.test.ts, tests/monolith_budget.test.ts,
-  tests/renderer_compile_gate.test.ts, tests/hud_update_drive.test.ts
-The agent returns, and the session records in state.md BEFORE implementing: whether the
-guild bank chest opens the guild bank only (the personal bank stays closed there:
-recommend yes, pinned); whether the D18 vault arm extends to a hall your guild owns
-(recommend yes for members, negative-tested for a non-member); the hall-shared predicate
-shape (over the hall's built station list and the claim roster filtered to members,
-never a call into partySharedStationFor; the HUD row set from the same predicate through
-the inRangeStationTypes list); the existing window each board opens and its open path;
-the entity template ids and title map rows; the extraction candidates for every
-coordinator line.
+STEP 1 - LOAD CONTEXT THROUGH AGENTS:
+Have a reader summarize this file, its QA, state.md locked decisions and content numbers,
+progress.md row 30, implementation-plan.md reviewer matrix, qa-checklist.md, ux-spec.md,
+content-manifest.md, content-numbers-workbook.md and art-brief.md. Do not read planning
+coordinators directly. The reader verifies current source anchors below and returns a
+promised-versus-live table, exact prior module contracts and proposed own-file changes.
+Record any changed tree fact in state.md before editing dependent feature files.
 
-STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files; the coordinator edits the shared pin files last (tests/world_api_parity.test.ts
-if a member changes, tests/snapshots.test.ts, tests/monolith_budget.test.ts, the parity
-goldens):
-- Agent SIM: amenities.ts gains the guild bank chest (a `kind: 'object'` interactable
-  spawned on the hall claim at its anchor; `freeholdGuildChestSatisfies` beside the
-  Strongbox arm so guild bank ops pass for a member standing at it and are refused for
-  a non-member, away from it, and below condition 30), the feast hall table anchor (the
-  shipped placeFeastAction targets the table; the feast joins the claim's objectIds so
-  free tears it down; Well Fed is the only buff), `hallSharedStationSatisfies(ctx,
-  hall, pid, pos, type)` composed as a new arm of the crafting gate and into the station
-  list handed to inRangeStationTypes, never calling the private party predicate;
-  isAtAnyStation and resolveTrain untouched (training refused at the hall); the D18 arm
-  per the STEP 1 decision; the board interactables as objects on the claim;
-  tests/freehold_strongbox.test.ts and tests/freehold_station.test.ts (the Phase 12
-  suites) extended.
-- Agent CLIENT: the interact funnel rows opening the EXISTING guild bank, calendar,
-  roster, pledge, and standings windows from the board and chest entities (measured
-  with the sim's own distance), the templateId title map rows pinned both directions,
-  hudChrome.housing.hall.* keys for labels and tooltips, hud_update_drive rows if a
-  painter polls, the chest, table, and board props through the registry with prewarm
-  homes (stand-ins listed as O5 deferrals), the tests/renderer_compile_gate.test.ts arm,
-  screenshots (desktop, compact, tablet).
-- Agent CONTENT: the anchors on MEETING_HALL_LAYOUT with measured r, world-entity names
-  for the chest, table, and boards, `npm run wiki:content` plus a spoiler-safe guide.*
-  key, a Homesteader-family deed row appended at the END of deeds.ts only if the
-  contract requires one (record the decision).
-Every agent writes any report longer than a screen to a file and replies with the path
-plus a short summary. Never `mode: "plan"` on teammates.
+Earlier planned modules: src/sim/freehold/amenities.ts, permissions.ts and instance.ts,
+src/sim/content/freehold/layouts.ts (MEETING_HALL_LAYOUT), src/render/freehold/ and
+src/ui/hud/housing/. Existing sources: src/sim/bank.ts, src/sim/guild_bank.ts,
+src/sim/professions/stations.ts, mobile_station.ts and crafting.ts,
+src/sim/vault_craft_gate.ts, src/sim/professions/feast.ts and feast_placement.ts,
+src/game/nearby_interaction.ts, src/ui/guild_bank_window.ts,
+src/ui/hud/professions/feast_title.ts and tests/entity_display_name.test.ts.
+NEW planned helper freeholdGuildChestSatisfies and hallSharedStationSatisfies extend
+the existing feature module, never the coordinator or private party predicate.
 
-INVARIANTS THIS PHASE MUST KEEP:
-- Never sell power: no amenity adds throughput; the feast's Well Fed is the only buff;
-  recipes and their stationType gates unchanged; training still requires the town
-  station; no gathering, drop, or progression number changes.
-- The hall-shared predicate is new and over members present in the hall; it never
-  reuses the private party predicate; the HUD's in-range set comes from the same
-  predicate the gate uses.
-- Boards are read-only mirrors: no new REST read, table, or write path; each opens an
-  existing window over existing guild data.
-- D6 and D7 hold for the guild: the chest is guild bank access (no new container, no
-  dupe surface); amenities lock below condition 30.
-- Determinism: no Rng; no wall clock in src/sim/; the feast keeps its own contract.
-- Server authority: membership from the session stamp; the sim decides every gate.
-- Render: every prop is a scheduler client with a prewarm home; the point-light budget
-  unchanged.
-- Content obligations in the SAME change: world-entity names, the title map pin, wiki
-  regen plus guide keys; no item, so no WebP or Reliquary obligation.
-- i18n: the policy in docs/freeholds/implementation-plan.md; text-free events (D10).
-- Monolith: src/sim/sim.ts, server/game.ts, and src/net/online.ts are at ZERO slack; a
-  delegate, case label, or mirror line pays with an extraction and a lowered ceiling.
-- The word "phase" appears in no code, comment, commit, or PR text.
+Before implementation decisions, dispatch database-performance-reviewer with the query,
+stored-shape and workload proposal when those surfaces apply; pair persistence/security.
+Reuse the named settled rules. Missing measurements/signatures are owned artifact gates,
+never a request to let an implementer choose a new balance value.
 
-Out of scope (do NOT do in this phase):
-- Guild deeds, first-kill banners, raid statues, hall trophy plinths (Phase 31);
-  visiting vendors, the Materials Vault chest, build projects (Phase 32); any change to
-  the guild bank, calendar, pledge, or roster data or their windows.
+The reader must include every contract and deliverable section above this Starter
+Prompt in its returned acceptance table, including sole authority ownership, D9,
+history/finality and required Codex asset execution where applicable.
 
-STEP 3 - VALIDATION + REVIEW DISPATCH:
-- Run: `npx tsc --noEmit`; `npx vitest run tests/architecture.test.ts
-  tests/sim_context.test.ts tests/monolith_budget.test.ts
-  tests/freehold_strongbox.test.ts tests/freehold_station.test.ts
-  tests/freehold_guildhall.test.ts
-  tests/freehold_determinism.test.ts tests/professions_crafting_hub.test.ts
-  tests/mobile_station_party.test.ts tests/mobile_station_walk.test.ts
-  tests/craft_from_vault.test.ts tests/professions_feast.test.ts
-  tests/feast_object_lifecycle.test.ts tests/world_api_parity.test.ts
-  tests/snapshots.test.ts tests/freehold_command_chain_online.test.ts
-  tests/entity_display_name.test.ts tests/renderer_compile_gate.test.ts
-  tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts
-  tests/localization_fixes.test.ts`; `npm run wiki:content` then `npx vitest run
-  tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run
-  tests/i18n_completeness.test.ts`; `npm run perf:tour` through the hall;
-  `node scripts/pr_screenshots.mjs` for the hall targets.
-- Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
-  architecture-reviewer (the predicate, the chest arm, the feast anchor),
-  frontend-seam-reviewer (the funnel, labels, mobile), plus render-performance-reviewer
-  (the props) and cross-platform-sync if a facet member or event changed. Prompt each
-  for COVERAGE not filtering; each writes its report to a file. Do not commit until no
-  BLOCKING issues remain.
+STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
+- SIM owner: spawn guild chest and long-table amenity objects into the hall claim's
+  objectIds so leaving/freeing the claim tears them down. Chest authorizes guild bank
+  operations only for current members at the measured chest, condition 30 or above.
+  Do not widen nearBanker into personal bank/direct Materials Vault access, and do not
+  create a new storage container. A rank's existing guild bank permissions remain in
+  force; geometry is not authorization. Recheck membership at every operation.
+- STATION owner: implement hallSharedStationSatisfies over the actual built station,
+  current member, claim roster and proximity. It composes into crafting admission and
+  the HUD inRangeStationTypes result from the same predicate; never call the private
+  partySharedStationFor. A member at a permitted hall station may draw from their own
+  personal Materials Vault through D18 and the existing source planner. No shared fund,
+  another member's vault or direct vault chest is implied. Nonmember, remote party
+  member, wrong type, missing station and condition below 30 refuse. Training and
+  resolveTrain/isAtAnyStation retain their town gates and all recipe rules.
+- FEAST/CLIENT owner: table uses shipped placeFeastAction, placement and lifecycle
+  with existing Well Fed only; no automatic aura or housing-specific power. No new
+  duration/yield/buff number. Interact funnel opens the existing guild-bank family or
+  existing crafting/feast flow, using measured sim distance. Final models, measured
+  anchors, entity/title-map keys, originality, wiki and scheduler prewarm land together.
+- Coordinator verifies the rank matrix, raw online command admission, held-item/fund
+  isolation, shared IWorld parity and claim teardown. Four boards are owned by 30a;
+  project vendors and direct Materials Vault chest are owned by 32a.
+
+INVARIANTS AND CLOSED ACCEPTANCE CONTRACT:
+Before implementation decisions and again on the finished diff, dispatch
+database-performance-reviewer, paired with migration-safety and privacy-security-review.
+Reuse 07a's global plot ownership fence and commitFreeholdMutation seam: character FIFO before
+the required shared-resource serialization, no held DB client while queueing,
+07a actual touch-set ordering preserved,
+lease/revision/fund/receipt refusal aborting every resource and housing write. No stale
+CAS reload may erase an acknowledged transfer. Bound rows, strings, descriptor bytes,
+query results and queue admission from the measured docs/freeholds/content-manifest.md; preserve
+unsupported stored rows safely. One running save plus one pending dirty generation,
+shared background admission and workload deadlines apply to every producer. Record the
+query/index inventory (scope, predicate, order, limit, expected rows, index), reverse
+FK/export/delete access, retention and largest legal fixtures. Disposable Postgres
+proof must cover crash/interleave, competing realms, lease/CAS refusal, cancellation,
+queue pressure, query counts and seeded plans; fake-pool assertions alone are insufficient.
+
+Every gameplay quantity comes from state.md Content numbers or the approved docs/freeholds/content-manifest.md
+and docs/freeholds/content-numbers-workbook.md. This file produces its owned exact-ID, quantity,
+derivation/rounding, reference and approval rows before runtime enable. Fernando owns
+gameplay calibration; the economy service owns prices/currency allowance. Measurements
+come from approved room/model bounds. Missing measurements or signatures are concrete
+artifact/release gates, never permission to invent a balance literal or reopen a choice.
+All material inputs remain obtainable or tradable without requiring a profession;
+Perfecting keystones, gear intermediates and quickening catalysts remain excluded.
+
+Follow docs/freeholds/ux-spec.md as the visual and interaction source. Reuse the actual
+shared window and PainterHost families, theme tokens, content-signature dirty model,
+focus restoration and nontrapping build companion. Every player string is an English
+hudChrome.housing.* key (item/entity/guide source domains keep their canonical keys);
+tooltips follow docs/design/tooltip-writing.md. Capture desktop, compact and tablet
+targets from the shared housing helper with stable IDs at LOW, including empty,
+loading, refused, locked, visitor, reconnect and success states relevant here. Required
+after-shots fail if missing. Use shape/text as well as color for actionable state;
+40x40 touch controls respect safe areas, keyboard/gamepad order and reduced motion.
+Three authored emitters is a ceiling subject to the existing light sink/global budget,
+including iOS two and pressure one; unchanged ghost, blocked reason and occupancy
+information must remain legible through ambient grade, materials and silhouettes.
+
+Every new logic block is a small module behind existing SimContext/IWorld/PainterHost/
+renderer seams. Render/UI consume IWorld only; both Sim and ClientWorld implement the
+facet and headless keeps the housing exclusion/no-op contract. No DOM/Three in sim,
+no wall clock or Math.random there; host calendar inputs preserve clock domains.
+Re-find monolith ceilings rather than quoting stale slack; never raise one, pay thin
+delegates with safe extraction and lower the ceiling. Every changed content record
+carries its same-change obligations and naming originality. No generated artifact or
+locale overlay is hand-edited; canonical M16 exception remains applicable. No em dash,
+en dash, emoji or forbidden purchase vocabulary. No shipped stand-in counts as final art.
+
+STEP 3 - VALIDATION AND REVIEW:
+- npx tsc --noEmit, then the focused suites below (new names are planned tests owned by
+  this file or its recorded predecessor; run each with bounded workers and read exits):
+npx vitest run tests/freehold_strongbox.test.ts tests/freehold_station.test.ts
+tests/freehold_guildhall.test.ts tests/professions_crafting_hub.test.ts
+tests/mobile_station_party.test.ts tests/mobile_station_walk.test.ts
+tests/craft_from_vault.test.ts tests/professions_feast.test.ts
+tests/feast_object_lifecycle.test.ts tests/world_api_parity.test.ts
+tests/freehold_command_chain_online.test.ts tests/entity_display_name.test.ts
+tests/renderer_compile_gate.test.ts tests/hud_update_drive.test.ts
+tests/mobile_window_coverage.test.ts tests/architecture.test.ts
+tests/sim_context.test.ts tests/monolith_budget.test.ts tests/localization_fixes.test.ts
+- npm run i18n:gen, then npx vitest run tests/i18n_completeness.test.ts;
+  npm run wiki:content, then npx vitest run tests/guide.test.ts for content changes.
+- Run the disposable-Postgres twins ARMED with TEST_DATABASE_URL after npm run db:up
+  for persisted changes. Capture the query/lock/recovery/bound evidence above.
+- Run npm run asset:budget, npm run perf:tour and node scripts/pr_screenshots.mjs for
+  the owned visual targets; node scripts/mobile_input_zoom_check.mjs against npm run dev.
+  Re-pin parity goldens in their own reviewed commit only when sampled behavior changes.
+- Required reviewers: architecture-reviewer, cross-platform-sync, privacy-security-review, migration-safety, database-performance-reviewer, server-hot-path-reviewer, content-obligations-reviewer, render-performance-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist.
+  Each reports COVERAGE to a file with BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT.
+  Database review repeats on the finished diff. Apply ALL findings including nits;
+  a fresh reviewer reads all fixes. The actual diff may trigger additional reviewers.
+- Run node scripts/gate_select.mjs (or deeper npm run gate) as the shared pre-merge bar
+  after integration; npm run ci:changed after the last commit is additional evidence,
+  never a substitute. Record exact command, exit and proof path for every acceptance.
+
+Shared pre-merge bar: run node scripts/gate_select.mjs (or deeper npm run gate);
+ci:changed is additional evidence, never its substitute. Record the exact exit.
 
 STEP 4 - COMMIT CADENCE:
-4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
-`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- feat(sim): add the guild bank chest, the feast hall table, and hall-shared stations
-- feat(content): add the Meeting Hall board anchors and entity names
-- feat(ui): open the roster, calendar, pledge, and standings boards from the hall
-- test(sim): pin hall-shared stations against the party predicate
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Only when implementation commits are authorized: Conventional Commits with scope and
+body, explicit owned paths, never git add -A, no coauthor trailer, and the word "phase"
+nowhere in messages. Separate behavior/content, generated fingerprints and verification
+as coherent reviewed commits. Never push, open or merge a PR from this file.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] tests/freehold_strongbox.test.ts (the chest and the feast table) and
-  tests/freehold_station.test.ts (the hall-shared predicate) prove: guild bank ops pass
-  for a member at the
-  chest and are refused away from it, for a non-member, and below condition 30; the
-  personal bank stays closed there; a member present in the hall satisfies a built
-  station's type and a party member outside the hall does not; the private party
-  predicate is never called (structural or spy pin); training is refused at the hall;
-  a feast at the long table grants Well Fed only and is torn down on free.
-- [ ] tests/professions_crafting_hub.test.ts, tests/mobile_station_party.test.ts, and
-  tests/craft_from_vault.test.ts are unchanged and green; the D18 decision is pinned
-  with its negative case.
-- [ ] Each board opens its existing window on both hosts from the interact funnel; the
-  title map is pinned both directions; no new REST read or table exists.
-- [ ] Props render with prewarm homes; `npm run perf:tour` shows no live-program event;
-  screenshots committed.
-- [ ] All STEP 3 suites green; the reviewers report no BLOCKING; the ceilings did not
-  rise; state.md records the STEP 1 decisions.
+STEP 5 - ACCEPTANCE:
+- [ ] Guild chest admits the correct member/rank at condition 30 and refuses 29,
+  foreign/currently revoked membership, distance and private-bank/vault attempts.
+- [ ] Hall station admission and HUD type set match for member presence, station type
+  and condition; existing town training, private party station and recipe semantics
+  are unchanged. A spy/structural test proves private party predicate independence.
+- [ ] Crafting draws only the acting member's own authorized personal vault/bags;
+  other vaults/fund remain untouched, with decisive concurrent/atomic-save negatives.
+- [ ] Feast object lifecycle grants exactly existing Well Fed, no automatic new aura,
+  and tears down on claim free. Final props, title map, names/wiki and prewarm pass.
+- [ ] Desktop/compact/tablet owner/officer/member/guest/locked screenshots, LOW perf,
+  all required tests, shared gate and fresh review of every fix pass.
 
-STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 30, notes, deferrals) and
-  docs/freeholds/state.md (the per-phase ledger row 30: entity template ids, the
-  predicate, i18n keys; the chest, D18, and board decisions as locked).
-- Record surprising rules learned in memory for the next session.
+STEP 6 - DOC UPDATES AND MEMORY:
+Record row 30, exact files/symbols/tests/command outcomes, approved artifact rows and
+review evidence in progress.md/state.md; keep built status honest. Preserve all prior
+decisions and next links. Record surprising repository rules in the authorized memory.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+Report status, files, exact checks/results, review and fresh-fix verdicts, any unmet
+release artifact gate, and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-30-qa.md
 
 STOPPING RULES:
-- Stop and ask if a board would need a new data path (a REST read, a table, or a write)
-  to show anything; the boards mirror what exists.
-- Stop if the hall-shared predicate cannot be built without calling the private party
-  predicate or changing a recipe's stationType gate.
-- Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
-- Do not push the branch; never merge a PR.
+- A missing required proof or artifact keeps this contribution incomplete; do not
+  invent a value, fake a source, discard custody or weaken an acceptance row.
+- Never raise a monolith ceiling, mutate a foreign owner or bypass current authority.
+- Keep the branch local; never push, open or merge a PR.
 ```

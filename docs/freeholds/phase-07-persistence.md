@@ -1,303 +1,321 @@
-# Phase 07: persistence (the account_freeholds row, load at join, the rev-fenced save path)
+# Phase 07: bounded persistence and stable plot identity
 
-Wave A, the Cottage MVP. The spec is `progress.md` "07 Persistence"; the decisions are
-`state.md` D5 and D16 (account state in its own row, a Sim-owned live map keyed by owner
-key, a rev compare-and-swap upsert) and `brainstorm.md` D5. This phase ships the durable
-home of every later phase's state: the `account_freeholds` table, the fresh-join read
-into `joinMeta`, `loadFreehold` / `serializeFreehold` / `evictFreehold` with
-`normalizeFreehold`, the per-owner serial writer on the server, the account export and
-delete obligations, the `/dev freehold <tier>` grant (D24, through the one tier setter
-Phase 15 reuses), and the pin that offline and headless hosts persist nothing (a fresh
-Sim starts every entry with the default Inn Room record). A house survives a server
-restart and a relog online; nothing player-visible changes yet.
+Wave A. The settled decisions in state.md, content-manifest.md,
+content-numbers-workbook.md, art-brief.md and ux-spec.md govern this work. The artifacts
+and tests named below are NEW unless the context inventory labels them EXISTING.
+No housing implementation is claimed complete by this planning file.
 
 ### Starter Prompt
 ```
-This is Phase 07 of the Freeholds and Guildhalls feature: persistence (the
-account_freeholds row, the fresh-join read, normalize and serialize, the rev-fenced save
-path, export and delete, the dev grant, the offline default pin).
+This is Phase 07 of the Freeholds and Guildhalls feature: bounded persistence and stable plot identity.
+Harness: Claude Code. Follow the root CLAUDE.md working-style block for effort and fan-out.
+This prompt names no model. Keep independent implementation owners disjoint; the parent
+integrates shared callers and pins after their reports return.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase (three independent slices with two shared pin files).
-
-Goal: give the freehold record a durable account-level home on the server (one row per
-account, rev-fenced, exported and cascade-deleted), loaded once at join into the
-Sim-owned live map and written back on the existing save cadence, so a house survives
-restart and relog online; offline and headless hosts persist nothing and start every
-entry with the default Inn Room record, pinned; the /dev freehold <tier> grant sets the
-tier through one setter on both dev paths and is refused without ALLOW_DEV_COMMANDS=1.
+Goal: preserve every owned plot across restart with stable identity, bounded load/save work and mixed-release recovery; keep cross-record transfers dark until 07a.
 
 STEP 0 - PRE-FLIGHT:
-- Work in the packet worktree named in docs/freeholds/state.md
-  (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
-  feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
-  session may share this checkout).
-- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
-  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
-  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
-- Memory scan: MEMORY.md and entries on Postgres and the schema module pattern, the
-  retention sweep wiring pin, the monolith ratchet, test-pin traps (prove tests RAN, strip
-  comments before a source pin), the shared-worktree commit care.
+- Work in /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds on
+  feature/freeholds. Verify git status is clean; otherwise ask the user.
+- Sync per state.md "Worktree, base, and merge-forward": git fetch origin --prune;
+  while PR #3872 is open merge origin/feature/masterwrought; once merged use the newest
+  origin/release/** and remove the dependency block. Run release-merge-audit after any
+  non-empty merge and pnpm install --frozen-lockfile when patches/ moved.
+- Memory scan: MEMORY.md, freeholds entry, test-pin traps, apply ALL findings, and
+  review the review-fix round. Record changed seam/ceiling/base facts in state.md before
+  editing dependent code. Read each changed directory's CLAUDE.md.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
-Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md, docs/freeholds/progress.md (only "07 Persistence"), and this file
-- server/db.ts (SCHEMA, the hand-ordered ensureSchema domain list after SCHEMA with its
-  FK comments, bankBonusFactsForAccount, exportAccountData), server/seeker_entitlement_db.ts
-  (SEEKER_ENTITLEMENT_SCHEMA with its keep-forever DDL comment), server/woc_market_db.ts
-  (WOC_MARKET_SCHEMA, a JSONB CHECK example), server/schema_notices.ts
-- server/ws_auth.ts (createWsAuth: the fresh-join arm that awaits bankBonusForAccount and
-  loadAccountCosmetics and stamps joinMeta; the resume arm that keeps in-memory values),
-  server/bank_entitlements.ts (the account facts registry), server/game.ts (join and
-  planJoin, characterSaveQueues, enqueueCharacterWrite, flushPeriodicSaves, saveAll, the
-  leave path and final-session teardown), server/serial_writer.ts (createKeyedSerialWriter),
-  server/periodic_save_flush.ts (runPeriodicSaveFlush: each write exactly once)
-- server/guild_bank_state.ts (loadGuildBanksIntoSim, mergeGuildBankRow,
-  GUILD_BANK_MERGED_MAX_BYTES: the boot-load and escrow shape, to CONTRAST with D16's rev
-  compare-and-swap, never to copy the escrow merge), src/sim/guild_bank.ts (loadGuildBank,
-  serializeGuildBank, evictGuildBank: the D16 load/serialize/evict idiom)
-- src/sim/professions/farm_persist.ts (serializeFarmPlots, normalizeFarmPlots, the
-  FARM_MAX_GROW_MS tamper ceiling, the clock-base banner: absolute deadlines in the host's
-  own lockoutNowMs base, a save is loaded only by the same kind of host that wrote it),
-  src/sim/professions/farm_load_report.ts (the dev-channel dropped-row warn),
-  src/sim/character_state.ts (the optional-field zero-default-omission comments)
-- src/sim/freehold/{types.ts,state.ts,instance.ts,index.ts,CLAUDE.md} as Phases 01 to 06
-  left them (FreeholdState, ctx.freeholds, the meta.freeholdOwnerKey stamp, the claim
-  rehydrate path), src/sim/sim.ts addPlayer options (bankBonus and applyBankBonusStamp in
-  src/sim/bank.ts: the ONE writer of a host-stamped field), src/sim/sim_context.ts
-- server/account_export_state.ts (projectAccountExportState), server/character_delete_db.ts
-  (the delete refusal shape; a freehold row is ACCOUNT-keyed and untouched by character
-  delete), server/retention_sweep.ts (createRetentionSweep), tests/server/main_retention_wiring.test.ts,
-  server/CLAUDE.md ("Hot paths": nothing per tick queries Postgres; every growing table
-  registers a prune or states keep-forever)
-- src/main.ts (the offline `new Sim({...})` entry: a fresh Sim on every entry, nothing
-  persisted; the pinned rule in tests/professions_farming_state.test.ts says every
-  serializeCharacter caller lives in server/), headless/env_server.ts (the env constructs
-  its own Sim the same way), headless/CLAUDE.md (the housing cut)
-- src/sim/dev_commands.ts (handleDevChat: the /dev verb dispatch behind the Sim's
-  devCommands flag), src/sim/dev_kit.ts, src/sim/sim.ts (devCommands from cfg; the
-  '/dev bot' arm as the gated-verb model), server/sim_boot_config.ts (devCommands:
-  ALLOW_DEV_COMMANDS === '1' into the realm Sim, so the server dev path shares the ONE
-  gate), tests/dev_commands.test.ts (the devSim fixture and the refusal shape without the
-  flag), src/sim/content/freehold/tiers.ts (FREEHOLD_TIERS: what the tier setter
-  re-derives), src/sim/freehold/hearth_key.ts (the Phase 06 cooldown logic that now reads
-  and writes hearth_key_ready_ms on the record)
-- tests/server/storage_purchase_db.test.ts and tests/server/storage_purchase_db.pg.test.ts
-  (the fake-pool suite plus the pg-armed twin in a PRIVATE schema, describe.skip unless
-  TEST_DATABASE_URL), tests/guild_bank_db.test.ts, tests/guild_bank_persistence.test.ts,
-  tests/guild_bank_pg_integration.test.ts, tests/professions_farming_state.test.ts (round
-  trip, one-corrupt-dimension-per-arm, the real-Sim round trip, the cross-clock pin)
-- tests/monolith_budget.test.ts (sim.ts, game.ts, online.ts, db.ts rows), tests/sim_context.test.ts
-- Root CLAUDE.md "Invariants" and "Modularity"; docs/freeholds/implementation-plan.md
-  "Cross-cutting gates" (the persistence gate)
-The agent returns: the DDL text to write (every column from progress.md, the JSONB
-CHECKs, the keep-forever comment, the ledger_paid_week index) and the exact ensureSchema
-insertion point; the fresh-join read recipe (one round trip beside bankBonusFactsForAccount,
-the joinMeta field, the addPlayer option, the stamp writer); the serial-writer shape and
-the three save moments (autosave cadence, leave, shutdown) with the eviction point when
-the account's last character leaves; the export projection row; the delete-cascade proof;
-the normalizeFreehold arm list (tier allowlist, furnishing id allowlist, plinth id
-allowlist, cell bounds, condition clamped 0 to 100, condition_stamp_day, last_seen_day,
-and ledger_paid_week as non-negative realm-calendar integers with a future value
-re-anchored to today, prepaid_weeks clamped 0 to 4, hearth_key_ready_ms as an absolute ms
-in the host clock base with a far-future value clamped to the 60-minute literal,
-visit_policy allowlist, never destroys); the dev-command dispatch arm and the one
-devCommands gate both hosts share; the offline default recipe (where a fresh Sim's
-addPlayer mints the Inn Room record with no raw row, on the offline and the headless
-construction sites); the extraction candidates in sim.ts, game.ts, and db.ts that pay
-for the new lines.
+STEP 1 - LOAD CONTEXT (through agents, never planning docs or coordinators directly):
+- One Explore agent reads this file, its paired QA, state.md, the matching progress row,
+  implementation-plan.md review table, ux-spec.md and the three content/art artifacts.
+- It reads the following existing seams and prior outputs, returning exact exports,
+  readers/writers, pin sites, known failure behavior and a promised-versus-tree table:
+  - EXISTING server/db.ts ensureSchema/exportAccountData; server/ws_auth.ts injected
+    bankBonusForAccount callback; server/main.ts binding to computeBankBonus(await
+    bankBonusFactsForAccount(id)); server/bank_entitlements.ts; server/CLAUDE.md.
+  - EXISTING server/serial_writer.ts::createKeyedSerialWriter,
+    server/periodic_save_flush.ts::runPeriodicSaveFlush, server/background_db_gate.ts,
+    server/db_connection_budget.ts, server/cached_read.ts, server/guild_bank_lazy_loader.ts.
+    FIFO does not coalesce work; periodic saves are not cross-write atomicity.
+  - EXISTING server/account_export_state.ts, server/character_delete_db.ts,
+    server/retention_sweep.ts, server/concurrent_indexes.ts; private-schema PG test
+    recipe in tests/server/storage_purchase_db.pg.test.ts.
+  - PRIOR 01-06 src/sim/freehold/{types.ts,state.ts,instance.ts,hearth_key.ts,index.ts};
+    EXISTING src/sim/professions/farm_persist.ts and farm_load_report.ts;
+    src/sim/dev_commands.ts, server/sim_boot_config.ts, headless/CLAUDE.md;
+    tests/monolith_budget.test.ts, tests/sim_context.test.ts and
+    tests/professions_farming_state.test.ts.
+- Reports go to the session scratchpad; replies carry a path and short summary.
+
+<!-- core-bridge-context:start -->
+BRIDGE SOURCE INVENTORY (verified engineering contract under approved D27-D75):
+- The current offline src/main.ts constructor supplies devCommands: import.meta.env.DEV;
+  it does NOT receive server ALLOW_DEV_COMMANDS. Read it through the Explore agent.
+- EXISTING src/sim/types.ts::SimConfig and src/sim/sim_context.ts expose devCommands;
+  server/sim_boot_config.ts uses the strict process.env.ALLOW_DEV_COMMANDS === '1'.
+- EXISTING vite.config.ts::diagnosticsCapturePlugin, scripts/lib/diagnostics_capture_guard.mjs
+  ::diagnosticsReadAllowed, the file-local defineConfigObject helper in tests/vite_dev_watch.test.ts,
+  tests/dockerignore_context.test.ts and .dockerignore provide the exact Vite/loopback/
+  config-shape/import-admission contracts. Installed Vite and official configureServer
+  docs must still match when implementation begins; a DEV build alone is not proof of
+  the local server endpoint. No preview or production middleware may expose it.
+<!-- core-bridge-context:end -->
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last:
-tests/sim_context.test.ts if a primitive is added, tests/monolith_budget.test.ts):
-- Agent DB: server/freehold_db.ts (FREEHOLD_SCHEMA with account_freeholds exactly as
-  progress.md lists it: tier, layout JSONB, trophies JSONB, condition, condition_stamp_day,
-  ledger_paid_week, prepaid_weeks, last_seen_day, hearth_key_ready_ms, visit_policy, rev,
-  updated_at; the keep-forever DDL comment; CREATE INDEX IF NOT EXISTS on
-  ledger_paid_week; FreeholdRow; freeholdForAccount(pool, accountId); upsertFreehold(pool,
-  row, expectedRev) as ONE statement whose WHERE carries the rev compare-and-swap and
-  whose result reports refused-stale, never merges), the one ensureSchema line in
-  server/db.ts placed after SCHEMA with the FK comment, the exportAccountData row (the
-  projection strips nothing hidden today but goes through one named projector so a later
-  hidden field has a home), tests/server/freehold_db.test.ts (fake pool: DDL text pins for
-  the columns, the CHECKs, the index, the keep-forever comment; the CAS refusal; the
-  export row) and tests/server/freehold_db.pg.test.ts (private schema, drop in beforeAll
-  and afterAll: round trip, the stale-rev refusal against real Postgres, ON DELETE CASCADE
-  proven by deleting the account).
-- Agent SIM: src/sim/freehold/state.ts (loadFreehold(ctx, ownerKey, raw) as the ONE
-  write-in path through normalizeFreehold; serializeFreehold(ctx, ownerKey) as a deep
-  clone, null when unloaded; evictFreehold; the Inn Room default for a pre-feature
-  account: tier 0, empty layout, three empty plinths, condition 100), the PersistedFreehold
-  shape in src/sim/freehold/types.ts (optional fields, zero-default omission,
-  condition_stamp_day, last_seen_day, and ledger_paid_week as realm-calendar integers,
-  hearth_key_ready_ms as an absolute ms in the host clock base), setFreeholdTier(ctx,
-  ownerKey, tier) as the ONE tier writer (re-derives budget, plinths, and slots from
-  FREEHOLD_TIERS, never touches the layout; the dev grant here and Phase 15's Charter
-  grant both call it), the /dev freehold <tier> arm in src/sim/dev_commands.ts
-  handleDevChat (offline and the server dev path share the Sim's devCommands flag fed
-  from ALLOW_DEV_COMMANDS=1; refused without it), the addPlayer option that carries the raw row and
-  calls loadFreehold once per owner key (a second character of the same account online
-  finds the record already loaded and must NOT reload it), the dev-channel dropped-row
-  warn on the farm_load_report shape, the sim.ts extraction that pays for the option
-  line and the lowered sim.ts ceiling, tests/freehold_state.test.ts (pure round trip;
-  one-corrupt-dimension-per-arm: bad tier, unknown furnishing id, unknown plinth id, a
-  cell outside every room, condition above 100 and below 0, a negative or future
-  condition_stamp_day, last_seen_day, or ledger_paid_week, prepaid_weeks above 4, a
-  non-finite or far-future hearth_key_ready_ms, an unknown visit_policy; each arm drops
-  or clamps its own field and never the whole house; the
-  pre-feature account loads the Inn Room default; the cross-clock pin; the real-Sim
-  round trip through addPlayer; same seed same state), and
-  tests/freehold_offline_default.test.ts (D16: a Sim constructed the way src/main.ts
-  constructs the offline world, and the headless env's Sim, each start with the default
-  Inn Room record under the entity:<pid> owner key with no raw row; and no file under
-  src/game/, src/main.ts, src/net/, or headless/ that names the freehold also touches
-  localStorage, sessionStorage, or indexedDB, scanned with comments stripped and failing
-  closed on an unreadable file), and tests/freehold_dev_grant.test.ts (setFreeholdTier
-  re-derives the tier record and keeps the layout; /dev freehold cottage succeeds on a
-  devCommands Sim and is refused on a Sim without the flag; an unknown tier refuses; the
-  server path shares the gate through server/sim_boot_config.ts).
-- Agent SERVER-SAVE: server/freehold_persist.ts (a createKeyedSerialWriter<string> keyed
-  by owner key; saveFreehold(host, ownerKey, reason) that serializes through the sim,
-  stamps last_seen_day from the realm day at join and at leave (the away-pause source
-  Phase 13 reads), bumps rev, calls upsertFreehold with the rev it loaded, and on a stale
-  refusal warns
-  once on the dev channel and reloads the row into the live map rather than retrying
-  blind; hooks: the autosave cadence inside runPeriodicSaveFlush (exactly once per flush,
-  only for dirty owners), the leave path, saveAll on SIGINT/SIGTERM; evictFreehold when
-  the account's last character leaves), the fresh-join read beside bankBonusForAccount in
-  server/ws_auth.ts threaded through joinMeta into addPlayer, the game.ts extraction that
-  pays for the join and save lines with a lowered game.ts ceiling,
-  tests/server/freehold_persist.test.ts (a fake host: dirty-only writes, the three
-  moments, the stale-rev warn-and-reload, eviction only after the last character,
-  last_seen_day stamped at join and at leave, nothing per tick touches the pool).
-Every agent writes any report longer than a screen to a file and replies with the path
-plus a short summary. Never `mode: "plan"` on teammates.
+Deliverables (at most five):
+1. NEW server/freehold_db.ts::FREEHOLD_SCHEMA, FreeholdRow, freeholdForAccount and
+   upsertFreehold. account_freeholds starts with primary key (account_id, plot_index),
+   a unique opaque public plot_id, FK account deletion, schema_version and distinct
+   durable_rev/wire_rev. Initially admit plot_index 0 only; 42 admits the second plot
+   without changing identity. Carry tier, layout/trophies JSONB, condition,
+   visit_policy, updated_at and explicit upkeep binding state.
+   Initial rows are unbound_no_history with no upkeep-derived day/week stamp or credit.
+   Bound checkpoint/credit shapes retain source calendar/schema/reset-policy identity.
+   07b owns account presence/absence/grace history and 07c owns account+tier marks; neither
+   belongs to this plot row or its serialization. 13/13a own bound upkeep migration.
+   Add idempotent shape CHECKs and a query/index inventory for account lookup,
+   public-plot lookup, CAS and reverse FKs. No speculative ledger_paid_week index. The same storage output produces the separate
+   account Hearth schema below; plot saves never write its committed private mirror.
+2. src/sim/freehold/state.ts::normalizeFreehold/loadFreehold/serializeFreehold/evictFreehold
+   and PersistedFreehold: deep-copy serialization and versioned load result distinguish
+   absent legacy data, safely repaired known scalar, unsupported version, malformed
+   owned content and oversize. Only ABSENT pre-feature data creates the Inn default.
+   Preserve unknown/newer/oversized owned rows in their original durable location, plus
+   bounded diagnostics/reference; the bounded recovery metadata need not contain the
+   oversized original. Never reinterpret unsupported checkpoint/credit shape as absence;
+   expose read-only recovery instead of replacing or silently dropping possessions.
+   Enforce content-derived rows/IDs/string/encoded-byte ceilings before deep allocation,
+   mutation, save and decode. Publish the largest legal and over-limit fixtures in
+   tests/freehold_state.test.ts and the measured bound rows in content-numbers-workbook.md.
+3. NEW server/freehold_persist.ts owns bounded per-plot loading/saving: coalesce to one
+   running write plus one pending dirty generation, serialize only inside admitted work,
+   clear only the committed generation, reuse existing background admission/deadlines
+   and pool. Fresh-join account lookup is bounded/single-flight and resumes reuse memory.
+   Consume 07b committed account lifecycle revisions; plot saves never advance
+   account presence or create return grace. Preserve explicit unbound/no-history until
+   the accepted binding is committed; serving realm alone cannot reinterpret stamps. Stale durable CAS quiesces mutations and reconciles safely; never
+   blindly overwrite acknowledged live state. 07a owns all cross-record commits.
+4. Wire this plot save lifecycle into periodic dirty save, leave and shutdown; preserve dirty
+   work on failure/cancellation. Evict only after active sessions/claims, in-flight
+   operations and pending writes release references, so later offline-owner visitors
+   retain the loaded plot. Export every private owned row/recovery artifact through the
+   explicit table loaders wired into exportAccountData, not the existing character-only
+   projector. Distinguish soft deactivation/restoration, hard deletion and anti-replay
+   retention; soft deactivation preserves all rows, character deletion preserves account
+   state, and true account deletion uses the reviewed cascade contract. 07b/07c extend
+   these safe exports. Keep original operation identities through rollback quiescence.
+   Report queue wait, dirty age, bytes, admission/pool wait, timeout/CAS/failure counts
+   without player data. account_freeholds is bounded plots per account, keep-forever.
+5. setFreeholdTier remains the one tier writer. Deliver the explicit housing-only
+   developer authorization bridge specified below, plus /dev freehold <tier> behind
+   BOTH general devCommands and a separate nonpersisted freeholdDevGrantEnabled
+   permission. A fresh offline/headless Sim starts in its entity-keyed Inn Room and
+   persists nothing even when authorization fails. The exact authorization/constructor,
+   real command and browser fixtures prove no direct tier injection or paid receipt.
+   All fixtures use approved state numbers; ordinary generic dev behavior is unchanged. The separately flag-authorized server dev
+   command still uses the ordinary tier setter and server save contract, without a
+   browser-derived permission or invented paid service receipt.
 
-INVARIANTS THIS PHASE MUST KEEP:
-- Determinism: no wall clock in src/sim/; day and week stamps are realm-calendar
-  integers (ctx.resetDay) and hearth_key_ready_ms is an absolute ms in the host's own
-  ctx.lockoutNowMs() base following the facet's housingNowMs() clock-base contract; the
-  load path draws no Rng and re-anchors, never re-rolls.
-- D5 and D16: the freehold is ACCOUNT state in its own row, never in the character blob;
-  the live record is keyed by owner key so two characters of one account share it; the
-  server row is the truth and the live map is a cache; a stale write is refused, never
-  merged; offline and headless hosts persist NOTHING and start every entry with the
-  default Inn Room record (pinned).
-- Never destroys: normalizeFreehold drops or clamps the offending FIELD; a pre-feature or
-  malformed row loads the Inn Room default rather than nothing; no path removes a
-  furnishing or trophy except the owner's own command (Phase 08).
-- The persistence gate (docs/freeholds/implementation-plan.md "Cross-cutting gates"):
-  additive idempotent inline DDL only, JSONB back-compat for every older row, an index
-  for every new predicate, a keep-forever DDL comment (this table never grows per
-  event), the exportAccountData row, the fake-pool round trip plus the pg-armed twin.
-- Server hot path: nothing per tick queries Postgres; the join read is ONE round trip;
-  saves ride the existing cadence through the serial writer.
-- Server authority and the token firewall as state.md scopes it: no on-chain vocabulary
-  in src/sim/ (wallet, token, $WOC, mint, holder, marketplace, on-chain, Solana, the
-  on-chain Freehold Charter deed); the Book of Deeds (deed ids, deedsEarned) is game
-  content and not firewall vocabulary; the row carries no on-chain field and no price;
-  the flag stays default off and untouched.
-- i18n: the policy in docs/freeholds/implementation-plan.md; this phase adds no player
-  string (the rev warning is dev-channel English).
-- Monolith ratchet: src/sim/sim.ts, server/game.ts, and src/net/online.ts sit at ZERO
-  slack; every option, join, or save line added is paid for by an extraction, then LOWER
-  the ceiling.
-- The word "phase" appears in no code, comment, commit, or PR text.
+ACCOUNT HEARTH AUTHORITY (C01, within existing schema/lifecycle outputs):
+07 owns NEW server/freehold_hearth_db.ts with FREEHOLD_HEARTH_SCHEMA,
+loadFreeholdHearth and advanceFreeholdHearthOnClient. The one account_freehold_hearth
+row uses account_id as PK/FK, ready_at_ms and a monotonic revision. Initial absent
+legacy state is ready with revision zero; lazy first-use row initialization uses an
+account-keyed conflict-safe insert inside the admitted transaction, never a GET write; unsupported future data is preserved under
+07's read-only recovery contract. Read one authoritative database epoch timestamp after
+locking the account participant; clock regression cannot make an unready key eligible,
+and accepted updates never decrease ready_at_ms or revision. Offline/headless use
+isolated injected host-clock state and the same state.md duration, never online SQL.
 
-Out of scope (do NOT do in this phase):
-- Placement validation, the layout rows' semantics, the freeholdState descriptor, and the
-  fhold self key (Phase 08): this phase stores the layout JSONB opaquely and validates
-  only ids and bounds.
-- Condition derivation and ledger math (Phase 13): this phase stores condition,
-  condition_stamp_day, ledger_paid_week, prepaid_weeks, and last_seen_day as columns and
-  clamps them; the Hearth Key's Phase 06 cooldown logic simply reads and writes
-  hearth_key_ready_ms on the record now, with no other Hearth Key change.
-- Any Charter or tier grant beyond the dev command (Phase 15 reuses setFreeholdTier).
-- The Charter grant and any Claudium path (Phase 15); visit_policy semantics (Phase 18):
-  stored, defaulted to friends, not read.
-- Any REST route, any retention prune (the table is keep-forever), any change to the
-  character save transaction.
-- Any offline or headless persistence (D16: none exists and none is added; a fresh Sim
-  starts with the default record).
+Only 07a's accepted remote Hearth entry may check and advance this participant in the
+same transaction as accepted entry effects. The cached private
+fhold/myFreehold.hearthKeyReadyAtMs and hearthKeyRevision are committed UI mirrors,
+excluded from serializeFreehold, plot autosave and transfer manifests. A cached value
+never authorizes. Refused, already-home and physical-gate entry do not advance it.
+Transfer copies or clears neither account's cooldown; every alt and later destination
+uses the same account row. Character deletion preserves it; account export, soft
+deactivation, restoration and true account deletion each have explicit tested handling.
+
+Use bounded indexed account lookup and admitted single-flight mirror loads, actual
+PK/FK wait inventory, keep-forever account row ownership and capability-aware rollout.
+NEW tests/server/freehold_hearth_db.test.ts and freehold_hearth_db.pg.test.ts prove
+same-account cross-alt/process/destination races, absent/unsupported load, rollback,
+clock regression, stale UI revision, commit-before-ACK and lifecycle/export behavior.
+This 07 pair proves the schema, load, account helper and lifecycle primitives now;
+07a owns the subsequent accepted-entry composition and complete entry races.
+Real-PG tests execute with TEST_DATABASE_URL; query/byte/lock evidence and before/final
+DB, persistence and security review are required. No extra receipt per routine entry
+or plot-keyed cooldown store is introduced.
+
+<!-- core-dev-bridge:start -->
+HOUSING-ONLY DEVELOPER BRIDGE (part of deliverable 5; NEW APIs below):
+- The TOOLING owner creates scripts/lib/freehold_dev_authorization.mjs and
+  scripts/lib/freehold_dev_authorization.d.mts exporting freeholdDevAuthorizationPlugin
+  ({ enabled }) and a directly tested request predicate. It registers configureServer
+  only with apply: 'serve'; never configurePreviewServer or a production/game route.
+  The Vite composition passes enabled: process.env.ALLOW_DEV_COMMANDS === '1' and
+  preserves literal defineConfig({ ... }), including its AST-pinned object shape.
+  Add the new Vite-imported helper and declaration to the exact .dockerignore admission
+  and tests/dockerignore_context.test.ts obligation; no unrelated build context widening.
+- The endpoint is exactly GET /__freehold/dev-authorization. Unrelated paths fall through;
+  wrong methods, missing/disabled opt-in or failed diagnosticsReadAllowed socket+Host
+  checks refuse. Test the real remoteAddress plus Host, not Origin/Host claims alone.
+  Only an explicitly enabled loopback request returns the exact affirmative JSON
+  {"freeholdDevGrantEnabled":true}, with JSON content type and Cache-Control: no-store.
+  Read no account, tier, receipt, purchase or arbitrary environment data. There is no
+  public VITE_* substitute and no preview/production endpoint, even with the shell flag.
+- The BOOTSTRAP owner creates src/game/freehold_dev_bootstrap.ts exporting injected,
+  testable resolveOfflineFreeholdDevGrant. Before the offline Sim construction, require
+  import.meta.env.DEV and an HTTP(S) loopback DOCUMENT origin; otherwise do not fetch.
+  Fetch only the same-origin endpoint without credentials, redirects or caching. Accept
+  only the exact affirmative shape. Missing endpoint, HTML fallback, refused/malformed/
+  failed/redirected/cancelled request resolves false and ordinary Inn initialization
+  continues. Tie cancellation to the entry lifecycle, so a late reply cannot configure
+  a different entry. Introduce no new timeout literal or additional cosmetic settle wait.
+- The SIM owner adds readonly, nonpersisted SimConfig/Sim/SimContext
+  freeholdDevGrantEnabled, default false, with live context/fake-host pins. NEW
+  src/sim/freehold/dev_grant.ts requires BOTH ctx.devCommands and this permission before
+  calling setFreeholdTier; src/sim/dev_commands.ts contributes only thin delegation.
+  Authorization stays outside the tier setter because independent legitimate service
+  effects use it too. server/sim_boot_config.ts sets the housing permission from the
+  same exact server flag, preserving its existing general-dev policy. Neither permission
+  alone suffices. The browser permission is for this offline Sim only, never a user
+  setting, local/query storage flag, UA/window.__game override, paid receipt or online
+  authority; offline developer fixture tiers never become online persisted ownership.
+- The INTEGRATION owner composes the bootstrap before the existing offline constructor,
+  pays src/main.ts/src/sim/sim.ts additions through behavior-preserving sibling extraction
+  and lowered/rechecked monolith ceilings, updates SimContext pins and owns real browser
+  command proof. Generic /dev commands and ordinary Inn startup are unchanged.
+  Reviewable launch: ALLOW_DEV_COMMANDS=1 npm run dev -- --host 127.0.0.1.
+  Screenshot setup first calls existing assertLoopbackUrl, invokes the real
+  /dev freehold cottage chat route and reads ordinary world state; no direct setter,
+  fake receipt, window.__game mutation or second offline entry is an authorization path.
+
+BRIDGE VALIDATION AND REVIEW EVIDENCE:
+- NEW tests/freehold_dev_authorization.test.ts and tests/freehold_dev_bootstrap.test.ts
+  cover exact flag1 versus unset/0/other strings, actual socket and forged Host/Origin,
+  absent/malformed/external/wildcard Host, wrong method/path, JSON shape/extra fields,
+  no-store, redirect/HTML/error/refusal/cancellation and unsupported origin/protocol.
+- Extend tests/freehold_dev_grant.test.ts with both permissions independently false and
+  true, the real chat delegation and sole setter; tests/freehold_offline_default.test.ts
+  proves permission failure does not prevent Inn. Preserve generic dev-command behavior.
+- Extend tests/vite_dev_watch.test.ts and tests/dockerignore_context.test.ts. Real
+  flag-off browser starts in Inn and refuses Cottage; real flag-on loopback browser
+  starts in Inn, then the actual command grants Cottage. Production build and preview
+  expose no endpoint even with flag1. Browser developer fixtures create no paid receipts or
+  online persisted entitlement, and permission is absent from serialization/export/wire.
+- Run npx vitest run tests/freehold_dev_authorization.test.ts
+  tests/freehold_dev_bootstrap.test.ts tests/freehold_dev_grant.test.ts
+  tests/freehold_offline_default.test.ts tests/vite_dev_watch.test.ts
+  tests/dockerignore_context.test.ts, plus tests/sim_context.test.ts and the real browser
+  fixtures owned above. Record executed browser server modes and command outcomes;
+  source-string checks alone do not prove loopback/refusal/build absence.
+- Add frontend-seam-reviewer for bootstrap/cancellation/browser input behavior alongside
+  the complete security, architecture, parity and test reviewers already required.
+<!-- core-dev-bridge:end -->
+
+INVARIANTS AND CLOSED HANDOFFS:
+- This file owns persistence plumbing only. 07a must land before online operations
+  transfer character items or money into housing. Separate autosave is never a transfer
+  transaction. The live wire revision is not the database expected revision.
+- Raw recovery data is not viewer JSON, is bounded before parse, and is never silently
+  written back as a default on older servers. Export/delete cover its ownership.
+- Every persisted collection has a schema/version/entry/byte bound and provenance in the
+  content-numbers workbook. Query/index evidence names real predicates and row counts;
+  large live-table index additions follow concurrent_indexes.ts.
+- No per-tick SQL, independent pool or claimed guaranteed reserve. All background work
+  uses shared admission and workload-specific timeouts; boot DDL retains its allowance.
+- Pure sim behavior uses SimContext, no wall clock or host imports, no new Rng draw.
+  IWorld is the renderer/UI seam; BOTH worlds and all facet/command/event pins change
+  together. No internal account or guild ownership key crosses a public descriptor.
+- Module-first siblings own logic. A coordinator edit is paid by a behavior-preserving
+  extraction and a remeasured/lowered ceiling; never raise a ceiling without permission.
+- Every player string resolves through an English hudChrome.housing.* key; use the
+  tooltip-writing skill for every tooltip. Shared API/kind keys retain their own catalog.
+  Regenerate artifacts; never hand-edit generated files or locale overlays.
+- The state token firewall applies to on-chain vocabulary, with the Book of Deeds
+  gameplay exception. Housing never sells power or destroys a home for condition.
+- Never add a balance literal absent from state or a source/approved calibration row.
+  A pending external acceptance has a concrete artifact, owner and closed release gate;
+  it is not an unresolved implementation choice. Feature flags default off.
+
+
+CORE STORAGE CAPABILITY AND LIFECYCLE CONTRACT:
+- NEW FUTURE docs/freeholds/persistence-rollout-contract.md is part of deliverable 4: name
+  minimum capable release, old07/future/populated fixtures, source binding, export and
+  soft-deactivate/restore/hard-delete behavior, rollout and rollback quiescence. The old
+  release lacks housing behavior and replaces characters.state wholesale; normalized
+  table preservation alone cannot establish mixed-release correctness. Do not enable
+  housing on an incapable writer/exporter or promise it continues lifecycle semantics.
+- Unknown future data remains unchanged/read-only. Account/tier writer CHECKs restrict
+  new writes without filtering away unsupported stored identifiers. Add schema fragments
+  under ensureSchema advisory serialization after FK parents and before final growth
+  guard; preserve repeated-boot/additive compatibility and concurrent-index requirements.
+- 07b is the sole account lifecycle/history authority; 07c is sole first-tier eligibility
+  authority. 07a supplies both transaction composition. The browser-only dev bridge does
+  not grant online account binding, import fixture state or mint receipts.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
-- Run: `npx tsc --noEmit`; `npx vitest run tests/server/freehold_db.test.ts
+- npx tsc --noEmit; npx vitest run tests/server/freehold_db.test.ts
   tests/server/freehold_persist.test.ts tests/freehold_state.test.ts
   tests/freehold_offline_default.test.ts tests/freehold_dev_grant.test.ts
-  tests/dev_commands.test.ts tests/server/main_retention_wiring.test.ts
-  tests/server/http/surface_inventory.test.ts tests/server/http/error_codes.test.ts
-  tests/api_error_code_parity.test.ts tests/architecture.test.ts tests/sim_context.test.ts
-  tests/monolith_budget.test.ts tests/localization_fixes.test.ts
-  tests/dungeon_instance_disconnect_reset.test.ts tests/professions_farming_state.test.ts
-  tests/env_protocol.test.ts`; then `npm run db:up` and
-  `TEST_DATABASE_URL=postgres://eastbrook:change-me@localhost:5433/eastbrook npx vitest run
-  tests/server/freehold_db.pg.test.ts`; a same-seed determinism case lives in
-  tests/freehold_state.test.ts.
-- Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
-  migration-safety (the DDL, the JSONB shape, the load path), database-performance-reviewer
-  (the join read, the CAS upsert, the index, the save cadence), privacy-security-review
-  (server/ and the export row, the dev-command gate), server-hot-path-reviewer (the
-  per-session join read and the per-flush save path), and architecture-reviewer for the
-  src/sim/ slice (the addPlayer option, the tier setter, the dev arm, and the sim.ts
-  extraction). Prompt each for COVERAGE not filtering;
-  each writes its report to a file. Do not commit until no BLOCKING issues remain.
+  tests/dev_commands.test.ts tests/professions_farming_state.test.ts
+  tests/architecture.test.ts tests/sim_context.test.ts tests/monolith_budget.test.ts
+  tests/localization_fixes.test.ts tests/env_protocol.test.ts
+  tests/server/main_retention_wiring.test.ts.
+- npm run db:up; with TEST_DATABASE_URL set to the disposable development database,
+  npx vitest run tests/server/freehold_db.pg.test.ts. Use a private schema, assert
+  tests ran, and clean it after. Record real plans for account/public plot/CAS queries,
+  bounded row/byte/query counts, delayed-DB coalescing and cancellation evidence.
+- Invoke database-performance-reviewer before database/workload decisions and on the
+  finished diff whenever this file touches SQL, storage shapes, queues, locks or growth.
+- Required COVERAGE reviewers: migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, architecture-reviewer, cross-platform-sync, test-coverage-auditor, qa-checklist.
+  Each reports all findings to a file. The parent applies ALL findings including nits,
+  then a FRESH reviewer reads the fixes. No unreviewed fix is accepted.
+- Run node scripts/gate_select.mjs before completion; npm run gate is the deeper option.
+  Record exact commands, exit codes, exercised/omitted suites and material risks.
 
 STEP 4 - COMMIT CADENCE:
-5 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
-`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- feat(server): add the account_freeholds table with rev-fenced reads and writes
-- feat(sim): load, normalize, serialize, and evict the freehold record by owner key
-- feat(server): persist the freehold through a per-owner serial writer at join, autosave, leave, and shutdown
-- feat(sim): add the /dev freehold tier grant through the one tier setter
-- test(sim): pin the default Inn Room record on a fresh offline and headless Sim
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+- Commit coherent dependency-first chunks with Conventional Commits scope and a body,
+  explicit paths, never git add -A, no coauthor trailer and no word "phase" in a message.
+  Separate extraction/parity provenance if applicable. Run npm run ci:changed after
+  the last commit and read its exit code. Do not push or open/merge a PR.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] FREEHOLD_SCHEMA carries every column in progress.md "07 Persistence" with the JSONB
-  CHECKs, the keep-forever comment, and the ledger_paid_week index; applied by
-  ensureSchema after SCHEMA; the DDL text is pinned by literal in
-  tests/server/freehold_db.test.ts.
-- [ ] /dev freehold cottage sets the tier through setFreeholdTier on a devCommands Sim
-  and on the server dev path under ALLOW_DEV_COMMANDS=1, and is refused without the flag
-  (pinned); last_seen_day is written at join and at leave (pinned).
-- [ ] freeholdForAccount runs once at fresh join beside bankBonusFactsForAccount and lands
-  in the live map through loadFreehold; a resume reloads nothing; a second character of
-  the same account shares the loaded record (pinned).
-- [ ] upsertFreehold refuses a stale rev (fake pool AND real Postgres); the server warns
-  on the dev channel and reloads; no merge path exists.
-- [ ] normalizeFreehold has one negative case per arm and never drops the house; a
-  pre-feature account loads the Inn Room default; the cross-clock pin passes.
-- [ ] exportAccountData includes the row; deleting the account cascades the row (pg twin);
-  tests/server/main_retention_wiring.test.ts is unchanged and keep-forever is stated in
-  the DDL.
-- [ ] A house survives a server restart and a relog online (the pg round trip plus the
-  join read); a fresh offline Sim and the headless env start with the default Inn Room
-  record and no offline or headless code path writes storage for it (pinned in
-  tests/freehold_offline_default.test.ts).
-- [ ] All STEP 3 suites green; the reviewers report no BLOCKING; sim.ts and game.ts
-  ceilings are LOWER than before.
+STEP 5 - ACCEPTANCE CRITERIA:
+- [ ] Reapplying DDL is safe; primary/public identities, JSONB checks and actual-query
+  indexes pass fake-pool and real-PG tests. Character delete preserves, account delete
+  cascades, and export includes all owned state/recovery records.
+- [ ] Maximum legal rows load unchanged; unsupported, unknown-owned and oversized rows
+  remain recoverable/read-only without inventory loss or destructive autosave. Each
+  scalar repair test proves unrelated fields survive; cross-clock fixtures pass.
+- [ ] Slow DB produces one running plus one pending generation; new edits during write
+  survive, shutdown/leave use the same queue, no client is held while awaiting a queue,
+  and eviction waits for every live claim/session/write reference.
+- [ ] 07b account lifecycle and 07c arrival authority stay outside plot serialization.
+  Explicit unbound/no-history, safe exports and capable-release rollback are pinned. Fresh owner sessions use
+  a bounded single-flight load; resume/second character do not overwrite newer memory.
+- [ ] Housing dev grant requires both distinct permissions; exact flag/loopback bridge,
+  ordinary Inn preservation, cancellation, strict payload and production/preview absence
+  are proven by scoped and real-browser tests. Offline/headless persist nothing;
+  global production entry remains gated until 07a and every byte/row bound has evidence.
+- [ ] All scoped checks and the shared contribution gate passed, every required review
+  returned, and the independent fix review found no remaining finding.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 07, notes, deferrals) and
-  docs/freeholds/state.md (the per-phase ledger row 07: new files, the table, the
-  addPlayer option name, the tier setter name, the dev command, the offline default
-  pin).
-- Record surprising rules learned in memory for the next session.
+- Update progress.md row 07 and state.md's implementation ledger with exact files,
+  exported symbols, schema/wire/command keys, measured bounds, artifacts and evidence.
+  Keep planning "settled" distinct from implementation "built". Record no anonymous
+  deferral; carry the named external acceptance artifact/release gate when applicable.
+- Record useful traps in the freeholds memory entry within the authorized scope.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+End with status, files, commands/outcomes, review verdicts, release evidence still required,
+and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-07-qa.md
 
 STOPPING RULES:
-- Stop and ask if the DDL would need anything non-additive (a column type change, a
-  dropped constraint) or if the row cannot be keyed by account_id alone.
-- Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
-- Do not push the branch; never merge a PR.
+- Preserve unrelated user work. Stop for an unapproved destructive schema change or a
+  required raised monolith ceiling; explain the exact constraint and concrete evidence.
+- If a required artifact or runtime proof fails, record FAIL and repair it; do not claim
+  approval, invent numbers or silently waive checks. Never push or open/merge a PR.
 ```

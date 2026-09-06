@@ -3,12 +3,70 @@
 Wave A, the Cottage MVP. The spec is `progress.md` "17 Trophies"; the decision is
 `state.md` D19 (trophies are furnishing-shaped records, never items: `trophy_eligibility.ts`
 maps deed ids, illuminated Reliquary pages, `slain:*` marks, owned mounts, and the
-`perfected` stamp to trophy prop ids; `syncTrophyUnlocks(ctx, meta)` runs after the join
-retro block and on first entry, reads only, and records unlocks with `retro: true`
-events; trophies occupy plinth slots, cost no decor points, and are never tradable). This
-phase ships the MVP trophy families, the retroactive grant, plinth placement through the
-layout core, the provenance tooltip, the Trophies tab, and stand-in props. The Legend
-Stand, the Harvestmaster sheaf, and the remaining families are Phase 23.
+`perfected` stamp to trophy prop ids; `syncTrophyUnlocks(ctx, meta)` reads an authoritative account projection after join
+retro, first entry and source-change invalidation, preserves original provenance and
+marks only historical additions as `retro: true`; trophies occupy plinth slots, cost no decor points, and are never tradable). This
+phase ships complete source eligibility with generic family displays, account retro/live grants,
+record-only plinth placement, honest provenance and the Trophies tab. Bespoke Legend
+Stand, Harvestmaster sheaf and advanced display forms arrive in Phase 23.
+
+## Exact screenshot integration contract
+
+These are NEW planned helper APIs.09 introduces the common helper, constructor,
+visual selector and one import/spread in scripts/pr_shot_targets.mjs, initially with
+its functional interior-only capture subset.11 extends that same
+scripts/lib/pr_shot_housing.mjs build target;16/17/18 append their own functional
+descriptors as their UI lands. Never register a later nonfunctional UI target. No new screenshot runner or multi-image capture API is introduced.
+The registry has one optional-clip result and one image per uniquely keyed variant.
+
+Registration is cumulative by actual producer: file 09 registers the interior
+baseline subset (12 variants); file 11 extends the same target to 89; file 16
+reaches 178; file 17 reaches 226; file 18 reaches 330. File 20 verifies the complete
+330-variant inventory. Earlier files require only their registered working subset,
+never nonfunctional future UI. These are derived inventory counts, not new gameplay
+or tuning values.
+
+The common housingVariants, housingVisualWhen and supplied beforeLoad are
+owned initially by09 and extended by11 exactly as ux-spec.md section11 defines them.
+Append only this file's implemented target; validate the registered cumulative subset
+of 226 working variants. Later UI targets register only when their producer lands:
+
+```js
+{
+  key: 'housing-trophies',
+  label: 'Trophy ownership, silhouettes, provenance and plinths',
+  when: [
+    ...housingVisualWhen,
+    'src/ui/hud/housing/trophy_',
+    'src/ui/hud/housing/furnishing_palette_',
+    'src/sim/freehold/trophies.ts',
+    'src/sim/freehold/trophy_eligibility.ts',
+    'src/sim/content/freehold/trophies.ts',
+  ],
+  variants: [
+    ...housingVariants([
+      'trophies-owned', 'trophies-unearned-known', 'trophies-hidden',
+      'trophies-provenance-known', 'trophies-provenance-unknown',
+      'trophies-maker', 'trophies-possession-inactive',
+      'trophies-plinth-preview', 'trophies-replace-review',
+      'trophies-clear-review', 'trophies-refreshing',
+    ]),
+    ...housingVariants(['trophies-provenance-known'], { theme: 'parchment' }),
+    ...housingVariants(['trophies-provenance-known'], { theme: 'highContrast' }),
+    ...housingVariants(['trophies-provenance-known'], { forcedColors: 'active' }),
+    ...housingVariants(['trophies-provenance-known'], { motion: 'reduce' }),
+    ...housingVariants(['trophies-grid-focused'], { input: 'keyboard' }),
+  ],
+  capture: captureHousingTrophies,
+},
+```
+
+Every captureHousing* stages exactly variant.scene through its real UI/authority
+fixture, asserts the matching state and returns one optional-clip result. Interior
+scenes use 09's full-viewport {}; UI scenes return { clip: '#ui' }. Missing required
+after-state throws. The registered working subset must include every exact
+target/variant and identity dimension for its producers;20 verifies the full union.
+No callback side shot or sequence-to-last-state substitute.
 
 ### Starter Prompt
 ```
@@ -24,6 +82,16 @@ Goal: grant every existing deed, illuminated page, realm-rare mark, mount, armor
 and curator rank its trophy retroactively on first entry, at no cost and with no Rng,
 let the owner set trophies on plinths that cost no decor budget, show where each one
 came from, and keep trophies out of every item, trade, and market path.
+
+Asset execution: every step that creates or regenerates shipping GLBs, reference
+artwork, icons or images MUST be done by Codex, not Claude. Use
+.agents/skills/woc-image-to-glb/SKILL.md and its shared canonical workflow for GLBs;
+use Codex image generation for raster artwork. Capture actual rendered screenshots
+as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
+phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
+icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
+That final sweep does not postpone artwork owned here. 44b revisits the completed result
+for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -41,6 +109,9 @@ STEP 0 - PRE-FLIGHT:
   the achievements system design, the content and pins/content gotcha clusters, parity
   goldens, the monolith ratchet, test-pin traps.
 
+- Invoke database-performance-reviewer before storage/query/lock/cadence decisions;
+  send the scoped diff surface and approved artifacts, then review the finished diff.
+
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "17 Trophies"), and this
@@ -57,6 +128,9 @@ Spawn one Explore agent to read and summarize:
   (ownedMounts), src/sim/types.ts (the perfected stamp on item instances, the Maker's
   Bond craftedBy field, the deedUnlocked and reliquaryUnlock SimEvent variants as the
   id-only models)
+- server/db.ts (listCharactersAllRealms is a full-state source to avoid), the existing
+  account/character keyset and concurrent-index seams, shared admission/cache budgets,
+  source-change/save/create/delete/session hooks and their literal pins
 - the join retro block in src/sim/sim.ts (grep seedItemDiscovery, retroFallbackGrants,
   evaluateDeedsFor with retro true) and the first-entry hook in
   src/sim/freehold/instance.ts (Phase 05)
@@ -76,8 +150,8 @@ Spawn one Explore agent to read and summarize:
 - src/ui/i18n.catalog/hud_chrome.ts (the housing namespace), src/ui/world_entity_i18n.ts
   (the deed and page name lookups the tooltip reuses), scripts/wiki/build_content.mjs
   (what the wiki regen reads), root CLAUDE.md "New game content" bullet
-The agent returns: the exact ownership reads for each source kind and the one bundle
-(characterReliquaryOwnership) that returns most of them; the join retro block insertion
+The agent returns: the exact ownership reads for each source kind and the character bundle
+(characterReliquaryOwnership) and the bounded account projection needed for all alts; the join retro block insertion
 point and the first-entry hook; the plinth slot rules and how a plinth row differs from
 a furnishing row in the layout; the fhold and descriptor extension points; the tooltip
 core recipe and where the composer dispatches; the deeds count pins that will move and
@@ -85,55 +159,183 @@ the Homesteader ids to append; the wiki regen and guide key obligations for a tr
 table; the extraction that pays for any sim.ts, game.ts, or online.ts line.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last):
-- Agent CONTENT: src/sim/content/freehold/trophies.ts (TROPHY_DEFS: trophy id, source
-  { kind: 'deed' | 'page' | 'mark' | 'mount' | 'set' | 'curator' | 'perfected', id },
-  prop model key, finish; deep-frozen; ids are frozen save keys; the MVP set: the boss
-  busts for the ready families named in the proposal, the slain:* mounted heads, the
-  mount paddock markers, the armor-set stands, the curator plaques, and the farming and
-  legendmaker plaques), merged by src/sim/data.ts; the Homesteader deed rows for the
-  first trophy set and a full plinth row appended at the END of content/deeds.ts
-  (cosmetic reward only), tests/deeds_content.test.ts re-pinned with fresh literals;
-  no Reliquary page (trophies are not loot; state the ruling in the file header); the
-  wiki regen (`npm run wiki:content`) with the guide.* prose keys for the trophies
-  table; a tests/freehold_content.test.ts arm: every TROPHY_DEFS source id resolves to
-  a real deed, page, mark, mount, set, or rank, no trophy id collides with an ITEMS key,
-  and no trophy carries a stat, buff, price, or drop field.
-- Agent SIM: src/sim/freehold/trophy_eligibility.ts (pure: the mapping from
-  ReliquaryOwnershipSurfaces plus the perfected stamps and curator rank to the set of
-  unlocked trophy ids, no ctx, no Rng) and src/sim/freehold/trophies.ts
-  (syncTrophyUnlocks(ctx, meta): after the join retro block and on first entry, reads
-  only, writes the unlock set into the owner's record, emits text-free
-  freeholdTrophyUnlocked { pid, trophyId, retro: true } once per new id, idempotent);
-  plinth placement through layout_core.ts (a plinth row holds exactly one trophy id, a
-  trophy fits only a plinth, costs no budget, the Inn Room's three plinths carry over
-  to the Cottage's four per D2), the place_furnishing and remove_furnishing arms for a
-  trophy row (never consuming or returning an item); the fhold key gains the unlock
-  list and the descriptor gains plinth rows with the strict decoder allowlist extended;
-  tests: the eligibility table pinned per source kind with a negative per kind, retro
-  grant idempotent and zero Rng (Rng.setObserver), a second character of the account
-  sees the same unlocks, a visitor's descriptor carries the owner's plinth rows, the
-  parity scenario `freehold_trophies` regenerated in its own commit.
-- Agent PRESENTATION: src/ui/hud/housing/trophy_tooltip_view.ts (pure: provenance
-  lines for deed name and day, page name, mark, mount, set, rank, maker for a
-  perfected source, through world_entity_i18n lookups and formatDateTime) wired through
-  the tooltip composer; the Trophies tab in furnishing_palette_view.ts and its window
-  (unlocked trophies with the unearned silhouettes visible as the hunt, per proposal
-  section 10, never placeable); the stand-in trophy props in the Phase 09 registry by
-  family (bust, head, marker, stand, plaque) so every trophy renders before Phase 19;
-  hudChrome.housing.trophy.* English keys; tests for the tooltip core and the tab core.
-The coordinator edits last: tests/snapshots.test.ts (ALL_DELTA_KEYS if a key is added,
-the fhold round-trip arm), tests/deeds_content.test.ts (if two agents touch it, the
-coordinator merges), the parity goldens commit, tests/monolith_budget.test.ts (lowered
-ceilings). Every agent writes any report longer than a screen to a file and replies
-with the path plus a short summary. Never `mode: "plan"` on teammates.
+Assign disjoint file ownership and integrate shared pins last.
+Read ux-spec.md and the locked decisions in state.md through the context reader.
+NEW paths/symbols below are planned deliverables, not existing tree anchors.
+
+Deliverables (at most five):
+1. Source-complete trophy catalog. TROPHY_DEFS accounts for every promised deed,
+   individual Reliquary relic/item discovery, completed page, slain:* mark, owned
+   mount, set, curator rank, title-awarding deed, weapon-skin source and Perfected
+   source. Sweep actual source definitions rather than a remembered family list.
+   Every qualifying source has a truthful generic family display in Wave A; 23 adds
+   bespoke Legend Stand, real weapon/armor/mount forms and silver/gilded finishes.
+   No single discovered relic silently requires full-page completion. Add explicit
+   source discriminants required by real ownership surfaces, frozen IDs and one
+   positive/negative resolution fixture per kind. Trophies remain cosmetic records:
+   no ITEMS, price, drop, buff, bag, mail, trade, bank or market path. Homesteader deeds,
+   wiki/guide and fingerprint obligations land together; trophy records get no
+   Reliquary item page.
+2. Shared account sources, eligibility and truthful provenance. trophy_eligibility.ts is pure
+   over bounded authoritative account projections, not only the entering character.
+   trophies.ts syncs after join retro, on first entry and through batched source-change
+   invalidation while already home, with zero per-tick scan and zero Rng. Persist
+   immutable provenance: source kind/id, source character when known, original earned
+   day when known, and explicit unknown fields when historical data lacks them.
+   First-entry date must never masquerade as achievement date. Retro grants emit
+   retro:true only for historical discoveries; new live grants are correctly distinct.
+   Produce the exact shared account-source modules and full source/freshness contract
+   below. Read/load work is lazy, bounded and admitted through 07; source collection,
+   ID/string and encoded-byte bounds preserve unsupported stored data.
+   The exhaustive semantic source-to-requirement fixture selects actual catalog
+   discriminants, not invented existing enums: deed/title uses trophies.requireDeed/
+   requireTitle; illuminated page requirePage; slain mark requireSlain; armor-set
+   completion requireSet; recorded acquisition requireItemAcquired; current possession
+   requireItemOwned; mount requireMount; curator rank requireRank; personally named
+   Perfected source requirePerfected. Every numeric requirement comes from live catalog.
+   Do not describe a non-deed predicate with a generic complete-deed sentence.
+   Original source date, source character, maker signature and custom item name are
+   distinct sanitized facts. Required unknown maker/name/history arms never borrow
+   the current character or reconciliation date. Authority supplies timestamp/calendar
+   identity; locale formats in the intended realm timezone. Possession-gated displays
+   become inactive/static silhouettes when the qualifying copy leaves, preserving
+   source history and public provenance. Acquisition unlocks do not accidentally gain
+   possession requirements. Item/weapon-skin source ownership remains truthful.
+3. Record-only plinth placement and public projection. Plinths accept one qualified
+   trophy record and cost no decor points; Inn Room has three and Cottage four from
+   state.md, with previous placements carried over. The authoritative journal handles
+   place/remove/undo/redo without consuming or minting items. Owner private unlock
+   projection and public placed provenance use 08a's opaque plot identity and strict
+   decoder; guests see the same public known/unknown source facts, never account IDs,
+   private ownership inventory or spoiler-hidden source names. Hidden unearned content
+   follows live Deeds/Reliquary spoiler policy, not a universal revealing silhouette.
+4. Trophy case and tooltip. furnishing_palette_view/window reuse the bags marks and
+   Trophies tab, with Reliquary's owned-art/silhouette, roving grid, source accessibility
+   and preserved scroll/focus patterns. trophy_tooltip_view.ts resolves all public
+   source names through existing localization and hudChrome.housing.trophies.* keys:
+   deed and day, page/relic, mark, mount/title, maker, known source character and unknown
+   history. Follow docs/design/tooltip-writing.md with live values; tooltip and focus/
+   touch inspection reveal identical facts. Empty/unearned/hidden/loading/error,
+   owned, selected, full-plinth and visitor states use ux-spec.md. Generic props must
+   receive final family assets in 19 before Wave A closes, never indefinite stand-ins.
+   hudChrome.housing.trophies.* is the single chosen English namespace; never add a
+   parallel singular trophy.* namespace. trophies.unknownSource means unknown original
+   history, never intentionally hidden content. trophies.hidden/hiddenAria own hidden
+   source output and every spoiler-protected sink. Hidden source protection covers
+   captions, source/requirement tips, aria/alt,
+   image data and search indexes, not just visible headings. trophies.refreshing
+   preserves known rows without inventing new eligibility. trophies.collectionHelp
+   remains associated with the grid's assistive description across locale/input changes.
+   selectedCopyNoMarks is a complete branch, never empty mark punctuation. Replace/
+   Clear reviews preserve record identity and plinth focus, keep pending selection
+   locked and never turn a trophy record into an inventory item. Owner and guest see
+   the same active/inactive and known/unknown public facts.
+   Mark requirements use the exact plural trophies.* English keys from ux-spec.md:
+   requireSlain = "Defeat {creature} to display this trophy.";
+   requireMasterwork = "Craft a Masterwork item to display this trophy.";
+   requireMasterworkCraft = "Craft a Masterwork item with {craft} to display this trophy.";
+   requireGatherEvent = "Find {find} through {profession} to display this trophy.";
+   requireGoldenHarvest = "Gather a golden harvest from a farm bed to display this trophy.";
+   requirePerfectSpecimen = "Harvest a perfect specimen from a fallen creature to display this trophy.".
+   Select by actual catalog membership/source discriminants, never display-name substrings.
+   For slain marks, validate ownEntry(MOBS, id), then resolve the creature through
+   src/ui/entity_i18n.ts::tEntity({ kind: 'mob', id, field: 'name' }). The public source
+   label may still use reliquaryRelicDisplayName; never pass its localized Slain prefix
+   as the creature. Missing/unrecognized identity selects trophies.unknownSource,
+   never a stripped/humanized ID or generic Complete-mark fallback.
+   masterwork:first uses requireMasterwork; catalogued per-craft Masterwork uses
+   requireMasterworkCraft with the ordinary localized craft name. Pristine vein,
+   ancient heartwood and moonlit bloom use requireGatherEvent with localized find and
+   Mining/Logging/Herbalism selectors. Golden harvest and perfect specimen use their
+   dedicated predicate keys. Tests cover every catalogued mark arm, injected localized
+   nouns and the unknown-source fallback. Pin these concrete rendered keyed fixtures:
+   slain:mogger => "Defeat Mogger to display this trophy.";
+   masterwork:first => "Craft a Masterwork item to display this trophy.";
+   masterwork:weaponcrafting => "Craft a Masterwork item with Weaponcrafting to display this trophy.";
+   gather_event:pristine_vein => "Find Pristine Vein through Mining to display this trophy.";
+   gather_event:golden_harvest => "Gather a golden harvest from a farm bed to display this trophy.";
+   gather_event:perfect_specimen => "Harvest a perfect specimen from a fallen creature to display this trophy.".
+   These are keyed render results, not additional unkeyed player copy.
+5. Trophy proof and captures. Pin an alternate account character's existing source,
+   immediate new source while inside, relog idempotence, every source kind, honest
+   unknown date, hidden spoiler, provenance privacy, three/four-plinth limits and
+   no-item routes. Re-run strict wire/parity/content/guide/ownership pins and bounded
+   PG account hydration evidence. Add the exact housing-trophies helper entry below
+   with desktop/compact/tablet owned/unearned/unknown/public provenance and placement
+   captures. Dispatch architecture, content, cross-platform, frontend, render,
+   privacy, migration, server-hot-path and before/final database reviewers.
+
+
+SHARED ACCOUNT SOURCE CONTRACT (deliverable 2; proof belongs to deliverable 5):
+17 owns NEW server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage
+and server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. The DB
+module owns fixed, versioned, statically selected source projections and account-scoped
+character-ID keyset pages. Select only the exact trophy source fields admitted by the
+source manifest; 24 extends that same projection with normalized farm state and source
+farming proficiency. No caller-supplied JSON paths, whole-character-state SELECT or
+listCharactersAllRealms scan is permitted. The per-realm character limit is not a
+limit for the account across all realms. Measure the candidate (account_id, id) access
+index against actual query plans, and use the concurrent-index seam if required.
+
+Record page rows/bytes, aggregate collection/string/encoded-byte limits, admission and
+connection deadlines, cache entries/bytes and refresh bounds in the approved
+content-numbers-workbook.md MEASURE-BOUNDS row before activation. Values come from the
+complete source catalog and seeded multi-realm cardinality evidence, never an invented
+character cap. Exhausted budget returns explicit incomplete/unavailable status; it
+must preserve existing known unlocks/provenance and cannot grant, revoke possession or
+infer empty merely because later pages were not read. Unknown/future source data stays
+preserved under 07's capability contract; this read boundary never normalizes it away.
+
+The loader owns one bounded account/source-generation keyed single-flight cache and
+shared admitted page flight for trophy and garden consumers. No visitor, tooltip,
+render frame or descriptor snapshot starts an independent scan. Use a bounded refresh
+on demand and coalesced invalidation of relevant source generations for cross-process
+saved data; capture the accepted refresh interval and maximum age in MEASURE-BOUNDS.
+No new farm poller or per-viewer subscription is introduced in 24. Persisted nonlocal
+sources remain explicitly saved, never asserted to include remote unflushed changes.
+
+A currently authoritative generation-fenced local Sim source replaces the ENTIRE
+saved slice for that character, including empty collections after a loss/harvest.
+Do not merge stale saved rows back into a live slice. Join/leave/takeover, successful
+relevant source changes, and committed changed-source save/create/delete either install
+an available source slice with its generation or invalidate its account/source epoch.
+Deed, discovery, page, mark, mount, inventory/possession, maker and perfected predicates
+receive their existing successful-source invalidations; 24 adds farm/proficiency ones.
+An unrelated position/gear autosave does not invalidate a garden slice. Coalesce one
+dirty account refresh, cancel abandoned generation work, and reject stale page completions
+after source replacement, removal or session takeover. A failed refresh retains known
+facts and explicit refresh status. Source character IDs stay internal; only the existing
+sanitized public provenance allowlist crosses 08a's owner/visitor wire.
+
+Confirmed source deletion removes its current slice. A character absent from a
+complete authoritative account enumeration is no current source; failed or incomplete
+enumeration is not deletion. In an existing supported character, absent farmPlots
+means no planted beds, matching normalizeFarmPlots. Unsupported/malformed/oversized
+fields remain unavailable, not silently empty. 24 uses the exact whole-field
+gatheringProficiency ?? professions fallback from Sim.addPlayer, not a per-entry
+merge that changes farming proficiency. Never reconstruct current farms from trophies
+or archived housing provenance. No durable garden-source table, farm schema or write-
+back of normalized character data is added. Add literal missing-field, confirmed-delete,
+failed-enumeration and current/legacy proficiency fixtures to the proof below.
+
+NEW tests/server/freehold_account_sources_db.test.ts and
+NEW tests/server/freehold_account_sources_db.pg.test.ts prove static projection,
+parameterized keyset ordering, multiple realms, measured index/query/row/byte bounds,
+empty completion and explicit incomplete/unknown/error arms with TEST_DATABASE_URL set
+for the real-PG suite. NEW tests/server/freehold_account_sources.test.ts proves shared
+concurrent trophy/garden flights, cache entry/byte eviction, admission pressure, relevant
+versus unrelated invalidation, delayed delete/replace/takeover results, cancellation,
+whole-slice empty replacement and saved/live freshness. Extend freehold_trophies tests
+for alternate sources, live grants, failed partial refresh preserving provenance and
+possession state, and exact owner/guest private-field sentinels. Read-only projection
+never mutates source farm/deed/Reliquary/character state. Before/final database,
+persistence, security and hot-path reviews inspect these exact modules and evidence.
 
 INVARIANTS THIS PHASE MUST KEEP:
 - Trophies are never items: no ITEMS entry, no bag slot, no trade, mail, market, bank,
   or Exchange path; never sold; pinned.
-- Determinism: eligibility and the sync draw no Rng; no wall clock; a retro grant is
-  idempotent across relogs and across the account's characters.
+- Determinism: eligibility and the sync draw no Rng; no wall clock; retro/live grants are
+  idempotent across relogs/alts and source-change notifications; unknown history stays unknown.
 - Read only: the trophy module never writes a deed, a reliquary field, or an item
   instance (the architecture test pins reliquary write ownership).
 - Never sell power: a trophy has no stat, buff, drop, or gathering effect; plinths cost
@@ -145,19 +347,30 @@ INVARIANTS THIS PHASE MUST KEEP:
   and guide keys, world-entity names only where a trophy becomes a named entity (none
   expected: trophies are descriptor rows), no new item id so no WebP obligation.
 - i18n: the policy in docs/freeholds/implementation-plan.md; the event is id-only (D10);
-  provenance text comes from existing deed and page name keys plus hudChrome.housing.trophy.*.
+  provenance text comes from existing deed and page name keys plus hudChrome.housing.trophies.*.
 - Monolith: sim.ts, game.ts, online.ts, and hud.ts are at or near their ceilings; pay
   every line with an extraction and lower the ceiling.
 - The word "phase" appears in no code, comment, commit, or PR text.
 
 Out of scope (do NOT do in this phase):
 - The Legend Stand, the Harvestmaster sheaf, the first-harvest markers, the grandmaster
-  banners, finishes by difficulty, and any other family beyond the MVP set (Phase 23).
-- Final trophy GLBs (Phase 19); guild first-kill trophies (Phase 31).
+  banners, finishes by difficulty, and bespoke display forms (Phase 23); their generic source eligibility ships here.
+- Final generic trophy GLBs are required in Phase 19 before Wave A release; later
+  bespoke forms ship with Phase 23. Guild first-kill sources require Phase 31 proof.
 - Any new deed trigger kind or reliquary page (trophies read what exists).
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
-- Run: `npx tsc --noEmit`; `npx vitest run tests/freehold_trophies.test.ts`;
+Required named reviewers for this file: architecture-reviewer, cross-platform-sync,
+privacy-security-review, database-performance-reviewer, migration-safety,
+server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer,
+content-obligations-reviewer, test-coverage-auditor, qa-checklist.
+Database-performance-reviewer runs before implementation decisions and again on the
+finished diff; pair with migration-safety and privacy-security-review as listed.
+The QA session inspects those reports and dispatches a fresh review of every fix.
+- Run `npx vitest run tests/server/freehold_account_sources_db.test.ts
+  tests/server/freehold_account_sources.test.ts`; with TEST_DATABASE_URL set, run
+  `npx vitest run tests/server/freehold_account_sources_db.pg.test.ts` and verify the
+  real-PG tests executed. Then run: `npx tsc --noEmit`; `npx vitest run tests/freehold_trophies.test.ts`;
   `npx vitest run tests/trophy_tooltip_view.test.ts`; `npx vitest run
   tests/freehold_content.test.ts tests/deeds_content.test.ts
   tests/reliquary_content.test.ts tests/item_icons.test.ts
@@ -175,7 +388,14 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   content-obligations-reviewer (TROPHY_DEFS, the deed rows, the wiki, the no-page
   ruling), frontend-seam-reviewer (the tooltip core, the tab, the stand-in props).
   Prompt each for COVERAGE not filtering; each writes its report to a file. Do not
-  commit until no BLOCKING issues remain.
+  commit until ALL findings, including nits, are resolved and the fixes have fresh review.
+
+- Required reviewers for the complete settled diff: architecture-reviewer, content-obligations-reviewer, cross-platform-sync,
+  frontend-seam-reviewer, render-performance-reviewer, privacy-security-review,
+  migration-safety, server-hot-path-reviewer and database-performance-reviewer.
+  Database performance reviews happen before implementation decisions and again on
+  the finished diff; persistence/security pair on stored/authority surfaces. Runtime
+  PG evidence, bounded workload/query/index/byte limits and cancellation are required.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -184,13 +404,21 @@ STEP 4 - COMMIT CADENCE:
 - feat(sim): grant trophies retroactively from deeds, pages, marks, mounts, and sets
 - feat(ui): show trophy provenance and the Trophies tab in the palette
 - test(parity): record the freehold trophies scenario goldens
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Then run the shared contribution gate from docs/qa-gate.md, including
+`node scripts/gate_select.mjs` when required, and `npm run ci:changed` after the LAST
+commit as the Stop-hook floor; record exact exit codes.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
+- [ ] Every one of the five settled STEP 2 deliverables and all linked ux-spec.md states
+  has implementation, decisive evidence and a fresh review; earlier summary prose never
+  overrides the settled contract. Numeric references match state.md and approved artifacts.
 - [ ] A character with an earned deed, an illuminated page, a slain:* mark, an owned
   mount, a full armor set, a curator rank, and a perfected item enters the Inn Room and
   receives one freeholdTrophyUnlocked per trophy with retro true; a relog and the
   account's second character receive none again (idempotent, pinned).
+- [ ] Shared account-source modules, bounded PG/cache/admission evidence and every
+  freshness/failure/unknown/cancellation branch above are proved; 24 has one named
+  source-extension seam with no duplicate scan, cache or poller.
 - [ ] Rng.setObserver records zero draws across the sync; no reliquary or deed write
   from src/sim/freehold/ (tests/architecture.test.ts).
 - [ ] A trophy goes on a plinth and only a plinth, costs no budget, and a fourth trophy
@@ -201,7 +429,7 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   bank, or the Exchange (one negative pin per path).
 - [ ] tests/deeds_content.test.ts re-pinned with fresh literals; the wiki regen is fresh
   (tests/guide.test.ts); the provenance tooltip renders every source kind.
-- [ ] All STEP 3 suites green; the three reviewers report no BLOCKING.
+- [ ] All STEP 3 suites green; all triggered reviewers confirm ALL findings, including nits, are resolved and freshly reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 17, notes, deferrals) and
@@ -211,8 +439,7 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+End with: phase status, files touched, validation results, review verdicts, external release gates, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-17-qa.md
 
 STOPPING RULES:

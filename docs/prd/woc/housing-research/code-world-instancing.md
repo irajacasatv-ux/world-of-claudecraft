@@ -2,6 +2,12 @@
 
 # Housing research: world, instancing, props, persistence, editor, guilds, mobile
 
+> **Dated research, not implementation authority.** Captured 2026-09-05. The
+> [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
+> record the requirements adopted on 2026-09-06. Historical
+> code inventories, editor capabilities, opinions and market figures below are context,
+> not current API guarantees, WOC tuning approval or legal/store approval.
+
 Read-only survey of the World of ClaudeCraft codebase (worktree add-real-estate,
 2026-09-05). Facts with `path:symbol` citations, organized by the seven questions,
 ending with recommendation inputs.
@@ -39,7 +45,7 @@ ending with recommendation inputs.
 - Cost model: an unclaimed slot is a plain object; a claimed one is its entities in
   the single `entities` map, ticking like the overworld. Interest:
   `src/sim/types.ts:PLAYER_INTEREST_RADIUS` 90 (NPCs
-  `server/game.ts:NPC_INTEREST_RADIUS` 120; `BG_MATCH_INTEREST_RADIUS` 300),
+  `server/interest_policy.ts:NPC_INTEREST_RADIUS` 120; `BG_MATCH_INTEREST_RADIUS` 300),
   per-cell shared gathering `server/interest_candidates.ts`, tiered cadence
   `server/entity_update_cadence.ts:isUpdateDue` (full <= 55 yd, half <= 80,
   quarter beyond). `server/tick_profiler.ts:TickProfiler` measures per-phase ms
@@ -135,7 +141,7 @@ ending with recommendation inputs.
   New reference-image assets follow the `image-to-glb` skill.
 - Budget rules: every new GPU producer is a scheduler client
   (`src/render/gpu_prep_admission.ts`, `gpu_prep_budget_core.ts`); point lights ride
-  `src/render/point_light_budget.ts` (`gfx.ts` low-tier maxPointLights 3); interiors
+  `src/render/point_light_budget.ts` (live global allocation in `gfx.ts`, not a universal three-light LOW guarantee); interiors
   light via `src/render/interior_light_rig.ts` (`FogSceneState`); `src/render/
   CLAUDE.md` "GPU work: every new producer is a client of the scheduler" and
   `render-performance-reviewer` on such diffs.
@@ -229,8 +235,9 @@ ending with recommendation inputs.
   settings must stay gameplay-neutral (`docs/design/graphics-settings-fairness.md`).
   No named minimum device; `docs/design/player-performance/baselines.md` captures
   were taken on an M4 Max, so the low tier plus the iOS process-kill guard is the
-  effective floor. Interiors: KayKit kit, ~30 draws per instance, max 3 point
-  lights at low.
+  effective floor in the historical survey. The proposed housing room has at most three
+  authored emitters; iOS may allow two and pressure may leave one contributing light.
+  Ambient grade and silhouettes must preserve actionable information in every case.
 
 ## Recommendation inputs
 
@@ -246,19 +253,31 @@ ending with recommendation inputs.
   deterministic regeneration on both hosts (own Rng seeded from the descriptor),
   colliders via a `setRiftRegion`-style runtime region, state saved through
   `saveWorldState` or a new table; avoid one Sim entity per furniture piece.
-- Placement UX: compose `placement_transform_core.ts` + `PlacedAssetsView` + the
-  ground-aim seam behind a new IWorld facet member implemented in both `Sim` and
-  `ClientWorld`, with `tests/world_api_parity.test.ts` updated.
+- Placement UX: existing editor math is a precedent, not permission for the sim to import
+  the editor or inherit its scale/nudge/cap constants. The housing core uses measured room
+  bounds; Wave A has floor placement, explicit input ownership and bounded placement-only
+  undo/redo. Later typed surfaces add planar/yaw freedom and fixed ceiling anchors. Scale,
+  full-axis gimbal and collision leniency remain adopted exclusions; layout sharing is later.
 - Risk 1: monolith ceilings (`tests/monolith_budget.test.ts`; `server/game.ts` has
   a zero-margin ceiling, `src/sim/sim.ts` sits near its own) force every piece
   behind the SimContext, RouteDef, and IWorld seams.
 - Risk 2: determinism: house content must never draw the shared `Rng` or read wall
   clocks; a claimed slot that reloads from DB must reconstruct identically on
   server and client (parity golden traces).
-- Risk 3: mobile LOW memory: an interior must reuse the dungeon kit, stay under 3
-  point lights, and go through the prewarm / compile-gate scheduler, or phones
-  crash at entry.
+- Risk 3: mobile LOW memory and live light allocation need measured proof through the
+  existing preparation scheduler. A three-emitter authoring ceiling alone cannot establish
+  safe entry or adequate readability; test the iOS and effective-one-light cases.
 - Risk 4: slot lifetime: instances are runtime-only and reaped after 300 s empty,
   so house state must rehydrate from persistence on every claim.
 - Every new content record carries deeds, wiki regen, i18n keys, and item art
   obligations (`content-obligations-reviewer`).
+
+The adopted packet separates 07a atomic operation/mutation composition, 07b account
+lifecycle/history/binding, 07c account-tier arrival eligibility and 08a safe wire
+projection. File 13 owns pure upkeep; 13a owns shared authoritative calendar history,
+irrevocable historical finality, bounded projection and private per-generation
+delivery/ACK. These are NEW unimplemented contracts, not capabilities of the
+historical host survey above. Replay never recreates first-tier presentation;
+commit-before-ACK may skip it. Old releases must not reinterpret lifecycle or
+calendar data merely because they preserve the tables. See the
+[service contract](../freehold-service-contract.md) for exact owner/acceptance seams.

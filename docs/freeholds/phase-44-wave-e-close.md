@@ -1,28 +1,17 @@
-# Phase 44: wave E close (the final matrix, the packet teardown offer, the PR)
+# Phase 44: wave E integration close before final artwork and legal handoff
 
-Wave E, depth, the last phase of the packet. The spec is `progress.md` "44 Wave E
-close"; the matrix is `qa-checklist.md` (run over the wave E diff AND once more over the
-whole feature at packet completion); the PR rules are `implementation-plan.md` "PR
-cadence" and `state.md` "Push policy"; the teardown rule is `brainstorm.md` D12. This is
-the final QA variant: it runs the matrix, captures screenshots, runs the wiki pass,
-surfaces every deferred follow-up, offers the packet teardown, and opens the wave E PR
-only after Fernando's push go. It ships no new behavior.
+This implementation file and its QA are the complete contract for this bounded slice.
+The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
+are authoritative. Nothing in this planning packet is marked built.
 
 ### Starter Prompt
 ```
-This is Phase 44 of the Freeholds and Guildhalls feature: wave E close (the final
-integration matrix over Phases 40 to 43 and over the whole feature, screenshots, the
-wiki pass, the packet teardown offer, the wave E PR).
+This is Phase 44 of the Freeholds and Guildhalls feature: wave E integration close before final artwork and legal handoff.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase.
+Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
+fan-out; this prompt names no model.
 
-Goal: prove wave E and the whole feature (every row of docs/freeholds/qa-checklist.md
-verified by a check that ran, twice: the wave diff and the packet diff), commit the
-screenshots, surface every deferral, offer the teardown of docs/freeholds/ exactly
-once, and open the wave E PR off the base branch with every housing flag defaulting
-off, then watch CI to green.
+Goal: prove the implemented wave and whole feature, record the complete reviewable evidence, then continue through44a artwork and44b legal handoff without declaring the packet complete.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -42,143 +31,228 @@ STEP 0 - PRE-FLIGHT:
   English text, CI is the gate, never push to a fork, PR merge needs approval, the
   sensitive-material sweep, tooling improvements at session end.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
+ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
+in this phase, including GLBs, references, icons and images, must be executed by
+Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
+provenance, runtime registration, fingerprint and in-context checks. This planning
+audit creates no game assets. Final art is required here;44a is a residual sweep,
+not permission to leave a placeholder for a later phase.
+
+STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md (every OPEN item and gate, every ruling), docs/freeholds/qa-checklist.md
-  (every row), docs/freeholds/progress.md (EVERY row 01 to 43 and every QA row: every
-  deferral, every verdict, the Phase 20, 27, 33, and 39 close records), brainstorm.md
-  (O1 to O7), this file
-- the wave diff: `git log --oneline <wave-e-start>..HEAD` and `git diff <wave-e-start>..HEAD
-  --stat --name-only`, with <wave-e-start> the tip recorded at the Phase 39 close; the
-  packet diff: `git diff <packet-base>..HEAD --stat --name-only` with <packet-base> the
-  base state.md records
-- .github/PULL_REQUEST_TEMPLATE.md, .claude/skills/pr-screenshots/SKILL.md,
-  scripts/pr_shot_targets.mjs (the Keep, Citadel, courtyard, tower, dye picker, layout
-  tab, second-plot, and professions targets), docs/qa-gate.md, .claude/skills/file-issue/SKILL.md
-The agent returns: the matrix row list with the exact command per row; the wave and
-packet diff surface lists mapped to the reviewer table; the screenshot target ids
-(desktop, compact, tablet); the PR body skeleton; the COMPLETE deferral list (every
-progress.md deferral, every OPEN item in state.md and brainstorm.md, every ruling still
-owed), each with its source row, as the input to the teardown offer.
+- state.md, progress.md, qa-checklist.md, ux-spec.md and every completed implementation/
+  QA record, including all suffixed producers and the accepted content/art manifests.
+- The exact wave-E and whole-feature diff/commit inventories using recorded start tips;
+  current tests, screenshot registry, generated-content obligations and release gates.
+- docs/qa-gate.md, the canonical PR template and the full existing service/counsel/
+  Terms/listing/deed/territory package. The six artifacts remain cumulative release gates.
+- New phase-44a-final-codex-artwork.md and phase-44b-final-legal-handoff.md with their QA:
+  these mandatory successors are not optional follow-ups.
+- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
+  artifacts referenced by state.md that this slice consumes.
+The agent returns: the exact matrix commands and evidence, all actual triggered reviewers, complete
+asset/runtime/source inventory, legal/service gate status and both next-stage inputs.
+No declaration of packet COMPLETE, cleanup offer, deletion or final release readiness
+belongs here. Missing implementation acceptance must be fixed before this close passes.
+All design rulings are locked; a missing required signed artifact keeps its release
+gate closed and produces a named validation result, never a guessed runtime value.
+Database review is required BEFORE implementation decisions and again on the finished
+diff, including changes to callers, persisted JSON, caches or workload even when SQL
+text stays unchanged. Reuse 07a's global plot fence and reviewed actual legacy
+touch-set, including caller-owned saves, character prelocks/nonces, bank-ledger
+classification, guild replay and storage/custody effects. Preserve character FIFO
+entry and the proved new-participant suffix, never a replacement generic lock order.
+Never enter a queue holding a DB client or hold locks
+across service IO. Bound admitted work, acquisition/query/transaction deadlines,
+projection keys, rows and bytes; background producers use shared admission and
+cancellation. Retain one running plus one pending dirty generation, not unbounded
+FIFO writes. Supply a query/index inventory (scope, predicates, order, limit, expected
+cardinality and supporting index), reverse-FK export/delete access and retention for
+every growing shape. Disposable-PG concurrency, plans, query counts and maximum legal
+payload evidence are acceptance, not satisfied by fake-pool tests.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files:
-- Agent MATRIX: run every row of docs/freeholds/qa-checklist.md over the WAVE diff and
-  again over the PACKET diff, one command at a time, reading exit codes; record both
-  result tables (row, command, result, evidence path) to a file; a row that cannot run
-  is FAIL, never "looks done".
-- Agent SHOTS: capture before/after screenshots through the pr-screenshots skill
-  (desktop and the compact and tablet mobile targets, landscape, lowest graphics preset
-  seeded before page.goto, never finding elements by English text), commit them under
-  docs/screenshots/ with explicit paths, and return the markdown block for the PR body.
-- Agent WIKI: `npm run wiki:content`, `npx vitest run tests/guide.test.ts`, the guide
-  prose keys for the top tiers, dyes, layout sharing, the second freehold, and (if
-  built) Carpenter and Mason; spoiler-safe and store-safe; `npm run i18n:gen`.
-Then the coordinator spawns qa-checklist over the whole PACKET diff plus every reviewer
-the matrix names for the surfaces present (the docs/freeholds/implementation-plan.md
-dispatch table), for COVERAGE, to files. Never `mode: "plan"` on teammates.
-
-THE TEARDOWN OFFER (after the matrix is green, before the push go):
-- Surface every deferred follow-up FIRST: write the complete deferral list (source row,
-  the item, the owner) into the PR body draft under "Deferred follow-ups" and print it
-  in the conversation; offer to file each as a GitHub issue through the file-issue
-  skill, and file only the ones Fernando names.
-- Then ask Fernando EXPLICITLY, in one question: "Remove docs/freeholds/ now?" Do not
-  infer consent from a push go or from silence.
-- On an explicit yes: copy docs/freeholds/phase-44-qa.md to the session scratchpad and
-  print that path (the QA session pastes from there; the file also stays in git
-  history), then run `git rm -r docs/freeholds/` and commit it ALONE, titled exactly
-  `docs: remove freeholds planning scaffolding`, with a body that names the packet, the
-  five wave PRs, where the deferral list lives (the PR body), and the two durable
-  artifacts that stay: docs/prd/woc/freehold-service-contract.md and
-  docs/prd/woc/freehold-deed-service-contract.md. Nothing else goes in that commit and
-  nothing else is removed; docs/prd/ is never touched.
-- On no, or no answer: leave the directory in place, record the offer and its outcome
-  in progress.md row 44, and continue.
+Deliverables (at most five):
+Assign disjoint implementation ownership by the following 5 deliverables.
+The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
+finish. Workers receive only the context report and owned files, preserve others' edits,
+and return full reports to the scratchpad with a path and short summary.
+1. Integration matrix: run every applicable qa-checklist row over the wave and whole
+   feature, recording exact command, exit code and evidence once per needed check.
+   Include07a/07b/07c/08a/13a and other suffixes; all custody/lifecycle/calendar/finality/
+   recovery/rollout and money/D9 boundaries remain covered. Reuse deterministic
+   evidence where unchanged and rerun any invalidated scope.
+2. Visual and content proof: verify every ux-spec target and final-art source in the
+   registered desktop/compact/tablet and LOW contexts, including all input modes,
+   focus/reduced motion, denied-store absence and actionable visibility. Regenerate
+   wiki/i18n/media through owning generators and verify freshness. Earlier waves
+   require final art;44a's inventory is a residual safety check, not permission to
+   ship a placeholder or postpone an earlier acceptance.
+3. Fresh whole-feature review: dispatch actual domain reviewers and qa-checklist
+   over evidence and diff for complete COVERAGE. Apply every finding including nits;
+   a new reviewer examines the fix round and affected checks pass. Reviewers do not
+   duplicate the shared deterministic gate.
+4. Reviewable release evidence: record the complete local PR-body draft and linked
+   screenshots/matrix/gate inventory, with every paid flag still fail-closed and
+   each signed-artifact status truthful. No release/deploy or storefront submission
+   occurs here. Preserve pending recovery identities through any quiesced rollout;
+   an unsigned legal/service gate is not an unmade product decision.
+5. Mandatory continuation handoff: update44/44QA status as integration passed,
+   final artwork/legal handoff pending. Supply the complete feature-created asset
+   inventory to44a and implemented-surface/legal evidence index to44b. Keep every
+   packet/durable UX/decision/content/service/legal file. No cleanup, directory
+   removal, terminal packet claim or skip over either paired QA is authorized.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- FREEHOLDS_ENABLED and FREEHOLD_DEEDS_ENABLED default off; allowSerializedCollectibles
-  defaults off; every housing and deed route and command refuses while dark; the
-  seven-row matrix is green; no wallet, $WOC, on-chain deed (mint, trade, holder), or marketplace string in any
-  App Store, Google Play, Steam, or Epic path; no "earn" language; the economy service
-  owns every price; the counsel gates are stated in the PR body with their status.
-- Never sell power; keystone exclusion; zero farm beds; nothing destroyed, nothing
-  repossessed; the vocabulary rule; the word "phase" nowhere in the PR text or commits;
-  no em dashes, no emojis; the sensitive-material sweep before any push.
-- The teardown removes docs/freeholds/ and nothing else, only on an explicit yes, in
-  its own commit; docs/prd/woc/freehold-service-contract.md and
-  docs/prd/woc/freehold-deed-service-contract.md stay in place as durable artifacts.
-- Push policy: the push happens only after Fernando's explicit go; origin only, never a
-  fork; a PR is never merged by a session.
+Every player-visible string, including error, aria, tooltip and empty-state text,
+uses an English hudChrome.housing.* key and the formatters from src/ui/i18n.ts.
+Tooltips follow docs/design/tooltip-writing.md. Reuse docs/freeholds/ux-spec.md and the
+shared family/painter/window lifecycle, focus return, keyboard/gamepad, touch safe-area,
+reduced-motion and graphics-fairness contracts; do not fork the theme. New paths,
+symbols, wire fields, tables and tests under housing/freehold are PLANNED unless an
+earlier completed ledger row owns them. Re-find every existing anchor in the tree.
+No power sale, keystone/gear-intermediate/quickening-catalyst bill, new farm bed,
+repossession or calendar destruction. Sim stays deterministic and token-free; all
+server player events are keyed data. Coordinators compose siblings and never grow
+past their pinned ceilings. Fresh tests use literal expectations and negative controls.
+ACCOUNT AUTHORITY, CALENDAR AND RECOVERY ACCEPTANCE:
+Consume 07b's single account lifecycle authority: NEW
+server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/loadFreeholdLifecycleProtectionPage/
+advanceFreeholdLifecycleOnClient, coordinated by
+server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator and the accepted
+server/freehold_lifecycle_binding.ts::resolveFreeholdLifecycleBinding policy registry.
+Capture authenticated observations before queues; committed monotonic transitions,
+not authentication login or a plot-local last-seen field, authorize account grace.
+Immutable multi-return history or lossless prefix facts cover dormant/foreign plots;
+union overlapping lifecycle protection and service suspensions exactly, never sum
+independent credits, force-write foreign plots or restart grace on an alt/plot switch.
 
-Out of scope (do NOT do in this phase):
-- Any new behavior or content; a fix found by the matrix is applied as its own commit
-  with a re-run of the affected rows, and anything larger is a deferral.
-- Enabling any flag anywhere; a deploy (DEPLOY.md is a separate, deliberate step);
-  filing issues Fernando did not name.
+07c's NEW server/freehold_arrival_db.ts::loadFreeholdArrivalTiers/
+markFreeholdArrivalTierOnClient owns normalized account+tier marks, separate from
+lifecycle and plot saves. Only the committed accepted-owner-entry insert winner
+has first-tier eligibility. NEW arrivals may receive a private freshArrivalPresentation
+directive; snapshot/resume/replay set it null even with firstTierAtAdmission history.
+Commit-before-ACK can skip presentation; no exactly-once visible/audio promise and
+no permanent receipt for routine visits. Second plots and transfers do not duplicate,
+copy or clear account arrival marks or seller lifecycle history.
+
+13/13a own shared source calendar/history/checkpoint evaluation. Preserve calendarId,
+schemaVersion/resetPolicyId and immutable prepaid bill/rate/material/receipt identities
+across foreign-realm claims and transfers. No rebinding to serving realm/browser zone.
+Historical dependencies of durable condition/bill/credit effects must be irrevocably
+finalized and read at consistent committed calendar/lifecycle revisions; unfinalized,
+missing or unsupported coverage keeps the affected effect pending. A future-credit
+purchase does not require future time to be finalized. Long absences/outages use
+bounded indexed prefix probes, never lifetime scans or absent-day/week loops.
+Calendar-only exclusive writers and compatible shared mutation readers follow 07a's
+actual legacy touch-set proof; no invented reverse lock hierarchy. Current-generation
+projection/ACK identity cannot regress after delayed loads or superseded delivery.
+Server-only operator evidence, secrets and diagnostics never reach either owner or
+visitor wire: explicit allowlist builders and distinctive sentinel tests prove it.
+
+At a sale/ownership transfer, materialize the old owner's condition at the transfer
+boundary from finalized original calendar/lifecycle history; preserve source calendar
+and immutable credits, retain seller account history, and apply buyer lifecycle only
+prospectively without copying grace. Unknown authority holds application for bounded
+original-operation recovery/accepted compensation, never a replacement charge or
+silent calendar reset. Current local custody/fence guards still apply.
+Character deletion, soft deactivation, restoration, true account deletion and export
+are separate: deactivation is not an FK cascade; restored history/credits/receipts keep
+their meaning. Explicit housing export loaders expose allowed facts only. Unknown or
+oversized originals remain durable/read-only with bounded diagnostic/reference, not
+empty/new-home defaults or filtered destructive arrival-set rewrites.
+07's persistence-rollout-contract.md and 07b's lifecycle-policy-binding.md/
+lifecycle-db-contract.md plus 13a's upkeep-calendar-db-contract.md name minimum
+capable releases, measured bounds, exact schema/save fixtures and accepted policies.
+Enable only a proven capable rollout; unchanged normalized rows do not prove an old
+binary implements lifecycle, export or saves. Rollback quiesces NEW effects and
+preserves accepted original-operation recovery identities and supported recovery.
+Each consuming implementation/QA runs relevant two-character/two-plot/two-realm,
+dormant-history, delayed-generation, finality/transfer, deactivation/restore/export
+and capable/uncapable-release fixtures through real composition and disposable PG.
+
+PROPOSED SERVICE AUTHORIZATION AND RECOVERY CONTRACT:
+Preserve literal D9: the game server receives no distribution/channel label,
+country assertion or physical-client attestation. The NEW external economy-service
+issuer/verifier and policy module verify an actual eligible checkout session and
+current territory under signed policy; the signed acceptance names their exact
+external repository/module or interface-artifact identity and conformance proof.
+Account auth, Origin, user agent, client JSON, linked stores, a desktop bridge
+capability and an outgoing server secret are not physical-distribution proof.
+The service binds NEW checkoutAuthorization to account, purpose/kind, SKU, policy
+version, accepted quote, operation and full plot/guild/custody fingerprint. The game
+consumes only the opaque protected reference and service-verified allow/refusal/effect;
+it never issues eligibility from headers, accepts a channel JSON field or logs/exposes
+the authorization. Unknown/malformed/unverified eligibility refuses NEW spend.
+The adapter authenticates the actual service response and bounds decode before
+validating the complete operation/effect/fingerprint. A signed acceptance document
+is not proof of runtime cryptographic validation. Malformed or nonterminal results
+never grant a local effect or prove that no debit occurred; preserve the original
+operation for bounded status discovery and recovery.
+
+NEW source ownership is explicit: 07a's
+server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation owns
+protected authorization binding, fingerprint and durable receipt authority;
+server/freehold_mutation.ts::commitFreeholdMutation owns atomic local effects.
+Phase 15's NEW server/freehold_purchases.ts is the initial opaque quote/status/
+authorization consumer; NEW server/freehold_deed_proxy.ts is the later deed consumer
+of that same verified boundary. No game geo or distribution-attestation module is
+introduced. These are proposed producers, not existing exports; read prepared
+phase-07a-transactional-mutation-boundary.md and its QA before implementation.
+
+Dark flags and unknown/current eligibility refuse new paid actions, not recovery of
+an already accepted original operation. Receipt/status discovery, local application
+or accepted compensation use its immutable outcome and original protected binding
+without a new checkout session or debit. Current local entitlement, ownership, fence
+and custody guards still apply. Rejected/expired new quotes need fresh confirmation;
+an accepted historical quote is not a fallback new purchase. Both service conformance
+and game tests cover forged eligibility inputs, cross-binding reuse, policy/territory/
+expiry changes before new spend, and accepted-operation recovery after those changes.
+
+
+Out of scope:
+New mechanics, feature/deploy enablement, external legal messages, final packet completion, cleanup/deletion or skipping44a/44b.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
-- The matrix IS the validation, run twice (wave and packet), plus `npx tsc --noEmit`,
-  `npm run ci:changed` after the LAST commit (read the exit code), and
-  `node scripts/gate_select.mjs` only for a change CI cannot see.
-- Reviewers: qa-checklist over the packet diff plus every reviewer the matrix names,
-  all for COVERAGE not filtering, all to files. No push while a BLOCKING finding stands.
+- Run the recorded whole-feature matrix and node scripts/gate_select.mjs, using
+  exact scoped tests, typecheck, builds, i18n/security and browser checks the gate owns.
+- Run npm run wiki:content; npx vitest run tests/guide.test.ts; npm run i18n:gen;
+  node scripts/pr_screenshots.mjs for the registered actual housing targets. Record
+  any physical-device/performance evidence separately, never infer it from screenshots.
+- Run node scripts/gate_select.mjs before completion; npm run ci:changed is not a
+  substitute. Re-run only affected checks after fixes, then verify the final head.
+- Dispatch architecture-reviewer, cross-platform-sync, migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, render-performance-reviewer, frontend-seam-reviewer, content-obligations-reviewer, test-coverage-auditor and qa-checklist
+  for the stated surfaces; actual additional surfaces trigger their canonical reviewer.
+  Database review runs before decisions and again on the completed diff. Every report
+  uses COVERAGE, BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT, saved to a file.
+  Apply ALL findings including nits; a fresh reviewer reads the fix round.
 
 STEP 4 - COMMIT CADENCE:
-3 to 5 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
-`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- docs(screenshots): add the depth-wave and whole-feature captures
-- docs(wiki): regenerate the guide for the top tiers, dyes, and layout sharing
-- fix(<scope>): <one commit per matrix finding, if any>
-- docs(freeholds): record the wave E and whole-feature matrix results
-- docs: remove freeholds planning scaffolding (ONLY on the explicit teardown yes)
-Then `npm run ci:changed`; read the exit code. Then STOP and ask Fernando for the push
-go (state.md "Push policy"). On the go: `git push origin <branch>`, open the PR off the
-base branch recorded in state.md following .github/PULL_REQUEST_TEMPLATE.md (summary
-stating every flag off and the counsel gates' status, related issues, type of change,
-how it was tested with both matrix tables, the screenshots block, the deferred
-follow-ups, the checklist), then `gh pr checks --watch`.
+Commit each coherent owned deliverable with a scoped Conventional Commit and a body.
+Stage EXPLICIT task paths, never git add -A. No coauthor trailer, em dash, en dash,
+emoji, or word "phase" appears in a commit message. Keep generated output with its
+authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] Every qa-checklist.md row has a recorded result from a command that ran, for the
-  wave diff and for the packet diff; no row is FAIL.
-- [ ] Screenshots (desktop, compact, tablet) are committed under docs/screenshots/ and
-  referenced from the PR body.
-- [ ] The wiki is fresh (tests/guide.test.ts green), spoiler-safe, and store-safe.
-- [ ] The deferral list is complete (every progress.md deferral and every OPEN item
-  appears) and lives in the PR body; issues were filed only for the items Fernando named.
-- [ ] The teardown question was asked explicitly and its outcome recorded; if yes, the
-  removal commit contains docs/freeholds/ and nothing else, both service contract docs
-  under docs/prd/woc/ still exist, and the QA prompt copy's path was printed.
-- [ ] The PR is open off the recorded base, body complete per the template, no "phase"
-  in the PR text, every flag off by default, CI green (`gh pr checks --watch`).
-- [ ] qa-checklist and every dispatched reviewer report no BLOCKING.
+STEP 5 - ACCEPTANCE CRITERIA:
+- [ ] Every wave/whole-feature matrix requirement has real evidence and the shared contribution gate passes; no skipped runtime proof is presented as a pass.
+- [ ] UX/content/art/source and current authority/calendar/custody/money/D9 obligations pass actual-surface review and a fresh review of all fixes.
+- [ ] Local release evidence accurately records flags and external signed gates; no feature release or legal approval is claimed.
+- [ ] All packet and durable contracts remain present;44QA links to44a, then44aQA to44b, then44bQA terminal. Neither final successor is optional.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- If the packet directory remains: update docs/freeholds/progress.md (row 44 with both
-  matrix tables, the PR number and URL, the teardown outcome) and docs/freeholds/state.md
-  ("Current phase": packet complete, awaiting the Phase 44 QA). If it was removed: the
-  same record goes into the PR body and the final response.
-- Record in memory: the packet outcome, the five PR numbers, the deferral list's home,
-  and every surprising rule learned; batch any tooling improvement to the end.
+Update progress.md row 44 and state.md's implementation ledger with actual paths,
+commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+Record facts learned; do not reopen the locked product rulings or mark a release gate
+accepted without its signed artifact. Numeric tables are literal, provenance-backed
+and approved before activation.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status ("pushed, green, ready for review", or "matrix green, awaiting
-push go" if the go has not come), the PR URL, both matrix summaries, review verdicts,
-the deferral list, the teardown outcome, the scratchpad path of the QA prompt copy if
-the teardown happened, and the FULL PATH of the next file to run:
+Report status, touched files, exact validation commands and outcomes, reviewer verdicts,
+tracked release gates and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-44-qa.md
-(if the teardown happened, the same prompt at the printed scratchpad path, or via
-`git show <teardown-commit>~1:docs/freeholds/phase-44-qa.md`).
 
 STOPPING RULES:
-- Stop at "matrix green, awaiting push go" until Fernando sanctions the push; never
-  push on your own judgment.
-- Never remove docs/freeholds/ without the explicit yes to the teardown question; never
-  remove anything else with it.
-- Stop at "pushed, green, ready for review"; never merge a PR; never enqueue it.
-- A red matrix row that needs more than a one-commit fix stops the close: record it and
-  name the owning phase file to re-run.
-- Do not push the branch without the go; never merge a PR.
+A failed acceptance check stops completion. Preserve state on failed mutation, decode,
+quote, capacity, lease or revision checks. No widening of a monolith ceiling or silent
+change to a locked ruling. Do not push the branch or open/merge a PR in this slice.
 ```

@@ -1,12 +1,90 @@
-# Phase 20: wave A close (the integration matrix, screenshots, the MVP PR)
+# Phase 20: wave A close (integration matrix, screenshots and local review draft)
 
 Wave A, the Cottage MVP, closes here. The spec is `progress.md` "20 Wave A close"; the
-matrix is `qa-checklist.md`; the decisions are `state.md` and `brainstorm.md` (D1 to D19).
+matrix is `qa-checklist.md`; the decisions are `state.md` and `brainstorm.md` (D1 through the last locked D decision).
 This phase writes no feature code: it runs the whole-feature matrix over the wave A diff,
 fixes only what the matrix finds (test-first, reviewed), captures the before and after
-screenshots, hands the service contract and the counsel checklist off, and opens the MVP
-PR off the base branch once Fernando sanctions the push. It stops at "pushed, green,
-ready for review" and never merges.
+screenshots, prepares the service/counsel handoff artifacts and a local reviewable
+PR description against the recorded base. It stays local; no push,
+PR creation or merge is part of this packet.
+
+## Complete Wave A screenshot matrix
+
+Implementing file 20 and its QA own this complete matrix. Required baseline
+sizes are desktop 1600x900, compact 874x402 and tablet 1180x820 from state "UX
+screenshot viewports". Every row marked all-baseline gets a separate readable
+capture at each size. Rows below group review responsibilities for readability
+only. Every named state maps to its own explicit unique section 11 variant and
+one image; no composite or last-state-only capture substitutes for an unobserved
+arm. File names include target, scene, viewport, theme, preset, motion, input,
+distribution, light/media profile and before/after identity. Missing required
+after-state is a failure.
+
+| Scenario target | Required visible state and assertion | Viewports | Primary owner |
+|---|---|---|---|
+| gate-own-choice; gate-friend-empty; gate-lookup-pending; gate-lookup-ready; gate-lookup-stale; gate-lookup-refused | Eastbrook semantic marker, real interact prompt, own/friend choice, no proximity teleport | All baseline | 06/18 |
+| arrival-inn | New accepted owner transition with committed fresh first-tier directive, safe reveal, truthful plinth, welcome and no automatic panel | All baseline | 06/09/19 |
+| arrival-cottage; arrival-ordinary-return; arrival-visitor | Cottage first-tier view requires fresh committed-winner directive; ordinary-return/visitor scenes have new ordinary welcome only and static camera | All baseline | 06/09/19 |
+| interior-inn-day; interior-inn-night; interior-cottage-day; interior-cottage-night | Steady actual Inn/Cottage at pinned named day/night and fixed moon presets, safe static view, readable LOW window/hearth/material distinction; no build UI or fresh arrival replay | All baseline | 09; shared target extended by 11 |
+| build-empty | No available furnishing copies, build.empty, no selectable item/ghost/confirm, usable tab/close | All baseline | 11 |
+| build-ready; build-placed-selected; build-move-preview; build-remove-review; build-remove-refused | Owned-copy marks, palette/Trophies tab, recognizable ghost, real footprint, live decor/plinth/amenity meters | All baseline | 11 |
+| build-blocked | Hatched/crossed footprint plus exact reason, confirm unavailable, full touch strip visible | All baseline | 11 |
+| build-decor-full; build-plinth-full; build-amenity-full | Live used/limit and needed/remaining, no invented warning threshold, no false place success | All baseline | 11 |
+| build-history-confirmed; build-history-undone; build-history-redone; build-history-stale | A real confirmed move, undo and redo, then stale inverse/refused-history explanation | All baseline | 11 |
+| build-pending; build-refused; build-reconnect | Original operation pending then reconnect, last committed world, mutation paused, no duplicate send | All baseline | 11 |
+| steward-bags; steward-vault; steward-automatic; steward-vault-unavailable | Actual needed/bags/vault split and all source modes, truthful source-named action | All baseline | 16 |
+| steward-prepay-review | Full versioned bill batch and source deductions, covered-through date, confirmation cleanup | All baseline | 16 |
+| steward-condition-30; steward-condition-29 | Condition 30 with amenity available, condition 29 with amenity paused and safe home explanation | All baseline | 13/16 |
+| steward-inn | No-upkeep state with no payment component | All baseline | 16 |
+| steward-pending; steward-refused; steward-reconnect | One in-flight material send, matching refusal, preserved source/week draft | All baseline | 16 |
+| charter-ready; charter-reconciled (also website-desktop) | Accurate art/grant/free-room copy, current service quote and review; browser and website desktop capability | All baseline for web; desktop for website shell | 16 |
+| charter-pending; charter-cancelled; charter-reconciling; charter-reconciled | Pending/cancelled/reconciled original intent, current receipt, no second purchase invitation | All baseline on allowed web | 15/16 |
+| charter-quote-unavailable; charter-quote-expired | Explicit quote unavailable/stale, no zero-price fallback | All baseline on allowed web | 16 |
+| charter-denied | No purchase or unapproved management component and accompanying DOM/accessibility/network assertions for every denied distribution | All baseline using injected actual surface verdict | 14/16 |
+| trophies-owned; trophies-unearned-known; trophies-hidden | Eligible art, truthful known-source silhouette, hidden-source non-disclosure, no free invented feat | All baseline | 17 |
+| trophies-provenance-known; trophies-provenance-unknown; trophies-maker; trophies-possession-inactive; trophies-plinth-preview; trophies-replace-review; trophies-clear-review; trophies-refreshing | Same public deed/page/mark/name/day for owner and visitor; unknown history explicit; selected plinth | All baseline | 17 |
+| visit-read-only; visit-owner-away | Guest context, who-is-home, offline-owner permitted entry, Leave, absent owner controls | All baseline | 18 |
+| visit-owner-building | Guest sees accepted layout plus decorating line, owner ghost absent by real wire proof | All baseline | 11/18 |
+| visit-full; visit-private-refused | Authorized full refusal and privacy-safe unknown/private refusal preserve typed name | All baseline | 18 |
+| visit-policy-draft; visit-policy-pending; visit-policy-saved; visit-policy-refused; visit-end-review; visit-end-pending; visit-end-succeeded; visit-revoked | Existing guest safely returned after End visit/revocation; no stale cached admission | All baseline | 18 |
+| entry-pending; entry-error; entry-busy; arrival-online-delayed-cosmetics | Pending/failed room load or foreign-realm busy state, retry with no false loss/waitlist | All baseline | 06/07/18 |
+
+Focused additions are mandatory, with the relevant baseline scene reused:
+
+| Variant | Visible proof and nonvisual check |
+|---|---|
+| Parchment and highContrast/forced colors | Build blocked, Steward condition/payment and trophy provenance retain readable text/focus/shape through theme repair. |
+| Reduced motion | Static arrival or immediate handback; no ghost pulse, animated hatch, auto-orbit, shimmer or flame-dependent state. Same controls and information. |
+| LOW iOS and pressured light case | Explicit ios-effective-one and high-preset variants assert live light-profile state. Separate real LOW iOS/WebKit device captures prove engine/readability/input; Chromium UA emulation proves only the profile branch. |
+| Keyboard | Real open/tab/grid/confirm/cancel/close sequence, focused control visible, no focus lost after relocalize or authoritative refresh. |
+| Gamepad | Actual active-family glyphs and successful palette, move, rotate, nudge, confirm, undo and cancel sequence; no simultaneous combat action. |
+| Touch | Real compact/tablet tap-only and drag arbitration, safe areas, target size and input floor; no action hidden under existing HUD or keyboard. |
+| Portrait shell | Existing rotation-gate presentation remains correct; no claim of a playable portrait build editor. |
+| Audio and mute | Separate event evidence: ordinary feedback only on a newly accepted delivered transition; no cue/directive remint on replay/resume or fresh-client recovery; commit-before-ACK may skip output. Matching placement/payment feedback, mute and spatial teardown still apply. Screenshots cannot prove sound. |
+| Multiplayer/authority | Two-client public revision/privacy, full-cap/refusal, offline-owner admission and revocation; restart/receipt integration for paid results. Offline screenshot fixtures cannot prove these. |
+
+Every owning UI file extends the source/mechanic tooltip fixture, focused painter
+and invalidation/focus tests, mobile and theme guards, i18n, fairness and script
+selection pins appropriate to its diff. File 20 records the screenshot manifest,
+input/audio/LOW evidence, content/art finish and outstanding external release
+sign-offs as gates. A screenshot is evidence of the recorded state and build,
+never proof that all implementation, performance or service gates passed.
+
+The wave close reviews the complete wave's feature code and interactions against
+its actual full-wave diff and evidence. Prior per-file QA informs that integration
+review but does not exclude feature behavior when the close's immediate edits are
+documentation. Resolve every review finding including nits, then obtain a fresh
+review of the entire fix round. Only named external signature artifacts remain
+release gates; they are never deferred review findings.
+
+The implementation plan's reviewer matrix applies to every owner: frontend,
+accessibility/i18n, test coverage, render performance for materials/lights/scene
+attach, parity/sim for feature behavior, and security/persistence/database review
+for authority or spending. Parent implementation sessions run the shared gate
+once and reviewers inspect its evidence; repeated ad hoc test runs do not replace
+the canonical QA contract. This packet settles what they must build and prove.
+
+Exact additional focused scene IDs from the section 11 manifest: build-keyboard-focused, build-pad-placement, build-touch-controls, portrait-rotation-gate, trophies-grid-focused. Each retains its declared input/view/media dimensions and one image per variant.
 
 ### Starter Prompt
 ```
@@ -20,8 +98,18 @@ ULTRACODE: not needed for this phase (the matrix is a checklist run, not a build
 
 Goal: prove the Cottage MVP end to end on every host and every store build by running
 every row of docs/freeholds/qa-checklist.md over the wave A diff, fix what the matrix
-finds, capture screenshots, and open the wave A PR (FREEHOLDS_ENABLED defaulting off)
-only after Fernando's push go, then watch CI to green. Never merge.
+finds, capture screenshots, and prepare the local wave A review draft with
+FREEHOLDS_ENABLED defaulting off. Never push, open or merge a PR.
+
+Asset execution: every step that creates or regenerates shipping GLBs, reference
+artwork, icons or images MUST be done by Codex, not Claude. Use
+.agents/skills/woc-image-to-glb/SKILL.md and its shared canonical workflow for GLBs;
+use Codex image generation for raster artwork. Capture actual rendered screenshots
+as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
+phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
+icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
+That final sweep does not postpone artwork owned here.44b revisits the completed result
+for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -40,13 +128,15 @@ STEP 0 - PRE-FLIGHT:
   at lowest graphics, capture rigs never find by English text, "format pass != check
   pass", "commits need bodies", the release-merge checkpoint entries.
 
+- Invoke database-performance-reviewer before storage/query/lock/cadence decisions;
+  send the scoped diff surface and approved artifacts, then review the finished diff.
+
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md (Push policy, the per-phase ledgers 01 to 19, OPEN items),
-  docs/freeholds/progress.md (every wave A row 01 to 19 with its QA verdict and deferred
-  items, and "20 Wave A close"), docs/freeholds/qa-checklist.md (every row), this file
+- docs/freeholds/state.md (Push policy, the per-phase ledgers 01 to 19, tracked release gates),
+  docs/freeholds/progress.md (every wave A row 01 to 19 with its QA verdict and external release gates, and "20 Wave A close"), docs/freeholds/qa-checklist.md (every row), this file
 - .github/PULL_REQUEST_TEMPLATE.md; .claude/skills/pr-screenshots/SKILL.md;
-  scripts/pr_shot_targets.mjs (the housing targets Phases 11, 16, and 17 added);
+  scripts/pr_shot_targets.mjs (the housing targets Phases 11, 16, 17 and 18 added);
   docs/prd/woc/freehold-service-contract.md (Phase 15); .claude/skills/ci-triage/SKILL.md
 - The wave diff: `git log --oneline <base>..HEAD` and `git diff <base>..HEAD --stat`
   where <base> is the merge-base with the base branch (origin/feature/masterwrought while
@@ -72,50 +162,79 @@ Spawn one Explore agent to read and summarize:
 The agent returns: the matrix as a table of row, resolved command, and the test files
 that exist on disk (naming any row whose suite does not exist under the checklist's
 name); the list of screenshot targets with their ids and mobile variants; the PR base
-branch and merge-base SHA; every deferred item from rows 01 to 19; the O1 handoff state
-and the O2 counsel checklist items; the flag default and where it is pinned.
+branch and merge-base SHA; every explicit external release gate from rows01 to19; the service contract handoff state
+and the counsel/Terms release checklist items; the flag default and where it is pinned.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files; the coordinator owns progress.md, state.md, and the PR body and edits them last:
-- Agent MATRIX: run every qa-checklist.md row's command ONE ROW AT A TIME (one vitest
-  file per invocation, bounded workers), including `npm run perf:tour` through the
-  Cottage, `npm run asset:budget`, the pg-armed persistence twin after `npm run db:up`
-  with TEST_DATABASE_URL set, the copy-rule scan from .githooks/pre-push over the wave
-  diff (dashes and emojis only), tests/freehold_store_gates.test.ts (the "earn" scan and
-  the token-string pins), and the classic-fidelity grep
-  from the qa-checklist.md row (the banned two-word land phrase over src/, server/, and
-  public/ ONLY, never docs/freeholds or docs/prd whose naming rules spell it, which must
-  return nothing, plus the PR body read by hand); record each row as PASS or FAIL
-  with the output path; for a FAIL write the failing assertion and the owning phase (by
-  progress.md row) without fixing anything.
-- Agent SCREENSHOTS: the pr-screenshots skill, before (the base branch) and after (HEAD),
-  desktop plus the compact and tablet landscape mobile boxes, seeding the lowest graphics
-  preset and graphicsDefaultApplied before page.goto, never locating an element by
-  English text: the Eastbrook Freehold Gate, the Inn Room, the Cottage in build mode with
-  the ghost in a blocked state, the palette, the Steward panel, the store surfaces (web,
-  and a native emulation showing the manage-on-the-website line), the trophy case.
-  Commit under docs/screenshots/<slug>/ and return the relative paths for the PR body.
-- Agent WIKI-AND-DOCS: `npm run wiki:content` then `npx vitest run tests/guide.test.ts`;
-  confirm every housing guide.* key is spoiler-safe; finalize
-  docs/prd/woc/freehold-service-contract.md (the two SKUs, spend kind freehold, the fingerprint
-  rule, the settlement line) as the O1 handoff; draft the PR body from
-  .github/PULL_REQUEST_TEMPLATE.md with: the MVP scope in the proposal's section 13
-  words, the flag default off and how to enable it, the seven-distribution surface
-  summary, the O2 counsel checklist as an OPEN section, the screenshot links, the deferred
-  items list, and the word "phase" nowhere.
-Then the coordinator: for every FAIL row, fix test-first in isolation (the
-extract-and-test skill), spawn the reviewer the dispatch table names for the touched
-surface, re-run the row, and record the fix commit. Every agent writes any report longer
-than a screen to a file and replies with the path plus a short summary. Never
-`mode: "plan"` on teammates.
+Assign disjoint file ownership and integrate shared pins last.
+Read ux-spec.md and the locked decisions in state.md through the context reader.
+NEW paths/symbols below are planned deliverables, not existing tree anchors.
+
+Deliverables (at most five):
+1. Complete Wave A readiness matrix. Run qa-checklist.md over the whole reviewed
+   wave, all settled D decisions and ux-spec.md; require every preceding implementation
+   and QA pair PASS. Include server/offline/headless parity, dark flags, seven surface
+   capabilities, atomic transfer/receipt crash races, bounded DB workloads and content
+   provenance. Parent runs deterministic commands once with bounded workers and
+   records command/exit/output path. The pre-merge bar is node scripts/gate_select.mjs
+   (or the deeper npm run gate), plus the Stop-hook floor; ci:changed alone is not the
+   contribution gate. Fix each actual failure test-first, dispatch relevant review and
+   freshly review every fix. No unreviewed nit or missing artifact becomes a PASS.
+2. Exact visual and input matrix. Execute the exact screenshot target/state matrix above
+   on desktop 1600x900, compact 874x402 and tablet 1180x820, using the common housing
+   helper and real HUD/Sim states. The approved constructor/descriptors expand to 330
+   unique variants; one capture callback produces one image. A transient sequence
+   ending in success never substitutes for pending/refusal/reconnect images. Required after-shots fail on missing state. Capture
+   #ui on touch to show safe-area strips, not a crop that hides them. Separate evidence
+   proves the sanctioned arrival sound, skip/reduced-motion camera return, actual
+   gamepad sequence and true two-client visiting. Confirm all final art IDs, measured
+   LOW budgets and identical actionable ghost/blocked/capacity information at every
+   tier, including iOS pressure fallback. Screenshots and recordings link to actual
+   checked-in evidence; no still image is treated as payment/ACL proof.
+3. Production handoffs and four-week measurement artifact. Finalize the accepted
+   service/counsel/Terms/listing artifact package and named release gates from state.md;
+   preserve all earlier production/store-submission sign-off gates. At the packet end,
+   phase-44a-final-codex-artwork.md must replace every residual feature-created
+   placeholder icon/image with final Codex artwork and emit final-artwork-audit.md.
+   Then phase-44b-final-legal-handoff.md revisits the actual built system, Terms, policy,
+   territory and listing copies and emits docs/prd/woc/freehold-final-legal-handoff.md
+   for the legal team with tracked sign-off. No early gate is postponed to that handoff;
+   report external acceptance honestly without OPEN design questions. Produce the
+   four-week measured Ledger report artifact defined by the content/calibration
+   manifest: approved schedule IDs and versions, ordinary weekly gatherer output
+   methodology, produce/nonproduce bill composition, source-mode demand, material
+   availability/tradability, outage exclusions, costs and condition/absence behavior.
+   Compare to retained Cottage 10% output target using measured observations, no
+   promised market price increase. Owner is Fernando with economy-service acceptance;
+   no production enable until literal bills and the report are signed. If the
+   observation window has not elapsed, a runnable collection/report artifact and
+   scheduled owner handoff are complete, while its production release gate stays
+   visibly unaccepted. No invented data or silent approval by elapsed time.
+4. Durable budget review and release preparation. Create the every-second-release
+   housing budget review artifact with named Fernando/render/performance owners,
+   measured LOW device scenarios, per-room assets/bytes/triangles/light allocations,
+   admitted-player visibility and decision record. No automatic capacity increase.
+   Complete wiki/guide and English-key/copy sweeps. Prepare a template-compliant MVP
+   PR draft with scoped behavior, all proof, default-off flags, seven surface summary
+   and named external release gates. Keep this audit and branch local; any future
+   implementation push/PR requires Fernando's separate authorization under state.md.
+5. Fresh review and recorded next handoff. Whole-wave qa-checklist and all actual
+   architecture, cross-platform, content, render, frontend, privacy, migration,
+   database-performance and server-hot-path reviewers inspect evidence. Database review
+   runs before decisions and on finished diff, including query/index/byte/queue and
+   disposable-PG proofs. Apply all findings and obtain a fresh fix-round verdict.
+   Record screenshot matrix, calibration/report and release gates, budget review,
+   local tip and actual next file; nothing is marked built by this packet audit.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- No feature work: only matrix fixes, screenshots, docs, and the PR.
-- The three money gates: (1) counsel sign-off is OPEN in the PR body, never claimed;
-  (2) FREEHOLDS_ENABLED defaults off and every housing route and command refuses while
-  dark, re-verified by the matrix; (3) the seven-distribution surface map passes its
-  matrix test. The economy service owns every price and all token math.
+- No feature work: only matrix fixes, screenshots, docs and the local review draft.
+- The three money gates: (1) written counsel acceptance, published accepted Terms/
+  listing artifacts and the accepted economy-service contract before production enable
+  or any housing-bearing store submission; external sign-off status lives in state.md;
+  (2) FREEHOLDS_ENABLED defaults off and the server refuses/hides housing purchases
+  while dark; (3) the seven-distribution surface map independently gates housing use,
+  purchase and approved website management, including complete submodel/handler/
+  catalog/DOM/accessibility/error absence on denied surfaces. These are cumulative.
 - No wallet, $WOC, on-chain deed (mint, trade, holder), or marketplace string in any housing path reachable on
   App Store, Google Play, Steam, or Epic; no "earn" language in hudChrome.housing.*.
 - Nothing purchasable changes a combat, progression, gathering, or drop number; nothing
@@ -126,7 +245,7 @@ INVARIANTS THIS PHASE MUST KEEP:
   lowers the ceiling.
 - The word "phase" appears in no code, comment, commit, or PR text (docs/freeholds/ is
   the only place it lives); screenshots are captured at the lowest preset.
-- Pushes go to origin only, never a fork; the PR is never merged by this session.
+- Keep the branch local. Never push, open or merge a PR in this packet.
 
 Out of scope (do NOT do in this phase):
 - Any wave B item: the Lodge tier, furnishings beyond the MVP set, the R8 pattern
@@ -136,6 +255,13 @@ Out of scope (do NOT do in this phase):
 - Raising a monolith ceiling or re-baselining any i18n artifact.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
+Required named reviewers for this file: architecture-reviewer, cross-platform-sync,
+privacy-security-review, database-performance-reviewer, migration-safety,
+server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer,
+content-obligations-reviewer, test-coverage-auditor, qa-checklist.
+Database-performance-reviewer runs before implementation decisions and again on the
+finished diff; pair with migration-safety and privacy-security-review as listed.
+The QA session inspects those reports and dispatches a fresh review of every fix.
 - The whole qa-checklist.md matrix (STEP 2, Agent MATRIX) with every row PASS, then
   `npx tsc --noEmit` and `npm run ci:changed` after the last commit (read the exit code).
 - Spawn per docs/freeholds/implementation-plan.md over the WHOLE wave diff: qa-checklist
@@ -143,53 +269,59 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   (the render and perf row), content-obligations-reviewer (the content row),
   cross-platform-sync (parity, wire, events), privacy-security-review (server, net, store
   policy), migration-safety (the persistence row), frontend-seam-reviewer (the mobile
-  row). Prompt each for COVERAGE not filtering; each writes its report to a file. No PR
+  row), architecture-reviewer, database-performance-reviewer and server-hot-path-reviewer
+  (the complete transaction/receipt/query/queue and snapshot/cadence evidence). Prompt each for COVERAGE not filtering; each writes its report to a file. No PR
   while a BLOCKING finding stands.
 
-STEP 4 - COMMIT CADENCE, THEN PUSH AND PR:
+- Required reviewers for the complete settled diff: all canonical whole-wave reviewers including database-performance-reviewer and
+  server-hot-path-reviewer.
+  Database performance reviews happen before implementation decisions and again on
+  the finished diff; persistence/security pair on stored/authority surfaces. Runtime
+  PG evidence, bounded workload/query/index/byte limits and cancellation are required.
+
+STEP 4 - COMMIT CADENCE AND LOCAL REVIEW DRAFT:
 2 to 5 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
 `git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
 - fix(<scope>): one commit per matrix finding, test-first, reviewed
 - docs(screenshots): add the Freehold before and after captures
 - docs(freeholds): record the wave A integration matrix results
 - docs(freeholds): finalize the economy-service contract for the Freehold Charter
-Then `npm run ci:changed` after the LAST commit; read the exit code.
-Then STOP and ask Fernando for the push go (state.md "Push policy"), showing the matrix
-table, the screenshot paths, and the PR body draft; ask in the same message whether
-wave B continues on feature/freeholds after this PR merges or on a stacked branch off
-its head, and record the answer in state.md. On the go: `git push -u origin
-feature/freeholds` (origin only), then `gh pr create --base <base branch> --title
-"feat(freeholds): the Cottage Freehold MVP" --body-file <the drafted body>`, then
-`gh pr checks --watch`. On a red or stalled check run the ci-triage skill, fix, push
-again, and watch again. Stop at "pushed, green, ready for review".
+Then run the shared contribution gate from docs/qa-gate.md, including
+`node scripts/gate_select.mjs` when required, and `npm run ci:changed` after the LAST
+commit as the Stop-hook floor; record exact exit codes.
+Keep the verified branch local and save the review-ready description, matrix and
+screenshot references. Continue the existing local packet chain into Wave B; no
+branching ruling, push, hosted PR creation or remote CI watch is required here.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
+- [ ] Every one of the five settled STEP 2 deliverables and all linked ux-spec.md states
+  has implementation, decisive evidence and a fresh review; earlier summary prose never
+  overrides the settled contract. Numeric references match state.md and approved artifacts.
 - [ ] Every qa-checklist.md row is recorded PASS in progress.md under "20 Wave A close"
   with the command that proved it; no row is marked by inspection.
-- [ ] qa-checklist reports PASS; every dispatched reviewer reports no BLOCKING.
+- [ ] qa-checklist reports PASS; every dispatched reviewer confirms ALL findings, including nits, are resolved and freshly reviewed.
 - [ ] Before and after screenshots (desktop, compact, tablet) are committed under
   docs/screenshots/ and linked from the PR body.
-- [ ] docs/prd/woc/freehold-service-contract.md is final and named in the PR body as the O1
-  handoff; the O2 counsel checklist is in the PR body as OPEN.
-- [ ] The PR is open off the base branch, follows the template, contains no "phase",
-  and `gh pr checks` is fully green; FREEHOLDS_ENABLED is unset by default.
-- [ ] state.md records the wave B branching choice and the PR number.
+- [ ] docs/prd/woc/freehold-service-contract.md is final and named in the PR body as the accepted service-contract
+  handoff; the counsel/Terms acceptance status is explicitly named as a production release gate.
+- [ ] The local review draft names the recorded base, follows the PR template,
+  contains no "phase" and links exact passing local gate evidence;
+  FREEHOLDS_ENABLED is unset by default. No remote PR or push occurred.
+- [ ] state.md records the local tip, Wave B continuation and named release gates.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (row 20: status, the matrix table, deferred items
-  carried into wave B) and docs/freeholds/state.md (the PR number, the wave B branching
-  choice, the "Current phase" line, any locked decision).
-- Record surprising rules learned in memory for the next session (the PR number and the
-  branching choice belong there too).
+- Update docs/freeholds/progress.md (row 20: status, the matrix table, external release gates
+  carried into wave B) and docs/freeholds/state.md (the local tip, Wave B continuation,
+  the "Current phase" line and any locked decision).
+- Record surprising rules learned in memory with the local tip and exact next file.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, the matrix table, files touched, review verdicts, the PR URL and
-CI state, deferred items, and the FULL PATH of the next file to run:
+End with: phase status, matrix table, files touched, review verdicts, local draft and
+validation evidence, release gates and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-20-qa.md
 
 STOPPING RULES:
-- Stop before any push: the push happens only after Fernando's explicit go in this
-  session; never push to a fork; never merge a PR.
+- Keep the branch local; never push, open or merge a PR.
 - Stop if a matrix row fails for a design reason (a locked decision would have to
   change): record it in progress.md and name the owning phase file as the file to re-run.
 - Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.

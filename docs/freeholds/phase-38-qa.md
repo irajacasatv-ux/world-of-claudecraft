@@ -1,106 +1,221 @@
-# Phase 38 QA: audit the Charter mint surface and marketplace trading
+# Phase 38 QA: audit optional Charter mint and furnished-plot trading
 
-Audits `phase-38-charter-mint-and-trading.md`. Verdict goes in `progress.md` (row
-"38 QA"). The next implementation phase never starts before this file has run.
+Audits `phase-38-charter-mint-and-trading.md`. Record the verdict in `progress.md` row "38 QA".
+The next implementation starts only after this audit passes.
 
 ### Starter Prompt
 ```
-This is Phase 38 (QA) of the Freeholds and Guildhalls feature: audit the Charter mint
-surface, the serialized collectible category, holder flair, and the extended
-distribution matrix.
-
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-
-Goal: audit the Phase 38 diff for correctness against every deliverable and acceptance
-criterion in docs/freeholds/progress.md "38 Charter mint surface and marketplace
-trading", missing tests, dead code, the token firewall, the three money gates, the store
-policy, and the seven-row matrix; fix what the audit finds; record a verdict.
+This is Phase 38 QA of the Freeholds and Guildhalls feature.
+Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Goal: verify every promised deliverable, adversarial failure case and settled ruling
+against the real implementation diff; fix all findings and review the fix round.
 
 STEP 0 - PRE-FLIGHT:
-- Work in the packet worktree named in docs/freeholds/state.md, on branch
-  feature/freeholds (or the stacked wave branch state.md records). Verify `git status`
-  is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
-  while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
-- Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
-  "apply ALL findings", the marketplace review verdict, "dev deploy is MAINNET".
+Work in the state.md worktree/branch. Verify git status is clean; ask if it is dirty.
+Sync per state.md "Worktree, base, and merge-forward"; after a non-empty merge run the
+release-merge-audit skill and install frozen dependencies if patches/ moved. Scan memory
+for test-pin traps, "apply ALL findings" and "review the review-fix round".
+
+ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
+in this phase, including GLBs, references, icons and images, must be executed by
+Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
+provenance, runtime registration, fingerprint and in-context checks. This planning
+audit creates no game assets. Final art is required here;44a is a residual sweep,
+not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
-Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md, docs/freeholds/progress.md ("38" and its row),
-  docs/freeholds/phase-38-charter-mint-and-trading.md (what was promised)
-- the Phase 38 diff: `git log --oneline <phase-start>..HEAD`, `git diff <phase-start>..HEAD
-  --stat --name-only`, then the full diff of every touched file (the commits named in
-  progress.md row 38)
-- the pins the diff claims: tests/distribution_surfaces.test.ts, tests/client_shell.test.ts,
-  tests/woc_market_wiring.test.ts, tests/freehold_store_gates.test.ts,
-  tests/server/woc_market_routes.test.ts, tests/server/freehold_deed_routes.test.ts, the
-  tests/server/ suites the diff added
-The agent returns: the promised-versus-delivered table per deliverable, the touched
-path list (any src/sim/ path is BLOCKING), every numeric literal the diff added near
-deed or collectible code, the list of new symbols and where each is consumed, every test
-added with what it asserts, and any TODO, unused import, or stub.
+Spawn one Explore agent over state.md, progress.md row 38, ux-spec.md, the implementation
+file, referenced signed artifacts, the complete scoped diff and all claimed tests.
+Return to a scratch report: promised/delivered table, each new symbol's actual consumer,
+each test's assertion and failure control, changed anchors, unused code and gate evidence.
 
-STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report to a
-file and replying with the path plus a short summary; prompt each for COVERAGE: report
-every issue including low-severity and uncertain ones; ranking happens later):
-- CORRECTNESS: every deed surface is gated by the surface map AND the HudFeatures row
-  (two independent gates); each of the seven distributions resolves as recorded; every
-  route refuses while either flag is dark before any service call; the listing freezes
-  through the service and the holder changes only after a confirmed settlement; the
-  transfer rule recorded in state.md is what the code does; the flair id is opaque and
-  an unknown id renders nothing; the seller's furnishings and trophies survive a sale;
-  no split, burn, or royalty is computed in the game.
-- TEST COVERAGE: the matrix has one `it` per distribution with the deed column asserted
-  by literal; the source pins scan the real bundle paths, not a fixture; per-dimension
-  negatives (flag dark, market dark, native build, the Seeker capability triple, off per
-  D21, Steam stamp, Epic stamp, malformed flair id); the settlement test asserts the holder is unchanged on an unavailable
-  result; no constant self-comparison; the grep pin for token math has a can-fail
-  control.
-- DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, any deed, wallet,
-  mint, or marketplace string in a native, Steam, or Epic path, English in a server
-  response, the word "phase" in any code, comment, or commit message, em dashes or
-  emojis, generated files hand-edited, the mobile sheet decision for the mint card.
-Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
-the diff touched (privacy-security-review, frontend-seam-reviewer,
-server-hot-path-reviewer, cross-platform-sync, test-coverage-auditor), and finally
-qa-checklist (the completion gate), all for COVERAGE, all to files.
+STEP 2 - AUDIT:
+Deliverables (at most five):
+1. Complete promised/delivered and adversarial correctness report.
+2. Decisive test, runtime-evidence and hygiene coverage report.
+3. Applied fixes, fresh fix review and recorded final gate verdict.
+
+Fan out three read-only coverage auditors: correctness, test coverage, and hygiene.
+Each reports every issue, including uncertain issues and nits, with severity/confidence
+and evidence to a file. Audit these specific requirements:
+- Trace each included and excluded exact item copy through prepare, freeze, quote,
+  settle, cancel and recover. The manifest is immutable; edit/upgrade/listing races
+  cannot substitute contents. Personal/bound copies and trophy unlocks stay seller's.
+- Exercise real-PG competing settlements, timeout after debit, restart, historical
+  replay and current-owner changes. No intermediate ownership or duplicate copy;
+  unsafe seller/buyer custody refuses before mutation and no lock spans service IO.
+- Native use consumes only server entitlement; optional deed state alone never
+  destroys access. Every denied distribution has no purchase/deed catalog or submodel.
+- The service verifies actual eligible checkout session/territory at each new-spend
+  boundary and returns opaque verified effects/refusals, never a channel label.
+  Reject forged auth/Origin/UA/JSON/linked-store/server-secret/bridge proofs and
+  cross-account/purpose/SKU/quote/operation authorization reuse. After later policy,
+  territory or expiry changes, recover only the accepted original outcome without
+  another checkout session/debit, subject to current local entitlement/custody guards.
+  07a's exact operation/mutation modules retain sole durable binding/receipt ownership.
+- WocMarketService delegates are paid by extraction. Flair remains an opaque public
+  ID; the client capability projection removes it on Seeker/App Store/Play/Steam/
+  Epic before renderer/chat consumption. Test actual projection, banner/chat/DOM,
+  errors and accessibility absence, not only a missing mint card. The same known
+  valid ID renders on both allowed web/website distributions and is absent on all
+  five denied distributions plus unknown-capability builds. Unknown IDs render none
+  in a separate arm. Those same denied clients retain
+  ordinary server housing entitlement and gameplay Book of Deeds. Server remains
+  D9-ignorant, with no src/sim/ change or per-viewer service verification.
+- Trace seller and buyer account_freehold_hearth rows through transfer/cancel/replay:
+  neither ready_at_ms nor revision is copied or cleared, and no plot field owns the
+  cooldown. Both accounts retain independent existing travel history.
+- Pin all three money gates and service-owned price/royalty/split; fresh quote and
+  explicit contents confirmation cannot be skipped by recovery or stale UI.
+Audit strict decode, malformed/max-size preservation, current authorization, keyed
+player strings, focus return and all input modes where UI exists, deterministic
+three-host parity, no monolith growth, and test-pin freshness where applicable.
+Dispatch migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, cross-platform-sync, frontend-seam-reviewer, render-performance-reviewer, test-coverage-auditor and qa-checklist
+for the actual surfaces, including persistence/DB review of JSON or caller changes.
+Database performance must have reviewed decisions and the finished diff; fake pools
+do not prove locks, query plans or concurrency.
+
+The three money gates apply to EVERY priced action: (1) signed counsel acceptance,
+published Terms and accepted economy-service contract/catalog before production enable
+or housing storefront submission; (2) fail-closed live flags, default off, refusing
+every NEW priced action while dark; original accepted-operation recovery
+remains admitted under the recorded immutable outcome; (3) independent per-distribution use, purchase,
+website-management and deed capabilities, pinned for all seven distributions. Charter
+and Call checkout is browser web and website-distributed desktop only. Seeker is
+use-only with deeds off. App Store, Google Play, Steam and Epic have no purchase or
+deed submodel, catalog fetch, handler, hidden DOM, error or accessibility purchase
+text. Website management is independently approved and defaults off on denied stores.
+No housing copy on native, Steam or Epic names a token, wallet or on-chain deed.
+Purchase benefits use cosmetic, convenience and access language, never earn/income/yield.
+The economy service owns every price, conversion, fee, royalty, burn and split. The
+game forwards opaque IDs and versioned quote fingerprints, never computes token math
+or substitutes a stale quote. Durable discoverable intent precedes spend; housing
+receipt authority and effects commit through the NEW 07a operation/mutation
+producers, consumed by the Phase 15 purchase and Phase 37 deed adapters.
+No bounded live key array provides replay authority and no lock spans service IO.
+Unknown, expired or changed quotes for NEW spend require a fresh quote and
+explicit confirmation; an accepted original operation recovers without a new debit.
+
+PROPOSED SERVICE AUTHORIZATION AND RECOVERY CONTRACT:
+Preserve literal D9: the game server receives no distribution/channel label,
+country assertion or physical-client attestation. The NEW external economy-service
+issuer/verifier and policy module verify an actual eligible checkout session and
+current territory under signed policy; the signed acceptance names their exact
+external repository/module or interface-artifact identity and conformance proof.
+Account auth, Origin, user agent, client JSON, linked stores, a desktop bridge
+capability and an outgoing server secret are not physical-distribution proof.
+The service binds NEW checkoutAuthorization to account, purpose/kind, SKU, policy
+version, accepted quote, operation and full plot/guild/custody fingerprint. The game
+consumes only the opaque protected reference and service-verified allow/refusal/effect;
+it never issues eligibility from headers, accepts a channel JSON field or logs/exposes
+the authorization. Unknown/malformed/unverified eligibility refuses NEW spend.
+The adapter authenticates the actual service response and bounds decode before
+validating the complete operation/effect/fingerprint. A signed acceptance document
+is not proof of runtime cryptographic validation. Malformed or nonterminal results
+never grant a local effect or prove that no debit occurred; preserve the original
+operation for bounded status discovery and recovery.
+
+NEW source ownership is explicit: 07a's
+server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation owns
+protected authorization binding, fingerprint and durable receipt authority;
+server/freehold_mutation.ts::commitFreeholdMutation owns atomic local effects.
+Phase 15's NEW server/freehold_purchases.ts is the initial opaque quote/status/
+authorization consumer; NEW server/freehold_deed_proxy.ts is the later deed consumer
+of that same verified boundary. No game geo or distribution-attestation module is
+introduced. These are proposed producers, not existing exports; read prepared
+phase-07a-transactional-mutation-boundary.md and its QA before implementation.
+
+Dark flags and unknown/current eligibility refuse new paid actions, not recovery of
+an already accepted original operation. Receipt/status discovery, local application
+or accepted compensation use its immutable outcome and original protected binding
+without a new checkout session or debit. Current local entitlement, ownership, fence
+and custody guards still apply. Rejected/expired new quotes need fresh confirmation;
+an accepted historical quote is not a fallback new purchase. Both service conformance
+and game tests cover forged eligibility inputs, cross-binding reuse, policy/territory/
+expiry changes before new spend, and accepted-operation recovery after those changes.
+
+ACCOUNT AUTHORITY, CALENDAR AND RECOVERY ACCEPTANCE:
+Consume 07b's single account lifecycle authority: NEW
+server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/loadFreeholdLifecycleProtectionPage/
+advanceFreeholdLifecycleOnClient, coordinated by
+server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator and the accepted
+server/freehold_lifecycle_binding.ts::resolveFreeholdLifecycleBinding policy registry.
+Capture authenticated observations before queues; committed monotonic transitions,
+not authentication login or a plot-local last-seen field, authorize account grace.
+Immutable multi-return history or lossless prefix facts cover dormant/foreign plots;
+union overlapping lifecycle protection and service suspensions exactly, never sum
+independent credits, force-write foreign plots or restart grace on an alt/plot switch.
+
+07c's NEW server/freehold_arrival_db.ts::loadFreeholdArrivalTiers/
+markFreeholdArrivalTierOnClient owns normalized account+tier marks, separate from
+lifecycle and plot saves. Only the committed accepted-owner-entry insert winner
+has first-tier eligibility. NEW arrivals may receive a private freshArrivalPresentation
+directive; snapshot/resume/replay set it null even with firstTierAtAdmission history.
+Commit-before-ACK can skip presentation; no exactly-once visible/audio promise and
+no permanent receipt for routine visits. Second plots and transfers do not duplicate,
+copy or clear account arrival marks or seller lifecycle history.
+
+13/13a own shared source calendar/history/checkpoint evaluation. Preserve calendarId,
+schemaVersion/resetPolicyId and immutable prepaid bill/rate/material/receipt identities
+across foreign-realm claims and transfers. No rebinding to serving realm/browser zone.
+Historical dependencies of durable condition/bill/credit effects must be irrevocably
+finalized and read at consistent committed calendar/lifecycle revisions; unfinalized,
+missing or unsupported coverage keeps the affected effect pending. A future-credit
+purchase does not require future time to be finalized. Long absences/outages use
+bounded indexed prefix probes, never lifetime scans or absent-day/week loops.
+Calendar-only exclusive writers and compatible shared mutation readers follow 07a's
+actual legacy touch-set proof; no invented reverse lock hierarchy. Current-generation
+projection/ACK identity cannot regress after delayed loads or superseded delivery.
+Server-only operator evidence, secrets and diagnostics never reach either owner or
+visitor wire: explicit allowlist builders and distinctive sentinel tests prove it.
+
+At a sale/ownership transfer, materialize the old owner's condition at the transfer
+boundary from finalized original calendar/lifecycle history; preserve source calendar
+and immutable credits, retain seller account history, and apply buyer lifecycle only
+prospectively without copying grace. Unknown authority holds application for bounded
+original-operation recovery/accepted compensation, never a replacement charge or
+silent calendar reset. Current local custody/fence guards still apply.
+Character deletion, soft deactivation, restoration, true account deletion and export
+are separate: deactivation is not an FK cascade; restored history/credits/receipts keep
+their meaning. Explicit housing export loaders expose allowed facts only. Unknown or
+oversized originals remain durable/read-only with bounded diagnostic/reference, not
+empty/new-home defaults or filtered destructive arrival-set rewrites.
+07's persistence-rollout-contract.md and 07b's lifecycle-policy-binding.md/
+lifecycle-db-contract.md plus 13a's upkeep-calendar-db-contract.md name minimum
+capable releases, measured bounds, exact schema/save fixtures and accepted policies.
+Enable only a proven capable rollout; unchanged normalized rows do not prove an old
+binary implements lifecycle, export or saves. Rollback quiesces NEW effects and
+preserves accepted original-operation recovery identities and supported recovery.
+Each consuming implementation/QA runs relevant two-character/two-plot/two-realm,
+dormant-history, delayed-generation, finality/transfer, deactivation/restore/export
+and capable/uncapable-release fixtures through real composition and disposable PG.
 
 STEP 3 - VALIDATION:
-- Run the Phase 38 STEP 3 suite list plus `npx tsc --noEmit`, the pg-armed twin with
-  TEST_DATABASE_URL set, and `git diff <phase-start>..HEAD
-  --name-only | grep '^src/sim/'` (must print nothing).
+Run every implementation STEP 3 command and required disposable-PG evidence. Record
+exact commands, exit codes and evidence paths; an env-skipped suite is not runtime
+proof. Run node scripts/gate_select.mjs before completion.
 
 STEP 4 - FIX:
-- Apply ALL BLOCKING and SHOULD-FIX items (and the nits unless a nit contradicts a
-  locked decision, in which case record it). Re-run the validation matrix. Commit fixes
-  separately from the verdict, Conventional Commits with scope and body, EXPLICIT paths,
-  never `git add -A`, the word "phase" nowhere. Then review the fix commits with a FRESH
-  reviewer (fixes are unreviewed code until someone reads them). `npm run ci:changed`
-  after the last commit; read the exit code.
+Apply ALL findings including nits. Re-run affected checks. A fresh reviewer reads the
+fix commits before completion. Commit fixes separately using scoped Conventional
+Commits with bodies and EXPLICIT paths, no coauthor trailer, no word "phase".
+Run npm run ci:changed after the last commit and read the exit code.
 
 STEP 5 - ACCEPTANCE:
-- [ ] Every Phase 38 acceptance box is verified by a check that ran, not by inspection.
-- [ ] No BLOCKING or SHOULD-FIX item remains open; deferred nits are listed with a reason.
-- [ ] The fix commits were reviewed.
+- [ ] Every implementation acceptance has a decisive recorded check and evidence.
+- [ ] All findings are applied; contradictions with a locked ruling are resolved in
+  the report without silently changing that ruling. No unresolved implementation gap.
+- [ ] The fresh fix review passes and the shared contribution gate passes.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- progress.md row "38 QA": verdict (PASS / PASS-WITH-FOLLOWUPS / FAIL), counts found and
-  fixed, deferred items. state.md: anything the fixes changed in the ledger row; both
-  deed flags recorded as off with the counsel gate OPEN.
-- Record surprising rules learned in memory.
+Record PASS or FAIL, findings/fixes, actual commands, evidence and tracked release gates
+in progress.md row "38 QA" and state.md's ledger. Preserve signed-artifact status.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: the QA verdict, counts found and fixed, deferred items, and the FULL PATH of
-the next file to run:
+Report verdict, findings and fixes, exact checks, gate status and FULL PATH of next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-39-wave-d-close.md
 
 STOPPING RULES:
-- A FAIL verdict stops the packet: record it and name the Phase 38 file as the next file
-  to re-run with the findings attached.
-- A src/sim/ path in the diff, a token-math constant, or a deed string in a native,
-  Steam, or Epic path is a FAIL, not a fix this QA makes on its own.
-- Do not push the branch; never merge a PR.
+A FAIL verdict reruns the owning implementation with the findings attached. Do not
+push the branch or open/merge a PR in this audit.
 ```

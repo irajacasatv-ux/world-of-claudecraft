@@ -3,7 +3,7 @@
 Wave A, the Cottage MVP. The spec is `progress.md` "10 Furnishing colliders"; the
 decision is `state.md` D17 (furnishings are walk-through until this phase, which
 generalises the runtime collider region registry beyond the rift band) and
-`brainstorm.md` D4 (runtime colliders regenerate from the descriptor on both hosts).
+`state.md` D4 (runtime colliders regenerate from the descriptor on both hosts).
 This phase extracts the rift region registry from `src/sim/colliders.ts` into a
 sibling with the rift as its first client and NO behavior change, publishes the owner's
 placed-furnishing colliders per claim and per accepted layout change on the server and
@@ -80,16 +80,38 @@ Spawn one Explore agent to read and summarize:
   online.ts rows), src/sim/CLAUDE.md
 - Root CLAUDE.md "Modularity" (extract on the rule of three; move-not-rewrite) and
   "Invariants"
-The agent returns: the registry's exact lookup contract and the two generalisation
-shapes with their behavior-change risk (a sibling module with a band-aware
-candidate-origin derivation: rift keeps riftNearestFloorOriginZ, freehold derives
-instanceOrigin from dungeonAt(x) and instanceSlotForZ(z); versus a parameterised
-setRuntimeRegion family where the rift exports become thin aliases); every reader site
+The agent returns: the registry's exact lookup contract for the settled sibling module with band-aware
+candidate-origin derivation: rift keeps riftNearestFloorOriginZ and freehold derives
+instanceOrigin from the actual instance claim without reusing a clamping lookup; the
+setRuntimeRegion family retains the rift exports as thin aliases; every reader site
 that must dispatch to the generalised lookup; the publish and clear sites on both
 hosts; the swept-collision and solidity suites' drive shapes; the extraction that
 lowers the colliders.ts ceiling; whether self_motion_rift_lift.ts needs a twin.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
+
+Deliverables (at most five):
+1. The settled runtime_collider_regions.ts sibling and unchanged-behavior rift aliases.
+2. Server per-claim collision identity and pure descriptor-to-collider publication.
+3. Client descriptor generation/identity lifecycle and matching local collision region.
+4. O(1) reader integration for movement, sight and pathing with no per-tick republish.
+5. Rift equivalence, adjacent-claim, two-host and stale-generation lifecycle evidence.
+
+The sibling choice is settled: preserve the rift's candidate-origin algorithm and add
+an exact freehold claim-band resolver; do not defer between two architectures. Read the
+actual claim slot after checking band and bounds, not a clamped coordinate that aliases
+its neighbor. Create one collision identity per claim, publish before any admitted actor
+moves there, and dispose after its final user releases it. All accepted08/08a layout
+revisions use the same measured footprint/radius transform; r0 rugs have no obstacle.
+Protect door/arrival and occupied-player clearance through authoritative placement
+validation before publication, including when the owner builds with guests present.
+
+Client initialization is explicit, including empty/revision 0 descriptors; plotId/origin/claim
+epoch changes replace the region even for identical rows. Out-of-order/old-generation
+frames cannot restore a left claim. Leave, disconnect, account switch and failed entry
+clear the previous collision state at the correct lifecycle point. Owner and all admitted
+guests collide against the same committed rows at every graphics preset. No graphics
+fallback, mesh load failure or prepared-asset timing changes physical truth.
 Sequenced fan-out, three slices; the REGISTRY slice lands and passes the five rift
 suites BEFORE the other two start (they consume its exports). Each agent gets ONLY the
 Explore summary and its own files; the coordinator edits tests/monolith_budget.test.ts
@@ -111,8 +133,9 @@ last:
   and stored on the InstanceSlot in an append-only collisionToken field, released with
   clearRuntimeRegion on free, NEVER the single ctx.riftCollisionToken shared across
   server claims; the reader resolves a position's token through the claim at that
-  position (instanceInfoAt, then the slot's token), settled in STEP 1 and recorded in
-  state.md; clearFreeholdColliders on free), the hooks: on every claim in instance.ts,
+  position through the existing instance lookup and exact slot identity, with explicit
+  band/slot boundary validation before reading the slot's token; record the verified
+  reader in state.md before implementing the adapter; clearFreeholdColliders on free), the hooks: on every claim in instance.ts,
   after every accepted change in placement.ts, in the free path; the ctx primitive or
   callback appended if one is needed (mirrored in tests/sim_context.test.ts),
   tests/freehold_colliders.test.ts (a placed table blocks movement through
@@ -177,8 +200,19 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   architecture-reviewer (the move-not-rewrite extraction, the publish sites, tick
   order untouched), cross-platform-sync (both hosts collide identically; the mirror),
   and privacy-security-review (src/net/ touched). Prompt each for COVERAGE not
-  filtering; each writes its report to a file. Do not commit until no BLOCKING issues
-  remain.
+  filtering; each writes its report to a file. Do not commit until all findings, including nits, are resolved and freshly reviewed.
+
+FINAL REVIEW AND COMPLETION CONTRACT:
+- Required reviewers for the actual promised surfaces: architecture-reviewer, cross-platform-sync, privacy-security-review, test-coverage-auditor, qa-checklist.
+  Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
+  nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
+  ownership examples; this complete roster is the minimum finishing dispatch.
+- Database performance reviews happen before implementation decisions and on the finished
+  diff whenever SQL/call sites/stored shapes/queues/locks/timeouts/growth change; pair
+  migration-safety and privacy-security-review for persistence/authority changes.
+- Run node scripts/gate_select.mjs before calling this contribution complete, as well as
+  every scoped/PG/visual/SFX check named here. Report exact commands and outcomes. A
+  skipped required suite or a reviewer report alone is not a passing shared gate.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -201,8 +235,7 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   and released on free; two concurrent claims keep independent regions (pinned); no
   freehold publish uses ctx.riftCollisionToken (a grep plus the reviewer's word).
 - [ ] No publish runs per tick (a grep of the sweep paths plus the reviewer's word).
-- [ ] All STEP 3 suites green; architecture-reviewer and cross-platform-sync report no
-  BLOCKING; the colliders.ts ceiling is LOWER than before (and sim.ts or online.ts if
+- [ ] All STEP 3 suites green; architecture-reviewer and cross-platform-sync confirm ALL findings, including nits, are resolved and freshly reviewed; the colliders.ts ceiling is LOWER than before (and sim.ts or online.ts if
   touched).
 
 STEP 6 - DOC UPDATES + MEMORY:

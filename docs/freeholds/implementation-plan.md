@@ -1,198 +1,400 @@
 # Freeholds and Guildhalls: implementation plan
 
-1. [The per-phase workflow](#the-per-phase-workflow)
-2. [Review dispatch (the packet's one canonical copy)](#review-dispatch)
-3. [Cross-cutting gates](#cross-cutting-gates)
-4. [The contributor i18n policy](#the-contributor-i18n-policy)
-5. [Code hygiene](#code-hygiene)
-6. [PR cadence](#pr-cadence)
-7. [Phase summary](#phase-summary)
-
 ## The per-phase workflow
-Every phase is one fresh Claude Code session in the packet worktree
-(`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds`, branch
-`feature/freeholds`). The session pastes the phase file's starter prompt and follows it:
 
-1. **Pre-flight.** Clean `git status` (a concurrent session may share the checkout; ask
-   before touching a dirty tree). Sync the base per `state.md` ("Base and merge-forward"):
-   while PR #3872 is open, fetch and merge `origin/feature/masterwrought`; once it has
-   merged, discover the newest `origin/release/**` and merge that instead, then delete the
-   dependency note from `state.md`. After any non-empty merge run the `release-merge-audit`
-   skill and, if the merge touched `patches/`, `pnpm install --frozen-lockfile`. Scan
-   `MEMORY.md` for the phase's domain.
-2. **Load context through one Explore agent**, never by reading the planning docs or the
-   coordinators directly: the agent reads `state.md`, `progress.md`, this phase's file, the
-   named source files, and the relevant `CLAUDE.md` files, and returns only what the phase
-   needs. A third-party API or an exact classic-era number gets a web-research agent;
-   anything it cannot verify is OPEN, never guessed.
-3. **Execute** with the lightest orchestration that fits (Explore for recon, a parallel
-   Agent fan-out for independent slices, a Workflow for batch-heavy phases: the phase file
-   says which and names the split). Each implementer gets only the Explore summary plus its
-   own files. Every agent writes any report longer than a screen to a file and replies with
-   the path plus a short summary.
-4. **Validate** with the `state.md` validation matrix rows for the change types the phase
-   touched, one vitest file at a time while iterating, `npx tsc --noEmit` liberally.
-5. **Review dispatch** per the rules below, only for the surfaces the diff touched; every
-   reviewer is prompted for COVERAGE (report every issue including low-severity and
-   uncertain ones; ranking happens later) and writes its report to a file. No commit while a
-   BLOCKING finding stands.
-6. **Commit** in 2 to 5 Conventional Commits with a scope and a body, EXPLICIT paths, never
-   `git add -A`, no em dashes, no emojis, the word "phase" nowhere. Then
-   `npm run ci:changed` after the LAST commit and read its exit code (filter any error path
-   against `git diff <base>..HEAD --name-only` before calling a red "scope noise"; fix with
-   a scoped `npx @biomejs/biome check --write <file>`; a format pass is not a check pass, so
-   re-run the check).
-7. **Hand off.** Update `progress.md` (status, deferrals, notes) and `state.md` (new
-   `IWorld` members, `SimEvent`s, wire keys, commands, endpoints, tables, i18n keys, locked
-   decisions), record any surprising rule in memory, and end the response with: status,
-   files touched, validation results, review verdicts, deferred items, and the FULL PATH of
-   the next file (the paired QA file after an implementation phase; the next
-   implementation file after a QA phase).
+The packet worktree is `/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds`
+on `feature/freeholds`, unless state.md records a separately authorized later wave branch.
+The current settle-and-polish audit remains local and produces no implementation, push,
+opened PR or merge. Follow the active harness's root instructions; this packet names no model.
 
-The in-phase `qa-checklist` run is a completion self-review. The dedicated
-`phase-NN-qa.md` session is the gate; phase NN+1 never starts before it has recorded a
-verdict in `progress.md`.
+1. Pre-flight: verify clean git status for a new implementation session and preserve
+   unrelated work. Follow state.md "Worktree, base, and merge-forward": fetch origin
+   with prune; while PR #3872 is open merge origin/feature/masterwrought, otherwise
+   merge the newest origin/release/** and remove the dependency block. Never use main.
+   Run release-merge-audit after a non-empty merge and frozen install if patches/ moved.
+2. Load context through agents: root/directory CLAUDE, state, progress, exact implementation
+   and QA, UX, manifests and current source/test anchors. Scan MEMORY.md, the packet entry,
+   test-pin traps, apply ALL findings and review the review-fix round. Reports go to the
+   scratchpad with paths and short summaries; do not directly load planning coordinators.
+   Record changed tree facts in state before dependent edits. Verify unstable external
+   interfaces from current primary sources; missing signatures/measurements remain owned
+   artifact release gates, never invented values or new untracked product questions.
+3. Execute the exact five-or-fewer coherent outputs in the implementation file. Give
+   overlapping files one owner, keep coordinator integration local, and preserve others'
+   changes. Use existing SimContext, IWorld, RouteDef, PainterHost and scheduler seams.
+4. Validate proportionately while iterating, then run every required scoped check and
+   node scripts/gate_select.mjs before readiness; npm run gate is the deeper option.
+   No CI-only, ci:changed-only, hook-only or reviewer-only completion substitute exists.
+5. Dispatch all matching specialists below for COVERAGE, not filtering. Apply ALL findings
+   including nits, then a fresh reviewer verifies the entire fix round. Keep the parent
+   responsible for integration, consequential finding verification and final commands.
+6. Commit only explicitly authorized paths with Conventional Commits scope and body,
+   no coauthor trailer and no word "phase" in messages. Never git add -A. Run
+   npm run ci:changed after the last commit and read the exit code. Preserve generated
+   artifact ownership and use changed-file formatting only.
+7. Update progress and state with actual commands/results, exported/wire/schema changes,
+   artifact status and review evidence. End with the full next path. Every implementation
+   is followed by its own QA; suffixes are mandatory nodes and 44b QA ends the program.
+
+A settled packet is not built software. A passed implementation QA is not legal,
+service or platform approval. Never mark a skipped required test as passing.
 
 ## Review dispatch
-The reviewer roster and what each owns is the "Reviewer coverage" table in
-`docs/qa-gate.md`. This table is the packet's single copy of the TRIGGER: which diff
-surfaces spawn which agent. Check `git diff --name-only <phase-start>..HEAD`, spawn ONLY
-the matching agents (most phases trigger one or two; a docs-only or test-only phase spawns
-none), prompt each for COVERAGE, and have each write its report to a file under the session
-scratchpad.
 
-| Diff touches | Spawn |
+[docs/qa-gate.md](../qa-gate.md) owns reviewer responsibilities. This table is the packet's
+canonical trigger map; the summary below names minimum planned specialists for the promised
+surfaces. Add actual new triggers if the diff grows. Conditional boilerplate mentioning a
+reviewer is not evidence that the required review ran. All QA files also have independent
+correctness, test-coverage and hygiene readers; all completed work gets qa-checklist.
+
+| Changed surface | Required reviewer |
 |---|---|
-| `server/`, `src/admin/`, `src/net/`, deploy or secret files, SQL or auth, any new nondeterminism source under `src/sim/` | `privacy-security-review` |
-| DDL, a persisted shape (`account_freeholds` JSONB, `CharacterState`), save or load code | `migration-safety` |
-| Anything that changes database work or growth (a query, an index, a table, a cadence) | `database-performance-reviewer` |
-| Work per tick, per request, per broadcast, or per session (a shared read, a cache, a growing collection, a snapshot or event payload) | `server-hot-path-reviewer` |
-| An `IWorld` facet, sim behavior or events, wire or matcher changes, the RL surface | `cross-platform-sync` |
-| `src/sim/` determinism, tick order, the `SimContext` seam | `architecture-reviewer` |
-| `src/ui/`, `src/styles/`, `src/render/` presentation code, the graphics-tier files under `src/game/` | `frontend-seam-reviewer` |
-| Any GPU producer: a material, a light, a GL context, a scene attach, VFX lifetime, a perf probe | `render-performance-reviewer` |
-| Any `src/sim/content/` record (items, recipes, deeds, reliquary, tiers, furnishings, patterns) | `content-obligations-reviewer` |
-| `scripts/gate*.mjs`, `scripts/lib/gate_*.mjs`, `scripts/lib/ci_*.mjs`, `.github/workflows/` | `gate-integrity-reviewer` |
-| A phase whose deliverable is tests (every QA phase; any phase adding a pin suite) | `test-coverage-auditor` |
-| A phase or deliverable set is COMPLETE | `qa-checklist` (the `/qa` skill runs it with the fan-out it names) |
+| Sim behavior, determinism, tick order or SimContext | architecture-reviewer |
+| IWorld, commands/events, wire, host parity or RL bindings | cross-platform-sync |
+| Server/net, authorization, SQL, secrets, privacy or new nondeterminism | privacy-security-review |
+| DDL, stored data, normalization, save/load or custody | migration-safety |
+| SQL/callers, indexes, cardinality/cadence, stored growth, queues/pools/locks/timeouts, driver/engine/resources/topology | database-performance-reviewer before implementation decisions AND on the finished diff |
+| Per-request/session/broadcast/tick work, caches, hydration or growing collections | server-hot-path-reviewer |
+| UI/styles/game input or presentation/render fairness | frontend-seam-reviewer |
+| New GPU producers, scene attachment, materials/lights/prewarm or GPU performance | render-performance-reviewer |
+| Content IDs/recipes/deeds/Reliquary/items/tiers/art obligations | content-obligations-reviewer |
+| Gate/CI selection or workflow pipeline | gate-integrity-reviewer |
+| Tests, pins and every QA | test-coverage-auditor |
+| Every completed implementation/QA/close | qa-checklist |
 
-QA phases additionally spawn three audit agents (correctness, test coverage, dead code)
-before the dispatch reviewers; see the QA template in each `phase-NN-qa.md`.
+For Codex, use the corresponding registered read-only role when one exists; a harness
+name difference never removes a concern. Reviewers inspect the parent's deterministic
+command evidence instead of rerunning the full gate. Finish every delegated task before
+reporting completion.
 
 ## Cross-cutting gates
-- **Persistence phases** (07, 12, 15, 21, 28, 29, 31, 34, 35, 36, 37, 41, 42): additive, idempotent inline DDL only
-  (`CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`;
-  there is no migrations directory), JSONB back-compat for every older row, an index for
-  every new predicate, a retention registration or a keep-forever DDL comment for every
-  table that grows, an `exportAccountData` row for every account-linked table, and a
-  save/load round-trip test (fake pool plus the pg-armed twin).
-- **Client phases** (06, 09, 11, 12, 16, 17, 18, 24, 25, 26, 29, 30, 32, 34, 35, 36, 38, 40, 41, 42): touch
-  targets 40x40 minimum, inputs 16px, landscape mobile, safe-area insets on edge-anchored
-  strips, a mobile-sheet decision for every new window id, no hover-only essential
-  information, graphics tiers gameplay-neutral (the placement ghost and the invalid state
-  draw at every tier), and before/after screenshots (desktop and mobile) through the
-  `pr-screenshots` skill committed under `docs/screenshots/` and linked from the PR body.
-- **Performance:** no per-tick allocation in the sim hot path and nothing housing-shaped
-  runs per tick at all (D8); snapshots stay interest-scoped and delta-guarded; the
-  renderer reads and never mutates; every new GPU producer is a client of the preparation
-  scheduler; `npm run perf:tour` and `npm run asset:budget` on budget-touching phases; the
-  dependency set stays tiny (no new packages).
-- **Money, tokens, and store policy** (the three gates every priced surface carries, listed
-  in `state.md` as OPEN with an owner): (1) counsel sign-off before `FREEHOLDS_ENABLED` is
-  set in production and before any store submission carrying housing copy; (2) a fail-closed
-  feature flag defaulting off (`FREEHOLDS_ENABLED === '1'` read live per call; every housing
-  route and command refuses `freehold.disabled` while dark; the store filter drops the
-  Charter SKU); (3) the per-distribution surface map pinned by a seven-row matrix test so no
-  store build shows a surface its policy forbids. The economy service owns every price and
-  all token math; the game forwards `expectedCostClaudium` as a fingerprint and never
-  computes a peg, a burn, or a split. No on-chain vocabulary in `src/sim/` (the token
-  firewall as `state.md` scopes it; the Book of Deeds is not firewall vocabulary).
-- **Deploys** are rare, deliberate, separate steps that follow `DEPLOY.md`; never part of a
-  phase; never `ALLOW_DEV_COMMANDS=1` in production.
+
+### Durable ownership, storage and work bounds
+
+07 owns stable opaque plot identity, separate account Hearth authority and bounded
+versioned storage. 07a checks and advances the account Hearth row only with accepted
+remote entry; private UI mirrors and transfer manifests never own the cooldown. 07a is the sole global
+claim fence and atomic resource/receipt composition; 08 owns authoritative ephemeral
+build presence and 08a owns public/private transport with isDecorating only.
+Separate character and housing autosaves are never an atomic transfer. Acquire queues
+and admission before DB clients, preserve the actual legacy save touch set and relative
+lock order, and use the existing pre-lock plus nonce fence. beginCharacterSaveTx supplies
+deadline setup, not the lock hierarchy; saveCharacterStateOnClient alone carries the
+known InitPlan race. Bank-ledger classification precedes guild replay; preserve actual
+market/mail/storage/custody/FK/trigger ordering. The exact housing composition manifest is
+reviewed before coding and proven with PG interleaves, never replaced by a universal
+all-receipts-last order. No DB client or lock spans service IO. Keep the dependency set unchanged; no new packages.
+
+Every cross-record effect and receipt commits atomically before ACK. Durable discoverable
+intent precedes external spend; repeatable operations retain original identity across
+ambiguity/restart and permanent replay authority unless accepted horizon evidence proves
+safe compaction. A stale fence/CAS cannot discard acknowledged item custody.
+
+Schemas are additive/idempotent and mixed-release compatible. Preserve unsupported,
+unknown-owned or oversized stored state safely; never overwrite it with empty defaults.
+Bound rows, strings, graphs, encoded/decoded bytes and query results before deep allocation
+and mutation. Every source value has a measured/signed workbook row. Every DB access has
+an actual predicate/order/limit/cardinality/index inventory, including reverse FKs, exports,
+deletes and pruning; do not create a speculative Ledger-week index or demand an index
+for every predicate without a query. Existing large-table index additions use the
+concurrent-index seam. Keep-forever or bounded retention must be explicit for every table.
+
+Coalesce to one running plus one pending dirty generation, preserve newer dirty work,
+share bounded admission/deadlines/pool budget and cancel safely. Eviction waits for live
+claim/session/operation/write references. No uncached per-viewer shared read, unbounded
+boot scan or claim of guaranteed reserved connections is allowed. Fake-pool tests do not
+prove locks/plans: required disposable-PG suites must execute with TEST_DATABASE_URL set.
+
+The first-tier arrival marker is bounded private account-scoped auxiliary storage, not
+just camera state. 07b/07c/07a/08a and their DB/persistence/security reviewers prove the exact
+account store and load/write owner, known-tier bounds, empty legacy default and atomic
+accepted-owner-entry mark-before-ACK. Document unique/FK waits in the real touch-set map.
+The Sim set is a mirror; plot saves, sale/transfer and character deletion do not copy,
+clear or rewrite account eligibility. Account deletion removes it. A crash after commit
+may skip this optional presentation; guest/reconnect/replay cannot mint it again. No
+permanent operation receipt is added for every ordinary arrival.
+
+07b owns the one account lifecycle authority for prior absence/grace; 13 and every
+plot consume its committed transition and retained protection history. Secondary plots or simultaneous claims cannot
+restart it. Arrival eligibility remains a separate meaning. Evaluate the exact union of account
+absence/grace and service suspensions; never subtract overlapping independent totals
+twice. Covered mutable history cannot authorize durable effects before irrevocable
+finality covers each dependency. Missing coverage remains not-ready, not chargeable time. 13a owns the durable shared
+upkeep calendar/history and bounded finalized-coverage projection, explicit source identity
+and compatible calendar-head participation in 07a. DB/persistence/security reviewers must
+verify those concrete stores and consumers, request budgets, cancellation and real waits.
+13a produces NEW FUTURE `docs/freeholds/upkeep-calendar-db-contract.md` for the exact
+DDL/query/lock/budget/PG evidence; this is a future implementation output, not a current
+packet link or counted artifact.
+
+28a extends the same lifecycle owner with separate guild-keyed head/history and
+server-controlled membership-incarnation evidence. Eligible current-member gameplay
+is distinct from donor allowance. No account-grace aggregation or roster-cache authority
+is permitted; historical guild protection and safe disband remain intact.
+
+17 owns NEW server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage
+and server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. Its static
+versioned account-keyed character pages, bounded shared admission/cache and current-
+generation source replacement serve trophies and 24's farm extension. No full-state
+SELECT, per-viewer page loop or invented account-global character cap is allowed.
+Current local sources replace whole saved slices, including empty; nonlocal sources
+remain saved. Unknown/incomplete/failed reads do not authorize deletion or false emptiness.
+DB/persistence/security reviewers inspect exact projection/index plans, total bytes,
+cache bounds, invalidation, cancellation and privacy before and after implementation.
+
+The account Hearth contract is NEW server/freehold_hearth_db.ts with
+FREEHOLD_HEARTH_SCHEMA, loadFreeholdHearth and advanceFreeholdHearthOnClient. The
+account_freehold_hearth row is the only online cooldown authority; owner-only
+fhold/myFreehold.hearthKeyReadyAtMs and hearthKeyRevision are committed mirrors.
+Same-account alts, processes and destinations race one participant inside 07a. A
+physical gate, refusal or already-home no-op spends nothing; transfer copies or
+clears neither account. Storage/export/lifecycle/clock/FK and real-PG proof belong to 07/07a.
+
+The ephemeral setFreeholdBuildPresence facet/set_freehold_build_presence command is
+introduced as a dark stub by 01, authorized by 08 and projected by 08a as isDecorating.
+11 sends start/stop and 18 reads the public boolean. Current session/plot/claim/entry
+and monotonic sequence guards prevent late starts/clears, with immediate cleanup at
+the real accepted socketClosed seam. No persisted row, receipt, ghost or private edit
+state accompanies presence; source/consumer parity and two-client lifecycle proof apply.
+
+### Money, tokens and store policy
+
+The three cumulative money gates apply to every priced implementation AND paired QA:
+14, 15, 16, 21, 29, 32, 37, 38, 40 and 42, and any suffixed consumer that exposes the
+same paid effect. 25a's material-only prepay and 32a's gold-priced cosmetic stock retain
+relevant authority, source/custody and approved-policy constraints without inventing a
+new service-priced action. Any later price-bearing diff inherits the full applicable gate.
+
+1. Written counsel acceptance, accepted/published Terms and listing/review-note artifacts,
+   plus signed economy-service authorization/catalog/recovery/settlement acceptance, before
+   production enable or any housing-bearing store submission. state names owner, exact
+   signed artifact, digest/version and remaining gate; unsigned drafts are not approval.
+2. FREEHOLDS_ENABLED defaults off, reads the strict '1' policy live and refuses every
+   housing route/command while dark. Purchase composition/catalog filtering also stays dark.
+3. The seven-distribution matrix independently governs use, purchase, website management
+   and optional deed capability, with unknown distribution fail-closed. Denied capabilities
+   are absent from whole submodels, handlers, fetched catalogs, hidden DOM, errors and
+   accessibility text. Website management is not an automatic fallback purchase link.
+
+The service owns every price, quote, fee, conversion, burn/treasury/resale/royalty and
+all token arithmetic. The game forwards expectedCostClaudium only as an expected-cost
+fingerprint, never calculates a peg, price, multiplier or split. Content Charter records
+carry no service price. Copy describes cosmetic, convenience and access, with no
+purchase-benefit earnings/income/yield claims. The Book of Deeds is ordinary gameplay;
+never use a bare-deed word scan that breaks it. No token or on-chain vocabulary enters
+src/sim/ outside the exact state.md firewall contract.
+
+Preserve literal D9 game-server distribution ignorance: NEW service-owned opaque
+authorization binds account, purpose/SKU, policy, quote and operation and returns the
+verified ordinary effect through the narrow host boundary. No existing trusted issuer
+is assumed. Client labels, Origin/UA/JSON, linked storefront accounts and the game-service
+secret do not prove distribution eligibility. Unknown eligibility refuses new spend;
+accepted operations remain recoverable under the original identity. Native access uses
+the server entitlement and is independent of optional chain-holder queries.
+
+### Content, UX and performance
+
+content-manifest and content-numbers-workbook own exact inventory/source/derivation/
+rounding/approval. Art-brief and ux-spec own reference and presentation acceptance. Wave A
+has eighteen furnishing outputs, including three pattern recipes within its ten craft
+outputs; Wave B adds exactly twenty including produce decoration. Wave A is Marks-only;
+later rare patterns have one named raid OR rift channel plus Marks, never a delve channel.
+The Hearth shelf is a new full catalog/nav/source/completion contract, not a guessed page
+cap. New IDs carry all same-change art/provenance/name/originality/deed/Reliquary/wiki
+obligations. Final shipping art is mandatory at every wave close; stand-ins do not satisfy
+final asset acceptance. No new professions are implemented by 43.
+
+Housing interface uses the actual shared window families and mapped tokens. DESIGN.md's
+adopted foundation remains the target; 11 checks readiness and consumes the coordinated
+rollout rather than inventing a local theme or reusing reverted window_frame code.
+Every state, key, keyboard/focus order, touch/pad action and screenshot target comes from
+ux-spec. The build palette is a world companion with explicitly composed input arbitration,
+not an accidental trapping modal. Touch targets are at least 40x40; the coarse-input 16px
+anti-zoom floor applies to input/select/textarea controls, not every label. Respect
+landscape/safe areas, non-hover routes and shared focus return.
+
+Every actionable ghost footprint, blocked shape/reason, collision/door/arrival safety,
+capacity and admitted player remains legible at every preset. Three authored room emitters
+is only a ceiling inside the live global sink; iOS LOW may allow two and pressure one.
+Render reads IWorld, uses identity-aware initialized signatures and scheduler/prewarm gates,
+and ignores stale async completion after a leave/plot change. No per-tick housing economic
+sweep or SQL is added; ordinary renderer consumption and shared interaction input are not
+forbidden by that scope. Unchanged paths allocate/serialize no repeated shared payload.
+
+Structural readiness gates reveal; ordinary online additional cosmetic settle remains zero,
+and bounded offline waiting does not guarantee final cosmetics. Use prepared readable
+representations while optional art loads. Arrival input resumes immediately on cancel,
+while the existing camera offset blends safely over DIRECTOR_RELEASE_TIME; reduced motion
+starts no directive. Sampled cue/SFX conformance and real audio evidence are independent
+from screenshots. 09 owns the initial shared helper and twelve interior variants; 11/16/17/18 extend
+its exact one-capture/one-image targets, and 11 extends
+housing art-only diff selection; 20 verifies the expanded matrix.
+
+The shared capture helper/registry import is produced by 09 with twelve functional
+Inn/Cottage day/night variants. 11 replaces that descriptor with its 89 working variants;
+16/17/18 cumulatively register 178/226/330. 20 verifies 330, never requiring later UI in
+an earlier pair. Explicit build-empty is included; guest observation uses the existing
+visit-owner-building scene without duplication. Exact constructor/descriptors, fixture
+postconditions and 329 English keys are recorded in UX and regenerated JSON inventories.
+
+### Developer fixtures
+
+07 owns the explicit dev-only loopback bridge, not a browser assumption about server env.
+GET /__freehold/dev-authorization exists only in configureServer with exact flag 1 and
+real socket+Host diagnosticsReadAllowed, strict affirmative boolean/no-store, no preview
+or production endpoint. Preserve defineConfig({ ... }) and Docker import admission.
+Offline bootstrap is DEV HTTP(S) loopback only, same-origin/no credentials/cache/redirect,
+strict payload, entry cancellation and false-on-failure while ordinary Inn entry continues.
+Both devCommands and separate nonpersisted freeholdDevGrantEnabled are required for the
+real housing command. Browser fixture state never becomes online ownership or a receipt;
+separately flag-authorized server dev commands retain their ordinary setter/save behavior.
+No public VITE_* switch, query/storage override, direct tier injection or fake receipt.
+
+All review findings, including nits, are resolved and a fresh reviewer checks the
+entire fix round before PASS. No PASS-WITH-FOLLOWUPS or deferred-nit closeout is valid.
+External signed artifacts remain explicit release gates, not deferred review findings.
 
 ## The contributor i18n policy
-Stated in full in the root `CLAUDE.md` and `src/ui/CLAUDE.md`; the packet applies it as:
-every new player-visible string is a `t()` key added in ENGLISH to the matching
-`src/ui/i18n.catalog/<domain>.ts` module (housing UI under a `housing` namespace in
-`hud_chrome.ts`; item names in the item-names domain; API errors through
-`npm run new:endpoint`), rendered only through `t()`, `formatNumber`, `formatMoney`,
-`formatDateTime`. Never edit `src/ui/i18n.locales/`; never fan translations out per phase;
-the maintainer fills locales at release. The one PR-tier exception, M16: a wordy new
-English value (four or more consecutive lowercase letters after stripping tokens) needs
-its five non-Latin fills in the same change. `src/sim/` and `server/` stay
-language-agnostic: housing emits text-free, id-carrying `SimEvent`s (D10); if a phase
-must emit English from sim or server, it adds the matcher rule in `src/ui/sim_i18n.ts` or
-`src/ui/server_i18n.ts` in the SAME change (the S3 guard
-`tests/localization_fixes.test.ts` enforces it). Run `npm run i18n:gen` after adding keys.
 
-## Code hygiene
-Module-first per the root Modularity section and the `extract-and-test` skill: every new
-behavior is its own small tested module behind an existing seam (`SimContext`, `IWorld`,
-`RouteDef`, `PainterHost`, `RENDER_PURE_CORES`), never a method cluster on `sim.ts`,
-`game.ts`, `online.ts`, `hud.ts`, or `renderer.ts`. `online.ts` and `game.ts` sit at their
-`tests/monolith_budget.test.ts` ceilings with ZERO slack: a phase that must add a line to
-either extracts an existing block first and lowers the ceiling. Every new behavior gets
-tests; every `src/sim/` change gets a determinism assertion; update or remove tests you
-break; delete replaced code, unused imports, and dead types; never hand-edit generated
-files (`*.generated.ts`, the resolved i18n bundles, the SFX manifest); no em dashes, en
-dashes, or emojis anywhere; the word "phase" never leaves this directory.
+Every player-visible label, tooltip, aria/alt, error, toast, dialog and loading state
+resolves through t() and the correct English catalog. Housing UI is hudChrome.housing.*;
+shared kind/item/entity/API sinks retain their own namespaces. Every authored player
+string in ux-spec.md and ux-key-manifest.json remains hudChrome.housing.*. Required
+runtime apiError.freehold.* bindings mirror the matching approved English in the
+existing API error catalog and API_ERROR_KEYS for protocol parity; they are not a
+second housing HUD namespace and are not added to the UX key manifest. Use formatNumber,
+formatMoney and formatDateTime from src/ui/i18n.ts; authority supplies calendar identity
+and the client locale formats dates in the intended realm timezone. Use the tooltip
+skill and docs/design/tooltip-writing.md for every tooltip.
 
-## PR cadence
-One PR per wave, each off the base branch recorded in `state.md`, opened by the wave's
-close phase after the whole-feature matrix (`qa-checklist.md`) passes, following
-`.github/PULL_REQUEST_TEMPLATE.md`, with `FREEHOLDS_ENABLED` defaulting off. The branch is
-pushed only after Fernando's go (state.md "Push policy"); pushes go to `origin`, never a
-fork; CI green on the PR is the merge bar and the maintainer merges. Wave B starts on the
-same branch after wave A's PR is merged (or, if Fernando prefers stacked PRs, on a branch
-off wave A's head; `state.md` records the choice when wave A closes). The packet teardown
-offer happens once, at the wave E close.
+Follow root/UI English-only contribution rules. Never edit locale overlays except the
+M16 same-change requirement: a wordy English value with four consecutive lowercase
+letters after stripping tokens receives its five non-Latin fills. The maintainer fills
+other locales at release. Never hand-edit generated artifacts.
+Sim/server remain language-agnostic with stable reason IDs and parameters. The existing
+dungeon enter/leave English path must be matcher-covered in the same change; no new
+housing English emit bypasses the S3 guard. Run i18n generation, freshness and parity.
+
+The first freehold API scaffold preserves generated freehold.invalid_input and later
+appends freehold.disabled to every catalog/mapping/pin site. Move generated module/test
+to their chosen _routes names and repair imports. Existing-domain extensions are hand
+RouteDef/error-table additions; do not rerun the generator expecting it to append leaves.
+
+## Code hygiene and evidence
+
+Module-first code belongs behind existing public seams; coordinator additions require
+behavior-preserving extraction and measured/lowered ceilings. Record moved source facts
+before citations change. Do not claim remembered monolith slack, literal counts or symbols
+are current. Regenerate goldens/fingerprints only from the actual implementation and
+keep required provenance commits separate. No em dash, en dash, emoji, .only test filter,
+leftover debugger or nondeterministic sim clock/random call. New code, comments, commit
+and PR messages never mention this packet's work numbering.
+
+The Stop floor is instant copy/hygiene scanning, not tests/typecheck/build/review. Claude
+uses .claude/hooks/qa-stop.sh; Codex's adapter delegates and adds its runtime coverage.
+Before implementation readiness run all scoped requirements plus node scripts/gate_select.mjs
+(or deeper npm run gate), and report exact commands/outcomes/skips. At this packet-only
+settlement stage, structural/link/anchor/copy/Stop evidence must be labeled documentation
+validation; it does not assert feature, PG, browser, SFX or service execution.
+
+## Codex asset execution and final handoff
+
+D74 requires Codex, not Claude, for every implementation that generates shipping models,
+GLBs, textures, reference images, icons/images or other assets. Its starter prompt names
+Codex explicitly and follows AGENTS.md plus the repository's existing asset/image/SFX
+intake, generation, provenance, export and quality/performance pipeline. Review-only
+work follows the active harness. No asset generation occurs in this packet audit.
+
+D75 adds 44a after 44 QA: inventory and replace every feature-created placeholder icon/
+image through Codex and verify final assets in context. Earlier same-change/per-wave
+final-art requirements remain. D73 adds 44b after 44a QA: revisit every Terms/legal/
+platform/service/territory determination against completed behavior and prepare the
+concrete legal-team handoff and tracked sign-off status. Earlier release/submission
+permissions cannot be postponed to that final revisit. Legal delivery uses an authorized
+recipient/channel; a draft is never reported delivered. 44b QA is terminal completion.
+
+## PR cadence and final preservation
+
+Each wave close prepares a concrete reviewed release package and records the shared gate,
+its paired QA and any unsigned release artifact. Later push/PR creation requires explicit
+authorization covering that action and the current state push policy; never merge or
+enqueue a PR from these sessions. This audit never pushes or opens/merges a PR. Do not
+convert future publication instructions into current authorization. Deploy is separately
+authorized and follows DEPLOY.md; never ALLOW_DEV_COMMANDS=1 in production.
+
+Neither 44, 44a nor 44b may remove the only source of UX, decisions, answered rulings, content/numbers/art, audit or service/
+counsel/Terms/listing/territory evidence. Before any future cleanup request, prepare a
+reviewable preservation change with exact source/destination and incoming-link manifests,
+content/anchor equivalence and a fresh review. The proposed durable UX destination is
+NEW docs/prd/woc/freehold-ux-spec.md, created only if that future preservation is approved;
+other destinations are enumerated by 44, not guessed here. All six existing handoff drafts
+stay intact. 44a creates the final-artwork-audit.md evidence and 44b produces the
+NEW FUTURE docs/prd/woc/freehold-final-legal-handoff.md after revisiting actual completed
+behavior. Neither future output is falsely counted as an already-created packet artifact. Obtain explicit approval of the exact remaining scaffolding deletion diff;
+a push approval or silence is not deletion consent. 43 produces its separately scoped
+future-craft handoff with no new profession implementation or implied release promise.
 
 ## Phase summary
-The per-phase deliverables and acceptance checklists (the spec) are in `progress.md`.
 
-| Phase | Goal (one line) | Main surfaces | Reviewers |
-|---|---|---|---|
-| 01 | `IWorldHousing` facet with stubs in both worlds, `src/sim/freehold/` skeleton behind `SimContext`, `FREEHOLDS_ENABLED` getter and `freehold.disabled` code with dispatch-time refusal, RL exclusion pin | world_api, sim, server config and wire sibling, headless | cross-platform-sync, architecture-reviewer, privacy-security-review |
-| 02 | `FurnishingItemDef` and the `'furnishing'` item kind across every consumer, pinned with a fixture | sim types, ui kind consumers, market filters | cross-platform-sync, frontend-seam-reviewer, architecture-reviewer |
-| 03 | Content: tier ladder (Inn Room, Cottage), Charter SKU allowlist, ledger schedule table, vendor-basic furnishings, every content obligation | content, item art, deeds, reliquary, wiki | content-obligations-reviewer |
-| 04 | Content: ten crafted furnishings (one per craft) and three quartermaster patterns on the R8/D13 channels, provisioner firewall arm | content, professions, item art | content-obligations-reviewer |
-| 05 | Owner-keyed instance claim on the dungeon slot pool: two `DungeonDef` records, `claimKey`, `freeholdOwnerKey` stamp, enter and leave commands, jailed set | sim instances, content, server wire, net | architecture-reviewer, cross-platform-sync, server-hot-path-reviewer |
-| 06 | Cottage and Inn Room interiors from layouts and variants, the Eastbrook Freehold Gate, the Hearth Key item | sim layouts and colliders, render dungeon, content | architecture-reviewer, render-performance-reviewer, content-obligations-reviewer, frontend-seam-reviewer |
-| 07 | `account_freeholds` row: DDL, load at join, rev-fenced save path, normalize and serialize, export and delete, the offline storage slot | server db, ws_auth, sim state | migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer |
-| 08 | `layout_core.ts` placement validation, place/move/remove/undo commands, the `freeholdState` descriptor event, strict decode, the chain test | sim, server wire, net | architecture-reviewer, cross-platform-sync, server-hot-path-reviewer |
-| 09 | `src/render/freehold/` furnishing view (scheduler client, stand-in kit), interior light rig, placement ghost | render | render-performance-reviewer, frontend-seam-reviewer |
-| 10 | Runtime furnishing colliders on both hosts through a generalised region registry | sim colliders, net | architecture-reviewer, cross-platform-sync |
-| 11 | Build mode UI: parameterised ground-aim placement, palette, strip, keybinds, pad, touch, i18n, mobile | ui, game input, styles | frontend-seam-reviewer |
-| 12 | Strongbox (bank access at home) and the station amenity slot, the D18 vault arm, the amenity lock rule | sim bank gate, professions stations, ui | architecture-reviewer, cross-platform-sync, migration-safety |
-| 13 | `condition_core.ts` and `ledger_core.ts`, pay command, four-week prepay, lockout at 30, week boundary, keystone exclusion pin | sim, server calendar feed | architecture-reviewer, cross-platform-sync, server-hot-path-reviewer |
-| 14 | `src/game/distribution_surfaces.ts` and the seven-distribution matrix, `HudFeatures.freeholdPurchaseEnabled`, source pins, copy scan, the O4 verdict | game, ui, electron config, tests | frontend-seam-reviewer, privacy-security-review |
-| 15 | Claudium spend kind `freehold`: Charter grant into the account row, Master Builder's Call repair grant, telemetry source, flag gating, the service contract doc | server claudium, sim grant, db | privacy-security-review, migration-safety, database-performance-reviewer |
-| 16 | Steward panel (condition, due, have and need, pay from bags or vault, prepay, Master Builder's Call) and the store surfaces per distribution | ui, styles, store window | frontend-seam-reviewer |
-| 17 | `trophy_eligibility.ts`, retroactive grant on first entry, trophy props on plinths, provenance tooltip, the Inn Room's three plinths | sim, content, ui, render | architecture-reviewer, content-obligations-reviewer, frontend-seam-reviewer |
-| 18 | Friends-only visiting, cap 8, read-only visitors, who-is-home, offline no-op | sim, server social, net, ui | privacy-security-review, cross-platform-sync, server-hot-path-reviewer |
-| 19 | Furnishing and trophy GLBs through the image-to-glb pipeline, prewarm homes, the LOW-preset phone check (`ultracode`) | public models, render | render-performance-reviewer |
-| 20 | Wave A close: integration matrix, wiki pass, perf tour, screenshots, the MVP PR | all | qa-checklist plus every reviewer the matrix names |
-| 21 | Lodge tier and the upgrade build project (Claudium fee SKU plus a materials bill, layout carry-over) | content, sim, server claudium | content-obligations-reviewer, architecture-reviewer, privacy-security-review |
-| 22 | About twenty more furnishings across all ten crafts plus produce props, the R8 pattern channels (`ultracode`) | content, item art | content-obligations-reviewer |
-| 23 | Legend Stand, Harvestmaster sheaf, first-harvest markers, banners, finishes, the remaining trophy families | sim, content, render | architecture-reviewer, content-obligations-reviewer, render-performance-reviewer |
-| 24 | Kitchen Garden tableau over `myFarmPlots` (zero beds), Harvest Journal board, farmer NPC | sim projection, render, content | architecture-reviewer, render-performance-reviewer |
-| 25 | Build mode v2: wall and table-top snapping, redo, capacity meter, advanced mode, twelve-week prepay, the Fenbridge gate | sim layout, ui, content | architecture-reviewer, frontend-seam-reviewer |
-| 26 | Open-house visiting: guild and public policies, caps by tier, door knock, rate limits | sim, server social, ui | privacy-security-review, server-hot-path-reviewer |
-| 27 | Wave B close | all | qa-checklist |
-| 28 | Owner kind `guild`, the Meeting Hall, rank permissions, the Hall Fund escrow with a member-readable ledger | sim, server guild, db | architecture-reviewer, migration-safety, privacy-security-review |
-| 29 | Guildhall purchase (pooled Claudium), 2x decay, Hall Fund upkeep, donation cap, contribution log with retention | server claudium, sim ledger, db | privacy-security-review, database-performance-reviewer |
-| 30 | Guild bank chest, feast hall, hall-shared station predicate, muster and calendar boards, pledge-board mirror, war table | sim, ui, render | architecture-reviewer, frontend-seam-reviewer |
-| 31 | Guild-level deed record, first-kill banners, raid statues | sim deeds, content, db | architecture-reviewer, content-obligations-reviewer, migration-safety |
-| 32 | Great Hall, Manor, Bastion tiers, multi-week build projects, project trophies, visiting vendors, the Materials Vault chest | content, sim, ui | content-obligations-reviewer, architecture-reviewer |
-| 33 | Wave C close | all | qa-checklist |
-| 34 | Wards: shared instanced neighborhoods, freehold exteriors, the Guildhall anchor plot | sim instances, render, content | architecture-reviewer, render-performance-reviewer, server-hot-path-reviewer |
-| 35 | Ward favor bar and monthly Endeavors (cosmetic rewards only) | sim, server, ui | architecture-reviewer, cross-platform-sync |
-| 36 | Seasonal Showcase vote, guest book with reactions only (no free text), retention | server, db, ui | privacy-security-review, database-performance-reviewer |
-| 37 | On-chain Freehold Charter: service mint and verify contract, `freehold_deeds` table, geo-exclusion, `FREEHOLD_DEEDS_ENABLED`, counsel gate | server, db, docs | privacy-security-review, migration-safety |
-| 38 | Web-only mint surface, deed trading as the marketplace's serialized collectible, holder flair read-only, matrix extended | ui, game, server market | privacy-security-review, frontend-seam-reviewer |
-| 39 | Wave D close | all | qa-checklist |
-| 40 | Keep and Citadel (and Fortress) tiers, courtyard and tower layouts, the prestige-deed gate | content, sim, render | content-obligations-reviewer, render-performance-reviewer |
-| 41 | Dye station (alchemy), dye slots, layout save, load, share | sim, content, ui | architecture-reviewer, frontend-seam-reviewer |
-| 42 | Second freehold SKU with a progressive upkeep schedule | content, server claudium, sim | privacy-security-review, architecture-reviewer |
-| 43 | Carpenter and Mason off-wheel crafts, conditional on the measured furnishing demand and a ruling | content, professions | content-obligations-reviewer |
-| 44 | Wave E close: final matrix, packet teardown offer, PR | all | qa-checklist |
+Every row also requires test-coverage-auditor and qa-checklist as printed. Wave closes
+use the union of every actual changed surface, even when their immediate edits are docs.
+The link to the implementation preserves exact five-deliverable ownership.
+
+| Phase | Main output / surfaces | Required reviewers |
+|---|---|---|
+| [01](phase-01-foundation.md) | Foundation | architecture-reviewer, cross-platform-sync, privacy-security-review, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [02](phase-02-furnishing-item-kind.md) | Furnishing item kind | architecture-reviewer, cross-platform-sync, frontend-seam-reviewer, test-coverage-auditor, qa-checklist |
+| [03](phase-03-content-tiers-and-basics.md) | Content: tiers, Charter SKU, ledger schedule, vendor basics | architecture-reviewer, cross-platform-sync, frontend-seam-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [04](phase-04-content-crafted-and-patterns.md) | Content: crafted furnishings and quartermaster patterns | content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [05](phase-05-instance-claim.md) | Instance claim | architecture-reviewer, cross-platform-sync, privacy-security-review, server-hot-path-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [06](phase-06-interiors-gate-and-hearth-key.md) | Interiors, the Eastbrook gate, the Hearth Key | architecture-reviewer, cross-platform-sync, privacy-security-review, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [07](phase-07-persistence.md) | Persistence | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist |
+| [07a](phase-07a-transactional-mutation-boundary.md) | Transactional mutations and global claim fencing | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [07b](phase-07b-account-lifecycle.md) | Account lifecycle and protection history | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [07c](phase-07c-arrival-eligibility.md) | Account first-tier arrival eligibility | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [08](phase-08-layout-and-placement-sim.md) | Layout core and placement commands | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [08a](phase-08a-descriptor-and-wire.md) | Public descriptors and consumer-correct wire state | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [09](phase-09-render-furnishings.md) | Render: furnishing view, light rig, ghost | cross-platform-sync, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, gate-integrity-reviewer, test-coverage-auditor, qa-checklist |
+| [10](phase-10-furnishing-colliders.md) | Furnishing colliders | architecture-reviewer, cross-platform-sync, privacy-security-review, test-coverage-auditor, qa-checklist |
+| [11](phase-11-build-mode-ui.md) | Build mode UI | cross-platform-sync, privacy-security-review, frontend-seam-reviewer, render-performance-reviewer, gate-integrity-reviewer, test-coverage-auditor, qa-checklist |
+| [12](phase-12-strongbox-and-station.md) | Strongbox and station amenities | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist |
+| [13](phase-13-condition-and-ledger-core.md) | Condition and the Steward's Ledger core | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [13a](phase-13a-authoritative-upkeep-calendar.md) | Authoritative upkeep calendar | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [14](phase-14-distribution-surface-map.md) | Distribution surface map | privacy-security-review, frontend-seam-reviewer, test-coverage-auditor, qa-checklist |
+| [15](phase-15-claudium-charter-and-call.md) | Claudium: the Freehold Charter and the Master Builder's Call | architecture-reviewer, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [16](phase-16-steward-panel-and-store-surfaces.md) | Steward panel and store surfaces | privacy-security-review, frontend-seam-reviewer, test-coverage-auditor, qa-checklist |
+| [17](phase-17-trophies.md) | Trophies | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [18](phase-18-visiting.md) | Visiting | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist |
+| [19](phase-19-art-batch.md) | Art batch | frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [20](phase-20-wave-a-close.md) | Wave A close | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [21](phase-21-lodge-tier-and-upgrade.md) | Lodge tier and the upgrade build project | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [22](phase-22-furnishings-all-crafts.md) | Furnishings across all ten crafts and the R8 pattern channels | frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [23](phase-23-legend-stand-and-trophy-families.md) | Legend Stand and the remaining trophy families | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [24](phase-24-kitchen-garden-tableau.md) | Kitchen Garden tableau | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [25](phase-25-build-mode-v2.md) | Build mode v2 | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [25a](phase-25a-prepay-and-fenbridge-gate.md) | Twelve-week prepay and the Fenbridge gate | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [26](phase-26-open-house-visiting.md) | Open-house visiting | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [27](phase-27-wave-b-close.md) | Wave B close | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [28](phase-28-guild-owner-kind-and-hall-fund.md) | The guild owner kind, the Meeting Hall, the Hall Fund | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [28a](phase-28a-guild-lifecycle-and-membership.md) | Guild lifecycle and membership evidence | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, test-coverage-auditor, qa-checklist |
+| [29](phase-29-guildhall-purchase-and-upkeep.md) | Guildhall purchase and upkeep | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [30](phase-30-hall-amenities.md) | Hall amenities | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [30a](phase-30a-hall-boards.md) | Hall boards | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [31](phase-31-guild-deeds-and-first-kill-trophies.md) | Guild-level deeds and first-kill trophies | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [32](phase-32-hall-and-manor-tiers.md) | Great Hall, Manor, Bastion tiers and build projects | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [32a](phase-32a-project-rewards-and-vault.md) | Project rewards and direct vault access | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [33](phase-33-wave-c-close.md) | Wave C close | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [34](phase-34-wards.md) | Wards: shared neighborhoods and exteriors | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [35](phase-35-ward-favor-and-endeavors.md) | Ward favor and Endeavors | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [36](phase-36-showcases-and-guest-books.md) | Showcases and guest books | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [37](phase-37-charter-service-contract.md) | On-chain Freehold Charter: service contract, ledger table, geo-exclusion | privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist |
+| [38](phase-38-charter-mint-and-trading.md) | Charter mint surface and marketplace trading (web only) | cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, test-coverage-auditor, qa-checklist |
+| [39](phase-39-wave-d-close.md) | Wave D close | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [40](phase-40-keep-and-citadel-tiers.md) | Keep and Citadel tiers, prestige deeds | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [41](phase-41-dye-station-and-layout-sharing.md) | Dye station | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [41a](phase-41a-layout-save-and-sharing.md) | Layout saves and public sharing | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist |
+| [42](phase-42-second-freehold-sku.md) | Second freehold SKU | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [43](phase-43-carpenter-and-mason.md) | Existing-craft coverage and future expansion handoff | architecture-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [44](phase-44-wave-e-close.md) | Wave E integration close | architecture-reviewer, cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [44a](phase-44a-final-codex-artwork.md) | Final Codex artwork | frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor, qa-checklist |
+| [44b](phase-44b-final-legal-handoff.md) | Final legal revisit and handoff | cross-platform-sync, privacy-security-review, database-performance-reviewer, migration-safety, frontend-seam-reviewer, test-coverage-auditor, qa-checklist |

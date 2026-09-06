@@ -2,11 +2,17 @@
 
 # Upkeep economics, decor economies, trophies, placement UX, housing monetization, guild halls
 
+> **Dated research, not implementation authority.** Captured 2026-09-05. The
+> [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
+> record the requirements adopted on 2026-09-06. Historical
+> code inventories, editor capabilities, opinions and market figures below are context,
+> not current API guarantees, WOC tuning approval or legal/store approval.
+
 Research report, 2026-09-05. Sources dated 2024 to 2026 where available; older ones are marked. Unverified items are flagged.
 
 ## 1. Upkeep economics
 
-### How live games charge upkeep (verified numbers)
+### How the cited historical sources describe upkeep
 
 - Star Wars Galaxies (2003-era design, still run on emulators): hourly credit maintenance, small house 384/day up to guild hall 2,400/day; unpaid houses become "condemned" and the door locks until paid; abandoned buildings are packed into the owner's datapad, not destroyed. https://swg.fandom.com/wiki/Housing , https://swgr.org/wiki/structures_and_cities/
 - Ultima Online: before Publish 16 (Dec 2002) any owner or friend refreshed a house by opening a door, and an unrefreshed house decayed over about 11 days; Publish 16 made the primary house auto-refresh "for as long as the account remains active"; a condemned house "cannot be refreshed, and will decay within 5 days" and its contents drop on the ground (IDOC). https://www.uoguide.com/Publish_16_-_Housing_Ownership_Changes , https://uo.com/wiki/ultima-online-wiki/technical/previous-publishes/2002-2/publish-16-part-4-2nd-december/ , https://uo.com/wiki/ultima-online-wiki/gameplay/houses-placing-a-house/condemned-houses-idoc/ , https://ultimaonline.fandom.com/wiki/Housing (90-day grace after the account lapses)
@@ -16,7 +22,7 @@ Research report, 2026-09-05. Sources dated 2024 to 2026 where available; older o
 - Rust (survival, not MMO): upkeep is paid in the same materials the base is built from, 10% of build cost per day for small bases rising to 33% for large ones; an empty cupboard starts decay after 24 hours. Design intent: "You cannot build larger than your resource farming can sustain." https://falconrust.com/guides/building/upkeep-guide/ , https://rustly.com/guides/rust-tool-cupboard-guide/ , https://wiki.facepunch.com/rust/the_tool_cupboard
 - Conan Exiles: 7-day (168 h) timer that only counts down while the owning clan is offline and resets on login; Funcom extends it to 14 days in summer; stated purpose is avoiding server wipes. https://conanexiles.fandom.com/wiki/Building , https://supercraft.host/wiki/conan-exiles/conan_exiles_decay_settings/ , https://xgamingserver.com/blog/conan-exiles-building-decay-guide/
 - Albion Online hideouts: power level decays and must be fed power cores, with a 3-day grace before damage; one green core per week is enough for a Roads hideout. https://wiki.albiononline.com/wiki/Hideout , https://albiononline.com/news/devtalk-power-cores , https://forum.albiononline.com/index.php/Thread/187378-Wanting-to-set-up-hideout-small-Guild/ . Personal islands: the official wiki blocked my fetch; one guide says "yours forever" with "no taxes" ( https://www.techfornerd.com/albion-online-personal-island-guide/ ) while a 2026 guide claims "islands close if you stop paying upkeep" ( https://www.albioncodex.com/guides/albion-online-island-guide ). UNVERIFIED conflict; my understanding is personal islands have no upkeep.
-- EverQuest 2 guild halls: per-amenity weekly upkeep (decor 2g + 500 status, tradeskill 20g + 5,000 status, general 10g + 2,500 status), payable 12 weeks ahead from guild escrow. https://eq2.fandom.com/wiki/Guild_Hall_Amenities
+- EverQuest 2: twelve-week housing/guildhall prepay is primary-verified in [Raising the Banner, GU49](https://www.everquest2.com/news/imported-eq2-enus-1916), published 2008-10-07. The historical per-amenity amounts remain secondary context: https://eq2.fandom.com/wiki/Guild_Hall_Amenities . WOC's initial four-week limit is its own staging choice.
 - No upkeep at all: WoW Midnight ("no lotteries, and no onerous upkeep", house costs a flat 1,000 gold, no repossession) https://www.icy-veins.com/wow/news/blizzard-breaks-down-how-housing-works-in-midnight/ , https://timesaver.gg/blog/wow-midnight-housing-worth-it ; FFXIV (no rent, but the plot is demolished after 45 days without the owner entering, with warnings at 30/35/42 days and suspensions during real disasters) https://www.destructoid.com/ffxiv-housing-demolition-and-relocation-explained/ , https://knowgameplay.blog/ffxiv-auto-demolish-rules-housing-guide ; Guild Wars 2 (upgrades are one-time favor and aetherium sinks) https://wiki.guildwars2.com/wiki/Guild_upgrade ; RuneScape POH (construction is a one-time gold sink; the 2025 overhaul removes the "build in a spot" cost) https://www.mmorpg.com/news/jagex-reveals-runescapes-road-to-restoration-player-owned-housing-overhauls-2000137588 , https://runescape.wiki/w/Gold_sink ; Lost Ark stronghold (no upkeep mentioned in Maxroll's guide) https://maxroll.gg/lost-ark/resources/stronghold-guide ; Black Desert (contribution points are invested, not spent, and fully refundable) https://blackdesertonline.fandom.com/wiki/Housing , https://www.blackdesertfoundry.com/contribution-points-guide/
 
 ### Tolerable range
@@ -84,14 +90,36 @@ No controlled MMO evidence found. Best analogs are decor demand, not upkeep: ESO
 - ESO: no true guild halls; a member's house is designated, capped at 24 visitors. https://forums.elderscrollsonline.com/en/discussion/507894/what-does-guild-halls-offer-players
 - Guild-level trophies: GW2 and EQ2 raid trophies; WoW raid trophies are personal, no guild first-kill banners found.
 
-## Upkeep design recommendation
+## Adopted WOC upkeep and UX
 
-- Rate: a house loses 1 condition point per day out of 100 (tier 1) and repair costs materials worth about 10% of an active player's weekly gathering output, anchored on ArcheAge's first-plot share and well under Rust's 10%/day. Tier 2 and 3 cost 1.5x and 2x per repair while decaying at the same daily rate, so the share of income stays flat.
-- Paid in: a weekly "repair order" of 3 to 5 low-tier gathered materials drawn from every gathering line (herb, ore, cloth, leather, fish, lumber), rotated so demand spreads and one material never spikes. Token quick fix priced at about 1.5x market value of the materials so it never undercuts gatherers. Never premium-currency only.
-- Grace: condition above 30 is cosmetic (scuffs, dust). Below 30, crafting stations, trophy buffs and fast travel lock (the New World and SWG pattern). Condition never reaches destruction; decor and contents are never lost (UO IDOC and EVE's abandoned-loot rule are the two most hated outcomes found).
-- Away rules: decay pauses after 7 days offline (Conan) and a returning player gets 3 repair-free days (Albion). No visit-based demolition (FFXIV).
-- Guild halls: 2x decay, paid from a guild escrow that officers can prepay 12 weeks (EQ2) and members can donate to with a contribution log; cap weekly guild contribution so large guilds do not trivialize it (GW2 favor cap).
-- Failure modes to design out: publish rates in the UI, never governor-set; cap total upkeep for multi-house owners with a progressive schedule and hard cap (ArcheAge); never raise upkeep to fight inflation (EVE scarcity); reduce or pause upkeep automatically when the market is offline (New World's 2021 cut).
+- Condition 0 to 100 and personal/guild daily wear 1/2 are existing WOC working targets.
+  Cottage/Citadel 10%/20% of measured weekly gatherer output are calibration objectives,
+  not an ArcheAge formula. The labor-regeneration calculation above uses another denominator.
+  No tier repair multipliers from this historical lane are silently imported into the packet.
+- Each approved realm-week bill includes produce plus rotating allowed nonproduce families.
+  Exact item IDs, quantities, rates and rounding require the signed workbook before enablement.
+  Service-owned Call pricing uses the valid quote; it is not a direct token repair in native
+  clients. Explicit source selection and immutable four-week/later twelve-week prepay apply.
+- Amenities work at 30 and pause below 30. Entry and decoration remain available at zero;
+  WOC trophies grant no buffs at all. Ordinary wear never destroys or repossesses anything.
+- Protective pause after seven absent days and three repair-free return days are adopted
+  WOC policy. Conan's historical abandonment countdown is not a pause-after-seven-days
+  precedent; Albion's damage grace does not verify the proposed return grace. See the
+  [Funcom staff explanation](https://forums.funcom.com/t/any-news-or-updates-about-the-decay-timer-still-short-if-yes-bye/59972/13).
+- Guild donations are pooled, with the service owning Claudium balance. The adopted
+  account-wide weekly allowance requires its exact calibration schedule; GW2 Favor caps and
+  gold receipt/withdrawal limits do not establish a per-member donation cap. See
+  [ArenaNet treasury overview](https://www.guildwars2.com/en-gb/news/building-your-guild-hall/).
+- Authority-recorded economic outages pause wear/debt with no catch-up or lost prepaid
+  credit. File 20 measures material demand and reviews LOW budget headroom, without promising
+  higher prices or automatic capacity increases.
+- Editor precedents above do not enlarge WOC scope. Initial floor building has deliberate
+  confirmation and bounded placement-only undo/redo; later planar/yaw and typed surfaces
+  include fixed ceiling anchors. Scale, full-axis gimbal and collision leniency are excluded;
+  save/load/share is later. Seasonal sets, delve pattern drops and new crafts are excluded.
+- Fernando approved these refinements with R01-R46 on 2026-09-06. They are adopted
+  implementation requirements; external service/legal acceptance and measured calibration
+  remain the named release gates, not unanswered product recommendations.
 
 ## Not verified / not found
 

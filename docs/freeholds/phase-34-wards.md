@@ -1,25 +1,17 @@
-# Phase 34: Wards (shared neighborhoods and exteriors)
+# Phase 34: Wards: shared neighborhoods and exteriors
 
-Wave D, Wards and Charters. The spec is `progress.md` "34 Wards: shared neighborhoods and
-exteriors"; the decisions are `state.md` and `brainstorm.md` (D4 descriptors, D8 nothing
-ticks, D15 the slot pool, D16 owner-keyed state). This phase ships the ward instance
-kind (24 to 50 freehold exteriors around a square with a Guildhall anchor plot), exterior
-shells per tier, deterministic ward assignment and reassignment, and the ward as the
-enter point for member plots.
+This implementation file and its QA are the complete contract for this bounded slice.
+The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
+are authoritative. Nothing in this planning packet is marked built.
 
 ### Starter Prompt
 ```
-This is Phase 34 of the Freeholds and Guildhalls feature: Wards (the shared ward
-instance, exterior shells per tier, assignment and reassignment, the ward as the door to
-member plots).
+This is Phase 34 of the Freeholds and Guildhalls feature: Wards: shared neighborhoods and exteriors.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase.
+Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
+fan-out; this prompt names no model.
 
-Goal: give every freehold a place in a shared, instanced neighborhood on the existing
-slot pool and descriptor seams, with exteriors regenerated deterministically on both
-hosts from one small descriptor, and with no per-tick work and no forced moves.
+Goal: give every plot a stable neighborhood through the existing slot pool and descriptors, with race-safe assignment, bounded admission and beautiful tier exteriors.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -39,7 +31,14 @@ STEP 0 - PRE-FLIGHT:
   descriptor model, ALL_DELTA_KEYS conflicts, server hot paths and cached reads, the
   scheduler and instanced meshes, test-pin traps.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
+ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
+in this phase, including GLBs, references, icons and images, must be executed by
+Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
+provenance, runtime registration, fingerprint and in-context checks. This planning
+audit creates no game assets. Final art is required here;44a is a residual sweep,
+not permission to leave a placeholder for a later phase.
+
+STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "34 Wards"), and this file
 - src/sim/instances/dungeons.ts (enterDungeon, claimInstance, freeInstance,
@@ -58,66 +57,146 @@ Spawn one Explore agent to read and summarize:
   src/render/gated_scene_attach.ts, src/render/point_light_budget.ts
 - tests/snapshots.test.ts (ALL_DELTA_KEYS), tests/freehold_command_chain_online.test.ts,
   tests/dungeons.test.ts, tests/monolith_budget.test.ts
-The agent returns: a free DungeonDef index for the ward and the footprint arm the ward
-needs (a ward is wider than a dungeon claim); the rift descriptor recipe end to end
-(emit, re-send on resume, client mirror, colliders); the account_freeholds column
-additions the ward needs; the cached-read and serialize-once shapes; the render tracker
-to copy for exterior retirement; the extraction candidates that pay for new lines.
-Settle in STEP 1 and record in state.md before implementing: the ward plot cap
-(working: 50 plots, the state.md value) and the visible-member cap (working: 24), the
-anchor-plot rule (the Guildhall most members share, else empty), and the ward claim
-footprint.
+- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
+  artifacts referenced by state.md that this slice consumes.
+The agent returns: the measured ward footprint and assigned DungeonDef index; descriptor/claim/rehydration
+seams; transaction and index design; cache-bust sites; the scheduler/tracker recipe.
+Capacity is 50 plots and 24 admitted occupants from state.md, never a graphics cull.
+The largest represented guild anchors; ties use stable guild ID; no guild means no
+anchor. Physical footprint/arrival clearance is measured in the approved geometry
+manifest against instanceSlotForZ and the existing claim allocator before art.
+All design rulings are locked; a missing required signed artifact keeps its release
+gate closed and produces a named validation result, never a guessed runtime value.
+Database review is required BEFORE implementation decisions and again on the finished
+diff, including changes to callers, persisted JSON, caches or workload even when SQL
+text stays unchanged. Reuse 07a's global plot fence and reviewed actual legacy
+touch-set, including caller-owned saves, character prelocks/nonces, bank-ledger
+classification, guild replay and storage/custody effects. Preserve character FIFO
+entry and the proved new-participant suffix, never a replacement generic lock order.
+Never enter a queue holding a DB client or hold locks
+across service IO. Bound admitted work, acquisition/query/transaction deadlines,
+projection keys, rows and bytes; background producers use shared admission and
+cancellation. Retain one running plus one pending dirty generation, not unbounded
+FIFO writes. Supply a query/index inventory (scope, predicates, order, limit, expected
+cardinality and supporting index), reverse-FK export/delete access and retention for
+every growing shape. Disposable-PG concurrency, plans, query counts and maximum legal
+payload evidence are acceptance, not satisfied by fake-pool tests.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, four slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last):
-- Agent SIM: src/sim/content/freehold/dungeons.ts freehold_ward (spawns: [],
-  guideVisible: false, claimKey: 'owner', absent from FINDER_ACTIVITIES), the ward claim
-  keyed ward:<wardId> that every member and guest enters, src/sim/freehold/ward_core.ts
-  (the pure descriptor: plot rows { ownerKey, plotIndex, tier, style }, the square
-  layout math, the anchor plot), src/sim/freehold/ward_assignment_core.ts (least-full open
-  ward in ward-id order, a new ward opens only when every open ward is at cap,
-  reassignment only on the owner's request to a friend's or guild's ward with a free
-  plot, never forced, never loses anything), src/sim/freehold/wards.ts (claim, the
-  pid-scoped wardState event on enter and after each change, the member door that enters
-  the plot under the owner's key), tests/freehold_wards.test.ts (determinism, assignment,
-  the door, occupancy reaping), the sim.ts delegates paid by extraction.
-- Agent SERVER: ward_id and ward_plot columns on account_freeholds (ADD COLUMN IF NOT
-  EXISTS, indexed) and a freehold_wards table (ward_id, realm, anchor_guild_id nullable,
-  created_at; keep-forever comment) in server/freehold_db.ts; the ward roster read behind
-  createCachedRead with single-flight and a bust on assignment; the descriptor built once
-  per ward per change; the wardState re-send on resume beside riftStateEventFor; the
-  exportAccountData rows; tests/server/freehold_wards_db.test.ts plus the pg twin.
-- Agent NET: applyWardStateEvent in a src/net/ward_wire.ts sibling (strict decode, a
-  malformed row dropped), the runtime colliders for exterior shells through the region
-  registry, the online.ts lines paid by extraction, the chain test arm.
-- Agent RENDER: src/render/freehold/ward_exteriors.ts (one InstancedMesh per tier shell
-  kit, attached through attachSceneGroupGated, retired on leave through a tracker keyed
-  by ward origin like DelveInteriorTracker, a prewarm home for every shell material,
-  point lights within budget) plus ward_exteriors_core.ts in RENDER_PURE_CORES.
-The coordinator edits last: tests/world_api_parity.test.ts (any facet member: wardView,
-requestWardMove), tests/snapshots.test.ts, tests/monolith_budget.test.ts, parity goldens
-in their own commit. Every agent writes any report longer than a screen to a file and
-replies with the path plus a short summary. Never `mode: "plan"` on teammates.
+Deliverables (at most five):
+Assign disjoint implementation ownership by the following 5 deliverables.
+The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
+finish. Workers receive only the context report and owned files, preserve others' edits,
+and return full reports to the scratchpad with a path and short summary.
+1. Ward geometry and descriptor: add planned freehold_ward DungeonDef with spawns: [],
+   guideVisible: false, claimKey: 'owner', outside FINDER_ACTIVITIES. Implement pure
+   ward_core.ts with opaque public plotId rows, square/door coordinates, tier and
+   cosmetic style IDs, measured bounds and deterministic anchor selection. Internal
+   account/guild owner keys never appear in viewer wire. One global fenced ward claim
+   ward:<wardId> uses existing pool admission/reaping; no per-tick subsystem.
+2. Race-safe membership: ward_assignment_core.ts orders bounded candidates by lowest
+   occupancy then stable ward ID; PostgreSQL alone authorizes allocation. Extend
+   server/freehold_db.ts with indexed ward membership tied to Phase 07 stable plot ID,
+   freehold_wards and required reverse-FK/export access. Enforce unique (ward_id,
+   ward_plot) and one membership per plot. Lock affected wards in stable ID order,
+   recheck capacity and update old/new occupancy in one bounded transaction. Create a
+   ward only after authoritative candidates are full. Owner-requested moves alone;
+   full target refuses without moving or losing anything. Bounded indexed candidate
+   selection, single-flight roster reads and commit-then-bust prevent stale capacity
+   authorization or whole-table scans.
+3. Admission, doors and wire: wards.ts admits at most 24 occupants, refuses a busy
+   claim honestly, and keeps already admitted entities visible on every preset. The
+   member door resolves plotId server-side and enforces current visit/block/guild
+   permissions even for offline owners. Emit/re-send pid-scoped wardState after claim,
+   change and resume through server/freehold_wire.ts. Strict src/net/ward_wire.ts
+   decode and runtime collider registry preserve last valid state on malformed input;
+   shared projections never authorize entry. Implement any wardView/requestWardMove
+   facet through both worlds, pins and real command-chain tests.
+4. Exterior art and UX: final tier shell kits use one InstancedMesh per kit through
+   attachSceneGroupGated, prewarm homes, point_light_budget and tracked retirement
+   modelled on DelveInteriorTracker. Add ward_exteriors.ts and its registered pure
+   core. Gate/door affordances, anchor identity and full/busy/reassignment states use
+   ux-spec's later-wave family and keyed copy. Record desktop/compact/tablet square,
+   exterior, busy-cap and door screenshot targets; no stand-in art ships.
+5. Proof: literal capacity/anchor fixtures, same-seed work-happened twin, world/facet/
+   snapshot/command pins, reconnect descriptor and both-host collider checks. In
+   disposable PG race final-slot claims and opposite moves, assert uniqueness/cap/
+   membership preservation and bounded contention; record plans, query counts,
+   maximum descriptor bytes and no per-tick SQL. Run perf tour and prove scheduler
+   retirement and LOW actionable visibility.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- Determinism: assignment and layout are pure functions of the roster and content; no
-  Rng; no wall clock; both hosts regenerate byte-identical exteriors from the descriptor.
-- Nothing ticks: occupancy rides updateInstances; the roster is read at claim and on
-  change; no per-tick DB or sim work.
-- Server authority; interest scoping and delta guards unchanged; every new self key or
-  event pinned (ALL_DELTA_KEYS, the chain test).
-- Nothing destroyed, no forced move: a reassignment never drops a furnishing, a trophy,
-  or the record.
-- Token firewall at the state.md scope (the style slot is a cosmetic id, never an
-  on-chain word such as holder, mint, or marketplace); the i18n
-  policy in docs/freeholds/implementation-plan.md; vocabulary fixed; "phase" in no code,
-  comment, commit, or PR text; sim.ts, game.ts, and online.ts ceilings LOWER after this
-  phase.
+Every player-visible string, including error, aria, tooltip and empty-state text,
+uses an English hudChrome.housing.* key and the formatters from src/ui/i18n.ts.
+Tooltips follow docs/design/tooltip-writing.md. Reuse docs/freeholds/ux-spec.md and the
+shared family/painter/window lifecycle, focus return, keyboard/gamepad, touch safe-area,
+reduced-motion and graphics-fairness contracts; do not fork the theme. New paths,
+symbols, wire fields, tables and tests under housing/freehold are PLANNED unless an
+earlier completed ledger row owns them. Re-find every existing anchor in the tree.
+No power sale, keystone/gear-intermediate/quickening-catalyst bill, new farm bed,
+repossession or calendar destruction. Sim stays deterministic and token-free; all
+server player events are keyed data. Coordinators compose siblings and never grow
+past their pinned ceilings. Fresh tests use literal expectations and negative controls.
 
-Out of scope (do NOT do in this phase):
-- Favor, Endeavors (Phase 35); Showcases and guest books (Phase 36); holder flair (Phase
-  38 fills the reserved style slot); exterior customization beyond the tier shell.
+
+Out of scope:
+Any behavior beyond these deliverables, any invented balance rate, and any production flag enable.
+
+ACCOUNT AUTHORITY, CALENDAR AND RECOVERY ACCEPTANCE:
+Consume 07b's single account lifecycle authority: NEW
+server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/loadFreeholdLifecycleProtectionPage/
+advanceFreeholdLifecycleOnClient, coordinated by
+server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator and the accepted
+server/freehold_lifecycle_binding.ts::resolveFreeholdLifecycleBinding policy registry.
+Capture authenticated observations before queues; committed monotonic transitions,
+not authentication login or a plot-local last-seen field, authorize account grace.
+Immutable multi-return history or lossless prefix facts cover dormant/foreign plots;
+union overlapping lifecycle protection and service suspensions exactly, never sum
+independent credits, force-write foreign plots or restart grace on an alt/plot switch.
+
+07c's NEW server/freehold_arrival_db.ts::loadFreeholdArrivalTiers/
+markFreeholdArrivalTierOnClient owns normalized account+tier marks, separate from
+lifecycle and plot saves. Only the committed accepted-owner-entry insert winner
+has first-tier eligibility. NEW arrivals may receive a private freshArrivalPresentation
+directive; snapshot/resume/replay set it null even with firstTierAtAdmission history.
+Commit-before-ACK can skip presentation; no exactly-once visible/audio promise and
+no permanent receipt for routine visits. Second plots and transfers do not duplicate,
+copy or clear account arrival marks or seller lifecycle history.
+
+13/13a own shared source calendar/history/checkpoint evaluation. Preserve calendarId,
+schemaVersion/resetPolicyId and immutable prepaid bill/rate/material/receipt identities
+across foreign-realm claims and transfers. No rebinding to serving realm/browser zone.
+Historical dependencies of durable condition/bill/credit effects must be irrevocably
+finalized and read at consistent committed calendar/lifecycle revisions; unfinalized,
+missing or unsupported coverage keeps the affected effect pending. A future-credit
+purchase does not require future time to be finalized. Long absences/outages use
+bounded indexed prefix probes, never lifetime scans or absent-day/week loops.
+Calendar-only exclusive writers and compatible shared mutation readers follow 07a's
+actual legacy touch-set proof; no invented reverse lock hierarchy. Current-generation
+projection/ACK identity cannot regress after delayed loads or superseded delivery.
+Server-only operator evidence, secrets and diagnostics never reach either owner or
+visitor wire: explicit allowlist builders and distinctive sentinel tests prove it.
+
+At a sale/ownership transfer, materialize the old owner's condition at the transfer
+boundary from finalized original calendar/lifecycle history; preserve source calendar
+and immutable credits, retain seller account history, and apply buyer lifecycle only
+prospectively without copying grace. Unknown authority holds application for bounded
+original-operation recovery/accepted compensation, never a replacement charge or
+silent calendar reset. Current local custody/fence guards still apply.
+Character deletion, soft deactivation, restoration, true account deletion and export
+are separate: deactivation is not an FK cascade; restored history/credits/receipts keep
+their meaning. Explicit housing export loaders expose allowed facts only. Unknown or
+oversized originals remain durable/read-only with bounded diagnostic/reference, not
+empty/new-home defaults or filtered destructive arrival-set rewrites.
+07's persistence-rollout-contract.md and 07b's lifecycle-policy-binding.md/
+lifecycle-db-contract.md plus 13a's upkeep-calendar-db-contract.md name minimum
+capable releases, measured bounds, exact schema/save fixtures and accepted policies.
+Enable only a proven capable rollout; unchanged normalized rows do not prove an old
+binary implements lifecycle, export or saves. Rollback quiesces NEW effects and
+preserves accepted original-operation recovery identities and supported recovery.
+Each consuming implementation/QA runs relevant two-character/two-plot/two-realm,
+dormant-history, delayed-generation, finality/transfer, deactivation/restore/export
+and capable/uncapable-release fixtures through real composition and disposable PG.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/architecture.test.ts
@@ -129,48 +208,41 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/server/freehold_wards_db.test.ts tests/server/main_retention_wiring.test.ts`;
   the pg-armed twin with TEST_DATABASE_URL set; `npm run perf:tour`; parity goldens if
   regenerated.
-- Spawn review agents per docs/freeholds/implementation-plan.md: architecture-reviewer,
-  render-performance-reviewer, server-hot-path-reviewer, plus cross-platform-sync (the
-  new event and facet), migration-safety (columns and table), privacy-security-review
-  (server/ and src/net/). Prompt each for COVERAGE not filtering; each writes its report
-  to a file. Do not commit until no BLOCKING issues remain.
+- Run node scripts/gate_select.mjs before completion; npm run ci:changed is not a
+  substitute. Re-run only affected checks after fixes, then verify the final head.
+- Dispatch architecture-reviewer, cross-platform-sync, migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, render-performance-reviewer, frontend-seam-reviewer, content-obligations-reviewer, test-coverage-auditor and qa-checklist
+  for the stated surfaces; actual additional surfaces trigger their canonical reviewer.
+  Database review runs before decisions and again on the completed diff. Every report
+  uses COVERAGE, BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT, saved to a file.
+  Apply ALL findings including nits; a fresh reviewer reads the fix round.
 
 STEP 4 - COMMIT CADENCE:
-4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
-`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- feat(sim): add the ward instance, its descriptor, and deterministic plot assignment
-- feat(server): persist ward membership and re-send the ward descriptor on resume
-- feat(net): mirror the ward descriptor and its exterior colliders
-- feat(render): draw ward exteriors as instanced tier shells through the scheduler
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Commit each coherent owned deliverable with a scoped Conventional Commit and a body.
+Stage EXPLICIT task paths, never git add -A. No coauthor trailer, em dash, en dash,
+emoji, or word "phase" appears in a commit message. Keep generated output with its
+authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] A new freehold lands in the least-full open ward; the plot cap and the
-  visible-member cap are pinned by fresh literals; a same-seed twin run assigns
-  identically; a reassignment request to a full ward is refused with a text-free reason
-  and moves nothing.
-- [ ] The wardState descriptor round-trips the wire, is re-sent on resume, and both
-  hosts regenerate identical exteriors and colliders (the determinism suite arm).
-- [ ] A member door in the ward enters the plot under the owner's key; a visitor obeys
-  the plot's visit policy; occupancy reaping frees the ward slot.
-- [ ] No per-tick DB read; the roster read is cached and busted on assignment
-  (server-hot-path-reviewer no BLOCKING); no live-program events on the perf tour.
-- [ ] All STEP 3 suites green; every reviewer reports no BLOCKING.
+STEP 5 - ACCEPTANCE CRITERIA:
+- [ ] The approved geometry manifest proves claim footprint, arrival paths and deterministic anchor; 50 plots and 24 admitted occupants are literal-pinned and no admitted entity is culled.
+- [ ] Disposable-PG final-slot/opposite-move races preserve every membership and item; indexed bounded candidates and stable lock order pass recorded plans and contention checks.
+- [ ] Opaque plot descriptors round-trip/re-send on resume, preserve malformed prior state, and produce identical colliders/exteriors on both hosts; current ACL governs every door.
+- [ ] Final exterior art, LOW fairness and desktop/compact/tablet ward/door/busy screenshots meet ux-spec; no live-program events or retired scene leaks.
+- [ ] All validation, actual-surface reviews, fresh fix review and contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 34, notes, deferrals) and
-  docs/freeholds/state.md (ledger row 34: the DungeonDef, the event, wire keys, facet
-  members, columns and table; the capacity, anchor, and footprint decisions).
-- Record surprising rules learned in memory for the next session.
+Update progress.md row 34 and state.md's implementation ledger with actual paths,
+commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+Record facts learned; do not reopen the locked product rulings or mark a release gate
+accepted without its signed artifact. Numeric tables are literal, provenance-backed
+and approved before activation.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+Report status, touched files, exact validation commands and outcomes, reviewer verdicts,
+tracked release gates and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-34-qa.md
 
 STOPPING RULES:
-- Stop and ask if the ward footprint cannot fit the slot pool without widening
-  instanceSlotForZ for every def (a pool-wide change is a maintainer decision).
-- Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
-- Do not push the branch; never merge a PR.
+A failed acceptance check stops completion. Preserve state on failed mutation, decode,
+quote, capacity, lease or revision checks. No widening of a monolith ceiling or silent
+change to a locked ruling. Do not push the branch or open/merge a PR in this slice.
 ```

@@ -8,6 +8,173 @@ fixes only what the matrix finds (test-first, reviewed), captures the before and
 screenshots, and opens the wave B PR (or pushes the stacked branch) once Fernando
 sanctions the push. It stops at "pushed, green, ready for review" and never merges.
 
+## Deliverables (at most five):
+
+1. Whole-wave B integration matrix including 25a and its QA.
+2. Before/after desktop, compact and tablet screenshots.
+3. Fresh wiki and signed-artifact release readiness record.
+4. Scoped reviewed matrix fixes and fresh verification of their complete fix round.
+5. Reviewable PR package with separately authorized push and green current-head CI.
+
+## Complete wave evidence
+
+The close includes every suffixed implementation and QA pair in its wave: 25a in B,
+30a and 32a in C. All content manifests and approved numeric provenance rows must be
+complete; no shipped stand-in or missing reference model is a permissible deferral.
+Counsel memo, published Terms, accepted service contract/catalog and distribution
+approval are tracked signed-artifact release gates, never unresolved product questions.
+Missing sign-off keeps production and affected store submission disabled; report the
+exact artifact/owner rather than claiming approval. All priced routes/handlers obey
+the three money gates (counsel, fail-closed FREEHOLDS_ENABLED, distribution map) and
+service-authoritative pricing. Seeker is use-only; website-management is independently
+approved and default off on denied storefronts; purchase submodels/catalog/handlers/
+DOM/accessibility text are absent on denied builds. No on-chain marketing there.
+
+The whole-feature matrix includes atomic resource/housing saves, durable receipt
+recovery, current guild/visitor authority, offline-owner visits, exact account trophy
+provenance, typed parent/child placement, outfit/item forms, no new farm beds, final
+art at LOW, state30/29 amenity boundary, prepay12/13, source modes and immutable bills.
+Wave C additionally proves guild pooled absolute balance/cap schedule, own-member
+plinth departure, guild-at-clear proof, War table lockouts/first kills, immediate
+project completion and service-specific chest/station/vault gates. Capture each
+relevant empty/loading/error/locked/visitor/pending/reconnect state on desktop,
+compact and tablet through ux-spec.md's real-state helper. A missing AFTER capture
+fails. Required PG twins run ARMED; absent runtime evidence fails the close.
+
+Dispatch the whole-wave actual-surface roster: architecture-reviewer,
+cross-platform-sync, privacy-security-review, migration-safety,
+database-performance-reviewer, server-hot-path-reviewer, content-obligations-reviewer,
+render-performance-reviewer, frontend-seam-reviewer, test-coverage-auditor and
+qa-checklist. Confirm database reviews before decisions and on each finished DB diff;
+consume recorded deterministic evidence rather than duplicating the full gate. Apply
+ALL findings including nits, then have a second fresh reviewer verify every fix.
+Run node scripts/gate_select.mjs or deeper npm run gate as the shared pre-merge bar;
+ci:changed and remote CI are additional checks. Report exact commands/exits/paths.
+
+## Shared authority and persistence dependency
+
+This file extends the single producer from 07a, not a second account or guild payment
+system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
+server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
+durable intent, applied identities, global claim fencing and atomic effects. Phase15
+adds service quote/receipt fields to those rows; later files consume them. No separate
+guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
+Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
+Preserve explicit character pre-lock before nonce fencing, bank-ledger classification
+before guild replay, and the actual market/mail, storage advisory/receipt, custody,
+FK/unique/deferred-trigger ordering of every carried legacy effect. Never substitute
+a generic accounts/characters/guilds/receipts lock hierarchy. No client is held while
+joining serialization; no lock/client spans service IO. Reuse admitted cancellation-
+aware work and retain original operation identity across crash/timeout/eligibility change.
+
+07 owns capability-aware save/export/deactivation/restore preservation; 07b owns
+account lifecycle and immutable protection history. Unsupported/oversized/unknown
+source rows remain original and read-only with a bounded diagnostic/reference; do not
+reset them to empty history, a free Inn or fresh grace. Character delete preserves
+account records; soft deactivation/restore, authorized hard deletion and export remain
+distinct. Follow the minimum-capable-release/rollout artifact; old binaries merely
+leaving normalized rows untouched do not prove compatible save or lifecycle behavior.
+Rollback quiesces new mutations while preserving accepted recovery identities.
+
+Paired QA must cover the actual legacy transaction participants, lease/CAS/nonce
+failure, pending/replayed operations, concurrent accounts/alts/realms, partial failure,
+oversized/unknown version preservation and minimum-capable rollout/rollback fixtures.
+Database, persistence and security reviewers inspect these exact before/final diffs.
+
+## Existing lifecycle, upkeep history and finality contract
+
+Consume 07b's single lifecycle owner and 13/13a's single upkeep-calendar owner.
+NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provides the
+committed immutable protection source, and createFreeholdLifecycleCoordinator captures
+authenticated observation time before queueing. Derive a return before presence
+advances; stale observations, fenced sessions and replay cannot mint grace. The
+accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
+and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
+and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
+or account calendar ingress, source-history array on plots, polling job or receipt store.
+
+Every plot/checkpoint/immutable bill and prepaid credit retains original calendarId,
+schemaVersion, resetPolicyId and committed lifecycle/authority/finalized-prefix identity.
+Union overlapping lifecycle absence/grace and service suspension ranges exactly;
+never add independent totals or use only latest grace for a dormant plot. Historical
+condition/checkpoint changes, bill classification and credit consumption/carry require
+irrevocably finalized source facts. Covered but mutable tails support read-only preview
+only. Missing history, unknown binding or time beyond coverage is explicit not-ready,
+never zero outage. A future-credit purchase uses an accepted published schedule without
+requiring future time to be finalized; its later consumption requires final history.
+
+Recheck lifecycle and compatible calendar-head FOR SHARE guards inside 07a's reviewed
+composition hook through commit. The calendar-only writer takes FOR UPDATE and never
+account/plot/receipt locks; loaders release reads before writer queues. Retain exact
+indexed history/prefix facts with bounded probes across multi-year absence/open outage,
+not per-day/week loops, lifetime loads or foreign-plot rewrites. Keep source history
+until lossless dependency-aware rebase proves dormant plots/credits/recovery safe.
+Current-generation revision/digest/watermark install and exact current/superseded/
+conflict/pending ACK semantics belong only to 13a. An older response cannot replace a
+newer projection or claim readiness. Owner/public builders allowlist safe fields and
+reject operator-evidence, secret and private-diagnostic sentinels even on owner wire.
+
+Paired QA verifies repeated absence/return cycles, overlapping protection, original
+calendar across realm/zone change, open multi-year suspension, missing versus empty
+coverage, unfinalized history refusal, future-credit purchase, credit carry, stale
+process install and restart/rollout. UI may show a keyed pending state while existing
+entry/build/undo remain available; durable payment retains original operation recovery.
+
+## Literal D9 and original-operation money authority
+
+The game server and Sim remain ignorant of physical distribution. The future economy
+service owns eligibility verification and opaque authorization bound to account,
+purpose/SKU, policy, quote and operation, with issuer/verifier conformance in the
+accepted service artifact. A first-party web checkout session alone is insufficient.
+Client channel labels, Origin, UA, arbitrary JSON, linked Steam/Epic accounts and the
+game-service secret never prove eligibility; do not add a trusted channel field to the
+game server. The client capability map controls presentation, not purchase authority.
+Unknown eligibility refuses NEW spend. Already accepted payments recover under their
+original operation after session/authorization expiry or eligibility change.
+
+Use the service response protocol specified in 15: authenticated bounded decoding,
+complete original operation/fingerprint/target/effect validation and terminal-state
+classification. A malformed/nonterminal reply is neither a grant nor proof of no
+debit. Written signed acceptance is not runtime cryptographic verification. The 07
+developer fixture cannot mint a paid receipt or satisfy online service authorization.
+Keep all three money gates: counsel before enable/store submission, default-off
+FREEHOLDS_ENABLED on both dispatch arms/catalog, and the seven-distribution surface map.
+Published Terms, accepted service catalog/contract and issuer/verifier evidence remain
+release gates; the final legal-team handoff in 44b does not postpone these earlier gates.
+The economy service owns every price and all token math; expectedCostClaudium is only
+the forwarded literal quote fingerprint. Test false client claims, unknown eligibility,
+malformed/ambiguous replies and successful original-operation recovery on both arms.
+
+## Arrival consumer dependency
+
+Use the 07c account-wide normalized arrival-tier owner, not a plot-local seen set.
+NEW server/freehold_arrival_db.ts::markFreeholdArrivalTierOnClient is the conflict-safe
+insert inside 07a's accepted-owner-entry; only its committed insert winner gets fresh
+first-tier eligibility. 08a's private result separates historical firstTierAtAdmission
+from nullable freshArrivalPresentation carrying acceptedTransitionId, playWelcomeCue
+and firstTierViewEligible. Confirmed dungeonEntrySeq and destination plot match before
+the camera/audio consumer acts. Each new accepted arrival may welcome; snapshots,
+resume and replay carry null and never restart sound/camera. Commit-before-ACK may
+skip presentation, so do not claim exactly-once visible delivery. Visitors create no
+account tier mark; no permanent receipt is added for routine arrivals. A new tier,
+Fenbridge entry or second account session reuses this same authority and safe handback.
+Pair tests cover two accounts, same-account alts/concurrent realms, returning tier,
+guest, rejected entry, commit-before-ACK and reconnect. Asset/view execution is Codex.
+
+## Required Codex asset execution
+
+Every step in this file that creates or replaces a GLB, icon, image, texture, reference
+sheet, room/interior or trophy/furnishing art must be executed by Codex, not Claude.
+Use the repository image-to-GLB and image-generation workflows, approved art-brief.md,
+measured model manifests, export/optimization/fingerprint/prewarm and in-game proof.
+The paired QA verifies the asset-generating step used Codex and all final-art evidence.
+If a QA fix creates or replaces an asset, that fix step also runs in Codex, not Claude.
+Final wave acceptance still requires complete shipping art. The final Codex placeholder
+icon/image sweep in 44a verifies and replaces any feature-created remnants; it does
+not excuse an earlier incomplete paid product or relax an earlier final-art gate.
+This packet is documentation only; no shipping asset is generated by this audit.
+
 ### Starter Prompt
 ```
 This is Phase 27 of the Freeholds and Guildhalls feature: the wave B close (the
@@ -47,8 +214,8 @@ STEP 0 - PRE-FLIGHT:
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md (Push policy and the wave B branching choice, the ledgers 21
-  to 26, OPEN items), docs/freeholds/progress.md (rows 21 to 26 with their QA verdicts
-  and deferred items, the wave A matrix table under row 20, and "27 Wave B close"),
+  to 26, tracked signed-artifact release gates), docs/freeholds/progress.md (rows 21 to 26 with their QA verdicts
+  and tracked artifact/release gates, the wave A matrix table under row 20, and "27 Wave B close"),
   docs/freeholds/qa-checklist.md (every row), this file
 - .github/PULL_REQUEST_TEMPLATE.md; .claude/skills/pr-screenshots/SKILL.md;
   scripts/pr_shot_targets.mjs (the targets Phases 25 and 26 added);
@@ -67,8 +234,12 @@ Spawn one Explore agent to read and summarize:
 The agent returns: the matrix as a table of row, resolved command, and the test files
 that exist on disk (naming any row whose suite does not exist under the checklist's
 name); the screenshot targets with ids and mobile variants; the PR base branch and
-merge-base SHA per the branching choice; every deferred item from rows 21 to 26; the O1
-handoff delta (the upgrade SKU) and the O2 state; the flag default and its pin.
+merge-base SHA per the branching choice; every deferred item from rows 21 to 26; the service-contract
+handoff delta (the upgrade SKU) and counsel/Terms/store-signoff state; the flag default and its pin.
+
+The reader must include every contract and deliverable section above this Starter
+Prompt in its returned acceptance table, including sole authority ownership, D9,
+history/finality and required Codex asset execution where applicable.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
@@ -95,10 +266,10 @@ files; the coordinator owns progress.md, state.md, and the PR body and edits the
   relative paths for the PR body.
 - Agent WIKI-AND-DOCS: `npm run wiki:content` then `npx vitest run tests/guide.test.ts`;
   confirm every new guide.* key is spoiler-safe; confirm freehold-service-contract.md carries the
-  upgrade SKU (O1); draft the PR body from .github/PULL_REQUEST_TEMPLATE.md with: the
+  upgrade SKU (the signed service-contract handoff); draft the PR body from .github/PULL_REQUEST_TEMPLATE.md with: the
   wave B scope in the proposal's section 14 item 2 words, the flag default off, the
-  surface summary unchanged, the O2 counsel checklist still OPEN, the screenshot links,
-  the deferred items list (including any stand-in ids), and the word "phase" nowhere.
+  surface summary unchanged, the tracked counsel/Terms/store-signoff artifact status, the screenshot links,
+  the tracked artifact/release gates list (excluding unshipped development stand-ins from completion claims), and the word "phase" nowhere.
 Then the coordinator: for every FAIL row, fix test-first in isolation (the
 extract-and-test skill), spawn the reviewer the dispatch table names for the touched
 surface, re-run the row, and record the fix commit. Every agent writes any report longer
@@ -107,14 +278,14 @@ than a screen to a file and replies with the path plus a short summary. Never
 
 INVARIANTS THIS PHASE MUST KEEP:
 - No feature work: only matrix fixes, screenshots, docs, and the PR.
-- The three money gates: (1) counsel sign-off is OPEN in the PR body, never claimed;
+- The three money gates: (1) counsel sign-off is a tracked release gate in the PR body, never claimed without evidence;
   (2) FREEHOLDS_ENABLED defaults off and every housing route and command (the upgrade
   SKU, the open-houses read included) refuses while dark, re-verified by the matrix;
   (3) the seven-distribution surface map passes and the upgrade purchase surface is off
   every native, Steam, and Epic build. The economy service owns every price and all
   token math.
 - No wallet, $WOC, on-chain deed (mint, trade, holder), or marketplace string in any housing path reachable on
-  App Store, Google Play, Steam, or Epic; no "earn" language in hudChrome.housing.*.
+  App Store, Google Play, Steam, or Epic; no "earn" language in purchase-benefit copy.
 - Never sell power; never destroy; zero new farm beds (the farming calendar rows); the
   keystone exclusion over every ledger, furnishing, and upgrade bill.
 - i18n: the policy in docs/freeholds/implementation-plan.md; no locale overlay edited.
@@ -140,6 +311,9 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   COVERAGE not filtering; each writes its report to a file. No PR while a BLOCKING
   finding stands.
 
+Shared pre-merge bar: run node scripts/gate_select.mjs (or deeper npm run gate);
+ci:changed is additional evidence, never its substitute. Record the exact exit.
+
 STEP 4 - COMMIT CADENCE, THEN PUSH AND PR:
 2 to 5 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
 `git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
@@ -160,25 +334,25 @@ for review".
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] Every qa-checklist.md row is recorded PASS in progress.md under "27 Wave B close"
   with the command that proved it; no row is marked by inspection.
-- [ ] qa-checklist reports PASS; every dispatched reviewer reports no BLOCKING.
+- [ ] qa-checklist reports PASS; every dispatched reviewer confirms ALL findings, including nits, are resolved and freshly reviewed.
 - [ ] Before and after screenshots (desktop, compact, tablet) are committed under
   docs/screenshots/ and linked from the PR body.
-- [ ] freehold-service-contract.md carries the upgrade SKU (O1); the O2 counsel checklist is in
-  the PR body as OPEN.
+- [ ] freehold-service-contract.md carries the upgrade SKU (the signed service-contract handoff); the counsel/Terms/store-signoff artifact inventory is in
+  the PR body as a signed-artifact release gate.
 - [ ] The PR is open off the base the branching choice names, follows the template,
   contains no "phase", and `gh pr checks` is fully green; FREEHOLDS_ENABLED is unset by
   default.
 - [ ] state.md records the wave C branching choice and the PR number.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (row 27: status, the matrix table, deferred items
+- Update docs/freeholds/progress.md (row 27: status, the matrix table, tracked artifact/release gates
   carried into wave C) and docs/freeholds/state.md (the PR number, the wave C branching
   choice, the "Current phase" line, any locked decision).
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
 End with: phase status, the matrix table, files touched, review verdicts, the PR URL and
-CI state, deferred items, and the FULL PATH of the next file to run:
+CI state, tracked artifact/release gates, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-27-qa.md
 
 STOPPING RULES:

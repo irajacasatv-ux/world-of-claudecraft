@@ -2,7 +2,7 @@
 
 Wave A, the Cottage MVP. The spec is `progress.md` "02 Furnishing item kind"; the decisions
 are `state.md` (the `OtherItemDef` Exclude gotcha, D17's collision radius on every def) and
-`brainstorm.md` D4 and D14. This phase ships the ONE new item kind the whole feature adds,
+`state.md` D4 and D14. This phase ships the ONE new item kind the whole feature adds,
 `FurnishingItemDef`, threaded through every kind consumer and pinned with a synthetic fixture.
 No shipped item carries the kind yet, so no art obligation fires.
 
@@ -11,9 +11,9 @@ No shipped item carries the kind yet, so no art obligation fires.
 This is Phase 02 of the Freeholds and Guildhalls feature: the furnishing item kind
 (FurnishingItemDef, the 'furnishing' ItemKind member, every kind consumer, the tooltip core).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase (three independent slices over a known consumer census).
+Harness: Codex. Asset generation in this implementation must use Codex, not Claude.
+Follow AGENTS.md and root/directory CLAUDE.md repository contracts; use the active Codex
+model and the existing image/model/SFX pipelines, provenance and quality gates.
 
 Goal: add the 'furnishing' item kind with its own narrow def, give every compile-time record
 and every runtime kind switch an explicit arm (refusal, storability, presentation), add the
@@ -76,14 +76,28 @@ extraction candidate that pays for it); the catalog module and key path for
 `itemUi.kind.furnishing`; the UI_PURE_CORES registration line.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
+
+Deliverables (at most five):
+1. Narrow furnishing type plus complete refusal/storability/economy consumer census.
+2. Kind presentation, the market filter, All-only ordinary bags and the icon fallback.
+3. The registered tooltip core, English housing keys and decisive consumer fixtures.
+
+The dedicated housing palette is a bags-family furnishing filter with a Trophies tab in
+11. Do not reopen a general bag-chip choice. The furnishing-tooltip core returns only
+hudChrome.housing.* keys and values; itemUi.kind.furnishing remains the shared kind
+label. Author every tooltip with docs/design/tooltip-writing.md and the tooltip skill.
+Record the complete new English leaf inventory, not a hardcoded claim of two leaves.
+The default floor surface describes placement support; model geometry and walk-through
+rules come from content-manifest.md and its measured layout/art rows. Later typed
+wall/table/ceiling support is added explicitly in 25, without guessing art dimensions.
+
 Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
 files (disjoint except the shared pin files the coordinator edits last):
 - Agent KIND: src/sim/types.ts (FurnishingItemDef extends BaseItemDef { kind: 'furnishing';
   furnishing: { footprint, r, decorCost, surface: 'floor', plinth?: boolean }; use?: never;
   feast?: never; stackSize?: never }, where `r` is REQUIRED on every def and `r: 0` means
   walk-through, the rug case; 'furnishing' on ItemKind, the OtherItemDef Exclude
-  edit, the ItemDef union append), src/sim/inventory_sort.ts KIND_RANK (a rank beside
-  tool; record the choice), src/sim/bags.ts UNSTACKED_KINDS (one per slot), and every
+  edit, the ItemDef union append), src/sim/inventory_sort.ts KIND_RANK (the rank immediately after tool, before the next existing kind; preserve all existing relative ordering), src/sim/bags.ts UNSTACKED_KINDS (one per slot), and every
   src/sim/ refusal and storability arm: equip (equipment_rules.ts), disenchant, salvage,
   sunder, perfect, craft output, the Exchange eligibility (D25: eligible per the mount
   rule, pinned once here and never reopened), useItem (a furnishing has NO use arm, ever;
@@ -94,8 +108,7 @@ files (disjoint except the shared pin files the coordinator edits last):
 - Agent UI: src/ui/item_kind_label.ts ITEM_KIND_LABEL_KEYS with the English
   `itemUi.kind.furnishing` key in the item-names catalog module, src/sim/market_query.ts
   plus src/ui/market_view.ts (a `furnishing` browse chip with its label key),
-  src/ui/bag_filter.ts (reachable through All like patterns unless the chip row has room;
-  record the decision), src/ui/icons.ts (a furnishing fallback arm, never the junk
+  src/ui/bag_filter.ts (reachable through All like patterns; no new general bag chip, while Phase 11 owns the furnishing-only palette filter), src/ui/icons.ts (a furnishing fallback arm, never the junk
   cascade), src/ui/bags_view.ts (no use hint for a furnishing), the action-bar controller
   (a furnishing never sits on a bar slot, pinned), the context menu and equip-drop cores.
 - Agent TOOLTIP: src/ui/hud/housing/{index.ts,CLAUDE.md,furnishing_tooltip_view.ts}: a
@@ -118,8 +131,7 @@ INVARIANTS THIS PHASE MUST KEEP:
   nothing in the client predicts an outcome.
 - Never sell power: FurnishingItemDef carries no stat, buff, aura, or drop field (the
   `?: never` bars are the compile-time pin; the sweep test is the runtime pin).
-- i18n: the contributor policy in docs/freeholds/implementation-plan.md; the two English
-  leaves this phase adds are `itemUi.kind.furnishing` and the market chip label; the
+- i18n: the contributor policy in docs/freeholds/implementation-plan.md; the shared kind and market labels plus every hudChrome.housing.* tooltip leaf are English-only; the
   tooltip core returns keys and values, never rendered text.
 - Token firewall (the state.md scope): no on-chain word (wallet, token, $WOC, mint, holder,
   marketplace, on-chain, Solana) in src/sim/; deed ids and deedsEarned are Book of Deeds
@@ -134,6 +146,15 @@ Out of scope (do NOT do in this phase):
 - The place_furnishing command (Phase 08; a furnishing never gains a use arm); build mode
   (Phase 11).
 - Any src/sim/freehold/ behavior, instance, layout, render, or server work.
+
+
+CODEX ASSET EXECUTION (D74/D75):
+- Any generated model/GLB, texture, reference image, icon/image or sampled asset in this
+  implementation is executed by Codex through the existing repository pipeline, including
+  provenance, deterministic export/fingerprint and in-context quality/performance checks.
+  QA verifies that execution evidence. The final 44a Codex pass rechecks and replaces
+  all feature-created placeholder icons/images; it does not waive this producer's
+  same-change or per-wave final-asset obligations. No asset is generated in the packet audit.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit` (both exhaustive records must red until the arms exist, then
@@ -151,8 +172,20 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   architecture-reviewer (the kind arms inside the src/sim/ gates: bank, guild bank, trade,
   mail, market, equipment), and frontend-seam-reviewer (the tooltip core, the chips, the
   icon arm). Prompt each for
-  COVERAGE not filtering; each writes its report to a file. Do not commit until no
-  BLOCKING issues remain.
+  COVERAGE not filtering; each writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
+  locked rulings and the fixes have fresh review.
+
+FINAL REVIEW AND COMPLETION CONTRACT:
+- Required reviewers for the actual promised surfaces: cross-platform-sync, architecture-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist.
+  Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
+  nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
+  ownership examples; this complete roster is the minimum finishing dispatch.
+- Database performance reviews happen before implementation decisions and on the finished
+  diff whenever SQL/call sites/stored shapes/queues/locks/timeouts/growth change; pair
+  migration-safety and privacy-security-review for persistence/authority changes.
+- Run node scripts/gate_select.mjs before calling this contribution complete, as well as
+  every scoped/PG/visual/SFX check named here. Report exact commands and outcomes. A
+  skipped required suite or a reviewer report alone is not a passing shared gate.
 
 STEP 4 - COMMIT CADENCE:
 3 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -173,13 +206,13 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   art obligation triggered); tests/item_icons.test.ts is unchanged and green.
 - [ ] furnishing_tooltip_view.ts is in UI_PURE_CORES; hud.ts did not grow (or its ceiling
   is LOWER than before).
-- [ ] The S3 guard and i18n completeness pass with the two English leaves.
-- [ ] All STEP 3 suites green; all three reviewers report no BLOCKING.
+- [ ] The S3 guard and i18n completeness pass with the complete declared English leaf inventory.
+- [ ] All STEP 3 suites green; all required reviewers confirm all findings resolved and the fresh fix review passed.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 02, notes, deferrals) and
-  docs/freeholds/state.md (the per-phase ledger row 02: new files, the kind, the two i18n
-  keys; the KIND_RANK and bag chip decisions as locked; D25 already holds the Exchange
+  docs/freeholds/state.md (the per-phase ledger row 02: new files, the kind and all i18n
+  keys; the fixed KIND_RANK and All-only bag behavior as verified; D25 already holds the Exchange
   ruling, do not restate it).
 - Record surprising rules learned in memory for the next session.
 

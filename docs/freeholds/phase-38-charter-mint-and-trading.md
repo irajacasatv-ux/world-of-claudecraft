@@ -1,28 +1,17 @@
-# Phase 38: Charter mint surface and marketplace trading (web only)
+# Phase 38: optional Charter mint and furnished-plot trading
 
-Wave D, Wards and Charters. The spec is `progress.md` "38 Charter mint surface and
-marketplace trading (web only)"; the decisions are `state.md` (the token firewall, the
-three money gates, the surface map) and `brainstorm.md` (D9 the distribution map, O2 the
-counsel memo). This is a money and token phase with NO `src/sim/` change: it ships the
-web-only mint surface behind the Exchange gate, deed trading as the marketplace's
-"serialized collectible" category (3 percent burned, 7 percent treasury, 90 percent
-seller, all computed by the economy service), holder flair on the exterior read-only, and
-the distribution matrix extended so no native, Steam, or Epic build reaches any of it.
+This implementation file and its QA are the complete contract for this bounded slice.
+The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
+are authoritative. Nothing in this planning packet is marked built.
 
 ### Starter Prompt
 ```
-This is Phase 38 of the Freeholds and Guildhalls feature: the Charter mint surface and
-marketplace trading (web only; the serialized collectible category; holder flair; the
-distribution matrix extended).
+This is Phase 38 of the Freeholds and Guildhalls feature: optional Charter mint and furnished-plot trading.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase.
+Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
+fan-out; this prompt names no model.
 
-Goal: put the Phase 37 deed behind the web-only Exchange gate (mint, list, buy) as a
-marketplace category the service prices and splits, show holder flair on the exterior
-as a read-only cosmetic, and extend the seven-distribution surface map so every native,
-Steam, and Epic path stays free of every deed, wallet, mint, and marketplace string.
+Goal: offer voluntary furnished-plot transfers only on approved web surfaces, with explicit contents confirmation and provably safe custody after service settlement.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -42,7 +31,14 @@ STEP 0 - PRE-FLIGHT:
   the dev deploy being MAINNET, the wallet re-auth review, the exchange website-desktop
   PR, distribution gates, test-pin traps.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
+ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
+in this phase, including GLBs, references, icons and images, must be executed by
+Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
+provenance, runtime registration, fingerprint and in-context checks. This planning
+audit creates no game assets. Final art is required here;44a is a residual sweep,
+not permission to leave a placeholder for a later phase.
+
+STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md (the counsel gate status, the Phase 37 decisions),
   docs/freeholds/progress.md (only "38 Charter mint surface and marketplace trading"),
@@ -54,7 +50,8 @@ Spawn one Explore agent to read and summarize:
   dailyRewardsEnabled), tests/client_shell.test.ts, tests/woc_market_wiring.test.ts,
   tests/electron_desktop_config.test.ts
 - server/woc_market_routes.ts (the policy switches allowMounts and allowMechChromas,
-  the category vocabulary mirrored as literals, the status route), server/woc_market_service.ts,
+  the category vocabulary mirrored as literals, the status route), server/woc_market.ts
+  (WocMarketService; a tracked monolith at its ceiling), tests/monolith_budget.test.ts,
   server/woc_market_db.ts, server/woc_market_proxy.ts (service-computed splits),
   server/freehold_deed_routes.ts, server/freehold_deeds_db.ts, server/freehold_deed_proxy.ts
   (Phase 37), server/chat_flair_stamp.ts (stampChatSenderFlair: the holder flair
@@ -63,73 +60,245 @@ Spawn one Explore agent to read and summarize:
   src/sim/freehold/ward_core.ts (the reserved style slot from Phase 34; READ ONLY, the
   sim does not change)
 - tests/server/woc_market_routes.test.ts, tests/server/freehold_deed_routes.test.ts
-The agent returns: the surface-map extension recipe (a deedSurfaces row: web on,
-website desktop through wocExchangeSupported; Seeker, App Store, Google Play, Steam, and
-Epic off, because D21 has ruling 6 (web only) outrank the section 8 Seeker row); the
-Exchange window's category rendering seam; the market policy switch to
-add (allowSerializedCollectibles, default off) and the listing arm for a non-item asset
-keyed by the freehold_deeds row; the custody model (the service freezes the asset on
-listing through the delegate and settles the transfer; the game records the new holder
-after the service confirms); how the server fills the ward descriptor's style slot with
-a cosmetic flair id without any sim type change. Settle in STEP 1 and record in
-state.md before implementing: what a deed transfer moves (the packet default from the
-Phase 37 contract: the title and the flair move; the plot entitlement moves only
-through the web claim flow after the service verifies the new holder; never in a native
-app), and the flair id vocabulary (cosmetic ids only).
+- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
+  artifacts referenced by state.md that this slice consumes.
+- Required durable artifacts: docs/freeholds/content-manifest.md,
+  docs/freeholds/content-numbers-workbook.md, docs/freeholds/art-brief.md and
+  docs/freeholds/ux-spec.md; docs/prd/woc/freehold-service-contract.md,
+  docs/prd/woc/freehold-counsel-memo.md, docs/prd/woc/freehold-terms-amendment.md,
+  docs/prd/woc/freehold-store-listing-drafts.md,
+  docs/prd/woc/freehold-deed-service-contract.md and
+  docs/prd/woc/freehold-territory-authority-schedule.md.
+The agent returns: the exact distribution/Exchange/WocMarketService seams and monolith extraction,
+service draft acceptance, stable plot identity and transfer transaction. The settled
+sale transfers shell/tier and eligible transferable placed furnishings in a signed
+immutable manifest. Trophy unlock/provenance, personal/bound copies and omitted goods
+remain seller-owned in verified safe custody. Housing entitlement is an authoritative
+server fact; native clients never derive access from a chain query. The opaque flair
+ID vocabulary is the approved art manifest, unknown IDs render no flair. Client
+distribution capabilities control presentation only: denied deed-capability builds
+have no holder flair, including exterior/banner, chat or other presentation paths. The NEW economy-service
+issuer/verifier alone validates actual eligible checkout session and territory;
+NEW server/freehold_deed_proxy.ts consumes verified opaque allow/refusal/effects,
+with protected binding/receipt owned by 07a. The game learns no channel label or
+physical-client attestation and never infers authority from request headers.
+All design rulings are locked; a missing required signed artifact keeps its release
+gate closed and produces a named validation result, never a guessed runtime value.
+Database review is required BEFORE implementation decisions and again on the finished
+diff, including changes to callers, persisted JSON, caches or workload even when SQL
+text stays unchanged. Reuse 07a's global plot fence and reviewed actual legacy
+touch-set, including caller-owned saves, character prelocks/nonces, bank-ledger
+classification, guild replay and storage/custody effects. Preserve character FIFO
+entry and the proved new-participant suffix, never a replacement generic lock order.
+Never enter a queue holding a DB client or hold locks
+across service IO. Bound admitted work, acquisition/query/transaction deadlines,
+projection keys, rows and bytes; background producers use shared admission and
+cancellation. Retain one running plus one pending dirty generation, not unbounded
+FIFO writes. Supply a query/index inventory (scope, predicates, order, limit, expected
+cardinality and supporting index), reverse-FK export/delete access and retention for
+every growing shape. Disposable-PG concurrency, plans, query counts and maximum legal
+payload evidence are acceptance, not satisfied by fake-pool tests.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last):
-- Agent GAME+UI: the deedSurfaces row in src/game/distribution_surfaces.ts and the
-  seven-row matrix extension in tests/distribution_surfaces.test.ts; HudFeatures.freeholdDeedSurfacesEnabled
-  beside freeholdPurchaseEnabled, composed in src/main.ts (one line; main.ts stays a
-  firewall); src/ui/hud/housing/deed_card_view.ts and deed_card_window.ts (mint, status,
-  the handoff into the Exchange window's collectible tab) mounted only when the feature
-  is on; the Exchange window's serialized collectible category rendering; the source
-  pins in tests/client_shell.test.ts (no deed, wallet, mint, or marketplace string in a
-  native, Steam, or Epic path); hudChrome.housing.* keys; pr_shot_targets entries for
-  the web surface and the native absence.
-- Agent SERVER: the allowSerializedCollectibles policy switch (default off) and the
-  listing, quote, and settlement arms in server/woc_market_service.ts for a deed keyed
-  by the freehold_deeds row (freeze on listing through the service, the new holder
-  written after the service confirms, re-verify before any use); the mint route wired
-  to the Phase 37 proxy; the holder flair stamped into the ward descriptor at serialize
-  time from the existing holder tier (server-only; the sim never learns it); every route
-  refusing while FREEHOLD_DEEDS_ENABLED or WOC_MARKET_ENABLED is dark; tests under
-  tests/server/ (the split is never computed here: a grep pin for 0.03, 0.07, 0.9,
-  3, 7, 90 near deed code fails the suite).
-- Agent NET: the flair field decoded strictly in src/net/ward_wire.ts as an opaque
-  cosmetic id (unknown ids dropped to none, never rendered raw), the exterior painter's
-  banner variant keyed by that id.
-The coordinator edits last: tests/distribution_surfaces.test.ts if two slices touched
-it, tests/monolith_budget.test.ts. Every agent writes any report longer than a screen
-to a file and replies with the path plus a short summary. Never `mode: "plan"` on
-teammates.
+Deliverables (at most five):
+Assign disjoint implementation ownership by the following 5 deliverables.
+The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
+finish. Workers receive only the context report and owned files, preserve others' edits,
+and return full reports to the scratchpad with a path and short summary.
+1. Distribution and mint card: add deedSurfaces to distribution_surfaces.ts, enabled
+   only for web and website desktop through wocExchangeSupported; Seeker/App Store/
+   Play/Steam/Epic off. Compose freeholdDeedSurfacesEnabled beside the purchase gate.
+   deed_card_view.ts/window.ts and serialized-collectible Exchange category reuse the
+   cold-window family and ux-spec keyed states, focus and mobile rules. A complete
+   denied purchase/deed submodel is absent, including fetched catalogs, handlers,
+   hidden DOM, errors and aria. Seven-row matrix and source/bundle pins prove it.
+2. Prepare, custody and listing: new server/freehold_deed_market.ts is the owner,
+   called by thin WocMarketService delegates in server/woc_market.ts; extraction pays
+   their lines and lowers the monolith pin. Authenticated current seller prepares an
+   immutable manifest of stable plot/shell/tier/revision and exact eligible item-copy
+   IDs with service quote fingerprint. At prepare, quote/confirmation, listing and
+   NEW-spend settlement, server/freehold_deed_proxy.ts consumes the service's verified
+   opaque authorization/effect or typed refusal. The service alone checks actual
+   checkout-session/territory eligibility and complete account/purpose/SKU/policy/
+   quote/operation/custody binding; no channel/country claim enters the game host.
+   Reserve the plot and listed copies behind the
+   global fence, reject edit/upgrade/second listing races, and preview ALL excluded
+   bound/personal pieces and their exact safe destination. Treasury delegate freezes
+   the asset only after verified preparation. If seller custody for omitted goods
+   cannot be proven, refuse before listing or spend; no implicit deletion or mail.
+3. Atomic settlement and recovery: explicit seller contents confirmation authorizes
+   voluntary transfer, distinct from no-loss upkeep. Service confirms the exact
+   manifest/outcome; a bounded transaction updates buyer server entitlement, plot
+   owner, included exact-copy custody, seller safe custody and durable receipt once.
+   Seller's account trophy unlocks/provenance remain; detach their displays and keep
+   bound/personal items. Cancel/thaw restores exact original custody; ambiguous service
+   completion retries the same intent and recovers without exposing an intermediate
+   owner or duplicate furniture. Later checkout expiry, revocation or changed
+   territory eligibility refuses NEW spend but cannot strand an accepted outcome:
+   discover/apply or compensate the original immutable operation without another
+   checkout session or debit. NEW server/freehold_operation_db.ts owns protected
+   binding/fingerprint/receipt through prepareFreeholdOperation/applyFreeholdOperation;
+   NEW server/freehold_mutation.ts commitFreeholdMutation owns atomic game effects,
+   both produced by 07a. Current local entitlement/custody guards still apply.
+   07's account_freehold_hearth row remains each account's own travel history:
+   transfer, cancellation and recovery neither copy nor clear seller or buyer
+   ready_at_ms/revision, and no transferred plot contains authoritative cooldown.
+   A deed freeze/burn alone never removes existing
+   entitlement or access. No DB lock spans IO; no src/sim/ change is required because
+   the earlier generic plot/custody seam owns all gameplay effects.
+4. Cosmetic flair and public presentation: stamp an opaque cosmetic flair ID at
+   server/freehold_wire.ts serialization using the existing chat_flair_stamp.ts
+   precedent, never a service lookup per viewer/frame. Strict ward_wire.ts unknown
+   IDs become none. The client presentation projection strips holder flair unless
+   deedSurfaces/freeholdDeedSurfacesEnabled permits it; renderers and chat consume
+   that gated projection, never a raw ID unconditionally. Seeker/App Store/Play/
+   Steam/Epic therefore construct no holder-flair submodel, exterior/banner variant,
+   chat badge, hidden DOM, error copy or accessible label. The D9-ignorant server
+   receives no distribution label or physical-client proof. Ordinary server housing
+   entitlement and gameplay Book of Deeds work on these same denied clients.
+   Allowed exterior/material variants use scheduler prewarm and retirement. Public
+   descriptors omit chain vocabulary, account IDs, sale-private metadata and service
+   authority. Capture allowed ward flair and exact denied projection/DOM/ARIA/error
+   absence, alongside web contents/cancel/recovery and native ordinary-home use.
+   The same known valid flair ID must render on both allowed distributions and
+   disappear on all five denied distributions plus an unknown-capability build;
+   unknown flair IDs remain a separate refusal/control arm.
+5. Proof: dark flag and allowSerializedCollectibles/WOC_MARKET_ENABLED refusals;
+   strict matrix, no-price-arithmetic, no-src/sim and source/bundle gates. Real-PG
+   listing/placement/transfer races, exact included/excluded custody, timeout/restart,
+   cancel/recover and historical receipt replay show no loss/duplication. Bound
+   listing pages, cache keys, query/verify cadence and background recovery; export/
+   erasure and immutable replay retention remain correct after account owner changes.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- The three money gates: (1) counsel sign-off before enable (FREEHOLD_DEEDS_ENABLED and
-  allowSerializedCollectibles stay off until the memo in state.md is signed); (2) the
-  fail-closed flags defaulting off, refusing every deed route and hiding every deed
-  surface while dark, pinned; (3) the per-distribution surface map pinned by the
-  seven-row matrix with the deed column. The economy service owns prices and token
-  math (the mint fee, the royalty, the 3, 7, 90 split); the game forwards ids and keys
-  and never computes a peg, a burn, or a split.
-- The token firewall at the state.md scope (no on-chain word in src/sim/: wallet, token,
-  $WOC, mint, holder, marketplace, on-chain, Solana; Book of Deeds ids are game content):
-  NO src/sim/ change in this phase; the flair is an opaque cosmetic id.
-- Store policy: no deed, wallet, $WOC, mint, or marketplace string or control in any App
-  Store, Google Play, Steam, or Epic path, and no deed string or control in the Seeker
-  path (source pins; D21 keeps the deed surfaces to web and website desktop); the house
-  is fully usable everywhere; deed ownership unlocks nothing in a native app (Apple
-  3.1.1).
-- Nothing repossessed: selling the deed never removes the seller's furnishings or
-  trophies; the transfer rule settled in STEP 1 is recorded and pinned.
-- The i18n policy in docs/freeholds/implementation-plan.md; vocabulary fixed; "phase"
-  in no code, comment, commit, or PR text; monolith ceilings never raised.
+Every player-visible string, including error, aria, tooltip and empty-state text,
+uses an English hudChrome.housing.* key and the formatters from src/ui/i18n.ts.
+Tooltips follow docs/design/tooltip-writing.md. Reuse docs/freeholds/ux-spec.md and the
+shared family/painter/window lifecycle, focus return, keyboard/gamepad, touch safe-area,
+reduced-motion and graphics-fairness contracts; do not fork the theme. New paths,
+symbols, wire fields, tables and tests under housing/freehold are PLANNED unless an
+earlier completed ledger row owns them. Re-find every existing anchor in the tree.
+No power sale, keystone/gear-intermediate/quickening-catalyst bill, new farm bed,
+repossession or calendar destruction. Sim stays deterministic and token-free; all
+server player events are keyed data. Coordinators compose siblings and never grow
+past their pinned ceilings. Fresh tests use literal expectations and negative controls.
+The three money gates apply to EVERY priced action: (1) signed counsel acceptance,
+published Terms and accepted economy-service contract/catalog before production enable
+or housing storefront submission; (2) fail-closed live flags, default off, refusing
+every NEW priced action while dark; original accepted-operation recovery
+remains admitted under the recorded immutable outcome; (3) independent per-distribution use, purchase,
+website-management and deed capabilities, pinned for all seven distributions. Charter
+and Call checkout is browser web and website-distributed desktop only. Seeker is
+use-only with deeds off. App Store, Google Play, Steam and Epic have no purchase or
+deed submodel, catalog fetch, handler, hidden DOM, error or accessibility purchase
+text. Website management is independently approved and defaults off on denied stores.
+No housing copy on native, Steam or Epic names a token, wallet or on-chain deed.
+Purchase benefits use cosmetic, convenience and access language, never earn/income/yield.
+The economy service owns every price, conversion, fee, royalty, burn and split. The
+game forwards opaque IDs and versioned quote fingerprints, never computes token math
+or substitutes a stale quote. Durable discoverable intent precedes spend; housing
+receipt authority and effects commit through the NEW 07a operation/mutation
+producers, consumed by the Phase 15 purchase and Phase 37 deed adapters.
+No bounded live key array provides replay authority and no lock spans service IO.
+Unknown, expired or changed quotes for NEW spend require a fresh quote and
+explicit confirmation; an accepted original operation recovers without a new debit.
 
-Out of scope (do NOT do in this phase):
-- Any src/sim/ change; a native IAP rail; enabling any flag outside a test; any deed
-  surface on Seeker (D21).
+Out of scope:
+Any behavior beyond these deliverables, any invented balance rate, and any production flag enable.
+
+PROPOSED SERVICE AUTHORIZATION AND RECOVERY CONTRACT:
+Preserve literal D9: the game server receives no distribution/channel label,
+country assertion or physical-client attestation. The NEW external economy-service
+issuer/verifier and policy module verify an actual eligible checkout session and
+current territory under signed policy; the signed acceptance names their exact
+external repository/module or interface-artifact identity and conformance proof.
+Account auth, Origin, user agent, client JSON, linked stores, a desktop bridge
+capability and an outgoing server secret are not physical-distribution proof.
+The service binds NEW checkoutAuthorization to account, purpose/kind, SKU, policy
+version, accepted quote, operation and full plot/guild/custody fingerprint. The game
+consumes only the opaque protected reference and service-verified allow/refusal/effect;
+it never issues eligibility from headers, accepts a channel JSON field or logs/exposes
+the authorization. Unknown/malformed/unverified eligibility refuses NEW spend.
+The adapter authenticates the actual service response and bounds decode before
+validating the complete operation/effect/fingerprint. A signed acceptance document
+is not proof of runtime cryptographic validation. Malformed or nonterminal results
+never grant a local effect or prove that no debit occurred; preserve the original
+operation for bounded status discovery and recovery.
+
+NEW source ownership is explicit: 07a's
+server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation owns
+protected authorization binding, fingerprint and durable receipt authority;
+server/freehold_mutation.ts::commitFreeholdMutation owns atomic local effects.
+Phase 15's NEW server/freehold_purchases.ts is the initial opaque quote/status/
+authorization consumer; NEW server/freehold_deed_proxy.ts is the later deed consumer
+of that same verified boundary. No game geo or distribution-attestation module is
+introduced. These are proposed producers, not existing exports; read prepared
+phase-07a-transactional-mutation-boundary.md and its QA before implementation.
+
+Dark flags and unknown/current eligibility refuse new paid actions, not recovery of
+an already accepted original operation. Receipt/status discovery, local application
+or accepted compensation use its immutable outcome and original protected binding
+without a new checkout session or debit. Current local entitlement, ownership, fence
+and custody guards still apply. Rejected/expired new quotes need fresh confirmation;
+an accepted historical quote is not a fallback new purchase. Both service conformance
+and game tests cover forged eligibility inputs, cross-binding reuse, policy/territory/
+expiry changes before new spend, and accepted-operation recovery after those changes.
+
+ACCOUNT AUTHORITY, CALENDAR AND RECOVERY ACCEPTANCE:
+Consume 07b's single account lifecycle authority: NEW
+server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/loadFreeholdLifecycleProtectionPage/
+advanceFreeholdLifecycleOnClient, coordinated by
+server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator and the accepted
+server/freehold_lifecycle_binding.ts::resolveFreeholdLifecycleBinding policy registry.
+Capture authenticated observations before queues; committed monotonic transitions,
+not authentication login or a plot-local last-seen field, authorize account grace.
+Immutable multi-return history or lossless prefix facts cover dormant/foreign plots;
+union overlapping lifecycle protection and service suspensions exactly, never sum
+independent credits, force-write foreign plots or restart grace on an alt/plot switch.
+
+07c's NEW server/freehold_arrival_db.ts::loadFreeholdArrivalTiers/
+markFreeholdArrivalTierOnClient owns normalized account+tier marks, separate from
+lifecycle and plot saves. Only the committed accepted-owner-entry insert winner
+has first-tier eligibility. NEW arrivals may receive a private freshArrivalPresentation
+directive; snapshot/resume/replay set it null even with firstTierAtAdmission history.
+Commit-before-ACK can skip presentation; no exactly-once visible/audio promise and
+no permanent receipt for routine visits. Second plots and transfers do not duplicate,
+copy or clear account arrival marks or seller lifecycle history.
+
+13/13a own shared source calendar/history/checkpoint evaluation. Preserve calendarId,
+schemaVersion/resetPolicyId and immutable prepaid bill/rate/material/receipt identities
+across foreign-realm claims and transfers. No rebinding to serving realm/browser zone.
+Historical dependencies of durable condition/bill/credit effects must be irrevocably
+finalized and read at consistent committed calendar/lifecycle revisions; unfinalized,
+missing or unsupported coverage keeps the affected effect pending. A future-credit
+purchase does not require future time to be finalized. Long absences/outages use
+bounded indexed prefix probes, never lifetime scans or absent-day/week loops.
+Calendar-only exclusive writers and compatible shared mutation readers follow 07a's
+actual legacy touch-set proof; no invented reverse lock hierarchy. Current-generation
+projection/ACK identity cannot regress after delayed loads or superseded delivery.
+Server-only operator evidence, secrets and diagnostics never reach either owner or
+visitor wire: explicit allowlist builders and distinctive sentinel tests prove it.
+
+At a sale/ownership transfer, materialize the old owner's condition at the transfer
+boundary from finalized original calendar/lifecycle history; preserve source calendar
+and immutable credits, retain seller account history, and apply buyer lifecycle only
+prospectively without copying grace. Unknown authority holds application for bounded
+original-operation recovery/accepted compensation, never a replacement charge or
+silent calendar reset. Current local custody/fence guards still apply.
+Character deletion, soft deactivation, restoration, true account deletion and export
+are separate: deactivation is not an FK cascade; restored history/credits/receipts keep
+their meaning. Explicit housing export loaders expose allowed facts only. Unknown or
+oversized originals remain durable/read-only with bounded diagnostic/reference, not
+empty/new-home defaults or filtered destructive arrival-set rewrites.
+07's persistence-rollout-contract.md and 07b's lifecycle-policy-binding.md/
+lifecycle-db-contract.md plus 13a's upkeep-calendar-db-contract.md name minimum
+capable releases, measured bounds, exact schema/save fixtures and accepted policies.
+Enable only a proven capable rollout; unchanged normalized rows do not prove an old
+binary implements lifecycle, export or saves. Rollback quiesces NEW effects and
+preserves accepted original-operation recovery identities and supported recovery.
+Each consuming implementation/QA runs relevant two-character/two-plot/two-realm,
+dormant-history, delayed-generation, finality/transfer, deactivation/restore/export
+and capable/uncapable-release fixtures through real composition and disposable PG.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/distribution_surfaces.test.ts
@@ -142,50 +311,41 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts`; `node
   scripts/pr_screenshots.mjs`; `git diff
   <phase-start>..HEAD --name-only | grep '^src/sim/'` must print nothing.
-- Spawn review agents per docs/freeholds/implementation-plan.md: privacy-security-review,
-  frontend-seam-reviewer, plus server-hot-path-reviewer (listing and verify reads) and
-  cross-platform-sync (the descriptor field on the wire). Prompt each for COVERAGE not
-  filtering; each writes its report to a file. Do not commit until no BLOCKING issues
-  remain.
+- Run node scripts/gate_select.mjs before completion; npm run ci:changed is not a
+  substitute. Re-run only affected checks after fixes, then verify the final head.
+- Dispatch migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, cross-platform-sync, frontend-seam-reviewer, render-performance-reviewer, test-coverage-auditor and qa-checklist
+  for the stated surfaces; actual additional surfaces trigger their canonical reviewer.
+  Database review runs before decisions and again on the completed diff. Every report
+  uses COVERAGE, BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT, saved to a file.
+  Apply ALL findings including nits; a fresh reviewer reads the fix round.
 
 STEP 4 - COMMIT CADENCE:
-4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
-`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- feat(game): extend the distribution surface map with the deed surfaces column
-- feat(server): list and settle Freehold Charters as the serialized collectible category
-- feat(ui): add the web-only Charter mint card and the collectible tab
-- feat(net): mirror holder flair as an opaque cosmetic id on ward exteriors
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Commit each coherent owned deliverable with a scoped Conventional Commit and a body.
+Stage EXPLICIT task paths, never git add -A. No coauthor trailer, em dash, en dash,
+emoji, or word "phase" appears in a commit message. Keep generated output with its
+authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] The seven-row matrix passes with the deed column: web on, website desktop only
-  through wocExchangeSupported, Seeker, App Store, Google Play, Steam, and Epic off
-  (D21); the source pins find no deed, wallet, mint, or marketplace string in those paths.
-- [ ] Every deed and collectible route refuses while either flag is dark (pinned per
-  route); the surfaces are absent while HudFeatures says off.
-- [ ] A listing freezes through the service, a settlement records the new holder only
-  after the service confirms, and no split, burn, or royalty constant exists in the game
-  (grep pin); the seller keeps every furnishing and trophy.
-- [ ] Holder flair renders from an opaque id; an unknown id renders nothing; the diff
-  touches no src/sim/ path.
-- [ ] Screenshots: the mint card on web and its absence on a native emulation; all
-  STEP 3 suites green; every reviewer reports no BLOCKING.
+STEP 5 - ACCEPTANCE CRITERIA:
+- [ ] Web/website-only deed surfaces and full denied submodel absence pass matrix/source/bundle checks; dark new-action routes refuse, accepted original operations remain recoverable, and all three money gates/service-price rules hold.
+- [ ] Confirmed furnished manifest transfers precisely shell/tier and eligible placed copies; seller trophies, bound/personal and omitted copies remain in verified custody; unsafe preparation refuses atomically.
+- [ ] Real-PG edit/list/settle races and timeout/restart/cancel/recovery prove exact-copy and entitlement consistency using durable receipt authority, never native chain access.
+- [ ] Opaque flair stays cosmetic; unknown IDs and denied deed-capability clients render none at actual projection/DOM/error/ARIA boundaries. Allowed ward flair and denied ordinary-home/Book of Deeds controls pass, with no sim path change and scheduler-safe ux-spec captures.
+- [ ] All unit/PG/growth evidence, reviews, fresh fix review and contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 38, notes, deferrals) and
-  docs/freeholds/state.md (ledger row 38: endpoints, wire fields, facet or feature rows,
-  i18n keys; the transfer rule and flair vocabulary; the counsel gate still OPEN).
-- Record surprising rules learned in memory for the next session.
+Update progress.md row 38 and state.md's implementation ledger with actual paths,
+commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+Record facts learned; do not reopen the locked product rulings or mark a release gate
+accepted without its signed artifact. Numeric tables are literal, provenance-backed
+and approved before activation.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+Report status, touched files, exact validation commands and outcomes, reviewer verdicts,
+tracked release gates and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-38-qa.md
 
 STOPPING RULES:
-- Stop and ask if the Exchange window cannot render a non-item category without a
-  src/sim/ change; the answer is a server-fed row, never a firewall exception.
-- Stop if the flair cannot be filled without an on-chain word (holder, mint, marketplace)
-  in a sim type.
-- Do not push the branch; never merge a PR.
+A failed acceptance check stops completion. Preserve state on failed mutation, decode,
+quote, capacity, lease or revision checks. No widening of a monolith ceiling or silent
+change to a locked ruling. Do not push the branch or open/merge a PR in this slice.
 ```

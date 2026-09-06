@@ -1,27 +1,17 @@
-# Phase 40: Keep and Citadel tiers, prestige deeds
+# Phase 40: Keep and Citadel tiers with existing prestige
 
-Wave E, depth. The spec is `progress.md` "40 Keep and Citadel tiers, prestige deeds"; the
-decisions are `state.md` and `brainstorm.md` (D2 in-place upgrades, the Phase 21 and 32
-build projects, D19 trophies). This phase ships the epic and legendary rungs of both
-ladders (`keep` and `citadel` for freeholds, `fortress` and the guild `citadel`) with
-courtyard and tower layouts, decor budgets 300 and 420, and the prestige-deed gate on the
-top two tiers. The prestige-deed choice (a Reliquary curator rank, a raid clear, or the
-Legendmaker deed, and who on the account must hold it) is a Fernando ruling recorded in
-`state.md` BEFORE this phase starts; without it the phase does not begin.
+This implementation file and its QA are the complete contract for this bounded slice.
+The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
+are authoritative. Nothing in this planning packet is marked built.
 
 ### Starter Prompt
 ```
-This is Phase 40 of the Freeholds and Guildhalls feature: Keep and Citadel tiers and the
-prestige-deed gate (keep, citadel, fortress, and the guild citadel with courtyard and
-tower layouts; budgets 300 and 420).
+This is Phase 40 of the Freeholds and Guildhalls feature: Keep and Citadel tiers with existing prestige.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
-ULTRACODE: not needed for this phase.
+Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
+fan-out; this prompt names no model.
 
-Goal: extend both ladders to their legendary rung on the Phase 32 project seam, gate the
-top two tiers on the ruled prestige deed (accomplishment, never money alone), and keep
-every courtyard and tower within the light budget and the collider derivation.
+Goal: complete the personal and guild tier ladders using the same existing prestige alternatives for both top tiers, safe upgrades and final courtyard/tower art.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -37,22 +27,24 @@ STEP 0 - PRE-FLIGHT:
   patches/.
 - If state.md "Push policy" records a stacked wave branch, work on that branch instead of
   feature/freeholds.
-- THE RULING GATE: read state.md "Locked decisions" for the prestige-deed ruling (which
-  source gates Keep and Citadel: a Reliquary curator rank, a raid clear, or the
-  Legendmaker deed; and whether the purchasing character or any character on the
-  account must hold it). If it is absent, STOP and ask Fernando; implement nothing.
 - Memory scan: MEMORY.md and entries on content obligations, interior layouts and
   colliders, point-light budgets, the provisioner firewall, test-pin traps.
 
-STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
+ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
+in this phase, including GLBs, references, icons and images, must be executed by
+Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
+provenance, runtime registration, fingerprint and in-context checks. This planning
+audit creates no game assets. Final art is required here;44a is a residual sweep,
+not permission to leave a placeholder for a later phase.
+
+STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md (the ruling, the content numbers table), docs/freeholds/progress.md
   (only "40 Keep and Citadel tiers, prestige deeds"), and this file
 - src/sim/content/freehold/tiers.ts, charters.ts, dungeons.ts, trophies.ts (the ladder
   through Phase 32; free indices), src/sim/content/freehold/layouts.ts (the Manor and
-  Bastion layouts, D23) and src/sim/dungeon_layout.ts (the helpers only: authoredLiftAt,
-  DAWNHOLD_STAIR_LIFT as the tower model), src/sim/rift/authored.ts
-  (AuthoredRoom, AuthoredLedge), src/sim/colliders.ts (STATIC_INTERIOR_COLLIDERS),
+  Bastion layouts, D23) and src/sim/dungeon_layout.ts (DAWNHOLD_STAIR_LIFT and authoredLiftAt consumer
+  model), src/sim/rift/authored.ts (authoredLiftAt, AuthoredRoom, AuthoredLedge), src/sim/colliders.ts (STATIC_INTERIOR_COLLIDERS),
   src/sim/world.ts (groundHeight interior arms), src/render/dungeon.ts (the variant
   union; whether an open-sky room exists in any kit), src/render/point_light_budget.ts
 - src/sim/freehold/build_project.ts (Phase 32), the Phase 21 upgrade gate module,
@@ -62,61 +54,214 @@ Spawn one Explore agent to read and summarize:
   shells per tier from Phase 34)
 - src/render/freehold/ (the dressing modules), tests/freehold_content.test.ts,
   tests/freehold_build_project.test.ts, tests/provisioner_firewall.test.ts
-The agent returns: the tier row fields and the working numbers (keep: rooms 4 plus a
-courtyard, budget 300, plinths 22, amenity 4; citadel: rooms 5 plus courtyard and tower,
-budget 420, plinths 32, amenity 6; fortress and guild citadel the same shapes with guild
-fees pooled); the six layout touch points; how a courtyard (an open-sky room: no ceiling
-modules, a daylight rig) and a tower (lifts and ramps) express in the authored layout
-and the render kit; the exact read for the ruled prestige source; the Phase 32 project
-shape; the extraction candidates. Settle in STEP 1 and record in state.md: whether the
-guild tiers reuse the freehold layouts with guild dressing (the packet default) or own
-layouts, and the four bills (tier 4 fine materials and tier 4 produce, never a keystone,
-flagged TUNING; Fernando owns the finals).
+- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
+  artifacts referenced by state.md that this slice consumes.
+- Required durable artifacts: docs/freeholds/content-manifest.md,
+  docs/freeholds/content-numbers-workbook.md, docs/freeholds/art-brief.md and
+  docs/freeholds/ux-spec.md; docs/prd/woc/freehold-service-contract.md,
+  docs/prd/woc/freehold-counsel-memo.md, docs/prd/woc/freehold-terms-amendment.md,
+  docs/prd/woc/freehold-store-listing-drafts.md,
+  docs/prd/woc/freehold-deed-service-contract.md and
+  docs/prd/woc/freehold-territory-authority-schedule.md.
+The agent returns: the tier/geometry, project, guild-clear and sticky account-deed seams. Personal
+Keep and Citadel both require an account-earned union containing ANY of:
+prog_legendmaker, col_reliquary_rank_5, dgn_nythraxis, dgn_ignivar, dgn_varkhul.
+Read sticky earned deeds, not current item possession/Curator score. Guild Fortress
+and guild Citadel both require their OWN recorded Phase 31 guild-at-clear source:
+nythraxis_scourge_of_thornpeak / nythraxis_boss_arena;
+ignivar_herald_of_the_last_flame / ignivar_raid_arena; or
+varkhul_forgefather_of_the_last_flame / ignivar_inner_crucible, normal or heroic.
+An officer's personal deed is not guild history. Tier progression and material/fee
+projects still apply, with no new escalating prestige grind or later demotion.
+Guild twins reuse the approved personal geometry with guild dressing. The content
+manifest produces the four exact bills and source/rounding approval before activation.
+All design rulings are locked; a missing required signed artifact keeps its release
+gate closed and produces a named validation result, never a guessed runtime value.
+Database review is required BEFORE implementation decisions and again on the finished
+diff, including changes to callers, persisted JSON, caches or workload even when SQL
+text stays unchanged. Reuse 07a's global plot fence and reviewed actual legacy
+touch-set, including caller-owned saves, character prelocks/nonces, bank-ledger
+classification, guild replay and storage/custody effects. Preserve character FIFO
+entry and the proved new-participant suffix, never a replacement generic lock order.
+Never enter a queue holding a DB client or hold locks
+across service IO. Bound admitted work, acquisition/query/transaction deadlines,
+projection keys, rows and bytes; background producers use shared admission and
+cancellation. Retain one running plus one pending dirty generation, not unbounded
+FIFO writes. Supply a query/index inventory (scope, predicates, order, limit, expected
+cardinality and supporting index), reverse-FK export/delete access and retention for
+every growing shape. Disposable-PG concurrency, plans, query counts and maximum legal
+payload evidence are acceptance, not satisfied by fake-pool tests.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, four slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last):
-- Agent CONTENT: the four tier rows, the four upgrade SKUs in charters.ts (no price, no
-  copy), the DungeonDefs (spawns: [], guideVisible: false, claimKey: 'owner', absent from
-  FINDER_ACTIVITIES), the bills, the project trophies, the Homesteader deeds for Keep and
-  Citadel, the ward exterior shells for the two new ranks, wiki regen and guide keys,
-  art through the image-to-glb skill or registered stand-ins (D13).
-- Agent SIM: KEEP_LAYOUT and CITADEL_LAYOUT in src/sim/content/freehold/layouts.ts (D23;
-  the guild twins or dressing per the settled choice) with the courtyard room and the
-  tower lifts, STATIC_INTERIOR_COLLIDERS entries, groundHeight
-  arms; the prestige arm in the upgrade gate reading the ruled source through the
-  existing deeds or reliquary reads (read only; a text-free freeholdDenied reason
-  prestige_required), pinned positive and negative; the project rows on the Phase 32
-  seam; tests/freehold_prestige_gate.test.ts and the tier pins.
-- Agent RENDER: the courtyard (open sky, a daylight rig that stays within the point-light
-  budget, no ceiling modules) and tower variants, dressing, prewarm homes, the exterior
-  shell kit rows; render cores registered in RENDER_PURE_CORES.
-- Agent SERVER+UI: the spend arm for the four SKUs riding the Phase 21 grant and the
-  Phase 29 Hall Fund pooling, exactly-once by purchase key, refusing before any spend
-  when the prestige source is absent (the sim's dry run answers it); the steward panel
-  showing the prestige requirement with its status; hudChrome.housing.* keys; mobile
-  sheet; pr_shot_targets entries.
-The coordinator edits last: tests/world_api_parity.test.ts if the facet grows,
-tests/monolith_budget.test.ts, parity goldens in their own commit. Every agent writes
-any report longer than a screen to a file and replies with the path plus a short
-summary. Never `mode: "plan"` on teammates.
+Deliverables (at most five):
+Assign disjoint implementation ownership by the following 5 deliverables.
+The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
+finish. Workers receive only the context report and owned files, preserve others' edits,
+and return full reports to the scratchpad with a path and short summary.
+1. Content/layout family: four tier/SKU rows, KEEP_LAYOUT/CITADEL_LAYOUT and guild
+   dressed twins, DungeonDefs, courtyard/tower lifts, colliders/groundHeight and ward
+   shell rows. Preserve state targets: Keep/Fortress 4 rooms plus courtyard, 300 decor,
+   22 plinths, 4 amenities; Citadels 5 plus courtyard/tower, 420 decor, 32 plinths,
+   6 amenities. Bills use approved fine materials plus produce, no protected inputs.
+   Exact quantities/source derivation and service SKUs enter signed manifests; all
+   inputs remain obtainable/tradable without requiring a profession. Content author
+   owns Homesteader/project trophy/source/wiki/name obligations.
+2. Prestige predicate: a small read-only core implements the exact personal OR and
+   owning-guild source allowlist above. Use account-union materialization/event refresh
+   and recorded guild history, no hot-path SQL scan, forged current-membership retro
+   credit or bought bypass. Both tiers share the same qualification; prior tier,
+   approved project and payment still required. Record sticky qualification; later
+   item loss/member departure cannot demote an owned property.
+3. Final art family: courtyard open sky/daylight, tower/ramps and guild dressing use
+   measured geometry, final approved reference/GLB pipeline assets and prewarmed
+   scheduler clients. Three authored emitters is a ceiling under live global light
+   budget, not a promise of three active LOW lights; iOS/pressure fallbacks retain
+   shape, navigation, blocked placement and capacity information. Complete art
+   fingerprints, asset/perf budget and desktop/compact/tablet screenshot targets.
+4. Atomic upgrade/project settlement: reuse Phase 21 and 32 safe project and Phase 29
+   service-owned Hall Fund paths. Preview fitting exact copies and ALL overflow;
+   insufficient safe bag custody refuses before any new fee/material mutation.
+   Prestige, current owner/officer, approved bill and quote guards precede spend;
+   durable intent/receipt and character/housing/fund effects settle atomically.
+   Contributions survive unfinished projects. Conditions met means completion, no
+   artificial waiting period. Quote expiry/unknown price never falls back to a literal.
+5. Steward requirements and proof: show existing accomplishment alternatives and
+   account/guild status as keyed read-only requirements, current material bill and
+   overflow destination confirmation. Reuse ux-spec family, focus/input/error states.
+   Pin exact source alternatives with each independent positive and all-negative,
+   profession-free raid access, guild-at-clear identity, sticky ownership, no paid
+   bypass and real-PG cross-record/receipt races. Source/parity/content/gate tests and
+   all three money gates apply to all four priced rows.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- The prestige gate is accomplishment, never money: no Claudium path bypasses it; it
-  reads existing deed or reliquary state and grants nothing.
-- Never sell power; keystone exclusion in every bill; zero farm beds; nothing destroyed
-  (an unfinished project keeps its contributions).
-- Determinism (no Rng; weeks on ctx.resetDay); server authority; the money gates for
-  the upgrade SKUs (counsel sign-off before enable, FREEHOLDS_ENABLED default off, the
-  surface map pinned; the economy service owns prices); the token firewall.
-- The point-light budget (three at LOW) in every new interior including the courtyard;
-  colliders derive from the layout.
-- The i18n policy in docs/freeholds/implementation-plan.md; vocabulary fixed; "phase"
-  in no code, comment, commit, or PR text; monolith ceilings LOWER after this phase.
+Every player-visible string, including error, aria, tooltip and empty-state text,
+uses an English hudChrome.housing.* key and the formatters from src/ui/i18n.ts.
+Tooltips follow docs/design/tooltip-writing.md. Reuse docs/freeholds/ux-spec.md and the
+shared family/painter/window lifecycle, focus return, keyboard/gamepad, touch safe-area,
+reduced-motion and graphics-fairness contracts; do not fork the theme. New paths,
+symbols, wire fields, tables and tests under housing/freehold are PLANNED unless an
+earlier completed ledger row owns them. Re-find every existing anchor in the tree.
+No power sale, keystone/gear-intermediate/quickening-catalyst bill, new farm bed,
+repossession or calendar destruction. Sim stays deterministic and token-free; all
+server player events are keyed data. Coordinators compose siblings and never grow
+past their pinned ceilings. Fresh tests use literal expectations and negative controls.
+The three money gates apply to EVERY priced action: (1) signed counsel acceptance,
+published Terms and accepted economy-service contract/catalog before production enable
+or housing storefront submission; (2) fail-closed live flags, default off, refusing
+every NEW priced action while dark; original accepted-operation recovery
+remains admitted under the recorded immutable outcome; (3) independent per-distribution use, purchase,
+website-management and deed capabilities, pinned for all seven distributions. Charter
+and Call checkout is browser web and website-distributed desktop only. Seeker is
+use-only with deeds off. App Store, Google Play, Steam and Epic have no purchase or
+deed submodel, catalog fetch, handler, hidden DOM, error or accessibility purchase
+text. Website management is independently approved and defaults off on denied stores.
+No housing copy on native, Steam or Epic names a token, wallet or on-chain deed.
+Purchase benefits use cosmetic, convenience and access language, never earn/income/yield.
+The economy service owns every price, conversion, fee, royalty, burn and split. The
+game forwards opaque IDs and versioned quote fingerprints, never computes token math
+or substitutes a stale quote. Durable discoverable intent precedes spend; housing
+receipt authority and effects commit through the NEW 07a operation/mutation
+producers, consumed by the Phase 15 purchase and Phase 37 deed adapters.
+No bounded live key array provides replay authority and no lock spans service IO.
+Unknown, expired or changed quotes for NEW spend require a fresh quote and
+explicit confirmation; an accepted original operation recovers without a new debit.
 
-Out of scope (do NOT do in this phase):
-- Dyes and layout sharing (Phase 41); the second freehold (Phase 42); any new deed as
-  the prestige source (the ruling names an existing one).
+Out of scope:
+Any behavior beyond these deliverables, any invented balance rate, and any production flag enable.
+
+PROPOSED SERVICE AUTHORIZATION AND RECOVERY CONTRACT:
+Preserve literal D9: the game server receives no distribution/channel label,
+country assertion or physical-client attestation. The NEW external economy-service
+issuer/verifier and policy module verify an actual eligible checkout session and
+current territory under signed policy; the signed acceptance names their exact
+external repository/module or interface-artifact identity and conformance proof.
+Account auth, Origin, user agent, client JSON, linked stores, a desktop bridge
+capability and an outgoing server secret are not physical-distribution proof.
+The service binds NEW checkoutAuthorization to account, purpose/kind, SKU, policy
+version, accepted quote, operation and full plot/guild/custody fingerprint. The game
+consumes only the opaque protected reference and service-verified allow/refusal/effect;
+it never issues eligibility from headers, accepts a channel JSON field or logs/exposes
+the authorization. Unknown/malformed/unverified eligibility refuses NEW spend.
+The adapter authenticates the actual service response and bounds decode before
+validating the complete operation/effect/fingerprint. A signed acceptance document
+is not proof of runtime cryptographic validation. Malformed or nonterminal results
+never grant a local effect or prove that no debit occurred; preserve the original
+operation for bounded status discovery and recovery.
+
+NEW source ownership is explicit: 07a's
+server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation owns
+protected authorization binding, fingerprint and durable receipt authority;
+server/freehold_mutation.ts::commitFreeholdMutation owns atomic local effects.
+Phase 15's NEW server/freehold_purchases.ts is the initial opaque quote/status/
+authorization consumer; NEW server/freehold_deed_proxy.ts is the later deed consumer
+of that same verified boundary. No game geo or distribution-attestation module is
+introduced. These are proposed producers, not existing exports; read prepared
+phase-07a-transactional-mutation-boundary.md and its QA before implementation.
+
+Dark flags and unknown/current eligibility refuse new paid actions, not recovery of
+an already accepted original operation. Receipt/status discovery, local application
+or accepted compensation use its immutable outcome and original protected binding
+without a new checkout session or debit. Current local entitlement, ownership, fence
+and custody guards still apply. Rejected/expired new quotes need fresh confirmation;
+an accepted historical quote is not a fallback new purchase. Both service conformance
+and game tests cover forged eligibility inputs, cross-binding reuse, policy/territory/
+expiry changes before new spend, and accepted-operation recovery after those changes.
+
+ACCOUNT AUTHORITY, CALENDAR AND RECOVERY ACCEPTANCE:
+Consume 07b's single account lifecycle authority: NEW
+server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/loadFreeholdLifecycleProtectionPage/
+advanceFreeholdLifecycleOnClient, coordinated by
+server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator and the accepted
+server/freehold_lifecycle_binding.ts::resolveFreeholdLifecycleBinding policy registry.
+Capture authenticated observations before queues; committed monotonic transitions,
+not authentication login or a plot-local last-seen field, authorize account grace.
+Immutable multi-return history or lossless prefix facts cover dormant/foreign plots;
+union overlapping lifecycle protection and service suspensions exactly, never sum
+independent credits, force-write foreign plots or restart grace on an alt/plot switch.
+
+07c's NEW server/freehold_arrival_db.ts::loadFreeholdArrivalTiers/
+markFreeholdArrivalTierOnClient owns normalized account+tier marks, separate from
+lifecycle and plot saves. Only the committed accepted-owner-entry insert winner
+has first-tier eligibility. NEW arrivals may receive a private freshArrivalPresentation
+directive; snapshot/resume/replay set it null even with firstTierAtAdmission history.
+Commit-before-ACK can skip presentation; no exactly-once visible/audio promise and
+no permanent receipt for routine visits. Second plots and transfers do not duplicate,
+copy or clear account arrival marks or seller lifecycle history.
+
+13/13a own shared source calendar/history/checkpoint evaluation. Preserve calendarId,
+schemaVersion/resetPolicyId and immutable prepaid bill/rate/material/receipt identities
+across foreign-realm claims and transfers. No rebinding to serving realm/browser zone.
+Historical dependencies of durable condition/bill/credit effects must be irrevocably
+finalized and read at consistent committed calendar/lifecycle revisions; unfinalized,
+missing or unsupported coverage keeps the affected effect pending. A future-credit
+purchase does not require future time to be finalized. Long absences/outages use
+bounded indexed prefix probes, never lifetime scans or absent-day/week loops.
+Calendar-only exclusive writers and compatible shared mutation readers follow 07a's
+actual legacy touch-set proof; no invented reverse lock hierarchy. Current-generation
+projection/ACK identity cannot regress after delayed loads or superseded delivery.
+Server-only operator evidence, secrets and diagnostics never reach either owner or
+visitor wire: explicit allowlist builders and distinctive sentinel tests prove it.
+
+At a sale/ownership transfer, materialize the old owner's condition at the transfer
+boundary from finalized original calendar/lifecycle history; preserve source calendar
+and immutable credits, retain seller account history, and apply buyer lifecycle only
+prospectively without copying grace. Unknown authority holds application for bounded
+original-operation recovery/accepted compensation, never a replacement charge or
+silent calendar reset. Current local custody/fence guards still apply.
+Character deletion, soft deactivation, restoration, true account deletion and export
+are separate: deactivation is not an FK cascade; restored history/credits/receipts keep
+their meaning. Explicit housing export loaders expose allowed facts only. Unknown or
+oversized originals remain durable/read-only with bounded diagnostic/reference, not
+empty/new-home defaults or filtered destructive arrival-set rewrites.
+07's persistence-rollout-contract.md and 07b's lifecycle-policy-binding.md/
+lifecycle-db-contract.md plus 13a's upkeep-calendar-db-contract.md name minimum
+capable releases, measured bounds, exact schema/save fixtures and accepted policies.
+Enable only a proven capable rollout; unchanged normalized rows do not prove an old
+binary implements lifecycle, export or saves. Rollback quiesces NEW effects and
+preserves accepted original-operation recovery identities and supported recovery.
+Each consuming implementation/QA runs relevant two-character/two-plot/two-realm,
+dormant-history, delayed-generation, finality/transfer, deactivation/restore/export
+and capable/uncapable-release fixtures through real composition and disposable PG.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/architecture.test.ts
@@ -130,47 +275,41 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/server/ suites the SERVER slice added; `npm run wiki:content` then `npx vitest run
   tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts`;
   `npm run perf:tour`; `npm run asset:budget`; `node scripts/pr_screenshots.mjs`.
-- Spawn review agents per docs/freeholds/implementation-plan.md: content-obligations-reviewer,
-  render-performance-reviewer, plus architecture-reviewer (layouts and the gate),
-  privacy-security-review (server/), and frontend-seam-reviewer (src/ui/). Prompt each
-  for COVERAGE not filtering; each writes its report to a file. Do not commit until no
-  BLOCKING issues remain.
+- Run node scripts/gate_select.mjs before completion; npm run ci:changed is not a
+  substitute. Re-run only affected checks after fixes, then verify the final head.
+- Dispatch content-obligations-reviewer, architecture-reviewer, cross-platform-sync, migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, frontend-seam-reviewer, render-performance-reviewer, test-coverage-auditor and qa-checklist
+  for the stated surfaces; actual additional surfaces trigger their canonical reviewer.
+  Database review runs before decisions and again on the completed diff. Every report
+  uses COVERAGE, BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT, saved to a file.
+  Apply ALL findings including nits; a fresh reviewer reads the fix round.
 
 STEP 4 - COMMIT CADENCE:
-4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
-`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- feat(content): add the Keep, Citadel, Fortress, and guild Citadel tiers with their bills
-- feat(sim): add courtyard and tower layouts and the prestige gate on the top tiers
-- feat(render): dress the courtyard and tower interiors within the light budget
-- test(sim): pin the prestige gate, the tier table, and the keystone exclusion
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Commit each coherent owned deliverable with a scoped Conventional Commit and a body.
+Stage EXPLICIT task paths, never git add -A. No coauthor trailer, em dash, en dash,
+emoji, or word "phase" appears in a commit message. Keep generated output with its
+authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
-STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] The four tier rows are pinned by fresh literals (300 and 420 budgets, 22 and 32
-  plinths, 4 and 6 amenity slots); the layouts derive their colliders; the courtyard
-  reads as open sky and the tower lifts are walkable on both hosts.
-- [ ] The prestige gate refuses an upgrade without the ruled source (text-free reason)
-  and admits with it, for the ruled holder rule; no Claudium path bypasses it (pinned).
-- [ ] The upgrade grant is exactly-once by purchase key; no bill names a keystone.
-- [ ] Three point lights at LOW in every new interior; no live-program events on the
-  perf tour; the asset budget passes; screenshots committed.
-- [ ] All STEP 3 suites green; every reviewer reports no BLOCKING.
+STEP 5 - ACCEPTANCE CRITERIA:
+- [ ] Four tier/geometry families match approved targets and literal pins, guild dressing reuses geometry, and every bill has exact approved source/quantity/rounding rows.
+- [ ] Every personal OR alternative independently admits both top tiers; no-credential refuses; owning-guild recorded clears qualify without officer substitution or fabricated retro history; ownership never demotes.
+- [ ] Overflow preview, custody refusal and prestige checks precede spend; real-PG atomic upgrade/Fund/receipt tests preserve exact copies and contributions without stale quote fallback.
+- [ ] Final courtyard/tower art, light-budget fallback and desktop/compact/tablet requirement/overflow screenshots satisfy ux-spec and asset/perf gates.
+- [ ] All four priced actions pass money/surface/service rules, all suites/reviews and contribution gate.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 40, notes, deferrals) and
-  docs/freeholds/state.md (ledger row 40; the content numbers table gains the four tiers;
-  the layout and bill decisions).
-- Record surprising rules learned in memory for the next session.
+Update progress.md row 40 and state.md's implementation ledger with actual paths,
+commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+Record facts learned; do not reopen the locked product rulings or mark a release gate
+accepted without its signed artifact. Numeric tables are literal, provenance-backed
+and approved before activation.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+Report status, touched files, exact validation commands and outcomes, reviewer verdicts,
+tracked release gates and the FULL PATH of the next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-40-qa.md
 
 STOPPING RULES:
-- Stop before STEP 1 if the prestige-deed ruling is not in state.md; ask Fernando.
-- Stop and ask if a courtyard cannot be expressed without a new kit module family (a
-  render kit addition is a maintainer decision).
-- Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
-- Do not push the branch; never merge a PR.
+A failed acceptance check stops completion. Preserve state on failed mutation, decode,
+quote, capacity, lease or revision checks. No widening of a monolith ceiling or silent
+change to a locked ruling. Do not push the branch or open/merge a PR in this slice.
 ```

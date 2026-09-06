@@ -9,6 +9,73 @@ the gate by owner name with the friend fact stamped by the server, the cap of 8,
 visitors, the who-is-home line, and the offline no-op. Open-house policies, caps by tier,
 and the door knock are Phase 26.
 
+## Exact screenshot integration contract
+
+These are NEW planned helper APIs.09 introduces the common helper, constructor,
+visual selector and one import/spread in scripts/pr_shot_targets.mjs, initially with
+its functional interior-only capture subset.11 extends that same
+scripts/lib/pr_shot_housing.mjs build target;16/17/18 append their own functional
+descriptors as their UI lands. Never register a later nonfunctional UI target. No new screenshot runner or multi-image capture API is introduced.
+The registry has one optional-clip result and one image per uniquely keyed variant.
+
+Registration is cumulative by actual producer: file 09 registers the interior
+baseline subset (12 variants); file 11 extends the same target to 89; file 16
+reaches 178; file 17 reaches 226; file 18 reaches 330. File 20 verifies the complete
+330-variant inventory. Earlier files require only their registered working subset,
+never nonfunctional future UI. These are derived inventory counts, not new gameplay
+or tuning values.
+
+The common housingVariants, housingVisualWhen and supplied beforeLoad are
+owned initially by09 and extended by11 exactly as ux-spec.md section11 defines them.
+Append only this file's implemented target; validate the registered cumulative subset
+of 330 working variants. Later UI targets register only when their producer lands:
+
+```js
+{
+  key: 'housing-visiting',
+  label: 'Housing gate, arrival and owner/guest entry states',
+  when: [
+    ...housingVisualWhen,
+    'src/ui/hud/housing/visit_prompt_',
+    'src/ui/hud/housing/housing_view.ts',
+    'src/ui/hud/housing/steward_panel_',
+    'src/sim/freehold/gate.ts',
+    'src/sim/freehold/visiting.ts',
+    'src/game/teleport_camera.ts',
+  ],
+  variants: [
+    ...housingVariants([
+      'gate-own-choice', 'gate-friend-empty', 'gate-lookup-pending',
+      'gate-lookup-ready', 'gate-lookup-stale', 'gate-lookup-refused',
+      'arrival-inn', 'arrival-cottage', 'arrival-ordinary-return',
+      'arrival-visitor', 'arrival-online-delayed-cosmetics',
+      'visit-read-only', 'visit-owner-away', 'visit-owner-building',
+      'visit-full', 'visit-private-refused', 'visit-policy-draft',
+      'visit-policy-pending', 'visit-policy-saved', 'visit-policy-refused',
+      'visit-end-review', 'visit-end-pending', 'visit-end-succeeded',
+      'visit-revoked', 'entry-pending', 'entry-error', 'entry-busy',
+    ]),
+    ...housingVariants(['arrival-inn', 'arrival-cottage'], { motion: 'reduce' }),
+    ...housingVariants(['arrival-inn', 'arrival-cottage'], { light: 'ios-effective-one' }),
+    ...housingVariants(['arrival-inn', 'arrival-cottage'], { graphics: 'high' }),
+    ...housingVariants(['gate-lookup-ready'], { input: 'keyboard' }),
+    ...housingVariants(['portrait-rotation-gate'], {
+      views: housingViews.filter((view) => view.mobile).map((view) => ({
+        ...view, key: `${view.key}-portrait`, width: view.height, height: view.width,
+      })),
+    }),
+  ],
+  capture: captureHousingVisiting,
+},
+```
+
+Every captureHousing* stages exactly variant.scene through its real UI/authority
+fixture, asserts the matching state and returns one optional-clip result. Interior
+scenes use 09's full-viewport {}; UI scenes return { clip: '#ui' }. Missing required
+after-state throws. The registered working subset must include every exact
+target/variant and identity dimension for its producers;20 verifies the full union.
+No callback side shot or sequence-to-last-state substitute.
+
 ### Starter Prompt
 ```
 This is Phase 18 of the Freeholds and Guildhalls feature: visiting (the friends and
@@ -23,6 +90,16 @@ Goal: let a friend walk into your Cottage through the Eastbrook gate, see your
 furnishings and trophies, and touch nothing, with the friendship fact decided by the
 server from its own social snapshot, at most eight visitors inside at once, and an
 owner-set policy that persists on the record, while the offline host does nothing.
+
+Asset execution: every step that creates or regenerates shipping GLBs, reference
+artwork, icons or images MUST be done by Codex, not Claude. Use
+.agents/skills/woc-image-to-glb/SKILL.md and its shared canonical workflow for GLBs;
+use Codex image generation for raster artwork. Capture actual rendered screenshots
+as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
+phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
+icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
+That final sweep does not postpone artwork owned here.44b revisits the completed result
+for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -39,6 +116,9 @@ STEP 0 - PRE-FLIGHT:
 - Memory scan: MEMORY.md and entries on the server/tests gotcha cluster, the offline
   IWorld live-array aliasing trap, parity goldens and META_EXCLUDE, the monolith
   ratchet, ALL_DELTA_KEYS conflicts, test-pin traps.
+
+- Invoke database-performance-reviewer before storage/query/lock/cadence decisions;
+  send the scoped diff surface and approved artifacts, then review the finished diff.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
@@ -80,59 +160,96 @@ Spawn one Explore agent to read and summarize:
 The agent returns: the stamp recipe for a session-only friend set on PlayerMeta (the
 guild stamp shape: a Sim setter, a fence, the META_EXCLUDE row) and where
 sendSocialSnapshot can feed it; how "present inside the claim" is computed from
-enteredBy plus instanceClaimContains (enteredBy alone accumulates); how an owner is
-resolved by name on the server without trusting the client (the live session map);
+enteredBy plus instanceClaimContains (enteredBy alone accumulates); how a normalized owner name is
+resolved through bounded authoritative lookup/lazy load without trusting client claims;
 the pid-scoped event delivery for arrivals; the HEAVY_SELF gating of fhold; the
 prompt dialog recipe; the extraction candidates that pay for any sim.ts, game.ts, or
 online.ts line.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
-Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
-files (disjoint except the shared pin files the coordinator edits last):
-- Agent SIM: src/sim/freehold/visiting.ts (the policy union 'friends' | 'private' on the
-  record, default friends; setVisitPolicy(ctx, policy, pid) owner-only, persisted through
-  the record's rev; visitorAdmission(ctx, ownerKey, visitorPid): the owner is never a
-  visitor, private refuses not_friend, friends requires the visitor's session-stamped
-  friend set to contain the owner's character (a missing stamp refuses, never admits),
-  the cap of 8 counted as members of the claim's enteredBy that still satisfy
-  instanceClaimContains excluding the owner, refusing visitors_full; the enter path in
-  instance.ts calls it before the claim); the session-only PlayerMeta.freeholdFriendKeys
-  stamp with a Sim setter (the guild stamp shape) and its META_EXCLUDE row; read-only
-  enforcement: every placement, pay, build_station, strongbox, and set_visit_policy
-  command refuses not_owner for a visitor (Phase 08's gate, now pinned per command with
-  a visitor session); freeholdVisitors on the Sim (names of players inside the viewer's
-  current claim, the owner first); text-free freeholdVisitorArrived and
-  freeholdVisitorLeft { pid, name } events to the owner (names are values, never keys);
-  the offline no-op: the offline host stamps no friend set, so a visit resolves no owner,
-  and the policy command still updates the live record for the session (offline persists
-  nothing per D16; a fresh offline Sim starts at the friends default, pinned); the
-  determinism case.
-- Agent SERVER: the friend set captured in sendSocialSnapshot from snap.friends ONLY
-  (never socialTrackedIds, which includes guildmates) and stamped through the Sim
-  setter, re-stamped on every social snapshot, cleared on leave; the visitor enter arm
-  in dispatchFreeholdCommand resolving the owner by name through the live session map
-  (a name that is not online or owns no freehold refuses no_freehold with ONE merged
-  frame, the existence-oracle rule, so a visitor cannot probe who owns a house), the
-  block list winning over friendship (a visitor on the owner's block list, or an owner
-  on the visitor's, refuses not_friend, never a distinct reason), set_visit_policy
-  shape-only; HEAVY_SELF_EVENTS rows for the two visitor events if fhold carries the
-  visitor names; the online two-session test (owner and friend on a StubWebSocket pair
-  through GameServer.join, the friend enters, a stranger is refused, the ninth visitor
-  is refused, the visitor's place_furnishing is refused not_owner, the owner sees the
-  arrival event) modeled on tests/feast_online.test.ts and
-  tests/dungeon_instance_disconnect_reset.test.ts; no new table, no persisted log.
-- Agent UI: src/ui/hud/housing/visit_prompt_view.ts and visit_prompt_window.ts on the
-  prompt_dialog.ts recipe (enter my own Cottage, or a friend's by name; the name field
-  16px; the policy toggle for the owner as a friends or private switch), opened from the
-  gate interact; the visitor cap and not_friend refusals through
-  freeholdDeniedLineKey; the who-is-home line from freeholdVisitors in the Steward
-  panel (a read-only row, Phase 16's core gains one input); hudChrome.housing.visit.*
-  English keys; the mobile sheet decision and 40x40 targets; tests for the two cores.
-The coordinator edits last: tests/snapshots.test.ts (any fhold field, ALL_DELTA_KEYS),
-tests/sim_context.test.ts (the setter if it is a callback), tests/parity/trace.ts
-(META_EXCLUDE) and the goldens commit, tests/monolith_budget.test.ts (lowered
-ceilings). Every agent writes any report longer than a screen to a file and replies
-with the path plus a short summary. Never `mode: "plan"` on teammates.
+Assign disjoint file ownership and integrate shared pins last.
+Read ux-spec.md and the locked decisions in state.md through the context reader.
+NEW paths/symbols below are planned deliverables, not existing tree anchors.
+
+Deliverables (at most five):
+1. Admission and live policy. visiting.ts authorizes friends/default or private
+   using current server social/block facts; a guildmate alone is not a friend. Count
+   enteredBy intersected with actual claim presence and exclude every session of the
+   owner account, not just one pid. Inn Room and Cottage use the approved 8 visitor
+   target; the ninth refuses without mutating and departure frees capacity. Private
+   stops new admissions while existing guests may finish until exit; blocking,
+   revoked friendship/membership and explicit owner End visit immediately eject safely
+   through the recorded exit route. Every client command and amenity remains read-only
+   for guests, including ledger, history, banking, station and policy controls.
+2. Offline-owner authority and bounded lookup. server/freehold_visiting.ts is a NEW
+   sibling for normalized name lookup, current authorization, lazy plot load and07's
+   global claim fence. Authorized friends may visit while the owner is offline.
+   Bound input length, lookups, pending work, cache cardinality and loaded claims;
+   reuse shared admission/cancellation/deadlines. A foreign-realm active claim or full
+   runtime pool returns honest busy/retry, never an ownership waitlist or lost home.
+   Cache raw projections only; entry rechecks current social/block/privacy authority
+   and busts on committed changes. Unknown/inaccessible/no-home requests share a
+   privacy-safe denial without revealing account ownership. Do not require a live
+   owner session map or prohibit the necessary bounded on-open SQL.
+   Friend lookup and entry are separate operations. On the friend tab, Enter in
+   the name field performs Find home; Enter destination is absent until a current
+   authorized result matches request identity and normalized queried name. Editing
+   the name immediately invalidates the prior result/capability and shows
+   hudChrome.housing.gate.lookupChanged. Stale or out-of-order replies never display
+   or authorize another draft. Successful lookup focuses its named result heading,
+   announces it and exposes Enter; failure retains name/retry. Explicit entry repeats
+   all live admission checks; physical gate does not inherit remote Hearth Key cooldown.
+   The owner tab selects an owned plot and shows only its real admission restrictions.
+3. Policy/event/wire lifecycle. set_visit_policy and NEW freehold_end_visit/
+   endFreeholdVisit travel through IWorld, both worlds, command/schema/tags, jail/dark
+   gates, server dispatch, strict wire and RL protocol parity. Use public plotId and
+   admitted guest identity, never client-asserted account/relationship authority.
+   freeholdVisitors is current names/presence only, owner-account sessions first;
+   arrival/leave events are pid-scoped. No persisted visitor log or per-tick roster
+   sweep. Standalone offline Sim has no remote visitors and remains session-only as
+   D16 says; this is distinct from an offline owner on the online server. Policy
+   persists through the existing globally fenced plot writer online.
+4. Gate/guest experience. visit_prompt_view/window reuse the small shared decision
+   window and blocking-confirmation recipe where needed. Phase06 already opens the
+   own-home/friend-name prompt on interaction; extend it without an auto-teleport or
+   second gate dialect. Use the existing hudChrome.housing.gate.* keys for own/friend
+   choice, name lookup, loading, entry errors and confirmed destination; use existing
+   hudChrome.housing.visit.* keys for admitted guest state, privacy, roster and
+   who-is-home. Match ux-spec's exact keys; add no second namespace or new strings.
+   Authorized visitor view shows current visitor count/cap and read-only affordances;
+   owner sees current roster, privacy and End visit. The decorating indicator consumes
+   only08a's authoritative freeholdState.isDecorating boolean from08's ephemeral
+   setFreeholdBuildPresence authority and11's start/stop lifecycle. Never infer presence
+   from camera/focus/rendering or a ghost. Host clears departed/revoked sessions and
+   rejects stale plot/entry/sequence observations; concurrent eligible sessions aggregate
+   privately. Guests see accepted layout only, never ghost/history/inventory/camera or
+   actor/account identity. Existing visit-owner-building is the sole guest-observer
+   screenshot identity, owned by18 and backed by separate real two-client lifecycle proof. All focus, keyboard, pad,
+   touch 16px input/40x40 targets, safe-area and close-return behavior follow ux-spec.md.
+   Owner privacy/roster lives in a Visitors tab of steward_panel_view/window, beside
+   Ledger, with an owner guest-status entry selecting that same tab. Show only current
+   Private/Friends policies here, no disabled Guild/Public teasers. Radio edits a draft;
+   confirmed policy remains separate until Apply visiting policy succeeds. Correlate
+   operation/plot/revision; unrelated entry/placement events cannot complete Apply.
+   Matching refusal preserves draft/reason; reconnect refreshes authority before enabling.
+   Current guest list has loading/empty/error/reconnect states independent of drafts.
+   End visit opens owner-inert confirmation for that guest; matching endPending/
+   endSucceeded copy is distinct from entry pending. If the guest leaves first, refresh
+   roster without another ejection, focusing next valid row then heading if empty.
+   Closed windows stay closed after late results; guests receive no owner tab/draft.
+   Focus: selected tab, confirmed-policy help, selected radio, Apply, roster/list and
+   named End visit actions, Close. Who-is-home uses locale list formatting over escaped
+   authorized names; owner-away is distinct from an empty guest/other-player roster.
+5. Authority/UI proof. Real two-session tests cover online and offline owner,
+   unknown-name denial, forged friend flag, block/revocation during visit, Private
+   existing-guest rule, End visit, owner alt exclusion, stale cache and foreign-realm
+   claim conflict. Disposable-PG evidence proves bounded lookup/lazy-load admission,
+   cancellation and global fence, with query/index inventory and no private wire
+   fields. Add exact housing-visiting capture entry below for desktop/compact/tablet
+   gate/loading/error/full/private/guest/owner-building. Screenshot fixtures are not
+   proof of authorization; record separate real two-client results. Dispatch
+   architecture, cross-platform, frontend, privacy, server-hot-path, migration and
+   before/final database reviewers.
 
 INVARIANTS THIS PHASE MUST KEEP:
 - Server authority: the friend fact is stamped by the server from its own social
@@ -142,15 +259,14 @@ INVARIANTS THIS PHASE MUST KEEP:
   visitor log table; the policy is the only persisted field.
 - Determinism: no Rng, no wall clock; the same stamps and roster give the same
   admission on both hosts; the offline host is a no-op by construction.
-- Privacy: a visitor learns nothing about accounts (names only, and only inside the
-  claim); an unknown or offline name and a name that owns no freehold answer the same
-  frame; the block list wins over friendship without a distinct reason; a session-only
+- Privacy: a visitor learns no account IDs or private ownership facts; unknown/inaccessible/
+  no-home names share one denial, while an authorized offline owner can be visited; the block list wins over friendship without a distinct reason; a session-only
   stamp is in META_EXCLUDE with a justification.
 - Never destroy, never sell power: visiting changes no number and no record beyond the
   policy field.
-- Hot paths: the friend set is captured where the social snapshot already runs (no new
-  DB read per visit), the enter path is rate-limited by the command lane, events are
-  pid-scoped, no per-tick roster work.
+- Hot paths: existing social snapshots feed live relationship changes; bounded
+  authorized lookup/lazy-load queries support offline owners. No SQL runs per frame
+  or tick; admission and cancellation bound work, events are pid-scoped.
 - i18n: the policy in docs/freeholds/implementation-plan.md; every deny and arrival is a
   text-free id-carrying SimEvent (D10); names cross as values.
 - Monolith: sim.ts, game.ts, and online.ts are at ZERO slack; a delegate, case label, or
@@ -165,6 +281,12 @@ Out of scope (do NOT do in this phase):
 - Any change to the friends system itself.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
+Required named reviewers for this file: architecture-reviewer, cross-platform-sync,
+privacy-security-review, database-performance-reviewer, migration-safety,
+server-hot-path-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist.
+Database-performance-reviewer runs before implementation decisions and again on the
+finished diff; pair with migration-safety and privacy-security-review as listed.
+The QA session inspects those reports and dispatches a fresh review of every fix.
 - Run: `npx tsc --noEmit`; `npx vitest run tests/freehold_visiting.test.ts`;
   `npx vitest run tests/freehold_visiting_online.test.ts`; `npx vitest run
   tests/visit_prompt_view.test.ts tests/architecture.test.ts tests/sim_context.test.ts
@@ -183,7 +305,14 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   block list, names on the wire), cross-platform-sync (the policy command and the
   visitor reads on both hosts, the offline no-op), server-hot-path-reviewer (the
   capture site, the event fan-out, the lane). Prompt each for COVERAGE not filtering;
-  each writes its report to a file. Do not commit until no BLOCKING issues remain.
+  each writes its report to a file. Do not commit until ALL findings, including nits, are resolved and the fixes have fresh review.
+
+- Required reviewers for the complete settled diff: architecture-reviewer, cross-platform-sync, frontend-seam-reviewer,
+  privacy-security-review, server-hot-path-reviewer, migration-safety and
+  database-performance-reviewer.
+  Database performance reviews happen before implementation decisions and again on
+  the finished diff; persistence/security pair on stored/authority surfaces. Runtime
+  PG evidence, bounded workload/query/index/byte limits and cancellation are required.
 
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
@@ -192,25 +321,33 @@ STEP 4 - COMMIT CADENCE:
 - feat(server): stamp the friend set from the social snapshot and route visitor entry
 - feat(ui): add the visit prompt and the who-is-home line
 - test(server): prove friends-only visiting across two live sessions
-Then `npm run ci:changed` after the LAST commit; read the exit code.
+Then run the shared contribution gate from docs/qa-gate.md, including
+`node scripts/gate_select.mjs` when required, and `npm run ci:changed` after the LAST
+commit as the Stop-hook floor; record exact exit codes.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
+- [ ] Every one of the five settled STEP 2 deliverables and all linked ux-spec.md states
+  has implementation, decisive evidence and a fresh review; earlier summary prose never
+  overrides the settled contract. Numeric references match state.md and approved artifacts.
 - [ ] With policy friends a stamped friend enters under the owner's key, a stranger and
   a guildmate-only refuse not_friend, a blocked player refuses not_friend, and with
-  policy private everyone but the owner refuses not_friend (each a pin).
+  policy private new guests refuse while existing admitted guests may finish until
+  exit unless blocked, revoked or explicitly ended (each a pin).
 - [ ] The ninth visitor refuses visitors_full; a visitor who left frees the slot (the
-  count uses presence, not the accumulated enteredBy); the owner never counts.
+  count uses presence, not the accumulated enteredBy); all owner-account sessions are excluded from the visitor count.
 - [ ] Every placement, pay, amenity, and policy command refuses not_owner for a visitor
   without mutating (one pin per command through a visitor session).
 - [ ] freeholdVisitors lists the players inside on both hosts; the owner receives
   freeholdVisitorArrived and freeholdVisitorLeft; the fhold arm round-trips.
-- [ ] An unknown name, an offline owner, and a name owning no freehold produce the SAME
-  frame; no account id or friend list crosses the wire.
+- [ ] Unknown/inaccessible/no-home names share the same denial; an authorized offline
+  owner loads lazily behind the global fence. No account ID/friend list crosses wire.
+- [ ] Blocking, revoked friendship and End visit eject immediately and safely; stale
+  caches never authorize entry, and foreign-realm claims return truthful retry.
 - [ ] Offline: no stamp, no visitor path, the policy updates the live record only and a
   fresh Sim starts at the friends default (pinned, D16); the RL ACTIONS pin is unchanged.
 - [ ] The two-session online test passes; sim.ts, game.ts, online.ts ceilings are not
   higher than before.
-- [ ] All STEP 3 suites green; the three reviewers report no BLOCKING.
+- [ ] All STEP 3 suites green; all triggered reviewers confirm ALL findings, including nits, are resolved and freshly reviewed.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 18, notes, deferrals) and
@@ -220,13 +357,12 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, files touched, validation results, review verdicts, deferred
-items, and the FULL PATH of the next file to run:
+End with: phase status, files touched, validation results, review verdicts, external release gates, and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-18-qa.md
 
 STOPPING RULES:
-- Stop and ask if the friend fact cannot be stamped from the existing social snapshot
-  without a new per-visit database read.
+- Stop if authorization would rely on a stale cosmetic cache or unbounded database
+  lookup; use the locked bounded on-open authority/lazy-load contract for offline owners.
 - Stop if visitor presence cannot be derived from the live claim without a new tick
   sweep or a persisted log (D8).
 - Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
