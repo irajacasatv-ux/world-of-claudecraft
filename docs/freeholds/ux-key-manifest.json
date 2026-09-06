@@ -1,1318 +1,2787 @@
 [
   {
     "key": "hudChrome.housing.common.close",
-    "value": "Close"
+    "value": "Close",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.cancel",
-    "value": "Cancel"
+    "value": "Cancel",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.back",
-    "value": "Back"
+    "value": "Back",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.retry",
-    "value": "Try again"
+    "value": "Try Again",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.loading",
-    "value": "Loading your home..."
+    "value": "Loading your home...",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.pending",
-    "value": "Waiting for confirmation..."
+    "value": "Waiting for confirmation...",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.reconnecting",
-    "value": "Reconnecting. Your saved home is safe."
+    "value": "Reconnecting. Your saved home is safe.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.readOnly",
-    "value": "Read only"
+    "value": "Read only",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.unavailable",
-    "value": "This is unavailable right now."
+    "value": "This is unavailable right now.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.unknown",
-    "value": "Unknown"
+    "value": "Unknown",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.selected",
-    "value": "Selected: {name}"
+    "value": "Selected: {name}",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.common.closeAria",
-    "value": "Close {window}"
+    "value": "Close {window}",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.denied.unavailable",
-    "value": "This home is unavailable right now. Try again later."
+    "value": "This home is unavailable right now. Try again later.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.denied.busy",
-    "value": "This home is active elsewhere or still opening. Try again shortly."
+    "value": "This home is active elsewhere or still opening. Try again shortly.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.denied.permission",
-    "value": "You cannot use this here."
+    "value": "You cannot use this here.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.denied.ownershipChanged",
-    "value": "Your access changed. Your last confirmed changes are saved."
+    "value": "Your access changed. Your last confirmed changes are saved.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.changed",
-    "value": "Your home changed before this action finished. Review it and try again."
+    "value": "Your home changed before this action finished. Review it and try again.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.materials",
-    "value": "You do not have enough materials in the selected source."
+    "value": "You do not have enough materials in the selected source.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.denied.bagsFull",
-    "value": "Make room in your bags before removing this furnishing."
+    "value": "Make room in your bags before removing this furnishing.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.condition",
-    "value": "Restore your home's condition to use this amenity."
+    "value": "Restore your home's condition to use this amenity.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.denied.offlinePurchase",
-    "value": "Purchases need an online connection."
+    "value": "Purchases need an online connection.",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.denied.dead",
+    "value": "You cannot do that while dead.",
+    "owner": "06"
+  },
+  {
+    "key": "hudChrome.housing.denied.combat",
+    "value": "You cannot do that in combat.",
+    "owner": "06"
+  },
+  {
+    "key": "hudChrome.housing.denied.cooldown",
+    "value": "Your Hearth Key is still cooling down.",
+    "owner": "06"
+  },
+  {
+    "key": "hudChrome.housing.denied.instanced",
+    "value": "You cannot use this inside an instance.",
+    "owner": "06"
+  },
+  {
+    "key": "hudChrome.housing.denied.match",
+    "value": "You cannot use this during a match.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.granted.placed",
-    "value": "{item} placed."
+    "value": "{item} placed.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.granted.moved",
-    "value": "{item} moved."
+    "value": "{item} moved.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.granted.removed",
-    "value": "{item} returned to your bags."
+    "value": "{item} returned to your bags.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.granted.ledgerPaid",
-    "value": "Your Ledger is paid."
+    "value": "Your Ledger is paid.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.granted.prepaid",
-    "value": "Your Ledger is paid through {date}."
+    "value": "Your Ledger is paid through {date}.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.granted.call",
-    "value": "Your home's condition is restored."
+    "value": "Your home's condition is restored.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.gate.title",
-    "value": "Choose a home"
+    "value": "Choose a Home",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.own",
-    "value": "My home"
+    "value": "My Home",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.visit",
-    "value": "Visit a friend"
+    "value": "Visit a Friend",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.name",
-    "value": "Character name"
+    "value": "Character name",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.namePlaceholder",
-    "value": "Enter a character name"
+    "value": "Enter a character name",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.nameRequired",
-    "value": "Enter a character name to visit."
+    "value": "Enter a character name to visit.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.homeChoice",
-    "value": "Choose your home"
+    "value": "Choose your home",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.lookup",
-    "value": "Find home"
+    "value": "Find Home",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.lookupPending",
-    "value": "Finding your friend's home..."
+    "value": "Finding your friend's home...",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.lookupChanged",
-    "value": "Find this character's home before entering."
+    "value": "Find this character's home before entering.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.result",
-    "value": "Home belonging to {name}"
+    "value": "Home belonging to {name}",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.enter",
-    "value": "Enter"
+    "value": "Enter",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.loading",
-    "value": "Opening the door..."
+    "value": "Opening the door...",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.marker",
-    "value": "Freeholds gate"
+    "value": "Freeholds gate",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.gate.interact",
-    "value": "Choose a home"
+    "value": "Choose a home",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.arrival.welcome",
-    "value": "Welcome home, {name}."
+    "value": "Welcome home, {name}.",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.arrival.visitor",
-    "value": "Welcome to {name}'s home."
+    "value": "Welcome to {name}'s home.",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.arrival.skip",
-    "value": "Skip arrival view"
+    "value": "Skip Arrival View",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.arrival.ready",
-    "value": "Your home is ready to explore."
+    "value": "Your home is ready to explore.",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.hearthKey.tooltip",
-    "value": "Return to your selected home. You cannot use this while in combat, dead or in jail. Your homes share its cooldown."
+    "value": "Return to your home. You cannot use this while in combat, dead, in jail, inside an instance or during a match.",
+    "owner": "06"
   },
   {
     "key": "hudChrome.housing.hearthKey.destination",
-    "value": "Destination: {home}"
+    "value": "Destination: {home}",
+    "owner": "06"
+  },
+  {
+    "key": "hudChrome.housing.hearthKey.tooltipShared",
+    "value": "Return to your selected home. You cannot use this while in combat, dead, in jail, inside an instance or during a match. Your homes share its cooldown.",
+    "owner": "42"
   },
   {
     "key": "hudChrome.housing.build.title",
-    "value": "Build mode"
+    "value": "Build Mode",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.enter",
-    "value": "Build"
+    "value": "Build",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.leave",
-    "value": "Finish building"
+    "value": "Finish Building",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.furnishings",
-    "value": "Furnishings"
+    "value": "Furnishings",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.trophies",
-    "value": "Trophies"
+    "value": "Trophies",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.amenityTab",
-    "value": "Amenities"
+    "value": "Amenities",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.search",
-    "value": "Search furnishings"
+    "value": "Search furnishings",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.searchPlaceholder",
-    "value": "Search by name"
+    "value": "Search by name",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.clearSearch",
-    "value": "Clear search"
+    "value": "Clear Search",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.category",
-    "value": "Furnishing category"
+    "value": "Furnishing category",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.palette",
-    "value": "Choose a furnishing"
+    "value": "Choose a furnishing",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.collectionHelp",
-    "value": "Use the arrow keys to move between furnishings. Press Enter to select one."
+    "value": "Use the arrow keys to move between furnishings. Press Enter to select one.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.placedObjects",
-    "value": "Placed furnishings"
+    "value": "Placed furnishings",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.selectPlaced",
-    "value": "Select {item}"
+    "value": "Select {item}",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.selectedPlaced",
-    "value": "Selected placed furnishing: {item}."
+    "value": "Selected placed furnishing: {item}.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.moveSelected",
-    "value": "Move furnishing"
+    "value": "Move Furnishing",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.replaceTrophy",
-    "value": "Replace trophy"
+    "value": "Replace Trophy",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.clearTrophy",
-    "value": "Clear plinth"
+    "value": "Clear Plinth",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.returnTooltip",
-    "value": "Return this exact furnishing to your bags. You need enough bag space."
+    "value": "Return this exact furnishing to your bags. You need enough bag space.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.proposalReplaced",
-    "value": "Previous placement preview cancelled. {item} is selected."
+    "value": "Previous placement preview cancelled. {item} is selected.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.selectionPending",
-    "value": "Wait for this placement to finish before changing selection."
+    "value": "Wait for this placement to finish before changing selection.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.surfaceFloor",
-    "value": "Floor"
+    "value": "Floor",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.surfaceWall",
-    "value": "Wall"
+    "value": "Wall",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.surfaceTabletop",
-    "value": "Tabletop"
+    "value": "Tabletop",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.surfaceCeiling",
-    "value": "Ceiling"
+    "value": "Ceiling",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.paletteOpen",
-    "value": "Open furnishing palette"
+    "value": "Open Furnishing Palette",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.empty",
-    "value": "Find furnishings at vendors or make them with crafting recipes."
+    "value": "Find furnishings at vendors or make them with crafting recipes.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.noResults",
-    "value": "No furnishings match your search."
+    "value": "No furnishings match your search.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.selectedCopy",
-    "value": "{item}, {marks}, {count} available"
+    "value": "{item}, {marks}, {count} available",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.selectedCopyNoMarks",
-    "value": "{item}, {count} available"
+    "value": "{item}, {count} available",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.confirm",
-    "value": "Place"
+    "value": "Place",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.confirmMove",
-    "value": "Move"
+    "value": "Move",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.remove",
-    "value": "Return to bags"
+    "value": "Return to Bags",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.rotate",
-    "value": "Rotate clockwise"
+    "value": "Rotate Clockwise",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.rotateBack",
-    "value": "Rotate counterclockwise"
+    "value": "Rotate Counterclockwise",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.cancel",
-    "value": "Cancel placement"
+    "value": "Cancel Placement",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.nudge",
-    "value": "Nudge"
+    "value": "Nudge",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.nudgeForward",
-    "value": "Nudge forward"
+    "value": "Nudge Forward",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.nudgeBack",
-    "value": "Nudge backward"
+    "value": "Nudge Backward",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.nudgeLeft",
-    "value": "Nudge left"
+    "value": "Nudge Left",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.nudgeRight",
-    "value": "Nudge right"
+    "value": "Nudge Right",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.snap",
-    "value": "Snap to grid"
+    "value": "Snap to Grid",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.undo",
-    "value": "Undo"
+    "value": "Undo",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.redo",
-    "value": "Redo"
+    "value": "Redo",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.undoEmpty",
-    "value": "There are no placement changes to undo."
+    "value": "There are no placement changes to undo.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.redoEmpty",
-    "value": "There are no placement changes to redo."
+    "value": "There are no placement changes to redo.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.historyChanged",
-    "value": "Your home changed. Placement history has been reset."
+    "value": "Your home changed. Placement history has been reset.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.historyTooltip",
-    "value": "Undo confirmed placement changes from this building session. Payments and purchases are not included."
+    "value": "Undo confirmed placement changes from this building session. Payments and purchases are not included.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.saving",
-    "value": "Saving placement..."
+    "value": "Saving placement...",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.preparing",
-    "value": "Preparing furnishing preview..."
+    "value": "Preparing furnishing preview...",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.valid",
-    "value": "Ready to place."
+    "value": "Ready to place.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.placementReason",
-    "value": "Placement: {reason}"
+    "value": "Placement: {reason}",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.decor",
-    "value": "Decor: {used} of {limit}"
+    "value": "Decor: {used} of {limit}",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.plinths",
-    "value": "Plinths: {used} of {limit}"
+    "value": "Plinths: {used} of {limit}",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.amenities",
-    "value": "Amenities: {used} of {limit}"
+    "value": "Amenities: {used} of {limit}",
+    "owner": "11"
+  },
+  {
+    "key": "hudChrome.housing.build.meterFull",
+    "value": "At capacity",
+    "owner": "11"
+  },
+  {
+    "key": "hudChrome.housing.build.meterOver",
+    "value": "Over capacity by {excess}",
+    "owner": "11"
+  },
+  {
+    "key": "hudChrome.housing.build.meterAria",
+    "value": "{meter}: {used} of {limit} in use",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.decorTooltip",
-    "value": "This furnishing uses {cost} decor. You have {remaining} decor available."
+    "value": "This furnishing uses {cost} decor. You have {remaining} decor available.",
+    "owner": "11"
+  },
+  {
+    "key": "hudChrome.housing.furnishing.footprint",
+    "value": "Footprint: {width} by {depth} cells.",
+    "owner": "02"
+  },
+  {
+    "key": "hudChrome.housing.furnishing.decorCost",
+    "value": "Decor cost: {cost}.",
+    "owner": "02"
+  },
+  {
+    "key": "hudChrome.housing.furnishing.surfaceFloor",
+    "value": "Placed on the floor.",
+    "owner": "02"
+  },
+  {
+    "key": "hudChrome.housing.furnishing.maker",
+    "value": "Made by {maker}.",
+    "owner": "02"
   },
   {
     "key": "hudChrome.housing.build.plinthTooltip",
-    "value": "Display trophies on your home's plinths. {used} of {limit} are in use."
+    "value": "Display trophies on your home's plinths. {used} of {limit} are in use.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.amenityTooltip",
-    "value": "Installed stations use amenity slots. Your built-in Strongbox does not use a slot."
+    "value": "Installed stations use amenity slots. Your built-in Strongbox does not use a slot.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.camera",
-    "value": "Build camera"
+    "value": "Build Camera",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.cameraHint",
-    "value": "Move the view to inspect your placement."
+    "value": "Move the view to inspect your placement.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.controlsAria",
-    "value": "Placement controls for {item}"
+    "value": "Placement controls for {item}",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.build.fixed",
-    "value": "This is part of your home and cannot be moved."
+    "value": "This is part of your home and cannot be moved.",
+    "owner": "11"
+  },
+  {
+    "key": "hudChrome.housing.build.surface",
+    "value": "Surface: {surface}",
+    "owner": "25"
+  },
+  {
+    "key": "hudChrome.housing.build.freeRotate",
+    "value": "Rotate Freely",
+    "owner": "25"
+  },
+  {
+    "key": "hudChrome.housing.build.movesChildren",
+    "value": "Attached furnishings move with this piece.",
+    "owner": "25"
   },
   {
     "key": "hudChrome.housing.denied.placementBlocked",
-    "value": "Something is in the way."
+    "value": "Something is in the way.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.outsideRoom",
-    "value": "Place this inside the room."
+    "value": "Place this inside the room.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.doorway",
-    "value": "Keep the doorway and arrival path clear."
+    "value": "Keep the doorway and arrival path clear.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.occupied",
-    "value": "Someone is standing in that space."
+    "value": "Someone is standing in that space.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.decorFull",
-    "value": "This needs {needed} decor. You have {remaining} available."
+    "value": "This needs {needed} decor. You have {remaining} available.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.plinthFull",
-    "value": "Every plinth is in use."
+    "value": "Every plinth is in use.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.amenityFull",
-    "value": "Every amenity slot is in use."
+    "value": "Every amenity slot is in use.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.wrongSurface",
-    "value": "This furnishing needs a {surface} surface."
+    "value": "This furnishing needs a {surface} surface.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.copyMissing",
-    "value": "This furnishing is no longer available."
+    "value": "This furnishing is no longer available.",
+    "owner": "11"
   },
   {
     "key": "hudChrome.housing.denied.childrenPresent",
-    "value": "Move the furnishings on this piece before removing it."
+    "value": "Move the furnishings on this piece before removing it.",
+    "owner": "11"
+  },
+  {
+    "key": "hudChrome.housing.denied.supportFull",
+    "value": "There is no room left on this surface.",
+    "owner": "25"
+  },
+  {
+    "key": "hudChrome.housing.denied.invalidTransform",
+    "value": "That placement could not be applied. Try again.",
+    "owner": "25"
+  },
+  {
+    "key": "hudChrome.housing.denied.trophyUnavailable",
+    "value": "That trophy is not available to display.",
+    "owner": "17"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeTab",
+    "value": "Upgrade",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeTitle",
+    "value": "Upgrade to Lodge",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeIntro",
+    "value": "Contribute the materials below and pay the upgrade fee once, in either order. Nothing is spent until you confirm.",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeNoProject",
+    "value": "No upgrade is in progress.",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeFeePaid",
+    "value": "Upgrade fee paid.",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeFeeDue",
+    "value": "Upgrade fee not yet paid.",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeReady",
+    "value": "Everything is in. Finish the upgrade when your bags have room for anything that will not fit.",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeOverflow",
+    "value": "Placed items that will return to your bags: {count}",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeContribute",
+    "value": "Contribute",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeFinish",
+    "value": "Finish Upgrade",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeRowAria",
+    "value": "Upgrade material {item}: {have} of {need} contributed",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.granted.upgradeComplete",
+    "value": "Your home is now a Lodge.",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.denied.upgradeNoProject",
+    "value": "There is no upgrade to finish.",
+    "owner": "21"
+  },
+  {
+    "key": "hudChrome.housing.denied.upgradeFeeDue",
+    "value": "Pay the upgrade fee before finishing the upgrade.",
+    "owner": "21"
   },
   {
     "key": "hudChrome.housing.steward.title",
-    "value": "Steward"
+    "value": "Steward",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.householdTab",
-    "value": "Household"
+    "value": "Household",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.visitorsTab",
-    "value": "Visitors"
+    "value": "Visitors",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.condition",
-    "value": "Condition: {condition} of {maximum}"
+    "value": "Condition: {condition} of {maximum}",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.conditionTooltip",
-    "value": "Amenities work at {threshold} condition or higher. Below that, amenities pause. Low condition does not prevent entry or decoration. Upkeep never removes your home or belongings."
+    "value": "Amenities work at {threshold} condition or higher. Below that, amenities pause. Low condition does not prevent entry or decoration. Upkeep never removes your home or belongings.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.amenitiesReady",
-    "value": "Amenities are available."
+    "value": "Amenities are available.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.amenitiesPaused",
-    "value": "Amenities are paused until your home's condition is restored."
+    "value": "Amenities are paused until your home's condition is restored.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.nextDue",
-    "value": "Next Ledger due: {date}"
+    "value": "Next Ledger due: {date}",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.coveredThrough",
-    "value": "Ledger paid through {date}."
+    "value": "Ledger paid through {date}.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.noUpkeep",
-    "value": "Your Inn Room has no upkeep."
+    "value": "Your Inn Room has no upkeep.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.currentPaid",
-    "value": "This week's Ledger is paid."
+    "value": "This week's Ledger is paid.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.ledger",
-    "value": "Weekly Ledger"
+    "value": "Weekly Ledger",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.needed",
-    "value": "Needed"
+    "value": "Needed",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.bags",
-    "value": "Bags"
+    "value": "Bags",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.vault",
-    "value": "Materials Vault"
+    "value": "Materials Vault",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.rowAria",
-    "value": "{item}: need {needed}; {bags} in bags; {vault} in Materials Vault."
+    "value": "{item}: need {needed}; {bags} in bags; {vault} in Materials Vault.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.rowUnavailableAria",
-    "value": "{item}: need {needed}; {bags} in bags; Materials Vault balance is unavailable."
+    "value": "{item}: need {needed}; {bags} in bags; Materials Vault balance is unavailable.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.haveNeed",
-    "value": "Have {have} of {need}."
+    "value": "Have {have} of {need}.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.source",
-    "value": "Pay using"
+    "value": "Pay using",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.bagsOnly",
-    "value": "Bags only"
+    "value": "Bags only",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.vaultOnly",
-    "value": "Materials Vault only"
+    "value": "Materials Vault only",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.automatic",
-    "value": "Bags, then Materials Vault"
+    "value": "Bags, then Materials Vault",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.payBags",
-    "value": "Pay from bags"
+    "value": "Pay From Bags",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.payVault",
-    "value": "Pay from vault"
+    "value": "Pay From Vault",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.payAutomatic",
-    "value": "Pay from bags and vault"
+    "value": "Pay From Bags and Vault",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.sourceTooltip",
-    "value": "Automatic payment takes matching materials from your bags first, then your Materials Vault. Review the listed amounts before confirming."
+    "value": "Automatic payment takes matching materials from your bags first, then your Materials Vault. Review the listed amounts before confirming.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.prepay",
-    "value": "Prepay Ledger"
+    "value": "Prepay Ledger",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.prepayWeeks",
-    "value": "Weeks to cover: {weeks}"
+    "value": "Weeks to cover: {weeks}",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.prepayLimit",
-    "value": "You can cover up to {limit} weeks."
+    "value": "You can cover up to {limit} weeks.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.review",
-    "value": "Review material payment"
+    "value": "Review Material Payment",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.reviewThrough",
-    "value": "Cover your Ledger through {date} using {source}."
+    "value": "Cover your Ledger through {date} using {source}.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.confirm",
-    "value": "Confirm material payment"
+    "value": "Confirm Material Payment",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.pending",
-    "value": "Confirming your Ledger payment..."
+    "value": "Confirming your Ledger payment...",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.refreshing",
-    "value": "Updating your Ledger and material balances..."
+    "value": "Updating your Ledger and material balances...",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.outagePause",
-    "value": "Upkeep is paused while the market service is unavailable. No missed upkeep will be added later."
+    "value": "Upkeep is paused while the market service is unavailable. No missed upkeep will be added later.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.absencePause",
-    "value": "Wear is paused while you are away."
+    "value": "Wear is paused while you are away.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.returnGrace",
-    "value": "Wear is paused until {date} while you settle back in."
+    "value": "Wear is paused until {date} while you settle back in.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.call",
-    "value": "Master Builder's Call"
+    "value": "Master Builder's Call",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.callCurrentTooltip",
-    "value": "Pay the current unpaid Ledger and restore condition to {maximum}. Future prepaid weeks stay unchanged."
+    "value": "Pay the current unpaid Ledger and restore condition to {maximum}. Future prepaid weeks stay unchanged.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.callRepairTooltip",
-    "value": "Restore condition to {maximum}. Your current Ledger is already paid. Future prepaid weeks stay unchanged."
+    "value": "Restore condition to {maximum}. Your current Ledger is already paid. Future prepaid weeks stay unchanged.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.reviewCall",
-    "value": "Review Master Builder's Call"
+    "value": "Review Master Builder's Call",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.manageWebsite",
-    "value": "Manage on the website"
+    "value": "Manage on the Website",
+    "owner": "14"
   },
   {
     "key": "hudChrome.housing.steward.manageWebsiteAria",
-    "value": "Open approved home management on the website"
+    "value": "Open approved home management on the website",
+    "owner": "14"
   },
   {
     "key": "hudChrome.housing.steward.visitor",
-    "value": "Only the owner can manage this home's Ledger."
+    "value": "Only the owner can manage this home's Ledger.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.steward.hearthDestination",
-    "value": "Hearth Key destination"
+    "value": "Hearth Key destination",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.steward.upgradeRequirements",
+    "value": "Upgrade Requirements",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.prestigeAny",
+    "value": "Earn any one of these on this account:",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.prestigeGuildAny",
+    "value": "Your guild must have recorded one of these clears:",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.requirementMet",
+    "value": "Earned",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.requirementUnmet",
+    "value": "Not yet earned",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.requirementRowAria",
+    "value": "{requirement}: {status}",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.prestigeTooltip",
+    "value": "Once earned, this stays met. Losing an item, a rank or a guild member later never removes an upgrade.",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.overflowReview",
+    "value": "{count} placed furnishings will not fit the new layout. They go to {destination}. Nothing is lost.",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.overflowNone",
+    "value": "Everything placed fits the new layout.",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.confirmUpgrade",
+    "value": "Confirm Upgrade",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.denied.prestige",
+    "value": "This tier needs an accomplishment this account has not earned yet.",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.denied.guildClear",
+    "value": "Your guild has not recorded a qualifying clear yet.",
+    "owner": "40"
+  },
+  {
+    "key": "hudChrome.housing.steward.primaryTab",
+    "value": "Primary Home",
+    "owner": "42"
+  },
+  {
+    "key": "hudChrome.housing.steward.secondTab",
+    "value": "Second Home",
+    "owner": "42"
+  },
+  {
+    "key": "hudChrome.housing.steward.secondBillNote",
+    "value": "A second home's upkeep and upgrade lines are one and a half times the primary schedule, rounded up.",
+    "owner": "42"
+  },
+  {
+    "key": "hudChrome.housing.denied.secondHomeCap",
+    "value": "You already have two homes.",
+    "owner": "42"
   },
   {
     "key": "hudChrome.housing.trophies.title",
-    "value": "Trophy case"
+    "value": "Trophy Case",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.search",
-    "value": "Search trophies"
+    "value": "Search trophies",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.collectionHelp",
-    "value": "Use the arrow keys to move between trophies. Press Enter to inspect one."
+    "value": "Use the arrow keys to move between trophies. Press Enter to inspect one.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.refreshing",
-    "value": "Updating your trophy collection..."
+    "value": "Updating your trophy collection...",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.empty",
-    "value": "Your adventures will fill these shelves."
+    "value": "Your adventures will fill these shelves.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.noResults",
-    "value": "No trophies match your search."
+    "value": "No trophies match your search.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.achievedBy",
-    "value": "Achieved by {name}"
+    "value": "Achieved by {name}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.achievedOn",
-    "value": "Achieved on {date}"
+    "value": "Achieved on {date}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.characterUnknown",
-    "value": "Original character unknown."
+    "value": "Original character unknown.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.dateUnknown",
-    "value": "Original date unknown."
+    "value": "Original date unknown.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.deed",
-    "value": "{deedLabel}: {deed}"
+    "value": "{deedLabel}: {deed}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.page",
-    "value": "{pageLabel}: {page}"
+    "value": "{pageLabel}: {page}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.mark",
-    "value": "{markLabel}: {mark}"
+    "value": "{markLabel}: {mark}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.item",
-    "value": "Displayed item: {item}"
+    "value": "Displayed item: {item}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.titleSource",
-    "value": "Title: {title}"
+    "value": "Title: {title}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.mountSource",
-    "value": "Mount: {mount}"
-  },
-  {
-    "key": "hudChrome.housing.trophies.unearned",
-    "value": "Complete {deed} to display this trophy."
+    "value": "Mount: {mount}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireDeed",
-    "value": "Complete {deed} to display this trophy."
+    "value": "Complete {deed} to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireTitle",
-    "value": "Unlock {title} to display this trophy."
+    "value": "Unlock {title} to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requirePage",
-    "value": "Complete {page} to display this trophy."
+    "value": "Complete {page} to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireSlain",
-    "value": "Defeat {creature} to display this trophy."
+    "value": "Defeat {creature} to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireMasterwork",
-    "value": "Craft a Masterwork item to display this trophy."
+    "value": "Craft a Masterwork item to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireMasterworkCraft",
-    "value": "Craft a Masterwork item with {craft} to display this trophy."
+    "value": "Craft a Masterwork item with {craft} to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireGatherEvent",
-    "value": "Find {find} through {profession} to display this trophy."
+    "value": "Find {find} through {profession} to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireGoldenHarvest",
-    "value": "Gather a golden harvest from a farm bed to display this trophy."
+    "value": "Gather a golden harvest from a farm bed to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requirePerfectSpecimen",
-    "value": "Harvest a perfect specimen from a fallen creature to display this trophy."
+    "value": "Harvest a perfect specimen from a fallen creature to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireSet",
-    "value": "Complete the {set} collection to display this trophy."
+    "value": "Complete the {set} collection to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireItemAcquired",
-    "value": "Find {item} to unlock this trophy."
+    "value": "Find {item} to unlock this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireItemOwned",
-    "value": "Own {item} to activate this display."
+    "value": "Own {item} to activate this display.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireMount",
-    "value": "Collect {mount} to display this trophy."
+    "value": "Collect {mount} to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requireRank",
-    "value": "Reach {rank} in {collection} to display this trophy."
+    "value": "Reach {rank} in {collection} to display this trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.requirePerfected",
-    "value": "Own a qualifying named Perfected item to activate this display."
+    "value": "Own a qualifying named Perfected item to activate this display.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.setSource",
-    "value": "Armor set: {set}"
+    "value": "Armor set: {set}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.rankSource",
-    "value": "{collection}: {rank}"
+    "value": "{collection}: {rank}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.maker",
-    "value": "Made by {maker}"
+    "value": "Made by {maker}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.namedItem",
-    "value": "Named item: {name}"
+    "value": "Named item: {name}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.makerUnknown",
-    "value": "Original maker unknown."
+    "value": "Original maker unknown.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.nameUnknown",
-    "value": "Original item name unknown."
+    "value": "Original item name unknown.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.inactive",
-    "value": "This display is inactive because its required item is no longer owned."
+    "value": "This display is inactive because its required item is no longer owned.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.hidden",
-    "value": "A trophy for an undiscovered accomplishment."
+    "value": "A trophy for an undiscovered accomplishment.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.unknownSource",
-    "value": "This trophy's original source is unknown."
+    "value": "This trophy's original source is unknown.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.place",
-    "value": "Place on a plinth"
+    "value": "Place on a Plinth",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.choosePlinth",
-    "value": "Choose a plinth for {trophy}."
+    "value": "Choose a plinth for {trophy}.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.plinthFull",
-    "value": "Every plinth is in use."
+    "value": "Every plinth is in use.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.ownedAria",
-    "value": "{trophy}. Available to display. {source}."
+    "value": "{trophy}. Available to display. {source}.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.unearnedAria",
-    "value": "{trophy}. Not yet available. {requirement}."
+    "value": "{trophy}. Not yet available. {requirement}.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.hiddenAria",
-    "value": "Undiscovered trophy."
+    "value": "Undiscovered trophy.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.inspectAria",
-    "value": "Inspect {trophy}"
+    "value": "Inspect {trophy}",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.placeTooltip",
-    "value": "Display this accomplishment on a free plinth. Removing the display keeps your trophy unlocked."
+    "value": "Display this accomplishment on a free plinth. Removing the display keeps your trophy unlocked.",
+    "owner": "17"
   },
   {
     "key": "hudChrome.housing.trophies.possessionRequired",
-    "value": "This display is active while you own {item}."
+    "value": "This display is active while you own {item}.",
+    "owner": "17"
+  },
+  {
+    "key": "hudChrome.housing.trophies.finish",
+    "value": "Finish: {finish}",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.finishBronze",
+    "value": "Bronze",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.finishSilver",
+    "value": "Silver",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.finishGilded",
+    "value": "Gilded",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.finishSource",
+    "value": "Silver needs the heroic clear; gilded needs an S-rank rift clear.",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.dulled",
+    "value": "Finishes look dull while your home's condition is below 30.",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formStatue",
+    "value": "{source} statue",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formHead",
+    "value": "{source} mounted head",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formBanner",
+    "value": "{title} banner",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formPaddock",
+    "value": "{mount} paddock",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formItemStand",
+    "value": "{item} armor display",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formWeaponRack",
+    "value": "{item} weapon rack",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formSpecimenCabinet",
+    "value": "Specimen cabinet",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formHarvestSheaf",
+    "value": "Harvest sheaf",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formHarvestMarker",
+    "value": "{region} first-harvest marker",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formAnglersDisplay",
+    "value": "Angler's display",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formRiftObelisk",
+    "value": "Rift obelisk",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formLegendStand",
+    "value": "Legend Stand",
+    "owner": "23"
+  },
+  {
+    "key": "hudChrome.housing.trophies.formRankDisplay",
+    "value": "{collection} rank display",
+    "owner": "23"
   },
   {
     "key": "hudChrome.housing.visit.title",
-    "value": "Visit a home"
+    "value": "Visit a Home",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.occupancy",
-    "value": "Visitors: {count} of {limit}"
+    "value": "Visitors: {count} of {limit}",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.occupancyTooltip",
-    "value": "The visitor limit does not count characters on the owner's account."
+    "value": "The visitor limit does not count characters on the owner's account.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.home",
-    "value": "At home: {names}"
+    "value": "At home: {names}",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.quiet",
-    "value": "No one else is home."
+    "value": "No one else is home.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.full",
-    "value": "This home is full. Try again later."
+    "value": "This home is full. Try again later.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.unavailable",
-    "value": "This home is not available to visit."
+    "value": "This home is not available to visit.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.ownerAway",
-    "value": "The owner is away. You are welcome to visit."
+    "value": "The owner is away. You are welcome to visit.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.guest",
-    "value": "You are visiting {name}."
+    "value": "You are visiting {name}.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.leave",
-    "value": "Leave home"
+    "value": "Leave Home",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.ownerBuilding",
-    "value": "{name} is decorating."
+    "value": "{name} is decorating.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.policy",
-    "value": "Who can visit"
+    "value": "Who can visit",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.private",
-    "value": "Private"
+    "value": "Private",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.friends",
-    "value": "Friends"
+    "value": "Friends",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.guild",
-    "value": "Guild"
+    "value": "Guild",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.public",
-    "value": "Public"
+    "value": "Public",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.endVisit",
-    "value": "End visit"
+    "value": "End Visit",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.endVisitAria",
-    "value": "End {name}'s visit"
+    "value": "End {name}'s visit",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.endConfirm",
-    "value": "Return {name} to the gate?"
+    "value": "Return {name} to the gate?",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.ended",
-    "value": "Your visit has ended. You have returned to the gate."
+    "value": "Your visit has ended. You have returned to the gate.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.pending",
-    "value": "Confirming entry..."
+    "value": "Confirming entry...",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.endPending",
-    "value": "Ending {name}'s visit..."
+    "value": "Ending {name}'s visit...",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.endSucceeded",
-    "value": "{name}'s visit has ended."
+    "value": "{name}'s visit has ended.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.policyPending",
-    "value": "Updating who can visit..."
+    "value": "Updating who can visit...",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.policySaved",
-    "value": "Visiting policy updated."
+    "value": "Visiting policy updated.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.policyConfirmed",
-    "value": "Current policy: {policy}"
+    "value": "Current policy: {policy}",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.policyDraft",
-    "value": "Selected policy: {policy}"
+    "value": "Selected policy: {policy}",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.applyPolicy",
-    "value": "Apply visiting policy"
+    "value": "Apply Visiting Policy",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.roster",
-    "value": "Guests at home"
+    "value": "Guests at home",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.rosterEmpty",
-    "value": "No guests are here."
+    "value": "No guests are here.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.privateExisting",
-    "value": "Current guests may stay until they leave or you end their visit."
+    "value": "Current guests may stay until they leave or you end their visit.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.readOnlyTooltip",
-    "value": "Inspect this home's furnishings and trophies. Only the owner can change them."
+    "value": "Inspect this home's furnishings and trophies. Only the owner can change them.",
+    "owner": "18"
   },
   {
     "key": "hudChrome.housing.visit.ownerService",
-    "value": "This service is for the home's owner."
+    "value": "This service is for the home's owner.",
+    "owner": "18"
+  },
+  {
+    "key": "hudChrome.housing.visit.openHouses",
+    "value": "Open Houses",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.openHousesEmpty",
+    "value": "No friends or guildmates have an open house right now.",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.openHousesLoading",
+    "value": "Finding open houses...",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.openHousesError",
+    "value": "Open houses could not be loaded. Try again.",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.refreshList",
+    "value": "Refresh",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.listEntry",
+    "value": "{name}'s {tier}",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.listEntryAria",
+    "value": "{name}'s {tier}, open to {policy}, {count} of {limit} visitors",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.openTo",
+    "value": "Open to {policy}",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.knock",
+    "value": "Knock",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.knockAria",
+    "value": "Knock on {name}'s door",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.knockSent",
+    "value": "You knocked on {name}'s door.",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.knockWait",
+    "value": "Wait a moment before knocking there again.",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.knockRefused",
+    "value": "You cannot knock there right now.",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.knockHeard",
+    "value": "{name} is knocking at the door.",
+    "owner": "26"
+  },
+  {
+    "key": "hudChrome.housing.visit.entryWait",
+    "value": "Too many visits in a short time. Try again shortly.",
+    "owner": "26"
   },
   {
     "key": "hudChrome.housing.charter.title",
-    "value": "Freehold Charter"
+    "value": "Freehold Charter",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.summary",
-    "value": "Open a Cottage to furnish, display your trophies and welcome friends."
+    "value": "Open a Cottage to furnish, display your trophies and welcome friends.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.boundary",
-    "value": "A cosmetic home with convenience and access features. It grants no combat power."
+    "value": "A cosmetic home with convenience and access features. It grants no combat power.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.freeRoom",
-    "value": "An Inn Room is free for every account."
+    "value": "An Inn Room is free for every account.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.artAria",
-    "value": "Cottage interior with a hearth and space for your furnishings"
+    "value": "Cottage interior with a hearth and space for your furnishings",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.review",
-    "value": "Review purchase"
+    "value": "Review Purchase",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.price",
-    "value": "Price: {price}"
+    "value": "Price: {price}",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.charter.feeDetails",
+    "value": "Fees and taxes: {feeDetails}",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.charter.quoteExpiry",
+    "value": "Price valid until {expiresAt}.",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.charter.terms",
+    "value": "Purchase Terms",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.charter.section",
+    "value": "Freeholds",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.charter.reference",
+    "value": "Request reference: {operationId}",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.charter.supportReview",
+    "value": "This request needs a support review. Your request reference is saved.",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.charter.serviceUnavailable",
+    "value": "This service is unavailable for this account or location.",
+    "owner": "37"
+  },
+  {
+    "key": "hudChrome.housing.charter.eligibilityUnconfirmed",
+    "value": "Eligibility could not be confirmed. Please try again later.",
+    "owner": "37"
+  },
+  {
+    "key": "hudChrome.housing.charter.supportPointer",
+    "value": "Contact support with your saved request reference.",
+    "owner": "37"
   },
   {
     "key": "hudChrome.housing.charter.quoteLoading",
-    "value": "Loading current price..."
+    "value": "Loading current price...",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.quoteExpired",
-    "value": "This quote has expired. Review the current quote before confirming."
+    "value": "This quote has expired. Review the current quote before confirming.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.priceChanged",
-    "value": "The price has changed. Review the new price before confirming."
+    "value": "The price has changed. Review the new price before confirming.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.confirm",
-    "value": "Confirm purchase"
+    "value": "Confirm Purchase",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.pending",
-    "value": "Your purchase is being confirmed."
+    "value": "Your purchase is being confirmed.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.reconciling",
-    "value": "Checking your original purchase. You do not need to buy again."
+    "value": "Checking your original purchase. You do not need to buy again.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.received",
-    "value": "Your Cottage is ready."
+    "value": "Your Cottage is ready.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.owned",
-    "value": "This account already has a Cottage or a larger home."
+    "value": "This account already has a Cottage or a larger home.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.cancelled",
-    "value": "Purchase cancelled."
+    "value": "Purchase cancelled.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.unavailable",
-    "value": "This purchase is unavailable right now."
+    "value": "This purchase is unavailable right now.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.receipt",
-    "value": "Purchase confirmation"
+    "value": "Purchase Confirmation",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.mapUnavailable",
-    "value": "The gate could not be shown on the map. Try again."
+    "value": "The gate could not be shown on the map. Try again.",
+    "owner": "16"
   },
   {
     "key": "hudChrome.housing.charter.showGate",
-    "value": "Show gate on map"
+    "value": "Show Gate on Map",
+    "owner": "16"
+  },
+  {
+    "key": "hudChrome.housing.charter.guildhallTitle",
+    "value": "Guildhall Charter",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.charter.guildhallSummary",
+    "value": "Open a Meeting Hall for your guild, paid from the Hall Fund.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.charter.guildhallOfficerOnly",
+    "value": "A guild officer can complete this purchase for the guild.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.charter.guildhallReceived",
+    "value": "Your guild's Meeting Hall is ready.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.charter.guildhallOwned",
+    "value": "Your guild already has a hall.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.charter.secondTitle",
+    "value": "Second Freehold Charter",
+    "owner": "42"
+  },
+  {
+    "key": "hudChrome.housing.charter.secondSummary",
+    "value": "Open a second Cottage with its own upkeep, visitors and ward slot.",
+    "owner": "42"
+  },
+  {
+    "key": "hudChrome.housing.charter.secondRequiresPrimary",
+    "value": "You need a Cottage or larger primary home before buying a second home.",
+    "owner": "42"
+  },
+  {
+    "key": "hudChrome.housing.charter.secondOwned",
+    "value": "This account already has a second home.",
+    "owner": "42"
+  },
+  {
+    "key": "hudChrome.housing.charter.secondReceived",
+    "value": "Your second home is ready.",
+    "owner": "42"
   },
   {
     "key": "hudChrome.housing.interior.door",
-    "value": "Home door"
+    "value": "Home door",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.interior.hearth",
-    "value": "Hearth"
+    "value": "Hearth",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.interior.strongbox",
-    "value": "Strongbox"
+    "value": "Strongbox",
+    "owner": "12"
   },
   {
     "key": "hudChrome.housing.interior.strongboxTooltip",
-    "value": "Open your personal bank here. This does not add storage space."
+    "value": "Open your personal bank here. This does not add storage space.",
+    "owner": "12"
   },
   {
     "key": "hudChrome.housing.interior.stationTooltip",
-    "value": "Use this home's {station}. Recipes keep their normal skill and training requirements."
+    "value": "Use this home's {station}. Recipes keep their normal skill and training requirements.",
+    "owner": "12"
   },
   {
     "key": "hudChrome.housing.interior.strongboxVisitorTooltip",
-    "value": "This Strongbox opens the owner's personal bank. Guests cannot use it."
+    "value": "This Strongbox opens the owner's personal bank. Guests cannot use it.",
+    "owner": "12"
   },
   {
     "key": "hudChrome.housing.interior.strongboxPausedTooltip",
-    "value": "This Strongbox is paused by the home's condition. The owner can restore condition to use it."
+    "value": "This Strongbox is paused by the home's condition. The owner can restore condition to use it.",
+    "owner": "12"
   },
   {
     "key": "hudChrome.housing.interior.stationVisitorTooltip",
-    "value": "This station is for the home's authorized users."
+    "value": "This station is for the home's authorized users.",
+    "owner": "12"
   },
   {
     "key": "hudChrome.housing.interior.stationPausedTooltip",
-    "value": "This station is paused by the home's condition. The owner can restore condition to use it."
+    "value": "This station is paused by the home's condition. The owner can restore condition to use it.",
+    "owner": "12"
   },
   {
     "key": "hudChrome.housing.interior.plinth",
-    "value": "Trophy plinth"
+    "value": "Trophy plinth",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.interior.emptyPlinth",
-    "value": "An empty plinth for one of your trophies."
+    "value": "An empty plinth for one of your trophies.",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.interior.amenityPaused",
-    "value": "This amenity is paused. The owner can restore the home's condition."
+    "value": "This amenity is paused. The owner can restore the home's condition.",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.interior.preparing",
-    "value": "Preparing the room..."
+    "value": "Preparing the room...",
+    "owner": "09"
   },
   {
     "key": "hudChrome.housing.garden.title",
-    "value": "Kitchen Garden"
+    "value": "Kitchen Garden",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.loading",
-    "value": "Loading the garden..."
+    "value": "Loading the garden...",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.empty",
-    "value": "No garden beds are recorded."
+    "value": "No garden beds are recorded.",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.live",
-    "value": "Current garden"
+    "value": "Current garden",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.saved",
-    "value": "Saved garden"
+    "value": "Saved garden",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.mixed",
-    "value": "Some beds use saved records."
+    "value": "Some beds use saved records.",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.incomplete",
-    "value": "Some garden beds could not be loaded."
+    "value": "Some garden beds could not be loaded.",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.unavailable",
-    "value": "The garden is unavailable right now."
+    "value": "The garden is unavailable right now.",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.openJournal",
-    "value": "Open {journal}"
+    "value": "Open {journal}",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.liveTooltip",
-    "value": "These beds use their owner's current garden records."
+    "value": "These beds use their owner's current garden records.",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.savedTooltip",
-    "value": "These beds use saved garden records. Changes made elsewhere may not appear yet."
+    "value": "These beds use saved garden records. Changes made elsewhere may not appear yet.",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.mixedTooltip",
-    "value": "Some beds use current records and others use saved records. Changes made elsewhere may not appear yet."
+    "value": "Some beds use current records and others use saved records. Changes made elsewhere may not appear yet.",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.savedStatus",
-    "value": "{status} (saved)"
+    "value": "{status} (saved)",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.savedReadyTooltip",
-    "value": "This bed appears ready from saved garden records. Changes made elsewhere may not appear yet."
+    "value": "This bed appears ready from saved garden records. Changes made elsewhere may not appear yet.",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.journalTooltip",
-    "value": "Open your current character's {journal}."
+    "value": "Open your current character's {journal}.",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.garden.growing",
-    "value": "Growing"
+    "value": "Growing",
+    "owner": "24"
+  },
+  {
+    "key": "hudChrome.housing.garden.board",
+    "value": "Harvest Journal board",
+    "owner": "24"
   },
   {
     "key": "hudChrome.housing.guild.title",
-    "value": "Guildhall"
+    "value": "Guildhall",
+    "owner": "28"
   },
   {
     "key": "hudChrome.housing.guild.fund",
-    "value": "Hall Fund"
+    "value": "Hall Fund",
+    "owner": "28"
   },
   {
     "key": "hudChrome.housing.guild.projects",
-    "value": "Hall projects"
+    "value": "Hall Projects",
+    "owner": "28"
   },
   {
     "key": "hudChrome.housing.guild.contributions",
-    "value": "Contributions"
+    "value": "Contributions",
+    "owner": "28"
   },
   {
     "key": "hudChrome.housing.guild.warTable",
-    "value": "War table"
+    "value": "War Table",
+    "owner": "28"
   },
   {
     "key": "hudChrome.housing.guild.noRecords",
-    "value": "Your guild has no records here yet."
+    "value": "Your guild has no records here yet.",
+    "owner": "28"
   },
   {
     "key": "hudChrome.housing.guild.officerRequired",
-    "value": "A guild officer can manage this project."
+    "value": "A guild officer can manage this project.",
+    "owner": "28"
   },
   {
     "key": "hudChrome.housing.guild.ownPlinth",
-    "value": "Your assigned trophy plinth"
+    "value": "Your assigned trophy plinth",
+    "owner": "28"
+  },
+  {
+    "key": "hudChrome.housing.guild.lockouts",
+    "value": "Raid Lockouts",
+    "owner": "30a"
+  },
+  {
+    "key": "hudChrome.housing.guild.firstKills",
+    "value": "First Kills",
+    "owner": "30a"
+  },
+  {
+    "key": "hudChrome.housing.guild.lockoutRow",
+    "value": "{boss} ({difficulty}): {locked} of {online} online members are locked until the next reset.",
+    "owner": "30a"
+  },
+  {
+    "key": "hudChrome.housing.guild.ownLockoutRow",
+    "value": "You are locked to {boss} ({difficulty}) until {resetAt}.",
+    "owner": "30a"
+  },
+  {
+    "key": "hudChrome.housing.guild.noLockouts",
+    "value": "No online member is locked to a final boss right now.",
+    "owner": "30a"
+  },
+  {
+    "key": "hudChrome.housing.guild.firstKillsUnavailable",
+    "value": "First kills are not recorded yet.",
+    "owner": "30a"
+  },
+  {
+    "key": "hudChrome.housing.guild.membersOnly",
+    "value": "Only current members of this guild can read the hall boards.",
+    "owner": "30a"
+  },
+  {
+    "key": "hudChrome.housing.guild.boardLoading",
+    "value": "Loading the board...",
+    "owner": "30a"
+  },
+  {
+    "key": "hudChrome.housing.guild.firstKillRow",
+    "value": "{boss} ({difficulty}): first cleared by {character} on {day}.",
+    "owner": "31"
+  },
+  {
+    "key": "hudChrome.housing.denied.guildPolicy",
+    "value": "A Guildhall can be private, open to its guild or open to everyone.",
+    "owner": "28"
+  },
+  {
+    "key": "hudChrome.housing.guild.fundBalance",
+    "value": "Hall Fund balance: {balance}",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.payFromFund",
+    "value": "Pay From the Hall Fund",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.reviewFundPayment",
+    "value": "Review Hall Fund Payment",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.fundPaymentPending",
+    "value": "Paying this week's Ledger from the Hall Fund...",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.fundPaid",
+    "value": "This week's Ledger is paid from the Hall Fund.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.donate",
+    "value": "Donate",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.donateTitle",
+    "value": "Donate to the Hall Fund",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.donateMaterials",
+    "value": "Materials",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.donateGold",
+    "value": "Gold",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.donateClaudium",
+    "value": "Claudium",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.capReadout",
+    "value": "This week: {used} of {cap} donated",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.capReached",
+    "value": "You have reached this week's donation limit.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.capResets",
+    "value": "Your donation limit resets with the weekly reset.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.donatePending",
+    "value": "Sending your donation...",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.donated",
+    "value": "Your donation is recorded.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.contributionsEmpty",
+    "value": "No contributions have been recorded yet.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.contributionEntry",
+    "value": "{name} gave {amount} on {date}",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.contributionsWindow",
+    "value": "Contributions from the last {days} days",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.withdrawToBank",
+    "value": "Withdraw to Guild Bank",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.withdrawConfirm",
+    "value": "Move the Hall Fund's materials and gold to the guild bank?",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.withdrawPending",
+    "value": "Moving the Hall Fund to the guild bank...",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.withdrawn",
+    "value": "The Hall Fund's materials and gold are in the guild bank.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.fundEmpty",
+    "value": "The Hall Fund is empty.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.conditionRate",
+    "value": "A Guildhall wears twice as fast as a personal home.",
+    "owner": "29"
+  },
+  {
+    "key": "hudChrome.housing.guild.chestMembersOnly",
+    "value": "Only guild members can use the guild chest.",
+    "owner": "30"
+  },
+  {
+    "key": "hudChrome.housing.guild.stationMembersOnly",
+    "value": "Only guild members can use the hall's stations.",
+    "owner": "30"
+  },
+  {
+    "key": "hudChrome.housing.guild.amenitiesPaused",
+    "value": "Hall amenities are paused until the hall's condition is restored.",
+    "owner": "30"
   },
   {
     "key": "hudChrome.housing.ward.title",
-    "value": "Neighborhood"
+    "value": "Neighborhood",
+    "owner": "34"
   },
   {
     "key": "hudChrome.housing.ward.endeavors",
-    "value": "Neighborhood Endeavors"
+    "value": "Neighborhood Endeavors",
+    "owner": "35"
   },
   {
     "key": "hudChrome.housing.ward.favor",
-    "value": "Neighborhood Favor"
+    "value": "Neighborhood Favor",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.roster",
+    "value": "Neighborhood Roster",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.loading",
+    "value": "Loading the neighborhood...",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.unavailable",
+    "value": "The neighborhood roster is unavailable right now.",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.occupancy",
+    "value": "{claimed} of {capacity} plots claimed",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.anchor",
+    "value": "Guild anchor: {guild}",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.noAnchor",
+    "value": "No guild anchors this neighborhood.",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.openGround",
+    "value": "Open ground",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.door",
+    "value": "Door of {owner}",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.privateDoor",
+    "value": "A private home",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.move",
+    "value": "Move Here",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.moveReview",
+    "value": "Move your home to this neighborhood? Your plot and furnishings move with it.",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.movePending",
+    "value": "Moving your home...",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.moved",
+    "value": "Your home now stands in its new neighborhood.",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.denied.wardFull",
+    "value": "This neighborhood is full. Your home stays where it is.",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.denied.wardBusy",
+    "value": "This neighborhood is busy right now. Try again shortly.",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.denied.wardSame",
+    "value": "Your home is already in this neighborhood.",
+    "owner": "34"
+  },
+  {
+    "key": "hudChrome.housing.ward.favorRank",
+    "value": "Favor rank {rank} of {maximum}",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.favorCapacity",
+    "value": "Permanent decor bonus: +{count}",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.favorTooltip",
+    "value": "Favor comes from paying your Ledger on time, from distinct neighbors visiting, and from completed Endeavors. It never decays and never drops when your home moves.",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavorMonth",
+    "value": "Endeavors for {month}",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavorProgress",
+    "value": "{current} of {goal}",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavorComplete",
+    "value": "Complete",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavorReward",
+    "value": "Reward: {reward}",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavorRewardHidden",
+    "value": "The reward is revealed when this Endeavor is complete.",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavorsEmpty",
+    "value": "No Endeavors are running this month.",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavorsLoading",
+    "value": "Loading Endeavors...",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavorsUnavailable",
+    "value": "Endeavors are unavailable right now. Your Favor is unchanged.",
+    "owner": "35"
+  },
+  {
+    "key": "hudChrome.housing.ward.endeavorsReset",
+    "value": "Progress resets on {date}.",
+    "owner": "35"
   },
   {
     "key": "hudChrome.housing.showcase.title",
-    "value": "Home Showcase"
+    "value": "Home Showcase",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.showcase.enter",
-    "value": "Enter your home"
+    "value": "Enter Your Home",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.showcase.consent",
-    "value": "Make this home's approved public display visible in the Showcase?"
+    "value": "Make this home's approved public display visible in the Showcase?",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.showcase.vote",
-    "value": "Vote for this home"
+    "value": "Vote for This Home",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.showcase.noEntries",
-    "value": "No homes have entered this Showcase yet."
+    "value": "No homes have entered this Showcase yet.",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.showcase.voted",
-    "value": "Your vote is recorded."
+    "value": "Your vote is recorded.",
+    "owner": "36"
+  },
+  {
+    "key": "hudChrome.housing.showcase.seasonClosed",
+    "value": "This Showcase season is closed. The next season opens on {date}.",
+    "owner": "36"
+  },
+  {
+    "key": "hudChrome.housing.showcase.seasonLocked",
+    "value": "Voting is locked while results are counted.",
+    "owner": "36"
+  },
+  {
+    "key": "hudChrome.housing.showcase.voteUsed",
+    "value": "You have already voted this season.",
+    "owner": "36"
+  },
+  {
+    "key": "hudChrome.housing.showcase.ownEntry",
+    "value": "You cannot vote for your own home.",
+    "owner": "36"
+  },
+  {
+    "key": "hudChrome.housing.showcase.loading",
+    "value": "Loading the Showcase...",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.guestBook.title",
-    "value": "Guest book"
+    "value": "Guest Book",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.guestBook.empty",
-    "value": "Leave a friendly reaction for the owner."
+    "value": "Leave a friendly reaction for the owner.",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.guestBook.wave",
-    "value": "Wave"
+    "value": "Wave",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.guestBook.cheer",
-    "value": "Cheer"
+    "value": "Cheer",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.guestBook.admire",
-    "value": "Admire"
+    "value": "Admire",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.guestBook.recorded",
-    "value": "Your reaction is recorded."
+    "value": "Your reaction is recorded.",
+    "owner": "36"
+  },
+  {
+    "key": "hudChrome.housing.guestBook.used",
+    "value": "You have already left a reaction here today.",
+    "owner": "36"
+  },
+  {
+    "key": "hudChrome.housing.guestBook.loading",
+    "value": "Loading the guest book...",
+    "owner": "36"
   },
   {
     "key": "hudChrome.housing.layouts.title",
-    "value": "Layouts"
+    "value": "Layouts",
+    "owner": "41a"
   },
   {
     "key": "hudChrome.housing.layouts.save",
-    "value": "Save layout"
+    "value": "Save Layout",
+    "owner": "41a"
   },
   {
     "key": "hudChrome.housing.layouts.load",
-    "value": "Load layout"
+    "value": "Load Layout",
+    "owner": "41a"
   },
   {
     "key": "hudChrome.housing.layouts.share",
-    "value": "Share layout"
+    "value": "Share Layout",
+    "owner": "41a"
   },
   {
     "key": "hudChrome.housing.layouts.review",
-    "value": "Review layout changes"
+    "value": "Review Layout Changes",
+    "owner": "41a"
   },
   {
     "key": "hudChrome.housing.layouts.shortfall",
-    "value": "You need {count} more of {item} for this layout."
+    "value": "You need {count} more of {item} for this layout.",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.empty",
+    "value": "You have no saved layouts yet.",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.nameLabel",
+    "value": "Layout name",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.slotsFull",
+    "value": "All {count} layout slots are in use. Replace one to save.",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.overwrite",
+    "value": "Replace the saved layout {name}?",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.saved",
+    "value": "Your layout is saved.",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.codeLabel",
+    "value": "Share code",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.copyCode",
+    "value": "Copy Code",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.pasteCode",
+    "value": "Paste a share code",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.importReview",
+    "value": "Review this shared layout before applying it.",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.displaced",
+    "value": "{item} will move to {destination}.",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.dyeShortfall",
+    "value": "You need {count} more {dye} for this layout.",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.layouts.applied",
+    "value": "Your layout is applied.",
+    "owner": "41a"
+  },
+  {
+    "key": "hudChrome.housing.denied.layoutCode",
+    "value": "This share code is not valid.",
+    "owner": "41a"
   },
   {
     "key": "hudChrome.housing.dyes.title",
-    "value": "Dye station"
+    "value": "Dye Station",
+    "owner": "41"
   },
   {
     "key": "hudChrome.housing.dyes.apply",
-    "value": "Apply dye"
+    "value": "Apply Dye",
+    "owner": "41"
   },
   {
     "key": "hudChrome.housing.dyes.review",
-    "value": "Review dye use"
+    "value": "Review Dye Use",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.dyes.loading",
+    "value": "Loading dyes...",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.dyes.channelPrimary",
+    "value": "Primary",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.dyes.channelAccent",
+    "value": "Accent",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.dyes.noDye",
+    "value": "No dye",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.dyes.unchanged",
+    "value": "No change. Nothing is used.",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.dyes.swatchAria",
+    "value": "{dye}: {count} in bags",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.dyes.reviewLine",
+    "value": "Use {count} {dye} on {furnishing}.",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.dyes.pending",
+    "value": "Applying dye...",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.dyes.stationTooltip",
+    "value": "Dyes are applied at this home's apothecary station while the home is at {threshold} condition or higher. Placing, moving and removing furnishings never need it.",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.denied.dyeStation",
+    "value": "Dyeing needs an apothecary station in this home.",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.denied.dyeRange",
+    "value": "Stand closer to the apothecary station to dye.",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.denied.dyeShortfall",
+    "value": "You do not have enough {dye}.",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.denied.dyeChannel",
+    "value": "This furnishing cannot be dyed.",
+    "owner": "41"
+  },
+  {
+    "key": "hudChrome.housing.deed.title",
+    "value": "Optional Freehold Deed",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.mint",
+    "value": "Mint Freehold Deed",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.homesTab",
+    "value": "Homes",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.list",
+    "value": "List This Home",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.cancelListing",
+    "value": "Cancel Listing",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.buy",
+    "value": "Buy This Home",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.confirmSale",
+    "value": "Confirm Sale",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.included",
+    "value": "These items transfer with the home: {count}",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.retained",
+    "value": "These items stay with you: {count}",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.minted",
+    "value": "Your Freehold Deed is minted.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.listed",
+    "value": "Your home is listed. Its contents are locked until the sale settles or you cancel.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.sold",
+    "value": "Your home is sold. Your Inn Room is ready.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.received",
+    "value": "Your new home is ready.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.noListings",
+    "value": "No homes are listed right now.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.stepUp",
+    "value": "Sign with your linked wallet to continue.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.flairAria",
+    "value": "Freehold Deed holder flair",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.denied.deedBuyerCapacity",
+    "value": "You do not have a free home slot for this purchase.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.description",
+    "value": "Create an optional record for this Freehold through the approved service. Your game access does not require this record.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.saleReview",
+    "value": "Review the home and furnishings included in this sale.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.includedHeading",
+    "value": "Included in the sale",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.retainedHeading",
+    "value": "Staying with you",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.custody",
+    "value": "Your personal trophy records and excluded belongings remain yours. The sale proceeds only when their safe storage is confirmed.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.custodyUnavailable",
+    "value": "Your excluded belongings need safe storage before this sale can proceed.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.conditionCredits",
+    "value": "The home's condition is recorded through the transfer time. Existing prepayment credits keep their original terms. Account return grace does not transfer.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.salePending",
+    "value": "This sale is being confirmed. Its request reference is saved.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.requestPending",
+    "value": "This request is being confirmed. Your request reference is saved.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.supportRecovery",
+    "value": "This request needs a support review. Your home records and belongings are preserved.",
+    "owner": "38"
+  },
+  {
+    "key": "hudChrome.housing.deed.noPricePromise",
+    "value": "A listing does not guarantee a buyer or a future price.",
+    "owner": "38"
   }
 ]

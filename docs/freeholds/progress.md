@@ -71,7 +71,7 @@ the chain. The current next implementation is
 | 23 QA | Not started | | | |
 | 24 Kitchen Garden tableau | Not started | | | |
 | 24 QA | Not started | | | |
-| 25 Build mode v2 | Not started | | | |
+| 25 Advanced placement and build mode | Not started | | | |
 | 25 QA | Not started | | | |
 | 25a Twelve-week prepay and the Fenbridge gate | Not started | | | |
 | 25a QA | Not started | | | |
@@ -85,7 +85,7 @@ the chain. The current next implementation is
 | 28a QA | Not started | | | |
 | 29 Guildhall purchase and upkeep | Not started | | | |
 | 29 QA | Not started | | | |
-| 30 Hall amenities | Not started | | | |
+| 30 Guild chest, feast table and shared stations | Not started | | | |
 | 30 QA | Not started | | | |
 | 30a Hall boards | Not started | | | |
 | 30a QA | Not started | | | |
@@ -115,30 +115,35 @@ the chain. The current next implementation is
 | 41 QA | Not started | | | |
 | 41a Layout saves and public sharing | Not started | | | |
 | 41a QA | Not started | | | |
-| 42 Second freehold SKU | Not started | | | |
+| 42 Second freehold admission and shared Hearth cooldown | Not started | | | |
 | 42 QA | Not started | | | |
 | 43 Existing-craft coverage and future expansion handoff | Not started | | | |
 | 43 QA | Not started | | | |
-| 44 Wave E integration close | Not started | | | |
+| 44 Wave E integration close before final artwork and legal handoff | Not started | | | |
 | 44 QA | Not started | | | |
 | 44a Final Codex artwork | Not started | | | |
 | 44a QA | Not started | | | |
-| 44b Final legal revisit and handoff | Not started | | | |
+| 44b Final Terms and legal-team handoff against completed implementation | Not started | | | |
 | 44b QA | Not started | | | |
 
 ## Per-phase deliverables and acceptance (the spec each phase file expands)
 
-These summaries preserve each implementation file's five-or-fewer coherent outputs.
-The linked implementation and QA carry the exact modules, tests, input/UX states and
-runtime acceptance; state.md owns decisions and numbers, and ux-spec owns presentation.
-This index does not add a sixth deliverable or silently substitute a summary for the
-full file. Every implementation must complete its entire scoped acceptance and shared
-gate; every QA applies all findings and has a fresh reviewer verify the fix round.
+These summaries preserve each implementation file's five-or-fewer coherent outputs: the
+numbered lines are the phase file's own deliverable titles (or its one-line deliverable
+sentences) in order (07, 07a, 07b, 07c, 08 and 08a keep one-line summaries of their
+paragraph-length items, one per output in the same position), and a note under a list
+names outputs a decision or review folded into an existing deliverable. The linked
+implementation and QA carry the exact modules, tests, input/UX states and runtime
+acceptance; state.md owns decisions and numbers, and ux-spec owns presentation. This index
+does not add a sixth deliverable or silently substitute a summary for the full file. Every
+implementation must complete its entire scoped acceptance and shared gate; every QA
+applies all findings and has a fresh reviewer verify the fix round.
 
 For each row, record actual commit range, commands/exit codes, executed and skipped
 checks, evidence paths and reviewer verdicts. Unsigned external artifacts retain their
-named release gate. A future measured/calibrated value requires the workbook's source,
-owner and approval evidence before activation, never an inferred TUNING literal.
+named release gate; a row carries named unsigned release gates, never a deferral record.
+A future measured/calibrated value requires the workbook's source, owner and approval
+evidence before activation, never an inferred TUNING literal.
 
 ### Wave A: Cottage MVP
 
@@ -148,10 +153,20 @@ Implementation: [phase-01-foundation.md](phase-01-foundation.md). Paired audit: 
 
 Deliverables (at most five):
 
-1. Housing facet, command registry and null mirrors.
-2. SimContext subsystem and extraction pins.
-3. Authenticated scaffold and dark dispatch.
-4. RL exclusion and parity evidence.
+1. The complete housing facet, command registry and null mirrors on both hosts.
+2. The SimContext-backed subsystem and its live-view/extraction pins.
+3. The authenticated status scaffold, both error catalogs, the freeholdsEnabled boot
+   config and dark command dispatch.
+4. The unchanged RL action-space exclusion and decisive parity/negative tests.
+
+Facet member list (the parity reference): data myFreehold and freeholdLayout (null until
+05 and 08a); method housingNowMs(); dark no-op methods freeholdEnter, freeholdLeave,
+placeFurnishing, moveFurnishing, removeFurnishing, undoPlacement, redoPlacement,
+payLedger, setVisitPolicy, setFreeholdBuildPresence. Later appends: 12 appends
+buildStation and myAmenities, 17 appends placeTrophy and clearPlinth, 18 appends
+freeholdVisitors, 21 appends contributeUpgrade and finishUpgrade, 30a appends
+guildHallBoards, 34 appends myWard and moveWard, 42 appends myFreeholds; every other later
+member is named in its own phase file with the parity pin updated in that same change.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -163,9 +178,12 @@ Implementation: [phase-02-furnishing-item-kind.md](phase-02-furnishing-item-kind
 
 Deliverables (at most five):
 
-1. Narrow furnishing type and complete consumer census.
-2. Kind labels, market filter and All-only ordinary bags.
-3. Tooltip core and decisive English-key fixtures.
+1. Narrow furnishing type plus complete refusal/storability/economy consumer census.
+2. Kind presentation, the market filter, All-only ordinary bags and the icon fallback.
+3. The registered tooltip core, English housing keys and decisive consumer fixtures.
+
+Regenerates ux-key-manifest.json (4 keys owned) in this phase with every cited count
+updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -177,11 +195,13 @@ Implementation: [phase-03-content-tiers-and-basics.md](phase-03-content-tiers-an
 
 Deliverables (at most five):
 
-1. Frozen tiers and price-free Charter allowlist.
-2. Realm-week schedule and numeric-source worksheet.
-3. Eight vendor outputs with all same-change content obligations.
-4. Homesteader opener and complete new Hearth shelf.
-5. Literal source/firewall/economy evidence.
+1. Deep-frozen Inn Room/Cottage tiers and the price-free Charter allowlist.
+2. The versioned realm-week eligible-ID schedule and exact calibration worksheet rows.
+3. Exactly eight vendor furnishings and the furnisher, with all same-change content art,
+   naming, wiki, provenance and originality obligations per shipped ID.
+4. The Homesteader opener and the NEW Hearth shelf across its complete consumer census.
+5. Literal content/firewall/economy/source-freeze tests and the approved manifest
+   evidence.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -193,10 +213,11 @@ Implementation: [phase-04-content-crafted-and-patterns.md](phase-04-content-craf
 
 Deliverables (at most five):
 
-1. Ten craft outputs and approved recipes.
-2. Three Marks-only patterns within those outputs.
-3. All icon/name/originality/Hearth/wiki obligations.
-4. Acquisition/channel/economy/firewall evidence.
+1. Exactly ten crafted furnishing outputs, one per existing craft, with approved recipe
+   and station/acquisition rows from content-manifest.md.
+2. Exactly three pattern items within those ten outputs and deterministic Marks stock.
+3. All same-change icon/provenance/name/originality/Hearth-page/wiki obligations.
+4. Literal recipe/channel/economy/firewall and acquisition behavior evidence.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -208,10 +229,11 @@ Implementation: [phase-05-instance-claim.md](phase-05-instance-claim.md). Paired
 
 Deliverables (at most five):
 
-1. Owner-claim dungeon records and exclusions.
-2. Deterministic host-stamped claim/reap behavior.
-3. Dark dispatch, jailed refusal and account-session sharing.
-4. Safe arrival identity and parity evidence.
+1. The two owner-claim DungeonDefs and all content/finder/reset/parity exclusions.
+2. Host-stamped owner resolution, every account's default tier-0 Inn Room record, the D24
+   dev grant fixture and deterministic claim/leave/reap behavior.
+3. Thin flag-gated server dispatch, jailed refusal and same-account session sharing.
+4. The authoritative arrival identity/pose and decisive offline/online parity tests.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -223,11 +245,15 @@ Implementation: [phase-06-interiors-gate-and-hearth-key.md](phase-06-interiors-g
 
 Deliverables (at most five):
 
-1. Measured layouts, collision/lift and safe poses.
-2. Explicit gate interaction and owned Hearth Key.
-3. Prepared shared-family interior dressing.
-4. Plant-sheet gate prompt, feedback and content obligations.
-5. Offline/online/input and visual proof.
+1. The measured Inn/Cottage layouts, collision/lift derivations and safe entry/exit poses.
+2. Explicit Eastbrook gate interaction and the owned Hearth Key, with all authority gates.
+3. Shared-grammar interior shells and scheduler-prepared dressing on both room families.
+4. The gate prompt, its semantic map marker, keyed refusal feedback and all
+   item/entity/i18n/content obligations.
+5. Decisive offline/online tests and the desktop/compact/tablet visual evidence.
+
+Regenerates ux-key-manifest.json (38 keys owned) in this phase with every cited count
+updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -244,6 +270,11 @@ Deliverables (at most five):
 3. Single-flight load and coalesced admitted save.
 4. Lifecycle, recovery, export/delete and observability.
 5. Housing-only developer bridge, ordinary Inn and dev-command proof.
+
+Deliverable 5 delivers the housing-only developer authorization bridge behind both
+permissions for the PRIOR 05 setter, default Inn Room record and dev grant fixture (D81):
+no second default or tier writer, ordinary Inn preserved, nothing persists when
+authorization fails.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -335,11 +366,14 @@ Implementation: [phase-09-render-furnishings.md](phase-09-render-furnishings.md)
 
 Deliverables (at most five):
 
-1. Identity-aware pure visual core and view.
-2. Prepared model registry and generic trophy interface.
-3. Hearth/daylight grade under the global light budget.
-4. Shape-readable tier-invariant ghost.
-5. Safe first-arrival camera/audio/input and visual proof.
+1. Identity-aware pure layout/diff core and scheduler-client furnishing view.
+2. One model registry with prepared family stand-ins and safe future trophy forms.
+3. The hearth/room condition and realm-daylight grade within the global light budget.
+4. The shape-readable, tier-invariant placement ghost and its pure core/setter.
+5. The safe first-arrival camera/sampled feedback composition and its tests/screenshots.
+
+Regenerates ux-key-manifest.json (10 keys owned) and ux-shot-manifest.json (the registry
+reaches 12 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -351,11 +385,12 @@ Implementation: [phase-10-furnishing-colliders.md](phase-10-furnishing-colliders
 
 Deliverables (at most five):
 
-1. Runtime collider sibling and rift aliases.
-2. Per-claim server collision identity.
-3. Client identity/generation lifecycle.
-4. Bounded movement/sight/pathing integration.
-5. Two-host/rift/adjacent-claim proof.
+1. The settled runtime_collider_regions.ts sibling and unchanged-behavior rift aliases.
+2. Server per-claim collision identity and pure descriptor-to-collider publication.
+3. Client descriptor generation/identity lifecycle and matching local collision region.
+4. O(1) host-token reader (per-claim ownership stamps) for movement, sight and pathing, no
+   per-tick republish.
+5. Rift equivalence, adjacent-claim, two-host and stale-generation lifecycle evidence.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -367,11 +402,19 @@ Implementation: [phase-11-build-mode-ui.md](phase-11-build-mode-ui.md). Paired a
 
 Deliverables (at most five):
 
-1. Build session and detached bounded camera.
-2. Companion palette, placed-object selection and budget meters.
-3. Shared pointer/touch/pad arbitration and action strip.
-4. Shared theme, focus and accessibility.
-5. Real-HUD capture helper and command/input evidence.
+1. Build-session controller and camera.
+2. World-companion palette and meters.
+3. Shared input and action strip.
+4. Shared presentation and accessibility.
+5. Build-session proof and capture helper.
+
+Deliverable 2 also produces src/ui/hud/housing/capacity_meter_view.ts and its test;
+deliverable 3 registers the five keybinds toggleBuildMode, rotateFurnishingLeft,
+rotateFurnishingRight, undoPlacement and redoPlacement; the Replace trophy and Clear
+plinth affordances ship disabled for 17's record-only chooser.
+
+Regenerates ux-key-manifest.json (81 keys owned) and ux-shot-manifest.json (the registry
+reaches 89 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -383,11 +426,14 @@ Implementation: [phase-12-strongbox-and-station.md](phase-12-strongbox-and-stati
 
 Deliverables (at most five):
 
-1. Personal-bank-only built-in Strongbox.
-2. Station slot and craft projection.
-3. Explicit authorized personal-vault crafting.
-4. Shared interaction and wire lifecycle.
-5. Owner/visitor/proximity/condition boundary proof.
+1. Built-in Strongbox access.
+2. Station slot and crafting projection.
+3. Explicit personal vault crafting arm.
+4. Thin interaction and wire integration.
+5. Boundary proof.
+
+Regenerates ux-key-manifest.json (7 keys owned) in this phase with every cited count
+updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -399,11 +445,18 @@ Implementation: [phase-13-condition-and-ledger-core.md](phase-13-condition-and-l
 
 Deliverables (at most five):
 
-1. Absence/grace/outage-aware condition.
-2. Published realm-week schedule and source planner.
+1. Pure condition and protection state.
+2. Published Ledger schedule and source planner.
 3. Atomic material payment and immutable prepay.
-4. Correlated calendar/wire/persistence state.
-5. Boundary/restart/PG evidence and the future upkeep-calendar DB contract.
+4. Command and owner wire projection.
+5. Decisive pure and atomic proof.
+
+Named outputs: NEW freehold_ledgers (the keep-forever paid-bill relation in
+server/freehold_db.ts), src/sim/realm_week.ts (the calendar leaf extracted from
+masterwrought_materials.ts), ledgerWeekOf, LEDGER_PREPAY_MAX_WEEKS = 4,
+src/sim/freehold/ledger.ts (the pay_ledger body); 5 commits. Deliverable 5 runs
+tests/server/freehold_ledger.pg.test.ts PG-armed with the composed daily-plus-Tuesday
+restart fixture.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -415,11 +468,11 @@ Implementation: [phase-13a-authoritative-upkeep-calendar.md](phase-13a-authorita
 
 Deliverables (at most five):
 
-1. Shared durable calendar history and finalized bounded projection.
-2. Private pre-body and DB-admitted authority ingress.
-3. Monotonic process-generation publication and exact ACK.
-4. Legacy binding/lifecycle/rollout preservation.
-5. Integrated PG/security/performance acceptance artifact.
+1. Durable shared authority and bounded historical projection.
+2. Private bounded authority ingress.
+3. Monotonic host publication and exact acknowledgments.
+4. Migration, account lifecycle and rollout preservation.
+5. Integrated evidence and release artifact.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -431,11 +484,18 @@ Implementation: [phase-14-distribution-surface-map.md](phase-14-distribution-sur
 
 Deliverables (at most five):
 
-1. Independent distribution capabilities.
-2. Complete composition/source boundaries.
-3. Seven distributions and unknown fail-closed proof.
-4. Approved keyed language and handoff artifacts.
-5. Accessibility and regression evidence.
+1. Independent surface capabilities.
+2. Composition and source boundaries.
+3. Seven-distribution matrix and absence proof.
+4. Exact language and approval artifacts.
+5. Regression and accessibility proof.
+
+Exactly two HudFeatures rows, freeholdPurchaseEnabled and freeholdManageOnWebsite (D91);
+the map's housing fields are freeholdPurchase, freeholdManageOnWebsite and deedSurfaces
+(deedSurfaces consumed by 38); management default off on every row.
+
+Regenerates ux-key-manifest.json (2 keys owned) in this phase with every cited count
+updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -447,11 +507,18 @@ Implementation: [phase-15-claudium-charter-and-call.md](phase-15-claudium-charte
 
 Deliverables (at most five):
 
-1. Extend the shared durable operation boundary.
-2. Confirmed Charter and Call effects.
-3. Service spend and original-identity reconciliation.
-4. Accepted opaque authorization/catalog/growth contract.
-5. Service ambiguity/crash/race proof.
+1. Extend the existing durable housing operation boundary.
+2. Confirmed grant core.
+3. Spend/reconcile integration.
+4. Service contract handoff and growth rails.
+5. Crash/race proof.
+
+Named outputs: two RouteDef rows on server/freehold_routes.ts (POST /api/freehold/quote
+with a typed body, GET /api/freehold/operation/:operationId) handled by NEW
+server/freehold_purchases.ts, the checkoutAuthorization reference on the 07a operation
+rows (D88 deletion policy inherited), SKU id freehold_master_builders_call, keys
+charter.feeDetails, charter.quoteExpiry and charter.terms (D92),
+src/sim/freehold/grant.ts.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -463,11 +530,17 @@ Implementation: [phase-16-steward-panel-and-store-surfaces.md](phase-16-steward-
 
 Deliverables (at most five):
 
-1. Authoritative source-specific Steward view.
-2. Focused correlated decision window.
-3. Complete approved Charter/Call submodels.
+1. Authoritative Steward view.
+2. Focused decision window.
+3. Approved Charter and Call submodels.
 4. Shared design and mobile behavior.
-5. Exact Steward/store screenshots and command proof.
+5. Steward/store proof and screenshots.
+
+Deliverable 3 renders 15's charter.feeDetails, charter.quoteExpiry and charter.terms rows
+(the fee, tax and Purchase Terms lines, D92); window id steward-window.
+
+Regenerates ux-key-manifest.json (74 keys owned) and ux-shot-manifest.json (the registry
+reaches 178 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -480,10 +553,19 @@ Implementation: [phase-17-trophies.md](phase-17-trophies.md). Paired audit: [pha
 Deliverables (at most five):
 
 1. Source-complete trophy catalog.
-2. Account-wide live/retro eligibility and truthful provenance.
-3. Record-only plinth and public projection.
-4. Collection/tooltip selection and focus UX.
-5. Account/source/PG/screenshot evidence.
+2. Shared account sources, eligibility and truthful provenance.
+3. Record-only plinth placement and public projection.
+4. Trophy case and tooltip.
+5. Trophy proof and captures.
+
+Deliverable 3 places through the NEW IWorldHousing members placeTrophy(plinthKey,
+trophyId) and clearPlinth(plinthKey) (commands place_trophy and clear_plinth); deliverable
+4 ships the trophy case window (id trophy-case-window), the tooltip and the Trophies tab
+selection/focus UX, and wires the Replace trophy/Clear plinth affordances 11 shipped
+disabled.
+
+Regenerates ux-key-manifest.json (50 keys owned) and ux-shot-manifest.json (the registry
+reaches 226 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -495,11 +577,19 @@ Implementation: [phase-18-visiting.md](phase-18-visiting.md). Paired audit: [pha
 
 Deliverables (at most five):
 
-1. Admission, revocation and explicit End visit.
-2. Bounded offline-owner lookup and global authority.
-3. Policy/operation/wire lifecycle.
-4. Find home/Enter and guest read-only experience.
-5. Real two-client/PG/privacy/input proof.
+1. Admission and live policy.
+2. Offline-owner authority and bounded lookup.
+3. Policy/event/wire lifecycle.
+4. Gate/guest experience.
+5. Authority/UI proof.
+
+Deliverable 1 admits on the named owner character's outgoing friend list, refuses when a
+block row exists on either side, and busts the projection through the
+friendAdd/friendRemove/blockAdd mutation-site hook that triggers the D51 ejection recheck
+(D76).
+
+Regenerates ux-key-manifest.json (33 keys owned) and ux-shot-manifest.json (the registry
+reaches 330 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -511,11 +601,11 @@ Implementation: [phase-19-art-batch.md](phase-19-art-batch.md). Paired audit: [p
 
 Deliverables (at most five):
 
-1. Final vendor asset family.
-2. Final crafted asset family.
-3. Source-complete trophy asset family.
-4. Final Inn/Cottage dressing.
-5. Registry/prewarm/performance and visual evidence.
+1. Codex vendor asset family.
+2. Codex crafted asset family.
+3. Codex source-complete trophy family.
+4. Codex Inn Room/Cottage dressing.
+5. Registry/prewarm and evidence.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -527,11 +617,16 @@ Implementation: [phase-20-wave-a-close.md](phase-20-wave-a-close.md). Paired aud
 
 Deliverables (at most five):
 
-1. Whole Wave A readiness matrix including all five suffixes.
-2. Exact screenshot and composed-input matrix.
-3. Signed handoffs and measured calibration report.
-4. Durable budget review and authorized release preparation.
-5. Fresh coverage/fix review and recorded handoff.
+1. Complete Wave A readiness matrix.
+2. Exact visual and input matrix.
+3. Production handoffs and four-week measurement artifact.
+4. Durable budget review and release preparation.
+5. Fresh review and recorded next handoff.
+
+Deliverable 3 creates docs/freeholds/ledger-calibration-report.md and deliverable 4
+docs/freeholds/housing-budget-review.md (both NEW FUTURE; later closes extend them).
+Deliverable 5 STOPS and asks for the push go and ends at "pushed, green, ready for review"
+or "matrix green, awaiting push go" (D87).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -545,11 +640,18 @@ Implementation: [phase-21-lodge-tier-and-upgrade.md](phase-21-lodge-tier-and-upg
 
 Deliverables (at most five):
 
-1. Lodge tier/layout/final art.
-2. Approved bill and service fee contract.
-3. Atomic upgrade and exact-copy carry-over.
-4. Durable receipts and public progress.
-5. Steward preview/custody/parity proof.
+1. Lodge tier, measured layout and final content/art obligations.
+2. Approved upgrade bill and versioned service fee contract.
+3. Atomic upgrade/contribution/completion and exact-copy carry-over.
+4. Durable receipt/persistence and public progress projection.
+5. Steward preview/progress UX and custody/parity evidence.
+
+Deliverable 5 covers the Steward Upgrade tab with its keyed states and the six
+steward-upgrade-* captures; the contribute command takes an explicit source mode and a
+finish re-attempt arm per D89.
+
+Regenerates ux-key-manifest.json (14 keys owned) and ux-shot-manifest.json (the registry
+reaches 348 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -561,10 +663,15 @@ Implementation: [phase-22-furnishings-all-crafts.md](phase-22-furnishings-all-cr
 
 Deliverables (at most five):
 
-1. Exactly twenty further outputs including produce decoration.
-2. Named raid or rift source plus Marks per rare pattern.
-3. Final art and all content obligations.
-4. Complete catalog/market/performance evidence.
+1. Exact twenty-output furnishing/craft roster and recipes, with produce decoration inside
+   it.
+2. Every rare pattern has one named raid or rift source plus Marks.
+3. Final art, source/name checks and all same-change content obligations.
+4. Full thirty-eight-output market/content/performance evidence.
+
+Content plus exactly two appended luck-channel draws in sim logic (the nythraxis_housing
+tail group and the rift Draw 8), reviewed by architecture-reviewer and
+cross-platform-sync.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -576,11 +683,17 @@ Implementation: [phase-23-legend-stand-and-trophy-families.md](phase-23-legend-s
 
 Deliverables (at most five):
 
-1. Bespoke forms replacing generic Wave A trophies.
-2. Legend Stand and actual-item displays.
-3. Mount/title/farming/profession forms.
-4. Truthful source/day/difficulty and final finishes.
-5. Account sync/custody/visual evidence.
+1. Bespoke models replacing every wave A generic trophy display.
+2. Legend Stand and actual-item weapon/armor displays.
+3. Cosmetic mounts, title banners and farming/profession displays.
+4. Truthful source/difficulty/date projection and final finish art.
+5. Account-wide live/retro sync and custody/visual evidence.
+
+Deliverable 5 carries the plaque, finish and inactive picks on the descriptor with the
+old-client default, owned by a WIRE slice.
+
+Regenerates ux-key-manifest.json (19 keys owned) and ux-shot-manifest.json (the registry
+reaches 357 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -592,27 +705,36 @@ Implementation: [phase-24-kitchen-garden-tableau.md](phase-24-kitchen-garden-tab
 
 Deliverables (at most five):
 
-1. Bounded shared account-owner farm source and freshness.
-2. Safe public owner-garden projection.
-3. Current-character Harvest Journal and flavor NPC.
-4. Final measured tableau and props.
-5. Zero-bed/source/privacy/fairness/input proof.
+1. Bounded shared account-owner farm source with explicit freshness.
+2. Single safe public owner-garden projection with private fields excluded.
+3. Current-character owner-only Harvest Journal board and flavor NPC.
+4. Final measured garden tableau and prop art.
+5. Zero-bed, source-authority, privacy, fairness and interaction evidence, with the
+   registered garden screenshot target and regenerated key/shot manifests (D92).
+
+Regenerates ux-key-manifest.json (17 keys owned) and ux-shot-manifest.json (the registry
+reaches 399 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
 After phase-24-qa.md: [phase-25-build-mode-v2.md](phase-25-build-mode-v2.md).
 
-#### 25 Build mode v2
+#### 25 Advanced placement and build mode
 
 Implementation: [phase-25-build-mode-v2.md](phase-25-build-mode-v2.md). Paired audit: [phase-25-qa.md](phase-25-qa.md).
 
 Deliverables (at most five):
 
-1. Typed floor/wall/table/fixed-ceiling support.
-2. Atomic parent/child transforms and compatible storage.
-3. Free planar/yaw plus retained snapped mode.
-4. Extend session history, ghost and surface capacity.
-5. Validator/persistence/collision/input proof.
+1. Typed floor, wall, table and fixed ceiling placement from measured authored anchors.
+2. Atomic parent/child transforms and strict persisted/public descriptor compatibility.
+3. Free planar translation/free yaw plus the retained fifteen-degree snapped mode.
+4. Extend the existing session undo/redo, ghost and surface-capacity UX for every input.
+5. Shared validator, persistence, collision and screenshot evidence for every new arm.
+
+Deliverable 4 includes the build.snap mode toggle and the touch free-yaw handle.
+
+Regenerates ux-key-manifest.json (5 keys owned) and ux-shot-manifest.json (the registry
+reaches 437 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -624,10 +746,15 @@ Implementation: [phase-25a-prepay-and-fenbridge-gate.md](phase-25a-prepay-and-fe
 
 Deliverables (at most five):
 
-1. Twelve-week immutable material prepay.
-2. Steward batch/source and atomic receipt evidence.
-3. Measured Fenbridge gate and return routing.
-4. Final gate art/content/input proof.
+1. Twelve-week material prepay on the existing immutable published weekly schedule.
+2. Steward batch preview/source choice and atomic receipt/persistence evidence.
+3. Measured Fenbridge gate using the existing own-home/friend prompt and return routing.
+4. Final gate art, content obligations and desktop/touch/gamepad round-trip evidence.
+
+Twelve-week activation gates: the signed CAL-LEDGER-A and the 13a calendar-authority
+acceptance (named unsigned release gates until on file). 25a proves twelve weeks through
+ledger_core's injected cap; the shipped LEDGER_PREPAY_MAX_WEEKS default is raised to 12
+only with the signed CAL-LEDGER-A version and the 13a acceptance recorded in state.md.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -639,11 +766,17 @@ Implementation: [phase-26-open-house-visiting.md](phase-26-open-house-visiting.m
 
 Deliverables (at most five):
 
-1. Guild/public policies and admission caps.
-2. Bounded current-permission on-open list.
-3. Offline-owner authoritative visit lifecycle.
-4. Knock limits, End visit and revocation.
-5. Shared visitor/Steward and multi-client proof.
+1. Guild/public policy and visitor-cap matrix.
+2. Bounded permission-filtered on-open list.
+3. Current-authority admission and offline-owner visit lifecycle.
+4. Rate-limited knock and End visit/revocation behavior.
+5. Shared visit/Steward UX and multi-client evidence.
+
+Deliverable 4 uses account+plot knock and public-entry buckets and refuses at admission
+when a block row exists on either side (D76).
+
+Regenerates ux-key-manifest.json (15 keys owned) and ux-shot-manifest.json (the registry
+reaches 455 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -655,11 +788,11 @@ Implementation: [phase-27-wave-b-close.md](phase-27-wave-b-close.md). Paired aud
 
 Deliverables (at most five):
 
-1. Whole Wave B matrix including 25a.
-2. Required screenshots.
-3. Wiki and signed-artifact readiness.
-4. Reviewed fixes and fresh verification.
-5. Reviewable release package with separately authorized publication.
+1. Whole-wave B integration matrix including 25a and its QA.
+2. Before/after desktop, compact and tablet screenshots.
+3. Fresh wiki and signed-artifact release readiness record.
+4. Scoped reviewed matrix fixes and fresh verification of their complete fix round.
+5. Reviewable PR package with separately authorized push and green current-head CI.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -673,11 +806,17 @@ Implementation: [phase-28-guild-owner-kind-and-hall-fund.md](phase-28-guild-owne
 
 Deliverables (at most five):
 
-1. Stable guild plot and claim identity.
-2. Rank and assigned member-plinth permissions.
-3. Meeting Hall layout and final art.
-4. Service-currency mirror and material/gold Hall Fund.
-5. Atomic bounded hydration/persistence/parity proof.
+1. Stable guild plot/claim ownership identity.
+2. Rank, amenity and member-owned assigned trophy-plinth permissions.
+3. Meeting Hall content/layout and final art.
+4. Service-currency mirror and material/gold Hall Fund state.
+5. Atomic bounded persistence/lazy hydration and cross-host evidence.
+
+Deliverable 2 carries the D77 guild visit policy: current members always admitted; guild,
+public or private only; public admission capped by the tier column.
+
+Regenerates ux-key-manifest.json (9 keys owned) in this phase with every cited count
+updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -689,11 +828,11 @@ Implementation: [phase-28a-guild-lifecycle-and-membership.md](phase-28a-guild-li
 
 Deliverables (at most five):
 
-1. Guild-keyed lifecycle head and immutable protection history.
-2. Committed membership-incarnation and revocation evidence.
-3. Bounded admitted observations and monotonic installation.
-4. Original guild binding, shared calendar and safe disband.
-5. Real-Postgres authority, locks, retention and load proof.
+1. Guild-keyed lifecycle head and immutable protection history under 07b's owner.
+2. Committed membership-incarnation evidence and revocation-boundary capture.
+3. Bounded admitted guild observation, coalescing and nonregressing installation.
+4. Original guild binding, shared-calendar projection and the D79 tombstone disposition.
+5. Real-Postgres authority, history, lock, retention and load proof.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -705,26 +844,39 @@ Implementation: [phase-29-guildhall-purchase-and-upkeep.md](phase-29-guildhall-p
 
 Deliverables (at most five):
 
-1. Service-owned pooled purchase and recovery.
-2. Atomic capped contributions across alts.
-3. Guild condition and immutable Hall Ledger.
-4. Indexed donor audit/export/delete/retention.
-5. Member/officer authority and Steward proof.
+1. Service-owned pooled purchase and durable recovery.
+2. Atomic capped material/gold/currency contributions.
+3. Guild condition and immutable Hall Ledger settlement.
+4. Indexed retained donor audit, export/delete and recovery proof.
+5. Member/officer Steward/store UX and authority evidence.
+
+Deliverable 2 keys the weekly cap on ledgerWeekOf (D84) and adds the officer-plus
+withdraw-to-guild-bank verb on the 07a rail (D78).
+
+Regenerates ux-key-manifest.json (29 keys owned) in this phase with every cited count
+updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
 After phase-29-qa.md: [phase-30-hall-amenities.md](phase-30-hall-amenities.md).
 
-#### 30 Hall amenities
+#### 30 Guild chest, feast table and shared stations
 
 Implementation: [phase-30-hall-amenities.md](phase-30-hall-amenities.md). Paired audit: [phase-30-qa.md](phase-30-qa.md).
 
 Deliverables (at most five):
 
-1. Guild-bank-only chest.
-2. Existing feast with unchanged Well Fed.
-3. Members craft from their own authorized vault.
-4. Final amenity art and service-boundary proof.
+1. Guild-bank-only chest with service-specific authorization and condition/proximity
+   gates.
+2. Existing feast object at the authored long table with unchanged Well Fed behavior.
+3. Hall-member station predicate and crafting from each member's own Materials Vault.
+4. Final amenity art/anchors and shared HUD interaction/permission evidence.
+
+Deliverable 2 is the existing feast object at the authored long table (party feast through
+place_feast, apex feasts through use) with unchanged Well Fed behavior.
+
+Regenerates ux-key-manifest.json (3 keys owned) and ux-shot-manifest.json (the registry
+reaches 493 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -736,11 +888,14 @@ Implementation: [phase-30a-hall-boards.md](phase-30a-hall-boards.md). Paired aud
 
 Deliverables (at most five):
 
-1. Muster roster board.
-2. Guild event calendar board.
-3. Member-readable pledge board.
-4. Authorized lockout and recorded-first-kill war table.
-5. Final board art/privacy/input evidence.
+1. Muster board opening the current authorized guild roster.
+2. Calendar board opening the existing guild event calendar.
+3. Pledge board opening the existing member-readable pledge projection.
+4. War table showing authorized raid lockouts and the recorded-first-kill section.
+5. Final board art, measured anchors, shared UI states and privacy/interaction evidence.
+
+Regenerates ux-key-manifest.json (8 keys owned) and ux-shot-manifest.json (the registry
+reaches 511 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -752,11 +907,18 @@ Implementation: [phase-31-guild-deeds-and-first-kill-trophies.md](phase-31-guild
 
 Deliverables (at most five):
 
-1. Guild-at-clear participant observation.
-2. Append-only deed/source proof.
-3. Bounded durable first-clear deduplication.
-4. Final guild trophies and member-plinth custody.
-5. War-table live/retro/multi-guild proof.
+1. Bounded source-life and authenticated-character admission with complete activation
+   coverage.
+2. Immutable guild-at-clear capture and original-carrier save-snapshot bridge.
+3. Durable first-source proof and bounded committed-outcome persistence/projection.
+4. Append-only guild deed content and final shared trophy forms with truthful provenance.
+5. War table first-kill UI and complete source, custody, privacy and concurrency evidence.
+
+Deliverable 5's War table first-kill UI rides 30a's bounded sibling read with no facet
+member (D82); capacity exhaustion never refuses join, dungeon entry or respawn (D83).
+
+Regenerates ux-key-manifest.json (1 key owned) and ux-shot-manifest.json (the registry
+reaches 517 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -768,11 +930,11 @@ Implementation: [phase-32-hall-and-manor-tiers.md](phase-32-hall-and-manor-tiers
 
 Deliverables (at most five):
 
-1. Three tier/layout records.
-2. Approved project bills and service fees.
-3. Atomic completion and exact-copy carry-over.
-4. Final interiors and project progress.
-5. Money/persistence/custody/parity proof.
+1. Three tier records and measured layouts as one ladder batch.
+2. Exact approved project bills plus versioned service fee rows.
+3. Atomic shared project/contribution/completion and exact-copy carry-over.
+4. Final three-interior dressing with the shared project progress UI.
+5. Durable server/persistence, cross-host, money-gate and custody evidence.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -784,10 +946,11 @@ Implementation: [phase-32a-project-rewards-and-vault.md](phase-32a-project-rewar
 
 Deliverables (at most five):
 
-1. Durable project-completion trophies.
-2. Cosmetic furnishing vendor unlocks.
-3. Service-specific Manor/Bastion direct vault access.
-4. Final art/content/unlock/custody proof.
+1. Project-completion trophies from durable completed-project proof.
+2. Completion-unlocked guild cosmetic furnishing vendor stock with an exact manifest.
+3. Manor direct Materials Vault chest with service-specific authorization (D47: Manor
+   only).
+4. Final art, shared interaction UX and complete unlock/custody/content evidence.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -799,11 +962,12 @@ Implementation: [phase-33-wave-c-close.md](phase-33-wave-c-close.md). Paired aud
 
 Deliverables (at most five):
 
-1. Whole Wave C matrix including 28a, 30a and 32a.
-2. Required screenshots.
-3. Wiki and accepted artifact inventory.
-4. Reviewed fixes and fresh verification.
-5. Reviewable release package with separately authorized publication.
+1. Whole-wave C integration matrix including 28a/30a/32a and their QA.
+2. Before/after desktop, compact and tablet screenshots.
+3. Fresh wiki and handoff-ready content/service/legal release artifact inventory
+   (acceptance status recorded per artifact).
+4. Scoped reviewed matrix fixes and a fresh review of their complete fix round.
+5. Reviewable PR package with separately authorized push and green current-head CI.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -817,11 +981,14 @@ Implementation: [phase-34-wards.md](phase-34-wards.md). Paired audit: [phase-34-
 
 Deliverables (at most five):
 
-1. Measured ward geometry and public descriptor.
-2. Race-safe bounded membership allocation.
-3. Admitted-occupant capacity and door/wire authority.
-4. Final exterior/marker art and shared UI.
-5. Real-PG capacity/lock and low-tier evidence.
+1. Ward geometry and descriptor.
+2. Race-safe membership.
+3. Admission, doors and wire.
+4. Exterior art and UX.
+5. Proof.
+
+Regenerates ux-key-manifest.json (17 keys owned) and ux-shot-manifest.json (the registry
+reaches 535 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -833,11 +1000,14 @@ Implementation: [phase-35-ward-favor-and-endeavors.md](phase-35-ward-favor-and-e
 
 Deliverables (at most five):
 
-1. Permanent capacity and independent monthly content.
-2. Identified bounded progress/contribution rules.
-3. Durable completion and member awards.
-4. Shared public progress and cosmetic rewards.
-5. Boundary/replay/retention/content evidence.
+1. Permanent capacity and calendar.
+2. Authored Endeavor content.
+3. Durable progress and awards.
+4. Ward panel and wire.
+5. Proof.
+
+Regenerates ux-key-manifest.json (14 keys owned) and ux-shot-manifest.json (the registry
+reaches 553 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -849,11 +1019,14 @@ Implementation: [phase-36-showcases-and-guest-books.md](phase-36-showcases-and-g
 
 Deliverables (at most five):
 
-1. Realm Showcase eligibility and vote identity.
-2. Durable season close and bounded rewards.
-3. Serialized capped guest reactions.
-4. Private-safe projection and shared UI.
-5. Real-PG concurrency/retention/moderation proof.
+1. Showcase persistence and close.
+2. Guest book persistence.
+3. Routes, privacy and growth.
+4. Social windows and reward presentation.
+5. Proof.
+
+Regenerates ux-key-manifest.json (19 keys owned) and ux-shot-manifest.json (the registry
+reaches 595 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -865,11 +1038,14 @@ Implementation: [phase-37-charter-service-contract.md](phase-37-charter-service-
 
 Deliverables (at most five):
 
-1. Signed service/counsel/territory contract readiness.
-2. Durable asset/operation/recovery records.
-3. Typed proxy and trusted service verification.
-4. Per-asset authority and no-lapse-loss policy.
-5. Bounded service/PG/geo/refusal proof.
+1. Service and authority artifact.
+2. Typed proxy and fail-closed policy.
+3. Durable claim/custody storage.
+4. Registry routes and tests.
+5. Runtime and handoff proof.
+
+Regenerates ux-key-manifest.json (3 keys owned) in this phase with every cited count
+updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -881,11 +1057,14 @@ Implementation: [phase-38-charter-mint-and-trading.md](phase-38-charter-mint-and
 
 Deliverables (at most five):
 
-1. Immutable furnished-sale and safe-custody manifest.
-2. Prepare/freeze/quote/settle/cancel/recovery flow.
-3. Atomic server entitlement and exact-copy transfer.
-4. Approved web-only mint/trade/flair UI.
-5. Receipt/race/privacy/render and denial proof.
+1. Distribution and mint card.
+2. Prepare, custody and listing.
+3. Atomic settlement and recovery.
+4. Cosmetic flair and public presentation.
+5. Proof.
+
+Regenerates ux-key-manifest.json (28 keys owned) and ux-shot-manifest.json (the registry
+reaches 639 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -897,11 +1076,11 @@ Implementation: [phase-39-wave-d-close.md](phase-39-wave-d-close.md). Paired aud
 
 Deliverables (at most five):
 
-1. Whole Wave D validation.
-2. Final UX/input evidence.
+1. Scoped/whole-feature validation evidence required by the wave.
+2. Final UX screenshots and interaction evidence.
 3. Wiki and content freshness.
-4. Fresh reviews and signed-artifact inventory.
-5. Local release documentation and separately authorized publication.
+4. Fresh coverage/fix review and signed-artifact gate inventory.
+5. Local reviewable release documentation and any separately authorized publication.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -915,11 +1094,14 @@ Implementation: [phase-40-keep-and-citadel-tiers.md](phase-40-keep-and-citadel-t
 
 Deliverables (at most five):
 
-1. Final personal/guild top-tier layouts.
-2. Exact existing account/guild prestige predicates.
-3. Approved bills and atomic custody.
-4. Final courtyard/tower art and shared upgrade UI.
-5. Money/authority/persistence/LOW evidence.
+1. Content/layout family.
+2. Prestige predicate.
+3. Final art family.
+4. Atomic upgrade/project settlement.
+5. Steward requirements and proof.
+
+Regenerates ux-key-manifest.json (12 keys owned) and ux-shot-manifest.json (the registry
+reaches 654 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -931,10 +1113,13 @@ Implementation: [phase-41-dye-station-and-layout-sharing.md](phase-41-dye-statio
 
 Deliverables (at most five):
 
-1. Approved dye palette and recipes.
-2. Condition/proximity-aware dye station.
-3. Exact-copy tint/material handling.
-4. Wire/custody/final-art/input proof.
+1. Station and tint descriptor.
+2. Eight-dye content family.
+3. Material and picker presentation.
+4. Wire, persistence and proof.
+
+Regenerates ux-key-manifest.json (16 keys owned) and ux-shot-manifest.json (the registry
+reaches 672 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -946,25 +1131,31 @@ Implementation: [phase-41a-layout-save-and-sharing.md](phase-41a-layout-save-and
 
 Deliverables (at most five):
 
-1. Bounded private saved layouts.
-2. Public versioned share codec.
-3. Preview and atomic use of existing item copies.
-4. Input/privacy/custody/persistence proof.
+1. Public codec.
+2. Bounded saved layouts.
+3. Atomic plan application.
+4. Layout tab and proof.
+
+Regenerates ux-key-manifest.json (19 keys owned) and ux-shot-manifest.json (the registry
+reaches 696 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
 After phase-41a-qa.md: [phase-42-second-freehold-sku.md](phase-42-second-freehold-sku.md).
 
-#### 42 Second freehold SKU
+#### 42 Second freehold admission and shared Hearth cooldown
 
 Implementation: [phase-42-second-freehold-sku.md](phase-42-second-freehold-sku.md). Paired audit: [phase-42-qa.md](phase-42-qa.md).
 
 Deliverables (at most five):
 
-1. Stable second-plot admission and primary-first facet.
-2. Independent plot upkeep with shared account Hearth cooldown.
-3. Service-authorized durable second-SKU effect.
-4. Boundary/restart/overflow/authority proof.
+1. Second-plot admission.
+2. Independent plot upkeep and shared account lifecycle.
+3. Durable grant and bounded mirror.
+4. Steward/store UX and proof.
+
+Regenerates ux-key-manifest.json (10 keys owned) and ux-shot-manifest.json (the registry
+reaches 733 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -976,25 +1167,29 @@ Implementation: [phase-43-carpenter-and-mason.md](phase-43-carpenter-and-mason.m
 
 Deliverables (at most five):
 
-1. Existing-craft coverage and measured future handoff.
-2. Separately authorized expansion evidence contract.
-3. No-new-professions consistency proof.
+1. Coverage and evidence artifact.
+2. Future decision contract.
+3. Consistency and proof.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
 After phase-43-qa.md: [phase-44-wave-e-close.md](phase-44-wave-e-close.md).
 
-#### 44 Wave E integration close
+#### 44 Wave E integration close before final artwork and legal handoff
 
 Implementation: [phase-44-wave-e-close.md](phase-44-wave-e-close.md). Paired audit: [phase-44-qa.md](phase-44-qa.md).
 
 Deliverables (at most five):
 
-1. Final wave and complete-program validation.
-2. Final UX/input evidence.
-3. Wiki and content freshness.
-4. Fresh review and durable artifact preservation.
-5. Local release documentation and separately authorized publication.
+1. Integration matrix.
+2. Visual and content proof.
+3. Fresh whole-feature review.
+4. Reviewable release evidence.
+5. Mandatory continuation handoff.
+
+Deliverable 5 records the proposed (not executed) durable preservation destination table
+in the row 44 record, then STOPS and asks for the push go and ends at "pushed, green,
+ready for review" or "matrix green, awaiting push go" (D87).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1006,27 +1201,27 @@ Implementation: [phase-44a-final-codex-artwork.md](phase-44a-final-codex-artwork
 
 Deliverables (at most five):
 
-1. Exhaustive feature-created visual inventory.
-2. Final Codex placeholder image production.
-3. Existing asset pipeline and provenance integration.
-4. In-context viewport/input/theme/LOW proof.
-5. Zero remaining placeholders and fresh review.
+1. Exhaustive visual inventory.
+2. Final Codex replacement of placeholder images.
+3. Sanctioned pipeline integration.
+4. In-context proof.
+5. Residual zero and fresh review.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
 After phase-44a-qa.md: [phase-44b-final-legal-handoff.md](phase-44b-final-legal-handoff.md).
 
-#### 44b Final legal revisit and handoff
+#### 44b Final Terms and legal-team handoff against completed implementation
 
 Implementation: [phase-44b-final-legal-handoff.md](phase-44b-final-legal-handoff.md). Paired audit: [phase-44b-qa.md](phase-44b-qa.md).
 
 Deliverables (at most five):
 
-1. Completed-feature legal evidence matrix.
+1. Completed-feature evidence matrix.
 2. Terms and player-copy revisit.
-3. Final service/platform/territory conformance.
-4. Concrete legal-team handoff and release tracking.
-5. Complete chain and durable preservation audit.
+3. Service/platform/territory reconciliation.
+4. Concrete legal-team handoff.
+5. Final completeness and preservation audit.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1035,16 +1230,16 @@ After phase-44b-qa.md: the program ends; no automatic deletion, push or merge.
 ## Load-bearing handoffs and verified seams
 
 07 owns stable plot and separate account Hearth storage, bounded recovery and the
-housing-only developer bridge.
-07a owns global claim fencing and atomic mutations/receipts; every later resource or
-paid effect reuses it. 07b owns account lifecycle/history and 07c owns account+tier
-arrival eligibility. 13a owns durable finalized calendar ingress/delivery; 13 consumes
-its safe projection. 08 owns placement/history and ephemeral build-presence authority; 08a owns the
-public/private wire and isDecorating boolean.
-25a owns twelve-week prepay/Fenbridge, 28a the guild lifecycle/membership extension,
-30a boards, 32a completion rewards/direct vault,
-and 41a bounded layout saves/sharing. No later file may silently move those duties back
-into its unsuffixed predecessor.
+housing-only developer bridge. 07a owns global claim fencing and atomic
+mutations/receipts; every later resource or paid effect reuses it. 07b owns account
+lifecycle/history and 07c owns account+tier arrival eligibility. 13a owns durable
+finalized calendar ingress/delivery and the NEW FUTURE upkeep-calendar-db-contract.md; 13
+consumes its safe projection and produces the keep-forever freehold_ledgers relation. 08
+owns placement/history and ephemeral build-presence authority; 08a owns the public/private
+wire and isDecorating boolean. 25a owns twelve-week prepay/Fenbridge, 28a the guild
+lifecycle/membership extension, 30a boards, 32a completion rewards/direct vault, and 41a
+bounded layout saves/sharing. No later file may silently move those duties back into its
+unsuffixed predecessor.
 
 The first-tier arrival marker is bounded private account-scoped auxiliary state owned
 by 07c, marked inside 07a accepted-owner-entry commit and consumed by 08a/09. Database,
@@ -1060,22 +1255,33 @@ Keep generated freehold.invalid_input and its catalog/mapping/parity rows. Move 
 server/freehold.ts and tests/server/freehold.test.ts to server/freehold_routes.ts and
 tests/server/freehold_routes.test.ts, repairing registry and test imports. Add
 freehold.disabled separately to ERROR_CODES, API_ERROR_KEYS, the English apiError.freehold
-block, EXPECTED_CODES and KNOWN_CODES. Later freehold routes extend the existing domain
-by hand; the generator does not append into its existing catalog block.
+block, EXPECTED_CODES (file-local in tests/server/http/error_codes.test.ts) and KNOWN_CODES
+(tests/api_error_code_parity.test.ts); the map editor's own KNOWN_CODES list in
+src/editor/server_errors_core.ts is a different code family and out of scope. Later
+freehold routes extend the existing domain by hand; the generator does not append into
+its existing catalog block.
 
 The fresh-join load reuses the injected bankBonusForAccount pattern in server/ws_auth.ts;
-server/main.ts binds computeBankBonus(await bankBonusFactsForAccount(id)), with the facts
-export in server/db.ts and computation in server/bank_entitlements.ts. The freehold load
+on the packet base 7d140843d2 server/main.ts binds it as a one-liner around
+computeBankBonus(await bankBonusFactsForAccount(id)), with the facts export in server/db.ts
+and computation in server/bank_entitlements.ts; origin/release/v0.42.0 widens that binding
+to a closure that also returns characterCount, so the current binding is re-verified at
+phase start after the merge-forward. The freehold load
 has its own injected callback and bounded single-flight admission. Offline permission
 uses the separate explicit local bridge, not a presumed browser copy of the server env.
 
 ## Close evidence and durable artifacts
 
 20 covers all Wave A pairs including 07a/08a and the exact desktop/compact/tablet,
-input/focus/motion/LOW/denied-surface screenshot variants in ux-spec. 27 includes 25a;
-33 includes 30a/32a; 39 covers the optional-deed release gates; 44 includes 41a and
-runs the complete-program matrix. Screenshot fixtures are not evidence that audio,
-multiplayer, service recovery, PG interleaves or a real device were exercised.
+input/focus/motion/LOW/denied-surface screenshot variants in ux-spec. 27 includes 25a; 33
+includes 28a/30a/32a; 39 covers the optional-deed release gates; 44 includes 41a and runs
+the complete-program matrix. Every close (20, 27, 33, 39, 44) STOPS and asks for the push
+go and ends at "pushed, green, ready for review" or "matrix green, awaiting push go"
+(D87); 20 creates docs/freeholds/ledger-calibration-report.md and
+docs/freeholds/housing-budget-review.md, which later closes extend; 44 records the
+proposed (not executed) durable preservation destination table. Screenshot fixtures are
+not evidence that audio, multiplayer, service recovery, PG interleaves or a real device
+were exercised.
 
 Every close records the six handoff documents indexed in README, content/art/numeric
 sources, signed external gate status, measured budgets and fresh fix review. The 44

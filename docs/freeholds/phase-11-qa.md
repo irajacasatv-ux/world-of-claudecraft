@@ -5,17 +5,19 @@ next implementation phase never starts before this file has run.
 
 ## Exact screenshot integration contract
 
-These are NEW planned helper APIs.09 introduces the common helper, constructor,
+These are NEW planned helper APIs. 09 introduces the common helper, constructor,
 visual selector and one import/spread in scripts/pr_shot_targets.mjs, initially with
-its functional interior-only capture subset.11 extends that same
-scripts/lib/pr_shot_housing.mjs build target;16/17/18 append their own functional
+its functional interior-only capture subset. 11 extends that same
+scripts/lib/pr_shot_housing.mjs build target; 16/17/18 append their own functional
 descriptors as their UI lands. Never register a later nonfunctional UI target. No new screenshot runner or multi-image capture API is introduced.
 The registry has one optional-clip result and one image per uniquely keyed variant.
 
 Registration is cumulative by actual producer: file 09 registers the interior
 baseline subset (12 variants); file 11 extends the same target to 89; file 16
 reaches 178; file 17 reaches 226; file 18 reaches 330. File 20 verifies the complete
-330-variant inventory. Earlier files require only their registered working subset,
+wave A set (330 of the 733-variant program inventory in ux-spec section 11; 21 to 42
+register their own milestones and each wave close verifies its union). Earlier files
+require only their registered working subset,
 never nonfunctional future UI. These are derived inventory counts, not new gameplay
 or tuning values.
 
@@ -80,7 +82,7 @@ const housingVisualWhen = [
   'src/render/freehold/furnishing_models.ts',
   'src/render/freehold/furnishing_ghost_visual.ts',
   'src/render/freehold/interior_dressing.ts',
-  'src/render/freehold/interior_light_rig.ts',
+  'src/render/freehold/freehold_light_grade.ts',
   'src/sim/content/freehold/layouts.ts',
   'src/sim/content/freehold/furnishings.ts',
   'scripts/assets/freehold_basics/',
@@ -113,6 +115,7 @@ const housingVisualWhen = [
     'src/ui/hud/housing/build_mode_',
     'src/ui/hud/housing/furnishing_palette_',
     'src/ui/hud/housing/capacity_meter_view.ts',
+    'src/ui/hud/housing/build_input_core.ts',
     'src/game/build_mode_wiring.ts',
     'src/game/freehold_build_camera.ts',
     'src/sim/freehold/layout_core.ts',
@@ -146,11 +149,11 @@ Every captureHousing* stages exactly variant.scene through its real UI/authority
 fixture, asserts the matching state and returns one optional-clip result. Interior
 scenes use 09's full-viewport {}; UI scenes return { clip: '#ui' }. Missing required
 after-state throws. The registered working subset must include every exact
-target/variant and identity dimension for its producers;20 verifies the full union.
+target/variant and identity dimension for its producers; 20 verifies the full union.
 No callback side shot or sequence-to-last-state substitute.
 
-11 replaces the09 interior-only descriptor with this extended descriptor,
-never appending a duplicate target key. Preserve09's working room fixture and
+11 replaces the 09 interior-only descriptor with this extended descriptor,
+never appending a duplicate target key. Preserve 09's working room fixture and
 delegate its interior scene IDs before entering the build-only capture path:
 
 ```js
@@ -185,7 +188,7 @@ copies in the furnishing tab. Assert build.empty, an empty selectable grid, no g
 inactive placement/confirm and working close/tab controls. It grants no fake item and
 does not substitute a search with no matches for an empty inventory. Every new scene
 runs all desktop/compact/tablet baseline views. Guest observation stays the existing
-visit-owner-building identity registered by 18;11 carries the two-client behavioral
+visit-owner-building identity registered by 18; 11 carries the two-client behavioral
 acceptance and cites that later capture, never a duplicate screenshot scene.
 
 ### Fixture dependency owned by Phase 07
@@ -296,7 +299,7 @@ This is Phase 11 (QA) of the Freeholds and Guildhalls feature: audit build mode 
 placement controller, the view core and strip, the furnishing palette, keybinds, pad,
 touch, i18n, mobile, screenshots).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 11 diff for correctness against every deliverable and acceptance
@@ -312,13 +315,13 @@ use Codex image generation for raster artwork. Capture actual rendered screensho
 as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
 phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
 icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
-That final sweep does not postpone artwork owned here.44b revisits the completed result
+That final sweep does not postpone artwork owned here. 44b revisits the completed result
 for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
   while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the hud_update_drive registry
@@ -336,6 +339,9 @@ Spawn one Explore agent to read and summarize:
 - the pins the diff claims: tests/build_mode_view.test.ts,
   tests/build_mode_controller.test.ts, tests/build_mode_painter.test.ts,
   tests/furnishing_palette_view.test.ts, tests/build_mode_wiring.test.ts,
+  tests/capacity_meter_view.test.ts, tests/build_input_core.test.ts,
+  tests/freehold_build_camera.test.ts, tests/pr_shot_targets.test.ts,
+  tests/housing_view.test.ts,
   tests/keybinds.test.ts, tests/gamepad_bindings.test.ts, tests/hud_update_drive.test.ts,
   tests/hud_perf_budget.test.ts, tests/mobile_window_coverage.test.ts,
   tests/architecture.test.ts (UI_PURE_CORES, UI_DOM_MODULES), tests/monolith_budget.test.ts
@@ -379,19 +385,30 @@ Deliverables (at most five):
    refusal preserves the object/focus and success focuses the returned copy or next
    valid filtered row. External removal selects the next valid same-list row, then
    its heading if empty. No late result reopens a closed palette. Trophy plinths offer
-   Replace trophy/Clear plinth through 17's record-only chooser; clearing preserves
-   unlock/provenance and creates no inventory copy. Every proposal focuses the named
+   Replace trophy/Clear plinth (build.replaceTrophy, build.clearTrophy) as a disabled
+   affordance shell in 11, exactly like the Trophies tab shell; 17 wires both to its
+   record-only chooser TrophyCaseWindow.openForPlinth(plinthKey) over the NEW pure
+   src/ui/hud/housing/trophy_case_view.ts::eligibleTrophyChooser model shared by its
+   trophy case window and the palette Trophies tab (the names 17 owns); clearing
+   preserves unlock/provenance and creates no inventory copy. Every
+   proposal focuses the named
    placement root so nudge/confirm work without a hidden extra focus transition.
 2. World-companion palette and meters. build_mode_view.ts and
    furnishing_palette_view.ts are DOM-free; furnishing_palette_window.ts reuses bags
    slots, original slotIndex, item glyph/grade/bind/maker marks and filters only bag
-   furnishings. Add the Trophies tab shell now, populated by Phase 17. Always show
-   decor, plinth and amenity used/capacity from authority; no budget meter waits for
-   advanced building. Register the palette as a nontrapping companion with
+   furnishings. Add the Trophies tab shell now, populated by Phase 17. NEW
+   src/ui/hud/housing/capacity_meter_view.ts (UI_PURE_CORES; tests/capacity_meter_view.test.ts,
+   NEW here and rerun by 25) derives the decor, plinth and amenity meters from
+   authority: used and limit through build.decor, build.plinths and build.amenities,
+   the full state (used equals limit) through build.meterFull, truthful over-capacity
+   numbers with only the drawn fill clamped through build.meterOver, and
+   build.meterAria as each meter's aria-valuetext; furnishing_palette_window.ts paints
+   it. Always show all three from authority; no budget meter waits for advanced
+   building. Register the palette as a nontrapping companion with
    data-pad-nav-root, a reasoned mobile exception and preserved filter/selection/scroll.
    Build presence uses the approved housing facet setFreeholdBuildPresence(active:boolean)
-   and set_freehold_build_presence command, scaffolded in01 and authorized by08's
-   NEW src/sim/freehold/build_presence.ts::setFreeholdBuildPresence.11 sends start when
+   and set_freehold_build_presence command, scaffolded in 01 and authorized by 08's
+   NEW src/sim/freehold/build_presence.ts::setFreeholdBuildPresence. 11 sends start when
    entering eligible build mode and stop on close using the acknowledged opaque plotId,
    acceptedTransitionId and monotonic buildPresenceSeq captured for the current authenticated
    socket binding. Those
@@ -405,17 +422,26 @@ Deliverables (at most five):
    obsolete binding at dispatch. Tests reset a new socket counter after a prior high
    sequence and prove queued old-socket start/clear cannot affect the new binding.
    08a exposes only freeholdState.isDecorating. No ghost, palette, inventory, history,
-   camera, actor or account identity accompanies it.11 tests the send/clear lifecycle;
-   real two-client privacy proof observes existing18 visit-owner-building, not a second
+   camera, actor or account identity accompanies it. 11 tests the send/clear lifecycle;
+   real two-client privacy proof observes existing 18 visit-owner-building, not a second
    screenshot identity. Three-host/two-world parity includes the ephemeral verb/boolean.
    Guests see accepted layout revisions only, never private edit proposals. An unavailable or loading layout disables
    commit without an optimistic placement; no furnishings has a keyed useful empty
    state. All UX states and focus order follow ux-spec.md.
 3. Shared input and action strip. build_mode_painter.ts reuses ActionBarPainter;
    build_mode_wiring.ts is one bootstrap call and generalises existing placement pad
-   hooks. Existing planned toggleBuildMode/rotateFurnishingLeft/rotateFurnishingRight
-   bindings gain pinned defaults; nudge follows the approved grid, yaw the state.md
-   lattice. Mouse picks and explicitly confirms. Touch drag moves the ghost; an
+   hooks. The planned toggleBuildMode, rotateFurnishingLeft and rotateFurnishingRight
+   BindActions register with the pinned defaults 'Shift+KeyB', 'Comma' and 'Period'
+   (all unclaimed in BIND_ACTIONS today; every bare letter is taken), and NEW
+   undoPlacement and redoPlacement BindActions register with defaults ['Ctrl+KeyZ',
+   'Meta+KeyZ'] and ['Ctrl+Shift+KeyZ', 'Meta+Shift+KeyZ'] (two codes each, the seam's
+   maximum: makeCombo emits a separate Meta part for Cmd, so Cmd+Z never matches a
+   Ctrl-only default), all in a Housing category the options window lists through the
+   existing seam with BIND_CATEGORY_LABEL_KEYS and BIND_ACTION_LABEL_KEYS gaining the
+   six hudChrome.keybinds.* rows named in this file's key table (no English fallback
+   label); tests/keybinds.test.ts pins the five rows, all seven default codes and a
+   label key per action and for the category (U1 F5). Nudge follows the approved grid, yaw
+   the state.md lattice. Mouse picks and explicitly confirms. Touch drag moves the ghost; an
    unambiguous Confirm/Rotate/Cancel strip commits instead of a drag-release or stray
    tap. Each target is 40x40 minimum with all safe-area insets. Gamepad bumpers rotate,
    d-pad nudges and confirm/cancel use the shared glyph and topmost navigation rules.
@@ -429,15 +455,29 @@ Deliverables (at most five):
    Preserve every unrelated window's shipped behavior. Ordinary modal/confirmation
    always suspends housing input. Palette focus owns navigation/confirm; placement
    with companion visible owns camera-relative ghost movement and bounded-camera
-   look, never avatar movement, casts, combat or trigger hotbar actions. The existing
+   look, never avatar movement, casts, combat or trigger hotbar actions. While
+   placement owns pad input, build_mode_wiring.ts suspends exactly this set (U1 F4):
+   GAMEPAD_CYCLE_SET on RB (RB rotates clockwise instead), the LB slot (rotates
+   counterclockwise), 'jump' on Y, 'autorun' on L3, the bare d-pad focus navigation
+   (the d-pad nudges one cell) and every cross-hotbar trigger action; GAMEPAD_CYCLE_HUD
+   stays live only as the return-to-palette action. Housing pad verbs are a fixed
+   context overlay inside build_mode_wiring.ts on the ground-aim precedent (the
+   confirm, cancel and d-pad routing gamepad.ts already applies while aiming), not new
+   remappable GamepadActionIds; glyphs come from the active pad family. The existing
    focus-navigation action returns to the selected palette cell; selection returns
    to placement. Close/reconnect/authority loss/plot change release ownership once.
-   Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z act on housing history only in housing world context;
-   search-field text undo remains native. Actual composed input tests keep the palette
-   visible, exercise ordinary modal override and prove no concurrent combat dispatch.
+   The undoPlacement/redoPlacement bindings dispatch only when build_input_core.ts
+   classifies the context as housing world; with the search field focused the chord
+   is not consumed and native text undo stays intact. Actual composed input tests keep
+   the palette visible, exercise ordinary modal override, prove no concurrent combat
+   dispatch, and assert that an RB press in placement rotates the ghost, never calls
+   toggleCrossHotbarSet and never casts.
    Touch pointers use touch_router ownership: selected piece previews, empty world
    drags camera, UI stays UI and pinch affects camera only. Reverse rotate and nudge
-   remain tap-only reachable. Collection instructions use build.collectionHelp as the
+   remain reachable through a tap-only action panel that is one
+   strip_gesture_controller instantiation with anchorRole 'toggle' honouring
+   settings.touchTapMenus (src/ui/hud/CLAUDE.md "Tap mode is shared, never per menu"),
+   never a fourth tap dialect (U1 F14). Collection instructions use build.collectionHelp as the
    grid's assistive description; both-axis linear roving is not a geometric-grid claim.
 4. Shared presentation and accessibility. Implement the actual window/theme tokens
    under ux-spec.md's foundation readiness contract: record whether the coordinated
@@ -451,12 +491,18 @@ Deliverables (at most five):
    modules; new coordinator lines are paid by extraction with lowered ceilings.
 5. Build-session proof and capture helper. Add decisive camera ownership/return,
    history stale-revision, once-per-confirm, interrupted-pointer, keyboard and fake-pad
-   tests beside the existing build_mode suites; no monetary action enters history.
-   The 09-created scripts/lib/pr_shot_housing.mjs exports housingReviewTargets;11 extends
+   tests in tests/build_mode_controller.test.ts, tests/build_mode_wiring.test.ts, NEW
+   tests/freehold_build_camera.test.ts, NEW tests/build_input_core.test.ts and NEW
+   tests/capacity_meter_view.test.ts beside the existing build_mode suites (the
+   decisive assertions are listed in phase-11-qa.md TEST COVERAGE); no monetary
+   action enters history.
+   The 09-created scripts/lib/pr_shot_housing.mjs exports housingReviewTargets; 11 extends
    its functional build target and shared variants below. Pin path selection in
-   tests/pr_shot_targets.test.ts. Capture real HUD/Sim ready, blocked, empty, pending,
+   tests/pr_shot_targets.test.ts, including a case that
+   classifyDiff(['src/ui/hud/housing/build_input_core.ts']).specific contains
+   housing-build-mode. Capture real HUD/Sim ready, blocked, empty, pending,
    rejection, reconnect and capacity-full states. Guest-observer capture is the existing
-   visit-owner-building target owned18 and verified at20;11 owns its behavioral privacy
+   visit-owner-building target owned 18 and verified at 20; 11 owns its behavioral privacy
    contract without requiring future visiting UI. Required after-shots
    throw if the fixture cannot produce the state. Full #ui on touch proves safe areas;
    screenshots do not substitute for two-client authority or audio tests.
@@ -468,11 +514,12 @@ Deliverables (at most five):
    Never stage multiple transient states then return the last, use internal side-shot
    writes or skip a required after-state. The exact descriptor/constructor inventory
    below expands to 89 working build-target variants including the 12 inherited interior
-   variants. Pin that implemented subset now;16/17/18 append only their functional
-   targets, and20 pins the complete 330-variant union. No future placeholder UI target
+   variants. Pin that implemented subset now; 16/17/18 append only their functional
+   targets, and 20 pins the complete wave A union (330 of the 733-variant program
+   inventory in ux-spec section 11). No future placeholder UI target
    or duplicate build descriptor satisfies this gate.
    09 owns NEW isHousingVisualPath with housingVisualWhen in the shared helper and its
-   composition into existing classifyDiff selection.11 extends that same inventory/tests,
+   composition into existing classifyDiff selection. 11 extends that same inventory/tests,
    never a second predicate;
    use the exact housingVisualWhen model/layout/exporter/spec/public item/model/reference
    and shared-style inventory, including public-art-only diffs. Independent pins cover
@@ -494,7 +541,39 @@ Deliverables (at most five):
 - TEST COVERAGE verifies decisive literal/source and negative assertions for every
   boundary above, including actual work before equality, real async/race outcomes and
   honest unknown/denied states. Missing before/after capture, skipped environment test,
-  unaccepted release gate or absent artifact is explicit, never silently PASS.
+  unaccepted release gate or absent artifact is explicit, never silently PASS. Each of
+  these can-fail checks must exist in the named suite with its stated negative control:
+  - tests/build_mode_controller.test.ts: exactly one facet send per activation (a
+    second commit before the result sends nothing) and re-arm on the deny event (the
+    next activation sends again); a refused send leaves freeholdLayout deep-equal
+    (control: an accepted descriptor changes it); redo restores the undone row; Escape
+    twice first cancels the proposal with build mode still active, then exits and
+    returns focus to the trigger element; an external revision bump clears the journal
+    and emits historyChanged exactly once (control: a same-revision update keeps the
+    journal); an open modal suspends placement and dispatches no cast.
+  - tests/build_mode_wiring.test.ts: touch drag-release and a stray tap call commit
+    zero times while strip Confirm calls it once; Ctrl/Cmd+Z with the search field
+    focused leaves history untouched and in housing world context calls undo once; the
+    composed fake pad proves an RB press in placement rotates the ghost, never calls
+    toggleCrossHotbarSet and never casts, and the d-pad nudges exactly one cell.
+  - tests/freehold_build_camera.test.ts: camera pose equality after exit, teleport,
+    disconnect and plot change (control: the pose differs while build mode owns it);
+    the sim player position is unchanged throughout.
+  - tests/build_input_core.test.ts: each of the four contexts (blocking window, palette
+    focus, placement, normal world) with the negative for its neighbour.
+  - tests/capacity_meter_view.test.ts: used/limit text per meter, the full state at
+    used equals limit, and over-capacity keeping truthful numbers while the drawn fill
+    clamps to 1 (control: below the limit no full/over state is set).
+  - tests/build_mode_painter.test.ts: the strip measurement helper reports every
+    button at or above 40x40 and reds on a 39px fixture; the compact capture's assert
+    step measures the real strip through getBoundingClientRect and throws below 40x40.
+  - tests/hud_update_drive.test.ts and tests/hud_perf_budget.test.ts: rows for
+    build_mode_painter (control: removing the row reds); tests/keybinds.test.ts: the
+    five Housing BindActions, all seven default codes (Ctrl and Meta for undo/redo) and
+    a hudChrome.keybinds.* label key per action and for the category (control: a row
+    without a label key reds); tests/pr_shot_targets.test.ts:
+    classifyDiff(['src/ui/hud/housing/build_input_core.ts']).specific contains
+    housing-build-mode.
 - HYGIENE checks source anchors and imports, ownership, no dead/TODO code, actual
   monolith ceilings, all i18n render sinks and generated-artifact obligations, no
   em/en dash or emoji and no forbidden purchase language. Cross-check every numeric

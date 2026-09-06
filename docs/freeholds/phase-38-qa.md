@@ -20,7 +20,7 @@ ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
@@ -41,11 +41,26 @@ and evidence to a file. Audit these specific requirements:
 - Trace each included and excluded exact item copy through prepare, freeze, quote,
   settle, cancel and recover. The manifest is immutable; edit/upgrade/listing races
   cannot substitute contents. Personal/bound copies and trophy unlocks stay seller's.
+  Buyer capacity (D80): real-PG fixtures for buyer-at-Inn-Room (the purchased plot
+  occupies index 0, the buyer's retained copies and displays reach the previewed safe
+  destination, the Favor capacity award follows the plot ID), buyer-at-Cottage (the
+  literal refusal freehold.deed.buyer_capacity before reservation or service IO),
+  buyer-with-two-plots-after-42 (the same refusal when no index is free; occupancy of
+  the free index otherwise) and seller-post-sale (a fresh tier-0 record at index 0
+  with account trophy unlocks retained and the base capacity budget).
 - Exercise real-PG competing settlements, timeout after debit, restart, historical
   replay and current-owner changes. No intermediate ownership or duplicate copy;
   unsafe seller/buyer custody refuses before mutation and no lock spans service IO.
+  Add the composed cases the deed contract defines: cancel-pending racing
+  transfer-confirmed (one terminal success only), seller disconnect during
+  listing-prepared (no asset or belongings disappear) and restart between
+  transfer-confirmed and game-applied (the original transition resumes), each with a
+  real-PG fixture and a literal terminal state. An open listing or transfer blocks
+  character or account deletion with the mapped refusal class (D88).
 - Native use consumes only server entitlement; optional deed state alone never
-  destroys access. Every denied distribution has no purchase/deed catalog or submodel.
+  destroys access. Every denied distribution has no purchase/deed catalog or submodel
+  as a runtime contract (no DOM node, handler, request, fetched catalog, error copy or
+  accessible text) while the dormant code and keys ship in every bundle (D86).
 - The service verifies actual eligible checkout session/territory at each new-spend
   boundary and returns opaque verified effects/refusals, never a channel label.
   Reject forged auth/Origin/UA/JSON/linked-store/server-secret/bridge proofs and
@@ -53,7 +68,22 @@ and evidence to a file. Audit these specific requirements:
   territory or expiry changes, recover only the accepted original outcome without
   another checkout session/debit, subject to current local entitlement/custody guards.
   07a's exact operation/mutation modules retain sole durable binding/receipt ownership.
-- WocMarketService delegates are paid by extraction. Flair remains an opaque public
+  Missing, expired, consumed and relinked-wallet step-up proofs refuse listing;
+  cross-manifest signature reuse refuses; woc_market.wallet_required and
+  terms_required refuse before reservation or service IO; accepted-operation recovery
+  needs no new challenge.
+- WocMarketService delegates are limited to config, refusal mapping, step-up and quote
+  plumbing (never escrowInsertListing or the bag custody bridge) and are paid by
+  extraction; the diff adds no ExchangeBrowseCategory or BROWSE_CATEGORIES member,
+  defines deedSurfaces nowhere (14's module keeps the one definition and its seven-row
+  literals are untouched), adds no HudFeatures row (D91), keeps every deed/mint/listing
+  key under hudChrome.housing.deed.* (the mint, listing, sale-review, custody,
+  condition-and-credits, pending, support-recovery and no-price-promise rows 38 names
+  with exact English, plus 37's charter.serviceUnavailable reused) with
+  tests/freehold_store_gates.test.ts still
+  failing on a planted on-chain word outside that namespace, and carries the ux-spec
+  rows plus both regenerated manifests (D92). NEW allowSerializedCollectibles defaults
+  off and refuses the feed and every listing route. Flair remains an opaque public
   ID; the client capability projection removes it on Seeker/App Store/Play/Steam/
   Epic before renderer/chat consumption. Test actual projection, banner/chat/DOM,
   errors and accessibility absence, not only a missing mint card. The same known
@@ -70,7 +100,7 @@ and evidence to a file. Audit these specific requirements:
 Audit strict decode, malformed/max-size preservation, current authorization, keyed
 player strings, focus return and all input modes where UI exists, deterministic
 three-host parity, no monolith growth, and test-pin freshness where applicable.
-Dispatch migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, cross-platform-sync, frontend-seam-reviewer, render-performance-reviewer, test-coverage-auditor and qa-checklist
+Dispatch migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, cross-platform-sync, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor and qa-checklist
 for the actual surfaces, including persistence/DB review of JSON or caller changes.
 Database performance must have reviewed decisions and the finished diff; fake pools
 do not prove locks, query plans or concurrency.

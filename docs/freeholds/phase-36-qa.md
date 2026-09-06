@@ -20,7 +20,7 @@ ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
@@ -49,6 +49,12 @@ and evidence to a file. Audit these specific requirements:
 - Pin wave/cheer/admire at DDL, request, wire and UI. Inspect the independent
   freehold_guest_book_daily_claims unique (account_id, plot_id, realm_day_id) marker,
   immutable CAL-SOCIAL calendar/reset binding and shared nonregressing day authority.
+  realm_day_id is the resetDay reset-day key (resetDayKey(ms, REALM_RESET_TIME_ZONE)
+  on the server, ctx.resetDay in the sim), never the UTC date, and the Showcase realm
+  week uses the same clock through src/sim/realm_week.ts emberWeekAnchorOf: the
+  fixture with reactions at
+  02:59 and 03:01 realm-local across a UTC midnight accepts exactly one claim per
+  reset-day key on each side of the reset instant (D84).
   Current ACL/input, reviewed plot participant, daily claim, append and deterministic
   50-entry prune compose atomically; rollback after claim insertion restores all.
 - A posts, 50 others displace A, then A via alt/process/restart is still refused the
@@ -56,17 +62,23 @@ and evidence to a file. Audit these specific requirements:
   rollover and stale captured attempts; next authoritative day permits one reaction.
   Confirm no client day, guessed serving realm or policy/clock regression reopens a
   retired day, including attempts delayed while acquiring the plot fence.
-- Inspect all six relations named in36: Showcase entries/votes/results/awards,
+- Inspect all six relations named in 36: Showcase entries/votes/results/awards,
   guest entries and daily claims. pruneFreeholdGuestBookDailyClaims uses indexed
   bounded cleanup only after the authority watermark and every supported peer/
   retry/restart/rolling path excludes readmission. No guessed TTL; unavailable
   retirement proof retains markers. Verify reverse-FK indexes, row/byte bounds,
   export/delete and replay retention with actual-PG plans/counts/lock waits/peak
-  admitted work. Check current consent/block/ignore, indistinguishable404s and
-  bounded caches; names/reactions remain subject to moderation.
+  admitted work. Check that server/freehold_visiting.ts current authorization is the
+  only block/ignore/visit-policy authority (D76 friend fact and block-either-side,
+  D77 guild policy), that owner delete keys on the integer entry id,
+  indistinguishable 404s and bounded caches; names/reactions remain subject to
+  moderation.
 - Every changed reward prop uses scheduled prewarm and retirement; repeated
   entry/leave does not grow resources. Verify measured LOW frame/GPU budget and
-  actionable visibility with render-performance-reviewer using actual evidence.
+  actionable visibility with render-performance-reviewer using actual evidence. The
+  NEW showcase/guestBook keys and screenshot targets named in 36 deliverable 4 exist
+  in ux-spec.md and both regenerated manifests with updated counts (D92); the guest
+  book opens from the existing gate-door interactable.
 Audit strict decode, malformed/max-size preservation, current authorization, keyed
 player strings, focus return and all input modes where UI exists, deterministic
 three-host parity, no monolith growth, and test-pin freshness where applicable.

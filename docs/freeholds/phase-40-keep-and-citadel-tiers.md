@@ -1,4 +1,4 @@
-# Phase 40: Keep and Citadel tiers with existing prestige
+# Phase 40: Keep and Citadel tiers, prestige deeds
 
 This implementation file and its QA are the complete contract for this bounded slice.
 The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
@@ -8,8 +8,8 @@ are authoritative. Nothing in this planning packet is marked built.
 ```
 This is Phase 40 of the Freeholds and Guildhalls feature: Keep and Citadel tiers with existing prestige.
 
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
-fan-out; this prompt names no model.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out; this prompt names no model.
 
 Goal: complete the personal and guild tier ladders using the same existing prestige alternatives for both top tiers, safe upgrades and final courtyard/tower art.
 
@@ -27,14 +27,15 @@ STEP 0 - PRE-FLIGHT:
   patches/.
 - If state.md "Push policy" records a stacked wave branch, work on that branch instead of
   feature/freeholds.
-- Memory scan: MEMORY.md and entries on content obligations, interior layouts and
-  colliders, point-light budgets, the provisioner firewall, test-pin traps.
+- Gotchas scan (Codex has no memory step): state.md "Gotchas (read before the matching
+  phase)" entries on content obligations, interior layouts and colliders, point-light
+  budgets, the provisioner firewall, test-pin traps.
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
@@ -54,8 +55,8 @@ Spawn one Explore agent to read and summarize:
   shells per tier from Phase 34)
 - src/render/freehold/ (the dressing modules), tests/freehold_content.test.ts,
   tests/freehold_build_project.test.ts, tests/provisioner_firewall.test.ts
-- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
-  artifacts referenced by state.md that this slice consumes.
+- docs/freeholds/ux-spec.md and the content, measurement, service and policy artifacts
+  referenced by state.md that this slice consumes (signed, or still open release gates).
 - Required durable artifacts: docs/freeholds/content-manifest.md,
   docs/freeholds/content-numbers-workbook.md, docs/freeholds/art-brief.md and
   docs/freeholds/ux-spec.md; docs/prd/woc/freehold-service-contract.md,
@@ -102,16 +103,25 @@ and return full reports to the scratchpad with a path and short summary.
    dressed twins, DungeonDefs, courtyard/tower lifts, colliders/groundHeight and ward
    shell rows. Preserve state targets: Keep/Fortress 4 rooms plus courtyard, 300 decor,
    22 plinths, 4 amenities; Citadels 5 plus courtyard/tower, 420 decor, 32 plinths,
-   6 amenities. Bills use approved fine materials plus produce, no protected inputs.
-   Exact quantities/source derivation and service SKUs enter signed manifests; all
-   inputs remain obtainable/tradable without requiring a profession. Content author
-   owns Homesteader/project trophy/source/wiki/name obligations.
+   6 amenities; the tiers.ts visitor-cap column that 26's visitorCapFor(tier) reads
+   carries Keep 20 and Citadel 24 (state.md Content numbers, fresh literal pins).
+   Bills use approved fine materials plus produce, no protected inputs. Exact
+   quantities/source derivation enter the CAL-UPGRADE workbook artifact and the service
+   SKUs enter the CAL-SERVICE catalog (its signature is a release gate); all inputs
+   remain obtainable/tradable without requiring a profession. Content author owns
+   Homesteader/project trophy/source/wiki/name obligations; Homesteader rows append at
+   the END of src/sim/content/deeds.ts and tests/deeds_content.test.ts re-pins
+   DEED_ORDER.length by re-measuring, never by reordering.
 2. Prestige predicate: a small read-only core implements the exact personal OR and
    owning-guild source allowlist above. Use account-union materialization/event refresh
    and recorded guild history, no hot-path SQL scan, forged current-membership retro
    credit or bought bypass. Both tiers share the same qualification; prior tier,
    approved project and payment still required. Record sticky qualification; later
-   item loss/member departure cannot demote an owned property.
+   item loss/member departure cannot demote an owned property. Capture capacity never
+   gates gameplay (D83): an exhausted or busy guild-clear recording arm never refuses
+   GameServer.join, enterDungeon or a respawn; it records the bounded
+   clear-not-captured gap with its operator alert, and the personal sticky-deed path is
+   unaffected.
 3. Final art family: courtyard open sky/daylight, tower/ramps and guild dressing use
    measured geometry, final approved reference/GLB pipeline assets and prewarmed
    scheduler clients. Three authored emitters is a ceiling under live global light
@@ -127,11 +137,39 @@ and return full reports to the scratchpad with a path and short summary.
    artificial waiting period. Quote expiry/unknown price never falls back to a literal.
 5. Steward requirements and proof: show existing accomplishment alternatives and
    account/guild status as keyed read-only requirements, current material bill and
-   overflow destination confirmation. Reuse ux-spec family, focus/input/error states.
+   overflow destination confirmation using the exact English rows below (D92);
+   refusals resolve through the D26 freeholdDeniedLineKey selector with the denied rows
+   appended there. Reuse ux-spec family, focus/input/error states. Append the rows to
+   ux-spec section 10, register the requirement/overflow scenes
+   steward-requirements-met, steward-requirements-unmet, steward-guild-clear-unmet,
+   steward-overflow-review and steward-overflow-none x desktop/compact/tablet (15
+   variants, the 654 milestone) on the `housing-steward-store` section 11 target (the
+   Steward window), and regenerate ux-key-manifest.json and ux-shot-manifest.json in
+   the same
+   change.
    Pin exact source alternatives with each independent positive and all-negative,
    profession-free raid access, guild-at-clear identity, sticky ownership, no paid
    bypass and real-PG cross-record/receipt races. Source/parity/content/gate tests and
    all three money gates apply to all four priced rows.
+
+Exact English keys this phase adds (D92; 21 owns the Lodge upgrade rows it registers,
+this phase adds only the prestige and overflow rows below; {destination} resolves
+through the existing steward.bags/steward.vault rows):
+
+| Key | Exact English |
+| --- | --- |
+| hudChrome.housing.steward.upgradeRequirements | Upgrade Requirements |
+| hudChrome.housing.steward.prestigeAny | Earn any one of these on this account: |
+| hudChrome.housing.steward.prestigeGuildAny | Your guild must have recorded one of these clears: |
+| hudChrome.housing.steward.requirementMet | Earned |
+| hudChrome.housing.steward.requirementUnmet | Not yet earned |
+| hudChrome.housing.steward.requirementRowAria | {requirement}: {status} |
+| hudChrome.housing.steward.prestigeTooltip | Once earned, this stays met. Losing an item, a rank or a guild member later never removes an upgrade. |
+| hudChrome.housing.steward.overflowReview | {count} placed furnishings will not fit the new layout. They go to {destination}. Nothing is lost. |
+| hudChrome.housing.steward.overflowNone | Everything placed fits the new layout. |
+| hudChrome.housing.steward.confirmUpgrade | Confirm Upgrade |
+| hudChrome.housing.denied.prestige | This tier needs an accomplishment this account has not earned yet. |
+| hudChrome.housing.denied.guildClear | Your guild has not recorded a qualifying clear yet. |
 
 INVARIANTS THIS PHASE MUST KEEP:
 Every player-visible string, including error, aria, tooltip and empty-state text,
@@ -270,8 +308,10 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/freehold_upgrade.test.ts tests/provisioner_firewall.test.ts tests/item_icons.test.ts
   tests/item_art_consistency.test.ts tests/deeds_content.test.ts tests/reliquary_content.test.ts
   tests/recipe_economy.test.ts tests/market_filters.test.ts tests/freehold_wards.test.ts
-  tests/renderer_compile_gate.test.ts tests/hud_update_drive.test.ts
-  tests/mobile_window_coverage.test.ts tests/localization_fixes.test.ts` plus the
+  tests/freehold_visiting.test.ts tests/renderer_compile_gate.test.ts
+  tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts
+  tests/pr_shot_targets.test.ts tests/localization_fixes.test.ts`
+  (tests/freehold_visiting.test.ts is 26's suite and carries the visitor-cap pin) plus the
   tests/server/ suites the SERVER slice added; `npm run wiki:content` then `npx vitest run
   tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts`;
   `npm run perf:tour`; `npm run asset:budget`; `node scripts/pr_screenshots.mjs`.
@@ -290,10 +330,10 @@ emoji, or word "phase" appears in a commit message. Keep generated output with i
 authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
 STEP 5 - ACCEPTANCE CRITERIA:
-- [ ] Four tier/geometry families match approved targets and literal pins, guild dressing reuses geometry, and every bill has exact approved source/quantity/rounding rows.
-- [ ] Every personal OR alternative independently admits both top tiers; no-credential refuses; owning-guild recorded clears qualify without officer substitution or fabricated retro history; ownership never demotes.
+- [ ] Four tier/geometry families match approved targets and literal pins, guild dressing reuses geometry, and every bill has exact approved source/quantity/rounding rows; tiers.ts carries the Keep 20 and Citadel 24 visitor caps with fresh literal pins and the deeds pin is re-measured by append.
+- [ ] Every personal OR alternative independently admits both top tiers; no-credential refuses; owning-guild recorded clears qualify without officer substitution or fabricated retro history; ownership never demotes; capture exhaustion never refuses join, enterDungeon or respawn (D83, pinned).
 - [ ] Overflow preview, custody refusal and prestige checks precede spend; real-PG atomic upgrade/Fund/receipt tests preserve exact copies and contributions without stale quote fallback.
-- [ ] Final courtyard/tower art, light-budget fallback and desktop/compact/tablet requirement/overflow screenshots satisfy ux-spec and asset/perf gates.
+- [ ] Final courtyard/tower art, light-budget fallback and desktop/compact/tablet requirement/overflow screenshots satisfy ux-spec and asset/perf gates; the requirement/overflow key rows and the five scenes (steward-requirements-met, steward-requirements-unmet, steward-guild-clear-unmet, steward-overflow-review, steward-overflow-none) are registered and both manifests regenerated (D92).
 - [ ] All four priced actions pass money/surface/service rules, all suites/reviews and contribution gate.
 
 STEP 6 - DOC UPDATES + MEMORY:

@@ -21,7 +21,7 @@ literal pins, and i18n completeness; fix what the audit finds; record a verdict.
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
   while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the content pins cluster, "review
@@ -39,7 +39,8 @@ Spawn one Explore agent to read and summarize:
 - the pins the diff claims: tests/freehold_content.test.ts,
   tests/provisioner_firewall.test.ts (the ledger arm), tests/deeds_content.test.ts,
   tests/reliquary_content.test.ts, tests/item_icons.test.ts,
-  tests/item_art_consistency.test.ts, tests/furnishing_item_kind.test.ts
+  tests/item_art_consistency.test.ts, tests/furnishing_item_kind.test.ts,
+  tests/server/freehold_wire.test.ts (the dark-realm arm)
 - the root CLAUDE.md "New game content" obligation bullet and src/sim/content/CLAUDE.md
 The agent returns: the promised-versus-delivered table per deliverable, the obligation
 table per new item id (WebP present, provenance row, English name, M16 fills, Hearth shelf
@@ -56,22 +57,32 @@ every issue including low-severity and uncertain ones; ranking happens later):
   explicit grade ids; the vendor row sells only furnishing ids and each resolves; every
   furnishing carries a numeric `r` (positive for a solid piece, 0 for the rug, never
   absent); the Homesteader deeds are cosmetic
-  (renown and a title or border at most, never power); the Hearth shelf pages reference
-  only shipped furnishing ids; the tables are deep-frozen (mutation throws in strict mode).
+  (renown and a title or border at most, never power): exactly the two manifest ids
+  `homesteader_first_furnishing` and `homesteader_first_cottage`, trigger kind `manual`
+  on both, no DeedTrigger widening, and NO grantDeed call for either anywhere in this
+  diff (08 and 15 own the raise sites; grep grantDeed over the 03 diff is empty); the
+  Hearth shelf pages reference only shipped
+  furnishing ids; the tables are deep-frozen (mutation throws in strict mode); the
+  furnisher spawns only when freeholdsEnabled is true and the item defs merge regardless
+  (D85).
 - TEST COVERAGE: literal pins written fresh (no `expect(X).toBe(X)`, no count read from
   the table under test); the keystone sweep enumerates every possible week, not one; the
   power-neutral sweep checks a closed field allowlist on every def (a def with an extra
   field fails); the provisioner arm has a can-fail control (a scratch line naming a
-  keystone trips it); deeds and reliquary count re-pins are fresh literals; missing
-  negative cases (an unknown charter id, an unknown tier id).
+  keystone trips it); deeds and reliquary count re-pins are fresh literals; the
+  dark-realm arm in tests/server/freehold_wire.test.ts asserts the furnisher entity absent
+  with the flag unset and its eight-id stock by literal with '1'; missing negative cases
+  (an unknown charter id, an unknown tier id).
 - DEAD CODE AND HYGIENE: unused imports and exports, leftover TODOs, the architecture
-  import invariant, the word "phase" or "rent" or the banned two-word land phrase from
-  ruling 9 in any code, comment, or
-  commit message, em dashes or emojis, a hand-edited generated file (wiki content,
-  translation keys), a locale overlay touched, a WebP without a provenance row or a
-  provenance row without a WebP, source/derivation/rounding and approval artifacts present on every quantity.
+  import invariant, the word "phase" or "rent" or the banned phrase "real estate"
+  (state.md "Non-negotiables", vocabulary fixed; qa-checklist.md "Ownership and classic
+  fidelity") in any code, comment, or commit message, em dashes or emojis, a
+  hand-edited generated file (wiki content, translation keys), a locale overlay touched,
+  a WebP without a provenance row or a provenance row without a WebP,
+  source/derivation/rounding and approval artifacts present on every quantity.
 Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
-the diff touched (content-obligations-reviewer, test-coverage-auditor), and finally
+the diff touched (content-obligations-reviewer, architecture-reviewer,
+cross-platform-sync, frontend-seam-reviewer, test-coverage-auditor), and finally
 qa-checklist (the completion gate), all for COVERAGE, all to files.
 
 SETTLED COVERAGE ADDITIONS:

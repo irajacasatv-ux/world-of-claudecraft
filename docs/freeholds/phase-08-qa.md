@@ -6,7 +6,8 @@ state.md decisions and ux-spec.md are the acceptance contract.
 ### Starter Prompt
 ```
 This is Phase 08 QA of the Freeholds and Guildhalls feature: bounded placement and session undo/redo.
-Harness: Claude Code. Follow root CLAUDE.md working-style and effort/fan-out rules.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block and its effort/fan-out rules.
 
 Goal: verify every promised behavior and artifact, apply ALL findings including nits,
 and have a second fresh reviewer verify the fix round before recording a verdict.
@@ -36,14 +37,18 @@ STEP 2 - AUDIT:
     occupants cannot be blocked by an accepted edit.
   - Drive each command through the Sim delegate and server dispatcher. Lock/consume
     exact copies in adversarial order; every refusal preserves bags, layout, history,
-    durable/wire revisions and operation receipts. Condition0 cannot gate placement.
+    durable/wire revisions and operation receipts. Condition 0 cannot gate placement.
+    Assert the first successful placement raises homesteader_first_furnishing through
+    src/sim/deeds.ts::grantDeed exactly once per character in both hosts (online only
+    after the 07a commit); a refused plan, an undo and a second placement raise nothing
+    new, and the deed grants no power (cosmetic renown and title only, per the manifest).
   - Undo/redo confirmed operations, then spend/lock a returned copy, change plot/session,
     interleave an owner's other session or revoke ownership. Stale inverses never mint
     copies; expected revisions advance through ordinary history without false refusal.
-  - Inspect07a integration and real-PG crash/race evidence. ACK follows durable commit,
+  - Inspect 07a integration and real-PG crash/race evidence. ACK follows durable commit,
     stale fencing refuses, retry uses the same operation ID and no separate autosave is
     passed off as atomicity. Match the source-frozen physical/calibration manifests.
-  - Verify08a exclusively owns descriptor/mirror/snapshot transport,11 owns Wave A
+  - Verify 08a exclusively owns descriptor/mirror/snapshot transport, 11 owns Wave A
     capacity UI and redo is already live. No full-axis/scale/leniency mode slips in.
 - Required domain COVERAGE review: architecture-reviewer, cross-platform-sync, database-performance-reviewer, migration-safety, server-hot-path-reviewer, privacy-security-review, test-coverage-auditor, qa-checklist.
   Database performance runs before new DB decisions and on the finished diff. Parent
@@ -91,7 +96,8 @@ STEP 3 - VALIDATION:
   tests/server/freehold_mutation.test.ts tests/architecture.test.ts
   tests/sim_context.test.ts tests/monolith_budget.test.ts tests/world_api_parity.test.ts
   tests/command_schema.test.ts tests/command_facets.test.ts tests/env_protocol.test.ts
-  tests/localization_fixes.test.ts tests/professions_feast.test.ts.
+  tests/localization_fixes.test.ts tests/professions_feast.test.ts
+  tests/deeds_content.test.ts.
 - Run tests/server/freehold_mutation.pg.test.ts with TEST_DATABASE_URL armed for the
   real transfer/fence/receipt boundary. Regenerate parity via UPDATE_PARITY=1 npx vitest
   run tests/parity in its own commit, then npx vitest run tests/parity clean.

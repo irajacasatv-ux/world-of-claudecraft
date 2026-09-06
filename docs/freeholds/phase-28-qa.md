@@ -21,6 +21,15 @@ revision. Old responses cannot overwrite new. Hall materials/gold, contributor c
 donor audit participate in one atomic transfer. Fund slot/log/byte limits derive from
 the legal approved bill/cap/content manifest and are pinned before enable. Lazy guild
 hydration reuses existing admission/single-flight bounds, never whole-table boot load.
+The fund's end of life is defined (D78): 29 adds an officer-plus withdraw-to-guild-bank
+verb for fund materials and gold on the 07a rail, and the service contract's Hall Fund
+end-of-life row refunds the pooled balance pro rata to donor accounts by original
+receipt as separately identified immutable refund operations the game only requests.
+Guild-owned plots follow the D77 visiting policy: current members are admitted always;
+visit_policy for the guild owner kind is set by the leader or an officer and accepts
+only guild, public or private (friends is refused for that owner kind); public admission
+is capped by the tier column, the Meeting Hall cap being the Cottage row until 32 sets
+its own; non-members enter as read-only guests under the D51 ejection rules.
 
 Before implementation decisions and again on the finished diff, dispatch
 database-performance-reviewer, paired with migration-safety and privacy-security-review.
@@ -72,7 +81,7 @@ information must remain legible through ambient grade, materials and silhouettes
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -143,10 +152,18 @@ The dedicated phase-28a-guild-lifecycle-and-membership.md and its QA extend 07b 
 guild_freehold_lifecycle and guild_freehold_lifecycle_history, committed membership
 incarnation, original guild binding and installCommittedLifecycleProjection. This file
 owns no sixth lifecycle deliverable. Its guild_freeholds parent reference uses RESTRICT
-and raw disband is refused while live hall/fund dependencies remain; 28a adds the same
-safe-disposition protection for lifecycle/checkpoint/credit/recovery dependencies before
-29 enables upkeep. No account history is rekeyed or copied, and no new receipt owner
-is created. The 07a and 13a shared contracts above remain prerequisites for all consumers.
+as the backstop only; the refusal path is the existing beginGuildBankDelete guard in
+server/social.ts extended at BOTH guild-deleting call sites (guildLeave last-member-out
+before removeGuildMember in finishGuildLeave, and guildDisband) to refuse while
+guild_freeholds, guild_hall_funds, lifecycle or recovery rows remain (S5, D79). A guild
+that holds any keep-forever housing row is never hard-deleted: disband is 28a's
+tombstone disposition (D79). The explicit safe disposition means fund materials and gold
+at zero through 29's officer-plus withdraw-to-guild-bank verb and the pooled service
+balance settled or refund-requested through the service contract's Hall Fund end-of-life
+row (D78). 28a adds the same protection for lifecycle/checkpoint/credit/recovery
+dependencies before 29 enables upkeep. No account history is rekeyed or copied, and no
+new receipt owner is created. The 07a and 13a shared contracts above remain
+prerequisites for all consumers.
 
 ## Arrival consumer dependency
 
@@ -183,7 +200,7 @@ This is Phase 28 (QA) of the Freeholds and Guildhalls feature: audit the guild o
 kind, the Meeting Hall, and the Hall Fund (the guildhall record and claim, rank
 permissions, the tier and layout, the escrow and its persistence).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 28 diff for correctness against every deliverable and acceptance
@@ -231,14 +248,24 @@ every issue including low-severity and uncertain ones; ranking happens later):
 - CORRECTNESS: every deliverable and acceptance criterion actually met; the guild claim
   key ignores party and character; a kicked member loses edit and entry on the next
   stamp; every shared-layout/fund edit refuses a plain member on BOTH dispatch arms,
-  while only that member's assigned personal trophy plinth remains editable; the fund
-  merge never persists a whole book from one session and bounds its size; a stale rev
-  is refused, never merged; the guild bank suites are unchanged and green; the
-  extractions are move-not-rewrite.
+  while only that member's assigned personal trophy plinth remains editable; the D77
+  guild-plot policy matrix holds on both hosts (members always; guild, public or private
+  only; friends refused; public capped at the Cottage row) and only a leader or officer
+  sets it; disband refuses at BOTH guild-deleting call sites with the member row intact
+  after a refused /gquit, and a stocked fund cannot disband until 29's withdraw verb
+  empties materials and gold and the service balance is settled or refund-requested
+  (D78); the hall record stores no guild name; the fund merge never persists a whole
+  book from one session and bounds its size; a stale rev is refused, never merged; the
+  guild bank suites are unchanged and green; the extractions are move-not-rewrite.
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion (rank cases per command, not
-  one representative; the DDL pinned as literal text; raw-delete refusal for each live hall/fund dependency, safe-disposition cleanup and pre-feature cases
-  against the pg twin ARMED; the live-view pin mutates through the Sim and reads through
-  ctx); orphaned tests; a determinism case with a work-happened anchor.
+  one representative; the DDL pinned as literal text; disband refusal for each live
+  hall/fund dependency at BOTH guild-deleting call sites (the /gquit last-member path
+  before removeGuildMember, and guildDisband), the stocked-fund arm (D78), the D77
+  policy matrix with every cell and the friends refusal, the hall edit set equal to the
+  exported GUILD_BANK_EDIT_RANKS (S4), the tombstone disposition permitted only after
+  the explicit safe disposition (D79) and the pre-feature case against the pg twin
+  ARMED; the live-view pin mutates through the Sim and reads through ctx); orphaned
+  tests; a determinism case with a work-happened anchor.
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
   import invariant and the token firewall at the state.md scope (no on-chain vocabulary in
   src/sim/ per the state.md list; the Book of Deeds is game content), the word "phase" in any code, comment, or commit message, em dashes or

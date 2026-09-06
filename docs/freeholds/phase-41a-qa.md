@@ -34,7 +34,14 @@ and evidence to a file. Audit these specific requirements:
 - Public codec strips every private save label/account/plot/item-copy/price field;
   malformed and over-limit compressed/decoded/nested inputs fail before allocation.
 - Five saves per stable plot have measured byte/row/label bounds; unsupported stored
-  versions are preserved safely. Export/delete and save/import rate limits are real.
+  versions are preserved safely. Export/delete follow 07a's per-row-class ON DELETE
+  policy (D88) and an open apply/import operation blocks deletion with the mapped
+  refusal class; the save/import rate limit is the NEW layout_import MsgLane member
+  in server/msg_lanes.ts (per session; the closed union and its pinning suite extend)
+  plus the per-account bounded LRU budget in 26's idiom: one frame beyond either
+  budget, on one session and spread over two sessions of one account, is refused with
+  a keyed reason before decode, behind the MSG_BYTE_BURST frame bound, never a REST
+  rate_limit middleware.
 - Apply matches already placed/bag/authorized-bank exact copies; no duplicate copy
   requirement for an existing placement, no implicit vault/guild authorization, no
   furniture/dye creation. Shortfall or unsafe displacement leaves all state intact.
@@ -42,7 +49,7 @@ and evidence to a file. Audit these specific requirements:
   authoritative atomic material transaction: exact owned dye copies, chosen source,
   station/proximity, condition 30+, current cost rules and explicit color/material
   preview. Unchanged tint consumes nothing; changed tint cannot be ignored or free.
-  Test absent dye, absent station, remote station, condition29, unauthorized channel,
+  Test absent dye, absent station, remote station, condition 29, unauthorized channel,
   duplicate dye-copy allocation,
   stale preview/source and failure midway through a batch with no partial effects.
 - Unsupported incoming share version/tint refuses before application. Valid future
@@ -52,7 +59,10 @@ and evidence to a file. Audit these specific requirements:
   atomic all-or-none custody and material consumption; private labels remain absent
   from public share preview/code, while approved public colors remain present.
 - Check every facet/command/snapshot/chain pin and ux-spec saved/import/shortfall/stale
-  input/focus states, with maximum legal layout and decoded-byte evidence.
+  input/focus states, with maximum legal layout and decoded-byte evidence. The NEW
+  layouts.*/denied.layoutCode keys and the housing-layouts target (eight layouts-*
+  scenes) named in 41a deliverable 4 exist in ux-spec.md and both regenerated manifests
+  with updated counts (D92).
 Audit strict decode, malformed/max-size preservation, current authorization, keyed
 player strings, focus return and all input modes where UI exists, deterministic
 three-host parity, no monolith growth, and test-pin freshness where applicable.

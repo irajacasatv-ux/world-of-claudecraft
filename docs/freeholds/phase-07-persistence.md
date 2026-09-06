@@ -8,7 +8,8 @@ No housing implementation is claimed complete by this planning file.
 ### Starter Prompt
 ```
 This is Phase 07 of the Freeholds and Guildhalls feature: bounded persistence and stable plot identity.
-Harness: Claude Code. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block for effort and fan-out.
 This prompt names no model. Keep independent implementation owners disjoint; the parent
 integrates shared callers and pins after their reports return.
 
@@ -31,8 +32,10 @@ STEP 1 - LOAD CONTEXT (through agents, never planning docs or coordinators direc
 - It reads the following existing seams and prior outputs, returning exact exports,
   readers/writers, pin sites, known failure behavior and a promised-versus-tree table:
   - EXISTING server/db.ts ensureSchema/exportAccountData; server/ws_auth.ts injected
-    bankBonusForAccount callback; server/main.ts binding to computeBankBonus(await
-    bankBonusFactsForAccount(id)); server/bank_entitlements.ts; server/CLAUDE.md.
+    bankBonusForAccount callback; the server/main.ts binding of that callback over
+    computeBankBonus and bankBonusFactsForAccount (re-verify its exact closure at phase
+    start after merge-forward: the release branch widens the return to include
+    characterCount); server/bank_entitlements.ts; server/CLAUDE.md.
   - EXISTING server/serial_writer.ts::createKeyedSerialWriter,
     server/periodic_save_flush.ts::runPeriodicSaveFlush, server/background_db_gate.ts,
     server/db_connection_budget.ts, server/cached_read.ts, server/guild_bank_lazy_loader.ts.
@@ -67,10 +70,19 @@ Deliverables (at most five):
    upsertFreehold. account_freeholds starts with primary key (account_id, plot_index),
    a unique opaque public plot_id, FK account deletion, schema_version and distinct
    durable_rev/wire_rev. Initially admit plot_index 0 only; 42 admits the second plot
-   without changing identity. Carry tier, layout/trophies JSONB, condition,
-   visit_policy, updated_at and explicit upkeep binding state.
+   without changing identity. The same identity admits 38's furnished-plot transfer
+   under D80 without change: the sold plot keeps its stable plot_id and moves to the
+   buyer's plot_index 0 only while that record is tier 0, and the seller receives a
+   fresh tier-0 record at index 0 with a new plot_id. Carry tier, layout/trophies
+   JSONB, condition, visit_policy, updated_at and explicit upkeep binding state.
    Initial rows are unbound_no_history with no upkeep-derived day/week stamp or credit.
-   Bound checkpoint/credit shapes retain source calendar/schema/reset-policy identity.
+   Bound checkpoint/credit shapes retain source calendar/schema/reset-policy identity;
+   every day-keyed fact they carry uses the realm-day resetDay vocabulary from
+   resetDayKey over the zone the accepted binding's reset_policy_id resolves to (the D84
+   realm reset zone, identical across realm processes, never the serving process's bare
+   REALM_RESET_TIME_ZONE) and the emberWeekAnchorOf week, and any epoch-ms companion is
+   display-only (D84). updated_at and the Hearth ready_at_ms below are
+   ordering/authority timestamps, not calendar facts.
    07b owns account presence/absence/grace history and 07c owns account+tier marks; neither
    belongs to this plot row or its serialization. 13/13a own bound upkeep migration.
    Add idempotent shape CHECKs and a query/index inventory for account lookup,
@@ -79,7 +91,9 @@ Deliverables (at most five):
 2. src/sim/freehold/state.ts::normalizeFreehold/loadFreehold/serializeFreehold/evictFreehold
    and PersistedFreehold: deep-copy serialization and versioned load result distinguish
    absent legacy data, safely repaired known scalar, unsupported version, malformed
-   owned content and oversize. Only ABSENT pre-feature data creates the Inn default.
+   owned content and oversize. Only ABSENT pre-feature data resolves to 05's in-memory
+   tier-0 Inn Room record (D81); 07 persists that record without changing its identity
+   and never creates a second default.
    Preserve unknown/newer/oversized owned rows in their original durable location, plus
    bounded diagnostics/reference; the bounded recovery metadata need not contain the
    oversized original. Never reinterpret unsupported checkpoint/credit shape as absence;
@@ -102,16 +116,28 @@ Deliverables (at most five):
    explicit table loaders wired into exportAccountData, not the existing character-only
    projector. Distinguish soft deactivation/restoration, hard deletion and anti-replay
    retention; soft deactivation preserves all rows, character deletion preserves account
-   state, and true account deletion uses the reviewed cascade contract. 07b/07c extend
-   these safe exports. Keep original operation identities through rollback quiescence.
+   state, and true account deletion follows the service contract's "Identity and
+   durable protocol" hard-deletion rule (nonidentifying anti-replay identity retained
+   per the accepted retention schedule, an artifact of the "Counsel, Terms and
+   storefront model" gate row) and 07a's per-row-class ON DELETE policy (D88): plot
+   and Hearth rows cascade, and an open housing operation blocks the deletion with 07a's
+   CharacterFreeholdOperationOpen class and its character.freehold_operation_open code.
+   07b/07c extend these safe exports. Keep original operation
+   identities through rollback quiescence.
    Report queue wait, dirty age, bytes, admission/pool wait, timeout/CAS/failure counts
    without player data. account_freeholds is bounded plots per account, keep-forever.
-5. setFreeholdTier remains the one tier writer. Deliver the explicit housing-only
-   developer authorization bridge specified below, plus /dev freehold <tier> behind
-   BOTH general devCommands and a separate nonpersisted freeholdDevGrantEnabled
-   permission. A fresh offline/headless Sim starts in its entity-keyed Inn Room and
-   persists nothing even when authorization fails. The exact authorization/constructor,
-   real command and browser fixtures prove no direct tier injection or paid receipt.
+5. PRIOR 05 owns setFreeholdTier (the one tier writer), the default Inn Room record,
+   the D24 /dev freehold <tier> fixture and the housing-only developer authorization
+   bridge that places that command behind BOTH general devCommands and the separate
+   nonpersisted freeholdDevGrantEnabled permission (D81; the modules are named in
+   phase-05-instance-claim.md and re-verified below); this phase creates no second
+   default, no second tier writer and no second bridge. It adds the persisted save
+   behind the same setter and extends the PRIOR 05 tests/freehold_dev_grant.test.ts
+   (SIM owner) and tests/freehold_offline_default.test.ts (INTEGRATION owner) with the
+   persistence-absent arm: a fresh offline/headless Sim keeps 05's entity-keyed Inn
+   Room record and persists nothing even when authorization fails. The exact
+   authorization/constructor, real command and browser fixtures prove no direct tier
+   injection or paid receipt.
    All fixtures use approved state numbers; ordinary generic dev behavior is unchanged. The separately flag-authorized server dev
    command still uses the ordinary tier setter and server save contract, without a
    browser-derived permission or invented paid service receipt.
@@ -148,15 +174,16 @@ DB, persistence and security review are required. No extra receipt per routine e
 or plot-keyed cooldown store is introduced.
 
 <!-- core-dev-bridge:start -->
-HOUSING-ONLY DEVELOPER BRIDGE (part of deliverable 5; NEW APIs below):
-- The TOOLING owner creates scripts/lib/freehold_dev_authorization.mjs and
-  scripts/lib/freehold_dev_authorization.d.mts exporting freeholdDevAuthorizationPlugin
+HOUSING-ONLY DEVELOPER BRIDGE (part of deliverable 5; PRIOR 05 APIs re-verified below,
+D81; the persisted save behind setFreeholdTier is this phase's only NEW arm):
+- The TOOLING owner re-verifies the PRIOR 05 scripts/lib/freehold_dev_authorization.mjs
+  and scripts/lib/freehold_dev_authorization.d.mts exporting freeholdDevAuthorizationPlugin
   ({ enabled }) and a directly tested request predicate. It registers configureServer
   only with apply: 'serve'; never configurePreviewServer or a production/game route.
   The Vite composition passes enabled: process.env.ALLOW_DEV_COMMANDS === '1' and
   preserves literal defineConfig({ ... }), including its AST-pinned object shape.
-  Add the new Vite-imported helper and declaration to the exact .dockerignore admission
-  and tests/dockerignore_context.test.ts obligation; no unrelated build context widening.
+  Re-verify the PRIOR 05 .dockerignore admission of that helper and declaration and the
+  tests/dockerignore_context.test.ts obligation; no unrelated build context widening.
 - The endpoint is exactly GET /__freehold/dev-authorization. Unrelated paths fall through;
   wrong methods, missing/disabled opt-in or failed diagnosticsReadAllowed socket+Host
   checks refuse. Test the real remoteAddress plus Host, not Origin/Host claims alone.
@@ -164,17 +191,19 @@ HOUSING-ONLY DEVELOPER BRIDGE (part of deliverable 5; NEW APIs below):
   {"freeholdDevGrantEnabled":true}, with JSON content type and Cache-Control: no-store.
   Read no account, tier, receipt, purchase or arbitrary environment data. There is no
   public VITE_* substitute and no preview/production endpoint, even with the shell flag.
-- The BOOTSTRAP owner creates src/game/freehold_dev_bootstrap.ts exporting injected,
-  testable resolveOfflineFreeholdDevGrant. Before the offline Sim construction, require
-  import.meta.env.DEV and an HTTP(S) loopback DOCUMENT origin; otherwise do not fetch.
+- The BOOTSTRAP owner re-verifies the PRIOR 05 src/game/freehold_dev_bootstrap.ts
+  exporting injected, testable resolveOfflineFreeholdDevGrant. Before the offline Sim
+  construction, require import.meta.env.DEV and an HTTP(S) loopback DOCUMENT origin;
+  otherwise do not fetch.
   Fetch only the same-origin endpoint without credentials, redirects or caching. Accept
   only the exact affirmative shape. Missing endpoint, HTML fallback, refused/malformed/
   failed/redirected/cancelled request resolves false and ordinary Inn initialization
   continues. Tie cancellation to the entry lifecycle, so a late reply cannot configure
   a different entry. Introduce no new timeout literal or additional cosmetic settle wait.
-- The SIM owner adds readonly, nonpersisted SimConfig/Sim/SimContext
-  freeholdDevGrantEnabled, default false, with live context/fake-host pins. NEW
-  src/sim/freehold/dev_grant.ts requires BOTH ctx.devCommands and this permission before
+- The SIM owner keeps the PRIOR 05 readonly, nonpersisted SimConfig/Sim/SimContext
+  freeholdDevGrantEnabled, default false, with its live context/fake-host pins, and adds
+  the persisted save behind setFreeholdTier. The PRIOR 05 src/sim/freehold/dev_grant.ts
+  gates the D24 fixture: it requires BOTH ctx.devCommands and this permission before
   calling setFreeholdTier; src/sim/dev_commands.ts contributes only thin delegation.
   Authorization stays outside the tier setter because independent legitimate service
   effects use it too. server/sim_boot_config.ts sets the housing permission from the
@@ -182,9 +211,10 @@ HOUSING-ONLY DEVELOPER BRIDGE (part of deliverable 5; NEW APIs below):
   alone suffices. The browser permission is for this offline Sim only, never a user
   setting, local/query storage flag, UA/window.__game override, paid receipt or online
   authority; offline developer fixture tiers never become online persisted ownership.
-- The INTEGRATION owner composes the bootstrap before the existing offline constructor,
-  pays src/main.ts/src/sim/sim.ts additions through behavior-preserving sibling extraction
-  and lowered/rechecked monolith ceilings, updates SimContext pins and owns real browser
+- The INTEGRATION owner re-verifies the PRIOR 05 bootstrap composition before the
+  existing offline constructor, pays any src/main.ts/src/sim/sim.ts additions through
+  behavior-preserving sibling extraction and lowered/rechecked monolith ceilings,
+  updates SimContext pins and owns real browser
   command proof. Generic /dev commands and ordinary Inn startup are unchanged.
   Reviewable launch: ALLOW_DEV_COMMANDS=1 npm run dev -- --host 127.0.0.1.
   Screenshot setup first calls existing assertLoopbackUrl, invokes the real
@@ -192,17 +222,21 @@ HOUSING-ONLY DEVELOPER BRIDGE (part of deliverable 5; NEW APIs below):
   fake receipt, window.__game mutation or second offline entry is an authorization path.
 
 BRIDGE VALIDATION AND REVIEW EVIDENCE:
-- NEW tests/freehold_dev_authorization.test.ts and tests/freehold_dev_bootstrap.test.ts
-  cover exact flag1 versus unset/0/other strings, actual socket and forged Host/Origin,
+- Extend the PRIOR 05 tests/freehold_dev_authorization.test.ts and
+  tests/freehold_dev_bootstrap.test.ts with the persistence-absent arm; they already
+  cover exact flag 1 versus unset/0/other strings, actual socket and forged Host/Origin,
   absent/malformed/external/wildcard Host, wrong method/path, JSON shape/extra fields,
   no-store, redirect/HTML/error/refusal/cancellation and unsupported origin/protocol.
-- Extend tests/freehold_dev_grant.test.ts with both permissions independently false and
-  true, the real chat delegation and sole setter; tests/freehold_offline_default.test.ts
-  proves permission failure does not prevent Inn. Preserve generic dev-command behavior.
-- Extend tests/vite_dev_watch.test.ts and tests/dockerignore_context.test.ts. Real
+- The SIM owner extends the PRIOR 05 tests/freehold_dev_grant.test.ts (deliverable 5),
+  which covers both permissions independently false and true, the real chat delegation
+  and sole setter, with the saved-tier arm; the INTEGRATION owner extends the PRIOR 05
+  tests/freehold_offline_default.test.ts with the persistence-absent arm (permission
+  failure still does not prevent 05's Inn default, and nothing is written). Preserve
+  generic dev-command behavior.
+- Re-run tests/vite_dev_watch.test.ts and tests/dockerignore_context.test.ts unchanged. Real
   flag-off browser starts in Inn and refuses Cottage; real flag-on loopback browser
   starts in Inn, then the actual command grants Cottage. Production build and preview
-  expose no endpoint even with flag1. Browser developer fixtures create no paid receipts or
+  expose no endpoint even with flag 1. Browser developer fixtures create no paid receipts or
   online persisted entitlement, and permission is absent from serialization/export/wire.
 - Run npx vitest run tests/freehold_dev_authorization.test.ts
   tests/freehold_dev_bootstrap.test.ts tests/freehold_dev_grant.test.ts
@@ -242,11 +276,12 @@ INVARIANTS AND CLOSED HANDOFFS:
 
 CORE STORAGE CAPABILITY AND LIFECYCLE CONTRACT:
 - NEW FUTURE docs/freeholds/persistence-rollout-contract.md is part of deliverable 4: name
-  minimum capable release, old07/future/populated fixtures, source binding, export and
-  soft-deactivate/restore/hard-delete behavior, rollout and rollback quiescence. The old
-  release lacks housing behavior and replaces characters.state wholesale; normalized
-  table preservation alone cannot establish mixed-release correctness. Do not enable
-  housing on an incapable writer/exporter or promise it continues lifecycle semantics.
+  minimum capable release, pre-07 (old release), future and populated fixtures, source
+  binding, export and soft-deactivate/restore/hard-delete behavior, rollout and rollback
+  quiescence. The old release lacks housing behavior and replaces characters.state
+  wholesale; normalized table preservation alone cannot establish mixed-release
+  correctness. Do not enable housing on an incapable writer/exporter or promise it
+  continues lifecycle semantics.
 - Unknown future data remains unchanged/read-only. Account/tier writer CHECKs restrict
   new writes without filtering away unsupported stored identifiers. Add schema fragments
   under ensureSchema advisory serialization after FK parents and before final growth
@@ -257,6 +292,7 @@ CORE STORAGE CAPABILITY AND LIFECYCLE CONTRACT:
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - npx tsc --noEmit; npx vitest run tests/server/freehold_db.test.ts
+  tests/server/freehold_hearth_db.test.ts
   tests/server/freehold_persist.test.ts tests/freehold_state.test.ts
   tests/freehold_offline_default.test.ts tests/freehold_dev_grant.test.ts
   tests/dev_commands.test.ts tests/professions_farming_state.test.ts
@@ -264,12 +300,16 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/localization_fixes.test.ts tests/env_protocol.test.ts
   tests/server/main_retention_wiring.test.ts.
 - npm run db:up; with TEST_DATABASE_URL set to the disposable development database,
-  npx vitest run tests/server/freehold_db.pg.test.ts. Use a private schema, assert
+  npx vitest run tests/server/freehold_db.pg.test.ts
+  tests/server/freehold_hearth_db.pg.test.ts. Use a private schema, assert
   tests ran, and clean it after. Record real plans for account/public plot/CAS queries,
   bounded row/byte/query counts, delayed-DB coalescing and cancellation evidence.
 - Invoke database-performance-reviewer before database/workload decisions and on the
   finished diff whenever this file touches SQL, storage shapes, queues, locks or growth.
-- Required COVERAGE reviewers: migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, architecture-reviewer, cross-platform-sync, test-coverage-auditor, qa-checklist.
+- Required COVERAGE reviewers: migration-safety, database-performance-reviewer,
+  privacy-security-review, server-hot-path-reviewer, architecture-reviewer,
+  cross-platform-sync, frontend-seam-reviewer (the src/game bootstrap and the
+  src/main.ts firewall extraction), test-coverage-auditor, qa-checklist.
   Each reports all findings to a file. The parent applies ALL findings including nits,
   then a FRESH reviewer reads the fixes. No unreviewed fix is accepted.
 - Run node scripts/gate_select.mjs before completion; npm run gate is the deeper option.
@@ -283,8 +323,9 @@ STEP 4 - COMMIT CADENCE:
 
 STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] Reapplying DDL is safe; primary/public identities, JSONB checks and actual-query
-  indexes pass fake-pool and real-PG tests. Character delete preserves, account delete
-  cascades, and export includes all owned state/recovery records.
+  indexes pass fake-pool and real-PG tests. Character delete preserves; account delete
+  cascades plot and Hearth rows, is refused with the mapped class while a housing
+  operation is open (D88), and export includes all owned state/recovery records.
 - [ ] Maximum legal rows load unchanged; unsupported, unknown-owned and oversized rows
   remain recoverable/read-only without inventory loss or destructive autosave. Each
   scalar repair test proves unrelated fields survive; cross-clock fixtures pass.
@@ -305,7 +346,7 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Update progress.md row 07 and state.md's implementation ledger with exact files,
   exported symbols, schema/wire/command keys, measured bounds, artifacts and evidence.
   Keep planning "settled" distinct from implementation "built". Record no anonymous
-  deferral; carry the named external acceptance artifact/release gate when applicable.
+  deferral; carry every named unsigned release gate when applicable.
 - Record useful traps in the freeholds memory entry within the authorized scope.
 
 STEP 7 - FINAL RESPONSE FORMAT:

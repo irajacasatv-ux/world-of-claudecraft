@@ -8,11 +8,12 @@ No housing implementation is claimed complete by this planning file.
 ### Starter Prompt
 ```
 This is Phase 08 of the Freeholds and Guildhalls feature: bounded placement and session undo/redo.
-Harness: Claude Code. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block for effort and fan-out.
 This prompt names no model. Keep independent implementation owners disjoint; the parent
 integrates shared callers and pins after their reports return.
 
-Goal: place, move, remove, undo and redo exact furniture copies through one deterministic plan and the committed07a transaction boundary.
+Goal: place, move, remove, undo and redo exact furniture copies through one deterministic plan and the committed 07a transaction boundary.
 
 STEP 0 - PRE-FLIGHT:
 - Work in /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds on
@@ -30,16 +31,16 @@ STEP 1 - LOAD CONTEXT (through agents, never planning docs or coordinators direc
   implementation-plan.md review table, ux-spec.md and the three content/art artifacts.
 - It reads the following existing seams and prior outputs, returning exact exports,
   readers/writers, pin sites, known failure behavior and a promised-versus-tree table:
-  - PRIOR07/07a src/sim/freehold/{types.ts,state.ts,instance.ts,index.ts},
+  - PRIOR 07/07a src/sim/freehold/{types.ts,state.ts,instance.ts,index.ts},
     server/freehold_mutation.ts::commitFreeholdMutation and operation/claim DB modules.
-  - PRIOR03/04/06 src/sim/content/freehold/{furnishings.ts,tiers.ts,layouts.ts};
+  - PRIOR 03/04/06 src/sim/content/freehold/{furnishings.ts,tiers.ts,layouts.ts};
     EXISTING src/sim/rift/authored.ts::AuthoredRoom/AuthoredDoor/AuthoredDecor and
     src/sim/geometry2d.ts; content-numbers-workbook.md's measured floor/grid/clearance rows.
   - EXISTING src/editor/placement_transform_core.ts::rotateStep/wrapAngle/ROTATE_STEP_RAD
     as behavior reference only, never an import into sim; src/sim/item_copy_ref.ts,
     src/sim/item_lock.ts, src/sim/bags.ts, src/sim/professions/feast.ts and
     src/sim/professions/pattern_items.ts for exact-copy/gate-order behavior.
-  - PRIOR01 housing facet, command registry including redo_placement, null mirrors and
+  - PRIOR 01 housing facet, command registry including redo_placement, null mirrors and
     server/freehold_wire.ts. EXISTING tests/farming_command_chain_online.test.ts,
     tests/command_schema.test.ts, tests/command_facets.test.ts, tests/parity/scenarios.ts,
     tests/parity/trace.ts, tests/world_api_parity.test.ts and tests/monolith_budget.test.ts.
@@ -63,6 +64,12 @@ Deliverables (at most five):
    gates entry, placement, removal or history. Place consumes the selected exact unlocked
    item copy once; remove returns that same copy or refuses bags_full without mutation.
    Never entomb an owner/guest or obstruct the safe exit; occupancy is authoritative.
+   The first successful place for a character raises 03's homesteader_first_furnishing
+   deed (trigger kind manual, cosmetic only) through the existing src/sim/deeds.ts::
+   grantDeed seam after the placement mutation applies, identically in both hosts
+   (online after the 07a commit, offline in the same synchronous plan); a refused plan,
+   an undo or a later placement raises nothing new. tests/freehold_placement.test.ts
+   pins the raise and those negative arms beside tests/deeds_content.test.ts.
 3. NEW src/sim/freehold/placement_history.ts owns undoPlacement/redoPlacement for a
    build session, bounded by the approved maximum legal placement-row count. Entries
    retain exact-copy identity and expected revision/operation preconditions. Journal only
@@ -87,7 +94,7 @@ Deliverables (at most five):
    maximum legal/over-limit layouts, exact-copy loss/duplication controls and every
    history boundary. Extend server/freehold_wire and command/facet pins. Add a parity
    scenario with a work-happened anchor; regenerate goldens in their own commit.
-   Consume07a real-PG transfer tests rather than claiming separate autosaves are atomic.
+   Consume 07a real-PG transfer tests rather than claiming separate autosaves are atomic.
 
 EPHEMERAL BUILD-PRESENCE CONTRACT (C03; D20 names remain unchanged):
 NEW facet setFreeholdBuildPresence(active: boolean) and command
@@ -128,9 +135,10 @@ INVARIANTS AND CLOSED HANDOFFS:
 - Bounds are measured from the largest legal layout, all permitted nested copies and
   bounded item metadata. Validate entry/byte ceilings before allocation and persistence.
   A missing approval/measurement row keeps the affected content gated; no late guessing.
-- 08a, not this file, owns freeholdState/fhold projection, strict decodes and snapshot
-  census. 09 reads that public descriptor and 10 adds runtime colliders. Until10 physical
-  furnishings are walk-through, while authoritative placement safety already applies.
+- 08a, not this file, owns freeholdState/fhold projection (including
+  applyFreeholdStateEvent), strict decodes and snapshot census. 09 reads that public
+  descriptor and 10 adds runtime colliders. Until 10, physical furnishings are
+  walk-through, while authoritative placement safety already applies.
 - Normal snapped yaw remains available after 25 introduces explicit advanced free planar
   translation/free yaw and typed wall/table/ceiling anchors. Full-axis gimbal, arbitrary
   scale and collision-leniency are excluded. Capacity meters and redo are Wave A in 11.
@@ -157,7 +165,8 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/server/freehold_mutation.test.ts tests/architecture.test.ts
   tests/sim_context.test.ts tests/monolith_budget.test.ts tests/world_api_parity.test.ts
   tests/command_schema.test.ts tests/command_facets.test.ts tests/env_protocol.test.ts
-  tests/localization_fixes.test.ts tests/professions_feast.test.ts.
+  tests/localization_fixes.test.ts tests/professions_feast.test.ts
+  tests/deeds_content.test.ts.
 - Run tests/server/freehold_mutation.pg.test.ts with TEST_DATABASE_URL armed for the
   real transfer/fence/receipt boundary. Regenerate parity via UPDATE_PARITY=1 npx vitest
   run tests/parity in its own commit, then npx vitest run tests/parity clean.
@@ -179,7 +188,7 @@ STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] Every geometry/gate arm has a can-fail negative and a control; maximum legal
   measured layout fits, one-over-limit refuses, protected paths and occupants stay safe.
 - [ ] All five commands preserve exact-copy custody; every refusal changes nothing and
-  online acknowledgment follows07a atomic commit. Fake/real PG prove no duplicated/lost
+  online acknowledgment follows 07a atomic commit. Fake/real PG prove no duplicated/lost
   furniture across restart, stale revision, old fence and replay.
 - [ ] Undo/redo obey the derived finite session bound and exact revision/copy identity;
   stale inverse, locked/spent returned copy and session/plot change refuse safely.
@@ -194,7 +203,7 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Update progress.md row 08 and state.md's implementation ledger with exact files,
   exported symbols, schema/wire/command keys, measured bounds, artifacts and evidence.
   Keep planning "settled" distinct from implementation "built". Record no anonymous
-  deferral; carry the named external acceptance artifact/release gate when applicable.
+  deferral; carry every named unsigned release gate when applicable.
 - Record useful traps in the freeholds memory entry within the authorized scope.
 
 STEP 7 - FINAL RESPONSE FORMAT:

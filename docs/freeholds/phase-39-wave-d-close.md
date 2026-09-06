@@ -21,14 +21,16 @@ The audit session that settled this packet does not execute this future close.
 This is Phase 39 of the Freeholds and Guildhalls feature: wave D close (the integration
 matrix over Phases 34 to 38, screenshots, the wiki pass, the Wards and Charters PR).
 
-Harness: Codex, not Claude. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
+Harness: Claude Code (the active harness; this close is review-only, and D74 requires
+Codex only for asset-creating steps). Follow the root CLAUDE.md "Working style and effort
+by model" block for effort and fan-out; this prompt names no model.
 ULTRACODE: not needed for this phase.
 
 Goal: prove wave D whole (every row of docs/freeholds/qa-checklist.md verified by a check
 that ran, with the money and store-policy row given the deed surfaces' full attention),
 commit the before/after screenshots, and open the wave D PR off the base branch with
-FREEHOLDS_ENABLED and FREEHOLD_DEEDS_ENABLED defaulting off, then watch CI to green.
+FREEHOLDS_ENABLED and FREEHOLD_DEEDS_ENABLED defaulting off only after Fernando's push
+go, then watch CI to green. Never merge.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -50,14 +52,23 @@ STEP 0 - PRE-FLIGHT:
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
-Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
-provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
-not permission to leave a placeholder for a later phase.
+Codex, not Claude (D74); this review-only close runs in the active harness and hands
+any asset-creating matrix fix to a Codex session. Use Codex's built-in image generation
+tool (an external prerequisite: STOP if it is unavailable) following
+docs/design/eastbrook-vale-rebuild/imagegen-prompts.md with rows in
+imagegen-provenance.md and CREDITS.md, and the image-to-GLB workflow in
+.agents/skills/woc-image-to-glb/SKILL.md, with their provenance, runtime registration,
+fingerprint and in-context checks. This planning audit creates no game assets. Final
+art is required here; 44a is a residual sweep, not permission to leave a placeholder
+for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md (the counsel gate, both deed flags, the transfer rule),
+- docs/freeholds/state.md (the tracked release gates; D64/D65, the transfer rule; the
+  Runtime safety row), with both deed flags read from their owning files:
+  FREEHOLD_DEEDS_ENABLED (phase-37) and NEW allowSerializedCollectibles (phase-38
+  deliverable 2, the policy switch beside allowMounts/allowMechChromas in
+  server/woc_market_routes.ts),
   docs/freeholds/qa-checklist.md (every row), docs/freeholds/progress.md (rows 34 to 38
   and their QA rows, every finding disposition, the Phase 33 close record as the shape), this file
 - the wave diff: `git log --oneline <wave-d-start>..HEAD` and `git diff <wave-d-start>..HEAD
@@ -71,14 +82,24 @@ tests/freehold_store_gates.test.ts), the wave diff surface list mapped to the re
 (any src/sim/ path under a deed commit is a finding), the screenshot target ids (the
 ward square, an exterior per tier, the ward panel with favor and Endeavors, the guest
 book, the mint card on web and its absence on a native emulation; desktop, compact,
-tablet), the PR body skeleton, and every resolved finding and the tracked counsel release gate to
-state in the PR.
+tablet), the PR body skeleton, and every resolved finding and the "Release gates" table
+to state in the PR: each of the six docs/prd/woc artifacts (freehold-service-contract.md,
+freehold-counsel-memo.md, freehold-terms-amendment.md, freehold-store-listing-drafts.md,
+freehold-deed-service-contract.md, freehold-territory-authority-schedule.md) plus the
+approved numerical rows (content-numbers-workbook.md) and the lifecycle/rollout
+artifacts (persistence-rollout-contract.md, lifecycle-policy-binding.md,
+lifecycle-db-contract.md, upkeep-calendar-db-contract.md), each by path with its signed
+or unsigned status.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 Parallel Agent fan-out, three slices, each given ONLY the Explore summary and its own
 files:
 - Agent MATRIX: run every row of docs/freeholds/qa-checklist.md over the wave diff, one
-  command at a time, reading exit codes; for the money and store-policy row also run
+  command at a time, reading exit codes, with the pg-armed twins run after `npm run db:up`
+  with TEST_DATABASE_URL set to the URL state.md's "Validation matrix" server/ row gives
+  and the
+  row recording "pg twins executed: N tests ran, 0 skipped"; for the money and
+  store-policy row also run
   the seven-row matrix, the source pins, and the tests/freehold_store_gates.test.ts
   "earn" and token-string pins, and scan actual housing purchase/on-chain deed
   submodels, rendered copy, DOM, accessibility, errors and scoped build paths for
@@ -109,12 +130,14 @@ Never `mode: "plan"` on teammates.
 
 INVARIANTS THIS PHASE MUST KEEP:
 - FREEHOLDS_ENABLED and FREEHOLD_DEEDS_ENABLED default off and refuse every NEW housing/deed
-  paid action while dark, while preserving accepted-operation recovery; allowSerializedCollectibles defaults off; the
+  paid action while dark, while preserving accepted-operation recovery; NEW
+  allowSerializedCollectibles (38 deliverable 2) defaults off; the
   seven-row matrix with the deed column is green; denied Seeker/App Store/Google
   Play/Steam/Epic housing purchase/deed surfaces expose no wallet, $WOC, on-chain
   deed, mint or marketplace promotion. Ordinary gameplay Book of Deeds remains
-  allowed and positively tested; no housing "earn" language; the economy service owns every price and split; the counsel release-gate status is stated
-  accurately in the PR body.
+  allowed and positively tested; no housing "earn" language; the economy service owns
+  every price and split; every artifact in the "Release gates" table is stated in the PR
+  body with its signed or unsigned status.
 - Never sell power; keystone exclusion; zero farm beds; nothing destroyed, nothing
   repossessed.
 - The PR text contains the word "phase" nowhere, no em dashes, no emojis; vocabulary
@@ -245,11 +268,15 @@ STEP 4 - COMMIT CADENCE:
 - fix(<scope>): <one commit per matrix finding, if any>
 - docs(freeholds): record the wave D matrix results
 Then `npm run ci:changed`; read the exit code. Then STOP and ask Fernando for the push
-go (state.md "Push policy"). On the go: `git push origin <branch>`, open the PR off the
-base branch recorded in state.md following .github/PULL_REQUEST_TEMPLATE.md (summary
-stating both deed flags default off and the counsel release gate is awaiting its signed acceptance when unsigned, related issues, type
-of change, how it was tested with the matrix table, the screenshots block, the
-checklist), then `gh pr checks --watch`.
+go (state.md "Push policy"); ask in the same message whether wave E continues on the
+same branch after this PR merges or on a stacked branch (D12: one PR per wave, each off
+the base), and record the answer in state.md. On the go: `git push origin <branch>`
+(origin only), open the PR off the base branch recorded in state.md following
+.github/PULL_REQUEST_TEMPLATE.md (summary stating both deed flags default off and the
+"Release gates" table from STEP 1 with each artifact's signed or unsigned status and
+"awaiting its signed acceptance" where unsigned, related issues, type of change, how it
+was tested with the matrix table, the screenshots block, the checklist), then
+`gh pr checks --watch`. Without the go, stop at "matrix green, awaiting push go".
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] Every qa-checklist.md row has a recorded result from a command that ran; no row
@@ -258,22 +285,28 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] Screenshots (desktop, compact, tablet) are committed under docs/screenshots/ and
   referenced from the PR body, including the native absence of the mint card.
 - [ ] The wiki is fresh (tests/guide.test.ts green), spoiler-safe, and store-safe.
-- [ ] The PR is open off the recorded base, body complete per the template, no "phase"
-  in the PR text, both deed flags off by default, the counsel release-gate status stated accurately, CI green
-  (`gh pr checks --watch`).
+- [ ] Either the PR is open off the recorded base with CI green (`gh pr checks --watch`)
+  (push go given), or the branch is local at "matrix green, awaiting push go" with the
+  PR body drafted; in both cases the body is complete per the template, no "phase" in
+  the PR text, both deed flags off by default, and the "Release gates" table states the
+  signed or unsigned status of freehold-service-contract.md, freehold-counsel-memo.md,
+  freehold-terms-amendment.md, freehold-store-listing-drafts.md,
+  freehold-deed-service-contract.md, freehold-territory-authority-schedule.md, the
+  approved numerical rows and the four lifecycle/rollout artifacts accurately.
 - [ ] qa-checklist and every dispatched reviewer confirm ALL findings including nits resolved, and a fresh reviewer passes the complete fix round. External signatures remain tracked release gates, never deferred review findings.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (row 39 with the matrix table, the PR number and
   URL, resolved finding counts and tracked external release gates) and docs/freeholds/state.md ("Current phase", the
-  wave E start tip, the PR number, any stacked-branch choice for wave E; the locked prestige OR and Carpenter/Mason exclusion carried into wave E).
+  wave E start tip, the PR number or local tip, any stacked-branch choice for wave E
+  under D12; the locked prestige OR and Carpenter/Mason exclusion carried into wave E).
 - Record surprising rules learned in memory for the next session.
 
 STEP 7 - FINAL RESPONSE FORMAT:
 End with: phase status ("pushed, green, ready for review", or "matrix green, awaiting
-push go" if the go has not come), the PR URL, the matrix summary, review verdicts,
-resolved findings, the locked prestige and future-craft handoff scope, and the FULL PATH of the next file to
-run:
+push go" if the go has not come), the PR URL when one exists, the matrix summary,
+review verdicts, resolved findings, the locked prestige and future-craft handoff scope,
+and the FULL PATH of the next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-39-qa.md
 
 STOPPING RULES:

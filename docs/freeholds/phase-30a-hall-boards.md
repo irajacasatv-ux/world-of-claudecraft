@@ -1,4 +1,4 @@
-# Phase 30a: muster, calendar, pledge and War table boards
+# Phase 30a: Hall boards
 
 Wave C. This implementation file and its paired QA own only the deliverables
 below. The locked decisions, content numbers, content-manifest.md,
@@ -18,7 +18,7 @@ acceptance row applies to the paired QA; nothing is built by this planning packe
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -50,8 +50,9 @@ NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provide
 committed immutable protection source, and createFreeholdLifecycleCoordinator captures
 authenticated observation time before queueing. Derive a return before presence
 advances; stale observations, fenced sessions and replay cannot mint grace. The
-accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
-and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+lifecycle-policy-binding artifact (accepted or still a named gate) names
+lifecyclePolicyId, sourceCalendarId and resetPolicyId; serving realm, browser zone or
+guessed UTC cannot rebind history.
 13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
 and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
 or account calendar ingress, source-history array on plots, polling job or receipt store.
@@ -112,8 +113,8 @@ STEP 0 - PRE-FLIGHT:
   origin/feature/masterwrought while PR #3872 is open, otherwise newest origin/release/**
   and remove the dependency block after merge. Run release-merge-audit after a nonempty
   merge and pnpm install --frozen-lockfile if patches/ moved. Never use main.
-- Read root and applicable local CLAUDE.md in full; memory scan MEMORY.md, freeholds
-  packet entry, test-pin traps, apply ALL findings, review the review-fix round.
+- Read root and applicable local CLAUDE.md in full; read state.md Gotchas (the matching
+  cluster and the test-pin traps), apply ALL findings, review the review-fix round.
 
 STEP 1 - LOAD CONTEXT THROUGH AGENTS:
 Have a reader summarize this file, its QA, state.md locked decisions and content numbers,
@@ -124,15 +125,32 @@ promised-versus-live table, exact prior module contracts and proposed own-file c
 Record any changed tree fact in state.md before editing dependent feature files.
 
 Existing sources: server/guild_roster_cache.ts, server/social.ts, server/social_db.ts,
-src/ui/calendar_view.ts, src/ui/calendar_window.ts and the shipped roster/pledge
-windows discovered through their own barrels. Read current local CLAUDE.md before
-source inspection. Use existing raid lockout authority/projection discovered from
-src/world_api/ and server/raid_reset.ts, not a generic guild standings window.
+src/ui/calendar_view.ts, src/ui/calendar_window.ts, the Social window's guild tab
+(src/ui/social_window.ts: the muster board's target, the viewer's own current roster,
+never the realm guild list behind src/ui/hud/guild_board/guild_roster_view.ts) and the
+shipped pledge window discovered through src/ui/hud/guild_board/. Read current local
+CLAUDE.md before source inspection. Use the existing per-character raid lockout
+authority (PlayerMeta.raidLockouts in src/sim/sim.ts, projected self-only through
+IWorldDungeons.raidLockouts in src/world_api/dungeons.ts; a lockout is live while its
+expiry exceeds ctx.lockoutNowMs(), the isRaidLocked rule in
+src/sim/instances/dungeons.ts; expiries come from the host's raidResetMs and
+weeklyRaidResetMs, fed by server/raid_reset.ts nextRaidResetMs and
+nextWeeklyRaidResetMs), not a generic guild standings window. No week anchor is read:
+emberWeekAnchorOf lives in src/sim/professions/masterwrought_materials.ts and serves
+the D84 ledger week only, never raid lockouts.
 Earlier planned housing sources: src/sim/freehold/amenities.ts and permissions.ts,
 src/sim/content/freehold/layouts.ts, src/render/freehold/ and src/ui/hud/housing/.
 NEW planned war_table_view.ts and war_table_window.ts live under src/ui/hud/housing/;
-NEW planned tests/hall_boards_view.test.ts pins the four board flows. First-kill
-authority arrives in 31, which supplies this read-only section's declared input.
+NEW planned tests/hall_boards_view.test.ts pins the four board flows. The War table
+data arrives through ONE NEW bounded read: NEW server/guild_hall_boards.ts::routes
+(RouteDef GET /api/guilds/hall-boards, registered in server/http/registry.ts beside
+guildRosterRoutes, current-membership check on every call) mirrored by the NEW
+IWorldHousing member guildHallBoards(): Promise<GuildHallBoardsInfo | null> in
+src/world_api/housing.ts, the guildRoster precedent on src/world_api/progression_xp.ts.
+ClientWorld fetches the read; the offline Sim answers null (no guild authority
+offline); headless keeps the no-op contract; the parity pin in
+tests/world_api_parity.test.ts is updated here. First-kill authority arrives in 31,
+which fills this read's firstKills arm and adds no facet member (D82).
 
 Before implementation decisions, dispatch database-performance-reviewer with the query,
 stored-shape and workload proposal when those surfaces apply; pair persistence/security.
@@ -145,28 +163,65 @@ history/finality and required Codex asset execution where applicable.
 
 STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
 - BOARD DATA owner: muster/calendar/pledge reuse their existing authorized data and
-  window openers. War table explicitly composes guild raid lockout summaries and
-  recorded first kills, never substitutes generic standings. Read-only projection
-  must recheck current membership and expose only authorized guild facts. Until 31,
-  the first-kill section uses an explicit keyed unavailable state, never fabricated
-  history or a forever-empty success. 31 connects its durable first-clear projection.
+  window openers (muster: the Social window guild tab on the viewer's own guild;
+  calendar: src/ui/calendar_window.ts; pledge: the shipped pledge window). War table
+  explicitly composes guild raid lockout summaries and recorded first kills, never
+  substitutes generic standings. Closed lockout shape (D56): one row per lockout key
+  the live model stamps, eleven in all: heroicLockoutId(<dungeonId>) for the five
+  dungeon final bosses (their normal difficulty stamps no lockout) and both the plain
+  and :heroic keys for nythraxis_boss_arena (realm-daily boundary), ignivar_raid_arena
+  and ignivar_inner_crucible (weekly boundary, WEEKLY_LOCKOUT_RAID_ROOMS). Each row
+  counts the guild's currently online members on this realm whose lockout for that key
+  is live (expiry above ctx.lockoutNowMs(), the isRaidLocked rule; no week anchor),
+  plus the viewer's OWN lockout rows, the same self-only facts IWorldDungeons.raidLockouts
+  already shows. Source: the live PlayerMeta.raidLockouts of sessions whose stamped
+  guildMembership is this guild, read once per board open by the GET read above; never
+  a character-blob read, a listCharactersAllRealms scan or an offline member. No other
+  member is named, so no new per-character fact is disclosed and current membership is
+  the only consent needed; the row text says online members, so the count is truthful.
+  Read-only projection must recheck current membership and expose only authorized
+  guild facts; wrong-guild, revoked and guest viewers (D77) receive the keyed
+  members-only state, never a count. Until 31, the first-kill section uses an explicit
+  keyed unavailable state, never fabricated history or a forever-empty success. 31
+  connects its durable first-clear projection through this same read (D82).
 - UI owner: use the same shared window, ledger/list/tab and PainterHost family as the
   Steward/collection UI. Each board has empty, loading, error, locked/nonmember,
-  reconnect and ready states; first kills also has source-unavailable state. Keyboard
+  reconnect and ready states; first kills also has source-unavailable state. NEW keys
+  with exact English (D92; tabs in title case, states in sentence case):
+  hudChrome.housing.guild.lockouts "Raid Lockouts"; guild.firstKills "First Kills";
+  guild.lockoutRow "{boss} ({difficulty}): {locked} of {online} online members are
+  locked until the next reset."; guild.ownLockoutRow "You are locked to {boss}
+  ({difficulty}) until {resetAt}."; guild.noLockouts "No online member is locked to a
+  final boss right now.";
+  guild.firstKillsUnavailable "First kills are not recorded yet."; guild.membersOnly
+  "Only current members of this guild can read the hall boards."; guild.boardLoading
+  "Loading the board...". Reuse guild.warTable (title), guild.noRecords (empty),
+  common.unavailable (error) and common.reconnecting (reconnect); boss and difficulty
+  names keep their canonical entity/dungeon keys; digits and dates go through
+  formatNumber/formatDateTime. ux-spec carries the rows and ux-key-manifest.json
+  regenerates in this phase with every cited count updated. Keyboard
   and gamepad navigate board tabs/list before Close and restore the invoking board
   focus; touch uses the shared compact/tablet sheet. Read-only guest/member boundaries
-  use server authority. No board grants power or changes guild calendar/pledge data.
+  use server authority (D77: members always, guests under D51). No board grants power
+  or changes guild calendar/pledge data.
 - WORLD/ART owner: measured anchors in MEETING_HALL_LAYOUT protect circulation and
   entry camera. Board objects join claim objectIds and teardown. Final wood/brass/
   parchment art, localized entity/title-map names, originality and wiki obligations
-  land with scheduler prewarm. Extend the shared housing screenshot helper with stable
-  target IDs for roster/calendar/pledge/lockouts and first-kill-unavailable states.
+  land with scheduler prewarm. Extend the shared housing screenshot helper with the
+  stable `housing-war-table` scenes ux-spec section 11 registers for this phase:
+  hall-boards-roster, hall-boards-calendar, hall-boards-pledge, hall-boards-members-only,
+  war-table-lockouts and war-table-first-kills-unavailable x desktop/compact/tablet (18
+  variants, the 511 milestone; 31 appends war-table-first-kills-ready and
+  war-table-first-kills-empty).
 - SERVER owner: reuse existing cached reads and raw projections wherever available.
-  Any required missing lockout projection is a NEW bounded sibling behind the current
-  guild domain/facet and RouteDef registry, with current-authority checks, query/index
-  inventory, batch social facts, cancellation and tests before use. This is permitted
-  read-only seam work; no speculative write API or per-frame SQL. Record exact source
-  symbols in state before adapting the consumers. Root integrates wire/schema/parity.
+  The missing lockout projection is exactly the NEW bounded sibling read named in STEP 1
+  (server/guild_hall_boards.ts behind the guild domain RouteDef registry, mirrored by the
+  guildHallBoards facet member), with current-authority checks on every call, a
+  query/index inventory (the lockout arm issues no SQL: it reads live sessions; 31's
+  firstKills arm reads the committed guild_deeds projection by guild_id), batch social
+  facts, cancellation and tests before use. This is permitted read-only seam work; no
+  speculative write API or per-frame SQL. Record exact source symbols in state before
+  adapting the consumers. Root integrates wire/schema/parity.
 
 INVARIANTS AND CLOSED ACCEPTANCE CONTRACT:
 Before implementation decisions and again on the finished diff, dispatch
@@ -250,14 +305,21 @@ nowhere in messages. Separate behavior/content, generated fingerprints and verif
 as coherent reviewed commits. Never push, open or merge a PR from this file.
 
 STEP 5 - ACCEPTANCE:
-- [ ] Every board opens the named real window/projection, with wrong-guild/revoked
-  membership negative tests and no hidden private fields or mutable board authority.
-- [ ] War table shows authorized raid lockouts and truthful first-kill unavailable
-  state until 31; 31 owns the named data hookup and later ready/empty proof.
+- [ ] Every board opens the named real window/projection (muster: the Social window
+  guild tab on the viewer's own guild), with wrong-guild/revoked membership negative
+  tests and no hidden private fields or mutable board authority.
+- [ ] War table shows the closed eleven-key online-member lockout counts (daily and
+  weekly expiries by the isRaidLocked rule, no week anchor) plus the viewer's own rows
+  through guildHallBoards (no SQL, no character-blob read, no other member named, a
+  wrong-guild negative for lockout rows) and the truthful keyed first-kill unavailable
+  state until 31, which fills the same read's firstKills arm and owns the ready/empty
+  proof (D82); the parity pin for the new facet member is updated here.
 - [ ] All empty/loading/error/locked/reconnect/ready states, keyboard/gamepad focus
   return, 40x40 safe-area touch and compact/tablet layouts have real-state screenshots.
 - [ ] Final board art, measured circulation, content/title-map/wiki and GPU prewarm
-  satisfy the shared quality bar; read paths have bounded current-authority evidence.
+  satisfy the shared quality bar; read paths have bounded current-authority evidence;
+  every new key named in STEP 2 is in ux-spec and ux-key-manifest.json with the cited
+  count updated (D92).
 - [ ] All checks, shared gate and complete reviewer/fresh-fix round pass.
 
 STEP 6 - DOC UPDATES AND MEMORY:

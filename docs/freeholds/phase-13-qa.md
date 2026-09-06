@@ -9,7 +9,7 @@ This is Phase 13 (QA) of the Freeholds and Guildhalls feature: audit condition a
 Steward's Ledger core (the two pure cores, the pay_ledger command, prepay, the lockout,
 the week boundary, the keystone exclusion).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 13 diff for correctness against every deliverable and acceptance
@@ -25,15 +25,16 @@ use Codex image generation for raster artwork. Capture actual rendered screensho
 as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
 phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
 icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
-That final sweep does not postpone artwork owned here.44b revisits the completed result
+That final sweep does not postpone artwork owned here. 44b revisits the completed result
 for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
-  while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge
+  origin/feature/masterwrought while PR #3872 is open, else the newest origin/release/**;
+  release-merge-audit after a non-empty merge; pnpm install --frozen-lockfile if
+  patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
   "apply ALL findings", the provisioner firewall and "one planner per file" entries.
 
@@ -48,7 +49,9 @@ Spawn one Explore agent to read and summarize:
 - the pins the diff claims: tests/freehold_condition.test.ts,
   tests/freehold_ledger.test.ts, tests/freehold_determinism.test.ts,
   tests/provisioner_firewall.test.ts (the ledger arm), tests/snapshots.test.ts (the
-  fhold arm), tests/freehold_command_chain_online.test.ts, the parity scenario
+  fhold arm), tests/freehold_command_chain_online.test.ts,
+  tests/server/freehold_ledger.pg.test.ts (PG-armed: the pay_ledger participant), the
+  parity scenario
 The agent returns: the promised-versus-delivered table per deliverable, the list of new
 symbols and where each is consumed, every test added with what it asserts, how each host
 feeds resetDay, and any TODO, unused import, or arm that mutates on a refusal path.
@@ -63,9 +66,9 @@ STEP 2 - AUDIT (fresh parallel reviewers, COVERAGE, all findings to files):
 Deliverables (at most five):
 1. Pure condition and protection state. condition_core.ts derives condition from saved
    value/checkpoints and injected authoritative facts without clock, Rng or per-tick
-   sweep. At30 amenities work; below30 they pause. Entry, furnishing/build and undo
-   still work at0; nothing is repossessed. The existing seven-day absence pause and
-   three-day return grace consume ONE committed account lifecycle authority from07b:
+   sweep. At 30 amenities work; below 30 they pause. Entry, furnishing/build and undo
+   still work at 0; nothing is repossessed. The existing seven-day absence pause and
+   three-day return grace consume ONE committed account lifecycle authority from 07b:
    server/freehold_lifecycle_db.ts::loadFreeholdLifecycle,
    advanceFreeholdLifecycleOnClient and loadFreeholdLifecycleProtectionPage, produced
    through server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator. Never
@@ -76,15 +79,30 @@ Deliverables (at most five):
    independent totals and double-credit overlap. Alts/claims/secondary plots do not
    restart grace; a buyer uses its own lifecycle prospectively without copied grace.
    NEW src/sim/freehold/state.ts::FreeholdUpkeepSuspension is an allowlisted safe
-   projection of calendarId/startMs/endMs/reasonCode only; no operatorEvidenceRef,
+   projection of calendarId, startDay/endDay (realm-day keys, D84), startMs/endMs
+   (display-only) and reasonCode only; no operatorEvidenceRef,
    revision diagnostics or secret. FreeholdUpkeepCalendarState and
    FreeholdUpkeepCheckpoint preserve stable calendarId, schemaVersion/resetPolicyId,
    committed authority/lifecycle revisions, coverageStartMs/coveredThroughMs and
    finalizedThroughMs plus exact bounded cumulative coverage facts. Raw server records
-   and operator evidence are owned by13a, never imported into src/sim or player wire.
+   and operator evidence are owned by 13a, never imported into src/sim or player wire.
    Original calendar identity stays on checkpoints and immutable credits through realm
-   claims/reset-policy change; no guessed timezone, fixed24h division or partial-day
-   rounding. Unsupported/missing shapes and unbound_no_history never become empty
+   claims/reset-policy change; no guessed timezone, fixed 24h division or partial-day
+   rounding. Per D84 the sim consumes day-keyed protection facts in the resetDay
+   vocabulary: every suspension, coverage and finality fact the cores compare carries a
+   realm-day key twin (startDay/endDay beside startMs/endMs; coverageStartDay,
+   finalizedThroughDay and coveredThroughDay beside the three watermarks) produced
+   host-side by 13a with resetDayKey(ms, REALM_RESET_TIME_ZONE), the same function
+   that feeds ctx.resetDay, under one whole-day rounding rule per twin: the start
+   twins (startDay, coverageStartDay) are the FIRST realm day wholly protected/covered
+   (the window containing the instant only when it is exactly a 03:00 boundary,
+   otherwise the next window); the through twins (endDay, finalizedThroughDay,
+   coveredThroughDay) are the LAST realm day wholly protected/finalized/covered (the
+   previous window unless the watermark is exactly a 03:00 boundary); the day
+   containing a mid-day watermark is pending for the cores, never finalized or
+   covered. condition_core and ledger_core compare only day keys and the epoch-ms
+   fields are display-only, so no epoch arithmetic enters src/sim/.
+   Unsupported/missing shapes and unbound_no_history never become empty
    outage history, fresh grace, a fresh Inn or permission to evaluate upkeep.
    Finality is explicit: every historical dependency of durable condition evaluation,
    checkpointing, bill classification and credit consumption/carry must be irrevocably
@@ -95,7 +113,16 @@ Deliverables (at most five):
    partial active week keeps the fixed voluntary bill, wholly protected billing period
    carries its original credit forward, no prorating, back bills or catch-up wear.
 2. Published Ledger schedule and source planner. ledger_core.ts keys the schedule by
-   realm week and schedule version only, independent of owner. Every bill has produce
+   realm week and schedule version only, independent of owner. The realm week is
+   ledgerWeekOf(resetDay), which reuses the existing Tuesday anchor emberWeekAnchorOf
+   (D84): this phase extracts that pure leaf (emberWeekAnchorOf, emberWeeksBetween,
+   emberWeekAnchorPlusWeeks, resetDayToDayNumber) from
+   src/sim/professions/masterwrought_materials.ts into NEW src/sim/realm_week.ts,
+   re-exported from its old module so every existing caller and test is
+   byte-unchanged, and ledgerWeekOf is that helper under the housing name, pinned equal
+   to emberWeekAnchorOf on both sides of a Tuesday and consistent with
+   WEEKLY_RESET_WEEKDAY = 2 in tests/freehold_ledger.test.ts. No second week
+   derivation exists. Every bill has produce
    plus approved rotating nonproduce families within state.md's three-to-five-line
    target. The content/provenance worksheet supplies exact eligible item IDs,
    reference-derived quantities and rounding before enable; none is guessed. Compose
@@ -103,32 +130,39 @@ Deliverables (at most five):
    countMinusPlanned across lines and lock-aware/raw diagnosis. Bags-only, vault-only
    and automatic bags-then-vault sourcing drive the same preview and deduction. No
    keystone, gear intermediate, quickening catalyst or inaccessible/nontradable input.
-3. Atomic material payment and immutable prepay. pay_ledger validates source mode,
+3. Atomic material payment and immutable prepay. The pay_ledger command body is NEW
+   src/sim/freehold/ledger.ts (the thin SimContext consumer of ledger_core.ts, the
+   state.md module list's ledger.ts). pay_ledger validates source mode,
    owner/plot authority, published schedule, finalized historical dependencies and full
-   batch before mutation.07a's commitFreeholdMutation pairs character bags/vault and
-   plot condition/immutable paid-bill credits behind the global plot fence. Refused
-   revision/lease/lock/shortfall changes neither side. At most four future weeks now;
+   batch before mutation. 07a's commitFreeholdMutation pairs character bags/vault and
+   plot condition/immutable paid-bill credits behind the global plot fence; the
+   immutable paid-bill credits persist in NEW freehold_ledgers (server/freehold_db.ts,
+   an additive idempotent FREEHOLD_SCHEMA extension, keep-forever with a growth
+   metric, the state.md seams row). Refused
+   revision/lease/lock/shortfall changes neither side. At most four future weeks now:
+   NEW src/sim/freehold/ledger_core.ts::LEDGER_PREPAY_MAX_WEEKS is 4 here (state.md
+   Content numbers: 4 weeks initially and 12 from 25a, which raises this constant);
    refuse the fifth unchanged. Future purchase may bind a valid published schedule
    without finalized future elapsed periods; later actual credit consumption requires
    finalized elapsed dependencies. Credits retain source calendar/rate/material/receipt
-   attribution across retuning/suspension. Material repair from93 costs the same bill
-   as from60.15's Call satisfies the current unpaid bill and repairs to100 without
+   attribution across retuning/suspension. Material repair from 93 costs the same bill
+   as from 60. 15's Call satisfies the current unpaid bill and repairs to 100 without
    consuming or creating future credits; already-paid current bill is repair-only.
-   Preserve07a's actual relative locks and reviewed composition hook: fenced character
+   Preserve 07a's actual relative locks and reviewed composition hook: fenced character
    pre-lock/nonce, bank-ledger classification before guild replay and storage/custody
-   tail, not an invented receipts-last hierarchy.13a supplies compatible calendar-head
+   tail, not an invented receipts-last hierarchy. 13a supplies compatible calendar-head
    read participants and immutable projection authority before live upkeep can enable.
 4. Command and owner wire projection. The private fhold allowlist contains only the
    owner-needed condition/bill/source/prepay/suspension/grace/calendar facts. Explicit
    builders never serialize FreeholdUpkeepCalendarState or a DB record wholesale;
-   the public visitor projection keeps08a's separate allowlist. No evidence, secret or
+   the public visitor projection keeps 08a's separate allowlist. No evidence, secret or
    private diagnostic in self/public encoders or events. Outcomes carry operationId,
    plotId and operation kind consistently through text-free events, strict allowlists,
-   HEAVY_SELF and ClientWorld so16 ignores unrelated/late replies. The pure command
+   HEAVY_SELF and ClientWorld so 16 ignores unrelated/late replies. The pure command
    adapter accepts an injected typed calendar/lifecycle projection; absent, unsupported,
    unbound, uncovered or unfinalized required historical facts are not-ready, not zero
-   outage.13 can prove the core with deterministic fixtures, but its live authority gate
-   stays closed until13a supplies reviewed storage, host feeds and accepted producer
+   outage. 13 can prove the core with deterministic fixtures, but its live authority gate
+   stays closed until 13a supplies reviewed storage, host feeds and accepted producer
    artifacts. No service polling or wall clock is added to the core for this dependency.
 5. Decisive pure and atomic proof. Pin boundary math and no Rng, first visit versus
    absence, account-alt/dormant multi-cycle protection union, fixed partial-week bill,
@@ -139,10 +173,19 @@ Deliverables (at most five):
    credit purchase succeeds with valid current facts even when future time is not final.
    Test actual self/public encoders with distinctive operator-evidence/secret/private
    diagnostic sentinels; none reaches wire/event/copy. Preserve original unknown/future
-   state read-only. Atomic07a fixtures prove no bags/vault/plot divergence on refusal or
-   failure.13a owns live ingress/calendar PG/host/rollout proof and the explicit
-   docs/freeholds/upkeep-calendar-db-contract.md artifact before activation. The planned
-   calibration and four-week acceptance stay with03/13/20; no balance limit is guessed.
+   state read-only. Atomic 07a fixtures prove no bags/vault/plot divergence on refusal or
+   failure, and NEW tests/server/freehold_ledger.pg.test.ts (owned here, armed with
+   TEST_DATABASE_URL) drives pay_ledger through commitFreeholdMutation on disposable
+   PostgreSQL: refusal after the bags half, a stale CAS, and the service contract's
+   "Transaction composition and workload evidence" proof list (races with autosave,
+   storage start/apply, guild replay, account/character deletion and lease takeover,
+   pending legacy side effects and ambiguous commits). One composed fixture pins that
+   a daily and a Tuesday realm-week boundary both pass while the process is down and
+   that the first evaluation on boot classifies the elapsed bill and wear exactly once
+   and consumes at most one credit. 13a owns live ingress/calendar PG/host/rollout
+   proof and the explicit docs/freeholds/upkeep-calendar-db-contract.md artifact before
+   activation. The planned
+   calibration and four-week acceptance stay with 03/13/20; no balance limit is guessed.
 
 - TEST COVERAGE verifies decisive literal/source and negative assertions for every
   boundary above, including actual work before equality, real async/race outcomes and
@@ -164,7 +207,9 @@ server-hot-path-reviewer, test-coverage-auditor, qa-checklist.
 Database-performance-reviewer runs before implementation decisions and again on the
 finished diff; pair with migration-safety and privacy-security-review as listed.
 The QA session inspects those reports and dispatches a fresh review of every fix.
-- Run the Phase 13 STEP 3 suite list plus `npx tsc --noEmit`.
+- Run the Phase 13 STEP 3 suite list plus `npx tsc --noEmit`, including the PG-armed
+  twins with TEST_DATABASE_URL set after `npm run db:up` (record that they ran, not
+  skipped).
 
 STEP 4 - FIX:
 - Resolve ALL findings, including NICE-TO-HAVE items and nits. Correct any conflict

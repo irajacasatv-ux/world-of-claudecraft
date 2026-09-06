@@ -6,8 +6,11 @@ records with lift functions, `STATIC_INTERIOR_COLLIDERS`, the Hearth Key cooldow
 value, `JAILED_BLOCKED_COMMANDS`, D23 and D26) and `state.md` D4 and D13 (stand-ins
 before art).
 This phase replaces Phase 05's placeholder interiors with the real Inn Room and Cottage
-shells, gives the player two ways in (walking into the quay gate, using the Hearth Key), and
-is the first player-reachable housing surface, so it is a CLIENT phase with screenshots.
+shells, gives the player two ways in (confirming the quay gate prompt, using the Hearth
+Key), and is the first player-reachable housing surface, so it is a CLIENT phase with
+screenshots. Its offline entry, perf tour and captures depend on Phase 05's default Inn
+Room record and `/dev freehold <tier>` fixture (D81), not on Phase 07; on a dark realm
+the gate prompt and the Hearth Key are neither spawned nor granted (D85).
 
 ### Starter Prompt
 ```
@@ -21,10 +24,11 @@ model and the existing image/model/SFX pipelines, provenance and quality gates.
 
 Goal: author the two interiors as data the sim and the renderer both read (walls, doors,
 static decor with measured radii, plinth and hearth anchors), build them on proximity
-through the existing gated loop, spawn one tier-routed gate on the Eastbrook quay that
-enters on walk-in, grant every character of the owning account a Hearth Key that walks
-them home from any zone on a pinned cooldown, and surface the text-free refusals as
-localized toasts.
+through the existing gated loop, spawn one tier-routed gate on the Eastbrook quay whose
+explicit interact opens the prompt and whose confirmation enters (never proximity, D50),
+grant every character of the owning account a Hearth Key that walks them home from any
+non-instanced, non-match context on a pinned cooldown, and surface the text-free
+refusals as localized toasts.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -59,23 +63,49 @@ Spawn one Explore agent to read and summarize:
   {instance.ts,state.ts,index.ts,CLAUDE.md} (Phase 05), src/sim/instances/dungeons.ts
   (updateDoorTriggers, DOOR_TRIGGER_RADIUS, the ctor door spawn, leaveDungeon and
   detachFromDungeon's return position), src/sim/entity.ts (createGroundObject), the
-  Eastbrook zone content and its quay ground objects (grep the Eastbrook zone file under
-  src/sim/content/ and its groundObjects rows), src/sim/items.ts (useItem, the ItemUse arm
-  chain, the placeMobileStation arm), src/sim/professions/mobile_station.ts
+  ground-object table src/sim/data.ts GROUND_OBJECTS (exposed as WorldContent.groundObjects
+  and spawned by the Sim ctor loop, grep `worldContent.groundObjects` in src/sim/sim.ts;
+  no src/sim/content/ zone file carries groundObjects rows) and the non-lootable
+  interactable precedent: src/sim/content/mailboxes.ts, its ctor spawn beside that loop
+  (grep `'Mailbox'` in src/sim/sim.ts) and its EASTBROOK_LAYOUT SERVICES position in
+  src/sim/eastbrook_layout.ts; src/sim/interaction.ts (interact() handles only lootable
+  objects and pickUpObject refuses `!obj.lootable`, so the gate needs its own client arm);
+  src/game/interactions.ts (both button arms route objects by templateId: dungeon_door,
+  dungeon_exit, mailbox, then pickUpObject) and src/game/nearby_interaction.ts (the same
+  chain for the nearby-interact press); src/sim/items.ts (useItem, the ItemUse arm chain,
+  the placeMobileStation arm), src/sim/professions/mobile_station.ts
   (placeMobileStationFromItem: holding is the credential, using consumes nothing),
-  src/sim/content/profession_items.ts (the Master's Field Forge item def), src/sim/data.ts
-  (mergeItems, where the new src/sim/content/freehold/items.ts table joins ITEMS),
-  src/sim/sim.ts (the per-player tick site that calls updateDoorTriggers)
+  src/sim/content/items.ts (the masters_field_forge item def, the model for the key),
+  src/sim/data.ts (mergeItems, where the new src/sim/content/freehold/items.ts table joins
+  ITEMS), src/sim/sim.ts (the per-player tick site that calls updateDoorTriggers),
+  src/sim/unstuck.ts unstuckLocationAt (how rift, delve, battleground and claimed-instance
+  contexts are resolved explicitly), src/sim/sim_context.ts (bgMatches, arenaMatches,
+  duels), src/sim/freehold/{state.ts,instance.ts,dev_grant.ts} from Phase 05 (the default
+  tier-0 record, setFreeholdTier, the `/dev freehold <tier>` fixture),
+  src/game/freehold_dev_bootstrap.ts and scripts/lib/freehold_dev_authorization.mjs (its
+  loopback bridge)
 - src/render/dungeon.ts (DungeonInteriorVariant, buildInterior and how it resolves a
   layout and variant from the interior string, ensureDungeonAssets, buildPrewarmGroup),
   src/render/dawnhold_dressing.ts (buildDawnholdDressing, ensureDawnholdDressing),
-  src/render/renderer.ts (the dungeon proximity loop and builtInteriors,
-  retireInteriorGroup), src/render/gated_scene_attach.ts, src/render/CLAUDE.md ("GPU work"
+  src/render/renderer.ts (the dungeon proximity loop and builtInteriors, and the PRIVATE
+  retireInteriorGroup method reached only as a callback), src/render/gated_scene_attach.ts,
+  src/render/CLAUDE.md ("GPU work"
   and RENDER_PURE_CORES), src/render/characters/CLAUDE.md (the subsystem template)
-- server/game.ts (JAILED_BLOCKED_COMMANDS and the use_item dispatch), server/freehold_wire.ts,
-  the use_item payload shape (grep `use_item` in server/game.ts and src/net/online.ts)
-- src/ui/world_entity_i18n.ts, src/ui/hud/professions/feast_title.ts (the hand-listed
-  templateId map), tests/entity_display_name.test.ts, src/ui/hud/professions/farming_view.ts
+- server/game.ts (JAILED_BLOCKED_COMMANDS and the `case 'use':` dispatch that reads
+  msg.item and optional msg.slot), server/freehold_wire.ts, the `use` payload shape
+  `{ cmd: 'use', item, slot? }` (grep `cmd: 'use'` in src/net/online.ts; no separate
+  item-use command exists)
+- src/ui/world_entity_i18n.ts, src/ui/entity_display_core.ts (objects display the raw
+  sim name except feasts, so the gate needs a templateId-to-key arm there),
+  src/ui/hud/professions/feast_title.ts (the hand-listed templateId map),
+  tests/entity_display_name.test.ts, src/ui/map_marker_semantics_core.ts (MapMarkerSemantic
+  has dungeon, rift and delve kinds only), src/ui/map_semantic_accessibility_core.ts
+  (semanticMapMarkerArt, mapMarkerSemanticLayer, mapMarkerSemanticToken),
+  src/ui/minimap_markers.ts, tests/map_marker_semantics.test.ts,
+  tests/map_semantic_accessibility_core.test.ts, tests/minimap_markers.test.ts,
+  scripts/perf_tour.mjs (PERF_SCENARIO is a label read by src/game/perf_reporter.ts; the
+  tour drives movement itself and has no interior route yet),
+  src/ui/hud/professions/farming_view.ts
   (farmDeniedLineKey), src/ui/hud/professions/farm_event_feedback.ts (handleFarmEvent) and
   its hud.ts call site, src/ui/hud/housing/ (Phase 02 barrel), src/ui/i18n.catalog/
   hud_chrome.ts (the farming namespace), the item-names catalog module
@@ -89,8 +119,10 @@ lift function) and the six touch points per interior with the extraction candida
 pays for the world.ts arms; how buildInterior resolves a layout and variant by interior
 string and where a dressing module hooks in with its prewarm home; the gate spawn site and
 the explicit gate interaction call site plus the sim.ts extraction that pays for a per-player call;
-the ItemUse arm recipe; the use_item payload field a jailed check can read; the deny-toast
-wiring recipe and its hud.ts cost; the screenshot target recipe (desktop, compact, tablet).
+the ItemUse arm recipe; the `use` payload field (msg.item) a jailed check can read; the
+client object-routing arms to extend; the marker semantic recipe (kind, art token, layer,
+accessibility token); the deny-toast wiring recipe and its hud.ts cost; the perf tour
+route recipe; the screenshot target recipe (desktop, compact, tablet).
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 
@@ -98,7 +130,8 @@ Deliverables (at most five):
 1. The measured Inn/Cottage layouts, collision/lift derivations and safe entry/exit poses.
 2. Explicit Eastbrook gate interaction and the owned Hearth Key, with all authority gates.
 3. Shared-grammar interior shells and scheduler-prepared dressing on both room families.
-4. The gate prompt, keyed refusal feedback and all item/entity/i18n/content obligations.
+4. The gate prompt, its semantic map marker, keyed refusal feedback and all
+   item/entity/i18n/content obligations.
 5. Decisive offline/online tests and the desktop/compact/tablet visual evidence.
 
 Consume ux-spec.md's first-moment flow and art-brief.md's measured reference plan. Freeze
@@ -109,7 +142,7 @@ edge, cloth and truthful empty plinths; a free room is never visually second-rat
 
 The gate opens the plant-sheet decision-window-family prompt through NEW
 src/ui/hud/housing/housing_view.ts and gate_prompt_painter.ts, with own-home and
-friend-by-name destinations. Before18 implements friend lookup, that row is visibly
+friend-by-name destinations. Before 18 implements friend lookup, that row is visibly
 unavailable through hudChrome.housing.common.unavailable; it becomes live before
 Wave A closes. Proximity never triggers entry. All empty/loading/pending/error/locked,
 full/busy/recovery and visitor states use hudChrome.housing.gate.* or the one denied
@@ -145,23 +178,38 @@ files (disjoint except the shared pin files the coordinator edits last):
   and the entry inside a room, plinth anchor count equals the tier's plinths, the hearth
   present in both, lift zero on the flat floor).
 - Agent GATE AND KEY: src/sim/freehold/gate.ts (the Eastbrook Freehold Gate: one ground
-  object with templateId `freehold_gate` spawned at the quay from the Eastbrook content
-  row, lootable false, respawnTimer Infinity; an explicit interact action opens the gate prompt and validates authoritative
-  proximity on confirmation before calling enterFreehold, tier-routed through
-  freeholdDefForTier; proximity only exposes the affordance and NEVER teleports; no new
-  per-player housing tick loop; leaveFreehold lands at the authored safe gate position), the `hearth_key` tool item DEF in
+  object with templateId `freehold_gate`, lootable false, respawnTimer Infinity, spawned
+  by the ctor beside the mailbox from an EASTBROOK_LAYOUT SERVICES quay position ONLY when
+  the Sim's freeholdsEnabled boot config is true (D85: a dark realm spawns no gate; the
+  offline and headless hosts pass true under D3); an explicit interact action opens the
+  gate prompt and validates authoritative proximity on confirmation before calling
+  enterFreehold, tier-routed through freeholdDefForTier; proximity only exposes the
+  affordance and NEVER teleports; no new per-player housing tick loop; leaveFreehold
+  lands at the authored safe gate position), the `hearth_key` tool item DEF in
   src/sim/content/freehold/items.ts (soulbound, no market listing, sellValue 0, merged by
   src/sim/data.ts, every content obligation applies), and its use arm and cooldown logic
   in src/sim/freehold/hearth_key.ts (D23): an ItemUse arm `{ type: 'freeholdEnter' }`
-  that enters from any zone, consumes nothing, refuses in combat and while dead through
-  freeholdDenied, and refuses `cooldown` against the authoritative account Hearth state,
+  that enters from any open-world zone, consumes nothing, refuses in combat and while
+  dead through freeholdDenied, refuses from inside a rift floor, a delve, a dungeon or
+  any other claimed instance with the reason `instanced` and from inside a battleground,
+  an arena match, a duel or while carrying a battleground flag with the reason `match`
+  (both ids APPENDED to the Phase 05 enum after `busy`, before Phase 08's ids; the
+  contexts are resolved the way src/sim/unstuck.ts resolves them, never by position
+  guesswork; using the key at the selected home is the already-home no-op), and refuses
+  `cooldown` against the authoritative account Hearth state,
   using its isolated host-clock mirror offline and 07a transaction participant online, the cooldown being the state.md working
   value (60 minutes, the explicitly retained state.md working target; no unsupported
-  historical attribution) pinned by test; granted to each character of the owning account on its first gate
-  entry and re-granted when absent for inventory usability only; owning the item grants
-  no admission authority); the server side:
-  a payload-aware jailed check in server/freehold_wire.ts for use_item carrying the Hearth
-  Key beside JAILED_BLOCKED_COMMANDS (pinned); tests/freehold_gate_and_key.test.ts.
+  historical attribution) pinned by test; granted to each character of the owning
+  account on its first gate entry and re-granted when absent for inventory usability
+  only, and only while the boot config is true (D85); with full bags the entry proceeds
+  and no key is minted, the grant retrying on the next entry that finds a free slot;
+  owning the item grants no admission authority); the server side: a payload-aware
+  jailed check in server/freehold_wire.ts for the `use` command carrying the Hearth Key
+  (`msg.cmd === 'use' && msg.item === 'hearth_key'`) beside JAILED_BLOCKED_COMMANDS
+  (pinned); tests/freehold_gate_and_key.test.ts, and the dark-realm arms appended to
+  tests/server/freehold_wire.test.ts (a Sim built from buildRealmSimConfig with
+  FREEHOLDS_ENABLED unset spawns no freehold_gate entity and grants no hearth_key on
+  entry; with '1' both happen).
 - Agent RENDER: `'inn_room' | 'cottage'` DungeonInteriorVariant members on the dawnhold
   grammar in src/render/dungeon.ts, the layout and variant resolution for the two interior
   strings, src/render/freehold/{index.ts,CLAUDE.md,interior_dressing.ts} (static dressing
@@ -169,19 +217,51 @@ files (disjoint except the shared pin files the coordinator edits last):
   the rig) on the dawnhold_dressing.ts shape, built on proximity through the existing
   gated loop with every material in a prewarm home; a renderer.ts edit only if the loop
   cannot resolve the new interiors by data (then the Eastbrook re-mint memory applies);
-  the tests/renderer_compile_gate.test.ts arm for the two interiors; an offline
-  `npm run perf:tour` through both with zero live-program events.
-- Agent CLIENT: `hudChrome.housing.denied.*` English keys (one per reason, no "earn"
-  language), the gate's templateId row in src/ui/world_entity_i18n.ts and the Hearth Key
-  name in the item-names catalog, src/ui/hud/housing/housing_view.ts with
-  `freeholdDeniedLineKey(reason)` (UI_PURE_CORES; D26: the ONE deny-line selector over
-  hudChrome.housing.denied.*, later phases append rows to it and never add a second
-  selector) and src/ui/hud/housing/
-  freehold_event_feedback.ts (the handleFarmEvent shape) wired at the HUD event switch
-  without growing hud.ts (or paid for and lowered), the Hearth Key WebP with provenance,
-  tests/housing_view.test.ts, and the scripts/pr_shot_targets.mjs entries plus the
-  before/after captures (desktop, compact, tablet) through the pr-screenshots skill
-  committed under docs/screenshots/.
+  the tests/renderer_compile_gate.test.ts arm for the two interiors; a NEW freehold route
+  in scripts/perf_tour.mjs (or a sibling scripts/perf_tour_freehold.mjs it imports) run
+  offline as `PERF_SCENARIO=bench_freehold_interiors npm run perf:tour`: walk to the
+  quay gate, confirm own-home entry through the real prompt, sample the Inn Room, grant
+  the Cottage through Phase 05's real `/dev freehold cottage` chat route under the
+  loopback bridge (D81), re-enter and sample the Cottage, with zero live-program events
+  in both samples.
+- Agent CLIENT: the NEW `hudChrome.housing.denied.*` English keys (D92; sentence case;
+  no "earn" language): denied.dead "You cannot do that while dead.", denied.combat "You
+  cannot do that in combat.", denied.cooldown "Your Hearth Key is still cooling down.",
+  denied.instanced "You cannot use this inside an instance.", denied.match "You cannot
+  use this during a match."; the gate's templateId row in src/ui/world_entity_i18n.ts
+  ("Freehold Gate") plus the templateId-to-key arm in src/ui/entity_display_core.ts so
+  the world label and map cores name it by key (objects otherwise display the raw sim
+  name) with the object case added to tests/entity_display_name.test.ts; the Hearth Key
+  name in the item-names catalog ("Hearth Key") and hudChrome.housing.hearthKey.tooltip
+  shipped with its Wave A English "Return to your home. You cannot use this while in
+  combat, dead, in jail, inside an instance or during a match." (every refusal the arm
+  makes is a stated limit per docs/design/tooltip-writing.md rule 7; the second-home
+  sentence belongs to 42's hearthKey.tooltipShared, which inherits the same limits; no
+  tooltip ships a mechanic before its handler); src/ui/hud/housing/housing_view.ts with
+  `freeholdDeniedLineKey(reason)`
+  (UI_PURE_CORES; D26: the ONE deny-line selector over hudChrome.housing.denied.*, total
+  over the enum as it stands after this phase: no_freehold to denied.unavailable, busy
+  to denied.busy, locked to denied.condition, dead/combat/cooldown/instanced/match to
+  their NEW rows, visitors_full and not_friend to denied.permission until 18 appends
+  their own rows; later phases append rows to it and never add a second selector) and
+  src/ui/hud/housing/freehold_event_feedback.ts (the handleFarmEvent shape) wired at the
+  HUD event switch without growing hud.ts (or paid for and lowered); the gate arm in
+  src/game/interactions.ts (both button arms) and src/game/nearby_interaction.ts on the
+  mailbox precedent (templateId `freehold_gate` opens the prompt through the HUD, never
+  pickUpObject, so left-click, right-click and the nearby-interact press all reach it);
+  the NEW MapMarkerSemantic arm `{ kind: 'freehold-gate' }` for that templateId in
+  src/ui/map_marker_semantics_core.ts with its art token, layer and accessibility token
+  in src/ui/map_semantic_accessibility_core.ts and src/ui/minimap_markers.ts, labelled by
+  the existing hudChrome.housing.gate.marker ("Freeholds gate"), extended in
+  tests/map_marker_semantics.test.ts, tests/map_semantic_accessibility_core.test.ts and
+  tests/minimap_markers.test.ts (16 later selects this marker from the Charter receipt);
+  the Hearth Key WebP with provenance; tests/housing_view.test.ts; and the
+  scripts/pr_shot_targets.mjs entries plus the before/after captures (desktop, compact,
+  tablet) through the pr-screenshots skill committed under docs/screenshots/, the Cottage
+  captures granted through Phase 05's real `/dev freehold cottage` route under the
+  loopback bridge (D81; never a window.__game mutation or a direct setter); and the
+  regeneration of ux-key-manifest.json and ux-shot-manifest.json in this phase with every
+  cited count updated (D92).
 The coordinator runs last: tests/entity_display_name.test.ts re-pin, tests/item_icons.test.ts,
 `npm run wiki:content`, and the monolith ceilings.
 Every agent writes any report longer than a screen to a file and replies with the path
@@ -219,8 +299,12 @@ INVARIANTS THIS PHASE MUST KEEP:
   lock, never a Sim/display clock or cached ready value.
 - One sim, three hosts: confirmed gate interaction and the key arm run unchanged offline and
   online; the RL env still excludes housing.
-- Server authority: confirmed gate interaction and the key resolve in the sim; the client sends use_item
-  and mirrors; a jailed session can reach neither path.
+- Server authority: confirmed gate interaction and the key resolve in the sim; the
+  client sends the existing `use` command with the key's item id and mirrors; a jailed
+  session can reach neither path.
+- Dark realm (D85): with the boot config false no gate object spawns, no prompt can open
+  and no Hearth Key is granted; the offline and headless hosts stay live (D3); the
+  interiors, layouts and item defs are the same data on every host.
 - Text-free events (D10): every refusal is a freeholdDenied reason resolved to a
   hudChrome.housing.denied.* key client-side; the gate and key names are catalog keys.
 - Nothing destroyed, nothing sold: the key is granted, never bought or lost for good.
@@ -245,11 +329,12 @@ INVARIANTS THIS PHASE MUST KEEP:
 Out of scope (do NOT do in this phase):
 - Durable account Hearth storage (07 adds account_freehold_hearth and 07a performs the
   atomic online admission). This file owns only isolated host-clock state and the item
-  interaction; online admission stays gated until those dependencies are complete.
+  interaction; the wave PR carries 07 and 07a (D12), so this phase adds no second
+  production gate and its online arm proves entry through the real dispatch.
 - Furnishing placement, the descriptor, colliders for placed furnishings (Phase 08 to 10);
   the light rig and the furnishing view (Phase 09); the Strongbox and station props on
   their anchors (Phase 12); visiting through the gate (Phase 18); GLB art (Phase 19); the
-  Fenbridge gate and the "gate used" memory (Phase 25).
+  Fenbridge gate and the "gate used" memory (Phase 25a).
 
 
 CODEX ASSET EXECUTION (D74/D75):
@@ -277,19 +362,24 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts
   tests/entity_display_name.test.ts tests/item_icons.test.ts tests/item_art_consistency.test.ts
   tests/mobile_station_party.test.ts tests/server/freehold_wire.test.ts
-  tests/command_schema.test.ts tests/env_protocol.test.ts`; `npm run i18n:gen` then
-  `npx vitest run tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`;
-  `npm run wiki:content` then `npx vitest run tests/guide.test.ts`; `npm run perf:tour`
-  through both interiors; `node scripts/pr_screenshots.mjs` for the captures.
+  tests/command_schema.test.ts tests/env_protocol.test.ts
+  tests/map_marker_semantics.test.ts tests/map_semantic_accessibility_core.test.ts
+  tests/minimap_markers.test.ts tests/freehold_dev_grant.test.ts`; `npm run i18n:gen`
+  then `npx vitest run tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`;
+  `npm run wiki:content` then `npx vitest run tests/guide.test.ts`;
+  `PERF_SCENARIO=bench_freehold_interiors npm run perf:tour` through both interiors;
+  `node scripts/pr_screenshots.mjs` for the captures.
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
   architecture-reviewer (the authoritative gate interaction, the key arm, the world.ts and sim.ts
   extractions), render-performance-reviewer (the dressing as a scheduler client, the
   prewarm home, the perf tour), content-obligations-reviewer (the Hearth Key and gate
   obligations), frontend-seam-reviewer (housing_view.ts, the feedback module, the catalog
-  keys, and the render dressing as presentation); the dispatch table adds
-  cross-platform-sync (the enter paths on both hosts) and privacy-security-review (the
-  jailed use_item check in server/). Prompt each
-  for COVERAGE not filtering; each writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
+  keys, the marker arm, the client interact arms, and the render dressing as
+  presentation); the dispatch table adds cross-platform-sync (the enter paths on both
+  hosts), privacy-security-review (the jailed `use` check in server/),
+  server-hot-path-reviewer (the gate spawn and the key grant on the entry path, no new
+  per-player loop), test-coverage-auditor (every pin), then qa-checklist (the completion
+  gate). Prompt each for COVERAGE not filtering; each writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
   locked rulings and the fixes have fresh review.
 
 FINAL REVIEW AND COMPLETION CONTRACT:
@@ -315,20 +405,35 @@ STEP 4 - COMMIT CADENCE:
 Then `npm run ci:changed` after the LAST commit; read the exit code.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] Confirming the own-home gate action enters the Inn Room offline (tests/freehold_gate_and_key.test.ts)
-  and online (the two-session arm through the real dispatch); the Hearth Key enters from
-  a non-Eastbrook zone; leaving lands at the gate (position pinned by literal).
+- [ ] Confirming the own-home gate action enters the Inn Room offline on Phase 05's default
+  record with no seeding step (tests/freehold_gate_and_key.test.ts; D81) and online (the
+  two-session arm through the real dispatch); the Hearth Key enters from a non-Eastbrook
+  open-world zone; leaving lands at the gate (position pinned by literal).
+- [ ] Left-click, right-click and the nearby-interact press on the gate open the prompt
+  through the real client routing (src/game/interactions.ts and nearby_interaction.ts,
+  pinned), and a proximity walk opens nothing.
 - [ ] The cooldown is pinned to the state.md working value (60 minutes) and the ready stamp
   is account-scoped, with private UI mirrors only; dead, combat, and cooldown refuse with a
-  freeholdDenied reason and nothing moved; the key is granted once and re-granted when
-  absent; a jailed session's use_item on the key is refused (pinned).
+  freeholdDenied reason and nothing moved; one test per context asserts `instanced` for
+  a rift floor, a delve and a dungeon claim and `match` for a battleground, an arena, a
+  duel and a flag carrier, each with no teleport; the key is granted once and re-granted
+  when absent, and a full-bags entry proceeds with no key minted (pinned); a jailed
+  session's `use` of the key is refused (pinned).
 - [ ] tests/freehold_layouts.test.ts proves both derivations deterministic; the plinth
   anchor counts equal the tier table; tests/renderer_compile_gate.test.ts covers both
-  interiors; `npm run perf:tour` shows zero live-program events through them.
+  interiors; `PERF_SCENARIO=bench_freehold_interiors npm run perf:tour` records zero
+  live-program events in the Inn Room and the Cottage samples, the Cottage granted
+  through Phase 05's fixture (D81).
 - [ ] render-performance-reviewer confirms all findings resolved and the fresh fix review passed (interiors ride the gated loop);
   the other reviewers likewise.
-- [ ] Every deny reason has an English key; the S3 guard and the API error parity pass;
-  the Hearth Key has a WebP and a provenance row; the gate has a world-entity row.
+- [ ] Every deny reason in the enum maps through freeholdDeniedLineKey to an English key
+  with the exact values named in the CLIENT slice (the five NEW rows, the existing
+  rows for the rest); hearthKey.tooltip ships the Wave A English; the S3 guard and the
+  API error parity pass; the Hearth Key has a WebP and a provenance row; the gate has a
+  world-entity row, an entity_display_core arm and a `freehold-gate` marker semantic
+  pinned in the three marker suites.
+- [ ] The dark-realm arms in tests/server/freehold_wire.test.ts prove no gate entity and
+  no Hearth Key grant with FREEHOLDS_ENABLED unset, and both with '1' (D85).
 - [ ] Before/after screenshots (desktop, compact, tablet) are committed under
   docs/screenshots/ and named in progress.md.
 - [ ] world.ts, sim.ts, and hud.ts ceilings are LOWER or unchanged; all STEP 3 suites green.
@@ -339,9 +444,10 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   already-at-home is a no-op with no cooldown spend, and a held key grants no authority.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 06, notes, deferrals, the screenshot
-  paths) and docs/freeholds/state.md (the per-phase ledger row 06: new files, the two
-  interiors, the gate templateId, the item id, the ItemUse type, 07's separate durable
+- Update docs/freeholds/progress.md (status row 06, notes, named unsigned gates, the
+  screenshot paths) and docs/freeholds/state.md (the per-phase ledger row 06: new files,
+  the two interiors, the gate templateId and its marker kind, the item id, the ItemUse
+  type, the appended reason ids instanced and match, 07's separate durable
   account_freehold_hearth authority and its committed private display mirror (never
   persisted inside a plot), the i18n keys; the placeholder-interior note from row 05
   marked swapped).
@@ -355,7 +461,7 @@ items, and the FULL PATH of the next file to run:
 STOPPING RULES:
 - Stop and ask if the renderer cannot resolve the new interiors by data and renderer.ts
   must grow (the Eastbrook re-mint and the ceiling are both maintainer territory).
-- Stop if the jailed check cannot see the Hearth Key inside the use_item payload (never
+- Stop if the jailed check cannot see the Hearth Key inside the `use` payload (never
   ship a key a jailed session can use).
 - Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
 - Do not push the branch; never merge a PR.

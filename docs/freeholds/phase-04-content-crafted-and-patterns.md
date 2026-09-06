@@ -1,7 +1,7 @@
 # Phase 04: content, the crafted furnishings and the quartermaster patterns
 
 Wave A, the Cottage MVP. The spec is `progress.md` "04 Content: crafted furnishings and
-quartermaster patterns"; the decisions are `state.md` D13 and D14 (one recipe per
+quartermaster patterns"; the decisions are `state.md` D53 and D14 (one recipe per
 existing craft, patterns are `kind: 'recipe'` rows on the deterministic quartermaster row, no
 luck-gated faucet in the MVP) and `state.md` (keystone exclusion, recipes and `stationType`
 gates unchanged). This is a CONTENT phase with the full same-change obligation list; it also
@@ -18,7 +18,7 @@ model and the existing image/model/SFX pipelines, provenance and quality gates.
 
 Goal: give every one of the ten crafts a furnishing recipe on its existing trainer and
 station seams, put three of those recipes behind pattern items sold deterministically by the
-Heroic Quartermaster (D13, Marks-purchasable, never a luck-gated only faucet), ship art and
+Heroic Quartermaster (D53, Marks-purchasable, never a luck-gated only faucet), ship art and
 every content obligation, and extend the channel, economy, and provisioner contracts so
 furnishing recipes are swept like every other recipe.
 
@@ -41,7 +41,8 @@ STEP 0 - PRE-FLIGHT:
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "04 Content: crafted furnishings
-  and quartermaster patterns"), docs/freeholds/state.md (D13, D14 and the settled Hearth shelf contract), and this file
+  and quartermaster patterns"), docs/freeholds/state.md (D53, D14 and the settled Hearth
+  shelf contract), and this file
 - src/sim/content/apex_patterns.ts (the id contract `pattern_<output>`, the per-craft
   prefixes, the header count literal that must stay true), src/sim/content/farm_patterns.ts
   (the narrow RecipeItemDef table as the model), src/sim/professions/pattern_items.ts
@@ -52,7 +53,8 @@ Spawn one Explore agent to read and summarize:
   src/sim/content/professions.ts (STATION_TYPE_BY_CRAFT, the stationType binding),
   src/sim/professions/crafting.ts (evaluateCraftAdmission: the station gate that must not
   change; how a non-gear output is minted), src/sim/content/heroic_vendor.ts (the
-  deterministic Marks stock row shape), docs/design/professions.md (R8, D13, R17, R18),
+  deterministic Marks stock row shape), docs/design/professions.md (its own R8, R17 and
+  R18 rows; the packet doctrine is state.md D53),
   src/sim/professions/CLAUDE.md
 - src/sim/content/freehold/{furnishings.ts,tiers.ts} (Phase 03), src/sim/data.ts
   (mergeItems beside APEX_PATTERN_ITEMS and FARM_PATTERN_ITEMS), src/sim/content/
@@ -63,7 +65,10 @@ Spawn one Explore agent to read and summarize:
   the icon pipeline recorded in state.md row 03, src/ui/world_entity_i18n.ts, the
   item-names catalog module
 - tests/apex_pattern_channels.test.ts (the no-fourth-channel sweep and the quartermaster
-  arm: does it accept a quartermaster-only pattern?), tests/apex_pattern_items.test.ts,
+  arm: does it accept a quartermaster-only pattern?; the three literal pins that redden
+  on three new drop recipes: the "phase 02 sweep floor" EXACTLY-40 kind:recipe literal,
+  the drop-recipe partition toHaveLength(40) with its five-family sum equality, and the
+  stale "34" header comment), tests/apex_pattern_items.test.ts,
   tests/farm_pattern_items.test.ts (the partition and marks-valve pins),
   tests/recipe_pattern_items.test.ts (the shipped-content sweeps),
   tests/recipe_economy.test.ts, tests/provisioner_firewall.test.ts (the Phase 03 ledger
@@ -74,7 +79,7 @@ Spawn one Explore agent to read and summarize:
 The agent returns: the recipe record shape and its merge site; the trainer-row recipe
 (which table, which skill threshold field); the pattern row and the quartermaster stock row
 recipes; whether the channel sweep accepts a quartermaster-only pattern and, if not, the
-exact arm to add so D13 without a luck channel is legal; the tier 1 to 3 material ids per
+exact arm to add so D53 without a luck channel is legal; the tier 1 to 3 material ids per
 craft and the produce ids the consumable crafts (cooking, alchemy) may bill; the firewall
 carve-out predicate and the arm that lets a furnishing recipe bill produce while refusing
 every keystone; the Hearth shelf append recipe and the count pins; the art invocation.
@@ -93,6 +98,11 @@ phrases such as stand-or-brazier describe historical options only and are replac
 manifest's selected form. Every material count, skill threshold, Marks price, sellValue,
 decor cost and geometry value has a named source+derivation+rounding or signed calibration
 row before activation. Do not claim classic-era authority for original housing rates.
+Every ProfessionRecipeRecord balance field is in that rule, itemLevelBudget and skillReq
+included: itemLevelBudget is REQUIRED on every recipe and drives the craft gold sink
+(src/sim/professions/crafting.ts, CRAFT_GOLD_SINK_COPPER_PER_BUDGET), so each of the ten
+recipes takes its value from the content-numbers-workbook.md CAL-RECIPES-A row (the
+bronze hoe precedent in src/sim/content/recipes.ts carries 10), never from taste.
 Verify pattern sellValue against the shipped pattern contract rather than assuming it.
 Wave A remains Marks-only, never a raid/rift/delve luck faucet. The later Wave B manifest
 adds one named raid OR rift luck channel plus Marks per rare pattern and counts all produce
@@ -129,8 +139,13 @@ files (disjoint except the shared pin files the coordinator edits last):
   r-on-every-def pin extended in tests/freehold_content.test.ts.
 The coordinator runs last: the furnishing-recipe arm in tests/provisioner_firewall.test.ts
 (produce allowed on the consumable crafts, keystones and gear intermediates never, a
-can-fail control), `npm run wiki:content`, and the count re-pins in
-tests/reliquary_content.test.ts and tests/recipe_pattern_items.test.ts.
+can-fail control), `npm run wiki:content`, the count re-pins in
+tests/reliquary_content.test.ts (tests/recipe_pattern_items.test.ts has no count pin;
+its sweeps are behavioral), and the tests/apex_pattern_channels.test.ts re-pins landed in
+the pattern commit: the shipped kind:'recipe' floor literal 40 to 43, the drop-recipe
+partition literal 40 to 43 with a SIXTH family arm for the three furnishing drop rows so
+the family sum equality and the disjointness check still hold, and the stale header
+comment (it still says 34) corrected to the new truth.
 Every agent writes any report longer than a screen to a file and replies with the path
 plus a short summary. Never `mode: "plan"` on teammates.
 
@@ -142,7 +157,7 @@ INVARIANTS THIS PHASE MUST KEEP:
   makers_ember, a gear intermediate, or the quickening catalyst.
 - Never sell power: every furnishing output is decor (the feast-table prop grants no Well
   Fed and has no charges; the glow light has no aura); the power-neutral sweep pins it.
-- D13: every pattern is Marks-purchasable on a deterministic row; no luck-gated channel
+- D53: every pattern is Marks-purchasable on a deterministic row; no luck-gated channel
   in the MVP; no pattern takes a Reliquary page.
 - Content obligations, all in this change: art with provenance for all thirteen ids,
   names with M16 fills, Hearth shelf pages for the ten items, wiki regen, guide keys.
@@ -182,8 +197,11 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`.
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
   content-obligations-reviewer (the obligation list, referential integrity through the
-  merged catalog, the explicit source derivation and approval of every bill). Prompt it for COVERAGE not
-  filtering; it writes its report to a file. Do not commit until all findings, including nits, are resolved and freshly reviewed.
+  merged catalog, the explicit source derivation and approval of every bill),
+  test-coverage-auditor (the re-pinned literals and every negative arm), then
+  qa-checklist (the completion gate). Prompt each for COVERAGE not filtering; each writes
+  its report to a file. Do not commit until all findings, including nits, are resolved
+  and freshly reviewed.
 
 FINAL REVIEW AND COMPLETION CONTRACT:
 - Required reviewers for the actual promised surfaces: content-obligations-reviewer, test-coverage-auditor, qa-checklist.
@@ -213,7 +231,11 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   appears in src/sim/content/reliquary.ts.
 - [ ] tests/apex_pattern_channels.test.ts, tests/recipe_pattern_items.test.ts,
   tests/recipe_economy.test.ts, and tests/provisioner_firewall.test.ts (with the furnishing
-  arm) are green; the apex header count literal is unchanged and still true.
+  arm) are green; the src/sim/content/apex_patterns.ts header count literal is unchanged
+  and still true; the channel suite's floor and partition literals read 43 with the sixth
+  family arm and its header comment matches (pinned in the pattern commit).
+- [ ] tests/freehold_content.test.ts pins each recipe's itemLevelBudget and skillReq to the
+  CAL-RECIPES-A workbook literals; no recipe carries a value the workbook does not.
 - [ ] content-obligations-reviewer confirms all findings resolved and the fresh fix review passed.
 - [ ] `grep -rn "wyrmfall_core\|sundered_essence\|makers_ember\|quickening"
   src/sim/content/freehold/` returns nothing; no bill names a billet, plating, cording,
@@ -223,7 +245,7 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] All STEP 3 suites green.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 04, notes, deferrals) and
+- Update docs/freeholds/progress.md (status row 04, notes, named unsigned gates) and
   docs/freeholds/state.md (the per-phase ledger row 04: new files, the thirteen ids, the
   recipe ids, the quartermaster rows, page ids, i18n keys; the exact Hearth page inventory).
 - Record surprising rules learned in memory for the next session.
@@ -235,7 +257,7 @@ items, and the FULL PATH of the next file to run:
 
 STOPPING RULES:
 - Stop and ask if the channel sweep cannot accept a quartermaster-only pattern without
-  weakening an existing pin (D13 must hold without a luck channel; never loosen the sweep).
+  weakening an existing pin (D53 must hold without a luck channel; never loosen the sweep).
 - Stop if a craft has no keystone-free tier 1 to 3 material set for its bill, or a required numeric source/approved calibration row is absent (the documented
   content release gate remains closed until that artifact exists).
 - Do not push the branch; never merge a PR.

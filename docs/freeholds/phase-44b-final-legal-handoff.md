@@ -33,16 +33,45 @@ STEP 0 - PRE-FLIGHT:
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
-- state.md D73, every prior paid-release gate and actual signed status, completed44
-  and44a/QA evidence, final-artwork-audit.md, ux-spec.md and the full implemented diff.
+- state.md D73, every prior paid-release gate and actual signed status, completed 44
+  and 44a/QA evidence, final-artwork-audit.md, ux-spec.md and the full implemented diff.
 - docs/prd/woc/freehold-counsel-memo.md, freehold-terms-amendment.md,
   freehold-store-listing-drafts.md, freehold-service-contract.md,
   freehold-deed-service-contract.md and freehold-territory-authority-schedule.md.
+- The live governing documents the drafts must reconcile: public/terms.html ("Last
+  updated: 25 August 2026") section 8 ("We do not sell virtual items or currency" and
+  "modify, remove, reset, or wipe ... without liability or compensation"), section 9
+  (token issuance: "We do not issue, mint, control, manage, promote as an investment,
+  or guarantee the $WOC token"), section 12 ("reset or wipe data"), section 19
+  (termination: "On termination, your licence to use the Service ends" plus the
+  marketplace escrow sentence) and section 22 (the marketplace "is not available in the
+  App on any platform", the one-document pattern the housing deed schedule adopts);
+  public/privacy.html ("Last updated: 21 June 2026") section 2 (wallet verification
+  "does not involve any transaction"), section 6 (inactive-account deletion) and
+  section 8 (the in-game deletion option versus the soft-deactivation code in
+  server/account.ts); TERMS_AND_CONDITIONS.md; TERMS_AND_CONDITIONS_MARKETPLACE_DRAFT.md
+  (the counsel redline precedent, with its open [COUNSEL] questions on shared sections
+  8, 9 and 10 and the section 17 liability cap); and src/ui/terms_link.ts (every shell
+  links the one canonical Terms
+  URL). The handoff names each clause and the amendment's disposition for it (redline,
+  disclaimer or leave).
 - Actual account entitlement, distribution presentation, service authorization,
   quotes/settlement/refunds, no-loss upkeep, transfer/custody, privacy/export/deletion,
-  moderation, art/IP/provenance and rollout/recovery behavior and their test evidence.
-- Current primary platform/legal source documents cited in the package; legal counsel
-  owns applicability and approval, not this coding session's policy inference.
+  moderation, art/IP/provenance and rollout/recovery behavior and their test evidence;
+  the support-reconciliation ownership statement the revised
+  freehold-service-contract.md carries (service-owned, operator-authenticated tooling on
+  the economy service; the game applies accepted outcomes only through the 07a/15
+  original-operation recovery reader and owns no operator route or admin page) and the
+  refund-drill evidence that depends on it.
+- Current primary platform/legal source documents cited in the package, including the
+  Solana Mobile Publisher Policy at its current host
+  https://legal.solanamobile.com/publisher-policy-web (the solanamobile.com URL answers
+  a 308 redirect there; retrieved 2026-09-06, "Last Updated: Jul 21, 2026", part of the
+  dApp Store Developer Agreement), the dApp Store Developer Agreement as a named
+  acceptance artifact and the dApp Store Terms of Use at
+  legal.solanamobile.com/en/dapp-store-tos; an inaccessible current text stays a named
+  counsel artifact gate. Legal counsel owns applicability and approval, not this coding
+  session's policy inference.
 - docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
   artifacts referenced by state.md that this slice consumes.
 The agent returns: a clause-by-clause implemented-versus-promised matrix, changed facts since early
@@ -63,13 +92,20 @@ and return full reports to the scratchpad with a path and short summary.
    docs/prd/woc/freehold-final-legal-handoff.md with exact implementation/commit scope,
    clause/surface/operation mapping, screenshots/tests, final artwork provenance and
    every already accepted or still external determination. Describe actual effects,
-   eligible checkout authorization, transfer manifest and no-loss protection plainly;
-   do not substitute the earlier proposal for verified built behavior.
+   eligible checkout authorization, transfer manifest, no-loss protection and the
+   purchase-submodel absence contract plainly (D86: absence on a denied storefront is a
+   runtime contract with no DOM node, handler, request, fetched catalog, error copy or
+   accessible text, while purchase code and English keys ship dormant in every bundle
+   under the runtime capability; the review notes say "not rendered or reachable", never
+   "absent from the bundle", and counsel confirms this line item); do not substitute the
+   earlier proposal for verified built behavior.
 2. Terms and player-copy revisit: refresh the concrete Terms amendment, counsel memo
    and seven-distribution listing/review-note drafts to match the final behavior.
    Include account entitlement versus optional deed, custody/refund/cancellation,
    material/upkeep/Call effect, cosmetic/access limits and privacy/retention details.
-   Preserve the housing language and source-key rules. Proposed legal drafting is
+   Preserve the housing language and source-key rules (D92: hudChrome.housing.* as pinned
+   by ux-spec and ux-key-manifest.json is the only key family; the drafts adopt those
+   ids). Proposed legal drafting is
    clearly marked for legal-team review, never presented as approved legal advice.
 3. Service/platform/territory reconciliation: check the final service/deed contracts,
    accepted issuer/verifier evidence, published catalog/settlement, authority schedule,
@@ -86,14 +122,14 @@ and return full reports to the scratchpad with a path and short summary.
    artifact links. Delivery requires an authorized recipient/channel; never invent
    contact details or claim a draft was sent. This docs audit sends no legal message.
    The handoff artifact remains complete even while external review is pending.
-5. Final completeness and preservation audit: validate the entire chain through44bQA,
+5. Final completeness and preservation audit: validate the entire chain through 44b QA,
    all approved decisions, final-art inventory, exact anchors and legal/economy gate
    status. Run the proportional contribution gate and fresh coverage/fix review.
    Preserve all packet, UX, decision, content/art and legal/service sources. Mark
-   implementation packet complete only after44bQA passes; external review/sign-off,
+   implementation packet complete only after 44b QA passes; external review/sign-off,
    authorized publication and deployment retain their separate truthful statuses.
    Any later scaffolding cleanup is a separate explicitly authorized task with
-   reviewed durable preservation/link proof, never an action in44/44a/44b.
+   reviewed durable preservation/link proof, never an action in 44/44a/44b.
 
 INVARIANTS THIS PHASE MUST KEEP:
 Every player-visible string, including error, aria, tooltip and empty-state text,
@@ -173,10 +209,15 @@ emoji, or word "phase" appears in a commit message. Keep generated output with i
 authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
 STEP 5 - ACCEPTANCE CRITERIA:
-- [ ] The final handoff maps every Terms/legal/platform/service promise to the actual completed feature and final artwork, with precise evidence and no unsupported policy or approval claim.
+- [ ] The final handoff maps every Terms/legal/platform/service promise to the actual
+  completed feature and final artwork, with precise evidence, the named live Terms and
+  Privacy clauses with their dispositions, the D86 dormant-submodel line item, the
+  support-reconciliation ownership statement and no unsupported policy or approval claim.
 - [ ] Concrete counsel/Terms/listing/service/deed/territory documents are reconciled and reviewable; earlier paid-release gates remain cumulative and enforced.
 - [ ] The legal-team package, cover-message draft, owners, revision and external sign-off/release-gate tracking are complete; delivery status is truthful and no recipient/channel is invented.
-- [ ] Full chain/anchors/language/final-art and proportional QA/fresh fix review pass, all durable sources remain, and44bQA alone is the terminal implementation-packet audit.
+- [ ] Full chain/anchors/language/final-art and proportional QA/fresh fix review pass,
+  all durable sources remain, and 44b QA alone is the terminal implementation-packet
+  audit.
 
 STEP 6 - DOC UPDATES + MEMORY:
 Update progress.md row 44b and state.md's implementation ledger with actual paths,
@@ -193,5 +234,6 @@ tracked release gates and the FULL PATH of the next file:
 STOPPING RULES:
 A failed acceptance check stops completion. Preserve state on failed mutation, decode,
 quote, capacity, lease or revision checks. No widening of a monolith ceiling or silent
-change to a locked ruling. Do not push the branch or open/merge a PR in this slice.
+change to a locked ruling. Push 44b commits to an open wave E PR only under a go that
+covers follow-up pushes; otherwise stop and ask; never open or merge a PR in this slice.
 ```

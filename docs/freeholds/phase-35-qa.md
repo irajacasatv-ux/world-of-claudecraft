@@ -1,4 +1,4 @@
-# Phase 35 QA: audit permanent ward Favor and monthly Endeavors
+# Phase 35 QA: audit Ward favor and Endeavors
 
 Audits `phase-35-ward-favor-and-endeavors.md`. Record the verdict in `progress.md` row "35 QA".
 The next implementation starts only after this audit passes.
@@ -6,21 +6,24 @@ The next implementation starts only after this audit passes.
 ### Starter Prompt
 ```
 This is Phase 35 QA of the Freeholds and Guildhalls feature.
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out.
 Goal: verify every promised deliverable, adversarial failure case and settled ruling
 against the real implementation diff; fix all findings and review the fix round.
 
 STEP 0 - PRE-FLIGHT:
 Work in the state.md worktree/branch. Verify git status is clean; ask if it is dirty.
 Sync per state.md "Worktree, base, and merge-forward"; after a non-empty merge run the
-release-merge-audit skill and install frozen dependencies if patches/ moved. Scan memory
-for test-pin traps, "apply ALL findings" and "review the review-fix round".
+release-merge-audit skill and install frozen dependencies if patches/ moved. Read
+state.md "Gotchas (read before the matching phase)" and implementation-plan.md for
+test-pin traps, "apply ALL findings" and "review the review-fix round" (Codex has no
+memory step).
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
@@ -38,8 +41,12 @@ Deliverables (at most five):
 Fan out three read-only coverage auditors: correctness, test coverage, and hygiene.
 Each reports every issue, including uncertain issues and nits, with severity/confidence
 and evidence to a file. Audit these specific requirements:
-- Calendar rollover must not decay Favor or capacity; independent month/season keys
-  stay deterministic across leap/month boundaries with injected authority data.
+- Calendar rollover must not decay Favor or capacity; the Endeavor month key is
+  utcDay.slice(0, 7) (D84), never resetDay: the injected fixture 2026-10-01T03:30Z yields
+  2026-10 while resetDay still reads 2026-09-30, and leap/month boundaries stay
+  deterministic with injected authority data. The capacity award is keyed by the stable
+  plot ID (D80): a transfer fixture carries an above-base award to the buyer's record and
+  the seller's fresh record starts at base.
 - Exact approved content rows, event fingerprints and distinct-visit dedupe exclude
   bought Calls, repeated visits and alts as repeat credit. Positive cosmetic allowlist
   must fail for a power reward and contain every actual reward.
@@ -47,7 +54,10 @@ and evidence to a file. Audit these specific requirements:
   dedupe/progress and durable lazy awards. No eager all-member rewrite or unbounded
   startup load; compacted counters retain permanent rank and award replay identity.
 - The panel, tooltip keys, hidden-source silhouettes, wire fields and max-size fixtures
-  match ux-spec and both-world pins; each new reward has final art/source obligations.
+  match ux-spec and both-world pins; the exact favor/endeavor key rows are in
+  ux-key-manifest.json and the `housing-ward` favor/endeavor variants (the six
+  ward-endeavors-loading/empty/unavailable and ward-endeavor-in-progress/complete/
+  hidden-reward scenes) in ux-shot-manifest.json (D92); each new reward has final art/source obligations.
 - Every changed reward prop uses scheduled prewarm and retirement; repeated
   entry/leave does not grow resources. Verify measured LOW frame/GPU budget and
   actionable visibility with render-performance-reviewer using actual evidence.

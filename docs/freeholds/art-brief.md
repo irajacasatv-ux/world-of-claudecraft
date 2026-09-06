@@ -91,7 +91,10 @@ reminder. The approved reference's red/teal accents are small visual anchors, no
 instructions to paint every furnishing a different saturated color. The eight
 approved dyes in the content manifest reuse this material-role palette. 41 produces
 the exact neutral-lit dye swatches, names, channel masks and item icon references;
-no dye modifies trophy proof, source difficulty, rarity or placement feedback.
+no dye modifies trophy proof, source difficulty, rarity or placement feedback. The
+dye picker is enabled by the home station amenity of type apothecary: no new amenity
+kind, no extra slot and no dye station GLB (D90), so the only dye art is the swatch
+and channel-mask board below.
 
 ## 4. Room geometry, circulation and authored vistas
 
@@ -182,7 +185,10 @@ cosmetically, but source/account condition never depends on the effect frame rat
 Show the actual condition and explanation in Steward; a dim scene alone is not a
 mechanic explanation. No burning eviction notice, collapse crack, countdown threat
 or pay-or-lose visual. Later trophy finish wear refines this behavior; it does not
-postpone basic condition feedback until 23.
+postpone basic condition feedback until 23. The Steward's fireplace-shaped condition
+emblem (ux-spec section 5) is a procedural `src/ui/ui_icons.ts` svgIcon recipe owned
+by 16 as deliberately final SVG art: it is not a raster asset, needs no reference board
+in section 8, and 44a's inventory records that explicit final-art verdict.
 
 Indoor daylight follows the realm's existing time grade. Night retains the hearth
 composition and readable circulation. Lighting change cannot hide ghost footprint,
@@ -284,13 +290,13 @@ sheet. No inferred prior approval. Rejected images remain outside runtime assets
 | `docs/freeholds/art/references/cottage-roomboard.png` | Cottage plan and matching views, 06/19 DRESSING | Built-in Strongbox, station slot, decorating negative space and camera safety |
 | `docs/freeholds/art/references/freehold-basics-board.png` | All eight A vendor pieces with readable identity, 19 VENDOR | Each exact manifest ID labelled, matching silhouette/detail views |
 | `docs/freeholds/art/references/freehold-crafted-a-board.png` | All ten A craft pieces, 19 CRAFTED | Stable floor support and distinct craft workmanship; exactly three pattern outputs |
-| `docs/freeholds/art/references/freehold-trophies-a-board.png` | Final generic plaque, source medallion, bust, head, marker and stand families, 19 TROPHIES | All-source truthful display; hidden silhouette; no false trophy default |
+| `docs/freeholds/art/references/freehold-trophies-a-board.png` | Final generic plaque variants, source medallion on plaque, stand plaque, paddock marker and qualified head families exactly as the content manifest's Wave A generic display column lists them (no bust form), 19 TROPHIES | All-source truthful display; hidden silhouette; no false trophy default |
 | `docs/freeholds/art/references/freehold-dressing-board.png` | Hearth, door, structural kit, plinth, Strongbox and station anchor family, 19 DRESSING | Fixed/movable visual distinction and measured sockets |
 | `docs/freeholds/art/references/freehold-crafted-b-board.png` | Exact twenty B outputs, 22 ART | Wall/table/fixed-ceiling surfaces and two Cooking produce outputs inside twenty |
 | `docs/freeholds/art/references/freehold-trophies-b-board.png` | Every specialized family from manifest section 23 inventory, 23 TROPHIES | Creature/item likeness, truthful difficulty and real source coverage |
 | `docs/freeholds/art/references/freehold-guildhall-board.png` | Meeting Hall/Great Hall/Bastion, feast/war/muster boards, member plinths and project vendors; 28 room, 30 amenity, 30a board, 31 guild-trophy, 32 tier and 32a project/vendor ART | Same material family at social scale; authorized board interaction; final wave C forms |
 | `docs/freeholds/art/references/freehold-ward-board.png` | Neighborhood square, approved exterior forms, guild anchor, doors and showcase display, 34/35/36 ART | Measured capacity footprint; sightlines; every admitted player visible |
-| `docs/freeholds/art/references/freehold-depth-board.png` | Keep/Fortress/Citadel, dye station and later layout surfaces, 40/41/42 ART | Preserved character, no unexplained new material theme; measured large-tier limits |
+| `docs/freeholds/art/references/freehold-depth-board.png` | Keep/Fortress/Citadel and later layout surfaces, 40/42 ART (no dye station model: D90) | Preserved character, no unexplained new material theme; measured large-tier limits |
 | `docs/freeholds/art/references/freehold-dye-board.png` | Exact eight approved dye swatches and channel masks, 41 ART | Neutral-lit values, approved names, LOW and color-vision readability |
 | `docs/freeholds/art/references/<model-key>-turnaround.png` | Each exact furnishing model and each specialized/dressing model's admitted detail reference | Named owner of corresponding family; front, side, rear/three-quarter, support/underside where needed |
 | `docs/freeholds/art/reference-manifest.md` | Complete rights/admission/hash manifest, 19 ART lead and every later extension owner | Every referenced file resolves; approval is explicit per source revision |
@@ -344,8 +350,9 @@ contract. Parent surfaces and collider envelopes use transformed shipping bounds
 
 Choose per-asset triangles, primitives, materials, textures, byte limits and total
 maximal-layout costs from measured source exemplars before building. The banker
-chest's verified 2,048 triangles and mailbox's 1,640 are comparator observations,
-not universal housing budgets. Other counts and bytes are re-read from current pins
+chest's verified 2,048 triangles (pinned in tests/render_glb_replacement_assets.test.ts)
+and the mailbox's 1,640 (tests/eastbrook_mailbox_asset.test.ts) are comparator
+observations, not universal housing budgets. Other counts and bytes are re-read from current pins
 at the art session. Prefer shared vertex-color material buckets and existing shared
 surface atlas treatment where it fits. A unique texture set or extra preview context
 requires a measured need and its own scheduler/residency proof, never an aesthetic
@@ -388,7 +395,7 @@ implementation session.
 | B, 27 | Lodge and exact twenty additional furniture outputs, six pattern icons, specialized trophy forms, Kitchen Garden tableau and advanced supports | Typed floor/wall/table/fixed-ceiling scenes, parent/undo atomicity, all-source/difficulty/provenance/hidden-source proof and max-layout LOW |
 | C, 33 | Meeting Hall/Great Hall/Bastion art, boards, feast and bank/station access, member and guild trophies, project/vendor art | Officer/member/guest view differences; crowded admitted-player visibility; final social-room composition and numeric/perf register |
 | D, 39 | Ward exteriors/square, shared guild anchor, Endeavor and Showcase displays/guestbook presentation | Measured ward occupancy and sightlines, all admitted players visible on LOW, privacy/opt-in/source correctness |
-| E, 44 | Keep/Fortress/Citadel, dye station/eight dyes and channel masks, later layout/second-home visuals | Largest legal furnished space/layout storage/perf proof, no incomplete sold content, every new ID final art and signed measurements |
+| E, 44 | Keep/Fortress/Citadel, the eight dye swatches and channel masks (no dye station GLB, D90), later layout/second-home visuals | Largest legal furnished space/layout storage/perf proof, no incomplete sold content, every new ID final art and signed measurements |
 
 A staged family may use registered readable stand-ins during development while its
 feature remains disabled. Any missing reference, invalid source approval, failed
@@ -414,9 +421,11 @@ earlier family's asset-generation, reference, GLB or activation gate.
 Verify the final registered assets in real desktop, compact and tablet scenes and
 LOW, including the approved reduced-light phone cases. Rebuild media/icon mappings,
 source fingerprints, provenance/CREDITS and affected asset pins through their normal
-producers. The screenshot inventory in UX remains the exact Wave A contract; later
-art owners add only the specific changed-surface evidence their accepted content
-needs, never substitute concept art for in-game proof.
+producers. The screenshot inventory in UX remains the exact Wave A contract (four
+registered targets, 330 variants); a later art owner that needs changed-surface
+evidence registers its target and variants in ux-spec section 11 and regenerates
+ux-shot-manifest.json in the same change, never captures under an unregistered alias
+and never substitutes concept art for in-game proof (U3 F4).
 
 [44b, final legal handoff](phase-44b-final-legal-handoff.md) then revisits Terms,
 listings, surface restrictions, service contracts and artwork rights/provenance
@@ -429,8 +438,10 @@ or release approval.
 ## 11. Visual and technical acceptance evidence
 
 The exact screenshot registry entries and state list live in UX and the owning
-11/16/17/18 implementation files. Art acceptance includes desktop, compact and tablet
-views (compact/tablet baselines are Chromium with iOS-profile emulation); empty,
+11/16/17/18 implementation files; only those four registered targets exist, and a
+later wave extends the registry before it captures. Art acceptance includes desktop,
+compact and tablet views (compact/tablet baselines are Chromium with iOS-profile
+emulation); empty,
 ready and blocked palette/ghost with hatch/reason; explicit Inn/Cottage day/night; maximum furniture/plinth budget;
 condition at/under the real threshold; owner-building visitor view; actual item and
 provenance display; reduced motion; current shared theme variants; and lowest phone

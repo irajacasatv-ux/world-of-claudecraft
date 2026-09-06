@@ -8,7 +8,8 @@ No housing implementation is claimed complete by this planning file.
 ### Starter Prompt
 ```
 This is Phase 07b of the Freeholds and Guildhalls feature: account lifecycle and protection history.
-Harness: Claude Code. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block for effort and fan-out.
 This prompt names no model. Keep independent implementation owners disjoint; the parent
 integrates shared callers and pins after their reports return.
 
@@ -36,7 +37,8 @@ STEP 1 - LOAD CONTEXT (through agents, never planning docs or coordinators direc
     the exported GameServer class in server/game.ts and its join/leave/saveAll members,
     server/main.ts shutdown wiring,
     server/linkdead.ts::planJoin and the async server/ws_auth.ts authentication shell.
-    Verify actual symbols from state facts; auth/analytics are not gameplay presence.
+    Verify actual symbols from state facts; auth/analytics are not gameplay presence
+    (D36 as refined: authentication login is not the presence source).
   - EXISTING server/character_save_statement.ts::runFencedCharacterUpdate,
     server/character_save_transaction.ts::beginCharacterSaveTx, server/serial_writer.ts,
     server/background_db_gate.ts, server/raid_reset.ts and server/realm.ts.
@@ -69,14 +71,22 @@ Deliverables (at most five):
    transition BEFORE advancing presence, then commit head+immutable history+revision
    atomically. Stale/equal observations, superseded/fenced sessions and repeated admission
    cannot move presence backwards or mint grace. Character FIFO alone is insufficient
-   for alt/cross-realm accounts. Unknown source policy/finality holds the affected effect
-   unavailable; never substitute commit time, a new UTC day or the serving realm.
+   for alt/cross-realm accounts. Absence, return and grace day boundaries are realm-day
+   facts in the resetDay vocabulary (D84): the accepted binding's reset_policy_id
+   resolves to the D84 realm reset zone, the server passes that resolved zone, identical
+   across realm processes, to resetDayKey (never the bare REALM_RESET_TIME_ZONE constant
+   of whichever process served the session), the sim reads resetDay, and an absent
+   binding holds the effect not-ready instead of falling back to the process constant;
+   observedAtMs and last_presence_at_ms are capture stamps, display-only for calendar
+   purposes. Unknown source policy/finality holds the affected effect unavailable; never
+   substitute commit time, a new UTC day or the serving realm.
 3. NEW server/freehold_lifecycle.ts::createFreeholdLifecycleCoordinator exposes
    captureAdmissionObservation, flushPresenceObservations and releaseSession. It owns
    authenticated GameServer.join acceptance observations and the bounded per-account
    periodic/leave/shutdown flush connected to PeriodicSaveWrites/runPeriodicSaveFlush,
-   GameServer.leave/saveAll and main shutdown. Capture observations before queued work;
-   NEW server/freehold_lifecycle_admission.ts::prepareFreeholdLifecycleAdmission,
+   GameServer.leave/saveAll and main shutdown. Capture observations before queued work.
+   The admission module is part of this same output, not a separate deliverable: NEW
+   server/freehold_lifecycle_admission.ts::prepareFreeholdLifecycleAdmission,
    commitFreeholdLifecycleAdmission and cancelFreeholdLifecycleAdmission bridge the
    asynchronous ws_auth shell to a bounded, generation/lease-bound admission reservation
    extracted from the existing planJoin/GameServer.join seam. A rejected/resumed join
@@ -87,32 +97,24 @@ Deliverables (at most five):
    not permission to restart return grace on retry. Do not insert async DB work into
    the synchronous join body or assume it is already an async transaction boundary.
    Reserve an explicit typed admission participant extension for 31's later NEW
-   createGuildClearAdmission owner, without implementing that later subsystem here.
-   This initial seam uses an opaque injected participant token and a bounded fake;
-   31 later supplies the specialized token/type, so 07b imports no future module.
-   When enabled, its fresh-character reservation extends every live unconsumed
-   Nythraxis source all-or-none before publication, including administrator admission;
-   no realm-cap or RAID_MAX shortcut proves that envelope. The lifecycle reservation
-   owns a prepared GuildClearCharacterAdmissionToken from NEW31
-   src/sim/freehold/guild_clear_contract.ts. prepareGuildClearCharacterAdmission,
-   commitGuildClearCharacterAdmission and cancelGuildClearCharacterAdmission
-   compose through the existing prepare/commit/cancel lifecycle API. Commit the
-   participant before authenticated Sim/session publication and cancel every failed
-   path. Prepared unpublished character generations participate when a new Nythraxis
-   source life reserves, so either interleaving retains its full envelope.
-   Integration uses the same generation/lease-bound lifecycle reservation, with no
-   second admission queue or database wait inside synchronous join. Failure publishes
-   neither session nor partial extension. Resume reuses its surviving generation;
-   takeover is a fenced transfer/replacement, and leave releases only unused capacity
-   after callbacks can no longer credit that generation. Captured clear candidates
-   retain their own capacity until a known committed outcome is handed to bounded
-   recovery. 31 supplies the concrete source-life accounting and activation proofs;
-   07b proves the typed extension lifecycle with a bounded fake participant now.
-   Periodic observations coalesce to one running plus one latest dirty
+   createGuildClearAdmission owner, without implementing that later subsystem here:
+   this phase's seam takes an opaque injected participant token and proves it with a
+   bounded fake participant; 07b neither owns nor imports any 31 artifact (the reserved
+   31 behavior is listed under LATER GUILD CLEAR ADMISSION EXTENSION below). Housing
+   capacity never gates gameplay (D83): the join-time reservation hook publishes the
+   session regardless of participant capacity; a participant whose extension cannot
+   fit records a bounded, auditable clear-not-captured gap with an operator alert and
+   publishes no partial extension, and no realm-cap or RAID_MAX shortcut proves any
+   envelope. Integration uses the same generation/lease-bound lifecycle reservation,
+   with no second admission queue or database wait inside synchronous join. Resume
+   reuses its surviving generation; takeover is a fenced transfer/replacement, and
+   leave releases only unused capacity after callbacks can no longer credit that
+   generation. Periodic observations coalesce to one running plus one latest dirty
    generation; failure/cancellation preserves pending captured work, release does not
    replace it with shutdown time. Match real admitted session/fence identity, drain only
    within reviewed shutdown deadlines, and quiesce/reload on stale account CAS. No use of
-   touchLogin last_login, best-effort character analytics or housing per-tick SQL.
+   touchLogin last_login (D36 as refined), best-effort character analytics or housing
+   per-tick SQL.
 4. NEW FUTURE docs/freeholds/lifecycle-policy-binding.md records the accepted account
    assignment policy, lifecyclePolicyId/sourceCalendarId/resetPolicyId, authority/version,
    capable release, rollout/rollback and tested legacy interpretation before activation.
@@ -133,7 +135,9 @@ Deliverables (at most five):
    all callers/locks/FKs/deletion/maintenance, measured bounds and actual PG plans,
    lifecycle binding compatibility, captured-observation schedules, source/prefix union
    reference fixtures and redacted load/growth/deadline metrics. Cover two characters,
-   second plots, simultaneous realms, delayed writes, repeated boot, failure, stale CAS,
+   second plots, simultaneous realms (two processes configured with different
+   REALM_RESET_TZ produce one day key for one account), delayed writes, repeated boot,
+   failure, stale CAS,
    multiple unloaded absence/return cycles, DST/reset identity, mixed versions and
    restoration. Every retained interval survives; no duplicated grace or lost protection.
 
@@ -160,8 +164,12 @@ INVARIANTS AND CLOSED HANDOFFS:
   future prepay purchase does not require finalizing future periods. Missing coverage
   preserves current condition and blocks affected evaluation instead of assuming charge.
 - Soft account deactivation retains head/history and recovery; restoration reuses them.
-  Character deletion preserves them. True account deletion has explicit cascade/privacy
-  and anti-replay treatment; export includes safe private lifecycle/protection facts via
+  Character deletion preserves them. True account deletion follows 07a's D88 policy:
+  head and history rows are not operation rows, so account_freehold_lifecycle and
+  account_freehold_lifecycle_history cascade with the account, while D88's open-operation
+  guard (07a's CharacterFreeholdOperationOpen class) still refuses the deletion while a
+  housing operation is open; anti-replay identity lives in 07a's tombstones, not here.
+  Export includes safe private lifecycle/protection facts via
   real table loaders, excluding operator evidence/secrets. Sale never copies seller grace:
   materialize condition at the accepted transfer boundary under existing source history,
   retain immutable credits/calendar identity and use buyer lifecycle only prospectively.
@@ -180,6 +188,21 @@ INVARIANTS AND CLOSED HANDOFFS:
   A pending external acceptance has a concrete artifact, owner and closed release gate;
   it is not an unresolved implementation choice. Feature flags default off.
 
+
+LATER GUILD CLEAR ADMISSION EXTENSION (31 implementation, 07b seam proof now):
+- Reserved for 31, not built here: 31 creates src/sim/freehold/guild_clear_contract.ts
+  with GuildClearCharacterAdmissionToken and the prepareGuildClearCharacterAdmission,
+  commitGuildClearCharacterAdmission and cancelGuildClearCharacterAdmission calls that
+  compose through 07b's prepare/commit/cancel lifecycle API (NEW in this phase; 31
+  later calls it). When 31 lands, a fresh-character reservation extends every live
+  unconsumed Nythraxis source before publication, including administrator admission;
+  prepared unpublished character generations participate when a new Nythraxis source
+  life reserves, so either interleaving retains its full envelope. Under D83 that
+  extension never refuses GameServer.join, enterDungeon or a respawn: exhaustion records
+  the clear-not-captured gap and the session still publishes. Captured clear candidates
+  retain their own capacity until a known committed outcome is handed to bounded
+  recovery. 31 supplies the concrete source-life accounting and activation proofs; 07b
+  proves the typed extension lifecycle with a bounded fake participant now.
 
 LATER GUILD LIFECYCLE EXTENSION (owned by 28a, same 07b family):
 - Reserve explicit typed lifecycle scope. 07b admits account writes; 28a adds the guild
@@ -242,7 +265,7 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Update progress.md row 07b and state.md's implementation ledger with exact files,
   exported symbols, schema/wire/command keys, measured bounds, artifacts and evidence.
   Keep planning "settled" distinct from implementation "built". Record no anonymous
-  deferral; carry the named external acceptance artifact/release gate when applicable.
+  deferral; carry every named unsigned release gate when applicable.
 - Record useful traps in the freeholds memory entry within the authorized scope.
 
 STEP 7 - FINAL RESPONSE FORMAT:

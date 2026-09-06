@@ -33,10 +33,18 @@ and evidence to a file. Audit these specific requirements:
 - Compare final implementation and artwork to every legal/service/player promise,
   not only to the early packet. Verify precise clause/surface/test/artwork mappings.
 - Inspect all six revised documents, primary-source dates and inaccessible-source
-  artifact gates. No unreviewed legal conclusion, new fee/territory or paid-surface
-  enablement is smuggled into the handoff; earlier gates were never postponed.
+  artifact gates; the live public/terms.html sections 8, 9, 12, 19 and 22 and
+  public/privacy.html sections 2, 6 and 8 are named with their dispositions, and the
+  Solana Mobile Publisher Policy is cited at legal.solanamobile.com with its retrieval
+  date beside the dApp Store Developer Agreement acceptance artifact. No unreviewed
+  legal conclusion, new fee/territory or paid-surface enablement is smuggled into the
+  handoff; earlier gates were never postponed.
 - Check literal D9, original-operation recovery, source-calendar/credit preservation,
-  custody/consumer claims, privacy/deactivation/delete/export and final art licensing.
+  custody/consumer claims, privacy/deactivation/delete/export, final art licensing, the
+  D86 dormant-submodel line item (absence is a runtime contract; purchase code and
+  English keys ship dormant in every bundle; review notes say "not rendered or
+  reachable") and the support-reconciliation ownership statement with its refund-drill
+  evidence.
 - The cover message/package and named routing/legal owners are concrete. Delivered
   or accepted requires actual evidence; absent recipient/channel remains a tracked
   delivery gate, not a fabricated contact or claim of legal approval.
@@ -78,6 +86,7 @@ PASS; there is no next implementation file. External legal review, signed releas
 gates, authorized publication and deployment remain separately tracked.
 
 STOPPING RULES:
-A FAIL verdict reruns the owning implementation with the findings attached. Do not
-push the branch or open/merge a PR in this audit.
+A FAIL verdict reruns the owning implementation with the findings attached. Push fixes
+to an open wave E PR only under a go that covers follow-up pushes; otherwise stop and
+ask; never open or merge a PR in this audit.
 ```

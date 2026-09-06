@@ -1,5 +1,7 @@
-# Phase 41: dye station and furnishing tinting
+# Phase 41: Dye station
 
+The file name predates the 41/41a split: layout save and sharing belong to
+phase-41a-layout-save-and-sharing.md, and this file owns dyes only.
 This implementation file and its QA are the complete contract for this bounded slice.
 The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
 are authoritative. Nothing in this planning packet is marked built.
@@ -8,8 +10,8 @@ are authoritative. Nothing in this planning packet is marked built.
 ```
 This is Phase 41 of the Freeholds and Guildhalls feature: dye station and furnishing tinting.
 
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
-fan-out; this prompt names no model.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out; this prompt names no model.
 
 Goal: add eight approved cosmetic dyes through existing alchemy and station gates, with exact-copy application and scheduler-safe material variants. Layout save/share is owned by 41a.
 
@@ -27,21 +29,22 @@ STEP 0 - PRE-FLIGHT:
   patches/.
 - If state.md "Push policy" records a stacked wave branch, work on that branch instead of
   feature/freeholds.
-- Memory scan: MEMORY.md and entries on world_api parity pins, the station gate
-  composition, the R8 pattern channels, material variants and the scheduler, frozen
-  save keys, test-pin traps.
+- Gotchas scan (Codex has no memory step): state.md "Gotchas (read before the matching
+  phase)" entries on world_api parity pins, the station gate composition, the R8
+  pattern channels, material variants and the scheduler, frozen save keys, test-pin
+  traps.
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md, docs/freeholds/progress.md (only "41 Dye station and layout
-  sharing"), and this file
+- docs/freeholds/state.md, docs/freeholds/progress.md (only "41 Dye station"), and this
+  file
 - src/sim/freehold/amenities.ts (the Phase 12 station amenity slot and the D7
   composition), layout_core.ts and placement.ts (the layout row shape, validation, the
   undo stack), state.ts (the persisted record and its load-side allowlists),
@@ -51,21 +54,24 @@ Spawn one Explore agent to read and summarize:
   src/sim/content/farm_patterns.ts (the pattern table shape), tests/apex_pattern_channels.test.ts
 - src/world_api/housing.ts (the current housing facet), src/world_api.ts (COMMAND_NAMES,
   COMMAND_FACETS), server/freehold_wire.ts, server/freehold_db.ts (account_freeholds
-  columns), server/clean_metadata_text.ts, server/http/middleware/rate_limit.ts
+  columns); server/clean_metadata_text.ts and the message-lane limits are 41a's anchors,
+  not this phase's
 - src/render/freehold/furnishings.ts and furnishing_layout_core.ts (material handling,
   prewarm homes), src/render/CLAUDE.md "GPU work"
 - src/ui/hud/housing/ (build mode, the palette), src/ui/i18n.catalog/hud_chrome.ts,
   tests/freehold_layouts.test.ts (Phase 06), tests/freehold_layout_core.test.ts (Phase 08),
   tests/freehold_determinism.test.ts, tests/world_api_parity.test.ts
-- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
-  artifacts referenced by state.md that this slice consumes.
+- docs/freeholds/ux-spec.md and the content, measurement, service and policy artifacts
+  referenced by state.md that this slice consumes (signed, or still open release gates).
 The agent returns: the dye row/load allowlist, existing apothecary station/proximity gate,
 exact-copy item custody/undo seam, recipe content obligations and material prewarm
-recipe. State retains eight dyes and zero-to-two tint channels. The signed art/content
-manifest provides every exact dye ID, English key, approved material color/source,
+recipe. State retains eight dyes and zero-to-two tint channels. content-manifest.md's
+dye roster, art-brief.md's dye board and the CAL-DYES workbook artifact (UNSIGNED until
+approved) provide every exact dye ID, English key, approved material color/source,
 recipe/quantity/skill/channel row and source derivation. No guessed RGB or skill/rate.
-Dye application uses the dye-station amenity at condition 30 or above and correct
-proximity; ordinary place/move/remove/undo remains unlocked at every condition.
+Dye application uses the home station amenity of type apothecary (D90) at condition 30
+or above and correct proximity; ordinary place/move/remove/undo remains unlocked at
+every condition.
 All design rulings are locked; a missing required signed artifact keeps its release
 gate closed and produces a named validation result, never a guessed runtime value.
 Database review is required BEFORE implementation decisions and again on the finished
@@ -97,26 +103,43 @@ and return full reports to the scratchpad with a path and short summary.
    30 or above and approved recipe/material rules. 07a commits its complete planned
    inventory/tint/revision effects atomically; a preview never grants authority.
    Unchanged tint consumes nothing; batch imports cannot reuse a dye copy twice.
-   Existing alchemy/apothecary station type is reused, without training bypass.
+   The dye picker is enabled by the home station amenity of type apothecary (D90): no
+   new amenity kind, no extra slot, no station GLB; it reads the same station/proximity/
+   condition gate the apothecary crafting station uses, without training bypass, and
+   tests/freehold_dye.test.ts pins the gate on that exact amenity (a forge, kitchens,
+   tannery, loom or toolworks amenity does not enable it; no amenity refuses).
    Unsupported future valid owned tint/schema data retains its complete original
    storage and typed read-only recovery. Never drop a tint, rewrite the original or
    replace owned data with defaults because this binary cannot decode it. Separate
-   malformed known-schema repair under 07's explicit decoder policy; save/export and
-   later supported recovery preserve the original future record. Placement journal
+   malformed known-schema repair under 07's load-side contract (src/sim/freehold/state.ts
+   normalizeFreehold/loadFreehold: absent legacy data, safely repaired known scalar,
+   unsupported version, malformed owned content and oversize are distinct results, and
+   unknown/newer/oversized owned rows stay read-only in their original durable
+   location); save/export and later supported recovery preserve the original future
+   record. Placement journal
    inverse restores exact consumed copy/tint only with current revision/custody
    preconditions; stale undo refuses atomically without material gain.
-2. Eight-dye content family: signed palette rows own exact IDs/colors and English
-   hudChrome.housing keys, ordinary cosmetic item/recipe/pattern rows, trainer-taught
+2. Eight-dye content family: the CAL-DYES palette rows own exact IDs/colors and
+   English hudChrome.housing keys, ordinary cosmetic item/recipe/pattern rows,
+   trainer-taught
    deterministic faucet and any approved rare channel plus Marks. Preserve existing
    craft/recipe/skill gates, no profession addition or guessed rates. Final item art,
    naming/IP provenance, positive power-neutral checks, wiki and source obligations
    ship together; dyes and recipe patterns receive no Reliquary page.
 3. Material and picker presentation: cache/prewarm per-prop/tint variants with the
    render scheduler, never per-frame material allocation; register any pure core.
-   Build palette dye picker uses ux-spec bags-family affordances and keyed station-
-   required/locked/shortfall/loading/error states, focus return and full touch/
-   keyboard/gamepad parity. Screenshots show eight-color choices and locked/unlocked
-   station on desktop/compact/tablet, LOW fairness and reduced motion.
+   Variant residency is bounded and released through the room-leave lifecycle (the
+   ux-spec section 9 rule: visiting several homes must not ratchet materials), with
+   perf:tour evidence that entering and leaving tinted homes keeps the material count
+   flat. Build palette dye picker uses ux-spec bags-family affordances and the exact
+   keyed station-required/out-of-range/condition/shortfall/no-channel/loading/error
+   rows below (D92; refusals through the D26 freeholdDeniedLineKey selector), focus
+   return and full touch/keyboard/gamepad parity. Register the NEW `housing-dyes`
+   section 11 target (scenes dyes-picker, dyes-station-locked, dyes-station-unlocked
+   and dyes-shortfall x desktop/compact/tablet, plus dyes-picker at the high preset and
+   with reduced motion: 18 variants, the 672 milestone), append the rows
+   to ux-spec section 10 and regenerate ux-shot-manifest.json and ux-key-manifest.json
+   in the same change.
 4. Wire, persistence and proof: route dye_furnishing through the existing dispatch
    seam, both-world facet/member and command/snapshot pins, strict decoder and bounded
    load/save shape. Atomic inventory/tint/revision persistence uses Phase 07's fence
@@ -127,6 +150,30 @@ and return full reports to the scratchpad with a path and short summary.
    mutation, save, export and supported
    recovery; unsupported owned records remain byte-preserved/read-only. Reject
    excessive fresh inputs before allocation without destroying persisted originals.
+
+Exact English keys this phase ships (D92; the picker title, apply and review rows are
+shipped here, no earlier phase produces them; the condition refusal reuses
+denied.condition and the error state reuses denied.unavailable; {threshold} is the
+condition 30 boundary through formatNumber):
+
+| Key | Exact English |
+| --- | --- |
+| hudChrome.housing.dyes.title | Dye Station |
+| hudChrome.housing.dyes.apply | Apply Dye |
+| hudChrome.housing.dyes.review | Review Dye Use |
+| hudChrome.housing.dyes.loading | Loading dyes... |
+| hudChrome.housing.dyes.channelPrimary | Primary |
+| hudChrome.housing.dyes.channelAccent | Accent |
+| hudChrome.housing.dyes.noDye | No dye |
+| hudChrome.housing.dyes.unchanged | No change. Nothing is used. |
+| hudChrome.housing.dyes.swatchAria | {dye}: {count} in bags |
+| hudChrome.housing.dyes.reviewLine | Use {count} {dye} on {furnishing}. |
+| hudChrome.housing.dyes.pending | Applying dye... |
+| hudChrome.housing.dyes.stationTooltip | Dyes are applied at this home's apothecary station while the home is at {threshold} condition or higher. Placing, moving and removing furnishings never need it. |
+| hudChrome.housing.denied.dyeStation | Dyeing needs an apothecary station in this home. |
+| hudChrome.housing.denied.dyeRange | Stand closer to the apothecary station to dye. |
+| hudChrome.housing.denied.dyeShortfall | You do not have enough {dye}. |
+| hudChrome.housing.denied.dyeChannel | This furnishing cannot be dyed. |
 
 INVARIANTS THIS PHASE MUST KEEP:
 Every player-visible string, including error, aria, tooltip and empty-state text,
@@ -203,7 +250,8 @@ and capable/uncapable-release fixtures through real composition and disposable P
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run npx tsc --noEmit; npx vitest run tests/freehold_dye.test.ts
-  tests/freehold_layout_core.test.ts tests/freehold_determinism.test.ts
+  tests/freehold_station.test.ts tests/freehold_layout_core.test.ts
+  tests/freehold_determinism.test.ts
   tests/world_api_parity.test.ts tests/command_schema.test.ts tests/command_facets.test.ts
   tests/snapshots.test.ts tests/freehold_command_chain_online.test.ts
   tests/professions_crafting_hub.test.ts tests/apex_pattern_channels.test.ts
@@ -211,7 +259,9 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/deeds_content.test.ts tests/reliquary_content.test.ts tests/recipe_economy.test.ts
   tests/provisioner_firewall.test.ts tests/market_filters.test.ts tests/renderer_compile_gate.test.ts
   tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts tests/localization_fixes.test.ts
-  tests/architecture.test.ts tests/sim_context.test.ts tests/monolith_budget.test.ts.
+  tests/pr_shot_targets.test.ts tests/architecture.test.ts tests/sim_context.test.ts
+  tests/monolith_budget.test.ts (tests/freehold_station.test.ts is 12's station amenity
+  suite; tests/freehold_dye.test.ts is NEW here).
 - Run new server dye-transfer tests and disposable-PG twins with TEST_DATABASE_URL;
   npm run wiki:content; npx vitest run tests/guide.test.ts; npm run i18n:gen;
   npx vitest run tests/i18n_completeness.test.ts; npm run perf:tour;
@@ -231,10 +281,10 @@ emoji, or word "phase" appears in a commit message. Keep generated output with i
 authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
 STEP 5 - ACCEPTANCE CRITERIA:
-- [ ] Eight exact signed palette/recipe/source rows and zero-to-two tint channels are pinned; no guessed color/rate and no new station/profession or training bypass.
-- [ ] Dye requires its current station/proximity and condition 30+, consumes/applies atomically, and stale/duplicate/undo/crash tests preserve exact-copy custody; normal placement stays unlocked.
-- [ ] Valid future tint/schema preserves the complete original/read-only record across load/save/export/recovery; known-malformed repair is separately pinned. Strict limits and both-world commands pass; variants prewarm without per-frame material allocation.
-- [ ] Every dye has final art/source/wiki obligations and deterministic access; desktop/compact/tablet picker/lockout captures and all validation/reviews/gate pass.
+- [ ] Eight exact CAL-DYES palette/recipe/source rows (handoff-ready; acceptance status recorded as an unsigned release gate unless a signature artifact is on file) and zero-to-two tint channels are pinned; no guessed color/rate and no new station/profession or training bypass.
+- [ ] Dye requires the home apothecary station amenity (D90, pinned against every other amenity type and against no amenity), proximity and condition 30+, consumes/applies atomically, and stale/duplicate/undo/crash tests preserve exact-copy custody; normal placement stays unlocked.
+- [ ] Valid future tint/schema preserves the complete original/read-only record across load/save/export/recovery; known-malformed repair is separately pinned. Strict limits and both-world commands pass; variants prewarm without per-frame material allocation and entering and leaving tinted homes keeps the material count flat.
+- [ ] Every dye has final art/source/wiki obligations and deterministic access; desktop/compact/tablet picker/lockout captures and all validation/reviews/gate pass; the dye key rows and the `housing-dyes` scenes (dyes-picker, dyes-station-locked, dyes-station-unlocked, dyes-shortfall) are registered and both manifests regenerated (D92).
 
 STEP 6 - DOC UPDATES + MEMORY:
 Update progress.md row 41 and state.md's implementation ledger with actual paths,

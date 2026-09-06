@@ -6,10 +6,11 @@ QA"). The next implementation phase never starts before this file has run.
 ### Starter Prompt
 ```
 This is Phase 14 (QA) of the Freeholds and Guildhalls feature: audit the distribution
-surface map (the pure module, the seven-distribution matrix, the HudFeatures rows, the
-store-policy source pins, the "earn" scan, the locked Seeker use-only capability).
+surface map (the pure module, the seven-distribution matrix, the two HudFeatures rows
+freeholdPurchaseEnabled and freeholdManageOnWebsite, the store-policy source pins, the
+"earn" scan, the locked Seeker use-only capability).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 14 diff for correctness against every deliverable and acceptance
@@ -24,15 +25,16 @@ use Codex image generation for raster artwork. Capture actual rendered screensho
 as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
 phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
 icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
-That final sweep does not postpone artwork owned here.44b revisits the completed result
+That final sweep does not postpone artwork owned here. 44b revisits the completed result
 for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
-  while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge
+  origin/feature/masterwrought while PR #3872 is open, else the newest origin/release/**;
+  release-merge-audit after a non-empty merge; pnpm install --frozen-lockfile if
+  patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the source-scan traps (a scoped
   scan falling back to whole-file; guard exemptions must be POSITIVE), "review the
   review-fix round", "apply ALL findings".
@@ -65,15 +67,24 @@ STEP 2 - AUDIT (fresh parallel reviewers, COVERAGE, all findings to files):
 Deliverables (at most five):
 1. Independent surface capabilities. distribution_surfaces.ts is the pure
    src/game junction receiving walletEnabled and verified shell/mobile probes.
-   Keep existing wallet, exchange and claudiumStore verdicts unchanged. Housing has
-   independent usable, freeholdPurchase, freeholdManageOnWebsiteLine and deedSurfaces
-   capabilities; purchase is browser web/website-distributed desktop only. Seeker is
-   use-only with deeds off. Missing/throwing/malformed/unknown probes fail closed.
-   Housing use remains behind the accepted entitlement-model release gate. Website
-   management is not inferred from purchase denial: denied storefronts default off
-   until the complete destination/flow has written approval in the surface artifact.
-2. Composition and source boundaries. HudFeatures injects housing-use, purchase and
-   approved management rows through main.ts; no UI reader branches on NATIVE_APP or
+   Keep existing wallet, exchange and claudiumStore verdicts unchanged. The map's housing
+   fields are exactly three: freeholdPurchase, freeholdManageOnWebsite and deedSurfaces
+   (D91). Housing use is not a map field: it is the server entitlement gate (flag plus
+   entitlement) read through the housing facet, and it stays behind the accepted
+   entitlement-model release gate. Purchase is browser web/website-distributed desktop
+   only. deedSurfaces is owned here as this phase's source pin (on only for web and
+   website desktop through the strict wocExchangeSupported semantics, off on the five
+   denied rows) and is consumed by 38 from the map through main.ts; 38 changes no
+   distribution row and adds no HudFeatures row. Seeker is use-only with deeds off.
+   Missing/throwing/malformed/unknown probes fail closed. Website management is not
+   inferred from purchase denial: freeholdManageOnWebsite defaults off on every row,
+   browser web and website desktop included, and the map takes a per-row written
+   approval input that only the surface artifact's recorded approval can set; the
+   default fixture asserts management false on all seven rows.
+2. Composition and source boundaries. main.ts injects exactly two HudFeatures rows,
+   freeholdPurchaseEnabled and freeholdManageOnWebsite (D91), from the map's two
+   matching fields; there is no housing-use row and no deed row in HudFeatures. No UI
+   reader branches on NATIVE_APP or
    distribution strings. resolveWalletCapability stays in src/net, which never imports
    src/game. The server does not trust client platform claims as payment authority.
    Existing wallet/Exchange/store behavior remains unchanged while the housing map
@@ -81,18 +92,37 @@ Deliverables (at most five):
 3. Seven-distribution matrix and absence proof. tests/distribution_surfaces.test.ts
    drives actual Electron stamps and normalizeSolanaMobileCapabilities for web,
    website desktop, Steam, Epic, App Store, Google Play and Seeker. Assert every field,
-   missing-input dimension and independently approved management outcome. Denied
-   housing purchase means no row, handler, quote request, fetched catalog, hidden DOM,
-   error/money copy or accessibility node. Positive path allowlists and mutation
+   missing-input dimension and independently approved management outcome. This is the
+   only seven-row matrix: a HUD-level consumer test (16's
+   tests/woc_store_window_contract.test.ts) produces its rows by calling the real
+   distribution_surfaces verdict function with this phase's probe fixtures and feeding
+   the two housing fields into the Hud features bag, never by hand-written boolean
+   pairs. Denied housing purchase is a runtime absence contract (D86): no row, handler,
+   quote request, fetched catalog, hidden DOM, error/money copy or accessibility node,
+   asserted by DOM, handler and recorded-request scans, never bundle scans; purchase
+   code and English keys ship dormant in every bundle under the runtime capability, and
+   the review notes and the 44b handoff say "not rendered or reachable", never "absent
+   from the bundle". Positive path allowlists and mutation
    probes prove source scans cannot exempt an unclassified housing path.
 4. Exact language and approval artifacts. All visible housing labels use
    hudChrome.housing.* as specified in ux-spec.md; neutral management copy is shown
    only where its independent capability permits it. Purchase benefits describe
    cosmetic, convenience and access; no earn/income/yield or native/Steam/Epic token,
    wallet or on-chain-deed marketing. Ordinary Book of Deeds source names remain
-   gameplay. Cross-link the counsel memo, Terms/listing and accepted service artifacts
-   in state.md; their external acceptance is a release gate, not an implementation
-   question or a claim of platform approval.
+   gameplay. Cross-link the counsel memo, Terms/listing and service artifacts in
+   state.md (handoff-ready; acceptance status recorded as an unsigned release gate
+   unless a signature artifact is on file); their external acceptance is a release
+   gate, not an implementation question or a claim of platform approval. The web-only
+   allowlist of tests/freehold_store_gates.test.ts is a positive list of paths: the
+   charter.* and steward.manageWebsite keys of hudChrome.housing.* (D92) and, when 38
+   lands them, the hudChrome.housing.deed.* key block plus 38's NEW
+   src/ui/deed_card_view.ts and deed_card_window.ts modules and its Homes tab leaf,
+   which 38 registers in this allowlist in the same change as its own
+   mutation probe; any on-chain word outside the allowlist fails the pin, and every
+   allowlist extension carries its own mutation probe. This phase regenerates
+   ux-key-manifest.json (its two rows steward.manageWebsite and
+   steward.manageWebsiteAria, owner 14) in its own change with every cited count
+   updated (D92); it adds no ux-shot-manifest.json variant.
    Preserve literal D9: the game server stays unaware of distribution. Existing
    account auth, Origin/UA/JSON, linked platform accounts and desktop capability probes
    cannot authenticate a checkout channel. The economy service's NEW issuer/verifier
@@ -124,16 +154,19 @@ reviewer reads the fixes before the verdict.
   listing artifacts and the accepted economy-service contract before production enable
   or any housing-bearing store submission; external sign-off status lives in state.md;
   (2) FREEHOLDS_ENABLED defaults off and the server refuses/hides housing purchases
-  while dark; (3) the seven-distribution surface map independently gates housing use,
-  purchase and approved website management, including complete submodel/handler/
-  catalog/DOM/accessibility/error absence on denied surfaces. These are cumulative.
+  while dark; (3) the seven-distribution surface map independently gates housing purchase,
+  approved website management and the deed surfaces (housing use is the server
+  entitlement gate read through the housing facet, never a map or HudFeatures row, per
+  D91), including complete submodel/handler/catalog/DOM/accessibility/error absence on
+  denied surfaces as the D86 runtime contract. These are cumulative.
 - The economy service owns every price and all token math; the client forwards the
   immutable quote fingerprint and computes no tariff, conversion, discount or burn.
 
 STEP 3 - VALIDATION:
 Required named reviewers for this file: privacy-security-review, frontend-seam-reviewer,
 test-coverage-auditor, qa-checklist.
-- Run the Phase 14 STEP 3 suite list plus `npx tsc --noEmit`.
+- Run the Phase 14 STEP 3 suite list plus `npx tsc --noEmit`; confirm the regenerated
+  ux-key-manifest.json (two owner-14 rows, counts updated) is in the phase diff.
 
 STEP 4 - FIX:
 - Resolve ALL findings, including NICE-TO-HAVE items and nits. Correct any conflict

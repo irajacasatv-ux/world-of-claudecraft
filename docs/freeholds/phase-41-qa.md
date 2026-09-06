@@ -1,4 +1,4 @@
-# Phase 41 QA: audit dye station and furnishing tinting
+# Phase 41 QA: audit the Dye station
 
 Audits `phase-41-dye-station-and-layout-sharing.md`. Record the verdict in `progress.md` row "41 QA".
 The next implementation starts only after this audit passes.
@@ -6,21 +6,24 @@ The next implementation starts only after this audit passes.
 ### Starter Prompt
 ```
 This is Phase 41 QA of the Freeholds and Guildhalls feature.
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out.
 Goal: verify every promised deliverable, adversarial failure case and settled ruling
 against the real implementation diff; fix all findings and review the fix round.
 
 STEP 0 - PRE-FLIGHT:
 Work in the state.md worktree/branch. Verify git status is clean; ask if it is dirty.
 Sync per state.md "Worktree, base, and merge-forward"; after a non-empty merge run the
-release-merge-audit skill and install frozen dependencies if patches/ moved. Scan memory
-for test-pin traps, "apply ALL findings" and "review the review-fix round".
+release-merge-audit skill and install frozen dependencies if patches/ moved. Read
+state.md "Gotchas (read before the matching phase)" and implementation-plan.md for
+test-pin traps, "apply ALL findings" and "review the review-fix round" (Codex has no
+memory step).
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
@@ -40,8 +43,13 @@ Each reports every issue, including uncertain issues and nits, with severity/con
 and evidence to a file. Audit these specific requirements:
 - Phase 41 owns dyes only; layout save/load/share is 41a. Pin eight approved color/
   name/source rows, zero-to-two tint channels and exact approved recipe gates.
-- Dye consumes the station amenity: condition 30 boundary/proximity/ownership all
-  matter. Generic placement/move/remove/undo never acquires a new condition lock.
+- Dye is gated by the home station amenity of type apothecary (D90): every other
+  amenity type and no amenity refuse (pinned); condition 30 boundary/proximity/ownership
+  all matter. Generic placement/move/remove/undo never acquires a new condition lock.
+- The exact dye key rows are in ux-key-manifest.json and the `housing-dyes` variants
+  (dyes-picker, dyes-station-locked, dyes-station-unlocked, dyes-shortfall) in
+  ux-shot-manifest.json (D92); refusals resolve through freeholdDeniedLineKey; perf:tour
+  evidence shows a flat material count across repeated entry/leave of tinted homes.
 - Trace exact dye copy and furnishing tint through atomic application, revision
   refusal, duplicate command, restart and undo. Stale inverse cannot mint a dye.
 - NEW src/sim/freehold/dye.ts::planFurnishingDye is the shared authoritative

@@ -44,7 +44,8 @@ Spawn one Explore agent to read and summarize:
   as the narrow-def model with `?: never` bars, the ItemDef union)
 - src/sim/inventory_sort.ts (KIND_RANK), src/ui/item_kind_label.ts (ITEM_KIND_LABEL_KEYS),
   src/sim/bags.ts (UNSTACKED_KINDS, stackSizeOf)
-- src/sim/market_query.ts (MarketItemTypeFilter, itemMatchesType), src/ui/bag_filter.ts,
+- src/sim/market_query.ts (MarketItemTypeFilter; the exported marketItemMatches and the
+  private itemMatchesType arm it calls), src/ui/bag_filter.ts,
   src/ui/market_view.ts, src/ui/market_armor_badge.ts, src/ui/market_name_color.ts
 - src/ui/icons.ts (the procedural fallback by kind), src/ui/bags_view.ts (the per-kind
   tooltip lines and the clickUse hint), src/ui/item_name_color.ts,
@@ -70,7 +71,8 @@ Spawn one Explore agent to read and summarize:
 The agent returns: the exact narrow-def shape to add and the Exclude list edit; the census
 of every kind consumer grouped as compile-time record, runtime refusal arm, storability
 gate, or presentation branch, each with the file, the function, and the arm it needs; the
-market chip recipe (filter member, itemMatchesType arm, chip label key) and the bag chip
+market chip recipe (filter member, the private itemMatchesType arm behind the exported
+marketItemMatches, chip label key) and the bag chip
 precedent for patterns; the tooltip composer seam and what it costs in hud.ts lines (plus an
 extraction candidate that pays for it); the catalog module and key path for
 `itemUi.kind.furnishing`; the UI_PURE_CORES registration line.
@@ -82,11 +84,21 @@ Deliverables (at most five):
 2. Kind presentation, the market filter, All-only ordinary bags and the icon fallback.
 3. The registered tooltip core, English housing keys and decisive consumer fixtures.
 
-The dedicated housing palette is a bags-family furnishing filter with a Trophies tab in
-11. Do not reopen a general bag-chip choice. The furnishing-tooltip core returns only
+The dedicated housing palette is a bags-family furnishing filter with a Trophies tab
+in Phase 11. Do not reopen a general bag-chip choice. The furnishing-tooltip core returns only
 hudChrome.housing.* keys and values; itemUi.kind.furnishing remains the shared kind
 label. Author every tooltip with docs/design/tooltip-writing.md and the tooltip skill.
-Record the complete new English leaf inventory, not a hardcoded claim of two leaves.
+The tooltip leaves this phase owns are exactly these NEW keys with this English (D92;
+sentence case; the resolved values come from the def): hudChrome.housing.furnishing.footprint
+"Footprint: {width} by {depth} cells.", hudChrome.housing.furnishing.decorCost "Decor cost:
+{cost}.", hudChrome.housing.furnishing.surfaceFloor "Placed on the floor." (the only Wave A
+surface; 25 adds its own furnishing.surface* rows when typed surfaces land) and
+hudChrome.housing.furnishing.maker "Made by {maker}." (rendered only when the copy carries
+a signer); the build-mode rows hudChrome.housing.build.decorTooltip (11) and
+build.surface (25) are different sinks and are not reused here. ux-spec carries the four
+rows with owner 02 and this phase regenerates ux-key-manifest.json with every cited
+count updated (D92). Record the complete new English leaf inventory against that list,
+not a hardcoded claim of two leaves.
 The default floor surface describes placement support; model geometry and walk-through
 rules come from content-manifest.md and its measured layout/art rows. Later typed
 wall/table/ceiling support is added explicitly in 25, without guessing art dimensions.
@@ -113,10 +125,14 @@ files (disjoint except the shared pin files the coordinator edits last):
   (a furnishing never sits on a bar slot, pinned), the context menu and equip-drop cores.
 - Agent TOOLTIP: src/ui/hud/housing/{index.ts,CLAUDE.md,furnishing_tooltip_view.ts}: a
   DOM-free pure core on the recipe_pattern_tooltip_view.ts precedent (footprint, decor
-  cost, surface, a provenance line slot for the Maker's Bond craftedBy), registered in
-  UI_PURE_CORES, wired through the existing tooltip composer seam; if hud.ts must gain a
-  line, pay with the extraction the Explore summary named and LOWER the hud.ts ceiling in
-  tests/monolith_budget.test.ts; tests/furnishing_tooltip_view.test.ts.
+  cost, surface, a provenance line slot for the Maker's Bond instance field
+  ItemInstancePayload.signer in src/sim/types.ts, never a def field), registered in
+  UI_PURE_CORES, wired through the existing tooltip composer seam, returning only the
+  four hudChrome.housing.furnishing.* keys named above with their resolved values; if
+  hud.ts must gain a line, pay with the extraction the Explore summary named and LOWER
+  the hud.ts ceiling in tests/monolith_budget.test.ts; tests/furnishing_tooltip_view.test.ts
+  (one `it` per key, the English pinned by literal); the ux-key-manifest.json regeneration
+  with its counts (D92).
 The coordinator assembles tests/furnishing_item_kind.test.ts last: one synthetic def
 (never a shipped id) driven through every consumer group each agent touched, one arm per
 `it`, a negative case per refusal arm (the refusal is observable: nothing consumed, nothing
@@ -170,8 +186,9 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
   cross-platform-sync (the sim type and every gate arm behave the same offline and online),
   architecture-reviewer (the kind arms inside the src/sim/ gates: bank, guild bank, trade,
-  mail, market, equipment), and frontend-seam-reviewer (the tooltip core, the chips, the
-  icon arm). Prompt each for
+  mail, market, equipment), frontend-seam-reviewer (the tooltip core, the chips, the
+  icon arm), test-coverage-auditor (the sweep and every negative arm), then qa-checklist
+  (the completion gate). Prompt each for
   COVERAGE not filtering; each writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
   locked rulings and the fixes have fresh review.
 
@@ -206,11 +223,14 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   art obligation triggered); tests/item_icons.test.ts is unchanged and green.
 - [ ] furnishing_tooltip_view.ts is in UI_PURE_CORES; hud.ts did not grow (or its ceiling
   is LOWER than before).
-- [ ] The S3 guard and i18n completeness pass with the complete declared English leaf inventory.
+- [ ] The S3 guard and i18n completeness pass with the complete declared English leaf
+  inventory: the four hudChrome.housing.furnishing.* keys carry the English named in
+  STEP 2 byte for byte, and ux-key-manifest.json is regenerated with owner-02 rows and
+  updated counts (D92).
 - [ ] All STEP 3 suites green; all required reviewers confirm all findings resolved and the fresh fix review passed.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 02, notes, deferrals) and
+- Update docs/freeholds/progress.md (status row 02, notes, named unsigned gates) and
   docs/freeholds/state.md (the per-phase ledger row 02: new files, the kind and all i18n
   keys; the fixed KIND_RANK and All-only bag behavior as verified; D25 already holds the Exchange
   ruling, do not restate it).

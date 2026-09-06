@@ -129,13 +129,33 @@ files (disjoint except the shared pin files the coordinator edits last):
   `r: 0` means walk-through, the rug), decor
   cost, `surface: 'floor'`, a stand-in model key resolved by Phase 09's registry, sellValue
   and gold price, tradable; merged into ITEMS by src/sim/data.ts mergeItems; the Eastbrook
-  furnisher vendor row with the stock list; English item names in the item-names catalog;
-  the vendor's src/ui/world_entity_i18n.ts row; WebP icons plus mapping.json provenance for
-  every id through the repo's icon pipeline; the power-neutral sweep and the r-on-every-def
-  pin added to tests/freehold_content.test.ts; shipped ids added to the Phase 02 sweep.
+  furnisher vendor row with the stock list, spawned only when the Sim's freeholdsEnabled
+  boot config is true (D85: a dark realm spawns no furnisher and sells no furnishing; the
+  eight item DEFS still merge into ITEMS as data; the offline and headless hosts pass
+  true under D3): one predicate in a src/sim/freehold/ helper the ctor's NPC spawn loop
+  calls, paid for by an extraction and a LOWERED sim.ts ceiling; English item names in
+  the item-names catalog; the vendor's src/ui/world_entity_i18n.ts row; WebP icons plus
+  mapping.json provenance for every id through the repo's icon pipeline; the
+  power-neutral sweep and the r-on-every-def pin added to tests/freehold_content.test.ts;
+  shipped ids added to the Phase 02 sweep; the dark-realm arm appended to
+  tests/server/freehold_wire.test.ts (a Sim built from buildRealmSimConfig with
+  FREEHOLDS_ENABLED unset has no freehold_furnisher entity; with '1' it is present and
+  its vendorItems equal the eight ids by literal).
 - Agent OBLIGATIONS: the Homesteader deed family opener in src/sim/content/deeds.ts
-  (appended at the END with DEED_ORDER rows: first furnishing placed, first Cottage;
-  cosmetic-only, trigger kinds that later phases raise, never power), the Reliquary Hearth
+  (appended at the END with DEED_ORDER rows, the two ids frozen in content-manifest.md's
+  "Homesteader deeds (03)" table: `homesteader_first_furnishing` (Homesteader, first
+  furnishing placed) and `homesteader_first_cottage` (Householder, first Cottage);
+  cosmetic-only, never power; trigger kind `manual` for both, the existing DeedTrigger
+  member granted only by an explicit src/sim/deeds.ts::grantDeed call, so no DeedTrigger
+  or DeedFlagId widening. The raise sites are owned: 08 raises
+  homesteader_first_furnishing on a character's first successful placement after the
+  placement mutation applies, identically on both hosts (phase-08 deliverable 2); 15
+  raises homesteader_first_cottage through freeholdGrantCharter for the character whose
+  admitted session receives the Cottage tier grant, once, never on a dry run, a replayed
+  receipt or an alt, and a grant applied by session-less recovery raises it on the
+  account's next admitted Cottage entry (phase-15 deliverable 2, pinned in
+  tests/freehold_grant.test.ts). Deeds stay per-character records and are never
+  retro-granted to alts), the Reliquary Hearth
   shelf pages for the furnishing items in src/sim/content/reliquary.ts (patterns never;
   the new Hearth shelf is implemented across its actual catalog, navigation, order,
   localization, source and completion consumers; no global page cap exists, so never
@@ -153,6 +173,8 @@ INVARIANTS THIS PHASE MUST KEEP:
 - Keystone exclusion: no ledger line names wyrmfall_core, sundered_essence, makers_ember,
   a gear intermediate, or the quickening catalyst, swept over every schedule week.
 - Zero new farm beds; recipes and stationType gates untouched.
+- Dark realm (D85): the furnisher is not spawned and nothing is sold while the boot config
+  is false; the tables and item defs are the same data on every host.
 - Content obligations, all in this change: WebP art with provenance for every new item id,
   the Homesteader deeds, the Hearth shelf pages, wiki regen, guide keys, world-entity names,
   M16 fills.
@@ -187,12 +209,16 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/item_art_consistency.test.ts tests/deeds_content.test.ts
   tests/reliquary_content.test.ts tests/recipe_economy.test.ts
   tests/provisioner_firewall.test.ts tests/market_filters.test.ts tests/architecture.test.ts
-  tests/storage_charters.test.ts`; `npm run wiki:content` then `npx vitest run
-  tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run
+  tests/storage_charters.test.ts tests/server/freehold_wire.test.ts`; `npm run wiki:content`
+  then `npx vitest run tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run
   tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`.
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
-  content-obligations-reviewer (the whole obligation list against the diff). Prompt it
-  for COVERAGE not filtering; it writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
+  content-obligations-reviewer (the whole obligation list against the diff),
+  architecture-reviewer (the furnisher spawn predicate and the Reliquary shelf consumers
+  in src/sim/), cross-platform-sync (the same tables and spawn on both hosts),
+  frontend-seam-reviewer (the Hearth shelf navigation and labels in src/ui/),
+  test-coverage-auditor (every literal pin), then qa-checklist (the completion gate).
+  Prompt each for COVERAGE not filtering; each writes its report to a file. Do not commit until ALL findings, including nits, are resolved consistently with
   locked rulings and the fixes have fresh review.
 
 FINAL REVIEW AND COMPLETION CONTRACT:
@@ -228,10 +254,16 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   src/sim/content/freehold/` returns nothing.
 - [ ] Every new item id has a committed WebP and a mapping.json provenance row; the vendor
   has a world_entity_i18n.ts row; wordy English names carry their five fills.
+- [ ] The dark-realm arm in tests/server/freehold_wire.test.ts proves no furnisher entity
+  with FREEHOLDS_ENABLED unset and the eight-id stock with '1' (D85); both Homesteader
+  rows `homesteader_first_furnishing` and `homesteader_first_cottage` carry trigger kind
+  `manual` and sit at the END of DEED_ORDER (pinned in tests/deeds_content.test.ts by
+  literal id); no raise site lives in this phase (08 and 15 own them).
 - [ ] All STEP 3 suites green.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 03, notes, deferrals, the exact Hearth page inventory)
+- Update docs/freeholds/progress.md (status row 03, notes, named unsigned gates, the exact
+  Hearth page inventory)
   and docs/freeholds/state.md (the per-phase ledger row 03: new files, item ids, the
   vendor id, deed ids, page ids, i18n keys; the source-freeze and calibration artifact, its owner and release evidence).
 - Record surprising rules learned in memory for the next session.

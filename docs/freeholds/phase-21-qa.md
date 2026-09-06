@@ -81,7 +81,7 @@ information must remain legible through ambient grade, materials and silhouettes
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -113,8 +113,9 @@ NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provide
 committed immutable protection source, and createFreeholdLifecycleCoordinator captures
 authenticated observation time before queueing. Derive a return before presence
 advances; stale observations, fenced sessions and replay cannot mint grace. The
-accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
-and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+lifecycle-policy-binding artifact (accepted or still a named release gate) names
+lifecyclePolicyId, sourceCalendarId and resetPolicyId; serving realm, browser zone or
+guessed UTC cannot rebind history.
 13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
 and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
 or account calendar ingress, source-history array on plots, polling job or receipt store.
@@ -151,7 +152,8 @@ entry/build/undo remain available; durable payment retains original operation re
 The game server and Sim remain ignorant of physical distribution. The future economy
 service owns eligibility verification and opaque authorization bound to account,
 purpose/SKU, policy, quote and operation, with issuer/verifier conformance in the
-accepted service artifact. A first-party web checkout session alone is insufficient.
+service artifact (accepted or still a named release gate). A first-party web checkout
+session alone is insufficient.
 Client channel labels, Origin, UA, arbitrary JSON, linked Steam/Epic accounts and the
 game-service secret never prove eligibility; do not add a trusted channel field to the
 game server. The client capability map controls presentation, not purchase authority.
@@ -216,7 +218,7 @@ This is Phase 21 (QA) of the Freeholds and Guildhalls feature: audit the Lodge t
 the upgrade build project (the tier record and layout, the fee SKU and bill, the
 contribute command, carry-over, the second amenity slot).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 21 diff for correctness against every deliverable and acceptance
@@ -245,11 +247,15 @@ Spawn one Explore agent to read and summarize:
 - the pins the diff claims: tests/freehold_content.test.ts, tests/freehold_upgrade.test.ts,
   tests/freehold_layout_core.test.ts, tests/provisioner_firewall.test.ts,
   tests/server/freehold_gates.test.ts, tests/server/freehold_db.test.ts,
-  tests/world_api_parity.test.ts, tests/snapshots.test.ts, tests/monolith_budget.test.ts
+  tests/world_api_parity.test.ts, tests/snapshots.test.ts, tests/monolith_budget.test.ts,
+  tests/steward_panel_view.test.ts, tests/steward_panel_window.test.ts
 The agent returns: the promised-versus-delivered table per deliverable, the list of new
 symbols and where each is consumed, every test added with what it asserts, the bill's
-id list against the keystone, intermediate, and catalyst exclusions, the DDL text
-added, and any TODO, unused import, or stub.
+id list against the keystone, intermediate, and catalyst exclusions (unit counts, never
+stackSize), the source-mode argument and both mode paths (bags, vault inside the
+owner's claim), the re-attempt path after a bags_full completion refusal, the Steward
+upgrade keys and steward-upgrade-* scenes against ux-spec and the registry, the DDL
+text added, and any TODO, unused import, or stub.
 
 Database review runs before implementation decisions and again on the finished diff.
 
@@ -264,16 +270,35 @@ every issue including low-severity and uncertain ones; ranking happens later):
   exactly-once on replay of the same purchase key AND a different key after completion;
   completion requires the confirmed fee receipt and full bill in either order, with preflight overflow before fresh mutation; carry-over keeps
   every row that validates in the Lodge rooms and returns or refuses the rest without
-  mutating on refusal; all actually eligible Inn Room trophy displays survive two upgrades; the
+  mutating on refusal; the Lodge's first room is the Cottage cell grid, door, plinth
+  anchors 1 to 4 and amenity anchor 1 verbatim, so carry-over preserves identity (D80
+  premise); all actually eligible Inn Room trophy displays survive two upgrades;
+  contributions honor the explicit source mode (D37, D89): affordability, confirmation
+  and the atomic deduction use the same mode, a bags contribution never reaches the
+  vault, and the vault arm is authorized only inside the owner's own claim under
+  D18/D47; a fee confirmed against full bags leaves the project pending with its
+  receipt under the original 07a operation and finishes later exactly once with no
+  second fee (07a recovery at the next accepted entry, pinned in
+  tests/server/freehold_gates.test.ts, and the finishUpgrade arm, pinned in
+  tests/freehold_upgrade.test.ts); prepaid credits and the current
+  immutable bill survive completion unchanged and the schedule stays the tier-independent
+  realm-week table (D35); day facts use resetDay through 13a and the completion stamp is
+  utcDay (D84); the
   flag dark refuses the SKU on BOTH dispatch arms and the store filter; the pre-column
   account_freeholds row loads with no project; the Lodge layout's colliders equal its
-  rendered walls (authoredColliders from the same tables); the extractions are
+  rendered walls (authoredColliders from the same tables); the Steward upgrade section
+  renders every keyed state with the exact English the implementation file names and
+  the six steward-upgrade-* after-shots are on file; the extractions are
   move-not-rewrite (diff the moved bodies).
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion that fails on regression (the
   tier row and bill ids are fresh literals, never read back from the table; the keystone
   sweep spells the three ids and the intermediate words; the exactly-once test asserts
   the record after the replay, not just the return value); a negative case per deny
-  reason; the determinism case asserts a work-happened anchor before the equality;
+  reason and per source mode (bags never touches the vault; vault outside the claim
+  refuses with nothing deducted); the re-attempt test asserts one completion and one
+  receipt after two finish calls; the geometry subset pin compares fresh literal
+  anchors, never the layout read back; the Steward states are pinned by exact English
+  keys; the determinism case asserts a work-happened anchor before the equality;
   orphaned tests; the pg twin not skipped.
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
   import invariant, the word "phase" in any code, comment, or commit message, em dashes

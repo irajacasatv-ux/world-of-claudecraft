@@ -1,13 +1,13 @@
 # Phase 13a: authoritative upkeep calendar
 
-Wave A. Completes13's pure contract with durable shared history, private authority
+Wave A. Completes 13's pure contract with durable shared history, private authority
 ingress, monotonic host publication and explicit rollout proof. Live upkeep remains
-closed until the named producer and release artifacts are accepted. The successor is14.
+closed until the named producer and release artifacts are accepted. The successor is 14.
 
 ### Starter Prompt
 ```
 This is Phase 13a of Freeholds and Guildhalls: authoritative upkeep calendar.
-Harness: Claude Code. Follow root CLAUDE.md "Working style and effort by model";
+Harness: Claude Code. Follow root CLAUDE.md "Working style by model capability";
 this prompt names no model. Use its effort and bounded parallel review requirements.
 Goal: preserve exact historical protection and credits while installing only finalized,
 committed, current-generation authority through a bounded private delivery path.
@@ -19,7 +19,7 @@ use Codex image generation for raster artwork. Capture actual rendered screensho
 as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
 phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
 icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
-That final sweep does not postpone artwork owned here.44b revisits the completed result
+That final sweep does not postpone artwork owned here. 44b revisits the completed result
 for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
@@ -42,7 +42,7 @@ STEP 0 - PRE-FLIGHT:
   send the scoped diff surface and approved artifacts, then review the finished diff.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
-Spawn one reader for state.md, progress.md, the13/07a/07b/07c contracts, ux-spec.md,
+Spawn one reader for state.md, progress.md, the 13/07a/07b/07c contracts, ux-spec.md,
 docs/prd/woc/freehold-service-contract.md and this file. A source reader verifies all
 NEW producers from their preceding pairs and reads the actual calendar, lifecycle,
 wire, HTTP/body/auth/rate/admission/deadline, deploy/user-data.sh, account export and
@@ -61,9 +61,9 @@ Deliverables (at most five):
    loadFreeholdUpkeepCalendar and server-only FreeholdUpkeepAuthoritySuspension own
    calendar head, source history and normalized exact prefix summaries. The server-only
    record carries suspensionId/authorityVersion/calendarId/scope/reasonCode/startMs/
-   endMs/revisionId/operatorEvidenceRef.13's FreeholdUpkeepSuspension is a separate
+   endMs/revisionId/operatorEvidenceRef. 13's FreeholdUpkeepSuspension is a separate
    allowlisted safe interval; private evidence does not enter src/sim or player wire.
-   Finalized coverage is irrevocable. Preserve the explicit13 finality rule through
+   Finalized coverage is irrevocable. Preserve the explicit 13 finality rule through
    every historical dependency of durable condition/bill/credit evaluation/consumption;
    mutable covered tail authorizes no such effect. Future credit purchase does not need
    future finality. Keep coverageStartMs <= finalizedThroughMs <= coveredThroughMs;
@@ -73,11 +73,11 @@ Deliverables (at most five):
    schema/reset policy and original calendar/checkpoint/credit identity are durable.
    Indexed cumulative union/protection and wholly-protected-period facts permit bounded
    predecessor/endpoint/credit-rank queries without all-history or absent-day/week loops.
-   Combine immutable07b lifecycle coverage with service coverage as a union; independent
+   Combine immutable 07b lifecycle coverage with service coverage as a union; independent
    subtraction must not double-credit overlap. No force-saving foreign claimed plots.
    Keep shared history with measured growth until every dormant plot, credit, replay and
    mixed-release dependency is losslessly rebased. No TTL/newest-N clipping, head deletion
-   or reuse while referenced. Include13's literal pre-upkeep/unknown-shape fixture rules.
+   or reuse while referenced. Include 13's literal pre-upkeep/unknown-shape fixture rules.
 2. Private bounded authority ingress. NEW server/freehold_upkeep_ingress.ts exports
    createFreeholdUpkeepIngress, configureFreeholdUpkeepIngressRuntime,
    handleFreeholdUpkeepIngress, routes and FreeholdUpkeepIngressBudget for
@@ -114,18 +114,33 @@ Deliverables (at most five):
    recipient identity, generation registration/expiry, key configuration, bounded
    retry/ACK/reconciliation and public-deny regression evidence. A signed acceptance
    document is not proof that runtime responses carry cryptographic signatures.
-3. Monotonic host publication and exact acknowledgments. Existing
-   server/sim_calendar_feed.ts::SimCalendarSink/feedRealmCalendar installs a readonly
-   committed projection using server/raid_reset.ts and
-   server/realm.ts::REALM_RESET_TIME_ZONE policy; existing
-   src/game/utc_day.ts::feedSimCalendar takes explicit offline fixture input. Add the
-   missing deterministic headless caller fixture without Date.now/new action. Hosts
+3. Monotonic host publication and exact acknowledgments. Extend existing
+   server/sim_calendar_feed.ts::SimCalendarSink/feedRealmCalendar (today it writes the
+   four scalars utcDay, resetDay, eventLeadDay and dailyResetRemainingSec from one
+   instant and zone) to also install a readonly committed projection using
+   server/raid_reset.ts and server/realm.ts::REALM_RESET_TIME_ZONE policy. Per D84 this
+   file produces every day-keyed fact 13 consumes with resetDayKey(ms,
+   REALM_RESET_TIME_ZONE), the same function that feeds ctx.resetDay, rounded to whole
+   realm days: the start twins (startDay, coverageStartDay) are the first day wholly
+   covered (the containing window only at an exact 03:00 boundary, else the next); the
+   through twins (endDay, finalizedThroughDay, coveredThroughDay) are the last day
+   wholly finalized/covered (the previous window unless the watermark is exactly a
+   boundary); a mid-day watermark leaves its day pending; epoch-ms fields
+   stay display-only. Existing src/game/utc_day.ts::feedSimCalendar(sim) takes only the
+   sim and reads Date.now() itself once per second, writing the same four fields; the
+   offline calendar projection is therefore a NEW explicit input installed beside it
+   as a src/game/ sibling (never a fixture inside src/main.ts), built from the
+   clock-free resetDayOf(at)/nextResetMsOf(at) primitives. headless/ has no calendar
+   feed today: add the missing deterministic headless caller fixture that calls
+   feedRealmCalendar(sim, fixedNowMs, zone) with an injected instant and zone, never
+   Date.now, so all three hosts feed the same four fields while the D11 pin keeps
+   housing excluded from the RL env. Hosts
    receive safe projection only, no IO/history walk/per-owner allocation in callbacks.
    Installation is one guarded atomic swap bound to actual processGeneration,
    calendarId, authorityVersion, committed digest and lifecycle revision. An async
    completion from an old generation, lower revision or regressing watermark is
-   discarded; same revision with a different digest is a conflict. A load ofv1 that
-   finishes afterv2 never replacesv2, even ifv1 was a legitimate duplicate. Only a
+   discarded; same revision with a different digest is a conflict. A load of v1 that
+   finishes after v2 never replaces v2, even if v1 was a legitimate duplicate. Only a
    consistent committed projection satisfying current lifecycle/head guards installs.
    ACK semantics are exact: current duplicate matching current durable digest installs
    or verifies that head and replies current with requestedRevision/requestedDigest,
@@ -144,11 +159,11 @@ Deliverables (at most five):
    delivery; they do not replace it. Beyond coverage/finality hold affected effects,
    never infer service health from silence. No polling, per-tick SQL, new pool or LISTEN.
    Calendar writer uses head FOR UPDATE and only history/summary rows, never account/
-   plot/receipt locks;07a consumers use compatible FOR SHARE source heads through commit.
+   plot/receipt locks; 07a consumers use compatible FOR SHARE source heads through commit.
    Multiple source IDs sort only in the reviewed new-participant suffix. Loaders release
    shared snapshots before other queues; recovery/maintenance cannot invert head-to-plot
    order. Apply guards inspect finalized dependencies again under those same locks.
-4. Migration, account lifecycle and rollout preservation. Consume07b's
+4. Migration, account lifecycle and rollout preservation. Consume 07b's
    server/freehold_lifecycle_db.ts::loadFreeholdLifecycle/advanceFreeholdLifecycleOnClient/
    loadFreeholdLifecycleProtectionPage and server/freehold_lifecycle.ts::
    createFreeholdLifecycleCoordinator, whose captureAdmissionObservation,
@@ -157,9 +172,9 @@ Deliverables (at most five):
    server/freehold_lifecycle_admission.ts::prepareFreeholdLifecycleAdmission/
    commitFreeholdLifecycleAdmission/cancelFreeholdLifecycleAdmission for accepted
    gameplay entry, not authentication login or latest-only/plot-local grace.
-   Original binding uses07b's server/freehold_lifecycle_binding.ts::
-   resolveFreeholdLifecycleBinding and docs/freeholds/lifecycle-policy-binding.md;13a never
-   guesses a timezone/source calendar. Literal old07 rows with unbound_no_history remain
+   Original binding uses 07b's server/freehold_lifecycle_binding.ts::
+   resolveFreeholdLifecycleBinding and docs/freeholds/lifecycle-policy-binding.md; 13a never
+   guesses a timezone/source calendar. Literal old 07 rows with unbound_no_history remain
    no-upkeep until accepted prospective binding commits. Ambiguous populated or unknown/
    future checkpoint/credit state stays original/read-only, not an inferred reset/fresh
    house. Oversized recovery keeps original row plus bounded diagnostic/reference, not
@@ -167,12 +182,12 @@ Deliverables (at most five):
    boot and every periodic/leave/shutdown/caller-owned save preserve these facts.
    Character deletion preserves account lifecycle/arrival records. Soft deactivation,
    restoration, hard deletion, export and anti-replay retention are distinct operations
-   supplied by07b/07c/07a.13a extends existing server/db.ts::exportAccountData through
+   supplied by 07b/07c/07a. 13a extends existing server/db.ts::exportAccountData through
    explicit housing/lifecycle/checkpoint/credit projections, excluding operator evidence,
    secrets and private diagnostics. Sale materializes condition at its transfer boundary,
    preserves source calendar/immutable credit identity, and applies buyer lifecycle only
    prospectively; seller history remains, buyer grace is not copied. Unsupported stored
-   tier IDs are preserved separately from accepted writer vocabulary.07c's arrival mark
+   tier IDs are preserved separately from accepted writer vocabulary. 07c's arrival mark
    represents committed first-entry eligibility, not visual completion; ordinary visit
    replay never mints another directive/receipt. Name a minimum capable release/compatible
    rollout before enable: old release code is not assumed to understand new normalized
@@ -187,15 +202,25 @@ Deliverables (at most five):
    tests/server/freehold_upkeep_calendar_db.test.ts and
    tests/server/freehold_upkeep_calendar_db.pg.test.ts; extend calendar/reset host tests,
    freehold_condition/freehold_ledger and actual self/public wire tests. Pin finality
-   tail correction between load/commit; future prepay without future finality;v1 load,
-   v2 install,v1 resume; old-generation completion; all current/superseded/conflicting
+   tail correction between load/commit; future prepay without future finality; v1 load,
+   v2 install, v1 resume; old-generation completion; all current/superseded/conflicting
    ACK arms and exact digest/generation; wrong secret before permit/body, overload before
    parse/digest, permit release on abort/error, duplicate storms and peak shared pool.
    Distinct evidence/secret/private-diagnostic sentinels never reach self/public wire.
    PG proof covers shared readers/calendar-only writer, actual touch-set/queue order,
    cancellation/late checkout/commit ambiguity; literal legacy/populated/repeat boot,
    periodic/leave/shutdown/failure round trips; two-character/plot/realm lifecycle races;
-   dormant multiple-cycle union, DST, long open outage and immutable credit carry.
+   dormant multiple-cycle union, DST, long open outage and immutable credit carry. The
+   projection-builder test pins the D84 conversion at the boundary: a suspension whose
+   start instant sits between realm-local midnight and 03:00 lands in the previous
+   realm day's window and, being mid-window, rounds its startDay to the next wholly
+   covered day; a DST transition day yields one key on both sides of the shift; a
+   mid-day finalizedThroughMs yields the previous day's key and the same instant at
+   exactly 03:00 yields that window's key (the projection-builder arms of
+   tests/server/freehold_upkeep_calendar_db.test.ts). One
+   composed fixture pins that a daily and a Tuesday realm-week boundary both pass
+   while the process is down and that the first evaluation on boot classifies the
+   elapsed bill and wear exactly once and consumes at most one credit.
    DDL remains additive/idempotent under the existing ensureSchema advisory lock after
    parent tables and before final growth-budget fragment. Service acceptance supplies
    exact finality/identity/coverage/delivery facts before enable; no new rate, cap,
@@ -205,10 +230,10 @@ Deliverables (at most five):
 INVARIANTS THIS PHASE MUST KEEP:
 - Finalized historical authority, original identity/credits and protection union are
   durable requirements; uncovered/unfinalized history is not no outage. Future credit
-  purchase needs no finalized future time.13 supplies the unchanged arithmetic.
+  purchase needs no finalized future time. 13 supplies the unchanged arithmetic.
 - Sim is deterministic and text-free. No private evidence in any sim/player projection.
 - No per-tick SQL, historical day loop, new pool/poll/LISTEN or unbounded queue.
-- Existing public /internal/* denial and07a legacy touch-set order remain intact.
+- Existing public /internal/* denial and 07a legacy touch-set order remain intact.
 - Unknown/oversized stored data stays original/read-only with bounded diagnostics.
 - Follow state.md numeric provenance, monolith ceilings and English housing key policy.
 
@@ -242,10 +267,15 @@ calendar persistence, ingress/host wiring and decisive proof when reviewable. Ne
 Run `npm run ci:changed` after the last commit as the Stop-hook floor; record exit code.
 
 STEP 5 - ACCEPTANCE:
-- [ ] Every STEP2 deliverable has decisive proof and a fresh fix review; no skipped arm
+- [ ] Every STEP 2 deliverable has decisive proof and a fresh fix review; no skipped arm
   or external unsigned producer artifact is silently called complete.
 - [ ] Durable-finality/future-credit distinction, exact monotonic ACKs, safe encoders,
   pre-body admission, private generation routing and public denial are all exercised.
+- [ ] The D84 day-key conversion pins (a midnight-to-03:00 start lands in the previous
+  realm day's window and rounds forward; one key across a DST shift; the mid-day and
+  exact-boundary watermark arms of the whole-day rounding rule), the composed
+  daily-plus-Tuesday restart fixture and the injected-instant headless fixture ran
+  green.
 - [ ] Shared history/lifecycle union, legacy unbound/unknown preservation, actual
   transaction/queue order and minimum capable rollout have the named acceptance artifact.
 - [ ] ALL reviewer findings, including nits, are resolved consistently with locked
@@ -253,7 +283,7 @@ STEP 5 - ACCEPTANCE:
   have truthful outcomes; an unsigned external artifact remains its named release gate.
 
 STEP 6 - DOC UPDATES + MEMORY:
-Update progress.md/state.md/implementation-plan.md with13a producer names, safe-versus-
+Update progress.md/state.md/implementation-plan.md with 13a producer names, safe-versus-
 server-only schemas, delivered artifact identity, measured budgets, capability minimum,
 review evidence and next-file chain. Record lessons and actual invalidated source facts.
 

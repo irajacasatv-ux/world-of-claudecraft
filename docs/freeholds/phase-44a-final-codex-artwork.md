@@ -8,8 +8,11 @@ are authoritative. Nothing in this planning packet is marked built.
 ```
 This is Phase 44a of the Freeholds and Guildhalls feature: final Codex artwork and placeholder-image sweep.
 
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
-fan-out; this prompt names no model.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out; this prompt names no model. Claude-specific
+memory, Workflow and agent-runtime instructions do not apply under Codex (AGENTS.md):
+use the equivalent Codex read-only reader and reviewer roles wherever this prompt says
+Explore or review agent.
 
 Goal: inventory every feature-created visual, replace every remaining placeholder icon/image with final Codex artwork through the sanctioned workflow, and prove it in its actual gameplay context before legal handoff.
 
@@ -27,30 +30,43 @@ STEP 0 - PRE-FLIGHT:
   patches/.
 - If state.md "Push policy" records a stacked wave branch, work on that branch instead of
   feature/freeholds.
-- Memory scan: MEMORY.md and entries on screenshots at lowest graphics, capture rigs and
-  English text, CI is the gate, never push to a fork, PR merge needs approval, the
-  sensitive-material sweep, tooling improvements at session end.
+- Gotchas scan (Codex has no Claude memory, AGENTS.md): read state.md "Gotchas" for
+  screenshots at the lowest graphics preset, capture rigs never finding elements by
+  English text, CI is the gate, never push to a fork, PR merge needs approval and the
+  sensitive-material sweep.
+- Confirm Codex's built-in image generation tool responds in this harness before any
+  raster work; if it does not, STOP and record the external prerequisite as a named
+  release gate in progress.md row 44a (D74: never substitute Claude or an unrecorded
+  tool).
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
-Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
+Codex, not Claude (D74). Use Codex's built-in image generation tool (an external
+prerequisite of the Codex harness, not a repository skill: STOP and record the named
+gate if it is unavailable) following docs/design/eastbrook-vale-rebuild/imagegen-prompts.md
+with an imagegen-provenance.md row, and the woc-image-to-glb workflow, with their
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
 - state.md D74/D75, art-brief.md, content-manifest.md, content-numbers-workbook.md,
-  ux-spec.md and the completed44 evidence. Read every feature-created visual row and
+  ux-spec.md and the completed 44 evidence. Read every feature-created visual row and
   actual source/runtime use, including fallback branches and asset registration.
 - .agents/skills/woc-image-to-glb/SKILL.md, .claude/skills/image-to-glb/SKILL.md,
-  docs/image-to-glb-asset-workflow.md and scripts/assets/CLAUDE.md. Read the installed
-  imagegen skill and img2threejs instructions before any new raster/reference/GLB work.
+  docs/image-to-glb-asset-workflow.md and scripts/assets/CLAUDE.md. Read
+  docs/design/item-icon-art-style.md (style id woc-item-icon-v1), the
+  docs/design/eastbrook-vale-rebuild/imagegen-prompts.md and imagegen-provenance.md
+  record shape, the public/ui/items/mapping.json provenance rows,
+  tests/item_icons.test.ts and the img2threejs intake instructions before any new
+  raster/reference/GLB work.
 - scripts/build_media_manifest.mjs, scripts/pr_shot_targets.mjs, existing relevant
   item/art/parsed-GLB tests, CREDITS.md and local guidance for every changed asset sink.
   Use actual existing icon/art systems, never assume a proposed renderer path exists.
-- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
-  artifacts referenced by state.md that this slice consumes.
+- docs/freeholds/ux-spec.md and the content, measurement, service and policy artifacts
+  referenced by state.md that this slice consumes (each accepted, or still a named
+  unsigned release gate).
 The agent returns: a complete feature-created asset-to-runtime inventory and remaining placeholder
 matrix, exact sanctioned producer/export/registration/test chain and approved visual
 references. Deliberately final procedural/SVG artwork is not a placeholder merely
@@ -72,9 +88,12 @@ and return full reports to the scratchpad with a path and short summary.
    final/placeholder verdict. Include empty/loading/locked and hidden-source
    silhouettes. A deliberate spoiler silhouette is final UX, not fake accomplishment
    art. Inventory source scans and live inspection together; no unexamined fallbacks.
-2. Final Codex image production: this entire asset-generating phase MUST run in
-   Codex, not Claude. Use the installed imagegen skill for raster icons, images and
-   reference sheets; preserve the established icon/UI style and approved art brief.
+2. Final Codex replacement of placeholder images: this entire asset-generating phase
+   MUST run in Codex, not Claude. Use Codex's built-in image generation tool for
+   raster icons, images and reference sheets (external prerequisite; STOP if
+   unavailable) in the woc-item-icon-v1 style, with a public/ui/items/mapping.json
+   row, an imagegen-provenance.md row and a CREDITS.md row per image; preserve the
+   established icon/UI style and approved art brief.
    Use existing SVG/procedural editing where that is the sanctioned final asset type,
    with an explicit verdict, not a raster rewrite of every icon. Every remaining
    feature-created placeholder receives final accepted artwork. Record prompt/input/
@@ -90,7 +109,10 @@ and return full reports to the scratchpad with a path and short summary.
 4. In-context proof: capture every changed visual in actual desktop, compact, tablet
    and LOW gameplay contexts required by ux-spec, with source/final matched evidence
    and actual runtime IDs. Inspect legibility at displayed size, material/silhouette,
-   contrast, crop/alpha, theme/focus, reduced motion and denied-store absence. Include
+   contrast, crop/alpha, theme/focus, reduced motion and denied-store absence (D86:
+   no DOM node, handler, request, fetched catalog, error copy or accessible text on a
+   denied surface, while the purchase code and English keys ship dormant in every
+   bundle under the runtime capability, which is expected and stated). Include
    iOS/light-pressure fallback where relevant; never hide ghost/blocked information.
    Gallery renders alone do not satisfy gameplay evidence. Use existing approved
    screenshot sizes and measured asset budgets, no new guessed numeric limits.
@@ -99,7 +121,9 @@ and return full reports to the scratchpad with a path and short summary.
    checks show no feature-created placeholder icon/image or shipping stand-in.
    Update final-artwork-audit.md and the content/art manifests with final hashes and
    evidence. Run actual-surface review, apply all findings and fresh-review fixes;
-   hand the completed visual inventory and licensing evidence to44b.
+   hand the completed visual inventory, the licensing evidence, the placeholder
+   replacement record and the D86 evidence (the denied-surface runtime absence proof
+   beside the explicit dormant-bundle statement) to 44b (D75).
 
 INVARIANTS THIS PHASE MUST KEEP:
 Every player-visible string, including error, aria, tooltip and empty-state text,
@@ -145,12 +169,16 @@ authoring source. Run npm run ci:changed after the last commit and read its exit
 STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] The exhaustive actual-source/runtime inventory covers every feature-created visual and fallback; all placeholder rows are replaced and no shipping stand-in remains.
 - [ ] Asset generation ran in Codex, not Claude; raster/image and GLB work follows the sanctioned workflows with traceable provenance, final output, registration and regenerated manifests/fingerprint pins.
-- [ ] Each changed asset is verified in its actual desktop/compact/tablet/LOW context with ux-spec input/fairness/denied-store obligations; intentional final SVG/procedural/silhouette art has an explicit approval.
-- [ ] Focused art/content/registration tests, full required gate, domain reviews and fresh fix review pass; final-artwork-audit.md is complete and44aQA proceeds to44b.
+- [ ] Each changed asset is verified in its actual desktop/compact/tablet/LOW context with
+  ux-spec input/fairness/denied-store obligations (the D86 runtime-absence proof and
+  dormant-bundle statement are recorded for 44b); intentional final SVG/procedural/silhouette
+  art has an explicit approval.
+- [ ] Focused art/content/registration tests, full required gate, domain reviews and fresh fix review pass; final-artwork-audit.md is complete and 44a QA proceeds to 44b.
 
 STEP 6 - DOC UPDATES + MEMORY:
 Update progress.md row 44a and state.md's implementation ledger with actual paths,
-commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+commands, wire/schema contracts, screenshots, acceptance-artifact evidence (signed, or
+still a named unsigned release gate) and gate status.
 Record facts learned; do not reopen the locked product rulings or mark a release gate
 accepted without its signed artifact. Numeric tables are literal, provenance-backed
 and approved before activation.

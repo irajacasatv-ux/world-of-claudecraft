@@ -6,7 +6,8 @@ state.md decisions and ux-spec.md are the acceptance contract.
 ### Starter Prompt
 ```
 This is Phase 07a QA of the Freeholds and Guildhalls feature: transactional mutations and global claim fencing.
-Harness: Claude Code. Follow root CLAUDE.md working-style and effort/fan-out rules.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block and its effort/fan-out rules.
 
 Goal: verify every promised behavior and artifact, apply ALL findings including nits,
 and have a second fresh reviewer verify the fix round before recording a verdict.
@@ -35,16 +36,37 @@ STEP 2 - AUDIT:
     legacy bank-ledger-before-guild-bank order and prohibit legacy acquisition after the
     housing suffix. Test opposing operations, not a string-only SQL assertion.
   - Race two realm claims, expire/reclaim, then send a delayed old mutation. Assert one
-    authority, no state change on stale fence and bounded retries/cancellation.
+    authority, no state change on stale fence and bounded retries/cancellation. Hold a
+    claim with a live session and no plot mutation for longer than LEASE_TTL_SECONDS
+    under real PG: assert the second process is refused busy and the generation is
+    unchanged; stop renewFreeholdClaims and assert reclaim advances the generation and
+    fences the first process's late write.
   - Fault every transaction boundary: character debit before plot write, plot write
-    before receipt, duplicate receipt and COMMIT failure. Reload from PG and prove each
+    before receipt, duplicate receipt, COMMIT failure and the distinct ambiguous COMMIT
+    (destroy the client after COMMIT is sent, the
+    tests/server/character_delete_verify.pg.test.ts shape): landed proves no second
+    apply, not-landed exactly one later apply, and the verify read is the locked FOR KEY
+    SHARE form named in 07a, never a plain SELECT. Reload from PG and prove each
     exact copy is in exactly one legitimate custody location, never zero or two.
   - Recover intent after restart/service ambiguity with the same operation ID; replay
     after live-cache compaction refuses. No DB client spans external IO. Applied compact
     receipts are durable authority and retained/compacted only under accepted horizon.
   - Verify ACK/public descriptor follows commit and cancellation does not clear dirty
     work. Inspect real maximum payload, query/index plans, queue/pool metrics, exports,
-    account deletion and permanent receipt-growth treatment; no whole-table boot scan.
+    the D88 per-row-class deletion outcomes (delete an accounts row owning an applied
+    tombstone and an open intent and assert each declared outcome; delete a character
+    or account while an intent is open and assert the CharacterFreeholdOperationOpen
+    refusal with the literal character.freehold_operation_open code and status on the
+    character DELETE arm and on the account-side 55006 consumer, then exactly one
+    custody location), lease takeover during an open
+    operation, and the receipts growth gauge on freehold_operation_receipts; no
+    whole-table boot scan.
+  - Interleave a housing mutation with a dirty character autosave, a storage purchase
+    start and apply, and a guild-bank replay, each carrying a pending legacy side effect;
+    assert every half commits or none and the legacy participants' relative order is
+    unchanged. With the arms above, every one of the service contract's seven PG-proof
+    rows (autosave, storage start/apply, guild replay, deletion, lease takeover, pending
+    legacy side effects, ambiguous COMMIT) has a named arm in this inventory.
 - Required domain COVERAGE review: database-performance-reviewer, migration-safety, privacy-security-review, server-hot-path-reviewer, architecture-reviewer, cross-platform-sync, test-coverage-auditor, qa-checklist.
   Database performance runs before new DB decisions and on the finished diff. Parent
   runs deterministic gates once; reviewers inspect their evidence.
@@ -62,8 +84,9 @@ D9 AND DEVELOPER AUTHORITY BOUNDARY:
   Do not add a trusted distribution field to the game server to rescue an unverified
   purchase. Unknown eligibility refuses NEW spend; already accepted payments retain
   recovery under their original operation identity, with no DB client across service IO.
-- The 07 local developer permission and fixture cannot satisfy service authorization,
-  mint a paid receipt, cross into online authority or replace durable transfer proof.
+- The 05 local developer permission and fixture (D81) cannot satisfy service
+  authorization, mint a paid receipt, cross into online authority or replace a durable
+  transfer proof.
   Phase 15 extends these operation rows and consumes the signed service authorization
   contract; it does not fork receipt/recovery machinery or weaken D9.
 <!-- core-d9-authority:end -->
@@ -103,7 +126,9 @@ save snapshots and lifecycle rollback cannot reintroduce a transferable cooldown
 STEP 3 - VALIDATION:
 - npx tsc --noEmit; npx vitest run tests/server/freehold_mutation.test.ts
   tests/server/freehold_persist.test.ts tests/server/freehold_db.test.ts
-  tests/freehold_state.test.ts tests/architecture.test.ts tests/monolith_budget.test.ts.
+  tests/freehold_state.test.ts tests/architecture.test.ts tests/monolith_budget.test.ts
+  tests/api_error_code_parity.test.ts tests/localization_fixes.test.ts (the D88 guard's
+  code and English row).
 - npm run db:up; with TEST_DATABASE_URL set for the disposable development DB,
   npx vitest run tests/server/freehold_mutation.pg.test.ts
   tests/server/freehold_claim.pg.test.ts. The PG summary must show executed passing tests.

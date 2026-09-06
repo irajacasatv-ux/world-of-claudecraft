@@ -2,6 +2,8 @@
 
 Status: approved, UNBUILT design. Fernando approved R01 through R46 on
 2026-09-06, with the final Codex artwork closeout and legal-team handoff additions.
+D76 to D93 (ruling-sheet R47 to R64) are propagated here as the round-2 settled
+dispositions recorded in state.md "Settlement round 2", awaiting Fernando's word.
 [state.md](state.md) owns the locked decisions; [ruling-sheet.md](ruling-sheet.md)
 records the answered questions. Implementation, measured calibration, final asset
 approval and external sign-offs remain the concrete producing files' deliverables
@@ -61,6 +63,14 @@ its tier, condition, prepay, rotation, visitor and later layout rows. Measured
 room geometry comes from the content/art manifest and is recorded there before
 use. A missing measurement cannot be replaced with an invented balance value.
 
+Completion bar for this specification's inventories: the key tables below carry
+557 exact hudChrome.housing.* keys, each with one owning phase, and the
+section 11 registry expands to 733 screenshot variants, of which the
+four wave A targets hold 330 (file 20 verifies that wave A union) and
+the later producers register the rest in their own changes. ux-key-manifest.json
+and ux-shot-manifest.json are regenerated from these tables and this registry in
+the same change as any row change (D92).
+
 ## 2. Shared tokens, windows, painters and input ownership
 
 ### 2.1 Current tree versus adopted design
@@ -71,7 +81,8 @@ new tokens. Until the coordinated rollout lands, consume the current shared
 family and its actual tokens; after it lands, consume the adopted shared tokens.
 Do not introduce housing-local fallbacks with copied target colors or restyle the
 game from this packet. This explicit migration condition is recorded in state.
-The reverted window_frame.ts and .window-frame are not existing dependencies.
+The reverted window_frame.ts is absent; the leftover .window-frame selectors in
+src/styles/components.css and src/ui/perf_ornament_svg.ts are not a dependency.
 
 | Role | Verified current family | Adopted target | Content numbers source row |
 |---|---|---|---|
@@ -87,9 +98,12 @@ The reverted window_frame.ts and .window-frame are not existing dependencies.
 | Tooltips | Actual shared #tooltip and attachTooltip | Strong fill, 10px pad, max 320px, hover delay about 250ms and immediate keyboard-focus presentation | UX tooltip |
 | Readable states | themeCssVars contrast repair and shared semantic hooks | Normal text 4.5:1; large text/accent 3:1; error text stays --color-text-error #ff8f85 | UX contrast |
 
-Adopted guaranteed-dark ramps are --color-ink-1000 through --color-ink-800 and
---color-gold-900 through --color-gold-300, with exact values in state "UX current
-and adopted colors". They may ornament guaranteed-dark surfaces. Readable text,
+The shipped guaranteed-dark ramp is --color-gold-900 through --color-gold-300
+(declared in src/styles/tokens.css); the DESIGN.md ink ramp --color-ink-1000
+through --color-ink-800 is a target only, with exact values in state "UX current
+and adopted colors". Housing CSS never reads --color-ink-* before tokens.css
+declares it (the fallback-free token guard fails an undeclared name); the shipped
+gold ramp may ornament guaranteed-dark surfaces. Readable text,
 selected borders and focus on themed surfaces use the theme-derived variables:
 --color-accent-hover, --color-border-focus, --color-accent-glint,
 --color-text-secondary, --color-text-faint and --panel-fill-strong when shipped.
@@ -98,9 +112,12 @@ use the shared semantic roles; item rarity uses the existing quality hooks.
 
 ### 2.2 Exact composition contracts
 
-Reuse `.window.panel` from src/styles/layout.css and the existing window drag and
-resize installers. Every NEW housing window id receives an explicit mobile pin,
-size and transform rule or a reviewed mobile exception. CSS remains flat:
+Reuse the `.window.panel` composition (`.window` from src/styles/layout.css and
+`.panel` from src/styles/base.css) and the existing window drag and resize
+installers. Every NEW housing window id receives an explicit mobile pin,
+size and transform rule or a reviewed mobile exception. Wave A housing window
+ids: steward-window (16) and trophy-case-window (17), each with a mobile-sheet pin
+in src/styles/hud.mobile.css. CSS remains flat:
 src/styles/components.css for bodies, src/styles/hud.css for chrome and
 src/styles/hud.mobile.css for touch layout, respecting their layer contracts.
 
@@ -126,7 +143,8 @@ A visible .window.panel or dialog wins dpad_focus_nav's activeRoot selection,
 and the HUD's window-open projection puts gamepad into pointer mode. Adding
 `data-pad-nav-root` alone does not change either fact. File 11 therefore owns a
 NEW scoped companion/window-input arbitration seam in the housing controller
-and src/game/build_mode_wiring.ts, with a small NEW pure housing input core.
+and src/game/build_mode_wiring.ts, with the small NEW pure housing input core
+src/ui/hud/housing/build_input_core.ts.
 It classifies the active context as ordinary blocking window, housing palette
 focus, housing placement, or normal world. This is a planned extension, not an
 existing public API. The default remains the shipped behavior for every existing
@@ -203,35 +221,83 @@ and the hudChrome.housing.denied namespace. Success uses the separately planned
 freeholdGrantedLineKey, correlated by operation, target plot and request identity.
 An unrelated event must not close/rearm a window or play its success cue.
 
-| NEW key | English value |
-|---|---|
-| hudChrome.housing.common.close | Close |
-| hudChrome.housing.common.cancel | Cancel |
-| hudChrome.housing.common.back | Back |
-| hudChrome.housing.common.retry | Try again |
-| hudChrome.housing.common.loading | Loading your home... |
-| hudChrome.housing.common.pending | Waiting for confirmation... |
-| hudChrome.housing.common.reconnecting | Reconnecting. Your saved home is safe. |
-| hudChrome.housing.common.readOnly | Read only |
-| hudChrome.housing.common.unavailable | This is unavailable right now. |
-| hudChrome.housing.common.unknown | Unknown |
-| hudChrome.housing.common.selected | Selected: {name} |
-| hudChrome.housing.common.closeAria | Close {window} |
-| hudChrome.housing.denied.unavailable | This home is unavailable right now. Try again later. |
-| hudChrome.housing.denied.busy | This home is active elsewhere or still opening. Try again shortly. |
-| hudChrome.housing.denied.permission | You cannot use this here. |
-| hudChrome.housing.denied.ownershipChanged | Your access changed. Your last confirmed changes are saved. |
-| hudChrome.housing.denied.changed | Your home changed before this action finished. Review it and try again. |
-| hudChrome.housing.denied.materials | You do not have enough materials in the selected source. |
-| hudChrome.housing.denied.bagsFull | Make room in your bags before removing this furnishing. |
-| hudChrome.housing.denied.condition | Restore your home's condition to use this amenity. |
-| hudChrome.housing.denied.offlinePurchase | Purchases need an online connection. |
-| hudChrome.housing.granted.placed | {item} placed. |
-| hudChrome.housing.granted.moved | {item} moved. |
-| hudChrome.housing.granted.removed | {item} returned to your bags. |
-| hudChrome.housing.granted.ledgerPaid | Your Ledger is paid. |
-| hudChrome.housing.granted.prepaid | Your Ledger is paid through {date}. |
-| hudChrome.housing.granted.call | Your home's condition is restored. |
+hudChrome.housing.* is the only housing key family (D92): charter.* carries the
+Store card, fee, tax and Purchase Terms rows and steward.manageWebsite carries
+website management; no store.*, service.* or eligibility.* family exists, and the
+docs/prd/woc drafts adopt the ids in these tables. Window-title, tab and button
+keys use title case per DESIGN.md 5.4; status, description, radio and aria keys
+use sentence case. Every key has exactly one owning phase, shown in the Owner
+column of every table and in the owner field of ux-key-manifest.json; that phase
+names the keys it adds with their exact English in its own file (the wave A base
+rows are named here and cited by namespace in their owner files) and regenerates
+both manifests in the same change. Namespace owners, with the rows other phases
+own in the same namespace (14 ships its two steward rows before 16 opens the
+namespace; every other listed phase appends after the base owner):
+
+| Namespace | Base owner | Rows owned by other phases |
+|---|---|---|
+| common | 06 | none |
+| denied | 06 (unavailable, busy, permission, condition, dead, combat, cooldown, instanced, match) | 11 (placement rows, bagsFull, changed, ownershipChanged), 16 (materials, offlinePurchase), 17, 21, 25, 28, 34, 38, 40, 41, 41a, 42 |
+| granted | 11 (placed, moved, removed) | 16 (ledgerPaid, prepaid, call), 21 (upgradeComplete) |
+| gate | 06 | none |
+| arrival | 09 | none |
+| hearthKey | 06 (tooltip, destination) | 42 (tooltipShared) |
+| interior | 09 (door, hearth, plinth, emptyPlinth, amenityPaused, preparing) | 12 (Strongbox and station rows) |
+| build | 11 | 25 (surface, freeRotate, movesChildren) |
+| furnishing | 02 (item tooltip leaves) | 25 (typed surface rows when they land) |
+| steward | 16 | 14 (manageWebsite, manageWebsiteAria), 21 (upgrade rows), 40 (requirement and overflow rows), 42 (primaryTab, secondTab, secondBillNote) |
+| charter | 16 (card, quote, fee, tax, Terms, section, reference and support rows) | 29 (guildhall rows), 37 (serviceUnavailable, eligibilityUnconfirmed, supportPointer; 38 reuses serviceUnavailable for the deed service), 42 (second-home rows) |
+| trophies | 17 | 23 (finish and form rows) |
+| visit | 18 | 26 (Open Houses rows) |
+| garden | 24 | none |
+| guild | 28 (title, fund, projects, contributions, warTable, noRecords, officerRequired, ownPlinth) | 29 (fund form rows), 30 (amenity refusals), 30a (board rows), 31 (firstKillRow) |
+| ward | 34 (title and roster rows) | 35 (endeavors, favor and Endeavor rows) |
+| showcase | 36 | none |
+| guestBook | 36 | none |
+| layouts | 41a | none |
+| dyes | 41 | none |
+| deed | 38 | none |
+
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.common.close | Close | 06 |
+| hudChrome.housing.common.cancel | Cancel | 06 |
+| hudChrome.housing.common.back | Back | 06 |
+| hudChrome.housing.common.retry | Try Again | 06 |
+| hudChrome.housing.common.loading | Loading your home... | 06 |
+| hudChrome.housing.common.pending | Waiting for confirmation... | 06 |
+| hudChrome.housing.common.reconnecting | Reconnecting. Your saved home is safe. | 06 |
+| hudChrome.housing.common.readOnly | Read only | 06 |
+| hudChrome.housing.common.unavailable | This is unavailable right now. | 06 |
+| hudChrome.housing.common.unknown | Unknown | 06 |
+| hudChrome.housing.common.selected | Selected: {name} | 06 |
+| hudChrome.housing.common.closeAria | Close {window} | 06 |
+| hudChrome.housing.denied.unavailable | This home is unavailable right now. Try again later. | 06 |
+| hudChrome.housing.denied.busy | This home is active elsewhere or still opening. Try again shortly. | 06 |
+| hudChrome.housing.denied.permission | You cannot use this here. | 06 |
+| hudChrome.housing.denied.ownershipChanged | Your access changed. Your last confirmed changes are saved. | 11 |
+| hudChrome.housing.denied.changed | Your home changed before this action finished. Review it and try again. | 11 |
+| hudChrome.housing.denied.materials | You do not have enough materials in the selected source. | 16 |
+| hudChrome.housing.denied.bagsFull | Make room in your bags before removing this furnishing. | 11 |
+| hudChrome.housing.denied.condition | Restore your home's condition to use this amenity. | 06 |
+| hudChrome.housing.denied.offlinePurchase | Purchases need an online connection. | 16 |
+| hudChrome.housing.denied.dead | You cannot do that while dead. | 06 |
+| hudChrome.housing.denied.combat | You cannot do that in combat. | 06 |
+| hudChrome.housing.denied.cooldown | Your Hearth Key is still cooling down. | 06 |
+| hudChrome.housing.denied.instanced | You cannot use this inside an instance. | 06 |
+| hudChrome.housing.denied.match | You cannot use this during a match. | 06 |
+| hudChrome.housing.granted.placed | {item} placed. | 11 |
+| hudChrome.housing.granted.moved | {item} moved. | 11 |
+| hudChrome.housing.granted.removed | {item} returned to your bags. | 11 |
+| hudChrome.housing.granted.ledgerPaid | Your Ledger is paid. | 16 |
+| hudChrome.housing.granted.prepaid | Your Ledger is paid through {date}. | 16 |
+| hudChrome.housing.granted.call | Your home's condition is restored. | 16 |
+
+freeholdDeniedLineKey (06) maps the sim reasons as they stand after 06:
+no_freehold to denied.unavailable, busy to denied.busy, locked to
+denied.condition, and visitors_full and not_friend to denied.permission until 18
+adds their rows; dead, combat, cooldown, instanced and match have their own rows
+above. Later phases append rows to that one selector and never add a second.
 
 ### 2.4 Account lifecycle, calendar and presentation authority
 
@@ -255,9 +321,9 @@ ledgers. Do not expose database keys, operator evidence, internal authority
 revisions/digests, generation-registration facts, raw account lifecycle history,
 private diagnostics or secret-route details in labels, tooltips, aria text,
 errors, owner-private snapshots or public guest descriptors. Owner-private is
-still player-visible. File13a's NEW server-only
+still player-visible. File 13a's NEW server-only
 FreeholdUpkeepAuthoritySuspension in server/freehold_db.ts is distinct from
-file13's safe sim FreeholdUpkeepSuspension, whose allowed calendar facts are
+file 13's safe sim FreeholdUpkeepSuspension, whose allowed calendar facts are
 calendarId/startMs/endMs/reasonCode. Self/public builders explicitly allowlist
 what their viewer needs; they never serialize either complete server or sim
 record. Calendar identity needed by deterministic interpretation does not become
@@ -318,8 +384,10 @@ before rollback, outside the player flow.
 
 Guest-book daily rate authority survives visible entry removal. File 36's NEW
 freehold_guest_book_daily_claims uses unique (account_id, plot_id, realm_day_id),
-where the globally stable day identity preserves signed CAL-SOCIAL calendar/reset
-binding across revisions. Calendar/reset references do not create alternate
+where realm_day_id is the realm day resetDay (03:00 in the realm reset zone, D84)
+and the globally stable day identity preserves the CAL-SOCIAL calendar/reset
+binding (a named unsigned gate until its signature artifact is on file) across
+revisions. Calendar/reset references do not create alternate
 uniqueness identities. Appending and deterministic visible pruning share the
 conflict-safe daily-claim transaction; failure rolls back all effects. Pruning,
 owner/moderation deletion and restart do not reset the allowance. Closed-day cleanup
@@ -355,7 +423,10 @@ a visitor sees the owner's safe tableau, never an alt identity or Journal action
 ### Player goal and flow
 
 Find a home naturally in Eastbrook and enter feeling oriented, welcomed and free
-to explore. The gate is a world interactable with the normal semantic map marker.
+to explore. The gate is a world interactable with the normal semantic map marker
+(the freehold-gate MapMarkerSemantic arm, its art, layer and accessibility tokens,
+produced by 06 and pinned in tests/map_marker_semantics.test.ts,
+tests/map_semantic_accessibility_core.test.ts and tests/minimap_markers.test.ts).
 The proximity hint and the actual interact press share the same resolved target;
 merely walking near it never teleports. Gate choice offers the account's own
 home and friend-by-character-name. The free Inn Room is a normal destination and
@@ -400,7 +471,9 @@ establishing-shot wait. No housing-only curtain delay is added.
 
 First-tier hearth framing borrows src/render/camera_director_core.ts's
 envelope (state "UX arrival camera") with a path derived from the approved
-room's safe bounds and camera collision. Any movement, look, confirm or cancel
+room's safe bounds and camera collision. The optional hearth view is the NEW
+'hearthView' CameraDirectiveKind in src/render/camera_director_core.ts (09),
+beside the existing 'vista' and 'deathDrift' kinds. Any movement, look, confirm or cancel
 resumes ordinary input immediately and invokes the existing cancel path. That
 path blends its camera offset out over DIRECTOR_RELEASE_TIME; it does not
 instantly restore the pose. Keep the blend camera-safe while input resumes.
@@ -448,7 +521,7 @@ loadFreeholdArrivalTiers and markFreeholdArrivalTierOnClient. The private
 account_freehold_arrival_tiers account+tier mark is inserted conflict-safely
 inside file 07a's accepted owner-entry transaction. Only the committed
 insert winner on a newly accepted owner transition may receive
-freshArrivalPresentation with firstTierViewEligible true from08a. Historical
+freshArrivalPresentation with firstTierViewEligible true from 08a. Historical
 firstTierAtAdmission is immutable admission context, not permission to start a
 camera/cue. Guests,
 rejected entries, ordinary confirmed-seen returns, periodic saves, renderer
@@ -528,35 +601,38 @@ reduced motion does not auto-rotate the camera or slide the welcome line.
 Braced diagram labels are catalog suffixes under hudChrome.housing, expanded in
 the tables; other diagram words describe world composition, not screen copy.
 
-| NEW key | English value |
-|---|---|
-| hudChrome.housing.gate.title | Choose a home |
-| hudChrome.housing.gate.own | My home |
-| hudChrome.housing.gate.visit | Visit a friend |
-| hudChrome.housing.gate.name | Character name |
-| hudChrome.housing.gate.namePlaceholder | Enter a character name |
-| hudChrome.housing.gate.nameRequired | Enter a character name to visit. |
-| hudChrome.housing.gate.homeChoice | Choose your home |
-| hudChrome.housing.gate.lookup | Find home |
-| hudChrome.housing.gate.lookupPending | Finding your friend's home... |
-| hudChrome.housing.gate.lookupChanged | Find this character's home before entering. |
-| hudChrome.housing.gate.result | Home belonging to {name} |
-| hudChrome.housing.gate.enter | Enter |
-| hudChrome.housing.gate.loading | Opening the door... |
-| hudChrome.housing.gate.marker | Freeholds gate |
-| hudChrome.housing.gate.interact | Choose a home |
-| hudChrome.housing.arrival.welcome | Welcome home, {name}. |
-| hudChrome.housing.arrival.visitor | Welcome to {name}'s home. |
-| hudChrome.housing.arrival.skip | Skip arrival view |
-| hudChrome.housing.arrival.ready | Your home is ready to explore. |
-| hudChrome.housing.hearthKey.tooltip | Return to your selected home. You cannot use this while in combat, dead or in jail. Your homes share its cooldown. |
-| hudChrome.housing.hearthKey.destination | Destination: {home} |
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.gate.title | Choose a Home | 06 |
+| hudChrome.housing.gate.own | My Home | 06 |
+| hudChrome.housing.gate.visit | Visit a Friend | 06 |
+| hudChrome.housing.gate.name | Character name | 06 |
+| hudChrome.housing.gate.namePlaceholder | Enter a character name | 06 |
+| hudChrome.housing.gate.nameRequired | Enter a character name to visit. | 06 |
+| hudChrome.housing.gate.homeChoice | Choose your home | 06 |
+| hudChrome.housing.gate.lookup | Find Home | 06 |
+| hudChrome.housing.gate.lookupPending | Finding your friend's home... | 06 |
+| hudChrome.housing.gate.lookupChanged | Find this character's home before entering. | 06 |
+| hudChrome.housing.gate.result | Home belonging to {name} | 06 |
+| hudChrome.housing.gate.enter | Enter | 06 |
+| hudChrome.housing.gate.loading | Opening the door... | 06 |
+| hudChrome.housing.gate.marker | Freeholds gate | 06 |
+| hudChrome.housing.gate.interact | Choose a home | 06 |
+| hudChrome.housing.arrival.welcome | Welcome home, {name}. | 09 |
+| hudChrome.housing.arrival.visitor | Welcome to {name}'s home. | 09 |
+| hudChrome.housing.arrival.skip | Skip Arrival View | 09 |
+| hudChrome.housing.arrival.ready | Your home is ready to explore. | 09 |
+| hudChrome.housing.hearthKey.tooltip | Return to your home. You cannot use this while in combat, dead, in jail, inside an instance or during a match. | 06 |
+| hudChrome.housing.hearthKey.destination | Destination: {home} | 06 |
+| hudChrome.housing.hearthKey.tooltipShared | Return to your selected home. You cannot use this while in combat, dead, in jail, inside an instance or during a match. Your homes share its cooldown. | 42 |
 
 Hearth Key metadata shows the live cooldown (state Hearth Key row), without
-repeating it in the tooltip sentence. The second-home sentence is enabled only
-when the shared-target mechanic lands; before then the English source uses the
-same key with singular active-mechanic wording. No tooltip may ship a future
-restriction or feature before its handler exists.
+repeating it in the tooltip sentence. hearthKey.tooltip is the Wave A English 06
+ships; 42 rewords the key to the shared-destination sentence recorded above as
+hearthKey.tooltipShared when the second home lands, as a listed key change, never
+a silent reword. gate.interact is the world prompt verb and gate.title the window
+title; they are distinct sinks. No tooltip may ship a future restriction or
+feature before its handler exists.
 
 ## 4. Build mode: a world companion with deliberate placement
 
@@ -586,8 +662,11 @@ empty-mark case without dangling punctuation.
 
 The palette sits beside the world without a scrim or trap. A compact header and
 steady footer carry live decor/plinth/amenity meters from the initial build
-release. Meters show actual used and limit, including truthful over-capacity
-numbers; clamp only drawn fill. They do not invent bank near-full thresholds.
+release, painted from the NEW src/ui/hud/housing/capacity_meter_view.ts (11).
+Meters show actual used and limit, including truthful over-capacity numbers;
+clamp only drawn fill, with build.meterFull at used equals limit, build.meterOver
+for the truthful excess and build.meterAria as each meter's aria-valuetext.
+They do not invent bank near-full thresholds.
 The placement strip stays adjacent to the world selection and above existing
 action/touch controls. Compact collapses palette content after choosing a piece,
 leaving its selected-copy chip and reopen control. Tablet keeps a wider side
@@ -635,9 +714,14 @@ another plot's UI generation. If authority is lost, close editing safely and
 retain read-only room presentation. Do not offer discard-all when there is no
 unsaved layout transaction.
 
-Later advanced mode adds bounded planar translation/free yaw and typed
+Later advanced mode (25) adds bounded planar translation/free yaw and typed
 floor/wall/table/fixed-ceiling anchors, with parent movement and children applied
-atomically. The snapped mode stays available. There is no arbitrary scale,
+atomically. The snapped mode stays available: build.snap is the placement mode
+toggle (checked: fifteen-degree snapped yaw and grid; unchecked: bounded free
+planar translation and free yaw), and the free-yaw input per device is the held
+Rotate binding with a sideways pointer drag, the held rotate bumper with the right
+stick's horizontal axis, and the touch build.freeRotate handle in the tap-only
+action panel. There is no arbitrary scale,
 full-axis gimbal or collision-leniency mode in this packet. Save/load/share is a
 later release as recorded in state, not an initial promise or disabled teaser tab.
 
@@ -688,8 +772,12 @@ stays closed when the result arrives. Normal removal history uses the confirmed
 copy and revision, subject to the same stale inverse rules.
 
 An occupied trophy plinth offers Replace trophy and Clear plinth instead of
-Return to bags. Replace opens the same eligible trophy chooser, then stages the
-selected record on that exact plinth; no inventory copy is created. Cancel
+Return to bags. Replace opens the same eligible trophy chooser (the record-only
+src/ui/hud/housing/trophy_case_view.ts::eligibleTrophyChooser, opened through
+TrophyCaseWindow.openForPlinth(plinthKey) and wired by 17; 11 ships the Replace
+trophy and Clear plinth affordances as a disabled shell), then stages the
+selected record on that exact plinth through placeTrophy; no inventory copy is
+created. Cancel
 returns to the plinth's current display. Clear confirms removal of the display
 only, preserving unlock/provenance. An empty plinth offers the trophy chooser.
 Success focuses the plinth's new/current record or its empty-plinth row; refusal
@@ -715,7 +803,27 @@ controller owns them. Mouse position/drag moves the proposal, standard camera
 look orbits within room bounds, and the visible Rotate controls are always
 keyboard reachable. Do not steal text-editing shortcuts while search has focus.
 Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z invoke placement undo/redo only when the housing
-world context owns input; otherwise native text undo remains intact. Existing
+world context owns input; otherwise native text undo remains intact. They are the
+undoPlacement and redoPlacement BindActions with defaults ['Ctrl+KeyZ', 'Meta+KeyZ']
+and ['Ctrl+Shift+KeyZ', 'Meta+Shift+KeyZ'] (two codes each; makeCombo emits a
+separate Meta part for Cmd); toggleBuildMode,
+rotateFurnishingLeft and rotateFurnishingRight default to 'Shift+KeyB', 'Comma'
+and 'Period', all unclaimed in BIND_ACTIONS today, and tests/keybinds.test.ts pins
+the five rows. Their options-window labels are keybind label rows outside the
+housing family: hud_chrome catalog rows in the existing hudChrome.keybinds.* family
+(beside categoryPet and dive), consumed by src/ui/options_window.ts
+BIND_CATEGORY_LABEL_KEYS and BIND_ACTION_LABEL_KEYS, owned by 11 and NOT part of
+ux-key-manifest.json's housing inventory:
+
+| Catalog key (hudChrome.keybinds.*) | English value | Owner |
+|---|---|---|
+| hudChrome.keybinds.categoryHousing | Housing | 11 |
+| hudChrome.keybinds.toggleBuildMode | Toggle Build Mode | 11 |
+| hudChrome.keybinds.rotateFurnishingLeft | Rotate Furnishing Left | 11 |
+| hudChrome.keybinds.rotateFurnishingRight | Rotate Furnishing Right | 11 |
+| hudChrome.keybinds.undoPlacement | Undo Placement | 11 |
+| hudChrome.keybinds.redoPlacement | Redo Placement | 11 |
+ Existing
 Escape routing first cancels the proposal, then exits the mode on the next
 unconsumed close request. Every hint derives the active binding; new optional
 bindings are registered through the existing keybind seam without changing
@@ -727,17 +835,26 @@ stick moves the ghost camera-relative and the right stick orbits the bounded
 camera, using the existing ground-aim response curve. Left/right bumper actions
 rotate counterclockwise/clockwise by the state snap step; d-pad nudges by one
 measured grid cell. Confirm places and Cancel cancels the unsent proposal. The
-existing focus-navigation action returns to the palette. Trigger hotbar actions
-are suspended while placement owns those inputs, so one press cannot decorate
-and cast. The same logical actions are remappable and displayed using the
-current pad family glyphs, including when the device changes mid-session.
+existing focus-navigation action returns to the palette. While placement owns pad
+input, build_mode_wiring.ts suspends exactly this set: GAMEPAD_CYCLE_SET on RB (RB
+rotates clockwise instead), the LB slot (rotates counterclockwise), 'jump' on Y,
+'autorun' on L3, the bare d-pad focus navigation (the d-pad nudges one cell) and
+every cross-hotbar trigger action; GAMEPAD_CYCLE_HUD stays live only as the
+return-to-palette action, so one press cannot decorate and cast. Housing pad verbs
+are a fixed context overlay on the ground-aim precedent, not remappable
+GamepadActionIds; glyphs come from the active pad family, including when the
+device changes mid-session. The composed-pad test asserts an RB press in placement
+rotates the ghost, never calls toggleCrossHotbarSet and never casts.
 
 Touch routes each pointer through touch_router's ownership ledger. Dragging a
 selected piece previews it; dragging unoccupied world area controls the bounded
 camera, and UI touches stay UI-owned. Pinch controls camera only. Confirm,
 Rotate and Cancel remain separate visible targets at least 40x40px (state UX
 touch targets), with reverse-rotate and nudge reachable by the tap-only action
-panel. A finger-offset preview derives the selected control's actual hitbox and
+panel, one strip_gesture_controller instantiation with anchorRole 'toggle'
+honouring settings.touchTapMenus (never a fourth tap dialect); in advanced mode
+(25) the build.freeRotate handle lives in the same panel. A finger-offset preview
+derives the selected control's actual hitbox and
 screen projection; the footprint marks the real placement, not the finger.
 Moving over a panel or safe-area edge never confirms or switches touch owner.
 
@@ -778,85 +895,108 @@ Compact: collapsed selected-copy chip, world, stable touch action strip.
 
 The diagram X uses common.close; other action shorthand expands to build keys.
 
-| NEW key | English value |
-|---|---|
-| hudChrome.housing.build.title | Build mode |
-| hudChrome.housing.build.enter | Build |
-| hudChrome.housing.build.leave | Finish building |
-| hudChrome.housing.build.furnishings | Furnishings |
-| hudChrome.housing.build.trophies | Trophies |
-| hudChrome.housing.build.amenityTab | Amenities |
-| hudChrome.housing.build.search | Search furnishings |
-| hudChrome.housing.build.searchPlaceholder | Search by name |
-| hudChrome.housing.build.clearSearch | Clear search |
-| hudChrome.housing.build.category | Furnishing category |
-| hudChrome.housing.build.palette | Choose a furnishing |
-| hudChrome.housing.build.collectionHelp | Use the arrow keys to move between furnishings. Press Enter to select one. |
-| hudChrome.housing.build.placedObjects | Placed furnishings |
-| hudChrome.housing.build.selectPlaced | Select {item} |
-| hudChrome.housing.build.selectedPlaced | Selected placed furnishing: {item}. |
-| hudChrome.housing.build.moveSelected | Move furnishing |
-| hudChrome.housing.build.replaceTrophy | Replace trophy |
-| hudChrome.housing.build.clearTrophy | Clear plinth |
-| hudChrome.housing.build.returnTooltip | Return this exact furnishing to your bags. You need enough bag space. |
-| hudChrome.housing.build.proposalReplaced | Previous placement preview cancelled. {item} is selected. |
-| hudChrome.housing.build.selectionPending | Wait for this placement to finish before changing selection. |
-| hudChrome.housing.build.surfaceFloor | Floor |
-| hudChrome.housing.build.surfaceWall | Wall |
-| hudChrome.housing.build.surfaceTabletop | Tabletop |
-| hudChrome.housing.build.surfaceCeiling | Ceiling |
-| hudChrome.housing.build.paletteOpen | Open furnishing palette |
-| hudChrome.housing.build.empty | Find furnishings at vendors or make them with crafting recipes. |
-| hudChrome.housing.build.noResults | No furnishings match your search. |
-| hudChrome.housing.build.selectedCopy | {item}, {marks}, {count} available |
-| hudChrome.housing.build.selectedCopyNoMarks | {item}, {count} available |
-| hudChrome.housing.build.confirm | Place |
-| hudChrome.housing.build.confirmMove | Move |
-| hudChrome.housing.build.remove | Return to bags |
-| hudChrome.housing.build.rotate | Rotate clockwise |
-| hudChrome.housing.build.rotateBack | Rotate counterclockwise |
-| hudChrome.housing.build.cancel | Cancel placement |
-| hudChrome.housing.build.nudge | Nudge |
-| hudChrome.housing.build.nudgeForward | Nudge forward |
-| hudChrome.housing.build.nudgeBack | Nudge backward |
-| hudChrome.housing.build.nudgeLeft | Nudge left |
-| hudChrome.housing.build.nudgeRight | Nudge right |
-| hudChrome.housing.build.snap | Snap to grid |
-| hudChrome.housing.build.undo | Undo |
-| hudChrome.housing.build.redo | Redo |
-| hudChrome.housing.build.undoEmpty | There are no placement changes to undo. |
-| hudChrome.housing.build.redoEmpty | There are no placement changes to redo. |
-| hudChrome.housing.build.historyChanged | Your home changed. Placement history has been reset. |
-| hudChrome.housing.build.historyTooltip | Undo confirmed placement changes from this building session. Payments and purchases are not included. |
-| hudChrome.housing.build.saving | Saving placement... |
-| hudChrome.housing.build.preparing | Preparing furnishing preview... |
-| hudChrome.housing.build.valid | Ready to place. |
-| hudChrome.housing.build.placementReason | Placement: {reason} |
-| hudChrome.housing.build.decor | Decor: {used} of {limit} |
-| hudChrome.housing.build.plinths | Plinths: {used} of {limit} |
-| hudChrome.housing.build.amenities | Amenities: {used} of {limit} |
-| hudChrome.housing.build.decorTooltip | This furnishing uses {cost} decor. You have {remaining} decor available. |
-| hudChrome.housing.build.plinthTooltip | Display trophies on your home's plinths. {used} of {limit} are in use. |
-| hudChrome.housing.build.amenityTooltip | Installed stations use amenity slots. Your built-in Strongbox does not use a slot. |
-| hudChrome.housing.build.camera | Build camera |
-| hudChrome.housing.build.cameraHint | Move the view to inspect your placement. |
-| hudChrome.housing.build.controlsAria | Placement controls for {item} |
-| hudChrome.housing.build.fixed | This is part of your home and cannot be moved. |
-| hudChrome.housing.denied.placementBlocked | Something is in the way. |
-| hudChrome.housing.denied.outsideRoom | Place this inside the room. |
-| hudChrome.housing.denied.doorway | Keep the doorway and arrival path clear. |
-| hudChrome.housing.denied.occupied | Someone is standing in that space. |
-| hudChrome.housing.denied.decorFull | This needs {needed} decor. You have {remaining} available. |
-| hudChrome.housing.denied.plinthFull | Every plinth is in use. |
-| hudChrome.housing.denied.amenityFull | Every amenity slot is in use. |
-| hudChrome.housing.denied.wrongSurface | This furnishing needs a {surface} surface. |
-| hudChrome.housing.denied.copyMissing | This furnishing is no longer available. |
-| hudChrome.housing.denied.childrenPresent | Move the furnishings on this piece before removing it. |
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.build.title | Build Mode | 11 |
+| hudChrome.housing.build.enter | Build | 11 |
+| hudChrome.housing.build.leave | Finish Building | 11 |
+| hudChrome.housing.build.furnishings | Furnishings | 11 |
+| hudChrome.housing.build.trophies | Trophies | 11 |
+| hudChrome.housing.build.amenityTab | Amenities | 11 |
+| hudChrome.housing.build.search | Search furnishings | 11 |
+| hudChrome.housing.build.searchPlaceholder | Search by name | 11 |
+| hudChrome.housing.build.clearSearch | Clear Search | 11 |
+| hudChrome.housing.build.category | Furnishing category | 11 |
+| hudChrome.housing.build.palette | Choose a furnishing | 11 |
+| hudChrome.housing.build.collectionHelp | Use the arrow keys to move between furnishings. Press Enter to select one. | 11 |
+| hudChrome.housing.build.placedObjects | Placed furnishings | 11 |
+| hudChrome.housing.build.selectPlaced | Select {item} | 11 |
+| hudChrome.housing.build.selectedPlaced | Selected placed furnishing: {item}. | 11 |
+| hudChrome.housing.build.moveSelected | Move Furnishing | 11 |
+| hudChrome.housing.build.replaceTrophy | Replace Trophy | 11 |
+| hudChrome.housing.build.clearTrophy | Clear Plinth | 11 |
+| hudChrome.housing.build.returnTooltip | Return this exact furnishing to your bags. You need enough bag space. | 11 |
+| hudChrome.housing.build.proposalReplaced | Previous placement preview cancelled. {item} is selected. | 11 |
+| hudChrome.housing.build.selectionPending | Wait for this placement to finish before changing selection. | 11 |
+| hudChrome.housing.build.surfaceFloor | Floor | 11 |
+| hudChrome.housing.build.surfaceWall | Wall | 11 |
+| hudChrome.housing.build.surfaceTabletop | Tabletop | 11 |
+| hudChrome.housing.build.surfaceCeiling | Ceiling | 11 |
+| hudChrome.housing.build.paletteOpen | Open Furnishing Palette | 11 |
+| hudChrome.housing.build.empty | Find furnishings at vendors or make them with crafting recipes. | 11 |
+| hudChrome.housing.build.noResults | No furnishings match your search. | 11 |
+| hudChrome.housing.build.selectedCopy | {item}, {marks}, {count} available | 11 |
+| hudChrome.housing.build.selectedCopyNoMarks | {item}, {count} available | 11 |
+| hudChrome.housing.build.confirm | Place | 11 |
+| hudChrome.housing.build.confirmMove | Move | 11 |
+| hudChrome.housing.build.remove | Return to Bags | 11 |
+| hudChrome.housing.build.rotate | Rotate Clockwise | 11 |
+| hudChrome.housing.build.rotateBack | Rotate Counterclockwise | 11 |
+| hudChrome.housing.build.cancel | Cancel Placement | 11 |
+| hudChrome.housing.build.nudge | Nudge | 11 |
+| hudChrome.housing.build.nudgeForward | Nudge Forward | 11 |
+| hudChrome.housing.build.nudgeBack | Nudge Backward | 11 |
+| hudChrome.housing.build.nudgeLeft | Nudge Left | 11 |
+| hudChrome.housing.build.nudgeRight | Nudge Right | 11 |
+| hudChrome.housing.build.snap | Snap to Grid | 11 |
+| hudChrome.housing.build.undo | Undo | 11 |
+| hudChrome.housing.build.redo | Redo | 11 |
+| hudChrome.housing.build.undoEmpty | There are no placement changes to undo. | 11 |
+| hudChrome.housing.build.redoEmpty | There are no placement changes to redo. | 11 |
+| hudChrome.housing.build.historyChanged | Your home changed. Placement history has been reset. | 11 |
+| hudChrome.housing.build.historyTooltip | Undo confirmed placement changes from this building session. Payments and purchases are not included. | 11 |
+| hudChrome.housing.build.saving | Saving placement... | 11 |
+| hudChrome.housing.build.preparing | Preparing furnishing preview... | 11 |
+| hudChrome.housing.build.valid | Ready to place. | 11 |
+| hudChrome.housing.build.placementReason | Placement: {reason} | 11 |
+| hudChrome.housing.build.decor | Decor: {used} of {limit} | 11 |
+| hudChrome.housing.build.plinths | Plinths: {used} of {limit} | 11 |
+| hudChrome.housing.build.amenities | Amenities: {used} of {limit} | 11 |
+| hudChrome.housing.build.meterFull | At capacity | 11 |
+| hudChrome.housing.build.meterOver | Over capacity by {excess} | 11 |
+| hudChrome.housing.build.meterAria | {meter}: {used} of {limit} in use | 11 |
+| hudChrome.housing.build.decorTooltip | This furnishing uses {cost} decor. You have {remaining} decor available. | 11 |
+| hudChrome.housing.furnishing.footprint | Footprint: {width} by {depth} cells. | 02 |
+| hudChrome.housing.furnishing.decorCost | Decor cost: {cost}. | 02 |
+| hudChrome.housing.furnishing.surfaceFloor | Placed on the floor. | 02 |
+| hudChrome.housing.furnishing.maker | Made by {maker}. | 02 |
+| hudChrome.housing.build.plinthTooltip | Display trophies on your home's plinths. {used} of {limit} are in use. | 11 |
+| hudChrome.housing.build.amenityTooltip | Installed stations use amenity slots. Your built-in Strongbox does not use a slot. | 11 |
+| hudChrome.housing.build.camera | Build Camera | 11 |
+| hudChrome.housing.build.cameraHint | Move the view to inspect your placement. | 11 |
+| hudChrome.housing.build.controlsAria | Placement controls for {item} | 11 |
+| hudChrome.housing.build.fixed | This is part of your home and cannot be moved. | 11 |
+| hudChrome.housing.build.surface | Surface: {surface} | 25 |
+| hudChrome.housing.build.freeRotate | Rotate Freely | 25 |
+| hudChrome.housing.build.movesChildren | Attached furnishings move with this piece. | 25 |
+| hudChrome.housing.denied.placementBlocked | Something is in the way. | 11 |
+| hudChrome.housing.denied.outsideRoom | Place this inside the room. | 11 |
+| hudChrome.housing.denied.doorway | Keep the doorway and arrival path clear. | 11 |
+| hudChrome.housing.denied.occupied | Someone is standing in that space. | 11 |
+| hudChrome.housing.denied.decorFull | This needs {needed} decor. You have {remaining} available. | 11 |
+| hudChrome.housing.denied.plinthFull | Every plinth is in use. | 11 |
+| hudChrome.housing.denied.amenityFull | Every amenity slot is in use. | 11 |
+| hudChrome.housing.denied.wrongSurface | This furnishing needs a {surface} surface. | 11 |
+| hudChrome.housing.denied.copyMissing | This furnishing is no longer available. | 11 |
+| hudChrome.housing.denied.childrenPresent | Move the furnishings on this piece before removing it. | 11 |
+| hudChrome.housing.denied.supportFull | There is no room left on this surface. | 25 |
+| hudChrome.housing.denied.invalidTransform | That placement could not be applied. Try again. | 25 |
+| hudChrome.housing.denied.trophyUnavailable | That trophy is not available to display. | 17 |
 
 Surface names use the explicit build.surfaceFloor/build.surfaceWall/
-build.surfaceTabletop/build.surfaceCeiling keys when those mechanics land. Every enum added to
+build.surfaceTabletop/build.surfaceCeiling keys when those mechanics land (11
+renders Floor; the other three feed 25's typed surfaces). Every enum added to
 freeholdDeniedLineKey has an exhaustive key mapping and mechanism fixture. The
 English acceptance text is reconciled to the implemented handler before shipping.
+The four furnishing.* rows are the item tooltip leaves 02 ships for the furnishing
+item kind (resolved values from the def; maker only when the copy carries a signer);
+25 adds its own furnishing.surface* rows when typed surfaces land, while
+build.decorTooltip (11) and build.surface (25) remain build-mode sinks.
+Deny enums added by 25 map exhaustively: host_occupied to denied.childrenPresent;
+support_full to denied.supportFull; anchor_missing to denied.wrongSurface;
+host_cycle, host_foreign and transform_nonfinite to denied.invalidTransform; a
+stale inverse to build.historyChanged. 17's trophy_unavailable maps to
+denied.trophyUnavailable and no_plinth to denied.plinthFull.
 
 ## 5. Steward: a welcoming household ledger
 
@@ -868,7 +1008,9 @@ following PlantSheetWindow/buildPlantSheetView for a cold decision flow, live
 affordability, aria-busy and operation-correlated pending state. Its NEW housing
 view/window modules consume authoritative housing and inventory projections.
 The fireplace-shaped condition meter is a small readable emblem, not an animated
-monetization gauge. Beside it, show condition, amenity availability and next due
+monetization gauge. It is a procedural src/ui/ui_icons.ts svgIcon recipe owned by 16
+(deliberately final SVG art; no art-brief reference board; 44a records the explicit
+final-art verdict). Beside it, show condition, amenity availability and next due
 date; below it, put the itemized Ledger and material sources. The primary visual
 weight belongs to materials the player can gather or buy through ordinary play.
 
@@ -883,7 +1025,12 @@ the flame alone never communicates a gameplay boundary.
 The UI receives authoritative safe timestamps and the intended realm display
 timezone, not rendered server text or private authority records. The client
 formats the due date with shared locale formatters and that timezone. It never computes a due date from its own wall
-clock. The same contract applies to paid-through, suspension/resumption and
+clock. Every has-the-day-rolled-over fact the panel shows (due, paid-through,
+prepay coverage, condition day) is a realm-day key resetDay (03:00 in the realm
+reset zone) with the Tuesday week anchor for bills and prepaid weeks, produced by
+the server through resetDayKey(ms, REALM_RESET_TIME_ZONE) per D84; epoch-ms wire
+fields are display-only, and the Endeavor month is the UTC calendar month.
+The same contract applies to paid-through, suspension/resumption and
 provenance dates. If prepaid, show the covered-through date and the next uncovered bill.
 A confirmed outage/absence/return-grace protection state gets a calm explanation
 and safe resume/end date where known. These protections combine without counting
@@ -940,14 +1087,61 @@ states whether it pays the current bill and restores condition, or is repair-onl
 because that bill is already paid. A Call does not add future prepay or consume
 future credits. Purchase intent and receipt correlation include account, plot,
 SKU/operation and revision. An ambiguous charge stays pending/reconciling;
-closing the window never offers a new charge as a recovery path.
+closing the window never offers a new charge as a recovery path. An unaffordable
+Call reuses the shipped store affordability family (hudChrome.wocStore.needMoreBody
+with CharterRow.affordable and shortfall): this is the one deliberate reuse of a
+non-housing key, recorded here as the exception to the housing-only family rule;
+no charter.* shortfall row is added.
 
-Website management is a separate capability. Only an approved complete destination
-and flow can show steward.manageWebsite. Denied native/storefront surfaces default
-to no CTA, including hidden links, fetched purchase catalog, error text or aria
-labels. A merely renamed purchase link is not neutral. These surfaces keep
-material controls and honest household state. Housing use itself remains behind
-the accepted entitlement-model release gate recorded in state.
+Website management is a separate capability: the HudFeatures row
+freeholdManageOnWebsite defaults off on every distribution row, browser web and
+website desktop included, and turns on only through the independently approved
+management outcome (14). Only an approved complete destination and flow can show
+steward.manageWebsite. Denied native/storefront surfaces default to no CTA,
+including hidden links, fetched purchase catalog, error text or aria labels. A
+merely renamed purchase link is not neutral. These surfaces keep material
+controls and honest household state. Housing use itself remains behind the
+accepted entitlement-model release gate recorded in state: the server entitlement
+gate read through the housing facet, never a HudFeatures row (D91).
+
+### Upgrade to Lodge (21)
+
+Flow: the Steward gains an Upgrade tab (steward.upgradeTab) showing the upgrade
+bill per leg through steward.haveNeed, the fee status, the source-mode radiogroup
+reusing steward.bagsOnly and steward.vaultOnly (the existing
+steward-vault-unavailable state when the vault arm is not authorized in this
+instance band; the contribute command carries that explicit source mode per D89),
+a Contribute action for the selected leg, a Finish Upgrade action that re-runs the
+overflow preflight when the fee was the last leg and bags were full (never a
+second fee), the overflow preview, and completion. States: no project
+(steward.upgradeNoProject), partial, fee due (steward.upgradeFeeDue), ready
+(steward.upgradeReady with steward.upgradeOverflow), pending (common.pending),
+refused (denied.upgradeNoProject, denied.upgradeFeeDue, denied.bagsFull,
+denied.permission), reconnect (common.reconnecting), complete
+(granted.upgradeComplete). No price, burn or peg is rendered; the fee purchase
+itself stays on the Charter store surface. The tab and buttons are title case,
+the rest sentence case.
+
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.steward.upgradeTab | Upgrade | 21 |
+| hudChrome.housing.steward.upgradeTitle | Upgrade to Lodge | 21 |
+| hudChrome.housing.steward.upgradeIntro | Contribute the materials below and pay the upgrade fee once, in either order. Nothing is spent until you confirm. | 21 |
+| hudChrome.housing.steward.upgradeNoProject | No upgrade is in progress. | 21 |
+| hudChrome.housing.steward.upgradeFeePaid | Upgrade fee paid. | 21 |
+| hudChrome.housing.steward.upgradeFeeDue | Upgrade fee not yet paid. | 21 |
+| hudChrome.housing.steward.upgradeReady | Everything is in. Finish the upgrade when your bags have room for anything that will not fit. | 21 |
+| hudChrome.housing.steward.upgradeOverflow | Placed items that will return to your bags: {count} | 21 |
+| hudChrome.housing.steward.upgradeContribute | Contribute | 21 |
+| hudChrome.housing.steward.upgradeFinish | Finish Upgrade | 21 |
+| hudChrome.housing.steward.upgradeRowAria | Upgrade material {item}: {have} of {need} contributed | 21 |
+| hudChrome.housing.granted.upgradeComplete | Your home is now a Lodge. | 21 |
+| hudChrome.housing.denied.upgradeNoProject | There is no upgrade to finish. | 21 |
+| hudChrome.housing.denied.upgradeFeeDue | Pay the upgrade fee before finishing the upgrade. | 21 |
+
+Keep and Citadel upgrades (40) add read-only requirement rows and the overflow
+destination confirmation to the same tab, and the second home (42) adds the
+Primary Home and Second Home tabs above it; their rows are in the table below.
 
 ### States, focus and motion
 
@@ -987,53 +1181,69 @@ immediately. Payment success uses existing feedback amplitude, not confetti.
 +--------------------------------------------------+
 ```
 
-| NEW key | English value |
-|---|---|
-| hudChrome.housing.steward.title | Steward |
-| hudChrome.housing.steward.householdTab | Household |
-| hudChrome.housing.steward.visitorsTab | Visitors |
-| hudChrome.housing.steward.condition | Condition: {condition} of {maximum} |
-| hudChrome.housing.steward.conditionTooltip | Amenities work at {threshold} condition or higher. Below that, amenities pause. Low condition does not prevent entry or decoration. Upkeep never removes your home or belongings. |
-| hudChrome.housing.steward.amenitiesReady | Amenities are available. |
-| hudChrome.housing.steward.amenitiesPaused | Amenities are paused until your home's condition is restored. |
-| hudChrome.housing.steward.nextDue | Next Ledger due: {date} |
-| hudChrome.housing.steward.coveredThrough | Ledger paid through {date}. |
-| hudChrome.housing.steward.noUpkeep | Your Inn Room has no upkeep. |
-| hudChrome.housing.steward.currentPaid | This week's Ledger is paid. |
-| hudChrome.housing.steward.ledger | Weekly Ledger |
-| hudChrome.housing.steward.needed | Needed |
-| hudChrome.housing.steward.bags | Bags |
-| hudChrome.housing.steward.vault | Materials Vault |
-| hudChrome.housing.steward.rowAria | {item}: need {needed}; {bags} in bags; {vault} in Materials Vault. |
-| hudChrome.housing.steward.rowUnavailableAria | {item}: need {needed}; {bags} in bags; Materials Vault balance is unavailable. |
-| hudChrome.housing.steward.haveNeed | Have {have} of {need}. |
-| hudChrome.housing.steward.source | Pay using |
-| hudChrome.housing.steward.bagsOnly | Bags only |
-| hudChrome.housing.steward.vaultOnly | Materials Vault only |
-| hudChrome.housing.steward.automatic | Bags, then Materials Vault |
-| hudChrome.housing.steward.payBags | Pay from bags |
-| hudChrome.housing.steward.payVault | Pay from vault |
-| hudChrome.housing.steward.payAutomatic | Pay from bags and vault |
-| hudChrome.housing.steward.sourceTooltip | Automatic payment takes matching materials from your bags first, then your Materials Vault. Review the listed amounts before confirming. |
-| hudChrome.housing.steward.prepay | Prepay Ledger |
-| hudChrome.housing.steward.prepayWeeks | Weeks to cover: {weeks} |
-| hudChrome.housing.steward.prepayLimit | You can cover up to {limit} weeks. |
-| hudChrome.housing.steward.review | Review material payment |
-| hudChrome.housing.steward.reviewThrough | Cover your Ledger through {date} using {source}. |
-| hudChrome.housing.steward.confirm | Confirm material payment |
-| hudChrome.housing.steward.pending | Confirming your Ledger payment... |
-| hudChrome.housing.steward.refreshing | Updating your Ledger and material balances... |
-| hudChrome.housing.steward.outagePause | Upkeep is paused while the market service is unavailable. No missed upkeep will be added later. |
-| hudChrome.housing.steward.absencePause | Wear is paused while you are away. |
-| hudChrome.housing.steward.returnGrace | Wear is paused until {date} while you settle back in. |
-| hudChrome.housing.steward.call | Master Builder's Call |
-| hudChrome.housing.steward.callCurrentTooltip | Pay the current unpaid Ledger and restore condition to {maximum}. Future prepaid weeks stay unchanged. |
-| hudChrome.housing.steward.callRepairTooltip | Restore condition to {maximum}. Your current Ledger is already paid. Future prepaid weeks stay unchanged. |
-| hudChrome.housing.steward.reviewCall | Review Master Builder's Call |
-| hudChrome.housing.steward.manageWebsite | Manage on the website |
-| hudChrome.housing.steward.manageWebsiteAria | Open approved home management on the website |
-| hudChrome.housing.steward.visitor | Only the owner can manage this home's Ledger. |
-| hudChrome.housing.steward.hearthDestination | Hearth Key destination |
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.steward.title | Steward | 16 |
+| hudChrome.housing.steward.householdTab | Household | 16 |
+| hudChrome.housing.steward.visitorsTab | Visitors | 16 |
+| hudChrome.housing.steward.condition | Condition: {condition} of {maximum} | 16 |
+| hudChrome.housing.steward.conditionTooltip | Amenities work at {threshold} condition or higher. Below that, amenities pause. Low condition does not prevent entry or decoration. Upkeep never removes your home or belongings. | 16 |
+| hudChrome.housing.steward.amenitiesReady | Amenities are available. | 16 |
+| hudChrome.housing.steward.amenitiesPaused | Amenities are paused until your home's condition is restored. | 16 |
+| hudChrome.housing.steward.nextDue | Next Ledger due: {date} | 16 |
+| hudChrome.housing.steward.coveredThrough | Ledger paid through {date}. | 16 |
+| hudChrome.housing.steward.noUpkeep | Your Inn Room has no upkeep. | 16 |
+| hudChrome.housing.steward.currentPaid | This week's Ledger is paid. | 16 |
+| hudChrome.housing.steward.ledger | Weekly Ledger | 16 |
+| hudChrome.housing.steward.needed | Needed | 16 |
+| hudChrome.housing.steward.bags | Bags | 16 |
+| hudChrome.housing.steward.vault | Materials Vault | 16 |
+| hudChrome.housing.steward.rowAria | {item}: need {needed}; {bags} in bags; {vault} in Materials Vault. | 16 |
+| hudChrome.housing.steward.rowUnavailableAria | {item}: need {needed}; {bags} in bags; Materials Vault balance is unavailable. | 16 |
+| hudChrome.housing.steward.haveNeed | Have {have} of {need}. | 16 |
+| hudChrome.housing.steward.source | Pay using | 16 |
+| hudChrome.housing.steward.bagsOnly | Bags only | 16 |
+| hudChrome.housing.steward.vaultOnly | Materials Vault only | 16 |
+| hudChrome.housing.steward.automatic | Bags, then Materials Vault | 16 |
+| hudChrome.housing.steward.payBags | Pay From Bags | 16 |
+| hudChrome.housing.steward.payVault | Pay From Vault | 16 |
+| hudChrome.housing.steward.payAutomatic | Pay From Bags and Vault | 16 |
+| hudChrome.housing.steward.sourceTooltip | Automatic payment takes matching materials from your bags first, then your Materials Vault. Review the listed amounts before confirming. | 16 |
+| hudChrome.housing.steward.prepay | Prepay Ledger | 16 |
+| hudChrome.housing.steward.prepayWeeks | Weeks to cover: {weeks} | 16 |
+| hudChrome.housing.steward.prepayLimit | You can cover up to {limit} weeks. | 16 |
+| hudChrome.housing.steward.review | Review Material Payment | 16 |
+| hudChrome.housing.steward.reviewThrough | Cover your Ledger through {date} using {source}. | 16 |
+| hudChrome.housing.steward.confirm | Confirm Material Payment | 16 |
+| hudChrome.housing.steward.pending | Confirming your Ledger payment... | 16 |
+| hudChrome.housing.steward.refreshing | Updating your Ledger and material balances... | 16 |
+| hudChrome.housing.steward.outagePause | Upkeep is paused while the market service is unavailable. No missed upkeep will be added later. | 16 |
+| hudChrome.housing.steward.absencePause | Wear is paused while you are away. | 16 |
+| hudChrome.housing.steward.returnGrace | Wear is paused until {date} while you settle back in. | 16 |
+| hudChrome.housing.steward.call | Master Builder's Call | 16 |
+| hudChrome.housing.steward.callCurrentTooltip | Pay the current unpaid Ledger and restore condition to {maximum}. Future prepaid weeks stay unchanged. | 16 |
+| hudChrome.housing.steward.callRepairTooltip | Restore condition to {maximum}. Your current Ledger is already paid. Future prepaid weeks stay unchanged. | 16 |
+| hudChrome.housing.steward.reviewCall | Review Master Builder's Call | 16 |
+| hudChrome.housing.steward.manageWebsite | Manage on the Website | 14 |
+| hudChrome.housing.steward.manageWebsiteAria | Open approved home management on the website | 14 |
+| hudChrome.housing.steward.visitor | Only the owner can manage this home's Ledger. | 16 |
+| hudChrome.housing.steward.hearthDestination | Hearth Key destination | 16 |
+| hudChrome.housing.steward.upgradeRequirements | Upgrade Requirements | 40 |
+| hudChrome.housing.steward.prestigeAny | Earn any one of these on this account: | 40 |
+| hudChrome.housing.steward.prestigeGuildAny | Your guild must have recorded one of these clears: | 40 |
+| hudChrome.housing.steward.requirementMet | Earned | 40 |
+| hudChrome.housing.steward.requirementUnmet | Not yet earned | 40 |
+| hudChrome.housing.steward.requirementRowAria | {requirement}: {status} | 40 |
+| hudChrome.housing.steward.prestigeTooltip | Once earned, this stays met. Losing an item, a rank or a guild member later never removes an upgrade. | 40 |
+| hudChrome.housing.steward.overflowReview | {count} placed furnishings will not fit the new layout. They go to {destination}. Nothing is lost. | 40 |
+| hudChrome.housing.steward.overflowNone | Everything placed fits the new layout. | 40 |
+| hudChrome.housing.steward.confirmUpgrade | Confirm Upgrade | 40 |
+| hudChrome.housing.denied.prestige | This tier needs an accomplishment this account has not earned yet. | 40 |
+| hudChrome.housing.denied.guildClear | Your guild has not recorded a qualifying clear yet. | 40 |
+| hudChrome.housing.steward.primaryTab | Primary Home | 42 |
+| hudChrome.housing.steward.secondTab | Second Home | 42 |
+| hudChrome.housing.steward.secondBillNote | A second home's upkeep and upgrade lines are one and a half times the primary schedule, rounded up. | 42 |
+| hudChrome.housing.denied.secondHomeCap | You already have two homes. | 42 |
 
 ## 6. Trophy case, public provenance and plinth placement
 
@@ -1043,7 +1253,16 @@ See what their adventures have made available, choose a display and share the
 truth of that accomplishment. Reuse ReliquaryWindow/reliquary_view,
 reliquary_cell_art, reliquary_labels and reliquary_i18n for shelf navigation,
 collection art, silhouettes, source hints and scroll/focus preservation. The NEW
-trophy_tooltip_view.ts produces a pure public provenance model. The build
+trophy_tooltip_view.ts produces a pure public provenance model. NEW
+src/ui/hud/housing/trophy_case_view.ts (pure) and trophy_case_window.ts (painter)
+ship the standalone trophy case under window id trophy-case-window; it opens from
+the palette Trophies tab's open-case action and from a plinth interact, and
+TrophyCaseWindow.openForPlinth(plinthKey) is the record-only chooser 11's Replace
+trophy/Clear plinth affordance calls. Placement rides the IWorldHousing members
+placeTrophy(plinthKey, trophyId) and clearPlinth(plinthKey) (commands place_trophy
+and clear_plinth); a raw command carrying an unearned, unknown or other-account
+trophy id refuses denied.trophyUnavailable and changes no layout row, and
+provenance fields are written server-side from the unlock record only. The build
 palette's Trophies tab uses the same eligibility and selected record; it must
 not maintain another account trophy catalog with divergent ownership.
 
@@ -1053,7 +1272,11 @@ the record selected, preview the valid plinth and confirm authoritatively. A
 visitor can inspect the same public provenance from the placed object without
 seeing the owner's unrelated unearned collection, bags or paid entitlement.
 Trophies are account unlock records, never transferable items. Placing/removing
-a display never mints, consumes or trades a trophy inventory copy.
+a display never mints, consumes or trades a trophy inventory copy. A furnished-plot
+sale (38) transfers placed furnishings by its manifest, never account trophy
+unlocks: the seller keeps every unlock on a fresh tier-0 record at index 0 and the
+buyer's retained displays preview to a safe destination by the same manifest rule
+(D80).
 
 Initial eligibility covers the promised deed, Reliquary page, slain mark, item,
 mount, weapon skin, title, profession specimen, curator rank and Perfected source
@@ -1068,7 +1291,9 @@ The tooltip's visual hierarchy is display title, source deed/item/page/mark,
 known achieving character and known source date, then precise eligibility or
 possession limit. Dates are original source dates, not the current entrance or
 unlock-reconciliation day. If historical day or character is unknown, explicitly
-show the corresponding unknown key. Do not synthesize either. Owner and guest
+show the corresponding unknown key. Do not synthesize either. For the Legend
+Stand the only recorded day is the owning character's prog_legendmaker deed day; a
+promoted copy without it shows trophies.dateUnknown. Owner and guest
 see the same public source facts. Personal maker signature/custom item name
 uses existing sanitized/localized item rendering and marks.
 
@@ -1081,7 +1306,10 @@ The source-to-display matrix is exhaustive for the packet's promised source
 families. These are semantic content families, not invented current enum values;
 file 17's catalog supplies an exhaustive real source-discriminant map and tests.
 Every numerical requirement is a live catalog/view value. A generic deed sentence
-is never reused for a different source predicate.
+is never reused for a different source predicate; trophies.requireDeed is the
+one deed arm (the former trophies.unearned duplicate is dropped). The one English
+value two keys share is deliberate and sink-specific: denied.plinthFull is the sim
+deny line and trophies.plinthFull the case explanation.
 
 | Source family | Initial truthful display and source facts | Requirement/availability key arm |
 |---|---|---|
@@ -1189,58 +1417,76 @@ no hover-only facts. Gamepad follows the same item/tooltip/action sequence.
              plinth selection -> ghost -> confirm
 ```
 
-| NEW key | English value |
-|---|---|
-| hudChrome.housing.trophies.title | Trophy case |
-| hudChrome.housing.trophies.search | Search trophies |
-| hudChrome.housing.trophies.collectionHelp | Use the arrow keys to move between trophies. Press Enter to inspect one. |
-| hudChrome.housing.trophies.refreshing | Updating your trophy collection... |
-| hudChrome.housing.trophies.empty | Your adventures will fill these shelves. |
-| hudChrome.housing.trophies.noResults | No trophies match your search. |
-| hudChrome.housing.trophies.achievedBy | Achieved by {name} |
-| hudChrome.housing.trophies.achievedOn | Achieved on {date} |
-| hudChrome.housing.trophies.characterUnknown | Original character unknown. |
-| hudChrome.housing.trophies.dateUnknown | Original date unknown. |
-| hudChrome.housing.trophies.deed | {deedLabel}: {deed} |
-| hudChrome.housing.trophies.page | {pageLabel}: {page} |
-| hudChrome.housing.trophies.mark | {markLabel}: {mark} |
-| hudChrome.housing.trophies.item | Displayed item: {item} |
-| hudChrome.housing.trophies.titleSource | Title: {title} |
-| hudChrome.housing.trophies.mountSource | Mount: {mount} |
-| hudChrome.housing.trophies.unearned | Complete {deed} to display this trophy. |
-| hudChrome.housing.trophies.requireDeed | Complete {deed} to display this trophy. |
-| hudChrome.housing.trophies.requireTitle | Unlock {title} to display this trophy. |
-| hudChrome.housing.trophies.requirePage | Complete {page} to display this trophy. |
-| hudChrome.housing.trophies.requireSlain | Defeat {creature} to display this trophy. |
-| hudChrome.housing.trophies.requireMasterwork | Craft a Masterwork item to display this trophy. |
-| hudChrome.housing.trophies.requireMasterworkCraft | Craft a Masterwork item with {craft} to display this trophy. |
-| hudChrome.housing.trophies.requireGatherEvent | Find {find} through {profession} to display this trophy. |
-| hudChrome.housing.trophies.requireGoldenHarvest | Gather a golden harvest from a farm bed to display this trophy. |
-| hudChrome.housing.trophies.requirePerfectSpecimen | Harvest a perfect specimen from a fallen creature to display this trophy. |
-| hudChrome.housing.trophies.requireSet | Complete the {set} collection to display this trophy. |
-| hudChrome.housing.trophies.requireItemAcquired | Find {item} to unlock this trophy. |
-| hudChrome.housing.trophies.requireItemOwned | Own {item} to activate this display. |
-| hudChrome.housing.trophies.requireMount | Collect {mount} to display this trophy. |
-| hudChrome.housing.trophies.requireRank | Reach {rank} in {collection} to display this trophy. |
-| hudChrome.housing.trophies.requirePerfected | Own a qualifying named Perfected item to activate this display. |
-| hudChrome.housing.trophies.setSource | Armor set: {set} |
-| hudChrome.housing.trophies.rankSource | {collection}: {rank} |
-| hudChrome.housing.trophies.maker | Made by {maker} |
-| hudChrome.housing.trophies.namedItem | Named item: {name} |
-| hudChrome.housing.trophies.makerUnknown | Original maker unknown. |
-| hudChrome.housing.trophies.nameUnknown | Original item name unknown. |
-| hudChrome.housing.trophies.inactive | This display is inactive because its required item is no longer owned. |
-| hudChrome.housing.trophies.hidden | A trophy for an undiscovered accomplishment. |
-| hudChrome.housing.trophies.unknownSource | This trophy's original source is unknown. |
-| hudChrome.housing.trophies.place | Place on a plinth |
-| hudChrome.housing.trophies.choosePlinth | Choose a plinth for {trophy}. |
-| hudChrome.housing.trophies.plinthFull | Every plinth is in use. |
-| hudChrome.housing.trophies.ownedAria | {trophy}. Available to display. {source}. |
-| hudChrome.housing.trophies.unearnedAria | {trophy}. Not yet available. {requirement}. |
-| hudChrome.housing.trophies.hiddenAria | Undiscovered trophy. |
-| hudChrome.housing.trophies.inspectAria | Inspect {trophy} |
-| hudChrome.housing.trophies.placeTooltip | Display this accomplishment on a free plinth. Removing the display keeps your trophy unlocked. |
-| hudChrome.housing.trophies.possessionRequired | This display is active while you own {item}. |
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.trophies.title | Trophy Case | 17 |
+| hudChrome.housing.trophies.search | Search trophies | 17 |
+| hudChrome.housing.trophies.collectionHelp | Use the arrow keys to move between trophies. Press Enter to inspect one. | 17 |
+| hudChrome.housing.trophies.refreshing | Updating your trophy collection... | 17 |
+| hudChrome.housing.trophies.empty | Your adventures will fill these shelves. | 17 |
+| hudChrome.housing.trophies.noResults | No trophies match your search. | 17 |
+| hudChrome.housing.trophies.achievedBy | Achieved by {name} | 17 |
+| hudChrome.housing.trophies.achievedOn | Achieved on {date} | 17 |
+| hudChrome.housing.trophies.characterUnknown | Original character unknown. | 17 |
+| hudChrome.housing.trophies.dateUnknown | Original date unknown. | 17 |
+| hudChrome.housing.trophies.deed | {deedLabel}: {deed} | 17 |
+| hudChrome.housing.trophies.page | {pageLabel}: {page} | 17 |
+| hudChrome.housing.trophies.mark | {markLabel}: {mark} | 17 |
+| hudChrome.housing.trophies.item | Displayed item: {item} | 17 |
+| hudChrome.housing.trophies.titleSource | Title: {title} | 17 |
+| hudChrome.housing.trophies.mountSource | Mount: {mount} | 17 |
+| hudChrome.housing.trophies.requireDeed | Complete {deed} to display this trophy. | 17 |
+| hudChrome.housing.trophies.requireTitle | Unlock {title} to display this trophy. | 17 |
+| hudChrome.housing.trophies.requirePage | Complete {page} to display this trophy. | 17 |
+| hudChrome.housing.trophies.requireSlain | Defeat {creature} to display this trophy. | 17 |
+| hudChrome.housing.trophies.requireMasterwork | Craft a Masterwork item to display this trophy. | 17 |
+| hudChrome.housing.trophies.requireMasterworkCraft | Craft a Masterwork item with {craft} to display this trophy. | 17 |
+| hudChrome.housing.trophies.requireGatherEvent | Find {find} through {profession} to display this trophy. | 17 |
+| hudChrome.housing.trophies.requireGoldenHarvest | Gather a golden harvest from a farm bed to display this trophy. | 17 |
+| hudChrome.housing.trophies.requirePerfectSpecimen | Harvest a perfect specimen from a fallen creature to display this trophy. | 17 |
+| hudChrome.housing.trophies.requireSet | Complete the {set} collection to display this trophy. | 17 |
+| hudChrome.housing.trophies.requireItemAcquired | Find {item} to unlock this trophy. | 17 |
+| hudChrome.housing.trophies.requireItemOwned | Own {item} to activate this display. | 17 |
+| hudChrome.housing.trophies.requireMount | Collect {mount} to display this trophy. | 17 |
+| hudChrome.housing.trophies.requireRank | Reach {rank} in {collection} to display this trophy. | 17 |
+| hudChrome.housing.trophies.requirePerfected | Own a qualifying named Perfected item to activate this display. | 17 |
+| hudChrome.housing.trophies.setSource | Armor set: {set} | 17 |
+| hudChrome.housing.trophies.rankSource | {collection}: {rank} | 17 |
+| hudChrome.housing.trophies.maker | Made by {maker} | 17 |
+| hudChrome.housing.trophies.namedItem | Named item: {name} | 17 |
+| hudChrome.housing.trophies.makerUnknown | Original maker unknown. | 17 |
+| hudChrome.housing.trophies.nameUnknown | Original item name unknown. | 17 |
+| hudChrome.housing.trophies.inactive | This display is inactive because its required item is no longer owned. | 17 |
+| hudChrome.housing.trophies.hidden | A trophy for an undiscovered accomplishment. | 17 |
+| hudChrome.housing.trophies.unknownSource | This trophy's original source is unknown. | 17 |
+| hudChrome.housing.trophies.place | Place on a Plinth | 17 |
+| hudChrome.housing.trophies.choosePlinth | Choose a plinth for {trophy}. | 17 |
+| hudChrome.housing.trophies.plinthFull | Every plinth is in use. | 17 |
+| hudChrome.housing.trophies.ownedAria | {trophy}. Available to display. {source}. | 17 |
+| hudChrome.housing.trophies.unearnedAria | {trophy}. Not yet available. {requirement}. | 17 |
+| hudChrome.housing.trophies.hiddenAria | Undiscovered trophy. | 17 |
+| hudChrome.housing.trophies.inspectAria | Inspect {trophy} | 17 |
+| hudChrome.housing.trophies.placeTooltip | Display this accomplishment on a free plinth. Removing the display keeps your trophy unlocked. | 17 |
+| hudChrome.housing.trophies.possessionRequired | This display is active while you own {item}. | 17 |
+| hudChrome.housing.trophies.finish | Finish: {finish} | 23 |
+| hudChrome.housing.trophies.finishBronze | Bronze | 23 |
+| hudChrome.housing.trophies.finishSilver | Silver | 23 |
+| hudChrome.housing.trophies.finishGilded | Gilded | 23 |
+| hudChrome.housing.trophies.finishSource | Silver needs the heroic clear; gilded needs an S-rank rift clear. | 23 |
+| hudChrome.housing.trophies.dulled | Finishes look dull while your home's condition is below 30. | 23 |
+| hudChrome.housing.trophies.formStatue | {source} statue | 23 |
+| hudChrome.housing.trophies.formHead | {source} mounted head | 23 |
+| hudChrome.housing.trophies.formBanner | {title} banner | 23 |
+| hudChrome.housing.trophies.formPaddock | {mount} paddock | 23 |
+| hudChrome.housing.trophies.formItemStand | {item} armor display | 23 |
+| hudChrome.housing.trophies.formWeaponRack | {item} weapon rack | 23 |
+| hudChrome.housing.trophies.formSpecimenCabinet | Specimen cabinet | 23 |
+| hudChrome.housing.trophies.formHarvestSheaf | Harvest sheaf | 23 |
+| hudChrome.housing.trophies.formHarvestMarker | {region} first-harvest marker | 23 |
+| hudChrome.housing.trophies.formAnglersDisplay | Angler's display | 23 |
+| hudChrome.housing.trophies.formRiftObelisk | Rift obelisk | 23 |
+| hudChrome.housing.trophies.formLegendStand | Legend Stand | 23 |
+| hudChrome.housing.trophies.formRankDisplay | {collection} rank display | 23 |
 
 ## 7. Visiting: a friend's door and an honest guest role
 
@@ -1250,7 +1496,14 @@ Find a friend's home, know whether entry is possible and feel welcome without
 mistaking their controls for the owner's. Gate and NEW visit_prompt_view.ts /
 visit_prompt_window.ts reuse the same plant-sheet standalone decision family.
 Initial policy is private/friends; guild/public discovery arrives in the later
-visiting work. Friend-by-name uses server normalization and a bounded authorized
+visiting work. The friend admission fact is D76: the named owner character's
+outgoing friend list contains the visitor's character, read by the server in the
+bounded on-open lookup and rechecked at entry; the visitor's own friend list is
+never an admission input, a block row on either side refuses, friendAdd,
+friendRemove and blockAdd bust the visitor projection through a NEW mutation-site
+hook and trigger the ejection recheck, and a name that resolves to an alt resolves
+to that account's plot with only the named character's friend list consulted.
+Friend-by-name uses server normalization and a bounded authorized
 lookup, never client account IDs, unbounded autocomplete or per-result SQL from
 a painter. An unknown/private/blocked destination gets a privacy-safe refusal.
 
@@ -1288,7 +1541,12 @@ beside its household Ledger tab. Its heading opens from the ordinary Steward
 entry, with a direct owner guest-status affordance selecting that same tab.
 Only the policies supported by the current wave appear: Private/Friends at
 first, Guild/Public when the later visiting work lands. There are no disabled
-future-policy teasers. The tab contains confirmed policy, policy radiogroup,
+future-policy teasers. For a guild-owned plot (28) the policy is set by the
+leader or an officer and accepts only guild, public or private; friends is
+refused with denied.guildPolicy, current members are admitted always, non-members
+enter as guests under the ejection rules, and public admission is capped by the
+tier column, the Meeting Hall using the Cottage row until 32 (D77).
+The tab contains confirmed policy, policy radiogroup,
 Apply visiting policy, current guest list and each guest's End visit action.
 
 Selecting a radio changes a draft only. Show visit.policyConfirmed separately
@@ -1353,41 +1611,66 @@ keeps Leave away from placement/action overlap.
 +---------------------------------------------+
 ```
 
-| NEW key | English value |
-|---|---|
-| hudChrome.housing.visit.title | Visit a home |
-| hudChrome.housing.visit.occupancy | Visitors: {count} of {limit} |
-| hudChrome.housing.visit.occupancyTooltip | The visitor limit does not count characters on the owner's account. |
-| hudChrome.housing.visit.home | At home: {names} |
-| hudChrome.housing.visit.quiet | No one else is home. |
-| hudChrome.housing.visit.full | This home is full. Try again later. |
-| hudChrome.housing.visit.unavailable | This home is not available to visit. |
-| hudChrome.housing.visit.ownerAway | The owner is away. You are welcome to visit. |
-| hudChrome.housing.visit.guest | You are visiting {name}. |
-| hudChrome.housing.visit.leave | Leave home |
-| hudChrome.housing.visit.ownerBuilding | {name} is decorating. |
-| hudChrome.housing.visit.policy | Who can visit |
-| hudChrome.housing.visit.private | Private |
-| hudChrome.housing.visit.friends | Friends |
-| hudChrome.housing.visit.guild | Guild |
-| hudChrome.housing.visit.public | Public |
-| hudChrome.housing.visit.endVisit | End visit |
-| hudChrome.housing.visit.endVisitAria | End {name}'s visit |
-| hudChrome.housing.visit.endConfirm | Return {name} to the gate? |
-| hudChrome.housing.visit.ended | Your visit has ended. You have returned to the gate. |
-| hudChrome.housing.visit.pending | Confirming entry... |
-| hudChrome.housing.visit.endPending | Ending {name}'s visit... |
-| hudChrome.housing.visit.endSucceeded | {name}'s visit has ended. |
-| hudChrome.housing.visit.policyPending | Updating who can visit... |
-| hudChrome.housing.visit.policySaved | Visiting policy updated. |
-| hudChrome.housing.visit.policyConfirmed | Current policy: {policy} |
-| hudChrome.housing.visit.policyDraft | Selected policy: {policy} |
-| hudChrome.housing.visit.applyPolicy | Apply visiting policy |
-| hudChrome.housing.visit.roster | Guests at home |
-| hudChrome.housing.visit.rosterEmpty | No guests are here. |
-| hudChrome.housing.visit.privateExisting | Current guests may stay until they leave or you end their visit. |
-| hudChrome.housing.visit.readOnlyTooltip | Inspect this home's furnishings and trophies. Only the owner can change them. |
-| hudChrome.housing.visit.ownerService | This service is for the home's owner. |
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.visit.title | Visit a Home | 18 |
+| hudChrome.housing.visit.occupancy | Visitors: {count} of {limit} | 18 |
+| hudChrome.housing.visit.occupancyTooltip | The visitor limit does not count characters on the owner's account. | 18 |
+| hudChrome.housing.visit.home | At home: {names} | 18 |
+| hudChrome.housing.visit.quiet | No one else is home. | 18 |
+| hudChrome.housing.visit.full | This home is full. Try again later. | 18 |
+| hudChrome.housing.visit.unavailable | This home is not available to visit. | 18 |
+| hudChrome.housing.visit.ownerAway | The owner is away. You are welcome to visit. | 18 |
+| hudChrome.housing.visit.guest | You are visiting {name}. | 18 |
+| hudChrome.housing.visit.leave | Leave Home | 18 |
+| hudChrome.housing.visit.ownerBuilding | {name} is decorating. | 18 |
+| hudChrome.housing.visit.policy | Who can visit | 18 |
+| hudChrome.housing.visit.private | Private | 18 |
+| hudChrome.housing.visit.friends | Friends | 18 |
+| hudChrome.housing.visit.guild | Guild | 18 |
+| hudChrome.housing.visit.public | Public | 18 |
+| hudChrome.housing.visit.endVisit | End Visit | 18 |
+| hudChrome.housing.visit.endVisitAria | End {name}'s visit | 18 |
+| hudChrome.housing.visit.endConfirm | Return {name} to the gate? | 18 |
+| hudChrome.housing.visit.ended | Your visit has ended. You have returned to the gate. | 18 |
+| hudChrome.housing.visit.pending | Confirming entry... | 18 |
+| hudChrome.housing.visit.endPending | Ending {name}'s visit... | 18 |
+| hudChrome.housing.visit.endSucceeded | {name}'s visit has ended. | 18 |
+| hudChrome.housing.visit.policyPending | Updating who can visit... | 18 |
+| hudChrome.housing.visit.policySaved | Visiting policy updated. | 18 |
+| hudChrome.housing.visit.policyConfirmed | Current policy: {policy} | 18 |
+| hudChrome.housing.visit.policyDraft | Selected policy: {policy} | 18 |
+| hudChrome.housing.visit.applyPolicy | Apply Visiting Policy | 18 |
+| hudChrome.housing.visit.roster | Guests at home | 18 |
+| hudChrome.housing.visit.rosterEmpty | No guests are here. | 18 |
+| hudChrome.housing.visit.privateExisting | Current guests may stay until they leave or you end their visit. | 18 |
+| hudChrome.housing.visit.readOnlyTooltip | Inspect this home's furnishings and trophies. Only the owner can change them. | 18 |
+| hudChrome.housing.visit.ownerService | This service is for the home's owner. | 18 |
+| hudChrome.housing.visit.openHouses | Open Houses | 26 |
+| hudChrome.housing.visit.openHousesEmpty | No friends or guildmates have an open house right now. | 26 |
+| hudChrome.housing.visit.openHousesLoading | Finding open houses... | 26 |
+| hudChrome.housing.visit.openHousesError | Open houses could not be loaded. Try again. | 26 |
+| hudChrome.housing.visit.refreshList | Refresh | 26 |
+| hudChrome.housing.visit.listEntry | {name}'s {tier} | 26 |
+| hudChrome.housing.visit.listEntryAria | {name}'s {tier}, open to {policy}, {count} of {limit} visitors | 26 |
+| hudChrome.housing.visit.openTo | Open to {policy} | 26 |
+| hudChrome.housing.visit.knock | Knock | 26 |
+| hudChrome.housing.visit.knockAria | Knock on {name}'s door | 26 |
+| hudChrome.housing.visit.knockSent | You knocked on {name}'s door. | 26 |
+| hudChrome.housing.visit.knockWait | Wait a moment before knocking there again. | 26 |
+| hudChrome.housing.visit.knockRefused | You cannot knock there right now. | 26 |
+| hudChrome.housing.visit.knockHeard | {name} is knocking at the door. | 26 |
+| hudChrome.housing.visit.entryWait | Too many visits in a short time. Try again shortly. | 26 |
+
+Open Houses (file 26): the visit prompt gains an Open Houses tab listing the open
+houses of friends and guildmates with owner name, tier, policy and occupancy;
+states empty, loading, error and ready; a Knock button per row (rate-limited one
+per account+plot per 10 seconds, refused with the generic denial when a block row
+exists on either side) and Enter; a refused knock, a full house and a busy entry
+reuse visit.unavailable, visit.full and denied.busy. Focus order: tab, list rows,
+the row's Knock then Enter, Refresh, Close. The owner-side notice is
+visit.knockHeard. 26 also enables the existing visit.guild and visit.public radios
+on the Steward policy picker.
 
 ## 8. Freehold Charter: permitted WOC Store purchase
 
@@ -1397,14 +1680,19 @@ Understand exactly what a cosmetic home grants before spending. Only browser
 web and website-distributed desktop can expose the Charter or Call purchase
 surface, and only after counsel, published Terms and accepted economy-service
 contract gates pass. Seeker is use-only unless a later explicit ruling changes
-the signed surface map. Native iOS, Google Play Android, Steam and Epic do not
+the surface map (a named unsigned gate until its signature artifact is on file).
+Native iOS, Google Play Android, Steam and Epic do not
 receive the housing purchase submodel. A phone browser is still web, not native;
 a phone user agent cannot stand in for an authoritative distribution verdict.
 Unknown distribution fails closed. An existing wallet capability does not
 independently authorize housing purchase or deed functionality.
 
 Use woc_store_view.ts and the store composition in daily_rewards_window.ts,
-extended by the planned src/ui/charter_store_view.ts. The same catalog card,
+extended by the planned src/ui/charter_store_view.ts (the existing
+tests/charter_store_view.test.ts exercises the shipped storage-charter helpers; 16
+extends its integration arms without erasing them and adds focused tests for the
+housing module). charter.section is the Store section heading beside Strongbox
+Charters (the h3 pattern of charter_card_view.ts). The same catalog card,
 review, durable purchase intent and receipt family serves website desktop and
 browser web. Show painted Cottage art with the same finish as the actual room,
 exact grant summary, current service availability and service-formatted price.
@@ -1412,7 +1700,11 @@ Do not put an invented dollar amount, conversion, burn percentage, multiplier,
 discount or future resale price in the card. A price is a current versioned
 service quote; expired/unavailable quotes disable review with a plain reason.
 Expiry alone uses charter.quoteExpired. charter.priceChanged is selected only
-when a valid comparison actually proves the quoted amount changed.
+when a valid comparison actually proves the quoted amount changed. An unaffordable
+Charter (balance below the current quote) reuses hudChrome.wocStore.needMoreBody
+with CharterRow.affordable and shortfall, the one non-housing key section 5 records
+for the Call; review stays disabled with that line and no charter.* shortfall row
+exists.
 
 The product is cosmetic, convenience and access, with no combat/XP/drop bonus.
 State the free Inn Room on the permitted product detail so players can make an
@@ -1431,12 +1723,19 @@ sources remain valid gameplay; lexical guards target prohibited housing purchase
 on-chain-deed contexts rather than banning the ordinary achievement noun.
 
 Denied distributions have no housing token/wallet/on-chain deed words in visible
-copy, tooltip, aria/alt, errors, network catalog or hidden DOM. The existing Book
+copy, tooltip, aria/alt, errors, network catalog or hidden DOM. Absence is a
+runtime contract (D86): no DOM node, handler, request, fetched catalog, error copy
+or accessible text; the purchase code and its English keys ship dormant in every
+bundle under the runtime capability, and review notes say "not rendered or
+reachable", never "absent from the bundle". The existing Book
 of Deeds gameplay noun continues through its localized selector; do not confuse
 ordinary achievement naming with on-chain marketing. No disabled Charter tile,
 store badge, deep link, click handler or fallback wallet error remains behind
 CSS. Approved neutral management, if any, is independently capability-gated as
-section 5 specifies. Purchase authority is independently enforced by the economy service's NEW
+section 5 specifies. Exactly two HudFeatures rows exist, freeholdPurchaseEnabled
+and freeholdManageOnWebsite (D91); deed surfaces come from 14's deedSurfaces source
+pin consumed by 38, never a HudFeatures row.
+Purchase authority is independently enforced by the economy service's NEW
 signed contract. Existing account authentication, Origin/UA/JSON, linked platform
 accounts and desktop capability probes do not establish an authenticated
 checkout channel. Preserve D9's game-server ignorance of distribution through
@@ -1468,12 +1767,13 @@ optimistically opens a paid Cottage before the server grants it.
 |---|---|
 | Empty | No eligible product/catalog result shows the ordinary permitted-store empty state; denied distributions have no purchase component at all. |
 | Loading | Stable card outline and explicit catalog/quote loading; art may load independently, price never defaults to zero. |
-| Error | A stable service/refusal outcome keeps intent identity and explains retry/reconciliation. Sanitized housing copy, never an upstream stack/error dump. |
+| Error | A stable service/refusal outcome keeps intent identity and explains retry/reconciliation; charter.reference shows the saved opaque request reference and charter.supportReview the support-review outcome. Sanitized housing copy, never an upstream stack/error dump. |
 | Locked | Owned/not eligible/counsel-gated/Terms-gated/service-gated product cannot submit. Native denies are absence, not a grayed-up sell. |
+| Unaffordable | Balance below the current quote shows hudChrome.wocStore.needMoreBody with the live shortfall (the shared store family, section 5); review stays disabled, the quote and card stay readable, and no charter.* shortfall line exists. |
 | Visitor | Visiting another home does not expose the owner's purchase state. Allowed account Store remains their own account context outside the visit flow. |
 | Owner | Exact owned tier and permitted next action; duplicate initial entitlement is not a second buy button. |
 | Pending | Match durable operation/quote/account/plot; one confirmation and recoverable status. Distinguish interrupted checkout from confirmed purchase. |
-| Reconnect | Read the original intent/receipt and server grant; either finish ready state, remain reconciling or show confirmed refusal. No second debit. |
+| Reconnect | Read the original intent/receipt and server grant; either finish ready state, remain reconciling, show confirmed refusal, or show charter.supportReview with charter.reference. No second debit. |
 
 Focus order: Store category/tab, selected Charter card, details, review action,
 terms/receipt links where permitted, Close. The actual checkout confirmation
@@ -1493,33 +1793,63 @@ approved shell/brand typography, never a separate invented housing style.
 |                      {charter.boundary}             |
 |                      {charter.freeRoom}             |
 | current service price     [ {charter.review} ]      |
+| review: {charter.feeDetails} / {charter.quoteExpiry} |
+|         [ {charter.terms} ]   [ {charter.confirm} ]  |
 +----------------------------------------------------+
         review -> original intent -> receipt -> home
 Denied surface: this entire purchase component is absent.
 ```
 
-| NEW key | English value |
-|---|---|
-| hudChrome.housing.charter.title | Freehold Charter |
-| hudChrome.housing.charter.summary | Open a Cottage to furnish, display your trophies and welcome friends. |
-| hudChrome.housing.charter.boundary | A cosmetic home with convenience and access features. It grants no combat power. |
-| hudChrome.housing.charter.freeRoom | An Inn Room is free for every account. |
-| hudChrome.housing.charter.artAria | Cottage interior with a hearth and space for your furnishings |
-| hudChrome.housing.charter.review | Review purchase |
-| hudChrome.housing.charter.price | Price: {price} |
-| hudChrome.housing.charter.quoteLoading | Loading current price... |
-| hudChrome.housing.charter.quoteExpired | This quote has expired. Review the current quote before confirming. |
-| hudChrome.housing.charter.priceChanged | The price has changed. Review the new price before confirming. |
-| hudChrome.housing.charter.confirm | Confirm purchase |
-| hudChrome.housing.charter.pending | Your purchase is being confirmed. |
-| hudChrome.housing.charter.reconciling | Checking your original purchase. You do not need to buy again. |
-| hudChrome.housing.charter.received | Your Cottage is ready. |
-| hudChrome.housing.charter.owned | This account already has a Cottage or a larger home. |
-| hudChrome.housing.charter.cancelled | Purchase cancelled. |
-| hudChrome.housing.charter.unavailable | This purchase is unavailable right now. |
-| hudChrome.housing.charter.receipt | Purchase confirmation |
-| hudChrome.housing.charter.mapUnavailable | The gate could not be shown on the map. Try again. |
-| hudChrome.housing.charter.showGate | Show gate on map |
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.charter.title | Freehold Charter | 16 |
+| hudChrome.housing.charter.summary | Open a Cottage to furnish, display your trophies and welcome friends. | 16 |
+| hudChrome.housing.charter.boundary | A cosmetic home with convenience and access features. It grants no combat power. | 16 |
+| hudChrome.housing.charter.freeRoom | An Inn Room is free for every account. | 16 |
+| hudChrome.housing.charter.artAria | Cottage interior with a hearth and space for your furnishings | 16 |
+| hudChrome.housing.charter.review | Review Purchase | 16 |
+| hudChrome.housing.charter.price | Price: {price} | 16 |
+| hudChrome.housing.charter.feeDetails | Fees and taxes: {feeDetails} | 16 |
+| hudChrome.housing.charter.quoteExpiry | Price valid until {expiresAt}. | 16 |
+| hudChrome.housing.charter.terms | Purchase Terms | 16 |
+| hudChrome.housing.charter.section | Freeholds | 16 |
+| hudChrome.housing.charter.reference | Request reference: {operationId} | 16 |
+| hudChrome.housing.charter.supportReview | This request needs a support review. Your request reference is saved. | 16 |
+| hudChrome.housing.charter.serviceUnavailable | This service is unavailable for this account or location. | 37 |
+| hudChrome.housing.charter.eligibilityUnconfirmed | Eligibility could not be confirmed. Please try again later. | 37 |
+| hudChrome.housing.charter.supportPointer | Contact support with your saved request reference. | 37 |
+| hudChrome.housing.charter.quoteLoading | Loading current price... | 16 |
+| hudChrome.housing.charter.quoteExpired | This quote has expired. Review the current quote before confirming. | 16 |
+| hudChrome.housing.charter.priceChanged | The price has changed. Review the new price before confirming. | 16 |
+| hudChrome.housing.charter.confirm | Confirm Purchase | 16 |
+| hudChrome.housing.charter.pending | Your purchase is being confirmed. | 16 |
+| hudChrome.housing.charter.reconciling | Checking your original purchase. You do not need to buy again. | 16 |
+| hudChrome.housing.charter.received | Your Cottage is ready. | 16 |
+| hudChrome.housing.charter.owned | This account already has a Cottage or a larger home. | 16 |
+| hudChrome.housing.charter.cancelled | Purchase cancelled. | 16 |
+| hudChrome.housing.charter.unavailable | This purchase is unavailable right now. | 16 |
+| hudChrome.housing.charter.receipt | Purchase Confirmation | 16 |
+| hudChrome.housing.charter.mapUnavailable | The gate could not be shown on the map. Try again. | 16 |
+| hudChrome.housing.charter.showGate | Show Gate on Map | 16 |
+| hudChrome.housing.charter.guildhallTitle | Guildhall Charter | 29 |
+| hudChrome.housing.charter.guildhallSummary | Open a Meeting Hall for your guild, paid from the Hall Fund. | 29 |
+| hudChrome.housing.charter.guildhallOfficerOnly | A guild officer can complete this purchase for the guild. | 29 |
+| hudChrome.housing.charter.guildhallReceived | Your guild's Meeting Hall is ready. | 29 |
+| hudChrome.housing.charter.guildhallOwned | Your guild already has a hall. | 29 |
+| hudChrome.housing.charter.secondTitle | Second Freehold Charter | 42 |
+| hudChrome.housing.charter.secondSummary | Open a second Cottage with its own upkeep, visitors and ward slot. | 42 |
+| hudChrome.housing.charter.secondRequiresPrimary | You need a Cottage or larger primary home before buying a second home. | 42 |
+| hudChrome.housing.charter.secondOwned | This account already has a second home. | 42 |
+| hudChrome.housing.charter.secondReceived | Your second home is ready. | 42 |
+
+The review step shows the item, its effect, the total price, charter.feeDetails
+(service-authored keyed structured fields), charter.quoteExpiry and the
+charter.terms link before charter.confirm; expiresAt is formatted with
+formatDateTime and no service amount goes through formatMoney. The Call card
+uses the existing steward.call, steward.callCurrentTooltip,
+steward.callRepairTooltip and steward.reviewCall rows. The Guildhall Charter (29)
+and the Second Freehold Charter (42) reuse the same card, review, intent and
+receipt flow with their own title, summary, refusal and receipt rows above.
 
 ## 9. Interior art, light, sound and graphics fairness
 
@@ -1548,20 +1878,23 @@ The Cottage's built-in Strongbox is personal-bank access without extra storage
 capacity or amenity-slot cost. An installed crafting station uses its slot; access
 still respects recipe/station/training permissions. Remote personal vault draws
 for permitted crafting follow the dedicated authorization, not a general banker
-proximity flag. Direct Materials Vault chest is a later Manor unlock. Guest
+proximity flag. Direct Materials Vault chest is a later Manor unlock (D47: Manor
+only; no hall tier adds a personal-vault chest). Guest
 geometry does not confer permission to owner services. Guild chest and hall
 station routing remain separate later service identities.
 
 ### Rendering and lights
 
-NEW src/render/freehold/interior_dressing.ts and interior_light_rig.ts compose
-through the existing renderer seams. The room uses the existing sun/hemi/env/rim
-rig and a housing grade, not new directional/hemisphere producers. The verified
-Last Keep warm family is the reference for plaster, warm hearth and cool edges;
-any changed coefficients are measured/tuning rows before use, not copied numbers
-from a screenshot. LOW's current interior branch skips the richer state light
-rig, so the housing renderer must explicitly implement a readable LOW grade or
-fallback and prove it. surfaceMat's LOW Lambert path is a first-class target.
+NEW src/render/freehold/interior_dressing.ts and freehold_light_grade.ts (a basename
+distinct from the existing src/render/interior_light_rig.ts; its test is
+tests/freehold_light_grade.test.ts) compose through the existing renderer seams. The
+room uses the existing sun/hemi/env/rim rig and a housing grade, not new
+directional/hemisphere producers. The verified Last Keep warm family is the reference
+for plaster, warm hearth and cool edges; any changed coefficients are measured/tuning
+rows before use, not copied numbers from a screenshot. LOW's current interior branch
+skips the richer state light rig, so the housing renderer must explicitly implement a
+readable LOW grade or fallback and prove it. surfaceMat's LOW Lambert path is a
+first-class target.
 
 The proposal's three authored room point emitters are a ceiling, not three
 guaranteed contributing lights. State "Housing authored and effective lights"
@@ -1579,7 +1912,8 @@ name their stand-in and corresponding tests. Camera-wall occlusion follows the
 existing occluder_fade preparation convention, including reduced motion and no
 cold transparent-program flip. No thumbnail creates a second GL context.
 Arrival/room leave disposes or releases resources through the owning lifecycle;
-visiting several homes must not ratchet lights, materials, audio loops or listeners.
+visiting several homes must not ratchet lights, materials (including per-prop
+tint material variants, 41), audio loops or listeners.
 
 Condition changes the hearth's decorative flame/coal appearance using the
 existing truthful condition model. The accessible numeric meter and exact
@@ -1629,21 +1963,21 @@ the room, so the composition is judged with the player's real usable viewport.
 Art direction schematic, not an unmeasured room-dimension promise.
 ```
 
-| NEW key | English value |
-|---|---|
-| hudChrome.housing.interior.door | Home door |
-| hudChrome.housing.interior.hearth | Hearth |
-| hudChrome.housing.interior.strongbox | Strongbox |
-| hudChrome.housing.interior.strongboxTooltip | Open your personal bank here. This does not add storage space. |
-| hudChrome.housing.interior.stationTooltip | Use this home's {station}. Recipes keep their normal skill and training requirements. |
-| hudChrome.housing.interior.strongboxVisitorTooltip | This Strongbox opens the owner's personal bank. Guests cannot use it. |
-| hudChrome.housing.interior.strongboxPausedTooltip | This Strongbox is paused by the home's condition. The owner can restore condition to use it. |
-| hudChrome.housing.interior.stationVisitorTooltip | This station is for the home's authorized users. |
-| hudChrome.housing.interior.stationPausedTooltip | This station is paused by the home's condition. The owner can restore condition to use it. |
-| hudChrome.housing.interior.plinth | Trophy plinth |
-| hudChrome.housing.interior.emptyPlinth | An empty plinth for one of your trophies. |
-| hudChrome.housing.interior.amenityPaused | This amenity is paused. The owner can restore the home's condition. |
-| hudChrome.housing.interior.preparing | Preparing the room... |
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.interior.door | Home door | 09 |
+| hudChrome.housing.interior.hearth | Hearth | 09 |
+| hudChrome.housing.interior.strongbox | Strongbox | 12 |
+| hudChrome.housing.interior.strongboxTooltip | Open your personal bank here. This does not add storage space. | 12 |
+| hudChrome.housing.interior.stationTooltip | Use this home's {station}. Recipes keep their normal skill and training requirements. | 12 |
+| hudChrome.housing.interior.strongboxVisitorTooltip | This Strongbox opens the owner's personal bank. Guests cannot use it. | 12 |
+| hudChrome.housing.interior.strongboxPausedTooltip | This Strongbox is paused by the home's condition. The owner can restore condition to use it. | 12 |
+| hudChrome.housing.interior.stationVisitorTooltip | This station is for the home's authorized users. | 12 |
+| hudChrome.housing.interior.stationPausedTooltip | This station is paused by the home's condition. The owner can restore condition to use it. | 12 |
+| hudChrome.housing.interior.plinth | Trophy plinth | 09 |
+| hudChrome.housing.interior.emptyPlinth | An empty plinth for one of your trophies. | 09 |
+| hudChrome.housing.interior.amenityPaused | This amenity is paused. The owner can restore the home's condition. | 09 |
+| hudChrome.housing.interior.preparing | Preparing the room... | 09 |
 
 Interior tooltip selection follows the live service authorization/condition
 model. Owner-ready Strongbox/station gets its action tooltip; guest-denied gets
@@ -1660,12 +1994,14 @@ unavailable teaser tabs or build their controllers during the initial wave.
 
 | Surface and player goal | Flow, reused family and input order | States and limits |
 |---|---|---|
-| Guildhall boards: understand shared plans and contributions | Existing plant-sheet/list/ledger window and shared tabs; select board/tab, read authorized project or raid-lockout/first-kill list, choose permitted contribution/project action, review, confirm, return. War table is a real authorized projection, not a generic standings redirect. | Empty board explains no records; loading/error/reconnect preserve known state without authorizing spending; locked shows role/condition reason; visitor sees only approved public facts; member can manage assigned personal plinths; officer owns layout/projects. Pending contribution follows durable service/material result. No timed construction wait or new combat benefit. |
+| Guildhall boards: understand shared plans and contributions | Existing plant-sheet/list/ledger window and shared tabs; select board/tab, read authorized project or raid-lockout/first-kill list, choose permitted contribution/project action, review, confirm, return. War table is a real authorized projection, not a generic standings redirect: the War table lockout tab shows one row per lockout key the live model stamps (eleven: the five heroic five-man keys and the plain and heroic keys of nythraxis_boss_arena, ignivar_raid_arena and ignivar_inner_crucible), each counting online members whose lockout is live by the isRaidLocked expiry rule, plus the viewer's own lockouts; no other member is named and no week anchor is read (30a), and its first-kill tab reaches the client through 30a's bounded sibling read (the guildHallBoards facet member; 31 adds no facet member, D82) with keyed ready and empty states. guild.* is the only Guildhall family; no housing.hall.* namespace exists. The Hall Fund form (29) carries donation, cap, contribution-ledger and the officer-plus Withdraw to Guild Bank rows (D78). | Empty board explains no records; loading/error/reconnect preserve known state without authorizing spending; locked shows role/condition reason; visitor sees only approved public facts (a non-member enters as a guest under the public policy, D77); member can manage assigned personal plinths; officer owns layout/projects. Pending contribution follows durable service/material result. No timed construction wait or new combat benefit; guild-clear recording capacity never refuses join, dungeon entry or a respawn, and a not-captured clear shows no player-facing text (D83). |
 | Kitchen Garden: remember an existing harvest | Existing plant-sheet/list family and localized crop/Journal selectors; inspect the account-owner tableau, then owner may open the current character's private Harvest Journal. Guests inspect only safe owner-derived decor. No new beds, remote tending, harvest or growth benefit. | Empty requires a complete successful no-plots source. Loading/error/unavailable cannot imply an empty garden or ready crop. Current local authority can be live; remote/nonlocal committed snapshots remain visibly saved, with truthful mixed-source coverage. Reconnect preserves honest known source state. Selection is read-only; no spending/harvest mutation or pending duplicate action. |
-| Wards: find neighbors without losing a quiet home | Existing map marker/list family, bounded public roster and gate prompt; select marker, inspect authorized owner/occupancy, choose visit, then ordinary admission. Physical ward travel and plot-entry permissions remain separate. | Empty plots are scenery, not a ownership scarcity offer; loading/error/busy has retry; private/blocked facts stay private; owner/member and visitor get actual rights. Pending assignment is server-authorized. Reconnect never trusts cached capacity. Every admitted occupant is visible at LOW. |
+| Wards: find neighbors without losing a quiet home | Existing map marker/list family, bounded public roster and gate prompt; select marker, inspect authorized owner/occupancy, choose visit, then ordinary admission. The roster reads the myWard facet member and the owner-only Move Here action sends moveWard(wardId) (34); physical ward travel and plot-entry permissions remain separate. | Empty plots are scenery, not a ownership scarcity offer; loading/error/busy has retry; private/blocked facts stay private; owner/member and visitor get actual rights. Pending assignment is server-authorized. Reconnect never trusts cached capacity. Every admitted occupant is visible at LOW. Ward Favor capacity awards are properties of the stable plot ID and travel with the plot on a sale; a seller's fresh record starts at the base budget (D80). |
 | Showcases: exhibit a home intentionally | Reliquary-style cards, ordinary opt-in prompt and public source detail; select entry, inspect, visit if allowed, cast eligible account vote, receive acknowledgement. Owner explicitly opts in. | Empty/locked season explains dates/eligibility; loading/error/reconnect preserves vote identity; visitor sees consented public entries; owner cannot vote for their own entry. Pending vote cannot double-submit. Season results/rewards are durable and cosmetic; changing wards does not reset the account vote. |
-| Guest books: leave a friendly reaction | Existing compact list and selected reaction radiogroup; read public entries, select wave/cheer/admire, confirm, return. Same touch/pad sequence and shared prompt. | Empty book invites an allowed reaction; loading/error/reconnect cannot duplicate it; closed/blocked denies privately; owner can use normal moderation tools; guest never writes free text. Live per-account limit and retained-entry cap come from state. |
-| Advanced layout and dyes: refine an owned arrangement | Extend the existing build palette and plant-sheet confirmation family when live; choose typed surface/snap mode, preview parent/child move, confirm. Dye station selects permitted channel/dye then atomic consumption. Layouts select save/load/share, preview exact-copy shortfalls and changes, confirm. | Empty saves/dyes explain normal acquisition; loading/error leaves current layout; locked dye station follows amenity condition/proximity while ordinary placement stays available. Visitor read-only. Pending/reconnect preserves original operation. Import never grants missing furnishings, includes private names or bypasses bounds. Every changed imported tint uses the canonical dye admission/consumption transaction, current station/proximity/condition and exact owned dye copies; unchanged tint consumes nothing. Preview all dye shortfalls, then commit the whole supported batch atomically. |
+| Guest books: leave a friendly reaction | Existing compact list and selected reaction radiogroup opened from the existing gate-door interactable (the D4 object entity 06 spawns, whose prompt 26's knock extends; 36 places no new entity); read public entries, select wave/cheer/admire, confirm, return. Same touch/pad sequence and shared prompt. | Empty book invites an allowed reaction; loading/error/reconnect cannot duplicate it; closed/blocked denies privately; owner can use normal moderation tools; guest never writes free text. Live per-account limit and retained-entry cap come from state. |
+| Advanced layout and dyes: refine an owned arrangement | Extend the existing build palette and plant-sheet confirmation family when live; choose typed surface/snap mode, preview parent/child move, confirm. The dye picker is enabled by the home station amenity of type apothecary (D90: no separate station object, amenity kind, slot or station GLB) and selects the permitted channel/dye, then atomic consumption. Layouts select save/load/share, preview exact-copy shortfalls and changes, confirm. | Empty saves/dyes explain normal acquisition; loading/error leaves current layout; a locked dye picker follows the apothecary amenity's condition and proximity while ordinary placement stays available. Visitor read-only. Pending/reconnect preserves original operation. Import never grants missing furnishings, includes private names or bypasses bounds. Every changed imported tint uses the canonical dye admission/consumption transaction, current apothecary station/proximity/condition and exact owned dye copies; unchanged tint consumes nothing. Preview all dye shortfalls, then commit the whole supported batch atomically. |
+| Optional Freehold Deed and Homes tab (web and website desktop only): mint a deed, list or buy a furnished home | Existing cold-window family for the deed card (src/ui/deed_card_view.ts and deed_card_window.ts; deed.description states the record is optional, deed.custody and deed.conditionCredits the custody and transfer facts, deed.noPricePromise the no-price-promise line, and the service-unavailable state reuses charter.serviceUnavailable); a client-side Homes tab in the Exchange window over the plot-listing feed; select home, review the exact included/retained contents, sign the wallet step-up, confirm, return. Money states reuse charter.*; deed states use deed.*. | Empty feed explains no listings; loading/error/reconnect reuse common.*; a buyer without a free home slot sees denied.deedBuyerCapacity (D80: the purchased plot occupies the buyer's index 0 only at tier 0, or a free index under 42's two-plot cap); denied distributions build nothing (D86, D91). |
+| Second home: buy a second Cottage and switch plots | Steward gains Primary Home / Second Home tabs and the existing hearthDestination row; the store card reuses the charter.* purchase flow with the charter.second* rows. | Owned/pending/error reuse charter.*; the second home upgrades through the primary's build projects with every integer material line at ceil(1.5x) (D93); a third home shows denied.secondHomeCap. |
 
 Unsupported future station or tint values preserve the original owned record and
 make the affected surface read-only with common.unavailable. They are not absent
@@ -1704,7 +2040,9 @@ phones and perf-tour evidence; it never automatically increases a budget.
 Later day/week/season limits, ranks, votes, guest-book cap, dye channels and saved
 layout quantities resolve from state's owned content rows and accepted schedule.
 No new number is specified by these outlines. A later owner adds new English
-keys through the same mechanic-first review before introducing a screen.
+keys through the same mechanic-first review before introducing a screen, appends
+them to the tables below with its Owner column, and regenerates both manifests in
+the same change (D92).
 
 ```text
 shared family
@@ -1715,56 +2053,190 @@ shared family
     +-- build       -> typed surfaces -> dye/layout review
 ```
 
-| NEW key | English value |
-|---|---|
-| hudChrome.housing.garden.title | Kitchen Garden |
-| hudChrome.housing.garden.loading | Loading the garden... |
-| hudChrome.housing.garden.empty | No garden beds are recorded. |
-| hudChrome.housing.garden.live | Current garden |
-| hudChrome.housing.garden.saved | Saved garden |
-| hudChrome.housing.garden.mixed | Some beds use saved records. |
-| hudChrome.housing.garden.incomplete | Some garden beds could not be loaded. |
-| hudChrome.housing.garden.unavailable | The garden is unavailable right now. |
-| hudChrome.housing.garden.openJournal | Open {journal} |
-| hudChrome.housing.garden.liveTooltip | These beds use their owner's current garden records. |
-| hudChrome.housing.garden.savedTooltip | These beds use saved garden records. Changes made elsewhere may not appear yet. |
-| hudChrome.housing.garden.mixedTooltip | Some beds use current records and others use saved records. Changes made elsewhere may not appear yet. |
-| hudChrome.housing.garden.savedStatus | {status} (saved) |
-| hudChrome.housing.garden.savedReadyTooltip | This bed appears ready from saved garden records. Changes made elsewhere may not appear yet. |
-| hudChrome.housing.garden.journalTooltip | Open your current character's {journal}. |
-| hudChrome.housing.garden.growing | Growing |
-| hudChrome.housing.guild.title | Guildhall |
-| hudChrome.housing.guild.fund | Hall Fund |
-| hudChrome.housing.guild.projects | Hall projects |
-| hudChrome.housing.guild.contributions | Contributions |
-| hudChrome.housing.guild.warTable | War table |
-| hudChrome.housing.guild.noRecords | Your guild has no records here yet. |
-| hudChrome.housing.guild.officerRequired | A guild officer can manage this project. |
-| hudChrome.housing.guild.ownPlinth | Your assigned trophy plinth |
-| hudChrome.housing.ward.title | Neighborhood |
-| hudChrome.housing.ward.endeavors | Neighborhood Endeavors |
-| hudChrome.housing.ward.favor | Neighborhood Favor |
-| hudChrome.housing.showcase.title | Home Showcase |
-| hudChrome.housing.showcase.enter | Enter your home |
-| hudChrome.housing.showcase.consent | Make this home's approved public display visible in the Showcase? |
-| hudChrome.housing.showcase.vote | Vote for this home |
-| hudChrome.housing.showcase.noEntries | No homes have entered this Showcase yet. |
-| hudChrome.housing.showcase.voted | Your vote is recorded. |
-| hudChrome.housing.guestBook.title | Guest book |
-| hudChrome.housing.guestBook.empty | Leave a friendly reaction for the owner. |
-| hudChrome.housing.guestBook.wave | Wave |
-| hudChrome.housing.guestBook.cheer | Cheer |
-| hudChrome.housing.guestBook.admire | Admire |
-| hudChrome.housing.guestBook.recorded | Your reaction is recorded. |
-| hudChrome.housing.layouts.title | Layouts |
-| hudChrome.housing.layouts.save | Save layout |
-| hudChrome.housing.layouts.load | Load layout |
-| hudChrome.housing.layouts.share | Share layout |
-| hudChrome.housing.layouts.review | Review layout changes |
-| hudChrome.housing.layouts.shortfall | You need {count} more of {item} for this layout. |
-| hudChrome.housing.dyes.title | Dye station |
-| hudChrome.housing.dyes.apply | Apply dye |
-| hudChrome.housing.dyes.review | Review dye use |
+| NEW key | English value | Owner |
+|---|---|---|
+| hudChrome.housing.garden.title | Kitchen Garden | 24 |
+| hudChrome.housing.garden.loading | Loading the garden... | 24 |
+| hudChrome.housing.garden.empty | No garden beds are recorded. | 24 |
+| hudChrome.housing.garden.live | Current garden | 24 |
+| hudChrome.housing.garden.saved | Saved garden | 24 |
+| hudChrome.housing.garden.mixed | Some beds use saved records. | 24 |
+| hudChrome.housing.garden.incomplete | Some garden beds could not be loaded. | 24 |
+| hudChrome.housing.garden.unavailable | The garden is unavailable right now. | 24 |
+| hudChrome.housing.garden.openJournal | Open {journal} | 24 |
+| hudChrome.housing.garden.liveTooltip | These beds use their owner's current garden records. | 24 |
+| hudChrome.housing.garden.savedTooltip | These beds use saved garden records. Changes made elsewhere may not appear yet. | 24 |
+| hudChrome.housing.garden.mixedTooltip | Some beds use current records and others use saved records. Changes made elsewhere may not appear yet. | 24 |
+| hudChrome.housing.garden.savedStatus | {status} (saved) | 24 |
+| hudChrome.housing.garden.savedReadyTooltip | This bed appears ready from saved garden records. Changes made elsewhere may not appear yet. | 24 |
+| hudChrome.housing.garden.journalTooltip | Open your current character's {journal}. | 24 |
+| hudChrome.housing.garden.growing | Growing | 24 |
+| hudChrome.housing.garden.board | Harvest Journal board | 24 |
+| hudChrome.housing.guild.title | Guildhall | 28 |
+| hudChrome.housing.guild.fund | Hall Fund | 28 |
+| hudChrome.housing.guild.projects | Hall Projects | 28 |
+| hudChrome.housing.guild.contributions | Contributions | 28 |
+| hudChrome.housing.guild.warTable | War Table | 28 |
+| hudChrome.housing.guild.noRecords | Your guild has no records here yet. | 28 |
+| hudChrome.housing.guild.officerRequired | A guild officer can manage this project. | 28 |
+| hudChrome.housing.guild.ownPlinth | Your assigned trophy plinth | 28 |
+| hudChrome.housing.guild.lockouts | Raid Lockouts | 30a |
+| hudChrome.housing.guild.firstKills | First Kills | 30a |
+| hudChrome.housing.guild.lockoutRow | {boss} ({difficulty}): {locked} of {online} online members are locked until the next reset. | 30a |
+| hudChrome.housing.guild.ownLockoutRow | You are locked to {boss} ({difficulty}) until {resetAt}. | 30a |
+| hudChrome.housing.guild.noLockouts | No online member is locked to a final boss right now. | 30a |
+| hudChrome.housing.guild.firstKillsUnavailable | First kills are not recorded yet. | 30a |
+| hudChrome.housing.guild.membersOnly | Only current members of this guild can read the hall boards. | 30a |
+| hudChrome.housing.guild.boardLoading | Loading the board... | 30a |
+| hudChrome.housing.guild.firstKillRow | {boss} ({difficulty}): first cleared by {character} on {day}. | 31 |
+| hudChrome.housing.denied.guildPolicy | A Guildhall can be private, open to its guild or open to everyone. | 28 |
+| hudChrome.housing.guild.fundBalance | Hall Fund balance: {balance} | 29 |
+| hudChrome.housing.guild.payFromFund | Pay From the Hall Fund | 29 |
+| hudChrome.housing.guild.reviewFundPayment | Review Hall Fund Payment | 29 |
+| hudChrome.housing.guild.fundPaymentPending | Paying this week's Ledger from the Hall Fund... | 29 |
+| hudChrome.housing.guild.fundPaid | This week's Ledger is paid from the Hall Fund. | 29 |
+| hudChrome.housing.guild.donate | Donate | 29 |
+| hudChrome.housing.guild.donateTitle | Donate to the Hall Fund | 29 |
+| hudChrome.housing.guild.donateMaterials | Materials | 29 |
+| hudChrome.housing.guild.donateGold | Gold | 29 |
+| hudChrome.housing.guild.donateClaudium | Claudium | 29 |
+| hudChrome.housing.guild.capReadout | This week: {used} of {cap} donated | 29 |
+| hudChrome.housing.guild.capReached | You have reached this week's donation limit. | 29 |
+| hudChrome.housing.guild.capResets | Your donation limit resets with the weekly reset. | 29 |
+| hudChrome.housing.guild.donatePending | Sending your donation... | 29 |
+| hudChrome.housing.guild.donated | Your donation is recorded. | 29 |
+| hudChrome.housing.guild.contributionsEmpty | No contributions have been recorded yet. | 29 |
+| hudChrome.housing.guild.contributionEntry | {name} gave {amount} on {date} | 29 |
+| hudChrome.housing.guild.contributionsWindow | Contributions from the last {days} days | 29 |
+| hudChrome.housing.guild.withdrawToBank | Withdraw to Guild Bank | 29 |
+| hudChrome.housing.guild.withdrawConfirm | Move the Hall Fund's materials and gold to the guild bank? | 29 |
+| hudChrome.housing.guild.withdrawPending | Moving the Hall Fund to the guild bank... | 29 |
+| hudChrome.housing.guild.withdrawn | The Hall Fund's materials and gold are in the guild bank. | 29 |
+| hudChrome.housing.guild.fundEmpty | The Hall Fund is empty. | 29 |
+| hudChrome.housing.guild.conditionRate | A Guildhall wears twice as fast as a personal home. | 29 |
+| hudChrome.housing.guild.chestMembersOnly | Only guild members can use the guild chest. | 30 |
+| hudChrome.housing.guild.stationMembersOnly | Only guild members can use the hall's stations. | 30 |
+| hudChrome.housing.guild.amenitiesPaused | Hall amenities are paused until the hall's condition is restored. | 30 |
+| hudChrome.housing.ward.title | Neighborhood | 34 |
+| hudChrome.housing.ward.endeavors | Neighborhood Endeavors | 35 |
+| hudChrome.housing.ward.favor | Neighborhood Favor | 35 |
+| hudChrome.housing.ward.roster | Neighborhood Roster | 34 |
+| hudChrome.housing.ward.loading | Loading the neighborhood... | 34 |
+| hudChrome.housing.ward.unavailable | The neighborhood roster is unavailable right now. | 34 |
+| hudChrome.housing.ward.occupancy | {claimed} of {capacity} plots claimed | 34 |
+| hudChrome.housing.ward.anchor | Guild anchor: {guild} | 34 |
+| hudChrome.housing.ward.noAnchor | No guild anchors this neighborhood. | 34 |
+| hudChrome.housing.ward.openGround | Open ground | 34 |
+| hudChrome.housing.ward.door | Door of {owner} | 34 |
+| hudChrome.housing.ward.privateDoor | A private home | 34 |
+| hudChrome.housing.ward.move | Move Here | 34 |
+| hudChrome.housing.ward.moveReview | Move your home to this neighborhood? Your plot and furnishings move with it. | 34 |
+| hudChrome.housing.ward.movePending | Moving your home... | 34 |
+| hudChrome.housing.ward.moved | Your home now stands in its new neighborhood. | 34 |
+| hudChrome.housing.denied.wardFull | This neighborhood is full. Your home stays where it is. | 34 |
+| hudChrome.housing.denied.wardBusy | This neighborhood is busy right now. Try again shortly. | 34 |
+| hudChrome.housing.denied.wardSame | Your home is already in this neighborhood. | 34 |
+| hudChrome.housing.ward.favorRank | Favor rank {rank} of {maximum} | 35 |
+| hudChrome.housing.ward.favorCapacity | Permanent decor bonus: +{count} | 35 |
+| hudChrome.housing.ward.favorTooltip | Favor comes from paying your Ledger on time, from distinct neighbors visiting, and from completed Endeavors. It never decays and never drops when your home moves. | 35 |
+| hudChrome.housing.ward.endeavorMonth | Endeavors for {month} | 35 |
+| hudChrome.housing.ward.endeavorProgress | {current} of {goal} | 35 |
+| hudChrome.housing.ward.endeavorComplete | Complete | 35 |
+| hudChrome.housing.ward.endeavorReward | Reward: {reward} | 35 |
+| hudChrome.housing.ward.endeavorRewardHidden | The reward is revealed when this Endeavor is complete. | 35 |
+| hudChrome.housing.ward.endeavorsEmpty | No Endeavors are running this month. | 35 |
+| hudChrome.housing.ward.endeavorsLoading | Loading Endeavors... | 35 |
+| hudChrome.housing.ward.endeavorsUnavailable | Endeavors are unavailable right now. Your Favor is unchanged. | 35 |
+| hudChrome.housing.ward.endeavorsReset | Progress resets on {date}. | 35 |
+| hudChrome.housing.showcase.title | Home Showcase | 36 |
+| hudChrome.housing.showcase.enter | Enter Your Home | 36 |
+| hudChrome.housing.showcase.consent | Make this home's approved public display visible in the Showcase? | 36 |
+| hudChrome.housing.showcase.vote | Vote for This Home | 36 |
+| hudChrome.housing.showcase.noEntries | No homes have entered this Showcase yet. | 36 |
+| hudChrome.housing.showcase.voted | Your vote is recorded. | 36 |
+| hudChrome.housing.showcase.seasonClosed | This Showcase season is closed. The next season opens on {date}. | 36 |
+| hudChrome.housing.showcase.seasonLocked | Voting is locked while results are counted. | 36 |
+| hudChrome.housing.showcase.voteUsed | You have already voted this season. | 36 |
+| hudChrome.housing.showcase.ownEntry | You cannot vote for your own home. | 36 |
+| hudChrome.housing.showcase.loading | Loading the Showcase... | 36 |
+| hudChrome.housing.guestBook.title | Guest Book | 36 |
+| hudChrome.housing.guestBook.empty | Leave a friendly reaction for the owner. | 36 |
+| hudChrome.housing.guestBook.wave | Wave | 36 |
+| hudChrome.housing.guestBook.cheer | Cheer | 36 |
+| hudChrome.housing.guestBook.admire | Admire | 36 |
+| hudChrome.housing.guestBook.recorded | Your reaction is recorded. | 36 |
+| hudChrome.housing.guestBook.used | You have already left a reaction here today. | 36 |
+| hudChrome.housing.guestBook.loading | Loading the guest book... | 36 |
+| hudChrome.housing.layouts.title | Layouts | 41a |
+| hudChrome.housing.layouts.save | Save Layout | 41a |
+| hudChrome.housing.layouts.load | Load Layout | 41a |
+| hudChrome.housing.layouts.share | Share Layout | 41a |
+| hudChrome.housing.layouts.review | Review Layout Changes | 41a |
+| hudChrome.housing.layouts.shortfall | You need {count} more of {item} for this layout. | 41a |
+| hudChrome.housing.layouts.empty | You have no saved layouts yet. | 41a |
+| hudChrome.housing.layouts.nameLabel | Layout name | 41a |
+| hudChrome.housing.layouts.slotsFull | All {count} layout slots are in use. Replace one to save. | 41a |
+| hudChrome.housing.layouts.overwrite | Replace the saved layout {name}? | 41a |
+| hudChrome.housing.layouts.saved | Your layout is saved. | 41a |
+| hudChrome.housing.layouts.codeLabel | Share code | 41a |
+| hudChrome.housing.layouts.copyCode | Copy Code | 41a |
+| hudChrome.housing.layouts.pasteCode | Paste a share code | 41a |
+| hudChrome.housing.layouts.importReview | Review this shared layout before applying it. | 41a |
+| hudChrome.housing.layouts.displaced | {item} will move to {destination}. | 41a |
+| hudChrome.housing.layouts.dyeShortfall | You need {count} more {dye} for this layout. | 41a |
+| hudChrome.housing.layouts.applied | Your layout is applied. | 41a |
+| hudChrome.housing.denied.layoutCode | This share code is not valid. | 41a |
+| hudChrome.housing.dyes.title | Dye Station | 41 |
+| hudChrome.housing.dyes.apply | Apply Dye | 41 |
+| hudChrome.housing.dyes.review | Review Dye Use | 41 |
+| hudChrome.housing.dyes.loading | Loading dyes... | 41 |
+| hudChrome.housing.dyes.channelPrimary | Primary | 41 |
+| hudChrome.housing.dyes.channelAccent | Accent | 41 |
+| hudChrome.housing.dyes.noDye | No dye | 41 |
+| hudChrome.housing.dyes.unchanged | No change. Nothing is used. | 41 |
+| hudChrome.housing.dyes.swatchAria | {dye}: {count} in bags | 41 |
+| hudChrome.housing.dyes.reviewLine | Use {count} {dye} on {furnishing}. | 41 |
+| hudChrome.housing.dyes.pending | Applying dye... | 41 |
+| hudChrome.housing.dyes.stationTooltip | Dyes are applied at this home's apothecary station while the home is at {threshold} condition or higher. Placing, moving and removing furnishings never need it. | 41 |
+| hudChrome.housing.denied.dyeStation | Dyeing needs an apothecary station in this home. | 41 |
+| hudChrome.housing.denied.dyeRange | Stand closer to the apothecary station to dye. | 41 |
+| hudChrome.housing.denied.dyeShortfall | You do not have enough {dye}. | 41 |
+| hudChrome.housing.denied.dyeChannel | This furnishing cannot be dyed. | 41 |
+| hudChrome.housing.deed.title | Optional Freehold Deed | 38 |
+| hudChrome.housing.deed.mint | Mint Freehold Deed | 38 |
+| hudChrome.housing.deed.homesTab | Homes | 38 |
+| hudChrome.housing.deed.list | List This Home | 38 |
+| hudChrome.housing.deed.cancelListing | Cancel Listing | 38 |
+| hudChrome.housing.deed.buy | Buy This Home | 38 |
+| hudChrome.housing.deed.confirmSale | Confirm Sale | 38 |
+| hudChrome.housing.deed.included | These items transfer with the home: {count} | 38 |
+| hudChrome.housing.deed.retained | These items stay with you: {count} | 38 |
+| hudChrome.housing.deed.minted | Your Freehold Deed is minted. | 38 |
+| hudChrome.housing.deed.listed | Your home is listed. Its contents are locked until the sale settles or you cancel. | 38 |
+| hudChrome.housing.deed.sold | Your home is sold. Your Inn Room is ready. | 38 |
+| hudChrome.housing.deed.received | Your new home is ready. | 38 |
+| hudChrome.housing.deed.noListings | No homes are listed right now. | 38 |
+| hudChrome.housing.deed.stepUp | Sign with your linked wallet to continue. | 38 |
+| hudChrome.housing.deed.flairAria | Freehold Deed holder flair | 38 |
+| hudChrome.housing.denied.deedBuyerCapacity | You do not have a free home slot for this purchase. | 38 |
+| hudChrome.housing.deed.description | Create an optional record for this Freehold through the approved service. Your game access does not require this record. | 38 |
+| hudChrome.housing.deed.saleReview | Review the home and furnishings included in this sale. | 38 |
+| hudChrome.housing.deed.includedHeading | Included in the sale | 38 |
+| hudChrome.housing.deed.retainedHeading | Staying with you | 38 |
+| hudChrome.housing.deed.custody | Your personal trophy records and excluded belongings remain yours. The sale proceeds only when their safe storage is confirmed. | 38 |
+| hudChrome.housing.deed.custodyUnavailable | Your excluded belongings need safe storage before this sale can proceed. | 38 |
+| hudChrome.housing.deed.conditionCredits | The home's condition is recorded through the transfer time. Existing prepayment credits keep their original terms. Account return grace does not transfer. | 38 |
+| hudChrome.housing.deed.salePending | This sale is being confirmed. Its request reference is saved. | 38 |
+| hudChrome.housing.deed.requestPending | This request is being confirmed. Your request reference is saved. | 38 |
+| hudChrome.housing.deed.supportRecovery | This request needs a support review. Your home records and belongings are preserved. | 38 |
+| hudChrome.housing.deed.noPricePromise | A listing does not guarantee a buyer or a future price. | 38 |
+
+The deed.* rows ship dormant on denied distributions under D86 and are the one
+namespace 38 registers in 14's tests/freehold_store_gates.test.ts web-only
+allowlist; apiError.freehold.deed.buyer_capacity and apiError.freehold.second_plot_cap
+mirror their English in api_error.ts and are protocol leaves, not manifest keys
+(there is no second-home upgrade refusal and no key for one, D93). The deed modules
+are src/ui/deed_card_view.ts and deed_card_window.ts (38).
 
 ## 11. Exact screenshot registry and fixture contract
 
@@ -1791,12 +2263,21 @@ import { housingReviewTargets, isHousingVisualPath } from './lib/pr_shot_housing
 }),
 ```
 
-Registration is cumulative by actual producer: file 09 registers the interior
-baseline subset (12 variants); file 11 extends the same target to 89; file 16
-reaches 178; file 17 reaches 226; file 18 reaches 330. File 20 verifies the complete
-330-variant inventory. Earlier files require only their registered working subset,
-never nonfunctional future UI. These are derived inventory counts, not new gameplay
-or tuning values.
+Registration is cumulative by actual producer: file 09 registers the interior baseline
+subset (12 variants); file 11 extends the same target to 89; file 16 reaches 178; file
+17 reaches 226; file 18 reaches 330. File 20 verifies the complete 330-variant wave A
+inventory. Later waves register by producer in the same way, through the
+housingLaterRegistrations list below, each regenerating ux-shot-manifest.json in its
+own change with every cited count updated and each wave close verifying the union:
+file 21 reaches 348; file 23 reaches 357; file 24 reaches 399; file 25 reaches 437;
+file 26 reaches 455; file 30 reaches 493; file 30a reaches 511; file 31 reaches 517;
+file 34 reaches 535; file 35 reaches 553; file 36 reaches 595; file 38 reaches 639;
+file 40 reaches 654; file 41 reaches 672; file 41a reaches 696; file 42 reaches 733.
+The complete registry therefore expands to 733 variants, and the owner of every
+variant is reproducible from housingVariantOwner below and recorded in the manifest's
+owner field. Earlier files require only their registered working subset, never
+nonfunctional future UI. These are derived inventory counts, not new gameplay or
+tuning values.
 
 The exact constructor below is nested in housingReviewTargets. Everything it
 names besides supplied beforeLoad is NEW helper-owned fixture metadata/function,
@@ -1880,7 +2361,7 @@ const housingVisualWhen = [
   'src/render/freehold/furnishing_models.ts',
   'src/render/freehold/furnishing_ghost_visual.ts',
   'src/render/freehold/interior_dressing.ts',
-  'src/render/freehold/interior_light_rig.ts',
+  'src/render/freehold/freehold_light_grade.ts',
   'src/sim/content/freehold/layouts.ts',
   'src/sim/content/freehold/furnishings.ts',
   'scripts/assets/freehold_basics/',
@@ -1920,6 +2401,7 @@ screenshots from inside the callback to evade the runner's image manifest.
     'src/ui/hud/housing/build_mode_',
     'src/ui/hud/housing/furnishing_palette_',
     'src/ui/hud/housing/capacity_meter_view.ts',
+    'src/ui/hud/housing/build_input_core.ts',
     'src/game/build_mode_wiring.ts',
     'src/game/freehold_build_camera.ts',
     'src/sim/freehold/layout_core.ts',
@@ -2048,6 +2530,278 @@ screenshots from inside the callback to evade the runner's image manifest.
 },
 ```
 
+Wave A ownership is by target, with the four interior scenes owned by 09; every
+later registration names its owner. The owner of any variant is:
+
+```js
+const housingWaveAOwners = {
+  'housing-build-mode': '11', 'housing-steward-store': '16',
+  'housing-trophies': '17', 'housing-visiting': '18',
+};
+
+function housingVariantOwner(target, scene) {
+  if (housingInteriorScenes.includes(scene)) return '09';
+  const later = housingLaterRegistrations.find((entry) =>
+    entry.target === target && entry.scenes.includes(scene));
+  return later ? later.owner : housingWaveAOwners[target];
+}
+```
+
+Later producers append to an existing target or register a new one through this
+list; each entry's `scenes` is the exact scene set that producer owns, and the
+`variants` expansion uses the same constructor. New targets carry their own
+`label`, `when` and NEW capture callback; appends carry only `variants`. Scene ids
+below the wave A set are fixed here so the wave closes compare exact manifests.
+
+```js
+const housingGardenStates = [
+  'live', 'saved', 'mixed', 'incomplete', 'unavailable', 'empty', 'loading',
+];
+const housingGardenScenes = housingGardenStates.flatMap((state) =>
+  ['owner', 'guest'].map((role) => `garden-${state}-${role}`));
+
+const housingLaterRegistrations = [
+  { target: 'housing-steward-store', owner: '21',
+    scenes: ['steward-upgrade-preview', 'steward-upgrade-partial',
+      'steward-upgrade-fee-due', 'steward-upgrade-ready',
+      'steward-upgrade-bags-full', 'steward-upgrade-complete'],
+    variants: housingVariants(['steward-upgrade-preview', 'steward-upgrade-partial',
+      'steward-upgrade-fee-due', 'steward-upgrade-ready',
+      'steward-upgrade-bags-full', 'steward-upgrade-complete']) },
+  { target: 'housing-trophies', owner: '23',
+    scenes: ['trophies-finish-silver', 'trophies-finish-gilded', 'trophies-dulled-29'],
+    variants: housingVariants(['trophies-finish-silver', 'trophies-finish-gilded',
+      'trophies-dulled-29']) },
+  { target: 'housing-garden', owner: '24',
+    label: 'Kitchen Garden tableau, freshness and guest privacy',
+    when: [
+      ...housingVisualWhen,
+      'src/sim/freehold/garden_view.ts',
+      'src/render/freehold/garden_tableau.ts',
+      'server/freehold_account_sources.ts',
+      'src/ui/hud/housing/garden_',
+    ],
+    scenes: housingGardenScenes,
+    variants: housingVariants(housingGardenScenes),
+    capture: 'captureHousingGarden' },
+  { target: 'housing-build-advanced', owner: '25',
+    label: 'Typed surfaces, parent moves and free placement',
+    when: [
+      ...housingVisualWhen,
+      'src/sim/freehold/layout_core.ts',
+      'src/sim/freehold/placement.ts',
+      'src/ui/hud/housing/build_mode_',
+      'src/ui/hud/housing/build_input_core.ts',
+      'src/render/freehold/furnishing_ghost_visual.ts',
+    ],
+    scenes: ['build-wall-placement', 'build-table-placement', 'build-ceiling-placement',
+      'build-host-move-preview', 'build-child-blocked', 'build-surface-meter',
+      'build-free-yaw', 'build-snap-mode', 'build-advanced-visitor'],
+    variants: [
+      ...housingVariants([
+        'build-wall-placement', 'build-table-placement', 'build-ceiling-placement',
+        'build-host-move-preview', 'build-child-blocked', 'build-surface-meter',
+        'build-free-yaw', 'build-snap-mode', 'build-advanced-visitor',
+      ]),
+      ...housingVariants(['build-child-blocked'], { motion: 'reduce' }),
+      ...housingVariants(['build-wall-placement'], { input: 'keyboard' }),
+      ...housingVariants(['build-table-placement'], { input: 'gamepad' }),
+      ...housingVariants(['build-free-yaw'], { input: 'touch',
+        views: housingViews.filter((view) => view.mobile) }),
+    ],
+    capture: 'captureHousingBuildAdvanced' },
+  { target: 'housing-visiting', owner: '26',
+    scenes: ['open-house-list-empty', 'open-house-list-ready', 'open-house-list-error',
+      'open-house-knock-sent', 'open-house-knock-wait', 'visit-public-full'],
+    variants: housingVariants(['open-house-list-empty', 'open-house-list-ready',
+      'open-house-list-error', 'open-house-knock-sent', 'open-house-knock-wait',
+      'visit-public-full']) },
+  { target: 'housing-hall-amenities', owner: '30',
+    label: 'Guild chest, long table and hall stations',
+    when: [
+      ...housingVisualWhen,
+      'src/sim/freehold/amenities.ts',
+      'src/sim/freehold/permissions.ts',
+      'src/sim/professions/stations.ts',
+      'src/ui/bank_window.ts',
+      'src/ui/guild_bank_window.ts',
+    ],
+    scenes: ['hall-chest-leader', 'hall-chest-officer', 'hall-chest-member',
+      'hall-chest-guest', 'hall-chest-locked', 'hall-station-member',
+      'hall-station-guest', 'hall-station-locked', 'hall-feast-table',
+      'hall-feast-active'],
+    variants: [
+      ...housingVariants([
+        'hall-chest-leader', 'hall-chest-officer', 'hall-chest-member',
+        'hall-chest-guest', 'hall-chest-locked', 'hall-station-member',
+        'hall-station-guest', 'hall-station-locked', 'hall-feast-table',
+        'hall-feast-active',
+      ]),
+      ...housingVariants(['hall-chest-member'], { motion: 'reduce' }),
+      ...housingVariants(['hall-chest-officer'], { input: 'keyboard' }),
+      ...housingVariants(['hall-station-member'], { input: 'touch',
+        views: housingViews.filter((view) => view.mobile) }),
+    ],
+    capture: 'captureHousingHallAmenities' },
+  { target: 'housing-war-table', owner: '30a',
+    label: 'Hall boards, War table lockouts and first kills',
+    when: [
+      ...housingVisualWhen,
+      'src/ui/hud/housing/war_table_',
+      'src/ui/hud/housing/hall_boards_',
+      'server/guild_hall_boards.ts',
+    ],
+    scenes: ['hall-boards-roster', 'hall-boards-calendar', 'hall-boards-pledge',
+      'hall-boards-members-only', 'war-table-lockouts',
+      'war-table-first-kills-unavailable'],
+    variants: housingVariants(['hall-boards-roster', 'hall-boards-calendar',
+      'hall-boards-pledge', 'hall-boards-members-only', 'war-table-lockouts',
+      'war-table-first-kills-unavailable']),
+    capture: 'captureHousingWarTable' },
+  { target: 'housing-war-table', owner: '31',
+    scenes: ['war-table-first-kills-ready', 'war-table-first-kills-empty'],
+    variants: housingVariants(['war-table-first-kills-ready',
+      'war-table-first-kills-empty']) },
+  { target: 'housing-ward', owner: '34',
+    label: 'Neighborhood square, exteriors, roster and moves',
+    when: [
+      ...housingVisualWhen,
+      'src/sim/freehold/ward_core.ts',
+      'src/sim/freehold/wards.ts',
+      'src/render/freehold/ward_exteriors.ts',
+      'src/net/ward_wire.ts',
+      'src/ui/hud/housing/ward_',
+    ],
+    scenes: ['ward-square', 'ward-exterior', 'ward-roster', 'ward-busy-cap',
+      'ward-door', 'ward-move-review'],
+    variants: housingVariants(['ward-square', 'ward-exterior', 'ward-roster',
+      'ward-busy-cap', 'ward-door', 'ward-move-review']),
+    capture: 'captureHousingWard' },
+  { target: 'housing-ward', owner: '35',
+    scenes: ['ward-endeavors-loading', 'ward-endeavors-empty',
+      'ward-endeavor-in-progress', 'ward-endeavor-complete',
+      'ward-endeavor-hidden-reward', 'ward-endeavors-unavailable'],
+    variants: housingVariants(['ward-endeavors-loading', 'ward-endeavors-empty',
+      'ward-endeavor-in-progress', 'ward-endeavor-complete',
+      'ward-endeavor-hidden-reward', 'ward-endeavors-unavailable']) },
+  { target: 'housing-showcase', owner: '36',
+    label: 'Home Showcase entries, consent and votes',
+    when: [
+      ...housingVisualWhen,
+      'src/ui/hud/housing/showcase_',
+      'server/freehold_showcase',
+    ],
+    scenes: ['showcase-consent', 'showcase-list', 'showcase-voted',
+      'showcase-vote-used', 'showcase-season-closed', 'showcase-season-locked',
+      'showcase-empty', 'showcase-loading', 'showcase-error'],
+    variants: housingVariants(['showcase-consent', 'showcase-list', 'showcase-voted',
+      'showcase-vote-used', 'showcase-season-closed', 'showcase-season-locked',
+      'showcase-empty', 'showcase-loading', 'showcase-error']),
+    capture: 'captureHousingShowcase' },
+  { target: 'housing-guest-book', owner: '36',
+    label: 'Guest book reactions and daily limit',
+    when: [
+      ...housingVisualWhen,
+      'src/ui/hud/housing/guest_book_',
+      'server/freehold_guest_book',
+    ],
+    scenes: ['guest-book-empty', 'guest-book-reactions', 'guest-book-recorded',
+      'guest-book-used', 'guest-book-denied'],
+    variants: housingVariants(['guest-book-empty', 'guest-book-reactions',
+      'guest-book-recorded', 'guest-book-used', 'guest-book-denied']),
+    capture: 'captureHousingGuestBook' },
+  { target: 'housing-deed', owner: '38',
+    label: 'Optional Freehold Deed card, Homes tab and furnished-sale states',
+    when: [
+      ...housingVisualWhen,
+      'src/ui/deed_card_',
+      'src/game/distribution_surfaces.ts',
+      'server/freehold_deed',
+    ],
+    scenes: ['deed-card', 'deed-homes-tab', 'deed-contents-review', 'deed-step-up',
+      'deed-listed', 'deed-sold', 'deed-received', 'deed-buyer-capacity',
+      'deed-denied'],
+    variants: [
+      ...housingVariants(['deed-card', 'deed-homes-tab', 'deed-contents-review',
+        'deed-step-up', 'deed-listed', 'deed-sold', 'deed-received',
+        'deed-buyer-capacity']),
+      ...housingVariants(['deed-card', 'deed-homes-tab'], {
+        surface: 'website-desktop', views: housingDesktop,
+      }),
+      ...housingDeniedSurfaces.flatMap((surface) =>
+        housingVariants(['deed-denied'], { surface })),
+    ],
+    capture: 'captureHousingDeed' },
+  { target: 'housing-steward-store', owner: '40',
+    scenes: ['steward-requirements-met', 'steward-requirements-unmet',
+      'steward-guild-clear-unmet', 'steward-overflow-review', 'steward-overflow-none'],
+    variants: housingVariants(['steward-requirements-met', 'steward-requirements-unmet',
+      'steward-guild-clear-unmet', 'steward-overflow-review',
+      'steward-overflow-none']) },
+  { target: 'housing-dyes', owner: '41',
+    label: 'Dye picker, apothecary gate and shortfalls',
+    when: [
+      ...housingVisualWhen,
+      'src/sim/freehold/dye.ts',
+      'src/sim/content/freehold/dyes.ts',
+      'src/ui/hud/housing/dye_',
+    ],
+    scenes: ['dyes-picker', 'dyes-station-locked', 'dyes-station-unlocked',
+      'dyes-shortfall'],
+    variants: [
+      ...housingVariants(['dyes-picker', 'dyes-station-locked',
+        'dyes-station-unlocked', 'dyes-shortfall']),
+      ...housingVariants(['dyes-picker'], { graphics: 'high' }),
+      ...housingVariants(['dyes-picker'], { motion: 'reduce' }),
+    ],
+    capture: 'captureHousingDyes' },
+  { target: 'housing-layouts', owner: '41a',
+    label: 'Saved layouts, share codes and import review',
+    when: [
+      ...housingVisualWhen,
+      'src/sim/freehold/layout_share_core.ts',
+      'src/ui/hud/housing/layouts_',
+      'server/freehold_layout_saves_db.ts',
+    ],
+    scenes: ['layouts-empty', 'layouts-saved', 'layouts-overwrite',
+      'layouts-import-review', 'layouts-shortfall', 'layouts-dye-shortfall',
+      'layouts-displaced', 'layouts-stale'],
+    variants: housingVariants(['layouts-empty', 'layouts-saved', 'layouts-overwrite',
+      'layouts-import-review', 'layouts-shortfall', 'layouts-dye-shortfall',
+      'layouts-displaced', 'layouts-stale']),
+    capture: 'captureHousingLayouts' },
+  { target: 'housing-second-home', owner: '42',
+    label: 'Second home tabs, destination and second Charter',
+    when: [
+      ...housingVisualWhen,
+      'src/ui/hud/housing/steward_panel_',
+      'src/ui/charter_store_view.ts',
+      'src/sim/freehold/second_plot.ts',
+    ],
+    scenes: ['second-home-primary-tab', 'second-home-second-tab',
+      'second-home-hearth-destination', 'second-home-card', 'second-home-owned',
+      'second-home-bill', 'second-home-denied'],
+    variants: [
+      ...housingVariants(['second-home-primary-tab', 'second-home-second-tab',
+        'second-home-hearth-destination', 'second-home-card', 'second-home-owned',
+        'second-home-bill']),
+      ...housingVariants(['second-home-card'], {
+        surface: 'website-desktop', views: housingDesktop,
+      }),
+      ...housingDeniedSurfaces.flatMap((surface) =>
+        housingVariants(['second-home-denied'], { surface })),
+    ],
+    capture: 'captureHousingSecondHome' },
+];
+```
+
+Capture names in that list are the NEW helper-private callbacks each producer
+adds beside captureHousing* above; the manifest generator only expands variants.
+The generic states each scene stages are in section 12's later-wave table. The
+`when` paths of the later targets are NEW planned module prefixes the producing
+phase creates; a producer that lands a different basename updates the entry and
+regenerates the manifest in that same change.
+
 File 09 initially registers exactly the following descriptor instead of the later
 build descriptor above. It uses the same constructor, shared when inventory and
 target key. No other housing target is registered in 09. File 11 replaces this one
@@ -2099,7 +2853,7 @@ copies in the furnishing tab. Assert build.empty, an empty selectable grid, no g
 inactive placement/confirm and working close/tab controls. It grants no fake item and
 does not substitute a search with no matches for an empty inventory. Every new scene
 runs all desktop/compact/tablet baseline views. Guest observation stays the existing
-visit-owner-building identity registered by 18;11 carries the two-client behavioral
+visit-owner-building identity registered by 18; 11 carries the two-client behavioral
 acceptance and cites that later capture, never a duplicate screenshot scene.
 
 The values in option objects are explicit local fixture labels. No string above
@@ -2287,12 +3041,44 @@ Focused additions are mandatory, with the relevant baseline scene reused:
 | Parchment and highContrast/forced colors | Build blocked, Steward condition/payment and trophy provenance retain readable text/focus/shape through theme repair. |
 | Reduced motion | Static arrival or immediate handback; no ghost pulse, animated hatch, auto-orbit, shimmer or flame-dependent state. Same controls and information. |
 | LOW iOS and pressured light case | Explicit ios-effective-one and high-preset variants assert live light-profile state. Separate real LOW iOS/WebKit device captures prove engine/readability/input; Chromium UA emulation proves only the profile branch. |
-| Keyboard | Real open/tab/grid/confirm/cancel/close sequence, focused control visible, no focus lost after relocalize or authoritative refresh. |
-| Gamepad | Actual active-family glyphs and successful palette, move, rotate, nudge, confirm, undo and cancel sequence; no simultaneous combat action. |
-| Touch | Real compact/tablet tap-only and drag arbitration, safe areas, target size and input floor; no action hidden under existing HUD or keyboard. |
-| Portrait shell | Existing rotation-gate presentation remains correct; no claim of a playable portrait build editor. |
+| Keyboard (build-keyboard-focused, trophies-grid-focused, steward-prepay-review and gate-lookup-ready keyboard variants) | Real open/tab/grid/confirm/cancel/close sequence, focused control visible, no focus lost after relocalize or authoritative refresh. |
+| Gamepad (build-pad-placement) | Actual active-family glyphs and successful palette, move, rotate, nudge, confirm, undo and cancel sequence; no simultaneous combat action. |
+| Touch (build-touch-controls) | Real compact/tablet tap-only and drag arbitration, safe areas, target size and input floor; no action hidden under existing HUD or keyboard. |
+| Portrait shell (portrait-rotation-gate) | Existing rotation-gate presentation remains correct; no claim of a playable portrait build editor. |
 | Audio and mute | Separate event evidence: ordinary feedback only on a newly accepted delivered transition; no cue/directive remint on replay/resume or fresh-client recovery; commit-before-ACK may skip output. Matching placement/payment feedback, mute and spatial teardown still apply. Screenshots cannot prove sound. |
 | Multiplayer/authority | Two-client public revision/privacy, full-cap/refusal, offline-owner admission and revocation; restart/receipt integration for paid results. Offline screenshot fixtures cannot prove these. |
+
+Locale: every registered variant is captured in English (locale 'en'); the
+manifest carries no locale dimension by decision. Long non-Latin fills are proven
+by the M16 same-change fill rule and tests/i18n_completeness.test.ts, never by a
+capture variant; a later locale capture would add a locale key dimension and its
+own manifest regeneration.
+
+### Later-wave registrations and acceptance trace
+
+Each later producer registers the scenes below through housingLaterRegistrations
+and owns their acceptance; the wave close that follows verifies the union of every
+registered key against the regenerated manifest.
+
+| Scenario target | Required visible state and assertion | Viewports | Owner |
+|---|---|---|---|
+| steward-upgrade-preview; steward-upgrade-partial; steward-upgrade-fee-due; steward-upgrade-ready; steward-upgrade-bags-full; steward-upgrade-complete | Upgrade bill per leg, fee status, source mode, overflow preview, finish re-attempt and completion | All baseline | 21 |
+| trophies-finish-silver; trophies-finish-gilded; trophies-dulled-29 | Silver and gilded finishes on qualifying sources; every finish dull and the hearth cold below condition 30 | All baseline | 23 |
+| garden-{live,saved,mixed,incomplete,unavailable,empty,loading}-{owner,guest} | Truthful freshness per row, saved qualification visible and audible, owner-only Journal action, guest sees no alt identity or timer; unavailable and incomplete never imply empty or ready | All baseline | 24 |
+| build-wall-placement; build-table-placement; build-ceiling-placement; build-host-move-preview; build-child-blocked; build-surface-meter; build-free-yaw; build-snap-mode; build-advanced-visitor | Typed surface ghost and reason, parent move with children, surface meter, free yaw versus snapped mode, visitor sees accepted revisions only | All baseline plus reduce, keyboard, gamepad and touch arms | 25 |
+| open-house-list-empty; open-house-list-ready; open-house-list-error; open-house-knock-sent; open-house-knock-wait; visit-public-full | Open Houses tab states, Knock and its wait, public-policy full refusal preserving the list | All baseline | 26 |
+| hall-chest-leader; hall-chest-officer; hall-chest-member; hall-chest-guest; hall-chest-locked; hall-station-member; hall-station-guest; hall-station-locked; hall-feast-table; hall-feast-active | Guild chest by rank, guest refusals with guild.chestMembersOnly and guild.stationMembersOnly, paused amenities, the feast table and an active feast | All baseline plus reduce, keyboard and touch arms | 30 |
+| hall-boards-roster; hall-boards-calendar; hall-boards-pledge; hall-boards-members-only; war-table-lockouts; war-table-first-kills-unavailable | Board tabs, non-member refusal, lockout counts naming no other member, first kills unavailable before 31 | All baseline | 30a |
+| war-table-first-kills-ready; war-table-first-kills-empty | First-kill rows with character and day, the empty state reusing guild.noRecords | All baseline | 31 |
+| ward-square; ward-exterior; ward-roster; ward-busy-cap; ward-door; ward-move-review | Square and exterior kits at LOW, roster with anchor and occupancy, busy and full refusals, door names, the move confirmation | All baseline | 34 |
+| ward-endeavors-loading; ward-endeavors-empty; ward-endeavor-in-progress; ward-endeavor-complete; ward-endeavor-hidden-reward; ward-endeavors-unavailable | Permanent Favor capacity separate from monthly progress, spoiler-safe hidden reward, unavailable leaves Favor unchanged | All baseline | 35 |
+| showcase-consent; showcase-list; showcase-voted; showcase-vote-used; showcase-season-closed; showcase-season-locked; showcase-empty; showcase-loading; showcase-error | Consent prompt, consented entries, one vote per account, closed and locked seasons with dates, empty and error states | All baseline | 36 |
+| guest-book-empty; guest-book-reactions; guest-book-recorded; guest-book-used; guest-book-denied | Reaction radiogroup, recorded reaction, daily limit used, private denial with no free text | All baseline | 36 |
+| deed-card; deed-homes-tab; deed-contents-review; deed-step-up; deed-listed; deed-sold; deed-received; deed-buyer-capacity; deed-denied | Deed card and Homes tab on web and website desktop, exact included/retained contents, wallet step-up, listed/sold/received receipts, buyer capacity refusal, complete absence on every denied distribution | All baseline for web; desktop for website shell; denied surfaces via the injected verdict | 38 |
+| steward-requirements-met; steward-requirements-unmet; steward-guild-clear-unmet; steward-overflow-review; steward-overflow-none | Read-only requirement rows with earned status, guild-clear requirement unmet, overflow destination confirmation and the everything-fits arm | All baseline | 40 |
+| dyes-picker; dyes-station-locked; dyes-station-unlocked; dyes-shortfall | Eight swatches with bag counts, apothecary gate locked by condition or range, shortfall refusal; high preset and reduced motion keep identical actionable state | All baseline plus high and reduce arms | 41 |
+| layouts-empty; layouts-saved; layouts-overwrite; layouts-import-review; layouts-shortfall; layouts-dye-shortfall; layouts-displaced; layouts-stale | Saved slots, overwrite confirmation, import review with shortfalls, displaced destinations and the stale preview refusal | All baseline | 41a |
+| second-home-primary-tab; second-home-second-tab; second-home-hearth-destination; second-home-card; second-home-owned; second-home-bill; second-home-denied | Primary and Second Home tabs, destination row, second Charter card and owned state, the one-and-a-half bill note, complete absence on denied distributions | All baseline for web; desktop for website shell; denied surfaces via the injected verdict | 42 |
 
 Every owning UI file extends the source/mechanic tooltip fixture, focused painter
 and invalidation/focus tests, mobile and theme guards, i18n, fairness and script
@@ -2341,9 +3127,14 @@ docs/prd/woc/freehold-final-legal-handoff.md. External legal and platform
 sign-offs remain the existing release gates recorded in state. Preparing that
 handoff does not itself send a message or authorize release.
 
-The checked-in [English key inventory](ux-key-manifest.json) and
-[screenshot target inventory](ux-shot-manifest.json) are generated from this
-specification's tables and executable registry examples. They record the approved
-329 keys and 330 planned variants, respectively; they are requirements, not
-screenshots, implemented translations or evidence that a capture ran. A later
-reviewed source change regenerates the matching inventory in the same change.
+The checked-in [English key inventory](ux-key-manifest.json) and [screenshot target
+inventory](ux-shot-manifest.json) are generated from this specification's tables and
+executable registry examples. They record the approved 557 keys (each with its owning
+phase) and 733 planned variants (330 in wave A, then file 21 reaches 348; file 23
+reaches 357; file 24 reaches 399; file 25 reaches 437; file 26 reaches 455; file 30
+reaches 493; file 30a reaches 511; file 31 reaches 517; file 34 reaches 535; file 35
+reaches 553; file 36 reaches 595; file 38 reaches 639; file 40 reaches 654; file 41
+reaches 672; file 41a reaches 696; file 42 reaches 733), respectively; they are
+requirements, not screenshots, implemented translations or evidence that a capture
+ran. A later reviewed source change regenerates the matching inventory in the same
+change.

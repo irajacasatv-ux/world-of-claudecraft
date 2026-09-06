@@ -1,4 +1,4 @@
-# Phase 30a QA: audit muster, calendar, pledge and War table boards
+# Phase 30a QA: audit Hall boards
 
 Audits [phase-30a-hall-boards.md](phase-30a-hall-boards.md) and every one of its deliverable/acceptance rows. Verdict goes
 in progress.md row "30a QA". A check not run cannot be reported as proved.
@@ -16,7 +16,7 @@ in progress.md row "30a QA". A check not run cannot be reported as proved.
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -48,8 +48,9 @@ NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provide
 committed immutable protection source, and createFreeholdLifecycleCoordinator captures
 authenticated observation time before queueing. Derive a return before presence
 advances; stale observations, fenced sessions and replay cannot mint grace. The
-accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
-and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+lifecycle-policy-binding artifact (accepted or still a named gate) names
+lifecyclePolicyId, sourceCalendarId and resetPolicyId; serving realm, browser zone or
+guessed UTC cannot rebind history.
 13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
 and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
 or account calendar ingress, source-history array on plots, polling job or receipt store.
@@ -129,14 +130,21 @@ strict codec/mixed-release preservation, current membership, screenshot states a
 language rules. Tests need fresh literals, negative controls and work-happened anchors;
 real PG evidence must run ARMED, never skipped. No test may merely mirror its table.
 
-- [ ] Every board opens the named real window/projection, with wrong-guild/revoked
-  membership negative tests and no hidden private fields or mutable board authority.
-- [ ] War table shows authorized raid lockouts and truthful first-kill unavailable
-  state until 31; 31 owns the named data hookup and later ready/empty proof.
+- [ ] Every board opens the named real window/projection (muster: the Social window
+  guild tab on the viewer's own guild), with wrong-guild/revoked membership negative
+  tests and no hidden private fields or mutable board authority.
+- [ ] War table shows the closed eleven-key online-member lockout counts (daily and
+  weekly expiries by the isRaidLocked rule, no week anchor) plus the viewer's own rows
+  through guildHallBoards (no SQL, no character-blob read, no other member named, a
+  wrong-guild negative for lockout rows) and the truthful keyed first-kill unavailable
+  state until 31, which fills the same read's firstKills arm and owns the ready/empty
+  proof (D82); the parity pin for the new facet member is updated here.
 - [ ] All empty/loading/error/locked/reconnect/ready states, keyboard/gamepad focus
   return, 40x40 safe-area touch and compact/tablet layouts have real-state screenshots.
 - [ ] Final board art, measured circulation, content/title-map/wiki and GPU prewarm
-  satisfy the shared quality bar; read paths have bounded current-authority evidence.
+  satisfy the shared quality bar; read paths have bounded current-authority evidence;
+  every new key named in STEP 2 is in ux-spec and ux-key-manifest.json with the cited
+  count updated (D92).
 - [ ] All checks, shared gate and complete reviewer/fresh-fix round pass.
 
 Before implementation decisions and again on the finished diff, dispatch

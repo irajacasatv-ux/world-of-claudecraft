@@ -5,22 +5,24 @@ implementation phase never starts before this file has run.
 
 ## Exact screenshot integration contract
 
-These are NEW planned helper APIs.09 introduces the common helper, constructor,
+These are NEW planned helper APIs. 09 introduces the common helper, constructor,
 visual selector and one import/spread in scripts/pr_shot_targets.mjs, initially with
-its functional interior-only capture subset.11 extends that same
-scripts/lib/pr_shot_housing.mjs build target;16/17/18 append their own functional
+its functional interior-only capture subset. 11 extends that same
+scripts/lib/pr_shot_housing.mjs build target; 16/17/18 append their own functional
 descriptors as their UI lands. Never register a later nonfunctional UI target. No new screenshot runner or multi-image capture API is introduced.
 The registry has one optional-clip result and one image per uniquely keyed variant.
 
 Registration is cumulative by actual producer: file 09 registers the interior
 baseline subset (12 variants); file 11 extends the same target to 89; file 16
 reaches 178; file 17 reaches 226; file 18 reaches 330. File 20 verifies the complete
-330-variant inventory. Earlier files require only their registered working subset,
+wave A set (330 of the 733-variant program inventory in ux-spec section 11; 21 to 42
+register their own milestones and each wave close verifies its union). Earlier files
+require only their registered working subset,
 never nonfunctional future UI. These are derived inventory counts, not new gameplay
 or tuning values.
 
 The common housingVariants, housingVisualWhen and supplied beforeLoad are
-owned initially by09 and extended by11 exactly as ux-spec.md section11 defines them.
+owned initially by 09 and extended by 11 exactly as ux-spec.md section 11 defines them.
 Append only this file's implemented target; validate the registered cumulative subset
 of 226 working variants. Later UI targets register only when their producer lands:
 
@@ -58,16 +60,17 @@ Every captureHousing* stages exactly variant.scene through its real UI/authority
 fixture, asserts the matching state and returns one optional-clip result. Interior
 scenes use 09's full-viewport {}; UI scenes return { clip: '#ui' }. Missing required
 after-state throws. The registered working subset must include every exact
-target/variant and identity dimension for its producers;20 verifies the full union.
+target/variant and identity dimension for its producers; 20 verifies the full union.
 No callback side shot or sequence-to-last-state substitute.
 
 ### Starter Prompt
 ```
 This is Phase 17 (QA) of the Freeholds and Guildhalls feature: audit trophies
-(TROPHY_DEFS, the eligibility mapping, the retroactive sync, plinth placement, the
-provenance tooltip, the Trophies tab, the content obligations).
+(TROPHY_DEFS, the eligibility mapping, the retroactive sync, plinth placement through
+placeTrophy and clearPlinth, the trophy case window, the provenance tooltip, the
+Trophies tab, the content obligations).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 17 diff for correctness against every deliverable and acceptance
@@ -89,9 +92,10 @@ for the legal team; all earlier counsel/Terms/platform/service money gates still
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
-  while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge
+  origin/feature/masterwrought while PR #3872 is open, else the newest
+  origin/release/**; release-merge-audit after a non-empty merge; pnpm install
+  --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the content and pins/content
   gotcha clusters, "review the review-fix round", "apply ALL findings".
 
@@ -104,14 +108,22 @@ Spawn one Explore agent to read and summarize:
   commits named in progress.md row 17), including the regenerated wiki content and the
   parity goldens
 - the pins the diff claims: tests/freehold_trophies.test.ts,
-  tests/trophy_tooltip_view.test.ts, tests/freehold_content.test.ts (the trophy arm),
+  tests/trophy_tooltip_view.test.ts, tests/trophy_case_view.test.ts,
+  tests/trophy_case_window.test.ts, tests/freehold_content.test.ts (the trophy arm),
   tests/deeds_content.test.ts, tests/snapshots.test.ts (the fhold arm), the parity
-  scenario, tests/guide.test.ts
+  scenario, tests/guide.test.ts, tests/world_api_parity.test.ts,
+  tests/command_schema.test.ts, tests/command_facets.test.ts,
+  tests/freehold_command_chain_online.test.ts, tests/mobile_window_coverage.test.ts,
+  tests/sim_context.test.ts (CALLBACK_KEYS),
+  tests/server/freehold_account_sources_db.test.ts,
+  tests/server/freehold_account_sources_db.pg.test.ts and
+  tests/server/freehold_account_sources.test.ts
 The agent returns: the promised-versus-delivered table per deliverable, every TROPHY_DEFS
 row with the source it resolves to, the exact insertion points of syncTrophyUnlocks
 (join retro, first entry and source-change invalidation), every read it makes and whether any is a write, every test
-added with what it asserts, and any TODO, unused import, or path by which a trophy id
-could reach an item container.
+added with what it asserts, every raw command path by which a trophy id reaches a
+plinth and the unlock-list validation it passes, and any TODO, unused import, or path
+by which a trophy id could reach an item container.
 
 STEP 2 - AUDIT (fresh parallel reviewers, COVERAGE, all findings to files):
 - CORRECTNESS reads every one of the five settled deliverables in
@@ -139,11 +151,26 @@ Deliverables (at most five):
    invalidation while already home, with zero per-tick scan and zero Rng. Persist
    immutable provenance: source kind/id, source character when known, original earned
    day when known, and explicit unknown fields when historical data lacks them.
-   First-entry date must never masquerade as achievement date. Retro grants emit
+   First-entry date must never masquerade as achievement date. The original earned
+   day is a utcDay stamp of when it happened (D84), never a resetDay key and never the
+   first-entry day. Retro grants emit
    retro:true only for historical discoveries; new live grants are correctly distinct.
    Produce the exact shared account-source modules and full source/freshness contract
    below. Read/load work is lazy, bounded and admitted through 07; source collection,
-   ID/string and encoded-byte bounds preserve unsupported stored data.
+   ID/string and encoded-byte bounds preserve unsupported stored data. The sim reads
+   the projection through the NEW SimContext primitive ctx.freeholdAccountSources,
+   keyed the way D16 keys the live record: get(ownerKey) returns the current bounded
+   cross-character projection or an explicit incomplete status and
+   invalidate(ownerKey, sourceKind) coalesces a refresh, where ownerKey is the
+   host-stamped owner key the sync already holds through meta (the sim never holds
+   an account id). The server host binds it to createFreeholdAccountSourceLoader,
+   which resolves ownerKey to the account; the offline and headless hosts install a
+   local-only binding whose get returns an empty cross-character projection with
+   explicit status, and the local character's own ownership surfaces are read from
+   meta by the sync itself (D19). The key is appended to CALLBACK_KEYS and the fake
+   host in tests/sim_context.test.ts. Loader admission or budget exhaustion never refuses
+   GameServer.join, instance entry or a respawn (D83): the session publishes
+   regardless and the sync records explicit incomplete status.
    The exhaustive semantic source-to-requirement fixture selects actual catalog
    discriminants, not invented existing enums: deed/title uses trophies.requireDeed/
    requireTitle; illuminated page requirePage; slain mark requireSlain; armor-set
@@ -160,14 +187,48 @@ Deliverables (at most five):
    possession requirements. Item/weapon-skin source ownership remains truthful.
 3. Record-only plinth placement and public projection. Plinths accept one qualified
    trophy record and cost no decor points; Inn Room has three and Cottage four from
-   state.md, with previous placements carried over. The authoritative journal handles
-   place/remove/undo/redo without consuming or minting items. Owner private unlock
-   projection and public placed provenance use 08a's opaque plot identity and strict
-   decoder; guests see the same public known/unknown source facts, never account IDs,
-   private ownership inventory or spoiler-hidden source names. Hidden unearned content
+   state.md, with previous placements carried over. Placement rides two NEW
+   IWorldHousing members beside the D20 five (no D20 name changes):
+   placeTrophy(plinthKey, trophyId), which places or replaces the plinth's current
+   record, and clearPlinth(plinthKey); their wire commands place_trophy and
+   clear_plinth join COMMAND_NAMES with COMMAND_FACETS rows 'IWorldHousing', both Sim
+   and ClientWorld implement them, and the pinned member list in
+   tests/world_api_parity.test.ts moves in the same change. The server validates the
+   trophy id against the account's unlock list: a raw command carrying an unearned,
+   unknown or other-account trophy id refuses trophy_unavailable (NEW key
+   hudChrome.housing.denied.trophyUnavailable = "That trophy is not available to
+   display.") and changes no layout row; a full plinth set refuses no_plinth
+   (denied.plinthFull); provenance fields are written server-side from the unlock
+   record only and any client-supplied provenance is ignored. The authoritative
+   journal handles place/remove/undo/redo without consuming or minting items. Owner
+   private unlock projection and public placed provenance use 08a's opaque plot
+   identity and strict decoder; guests see the same public known/unknown source
+   facts, never account IDs, private ownership inventory or spoiler-hidden source
+   names. Hidden unearned content
    follows live Deeds/Reliquary spoiler policy, not a universal revealing silhouette.
-4. Trophy case and tooltip. furnishing_palette_view/window reuse the bags marks and
-   Trophies tab, with Reliquary's owned-art/silhouette, roving grid, source accessibility
+4. Trophy case and tooltip. NEW src/ui/hud/housing/trophy_case_view.ts (pure,
+   UI_PURE_CORES) and trophy_case_window.ts (painter, UI_DOM_MODULES) ship the
+   standalone trophy case ux-spec section 6 lays out: window id trophy-case-window
+   (a NEW housing window id with an explicit mobile-sheet pin in
+   src/styles/hud.mobile.css, pinned by tests/mobile_window_coverage.test.ts),
+   FocusManager registration as an ordinary standalone window, shelf tabs and search
+   (trophies.title as the window title in title case per D92, trophies.search,
+   trophies.noResults) reusing reliquary_view, reliquary_cell_art, reliquary_labels
+   and reliquary_i18n for shelf navigation, collection art, silhouettes, source hints
+   and scroll/focus preservation. It opens from the palette Trophies tab's open-case
+   action and from a plinth interact; TrophyCaseWindow.openForPlinth(plinthKey) is the
+   shared record-only chooser entry that 11's Replace trophy/Clear plinth affordance
+   shell (shipped disabled in 11) calls once this file lands, over the pure
+   trophy_case_view.ts::eligibleTrophyChooser model (one symbol shared by the standalone
+   window and the palette Trophies tab), and it stages the selected record on that
+   exact plinth through placeTrophy. The captures split by
+   surface: trophies-owned, -unearned-known, -hidden, -refreshing and -grid-focused
+   stage the trophy case window; -plinth-preview, -replace-review and -clear-review
+   stage the palette Trophies tab and plinth reviews; -provenance-known,
+   -provenance-unknown, -maker and -possession-inactive stage the placed-object
+   tooltip. furnishing_palette_view/window reuse the bags marks and
+   Trophies tab with the case's eligibility and selected record (never a second
+   catalog), with Reliquary's owned-art/silhouette, roving grid, source accessibility
    and preserved scroll/focus patterns. trophy_tooltip_view.ts resolves all public
    source names through existing localization and hudChrome.housing.trophies.* keys:
    deed and day, page/relic, mark, mount/title, maker, known source character and unknown
@@ -176,8 +237,10 @@ Deliverables (at most five):
    owned, selected, full-plinth and visitor states use ux-spec.md. Generic props must
    receive final family assets in 19 before Wave A closes, never indefinite stand-ins.
    hudChrome.housing.trophies.* is the single chosen English namespace; never add a
-   parallel singular trophy.* namespace. trophies.unknownSource means unknown original
-   history, never intentionally hidden content. trophies.hidden/hiddenAria own hidden
+   parallel singular trophy.* namespace. This file regenerates ux-key-manifest.json
+   and ux-shot-manifest.json in its own change with every cited count updated (D92).
+   trophies.unknownSource means unknown original history, never intentionally hidden
+   content. trophies.hidden/hiddenAria own hidden
    source output and every spoiler-protected sink. Hidden source protection covers
    captions, source/requirement tips, aria/alt,
    image data and search indexes, not just visible headings. trophies.refreshing
@@ -215,12 +278,17 @@ Deliverables (at most five):
    These are keyed render results, not additional unkeyed player copy.
 5. Trophy proof and captures. Pin an alternate account character's existing source,
    immediate new source while inside, relog idempotence, every source kind, honest
-   unknown date, hidden spoiler, provenance privacy, three/four-plinth limits and
-   no-item routes. Re-run strict wire/parity/content/guide/ownership pins and bounded
-   PG account hydration evidence. Add the exact housing-trophies helper entry below
-   with desktop/compact/tablet owned/unearned/unknown/public provenance and placement
-   captures. Dispatch architecture, content, cross-platform, frontend, render,
-   privacy, migration, server-hot-path and before/final database reviewers.
+   unknown date, hidden spoiler, provenance privacy, three/four-plinth limits,
+   no-item routes, the raw-command forgery arm (unearned, unknown and other-account
+   trophy ids) and the account weapon-skin fixture. The trophies-provenance-known
+   capture stages a deed source (deedsEarned is the only source that carries a known
+   original day today); trophies-provenance-unknown stages a non-deed historical
+   source, never a faked date. Re-run strict wire/parity/content/guide/ownership
+   pins and bounded PG account hydration evidence. Add the exact housing-trophies
+   helper entry below with desktop/compact/tablet owned/unearned/unknown/public
+   provenance and placement captures. Dispatch architecture, content,
+   cross-platform, frontend, render, privacy, migration, server-hot-path and
+   before/final database reviewers.
 
 
 SHARED ACCOUNT SOURCE CONTRACT (deliverable 2; proof belongs to deliverable 5):
@@ -229,7 +297,12 @@ and server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. The D
 module owns fixed, versioned, statically selected source projections and account-scoped
 character-ID keyset pages. Select only the exact trophy source fields admitted by the
 source manifest; 24 extends that same projection with normalized farm state and source
-farming proficiency. No caller-supplied JSON paths, whole-character-state SELECT or
+farming proficiency. Weapon-skin ownership is an account row, not a character field:
+the loader reads account_weapon_cosmetics.skin_ids (server/db.ts) through the existing
+per-account weaponSkinIds merge in server/game.ts, the skin grant path
+(server/claudium.ts noteWeaponSkinGrants) is its invalidation hook, and
+src/sim/reliquary.ts resolves weapon_skin relics through opts.weaponSkins, never a
+PlayerMeta field. No caller-supplied JSON paths, whole-character-state SELECT or
 listCharactersAllRealms scan is permitted. The per-realm character limit is not a
 limit for the account across all realms. Measure the candidate (account_id, id) access
 index against actual query plans, and use the concurrent-index seam if required.
@@ -283,8 +356,10 @@ for the real-PG suite. NEW tests/server/freehold_account_sources.test.ts proves 
 concurrent trophy/garden flights, cache entry/byte eviction, admission pressure, relevant
 versus unrelated invalidation, delayed delete/replace/takeover results, cancellation,
 whole-slice empty replacement and saved/live freshness. Extend freehold_trophies tests
-for alternate sources, live grants, failed partial refresh preserving provenance and
-possession state, and exact owner/guest private-field sentinels. Read-only projection
+for alternate sources, live grants, an owned skin on no character unlocking its
+weapon-skin trophy (and no character change revoking it), failed partial refresh
+preserving provenance and possession state, and exact owner/guest private-field
+sentinels. Read-only projection
 never mutates source farm/deed/Reliquary/character state. Before/final database,
 persistence, security and hot-path reviews inspect these exact modules and evidence.
 

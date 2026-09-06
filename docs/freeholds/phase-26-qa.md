@@ -62,7 +62,7 @@ information must remain legible through ambient grade, materials and silhouettes
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -153,6 +153,11 @@ session at that target, with no duplicate per-session delivery; an account alt t
 is a valid recipient, while owner-account alts elsewhere receive nothing. Recheck
 location/claim generation at dispatch so leaving or takeover cannot leak a stale knock.
 This routing creates no account-wide offline notification or persisted knock history.
+A knock from a blocked character (a block row on either side, mapped at the account level
+as 18 defines: any owner-account character blocking the knocker's character, or the
+knocker's character blocking any owner-account character) is refused at admission with
+the generic denial before any frame is built; the routeEvents block/ignore predicates
+cover chat and the three invite types only and are never relied on for the knock.
 
 Paired fixtures distinguish owner offline, online in the world, inside a different
 plot, inside the target plot, and two same-account alts split between target and away.
@@ -180,7 +185,7 @@ This is Phase 26 (QA) of the Freeholds and Guildhalls feature: audit open-house
 visiting (the guild and public policies, caps by tier, the knock, the visit prompt,
 the open-houses read, the public-entry rate limit).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 26 diff for correctness against every deliverable and acceptance
@@ -212,8 +217,11 @@ Spawn one Explore agent to read and summarize:
   tests/monolith_budget.test.ts, tests/snapshots.test.ts
 The agent returns: the promised-versus-delivered table per deliverable, the relation
 matrix as tested (every cell), every server read the list route performs and its
-cache and bust wiring, where the guildmate predicate is sourced, the rate-limit policy
-and its bucket, every event added, and any TODO, unused import, or stub.
+cache and bust wiring, where the guildmate predicate is sourced and that the friend
+relation is 18's D76 read, the knock and public-entry bucket keys ((accountId, plotId)
+and (accountId)) with their LRU bounds, where the block check sits in the admission
+path, every event added, every new visit.* key against the regenerated manifest, and
+any TODO, unused import, or stub.
 
 Database review runs before implementation decisions and again on the finished diff.
 
@@ -228,14 +236,20 @@ every issue including low-severity and uncertain ones; ranking happens later):
   is stamped on the server (a crafted payload claiming friend or guildmate is refused on
   BOTH dispatch arms); the guildmate predicate rechecks current authority immediately after a kick,
   invalidates presentation caches and ejects a revoked visitor without a TTL grace; a private house never appears in
-  any list or knock path; the cap boundary per tier holds with the owner excluded from
+  any list or knock path; a blocked knocker (either side, any owner-account character)
+  is refused at admission on both arms and no freeholdKnock frame reaches any owner
+  session; two sessions of one account share one knock bucket per plot and two plots
+  hold separate buckets; the cap boundary per tier holds with the owner excluded from
   the count as Phase 18 pinned; the knock reaches each eligible owner-account session at that target plot once, never an online-away or different-plot alt;
   guild and public are offline no-ops; the extractions are move-not-rewrite.
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion (all sixteen relation-policy
   cells, not a sample; the rate-limit test counts the refused entry, not the elapsed
-  time; the list test asserts the absence of the private house by id; the bust test
-  changes the policy and re-reads; the offline no-op pin asserts the refusal reason);
-  orphaned tests; the chain test carries the knock and the policy fields.
+  time, with the two-sessions-one-account and two-plot arms; the blocked-knocker test
+  asserts zero freeholdKnock frames; the list test asserts the absence of the private
+  house by id; the bust test changes the policy and re-reads; the offline no-op pin
+  asserts the refusal reason); orphaned tests; the chain test carries the knock and the
+  policy fields; every visit.* key named in 26 STEP 2 exists in the regenerated
+  manifest with the cited counts updated and no string bypasses t().
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
   import invariant, the word "phase" in any code, comment, or commit message, em dashes
   or emojis, generated files hand-edited, a persisted visitor log, a database read

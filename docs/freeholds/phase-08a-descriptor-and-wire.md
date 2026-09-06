@@ -8,7 +8,8 @@ No housing implementation is claimed complete by this planning file.
 ### Starter Prompt
 ```
 This is Phase 08a of the Freeholds and Guildhalls feature: public descriptors and consumer-correct wire state.
-Harness: Claude Code. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block for effort and fan-out.
 This prompt names no model. Keep independent implementation owners disjoint; the parent
 integrates shared callers and pins after their reports return.
 
@@ -30,8 +31,8 @@ STEP 1 - LOAD CONTEXT (through agents, never planning docs or coordinators direc
   implementation-plan.md review table, ux-spec.md and the three content/art artifacts.
 - It reads the following existing seams and prior outputs, returning exact exports,
   readers/writers, pin sites, known failure behavior and a promised-versus-tree table:
-  - PRIOR08 placement/state/history, PRIOR07 stable opaque plot ID and 07a committed
-    operation boundary; PRIOR01 src/world_api/housing.ts and freehold_snapshot_wire.ts.
+  - PRIOR 08 placement/state/history, PRIOR 07 stable opaque plot ID and 07a committed
+    operation boundary; PRIOR 01 src/world_api/housing.ts and freehold_snapshot_wire.ts.
   - EXISTING server/bank_wire.ts::emitBankSelfKeys, server/farming_commands.ts,
     server/heavy_self.ts, server/event_frame.ts::filterRoutableEvents and
     server/game.ts selfWireJson and riftStateEventFor resume composition (agent only).
@@ -54,18 +55,21 @@ Deliverables (at most five):
    remains their own record while visiting another plot; the active public descriptor
    separately says isOwner/canBuild. Shared public source projection is built once per
    committed public revision; viewer-specific fields are applied after authorization.
-2. Extend server/freehold_wire.ts::emitFreeholdSelfKeys and
-   src/sim/freehold/instance.ts::freeholdStateEventFor. Emit after confirmed entry/change,
+2. Add NEW server/freehold_wire.ts::emitFreeholdSelfKeys (beside PRIOR 01's
+   dispatchFreeholdCommand) and NEW src/sim/freehold/instance.ts::freeholdStateEventFor.
+   Emit after confirmed entry/change,
    on resume/full refresh and explicit clear on leave/session end. A signature belongs to
    the actual receiving consumer/session, never shared globally across recipients; include
    plot identity, claim/arrival epoch and relevant public/private revision. Every new
    consumer gets an initial snapshot even when state is empty or revision 0. Reconnect
    invalidates the signature. Unchanged hot paths allocate/serialize no shared payload.
-   Lazy condition/day transitions notify once through authority revisions, not per-tick
-   SQL or repeated full serialization. Private feedback is pid-scoped; guest descriptors
+   Lazy condition/day transitions (realm-day facts in the resetDay vocabulary, D84)
+   notify once through authority revisions, not per-tick SQL or repeated full
+   serialization. Private feedback is pid-scoped; guest descriptors
    contain only accepted revisions and the allowlisted freeholdState.isDecorating boolean from 08 authority.
-3. Fill the EXISTING skeleton src/net/freehold_snapshot_wire.ts with
-   decodeFreeholdSelfWire/applyFreeholdStateEvent behind a structural mirrors slice,
+3. Fill the PRIOR 01 skeleton src/net/freehold_snapshot_wire.ts with NEW
+   decodeFreeholdSelfWire/applyFreeholdStateEvent (owned here; 10 consumes
+   applyFreeholdStateEvent) behind a structural mirrors slice,
    DOM-free and ClientWorld-free. Closed allowlists bind both directions; bound encoded
    size/rows/strings before deep allocation. Reject malformed/stale/wrong-plot/old-epoch
    frames atomically, retaining the last valid state with one dev warning; null clears,
@@ -190,9 +194,16 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   maximum legal descriptor fixtures, including first consumer at revision 0, then unchanged
   update. Rerun related parity scenarios; regenerate only changed sampled payloads in
   their own commit. No DB query may be introduced by rendering or per-viewer serialization.
-- Invoke database-performance-reviewer before database/workload decisions and on the
-  finished diff whenever this file touches SQL, storage shapes, queues, locks or growth.
-- Required COVERAGE reviewers: cross-platform-sync, privacy-security-review, server-hot-path-reviewer, architecture-reviewer, test-coverage-auditor, qa-checklist.
+- Stored surface this phase touches (no new query or DDL): the PRIOR 07
+  loadFreeholdHearth and PRIOR 07c loadFreeholdArrivalTiers reads composed on resume
+  (bounded single-flight account reads owned there) and the private mirror's
+  stored-shape decode. Invoke database-performance-reviewer before those read/workload
+  decisions and on the finished diff.
+- Required COVERAGE reviewers: cross-platform-sync, privacy-security-review,
+  server-hot-path-reviewer, architecture-reviewer, database-performance-reviewer (the
+  composed loadFreeholdHearth and loadFreeholdArrivalTiers reads above), migration-safety
+  (the mirror stored-shape and wire decode back-compat), test-coverage-auditor,
+  qa-checklist.
   Each reports all findings to a file. The parent applies ALL findings including nits,
   then a FRESH reviewer reads the fixes. No unreviewed fix is accepted.
 - Run node scripts/gate_select.mjs before completion; npm run gate is the deeper option.
@@ -225,7 +236,7 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Update progress.md row 08a and state.md's implementation ledger with exact files,
   exported symbols, schema/wire/command keys, measured bounds, artifacts and evidence.
   Keep planning "settled" distinct from implementation "built". Record no anonymous
-  deferral; carry the named external acceptance artifact/release gate when applicable.
+  deferral; carry every named unsigned release gate when applicable.
 - Record useful traps in the freeholds memory entry within the authorized scope.
 
 STEP 7 - FINAL RESPONSE FORMAT:

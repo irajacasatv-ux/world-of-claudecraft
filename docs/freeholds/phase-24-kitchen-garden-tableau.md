@@ -1,4 +1,4 @@
-# Phase 24: the Kitchen Garden tableau
+# Phase 24: Kitchen Garden tableau
 
 Wave B, the Lodge tier and the rest of the first wave. The spec is `progress.md` "24
 Kitchen Garden tableau"; the decisions are `state.md` (the Kitchen Garden plants nothing:
@@ -29,7 +29,8 @@ information must remain legible through ambient grade, materials and silhouettes
 2. Single safe public owner-garden projection with private fields excluded.
 3. Current-character owner-only Harvest Journal board and flavor NPC.
 4. Final measured garden tableau and prop art.
-5. Zero-bed, source-authority, privacy, fairness and interaction evidence.
+5. Zero-bed, source-authority, privacy, fairness and interaction evidence, with the
+   registered garden screenshot target and regenerated key/shot manifests (D92).
 
 ## Account-owner garden source and freshness contract
 
@@ -74,8 +75,17 @@ per-visitor listener, full-account reload per save or second account-source cach
 The descriptor explicitly picks opaque visualId, bedId, cropId, stage, status and
 live/saved/unavailable freshness, sorted by the stable source-qualified internal key.
 Opaque visualId must not encode a character/account ID. Exclude raw source identities,
-observation timestamps, skill, private timers, hidden slots and survivalRoll/yieldSeed
-from both owner and guest wire. Public rows are the same owner-derived tableau for all
+observation timestamps (the source page's read and fence stamps), the crop's own
+plantedAtMs/readyAtMs, skill, private timers, hidden slots and survivalRoll/yieldSeed
+from both owner and guest wire. Because public rows carry stage without any timestamp,
+growth between descriptor emits follows one time-driven rule on both hosts: the
+existing 1 Hz farm tick sweep (updateFarming in src/sim/professions/farming.ts, the
+sweep that already calls notifyFarmReady) re-runs projectGardenTableau over each live
+claimed plot's available source and re-emits the garden block only when the projected
+rows' signature changes at a stage or status boundary; never per tick, never per frame,
+never a poller, with zero SQL and no extra source query. The offline host renders from
+the same pure projection on the same sweep, so both hosts advance a sprout at the same
+boundary. Public rows are the same owner-derived tableau for all
 viewers. Empty is valid only after a complete successful source read proves no plots;
 incomplete/over-budget/failed source is explicitly unavailable or incomplete, never
 false empty, first-character-only or a visitor's replacement garden. Use ux-spec's
@@ -121,12 +131,18 @@ docs/design/tooltip-writing.md. No separate synonym keys or timer-bearing fallba
 | hudChrome.housing.garden.savedReadyTooltip | This bed appears ready from saved garden records. Changes made elsewhere may not appear yet. |
 | hudChrome.housing.garden.journalTooltip | Open your current character's {journal}. |
 | hudChrome.housing.garden.growing | Growing |
+| hudChrome.housing.garden.board | Harvest Journal board |
 
 Resolve {journal} through existing hudChrome.harvestJournal.title. Resolve ready and
 withered status through existing hudChrome.harvestJournal.ready and
 hudChrome.harvestJournal.withered. Growing uses hudChrome.housing.garden.growing;
 never use hudChrome.harvestJournal.growing because that source contains a private timer.
-No timestamp, hidden farm data or raw source identifier enters a placeholder.
+No timestamp, hidden farm data or raw source identifier enters a placeholder. The
+board's templateId `harvest_journal_board` resolves its display name through the
+feast_title templateId map to hudChrome.housing.garden.board, never a raw English name
+on the wire. The board row is new in this phase, so append it to ux-spec section 10 and
+regenerate ux-key-manifest.json in the same change (D92); the other rows are already
+section 10 rows.
 
 Apply aggregate source-state precedence from the shared loader result: before any
 result use loading; whole-source failure uses unavailable; any incomplete coverage
@@ -150,8 +166,14 @@ pin a saved ready row's visual label, tooltip and accessible name, timer-free gr
 localized {journal}/{status} values and the owner-current-character versus guest action.
 Assert the exact public descriptor key set, no private sentinel in DOM/accessibility or
 placeholders, and no empty fallback on missing pages. Capture these states in the later
-wave B acceptance evidence at desktop, compact and tablet sizes at LOW; the canonical
-UX manifest owns target identities, so do not invent an unregistered screenshot alias.
+wave B acceptance evidence at desktop, compact and tablet sizes at LOW. The canonical UX
+manifest owns target identities, so this phase registers them rather than inventing an
+alias: append the NEW `housing-garden` target (the scenes
+garden-{live,saved,mixed,incomplete,unavailable,empty,loading}-{owner,guest} x
+desktop/compact/tablet, 42 variants, the 399 milestone) to ux-spec section 11
+(housingReviewTargets) and regenerate
+ux-shot-manifest.json in the same change (D92); the four wave A targets are unchanged,
+and 27 captures only registered keys.
 
 ## Required Codex asset execution
 
@@ -172,8 +194,9 @@ This is Phase 24 of the Freeholds and Guildhalls feature: the Kitchen Garden tab
 (the garden projection over the account owner's authoritative or saved farm sources, the Harvest Journal board, the
 farmer NPC, the render tableau at the garden anchor).
 
-Harness: Codex. All asset generation must be done by Codex, not Claude. Follow the root CLAUDE.md "Working style and effort by model"
-block for effort and fan-out; this prompt names no model.
+Harness: Codex, not Claude (D74): all asset generation must be done by Codex. Follow the
+root CLAUDE.md "Working style by model capability" block for effort and fan-out; this
+prompt names no model.
 ULTRACODE: not needed for this phase (three small slices over known seams).
 
 Goal: show the account owner's farm beds inside the freehold with truthful source freshness
@@ -194,9 +217,10 @@ STEP 0 - PRE-FLIGHT:
   patches/.
 - If state.md "Push policy" records a stacked wave B branch, work on that branch instead
   of feature/freeholds; the merge-forward rule is unchanged.
-- Memory scan: MEMORY.md and entries on the monolith ratchet, the farming calendar model
-  (bed counts are a pacing budget), the hidden-slot wire leak pin, the render scheduler
-  rules, test-pin traps, the offline clock-base contract.
+- Gotchas scan (Codex has no memory step): state.md "Gotchas (read before the matching
+  phase)" entries on the monolith ratchet, the farming calendar model (bed counts are a
+  pacing budget), the hidden-slot wire leak pin, the render scheduler rules, test-pin
+  traps, the offline clock-base contract.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
@@ -206,9 +230,10 @@ Spawn one Explore agent to read and summarize:
   projectFarmPlots, farmGrowthStage, EMPTY_FARM_PLOT_VIEWS), src/sim/content/farm_patches.ts
   (FARM_PATCHES, FARM_BED_IDS: the bed roster this phase must NOT grow),
   src/sim/professions/farming.ts (FARMING_GAIN_SCHEDULE, the header),
-  tests/helpers/farming_calendar_model.ts, src/sim/professions/harvest_yields.ts (the
-  Harvest Journal source) and the HUD surface that shows it (grep harvest journal under
-  src/ui/hud/professions/)
+  tests/helpers/farming_calendar_model.ts, src/ui/hud/professions/harvest_journal_view.ts
+  and harvest_journal_window.ts (the Harvest Journal core and painter over myFarmPlots)
+  and the src/ui/hud.ts openHarvestJournal open path (src/sim/professions/harvest_yields.ts
+  is the unrelated corpse-harvest yield ledger)
 - src/world_api/farming.ts (IWorldFarming: myFarmPlots, farmNowMs, the clock-base
   contract), src/world_api/housing.ts, src/net/online.ts (the fplot mirror),
   server/farming_commands.ts (appendFarmPlotsWire), tests/snapshots.test.ts (the fplot
@@ -217,7 +242,12 @@ Spawn one Explore agent to read and summarize:
   recipe, the descriptor emitter, CLAUDE.md), src/sim/content/freehold/layouts.ts (the
   Cottage and Lodge garden anchor keys, D23), src/sim/content/freehold/dungeons.ts (the
   npcs list on a DungeonDef),
-  src/sim/entity.ts (createGroundObject, createNpc, respawnTimer = Infinity)
+  src/sim/entity.ts (createGroundObject, createNpc, respawnTimer = Infinity),
+  src/sim/types.ts (NpcDef: the required `questIds: string[]` the new def sets to `[]`,
+  and the optional `farmer`, vendorItems, banker, market, cardMaster and dynamic fields
+  it must omit),
+  src/sim/professions/farmer_npcs.ts (isFarmerNpcEntity, nearFarmerNpc), src/sim/data.ts
+  (the NPCS merge)
 - src/render/farm_patches.ts (FarmPatchVisuals, the crop kit, the FAIRNESS note),
   src/render/farm_patches_core.ts (the sanctioned farmGrowthStage import),
   src/render/freehold/ (the dressing and furnishing painter), src/render/CLAUDE.md
@@ -259,9 +289,19 @@ if a member changes, tests/snapshots.test.ts, tests/monolith_budget.test.ts, gol
   board as a `kind: 'object'` interactable spawned on claim at the garden anchor
   (templateId `harvest_journal_board`, lootable false, respawnTimer Infinity, appended to
   the claim's objectIds so free tears it down); the farmer NPC as a DungeonNpcSpawn on
-  the Cottage and Lodge defs with no vendor row and no service; the zero-bed pin
+  the Cottage and Lodge defs whose NpcDef is NEW (templateId `freehold_farmer`, in NEW
+  src/sim/content/freehold/npcs.ts merged into NPCS by src/sim/data.ts beside the zone
+  tables): greeting and the required `questIds: []` only, with NO `farmer` flag (a
+  farmer-flagged def would open the husk-to-compost trade and its gossip row at home)
+  and none of the optional vendorItems, banker, market, cardMaster or dynamic fields,
+  so no vendor row and no gossip service; the zero-bed pin
   (garden_view imports farm_projection only, never farm_patches; FARM_BED_IDS and
-  FARMING_GAIN_SCHEDULE literals unchanged in their suites); tests/freehold_garden_view.test.ts.
+  FARMING_GAIN_SCHEDULE literals unchanged in their suites); tests/freehold_garden_view.test.ts,
+  including the negative farmer pin (NPCS.freehold_farmer.farmer is undefined,
+  isFarmerNpcEntity(npc) is false and convertHusks refuses 'no_farmer' inside the plot
+  with the NPC spawned) and the idle stage-boundary case (a claim idles across a stage
+  boundary with no farm command and the projected stage advances on both hosts with zero
+  SQL and no extra query).
 - Agent RENDER: src/render/freehold/garden_tableau.ts (a FarmPatchVisuals-shaped
   painter over the garden rows keyed by a content signature, crop meshes from the farm
   patch kit, ready glow and withered warning drawn at EVERY tier per the farm_patches.ts
@@ -271,10 +311,13 @@ if a member changes, tests/snapshots.test.ts, tests/monolith_budget.test.ts, gol
   only for the owner and current character; guests inspect the read-only owner tableau (measured with the sim's own distance); the
   tests/renderer_compile_gate.test.ts arm; `npm run perf:tour`.
 - Agent CONTENT: the garden anchors on the Cottage and Lodge layouts (decor keys with
-  measured r for the board and the beds' tableau footprint), src/ui/world_entity_i18n.ts
-  rows for the farmer NPC and the board, the templateId title map row pinned both
-  directions, hudChrome.housing.garden.* English keys, `npm run wiki:content` plus a
-  spoiler-safe guide.* key ("your beds, shown at home; nothing grows here").
+  measured r for the board and the beds' tableau footprint), the src/ui/world_entity_i18n.ts
+  row for the farmer NPC (English name: Farmer), the board's feast_title templateId map
+  row to hudChrome.housing.garden.board pinned both directions, the
+  hudChrome.housing.garden.* English keys (the table above, appended to ux-spec section 10
+  with ux-key-manifest.json regenerated), the `housing-garden` section 11 target with
+  ux-shot-manifest.json regenerated, `npm run wiki:content` plus a spoiler-safe guide.*
+  key ("your beds, shown at home; nothing grows here").
 Every agent writes any report longer than a screen to a file and replies with the path
 plus a short summary. Never `mode: "plan"` on teammates.
 
@@ -289,8 +332,9 @@ INVARIANTS THIS PHASE MUST KEEP:
 - Hidden outcomes never cross the wire: survivalRoll and yieldSeed never appear in the
   garden rows (the fplot leak pin's exact key-set style, extended).
 - Server authority and one sim: both hosts render one tableau from one projection.
-- Never sell power: the tableau is display; the farmer NPC sells nothing and grants
-  nothing; no buff, no gathering number, no shortcut.
+- Never sell power: the tableau is display; the farmer NPC sells nothing, grants
+  nothing and carries no `farmer` flag (no husk trade, no farmer gossip at home); no
+  buff, no gathering number, no shortcut.
 - Render: the painter is a scheduler client; the fairness rule (ready and withered
   states at every tier); the point-light budget unchanged.
 - Content obligations in the SAME change: world-entity names, the title map pin, wiki
@@ -319,7 +363,8 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/world_api_parity.test.ts tests/snapshots.test.ts tests/bandwidth.test.ts
   tests/freehold_command_chain_online.test.ts tests/entity_display_name.test.ts
   tests/renderer_compile_gate.test.ts tests/dungeons.test.ts
-  tests/localization_fixes.test.ts`; `npm run wiki:content` then `npx vitest run
+  tests/pr_shot_targets.test.ts tests/localization_fixes.test.ts`; `npm run wiki:content`
+  then `npx vitest run
   tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run
   tests/i18n_completeness.test.ts`; `npm run perf:tour`; parity goldens regenerated in
   their own commit if the descriptor emit changed.
@@ -346,18 +391,26 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] tests/freehold_garden_view.test.ts proves the tableau rows equal the complete approved account-owner source
   one to one (none added or dropped), preserve same-bed alts through source-qualified
   identity, expose only safe public fields/freshness, and use EMPTY only for proven
-  complete emptiness; missing/incomplete sources are unavailable. garden_view imports no content table.
+  complete emptiness; missing/incomplete sources are unavailable; an idle claim crossing a
+  stage boundary with no farm command advances the projected stage on both hosts with zero
+  SQL and no extra query. garden_view imports no content table.
 - [ ] tests/professions_farming.test.ts and tests/professions_zone_rollout.test.ts are
   unchanged (git diff shows no edit) and green; FARM_BED_IDS literal count unchanged.
 - [ ] The owner board opens the current character's existing Harvest Journal on both hosts; a guest
-  sees only the owner tableau and cannot open private journal controls; the farmer NPC has no vendor row and no service (pinned).
+  sees only the owner tableau and cannot open private journal controls; the farmer NpcDef
+  has no `farmer` flag, no vendor row and no service: NPCS.freehold_farmer.farmer is
+  undefined, isFarmerNpcEntity is false and convertHusks refuses 'no_farmer' inside the
+  plot (the negative pin).
 - [ ] The tableau renders growth, ready, and withered states at LOW and at the top
-  preset (the fairness pin); `npm run perf:tour` shows no live-program event.
+  preset (the fairness pin); `npm run perf:tour` shows no live-program event;
+  ux-key-manifest.json carries the board row and ux-shot-manifest.json the
+  `housing-garden` garden-{live,saved,mixed,incomplete,unavailable,empty,loading}-{owner,guest}
+  variants in this phase's commits (D92).
 - [ ] All STEP 3 suites green; the reviewers confirm ALL findings, including nits, are resolved and freshly reviewed; the ceilings did not
   rise.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 24, notes, deferrals) and
+- Update docs/freeholds/progress.md (status row 24, notes, named unsigned release gates) and
   docs/freeholds/state.md (the per-phase ledger row 24: new files, descriptor fields,
   the entity template ids, i18n keys; the owner-versus-descriptor projection decision).
 - Record surprising rules learned in memory for the next session.

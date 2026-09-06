@@ -1,12 +1,14 @@
-# Phase 20: wave A close (integration matrix, screenshots and local review draft)
+# Phase 20: wave A close (integration matrix, screenshots, the Cottage MVP PR)
 
 Wave A, the Cottage MVP, closes here. The spec is `progress.md` "20 Wave A close"; the
-matrix is `qa-checklist.md`; the decisions are `state.md` and `brainstorm.md` (D1 through the last locked D decision).
+matrix is `qa-checklist.md`; the decisions are `state.md` (D1 through D93; `brainstorm.md`
+is the settled research record, not a decision source).
 This phase writes no feature code: it runs the whole-feature matrix over the wave A diff,
 fixes only what the matrix finds (test-first, reviewed), captures the before and after
-screenshots, prepares the service/counsel handoff artifacts and a local reviewable
-PR description against the recorded base. It stays local; no push,
-PR creation or merge is part of this packet.
+screenshots, prepares the service/counsel handoff artifacts and a reviewable PR
+description against the recorded base, then STOPS and asks Fernando for the push go
+(D87): on the go the sanctioned push opens the wave A PR (D12's one PR per wave is owned
+for every wave); otherwise the close ends local, awaiting the push go. It never merges.
 
 ## Complete Wave A screenshot matrix
 
@@ -98,8 +100,9 @@ ULTRACODE: not needed for this phase (the matrix is a checklist run, not a build
 
 Goal: prove the Cottage MVP end to end on every host and every store build by running
 every row of docs/freeholds/qa-checklist.md over the wave A diff, fix what the matrix
-finds, capture screenshots, and prepare the local wave A review draft with
-FREEHOLDS_ENABLED defaulting off. Never push, open or merge a PR.
+finds, capture screenshots, and prepare the wave A review package with
+FREEHOLDS_ENABLED defaulting off; open the wave A PR only after Fernando's push go (D87),
+then watch CI to green. Never merge.
 
 Asset execution: every step that creates or regenerates shipping GLBs, reference
 artwork, icons or images MUST be done by Codex, not Claude. Use
@@ -108,7 +111,7 @@ use Codex image generation for raster artwork. Capture actual rendered screensho
 as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
 phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
 icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
-That final sweep does not postpone artwork owned here.44b revisits the completed result
+That final sweep does not postpone artwork owned here. 44b revisits the completed result
 for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
@@ -162,8 +165,9 @@ Spawn one Explore agent to read and summarize:
 The agent returns: the matrix as a table of row, resolved command, and the test files
 that exist on disk (naming any row whose suite does not exist under the checklist's
 name); the list of screenshot targets with their ids and mobile variants; the PR base
-branch and merge-base SHA; every explicit external release gate from rows01 to19; the service contract handoff state
-and the counsel/Terms release checklist items; the flag default and where it is pinned.
+branch and merge-base SHA; every explicit external release gate from rows 01 to 19; the
+service contract handoff state and the counsel/Terms release checklist items; the flag
+default and where it is pinned.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 Assign disjoint file ownership and integrate shared pins last.
@@ -173,17 +177,23 @@ NEW paths/symbols below are planned deliverables, not existing tree anchors.
 Deliverables (at most five):
 1. Complete Wave A readiness matrix. Run qa-checklist.md over the whole reviewed
    wave, all settled D decisions and ux-spec.md; require every preceding implementation
-   and QA pair PASS. Include server/offline/headless parity, dark flags, seven surface
-   capabilities, atomic transfer/receipt crash races, bounded DB workloads and content
-   provenance. Parent runs deterministic commands once with bounded workers and
-   records command/exit/output path. The pre-merge bar is node scripts/gate_select.mjs
-   (or the deeper npm run gate), plus the Stop-hook floor; ci:changed alone is not the
+   and QA pair PASS. Include server/offline/headless parity, dark flags (including the
+   D85 flag-unset server pin: no gate prompt, furnisher stock or Hearth Key on a dark
+   realm), seven surface capabilities, atomic transfer/receipt crash races, bounded DB
+   workloads and content provenance. Parent runs deterministic commands once with bounded
+   workers and records command/exit/output path; the pg-armed twins run after
+   `npm run db:up` with TEST_DATABASE_URL set to the URL state.md's "Validation matrix"
+   server/ row gives, and each such row records "pg twins executed: N tests ran, 0 skipped"
+   (the local gate sets no TEST_DATABASE_URL itself). The pre-merge bar is
+   node scripts/gate_select.mjs (or the deeper npm run gate), plus the Stop-hook floor; ci:changed alone is not the
    contribution gate. Fix each actual failure test-first, dispatch relevant review and
    freshly review every fix. No unreviewed nit or missing artifact becomes a PASS.
 2. Exact visual and input matrix. Execute the exact screenshot target/state matrix above
    on desktop 1600x900, compact 874x402 and tablet 1180x820, using the common housing
-   helper and real HUD/Sim states. The approved constructor/descriptors expand to 330
-   unique variants; one capture callback produces one image. A transient sequence
+   helper and real HUD/Sim states. The approved constructor/descriptors expand to the
+   wave A set of 330 unique variants (330 of the 733-variant program inventory in
+   ux-spec section 11; each later close verifies its own milestone union); one capture
+   callback produces one image. A transient sequence
    ending in success never substitutes for pending/refusal/reconnect images. Required after-shots fail on missing state. Capture
    #ui on touch to show safe-area strips, not a crop that hides them. Separate evidence
    proves the sanctioned arrival sound, skip/reduced-motion camera return, actual
@@ -191,18 +201,30 @@ Deliverables (at most five):
    LOW budgets and identical actionable ghost/blocked/capacity information at every
    tier, including iOS pressure fallback. Screenshots and recordings link to actual
    checked-in evidence; no still image is treated as payment/ACL proof.
-3. Production handoffs and four-week measurement artifact. Finalize the accepted
-   service/counsel/Terms/listing artifact package and named release gates from state.md;
-   preserve all earlier production/store-submission sign-off gates. At the packet end,
+3. Production handoffs and four-week measurement artifact. Record the
+   service/counsel/Terms/listing artifact package as handoff-ready, with acceptance status
+   recorded as an unsigned release gate unless a signature artifact is on file, together
+   with the named release gates from state.md, including the lifecycle/rollout gate: 07's
+   persistence-rollout-contract.md, 07b's lifecycle-policy-binding.md and
+   lifecycle-db-contract.md and 13a's upkeep-calendar-db-contract.md are named unsigned
+   gates (accepted, or still a named gate) that wave A is the first close to carry;
+   preserve all earlier production/store-submission sign-off gates. Create the NEW root
+   TERMS_AND_CONDITIONS_FREEHOLD_DRAFT.md from docs/prd/woc/freehold-terms-amendment.md
+   as a redline against TERMS_AND_CONDITIONS.md (the
+   TERMS_AND_CONDITIONS_MARKETPLACE_DRAFT.md precedent, kept beside the live Terms,
+   never replacing them), and record the submitted storefront metadata text and its
+   digest per distribution in the evidence bundle; the amendment names both artifacts.
+   At the packet end,
    phase-44a-final-codex-artwork.md must replace every residual feature-created
    placeholder icon/image with final Codex artwork and emit final-artwork-audit.md.
    Then phase-44b-final-legal-handoff.md revisits the actual built system, Terms, policy,
    territory and listing copies and emits docs/prd/woc/freehold-final-legal-handoff.md
    for the legal team with tracked sign-off. No early gate is postponed to that handoff;
    report external acceptance honestly without OPEN design questions. Produce the
-   four-week measured Ledger report artifact defined by the content/calibration
-   manifest: approved schedule IDs and versions, ordinary weekly gatherer output
-   methodology, produce/nonproduce bill composition, source-mode demand, material
+   four-week measured Ledger report artifact at
+   docs/freeholds/ledger-calibration-report.md (NEW FUTURE; the path later closes
+   extend), defined by the content/calibration manifest: approved schedule IDs and
+   versions, ordinary weekly gatherer output methodology, produce/nonproduce bill composition, source-mode demand, material
    availability/tradability, outage exclusions, costs and condition/absence behavior.
    Compare to retained Cottage 10% output target using measured observations, no
    promised market price increase. Owner is Fernando with economy-service acceptance;
@@ -211,20 +233,28 @@ Deliverables (at most five):
    scheduled owner handoff are complete, while its production release gate stays
    visibly unaccepted. No invented data or silent approval by elapsed time.
 4. Durable budget review and release preparation. Create the every-second-release
-   housing budget review artifact with named Fernando/render/performance owners,
+   housing budget review artifact at docs/freeholds/housing-budget-review.md (NEW FUTURE)
+   with named Fernando/render/performance owners,
    measured LOW device scenarios, per-room assets/bytes/triangles/light allocations,
    admitted-player visibility and decision record. No automatic capacity increase.
    Complete wiki/guide and English-key/copy sweeps. Prepare a template-compliant MVP
-   PR draft with scoped behavior, all proof, default-off flags, seven surface summary
-   and named external release gates. Keep this audit and branch local; any future
-   implementation push/PR requires Fernando's separate authorization under state.md.
+   PR body with scoped behavior, all proof, default-off flags, seven surface summary,
+   named external release gates and the mixed-release statement: FREEHOLDS_ENABLED
+   defaults off; an old client against a new server and a new client against an old
+   server both follow 08a's absent/null snapshot-key semantics; housing DDL is additive
+   and re-applied under ensureSchema's advisory lock with JSONB back-compat; rollback
+   quiesces new housing mutations while preserving accepted recovery identities
+   (migration-safety verifies the statement). The push and the wave A PR happen only
+   on Fernando's push go (STEP 4, D87); without it the branch stays local.
 5. Fresh review and recorded next handoff. Whole-wave qa-checklist and all actual
    architecture, cross-platform, content, render, frontend, privacy, migration,
-   database-performance and server-hot-path reviewers inspect evidence. Database review
+   database-performance, server-hot-path and test-coverage reviewers inspect evidence.
+   Database review
    runs before decisions and on finished diff, including query/index/byte/queue and
    disposable-PG proofs. Apply all findings and obtain a fresh fix-round verdict.
    Record screenshot matrix, calibration/report and release gates, budget review,
-   local tip and actual next file; nothing is marked built by this packet audit.
+   the local tip or PR number, the wave B branching choice and actual next file;
+   nothing is marked built by this packet audit.
 
 INVARIANTS THIS PHASE MUST KEEP:
 - No feature work: only matrix fixes, screenshots, docs and the local review draft.
@@ -239,13 +269,16 @@ INVARIANTS THIS PHASE MUST KEEP:
   App Store, Google Play, Steam, or Epic; no "earn" language in hudChrome.housing.*.
 - Nothing purchasable changes a combat, progression, gathering, or drop number; nothing
   is destroyed; condition 0 still opens the door (the matrix rows prove it).
-- i18n: the policy in docs/freeholds/implementation-plan.md; no locale overlay edited.
+- i18n: the policy in docs/freeholds/implementation-plan.md; no locale overlay edited
+  except the five M16 non-Latin fills for a new wordy English value (implementation-plan.md
+  "The contributor i18n policy").
 - Monolith ceilings not raised: a matrix fix that needs a line in src/sim/sim.ts,
   server/game.ts, or src/net/online.ts (all at ZERO slack) pays with an extraction and
   lowers the ceiling.
 - The word "phase" appears in no code, comment, commit, or PR text (docs/freeholds/ is
   the only place it lives); screenshots are captured at the lowest preset.
-- Keep the branch local. Never push, open or merge a PR in this packet.
+- Push policy: the push happens only after Fernando's explicit go (D87); origin only,
+  never a fork; a PR is never merged by a session.
 
 Out of scope (do NOT do in this phase):
 - Any wave B item: the Lodge tier, furnishings beyond the MVP set, the R8 pattern
@@ -270,8 +303,10 @@ The QA session inspects those reports and dispatches a fresh review of every fix
   cross-platform-sync (parity, wire, events), privacy-security-review (server, net, store
   policy), migration-safety (the persistence row), frontend-seam-reviewer (the mobile
   row), architecture-reviewer, database-performance-reviewer and server-hot-path-reviewer
-  (the complete transaction/receipt/query/queue and snapshot/cadence evidence). Prompt each for COVERAGE not filtering; each writes its report to a file. No PR
-  while a BLOCKING finding stands.
+  (the complete transaction/receipt/query/queue and snapshot/cadence evidence) and
+  test-coverage-auditor (the wave's pin suites and the fix commits). Prompt each for
+  COVERAGE not filtering; each writes its report to a file. No PR while a BLOCKING
+  finding stands.
 
 - Required reviewers for the complete settled diff: all canonical whole-wave reviewers including database-performance-reviewer and
   server-hot-path-reviewer.
@@ -279,19 +314,26 @@ The QA session inspects those reports and dispatches a fresh review of every fix
   the finished diff; persistence/security pair on stored/authority surfaces. Runtime
   PG evidence, bounded workload/query/index/byte limits and cancellation are required.
 
-STEP 4 - COMMIT CADENCE AND LOCAL REVIEW DRAFT:
+STEP 4 - COMMIT CADENCE, THEN PUSH AND PR ON THE GO:
 2 to 5 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
 `git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
 - fix(<scope>): one commit per matrix finding, test-first, reviewed
 - docs(screenshots): add the Freehold before and after captures
 - docs(freeholds): record the wave A integration matrix results
-- docs(freeholds): finalize the economy-service contract for the Freehold Charter
+- docs(freeholds): record the Freehold Charter service-contract handoff status
 Then run the shared contribution gate from docs/qa-gate.md, including
 `node scripts/gate_select.mjs` when required, and `npm run ci:changed` after the LAST
 commit as the Stop-hook floor; record exact exit codes.
-Keep the verified branch local and save the review-ready description, matrix and
-screenshot references. Continue the existing local packet chain into Wave B; no
-branching ruling, push, hosted PR creation or remote CI watch is required here.
+Then STOP and ask Fernando for the push go (state.md "Push policy", D87), showing the
+matrix table, the screenshot paths and the PR body draft; ask in the same message whether
+wave B continues on the same branch after this PR merges or on a stacked branch (D12: one
+PR per wave, each off the base), and record the answer in state.md. On the go:
+`git push -u origin feature/freeholds` (origin only), then `gh pr create --base <the
+recorded base branch> --title "feat(freeholds): the Cottage MVP" --body-file <the drafted
+body>`, then `gh pr checks --watch`; on a red or stalled check run the ci-triage skill,
+fix, push again and watch again. Stop at "pushed, green, ready for review". Without the
+go, keep the verified branch local with the review-ready description, matrix and
+screenshot references, and stop at "matrix green, awaiting push go".
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] Every one of the five settled STEP 2 deliverables and all linked ux-spec.md states
@@ -302,26 +344,35 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] qa-checklist reports PASS; every dispatched reviewer confirms ALL findings, including nits, are resolved and freshly reviewed.
 - [ ] Before and after screenshots (desktop, compact, tablet) are committed under
   docs/screenshots/ and linked from the PR body.
-- [ ] docs/prd/woc/freehold-service-contract.md is final and named in the PR body as the accepted service-contract
-  handoff; the counsel/Terms acceptance status is explicitly named as a production release gate.
-- [ ] The local review draft names the recorded base, follows the PR template,
-  contains no "phase" and links exact passing local gate evidence;
-  FREEHOLDS_ENABLED is unset by default. No remote PR or push occurred.
-- [ ] state.md records the local tip, Wave B continuation and named release gates.
+- [ ] docs/prd/woc/freehold-service-contract.md is handoff-ready and named in the PR body
+  with its acceptance status recorded as an unsigned release gate unless a signature
+  artifact is on file; the counsel/Terms acceptance status and the lifecycle/rollout
+  artifacts (persistence-rollout-contract.md, lifecycle-policy-binding.md,
+  lifecycle-db-contract.md, upkeep-calendar-db-contract.md) are named the same way as
+  release gates; the PR body carries the mixed-release and rollback statement.
+- [ ] The PR body names the recorded base, follows the PR template, contains no "phase"
+  and links exact passing local gate evidence; FREEHOLDS_ENABLED is unset by default.
+  Either the PR is open off the recorded base with `gh pr checks` fully green (push go
+  given), or the branch is local at "matrix green, awaiting push go" (no go recorded).
+- [ ] state.md records the local tip or the PR number, the wave B branching choice and
+  the named release gates, including the two report paths.
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (row 20: status, the matrix table, external release gates
-  carried into wave B) and docs/freeholds/state.md (the local tip, Wave B continuation,
-  the "Current phase" line and any locked decision).
+  carried into wave B) and docs/freeholds/state.md (the local tip or PR number, the wave
+  B branching choice, the "Current phase" line and any locked decision).
 - Record surprising rules learned in memory with the local tip and exact next file.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-End with: phase status, matrix table, files touched, review verdicts, local draft and
-validation evidence, release gates and the FULL PATH of the next file to run:
+End with: phase status ("pushed, green, ready for review", or "matrix green, awaiting
+push go" if the go has not come), the PR URL when one exists, the matrix table, files
+touched, review verdicts, validation evidence, release gates and the FULL PATH of the
+next file to run:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-20-qa.md
 
 STOPPING RULES:
-- Keep the branch local; never push, open or merge a PR.
+- Stop at "matrix green, awaiting push go" until Fernando sanctions the push; never
+  push on your own judgment; never push to a fork; never merge or enqueue a PR.
 - Stop if a matrix row fails for a design reason (a locked decision would have to
   change): record it in progress.md and name the owning phase file as the file to re-run.
 - Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.

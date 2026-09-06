@@ -8,8 +8,8 @@ are authoritative. Nothing in this planning packet is marked built.
 ```
 This is Phase 34 of the Freeholds and Guildhalls feature: Wards: shared neighborhoods and exteriors.
 
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
-fan-out; this prompt names no model.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out; this prompt names no model.
 
 Goal: give every plot a stable neighborhood through the existing slot pool and descriptors, with race-safe assignment, bounded admission and beautiful tier exteriors.
 
@@ -27,23 +27,25 @@ STEP 0 - PRE-FLIGHT:
   patches/.
 - If state.md "Push policy" records a stacked wave branch, work on that branch instead of
   feature/freeholds.
-- Memory scan: MEMORY.md and entries on instance bands and footprints, the rift
-  descriptor model, ALL_DELTA_KEYS conflicts, server hot paths and cached reads, the
-  scheduler and instanced meshes, test-pin traps.
+- Gotchas scan (Codex has no memory step): state.md "Gotchas (read before the matching
+  phase)" entries on instance bands and footprints, the rift descriptor model,
+  ALL_DELTA_KEYS conflicts, server hot paths and cached reads, the scheduler and
+  instanced meshes, test-pin traps.
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "34 Wards"), and this file
-- src/sim/instances/dungeons.ts (enterDungeon, claimInstance, freeInstance,
-  updateInstances, instanceClaimContains and the Nythraxis wide-arena carve-out,
-  instanceSlotForZ), src/sim/data.ts (instanceOrigin, INSTANCE_SLOT_COUNT, the x bands),
+- src/sim/instances/dungeons.ts (exported enterDungeon and updateInstances; the
+  module-private helpers claimInstance, freeInstance and instanceClaimContains; the
+  Nythraxis wide-arena carve-out), src/sim/data.ts (instanceOrigin, INSTANCE_SLOT_COUNT,
+  instanceSlotForZ, the x bands),
   src/sim/content/freehold/dungeons.ts (the indices in use), src/sim/freehold/instance.ts
   (claim, rehydrate, the freeholdState descriptor), src/sim/rift/runs.ts
   (riftStateEventFor, the resume re-send), src/sim/colliders.ts (setRiftRegion,
@@ -53,15 +55,21 @@ Spawn one Explore agent to read and summarize:
   (the riftState re-send after hello; grep riftStateEventFor), server/heavy_self.ts
 - src/net/online.ts (applyRiftStateEvent, applyFreeholdStateEvent), src/net/freehold_snapshot_wire.ts
 - src/render/freehold/ (the Phase 09 furnishing view, the Phase 06 interior dressing),
-  src/render/dungeon.ts (proximity build, retireInteriorGroup), src/render/delve_interior_tracker.ts,
+  src/render/dungeon.ts (proximity build, disposeInteriorResources) and
+  src/render/renderer.ts (the private retireInteriorGroup: scene.remove,
+  releaseInteriorExternalRefs, dungeons.disposeInteriorResources, reached through the
+  DelveInteriorTracker retire callback), src/render/delve_interior_tracker.ts,
   src/render/gated_scene_attach.ts, src/render/point_light_budget.ts
 - tests/snapshots.test.ts (ALL_DELTA_KEYS), tests/freehold_command_chain_online.test.ts,
   tests/dungeons.test.ts, tests/monolith_budget.test.ts
-- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
-  artifacts referenced by state.md that this slice consumes.
+- docs/freeholds/ux-spec.md and the content, measurement, service and policy artifacts
+  referenced by state.md that this slice consumes (signed, or still open release gates).
 The agent returns: the measured ward footprint and assigned DungeonDef index; descriptor/claim/rehydration
 seams; transaction and index design; cache-bust sites; the scheduler/tracker recipe.
 Capacity is 50 plots and 24 admitted occupants from state.md, never a graphics cull.
+Live-ward concurrency is a pool fact, not a design number: at most INSTANCE_SLOT_COUNT
+(src/sim/data.ts, 24) claimed wards per DungeonDef per realm process; saturation is the
+honest busy refusal (D50), and the ceiling is cited from that constant, never restated.
 The largest represented guild anchors; ties use stable guild ID; no guild means no
 anchor. Physical footprint/arrival clearance is measured in the approved geometry
 manifest against instanceSlotForZ and the existing claim allocator before art.
@@ -90,11 +98,13 @@ finish. Workers receive only the context report and owned files, preserve others
 and return full reports to the scratchpad with a path and short summary.
 1. Ward geometry and descriptor: add planned freehold_ward DungeonDef with spawns: [],
    guideVisible: false, claimKey: 'owner', outside FINDER_ACTIVITIES. Implement pure
-   ward_core.ts with opaque public plotId rows, square/door coordinates, tier and
+   NEW src/sim/freehold/ward_core.ts with opaque public plotId rows, square/door
+   coordinates, tier and
    cosmetic style IDs, measured bounds and deterministic anchor selection. Internal
    account/guild owner keys never appear in viewer wire. One global fenced ward claim
    ward:<wardId> uses existing pool admission/reaping; no per-tick subsystem.
-2. Race-safe membership: ward_assignment_core.ts orders bounded candidates by lowest
+2. Race-safe membership: NEW src/sim/freehold/ward_assignment_core.ts (a pure leaf the
+   server calls inside the allocation transaction) orders bounded candidates by lowest
    occupancy then stable ward ID; PostgreSQL alone authorizes allocation. Extend
    server/freehold_db.ts with indexed ward membership tied to Phase 07 stable plot ID,
    freehold_wards and required reverse-FK/export access. Enforce unique (ward_id,
@@ -104,26 +114,64 @@ and return full reports to the scratchpad with a path and short summary.
    full target refuses without moving or losing anything. Bounded indexed candidate
    selection, single-flight roster reads and commit-then-bust prevent stale capacity
    authorization or whole-table scans.
-3. Admission, doors and wire: wards.ts admits at most 24 occupants, refuses a busy
-   claim honestly, and keeps already admitted entities visible on every preset. The
+3. Admission, doors and wire: NEW src/sim/freehold/wards.ts admits at most 24 occupants,
+   refuses a busy claim honestly, and keeps already admitted entities visible on every
+   preset. The
    member door resolves plotId server-side and enforces current visit/block/guild
    permissions even for offline owners. Emit/re-send pid-scoped wardState after claim,
    change and resume through server/freehold_wire.ts. Strict src/net/ward_wire.ts
    decode and runtime collider registry preserve last valid state on malformed input;
-   shared projections never authorize entry. Implement any wardView/requestWardMove
-   facet through both worlds, pins and real command-chain tests.
+   shared projections never authorize entry. Add exactly two housing facet members
+   through both worlds (D20 verb-first style; one five-edit parity batch per member in
+   tests/world_api_parity.test.ts plus the command schema/facet pins): the `myWard` read
+   (the viewer's ward's opaque public plot/marker rows, occupancy and the bounded move
+   candidates) and the `moveWard(wardId)` command (owner-requested move only), with real
+   command-chain tests.
 4. Exterior art and UX: final tier shell kits use one InstancedMesh per kit through
    attachSceneGroupGated, prewarm homes, point_light_budget and tracked retirement
-   modelled on DelveInteriorTracker. Add ward_exteriors.ts and its registered pure
-   core. Gate/door affordances, anchor identity and full/busy/reassignment states use
-   ux-spec's later-wave family and keyed copy. Record desktop/compact/tablet square,
-   exterior, busy-cap and door screenshot targets; no stand-in art ships.
+   modelled on DelveInteriorTracker. Add NEW src/render/freehold/ward_exteriors.ts and
+   its registered pure core (RENDER_PURE_CORES). Gate/door affordances, the
+   roster/marker surface, anchor identity and full/busy/reassignment states use
+   ux-spec's later-wave map marker/list family and the exact keyed copy in the table
+   below (D92); refusals resolve through the D26 freeholdDeniedLineKey selector with
+   the denied rows appended there. Register the NEW `housing-ward` target (scenes
+   ward-square, ward-exterior, ward-roster, ward-busy-cap, ward-door and
+   ward-move-review x desktop/compact/tablet: 18 variants, the 535 milestone)
+   in ux-spec section 11 (housingReviewTargets), append the key rows to ux-spec section
+   10, and regenerate ux-shot-manifest.json and ux-key-manifest.json in the same
+   change; no stand-in art ships.
 5. Proof: literal capacity/anchor fixtures, same-seed work-happened twin, world/facet/
    snapshot/command pins, reconnect descriptor and both-host collider checks. In
    disposable PG race final-slot claims and opposite moves, assert uniqueness/cap/
    membership preservation and bounded contention; record plans, query counts,
    maximum descriptor bytes and no per-tick SQL. Run perf tour and prove scheduler
    retirement and LOW actionable visibility.
+
+Exact English keys this phase adds (D92: title case for titles and buttons, sentence
+case for status rows; tooltips per docs/design/tooltip-writing.md). The visit action
+reuses 18's gate prompt keys; a non-owner move request reuses denied.permission;
+loading/unavailable rows are named here because common.loading names the home, not the
+neighborhood:
+
+| Key | Exact English |
+| --- | --- |
+| hudChrome.housing.ward.title | Neighborhood |
+| hudChrome.housing.ward.roster | Neighborhood Roster |
+| hudChrome.housing.ward.loading | Loading the neighborhood... |
+| hudChrome.housing.ward.unavailable | The neighborhood roster is unavailable right now. |
+| hudChrome.housing.ward.occupancy | {claimed} of {capacity} plots claimed |
+| hudChrome.housing.ward.anchor | Guild anchor: {guild} |
+| hudChrome.housing.ward.noAnchor | No guild anchors this neighborhood. |
+| hudChrome.housing.ward.openGround | Open ground |
+| hudChrome.housing.ward.door | Door of {owner} |
+| hudChrome.housing.ward.privateDoor | A private home |
+| hudChrome.housing.ward.move | Move Here |
+| hudChrome.housing.ward.moveReview | Move your home to this neighborhood? Your plot and furnishings move with it. |
+| hudChrome.housing.ward.movePending | Moving your home... |
+| hudChrome.housing.ward.moved | Your home now stands in its new neighborhood. |
+| hudChrome.housing.denied.wardFull | This neighborhood is full. Your home stays where it is. |
+| hudChrome.housing.denied.wardBusy | This neighborhood is busy right now. Try again shortly. |
+| hudChrome.housing.denied.wardSame | Your home is already in this neighborhood. |
 
 INVARIANTS THIS PHASE MUST KEEP:
 Every player-visible string, including error, aria, tooltip and empty-state text,
@@ -204,10 +252,11 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/freehold_determinism.test.ts tests/dungeons.test.ts tests/world_api_parity.test.ts
   tests/command_schema.test.ts tests/command_facets.test.ts tests/snapshots.test.ts
   tests/env_protocol.test.ts tests/bandwidth.test.ts tests/freehold_command_chain_online.test.ts
-  tests/renderer_compile_gate.test.ts tests/localization_fixes.test.ts
-  tests/server/freehold_wards_db.test.ts tests/server/main_retention_wiring.test.ts`;
-  the pg-armed twin with TEST_DATABASE_URL set; `npm run perf:tour`; parity goldens if
-  regenerated.
+  tests/renderer_compile_gate.test.ts tests/pr_shot_targets.test.ts
+  tests/localization_fixes.test.ts tests/server/freehold_wards_db.test.ts
+  tests/server/main_retention_wiring.test.ts`; the pg-armed twin with TEST_DATABASE_URL
+  set; `npm run i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts`;
+  `npm run perf:tour`; parity goldens if regenerated.
 - Run node scripts/gate_select.mjs before completion; npm run ci:changed is not a
   substitute. Re-run only affected checks after fixes, then verify the final head.
 - Dispatch architecture-reviewer, cross-platform-sync, migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, render-performance-reviewer, frontend-seam-reviewer, content-obligations-reviewer, test-coverage-auditor and qa-checklist
@@ -226,7 +275,7 @@ STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] The approved geometry manifest proves claim footprint, arrival paths and deterministic anchor; 50 plots and 24 admitted occupants are literal-pinned and no admitted entity is culled.
 - [ ] Disposable-PG final-slot/opposite-move races preserve every membership and item; indexed bounded candidates and stable lock order pass recorded plans and contention checks.
 - [ ] Opaque plot descriptors round-trip/re-send on resume, preserve malformed prior state, and produce identical colliders/exteriors on both hosts; current ACL governs every door.
-- [ ] Final exterior art, LOW fairness and desktop/compact/tablet ward/door/busy screenshots meet ux-spec; no live-program events or retired scene leaks.
+- [ ] Final exterior art, LOW fairness and desktop/compact/tablet ward/door/busy screenshots meet ux-spec; no live-program events or retired scene leaks; the `housing-ward` target (ward-square, ward-exterior, ward-roster, ward-busy-cap, ward-door, ward-move-review) and the ward key rows are registered and both manifests regenerated in this phase's commits (D92).
 - [ ] All validation, actual-surface reviews, fresh fix review and contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:

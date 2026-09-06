@@ -1,28 +1,48 @@
-# Phase 31 QA: audit guild-level deeds and first-kill trophies
+# Phase 31 QA: audit Guild-level deeds and first-kill trophies
 
 Audits `phase-31-guild-deeds-and-first-kill-trophies.md`. Verdict goes in `progress.md`
 (row "31 QA"). The next implementation phase never starts before this file has run.
 
 ## Settled delivery and acceptance contract
 
-Credit each guild represented by at least one eligible credited clear participant,
-using that participant's authoritative membership at the clear, never current roster
-at later display time or an invented percentage threshold. The existing clear-credit
-eligibility defines participation; a remote/offline guildmate does not create credit.
-Preserve boss, difficulty, original day/character and durable event identity. Historic
+Three terms are used exactly and never interchanged. A credited recipient is a
+participant the UNCHANGED existing clear-credit rules credit (the generic eligible
+snapshot in src/sim/combat/damage.ts or the Nythraxis room roster). A carrier-eligible
+participant is a credited recipient whose stamped meta.guildMembership is non-null at
+the hook AND who holds a live authenticated GuildClearCharacterGeneration; sessionless
+players and developer bots are never carrier-eligible. A retired generation is a
+character generation after authoritative leave. Credit each guild represented by at
+least one carrier-eligible participant, using that participant's stamped membership at
+the clear, never current roster at later display time or an invented percentage
+threshold. The existing clear-credit rules define participation; a remote/offline
+guildmate does not create credit. Preserve boss, difficulty, original day/character
+and durable event identity. Historic
 backfill requires actual guild-at-clear evidence; character_deeds plus present-day
 membership is insufficient, so absent such proof recording begins at deploy. Unknown
 old difficulty/date stays explicitly unknown and never mints a higher finish. Do not
 change character deed credit or grant renown/power. Multiple clears/observers/restarts
 insert one (guild_id, deed_id) first-clear row and publish only committed unlocks with a stable notice identity.
 
+Qualifying sources are every FINAL_BOSS_DUNGEONS template (src/sim/deeds.ts) at normal
+and heroic: sixteen guild deed ids guild_first_<boss>_<difficulty>, one trophy prop id
+each. The five dungeon final bosses (morthen, vael_the_mistcaller, ysolei,
+korzul_the_gravewyrm, wildheart_high_priest) hang the banner family with a per-boss
+emblem; the three raid bosses (nythraxis_scourge_of_thornpeak,
+ignivar_herald_of_the_last_flame, varkhul_forgefather_of_the_last_flame) stand a
+statue; the finish follows 23's finishFor rule (normal bronze, heroic silver).
+
 Populate 30a's previously unavailable first-kill War table section from this bounded
-authorized projection. Guild trophies are shared guild records; member personal
-plinths preserve 28's ownership/departure policy. Final banner/statue art, source/name
-originality, wiki and all content obligations land together. Lazy or realm-paged
-hydration replaces whole-table boot scans. Include the earned_by reverse-FK/export
-access path, keep-forever compact proof and bounded projected bytes in the query index
-inventory, with disposable-PG duplicate/concurrency/restart evidence.
+authorized projection through 30a's guildHallBoards read; no facet member is added
+here, so the parity pin is unchanged (D82). Guild trophies are shared guild records;
+member personal plinths preserve 28's ownership/departure policy. Final banner/statue
+art, source/name originality, wiki and all content obligations land together. Lazy or
+realm-paged hydration replaces whole-table boot scans. Include the earned_by
+reverse-FK/export access path, the immutable earned_by_name and earned_by_realm
+snapshot the projection reads (D79), keep-forever compact proof and bounded projected
+bytes in the query index inventory, with disposable-PG duplicate/concurrency/restart
+evidence. Housing capacity never gates gameplay (D83): recording exhaustion records a
+bounded auditable clear-not-captured gap with an operator alert; join, dungeon entry,
+respawn, character rewards, loot and existing deeds are unchanged.
 
 Before implementation decisions and again on the finished diff, dispatch
 database-performance-reviewer, paired with migration-safety and privacy-security-review.
@@ -65,7 +85,7 @@ information must remain legible through ambient grade, materials and silhouettes
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -92,7 +112,8 @@ Database, persistence and security reviewers inspect these exact before/final di
 
 ## Source-life admission and original clear capture
 
-The accepted engineering ruling and verified source facts are recorded in state.md.
+The reviewed engineering refinement and verified source facts are recorded in state.md
+("Source-reviewed guild-clear admission refinement", as narrowed by D83).
 Existing src/sim/deeds.ts::onDungeonFinalBossKilledForDeeds synchronously updates the
 original recipients and returns void. GameServer.detectActivity observes deedUnlocked,
 appends to the actual pendingDeedRecords and requests ordinary saveCharacter; that writer
@@ -124,8 +145,10 @@ is an idempotent no-op with an explicit outcome, never a second release.
 GuildClearAdmissionResult<T> is the closed union { ok: true, token: T } or
 { ok: false, reason: 'busy' | 'not_ready' | 'stale_generation' }.
 GuildClearTransitionResult is 'applied' | 'already_applied' | 'stale_generation'.
-These are text-free internal outcomes; use the existing bounded operational refusal
-presentation at the host boundary without leaking capacities or source identities.
+These are text-free internal outcomes. A busy outcome binds only to source activation
+or credit capture (D83): it marks a source life or a captured clear not-captured and is
+recorded as the bounded clear-not-captured gap with an operator alert; it never reaches
+a player as a refusal and never leaks capacities or source identities.
 GuildClearSourceBatchRequest is an immutable bounded array of planned qualifying lives
 and their existing recipient envelopes, including replacement identities and the full
 batch before any mutation. GuildClearCapturedSource carries the immutable original
@@ -138,10 +161,10 @@ source identity, recipients/order, provenance and 28a membership evidence below.
 | Consume an existing source at synchronous capture | consumeGuildClearSourceReservation(token: GuildClearSourceReservationToken, source: GuildClearCapturedSource): GuildClearAdmissionResult<GuildClearCapturedBatchToken>; a correctly reserved admitted clear has capacity and cannot return busy. |
 | Retire an unconsumed source life | retireGuildClearSourceLife(token: GuildClearSourceReservationToken): GuildClearTransitionResult; only unused allocation is released. |
 | Release a committed candidate | releaseCommittedGuildClearCandidate(token: GuildClearCandidateReservationToken, handoff: GuildClearCommittedHandoff): GuildClearTransitionResult; accepted 07a outcome plus bounded projection/recovery ownership is required. |
-| Retire an ineligible character generation | retireGuildClearCharacterGeneration(generation: GuildClearCharacterGeneration): GuildClearTransitionResult; only unused participant envelopes are released after authoritative ineligibility. |
+| Retire a character generation after authoritative leave (a retired generation) | retireGuildClearCharacterGeneration(generation: GuildClearCharacterGeneration): GuildClearTransitionResult; only unused participant envelopes are released once the generation is retired. |
 
 GuildClearCharacterAdmissionRequest contains the authenticated candidate generation,
-optional surviving/replaced generation and original07b admission identity. The factory
+optional surviving/replaced generation and original 07b admission identity. The factory
 tracks both published and prepared-unpublished character generations: a Nythraxis life
 reserved while an admission is pending must include that prepared envelope too.
 GuildClearCapturedBatchToken contains the bounded per-guild GuildClearCandidateReservationToken
@@ -180,7 +203,16 @@ at the original helper entry; call this hook exactly ONCE after the existing cle
 counter/reward mutations and outside every recipient loop in
 onDungeonFinalBossKilledForDeeds. Its generic and Nythraxis callers therefore each
 consume one whole source life, even when several guilds are represented. Preserve
-all original character counters, speed tasks and reward ordering.
+all original character counters, speed tasks and reward ordering. The source token's
+Sim seat is the session-only ctx.guildClearSourceLives: Map<entityId,
+GuildClearSourceReservationToken> on SimContext beside guildBanks, rewritten when a
+life is bound (spawn, respawn, replacement) and deleted at removal, so entity id reuse
+cannot alias a life; it lives on neither Entity nor PlayerMeta, so the wireEntity
+allowlist and META_EXCLUDE are unchanged and the tests/sim_context.test.ts fake host
+pins it. Capture reads the Sim's stamped meta.guildMembership at the hook; a fresh-join
+participant whose stamp has not landed yet (the server/game.ts join snapshot lands a
+beat after addPlayer) represents no guild at that capture, pinned by a stamp-less
+participant fixture.
 
 The NEW bridge returns sourceAdmission: GuildClearSourceAdmission for online boot
 injection. buildRealmSimConfig/GameServer injects bridge.sourceAdmission into
@@ -192,10 +224,13 @@ consumeGuildClearSourceReservation exactly once, records the resulting immutable
 per-guild candidates/prefixes and returns the captured-batch outcome. It must not
 call the ctx adapter recursively. No source producer may bypass the bridge by calling
 the raw capacity-only consume. 07b's host character prepare/commit/cancel operations
-keep their existing exact names and owner; this changes no lifecycle admission API.
+keep their planned exact names and owner (07b's NEW module); this changes no lifecycle
+admission API.
 
 A decisive two-guild fixture uses one original recipient snapshot, with interleaved
-guild membership and an independently pinned first eligible carrier per guild. Assert
+guild membership and an independently pinned first carrier-eligible carrier per guild;
+a second fixture makes the first recipient in original order a sessionless guild member
+and asserts the next carrier-eligible member carries. Assert
 one whole-source hook call, one bridge capture, one private accounting consume and
 both original-order carriers/candidates. Reordering save completion cannot change
 those carriers; duplicate callback delivery cannot consume again or append another
@@ -213,20 +248,24 @@ later membership changes need no extra guild allocation. Several Nythraxis lives
 the per-character reservation; RAID_MAX, suggestedPlayers and MAX_PLAYERS_PER_REALM do
 not bound the Nythraxis room roster. No invented participant cap or movement barrier.
 
-07b's existing prepareFreeholdLifecycleAdmission / commitFreeholdLifecycleAdmission /
+07b's planned prepareFreeholdLifecycleAdmission / commitFreeholdLifecycleAdmission /
 cancelFreeholdLifecycleAdmission bridge composes the exact character operations above.
-Preparation extends every affected live-source reservation immediately and all-or-none
-BEFORE authenticated Sim/GameServer.join publication, including administrator admission.
-It retains the GuildClearCharacterAdmissionToken through the lifecycle admission attempt.
-Commit publishes the generation only after both participants commit; every failed or
-cancelled path cancels the unpublished extension. Failed capacity returns bounded
-operational busy immediately, with no waiter queue. A new source reservation counts
-prepared-unpublished generations, preventing an activation/admission interleaving gap.
+Preparation extends every affected live-source reservation all-or-none BEFORE
+authenticated Sim/GameServer.join publication, including administrator admission, and
+retains the GuildClearCharacterAdmissionToken through the lifecycle admission attempt.
+The join-time hook publishes the session regardless of capacity (D83): when the
+extension cannot fit, the character publishes as an unreserved generation, the gap is
+recorded, and no busy reaches the player; a cancelled lifecycle admission still cancels
+the unpublished extension. A captured source whose actual recipient batch exceeds its
+reserved envelope (possible only when an unreserved generation participated) is a
+not-captured clear: character rewards are unchanged and no guild candidate is captured.
+A new source reservation counts prepared-unpublished generations, preventing an
+activation/admission interleaving gap.
 
 A surviving-generation resume reuses capacity. Takeover is a generation-fenced transfer
 or replacement, never duplicate publication or an old completion releasing new capacity.
 retireGuildClearCharacterGeneration runs only after authoritative leave makes that
-generation ineligible for any clear callback. Release only unused participant envelope;
+generation retired: no clear callback can name it. Release only unused participant envelope;
 already captured candidate capacity survives leave and takeover independently. Sessionless
 offline/headless players and developer bots gain no online account authority and keep
 their existing character reward behavior. Required online composition cannot choose
@@ -240,32 +279,40 @@ requires a new reservation even if the entity ID is reused. Duplicate callbacks 
 capture a second batch. A source token is associated with its exact planned spawn and
 claim/life generation before publication; unused reservations on a refused branch are
 retired without touching an earlier source. All batch preflights occur before the first
-claim, aura, ID, RNG, entity, death or loot mutation listed below.
+claim, aura, ID, RNG, entity, death or loot mutation listed below. A refused
+reservation never blocks the producer (D83): the life activates exactly as before,
+flagged not-captured on its token seat; its clear credits characters unchanged, the hook
+returns the gap outcome instead of a captured batch, and the bridge records one bounded
+gap row (source identity, boss, difficulty, utcDay) in the redacted metrics with the
+operator alert. Gap rows are bounded by the metrics retention, never a queue.
 
 | Verified producer or teardown seam | Closed admission behavior |
 | --- | --- |
-| src/sim/instances/dungeons.ts::enterDungeon new claim | Reserve every qualifying life before private claimInstance changes fields, IDs, RNG or spawned entities. Refusal changes neither entry nor claim. |
-| resetDungeonInstances | Reserve the complete replacement batch before freeing any claim; preserve all-or-none difficulty/reset semantics. |
-| Developer Ignivar-family replacement within enterDungeon | Preflight before clearing encounter auras or freeing family claims, not merely just before claimInstance. |
-| spawnMobsForDev | Reserve all qualifying lives in the requested batch before spawning; no partial source-producing batch. |
-| src/sim/mob/lifecycle.ts::respawnMob via dead-mob update | Reserve the next life before clearing death, loot or any respawn state. Under pressure keep the corpse/loot state and defer revival. |
-| Sim.updatePendingMobRespawns | Reserve before replacement creation AND removal of the pending entry. |
-| Boot, authored and custom spawn producers | Classify the actual FINAL_BOSS_DUNGEONS roster and every reachable qualifying producer; preflight before publication, including non-claim developer sources. |
+| src/sim/instances/dungeons.ts::enterDungeon new claim | Reserve every qualifying life before private claimInstance changes fields, IDs, RNG or spawned entities. A refused reservation marks those lives not-captured; entry and claim proceed unchanged (D83). |
+| resetDungeonInstances | Reserve the complete replacement batch before freeing any claim; a refused batch marks the replacement lives not-captured; all-or-none difficulty/reset semantics are unchanged. |
+| Developer Ignivar-family replacement within enterDungeon | Preflight before clearing encounter auras or freeing family claims, not merely just before claimInstance; refusal marks not-captured and never blocks. |
+| spawnMobsForDev | Reserve all qualifying lives in the requested batch before spawning; no partial source-producing batch; a refused batch spawns unchanged as not-captured lives. |
+| src/sim/mob/lifecycle.ts::respawnMob via dead-mob update | Reserve the next life before clearing death, loot or any respawn state. Revival is never deferred (D83): a refused reservation revives the mob as a not-captured life. |
+| Sim.updatePendingMobRespawns | Reserve before replacement creation AND removal of the pending entry; refusal marks not-captured. |
+| Boot, authored and custom spawn producers | Classify the actual FINAL_BOSS_DUNGEONS roster and every reachable qualifying producer; preflight before publication, including non-claim developer sources; refusal marks not-captured. |
 | private freeInstance, family reaping, developer despawn and entity removal | Retire the exact old source generation and release only unconsumed allocation; captured candidates survive entity/claim teardown. |
 
-A publication assertion proves no qualifying online source becomes live unreserved.
-It is an invariant check, never the normal pressure handler or permission to throw after
-partial mutation. Cover the generic clear route and grantNythraxisLockout /
-onNythraxisKillForDeeds with the original room roster, including former raid members.
+A publication assertion proves no qualifying online source becomes live without a
+reservation outcome (reserved, or explicitly not-captured). It is an invariant check,
+never the normal pressure handler or permission to throw after partial mutation. Cover
+the generic clear route and grantNythraxisLockout / onNythraxisKillForDeeds with the
+original room roster, including former raid members.
 No later roster or caller-selected participant maximum changes existing clear credit.
 
 ### Immutable capture, ordinary save and committed release
 
 At the original synchronous callback capture process/source-life/claim identity,
-sourceEventId and original clear order, boss, difficulty, reset day, authenticated
-attribution and 28a guild-at-clear membership incarnation. The first eligible participant
-in the ORIGINAL credited-recipient order is each guild's carrier. Save scheduling or
-later online/session iteration cannot elect another carrier. Consume already-held
+sourceEventId and original clear order, boss, difficulty, utcDay (D84: earned_day
+stamps when the clear happened, never resetDay), authenticated attribution and 28a
+guild-at-clear membership incarnation. The first carrier-eligible participant in the
+ORIGINAL credited-recipient order is each guild's carrier; a recipient that fails a
+carrier test is skipped in that order. Save scheduling or later online/session
+iteration cannot elect another carrier. Consume already-held
 source envelopes, retain bounded candidate tokens and release unused worst-case
 envelopes. Await no SQL and preserve all existing character counters/rewards.
 
@@ -285,11 +332,18 @@ otherwise. Other recipients keep independent saves; no all-party reward transact
 stronger precommit character-reward durability is promised. No extra receipt or save queue.
 
 The guild_deeds row retains sourceOperationId, sourceEventId, sourceAcceptedOrder, boss,
-difficulty, original earned_day/earned_at and captured attribution with the unique
-(guild_id, deed_id) constraint. ON CONFLICT is duplicate defense, not a replacement for
-immutable capture and original source order. The shared 07a source-claim policy preserves
-the original accepted source across carriers/realms. No full lifetime roster or private
-source payload enters the wire; keep compact original proof with the durable outcome.
+difficulty, original earned_day (utcDay) and earned_at (epoch ms, display only), a
+nullable earned_by FK beside the immutable earned_by_name and earned_by_realm public
+snapshot written at commit (D79; the projection reads the snapshot, so deleting the
+carrier character changes nothing visible), with the unique (guild_id, deed_id)
+constraint. Closed first-source rule: the durable first is the first COMMITTED source
+claim for that (guild_id, deed_id); a later-committing earlier clear is dropped by ON
+CONFLICT and never rewrites earned_day, earned_by, the snapshot or earned_at;
+sourceAcceptedOrder is 07a's acceptance order and the sourceEventId/tick order is
+captured provenance only; a clear whose only carrier never commits is not recorded,
+and the guild's next committed clear is its first. ON CONFLICT is duplicate defense,
+not a replacement for immutable capture. No full lifetime roster or private source
+payload enters the wire; keep compact original proof with the durable outcome.
 
 Verified state source fact: legacy GameServer.saveCharacter can return true from its
 no-state/no-entity branch after recordUpTo when storage and ledger effects are empty,
@@ -328,11 +382,21 @@ advertise this capability. Graceful replacement drains/preserves committed ident
 within existing shutdown deadlines; restart installs committed recovery before ready.
 Original process/session/source generations fence resume, retirement and late callbacks.
 
-CLOSED overload policy: admitted sessions and already live source lives continue.
-Fresh authenticated character admission OR new qualifying source activation may return
-operational busy if its full reservation cannot fit. Retain captured candidates. No
-realm-wide tick pause, dropped candidate, movement/room barrier, invented participant
-limit or unbounded promise queue. Ordinary corpse revival may defer as specified above.
+CLOSED overload policy (D83): admitted sessions and already live source lives
+continue. Recording capacity never refuses GameServer.join, enterDungeon or a respawn.
+When a fresh character extension or a new source reservation cannot fit, the session
+publishes or the life activates unchanged as unreserved/not-captured, one bounded
+clear-not-captured gap is recorded with an operator alert, character rewards, loot and
+existing deeds are untouched, and guild credit for that clear is simply not captured.
+Retain captured candidates. No realm-wide tick pause, dropped candidate, movement/room
+barrier, invented participant limit, waiter queue or unbounded promise queue.
+
+Dark realm and disabled recording (D85): the Sim reads freeholdsEnabled from the
+SimConfig seam beside devCommands. While it is false, or while recording is disabled,
+no producer consults ctx.guildClearAdmission and every seam in the table above behaves
+exactly as before, pinned by a dark twin of the producer fixture asserting zero
+admission calls and identical instance/entity state, by the flag-unset server test, and
+by unchanged parity goldens.
 
 ### Measurement artifact and decisive proof
 
@@ -350,11 +414,18 @@ bound. No new numerical limit is asserted here; accepted measured artifact rows 
 Paired QA decisively proves generic and actual Nythraxis room credit including MORE
 occupants than RAID_MAX, former raid members and late membership changes; several live
 Nythraxis sources at fresh admission with exact multiplication; administrator bypass,
-disabled realm cap, failed/cancelled preparation with no published session, surviving
-resume and takeover. Existing admitted players must clear after capacity exhaustion.
-Test original carrier order and a clear with no new character deed; distinct clears
-during delayed saving, new candidate during IO, retry/failure/ambiguity, cross-carrier
-ordering and competing realms with exact snapshot/prefix identity and pending remainder.
+disabled realm cap, a failed extension that still publishes the session as unreserved
+(D83) and a cancelled preparation with no published session, surviving resume and
+takeover. Existing admitted players must clear after capacity exhaustion, and every
+exhaustion arm proves join, entry and revival unchanged with one recorded gap. Test
+original carrier order and a clear with no new character deed; distinct clears during
+delayed saving, new candidate during IO, retry/failure/ambiguity, cross-carrier ordering
+and competing realms with exact snapshot/prefix identity and pending remainder. The
+cross-carrier expected row is literal: clear A (earlier tick, carrier X) and clear B
+(later tick, carrier Y) with Y committing first leaves the row holding B's
+sourceEventId, B's utcDay and Y's name snapshot, byte-identical after X's ON CONFLICT
+no-op; the lost-carrier row: A's sole carrier never commits, no row exists, and B's
+commit inserts B as the first.
 
 Pin Reset All and family replacement refusal BEFORE any aura/claim/difficulty/ID/RNG
 change; unclaimed developer bosses, repeated lives sharing entity ID, no-clear death,
@@ -364,8 +435,11 @@ of existing canonical/dev lives and all-or-none failed readiness; capable/incapa
 rolling processes. Assert exact slot/byte totals, no leaked tokens and no moved unbounded
 queue across every success/refusal path. Use real disposable PostgreSQL tests for the
 actual save participants, source claims, ambiguous commits and committed recovery, with
-aggregate/redacted evidence. Raw guild deletion preserves 28a's protected disposition
-and original attribution proof. Database, persistence, architecture and security review
+aggregate/redacted evidence. A guild holding a first clear is never hard-deleted:
+disband and last-member leave take the D79 tombstone disposition at both deleting call
+sites (the beginGuildBankDelete guard in server/social.ts, extended before any member
+row is deleted), guild_deeds rows stay attached and the original attribution proof is
+unchanged. Database, persistence, architecture and security review
 runs before these decisions and again on the finished diff, then a fresh reader verifies
 all fixes. These are future runtime requirements, not tests run by this docs audit.
 
@@ -387,7 +461,7 @@ This packet is documentation only; no shipping asset is generated by this audit.
 This is Phase 31 (QA) of the Freeholds and Guildhalls feature: audit guild-level deeds
 and first-kill trophies.
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 31 diff for correctness against every deliverable and acceptance
@@ -414,7 +488,8 @@ Spawn one Explore agent to read and summarize:
   row 31)
 - the pins the diff claims: tests/freehold_guild_deeds.test.ts, tests/sim_context.test.ts,
   tests/server/guild_deeds_db.test.ts (and its pg twin), tests/deeds_content.test.ts,
-  tests/social_system.test.ts, tests/monolith_budget.test.ts
+  tests/social_system.test.ts, tests/hall_boards_view.test.ts,
+  tests/world_api_parity.test.ts, tests/monolith_budget.test.ts
 The agent returns: the promised-versus-delivered table per deliverable, the list of new
 symbols and where each is consumed, every test added with what it asserts, and any
 TODO, unused import, or stub.
@@ -428,13 +503,20 @@ history/finality and required Codex asset execution where applicable.
 STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report to a
 file and replying with the path plus a short summary; prompt each for COVERAGE: report
 every issue including low-severity and uncertain ones; ranking happens later):
-- CORRECTNESS: the credit site is the one clear-credit site and it reads deed state
+- CORRECTNESS: the credit site is the one credit function and BOTH its callers (the
+  generic eligible snapshot and the Nythraxis room roster) and it reads deed state
   without re-granting character deeds; exactly-once holds across a relog and across two
-  guilds; the guild record uses the load, serialize, evict idiom and never persists whole
-  from one session; the DDL is additive and keep-forever; raw guild deletion refuses while protected dependencies remain; explicit safe
-  disposition permits cleanup and the social_system guards still hold; the hall plinths show the finish per
-  difficulty; offline and headless hold an empty map without a crash; every extraction is
-  move-not-rewrite (diff the moved bodies).
+  guilds; the carrier is the first carrier-eligible recipient in original order; the
+  cross-carrier and lost-carrier literal rows hold; the guild record uses the load,
+  serialize, evict idiom and never persists whole from one session; the DDL is additive
+  and keep-forever with no ON DELETE RESTRICT; disbanding a guild that holds a first
+  clear takes the D79 tombstone outcome at both deleting call sites with the row
+  attached, deleting the carrier character leaves the projection unchanged (pg twin),
+  and the social_system guards still hold; capacity exhaustion never refuses join, entry
+  or revival and a dark realm makes zero admission calls (D83, D85); the War table reads
+  the committed projection, never the uncommitted candidate (D82); the hall plinths show
+  the finish per difficulty; offline and headless hold an empty map without a crash;
+  every extraction is move-not-rewrite (diff the moved bodies).
 - TEST COVERAGE: every claimed pin has a DECISIVE assertion (literal deed ids and prop
   ids written fresh; a same-seed twin run with a work-happened anchor; the second clear
   asserts no second row; a per-dimension negative for a non-guild party's clear); no

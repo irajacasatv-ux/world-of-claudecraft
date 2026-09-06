@@ -33,13 +33,26 @@ Each reports every issue, including uncertain issues and nits, with severity/con
 and evidence to a file. Audit these specific requirements:
 - The schema already has Phase 07 stable plot IDs; no late primary-key rewrite.
   Ward/deed/guest/layout/receipt references survive second admission. myFreehold stays
-  primary, myFreeholds is primary-first and bounded to two.
-- Odd and even material quantities use per-line ceil(1.5); zero/fractional invalid
+  primary, myFreeholds is primary-first and bounded to two. The second plot is granted
+  at the literal Cottage tier (D1/D2); it upgrades through the same build projects as
+  the primary with every integer material line at ceil(1.5x) and there is no
+  second-home upgrade refusal or key (D93); a third plot refuses with
+  freehold.second_plot_cap and a purchase without a primary refuses with
+  freehold.second_plot_primary_required, both real-PG fixtures; the second plot's
+  upgrade progress reads from its own myFreeholds projection, never myFreehold.upgrade.
+  The 38 interplay (D80) has real-PG fixtures: free-index
+  occupancy after purchase, freehold.deed.buyer_capacity with two plots occupied, a
+  sold primary replaced by a fresh tier-0 record at index 0, a sold second plot
+  freeing index 1 with no replacement, and each plot's Favor capacity award travelling
+  with its stable plot ID.
+- Odd and even material quantities use per-line ceil(1.5) on the weekly Ledger and
+  prepay lines (CAL-LEDGER-A) and on every upgrade bill line derived from the signed
+  primary CAL-UPGRADE row (D93, never a second signed row); zero/fractional invalid
   source rows refuse and prepaid versions never reprice. Service price is never this
   arithmetic; stale/unknown quotes or bills refuse with a fresh-confirmation flow.
 - Trace 07 server/freehold_hearth_db.ts::{FREEHOLD_HEARTH_SCHEMA,loadFreeholdHearth,
   advanceFreeholdHearthOnClient} and normalized account_freehold_hearth(account_id
-  PK/FK, ready_at_ms, revision).42 consumes that SAME account participant for both
+  PK/FK, ready_at_ms, revision). 42 consumes that SAME account participant for both
   homes/alts/realms through 07a atomic accepted remote entry, commit before ACK.
   Cached UI and plot fields never authorize; transaction epoch-clock observation
   follows account acquisition and nonregressing admission. Destination defaults
@@ -50,12 +63,19 @@ and evidence to a file. Audit these specific requirements:
   commit-before-ACK, clock regression and isolated offline/headless host-clock parity.
   Transfer/cancel/recovery never copy or clear seller or buyer ready_at_ms/revision.
   Character deletion preserves the row; soft deactivation/restore, account export
-  and true hard-delete have separate fixtures. Check indexes/query bounds/FK waits
-  and capable rolling-release proof. One plot's prepay/condition/visitor/ward state
-  cannot leak into the other's.
+  and true hard-delete have separate fixtures. An open second-SKU purchase or transfer
+  operation blocks character or account deletion with the mapped refusal class in
+  character_delete_db.ts (D88); the deletion race is a real-PG fixture. Check
+  indexes/query bounds/FK waits and capable rolling-release proof. One plot's
+  prepay/condition/visitor/ward state cannot leak into the other's.
 - Real-PG same/different-key second purchase races, stale lease/CAS, receipt compaction
   replay and restart prove two-plot cap and exact custody. Every priced QA checks
   counsel/Terms/service sign-off, dark flags and all-seven distribution submodels.
+  Denied-storefront absence is checked as a runtime contract (no DOM node, handler,
+  request, fetched catalog, error copy or accessible text) with dormant code/keys in
+  the bundle (D86); the NEW steward/charter/denied/hearthKey keys named in 42
+  deliverable 4 exist in ux-spec.md and both regenerated manifests with updated counts
+  (D92).
 Audit strict decode, malformed/max-size preservation, current authorization, keyed
 player strings, focus return and all input modes where UI exists, deterministic
 three-host parity, no monolith growth, and test-pin freshness where applicable.

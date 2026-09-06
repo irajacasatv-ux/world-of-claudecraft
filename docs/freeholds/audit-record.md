@@ -148,6 +148,17 @@ final checked deck SHA-256 is
 `79cb466899ba7ed0df19738a0203e04ba4fd3bde3a025a1809236500bf16cb59`.
 Future housing runtime and PostgreSQL acceptance remain owned implementation work.
 
+Disclosure: the proposal (docs/prd/woc/freeholds-and-guildhalls-research.md), the deck and
+the six housing-research appendices were edited in place on 2026-09-06 to propagate D27 to
+D75 and the 2026-09-06 review round (D76 to D92). The text adopted on 2026-09-05 is revision
+383fd7da83 (also the FernandoX7/add-real-estate head). Proposal sections 7, 8, 9, 10, 13 and
+14 were replaced; section 3 carries two marked sentence edits (D5/D16 and D37); the nine
+rulings in section 12 are unchanged and the addendum was corrected per D29. Appendix text
+rewritten after capture stands beside the restored original under a "Superseded 2026-09-06
+by D<n>" marker. The proposal status block and housing-research/README.md carry the same
+note. The section-by-section decision map is recorded below under "Adopted proposal and
+in-place propagation".
+
 ## Additional verified source corrections
 
 | Finding | Corrected source contract |
@@ -175,12 +186,15 @@ Future housing runtime and PostgreSQL acceptance remain owned implementation wor
 | D73 | Revisit completed-feature Terms, legality, platform policy, settlement and rights at the end, then produce the concrete legal-team handoff. Earlier release gates remain cumulative. |
 | D74 | Every asset-producing implementation and corrective asset pass must use Codex, not Claude, including GLBs, images and icons. |
 | D75 | Final Codex artwork replaces every feature-created placeholder icon/image in 44a; the final legal handoff follows in 44b. |
+| D76 through D93 | Recorded on 2026-09-06 from the independent review's decision gaps (state.md "Settlement round 2", ruling sheet R47-R64): visitor friend admission, guild-plot visiting policy, Hall Fund end-of-life, keep-forever guild history and tombstone disband, furnished-plot transfer admission, the 05 default Inn Room record, the war table client seam, housing capacity never gating gameplay, calendar clocks, dark realm behavior, the purchase-submodel absence contract, the wave A and E publication arms, deletion policy for operation rows, upgrade contribution source mode, dye station identity, distribution capabilities and the one key family; D93 (R64) is the fix round's coordinator ruling that the second home upgrades through the primary's build projects at ceil(1.5x) with no second-home upgrade refusal. Applied throughout the packet as recommended dispositions; each awaits Fernando's word. |
 
-The [locked state](state.md) preserves D1 through D26 and records D1 through D75,
-all answered recommendations, source-first corrections and precise engineering
-refinements. External counsel, published Terms, service acceptance and calibration
-artifacts are named production/release gates. They are not unanswered product
-questions, fabricated signatures or completed runtime evidence.
+The [locked state](state.md) preserves D1 through D26 and records D1 through D93 (D76
+through D92 from the 2026-09-06 independent review and D93 from the fix round's
+coordinator ruling, applied as recommended dispositions and awaiting Fernando's word), all
+answered recommendations, source-first corrections and precise engineering refinements.
+External counsel, published Terms, service acceptance and calibration artifacts are named
+production/release gates. They are not unanswered product questions, fabricated signatures
+or completed runtime evidence.
 
 The first independent whole-packet review covered all 141 files and returned
 CHANGES REQUIRED with 37 findings. All 37 and every additional finding discovered
@@ -203,16 +217,45 @@ claims. Postscan whole-source bridge members were separately checked. NEW names
 have explicit future owners, file-local members are labeled, and historical or
 other-revision references are not presented as current-tree exports.
 
-Final packet checks passed: 124 Markdown files, 56 implementation/QA pairs,
-112 ordered starter files, every STEP 0 through STEP 7, exact successor chain,
-at most five substantive deliverables, 135 README links, and no forbidden dash
-or emoji in the packet. The English manifest exactly matches all 329 UX keys;
-all 330 screenshot identities are unique and preserve the original 315 records.
-The 15 additions cover empty build state and day/night interiors. Functional
-registration stages are 12, 89, 178, 226 and 330 captures; later UI is never
-registered before its producer exists. Full local-link, whitespace and scope
-checks passed. The Stop-hook floor, `bash .codex/hooks/qa-stop.sh` with empty-object
-input, exited zero with no output. The canonical gate result is recorded above.
+Final packet checks passed: 124 Markdown files, 56 implementation/QA pairs, 112 ordered
+starter files, every STEP 0 through STEP 7, exact successor chain, at most five
+substantive deliverables, 135 README links, and no forbidden dash or emoji in the packet.
+The English manifest exactly matches all 329 UX keys; all 330 screenshot identities are
+unique and preserve the original 315 records. The 15 additions cover empty build state and
+day/night interiors. Functional registration stages are 12, 89, 178, 226 and 330 captures;
+later UI is never registered before its producer exists. Those are the settlement-time
+counts; the 2026-09-06 repair round regenerated both manifests with an owning phase per
+row (557 keys and 733 variants, wave A staying at 330), recorded in the review section
+below. Full local-link, whitespace and scope checks passed. The Stop-hook floor, `bash
+.codex/hooks/qa-stop.sh` with empty-object input, exited zero with no output. The
+canonical gate result is recorded above.
+
+## Adopted proposal and in-place propagation
+
+The proposal, deck and research appendices at HEAD are the settled propagation of the
+text adopted on 2026-09-05 at revision 383fd7da83, edited in place on 2026-09-06. The
+sections changed and the decision behind each:
+
+| Proposal section or artifact | Change | Decision |
+|---|---|---|
+| Status block and summary "Reg risk" row | Adoption line rewritten to the packet requirements; "Reg risk" replaced by "Release authority" (counsel and service acceptance, no legal classification claimed). | D28, D31, D33 |
+| Section 1 store-safe and upkeep bullets | Use separated from checkout; purchases web and website-desktop only, Seeker use-only; prepay four weeks then twelve with an approved web repair purchase. | D21, D28, D29 |
+| Section 3 (mandatory) | Two marked sentence edits only: farm persistence offers clock and validation precedents; Ledger payment has explicit bags-only, vault-only and automatic modes while home crafting keeps the one planner. | D5/D16/D61, D37 |
+| Section 6.4 trophies | Account-wide eligibility, generic display first with bespoke forms in 23, possession-inactive copies, known/unknown provenance, spoiler rules, guild first-kill capture in 31. | D48, D55 |
+| Section 6.7 upkeep | Values restated as WOC working targets with attributions removed; suspension, absence, integer units, source modes, Hall Fund allowance. | D31 to D37, D54 |
+| Section 7 flywheel | Table replaced; holder flair row folded into the deed surface; argument paragraphs removed. | D27, D29, D31, D64 |
+| Section 8 store-safe (mandatory) | Title, distribution table and rules replaced by the capability matrix and release gates. | D28, D29, D30, D65 |
+| Section 9 on-chain deeds | Optional deed contract, furnished-sale transfer, no rent, territory gates. | D64, D65 |
+| Section 10 experience | Arrival, Steward, build mode, trophy case and visiting text aligned to ux-spec; layout sharing moved to 41a. | D40 to D46 |
+| Section 12 rulings | The nine rulings are byte-identical; only the addendum paragraph was corrected. | D29 |
+| Section 13 MVP | Storage-charter flow, furnishing count, entitlement flow and the ledger price question replaced. | D1, D29, D31, D38, D50 |
+| Section 14 roadmap | Phases 0 to 4 replaced by waves A to E plus 44a and 44b. | D68, D73, D74, D75 |
+| Player deck | Every removed or narrowed promise carries its decision (trophies D48, placement D43/D44, channels D53, garden D52, Strongbox D47, prestige D63, prepay D32/D37, Call D29/D34, absence D35/D36, plinths D55, Hall Fund D54, projects D56, wards D57/D51, Endeavors D58, Showcase D59, guest books D60, checkout D27/D29/D31, deeds D64/D65, busy retry D50, offline Inn D16/D28/D45). | as listed |
+| Six research appendices | Body bullets rewritten after capture stand beside the restored original under a "Superseded 2026-09-06 by D<n>" marker; the section 12 rulings and the mandatory sections remain checkable against 383fd7da83. | D1, D62 and the decisions each marker names |
+
+The 2026-09-06 review (P3 F1) found this propagation undisclosed; the disclosure above
+and the matching note in the proposal status block and housing-research/README.md close
+it. A reader who needs the adopted 2026-09-05 wording reads revision 383fd7da83.
 
 ## Delivered UX and file scope
 
@@ -252,5 +295,41 @@ The change contains 141 documentation files: all 126 artifacts indexed by the
 
 The branch stays local. No game implementation or generated housing asset is
 included, and no legal delivery, external signature, push or PR action is claimed.
+
+## Independent review and repair round (2026-09-06)
+
+A fresh independent review read the whole packet at 1527f1c1ca (feature/freeholds, clean
+tree) after the settlement commit: twenty read-only lanes (anchors A1/A2/A3, deck DK,
+legal and platform L1, product coverage P1, structure P2, proposal rewrite P3, server
+lanes S1a/S1b/S2/S3/S4a/S4b/S5, UX lanes U1/U2a/U2b/U3 and the wave-close lane W1) over
+the 124 packet artifacts (the two JSON manifests included), the proposal, the deck, the
+housing-research README and its six appendices, and the six handoff drafts, each opening
+the cited repository sources and the release branch for drift. Ten adversarial verifiers
+(V1 to V10) re-opened every cited line and either confirmed, downgraded, widened or
+refuted each finding; the consolidated verdict table is the review's MASTER record.
+
+After adversarial verification the review carried 7 blocking, 139 should-fix and 167
+nice-to-have findings (9 refuted, 4 informational), each kept at the verifier's severity
+and corrected line numbers. The blocking findings were the wave A and E publication arms,
+the visitor friend-admission fact, the Hall Fund end-of-life disposition, the keep-forever
+guild history against hard delete, the war table client seam, the default Inn Room record
+that only 07 created (D81), and the buyer-capacity precondition of the deed contract.
+Every decision gap the review exposed is recorded as D76 through D93 (state.md "Settlement
+round 2", ruling sheet R47-R64) with its recommended disposition applied throughout the
+packet and its word column awaiting Fernando's word; the fix round's own coordinator
+ruling D93 (R64) settles the second home's upgrade path at ceil(1.5x) with no second-home
+upgrade refusal; no D1-D75 or R01-R46 row was reopened.
+
+The repair round applied every confirmed finding, including nits: wave one corrected the
+56 implementation/QA pairs, the art brief, the six drafts, the proposal, the deck and the
+appendices; wave two corrected the shared controlling documents (state, ruling sheet,
+README, progress, plan, checklist, audit record, content manifest, workbook, brainstorm),
+the UX specification and the two regenerated manifests, with cross-file requests exchanged
+in writing so that every deliverable list, reviewer roster, test list and cited count
+agrees with the file that owns it. The fix round is documentation only: no implementation,
+asset, database workload, push, PR or external delivery occurred. The round is complete
+and awaits the fresh review of the fix round required by implementation-plan.md and this
+record before any further status is claimed.
+
 The next implementing session starts with [the foundation starter](phase-01-foundation.md):
 `/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-01-foundation.md`.

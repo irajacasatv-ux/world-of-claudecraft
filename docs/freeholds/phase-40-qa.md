@@ -1,4 +1,4 @@
-# Phase 40 QA: audit Keep and Citadel tiers with existing prestige
+# Phase 40 QA: audit Keep and Citadel tiers, prestige deeds
 
 Audits `phase-40-keep-and-citadel-tiers.md`. Record the verdict in `progress.md` row "40 QA".
 The next implementation starts only after this audit passes.
@@ -6,21 +6,24 @@ The next implementation starts only after this audit passes.
 ### Starter Prompt
 ```
 This is Phase 40 QA of the Freeholds and Guildhalls feature.
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out.
 Goal: verify every promised deliverable, adversarial failure case and settled ruling
 against the real implementation diff; fix all findings and review the fix round.
 
 STEP 0 - PRE-FLIGHT:
 Work in the state.md worktree/branch. Verify git status is clean; ask if it is dirty.
 Sync per state.md "Worktree, base, and merge-forward"; after a non-empty merge run the
-release-merge-audit skill and install frozen dependencies if patches/ moved. Scan memory
-for test-pin traps, "apply ALL findings" and "review the review-fix round".
+release-merge-audit skill and install frozen dependencies if patches/ moved. Read
+state.md "Gotchas (read before the matching phase)" and implementation-plan.md for
+test-pin traps, "apply ALL findings" and "review the review-fix round" (Codex has no
+memory step).
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
@@ -41,14 +44,22 @@ and evidence to a file. Audit these specific requirements:
 - Pin each of the five personal existing deed alternatives independently and the
   three exact owning-guild boss/dungeon sources at both difficulties. Both upper
   tiers share the same predicate; no invented Citadel grind, profession requirement,
-  officer personal credential or current-score demotion.
+  officer personal credential or current-score demotion. Capture exhaustion never
+  refuses join, enterDungeon or respawn (D83): the negative pin runs with the recording
+  arm exhausted.
 - Four approved literal material bills contain produce and no protected input;
-  prerequisites/overflow custody checks precede service spend. Real-PG receipt/Fund/
+  prerequisites/overflow custody checks precede service spend. tiers.ts carries the Keep
+  20 and Citadel 24 visitor caps with fresh literal pins; Homesteader rows appended at the
+  END of deeds.ts with DEED_ORDER.length re-measured, never reordered. Real-PG receipt/Fund/
   exact-copy interleaves preserve contributions and cannot duplicate upgrades.
 - Same geometry with guild dressing, deterministic colliders/tower navigation, final
   art and scheduler/LOW iOS fallback match ux-spec; no universal three-light claim.
 - All three money gates, no guessed service fee, fresh quote confirmation, keyed
-  status/overflow UI, actual DB callers and account/guild source caches are covered.
+  status/overflow UI (the exact prestige/overflow rows in ux-key-manifest.json, the
+  `housing-steward-store` requirement/overflow variants (steward-requirements-met,
+  steward-requirements-unmet, steward-guild-clear-unmet, steward-overflow-review,
+  steward-overflow-none) in ux-shot-manifest.json, D92),
+  actual DB callers and account/guild source caches are covered.
 Audit strict decode, malformed/max-size preservation, current authorization, keyed
 player strings, focus return and all input modes where UI exists, deterministic
 three-host parity, no monolith growth, and test-pin freshness where applicable.

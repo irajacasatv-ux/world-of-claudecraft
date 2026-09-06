@@ -8,7 +8,9 @@ The next implementation phase never starts before this file has run.
 This pair produces NEW scripts/lib/pr_shot_housing.mjs::housingReviewTargets and the
 one import/spread in scripts/pr_shot_targets.mjs. It registers only twelve functioning
 interior variants. 11 extends this same target to 89, 16 reaches 178, 17 reaches 226,
-18 reaches 330 and 20 verifies the complete 330. No unavailable build, Steward,
+18 reaches 330 and 20 verifies the complete wave A set (330 of the 733-variant program
+inventory in ux-spec section 11; each later producer's close verifies its own
+milestone). No unavailable build, Steward,
 trophy or visiting UI is registered early. Counts derive from the UX manifest.
 
 ```js
@@ -75,7 +77,7 @@ const housingVisualWhen = [
   'src/render/freehold/furnishing_models.ts',
   'src/render/freehold/furnishing_ghost_visual.ts',
   'src/render/freehold/interior_dressing.ts',
-  'src/render/freehold/interior_light_rig.ts',
+  'src/render/freehold/freehold_light_grade.ts',
   'src/sim/content/freehold/layouts.ts',
   'src/sim/content/freehold/furnishings.ts',
   'scripts/assets/freehold_basics/',
@@ -115,7 +117,7 @@ extended build definition; it does not append a duplicate target.
 },
 ```
 
-The exact callback uses NEW09-owned fixture/assertion functions in that shared
+The exact callback uses NEW 09-owned fixture/assertion functions in that shared
 helper and the actual runner's optional-clip return contract:
 
 ```js
@@ -149,7 +151,7 @@ the visiting target's fresh-arrival/cue acceptance scenes.
 housingVisualWhen inventory. The existing classifyDiff visual-path selection consumes
 that predicate, alongside the target when-match path; no second path list or generic
 all-asset fallback is added. 11 extends the same owner/inventory/tests when build UI
-ships. Art-only diffs must select the functioning interior target already in09.
+ships. Art-only diffs must select the functioning interior target already in 09.
 
 09 extends tests/pr_shot_targets.test.ts with the exact twelve emitted keys, unique
 one-image records and required art-path selection. Real browser proof must assert the
@@ -163,9 +165,13 @@ This helper/capture evidence belongs to deliverable 5, not an additional output.
 This is Phase 09 (QA) of the Freeholds and Guildhalls feature: audit render (the
 furnishing view, the stand-in kit, the interior light rig, the placement ghost).
 
-Harness: Codex. Asset generation in this implementation must use Codex, not Claude.
-Follow AGENTS.md and root/directory CLAUDE.md repository contracts; use the active Codex
-model and the existing image/model/SFX pipelines, provenance and quality gates.
+Harness: Codex. Asset generation in this implementation (the sampled housing_arrival
+cue and any generated image) must use Codex, not Claude (D74); code and review work
+follows the active harness. Follow AGENTS.md and root/directory CLAUDE.md repository
+contracts; use the active Codex model and the existing image/model/SFX pipelines,
+provenance and quality gates. Claude-specific memory, Workflow and agent-runtime
+instructions do not apply under Codex (AGENTS.md): use the equivalent Codex read-only
+reader and reviewer roles wherever this prompt says Explore or review agent.
 
 Goal: audit the Phase 09 diff for correctness against every deliverable and acceptance
 criterion in docs/freeholds/progress.md "09 Render: furnishing view, light rig, ghost",
@@ -176,12 +182,12 @@ renderer.ts ratchet and re-mint; fix what the audit finds; record a verdict.
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
   while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
-- Memory scan: MEMORY.md, the test-pin traps catalog, the Eastbrook re-mint entry, the
-  measurement-record entry (commit the series, not a summary), "review the review-fix
-  round", "apply ALL findings".
+- Gotchas scan (Codex has no Claude memory, AGENTS.md): read state.md "Gotchas" for
+  the test-pin traps, the Eastbrook re-mint rule, the measurement-record rule (commit
+  the series, not a summary), "review the review-fix round" and "apply ALL findings".
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
@@ -192,7 +198,9 @@ Spawn one Explore agent to read and summarize:
   `git diff <phase-start>..HEAD --stat`, then the full diff of every touched file (the
   commits named in progress.md row 09)
 - the pins the diff claims: tests/furnishing_layout_core.test.ts,
-  tests/furnishing_visuals.test.ts, tests/interior_light_rig.test.ts,
+  tests/furnishing_visuals.test.ts, tests/freehold_light_grade.test.ts (and the
+  byte-identical existing tests/interior_light_rig.test.ts), tests/camera_director_core.test.ts
+  (the 'hearthView' arm), tests/pr_shot_targets.test.ts,
   tests/furnishing_ghost_core.test.ts, tests/furnishing_ghost_visual.test.ts,
   tests/renderer_compile_gate.test.ts, tests/architecture.test.ts (RENDER_PURE_CORES),
   tests/entity_gate_stand_in.test.ts, tests/monolith_budget.test.ts, the two Eastbrook
@@ -232,6 +240,7 @@ every issue including low-severity and uncertain ones; ranking happens later):
   ceiling lowered and not raised, no new package.
 Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
 the diff touched (render-performance-reviewer, frontend-seam-reviewer,
+cross-platform-sync, content-obligations-reviewer, gate-integrity-reviewer,
 test-coverage-auditor), and finally qa-checklist (the completion gate), all for
 COVERAGE, all to files.
 
@@ -327,7 +336,9 @@ STEP 3 - VALIDATION:
   Eastbrook re-mint script and confirm it prints the pinned literals.
 
 FINAL REVIEW AND COMPLETION CONTRACT:
-- Required reviewers for the actual promised surfaces: render-performance-reviewer, frontend-seam-reviewer, cross-platform-sync, content-obligations-reviewer, test-coverage-auditor, qa-checklist.
+- Required reviewers for the actual promised surfaces: render-performance-reviewer,
+  frontend-seam-reviewer, cross-platform-sync, content-obligations-reviewer,
+  gate-integrity-reviewer, test-coverage-auditor, qa-checklist.
   Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
   nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
   ownership examples; this complete roster is the minimum finishing dispatch.

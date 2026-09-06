@@ -24,7 +24,8 @@ information must remain legible through ambient grade, materials and silhouettes
 2. Single safe public owner-garden projection with private fields excluded.
 3. Current-character owner-only Harvest Journal board and flavor NPC.
 4. Final measured garden tableau and prop art.
-5. Zero-bed, source-authority, privacy, fairness and interaction evidence.
+5. Zero-bed, source-authority, privacy, fairness and interaction evidence, with the
+   registered garden screenshot target and regenerated key/shot manifests (D92).
 
 ## Account-owner garden source and freshness contract
 
@@ -69,8 +70,17 @@ per-visitor listener, full-account reload per save or second account-source cach
 The descriptor explicitly picks opaque visualId, bedId, cropId, stage, status and
 live/saved/unavailable freshness, sorted by the stable source-qualified internal key.
 Opaque visualId must not encode a character/account ID. Exclude raw source identities,
-observation timestamps, skill, private timers, hidden slots and survivalRoll/yieldSeed
-from both owner and guest wire. Public rows are the same owner-derived tableau for all
+observation timestamps (the source page's read and fence stamps), the crop's own
+plantedAtMs/readyAtMs, skill, private timers, hidden slots and survivalRoll/yieldSeed
+from both owner and guest wire. Because public rows carry stage without any timestamp,
+growth between descriptor emits follows one time-driven rule on both hosts: the
+existing 1 Hz farm tick sweep (updateFarming in src/sim/professions/farming.ts, the
+sweep that already calls notifyFarmReady) re-runs projectGardenTableau over each live
+claimed plot's available source and re-emits the garden block only when the projected
+rows' signature changes at a stage or status boundary; never per tick, never per frame,
+never a poller, with zero SQL and no extra source query. The offline host renders from
+the same pure projection on the same sweep, so both hosts advance a sprout at the same
+boundary. Public rows are the same owner-derived tableau for all
 viewers. Empty is valid only after a complete successful source read proves no plots;
 incomplete/over-budget/failed source is explicitly unavailable or incomplete, never
 false empty, first-character-only or a visitor's replacement garden. Use ux-spec's
@@ -116,12 +126,18 @@ docs/design/tooltip-writing.md. No separate synonym keys or timer-bearing fallba
 | hudChrome.housing.garden.savedReadyTooltip | This bed appears ready from saved garden records. Changes made elsewhere may not appear yet. |
 | hudChrome.housing.garden.journalTooltip | Open your current character's {journal}. |
 | hudChrome.housing.garden.growing | Growing |
+| hudChrome.housing.garden.board | Harvest Journal board |
 
 Resolve {journal} through existing hudChrome.harvestJournal.title. Resolve ready and
 withered status through existing hudChrome.harvestJournal.ready and
 hudChrome.harvestJournal.withered. Growing uses hudChrome.housing.garden.growing;
 never use hudChrome.harvestJournal.growing because that source contains a private timer.
-No timestamp, hidden farm data or raw source identifier enters a placeholder.
+No timestamp, hidden farm data or raw source identifier enters a placeholder. The
+board's templateId `harvest_journal_board` resolves its display name through the
+feast_title templateId map to hudChrome.housing.garden.board, never a raw English name
+on the wire. The board row is new in this phase, so append it to ux-spec section 10 and
+regenerate ux-key-manifest.json in the same change (D92); the other rows are already
+section 10 rows.
 
 Apply aggregate source-state precedence from the shared loader result: before any
 result use loading; whole-source failure uses unavailable; any incomplete coverage
@@ -145,8 +161,14 @@ pin a saved ready row's visual label, tooltip and accessible name, timer-free gr
 localized {journal}/{status} values and the owner-current-character versus guest action.
 Assert the exact public descriptor key set, no private sentinel in DOM/accessibility or
 placeholders, and no empty fallback on missing pages. Capture these states in the later
-wave B acceptance evidence at desktop, compact and tablet sizes at LOW; the canonical
-UX manifest owns target identities, so do not invent an unregistered screenshot alias.
+wave B acceptance evidence at desktop, compact and tablet sizes at LOW. The canonical UX
+manifest owns target identities, so this phase registers them rather than inventing an
+alias: append the NEW `housing-garden` target (the scenes
+garden-{live,saved,mixed,incomplete,unavailable,empty,loading}-{owner,guest} x
+desktop/compact/tablet, 42 variants, the 399 milestone) to ux-spec section 11
+(housingReviewTargets) and regenerate
+ux-shot-manifest.json in the same change (D92); the four wave A targets are unchanged,
+and 27 captures only registered keys.
 
 ## Required Codex asset execution
 
@@ -167,7 +189,7 @@ This is Phase 24 (QA) of the Freeholds and Guildhalls feature: audit the Kitchen
 tableau (the garden projection, the Harvest Journal board, the farmer NPC, the render
 tableau, the zero-bed rule).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 24 diff for correctness against every deliverable and acceptance
@@ -195,7 +217,8 @@ Spawn one Explore agent to read and summarize:
 - the pins the diff claims: tests/freehold_garden_view.test.ts,
   tests/professions_farming.test.ts, tests/professions_zone_rollout.test.ts,
   tests/snapshots.test.ts, tests/entity_display_name.test.ts,
-  tests/renderer_compile_gate.test.ts, tests/monolith_budget.test.ts
+  tests/renderer_compile_gate.test.ts, tests/pr_shot_targets.test.ts,
+  tests/monolith_budget.test.ts
 The agent returns: the promised-versus-delivered table per deliverable, the list of new
 symbols and where each is consumed, every test added with what it asserts, the import
 graph of garden_view.ts, every field the garden rows carry (against the PlotState hidden
@@ -216,18 +239,26 @@ every issue including low-severity and uncertain ones; ranking happens later):
   the clock-base contract (no Date.now subtraction from an authority stamp); a visitor
   sees the account owner's safe garden per D52, never their own farm substitute; only the
   owner board opens the current character's existing Harvest Journal; guests cannot open either private owner controls or a
-  misleading visitor Journal under an owner heading; the farmer NPC has no vendor, gossip
-  service, or state write; the board and NPC are torn down on free; the extractions are
-  move-not-rewrite.
+  misleading visitor Journal under an owner heading; the farmer NpcDef carries no `farmer`
+  flag, vendor, gossip service, or state write (isFarmerNpcEntity false, convertHusks
+  refuses 'no_farmer' inside the plot); the stage shown between descriptor emits advances
+  on the 1 Hz farm sweep on both hosts with zero SQL; the board's name resolves through the
+  templateId map to hudChrome.housing.garden.board; the board and NPC are torn down on
+  free; the extractions are move-not-rewrite.
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion (the zero-bed pin compares
   FARM_BED_IDS and FARMING_GAIN_SCHEDULE against fresh literals, not against themselves;
   the hidden-slot pin asserts the exact key set of a garden row; the one-to-one pin has
   a control that fails on an added or dropped row; the fairness pin exercises LOW and
-  the top preset); orphaned tests; a determinism case with a work-happened anchor.
+  the top preset; the farmer negative pin asserts NPCS.freehold_farmer.farmer undefined
+  and a 'no_farmer' refusal with the NPC spawned; the idle stage-boundary case asserts
+  the advanced stage with a zero-query control); orphaned tests; a determinism case with
+  a work-happened anchor.
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
   import invariant, garden_view importing farm_patches or any content table, the word
   "phase" in any code, comment, or commit message, em dashes or emojis, generated files
-  hand-edited, a prop attached outside the scheduler, the local CLAUDE.md row accurate.
+  hand-edited, a prop attached outside the scheduler, the local CLAUDE.md row accurate,
+  ux-key-manifest.json and ux-shot-manifest.json regenerated in the phase's commits (the
+  board row; the `housing-garden` variants) rather than hand-edited.
 - Required reviewers: architecture-reviewer, render-performance-reviewer, content-obligations-reviewer, frontend-seam-reviewer, cross-platform-sync, privacy-security-review, server-hot-path-reviewer, database-performance-reviewer, migration-safety, test-coverage-auditor, qa-checklist. Each reports COVERAGE to a file.
   Apply ALL findings including nits; a fresh reviewer reads every fix. The actual diff
   may trigger additional specialists; database review runs before decisions and again

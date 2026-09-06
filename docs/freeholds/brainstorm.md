@@ -1,8 +1,11 @@
 # Freeholds and Guildhalls: adopted proposal and tree context
 
-The packet is settled by D1-D75 in [state.md](state.md). The complete answered
-[ruling sheet](ruling-sheet.md) records Fernando's 2026-09-06 approval and additions.
-There is no separate decision or unresolved-question list here. Nothing is built.
+The packet is settled by D1-D93 in [state.md](state.md) ("Locked decisions" for D1-D75 and
+"Settlement round 2" for D76-D93, which await Fernando's word). The complete answered
+[ruling sheet](ruling-sheet.md) records Fernando's 2026-09-06 approval, his additions and
+the round-2 rows R47-R64 (D93, R64, is the fix round's coordinator ruling). Every
+decision, D1 and D9 included, is defined in state.md and never here; cite state.md for any
+D. There is no separate decision or unresolved-question list here. Nothing is built.
 
 ## Adopted proposal and explicit refinements
 
@@ -25,39 +28,40 @@ Earlier legal/platform/service release gates remain mandatory.
 
 ## Current tree and reuse
 
-The source audit found no Freeholds implementation. Existing systems provide the
-listed seams, but new housing owners, opaque service authorization, lifecycle/calendar
-bindings and their proofs are explicit producing deliverables. Their existence is not
-assumed from a similar subsystem. The dated factual source inventory is in state.md;
-verify changed anchors before implementing a dependent file.
+The source audit found no Freeholds implementation. Existing systems provide the listed
+seams, but new housing owners, opaque service authorization, lifecycle/calendar bindings
+and their proofs are explicit producing deliverables. Their existence is not assumed from
+a similar subsystem. 13 produces the keep-forever `freehold_ledgers` relation for
+immutable paid bills in `server/freehold_db.ts`; it is not an existing table. The dated
+factual source inventory is in state.md; verify changed anchors before implementing a
+dependent file.
 
-## Reuse map (exact symbols, verified against the tree on 2026-09-05)
+## Reuse map (exact symbols, verified against the tree on 2026-09-05, drift re-checked 2026-09-06)
 | Need | Reuse | Where |
 |---|---|---|
 | System module behind the seam | `SimContext` views, `createSimContext` passthrough | `src/sim/sim_context.ts`, `src/sim/CLAUDE.md` |
-| Instanced region of the one world | `InstanceSlot`, `freshInstanceSlot`, `instanceKeyFor`, `freeInstance`, `instanceOrigin`, `INSTANCE_X_BASE` bands | `src/sim/instances/`, `src/sim/data.ts` |
-| Interior shell from data | `DungeonLayout` + `DungeonInteriorVariant` (`dawnhold`), `DungeonInteriors.buildInterior`, `retireInteriorGroup` | `src/sim/dungeon_layout.ts`, `src/render/dungeon.ts` |
-| Descriptor over the wire + runtime colliders + resume re-send | `riftStateEventFor`, `applyRiftStateEvent`, `setRiftRegion` / `clearRiftRegion` | `src/sim/rift/`, `server/game.ts`, `src/net/online.ts` |
+| Instanced region of the one world | `InstanceSlot` (exported from `src/sim/sim.ts`), `freshInstanceSlot`, `instanceKeyFor`, `freeInstance` (module-private in `src/sim/instances/dungeons.ts`; extend in place, never import it), `instanceOrigin`, `INSTANCE_X_BASE` bands | `src/sim/sim.ts`, `src/sim/instances/`, `src/sim/data.ts` |
+| Interior shell from data | `DungeonLayout` + `DungeonInteriorVariant` (`dawnhold`), `DungeonInteriors.buildInterior`, `retireInteriorGroup` (private on the renderer, reached through the interior tracker callback) | `src/sim/dungeon_layout.ts`, `src/render/dungeon.ts`, `src/render/renderer.ts` |
+| Descriptor over the wire + runtime colliders + resume re-send | `riftStateEventFor`, `applyRiftStateEvent` (private ClientWorld member), `setRiftRegion` / `clearRiftRegion` | `src/sim/rift/runs.ts`, `src/sim/colliders.ts`, `server/game.ts`, `src/net/online.ts` |
 | Persisted deadlines, load-side allowlists | `serializeFarmPlots` / `normalizeFarmPlots`, `FARM_MAX_GROW_MS` | `src/sim/professions/farm_persist.ts` |
 | In-kind bill planner with a published order | `planWatchFee`, `eligibleWatchFeeItemIds` | `src/sim/professions/farm_watch_fee.ts` |
 | Bags-then-vault draw | `planReagentSourceDraw`, `countMinusPlanned` | `src/sim/professions/reagent_sources.ts` |
-| Placed object recipe | `createGroundObject` + `templateId` + `respawnTimer = Infinity`, `feastPlacementHeight` | `src/sim/professions/feast.ts`, `feast_placement.ts` |
-| Blueprints | `RecipeItemDef` + `resolvePatternLearn` (kind `'recipe'`, the R8/D13 channels) | `src/sim/professions/pattern_items.ts`, `src/sim/content/farm_patterns.ts` |
+| Placed object recipe | `createGroundObject` + `templateId` + `respawnTimer = Infinity`, `feastPlacementHeight` | `src/sim/entity.ts`, `src/sim/professions/feast.ts`, `feast_placement.ts` |
+| Blueprints | `RecipeItemDef` + `resolvePatternLearn` (kind `'recipe'`, the R8/D53 channels) | `src/sim/professions/pattern_items.ts`, `src/sim/content/farm_patterns.ts` |
 | Station gate composition | `isAtStation`, `inRangeStationTypes`, `partySharedStationSatisfies` | `src/sim/professions/stations.ts`, `mobile_station.ts` |
-| Purchase entitlement | `handleClaudiumApi`, `parseSpendKind`, `configureClaudiumRuntime`, `isKnownStorageSkuId` | `server/claudium.ts`, `server/claudium_proxy.ts`, `src/sim/content/storage_charters.ts` |
-| Account entitlement row | `account_weapon_cosmetics` shape, `grantAccountWeaponSkins`, injected `bankBonusForAccount` at fresh join; `server/main.ts` binds `computeBankBonus(await bankBonusFactsForAccount(id))` | `server/db.ts`, `server/ws_auth.ts`, `server/main.ts`, `server/bank_entitlements.ts` |
+| Purchase entitlement | `handleClaudiumApi`, `parseSpendKind` (file-local; extend its union in place), `configureClaudiumRuntime`, `isKnownStorageSkuId` | `server/claudium.ts`, `server/claudium_proxy.ts`, `src/sim/content/storage_charters.ts` |
+| Account entitlement row | `account_weapon_cosmetics` shape, `grantAccountWeaponSkins`, injected `bankBonusForAccount` at fresh join; on the packet base 7d140843d2 `server/main.ts` binds it as a one-liner around `computeBankBonus(await bankBonusFactsForAccount(id))`, and origin/release/v0.42.0 widens it to a closure that also returns `characterCount`, so the current binding is re-verified at phase start | `server/db.ts`, `server/ws_auth.ts`, `server/main.ts`, `server/bank_entitlements.ts` |
 | Domain DDL + retention | `<DOMAIN>_SCHEMA` applied by `ensureSchema`, `createRetentionSweep` | `server/db.ts`, `server/retention_sweep.ts` |
 | RouteDef table | `npm run new:endpoint`, `server/http/registry.ts`, `tests/server/http/surface_inventory.ts` | `server/http/` |
 | Fail-closed flag | `steamEnabled`, `riftForgeWireEnabled`, `wocMarketConfig.enabled` | `server/steam/config.ts`, `server/rift_forge_gate.ts`, `server/woc_market_routes.ts` |
-| Self-wire per-account key | `emitBankSelfKeys`, `maybe`, `applyBankSelfWire` (strict decode) | `server/bank_wire.ts`, `src/net/bank_snapshot_wire.ts` |
+| Self-wire per-account key | `emitBankSelfKeys`, `maybe` (a local closure in the `server/game.ts` snapshot emitter; each self key is one call there), `applyBankSelfWire` (strict decode) | `server/bank_wire.ts`, `server/game.ts`, `src/net/bank_snapshot_wire.ts` |
 | Command dispatch sibling | `dispatchFarmingCommand`, `HEAVY_SELF_CMDS`, `JAILED_BLOCKED_COMMANDS` | `server/farming_commands.ts`, `server/heavy_self.ts`, `server/game.ts` |
-| Runtime props synced from IWorld through the compile gate | `FarmPatchVisuals`, `attachSceneGroupGated`, `RENDER_PURE_CORES` | `src/render/farm_patches.ts`, `farm_patches_core.ts` |
+| Runtime props synced from IWorld through the compile gate | `FarmPatchVisuals`, `attachSceneGroupGated`, `RENDER_PURE_CORES` (file-local pin list) | `src/render/farm_patches.ts`, `farm_patches_core.ts`, `src/render/gated_scene_attach.ts`, `tests/architecture.test.ts` |
 | Placement input on mouse, pad, touch | `GroundAimController`, `padGroundAimCallbacks`, `MobileControls.onGroundAimMove/Tap`, `GroundAimReticleVisual` | `src/ui/hud/action_bar/`, `src/game/pad_ground_aim_wiring.ts`, `src/render/ground_aim_reticle_visual.ts` |
 | Yaw and nudge math | `rotateStep`, `wrapAngle`, `nudgeDelta` (copy the two angle helpers; sim may not import `src/editor`) | `src/editor/placement_transform_core.ts` |
 | Window families | `BankWindow` (strongbox opens the real bank), `PlantSheetWindow` (Steward panel), bags grid (palette), `ActionBarPainter` (build strip) | `src/ui/bank_window.ts`, `src/ui/hud/professions/`, `src/ui/hud/action_bar/` |
-| Distribution detection | `resolveWalletCapability`, `wocMarketAttachAllowed`, `wocExchangeSupported`, `NATIVE_APP`, `DESKTOP_APP` | `src/net/wallet_capability.ts`, `src/game/woc_market_wiring.ts`, `src/client_origin.ts` |
-| Trophy sources | `deedsEarned`, reliquary marks, `slain:*` marks, mount possession, the `perfected` stamp, Maker's Bond `craftedBy` | `src/sim/content/deeds.ts`, `src/sim/reliquary.ts` |
-
+| Distribution detection | `resolveWalletCapability`, `wocMarketAttachAllowed`, `WocMarketShellBridge.wocExchangeSupported?()` (optional desktop-bridge probe, not a function export), `NATIVE_APP`, `DESKTOP_APP` | `src/net/wallet_capability.ts`, `src/game/woc_market_wiring.ts`, `src/client_origin.ts` |
+| Trophy sources | `deedsEarned`, reliquary marks, `slain:*` marks, mount possession, the `perfected` stamp, Maker's Bond `ItemInstancePayload.signer` | `src/sim/content/deeds.ts`, `src/sim/reliquary.ts`, `src/sim/types.ts` |
 
 ## Work and handoff inventory
 

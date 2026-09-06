@@ -6,7 +6,8 @@ state.md decisions and ux-spec.md are the acceptance contract.
 ### Starter Prompt
 ```
 This is Phase 08a QA of the Freeholds and Guildhalls feature: public descriptors and consumer-correct wire state.
-Harness: Claude Code. Follow root CLAUDE.md working-style and effort/fan-out rules.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block and its effort/fan-out rules.
 
 Goal: verify every promised behavior and artifact, apply ALL findings including nits,
 and have a second fresh reviewer verify the fix round before recording a verdict.
@@ -38,12 +39,16 @@ STEP 2 - AUDIT:
     and reconnect. Verify correct initial delivery, relocation, clear and stale refusal.
   - Test type and size guards before deep work, independent input-array mutation,
     malformed-row atomic retention, absent/null semantics and out-of-order epochs.
-  - Drive each real command frame through ClientWorld -> dispatcher ->07a commit ->
+  - Drive each real command frame through ClientWorld -> dispatcher -> 07a commit ->
     descriptor mirror. Assert every field by literal and a can-fail rename/control.
   - Remeasure ALL_DELTA_KEYS/count/rename/source-scrape, both-host facet pins and maximum
     descriptor bytes. Query/event/serialization counters prove no repeated shared
     serialization or per-viewer/per-tick database work; scope private feedback correctly.
-- Required domain COVERAGE review: cross-platform-sync, privacy-security-review, server-hot-path-reviewer, architecture-reviewer, test-coverage-auditor, qa-checklist.
+- Required domain COVERAGE review: cross-platform-sync, privacy-security-review,
+  server-hot-path-reviewer, architecture-reviewer, database-performance-reviewer (the
+  PRIOR 07 loadFreeholdHearth and PRIOR 07c loadFreeholdArrivalTiers reads composed on
+  resume; no new query), migration-safety (the mirror stored-shape and wire decode
+  back-compat), test-coverage-auditor, qa-checklist.
   Database performance runs before new DB decisions and on the finished diff. Parent
   runs deterministic gates once; reviewers inspect their evidence.
 

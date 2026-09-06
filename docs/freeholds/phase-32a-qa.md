@@ -1,4 +1,4 @@
-# Phase 32a QA: audit project trophies, cosmetic vendors and the Materials Vault chest
+# Phase 32a QA: audit Project rewards and direct vault access
 
 Audits [phase-32a-project-rewards-and-vault.md](phase-32a-project-rewards-and-vault.md) and every one of its deliverable/acceptance rows. Verdict goes
 in progress.md row "32a QA". A check not run cannot be reported as proved.
@@ -7,7 +7,7 @@ in progress.md row "32a QA". A check not run cannot be reported as proved.
 
 1. Project-completion trophies from durable completed-project proof.
 2. Completion-unlocked guild cosmetic furnishing vendor stock with an exact manifest.
-3. Manor/Bastion direct Materials Vault chest with service-specific authorization.
+3. Manor direct Materials Vault chest with service-specific authorization (D47: Manor only).
 4. Final art, shared interaction UX and complete unlock/custody/content evidence.
 
 ## Shared authority and persistence dependency
@@ -15,7 +15,7 @@ in progress.md row "32a QA". A check not run cannot be reported as proved.
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -47,8 +47,9 @@ NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provide
 committed immutable protection source, and createFreeholdLifecycleCoordinator captures
 authenticated observation time before queueing. Derive a return before presence
 advances; stale observations, fenced sessions and replay cannot mint grace. The
-accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
-and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+lifecycle-policy-binding artifact (accepted or still a named gate) names
+lifecyclePolicyId, sourceCalendarId and resetPolicyId; serving realm, browser zone or
+guessed UTC cannot rebind history.
 13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
 and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
 or account calendar ingress, source-history array on plots, polling job or receipt store.
@@ -85,7 +86,8 @@ entry/build/undo remain available; durable payment retains original operation re
 The game server and Sim remain ignorant of physical distribution. The future economy
 service owns eligibility verification and opaque authorization bound to account,
 purpose/SKU, policy, quote and operation, with issuer/verifier conformance in the
-accepted service artifact. A first-party web checkout session alone is insufficient.
+service artifact (accepted or still a named gate). A first-party web checkout session
+alone is insufficient.
 Client channel labels, Origin, UA, arbitrary JSON, linked Steam/Epic accounts and the
 game-service secret never prove eligibility; do not add a trusted channel field to the
 game server. The client capability map controls presentation, not purchase authority.
@@ -157,9 +159,10 @@ real PG evidence must run ARMED, never skipped. No test may merely mirror its ta
   incomplete/foreign/replayed projects cannot grant it and no new gameplay power appears.
 - [ ] Vendor hydration is deterministic and conditional on the completed guild claim;
   approved costs/source/art and every same-change content obligation are present.
-- [ ] Chest admission and emitVaultSelfKeys agree for owner/member/current rank,
-  plot, distance and condition 30/29; guests cannot see private vault contents, and
-  Strongbox/guild chest retain separate service gates and original capacity.
+- [ ] Chest admission and emitVaultSelfKeys agree for the Manor owner versus every
+  non-owner (guest, visitor and any guild rank at a hall chest, which never opens a
+  personal vault), plot, distance and condition 30/29; guests cannot see private vault
+  contents, and Strongbox/guild chest retain separate service gates and original capacity.
 - [ ] Exact-copy storage/purchase and existing station-vault paths preserve custody;
   final art, LOW prewarm/perf and desktop/compact/tablet state screenshots pass.
 - [ ] All required checks, money/surface gates, shared gate and fresh-fix reviews pass.
@@ -186,8 +189,10 @@ Ordinary authorized gold/Marks furnishing vendors are gameplay acquisition. Thei
 existing platform-neutral admission remains available on every housing-use platform,
 including native, Steam, Epic and Seeker; they neither accept Claudium nor consume a
 paid-service eligibility capability. The feature/counsel/Terms release gates still
-apply to housing enablement. Test paid-store absence independently from the visible,
-authorized ordinary vendor and its insufficient-gold/Marks and locked-project states.
+apply to housing enablement. Vendor purchases debit the buying member's own gold or
+Marks, never the Hall Fund; fund custody and its end-of-life stay with 29 (D78). Test
+paid-store absence independently from the visible, authorized ordinary vendor and its
+insufficient-gold/Marks and locked-project states.
 The economy-service price rule above governs paid service prices, not local gameplay
 recipe/vendor gold or Marks rows pinned in CAL-HALL-STOCK.
 

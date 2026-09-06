@@ -9,9 +9,12 @@ This is Phase 19 (QA) of the Freeholds and Guildhalls feature: audit the art bat
 furnishing, trophy, and dressing GLBs, their fingerprint pins, the registry fill, the
 prewarm homes, the asset budget delta, the perf tour, the LOW-preset phone series).
 
-Harness: Codex, not Claude. Codex MUST execute all asset creation, regeneration and
-asset fixes in this file. Follow AGENTS.md and the root/directory CLAUDE.md repository
-contracts plus .agents/skills/woc-image-to-glb/SKILL.md; this prompt names no model.
+Harness: Codex, not Claude (D74). Codex MUST execute all asset creation, regeneration
+and asset fixes in this file. Follow AGENTS.md and the root/directory CLAUDE.md
+repository contracts plus .agents/skills/woc-image-to-glb/SKILL.md; this prompt names
+no model. Claude-specific memory, Workflow and agent-runtime instructions do not apply
+under Codex (AGENTS.md): use the equivalent Codex read-only reader and reviewer roles
+wherever this prompt says Explore or review agent.
 
 Goal: audit the Phase 19 diff for correctness against every deliverable and acceptance
 criterion in docs/freeholds/progress.md "19 Art batch", missing pins, dead stand-ins,
@@ -26,21 +29,21 @@ use Codex image generation for raster artwork. Capture actual rendered screensho
 as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
 phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
 icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
-That final sweep does not postpone artwork owned here.44b revisits the completed result
+That final sweep does not postpone artwork owned here. 44b revisits the completed result
 for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
   while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved; a lockfile change
   moves every source fingerprint, so re-run the asset pins FIRST and re-export with
   --no-preview if they red).
-- Memory scan: MEMORY.md, the test-pin traps catalog, the authored-art normalization
-  pin trap, renderer.ts edits owing the Eastbrook re-mint, the measurement-record rule,
-  the iOS UA locking the material tier, "review the review-fix round", "apply ALL
-  findings".
+- Gotchas scan (Codex has no Claude memory, AGENTS.md): read state.md "Gotchas" for
+  the test-pin traps, the authored-art normalization pin trap, renderer.ts edits owing
+  the Eastbrook re-mint, the measurement-record rule, the iOS UA locking the material
+  tier, "review the review-fix round" and "apply ALL findings".
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
@@ -81,11 +84,17 @@ Deliverables (at most five):
 2. Codex crafted asset family. Codex uses scripts/assets/freehold_crafted/ for final
    models for the ten accepted Wave A crafted outputs, including the three pattern
    recipes inside those ten, never three extra outputs. Reconcile ID/model/footprint/
-   radius/anchor measurements with03/04 and collision truth; walkthrough rugs are
+   radius/anchor measurements with 03/04 and collision truth; walkthrough rugs are
    explicit. Maintain the protected Masterwrought and ten-profession content mapping.
-3. Codex source-complete trophy family. Codex uses scripts/assets/freehold_trophies/ for final
-   shared bust/head/marker/stand/plaque models for every generic display17 ships.
-   No false feat is granted to fill a new account's case. Bespoke23 forms have explicit
+3. Codex source-complete trophy family. Codex uses scripts/assets/freehold_trophies/ for
+   the final shared Wave A generic display family exactly as content-manifest.md's
+   Wave A generic display column lists it: the plaque variants (framed, relief,
+   book-and-page, weapon-appearance, title, specimen, rank, named-work), the inscribed
+   source medallion on a freestanding plaque, the stand plaque for discovered set
+   pieces, the paddock marker on a floor-supported display and the qualified head
+   family for every generic display 17 ships; no bust form exists in the manifest and
+   none is built (U2a F6, P1 F-11).
+   No false feat is granted to fill a new account's case. Bespoke 23 forms have explicit
    later manifest rows; all Wave A IDs resolve now with approved lineage and readable
    known/unknown provenance in the HUD. A generic final family model is an intentional
    completed design, distinct from a temporary placeholder.
@@ -95,13 +104,13 @@ Deliverables (at most five):
    clear arrival/circulation and meaningful display sightlines from ux-spec.md.
    Measure authored grid/room bounds, model bounds/radii and protected door/arrival
    paths into the content manifest before integration. Use the inherited interior
-   grade/daylight and sampled arrival cue from06/09; no unsupported light/camera
+   grade/daylight and sampled arrival cue from 06/09; no unsupported light/camera
    literal. Three authored emitters is only a ceiling: the global sink may admit two
    on iOS or fewer under pressure. LOW still shows all furnishings, ghost, blocked
    reason and bounds; material/ambient/key fallback keeps the room readable.
    Structural collision/arrival safety and prepared actionable representations
    must be ready before reveal. Directional/hemi/spot/rect lighting stays boot-owned;
-   point-light allocation/retirement uses09's scheduled budget/gates and actual global
+   point-light allocation/retirement uses 09's scheduled budget/gates and actual global
    sink, preserving LOW fairness. Baseline compact/tablet capture is Chromium with an
    iOS profile, not Android, Safari or physical-device proof. Android claims require an
    explicit userAgent/profile variant. Ordinary online arrival's additional cosmetic settle
@@ -115,7 +124,7 @@ Deliverables (at most five):
    identity, never join time: consume a permitted fresh directive at most once.
    Snapshot/resume/replay grants no new cue; commit-before-ACK loss may omit visible
    or audio feedback for an accepted entry.
-   Consume07c/08a's nullable freshArrivalPresentation exactly: acceptedTransitionId,
+   Consume 07c/08a's nullable freshArrivalPresentation exactly: acceptedTransitionId,
    playWelcomeCue:true and firstTierViewEligible. Only that fresh directive can welcome;
    only a true firstTierViewEligible grants the tier view. Positive historical
    firstTierAtAdmission on snapshot/resume never grants a new cue/view. A committed
@@ -136,10 +145,10 @@ Deliverables (at most five):
    this implementation and Wave A release blocked; it is never a completed family
    with an indefinite art deferral. Render and frontend reviews inspect the final
    registry, screenshots and measured bounds; do not duplicate the coordinator tour.
-   Record final Codex asset provenance now.44a's final-artwork-audit.md must recheck
+   Record final Codex asset provenance now. 44a's final-artwork-audit.md must recheck
    every housing-created icon/image and residual fallback against the completed feature
-   before44b prepares docs/prd/woc/freehold-final-legal-handoff.md. It is an additional
-   completion sweep, never permission to ship an unfinished19 family.
+   before 44b prepares docs/prd/woc/freehold-final-legal-handoff.md. It is an additional
+   completion sweep, never permission to ship an unfinished 19 family.
 
 - TEST COVERAGE verifies decisive literal/source and negative assertions for every
   boundary above, including actual work before equality, real async/race outcomes and

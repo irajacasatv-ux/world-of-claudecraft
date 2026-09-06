@@ -8,7 +8,7 @@ implementation phase never starts before this file has run.
 This is Phase 01 (QA) of the Freeholds and Guildhalls feature: audit the foundation (the
 facet, the sim module skeleton, the flag, the RL exclusion).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 01 diff for correctness against every deliverable and acceptance
@@ -19,7 +19,7 @@ the audit finds; record a verdict.
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
   while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
@@ -43,24 +43,33 @@ STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report 
 file and replying with the path plus a short summary; prompt each for COVERAGE: report
 every issue including low-severity and uncertain ones; ranking happens later):
 - CORRECTNESS: every deliverable and acceptance criterion actually met; the facet member
-  kinds match on both prototypes; every housing command refuses while dark on BOTH
-  dispatch arms; the ctx.freeholds view is live (mutation through the Sim is visible
+  set equals the Phase 01 list ("THE PHASE 01 FACET MEMBER LIST" in the implementation
+  file, mirrored in progress.md "01 Foundation") with matching kinds on both prototypes;
+  every housing command refuses while dark on BOTH dispatch arms (the WS pre-switch
+  predicate in server/freehold_wire.ts, which must refuse before the heavy-self mark, and
+  the REST route answering freehold.disabled); SimConfig.freeholdsEnabled maps from the
+  env only through server/sim_boot_config.ts and both non-server constructors pass true
+  (D85); the ctx.freeholds view is live (mutation through the Sim is visible
   through ctx); the extractions are move-not-rewrite (diff the moved bodies); offline and
   online stubs behave identically (null, no-op); the generated module/test were moved
   to the chosen _routes paths with registry and test imports repaired; both
   freehold.invalid_input and freehold.disabled keep their error catalog, English leaf,
-  API_ERROR_KEYS, EXPECTED_CODES, and KNOWN_CODES rows.
+  API_ERROR_KEYS, EXPECTED_CODES, and KNOWN_CODES rows; .env.example carries the commented
+  FREEHOLDS_ENABLED row and DEPLOY.md "Operational notes" documents it as default off,
+  strict '1', never enabled in production before the signed release gates (the row 27-qa
+  and 39-qa later assert).
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion that fails on regression (no
   constant self-comparison; literal counts written fresh; the flag pin toggles the env
-  and asserts refusal per command; the ACTIONS exclusion asserts absence by literal);
+  and asserts refusal per command with no heavy-self dirty flag; the boot-mapping pin
+  covers '1', unset, '0' and 'true'; the ACTIONS exclusion asserts absence by literal);
   orphaned tests; missing negative cases (flag set to 'true' or '0' still dark).
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
   import invariant, the word "phase" in any code, comment, or commit message, em dashes
   or emojis, generated files hand-edited, the local CLAUDE.md present and accurate.
 Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
 the diff touched (cross-platform-sync, architecture-reviewer, privacy-security-review,
-test-coverage-auditor), and finally qa-checklist (the completion gate), all for COVERAGE,
-all to files.
+server-hot-path-reviewer, test-coverage-auditor), and finally qa-checklist (the
+completion gate), all for COVERAGE, all to files.
 
 SETTLED COVERAGE ADDITIONS:
 - Verify redoPlacement/redo_placement are present in both stubs, every command/facet pin,

@@ -1,4 +1,8 @@
-# Phase 43: future craft expansion handoff, no new professions
+# Phase 43: existing-craft coverage and future expansion handoff
+
+The file name keeps its original phase-43-carpenter-and-mason.md slug for link
+stability; the scope is the README title above, and D68 (ruling-sheet R42) excludes
+Carpenter and Mason from this packet: no new profession is created here.
 
 This implementation file and its QA are the complete contract for this bounded slice.
 The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
@@ -6,10 +10,11 @@ are authoritative. Nothing in this planning packet is marked built.
 
 ### Starter Prompt
 ```
-This is Phase 43 of the Freeholds and Guildhalls feature: future craft expansion handoff, no new professions.
+This is Phase 43 of the Freeholds and Guildhalls feature: existing-craft coverage and
+future expansion handoff, no new professions (D68).
 
-Harness: Claude Code. Follow the root CLAUDE.md working-style block for effort and
-fan-out; this prompt names no model.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block for effort and fan-out; this prompt names no model.
 
 Goal: close the optional Carpenter/Mason scope by producing a measured future-expansion handoff while this packet ships its full furnishing program through the existing ten professions.
 
@@ -28,7 +33,8 @@ STEP 0 - PRE-FLIGHT:
 - If state.md "Push policy" records a stacked wave branch, work on that branch instead of
   feature/freeholds.
 - Memory scan: MEMORY.md and entries on content obligations, the R8 pattern channels
-  and D13, the station gate composition, the professions tuning packet, test-pin traps.
+  (D53, ruling-sheet R27), the station gate composition, the professions tuning packet,
+  test-pin traps.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
@@ -40,9 +46,11 @@ Spawn one Explore agent to read and summarize:
   actual ten-profession furnishing assignment and cite existing paths/symbols/tests.
 - Completed contributor/reviewer evidence for furniture access without a profession,
   current training gates and the protected material/keystone envelope.
-- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
-  artifacts referenced by state.md that this slice consumes.
-The agent returns: the explicit locked exclusion of Carpenter/Mason from this packet, existing
+- docs/freeholds/ux-spec.md and the content, measurement, service and policy artifacts
+  referenced by state.md that this slice consumes (each accepted, or still a named
+  unsigned release gate).
+The agent returns: the explicit locked exclusion of Carpenter/Mason from this packet
+(D68, ruling-sheet R42: no new profession), existing
 craft coverage and measured demand/capacity evidence. No skill cap, station family,
 recipe count or new balance rate is chosen here. The future handoff is an artifact
 of this slice, not an unanswered question or conditional implementation branch.
@@ -60,7 +68,7 @@ and return full reports to the scratchpad with a path and short summary.
    acquisition alternatives, measured use/economy findings and actual source/test
    anchors. Explicitly preserve profession-free ownership and upgrade access. Existing
    ten professions deliver the complete approved packet; no Carpenter/Mason content
-   or skill-save enum is added.
+   or skill-save enum is added (D68).
 2. Future decision contract: document the evidence, affected station/training/skill-
    save/content/UI/parity/persistence seams and numeric-provenance worksheet a NEW
    separately authorized expansion would need. Reference existing rates only as
@@ -70,7 +78,10 @@ and return full reports to the scratchpad with a path and short summary.
    does not hold this packet open or imply a promised release.
 3. Consistency and proof: cross-check the actual content manifest, guide and deck
    against the locked scope; remove any conditional claim that Carpenter/Mason ships
-   here. Verify all handoff links/anchors and current furnishing coverage. Record
+   here from those artifacts and README.md only. state.md's historical D1-D26 text
+   (D14 included) stays verbatim: D68 supersedes it without editing it, so state.md
+   is byte-identical after this sweep except its ledger rows. Verify all handoff
+   links/anchors and current furnishing coverage. Record
    explicit no-implementation diff evidence and reviewer verdicts; leave every skill,
    station, recipe, player key and implementation file untouched.
 
@@ -114,12 +125,15 @@ authoring source. Run npm run ci:changed after the last commit and read its exit
 
 STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] The future craft handoff exists with measured evidence, actual anchors, existing-ten-profession coverage and explicit no-new-professions scope.
-- [ ] No skill cap/station/recipe count/rate is invented and no conditional Carpenter/Mason shipping promise remains in the packet or adopted proposal/deck.
+- [ ] No skill cap/station/recipe count/rate is invented and no conditional Carpenter/Mason
+  shipping promise remains in the packet or adopted proposal/deck (D68); state.md D1-D26
+  text, D14 included, is unchanged.
 - [ ] Only the planned handoff and packet status documentation change; all link/copy checks, fresh content/architecture/test review and proportional contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:
 Update progress.md row 43 and state.md's implementation ledger with actual paths,
-commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+commands, wire/schema contracts, screenshots, acceptance-artifact evidence (signed, or
+still a named unsigned release gate) and gate status.
 Record facts learned; do not reopen the locked product rulings or mark a release gate
 accepted without its signed artifact. Numeric tables are literal, provenance-backed
 and approved before activation.

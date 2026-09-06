@@ -35,13 +35,14 @@ ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md (the counsel gate status, the Phase 37 decisions),
-  docs/freeholds/progress.md (only "38 Charter mint surface and marketplace trading"),
+  docs/freeholds/progress.md (only "38 Charter mint surface and marketplace trading
+  (web only)"),
   this file, docs/prd/woc/freehold-deed-service-contract.md
 - src/game/distribution_surfaces.ts and tests/distribution_surfaces.test.ts (the Phase
   14 seven-row matrix), src/game/woc_market_wiring.ts (wocMarketAttachAllowed,
@@ -49,8 +50,11 @@ Spawn one Explore agent to read and summarize:
   (wocExchangeSupported), src/ui/hud.ts HudFeatures (freeholdPurchaseEnabled,
   dailyRewardsEnabled), tests/client_shell.test.ts, tests/woc_market_wiring.test.ts,
   tests/electron_desktop_config.test.ts
-- server/woc_market_routes.ts (the policy switches allowMounts and allowMechChromas,
-  the category vocabulary mirrored as literals, the status route), server/woc_market.ts
+- server/woc_market_routes.ts (the policy switches allowMounts and allowMechChromas
+  beside which NEW allowSerializedCollectibles lands, the closed BROWSE_CATEGORIES
+  literal mirror, the wallet_required/terms_required and stepup_* refusals, the status
+  route), server/woc_market_stepup.ts (WocStepUpOperation, stepUpBindingDigest,
+  verifyStepUpProof), server/woc_market.ts
   (WocMarketService; a tracked monolith at its ceiling), tests/monolith_budget.test.ts,
   server/woc_market_db.ts, server/woc_market_proxy.ts (service-computed splits),
   server/freehold_deed_routes.ts, server/freehold_deeds_db.ts, server/freehold_deed_proxy.ts
@@ -58,7 +62,9 @@ Spawn one Explore agent to read and summarize:
   precedent), server/freehold_wire.ts (the ward descriptor serialization)
 - src/ui/ the Exchange window family (grep woc_market under src/ui/), src/ui/hud/housing/,
   src/sim/freehold/ward_core.ts (the reserved style slot from Phase 34; READ ONLY, the
-  sim does not change)
+  sim does not change), src/sim/exchange_eligibility.ts (ExchangeBrowseCategory, the
+  closed browse union; READ ONLY), server/character_delete_db.ts (the storage-guard
+  refusal shape D88 maps)
 - tests/server/woc_market_routes.test.ts, tests/server/freehold_deed_routes.test.ts
 - docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
   artifacts referenced by state.md that this slice consumes.
@@ -76,8 +82,9 @@ immutable manifest. Trophy unlock/provenance, personal/bound copies and omitted 
 remain seller-owned in verified safe custody. Housing entitlement is an authoritative
 server fact; native clients never derive access from a chain query. The opaque flair
 ID vocabulary is the approved art manifest, unknown IDs render no flair. Client
-distribution capabilities control presentation only: denied deed-capability builds
-have no holder flair, including exterior/banner, chat or other presentation paths. The NEW economy-service
+distribution capabilities (14's deedSurfaces) control presentation only: denied
+deed-capability builds have no holder flair, including exterior/banner, chat or other
+presentation paths. The NEW economy-service
 issuer/verifier alone validates actual eligible checkout session and territory;
 NEW server/freehold_deed_proxy.ts consumes verified opaque allow/refusal/effects,
 with protected binding/receipt owned by 07a. The game learns no channel label or
@@ -105,23 +112,87 @@ Assign disjoint implementation ownership by the following 5 deliverables.
 The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
 finish. Workers receive only the context report and owned files, preserve others' edits,
 and return full reports to the scratchpad with a path and short summary.
-1. Distribution and mint card: add deedSurfaces to distribution_surfaces.ts, enabled
-   only for web and website desktop through wocExchangeSupported; Seeker/App Store/
-   Play/Steam/Epic off. Compose freeholdDeedSurfacesEnabled beside the purchase gate.
-   deed_card_view.ts/window.ts and serialized-collectible Exchange category reuse the
-   cold-window family and ux-spec keyed states, focus and mobile rules. A complete
-   denied purchase/deed submodel is absent, including fetched catalogs, handlers,
-   hidden DOM, errors and aria. Seven-row matrix and source/bundle pins prove it.
-2. Prepare, custody and listing: new server/freehold_deed_market.ts is the owner,
-   called by thin WocMarketService delegates in server/woc_market.ts; extraction pays
-   their lines and lowers the monolith pin. Authenticated current seller prepares an
-   immutable manifest of stable plot/shell/tier/revision and exact eligible item-copy
-   IDs with service quote fingerprint. At prepare, quote/confirmation, listing and
-   NEW-spend settlement, server/freehold_deed_proxy.ts consumes the service's verified
-   opaque authorization/effect or typed refusal. The service alone checks actual
-   checkout-session/territory eligibility and complete account/purpose/SKU/policy/
-   quote/operation/custody binding; no channel/country claim enters the game host.
-   Reserve the plot and listed copies behind the
+1. Distribution and mint card: consume Phase 14's deedSurfaces capability from
+   src/game/distribution_surfaces.ts (14's source pin, already asserted per row by
+   tests/distribution_surfaces.test.ts); 38 changes no distribution row and adds no
+   HudFeatures row (D91 fixes exactly two: freeholdPurchaseEnabled and
+   freeholdManageOnWebsite). The deed window attaches only where deedSurfaces permits,
+   through the same main.ts junction wocMarketAttachAllowed reads. NEW
+   src/ui/deed_card_view.ts and deed_card_window.ts plus a client-side Homes tab in
+   the Exchange window over the NEW plot-listing feed (no new ExchangeBrowseCategory
+   member: the closed union in src/sim/exchange_eligibility.ts and the
+   BROWSE_CATEGORIES literal mirror stay unchanged) reuse the cold-window family and
+   ux-spec keyed states, focus and mobile rules. Deed, mint and listing copy lives in
+   a NEW hudChrome.housing.deed.* block of src/ui/i18n.catalog/hud_chrome.ts, the one
+   namespace registered in 14's tests/freehold_store_gates.test.ts web-only allowlist;
+   that allowlist extension carries its own mutation probe (a planted on-chain word
+   outside hudChrome.housing.deed.* still fails) in the same change. Money states
+   reuse charter.* (price, quoteLoading, quoteExpired, priceChanged, confirm, pending,
+   cancelled, unavailable, receipt). NEW keys under hudChrome.housing with exact
+   English (D92), appended to ux-spec.md's key tables with the section 10 outline row
+   and the section 11 housing-deed screenshot target (scenes deed-card, deed-homes-tab,
+   deed-contents-review, deed-step-up, deed-listed, deed-sold, deed-received and
+   deed-buyer-capacity x desktop/compact/tablet, deed-card and deed-homes-tab on
+   website-desktop, and deed-denied across the six denied surfaces: 44 variants, the
+   639 milestone), and ux-key-manifest.json plus
+   ux-shot-manifest.json regenerated in this same change with every cited count
+   updated: deed.title "Optional Freehold Deed"; deed.mint "Mint Freehold Deed";
+   deed.homesTab "Homes"; deed.list "List This Home"; deed.cancelListing "Cancel
+   Listing"; deed.buy "Buy This Home"; deed.confirmSale "Confirm Sale"; deed.included
+   "These items transfer with the home: {count}"; deed.retained "These items stay
+   with you: {count}"; deed.minted "Your Freehold Deed is minted."; deed.listed "Your
+   home is listed. Its contents are locked until the sale settles or you cancel.";
+   deed.sold "Your home is sold. Your Inn Room is ready."; deed.received "Your new
+   home is ready."; deed.noListings "No homes are listed right now."; deed.stepUp
+   "Sign with your linked wallet to continue."; deed.flairAria "Freehold Deed
+   holder flair"; deed.description "Create an optional record for this Freehold through the
+   approved service. Your game access does not require this record."; deed.saleReview
+   "Review the home and furnishings included in this sale."; deed.includedHeading
+   "Included in the sale"; deed.retainedHeading "Staying with you"; deed.custody "Your
+   personal trophy records and excluded belongings remain yours. The sale proceeds
+   only when their safe storage is confirmed."; deed.custodyUnavailable "Your excluded
+   belongings need safe storage before this sale can proceed."; deed.conditionCredits
+   "The home's condition is recorded through the transfer time. Existing prepayment
+   credits keep their original terms. Account return grace does not transfer.";
+   deed.salePending "This sale is being confirmed. Its request reference is saved.";
+   deed.requestPending "This request is being confirmed. Your request reference is
+   saved."; deed.supportRecovery "This request needs a support review. Your home
+   records and belongings are preserved."; deed.noPricePromise "A listing does not
+   guarantee a buyer or a future price."; the service-unavailable state reuses 37's
+   charter.serviceUnavailable; and denied.deedBuyerCapacity "You do not have a free
+   home slot for this purchase." (mirrored by the apiError.freehold.deed.buyer_capacity
+   protocol leaf with the same English). The listing drafts and the deed contract
+   adopt these ids and this English (D92). A complete denied purchase/deed submodel is
+   absent as a runtime contract: no DOM node, handler, request, fetched catalog, error
+   copy or
+   accessible text; the deed code and its English keys ship dormant in every bundle
+   under the runtime capability, and the review notes and the 44b handoff say so
+   explicitly (D86). Seven-row matrix and source/bundle pins prove it.
+2. Prepare, custody and listing: NEW server/freehold_deed_market.ts owns a NEW
+   plot-listing relation freehold_deed_listings (indexed, bounded pages, its own
+   retention, export and delete rows in the query/index inventory) and its browse
+   feed. The listing is plot-shaped (a furnished plot is account state, not an ItemDef
+   or a bag copy), never a WocListingRow, which requires item: InvSlot, itemId,
+   sellerCharacter and sellerWallet and whose escrow runs against a character-bound
+   bag custody session. WocMarketService delegates in server/woc_market.ts are limited
+   to config, refusal mapping, step-up and quote plumbing, never escrowInsertListing or
+   the bag custody bridge; every line extracted from server/woc_market.ts lowers its
+   monolith pin. NEW allowSerializedCollectibles policy switch beside
+   allowMounts/allowMechChromas in server/woc_market_routes.ts, default off: the feed
+   and every deed listing route refuse while it is off, and 39 pins that default as 38
+   output. Listing and seller-side settlement require the WocStepUp challenge from
+   server/woc_market_stepup.ts with a NEW WocStepUpOperation kind
+   'list_freehold_plot' whose stepUpBindingDigest covers the manifest digest plus every
+   money figure shown; woc_market.wallet_required and woc_market.terms_required refuse
+   before any reservation or service IO, the existing stepup_* refusal codes apply, and
+   recovery of an accepted operation needs no new challenge. Authenticated current
+   seller prepares an immutable manifest of stable plot/shell/tier/revision and exact
+   eligible item-copy IDs with service quote fingerprint. At prepare,
+   quote/confirmation, listing and NEW-spend settlement, server/freehold_deed_proxy.ts
+   consumes the service's verified opaque authorization/effect or typed refusal. The
+   service alone checks actual checkout-session/territory eligibility and complete
+   account/purpose/SKU/policy/quote/operation/custody binding; no channel/country
+   claim enters the game host. Reserve the plot and listed copies behind the
    global fence, reject edit/upgrade/second listing races, and preview ALL excluded
    bound/personal pieces and their exact safe destination. Treasury delegate freezes
    the asset only after verified preparation. If seller custody for omitted goods
@@ -130,6 +201,17 @@ and return full reports to the scratchpad with a path and short summary.
    voluntary transfer, distinct from no-loss upkeep. Service confirms the exact
    manifest/outcome; a bounded transaction updates buyer server entitlement, plot
    owner, included exact-copy custody, seller safe custody and durable receipt once.
+   Buyer capacity (D80): the purchased plot occupies the buyer's plot_index 0 only when
+   that record is at tier 0 (Inn Room); the buyer's retained copies and displays are
+   previewed to a safe destination by the same manifest rule as the seller's;
+   otherwise the operation refuses with the literal code freehold.deed.buyer_capacity
+   (registered in the five Phase 01 catalogs/pins: ERROR_CODES, apiErrorStrings,
+   API_ERROR_KEYS, EXPECTED_CODES and KNOWN_CODES) before any reservation or service
+   IO. After 42, the purchased plot may occupy the buyer's free index under 42's
+   two-plot cap. The seller receives a fresh tier-0 record at index 0 with account
+   trophy unlocks retained. Ward Favor capacity awards (35) are properties of the
+   stable plot ID and travel with the plot; the seller's fresh record starts at the
+   base budget. The deed contract's Preconditions row names this rule.
    Seller's account trophy unlocks/provenance remain; detach their displays and keep
    bound/personal items. Cancel/thaw restores exact original custody; ambiguous service
    completion retries the same intent and recovers without exposing an intermediate
@@ -150,7 +232,7 @@ and return full reports to the scratchpad with a path and short summary.
    server/freehold_wire.ts serialization using the existing chat_flair_stamp.ts
    precedent, never a service lookup per viewer/frame. Strict ward_wire.ts unknown
    IDs become none. The client presentation projection strips holder flair unless
-   deedSurfaces/freeholdDeedSurfacesEnabled permits it; renderers and chat consume
+   14's deedSurfaces capability permits it; renderers and chat consume
    that gated projection, never a raw ID unconditionally. Seeker/App Store/Play/
    Steam/Epic therefore construct no holder-flair submodel, exterior/banner variant,
    chat badge, hidden DOM, error copy or accessible label. The D9-ignorant server
@@ -163,12 +245,19 @@ and return full reports to the scratchpad with a path and short summary.
    The same known valid flair ID must render on both allowed distributions and
    disappear on all five denied distributions plus an unknown-capability build;
    unknown flair IDs remain a separate refusal/control arm.
-5. Proof: dark flag and allowSerializedCollectibles/WOC_MARKET_ENABLED refusals;
-   strict matrix, no-price-arithmetic, no-src/sim and source/bundle gates. Real-PG
+5. Proof: dark flag and NEW allowSerializedCollectibles/WOC_MARKET_ENABLED refusals;
+   strict matrix, no-price-arithmetic, no-src/sim, no new BROWSE_CATEGORIES member,
+   deedSurfaces defined once in 14's module and source/bundle gates. Real-PG
    listing/placement/transfer races, exact included/excluded custody, timeout/restart,
-   cancel/recover and historical receipt replay show no loss/duplication. Bound
-   listing pages, cache keys, query/verify cadence and background recovery; export/
-   erasure and immutable replay retention remain correct after account owner changes.
+   cancel/recover and historical receipt replay show no loss/duplication; real-PG
+   fixtures for buyer-at-Inn-Room, buyer-at-Cottage, buyer-with-two-plots-after-42 and
+   seller-post-sale each pin a literal refusal code or resulting row set (D80), and a
+   listing attempt without a valid step-up proof returns the step-up refusal before
+   any reservation or service IO (fakeCtx and the pg twin). Bound listing pages, cache
+   keys, query/verify cadence and background recovery; export/erasure and immutable
+   replay retention remain correct after account owner changes. An open listing or
+   transfer operation blocks character or account deletion with 07a's mapped refusal
+   class in character_delete_db.ts (D88); the deletion race joins the real-PG list.
 
 INVARIANTS THIS PHASE MUST KEEP:
 Every player-visible string, including error, aria, tooltip and empty-state text,
@@ -304,17 +393,21 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/distribution_surfaces.test.ts
   tests/client_shell.test.ts tests/woc_market_wiring.test.ts tests/electron_desktop_config.test.ts
   tests/freehold_store_gates.test.ts tests/server/woc_market_routes.test.ts
-  tests/server/freehold_deed_routes.test.ts tests/server/http/surface_inventory.test.ts
+  tests/server/freehold_deed_routes.test.ts tests/server/freehold_deed_market.test.ts
+  tests/deed_card_view.test.ts tests/server/http/surface_inventory.test.ts
   tests/api_error_code_parity.test.ts tests/architecture.test.ts tests/monolith_budget.test.ts
   tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts tests/localization_fixes.test.ts`
-  plus the tests/server/ suites the SERVER slice added and the pg-armed twin; `npm run
+  (tests/server/freehold_deed_market.test.ts and tests/deed_card_view.test.ts are NEW,
+  38) plus the tests/server/ suites the SERVER slice added and the pg-armed twin; `npm run
   i18n:gen` then `npx vitest run tests/i18n_completeness.test.ts`; `node
   scripts/pr_screenshots.mjs`; `git diff
   <phase-start>..HEAD --name-only | grep '^src/sim/'` must print nothing.
 - Run node scripts/gate_select.mjs before completion; npm run ci:changed is not a
   substitute. Re-run only affected checks after fixes, then verify the final head.
-- Dispatch migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, cross-platform-sync, frontend-seam-reviewer, render-performance-reviewer, test-coverage-auditor and qa-checklist
-  for the stated surfaces; actual additional surfaces trigger their canonical reviewer.
+- Dispatch migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, cross-platform-sync, frontend-seam-reviewer, render-performance-reviewer, content-obligations-reviewer, test-coverage-auditor and qa-checklist
+  for the stated surfaces (content-obligations-reviewer covers the flair art variants
+  and the Book of Deeds control arm); actual additional surfaces trigger their
+  canonical reviewer.
   Database review runs before decisions and again on the completed diff. Every report
   uses COVERAGE, BLOCKING / SHOULD-FIX / NICE-TO-HAVE / VERDICT, saved to a file.
   Apply ALL findings including nits; a fresh reviewer reads the fix round.
@@ -326,8 +419,8 @@ emoji, or word "phase" appears in a commit message. Keep generated output with i
 authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
 STEP 5 - ACCEPTANCE CRITERIA:
-- [ ] Web/website-only deed surfaces and full denied submodel absence pass matrix/source/bundle checks; dark new-action routes refuse, accepted original operations remain recoverable, and all three money gates/service-price rules hold.
-- [ ] Confirmed furnished manifest transfers precisely shell/tier and eligible placed copies; seller trophies, bound/personal and omitted copies remain in verified custody; unsafe preparation refuses atomically.
+- [ ] Web/website-only deed surfaces and full denied submodel absence pass matrix/source/bundle checks; dark new-action routes refuse, accepted original operations remain recoverable, and all three money gates/service-price rules hold. The ux-spec key/target rows and both regenerated manifests are in the diff (D92); 14's deedSurfaces has one definition and no HudFeatures row was added (D91). The housing-deed scenes (deed-card, deed-homes-tab, deed-contents-review, deed-step-up, deed-listed, deed-sold, deed-received, deed-buyer-capacity, deed-denied) are registered in both regenerated manifests (D92).
+- [ ] Confirmed furnished manifest transfers precisely shell/tier and eligible placed copies; seller trophies, bound/personal and omitted copies remain in verified custody; unsafe preparation refuses atomically. Buyer capacity, the seller's fresh tier-0 record and plot-bound Favor capacity follow D80 with literal real-PG fixtures; listing without a valid wallet step-up refuses before reservation or service IO.
 - [ ] Real-PG edit/list/settle races and timeout/restart/cancel/recovery prove exact-copy and entitlement consistency using durable receipt authority, never native chain access.
 - [ ] Opaque flair stays cosmetic; unknown IDs and denied deed-capability clients render none at actual projection/DOM/error/ARIA boundaries. Allowed ward flair and denied ordinary-home/Book of Deeds controls pass, with no sim path change and scheduler-safe ux-spec captures.
 - [ ] All unit/PG/growth evidence, reviews, fresh fix review and contribution gate pass.
@@ -335,6 +428,8 @@ STEP 5 - ACCEPTANCE CRITERIA:
 STEP 6 - DOC UPDATES + MEMORY:
 Update progress.md row 38 and state.md's implementation ledger with actual paths,
 commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+Record allowSerializedCollectibles (NEW, default off) beside FREEHOLD_DEEDS_ENABLED in
+state.md's "Runtime safety and distribution" gate row so 39's pointer resolves.
 Record facts learned; do not reopen the locked product rulings or mark a release gate
 accepted without its signed artifact. Numeric tables are literal, provenance-backed
 and approved before activation.

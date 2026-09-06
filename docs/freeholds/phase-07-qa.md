@@ -6,7 +6,8 @@ state.md decisions and ux-spec.md are the acceptance contract.
 ### Starter Prompt
 ```
 This is Phase 07 QA of the Freeholds and Guildhalls feature: bounded persistence and stable plot identity.
-Harness: Claude Code. Follow root CLAUDE.md working-style and effort/fan-out rules.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block and its effort/fan-out rules.
 
 Goal: verify every promised behavior and artifact, apply ALL findings including nits,
 and have a second fresh reviewer verify the fix round before recording a verdict.
@@ -35,15 +36,26 @@ STEP 2 - AUDIT:
     normalization, default replacement or silent item/trophy loss is allowed.
   - Test actual query/index plans, maximum legal bytes, reverse FK behavior, per-account
     bounded loading and no speculative ledger-week index. No test is only a DDL string.
+  - Inspect the per-row-class ON DELETE outcomes (D88): plot and Hearth rows cascade with
+    the account, an open housing operation refuses the deletion with 07a's
+    CharacterFreeholdOperationOpen class and character.freehold_operation_open code,
+    and 07a's tombstones keep their nonidentifying identity. Day-keyed columns carry the
+    resetDay vocabulary from the binding-resolved reset zone, never the serving process
+    constant, with epoch-ms companions display-only (D84).
   - Delay/cancel DB writes while producing edits; verify one running+one pending dirty
     generation, latest state survives, no queue waits hold clients, and all lifecycle
     paths reuse the same writer/admission. A stale durable CAS never drops an acked effect.
   - Verify 07b account lifecycle delegation, no plot-local presence/grace writer, last-owner leave
     while a claim is referenced, pending write failure and shutdown flush. Ordinary FIFO
     is not enough; exercise coalescing. Prove offline/headless no-storage and dev gates.
-  - Preserve verified injected bankBonusForAccount/main.ts binding citations. Record
-    all exported symbols/real consumers and mandatory future07a dependency explicitly.
-- Required domain COVERAGE review: migration-safety, database-performance-reviewer, privacy-security-review, server-hot-path-reviewer, architecture-reviewer, cross-platform-sync, test-coverage-auditor, qa-checklist.
+  - Re-verify the injected bankBonusForAccount binding on the merged tree at phase start
+    (the release closure widens its return to include characterCount) and cite that
+    tree, not the planning one-liner. Record all exported symbols/real consumers and
+    the mandatory future 07a dependency explicitly.
+- Required domain COVERAGE review: migration-safety, database-performance-reviewer,
+  privacy-security-review, server-hot-path-reviewer, architecture-reviewer,
+  cross-platform-sync, frontend-seam-reviewer (the src/game bootstrap and the
+  src/main.ts firewall extraction), test-coverage-auditor, qa-checklist.
   Database performance runs before new DB decisions and on the finished diff. Parent
   runs deterministic gates once; reviewers inspect their evidence.
 
@@ -52,18 +64,21 @@ BRIDGE CORRECTNESS AND FIX-ROUND COVERAGE:
 - Verify the separate permission is named freeholdDevGrantEnabled and defaults false.
   The server predicate uses existing diagnosticsReadAllowed on real socket and Host.
   Account first-tier marks are produced by 07c; 07b owns lifecycle history. Neither
-  appears in plot serialization or is inferred from an unknown/future row.
+  appears in plot serialization or is inferred from an unknown/future row. Verify 07
+  creates no second default record or tier writer: 05's Inn Room record, setFreeholdTier
+  and the D24 fixture are reused (D81) and only persisted.
 - Reproduce the source gap first: ordinary offline DEV supplies general devCommands
-  without ALLOW_DEV_COMMANDS. Verify the NEW separate readonly nonpersisted housing
-  permission, its default false and live/fake SimContext pins, never a silent change to
-  generic devCommands. Only both permissions allow the real chat route/sole tier setter.
-- Inspect NEW scripts/lib/freehold_dev_authorization.mjs and
+  without ALLOW_DEV_COMMANDS. Verify the PRIOR 05 separate readonly nonpersisted housing
+  permission (D81), its default false and live/fake SimContext pins, never a silent
+  change to generic devCommands. Only both permissions allow the real chat route/sole
+  tier setter; this phase adds only the persisted save behind that setter.
+- Inspect the PRIOR 05 scripts/lib/freehold_dev_authorization.mjs and
   scripts/lib/freehold_dev_authorization.d.mts,
   src/game/freehold_dev_bootstrap.ts and src/sim/freehold/dev_grant.ts plus every actual
   Vite/bootstrap/Sim/context/server delegation. The endpoint is exact GET
   /__freehold/dev-authorization and configureServer-only apply:'serve'. Preserve
-  defineConfig({ ... }) AST shape; reject preview/production exposure with flag1.
-- Exercise unset/0/other versus exact flag1; real non-loopback socket with forged
+  defineConfig({ ... }) AST shape; reject preview/production exposure with flag 1.
+- Exercise unset/0/other versus exact flag 1; real non-loopback socket with forged
   loopback Host/Origin; loopback socket with absent/malformed/external/wildcard Host;
   wrong method and unrelated path. Affirmative body has the one exact true boolean,
   JSON type and no-store. No arbitrary environment/account/purchase/receipt disclosure.
@@ -79,10 +94,11 @@ BRIDGE CORRECTNESS AND FIX-ROUND COVERAGE:
   chat command, then read ordinary state to prove Cottage. Fixtures call assertLoopbackUrl
   first, never directly inject tier or a receipt. Developer offline state cannot become
   online persisted ownership; permission never reaches save/export/public wire.
-- Tests/freehold_dev_authorization.test.ts, tests/freehold_dev_bootstrap.test.ts,
-  tests/freehold_dev_grant.test.ts, tests/freehold_offline_default.test.ts,
+- The PRIOR 05 tests/freehold_dev_authorization.test.ts,
+  tests/freehold_dev_bootstrap.test.ts, tests/freehold_dev_grant.test.ts and
+  tests/freehold_offline_default.test.ts (each extended here with its persistence arm),
   tests/vite_dev_watch.test.ts, tests/dockerignore_context.test.ts and SimContext pins
-  must execute. Inspect .dockerignore's exact new helper/declaration admission and the
+  must execute. Inspect the PRIOR 05 .dockerignore helper/declaration admission and the
   coordinator extraction/ceiling changes. Add frontend-seam-reviewer for the bootstrap
   and browser behavior; security must review the real socket/Host boundary.
 <!-- core-dev-bridge-qa:end -->
@@ -90,11 +106,12 @@ BRIDGE CORRECTNESS AND FIX-ROUND COVERAGE:
 
 CORE STORAGE CAPABILITY AND LIFECYCLE CONTRACT:
 - NEW FUTURE docs/freeholds/persistence-rollout-contract.md is part of deliverable 4: name
-  minimum capable release, old07/future/populated fixtures, source binding, export and
-  soft-deactivate/restore/hard-delete behavior, rollout and rollback quiescence. The old
-  release lacks housing behavior and replaces characters.state wholesale; normalized
-  table preservation alone cannot establish mixed-release correctness. Do not enable
-  housing on an incapable writer/exporter or promise it continues lifecycle semantics.
+  minimum capable release, pre-07 (old release), future and populated fixtures, source
+  binding, export and soft-deactivate/restore/hard-delete behavior, rollout and rollback
+  quiescence. The old release lacks housing behavior and replaces characters.state
+  wholesale; normalized table preservation alone cannot establish mixed-release
+  correctness. Do not enable housing on an incapable writer/exporter or promise it
+  continues lifecycle semantics.
 - Unknown future data remains unchanged/read-only. Account/tier writer CHECKs restrict
   new writes without filtering away unsupported stored identifiers. Add schema fragments
   under ensureSchema advisory serialization after FK parents and before final growth
@@ -103,8 +120,9 @@ CORE STORAGE CAPABILITY AND LIFECYCLE CONTRACT:
   authority. 07a supplies both transaction composition. The browser-only dev bridge does
   not grant online account binding, import fixture state or mint receipts.
 
-- Verify literal unbound07, future/malformed/oversized owned fixtures, original-row
-  preservation with bounded diagnostic references, exports and soft-deactivation restore.
+- Verify literal unbound_no_history 07 rows, future/malformed/oversized owned fixtures,
+  original-row preservation with bounded diagnostic references, exports and
+  soft-deactivation restore.
   Inspect rollout capability floor and actual wholesale legacy character-save behavior.
 
 ACCOUNT HEARTH AUTHORITY (C01, within existing schema/lifecycle outputs):
@@ -144,6 +162,7 @@ configuration/context pins under those exact symbols and ordinary devCommands in
 
 STEP 3 - VALIDATION:
 - npx tsc --noEmit; npx vitest run tests/server/freehold_db.test.ts
+  tests/server/freehold_hearth_db.test.ts
   tests/server/freehold_persist.test.ts tests/freehold_state.test.ts
   tests/freehold_offline_default.test.ts tests/freehold_dev_grant.test.ts
   tests/dev_commands.test.ts tests/professions_farming_state.test.ts
@@ -151,7 +170,8 @@ STEP 3 - VALIDATION:
   tests/localization_fixes.test.ts tests/env_protocol.test.ts
   tests/server/main_retention_wiring.test.ts.
 - npm run db:up; with TEST_DATABASE_URL set to the disposable development database,
-  npx vitest run tests/server/freehold_db.pg.test.ts. Use a private schema, assert
+  npx vitest run tests/server/freehold_db.pg.test.ts
+  tests/server/freehold_hearth_db.pg.test.ts. Use a private schema, assert
   tests ran, and clean it after. Record real plans for account/public plot/CAS queries,
   bounded row/byte/query counts, delayed-DB coalescing and cancellation evidence.
 - Run every scoped command listed in the implementation file and node scripts/gate_select.mjs.

@@ -6,7 +6,14 @@ the live claim roster, never a persisted log). This phase extends Phase 18's fri
 visiting with the `guild` and `public` policies, visitor caps by tier (8, 12, 16, 20, and
 24), the door knock and the "who is home" line, the visit prompt listing open houses of friends and
 guildmates, and rate limits on public entry. Every predicate is stamped on the server at
-dispatch and never trusted from the client.
+dispatch and never trusted from the client. The friend relation is 18's D76 predicate
+(the named owner character's outgoing friend list, read through whoFriended or
+listFriends and rechecked at entry; the visitor's own list is never an input) and the
+block rule is 18's account-level mapping; the guild relation is the server-stamped
+current membership. The guild owner kind's visit policy is 28's per D77 (members always;
+guild, public or private only; friends refused; the Meeting Hall cap the Cottage row
+until 32); this file ships the account owner kind's guild and public policies that 28
+consumes.
 
 ## Settled delivery and acceptance contract
 
@@ -67,7 +74,7 @@ information must remain legible through ambient grade, materials and silhouettes
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -158,6 +165,11 @@ session at that target, with no duplicate per-session delivery; an account alt t
 is a valid recipient, while owner-account alts elsewhere receive nothing. Recheck
 location/claim generation at dispatch so leaving or takeover cannot leak a stale knock.
 This routing creates no account-wide offline notification or persisted knock history.
+A knock from a blocked character (a block row on either side, mapped at the account level
+as 18 defines: any owner-account character blocking the knocker's character, or the
+knocker's character blocking any owner-account character) is refused at admission with
+the generic denial before any frame is built; the routeEvents block/ignore predicates
+cover chat and the three invite types only and are never relied on for the knock.
 
 Paired fixtures distinguish owner offline, online in the world, inside a different
 plot, inside the target plot, and two same-account alts split between target and away.
@@ -185,7 +197,7 @@ This is Phase 26 of the Freeholds and Guildhalls feature: open-house visiting (t
 and public policies, caps by tier, the door knock and who-is-home line, the visit
 prompt, rate limits on public entry).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 ULTRACODE: not needed for this phase (three slices over the Phase 18 seams).
 
@@ -260,38 +272,80 @@ tests/world_api_parity.test.ts, tests/command_schema.test.ts,
 tests/server/http/surface_inventory.ts, tests/snapshots.test.ts,
 tests/monolith_budget.test.ts, the parity goldens):
 - Agent SIM: visiting.ts gains `guild` and `public` on the policy union (append-only),
-  `visitorCapFor(tier)` from a per-tier column in tiers.ts (working values 8, 12, 16, 20,
-  and 24 from Cottage to Citadel per state.md, TUNING, pinned by fresh literals; Fernando owns the gameplay targets), the relation matrix (owner, friend, guildmate, stranger) against the
-  four policies with text-free freeholdDenied reasons (`not_friend`, `not_guildmate`,
-  `private`, `visitors_full`; appended to freeholdDeniedLineKey in
-  src/ui/hud/housing/housing_view.ts, D26), the `knock_freehold` command (a visitor at the gate emits
-  a pid-scoped `freeholdKnock` to eligible owner-account sessions currently inside that target plot when the policy admits, carrying
-  the visitor's name as a value, never text), the who-is-home line already on
-  freeholdVisitors extended with the policy; the guild relation read from the
-  server-stamped predicate the dispatch passes, offline no-op for guild and public
-  (private and friends only); tests/freehold_visiting.test.ts extended.
-- Agent SERVER: server/freehold_wire.ts stamps the guildmate predicate at dispatch beside
-  the friend predicate (from authoritative current PgSocialDb.guildMembership and committed membership hooks,
-  never the display roster cache, never from the
-  payload), applies the public-entry rate limit and the knock rate limit (per-account
-  lane tokens with their own policies; the state.md literal is one knock per plot per
-  10 seconds, TUNING; both dispatch arms share one bucket each), the `knock_freehold` case with the label
-  only in game.ts (paid by an extraction), the open-houses read as a registry-only
-  RouteDef appended by hand to the existing server/freehold_routes.ts table (the
-  Phase 01 scaffold already owns the freehold domain; do not rerun it), with GET,
-  activeGuard, rateLimit, a bounded keyed cache per account with bounds/deadlines derived from the approved query worksheet;
-  recheck current authority and bust after committed policy, membership, friendship,
-  block/ignore and deletion changes; a private house is never listed; a friends-only house is listed only to
-  friends; refuses freehold.disabled while dark; the surface inventory row; new
+  `visitorCapFor(tier)` from a per-tier column in tiers.ts: this file fills the rows
+  that exist at 26 (inn_room 8, cottage 8, lodge 12 per state.md Content numbers,
+  TUNING, pinned by fresh literals; Fernando owns the gameplay targets) and pins that
+  every later tier row carries its own value from the state.md column (28's
+  meeting_hall takes the Cottage row per D77, Manor 16 lands with 32's row, 40 appends
+  Keep 20 and Citadel 24); the relation matrix (owner, friend, guildmate, stranger)
+  against the four policies for the account owner kind with text-free freeholdDenied
+  reasons (`not_friend`, `not_guildmate`, `private`, `visitors_full`; the first three
+  map to the existing hudChrome.housing.visit.unavailable line, the privacy-safe single
+  denial 18 established, and `visitors_full` to visit.full, in freeholdDeniedLineKey in
+  src/ui/hud/housing/housing_view.ts, D26); the `knock_freehold` command (a visitor at
+  the gate emits a pid-scoped `freeholdKnock` to eligible owner-account sessions
+  currently inside that target plot when the policy admits and no block row exists on
+  either side, carrying the visitor's name as a value, never text), the who-is-home
+  line already on freeholdVisitors extended with the policy; the friend relation is
+  18's D76 read and the guild relation the server-stamped predicate the dispatch
+  passes, offline no-op for guild and public (private and friends only);
+  tests/freehold_visiting.test.ts extended.
+- Agent SERVER: server/freehold_wire.ts stamps the guildmate predicate at dispatch (from
+  authoritative current PgSocialDb.guildMembership and the committed membership hooks,
+  never the display roster cache, never from the payload) beside 18's D76 friend read
+  (whoFriended or listFriends), applies the block check (either side, account-level)
+  at admission for entry and knock, applies the public-entry rate limit and the knock
+  rate limit (one knock per account+plot per 10 seconds, keyed (accountId, plotId) in a
+  bounded LRU map on the server, the maxEntries idiom of
+  server/discord_status_cache.ts, consulted on both dispatch arms; the public-entry
+  limit is keyed (accountId) the same way; session lanes are not the bucket, since
+  MsgLaneState lives on ClientSession and server/msg_lanes.ts has no account or plot
+  dimension; the literals are state.md TUNING), the `knock_freehold` case with the
+  label only in game.ts (paid by an extraction), the open-houses read as a
+  registry-only RouteDef appended by hand to the existing server/freehold_routes.ts
+  table (the Phase 01 scaffold already owns the
+  freehold domain; do not rerun it), with GET, the bearer guard freehold_routes.ts
+  already uses (server/http/middleware/bearer_active_guard.ts), rateLimit, a bounded
+  keyed cache per account with bounds/deadlines derived from the approved query
+  worksheet; recheck current authority and bust after committed policy, membership,
+  friendship (the D76 hook), block/ignore and deletion changes; a private house is
+  never listed; a friends-only house is listed only to characters on the named owner
+  character's outgoing friend list (D76); refuses freehold.disabled while dark; the
+  surface inventory row; new
   freehold.* error leaves appended to the existing catalog block, ERROR_CODES,
   API_ERROR_KEYS, EXPECTED_CODES, and KNOWN_CODES as Phase 01 specifies;
   tests/server/freehold_wire.test.ts and tests/server/freehold_routes.test.ts extended.
 - Agent UI: the visit prompt in src/ui/hud/housing/ (visit_prompt_view.ts pure core and
-  visit_prompt_window.ts painter in the cold window family) listing open houses with
-  owner name, tier, policy, and occupancy, a knock button, the who-is-home line, the
-  policy picker on the Steward panel gaining guild and public, hudChrome.housing.visit.*
-  keys, the mobile sheet decision, hud_update_drive rows, pr_shot_targets.mjs entries,
-  screenshots (desktop, compact, tablet).
+  visit_prompt_window.ts painter in the cold window family) gaining an Open Houses tab
+  that lists open houses with owner name, tier, policy, and occupancy (states: empty,
+  loading, error, ready; a refused knock, a full house and a busy entry reuse the
+  existing visit.* and denied.* lines), a knock button per row, the who-is-home line
+  with the policy (visit.policyConfirmed), the policy picker on the Steward panel
+  gaining the existing visit.guild and visit.public radios, the mobile sheet decision,
+  hud_update_drive rows, the housing-visiting registry entry extended with this file's
+  variants (open-house-list-empty, open-house-list-ready, open-house-list-error,
+  open-house-knock-sent, open-house-knock-wait, visit-public-full), screenshots
+  (desktop, compact, tablet). Every new string is one of the NEW
+  hudChrome.housing.visit.* keys below (exact English; the same namespace 18 owns, no
+  second family); ux-spec section 7 carries the rows and both UX manifests regenerate in
+  this phase with every cited count updated (D92). Focus order: tab, list rows, the
+  row's Knock then Enter, Refresh, Close.
+  NEW keys (exact English; title case for the tab and buttons, sentence case otherwise):
+  hudChrome.housing.visit.openHouses = "Open Houses";
+  hudChrome.housing.visit.openHousesEmpty = "No friends or guildmates have an open house
+  right now."; hudChrome.housing.visit.openHousesLoading = "Finding open houses...";
+  hudChrome.housing.visit.openHousesError = "Open houses could not be loaded. Try
+  again."; hudChrome.housing.visit.refreshList = "Refresh";
+  hudChrome.housing.visit.listEntry = "{name}'s {tier}";
+  hudChrome.housing.visit.listEntryAria = "{name}'s {tier}, open to {policy}, {count} of
+  {limit} visitors"; hudChrome.housing.visit.openTo = "Open to {policy}";
+  hudChrome.housing.visit.knock = "Knock"; hudChrome.housing.visit.knockAria = "Knock on
+  {name}'s door"; hudChrome.housing.visit.knockSent = "You knocked on {name}'s door.";
+  hudChrome.housing.visit.knockWait = "Wait a moment before knocking there again.";
+  hudChrome.housing.visit.knockRefused = "You cannot knock there right now.";
+  hudChrome.housing.visit.knockHeard = "{name} is knocking at the door.";
+  hudChrome.housing.visit.entryWait = "Too many visits in a short time. Try again
+  shortly.".
 Every agent writes any report longer than a screen to a file and replies with the path
 plus a short summary. Never `mode: "plan"` on teammates.
 
@@ -306,21 +360,26 @@ INVARIANTS THIS PHASE MUST KEEP:
 - One sim, three hosts: guild and public are offline no-ops (pinned); the RL exclusion
   pin stays green.
 - Privacy: a private house is invisible in every list; a knock reveals only a name the
-  owner could already see; block and ignore lists are honored by the existing event
-  predicates.
+  owner could already see; block and ignore lists are honored at dispatch in the
+  admission check for entry, list and knock (the routeEvents predicates cover chat and
+  the three invite types only): a knock from a character on any owner-account
+  character's block list, or whose character blocks any owner-account character, is
+  refused with the generic denial and no freeholdKnock frame is built.
 - Store policy: no purchase surface here; no "earn" language in purchase benefits; nothing timed or lost.
 - i18n: the policy in docs/freeholds/implementation-plan.md; text-free events (D10);
   apiError.freehold.* leaves through the scaffold.
 - Monolith: src/sim/sim.ts, server/game.ts, and src/net/online.ts use the current verified
   tests/monolith_budget.test.ts ceilings; a
   delegate, case label, or mirror line pays with an extraction and a lowered ceiling.
-- Working values (the caps 8, 12, 16, 20, and 24; one knock per plot per 10 seconds)
-  are state.md numbers; Fernando owns the finals.
+- Working values (the caps 8, 12, 16, 20, and 24; one knock per account+plot per 10
+  seconds) are state.md numbers; Fernando owns the finals.
 - The word "phase" appears in no code, comment, commit, or PR text.
 
 Out of scope (do NOT do in this phase):
 - Guest books, reactions, the Showcase vote (Phase 36); wards as the entry point
-  (Phase 34); guildhall entry rules (Phase 28).
+  (Phase 34); the guild owner kind's visit policy (28 defines it per D77: members
+  always, guild/public/private only, friends refused, the Meeting Hall cap the Cottage
+  row until 32; 28 consumes this file's policy values, cap column and keys).
 - Any persisted visit history or analytics table.
 
 
@@ -337,8 +396,10 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/api_error_code_parity.test.ts tests/localization_fixes.test.ts
   tests/visit_prompt_view.test.ts tests/hud_update_drive.test.ts
   tests/mobile_window_coverage.test.ts`; `npm run i18n:gen` then `npx vitest run
-  tests/i18n_completeness.test.ts`; `node scripts/pr_screenshots.mjs` for the visit
-  prompt targets; parity goldens regenerated in their own commit if an emit changed.
+  tests/i18n_completeness.test.ts`; regenerate both UX manifests per state.md "UX
+  verification inventories" and compare exact counts (D92); `node
+  scripts/pr_screenshots.mjs` for the visit prompt targets; parity goldens regenerated
+  in their own commit if an emit changed.
 - Required reviewers: architecture-reviewer, privacy-security-review, server-hot-path-reviewer, cross-platform-sync, frontend-seam-reviewer, database-performance-reviewer, migration-safety, content-obligations-reviewer, test-coverage-auditor, qa-checklist. Each reports COVERAGE to a file.
   Apply ALL findings including nits; a fresh reviewer reads every fix. The actual diff
   may trigger additional specialists; database review runs before decisions and again
@@ -363,17 +424,24 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
   and public offline no-op.
 - [ ] tests/server/freehold_wire.test.ts proves a payload claiming friendship or guild
   membership is ignored (the server stamp decides), and the public-entry and knock limits
-  refuse the N plus first entry or knock within the window on both dispatch arms.
+  refuse the N plus first entry or knock within the window on both dispatch arms, with
+  two sessions of one account sharing one knock bucket per plot and two plots holding
+  separate buckets; a blocked knocker (either side, any owner-account character) is
+  refused at admission on both arms and no freeholdKnock frame reaches any owner
+  session.
 - [ ] tests/server/freehold_routes.test.ts proves the open-houses read never lists a
   private house, lists a friends-only house to friends only, busts on a policy change,
   and refuses while dark; the surface inventory row and error codes are in.
 - [ ] The visit prompt lists open houses, knocks, and enters on mouse, pad, and touch;
-  screenshots committed; the mobile sheet decision recorded.
+  every new string resolves through a visit.* key named in STEP 2 and both UX manifests
+  are regenerated with the cited counts updated (D92); screenshots committed; the
+  mobile sheet decision recorded.
 - [ ] All STEP 3 suites green; the reviewers confirm ALL findings, including nits, are resolved and freshly reviewed; the ceilings did not
   rise.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 26, notes, deferrals) and
+- Update docs/freeholds/progress.md (status row 26, notes, named unsigned release
+  gates) and
   docs/freeholds/state.md (the per-phase ledger row 26: new command, events, the
   endpoint, error codes, i18n keys, the cap literals; the REST-versus-self-key decision
   and the guild predicate source).

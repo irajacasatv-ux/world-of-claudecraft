@@ -10,8 +10,12 @@ Only what the next session needs. Update at the end of every phase and QA.
   itself based on `release/v0.42.0`). The packet tip carries three cherry-picked docs
   commits (the proposal, the deck and index, the feature-plan skill refresh) on top.
 - Dependency PR #3872: OPEN and, at packet creation, CONFLICTING against
-  `origin/release/v0.42.0` (the release moved 37 commits past the PR base). Merge-forward
-  rule, repeated in every starter prompt:
+  `origin/release/v0.42.0` (the release moved 37 commits past the PR base). Re-verified at
+  the review-fix round (2026-09-06): still OPEN and CONFLICTING (merge state DIRTY, no
+  merge timestamp); `origin/release/v0.42.0` is now 87 commits past the merge-base
+  `1fdf0f55a3`, and its head at that check was `4e168d1ad7`. The release keeps advancing:
+  re-read it at every phase start and never treat a recorded revision as the current tip.
+  Merge-forward rule, repeated in every starter prompt:
   - While PR #3872 is OPEN: at every phase start `git fetch origin --prune` and
     `git merge origin/feature/masterwrought` (its fresh head, never a stale copy).
   - Once PR #3872 has MERGED: discover the newest release branch
@@ -21,12 +25,19 @@ Only what the next session needs. Update at the end of every phase and QA.
   - After any non-empty merge run the `release-merge-audit` skill; if the merge touched
     `patches/`, run `pnpm install --frozen-lockfile` before anything else.
 - Push policy: the branch stays local until Fernando says to push. Pushes go to `origin`,
-  never a fork. A PR is opened only by a wave close phase, after the whole-feature matrix,
-  and only after the push is sanctioned. Never merge a PR from a session.
+  never a fork. A PR is opened only by a wave close phase (20, 27, 33, 39 and 44: one PR
+  per wave under D12, owned for every wave), after the whole-feature matrix, and only
+  after the push is sanctioned; each close STOPS and asks for the push go and otherwise
+  ends local at "matrix green, awaiting push go" (D87). Every close and its QA end in one
+  of two states, "pushed, green, ready for review" or "matrix green, awaiting push go";
+  the QA records PASS, awaiting publication, when no go is recorded. Never merge a PR
+  from a session.
 
 ## Current phase
 Phase 01 (`phase-01-foundation.md`): NOT STARTED. R01-R46 and D73-D75 are approved;
-implementation remains unbuilt. This session settles documentation and keeps the branch local.
+D76-D93 (settlement round 2, R47-R64) are applied as recommended dispositions and await
+Fernando's word. The review-fix round of 2026-09-06 is applied across the packet and is
+awaiting its fresh review. Implementation remains unbuilt; the branch stays local.
 
 ## Settle audit facts (verified 2026-09-05 and 2026-09-06)
 These facts were recorded before dependent implementation instructions changed. They
@@ -38,6 +49,11 @@ describe the audited tree and primary evidence, not additional balance rulings.
   `git merge origin/feature/masterwrought` reported `Already up to date.` The dependency
   block above still applies. No non-empty merge or `patches/` change occurred, so neither
   the release-merge audit nor a dependency reinstall was triggered. Nothing is built.
+- Propagation disclosure: the proposal (`docs/prd/woc/freeholds-and-guildhalls-research.md`),
+  the deck and the six housing-research appendices at HEAD are the settled propagation of
+  the text adopted on 2026-09-05 at revision `383fd7da83` (the `FernandoX7/add-real-estate`
+  head), edited in place on 2026-09-06 to carry D27-D93; the adopted text lives in git
+  history at that revision and `audit-record.md` carries the section-level disclosure.
 - Paid-operation authority: `server/storage_purchase_db.ts` documents and implements
   durable exactly-once authority in `storage_purchase_applied_receipts`, outside the
   character-blob and character-deletion lifecycle. `appliedStorageKeys` only protects
@@ -179,10 +195,16 @@ describe the audited tree and primary evidence, not additional balance rulings.
   [Steam onboarding](https://partner.steamgames.com/doc/gettingstarted/onboarding)
   prohibits blockchain applications issuing or permitting exchanges of cryptocurrency
   or NFTs. These facts require signed surface/flow review, not a guessed approval.
-- External verification limits: the current exact Epic blockchain-policy page and
-  relocated Solana dApp Store publisher policy were not retrievable. The available
+- External verification limits: the current exact Epic blockchain-policy page was not
+  retrievable. The available
   [Epic content guidelines](https://cdn2.unrealengine.com/epic-games-store-content-guidelines-f8accc43356e.pdf)
-  require the Blockchain Addendum. The [Solana dApp Store introduction](https://docs.solanamobile.com/dapp-store/intro)
+  require the Blockchain Addendum. The Solana Mobile Publisher Policy is at
+  https://legal.solanamobile.com/publisher-policy-web (retrieved 2026-09-06; "Last
+  Updated: Jul 21, 2026"; the old solanamobile.com URL redirects there). It is part of and
+  subject to the Solana Mobile dApp Store Developer Agreement and carries no purchase, NFT
+  or territory rule of its own; the Developer Agreement (current signed text) is a named
+  acceptance artifact in the counsel memo and territory schedule. The
+  [Solana dApp Store introduction](https://docs.solanamobile.com/dapp-store/intro)
   establishes platform capability, not a housing checkout. A KR-only territory rule,
   blanket Epic link prohibition and Seeker housing-purchase approval were not verified.
 - Historical number attribution: [EQ2 GU49](https://www.everquest2.com/news/imported-eq2-enus-1916)
@@ -192,7 +214,9 @@ describe the audited tree and primary evidence, not additional balance rulings.
   member-donation multiple. Existing proposal values require explicit product adoption
   and the named economy acceptance artifact; none becomes a classic-era fact by citation.
 - Optional deed capability: [Metaplex Core](https://www.metaplex.com/docs/core)
-  publishes approximately 0.0029 SOL for a base asset, not the full service quote.
+  publishes the base-asset cost on its Core page (cited by reference as dated context; the
+  figure changes and is never copied into the packet or the code), not the full service
+  quote.
   Asset-level [Permanent Freeze Delegate](https://www.metaplex.com/docs/smart-contracts/core/plugins/permanent-freeze-delegate)
   and [Permanent Burn Delegate](https://www.metaplex.com/docs/smart-contracts/core/plugins/permanent-burn-delegate)
   are separate authorities configured at creation. Burn is irreversible and can affect
@@ -230,11 +254,13 @@ describe the audited tree and primary evidence, not additional balance rulings.
   redacts farm-plot fields and spreads other character state. New account-level housing
   tables will not appear in export automatically; deactivation, restoration, character
   deletion, true account deletion and export are distinct lifecycle paths.
-- Rollout capability facts: locally pinned `origin/release/v0.42.0` at `9e4d12ebd5`
-  contains no Freeholds runtime implementation. Its
-  historical `server/bank_ledger_save_effects_db.ts` exports
-  `characterUpdateStatement` at that exact release revision; it replaces the whole
-  `characters.state` value. This is a historical export anchor, not a current module
+- Rollout capability facts: `origin/release/v0.42.0` contains no Freeholds runtime
+  implementation. It was verified at `9e4d12ebd5` (the release head when this fact was
+  first recorded on 2026-09-06, the merge of PR #3880); at the review-fix round the head
+  was `4e168d1ad7`, 87 commits past the merge-base `1fdf0f55a3`, and it keeps advancing,
+  so no revision here is the current tip. Its historical
+  `server/bank_ledger_save_effects_db.ts` exports `characterUpdateStatement` at both
+  release revisions (line 159 in each); it replaces the whole `characters.state` value. This is a historical export anchor, not a current module
   export claim. In this worktree the extracted
   `server/character_save_statement.ts::characterUpdateStatement` still replaces that
   value, rather than merging omitted JSON keys. An older snapshot writer can remove
@@ -387,6 +413,14 @@ Garden plants nothing (zero beds); the Master Builder's Call is Claudium-priced.
 Original survey decisions D1 to D26 are preserved below as their historical adoption
 record. Later explicit decisions refine their scope or timing where noted.
 
+Label legend: C01 and C03 are packet-review finding labels (the C1-C34 series R44 cites)
+whose source-reviewed corrections are recorded as the two refinements under
+"Source-reviewed Hearth and build-presence refinements" below. Each binds an approved
+decision to the reviewed tree (C01 refines D67's shared Hearth cooldown; C03 refines the
+visitor experience without renaming a D20 member) and adds no balance constant or new
+ruling; the refinement under "Source-reviewed arrival delivery refinement" binds D41 the
+same way.
+
 - D1 **Charter purchase shape.** The Freehold Charter is a once-per-account grant the
   economy service records (`owned: true`, the weapon-skin model), mirrored into a new
   `account_freeholds` row by a `configureClaudiumRuntime` hook and healed by the
@@ -425,7 +459,11 @@ record. Later explicit decisions refine their scope or timing where noted.
   (`ctx.resetDay`, the farm absolute-deadline idiom); the ledger week reuses the realm
   weekly reset; the paid week is an indexed column evaluated at join, claim, and pay, never
   by a per-tick sweep. Visitors are the live claim roster (`InstanceSlot.enteredBy`), not a
-  persisted log.
+  persisted log. Refined by the source-reviewed lifecycle extension boundary below: the
+  indexed-column wording does not require a speculative standalone Ledger index (query
+  predicates, ordering, cardinality and reverse-FK/retention needs determine the reviewed
+  indexes), and the no-tick rule concerns housing economic work, not the renderer/input's
+  ordinary frame consumption.
 - D9 **The distribution surface map is one pure client module** with a seven-distribution
   matrix test (web, website desktop, Steam, Epic, App Store, Google Play, Seeker dApp
   Store) and a `HudFeatures.freeholdPurchaseEnabled` row. The server never learns the
@@ -501,7 +539,9 @@ Additional decisions locked at packet creation from the sim survey:
   the server dev path) sets the record's tier through a setter in
   `src/sim/freehold/state.ts`, lands in Phase 07, is refused without the flag (pinned),
   and is what the perf tour and the offline Cottage use. Phase 15's Charter grant reuses
-  the same setter; Phase 21 extends the command for `lodge`.
+  the same setter; Phase 21 extends the command for `lodge`. Refined by D81: the setter
+  and the command land in Phase 05 with the default tier-0 Inn Room record; Phase 07
+  persists the record and adds the save behind the same setter.
 - D25 **Furnishings are Exchange-eligible** at every rarity (the mount rule, proposal
   section 6.5), decided and pinned once in Phase 02; the Exchange itself stays behind its
   existing web-only gate, so no native or Steam or Epic build reaches a furnishing trade.
@@ -524,40 +564,40 @@ not an unresolved product question.
 - D33 **Numeric provenance and calibration (R07).** Create one content manifest and numeric provenance worksheet. Each row names source item/recipe or measured model, derivation and rounding, owner and producing file; unreferenced gameplay rates require Fernando's signed tuning appendix before activation. No inferred inventory max-stack quantity, keystone, gear intermediate or quickening catalyst enters a bill.
 - D34 **Call effect and current Ledger (R08).** A confirmed Call satisfies the current unpaid weekly bill and restores condition to 100, without adding future prepaid weeks or consuming existing future credits. If current bill is already paid, its quoted repair-only result is explicit before purchase. Correlate receipt to operation, account and plot.
 - D35 **Suspension history and credit preservation (R09).** Add authority-fed persistent suspension intervals to 13/13a and service contract. No wear or debt catches up for suspended time; simulated arithmetic uses injected calendar data, never network or wall-clock calls. Preserve paid rate versions and prepay credits. Partial weeks retain the fixed flat repair bill, with no prorating or added outage charge; missed weeks never accumulate back bills. A wholly suspended billing period consumes no prepaid credit; carry it forward without repricing.
-- D36 **Account/guild return protection and threshold (R10).** Retain the protective 7/3 policy; derive and persist the prior-absence/grace transition before updating presence. Alts cannot refresh grace repeatedly; guild absence uses eligible member presence. At condition 30 amenities work; only below 30 they pause. Entry/build/undo always work, including 0.
+- D36 **Account/guild return protection and threshold (R10).** Retain the protective 7/3 policy; derive and persist the prior-absence/grace transition before updating presence. Alts cannot refresh grace repeatedly; guild absence uses eligible member presence. At condition 30 amenities work; only below 30 they pause. Entry/build/undo always work, including 0. Refined by 07b's source review (cite as D36 as refined): admitted gameplay presence, never authentication login (touchLogin / accounts.last_login), is the absence source; 07b carries that contract.
 - D37 **Explicit payment source mode (R11).** Make source choice explicit: bags-only, vault-only, or automatic bags-then-vault. Affordability, confirmation and actual atomic deduction use the same mode. Prepay chooses the same source mode and shows the entire fixed batch before committing.
 - D38 **Exact roster and final art (R12).** Lock an 18-piece Wave A roster (eight vendor, ten crafted, three pattern recipes within the ten), twenty additional crafted outputs in Wave B with produce decoration counted inside that roster. Produce exact room/furniture/trophy art briefs and reference manifests now. Every wave requires final art for its shipped IDs; art sessions generate approved reference sheets through image-to-glb intake.
 - D39 **Measured geometry and finite storage bounds (R13).** Bind them to the authored room/model measurement manifest: aligned floor grid and clearance, transformed model bounds, explicit walk-through rugs, protected door/arrival paths, tabletop/ceiling anchors. Derive finite row/byte ceilings from the largest legal approved layout, including nested/saved copies; enforce before mutation/load. No freehand numeric guess.
-- D40 **Shared design foundation (R14).** ux-spec records both the adopted target and verified current token mapping. Housing reuses the actual shared window/theme family;11 owns an explicit foundation readiness check against DESIGN rollout. Switch only when the coordinated foundation lands. No local theme fork, nonexistent window_frame reuse or global redesign hidden inside housing.
-- D41 **First moment in Wave A (R15).** Deliver them in Wave A through 06/09/11/19: interact at gate, choose destination, authoritative arrival pose, short skippable safe hearth view, immediate reduced-motion/control handback, keyed welcome, sanctioned sampled cue once per confirmed arrival, realm-daylight continuity and condition-readable hearth.
+- D40 **Shared design foundation (R14).** ux-spec records both the adopted target and verified current token mapping. Housing reuses the actual shared window/theme family; 11 owns an explicit foundation readiness check against DESIGN rollout. Switch only when the coordinated foundation lands. No local theme fork, nonexistent window_frame reuse or global redesign hidden inside housing.
+- D41 **First moment in Wave A (R15).** Deliver them in Wave A through 06/09/11/19: interact at gate, choose destination, authoritative arrival pose, short skippable safe hearth view, immediate reduced-motion/control handback, keyed welcome, sanctioned sampled cue once per confirmed arrival, realm-daylight continuity and condition-readable hearth. Refined under "Source-reviewed arrival delivery refinement" below (the section after the C01 and C03 refinements): the cue and welcome are delivered at-most-once per accepted transition, best-effort, through 07c/08a's nullable freshArrivalPresentation directive; a committed arrival followed by a lost ACK or process failure may omit them, and no exactly-once presentation is guaranteed.
 - D42 **Complete build-mode interaction (R16).** Wave A gets a detached bounded build camera; bags-family furnishing palette and Trophies tab; footprint/ghost with shape+hatch+reason for rejection; rotate/nudge; session undo/redo; decor/plinth/amenity meters; explicit touch Confirm/Rotate/Cancel 40x40 with safe areas; keyboard/gamepad equivalents. Palette is a nontrapping world companion; Steward/trophy decision windows use ordinary focus/return contracts.
 - D43 **Bounded advanced placement scope (R17).** Wave B supports bounded free planar translation/free yaw plus typed floor/wall/table and fixed ceiling anchors for chandeliers, with parent movement atomic. Exclude arbitrary scale, full-axis gimbal and collision-leniency mode from this packet; correct proposal/deck accordingly. Boundaries, doors and clearance never become optional.
 - D44 **Bounded placement-only undo and redo (R18).** Placement-only session journal, undo and redo available from 11, bounded by maximum legal placement-row capacity. Store exact-copy identity and revision preconditions; stale inverse refuses atomically. Clear on plot/session change or incompatible external revision with keyed explanation. Money, ledgers and completed sales are outside undo.
 - D45 **Global light-budget fairness (R19).** Three authored room emitters is a ceiling, allocated through the existing light sink and live global budget; iOS may have two and pressure may leave one. Ambient/key grade, texture and silhouettes keep the room beautiful and legible. Ghost, blocked reason, floor bounds and capacity information are identical at every tier.
-- D46 **Exact screenshot acceptance (R20).** Define shared housing capture helper and exact registry entries in 11/16/17/18, reconciled to planned file names.20 requires desktop 1600x900, compact 874x402 and tablet 1180x820, plus focus, touch, gamepad, reduced motion, theme, denied-store and LOW-iOS cases.
+- D46 **Exact screenshot acceptance (R20).** Define shared housing capture helper and exact registry entries in 11/16/17/18, reconciled to planned file names. 20 requires desktop 1600x900, compact 874x402 and tablet 1180x820, plus focus, touch, gamepad, reduced motion, theme, denied-store and LOW-iOS cases.
 - D47 **Strongbox and station access (R21).** Strongbox is built-in personal-bank access, no amenity-slot cost. A station uses the slot. Direct Materials Vault chest remains Manor unlock; home station draws permitted personal vault materials through D18. Guild chest exposes guild bank; authorized guild members may craft from their own vault at hall stations. Service-specific authorization stays separate from geometry.
 - D48 **Account-wide truthful trophy eligibility (R22).** 17 owns authoritative account-wide eligibility and event-driven refresh for all promised deed/relic/item/mount/title/Perfected sources. Every qualifying source gets a truthful generic display if bespoke form arrives in 23. Preserve known source character/day; unknown history explicitly says unknown. Preserve hidden-content spoiler rules.
 - D49 **Full Hearth shelf contract (R23).** Add the new Hearth shelf through the actual catalog/nav/order/localization/source/completion contract, append curated furnishing pages without reordering existing IDs. Furnishing items qualify; patterns and trophy records do not. Track exact inventory and remeasure fingerprint pins, never treat current totals as maximums.
-- D50 **Explicit gate and offline-owner visiting (R24).** Interact opens own-home/friend-by-name prompt; proximity never auto-teleports. Support authorized visits while owner offline using bounded lookup/lazy load and global ownership fence. Runtime pool/foreign-realm claim saturation gives honest retry, never loss or an ownership waitlist.
-- D51 **Current visitor authority and safe ejection (R25).** Entry always checks current authority. Private stops new visitors; existing admitted guests may finish until exit unless owner uses End visit. Blocking, revoked relationship/membership or explicit End visit safely ejects immediately. Owner can end a visit without changing property ownership.
+- D50 **Explicit gate and offline-owner visiting (R24).** Interact opens own-home/friend-by-name prompt; proximity never auto-teleports. Support authorized visits while owner offline using bounded lookup/lazy load and global ownership fence. Runtime pool/foreign-realm claim saturation gives honest retry, never loss or an ownership waitlist. Refined by D76 (the friend admission fact is the named owner character's outgoing friend list; the visitor's own list is never an input; a block row on either side refuses; friendAdd/friendRemove/blockAdd bust through a NEW mutation-site hook).
+- D51 **Current visitor authority and safe ejection (R25).** Entry always checks current authority. Private stops new visitors; existing admitted guests may finish until exit unless owner uses End visit. Blocking, revoked relationship/membership or explicit End visit safely ejects immediately. Owner can end a visit without changing property ownership. Refined by D77 (guild-owned plots admit members always; guild/public/private only for the guild owner kind; non-members enter as guests under these ejection rules) and by D76 (the hook triggers this recheck).
 - D52 **Kitchen Garden public tableau (R26).** Project existing owner farm bed/crop/stage/status publicly without private inventory/timers. Owner board opens their own Harvest Journal; guest gets read-only owner tableau only. Produce props use existing cooking recipes or gold vendor decoration within R12 roster.
 - D53 **Pattern channels and excluded seasonal sets (R27).** Preserve adopted raid/rift/Marks doctrine, no delve channel. Every later rare pattern has one named luck channel plus Marks in its manifest; Wave A remains Marks-only. Seasonal furniture sets are explicitly outside this packet; ownership of existing decoration never expires.
 - D54 **Service-owned Hall Fund and donor target (R28).** Service owns guild pooled Claudium balance and debit/credit ledger; game mirrors absolute versioned results. Materials/gold and donor cap/audit update atomically. Proposed anti-dominance target: one current weekly Hall Ledger-equivalent per account per realm week across alts; the signed calibration artifact defines resource/currency allowance and rounding without game-side token conversion.
 - D55 **Guild layout and member trophy custody (R29).** Officers manage hall layout, members manage only their own assigned trophy plinths. Departing members retain unlock/provenance and their displays detach safely. Guild-first-kill credit uses existing eligible participant clear credit and records each qualifying participant's guild at that clear; multiple represented guilds can qualify. No invented percentage threshold or speculative retro credit from current membership.
-- D56 **Guild boards and cosmetic project completion (R30).** War table explicitly shows authorized guild raid lockouts and recorded first kills, with unavailable first-kill section until31. Projects finish when approved material/fee conditions are met, no artificial multi-week wait. Completion unlocks cosmetic furnishing vendor stock only, never training/combat bypass.
+- D56 **Guild boards and cosmetic project completion (R30).** War table explicitly shows authorized guild raid lockouts and recorded first kills, with unavailable first-kill section until 31. Projects finish when approved material/fee conditions are met, no artificial multi-week wait. Completion unlocks cosmetic furnishing vendor stock only, never training/combat bypass.
 - D57 **Transactional Ward capacity and anchor (R31).** Retain 50 plots and 24 admitted occupants as TUNING, not culling. DB transaction authorizes unique slots/capacity with bounded indexed candidates and stable lock order. Largest represented guild anchors, deterministic ID tie-break; no guild means no anchor. Footprint measured against allocator before art.
 - D58 **Permanent Favor and monthly Endeavors (R32).** Favor-unlocked decor capacity is permanent. Monthly Endeavor progress resets on the authority's UTC calendar month, independently of capacity. Keep four ranks/+10 targets; content manifest fixes event weights, thresholds and rewards through approved calibration before enable.
-- D59 **Realm Showcase identity and result (R33).** Realm-wide opt-in Showcase, one authenticated account vote per realm season, no self-vote, no eligibility reset by ward move.13-week seasons align to published realm weekly anchor. Tie-break earliest valid entry then stable ID. Persist close/reward identity before bounded delivery.
+- D59 **Realm Showcase identity and result (R33).** Realm-wide opt-in Showcase, one authenticated account vote per realm season, no self-vote, no eligibility reset by ward move. 13-week seasons align to published realm weekly anchor. Tie-break earliest valid entry then stable ID. Persist close/reward identity before bounded delivery.
 - D60 **Closed guest-book reactions and rate (R34).** Closed reactions wave/cheer/admire, no free text; proposed one reaction per account per plot per realm day. Per-plot insert/prune serializes with deterministic oldest order; 50 cap tested concurrently. Give entries, votes and books separate indexed retention/fold policies with durable season result.
 - D61 **Stable plot identity and atomic custody (R35).** Stable opaque public plot identity from 07 with account+plot-index lookup, primary-only admission initially. Internal account/guild keys never cross viewer wire. Globally fenced plot ownership permits one authoritative active claim per plot across realms; conflicting realm entry gives busy/retry. Character FIFO then owner/shared-resource serialization; bounded atomic transaction pairs inventory, housing, funds and receipt effects.
 - D62 **Durable recovery and bounded save work (R36).** Housing-specific durable receipts are permanent replay authority, with recoverable intent before spend and no DB locks across service IO. Retain compact applied identities unless an accepted service replay horizon permits proven compaction. Coalesce saves to one running+one pending dirty generation; all background producers share admission and workload deadlines.
 - D63 **Upgrade overflow and prestige eligibility (R37).** Preserve fitting exact copies. Preview overflow; if bags cannot safely accept it, refuse completion before new fee/material mutation. Top two personal tiers share an existing account prestige OR: prog_legendmaker, col_reliquary_rank_5, dgn_nythraxis, dgn_ignivar or dgn_varkhul. Guild top tiers use their own qualifying recorded raid-clear deed.
-- D64 **Furnished-plot transfer custody (R38).** Honor furnished-plot sale: explicit immutable manifest contains shell/tier and eligible transferable placed furnishings only. Seller trophy unlock/provenance, bound/personal copies and omitted goods remain theirs in verified safe custody. Verify entitlement transfer and recovery atomically after service confirmation; native consumes server entitlement, never on-chain access.
+- D64 **Furnished-plot transfer custody (R38).** Honor furnished-plot sale: explicit immutable manifest contains shell/tier and eligible transferable placed furnishings only. Seller trophy unlock/provenance, bound/personal copies and omitted goods remain theirs in verified safe custody. Verify entitlement transfer and recovery atomically after service confirmation; native consumes server entitlement, never on-chain access. Refined by D80: buyer capacity (index 0 at tier 0 before 42, a free index under 42's two-plot cap after), the literal refusal freehold.deed.buyer_capacity, the seller's fresh tier-0 record at index 0 with account trophy unlocks retained, and Ward Favor capacity awards travelling with the stable plot ID.
 - D65 **Per-asset authority and signed territories (R39).** Per-asset permanent delegate at mint, not collection-wide freeze. Low condition never destroys house, contents or access; no automatic lapse burn. Transfer/moderation restriction and irreversible burn triggers require explicit signed authority. Signed supported-country list, unknown-country refusal; no KR-only legal conclusion.
 - D66 **Dyes and bounded layout sharing (R40).** Retain counts. Art/content manifest supplies eight exact palette/name/source rows using approved material colors; no guessed RGB/rates. Dye station requires its amenity/proximity and condition 30+, while ordinary placement remains unlocked. Saved layouts use bounded per-plot storage; share codes carry version/tier/public layout only.
-- D67 **Independent second plot and shared Hearth (R41).** Primary-first myFreeholds, myFreehold remains primary alias; stable plot IDs from 07. Independent condition/prepay/visits/ward slot. Each second-home integer material line is ceil(primary approved line times 1.5). Hearth defaults primary, owner selects destination in Steward; shared account cooldown prevents bypass.
-- D68 **New professions excluded (R42).** Explicitly exclude new professions from this packet.43 produces a measured future-expansion handoff and records no implementation of new crafts. Existing ten professions deliver the complete furnishing program.
-- D69 **Base protocol and recurring budget review (R43).** Record actual clean sync at 7d140843d2; PR #3872 OPEN and base already current. Follow existing merge-forward until it merges, then newest release and remove dependency block. Correct no-offline-persistence summary.20 creates durable every-second-release budget review with measured LOW evidence, never automatic increases.
+- D67 **Independent second plot and shared Hearth (R41).** Primary-first myFreeholds, myFreehold remains primary alias; stable plot IDs from 07. Independent condition/prepay/visits/ward slot. Each second-home integer material line is ceil(primary approved line times 1.5). Hearth defaults primary, owner selects destination in Steward; shared account cooldown prevents bypass. Refined by D80 (Ward Favor capacity awards are properties of the stable plot ID and travel with the plot; after 42 a purchased plot may occupy the account's free index under the two-plot cap; the second SKU's price is the service's CAL-SERVICE row). Refined per D93: the second plot is granted at the Cottage tier and upgrades through the same build projects as the primary with every integer material line at ceil(1.5x); its weekly Ledger and prepay lines follow the same ceil(1.5x) rule (CAL-LEDGER-A); there is no second-home upgrade refusal; a third plot refuses with freehold.second_plot_cap; a sold primary is replaced by the seller's fresh tier-0 record at index 0 while a sold second plot frees index 1 with no replacement record. Per C01, the Hearth Key's authority is the account's, never the item's: owning the item grants no admission authority, and the combat, dead and jailed refusals apply.
+- D68 **New professions excluded (R42).** Explicitly exclude new professions from this packet. 43 produces a measured future-expansion handoff and records no implementation of new crafts. Existing ten professions deliver the complete furnishing program.
+- D69 **Base protocol and recurring budget review (R43).** Record actual clean sync at 7d140843d2; PR #3872 OPEN and base already current. Follow existing merge-forward until it merges, then newest release and remove dependency block. Correct no-offline-persistence summary. 20 creates durable every-second-release budget review with measured LOW evidence, never automatic increases.
 - D70 **Bounded suffixes and complete reviewer coverage (R44).** Split into suffixed implementation/QA pairs without renumbering, including further splits needed by new acceptance. Update every index/progress/next-file chain. Every file names all actual triggered reviewers; DB review before design and on final diff. Fix fifth-versus-ninth prepay boundary, stale auth tests and all reported nits.
 - D71 **Durable preservation and actual next file (R45).** ux-spec is durable. Any future authorized scaffolding teardown first preserves it and linked decisions/contracts under docs/prd/woc and proves links, never deletes the only source. Actual next file is /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-01-foundation.md.
 - D72 **Narrow requested memory update (R46).** Permit only the specifically requested freeholds memory entry to be updated with the resulting local tip, packet SETTLED and actual next-file path; no other memory or runtime-setup changes.
@@ -583,7 +623,129 @@ D6/D7 to service-specific personal-bank/station gates; D61/D62 specify the atomi
 housing-operation foundation without reusing storage-purchase ownership; D68 closes
 D14's optional professions as excluded. D71/D73/D75 supersede D12's earlier teardown
 and terminal timing, while D38/D74 preserve D13's temporary implementation stand-ins
-only until the required final-asset acceptance. D1-D26 themselves are retained unchanged.
+only until the required final-asset acceptance. D87 keeps D12's one PR per wave and
+assigns it an owner for every wave: 20 (A), 27 (B), 33 (C), 39 (D) and 44 (E) each carry
+the STOP-and-ask push-go arm, and 27 reads <wave-a-head> as the local tip recorded at the
+20 QA PASS or the wave A PR head when one exists. D1-D26 themselves are retained
+unchanged.
+
+### Settlement round 2 (independent review, 2026-09-06)
+
+The independent packet review of 2026-09-06 found decision gaps that no D1-D75 or R01-R46
+row covered. Each is recorded here with its recommended disposition applied throughout the
+packet; the ruling sheet's second round (R47-R64) carries the exact question and the word
+column. A row whose word column still reads "awaiting Fernando's word" is an owned
+approval item, not an open design question.
+
+- D76 **Visitor friend admission (R47).** The friend admission fact is: the named owner
+  character's outgoing friend list contains the visitor's character
+  (friendships.character_id = owner, friend_id = visitor), read through
+  whoFriended(visitor) or listFriends(owner) in the bounded on-open lookup and rechecked
+  at entry. The visitor's own friend list is never an admission input. A block row on
+  either side refuses. friendAdd, friendRemove and blockAdd bust the visitor projection
+  through a NEW mutation-site hook and trigger the D51 ejection recheck;
+  sendSocialSnapshot is not the feed. A name that resolves to an alt resolves to that
+  account's plot, and only the named character's friend list is consulted.
+- D77 **Guild-plot visiting policy (R48).** Guild-owned plots admit current members
+  always. visit_policy for the guild owner kind is set by the leader or an officer and
+  accepts only guild, public or private; friends is refused for that owner kind. Public
+  admission is capped by the tier column; the Meeting Hall cap is the Cottage row until 32
+  sets its own. Non-members enter as guests under the D51 ejection rules.
+- D78 **Hall Fund end-of-life (R49).** The service contract gains a Hall Fund end-of-life
+  row: on disband the pooled service balance is refunded pro rata to donor accounts by
+  original receipt as separately identified immutable refund operations; the game only
+  requests the operation. 29 adds an officer-plus withdraw-to-guild-bank verb for fund
+  materials and gold on the 07a rail. The explicit safe disposition in 28a means fund
+  materials and gold at zero and the service balance settled or refund-requested.
+- D79 **Keep-forever guild history and disband (R50).** A guild that holds any
+  keep-forever housing row (guild_deeds, first clears) is never hard-deleted. Disband
+  becomes the 28a tombstone disposition: the guild row is retained with a tombstone status, member
+  rows are removed, the realm name is released by a tombstone-aware uniqueness rule, and
+  guild_deeds rows stay attached. The disband guard extends the existing
+  beginGuildBankDelete guard at BOTH deleting call sites (disband and last-member leave)
+  before any member row is deleted. GM character or account deletion routes through the
+  same guard: leadership passes to the highest-ranked remaining member or, with none, the
+  tombstone disposition applies with fund disposition per D78. earned_by stays a nullable
+  FK beside an immutable captured public name and realm snapshot written at commit;
+  projections read the snapshot.
+- D80 **Furnished-plot transfer admission (R51).** Buyer capacity: the purchased plot
+  occupies the buyer's plot_index 0 only when that record is at tier 0 (Inn Room); the
+  buyer's retained copies and displays are previewed to a safe destination by the same
+  manifest rule as the seller's; otherwise the operation refuses with the literal code
+  freehold.deed.buyer_capacity. After 42, the purchased plot may occupy the buyer's free
+  index under 42's two-plot cap. The seller receives a fresh tier-0 record at index 0 with
+  account trophy unlocks retained. Ward Favor capacity awards are properties of the stable
+  plot ID and travel with the plot; the seller's fresh record starts at the base budget.
+  D64 and D67 are refined accordingly.
+- D81 **Default Inn Room record before persistence (R52).** 05 creates every account's
+  in-memory tier-0 Inn Room record as part of the claim model (the record D2 says every
+  account holds), together with the D24 development grant fixture the perf tour and the
+  Cottage captures use; 07 persists that record without changing its identity. 06's
+  offline entry and captures depend on 05, not on 07.
+- D82 **War table first-kill client seam (R53).** 31's first-kill projection reaches the
+  client through the same NEW bounded sibling read 30a names for missing lockout
+  projections (behind the current guild domain RouteDef registry with current-authority
+  checks), with keyed ready and empty states in the hall boards view and its test; no
+  facet member is added, so the parity pin is unchanged. 31 gains an Agent CLIENT slice,
+  its suites, its commit and its acceptance box.
+- D83 **Housing capacity never gates gameplay (R54).** Guild-clear recording capacity
+  never refuses GameServer.join, enterDungeon or a respawn. Exhaustion records a bounded,
+  auditable clear-not-captured gap with an operator alert; character rewards, loot and
+  existing deeds are unchanged and guild credit for that clear is simply not captured.
+  Every busy arm binds only to source activation or credit capture. The 07b join-time
+  reservation hook publishes the session regardless of capacity.
+- D84 **Calendar clocks (R55).** Every has-the-day-rolled-over fact (ledger, upkeep,
+  prepay, condition, guest-book daily admission, Showcase realm week, the per-account
+  weekly cap through ledgerWeekOf) uses the realm day resetDay (03:00 in the realm reset
+  zone) and the Tuesday week anchor emberWeekAnchorOf. The sim consumes day-keyed facts in
+  the resetDay vocabulary; the server produces them with resetDayKey(ms,
+  REALM_RESET_TIME_ZONE); epoch-ms fields are display-only. utcDay stamps when something
+  happened (deed days, provenance). The Endeavor month is the UTC calendar month
+  utcDay.slice(0, 7) per D58, never resetDay.
+- D85 **Dark realm behavior (R56).** The sim takes a freeholdsEnabled boot config beside
+  devCommands on the SimConfig seam. On a dark realm the Eastbrook gate prompt, the
+  furnisher and its stock and the Hearth Key are neither spawned nor sold; the offline
+  host stays live under D3. 03 and 06 inherit the rule and a flag-unset server test pins
+  it.
+- D86 **Purchase submodel absence contract (R57).** Absence on a denied storefront is a
+  runtime contract: no DOM node, handler, request, fetched catalog, error copy or
+  accessible text. Purchase code and English keys ship dormant in every bundle under the
+  runtime capability; the review notes and the 44b handoff say so explicitly.
+- D87 **Wave A and E publication arms (R58).** 20 and 44 carry the same STOP-and-ask
+  push-go arm as 27, 33 and 39: on the go, the sanctioned push opens that wave's PR; otherwise
+  the close ends local, awaiting the push go. 27 defines <wave-a-head> as the local tip
+  state.md recorded at the 20 QA PASS, or the wave A PR head when one exists. D12's one PR
+  per wave is owned for every wave.
+- D88 **Deletion policy for housing operation rows (R59).** 07a states the ON DELETE
+  policy per row class: intent rows cascade only when no open operation exists; applied
+  tombstones retain a nonidentifying operation identity with the account reference nulled
+  or scalar and cascade only under the accepted retention schedule. An open housing
+  operation blocks character or account deletion with the mapped refusal class in
+  character_delete_db.ts (the storage guard shape); the deletion race joins the real-PG
+  list.
+- D89 **Upgrade contribution source mode (R60).** Upgrade contributions take an explicit
+  source-mode argument per D37 (bags, or the vault inside the owner's own claim under
+  D18/D47); the bill counts item units per D33; a confirmed fee whose last leg cannot
+  finish because bags are full re-attempts without a second fee.
+- D90 **Dye station identity (R61).** The dye picker is enabled by the home station
+  amenity of type apothecary: no new amenity kind, no extra slot and no station GLB. The
+  art-brief row narrows to swatches and channel masks; a test pins the gate on that exact
+  amenity.
+- D91 **Distribution capabilities (R62).** Exactly two HudFeatures rows exist:
+  freeholdPurchaseEnabled and freeholdManageOnWebsite. Housing use is the server
+  entitlement gate (flag plus entitlement) read through the housing facet, never a
+  HudFeatures row; deedSurfaces is 14's source pin consumed by 38.
+- D92 **One key family and manifest governance (R63).** hudChrome.housing.* as pinned by
+  ux-spec and ux-key-manifest.json is the only key family (charter.*,
+  steward.manageWebsite); the drafts adopt those ids, and fee, tax and Purchase Terms rows
+  are added under charter.*. Window-title, tab and button keys use title case per
+  DESIGN.md 5.4; status, description, radio and aria keys stay sentence case. Every UI
+  phase names its new keys with exact English in its own file, ux-spec carries the rows,
+  and the manifests regenerate in that same phase with every cited count updated.
+- D93 **Second freehold tier and upgrades (R64).** The second plot is granted at Cottage
+  tier and upgrades through the same build projects as the primary with every integer
+  material line at ceil(1.5x) per D67; ledger and prepay lines follow D67; there is no
+  second-home upgrade refusal.
 
 ## Source-reviewed Hearth and build-presence refinements
 
@@ -692,10 +854,17 @@ authenticated character on that host, independent of location, party or guild;
 multiple sources multiply this capacity. Fresh admission extends every affected
 reservation all-or-none through 07b's prepareFreeholdLifecycleAdmission,
 commitFreeholdLifecycleAdmission and cancelFreeholdLifecycleAdmission before
-GameServer.join publishes the character, including administrators. The existing
-reservation owns a prepared GuildClearCharacterAdmissionToken, commits it through
-commitGuildClearCharacterAdmission before authenticated Sim/session publication,
-and cancels every failed path. Prepared unpublished character generations count
+GameServer.join publishes the character, including administrators. The
+reservation owns a prepared GuildClearCharacterAdmissionToken and commits it
+through commitGuildClearCharacterAdmission before authenticated Sim/session
+publication; a cancelled lifecycle admission cancels the unpublished extension.
+The join-time hook publishes the session regardless of capacity (D83): when the
+extension cannot fit, the character publishes as an unreserved generation, one
+bounded clear-not-captured gap is recorded with an operator alert, and no busy
+reaches the player. A captured source whose actual recipient batch exceeds its
+reserved envelope (possible only when an unreserved generation participated) is a
+not-captured clear: character rewards are unchanged and no guild candidate is
+captured. Prepared unpublished character generations count
 when another Nythraxis source life reserves; neither interleaving can omit capacity. Resume reuses
 its surviving generation; takeover transfers or replaces it under a generation
 fence. Authoritative leave releases only unused participant capacity; captured
@@ -706,8 +875,12 @@ Every qualifying source producer preflights the whole legal activation/replaceme
 batch before changing auras, claims, difficulty, IDs, RNG, entities, death/loot or
 pending replacement state. This includes normal claims, Reset All, developer
 family replacement and spawn batches, in-place respawn, pending respawn and
-boot/authored/custom producers. Refusal leaves the original state intact; a
-respawn under pressure leaves the corpse/loot state and defers revival. Retiring
+boot/authored/custom producers. A refused reservation never blocks the producer (D83): the life activates,
+the claim proceeds and the corpse revives exactly as before, flagged not-captured
+on its session-only token seat (ctx.guildClearSourceLives on SimContext); its
+clear credits characters unchanged and captures no guild candidate, and the bridge
+records one bounded gap row (source identity, boss, difficulty, utcDay) in the
+redacted metrics with the operator alert. Retiring
 an entity/claim releases only unused life allocation. Publication assertions are
 invariants, not overload handlers after partial mutation; no movement barrier or
 new participant cap is permitted.
@@ -728,9 +901,14 @@ generations, prepares all reservations and atomically installs readiness at a
 synchronous host boundary; inability to fit fails activation without advertising
 readiness. Incapable old processes cannot advertise the capability. Once enabled,
 recording cannot be disabled to discard candidates or admit excess work. Admitted
-sessions and already-live sources continue; fresh character admission or new
-qualifying source activation may return bounded operational busy. There is no
-waiter queue, global tick pause or dropped clear. Restart installs committed
+sessions and already-live sources continue. Recording capacity never refuses
+GameServer.join, enterDungeon or a respawn (D83): every busy outcome binds only to
+source activation or credit capture, where it marks the life or clear not-captured
+and records the bounded auditable gap; join, entry, revival, character rewards,
+loot and existing deeds are unchanged and guild credit for that clear is simply
+not captured. There is no waiter queue, global tick pause or dropped candidate.
+While freeholdsEnabled is false on the SimConfig seam (D85) or recording is
+disabled, no producer consults ctx.guildClearAdmission. Restart installs committed
 recovery before ready and shutdown obeys existing deadlines and generation fences.
 
 31 extends MEASURE-BOUNDS with the actual producer census, source/candidate schemas,
@@ -758,6 +936,14 @@ ambiguous commits, real PostgreSQL participants and exact no-leak capacity total
 - Store policy: `FREEHOLDS_ENABLED === '1'` read live, default off; no purchase surface
   and no wallet, $WOC, on-chain deed, or marketplace string in any App Store, Google Play, Steam,
   or Epic path; no "earn" language; nothing repossessed, nothing destroyed, no timed loss.
+  Dark also means the Sim boots with `freeholdsEnabled` false on that realm (D85): no
+  Eastbrook gate object, no furnisher entity or stock, and no Hearth Key grant reach a
+  player; the offline browser and headless hosts pass `freeholdsEnabled` true (D3), and
+  item, dungeon and layout data merge on every host regardless.
+- Housing capacity never gates gameplay (D83): guild-clear recording capacity never refuses
+  `GameServer.join`, `enterDungeon` or a respawn; exhaustion records a bounded, auditable
+  clear-not-captured gap with an operator alert, character rewards, loot and existing deeds
+  are unchanged, and every busy arm binds only to source activation or credit capture.
 - Never sell power: no amenity or furnishing changes a combat, progression, gathering, or
   drop number; the only buff in a house is a feast's Well Fed.
 - Never a Perfecting keystone (`wyrmfall_core`, `sundered_essence`, `makers_ember`), a
@@ -791,40 +977,182 @@ ambiguous commits, real PostgreSQL participants and exact no-leak capacity total
   `SimContext` primitives
   and callbacks are appended and mirrored in `tests/sim_context.test.ts` (`CALLBACK_KEYS`
   and the fake host); a `freehold/` row joins the `src/sim/CLAUDE.md` system table.
+  - Boot config (01, D85): the `SimConfig` seam (`src/sim/types.ts`) gains the optional
+    boot field `freeholdsEnabled` beside `devCommands`, mapped by `server/sim_boot_config.ts`
+    from `server/freehold_config.ts` `freeholdsEnabled(env)` and passed as true by
+    `src/main.ts` and `headless/env_server.ts`; 01 owns the field and its pins, 03 and 06
+    consume it.
+  - Tier writer (05, D81): `src/sim/freehold/state.ts::setFreeholdTier` and the
+    `/dev freehold <tier>` command land in 05 with the default tier-0 Inn Room record; 07
+    adds the persisted save behind the same setter; 15's Charter grant reuses it.
+  - Calendar (13, 13a, 35; D84): NEW `src/sim/realm_week.ts` (13) holds the pure realm-week
+    leaf extracted from `src/sim/professions/masterwrought_materials.ts`
+    (`emberWeekAnchorOf`, `emberWeeksBetween` and `emberWeekAnchorPlusWeeks`, re-exported
+    from that module unchanged; `resetDayToDayNumber` is module-private today, so the
+    extraction exports it from `realm_week.ts` while `masterwrought_materials.ts` keeps
+    its local use);
+    `ledger_core.ts::ledgerWeekOf(resetDay)` is that helper under the housing name and
+    `ledger_core.ts::LEDGER_PREPAY_MAX_WEEKS` is the shipped default of 13's injected prepay
+    cap (4 in 13; 25a proves 12 through the injected cap and raises the default only with
+    the signed CAL-LEDGER-A version and the 13a acceptance recorded in Content numbers). Housing day keys are produced only by
+    `server/raid_reset.ts::resetDayKey(ms, REALM_RESET_TIME_ZONE)` (13a); the sim compares
+    day keys and every epoch-ms field is display-only. `realm_month_core.ts` (35) is the
+    pure sim leaf for the UTC Endeavor month, fed by `server/sim_calendar_feed.ts`.
+  - Colliders (10, D17): the registry keys freehold regions under the per-Sim host token
+    (`ctx.riftCollisionToken`, which isolates Sims) by origin (ox, oz); each region carries
+    its claim's `collisionToken` as the ownership stamp on set/clear; `runtimeRegionAt`
+    derives one candidate origin from `dungeonAt(x)` and the UNCLAMPED slot inverse; the
+    `InstanceSlot` interface moves to `src/sim/instances/instance_slot.ts` (re-exported
+    from `sim.ts` as a type).
+  - Upgrade (21, D89): `src/sim/freehold/upgrade.ts`; `contribute_upgrade` carries an
+    explicit source mode (`'bags' | 'vault'`, D37/D89) and a `complete` arm (the
+    re-attempt: no materials, no second fee); facet members
+    `contributeUpgrade(slot, count, source)` and `finishUpgrade()`.
+  - Pattern channels (22, D53): `src/sim/content/dungeons.ts` gains the `nythraxis_housing`
+    tail rollGroup below `nythraxis_farm`, and `src/sim/rift/progression.ts` the sorted
+    exported `HOUSING_RIFT_PATTERN_ITEM_IDS` plus an appended Draw 8 (the only sim logic 22
+    touches).
+  - Legend Stand (23): the copy reference is owning character id + itemId + instance.name +
+    instance.signer + perfected + rolled.quality legendary, never `itemCopyPin`.
+  - Later-wave modules (24/34/35/41): `ward_core.ts`, `ward_assignment_core.ts` (pure,
+    called by the server inside the allocation transaction), `wards.ts`,
+    `ward_favor_core.ts`, `realm_month_core.ts`, `garden_view.ts` and `dye.ts` (the dye
+    picker rides the existing apothecary station amenity, D90: no new amenity kind, slot or
+    station GLB).
 - Content: `src/sim/content/freehold/` (`tiers.ts`, `charters.ts`, `furnishings.ts`,
   `furnishing_recipes.ts`, `furnishing_patterns.ts`, `ledger_schedule.ts`,
-  `trophies.ts`, `dungeons.ts`, `layouts.ts`, `items.ts`), merged by `src/sim/data.ts`
-  where the table is item or dungeon data (tiers and layouts are served by reference). Item kind `furnishing`
+  `trophies.ts`, `dungeons.ts`, `layouts.ts`, `items.ts`, later `npcs.ts` (the 24 farmer
+  `NpcDef` `freehold_farmer`, merged into `NPCS`) and `endeavors.ts` (35)), merged by
+  `src/sim/data.ts` where the table is item, NPC or dungeon data (tiers and layouts are
+  served by reference). Item kind `furnishing`
   (`FurnishingItemDef`), the one new kind. Patterns are `RecipeItemDef` rows
   (`pattern_<output>`), never a new kind.
 - Facet: `src/world_api/housing.ts` (`IWorldHousing`), pinned in
   `tests/world_api_parity.test.ts` (five edits per member batch), commands appended to
-  `COMMAND_NAMES` and tagged in `COMMAND_FACETS` in `src/world_api.ts`.
+  `COMMAND_NAMES` and tagged in `COMMAND_FACETS` in `src/world_api.ts`. Phase 01's member
+  list is: data `myFreehold` and `freeholdLayout` (null until 05 and 08a light them), the
+  clock-base method `housingNowMs()` (the `farmNowMs` shape), and the dark no-op methods
+  `freeholdEnter`, `freeholdLeave`, `placeFurnishing`, `moveFurnishing`,
+  `removeFurnishing`, `undoPlacement`, `redoPlacement`, `payLedger`, `setVisitPolicy` and
+  `setFreeholdBuildPresence` (C03). Later appends, none renaming a D20 member (the list
+  phase-01 carries): 12 appends `buildStation` and `myAmenities`, 17 appends
+  `placeTrophy(plinthKey, trophyId)` and `clearPlinth(plinthKey)` (commands `place_trophy`
+  and `clear_plinth`, `COMMAND_FACETS` 'IWorldHousing') beside the `SimContext` primitive
+  `ctx.freeholdAccountSources` (get(ownerKey) and invalidate(ownerKey, sourceKind) keyed
+  on the D16 host-stamped owner key the sync holds through meta, never an account id; the
+  server binding createFreeholdAccountSourceLoader resolves ownerKey to the account; the
+  offline and headless local-only binding returns an empty cross-character projection
+  with explicit status while the sync reads the local character's own surfaces from meta
+  per D19) appended to `CALLBACK_KEYS`, 18 appends `freeholdVisitors`, 21 appends
+  `contributeUpgrade(slot, count, source)` and `finishUpgrade()`, 30a appends NEW
+  `guildHallBoards()` (next bullet), 34 appends `myWard` and `moveWard(wardId)`, 42 appends
+  `myFreeholds`; every other later member is named in its own phase file with the parity
+  pin updated in that same change.
+- Hall boards read (30a): NEW `server/guild_hall_boards.ts::routes` (RouteDef
+  GET /api/guilds/hall-boards, registered in `server/http/registry.ts` beside
+  `guildRosterRoutes`, current-membership check on every call) mirrored by the NEW
+  `IWorldHousing` member `guildHallBoards(): Promise<GuildHallBoardsInfo | null>`
+  (ClientWorld fetches; the offline Sim answers null; headless no-op). Lockout arm:
+  one row per lockout key the live model stamps (eleven: heroicLockoutId of the five
+  dungeon final bosses, plus the plain and :heroic keys of nythraxis_boss_arena,
+  ignivar_raid_arena and ignivar_inner_crucible), each counting currently online
+  members whose lockout is live by the isRaidLocked expiry rule (live session metas
+  only, no SQL, no character-blob read, no other member named, no week anchor:
+  emberWeekAnchorOf serves the D84 ledger week only) plus the viewer's own rows.
+  firstKills arm: 31 fills it from the committed guild_deeds projection; 31 adds
+  no facet member (D82).
 - Instances: `DungeonDef.claimKey`, `freehold_inn_room` (index 15), `freehold_cottage`
   (index 16); interiors `'inn_room'` and `'cottage'` on the `interior` union with
   `DungeonLayout` records (`INN_ROOM_LAYOUT`, `COTTAGE_LAYOUT`) plus lift functions,
-  `STATIC_INTERIOR_COLLIDERS` entries, `groundHeight` arms, render variants.
+  `STATIC_INTERIOR_COLLIDERS` entries, `groundHeight` arms, render variants; the
+  `InstanceSlot` interface lives in `src/sim/instances/instance_slot.ts` from 10.
 - Wire: self key `fhold` (owner account state, strict decode in
   `src/net/freehold_snapshot_wire.ts`, created in Phase 01 with an empty allowlist and
   filled in Phase 08a), pid-scoped `freeholdState` descriptor event
   (re-sent on resume like `riftStateEventFor`), text-free `freeholdDenied` and
-  `freeholdGranted` events; server sibling `server/freehold_wire.ts`
-  (`dispatchFreeholdCommand`, `emitFreeholdSelfKeys`); `HEAVY_SELF_CMDS` /
-  `HEAVY_SELF_EVENTS` rows; `JAILED_BLOCKED_COMMANDS` for the gate and Hearth Key.
-- Server: `server/freehold_db.ts` (`FREEHOLD_SCHEMA`, `account_freeholds`, later
-  `freehold_ledgers`, wave D `freehold_deeds`), `server/freehold_routes.ts` (registered
-  in `server/http/registry.ts`, never inline in `main.ts`), `server/freehold_config.ts` (`freeholdsEnabled`), error family `freehold.*`,
-  Claudium spend kind `freehold` beside `storage`, telemetry source `freehold`, a
-  `freeholdForAccount` read at fresh join beside `bankBonusFactsForAccount`.
+  `freeholdGranted` events (`freeholdDenied` reasons in append-only order: `no_freehold`,
+  `locked`, `cooldown`, `visitors_full`, `not_friend`, `dead`, `combat`, `busy` from 05;
+  `instanced` and `match` from 06; `not_owner`, `bags_full`, `item_locked` from 08;
+  `short` from 13); server sibling `server/freehold_wire.ts` (the pre-switch
+  `refusedFreeholdCommand` predicate and the in-switch `dispatchFreeholdCommand` delegate
+  from 01; `emitFreeholdSelfKeys` from 08a); `HEAVY_SELF_CMDS` / `HEAVY_SELF_EVENTS` rows;
+  `JAILED_BLOCKED_COMMANDS` for the gate and Hearth Key; `src/net/ward_wire.ts` (34).
+- Server: `server/freehold_db.ts` (`FREEHOLD_SCHEMA`, `account_freeholds`, 13's keep-forever
+  `freehold_ledgers` for immutable paid bills, wave D `freehold_deeds`),
+  `server/freehold_routes.ts` (registered in `server/http/registry.ts`, never inline in
+  `main.ts`), `server/freehold_config.ts` (`freeholdsEnabled`), error family `freehold.*`,
+  Claudium spend kind `freehold` beside `storage`, telemetry source `freehold`, 15's two
+  RouteDef rows appended to `server/freehold_routes.ts` (POST `/api/freehold/quote`, a
+  mutating method with a typed body so origin_check, content_type and the body schema gate the
+  intent-minting Prepare step, and GET `/api/freehold/operation/:operationId`, the side-effect-free
+  status read, handled by NEW `server/freehold_purchases.ts`;
+  the checkoutAuthorization reference is stored on the 07a operation rows and never
+  leaves the server), SKU ids `freehold_charter_cottage` (03) and
+  `freehold_master_builders_call` (15), a `freeholdForAccount` read at fresh join beside
+  `bankBonusFactsForAccount`.
+- Server, 07a rows (NEW, named so 07a, 13, 15, 28, 37 and 42 cite one vocabulary):
+  `server/freehold_claim_db.ts` (`FREEHOLD_CLAIM_SCHEMA`, table `freehold_plot_claims`,
+  one active claim per `plot_id`) and `server/freehold_operation_db.ts`
+  (`FREEHOLD_OPERATION_SCHEMA`, tables `freehold_operations` for intent and
+  `freehold_operation_receipts` for applied tombstones), both placed in `ensureSchema`
+  after `FREEHOLD_SCHEMA` and before `STORAGE_PURCHASE_SCHEMA`; the claim renewer
+  `renewFreeholdClaims` is a `PeriodicSaveWrites` member registered in
+  `PERIODIC_SAVE_WRITE_NAMES` beside `heartbeatLeases` (expiry plus heartbeat, the
+  `LEASE_TTL_SECONDS` policy); the open-operation deletion guard raises the NEW
+  `CharacterFreeholdOperationOpen` class in `server/character_delete_db.ts` beside
+  `CharacterStoragePurchaseOpen` (D88); receipts growth rides a gauge modelled on
+  `server/bank_ledger_growth_monitor.ts` and pinned in
+  `tests/server/main_retention_wiring.test.ts`.
+- Guild roster (origin/release/v0.42.0, verified 2026-09-06, re-verify at every guild
+  phase start): GUILD_MEMBER_LIMIT is removed; the cap is per guild, base 100 plus
+  20-seat pages up to `GUILD_ROSTER_MAX_MEMBERS` (1,000) in `src/sim/guild_roster.ts`;
+  `PgSocialDb.guildMembership` carries `rosterPages`; `addGuildMemberAtomic` reads the cap
+  from the locked guild row; NEW `server/guild_roster_page_db.ts` (account KEY SHARE,
+  guilds UPDATE, `guild_roster_receipts` insert, character save: accounts, then guilds,
+  then characters); `guild_roster_receipts` cascades with guilds and characters;
+  `SocialTransport.buyRosterPage`, `SocialEvent.guildRosterResult/guildRosterExpanded`;
+  `src/world_api/social_graph.ts` `guildBuyRosterPage` and `GuildInfo.memberCap/nextRosterPrice`
+  (every housing facet batch conflicts on `tests/world_api_parity.test.ts` at merge).
+- Guild hall rail (28/28a/29; D77, D78, D79): `visit_policy` for the guild owner kind is
+  set by the leader or an officer and accepts only `guild`, `public` or `private`; 29's
+  officer-plus `hall_fund_withdraw` command moves the fund's material slots and gold into
+  the guild bank through the existing guild-bank deposit path on the 07a rail; disband is
+  28a's tombstone disposition behind the `beginGuildBankDelete` guard extended at BOTH
+  deleting call sites (disband and last-member leave).
+- Optional deeds (37/38): `FREEHOLD_DEEDS_ENABLED` (37, default off, live '1' also
+  requires `freeholdsEnabled`); NEW `allowSerializedCollectibles` policy switch (38,
+  default off, beside `allowMounts`/`allowMechChromas` in `server/woc_market_routes.ts`);
+  NEW `server/freehold_deed_market.ts` with the plot-shaped `freehold_deed_listings`
+  relation and browse feed (never a `WocListingRow`); the NEW `WocStepUpOperation` kind
+  `'list_freehold_plot'` (38); refusal `freehold.deed.buyer_capacity` (D80); 38's client
+  deed modules are `src/ui/deed_card_view.ts` and `deed_card_window.ts` (never
+  `src/ui/hud/housing/deed_*`).
 - Client: `src/render/freehold/` (`furnishings.ts` painter modelled on
   `FarmPatchVisuals`, `furnishing_layout_core.ts` in `RENDER_PURE_CORES`, the interior
-  dressing, `furnishing_ghost_visual.ts`), `src/ui/hud/housing/` (barrel + `CLAUDE.md`:
-  `build_mode_*`, `furnishing_palette_*`, `steward_panel_*`, `trophy_case_*`),
-  `src/game/distribution_surfaces.ts`, `HudFeatures.freeholdPurchaseEnabled`, keybinds
-  `toggleBuildMode`, `rotateFurnishingLeft`, `rotateFurnishingRight`.
+  dressing, `furnishing_ghost_visual.ts` and its sibling `freehold_light_grade.ts` (never a
+  second `interior_light_rig.ts` basename; test `tests/freehold_light_grade.test.ts`), the
+  NEW `'hearthView'` `CameraDirectiveKind` in `src/render/camera_director_core.ts` (09),
+  later `ward_exteriors.ts` (34) and `garden_tableau.ts` (24)), `src/ui/hud/housing/`
+  (barrel + `CLAUDE.md`: `build_mode_*`, `build_input_core.ts`, `capacity_meter_view.ts`,
+  `furnishing_palette_*`, `steward_panel_*`, `trophy_case_*` with
+  `trophy_case_view.ts::eligibleTrophyChooser` and
+  `TrophyCaseWindow.openForPlinth(plinthKey)` as 17's record-only chooser that 11's
+  Replace trophy / Clear plinth affordances call), wave A housing window ids
+  `steward-window` (16) and `trophy-case-window` (17), the freehold-gate
+  `MapMarkerSemantic` arm (`src/ui/map_marker_semantics_core.ts`) with its art, layer and
+  accessibility tokens and the `entity_display_core.ts` object arm for the gate (both from
+  06), `src/game/distribution_surfaces.ts` (housing fields `freeholdPurchase`,
+  `freeholdManageOnWebsite`, `deedSurfaces`; 14 owns `deedSurfaces`, 38 consumes it),
+  exactly two housing `HudFeatures` rows `freeholdPurchaseEnabled` and
+  `freeholdManageOnWebsite` (D91), keybinds `toggleBuildMode` ('Shift+KeyB'),
+  `rotateFurnishingLeft` ('Comma'), `rotateFurnishingRight` ('Period'), `undoPlacement`
+  ('Ctrl+KeyZ'), `redoPlacement` ('Ctrl+Shift+KeyZ').
 - i18n: `hudChrome.housing.*` in `src/ui/i18n.catalog/hud_chrome.ts`; item names in the
   item-names domain; `apiError.freehold.*` via `npm run new:endpoint`; world-entity names
-  in `src/ui/world_entity_i18n.ts`.
+  in `src/ui/world_entity_i18n.ts`. `hudChrome.housing.charter.feeDetails`,
+  `charter.quoteExpiry` and `charter.terms` are named in 15 and 16 with the same exact
+  English and rendered by 16 (D92); every UI phase names its new keys with exact English
+  in its own file and regenerates both manifests in that same change (D92).
 - Deeds family "Homesteader"; Reliquary "Hearth shelf" (furnishing items only; patterns
   never); provisioner firewall arm for the ledger schedule table.
 
@@ -855,8 +1183,14 @@ is not that source. Amenities work at 30 and pause below; entry/build/undo still
 
 Ledger bills have 3 to 5 lines, always produce plus allowed rotating nonproduce families,
 one published schedule per realm week. Source is explicitly bags-only, vault-only or
-automatic bags-then-vault. Prepay capacity is 4 weeks initially and 12 from 25a; bills and
-credits retain source/rate identity. The repair amount is flat within its bill; current
+automatic bags-then-vault. Prepay capacity is 4 weeks initially and 12 from 25a
+(`LEDGER_PREPAY_MAX_WEEKS` in `src/sim/freehold/ledger_core.ts`: 13 ships 4; the twelfth
+week activates only behind the signed CAL-LEDGER-A and the 13a calendar-authority
+acceptance; ledger_core.ts takes the cap as an injected input with LEDGER_PREPAY_MAX_WEEKS
+as the shipped default; 25a proves 12 through the injected cap and raises the default only
+in the change that records the signed twelve-week CAL-LEDGER-A version and the 13a
+acceptance here); bills and prepaid weeks are `ledgerWeekOf` realm weeks and
+wear is per realm day `resetDay` (D84); bills and credits retain source/rate identity. The repair amount is flat within its bill; current
 condition 93 versus 60 does not prorate it. Working Cottage/Citadel upkeep targets are
 about 10%/20% of measured weekly gatherer output, WOC calibration goals without unsupported
 classic-era attribution. The Call reference is about 1.5x a bill's market value, never a
@@ -872,8 +1206,9 @@ measured or signed rows in the workbook precede runtime activation:
 | Wave A/B furnishing outputs | 18 (8 vendor, 10 craft, 3 pattern recipes within the 10); 20 further crafts including produce decoration | Fernando/content manifest; 03/04/19 and 22/24, Codex asset producers |
 | Wave B pattern roster | 6 exact pattern rows named in content-manifest.md, approved D38/D53 roster rather than a classic-era count | Fernando/content; 22 one named raid or rift channel plus Marks per row, signed costs/drop weights |
 | Hearth Key | 60 minutes, original proposal/state reference; one account cooldown across destinations | Fernando; 06 interaction, 07/07a account authority, 42 shared consumer |
+| Concurrent claimed instances per freehold def | 24 per `DungeonDef` (`INSTANCE_SLOT_COUNT`, `src/sim/data.ts`), pre-allocated per def per realm process and reaped `INSTANCE_EMPTY_TIMEOUT` (300, `src/sim/types.ts`) after emptying; the 25th owner receives `freeholdDenied` busy, never a queue; saturation is the honest busy refusal (D50) | Fernando; 05 (the busy arm), 18 (visitor admission rides the same slot), 34 |
 | Snapped yaw and physical limits | 15 degrees from the adopted placement/reference; grid pitch, dimensions, clearance and row/byte limits derive from measured legal room/model manifests | Content/interior/placement owners; 03/06/08/19/25, no unreferenced dimensions |
-| Visitors | Inn 8 (D50 reuses Cottage target), then Cottage/Lodge/Manor/Keep/Citadel 8/12/16/20/24; exclude all owner-account sessions | Fernando; 18/26/40; admission caps never render culling |
+| Visitors | Inn 8 (D50 reuses Cottage target), then Cottage/Lodge/Manor/Keep/Citadel 8/12/16/20/24; exclude all owner-account sessions | Fernando; 18/26 (rows existing at 26: Inn 8, Cottage 8, Lodge 12), 28 (Meeting Hall = the Cottage row until 32, D77), 32 (Manor 16 and the hall tiers), 40 (Keep 20, Citadel 24); admission caps never render culling |
 | Public knock | One per account+plot per 10 seconds | Fernando; 26 |
 | Ward | 50 plots and 24 admitted occupants | Fernando; 34 DB/geometry/art proof |
 | Favor/Endeavor | 4 ranks, permanent +10 decor per rank; monthly progress uses authority UTC month | Fernando; 35 source/reward calibration |
@@ -883,7 +1218,7 @@ measured or signed rows in the workbook precede runtime activation:
 | Contribution log | 90-day retention working window | Fernando/DB owner; 29 export/prune/index proof |
 | Pattern resale | sellValue 100 subject to verifying the shipped pattern contract | Content owner; 04/22 literal source fixture |
 | Dyes and saved layouts | 8 exact palette rows; 0 to 2 declared tint channels; 5 saved layouts per plot | Fernando/art/content; 41/41a, approved palette sources and derived byte bounds |
-| Second-home bill | ceil(primary approved integer line times 1.5) | Fernando/content; 42; service separately owns SKU price |
+| Second-home bill | ceil(primary approved integer line times 1.5) on every integer material line: ledger, prepay and the same build-project upgrade bills as the primary; the second plot is granted at the Cottage tier and has no upgrade refusal (D93) | Fernando/content; 42; service separately owns SKU price |
 | Settlement examples | Initial 25% burn/75% treasury; illustrative resale 3% burn/7% treasury/90% seller, royalty independently quoted | Economy service and counsel; signed published service artifact, never local token arithmetic |
 
 ### Inherited UX constants (source status verified 2026-09-05)
@@ -907,13 +1242,22 @@ reference or an explicit ruling with a TUNING owner.
 | Housing authored and effective lights | Proposal ceiling: 3 authored room point emitters. Existing `src/render/gfx.ts`: iOS profile 2, constrained profile 3, ordinary profile 6; the contributing budget can fall to 1. Shared allocation remains authoritative. LOW grade and actionable visuals must not depend on all 3 contributing. | Interior/render and asset owners. |
 | UX screenshot viewports | Existing `scripts/pr_screenshots.mjs`: desktop default 1600x900; required existing touch tiers compact 874x402 and tablet 1180x820. Mobile default 844x390 is harness behavior, not the compact target. | Housing screenshot helper and wave-close matrix. |
 | UX screenshot low seed | Existing screenshot harness settings: `graphicsPreset` 1 and `graphicsDefaultApplied` true. Seed each theme explicitly; set desktop viewport in `beforeLoad` when departing from the harness default. | Build-mode capture helper. |
-| UX verification inventories | 329 exact housing keys in ux-key-manifest.json and 330 screenshot variants in ux-shot-manifest.json, derived from the approved UX inventory rather than gameplay tuning | UX owner; 09/11/16/17/18 and wave-close verification regenerate and compare exact manifests |
+| UX verification inventories | 557 exact housing keys (each with its owning phase) in ux-key-manifest.json and 733 screenshot variants (330 in wave A, each with its producing phase) in ux-shot-manifest.json, derived from the approved UX inventory rather than gameplay tuning | UX owner; every UI phase that adds keys or shot variants (06/09/11/12/14/16/17/18 in wave A; 21/23/24/25/26/28/29/30/30a/31/34/35/36/37/38/40/41/41a/42 later) regenerates both manifests in its own change with every cited count updated (D92), and wave-close verification compares the exact manifests |
 | UX numeric measurement ownership | Grid pitch, room dimensions, camera path, transformed furnishing bounds, clearance and touch projection derive from the approved measured art/room manifest. Placement-history bounds derive from the maximum legal placement-row bound. No unreferenced numeric literal is supplied by the UX document. | Content, interior, placement, asset and build-mode owners; Fernando for any new tuning. |
 
 ## Per-phase ledgers (fill as phases complete)
+Rows marked planned carry the names the packet fixed in advance; the completing phase
+replaces the marker with its actual outputs.
+
 | Phase | New files | IWorld members | SimEvents | Wire keys and commands | Endpoints | Tables | i18n keys |
 |---|---|---|---|---|---|---|---|
 | 01 | | | | | | | |
+| 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
+| 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
+| 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
+| 30 (planned) | NEW `tests/guild_chest_opener.test.ts` | none | | | | | `guild.chestMembersOnly`, `guild.stationMembersOnly`, `guild.amenitiesPaused`; shot target `housing-hall-amenities` (38 variants) |
+| 30a (planned) | `server/guild_hall_boards.ts` | `guildHallBoards()` | | | GET `/api/guilds/hall-boards` | | `guild.lockouts`, `guild.firstKills`, `guild.lockoutRow`, `guild.ownLockoutRow`, `guild.noLockouts`, `guild.firstKillsUnavailable`, `guild.membersOnly`, `guild.boardLoading` |
+| 31 (planned) | `server/freehold_guild_clear_admission.ts`, `server/freehold_guild_clear_bridge.ts`, `src/sim/freehold/guild_clear_contract.ts` | none (D82) | | | fills 30a's firstKills arm | `guild_deeds` | `guild.firstKillRow` |
 
 ## Tracked release and handoff gates
 
@@ -928,10 +1272,10 @@ question. Never present unsigned drafts as legal/platform/service acceptance.
 | Economy catalog, authorization and settlement | ../prd/woc/freehold-service-contract.md; 07a/15 then every priced consumer | Economy service and Fernando accept catalog/version, opaque eligible-checkout proof, quotes, pooled ledger, durable recovery and published conversion/burn policy before new spend/enable. |
 | Counsel, Terms and storefront model | ../prd/woc/freehold-counsel-memo.md, freehold-terms-amendment.md and freehold-store-listing-drafts.md; 14/15/16, checked 20 and revisited 44b | Legal team and Fernando approve/publish the applicable model before production enable or a housing-bearing storefront submission. Final 44b revisits the completed implementation and prepares the legal-team handoff. |
 | Optional deed territories and irreversible authority | ../prd/woc/freehold-deed-service-contract.md and freehold-territory-authority-schedule.md; 37/38, checked 39 and 44b | Service/legal/Fernando sign supported territories, per-asset powers and transfer/irreversible-operation policy before optional deed activation. Unknown eligibility refuses new operations; accepted operation recovery remains required. |
-| Approved numerical rows | content-numbers-workbook.md and content-manifest.md; each named producer, measured report 20 and later closes | Fernando owns gameplay target acceptance and the service owns prices. Exact trial derivations, rounding, source and measured calibration/signature precede runtime activation; no missing quantity is guessed. |
+| Approved numerical rows | content-numbers-workbook.md and content-manifest.md; each named producer; the four-week measured report at NEW FUTURE docs/freeholds/ledger-calibration-report.md and the every-second-release budget review at NEW FUTURE docs/freeholds/housing-budget-review.md, both created by 20 and extended by later closes | Fernando owns gameplay target acceptance and the service owns prices. Exact trial derivations, rounding, source and measured calibration/signature precede runtime activation; no missing quantity is guessed. |
 | Source calendar, lifecycle and rollout capability | Future persistence-rollout-contract.md, lifecycle-policy-binding.md, lifecycle-db-contract.md and upkeep-calendar-db-contract.md from 07/07b/13a | Named service/operations/DB owners accept account source/reset-policy assignment, immutable history/finality, bounds, capable-release rollout/rollback and actual PG proof before upkeep activation. |
 | Final assets and image replacement | art-brief.md/content-manifest.md and per-wave final-asset proof; final 44a icon/image replacement | Codex asset sessions use existing intake/provenance/export/compile/LOW/screenshot gates. No placeholder is counted as a final shipping asset; final 44a rechecks all feature-created icons/images before 44b. |
-| Runtime safety and distribution | 01 strict live FREEHOLDS_ENABLED gate; 14 seven-distribution capability matrix; every priced implementation and QA | Packet owners prove dark route/command/catalog behavior, complete forbidden submodel absence and independently approved management flow before activation. |
+| Runtime safety and distribution | 01 strict live FREEHOLDS_ENABLED gate; 37 FREEHOLD_DEEDS_ENABLED (default off, requires freeholdsEnabled); 38 NEW allowSerializedCollectibles policy switch (default off, beside allowMounts/allowMechChromas in server/woc_market_routes.ts); 14 seven-distribution capability matrix; every priced implementation and QA | Packet owners prove dark route/command/catalog behavior, complete forbidden submodel absence and independently approved management flow before activation. |
 
 Final ordering is 44 implementation, 44 QA, 44a Codex artwork, 44a QA, 44b legal
 revisit/handoff, 44b QA. Only then can the completed program be reported; durable source
@@ -939,9 +1283,13 @@ preservation still precedes any separately authorized cleanup. No push/PR or leg
 message is performed in this documentation session.
 
 ## Gotchas (read before the matching phase)
-- `src/sim/sim.ts` (ceiling 12006), `server/game.ts` (10336), and `src/net/online.ts`
-  (5861) sit at ZERO monolith slack: every delegate or case label added must be paid for
-  by extracting an existing block first, then lower the ceiling. `IWORLD_MEMBERS` probes
+- `src/sim/sim.ts`, `server/game.ts`, and `src/net/online.ts` sit at ZERO monolith slack on
+  the packet base (their `tests/monolith_budget.test.ts` pins equal their line counts
+  there: 12006, 10336 and 5861), and `origin/release/v0.42.0` re-pinned them at 12465,
+  10587 and 5873 in its drift commits; the phase re-reads the pins from
+  `tests/monolith_budget.test.ts` at phase start after the merge-forward and never budgets
+  against either literal. Every delegate or case label added must be paid for by
+  extracting an existing block first, then lower the ceiling. `IWORLD_MEMBERS` probes
   the prototypes, so facet methods stay one-line delegates on `Sim` and `ClientWorld`.
 - `OtherItemDef.kind` is an `Exclude` list: add `'furnishing'` to it or the new kind
   silently becomes a generic usable (Phase 02).
@@ -966,3 +1314,19 @@ message is performed in this documentation session.
 - The offline `farmNowMs` returns the sim clock and the online one `Date.now()`: a house
   timer follows the facet's clock-base contract (`housingNowMs()`), never subtracting any
   other clock.
+- Eastbrook re-mint: ANY byte changed in `src/render/renderer.ts` moves the polish
+  fingerprint leaf; re-run `scripts/assets/eastbrook_grand_armoury/remint_polish_provenance.mjs`
+  and update the four pinned literals in their own commit.
+- Screenshots: seed the lowest graphics preset AND `graphicsDefaultApplied` before
+  `page.goto`, or the device probe overwrites it; never locate elements by English text.
+- Mobile shots: the iPhone UA locks the material tier; shots needing graded light emulate
+  Android with an explicit `userAgent` variant.
+- Authored-art normalization pin: pin the normalization contract beside the blob, never
+  the blob alone; a fingerprint-only re-export that changes size is investigated first.
+- Measurement records commit the per-step series, never a summary alone.
+- Test-pin traps: a constant self-comparison, an unstripped source-text pin and a harness
+  that cannot prove its tests ran are vacuous; every pin needs a can-fail negative control.
+- Review discipline: apply ALL findings including nits; a fresh reviewer reads the whole
+  fix round; CI is the gate; never push to a fork; PR merge needs approval; sweep every
+  push for sensitive material. (These rows exist so Codex sessions, which read no Claude
+  memory, meet the same rules.)

@@ -40,19 +40,35 @@ and evidence to a file. Audit these specific requirements:
   capability and outgoing server secret cannot prove a running distribution.
   Reject cross-account/purpose/SKU/quote/operation authorization reuse; signed
   issuer/verifier proof identifies its external owner before activation.
-  Service quotes full cost; no copied base-asset cost drives payment.
+  Service quotes full cost; no copied base-asset cost drives payment: the source-scan
+  pin in NEW tests/server/freehold_deed_pins.test.ts proves server/freehold_deed_config.ts,
+  freehold_deed_proxy.ts and freehold_deed_routes.ts carry no price, SOL or split
+  literal, and the packet quotes the Metaplex Core page by reference only. The same
+  suite validates the territory fixtures against the machine field table in
+  docs/prd/woc/freehold-territory-authority-schedule.md.
 - Repeated transfer custody and receipt authority are more than ON CONFLICT once-claim.
   Test competing processes, restart, timeout-after-debit, stale response and erasure
-  without deleting another owner's housing or replay authority.
+  without deleting another owner's housing or replay authority. freehold_deeds and
+  its receipt rows are pinned OFF the retention sweep in the style of
+  tests/server/main_retention_wiring.test.ts's storage-receipt/bank_ledger arm.
 - Pin all three money gates, strict new-action flags, current local ownership,
-  opaque service verification, error catalogs and no src/sim/ diff or secrets.
+  opaque service verification, error catalogs and no src/sim/ diff or secrets. Route
+  guards are createActiveGuard/rateLimit/current-owner; no game-side operator route or
+  admin page exists (support reconciliation is service-owned). The .env.example rows
+  (both deed flags commented out) and the DEPLOY.md "Environment keys" rows for
+  FREEHOLD_DEEDS_ENABLED and the allowSerializedCollectibles env key state opt-in,
+  unset by default on the host and no production enable without the release gates,
+  and the docs(deploy) commit carrying them exists on the head.
   Required src/ui/i18n.catalog/api_error.ts::apiErrorStrings leaves, src/ui/api_error_i18n.ts mappings,
   their generator-owned i18n outputs and parity tests are explicitly allowed. Assert
   apiError.freehold.* protocol mirrors retain matching approved English and exact
   API_ERROR_KEYS parity, while all authored UX-spec/key-manifest strings remain
-  hudChrome.housing.*. Reject a duplicate HUD namespace or API entries added to that
-  UX manifest. Verify generated owners and allowed diff fixtures; separately reject runtime purchase/
-  deed components, submodels, catalog fetches, handlers, CTAs, hidden DOM or ARIA.
+  hudChrome.housing.* (the three eligibility rows 37 names, charter.serviceUnavailable,
+  charter.eligibilityUnconfirmed and charter.supportPointer, carry their exact English
+  in ux-spec and the regenerated key manifest, D92). Reject a duplicate HUD namespace or
+  API entries added to that UX manifest. Verify generated owners and allowed diff
+  fixtures; separately reject runtime purchase/deed components, submodels, catalog
+  fetches, handlers, CTAs, hidden DOM or ARIA.
   07a owns durable protected binding/receipt and atomic mutation; the deed proxy
   consumes it. After checkout expiry/revocation or territory/policy change, an
   accepted original operation discovers/applies or compensates its recorded outcome

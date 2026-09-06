@@ -58,7 +58,7 @@ This is Phase 22 (QA) of the Freeholds and Guildhalls feature: audit the furnish
 across all ten crafts and the R8 pattern channels (defs, recipes, patterns, art, every
 content obligation, the market chip at volume).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 22 diff for correctness against every deliverable and acceptance
@@ -89,7 +89,9 @@ Spawn one Explore agent to read and summarize:
   tests/apex_pattern_channels.test.ts, tests/recipe_pattern_items.test.ts,
   tests/provisioner_firewall.test.ts, tests/market_filters.test.ts,
   tests/item_icons.test.ts, tests/item_art_consistency.test.ts,
-  tests/deeds_content.test.ts, tests/reliquary_content.test.ts, the fingerprint suite
+  tests/deeds_content.test.ts, tests/reliquary_content.test.ts, the fingerprint suite,
+  tests/dungeons.test.ts, tests/farm_seed_channels.test.ts,
+  tests/rift_rank_tuning.test.ts and the parity goldens the two appended draws reach
 The agent returns: the promised-versus-delivered table per deliverable (count of defs
 per craft, recipes per craft, patterns per channel); every new item id with its icon,
 provenance row, final model, deed, page, wiki entry, and name fill; every test
@@ -106,20 +108,26 @@ file and replying with the path plus a short summary; prompt each for COVERAGE: 
 every issue including low-severity and uncertain ones; ranking happens later):
 - CORRECTNESS: every deliverable and acceptance criterion actually met; the approved twenty-output roster
   uses the exact existing craft recipe channels with produce decoration inside it; every pattern on exactly one
-  luck channel plus the Marks row; the raid rollGroup and rift draw order unchanged for
-  existing rows; no pattern takes a Reliquary page; the Cooking basket and marker tableau props follow the
+  luck channel plus the Marks row; the raid patterns sit in the NEW tail rollGroup
+  appended below nythraxis_farm and the rift patterns in the NEW appended Draw 8 over
+  their own sorted exported list, with zero changed bytes in the existing rows and lists
+  and the parity goldens re-recorded in their own commit; no pattern takes a Reliquary
+  page; the Cooking basket and marker tableau props follow the
   decision state.md records; the market chip returns every furnishing id; every
   registered model resolves through the registry the renderer reads.
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion (the roster is a fresh
   literal list, not derived from the table; the channel sweep would fail on a fourth
   channel or a missing Marks row; the power-neutral sweep checks every def field, not a
-  sampled one; the keystone sweep spells the ids); orphaned tests; a negative control
+  sampled one; the keystone sweep spells the ids; the twenty recipes' skillReq, reagent
+  item units, quality and itemLevelBudget and the two channel rates are literal pins
+  against the signed CAL-RECIPES-B rows; the existing channel list and group pins keep
+  their literals); orphaned tests; a negative control
   per sweep (a synthetic offending def fails it).
 - DEAD CODE AND HYGIENE: an id in the roster with no def, a def with no icon, an icon
   with no def, a provenance row with a stale owner, any shipped stand-in,
   the word "phase" in any code, comment, or commit message, em dashes or emojis,
   generated files hand-edited, a locale overlay edited, the wiki regen stale.
-- Required reviewers: content-obligations-reviewer, render-performance-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist. Each reports COVERAGE to a file.
+- Required reviewers: architecture-reviewer, cross-platform-sync, content-obligations-reviewer, render-performance-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist. Each reports COVERAGE to a file.
   Apply ALL findings including nits; a fresh reviewer reads every fix. The actual diff
   may trigger additional specialists; database review runs before decisions and again
   on the finished diff for database surfaces.

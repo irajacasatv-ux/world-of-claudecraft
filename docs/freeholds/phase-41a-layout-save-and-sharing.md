@@ -43,7 +43,10 @@ Spawn one Explore agent to read and summarize:
   src/sim/content/farm_patterns.ts (the pattern table shape), tests/apex_pattern_channels.test.ts
 - src/world_api/housing.ts (the current housing facet), src/world_api.ts (COMMAND_NAMES,
   COMMAND_FACETS), server/freehold_wire.ts, server/freehold_db.ts (account_freeholds
-  columns), server/clean_metadata_text.ts, server/http/middleware/rate_limit.ts
+  columns), server/clean_metadata_text.ts, server/msg_lanes.ts (classifyMsgLane,
+  consumeLaneToken: the WebSocket command lane seam), server/msg_rate_limit.ts
+  (MSG_BYTE_BURST, the pre-parse frame byte bound), server/character_delete_db.ts (the
+  storage-guard refusal shape D88 maps)
 - src/render/freehold/furnishings.ts and furnishing_layout_core.ts (material handling,
   prewarm homes), src/render/CLAUDE.md "GPU work"
 - src/ui/hud/housing/ (build mode, the palette), src/ui/i18n.catalog/hud_chrome.ts,
@@ -82,18 +85,36 @@ Assign disjoint implementation ownership by the following 4 deliverables.
 The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
 finish. Workers receive only the context report and owned files, preserve others' edits,
 and return full reports to the scratchpad with a path and short summary.
-1. Public codec: layout_share_core.ts encodeLayoutShare/decodeLayoutShare is pure,
+1. Public codec: NEW src/sim/freehold/layout_share_core.ts
+   (encodeLayoutShare/decodeLayoutShare) is pure,
    versioned and byte-stable across hosts. Serialize only approved furnishing/tint/
    anchor/transform plan rows and tier/layout version, never private labels or exact
    item-copy identity. Reject unknown version, malformed base64url, excessive bytes,
    rows, nested depth, invalid parent graph or geometry before allocating/applying.
    Reuse layout_core validation and approved measured bounds; no marketplace import.
-2. Bounded saved layouts: five per stable plot ID in layout_saves JSONB, additive
+2. Bounded saved layouts: five per stable plot ID in layout_saves JSONB owned by NEW
+   server/freehold_layout_saves_db.ts, additive
    DDL and versioned normalizer, row/byte limits derived from the legal largest
    snapshot. Save labels are private and cleanMetadataText-screened with approved
-   field length; never render a raw label or include one in share output. Rate-limit
-   save/import, use rev CAS/fenced writer and include export/delete. Unsupported or
-   oversized existing storage is preserved with typed recovery, not reset to empty.
+   field length; never render a raw label or include one in share output. save_layout
+   and apply_layout_share are WS facet commands, so their rate limit has two
+   mechanisms, both MEASURE-BOUNDS workbook rows (never literals here): (a) a NEW
+   layout_import MsgLane member in server/msg_lanes.ts (classifyMsgLane maps
+   save_layout and apply_layout_share to it, consumeLaneToken gains its bucket, and the
+   closed MsgLane union plus the suite that pins it extend) refuses the frame beyond
+   the per-session budget with a keyed reason before decode; (b) a per-account import
+   budget in a bounded LRU map keyed by accountId, in the idiom phase-26 uses for its
+   knock and public-entry limits (the maxEntries shape of
+   server/discord_status_cache.ts), consulted before decode, so two sessions or alts
+   of one account share one budget. Both sit after the MSG_BYTE_BURST pre-parse frame
+   bound in server/msg_rate_limit.ts and before the codec's own decoded
+   byte/row/depth limit; no REST route or rate_limit middleware is added. Use rev
+   CAS/fenced writer and include export/delete: layout_saves lives
+   inside the plot row and follows 07a's per-row-class ON DELETE policy (D88); an open
+   apply/import operation blocks character or account deletion with the mapped refusal
+   class in character_delete_db.ts, and the deletion race joins the real-PG list.
+   Unsupported or oversized existing storage is preserved with typed recovery, not
+   reset to empty.
 3. Atomic plan application: save_layout/load_layout/apply_layout_share and facet
    methods reuse current custody validation. A preview reserves exact available
    placed, bag and authorized personal-bank copies and shows EVERY shortfall and
@@ -114,17 +135,38 @@ and return full reports to the scratchpad with a path and short summary.
    versions/tints refuse before mutation; unsupported future owned saved records
    remain original/read-only under 07/41, never rewritten as tintless furniture.
    Stale preview or insufficient safe custody returns a keyed reason.
-4. Layout tab and proof: Steward-family private saved list, preview/shortfalls,
+4. Layout tab and proof: NEW src/ui/hud/housing/layouts_view.ts (pure view-core) and
+   layouts_painter.ts compose the Steward-family private saved list, preview/shortfalls,
    load/overwrite confirmation and public code copy/paste use ux-spec focus and input
    contracts. English hudChrome.housing keys for all states, screened labels rendered
-   safely; share preview never reveals private labels. Both-world commands and strict
-   wire pins, codec maximum/legal/over-limit tests and real-PG save/apply/bank/edit
-   races prove exact custody, atomic rollback and bounded work. Direct/imported
-   tint parity tests cover missing dye, absent station, remote station, condition29,
+   safely; share preview never reveals private labels. Existing layouts.* keys (title,
+   save, load, share, review, shortfall) and denied.changed (stale preview) are reused;
+   NEW keys under hudChrome.housing with exact English (D92), appended to ux-spec.md's
+   key tables with the section 11 housing-layouts screenshot target (scenes
+   layouts-empty, layouts-saved, layouts-overwrite, layouts-import-review,
+   layouts-shortfall, layouts-dye-shortfall, layouts-displaced and layouts-stale x
+   desktop/compact/tablet: 24 variants, the 696 milestone), both manifests
+   regenerated in this same change with every cited count updated: layouts.empty "You
+   have no saved layouts yet."; layouts.nameLabel "Layout name"; layouts.slotsFull "All
+   {count} layout slots are in use. Replace one to save."; layouts.overwrite "Replace
+   the saved layout {name}?"; layouts.saved "Your layout is saved."; layouts.codeLabel
+   "Share code"; layouts.copyCode "Copy Code"; layouts.pasteCode "Paste a share code";
+   layouts.importReview "Review this shared layout before applying it.";
+   layouts.displaced "{item} will move to {destination}."; layouts.dyeShortfall "You
+   need {count} more {dye} for this layout."; layouts.applied "Your layout is
+   applied."; and denied.layoutCode "This share code is not valid.". Both-world
+   commands and strict wire pins, codec maximum/legal/over-limit tests and real-PG
+   save/apply/bank/edit races prove exact custody, atomic rollback and bounded work; a
+   lane test drives one frame more than the per-session budget on one session, and one
+   frame more than the per-account budget spread over two sessions of one account, and
+   observes each refused with a keyed reason before decode. Direct/imported tint
+   parity tests cover missing dye, absent station, remote station, condition 29,
    unauthorized channel, unchanged
    tint, competing copy consumption, stale source revisions and failure after one
    planned tint in a batch; no partial furnishing, dye or tint effect survives.
-   Add desktop/compact/tablet empty/full/dye-shortfall/stale/import preview captures
+   Add the desktop/compact/tablet layouts-* captures (layouts-empty, layouts-saved,
+   layouts-overwrite, layouts-import-review, layouts-shortfall, layouts-dye-shortfall,
+   layouts-displaced, layouts-stale)
    and current-input parity, including exact color/material confirmation.
 
 INVARIANTS THIS PHASE MUST KEEP:
@@ -228,8 +270,8 @@ authoring source. Run npm run ci:changed after the last commit and read its exit
 STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] Five per-plot bounded saves preserve private screened labels; public codec contains only version/tier/public layout and passes deterministic/unknown/oversized/nested fixtures before allocation.
 - [ ] Apply previews exact furnishing and dye copies, chosen sources, every shortfall, color change and displaced destination. Shared 41 dye admission/cost rules and unchanged-tint no-consumption hold; one 07a transaction applies all or none without free color or item/dye creation.
-- [ ] Disposable-PG edit/bank/ACL/revision/crash races refuse stale previews without loss/duplication; export/erasure, JSON compatibility and workload/index evidence pass.
-- [ ] Full saved/import/shortfall/stale UI screenshots, keyboard/gamepad/touch/focus parity, all tests/reviews and contribution gate pass.
+- [ ] Disposable-PG edit/bank/ACL/revision/crash races refuse stale previews without loss/duplication; export/erasure, JSON compatibility and workload/index evidence pass. The NEW layout_import lane refuses the frame beyond the per-session budget and the per-account LRU budget refuses the frame beyond budget across two sessions of one account, both before decode; an open apply/import operation blocks deletion with the mapped refusal class (D88).
+- [ ] Full saved/import/shortfall/stale UI screenshots, keyboard/gamepad/touch/focus parity, all tests/reviews and contribution gate pass. The NEW layouts.*/denied.layoutCode keys and the housing-layouts target with its eight layouts-* scenes are in ux-spec.md and both regenerated manifests (D92).
 
 STEP 6 - DOC UPDATES + MEMORY:
 Update progress.md row 41a and state.md's implementation ledger with actual paths,

@@ -34,7 +34,8 @@ STEP 0 - PRE-FLIGHT:
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
 - docs/freeholds/state.md, docs/freeholds/progress.md (only "37 On-chain Freehold
-  Charter"), and this file; docs/prd/woc/freeholds-and-guildhalls-research.md section 9
+  Charter: service contract, ledger table, geo-exclusion"), and this file;
+  docs/prd/woc/freeholds-and-guildhalls-research.md section 9
   only (the on-chain design) and section 8's signed platform/territory gates
 - server/claudium_proxy.ts (claudiumServiceConfigured and the public typed
   unavailable-result pattern; its private helper is inspected as evidence only), server/claudium_spend_wire.ts (parse, never coerce),
@@ -42,15 +43,16 @@ Spawn one Explore agent to read and summarize:
   splits the game never derives), server/woc_market_routes.ts (wocMarketConfig, the
   woc_market.disabled 403 refusal), server/steam/config.ts (steamEnabled)
 - server/seeker_entitlement_db.ts (SEEKER_ENTITLEMENT_SCHEMA, the keep-forever comment,
-  claimAvailableSeekerEntitlement with ON CONFLICT DO NOTHING), server/seeker_entitlement.ts
-  (hasSeekerEntitlement, verifyCurrentSeekerEntitlement), server/db.ts (ensureSchema
+  claimAvailableSeekerEntitlement with ON CONFLICT DO NOTHING, hasSeekerEntitlement),
+  server/seeker_entitlement.ts (verifyCurrentSeekerEntitlement), server/db.ts (ensureSchema
   order, exportAccountData), server/freehold_db.ts, server/freehold_config.ts
 - server/http/types.ts (CtxAccount: account/scope, no checkout-channel authority),
   server/claudium_proxy.ts (ClaudiumSpendInput and the private callServiceDetailed
   outgoing server-credential pattern, not an exported helper or checkout proof),
   src/runtime.ts (DesktopBridge.wocExchangeSupported) and
   src/game/woc_market_wiring.ts (wocMarketAttachAllowed: client presentation only),
-  server/http/CLAUDE.md, server/http/registry.ts, .env.example
+  server/http/CLAUDE.md, server/http/registry.ts, .env.example, DEPLOY.md (the
+  "Environment keys" table Phase 01 opens beside FREEHOLDS_ENABLED)
 - tests/server/seeker_entitlement.test.ts, tests/server/storage_gates.test.ts,
   tests/server/http/surface_inventory.ts, tests/architecture.test.ts (the token firewall
   pin over src/sim), tests/monolith_budget.test.ts
@@ -106,11 +108,20 @@ and return full reports to the scratchpad with a path and short summary.
    configured at mint, with recoverable thaw authority. Irreversible burn has its own
    separately signed recovery/moderation triggers and recorded authorization. No
    automatic lapse burn, upkeep destruction or door/entitlement denial. Document
-   treasury royalties and fee splits as service-published values, not game arithmetic;
-   0.0029 SOL is dated base-asset context, never the full mint quote.
+   treasury royalties and fee splits as service-published values, not game arithmetic.
+   The Metaplex Core page state.md cites is the live source for the base-asset cost:
+   quote it as dated context by reference only, never as a figure in the packet or the
+   code and never as the full mint quote (the service alone quotes the mint).
 2. Typed proxy and fail-closed policy: NEW server/freehold_deed_config.ts strict
    live '1' also requires freeholdsEnabled; FREEHOLD_DEEDS_ENABLED defaults off for
-   new deed actions. NEW server/freehold_deed_proxy.ts owns mint/verify/quote/status
+   new deed actions. Add the .env.example rows (both deed flags commented out) and
+   the matching DEPLOY.md "Environment keys" rows for FREEHOLD_DEEDS_ENABLED and for
+   the env key behind the NEW allowSerializedCollectibles switch 38 lands (38's landing
+   does not change the default), each stating opt-in, unset by default on the host
+   /opt/eastbrook/.env, and that production never enables either without the recorded
+   release gates; commit them as `docs(deploy): document the deed flags as opt-in and
+   unset by default` with a body. NEW server/freehold_deed_proxy.ts owns
+   mint/verify/quote/status
    adapter methods consuming the service's opaque verified allow/refusal/effect.
    Follow the typed-result pattern in server/claudium_proxy.ts with strict parsing
    and bounded IO; callServiceDetailed is private evidence, never an exported import.
@@ -134,7 +145,10 @@ and return full reports to the scratchpad with a path and short summary.
    NEW server/freehold_purchases.ts is the initial opaque adapter consumer; the
    deed proxy consumes the same boundary, never duplicates its receipt authority.
    Additive/idempotent schema, reverse FK/export/delete policy
-   and deliberate keep-forever replay rows. Account erasure removes personal links
+   and deliberate keep-forever replay rows: freehold_deeds and its receipt rows are
+   pinned OFF the retention sweep by the same style of assertion as
+   tests/server/main_retention_wiring.test.ts "neither storage receipts nor
+   bank_ledger are placed on the retention sweep". Account erasure removes personal links
    according to the signed retention policy without destroying another owner's
    entitlement or reusable replay authority. Verification for an actual use is fresh;
    cosmetic stamps are bounded cached projections, never authority or per-frame IO.
@@ -142,9 +156,24 @@ and return full reports to the scratchpad with a path and short summary.
    RouteDef recipe, register import/spread and append deeds_disabled, geo-excluded,
    unavailable and already-claimed errors to the existing freehold block plus
    ERROR_CODES, API_ERROR_KEYS, EXPECTED_CODES and KNOWN_CODES. Do not rerun the
-   existing-domain scaffold. Claim/status operations are activeGuard/rateLimit/
-   authenticated/current-owner guarded. The service verifies opaque checkout and
-   territory authority; game routes never accept or decode a channel/country label.
+   existing-domain scaffold. Claim/status operations are guarded by createActiveGuard
+   (server/http/middleware/bearer_active_guard.ts, instantiated per route table as
+   activeAccount), rateLimit, authentication and current ownership. The service
+   verifies opaque checkout and territory authority; game routes never accept or
+   decode a channel/country label. Support reconciliation is service-owned tooling:
+   the game applies an accepted entitlement/effect adjustment only through 07a's
+   bounded recovery producer reading the immutable outcome, and 37 adds no game-side
+   operator route or admin page (the service contract records this ownership).
+   The three player-facing eligibility states the territory schedule proposes are NEW
+   keys under the existing hudChrome.housing.charter.* family with exact English (D92;
+   ux-spec carries the rows and ux-key-manifest.json regenerates in this phase with
+   every cited count updated): charter.serviceUnavailable = "This service is
+   unavailable for this account or location." (named once here; 38 reuses it for
+   deeds), charter.eligibilityUnconfirmed = "Eligibility could not be confirmed. Please
+   try again later." and charter.supportPointer = "Contact support with your saved
+   request reference."; the apiError.freehold.* leaves for geo-excluded and
+   unavailable mirror that English, and the keys ship dormant wherever the surface is
+   denied (D86).
    Dark new-action gates refuse before service IO. Protected status/recovery of an
    accepted original intent remains admitted without new checkout authorization or
    debit, subject to current local entitlement/custody guards. Extend surface
@@ -152,9 +181,17 @@ and return full reports to the scratchpad with a path and short summary.
 5. Runtime and handoff proof: disposable PG tests cover duplicate/cross-process
    claim, receipt replay after cache compaction, restart, service timeout after debit,
    stale revision, account delete and bounded verify recovery. Record query/index,
-   cache/queue/deadline, bytes and retention evidence. Validate signed counsel memo,
-   Terms/listing drafts, supported countries and separate freeze/burn authority; flags
-   stay dark until accepted. Diff-path proof permits only required UI error leaves
+   cache/queue/deadline, bytes and retention evidence. NEW
+   tests/server/freehold_deed_pins.test.ts holds the source-scan pin (beside 15's
+   src/sim/content/freehold/ price pin) proving server/freehold_deed_config.ts,
+   freehold_deed_proxy.ts and freehold_deed_routes.ts carry no price, SOL or split
+   literal, and the territory fixture-schema validation named below. Validate signed
+   counsel memo, Terms/listing drafts, supported countries and
+   separate freeze/burn authority; flags stay dark until accepted. 37's territory
+   fixtures and the external policy module's signed artifact both validate against the
+   machine field table in docs/prd/woc/freehold-territory-authority-schedule.md
+   (identifier names and types per row, owned by that schedule); 37 invents no second
+   shape. Diff-path proof permits only required UI error leaves
    in src/ui/i18n.catalog/api_error.ts::apiErrorStrings, API_ERROR_KEYS in src/ui/api_error_i18n.ts,
    their generator-owned i18n artifacts and corresponding parity tests. Re-find the
    generated owners before editing; never hand-edit generated output. No runtime
@@ -298,7 +335,8 @@ and capable/uncapable-release fixtures through real composition and disposable P
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run: `npx tsc --noEmit`; `npx vitest run tests/server/freehold_deed_routes.test.ts
-  tests/server/freehold_deeds_db.test.ts tests/server/http/surface_inventory.test.ts
+  tests/server/freehold_deeds_db.test.ts tests/server/freehold_deed_pins.test.ts
+  tests/server/http/surface_inventory.test.ts
   tests/server/http/error_codes.test.ts tests/server/new_endpoint.test.ts
   tests/api_error_code_parity.test.ts tests/localization_fixes.test.ts
   tests/architecture.test.ts tests/monolith_budget.test.ts tests/server/main_retention_wiring.test.ts`;
@@ -320,7 +358,7 @@ authoring source. Run npm run ci:changed after the last commit and read its exit
 
 STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] Concrete service/authority/territory artifacts specify all operations, furnished manifest custody, per-asset delegation and separately authorized irreversible burn; no automatic lapse loss or unsupported policy/cost claim.
-- [ ] Every dark new-action route refuses before IO; the service rejects unknown/unsupported eligibility before NEW spend, while accepted original-operation recovery remains possible without new debit. The game sees opaque verified results only; all money gates, the narrow required error-catalog/mapping allowlist, runtime purchase/deed-surface absence and no src/sim/ diff are pinned.
+- [ ] Every dark new-action route refuses before IO; the service rejects unknown/unsupported eligibility before NEW spend, while accepted original-operation recovery remains possible without new debit. The game sees opaque verified results only; all money gates, the narrow required error-catalog/mapping allowlist, runtime purchase/deed-surface absence and no src/sim/ diff are pinned. The .env.example rows and the DEPLOY.md "Environment keys" rows for both deed flags state opt-in, unset by default and no production enable without the release gates, in the docs(deploy) commit.
 - [ ] Persistent plot/current-asset/receipt identity survives repeated transfers, restart and competing processes; service IO holds no DB lock and fresh verification is separate from cached cosmetics.
 - [ ] Export/erasure, reverse-FK indexes, permanent replay authority, bounded recovery and real-PG proof are recorded; a missing external signature remains a release gate.
 - [ ] All route/error/unit/PG tests, fresh reviews and contribution gate pass.
@@ -328,6 +366,8 @@ STEP 5 - ACCEPTANCE CRITERIA:
 STEP 6 - DOC UPDATES + MEMORY:
 Update progress.md row 37 and state.md's implementation ledger with actual paths,
 commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
+Record FREEHOLD_DEEDS_ENABLED beside FREEHOLDS_ENABLED in state.md's "Runtime safety
+and distribution" gate row so 39's pointer resolves.
 Record facts learned; do not reopen the locked product rulings or mark a release gate
 accepted without its signed artifact. Numeric tables are literal, provenance-backed
 and approved before activation.

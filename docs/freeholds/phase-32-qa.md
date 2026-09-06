@@ -1,4 +1,4 @@
-# Phase 32 QA: audit Great Hall, Manor and Bastion upgrade projects
+# Phase 32 QA: audit Great Hall, Manor, Bastion tiers and build projects
 
 Audits [phase-32-hall-and-manor-tiers.md](phase-32-hall-and-manor-tiers.md) and every one of its deliverable/acceptance rows. Verdict goes
 in progress.md row "32 QA". A check not run cannot be reported as proved.
@@ -16,7 +16,7 @@ in progress.md row "32 QA". A check not run cannot be reported as proved.
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -48,8 +48,9 @@ NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provide
 committed immutable protection source, and createFreeholdLifecycleCoordinator captures
 authenticated observation time before queueing. Derive a return before presence
 advances; stale observations, fenced sessions and replay cannot mint grace. The
-accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
-and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+lifecycle-policy-binding artifact (accepted or still a named gate) names
+lifecyclePolicyId, sourceCalendarId and resetPolicyId; serving realm, browser zone or
+guessed UTC cannot rebind history.
 13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
 and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
 or account calendar ingress, source-history array on plots, polling job or receipt store.
@@ -86,7 +87,8 @@ entry/build/undo remain available; durable payment retains original operation re
 The game server and Sim remain ignorant of physical distribution. The future economy
 service owns eligibility verification and opaque authorization bound to account,
 purpose/SKU, policy, quote and operation, with issuer/verifier conformance in the
-accepted service artifact. A first-party web checkout session alone is insufficient.
+service artifact (accepted or still a named gate). A first-party web checkout session
+alone is insufficient.
 Client channel labels, Origin, UA, arbitrary JSON, linked Steam/Epic accounts and the
 game-service secret never prove eligibility; do not add a trusted channel field to the
 game server. The client capability map controls presentation, not purchase authority.
@@ -171,10 +173,15 @@ language rules. Tests need fresh literals, negative controls and work-happened a
 real PG evidence must run ARMED, never skipped. No test may merely mirror its table.
 
 - [ ] Fresh literal tier pins and exact approved manifests cover all three tiers;
-  rendered walls, floors and colliders share measured content and protected circulation.
+  rendered walls, floors and colliders share measured content and protected circulation;
+  the manor visitor cap 16 is pinned as a literal in tests/freehold_content.test.ts and
+  the hall-tier cap gate is recorded (D77).
 - [ ] Bill-first and fee-first complete immediately when both are confirmed, with no
   new elapsed-time requirement; concurrent members contribute through the capped fund,
-  officers approve, all contributed value and exact copies survive refusal/restart.
+  officers approve, all contributed value and exact copies survive refusal/restart; a
+  two-officer overflow case in tests/freehold_build_project.test.ts asserts copy custody
+  unchanged (the placer's bags, never the completing officer's) and the keyed refusal;
+  the Manor rail accepts no rank or fund input.
 - [ ] PG races/crash/lease/CAS and durable receipt replay prove one completion and
   atomic resource/overflow custody; both dispatch arms enforce every money/surface gate.
 - [ ] Required project/interior screenshots show pending/refused/overflow/member/officer

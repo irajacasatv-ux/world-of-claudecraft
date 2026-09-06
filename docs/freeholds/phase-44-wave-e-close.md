@@ -4,14 +4,39 @@ This implementation file and its QA are the complete contract for this bounded s
 The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
 are authoritative. Nothing in this planning packet is marked built.
 
+## Proposed durable preservation destinations (proposed, not executed)
+
+implementation-plan.md "PR cadence and final preservation" defers the durable destination
+list to this close. The table is the proposal a future, separately approved preservation
+change (D71) starts from; it authorizes no move, copy or deletion, and 44 QA checks that
+nothing was executed from it. One row per durable source README "Invariants and
+preservation" names.
+
+| Durable source (docs/freeholds/) | Proposed destination |
+|---|---|
+| ux-spec.md | NEW docs/prd/woc/freehold-ux-spec.md, created only if that future preservation is approved |
+| ux-key-manifest.json, ux-shot-manifest.json | Move beside the UX destination under docs/prd/woc/ |
+| state.md (D1 through D93 and both settlement records) | NEW docs/prd/woc/freehold-decisions.md |
+| ruling-sheet.md | NEW docs/prd/woc/freehold-ruling-sheet.md |
+| content-manifest.md | NEW docs/prd/woc/freehold-content-manifest.md |
+| content-numbers-workbook.md, ledger-calibration-report.md, housing-budget-review.md | NEW docs/prd/woc/freehold-content-numbers.md |
+| art-brief.md, final-artwork-audit.md | NEW docs/prd/woc/freehold-art-brief.md |
+| audit-record.md | NEW docs/prd/woc/freehold-audit-record.md |
+| persistence-rollout-contract.md, lifecycle-policy-binding.md, lifecycle-db-contract.md, upkeep-calendar-db-contract.md | NEW docs/prd/woc/freehold-persistence-contracts.md |
+| The six docs/prd/woc handoff drafts and freehold-final-legal-handoff.md | Stay in place |
+
 ### Starter Prompt
 ```
 This is Phase 44 of the Freeholds and Guildhalls feature: wave E integration close before final artwork and legal handoff.
 
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
-fan-out; this prompt names no model.
+Harness: Claude Code (the active harness; this close is review-only, and D74 requires
+Codex only for asset-creating steps). Follow the root CLAUDE.md working-style block for
+effort and fan-out; this prompt names no model.
 
-Goal: prove the implemented wave and whole feature, record the complete reviewable evidence, then continue through44a artwork and44b legal handoff without declaring the packet complete.
+Goal: prove the implemented wave and whole feature, record the complete reviewable
+evidence, prepare the wave E PR package and open the wave E PR only after Fernando's
+push go (D87), then continue through 44a artwork and 44b legal handoff without
+declaring the packet complete. Never merge.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -33,10 +58,15 @@ STEP 0 - PRE-FLIGHT:
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
-Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
-provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
-not permission to leave a placeholder for a later phase.
+Codex, not Claude (D74); this review-only close runs in the active harness and hands
+any asset-creating matrix fix to a Codex session. Use Codex's built-in image generation
+tool (an external prerequisite: STOP if it is unavailable) following
+docs/design/eastbrook-vale-rebuild/imagegen-prompts.md with rows in
+imagegen-provenance.md and CREDITS.md, and the image-to-GLB workflow in
+.agents/skills/woc-image-to-glb/SKILL.md, with their provenance, runtime registration,
+fingerprint and in-context checks. This planning audit creates no game assets. Final
+art is required here; 44a is a residual sweep, not permission to leave a placeholder
+for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
@@ -78,30 +108,41 @@ The coordinator alone edits shared parity/command/snapshot/monolith pins after w
 finish. Workers receive only the context report and owned files, preserve others' edits,
 and return full reports to the scratchpad with a path and short summary.
 1. Integration matrix: run every applicable qa-checklist row over the wave and whole
-   feature, recording exact command, exit code and evidence once per needed check.
-   Include07a/07b/07c/08a/13a and other suffixes; all custody/lifecycle/calendar/finality/
+   feature, recording exact command, exit code and evidence once per needed check; the
+   pg-armed twins run after `npm run db:up` with TEST_DATABASE_URL set to the URL
+   state.md's "Validation matrix" server/ row gives, and each such row records "pg twins
+   executed: N tests ran, 0 skipped". Include 07a/07b/07c/08a/13a and other suffixes; all
+   custody/lifecycle/calendar/finality/
    recovery/rollout and money/D9 boundaries remain covered. Reuse deterministic
    evidence where unchanged and rerun any invalidated scope.
 2. Visual and content proof: verify every ux-spec target and final-art source in the
    registered desktop/compact/tablet and LOW contexts, including all input modes,
    focus/reduced motion, denied-store absence and actionable visibility. Regenerate
    wiki/i18n/media through owning generators and verify freshness. Earlier waves
-   require final art;44a's inventory is a residual safety check, not permission to
+   require final art; 44a's inventory is a residual safety check, not permission to
    ship a placeholder or postpone an earlier acceptance.
 3. Fresh whole-feature review: dispatch actual domain reviewers and qa-checklist
    over evidence and diff for complete COVERAGE. Apply every finding including nits;
    a new reviewer examines the fix round and affected checks pass. Reviewers do not
    duplicate the shared deterministic gate.
-4. Reviewable release evidence: record the complete local PR-body draft and linked
-   screenshots/matrix/gate inventory, with every paid flag still fail-closed and
-   each signed-artifact status truthful. No release/deploy or storefront submission
-   occurs here. Preserve pending recovery identities through any quiesced rollout;
-   an unsigned legal/service gate is not an unmade product decision.
-5. Mandatory continuation handoff: update44/44QA status as integration passed,
+4. Reviewable release evidence: record the complete PR body and linked
+   screenshots/matrix/gate inventory (screenshots committed under docs/screenshots/ and
+   referenced from the PR body; lowest graphics preset seeded before page.goto, never
+   locating an element by English text), with every paid flag still fail-closed and
+   each external artifact handoff-ready, its acceptance status recorded as an unsigned
+   release gate unless a signature artifact is on file. The push and the wave E PR
+   happen only on Fernando's push go (STEP 4, D87); no release/deploy or storefront
+   submission occurs here. Preserve pending recovery identities through any quiesced
+   rollout; an unsigned legal/service gate is not an unmade product decision.
+5. Mandatory continuation handoff: update 44/44 QA status as integration passed,
    final artwork/legal handoff pending. Supply the complete feature-created asset
-   inventory to44a and implemented-surface/legal evidence index to44b. Keep every
-   packet/durable UX/decision/content/service/legal file. No cleanup, directory
-   removal, terminal packet claim or skip over either paired QA is authorized.
+   inventory to 44a and implemented-surface/legal evidence index to 44b. Keep every
+   packet/durable UX/decision/content/service/legal file, and copy this file's "Proposed
+   durable preservation destinations" table (one row per README durable source, each with
+   a docs/prd/woc destination or "stays in place") into the row 44 record, marked
+   proposed and not executed. No cleanup, directory removal, terminal packet claim or
+   skip over either paired QA is authorized; the table is input to a future separately
+   approved preservation change with incoming-link proof (D71), never an action here.
 
 INVARIANTS THIS PHASE MUST KEEP:
 Every player-visible string, including error, aria, tooltip and empty-state text,
@@ -211,7 +252,8 @@ expiry changes before new spend, and accepted-operation recovery after those cha
 
 
 Out of scope:
-New mechanics, feature/deploy enablement, external legal messages, final packet completion, cleanup/deletion or skipping44a/44b.
+New mechanics, feature/deploy enablement, external legal messages, final packet
+completion, cleanup/deletion or skipping 44a/44b.
 
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Run the recorded whole-feature matrix and node scripts/gate_select.mjs, using
@@ -232,27 +274,48 @@ Commit each coherent owned deliverable with a scoped Conventional Commit and a b
 Stage EXPLICIT task paths, never git add -A. No coauthor trailer, em dash, en dash,
 emoji, or word "phase" appears in a commit message. Keep generated output with its
 authoring source. Run npm run ci:changed after the last commit and read its exit code.
+Then STOP and ask Fernando for the push go (state.md "Push policy", D87; D12 owns one PR
+per wave for every wave), showing the matrix table, the screenshot paths and the PR body
+draft. On the go: `git push origin <branch>` (origin only), open the wave E PR off the
+base branch recorded in state.md following .github/PULL_REQUEST_TEMPLATE.md, then
+`gh pr checks --watch`; on a red or stalled check run the ci-triage skill, fix, push
+again and watch again. Stop at "pushed, green, ready for review"; without the go, stop
+at "matrix green, awaiting push go". In both end states 44 QA, then 44a and 44b follow
+(the D74/D75 ordering is unchanged); their commits reach an open wave E PR only under a
+go that covers follow-up pushes, and the PR never claims 44a/44b as done.
 
 STEP 5 - ACCEPTANCE CRITERIA:
 - [ ] Every wave/whole-feature matrix requirement has real evidence and the shared contribution gate passes; no skipped runtime proof is presented as a pass.
 - [ ] UX/content/art/source and current authority/calendar/custody/money/D9 obligations pass actual-surface review and a fresh review of all fixes.
-- [ ] Local release evidence accurately records flags and external signed gates; no feature release or legal approval is claimed.
-- [ ] All packet and durable contracts remain present;44QA links to44a, then44aQA to44b, then44bQA terminal. Neither final successor is optional.
+- [ ] Release evidence accurately records flags and every external artifact as
+  handoff-ready with its acceptance status recorded as an unsigned release gate unless a
+  signature artifact is on file; no feature release or legal approval is claimed. Either
+  the wave E PR is open off the recorded base with CI green (push go given), or the
+  branch is local at "matrix green, awaiting push go" with the PR body drafted.
+- [ ] All packet and durable contracts remain present; 44 QA links to 44a, then 44a QA
+  to 44b, then 44b QA terminal. Neither final successor is optional. The proposed
+  preservation destination table exists in the row 44 record and nothing was executed
+  from it.
 
 STEP 6 - DOC UPDATES + MEMORY:
 Update progress.md row 44 and state.md's implementation ledger with actual paths,
-commands, wire/schema contracts, screenshots, signed-artifact evidence and gate status.
-Record facts learned; do not reopen the locked product rulings or mark a release gate
-accepted without its signed artifact. Numeric tables are literal, provenance-backed
+commands, wire/schema contracts, screenshots, signed-artifact evidence, gate status, the
+PR number or local tip and any stacked-branch choice (D12). Record facts learned; do not
+reopen the locked product rulings or mark a release gate accepted without its signed
+artifact. Numeric tables are literal, provenance-backed
 and approved before activation.
 
 STEP 7 - FINAL RESPONSE FORMAT:
-Report status, touched files, exact validation commands and outcomes, reviewer verdicts,
-tracked release gates and the FULL PATH of the next file:
+Report status ("pushed, green, ready for review", or "matrix green, awaiting push go" if
+the go has not come), the PR URL when one exists, touched files, exact validation
+commands and outcomes, reviewer verdicts, tracked release gates and the FULL PATH of the
+next file:
 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-44-qa.md
 
 STOPPING RULES:
 A failed acceptance check stops completion. Preserve state on failed mutation, decode,
 quote, capacity, lease or revision checks. No widening of a monolith ceiling or silent
-change to a locked ruling. Do not push the branch or open/merge a PR in this slice.
+change to a locked ruling. Stop at "matrix green, awaiting push go" until Fernando
+sanctions the push; never push on your own judgment or to a fork; never merge or
+enqueue a PR.
 ```

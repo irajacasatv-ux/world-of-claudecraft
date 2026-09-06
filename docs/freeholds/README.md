@@ -6,12 +6,19 @@ depth. The accepted product dispositions belong in state.md; implementation evid
 belongs in progress.md. A complete plan is not evidence that the feature is built or
 that an unsigned external release artifact has been accepted.
 
-The input is the [adopted proposal](../prd/woc/freeholds-and-guildhalls-research.md),
-its research appendices and the [player deck](../prd/woc/freeholds-and-guildhalls-deck.html).
-The nine original rulings and proposal sections 3 and 8 remain mandatory. The final
-state decisions D1-D75 record deliberate scope/timing differences and their propagation.
-Fernando approved R01-R46 on 2026-09-06; the answered ruling sheet records his exact
-words and the final legal/Codex-asset/Codex-image additions D73-D75.
+The input is the [adopted proposal](../prd/woc/freeholds-and-guildhalls-research.md), its
+research appendices and the [player deck](../prd/woc/freeholds-and-guildhalls-deck.html).
+The nine original rulings and proposal sections 3 and 8 remain mandatory. The final state
+decisions D1-D75 record deliberate scope/timing differences and their propagation.
+Fernando approved R01-R46 on 2026-09-06; the answered ruling sheet records his exact words
+and the final legal/Codex-asset/Codex-image additions D73-D75. The independent review of
+2026-09-06 added D76-D93 (state.md "Settlement round 2", ruling sheet R47-R64; D93 is the
+fix round's coordinator ruling on the second home's upgrade path): they are applied
+throughout the packet as recommended dispositions and await Fernando's word. The proposal,
+deck and research appendices at HEAD are the settled propagation of the text adopted on
+2026-09-05 at revision 383fd7da83, edited in place on 2026-09-06; audit-record.md "Adopted
+proposal and in-place propagation" lists the sections changed and the decision behind
+each.
 
 Worktree: `/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds`.
 Branch: `feature/freeholds`. The settle-and-polish session stays local: no push,
@@ -29,7 +36,7 @@ for current facts and the exact dependency protocol, never assume a stale releas
 | [qa-checklist.md](qa-checklist.md) | Scoped, whole-wave and final integration evidence. |
 | [ux-spec.md](ux-spec.md) | Durable screen/flow/state/input/focus/copy and exact screenshot contract. |
 | [ux-key-manifest.json](ux-key-manifest.json) | Exact machine-checkable housing key/source inventory. |
-| [ux-shot-manifest.json](ux-shot-manifest.json) | Exact expanded screenshot variants and producing file ownership. |
+| [ux-shot-manifest.json](ux-shot-manifest.json) | Exact expanded screenshot variants by target, each carrying its producing phase in an owner field; the per-target registration order is ux-spec section 11. |
 | [content-manifest.md](content-manifest.md) | Exact content/acquisition/trophy/source inventory and producing work. |
 | [content-numbers-workbook.md](content-numbers-workbook.md) | Numerical source, derivation, rounding, measurement, approval and activation evidence. |
 | [art-brief.md](art-brief.md) | Room/furniture/trophy reference direction, measured bounds, final model and visual acceptance. |
@@ -43,6 +50,10 @@ It is a future deliverable, not an existing packet artifact or a current README 
 NEW FUTURE `docs/freeholds/lifecycle-policy-binding.md` and
 `docs/freeholds/lifecycle-db-contract.md`. These are owned implementation evidence
 outputs, also excluded from the current artifact count.
+20 produces NEW FUTURE `docs/freeholds/ledger-calibration-report.md` (the four-week
+measured Ledger report) and `docs/freeholds/housing-budget-review.md` (the
+every-second-release budget review); later closes extend both. They are future
+deliverables, also excluded from the current artifact count.
 
 ## External handoffs
 
@@ -59,10 +70,14 @@ reported complete. The service owns all prices and token arithmetic.
 | [Optional deed service contract](../prd/woc/freehold-deed-service-contract.md) | 37 verifies service/authority readiness, 38 proves voluntary furnished-sale custody and recovery, 39 verifies release gates. |
 | [Territory and authority schedule](../prd/woc/freehold-territory-authority-schedule.md) | 37/38 enforce signed supported territories and explicit per-asset authority; unknown eligibility refuses new operations. |
 
-The current UX inventory has 329 English keys and 330 screenshot variants. Registration
-follows functioning producers: 09 starts with 12 room variants, 11 reaches 89, 16 reaches
-178, 17 reaches 226, 18 reaches 330; 20 verifies the full set. These derived inventories
-are not balance values or evidence that implementation exists.
+The current UX inventory has 557 English keys, each with one owning phase in
+ux-key-manifest.json, and 733 screenshot variants, each with its producing phase in
+ux-shot-manifest.json. Registration follows functioning producers: 09 starts with 12 room
+variants, 11 reaches 89, 16 reaches 178, 17 reaches 226, 18 reaches 330 (20 verifies the
+wave A set); 21 reaches 348, 23 357, 24 399, 25 437, 26 455, 30 493, 30a 511, 31 517, 34
+535, 35 553, 36 595, 38 639, 40 654, 41 672, 41a 696 and 42 733, each wave close verifying
+its union. These derived inventories are not balance values or evidence that
+implementation exists.
 
 ## Waves and exact chain
 
@@ -74,8 +89,15 @@ coherent outputs; acceptance assertions are not extra outputs.
 
 Run each implementation, its paired QA, then the next row. The suffixes are full work
 items with their own QA: 07a, 07b, 07c, 08a, 13a, 25a, 28a, 30a, 32a, 41a, 44a and 44b. No item is renumbered.
-Wave closes prepare reviewable deliverables after local gates; publishing later requires
-separate explicit authorization under state.md. This audit authorizes no publication.
+Wave closes prepare reviewable deliverables after local gates, then STOP and ask for the
+push go: on the go the sanctioned push opens that wave's PR (D12, D87); otherwise the
+close ends local, awaiting the push go. This audit authorizes no publication.
+
+The README title is the canonical work-item title. A phase file's H1 may carry lowercase,
+a leading article, backticks, a parenthetical qualifier or the longer wording recorded in
+this allowlist: 03, 04, 05, 06, 07, 08, 09, 16, 36, 37, 38, 41a and 44a keep a longer or
+differently worded H1, and 43 adds only the qualifier "(no new professions)"; every other
+H1 equals its README title once case, articles, backticks and punctuation are normalized.
 
 ### Wave A: Cottage MVP
 
@@ -115,7 +137,7 @@ separate explicit authorization under state.md. This audit authorizes no publica
 | 22 Furnishings across all ten crafts and the R8 pattern channels | [phase-22-furnishings-all-crafts.md](phase-22-furnishings-all-crafts.md) | [phase-22-qa.md](phase-22-qa.md) |
 | 23 Legend Stand and the remaining trophy families | [phase-23-legend-stand-and-trophy-families.md](phase-23-legend-stand-and-trophy-families.md) | [phase-23-qa.md](phase-23-qa.md) |
 | 24 Kitchen Garden tableau | [phase-24-kitchen-garden-tableau.md](phase-24-kitchen-garden-tableau.md) | [phase-24-qa.md](phase-24-qa.md) |
-| 25 Build mode v2 | [phase-25-build-mode-v2.md](phase-25-build-mode-v2.md) | [phase-25-qa.md](phase-25-qa.md) |
+| 25 Advanced placement and build mode | [phase-25-build-mode-v2.md](phase-25-build-mode-v2.md) | [phase-25-qa.md](phase-25-qa.md) |
 | 25a Twelve-week prepay and the Fenbridge gate | [phase-25a-prepay-and-fenbridge-gate.md](phase-25a-prepay-and-fenbridge-gate.md) | [phase-25a-qa.md](phase-25a-qa.md) |
 | 26 Open-house visiting | [phase-26-open-house-visiting.md](phase-26-open-house-visiting.md) | [phase-26-qa.md](phase-26-qa.md) |
 | 27 Wave B close | [phase-27-wave-b-close.md](phase-27-wave-b-close.md) | [phase-27-qa.md](phase-27-qa.md) |
@@ -127,7 +149,7 @@ separate explicit authorization under state.md. This audit authorizes no publica
 | 28 The guild owner kind, the Meeting Hall, the Hall Fund | [phase-28-guild-owner-kind-and-hall-fund.md](phase-28-guild-owner-kind-and-hall-fund.md) | [phase-28-qa.md](phase-28-qa.md) |
 | 28a Guild lifecycle and membership evidence | [phase-28a-guild-lifecycle-and-membership.md](phase-28a-guild-lifecycle-and-membership.md) | [phase-28a-qa.md](phase-28a-qa.md) |
 | 29 Guildhall purchase and upkeep | [phase-29-guildhall-purchase-and-upkeep.md](phase-29-guildhall-purchase-and-upkeep.md) | [phase-29-qa.md](phase-29-qa.md) |
-| 30 Hall amenities | [phase-30-hall-amenities.md](phase-30-hall-amenities.md) | [phase-30-qa.md](phase-30-qa.md) |
+| 30 Guild chest, feast table and shared stations | [phase-30-hall-amenities.md](phase-30-hall-amenities.md) | [phase-30-qa.md](phase-30-qa.md) |
 | 30a Hall boards | [phase-30a-hall-boards.md](phase-30a-hall-boards.md) | [phase-30a-qa.md](phase-30a-qa.md) |
 | 31 Guild-level deeds and first-kill trophies | [phase-31-guild-deeds-and-first-kill-trophies.md](phase-31-guild-deeds-and-first-kill-trophies.md) | [phase-31-qa.md](phase-31-qa.md) |
 | 32 Great Hall, Manor, Bastion tiers and build projects | [phase-32-hall-and-manor-tiers.md](phase-32-hall-and-manor-tiers.md) | [phase-32-qa.md](phase-32-qa.md) |
@@ -152,11 +174,11 @@ separate explicit authorization under state.md. This audit authorizes no publica
 | 40 Keep and Citadel tiers, prestige deeds | [phase-40-keep-and-citadel-tiers.md](phase-40-keep-and-citadel-tiers.md) | [phase-40-qa.md](phase-40-qa.md) |
 | 41 Dye station | [phase-41-dye-station-and-layout-sharing.md](phase-41-dye-station-and-layout-sharing.md) | [phase-41-qa.md](phase-41-qa.md) |
 | 41a Layout saves and public sharing | [phase-41a-layout-save-and-sharing.md](phase-41a-layout-save-and-sharing.md) | [phase-41a-qa.md](phase-41a-qa.md) |
-| 42 Second freehold SKU | [phase-42-second-freehold-sku.md](phase-42-second-freehold-sku.md) | [phase-42-qa.md](phase-42-qa.md) |
+| 42 Second freehold admission and shared Hearth cooldown | [phase-42-second-freehold-sku.md](phase-42-second-freehold-sku.md) | [phase-42-qa.md](phase-42-qa.md) |
 | 43 Existing-craft coverage and future expansion handoff | [phase-43-carpenter-and-mason.md](phase-43-carpenter-and-mason.md) | [phase-43-qa.md](phase-43-qa.md) |
-| 44 Wave E integration close | [phase-44-wave-e-close.md](phase-44-wave-e-close.md) | [phase-44-qa.md](phase-44-qa.md) |
+| 44 Wave E integration close before final artwork and legal handoff | [phase-44-wave-e-close.md](phase-44-wave-e-close.md) | [phase-44-qa.md](phase-44-qa.md) |
 | 44a Final Codex artwork | [phase-44a-final-codex-artwork.md](phase-44a-final-codex-artwork.md) | [phase-44a-qa.md](phase-44a-qa.md) |
-| 44b Final legal revisit and handoff | [phase-44b-final-legal-handoff.md](phase-44b-final-legal-handoff.md) | [phase-44b-qa.md](phase-44b-qa.md) |
+| 44b Final Terms and legal-team handoff against completed implementation | [phase-44b-final-legal-handoff.md](phase-44b-final-legal-handoff.md) | [phase-44b-qa.md](phase-44b-qa.md) |
 
 ## How to start
 
@@ -180,6 +202,22 @@ Deeds remains ordinary gameplay vocabulary. Denied storefronts have no housing p
 or on-chain-deed submodel, including hidden DOM, handlers, fetched catalogs, errors and
 accessible text. Website management is independently approved. The game server remains
 unaware of distribution; the service verifies opaque purpose-bound authorization.
+
+Settlement round 2 refinements that every dependent file restates: housing capacity never
+gates gameplay, so guild-clear recording exhaustion records an auditable
+clear-not-captured gap instead of refusing join, dungeon entry or respawn (D83); a dark
+realm boots the Sim with freeholdsEnabled false, so no gate prompt, furnisher stock or
+Hearth Key reaches a player while the offline host stays live (D85); denied-storefront
+absence is a runtime contract and the purchase code and English keys ship dormant in every
+bundle (D86); exactly two HudFeatures rows exist, freeholdPurchaseEnabled and
+freeholdManageOnWebsite, and housing use is the server entitlement gate read through the
+housing facet (D91); every day-rollover fact uses the realm day resetDay and the Tuesday
+week anchor, the Endeavor month is the UTC calendar month, and epoch-ms fields are
+display-only (D84); hudChrome.housing.* as pinned by ux-spec and ux-key-manifest.json is
+the only key family and every UI phase regenerates the manifests with its own keys (D92).
+Visiting, guild lifecycle, Hall Fund, deed transfer, dev fixtures, first-kill projection,
+deletion policy, upgrade source modes, the dye amenity and the wave-close push arm follow
+D76-D82, D87-D90 and D93 as implementation-plan.md and qa-checklist.md restate them.
 
 ux-spec, decisions, the answered ruling sheet, content/numeric/art manifests, audit and service/counsel/Terms/listing/
 territory artifacts remain durable source material. Any future authorized scaffolding

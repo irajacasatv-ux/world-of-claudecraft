@@ -22,7 +22,7 @@ and the committed screenshots; fix what the audit finds; record a verdict.
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
   while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, renderer.ts edits owing the
@@ -40,9 +40,11 @@ Spawn one Explore agent to read and summarize:
   and the regenerated wiki content
 - the pins the diff claims: tests/freehold_layouts.test.ts,
   tests/freehold_gate_and_key.test.ts, tests/housing_view.test.ts,
-  tests/renderer_compile_gate.test.ts, tests/entity_display_name.test.ts,
-  tests/item_icons.test.ts, tests/monolith_budget.test.ts (sim.ts, world.ts, renderer.ts,
-  hud.ts rows), tests/server/freehold_wire.test.ts (the jailed arm)
+  tests/renderer_compile_gate.test.ts, tests/entity_display_name.test.ts (the object
+  case), tests/map_marker_semantics.test.ts, tests/map_semantic_accessibility_core.test.ts,
+  tests/minimap_markers.test.ts, tests/item_icons.test.ts, tests/monolith_budget.test.ts
+  (sim.ts, world.ts, renderer.ts, hud.ts rows), tests/server/freehold_wire.test.ts (the
+  jailed arm and the dark-realm arms)
 - src/sim/instances/dungeons.ts and src/render/renderer.ts as they stand (diff both
   against the phase start; classify every changed line)
 The agent returns: the promised-versus-delivered table per deliverable, the six touch
@@ -57,8 +59,15 @@ every issue including low-severity and uncertain ones; ranking happens later):
 - CORRECTNESS: both layouts derive the same collider set on two calls and on both hosts
   (the sim's derivation and the client's read the same table); every anchor and the entry
   sit inside a room; plinth anchors equal the tier table; the gate is tier-routed (a
-  cottage-tier record enters index 16, an inn-room record index 15); the key enters from
-  any zone, consumes nothing, and refuses dead, combat, and cooldown with no teleport;
+  cottage-tier record enters index 16, an inn-room record index 15); the offline entry
+  rides Phase 05's default record and the Cottage fixture is Phase 05's real `/dev
+  freehold cottage` route (D81; no direct setter or window.__game mutation anywhere in
+  the capture or tour scripts); the key enters from any open-world zone, consumes
+  nothing, and refuses dead, combat, cooldown, `instanced` (rift floor, delve, dungeon
+  claim) and `match` (battleground, arena, duel, flag carrier) with no teleport, each
+  context resolved the way src/sim/unstuck.ts resolves it; a full-bags entry proceeds
+  and mints no key; the gate and the key grant are absent while freeholdsEnabled is
+  false (D85) and the offline host stays live;
   the item def lives in src/sim/content/freehold/items.ts and the use arm in
   src/sim/freehold/hearth_key.ts (D23); the cooldown belongs to isolated account host-clock state offline and 07/07a durable
   account authority online; a plot field never authorizes admission. Pin the isolated
@@ -69,24 +78,37 @@ every issue including low-severity and uncertain ones; ranking happens later):
   disagreement/race proof belongs to 07a, not an unavailable 06 dependency. The
   cooldown equals the state.md working value (60 minutes); the key is granted once per
   character and re-granted
-  when absent; leaving lands at the gate; a jailed session's use_item on the key is
-  refused on the server and freehold_enter stays in JAILED_BLOCKED_COMMANDS; the dressing
+  when absent; leaving lands at the gate; a jailed session's `use` of the key is refused
+  on the server (the check reads msg.item, the only payload field) and freehold_enter
+  stays in JAILED_BLOCKED_COMMANDS; left-click, right-click and the nearby-interact press
+  on the gate open the prompt through the real client routing and never reach
+  pickUpObject; the gate has a `freehold-gate` marker semantic with art, layer and
+  accessibility tokens and the entity_display_core arm names it by key; the dressing
   attaches only through the gated loop with every material prewarmed; no light was added;
   the extractions are move-not-rewrite; no "manage on the website" or purchase copy
   appears in the gate path; the one deny-line selector is freeholdDeniedLineKey in
-  src/ui/hud/housing/housing_view.ts over hudChrome.housing.denied.* (D26), no second one.
+  src/ui/hud/housing/housing_view.ts over hudChrome.housing.denied.* (D26), no second
+  one, total over the enum with the five NEW English values exactly as the
+  implementation file names them; hearthKey.tooltip carries the Wave A English with no
+  second-home sentence.
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion (a position literal for the
   gate landing, the cooldown written fresh as the state.md working value, a reason token
   per refusal); the
   determinism test compares two independent derivations, never one against itself; the
-  online arm drives the real dispatch for gate confirmation and for use_item; the jailed pin
-  toggles the session flag and asserts no teleport; the perf tour result is recorded with
-  zero live-program events; missing negatives (a non-owner confirming a gate destination without authority
-  gets the correct refusal; use_item with a non-key item ignores the freehold arm; a key
-  use while already at the selected home is a no-op with no cooldown change).
+  online arm drives the real dispatch for gate confirmation and for `use`; the jailed pin
+  toggles the session flag and asserts no teleport; one negative per key context asserts
+  the reason token (`instanced` for rift, delve and dungeon; `match` for battleground,
+  arena, duel and flag carrier) with no teleport; the dark-realm arms assert the gate
+  entity absent and no key granted with the flag unset; the three marker suites pin the
+  new kind by literal; the perf tour result is recorded with zero live-program events in
+  both interiors; missing negatives (a non-owner confirming a gate destination without
+  authority gets the correct refusal; `use` with a non-key item ignores the freehold
+  arm; a key use while already at the selected home is a no-op with no cooldown change;
+  a full-bags entry succeeds with no key minted).
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
   import invariant (no render import in src/sim/, no sim mutation from src/render/), the
-  word "phase" or "rent" or the banned two-word land phrase from ruling 9 in any code,
+  word "phase" or "rent" or the banned phrase "real estate" (state.md "Non-negotiables",
+  vocabulary fixed; qa-checklist.md "Ownership and classic fidelity") in any code,
   comment, or commit message, em
   dashes or emojis, a hand-edited generated file, a locale overlay touched, "earn" in any
   hudChrome.housing.* value, an orphaned WebP or provenance row, the src/render/freehold/
@@ -95,9 +117,8 @@ every issue including low-severity and uncertain ones; ranking happens later):
 Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
 the diff touched (architecture-reviewer, render-performance-reviewer,
 content-obligations-reviewer, frontend-seam-reviewer, cross-platform-sync,
-privacy-security-review, test-coverage-auditor), and finally qa-checklist (the completion
-gate), all for COVERAGE,
-all to files.
+privacy-security-review, server-hot-path-reviewer, test-coverage-auditor), and finally
+qa-checklist (the completion gate), all for COVERAGE, all to files.
 
 SETTLED COVERAGE ADDITIONS:
 - Walk through proximity without interacting and assert zero teleport. Drive explicit
@@ -114,7 +135,7 @@ SETTLED COVERAGE ADDITIONS:
   a key and already-at-home no-op with unchanged cooldown. Inspect 40x40 touch
   targets, safe areas and all keyed prompt/refusal strings in screenshots.
 - Lighting/camera/sampled welcome is explicitly owned by 09; 06 may not falsely claim
-  final arrival beauty from a shell-only screenshot. The final18/19/20 handoff is named.
+  final arrival beauty from a shell-only screenshot. The final 18/19/20 handoff is named.
 
 <!-- core-ux-gate-qa:start -->
 GATE UX FIX-ROUND COVERAGE:
@@ -150,9 +171,12 @@ cooling physical-gate paths do not consume cooldown. This pair's offline behavio
 proved now; online production admission requires the completed 07/07a authority proof.
 
 STEP 3 - VALIDATION:
-- Run the Phase 06 STEP 3 suite list plus `npx tsc --noEmit`; `npm run i18n:gen` and
-  `npm run wiki:content` followed by `git status --porcelain` (a dirty file means a stale
-  regen); `npm run perf:tour` through both interiors once more.
+- Run the Phase 06 STEP 3 suite list plus `npx tsc --noEmit`; `npm run i18n:gen`,
+  `npm run wiki:content` and the ux-key-manifest.json and ux-shot-manifest.json
+  regeneration followed by `git status --porcelain` (a dirty file means a stale regen,
+  the manifests included; D92); `PERF_SCENARIO=bench_freehold_interiors npm run perf:tour`
+  through both
+  interiors once more.
 
 FINAL REVIEW AND COMPLETION CONTRACT:
 - Required reviewers for the actual promised surfaces: architecture-reviewer, cross-platform-sync, render-performance-reviewer, content-obligations-reviewer, frontend-seam-reviewer, privacy-security-review, server-hot-path-reviewer, test-coverage-auditor, qa-checklist.

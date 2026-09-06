@@ -16,7 +16,9 @@ in the UI drives the ghost until Phase 11. This is a client phase: the client ga
 This pair produces NEW scripts/lib/pr_shot_housing.mjs::housingReviewTargets and the
 one import/spread in scripts/pr_shot_targets.mjs. It registers only twelve functioning
 interior variants. 11 extends this same target to 89, 16 reaches 178, 17 reaches 226,
-18 reaches 330 and 20 verifies the complete 330. No unavailable build, Steward,
+18 reaches 330 and 20 verifies the complete wave A set (330 of the 733-variant program
+inventory in ux-spec section 11; each later producer's close verifies its own
+milestone). No unavailable build, Steward,
 trophy or visiting UI is registered early. Counts derive from the UX manifest.
 
 ```js
@@ -83,7 +85,7 @@ const housingVisualWhen = [
   'src/render/freehold/furnishing_models.ts',
   'src/render/freehold/furnishing_ghost_visual.ts',
   'src/render/freehold/interior_dressing.ts',
-  'src/render/freehold/interior_light_rig.ts',
+  'src/render/freehold/freehold_light_grade.ts',
   'src/sim/content/freehold/layouts.ts',
   'src/sim/content/freehold/furnishings.ts',
   'scripts/assets/freehold_basics/',
@@ -123,7 +125,7 @@ extended build definition; it does not append a duplicate target.
 },
 ```
 
-The exact callback uses NEW09-owned fixture/assertion functions in that shared
+The exact callback uses NEW 09-owned fixture/assertion functions in that shared
 helper and the actual runner's optional-clip return contract:
 
 ```js
@@ -157,7 +159,7 @@ the visiting target's fresh-arrival/cue acceptance scenes.
 housingVisualWhen inventory. The existing classifyDiff visual-path selection consumes
 that predicate, alongside the target when-match path; no second path list or generic
 all-asset fallback is added. 11 extends the same owner/inventory/tests when build UI
-ships. Art-only diffs must select the functioning interior target already in09.
+ships. Art-only diffs must select the functioning interior target already in 09.
 
 09 extends tests/pr_shot_targets.test.ts with the exact twelve emitted keys, unique
 one-image records and required art-path selection. Real browser proof must assert the
@@ -171,9 +173,13 @@ This helper/capture evidence belongs to deliverable 5, not an additional output.
 This is Phase 09 of the Freeholds and Guildhalls feature: render (the furnishing view,
 the stand-in kit, the interior light rig, the placement ghost).
 
-Harness: Codex. Asset generation in this implementation must use Codex, not Claude.
-Follow AGENTS.md and root/directory CLAUDE.md repository contracts; use the active Codex
-model and the existing image/model/SFX pipelines, provenance and quality gates.
+Harness: Codex. Asset generation in this implementation (the sampled housing_arrival
+cue and any generated image) must use Codex, not Claude (D74); code and review work
+follows the active harness. Follow AGENTS.md and root/directory CLAUDE.md repository
+contracts; use the active Codex model and the existing image/model/SFX pipelines,
+provenance and quality gates. Claude-specific memory, Workflow and agent-runtime
+instructions do not apply under Codex (AGENTS.md): use the equivalent Codex read-only
+reader and reviewer roles wherever this prompt says Explore or review agent.
 
 Goal: draw the descriptor: every placed furnishing renders from
 IWorldHousing.freeholdLayout on both hosts through a scheduler-client view with a
@@ -193,10 +199,10 @@ STEP 0 - PRE-FLIGHT:
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/.
-- Memory scan: MEMORY.md and entries on the Eastbrook re-mint (ANY byte in renderer.ts
-  moves the fingerprint leaf: four literals, one script), screenshots at the lowest
-  graphics preset, the iOS UA material-tier trap for mobile shots, the monolith ratchet,
-  test-pin traps.
+- Gotchas scan (Codex has no Claude memory, AGENTS.md): read state.md "Gotchas" for
+  the Eastbrook re-mint rule (ANY byte in renderer.ts moves the fingerprint leaf: four
+  literals, one script), screenshots at the lowest graphics preset, the iOS UA
+  material-tier trap for mobile shots, the monolith ratchet and the test-pin traps.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
@@ -216,8 +222,10 @@ Spawn one Explore agent to read and summarize:
   (DungeonInteriors.buildInterior, the DungeonInteriorVariant union, the gated attach),
   src/render/dawnhold_dressing.ts and the Phase 06 dressing module under
   src/render/freehold/, src/render/renderer.ts (the proximity build loop around
-  builtInteriors, retireInteriorGroup, setGroundAimReticle, where FarmPatchVisuals is
-  constructed and synced per frame), src/ui/hud/action_bar/ground_aim_controller.ts
+  builtInteriors, the PRIVATE retireInteriorGroup reached through the
+  DelveInteriorTracker retire callback, setGroundAimReticle, and every FarmPatchVisuals
+  site: the field, the construction, both per-frame drive sites and the
+  stageProgramAnchors prewarm hook), src/ui/hud/action_bar/ground_aim_controller.ts
   (GroundAimReticleView: point, radius, school, dimmed, blocked),
   src/render/ground_aim_reticle_visual.ts (GroundAimVisualState: x, z, radius, color,
   dimmed, optional blocked), src/render/ground_aim_reticle_core.ts
@@ -246,9 +254,10 @@ The agent returns: the FarmPatchVisuals recipe reduced to its steps (source seam
 signature, gated attach with a label kind, program anchors, teardown); the compile-gate
 and prewarm obligations for a group with new materials; the point-light budget entry
 points and the LOW count; the reticle setter shape to copy for the ghost; the floor
-seating constant and lift function; the renderer.ts extraction that pays for the two
-new lines (construct, sync) and the Eastbrook re-mint procedure; the perf tour
-invocation that walks the Cottage.
+seating constant and lift function; the renderer.ts extraction that pays for the at
+least five new lines (the field, the construction beside FarmPatchVisuals, both
+per-frame drive sites and the stageProgramAnchors prewarm hook) and the Eastbrook
+re-mint procedure; the perf tour invocation that walks the Cottage.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 
@@ -283,7 +292,10 @@ bounds/validity/selected item information at every preset. No per-frame allocati
 when unchanged, and no cosmetic budget elides the ghost or its blocked explanation.
 
 Add NEW src/game/freehold_arrival.ts through existing src/game/teleport_camera.ts and
-src/render/camera_director_core.ts seams. Reuse confirmed dungeonEntrySeq, align arrival-facing
+src/render/camera_director_core.ts seams. Add the NEW 'hearthView' member to
+CameraDirectiveKind in camera_director_core.ts with its own arm in
+tests/camera_director_core.test.ts; the existing 'vista' and 'deathDrift' arms stay
+untouched. Reuse confirmed dungeonEntrySeq, align arrival-facing
 before input, and borrow the existing director envelope only inside measured room camera
 bounds/collision. Any movement, look, confirm or cancel resumes ordinary input immediately and
 invokes the existing cancel path; its camera offset blends out over
@@ -292,11 +304,22 @@ and uses the static safe arrival, with no camera lock or auto-rotation. Never tr
 outdoor sweep. Preserve movement, keyboard-turn and pending camera-facing reset semantics.
 The same generation guard prevents resume/late duplicate welcome or camera replay.
 Add the typed public GameAudio.playHousingArrival method to the sampled feedback seam,
-not a call to its private play/playFeedback. NEW housing_arrival cue is authored in
-scripts/sfx/sfx_prompts.mjs with gain/speed/provenance and regenerated through
-npm run sfx:manifest; honor interfaceSfx/mute and sampled warm door/hearth ambience.
-Ordinary UI uses existing cues. Phase 09 owns hudChrome.housing.arrival.welcome and arrival
-status leaves via freehold_event_feedback.ts; author the exact English from ux-spec.
+not a call to its private play/playFeedback. The NEW housing_arrival cue's prompt is
+authored in scripts/sfx/sfx_prompts.mjs, its gain and speed in
+scripts/sfx/sfx_gain_map.json and scripts/sfx/sfx_speed_map.json, its provenance as a
+CREDITS.md row, then regenerated through npm run sfx:manifest; honor interfaceSfx/mute
+and sampled warm door/hearth ambience. Ordinary UI uses existing cues. Phase 09 owns
+the hudChrome.housing.interior.* base rows the room needs before 12 (interior.door =
+"Home door", interior.hearth = "Hearth", interior.plinth = "Trophy plinth",
+interior.emptyPlinth = "An empty plinth for one of your trophies.",
+interior.amenityPaused = "This amenity is paused. The owner can restore the home's
+condition." and interior.preparing = "Preparing the room..."; 12 appends its Strongbox
+and station rows) and the hudChrome.housing.arrival.* keys, delivered via
+freehold_event_feedback.ts with
+this exact English (D92; ux-spec carries the rows and the manifest regenerates in this
+phase): arrival.welcome = "Welcome home, {name}."; arrival.visitor = "Welcome to
+{name}'s home."; arrival.ready = "Your home is ready to explore."; arrival.skip (a
+button, title case per D92) = "Skip Arrival View".
 09 produces the cue file, manifest/provenance rows and public method now; 19 consumes
 and verifies their final integration/mix, never postpones this producer.
 No procedural audio oscillator or unregistered synthetic effect bypasses the pipeline.
@@ -329,20 +352,25 @@ Eastbrook literals after the re-mint):
   delayed by graphics tier, FPS governor or a throttle, every group through attachSceneGroupGated with a freehold-furnishing label
   kind, hidden program anchors so its programs never leave the retained FIFO, clones
   seated by the core, torn down when the layout goes null, an ENTITY_GATE_STAND_INS row
-  for anything held back), the two renderer.ts lines (construct beside FarmPatchVisuals,
-  sync per frame) paid by an extraction with a lowered renderer.ts ceiling, the
+  for anything held back), the at least five renderer.ts lines (the field, the
+  construction beside FarmPatchVisuals, both per-frame drive sites and the
+  stageProgramAnchors prewarm hook) paid by an extraction with a lowered renderer.ts
+  ceiling, the
   tests/renderer_compile_gate.test.ts arm, tests/furnishing_visuals.test.ts (the adapter
   suite on the farm_patches_adapter model: sync elides when the signature is unchanged,
   add/move/remove reach the scene through the gate, teardown disposes nothing shared).
-- Agent LIGHT+GHOST: src/render/freehold/interior_light_rig.ts (the hearth point light
+- Agent LIGHT+GHOST: src/render/freehold/freehold_light_grade.ts (a NEW basename
+  distinct from the existing src/render/interior_light_rig.ts; the hearth point light
   plus at most two more, reconciled through point_light_budget.ts within the LIVE global sink budget; three authored emitters is only a ceiling,
   iOS LOW may admit two and pressure may leave one; never adds or removes a directional, hemi, spot, or rect light after boot;
   attached with the interior dressing, retired with it), src/render/freehold/furnishing_ghost_visual.ts
   (a rotation-aware footprint over the ground_aim_reticle idiom: valid and blocked
   states, draws at EVERY graphics tier, driven by renderer.setFurnishingGhost(view |
   null) beside setGroundAimReticle; its pure state in a furnishing_ghost_core.ts
-  registered in RENDER_PURE_CORES), tests/interior_light_rig.test.ts (LOW including iOS two-emitter and pressure one-emitter fallback,
-  budget reconciliation, no boot-light mutation), tests/furnishing_ghost_core.test.ts
+  registered in RENDER_PURE_CORES), tests/freehold_light_grade.test.ts (NEW, 09; the
+  existing tests/interior_light_rig.test.ts stays byte-identical; LOW including iOS
+  two-emitter and pressure one-emitter fallback, budget reconciliation, no boot-light
+  mutation), tests/furnishing_ghost_core.test.ts
   and tests/furnishing_ghost_visual.test.ts (blocked paints refusal at every tier;
   identical input elides work).
 Every agent writes any report longer than a screen to a file and replies with the path
@@ -408,8 +436,8 @@ INVARIANTS THIS PHASE MUST KEEP:
   painters hold Three only.
 - i18n: the policy in docs/freeholds/implementation-plan.md; render adds no string; the Phase 09 arrival HUD feedback adds the declared
   hudChrome.housing.arrival.* English keys via its existing UI composition seam.
-- Monolith ratchet: src/render/renderer.ts sits at ZERO slack; the two lines are paid
-  for by an extraction, then LOWER the ceiling; any byte in renderer.ts owes the
+- Monolith ratchet: src/render/renderer.ts sits at ZERO slack; the at least five lines
+  are paid for by an extraction, then LOWER the ceiling; any byte in renderer.ts owes the
   Eastbrook re-mint in its own commit.
 - The dependency set stays tiny: no new packages.
 - The word "phase" appears in no code, comment, commit, or PR text.
@@ -435,15 +463,18 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
 - Also dispatch gate-integrity-reviewer for the shared screenshot selector/classifyDiff
   changes and required-capture failure behavior, using the actual scoped diff evidence.
 - Run: `npx tsc --noEmit`; `npx vitest run tests/furnishing_layout_core.test.ts
-  tests/furnishing_visuals.test.ts tests/interior_light_rig.test.ts
+  tests/furnishing_visuals.test.ts tests/freehold_light_grade.test.ts
   tests/furnishing_ghost_core.test.ts tests/furnishing_ghost_visual.test.ts
   tests/freehold_arrival.test.ts tests/teleport_camera.test.ts
+  tests/camera_director_core.test.ts tests/pr_shot_targets.test.ts
+  tests/interior_light_rig.test.ts
   tests/architecture.test.ts tests/renderer_compile_gate.test.ts
   tests/ability_material_prewarm_sweep.test.ts tests/defer_launcher_preloads.test.ts
   tests/entity_gate_stand_in.test.ts tests/point_light_budget.test.ts
   tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts
   tests/monolith_budget.test.ts tests/eastbrook_polish_capture_contract.test.ts
-  tests/eastbrook_polish_artifact_integrity.test.ts`.
+  tests/eastbrook_polish_artifact_integrity.test.ts`; tests/interior_light_rig.test.ts
+  runs unchanged and proves the new light module collides with nothing.
 - Run npm run sfx:manifest and npm run sfx:check, then the existing camera/director and
   SFX conformance suites found by the STEP 1 reader.
 - `npm run perf:tour` entering the Cottage offline (the /dev freehold cottage grant
@@ -462,7 +493,9 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   file. Do not commit until all findings, including nits, are resolved and freshly reviewed.
 
 FINAL REVIEW AND COMPLETION CONTRACT:
-- Required reviewers for the actual promised surfaces: render-performance-reviewer, frontend-seam-reviewer, cross-platform-sync, content-obligations-reviewer, test-coverage-auditor, qa-checklist.
+- Required reviewers for the actual promised surfaces: render-performance-reviewer,
+  frontend-seam-reviewer, cross-platform-sync, content-obligations-reviewer,
+  gate-integrity-reviewer, test-coverage-auditor, qa-checklist.
   Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
   nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
   ownership examples; this complete roster is the minimum finishing dispatch.
@@ -511,7 +544,8 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 
 STEP 6 - DOC UPDATES + MEMORY:
 - Update docs/freeholds/progress.md (status row 09, the tour evidence path, the
-  screenshot paths, deferrals) and docs/freeholds/state.md (the per-phase ledger row 09:
+  screenshot paths, named unsigned gates) and docs/freeholds/state.md (the per-phase
+  ledger row 09:
   new files, the renderer setter name, the label kind, the registry name Phase 19 fills).
 - Record surprising rules learned in memory for the next session.
 

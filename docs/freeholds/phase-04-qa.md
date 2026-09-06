@@ -15,13 +15,13 @@ model and the existing image/model/SFX pipelines, provenance and quality gates.
 
 Goal: audit the Phase 04 diff for correctness against every deliverable and acceptance
 criterion in docs/freeholds/progress.md "04 Content: crafted furnishings and quartermaster
-patterns", the D13 valve, the keystone and power-neutral sweeps, unchanged station gates,
+patterns", the D53 valve, the keystone and power-neutral sweeps, unchanged station gates,
 the same-change obligations, and literal pins; fix what the audit finds; record a verdict.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
   while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the content pins cluster, "review
@@ -57,8 +57,11 @@ every issue including low-severity and uncertain ones; ranking happens later):
   teaches a recipe whose acquisition includes 'drop' and each pattern has exactly one
   quartermaster row; the seven trainer recipes are absent from every drop channel; every
   output is `kind: 'furnishing'` with `r` and decorCost and no stat, buff, aura, or feast
-  payload; the apex header count literal is still literally true; nothing under
-  src/sim/professions/ moved; the market can list every furnishing (R18).
+  payload; the apex header count literal is still literally true and the channel suite's
+  floor, partition and header-comment literals read the new truth with a sixth family
+  arm; every recipe's itemLevelBudget and skillReq equal the CAL-RECIPES-A workbook
+  literals; nothing under src/sim/professions/ moved; the market can list every
+  furnishing (R18).
 - TEST COVERAGE: the pattern suite drives resolvePatternLearn with the item in a bag
   slot and asserts the recipe known plus exactly one copy consumed; the trainer path is
   driven for at least one furnishing recipe; the channel sweep would fail on a pattern
@@ -67,11 +70,11 @@ every issue including low-severity and uncertain ones; ranking happens later):
   input value); pins are fresh literals (never a count read from the table under test);
   missing negatives (a pattern used by a character without the craft refuses 'profession').
 - DEAD CODE AND HYGIENE: unused imports and exports, leftover TODOs, the architecture
-  import invariant, the word "phase" or "rent" or the banned two-word land phrase from
-  ruling 9 in any code, comment, or
-  commit message, em dashes or emojis, a hand-edited generated file, a locale overlay
-  touched, an orphaned WebP or provenance row, a pattern id inside
-  src/sim/content/reliquary.ts.
+  import invariant, the word "phase" or "rent" or the banned phrase "real estate"
+  (state.md "Non-negotiables", vocabulary fixed; qa-checklist.md "Ownership and classic
+  fidelity") in any code, comment, or commit message, em dashes or emojis, a
+  hand-edited generated file, a locale overlay touched, an orphaned WebP or provenance
+  row, a pattern id inside src/sim/content/reliquary.ts.
 Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
 the diff touched (content-obligations-reviewer, test-coverage-auditor), and finally
 qa-checklist (the completion gate), all for COVERAGE, all to files.

@@ -9,7 +9,7 @@ This is Phase 15 (QA) of the Freeholds and Guildhalls feature: audit Claudium, t
 Freehold Charter and the Master Builder's Call (the spend kind, the two grants, the
 mirror and reconcile, the telemetry source, the flag gating, the service contract).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 15 diff for correctness against every deliverable and acceptance
@@ -25,15 +25,16 @@ use Codex image generation for raster artwork. Capture actual rendered screensho
 as evidence. Ship final assets with provenance, credits, manifest and in-context proof.
 phase-44a-final-codex-artwork.md audits/replaces residual feature-created placeholder
 icons/images and produces final-artwork-audit.md before phase-44b-final-legal-handoff.md.
-That final sweep does not postpone artwork owned here.44b revisits the completed result
+That final sweep does not postpone artwork owned here. 44b revisits the completed result
 for the legal team; all earlier counsel/Terms/platform/service money gates still apply.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
-  while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge
+  origin/feature/masterwrought while PR #3872 is open, else the newest origin/release/**;
+  release-merge-audit after a non-empty merge; pnpm install --frozen-lockfile if
+  patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the Postgres and server/tests
   gotcha clusters, "review the review-fix round", "apply ALL findings".
 
@@ -49,7 +50,9 @@ Spawn one Explore agent to read and summarize:
   commits named in progress.md row 15)
 - the pins the diff claims: tests/server/freehold_gates.test.ts,
   tests/freehold_grant.test.ts, tests/server/freehold_db.test.ts and its pg twin,
-  tests/server/claudium.test.ts, tests/server/storage_gates.test.ts
+  tests/server/freehold_routes.test.ts (the quote and status routes),
+  tests/server/http/surface_inventory.test.ts, tests/server/claudium.test.ts,
+  tests/server/storage_gates.test.ts
 The agent returns: the promised-versus-delivered table per deliverable, the list of new
 symbols and where each is consumed, every test added with what it asserts, the exact
 order of operations in the live-apply host (dry run, persist discoverable intent, unlocked service IO, atomic grant/receipt, mirror), where the
@@ -67,11 +70,21 @@ STEP 2 - AUDIT (fresh parallel reviewers, COVERAGE, all findings to files):
 Deliverables (at most five):
 1. Extend the existing durable housing operation boundary. Phase 07a owns
    server/freehold_mutation.ts::commitFreeholdMutation and
-   server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation.
+   server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation
+   (the freehold_operations and freehold_operation_receipts rows under
+   FREEHOLD_OPERATION_SCHEMA; 15 extends those rows, never a parallel table).
    Extend those records for the service: bind immutable operationId/idempotency key,
-   account, opaque plotId, SKU, operation fingerprint, expected durable revision and
-   globally fenced owner generation before repeated spend. Persist discoverable
-   intent before service IO, release DB clients/locks, then call the service. The
+   account, opaque plotId, SKU, operation fingerprint (quoteId, catalogVersion, sku,
+   amount and currency), the protected opaque checkoutAuthorization reference the
+   service issued (stored and forwarded unchanged, never decoded, never logged or
+   exposed on any wire), expected durable revision and globally fenced owner
+   generation before repeated spend. Persist discoverable intent before service IO,
+   release DB clients/locks, then call the service. The extended rows inherit 07a's
+   D88 ON DELETE policy per row class: intent rows cascade only when no open operation
+   exists, applied tombstones keep a nonidentifying operation identity, and an open
+   Charter or Call operation blocks character or account deletion with 07a's
+   CharacterFreeholdOperationOpen refusal class in character_delete_db.ts (the
+   CharacterStoragePurchaseOpen guard shape). The
    authoritative service outcome and target grant receipt commit atomically before
    live mirrors acknowledge success. appliedPurchaseKeys may be a bounded live adjunct;
    it is never replay authority. Retain compact durable identities unless a signed
@@ -85,16 +98,16 @@ Deliverables (at most five):
    server/character_save_statement.ts owns pre-lock/nonce fencing; beginCharacterSaveTx
    supplies deadlines, not that fence. Never replace this with an unchecked InitPlan
    or an invented generic account/character/guild/receipt lock hierarchy.
-   Consume13a's sole server/freehold_upkeep_ingress.ts calendar boundary and13's safe
+   Consume 13a's sole server/freehold_upkeep_ingress.ts calendar boundary and 13's safe
    src/sim/freehold/state.ts projection. source calendarId/schemaVersion/resetPolicyId
    and committed lifecycle/authority revisions retain original bill/receipt identity.
    Every historical dependency of durable condition/bill/credit evaluation/consumption
    must be irrevocably finalized; otherwise hold the affected local effect pending.
    Buying future credits does not require future finality. The mutable covered tail is
-   never durable authority. The07a effect transaction uses compatible calendar-head
+   never durable authority. The 07a effect transaction uses compatible calendar-head
    FOR SHARE and lifecycle guards at the reviewed hook, rechecks finalized dependencies
    and lower revision CAS, and preserves original-key recovery without another debit.
-   No second interval store, receipt journal, poll or calendar migration.13a's guarded
+   No second interval store, receipt journal, poll or calendar migration. 13a's guarded
    process-generation/revision/digest install and exact current/superseded/conflicting
    ACKs are the sole source of live calendar status. A confirmed payment keeps its
    agreed recovery guarantee while local application waits for irrevocable facts.
@@ -103,9 +116,18 @@ Deliverables (at most five):
    a grant nor proof of no debit. Existing claudium_proxy.ts outgoing credential,
    timeout and redirect refusal do not implement this NEW receipt/status protocol;
    written signed acceptance is not cryptographic runtime response verification.
-2. Confirmed grant core. freeholdGrantCharter upgrades the existing Inn Room to
+2. Confirmed grant core. NEW src/sim/freehold/grant.ts (the state.md module list's
+   grant.ts) exports freeholdGrantCharter and freeholdGrantRepair.
+   freeholdGrantCharter upgrades the existing Inn Room to
    Cottage once per account, carrying approved exact furnishings and trophy records
-   in place. freeholdGrantRepair sets condition 100 and satisfies the current unpaid
+   in place, and raises the Homesteader deed homesteader_first_cottage (Phase 03's
+   content-manifest row, trigger kind manual) through the existing
+   src/sim/deeds.ts::grantDeed(ctx, meta, deedId) call for the character whose
+   admitted session receives the Cottage tier grant, once, never on a dry run, a
+   replayed receipt or an alt; a grant applied by recovery with no admitted session
+   raises it on the account's next admitted entry to the Cottage claim (the claim path
+   already knows the entering character), still exactly once. freeholdGrantRepair sets
+   condition 100 and satisfies the current unpaid
    Ledger bill, adds no future credit and consumes no future prepay. If this week's
    bill is already paid, the immutable quoted result explicitly says repair-only.
    Dry runs mutate nothing; grants remain server-only ctx operations, absent from
@@ -113,23 +135,57 @@ Deliverables (at most five):
    never an unverified client/store row. A new Call requires a valid admitted target
    session; an already-confirmed receipt still recovers after that session disconnects.
 3. Spend/reconcile integration. parseSpendKind, both claudium_proxy unions, store
-   filtering and both dispatch paths add known freehold SKUs behind the default-off
-   flag. freehold_purchases.ts uses the shared operation boundary, live-owner resolver
-   and literal service quote fingerprint; unknown SKU, kind mismatch, quote drift,
-   missing hook and unaccepted gates fail closed. Ambiguous debit retries/reconciles
-   only the original operation key, never issues a replacement charge. Store-open
+   filtering and both dispatch paths add the two known freehold SKUs behind the
+   default-off flag: freehold_charter_cottage from Phase 03's charters.ts and the
+   Master Builder's Call id freehold_master_builders_call this phase appends to that
+   allowlist (repeatable, no tier, no price, no copy). The game-side quote and status
+   surfaces 16 and the listing copy consume are two NEW RouteDef rows appended by hand
+   to Phase 01's server/freehold_routes.ts (registered in server/http/registry.ts; the
+   generator is not rerun for the existing domain): POST /api/freehold/quote (the
+   contract's Prepare row; a mutating method, so origin_check, content_type and the
+   body schema gate it: a typed JSON body of sku, opaque plotId, source selection and
+   an optional client idempotency key; it obtains the service quote and the opaque
+   checkoutAuthorization, persists the intent through prepareFreeholdOperation and
+   returns operationId, quoteId, catalogVersion, expiresAt, amount, currency,
+   feeDetails and termsVersion, never the authorization reference; a repeated body
+   with the same idempotency key returns the same open intent, never a second one)
+   and GET /api/freehold/operation/:operationId (the side-effect-free status read by
+   operation identity: pending, confirmed, refused or recovered with safe values
+   only), each with its tests/server/http/surface_inventory.test.ts row (method POST
+   and GET respectively) and its freehold.* error catalog rows. /api/claudium/store
+   rows are not widened; the Charter's owned flag still rides the existing store row
+   for reconcile. The spend rides POST /api/claudium/spend
+   with kind freehold carrying operationId and quoteId beside expectedCostClaudium; NEW
+   server/freehold_purchases.ts matches all three against the stored intent (a
+   mismatch is quote drift), forwards the stored opaque authorization and uses the
+   shared operation boundary and live-owner resolver; unknown SKU, kind mismatch,
+   quote drift, expired quote, missing hook and unaccepted gates fail closed. The
+   quote fields 16's charter.feeDetails, charter.quoteExpiry and charter.terms rows
+   render (owner 16, exact English in phase-16 and ux-spec section 8; D92, one owner
+   per key) are supplied by this route; the client formats expiresAt with
+   formatDateTime and never formats a service amount with formatMoney. Ambiguous debit
+   retries/reconciles only the original operation key, never issues a replacement
+   charge. Store-open
    Charter reconciliation and bounded background receipt recovery share admitted,
    cancellation-aware work; no lock spans network IO and no per-tick SQL is added.
    Telemetry records housing copper sources without computing service money values.
-4. Accepted service contract and growth rails. Validate the already-produced durable
-   docs/prd/woc/freehold-service-contract.md: initial SKU catalog/versioned quotes,
+4. Service contract handoff and growth rails. Validate the already-produced durable
+   docs/prd/woc/freehold-service-contract.md (handoff-ready; acceptance status recorded
+   as an unsigned release gate unless a signature artifact is on file): initial SKU
+   catalog/versioned quotes,
    once-owned Charter versus repeatable Call, exact current-bill repair effect,
    account/plot/guild-bound idempotency, immutable outcomes, refund and ambiguity
    rules, published conversion/burn policy and outage intervals. Service acceptance,
    counsel and published Terms remain explicit release gates in state.md. Inventory
    actual receipt/recovery queries, predicates, ordering, limits, indexes, retention,
    row/encoded-byte bounds and monitoring for growth, oldest pending intent, queue
-   wait, pool wait and failures. Reuse07's admission/deadline and export/delete policy.
+   wait, pool wait and failures. Reuse 07's admission/deadline and export policy and
+   07a's D88 deletion policy. Support reconciliation ownership is explicit: the economy
+   service owns the support tooling and the monetary side (its "Calibration, refunds
+   and support" section); this phase adds no operator route or admin page, and an
+   accepted entitlement/effect adjustment reaches the game only as an immutable linked
+   outcome discovered by the same original-operation status reader and applied
+   atomically through 07a, the contract's Recovery row.
    Literal D9 retains game-server ignorance of distribution. Service-owned NEW
    verification yields opaque account/purpose/SKU/policy/quote/operation-bound
    authorization, independently of client labels and UI capability. The service
@@ -146,9 +202,17 @@ Deliverables (at most five):
 5. Crash/race proof. Fake-service tests prove both route paths, tampered ownership,
    quote drift and disabled catalogs. Disposable-PG tests prove service-confirmed
    effect+receipt atomicity, timeout after debit, restart before/after grant, owner
-   disconnect, same-key cross-process races, stale CAS/global-fence refusal and replay
-   after live-array compaction. A failed apply stays discoverable for original-key
-   recovery with neither loss nor duplicate effect. Run database review before/final,
+   disconnect, same-key cross-process races, stale CAS/global-fence refusal, replay
+   after live-array compaction and the D88 deletion race (character/account deletion
+   against an open operation refuses with CharacterFreeholdOperationOpen; a closed one
+   proceeds). A
+   failed apply stays discoverable for original-key recovery with neither loss nor
+   duplicate effect. The fake service proves the game-side binding arm: apply refuses a
+   receipt whose authorization binding does not match the stored intent, the stored
+   reference is forwarded byte-identical and never decoded, and no wire, log or event
+   carries it; the service-side cross-account, cross-SKU, cross-quote and
+   cross-operation reuse refusals are owed by the signed issuer/verifier conformance
+   fixtures, not proven here. Run database review before/final,
    migration-safety, privacy-security-review and architecture review of grant purity;
    preserve existing storage behavior tests unchanged.
 
@@ -169,9 +233,11 @@ reviewer reads the fixes before the verdict.
   listing artifacts and the accepted economy-service contract before production enable
   or any housing-bearing store submission; external sign-off status lives in state.md;
   (2) FREEHOLDS_ENABLED defaults off and the server refuses/hides housing purchases
-  while dark; (3) the seven-distribution surface map independently gates housing use,
-  purchase and approved website management, including complete submodel/handler/
-  catalog/DOM/accessibility/error absence on denied surfaces. These are cumulative.
+  while dark; (3) the seven-distribution surface map independently gates housing purchase,
+  approved website management and the deed surfaces (housing use is the server
+  entitlement gate read through the housing facet, never a map or HudFeatures row, per
+  D91), including complete submodel/handler/catalog/DOM/accessibility/error absence on
+  denied surfaces as the D86 runtime contract. These are cumulative.
 - The economy service owns every price and all token math; the client forwards the
   immutable quote fingerprint and computes no tariff, conversion, discount or burn.
 

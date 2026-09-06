@@ -6,26 +6,33 @@ The next implementation starts only after this audit passes.
 ### Starter Prompt
 ```
 This is Phase 44a QA of the Freeholds and Guildhalls feature.
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out; Claude-specific memory, Workflow and
+agent-runtime instructions do not apply under Codex (AGENTS.md).
 Goal: verify every promised deliverable, adversarial failure case and settled ruling
 against the real implementation diff; fix all findings and review the fix round.
 
 STEP 0 - PRE-FLIGHT:
 Work in the state.md worktree/branch. Verify git status is clean; ask if it is dirty.
 Sync per state.md "Worktree, base, and merge-forward"; after a non-empty merge run the
-release-merge-audit skill and install frozen dependencies if patches/ moved. Scan memory
-for test-pin traps, "apply ALL findings" and "review the review-fix round".
+release-merge-audit skill and install frozen dependencies if patches/ moved. Read
+state.md "Gotchas" for test-pin traps, "apply ALL findings" and "review the review-fix
+round" (Codex has no Claude memory, AGENTS.md).
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
-Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
+Codex, not Claude (D74). Use Codex's built-in image generation tool (an external
+prerequisite of the Codex harness, not a repository skill: STOP and record the named
+gate if it is unavailable) following docs/design/eastbrook-vale-rebuild/imagegen-prompts.md
+with an imagegen-provenance.md row, and the woc-image-to-glb workflow, with their
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent over state.md, progress.md row 44a, ux-spec.md, the implementation
-file, referenced signed artifacts, the complete scoped diff and all claimed tests.
+file, the referenced acceptance artifacts (signed, or still named unsigned release
+gates), the complete scoped diff and all claimed tests.
 Return to a scratch report: promised/delivered table, each new symbol's actual consumer,
 each test's assertion and failure control, changed anchors, unused code and gate evidence.
 
@@ -40,14 +47,20 @@ and evidence to a file. Audit these specific requirements:
 - Match the complete feature diff/content tables to the final-artwork inventory;
   search placeholder constants, runtime fallback branches and unregistered assets.
   No hidden or rarely used icon/image escapes because a hero screenshot looked final.
-- Confirm Codex authored every new visual and the installed imagegen/GLB workflow
-  was followed. Inspect actual shipped bytes, generated registration, provenance,
-  CREDITS, affected-family fingerprints and meaningful can-fail art tests.
+- Confirm Codex authored every new visual through Codex's built-in image generation
+  tool (an external prerequisite; its absence is a recorded named gate, never a
+  Claude-side substitute) and the woc-image-to-glb workflow. Inspect actual shipped
+  bytes, generated registration, provenance, CREDITS, affected-family fingerprints and
+  meaningful can-fail art tests.
+- The D86 evidence handed to 44b shows denied-surface runtime absence (no DOM node,
+  handler, request, fetched catalog, error copy or accessible text) and states
+  explicitly that the purchase code and English keys ship dormant in every bundle
+  under the runtime capability.
 - Distinguish intentional spoiler silhouettes/final procedural/SVG from placeholders
   using explicit approval. Reject gallery-only proof: every replacement has real
   desktop/compact/tablet/LOW context, displayed-size legibility and fairness checks.
 - No earlier final-art gate was postponed to this sweep. The residual inventory is
-  fully closed, a fresh reviewer read all fixes, and the next file is44b legal handoff.
+  fully closed, a fresh reviewer read all fixes, and the next file is 44b legal handoff.
 Audit strict decode, malformed/max-size preservation, current authorization, keyed
 player strings, focus return and all input modes where UI exists, deterministic
 three-host parity, no monolith growth, and test-pin freshness where applicable.

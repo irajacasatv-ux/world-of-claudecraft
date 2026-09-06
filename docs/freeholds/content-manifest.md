@@ -1,6 +1,7 @@
 # Freeholds content manifest
 
-Status: approved, UNBUILT packet artifact under the answered R01 to R46 rulings.
+Status: approved, UNBUILT packet artifact under the answered R01 to R46 rulings and the
+round-2 dispositions D76-D93 (R47-R64, applied as recommended and awaiting Fernando's word).
 Existing source IDs below were inspected at 7d140843d2. Every
 `freehold_` ID, housing page ID, asset filename and recipe named as planned below is
 NEW work. No housing item, reference approval, art or gameplay implementation is
@@ -27,19 +28,20 @@ filenames, not wildcard delivery. Pattern rows additionally produce
 pattern is an extra furniture copy. A housing label resolves the canonical localized
 item name, never a second untranslated name embedded in a painter.
 
-The table's owner column owns data, acquisition, icon/provenance, item-name keys and
-M16 fills where required, wiki generation and guide text, shipped-ID golden additions,
-Hearth page membership, power-neutral/exclusion tests, and acquisition/market pins in
-the SAME content change. The art owner owns the model, measured bounds, collision
-record, fingerprint, model-registry/prewarm row and screenshots. Implementation
-stand-ins must be declared and readable; final GLBs and icons are mandatory at the
-closing gate for the wave that ships the ID. Every file generating these assets,
-including content-owned icons, must run with Codex, not Claude, using the established
-image/model pipelines. See [art-brief.md](art-brief.md). The additional final
+The table's owner column owns data, acquisition, icon/provenance, item-name keys and M16
+fills where required, wiki generation and guide text, shipped-ID golden additions, Hearth
+page membership, Book of Deeds records for every new piece of conquerable content
+(docs/design/deeds.md, pinned by tests/deeds_content.test.ts), power-neutral/exclusion
+tests, and acquisition/market pins in the SAME content change. The art owner owns the
+model, measured bounds, collision record, fingerprint, model-registry/prewarm row and
+screenshots. Implementation stand-ins must be declared and readable; final GLBs and icons
+are mandatory at the closing gate for the wave that ships the ID. Every file generating
+these assets, including content-owned icons, must run with Codex, not Claude, using the
+established image/model pipelines. See [art-brief.md](art-brief.md). The additional final
 [44a Codex artwork closeout](phase-44a-final-codex-artwork.md) inventories and replaces
-all feature-created placeholder icons/images across every wave; it does not defer
-these same-change or per-wave obligations. Its completed provenance accompanies the
-[44b legal-team handoff](phase-44b-final-legal-handoff.md).
+all feature-created placeholder icons/images across every wave; it does not defer these
+same-change or per-wave obligations. Its completed provenance accompanies the [44b
+legal-team handoff](phase-44b-final-legal-handoff.md).
 
 All movable Wave A items use floor placement. Tables gain measured parent surfaces
 only when the advanced editor lands. Rugs have required `r: 0` and explicit underlay
@@ -78,7 +80,10 @@ for enchanting where the shipped recipe family supplies it. Seven rows are taugh
 by the existing corresponding trainer. Engineering, inscription and jewelcrafting
 are the three Marks-only patterns; their prefixes reuse the shipped Schematic,
 Technique and Design contract. Every recipe's literal bill, skill band and quality
-must be signed in the numeric worksheet before that row can activate.
+must be signed in the numeric worksheet before that row can activate. Every
+ProfessionRecipeRecord balance field is in that rule, itemLevelBudget (the required
+craft gold-sink driver) and skillReq included; the values live in the workbook's
+CAL-RECIPES-A row.
 
 | Exact planned item ID | Planned English name | Existing craft / recipe source | Channel | Surface | Art/icon suffix | Identity and constraints | Same-change owner / final art |
 |---|---|---|---|---|---|---|---|
@@ -106,9 +111,14 @@ derived from the final output definition; no invented independent rarity.
 
 These twenty rows are NEW outputs, not replacements for Wave A. `raid + Marks`
 means one named Nythraxis final-boss housing tail group on the existing base loot
-source `nythraxis_scourge_of_thornpeak`, plus the deterministic Heroic Quartermaster
-stock row. `rift + Marks` means the existing winning B/A/S clear-tail acquisition
-seam, plus that stock row. Every pattern belongs to exactly one luck channel.
+source `nythraxis_scourge_of_thornpeak` (a NEW partitioned rollGroup `nythraxis_housing`
+appended BELOW `nythraxis_farm`; the existing groups gain no row), plus the deterministic
+Heroic Quartermaster stock row. `rift + Marks` means one NEW appended draw at the end of
+the existing winning B/A/S clear-tail seam (addRiftClearGearLoot in
+src/sim/rift/progression.ts, a Draw 8 over a NEW sorted exported
+HOUSING_RIFT_PATTERN_ITEM_IDS at the signed chance; the existing RIFT_PATTERN_ITEM_IDS
+and FARM_RIFT_DROP_ITEM_IDS lists are never edited), plus that stock row. Every pattern
+belongs to exactly one luck channel.
 Housing adds no delve channel or heroic-dungeon channel. Channel odds and Marks
 amounts are worksheet outputs, never copied from the unrelated apex rates.
 
@@ -197,8 +207,14 @@ gets a truthful generic display in Wave A even if its bespoke model arrives in 2
 | Armor set | Live set entries and corresponding discovered members | Stand plaque showing actual discovered pieces | 23 piece-by-piece stand | Never imply complete set from one item; unowned pieces remain absent/undiscovered as appropriate. |
 | Profession specimen | `professions_specimens` item/mark sources | Specimen plaque | 23 specimen cabinet | Display truthful obtained specimen; do not substitute ordinary material for rare proof. |
 | Curator rank | Existing curator-rank deeds in `src/sim/content/deeds.ts::DEEDS`, with actual account deed ownership | Rank plaque with the localized source rank | 23 rank display refinement | Enumerate the live rank-deed source set; do not infer a completed rank from current page count or invent its date. |
-| Named Perfected legendary | `src/sim/professions/perfecting.ts` and exact current copy payload | Named-work plaque | 23 Legend Stand | `perfected`, legendary promotion and actual chosen name required. If the exact copy leaves authorized account custody, keep unlock and provenance, darken live-copy display. |
-| Guild clear/project | New 31 guild-clear evidence / 32 durable project completion record | Introduced in guild wave using same plaque family | 31 first-clear banner/statue; 32a project trophy | Membership at credited clear, no retro proof inferred from current guild; project condition truly completed. |
+| Named Perfected legendary | `src/sim/professions/perfecting.ts` and exact current copy payload | Named-work plaque | 23 Legend Stand | `perfected`, legendary promotion and actual chosen name required. If the exact copy leaves authorized account custody, keep unlock and provenance, darken live-copy display. The Legend Stand copy reference is the stable subset (owning character id, itemId, instance.name, instance.signer, perfected, rolled.quality legendary), never itemCopyPin, which hashes the whole payload. The known source day is the owning character's prog_legendmaker deed day (deedsEarned, a utcDay stamp); no promotion day exists on the copy, so a copy without that deed day uses the unknown-day discriminator. |
+| Guild clear/project | New 31 guild-clear evidence (the sixteen `guild_first_<boss>_<difficulty>` guild deeds below) / 32 durable project completion record | Introduced in guild wave using same plaque family | 31 first-clear banner/statue; 32a project trophy | Membership at credited clear, no retro proof inferred from current guild; project condition truly completed. |
+
+The Wave A generic display family 19 builds is exactly this column's set: the plaque
+variants, the inscribed source medallion on a freestanding plaque, the stand plaque, the
+paddock marker on a floor-supported display and the qualified head family; no source
+class maps to a bust form and none is built (art-brief section 8 and phase 19 deliverable
+3 name the same set).
 
 Trophy requirement text uses UX's exact source-predicate keys: slain sources select
 trophies.requireSlain with the validated localized creature name; Masterwork,
@@ -209,7 +225,9 @@ source label and never the creature argument in a Defeat sentence.
 
 Provenance record: stable source identity, difficulty/mark, immutable known source
 character identity and public name projection, known authoritative source day or
-explicit unknown-day discriminator, optional page and exact-copy reference. Account
+explicit unknown-day discriminator (utcDay stamps of when the source happened, per D84;
+the captured public character name and day are a snapshot written at grant and read
+back as such, per D79), optional page and exact-copy reference. Account
 aggregation is authoritative and refreshes on source changes, login and first entry,
 batched without a per-tick full scan. Public projection includes only approved
 provenance fields, never account IDs, private inventory or full item payloads.
@@ -255,7 +273,7 @@ Condition can dull decorative finish, never obscure source identity or proof.
 | `freehold_trophy_anglers_display`, angler display | `col_deepest_cast` | 23 TROPHIES |
 | `freehold_trophy_rift_obelisk`, rift display | `dgn_rift`, `dgn_rift_s_rank`, actual qualifying relic marks | 23 TROPHIES; S-rank gilded only on qualifying source |
 | `freehold_trophy_legend_stand`, Legend Stand | Actual named promoted Perfected copy, `prog_legendmaker` as accomplishment context | 23 TROPHIES and eligibility owner |
-| `freehold_trophy_guild_first_<boss>_<difficulty>`, guild first-clear banner/statue | 31 exact accepted encounter/clear/membership inventory | 31 CONTENT/ART, freeze the expanded ID set in that implementation |
+| `freehold_trophy_guild_first_<boss>_<difficulty>`, guild first-clear banner/statue: sixteen ids, boss in the FINAL_BOSS_DUNGEONS roster (src/sim/deeds.ts) and difficulty in normal, heroic. Banner family with a per-boss emblem for the five dungeon final bosses `morthen`, `vael_the_mistcaller`, `ysolei`, `korzul_the_gravewyrm`, `wildheart_high_priest`; statue for the three raid bosses `nythraxis_scourge_of_thornpeak`, `ignivar_herald_of_the_last_flame`, `varkhul_forgefather_of_the_last_flame`; finish by 23's finishFor (normal bronze, heroic silver) | The matching 31 guild deed `guild_first_<boss>_<difficulty>` (same sixteen ids), earned by the first committed source claim per (guild_id, deed_id) | 31 CONTENT/ART; the sixteen ids are the frozen set |
 | `freehold_trophy_project_<tier>`, hall build-project model | Completed approved 32/40 project proof, never elapsed time alone | 32a/40 CONTENT/ART |
 
 The model key may be shared by many source records. Each model has a concrete
@@ -293,6 +311,69 @@ rather than treating their former totals as caps. Reuse existing watch/recent li
 without mislabelling them page limits. Each wave verifies full union/nav/source/name/
 icon/ownership/completion/guide coverage and no raw English leak.
 
+## Deeds and later-wave reward content
+
+Every family below is NEW content a phase file produces; the manifest carries it so the
+content-obligations reviewer, the Endeavor and Showcase producers and the 44 preservation
+audit have a row to check. The same-change obligations of the ownership paragraph above
+(art where the record is visual, item-name or deed-name English keys and M16 fills, wiki
+regen and guide keys, Book of Deeds pins, power-neutral tests) apply to each row; deeds
+are cosmetic-only records, never power.
+
+### Homesteader deeds (03)
+
+The ids are frozen here; phase-03 appends the rows at the END of `src/sim/content/deeds.ts`
+with DEED_ORDER rows and trigger kind `manual` (granted only by an explicit grantDeed
+call, so no DeedTrigger or DeedFlagId widening). Later content phases (17, 21, 22, 23, 24,
+28, 31) extend the family under the same rule.
+
+| Exact planned deed ID | Planned English name | Trigger | Raised by | Reward | Owner |
+|---|---|---|---|---|---|
+| `homesteader_first_furnishing` | Homesteader | manual | 08, through the src/sim/deeds.ts grantDeed seam after the first successful placement mutation applies, identically on both hosts, for the character that placed the furnishing (phase-08 deliverable 2) | cosmetic renown and title only | 03 CONTENT |
+| `homesteader_first_cottage` | Householder | manual | 15, through the same grantDeed(ctx, meta, deedId) call inside the confirmed grant, exactly once for the character whose admitted session receives the Cottage tier grant (phase-15 deliverable 2) | cosmetic renown and border only | 03 CONTENT |
+
+### Guild first-clear deeds (31)
+
+31 ships the guild deed record family `guild_first_<boss>_<difficulty>` for the sixteen
+sources the trophy table above names (every FINAL_BOSS_DUNGEONS template at normal and
+heroic), as keep-forever `guild_deeds` rows keyed (guild_id, deed_id) in
+`src/sim/content/freehold/guild_deeds.ts`, append-only order. Art (the banner or statue
+prop above), deed-name keys, wiki and deeds pins are 31 CONTENT obligations; the
+projection reads the captured public-name snapshot beside the nullable earned_by FK
+(D79).
+
+### Endeavor content (35)
+
+`src/sim/content/freehold/endeavors.ts` carries append-only goal IDs
+`freehold_endeavor_<goal>` and cosmetic reward props `freehold_endeavor_reward_<prop>`.
+Each reward prop is a furnishing-shaped record with the same art (`.glb` and `.webp` by
+the expansion rule), item-name key and M16, wiki, deed and Reliquary columns as the
+furnishing tables; weights, thresholds, targets and contribution limits are UNSIGNED per
+the workbook's CAL-ENDEAVORS row until approved, and an unapproved row cannot activate.
+Monthly activities are cosmetic: no stat, training, recipe/drop/gathering advantage or
+paid input. Owner: 35 CONTENT.
+
+| Planned ID template | Kind | Same-change obligations | Values |
+|---|---|---|---|
+| `freehold_endeavor_<goal>` | monthly goal with metric and threshold | English name/description keys, wiki row, distinct-visit identity and contribution fingerprint stated here before enable | UNSIGNED, CAL-ENDEAVORS |
+| `freehold_endeavor_reward_<prop>` | cosmetic reward prop delivered to safe item custody | model and icon by expansion, provenance, name originality, wiki, Book of Deeds record where conquerable, Reliquary none (trophy-decor unlock) | UNSIGNED, CAL-ENDEAVORS |
+
+### Showcase reward (36)
+
+The season-result source key mints a permanent owner unlock of trophy-decor reward
+props, never a new power reward. Obligations 36 consumes: Book of Deeds, one cosmetic
+record for the season win (docs/design/deeds.md, pinned by tests/deeds_content.test.ts);
+Reliquary, none (a trophy-decor unlock, not conquerable unique loot); wiki regen and
+committed WebP art per the item obligations; changed reward props use the scheduler,
+prewarm and retirement contract. Owner: 36 CONTENT.
+
+### Kitchen Garden entities (24)
+
+| Exact planned ID | Kind | Contract | Owner |
+|---|---|---|---|
+| `freehold_farmer` | NpcDef in NEW `src/sim/content/freehold/npcs.ts`, merged into NPCS by `src/sim/data.ts` | English name Farmer through the `src/ui/world_entity_i18n.ts` row; greeting only; no `farmer` flag, no vendor, banker, market, cardMaster, questIds or dynamic row | 24 CONTENT |
+| `harvest_journal_board` | `kind: 'object'` ground interactable spawned on claim at the garden anchor | display name through the feast_title templateId map to `hudChrome.housing.garden.board`, never a raw English name; lootable false, respawnTimer Infinity, torn down with the claim | 24 CONTENT |
+
 ## Later wave stock and dye roster
 
 Guild vendors in 32a reuse the completed Wave A/B furnishing IDs as cosmetic stock;
@@ -300,7 +381,8 @@ Guild vendors in 32a reuse the completed Wave A/B furnishing IDs as cosmetic sto
 source/price worksheet. No trainer recipe or power item may enter by implication.
 Guild first-clear and project trophies use the planned ID families above and signed
 clear/project evidence. Showcase trophies in 36 use a season-result source key and
-permanent owner unlock, never a new power reward. Seasonal furniture sets and new
+permanent owner unlock, never a new power reward (the Showcase reward row above states
+the deed, Reliquary, wiki and art obligations). Seasonal furniture sets and new
 Carpenter/Mason professions are explicitly outside the approved packet scope.
 
 The eight dye IDs below are approved R40 content, not sampled RGB values or invented
@@ -327,6 +409,9 @@ placement validity overlays.
 Dyes are a later-wave extension, never counted in the eighteen or twenty furnishing
 outputs. Their precise material values, quantities, skill requirements, station
 binding and economy invariants are unsigned production artifacts with explicit 41
-ownership and pre-enable acceptance. The station consumes the selected owned dye
-and can act only at the authorized amenity with condition at least the existing
-threshold. Ordinary build/undo remains available at every condition.
+ownership and pre-enable acceptance. The dye picker is enabled by the home station
+amenity of type apothecary (D90): no new amenity kind, no extra slot, no dye station
+furnishing or amenity row and no station GLB; the art row is the neutral-lit swatch board
+and channel masks only. Dyeing consumes the selected owned dye and acts only at that
+amenity with condition at least the existing threshold. Ordinary build/undo remains
+available at every condition.

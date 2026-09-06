@@ -34,7 +34,7 @@ ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
@@ -52,7 +52,14 @@ Spawn one Explore agent to read and summarize:
   server/db.ts (exportAccountData)
 - src/sim/freehold/visiting.ts (the visit policies from Phases 18 and 26), wards.ts (the
   opaque plot id the descriptor carries), trophies.ts (the trophy record and source
-  ids), src/sim/sim_context.ts (utcDay)
+  ids), src/sim/sim_context.ts (resetDay, the realm reset-day clock every daily
+  rollover keys on; utcDay only stamps when something happened), server/raid_reset.ts
+  (resetDayKey, the server producer of resetDay) and server/sim_calendar_feed.ts (how
+  the server feeds it), src/sim/realm_week.ts (13's extraction: emberWeekAnchorOf and
+  ledgerWeekOf, the Tuesday realm-week anchor), server/retention_sweep.ts
+  (utcDayOf: sweep scheduling only), server/freehold_visiting.ts (Phase 18's NEW
+  current-authorization sibling, extended by 26: the one block/ignore/visit-policy
+  authority)
 - src/ui/mailbox_window.ts or the cold-window family src/ui/CLAUDE.md names,
   src/ui/hud/housing/ (the ward panel), tests/server/http/surface_inventory.ts,
   tests/server/main_retention_wiring.test.ts, tests/api_error_code_parity.test.ts
@@ -61,8 +68,10 @@ Spawn one Explore agent to read and summarize:
 The agent returns: the existing RouteDef/error-registry recipe, current social predicates, trusted
 calendar feed, cold-window family and query/index inventory. The settled Showcase is
 realm-wide opt-in with one account vote per realm season, no self-vote and no reset
-by ward movement. Seasons last 13 weeks from the published realm weekly anchor.
-Tie-break earliest valid entry, then stable plot ID. Guest reactions are exactly
+by ward movement. Seasons last 13 weeks from the published realm weekly anchor,
+counted in realm weeks keyed by resetDay and the Tuesday anchor emberWeekAnchorOf
+from src/sim/realm_week.ts (D84). Tie-break earliest valid entry, then stable plot ID.
+Guest reactions are exactly
 wave/cheer/admire, one per account per plot per realm day, with 50 retained entries.
 These adopted tuning values live in state; dates are fed by authority.
 All design rulings are locked; a missing required signed artifact keeps its release
@@ -102,9 +111,13 @@ and return full reports to the scratchpad with a path and short summary.
    reaction enum wave/cheer/admire and public entry fields, with no free-text column
    or input. NEW freehold_guest_book_daily_claims under the same DB owner carries
    the retention-independent unique (account_id, plot_id, realm_day_id) consumption
-   marker. The globally stable realm_day_id preserves its signed CAL-SOCIAL source
-   calendar/reset binding across policy revisions; calendar_id and reset_id remain
-   immutable source references, never an alternate key that restores eligibility.
+   marker. realm_day_id is the resetDay realm reset-day identity (the server produces
+   it with resetDayKey(ms, REALM_RESET_TIME_ZONE); the sim consumes ctx.resetDay),
+   never the UTC calendar date; epoch-ms fields are display-only and utcDay only stamps
+   when an entry was written (D84). The globally stable realm_day_id preserves its
+   signed CAL-SOCIAL source calendar/reset binding across policy revisions;
+   calendar_id and reset_id remain immutable source references, never an alternate
+   key that restores eligibility.
    CAL-SOCIAL specifies authenticated day authority, the shared nonregressing
    admission/closed-day watermark and supported peer/retry horizon before activation.
    Never accept a client day, serving-realm guess or regressible process clock.
@@ -118,8 +131,14 @@ and return full reports to the scratchpad with a path and short summary.
 3. Routes, privacy and growth: hand-extend the existing freehold RouteDef domain;
    do not rerun the scaffold against its existing error catalog. Register routes and
    every new stable error in the five Phase 01 catalogs/pins. Owner delete uses
-   requireOwned; all reads/writes reapply current visit policy, blocks/ignores and
-   consent. Unknown/private/blocked plots return the same 404. Bounded projection
+   requireOwned keyed on the numeric entry id (num({ int, min: 1 })), never the opaque
+   plot id. All reads/writes call server/freehold_visiting.ts current authorization
+   (18's NEW sibling, extended by 26) as the only block/ignore/visit-policy authority,
+   which applies D76 (the named owner character's outgoing friend list is the
+   admission fact; a block row on either side refuses; an alt name resolves to that
+   account's plot) and D77 (guild plots admit members always; guild/public/private
+   only; friends refused for the guild owner kind), and recheck consent.
+   Unknown/private/blocked plots return the same 404. Bounded projection
    caches never authorize access; rate/admission-limit high-entropy plot keys.
    Inventory every growing relation separately: freehold_showcase_entries,
    freehold_showcase_votes, freehold_showcase_results, freehold_showcase_awards,
@@ -141,8 +160,28 @@ and return full reports to the scratchpad with a path and short summary.
 4. Social windows and reward presentation: server-fed Showcase list/vote and guest
    book cold windows use ux-spec later-wave Steward/list family with explicit opt-in,
    no-vote/used/closed/locked/empty/loading/error states, public provenance and
-   read-only guest mode. All strings are keyed; source names obey spoiler rules;
-   trophy-decor reward content/art/source obligations are fulfilled. Add
+   read-only guest mode. The guest book opens from the existing gate-door interactable
+   (the D4 object entity whose prompt 26's knock already extends) with a keyed
+   guestBook.title row; no new world entity is added. Existing showcase.* and
+   guestBook.* keys plus common.unavailable, common.retry and common.reconnecting
+   (error, unavailable, reconnect) are reused; NEW keys under hudChrome.housing with
+   exact English (D92), appended to ux-spec.md's key tables with the section 11
+   housing-showcase target (scenes showcase-consent, showcase-list, showcase-voted,
+   showcase-vote-used, showcase-season-closed, showcase-season-locked, showcase-empty,
+   showcase-loading and showcase-error x desktop/compact/tablet, 27 variants) and
+   housing-guest-book target (guest-book-empty, guest-book-reactions,
+   guest-book-recorded, guest-book-used and guest-book-denied, 15 variants; together
+   the 595 milestone), both manifests
+   regenerated in this same change with every cited count updated:
+   showcase.seasonClosed "This Showcase season is closed. The next season opens on
+   {date}."; showcase.seasonLocked "Voting is locked while results are counted.";
+   showcase.voteUsed "You have already voted this season."; showcase.ownEntry "You
+   cannot vote for your own home."; showcase.loading "Loading the Showcase...";
+   guestBook.used "You have already left a reaction here today."; guestBook.loading
+   "Loading the guest book...". All strings are keyed; source names obey spoiler
+   rules; trophy-decor reward content/art/source obligations are fulfilled, including
+   the Book of Deeds and Reliquary obligations stated on the content-manifest.md
+   Showcase reward row. Add
    desktop/compact/tablet captures and source pins for no text input. Changed reward
    props use the existing scheduler, prewarm and retirement contract, with repeated
    entry/leave proving no resource growth. Record measured LOW frame/GPU and
@@ -154,7 +193,9 @@ and return full reports to the scratchpad with a path and short summary.
    displace A, then A's alt/process/restarted session remains refused that day;
    repeat after owner/moderation deletion, pruning/cleanup races and rollover.
    The next authoritative day permits one new reaction. Prove stale captured-day
-   refusal and rollback after claim insertion. Disposable PG records actual query
+   refusal and rollback after claim insertion. A fixture with reactions at 02:59 and
+   03:01 realm-local across a UTC midnight shows exactly one accepted claim per
+   reset-day key on each side of the reset instant (D84). Disposable PG records actual query
    plans/counts, lock waits, peak admitted work, row/byte growth, reverse-FK cascades,
    all relation retention jobs and account export/delete at approved cardinality.
 
@@ -262,9 +303,9 @@ STEP 5 - ACCEPTANCE CRITERIA:
   must win regardless of insertion/query order, process or restart; choosing entry-a
   must fail. Run this literal comparator and real-PG close/replay fixture.
 - [ ] Close result and award identity persist before bounded reward delivery; opt-out/current ACL and duplicate/restart cases preserve privacy and exactly-once reward.
-- [ ] wave/cheer/admire, one reaction/account/plot/day and concurrent 50-entry cap are enforced at DB/route/window boundaries with no free-text field.
+- [ ] wave/cheer/admire, one reaction/account/plot/day and concurrent 50-entry cap are enforced at DB/route/window boundaries with no free-text field. The day is the resetDay reset-day key: the 02:59/03:01 realm-local fixture across a UTC midnight accepts exactly one claim per reset-day key on each side (D84).
 - [ ] All six named social relations have indexed lifecycle, export/delete and row/byte/retention evidence; daily claims survive display deletion/pruning and retire only after nonregressing authority closes every readmission path. Current block/ignore/visit checks prevent cache authorization.
-- [ ] All keyed window states, desktop/compact/tablet captures, content/parity checks, reviews and contribution gate pass.
+- [ ] All keyed window states, desktop/compact/tablet captures, content/parity checks, reviews and contribution gate pass. The NEW showcase/guestBook keys and the housing-showcase (showcase-*) and housing-guest-book (guest-book-*) scenes are in ux-spec.md and both regenerated manifests (D92).
 
 STEP 6 - DOC UPDATES + MEMORY:
 Update progress.md row 36 and state.md's implementation ledger with actual paths,

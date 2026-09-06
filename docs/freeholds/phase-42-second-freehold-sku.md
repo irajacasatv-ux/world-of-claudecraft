@@ -33,8 +33,8 @@ STEP 0 - PRE-FLIGHT:
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
 Spawn one Explore agent to read and summarize:
-- docs/freeholds/state.md, docs/freeholds/progress.md (only "42 Second freehold SKU"),
-  and this file
+- docs/freeholds/state.md, docs/freeholds/progress.md (only "42 Second freehold
+  admission and shared Hearth cooldown"), and this file
 - src/sim/content/freehold/charters.ts (FREEHOLD_CHARTERS, isKnownFreeholdCharterId),
   ledger_schedule.ts and src/sim/freehold/ledger_core.ts (the bill planner), condition_core.ts,
   state.ts (ctx.freeholds keyed by owner key; loadFreehold, serializeFreehold,
@@ -90,9 +90,43 @@ The coordinator alone edits shared parity/command/snapshot/monolith pins after w
 finish. Workers receive only the context report and owned files, preserve others' edits,
 and return full reports to the scratchpad with a path and short summary.
 1. Second-plot admission: use Phase 07 account+plot-index lookup and stable public
-   plotId through the same ctx.freeholds map/fence. Initial primary remains unchanged;
+   plotId through the same ctx.freeholds map/fence. NEW src/sim/freehold/second_plot.ts
+   is the sibling module behind the SimContext seam that owns second-plot admission
+   (the primary-owned precondition and the two-plot cap), plot-index resolution for
+   myFreeholds/myFreehold and the per-line ceil(1.5x) derivation the Ledger and
+   upgrade planners call; its state stays on ctx.freeholds as a live view, and NEW
+   tests/freehold_second_plot.test.ts pins it. Initial primary remains unchanged;
    the freehold_charter_second content SKU admits a second only when primary is
-   owned, rejects a third and carries no literal price or purchase copy. myFreeholds
+   owned (otherwise refusing with the literal code NEW
+   freehold.second_plot_primary_required), rejects a third with the literal code
+   freehold.second_plot_cap and carries no literal price or purchase copy. The second
+   plot is granted at the Cottage tier,
+   the tier the Freehold Charter grants (D1/D2: the Inn Room is the account's one free
+   tier-0 record and is never duplicated); its price is the CAL-SERVICE row the
+   service publishes. The second plot upgrades through the same build projects as the
+   primary (D93): 21's upgrade_lodge and the later 32 and 40 projects act on the plot
+   whose claim the owner is inside (the current claim, the plot myFreeholds resolves
+   for it), contribute_upgrade and its complete arm (finishUpgrade) take that plot, the
+   second plot's upgrade progress is read through its own myFreeholds projection's
+   upgrade field while myFreehold.upgrade stays the primary's (the both-world facet pin
+   names that field), the upgrade fee receipt binds that plot's stable ID through its
+   07a operation row (one
+   plot's fee never covers the other), and there is NO second-home upgrade refusal
+   (freehold.second_plot_cap and freehold.second_plot_primary_required are the two
+   codes this phase registers in the five Phase 01 catalogs/pins, mirrored by apiError
+   leaves carrying the English of denied.secondHomeCap and
+   charter.secondRequiresPrimary; the D67/D93 refinement is recorded in state.md). The
+   1.5x rule
+   covers every integer line of the second plot: each material line of its upgrade
+   bills is ceil(1.5x) the primary's signed CAL-UPGRADE line (derived per line, never
+   a second signed row) and its weekly Ledger and prepay lines are ceil(1.5x) the
+   primary schedule (CAL-LEDGER-A), per D67. Interplay with 38 (D80): after this phase
+   a purchased furnished plot may
+   occupy the buyer's free index under the two-plot cap and refuses with
+   freehold.deed.buyer_capacity when both indexes are occupied; a sold primary is
+   replaced by the seller's fresh tier-0 record at index 0, while a sold second plot
+   frees index 1 with no replacement record (D2 grants one Inn Room per account); each
+   plot's Ward Favor capacity award travels with its stable plot ID. myFreeholds
    is primary-first; myFreehold is the byte-compatible primary alias. Do not expose
    account:<id> keys on public wire or replace earlier ward/deed/social plot IDs.
 2. Independent plot upkeep and shared account lifecycle: second plot has its own
@@ -100,7 +134,8 @@ and return full reports to the scratchpad with a path and short summary.
    consumes the SAME 07b committed account lifecycle/protection history and 07c
    normalized account arrival-tier marks. It creates no plot-local grace/presence
    store, first-tier history or ordinary-visit receipt. The content-owned 1.5 multiplier applies ceil
-   separately to every integer line of the approved primary schedule; no floating
+   separately to every integer line of the approved primary schedule (the weekly
+   Ledger and prepay lines of CAL-LEDGER-A at the plot's tier); no floating
    inventory quantity, cross-plot credit, retroactive prepaid repricing or stale
    bill fallback. Hearth Key destination defaults primary with explicit Steward
    selection; consume 07's NEW server/freehold_hearth_db.ts owner, with
@@ -115,7 +150,7 @@ and return full reports to the scratchpad with a path and short summary.
    Disconnect/restart retains the approved 60-minute duration; offline/headless use
    isolated injected host-clock state with that same duration. Transfer/cancel/
    recovery never copy or clear either seller or buyer cooldown. Character deletion
-   preserves it;07b soft deactivation/restore, explicit account export and true
+   preserves it; 07b soft deactivation/restore, explicit account export and true
    account hard-delete remain distinct reviewed lifecycle paths.
    A second plot cannot restart return grace or first-tier
    presentation; both consume committed account revisions and private fresh-arrival
@@ -130,21 +165,59 @@ and return full reports to the scratchpad with a path and short summary.
    ownership/fence and fresh quote. No bounded purchase-key array guarantees replay.
    Join returns at most the approved two plot projections via indexed lookup;
    strict self-wire decode and both-world facet/command pins preserve old primary
-   consumers. Existing exports/delete include both stable rows, receipts retain replay
-   authority and all load/save/background limits continue to apply.
+   consumers. Existing exports/delete include both stable rows under 07a's
+   per-row-class ON DELETE policy (D88): an open second-SKU purchase or transfer
+   operation blocks character or account deletion with the mapped refusal class in
+   character_delete_db.ts and the deletion race joins the real-PG list; receipts
+   retain replay authority and all load/save/background limits continue to apply.
 4. Steward/store UX and proof: independent plot tabs/status, destination selection,
    current second-plot material bill and initial/owned/pending/error quote states use
-   ux-spec family. Purchase submodel exists only on approved browser/website builds;
-   second-SKU tests cover all seven distributions and denied DOM/catalog/handlers.
+   ux-spec family. Money states reuse charter.* and the destination row reuses
+   steward.hearthDestination/hearthKey.destination; NEW keys under hudChrome.housing
+   with exact English (D92), appended to ux-spec.md's key tables with the section 10
+   outline row and the section 11 housing-second-home screenshot target (scenes
+   second-home-primary-tab, second-home-second-tab, second-home-hearth-destination,
+   second-home-card, second-home-owned and second-home-bill x desktop/compact/tablet,
+   second-home-card on website-desktop, and second-home-denied across the six denied
+   surfaces: 37 variants, the 733 milestone that completes the program inventory), both
+   manifests regenerated in this same change with every cited count updated:
+   steward.primaryTab "Primary Home"; steward.secondTab "Second Home";
+   charter.secondTitle "Second Freehold Charter"; charter.secondSummary "Open a second
+   Cottage with its own upkeep, visitors and ward slot."; charter.secondRequiresPrimary
+   "You need a Cottage or larger primary home before buying a second home.";
+   charter.secondOwned "This account already has a second home.";
+   charter.secondReceived "Your second home is ready."; steward.secondBillNote "A
+   second home's upkeep and upgrade lines are one and a half times the primary
+   schedule, rounded up." (the Steward Upgrade tab inside the second plot shows that
+   plot's own ceil(1.5x) bill, D93); denied.secondHomeCap "You already have two homes."
+   (mirrored by the apiError.freehold.second_plot_cap protocol leaf with the same
+   English; there is no second-home upgrade refusal and no key for one, D93); and
+   hearthKey.tooltipShared "Return to your selected home. You cannot use this while in
+   combat, dead, in jail, inside an instance or during a match. Your homes share its
+   cooldown." (42 owns the shared-cooldown tooltip and its limits are byte-consistent
+   with 06's hearthKey.tooltip; 06 ships the singular wording). Purchase submodel
+   exists only on approved browser/website builds as a runtime contract: on a denied
+   storefront no DOM node, handler, request, fetched catalog, error copy or accessible
+   text exists while the purchase code and English keys ship dormant in every bundle
+   under the runtime
+   capability, and the review notes and the 44b handoff say so (D86); second-SKU tests
+   cover all seven distributions and denied DOM/catalog/handlers.
    Literal odd/even ceil cases and deterministic twin/old-new wire cases accompany
    real-PG concurrent purchase/CAS recovery. Extend 07's freehold_hearth_db unit/PG
    suites: simultaneous same-account alts/processes/realms/destinations produce one
    accepted cooldown advance; refused entry changes neither location nor clock.
    Pin stale UI, restart, commit-before-ACK, physical-gate/no-op, seller/buyer transfer,
    deactivation/restore/export and clock regression. Record bounded indexed account
-   loads, query/lock/FK waits and capable-release fixtures. Prove no third plot, stale
-   quotation, first-home mutation or custody loss. Capture desktop/
-   compact/tablet plot switch/Hearth selection and denied-store absence.
+   loads, query/lock/FK waits and capable-release fixtures. Prove no third plot
+   (freehold.second_plot_cap), no second plot without a primary
+   (freehold.second_plot_primary_required, a real-PG fixture), stale quotation,
+   first-home mutation or custody loss;
+   the grant test pins the literal Cottage tier and an upgrade on the second plot runs
+   the primary's build project with every material line at ceil(1.5x) and no refusal
+   (D93; the odd/even boundary cases cover the upgrade bill lines too).
+   Capture the desktop/compact/tablet second-home-* scenes (primary-tab, second-tab,
+   hearth-destination, card, owned, bill), second-home-card on website-desktop and
+   second-home-denied on every denied surface.
 
 INVARIANTS THIS PHASE MUST KEEP:
 Every player-visible string, including error, aria, tooltip and empty-state text,
@@ -306,10 +379,10 @@ emoji, or word "phase" appears in a commit message. Keep generated output with i
 authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
 STEP 5 - ACCEPTANCE CRITERIA:
-- [ ] Second grant reuses stable identity from07, is exactly-once under real-PG concurrent/restart receipt tests, refuses without primary or at the two-plot cap, and leaves all primary consumers unchanged.
+- [ ] Second grant reuses stable identity from 07, is exactly-once under real-PG concurrent/restart receipt tests, refuses without primary (freehold.second_plot_primary_required) or at the two-plot cap (freehold.second_plot_cap), and leaves all primary consumers unchanged. The second plot is granted at the literal Cottage tier; an upgrade on it runs the primary's build project with every integer material line at ceil(1.5x) and no refusal (D93); the 38 interplay (free-index occupancy, buyer_capacity at two plots, sold-primary replacement, sold-second freeing) has literal real-PG fixtures (D80).
 - [ ] Independent state/ward/visits and per-line ceil(1.5) with immutable prepaid versions pass literal odd/even boundary tests; no stale quote or schedule fallback.
 - [ ] Hearth defaults primary and both destinations atomically consume the same 07 account_freehold_hearth row through 07a. The 60-minute account history survives alt/realm/restart/transfer; stale mirrors never authorize, refused/no-op/gate entry never advances, and concurrent PG entry/clock/lifecycle/rollout proofs pass with existing combat restrictions.
-- [ ] Bounded two-row join/export/delete, strict wire/parity, seven-distribution complete surface absence and desktop/compact/tablet states pass all three money gates/service-price checks.
+- [ ] Bounded two-row join/export/delete under D88 (an open operation blocks deletion with the mapped refusal class), strict wire/parity, seven-distribution complete surface absence as a runtime contract with dormant code (D86), the NEW keys in ux-spec.md and both regenerated manifests (D92), and desktop/compact/tablet states pass all three money gates/service-price checks.
 - [ ] All suites, real-PG plans/custody evidence, reviews and contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:

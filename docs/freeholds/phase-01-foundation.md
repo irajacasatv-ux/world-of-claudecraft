@@ -1,7 +1,7 @@
 # Phase 01: foundation (the facet, the sim module skeleton, the flag, the RL exclusion)
 
 Wave A, the Cottage MVP. The spec is `progress.md` "01 Foundation"; the decisions are
-`state.md` (D1 to D75) and `brainstorm.md` context. This phase builds the architecture every later
+`state.md` (D1 to D93) and `brainstorm.md` context. This phase builds the architecture every later
 phase extends and ships NO player-visible behavior: `myFreehold` stays null on both hosts.
 
 ### Starter Prompt
@@ -9,14 +9,14 @@ phase extends and ships NO player-visible behavior: `myFreehold` stays null on b
 This is Phase 01 of the Freeholds and Guildhalls feature: foundation (the IWorldHousing
 facet, the src/sim/freehold/ module skeleton, the FREEHOLDS_ENABLED flag, the RL exclusion).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 ULTRACODE: not needed for this phase (four small independent slices).
 
 Goal: land the seams every later housing phase extends (the facet with stub
 implementations in both worlds, the SimContext-backed module skeleton, the fail-closed
-feature flag with dispatch-time refusal, the RL exclusion pin) with zero player-visible
-behavior.
+feature flag with dispatch-time refusal, the freeholdsEnabled boot config on the SimConfig
+seam, the RL exclusion pin) with zero player-visible behavior.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md
@@ -48,25 +48,34 @@ Spawn one Explore agent to read and summarize:
   the IWorldFarming delegates on Sim (grep `get myFarmPlots` in src/sim/sim.ts) and on ClientWorld (grep `farmNowMs` in src/net/online.ts)
 - tests/monolith_budget.test.ts (the sim.ts, game.ts, online.ts rows: all at zero slack)
 - server/rift_forge_gate.ts and its dispatch site in server/game.ts (grep
-  refusedRiftForgeCommand), server/steam/config.ts (steamEnabled), server/farming_commands.ts
-  (the dispatch-sibling shape), server/http/CLAUDE.md (the new:endpoint scaffold and the
-  append-only ERROR_CODES rule), .env.example flag rows
+  refusedRiftForgeCommand: a PRE-SWITCH predicate that refuses before the
+  heavySelfMarkOnReceipt mark with commandOutcome false and a metrics counter),
+  server/steam/config.ts (steamEnabled), server/farming_commands.ts (the IN-SWITCH
+  dispatch-sibling shape that returns the accept-return value), server/http/CLAUDE.md (the
+  new:endpoint scaffold and the append-only ERROR_CODES rule), .env.example flag rows
+- src/sim/types.ts SimConfig (devCommands, riftPortals, compulsoryTutorial: the optional
+  boot fields that default off), server/sim_boot_config.ts buildRealmSimConfig (the server
+  boot mapping), the offline constructor in src/main.ts (grep `devCommands:
+  import.meta.env.DEV`) and the headless constructor in headless/env_server.ts (grep
+  `new Sim(`)
 - headless/CLAUDE.md (the farming cut paragraph), tests/env_protocol.test.ts (the
   NUM_ACTIONS anchor), src/sim/obs.ts ACTIONS
 - Root CLAUDE.md "Modularity" and "Invariants"
 The agent returns: the exact facet recipe with file paths and pin sites; the Sim and
 ClientWorld one-liner shapes; the SimContext append recipe (primitive vs callback) and
 the two test pin sites; the extraction candidates in sim.ts, game.ts, and online.ts that
-pay for the new lines (self-contained blocks with a clear seam); the flag getter and
-dispatch-refusal shapes; the new:endpoint invocation for the freehold domain; the
-env_protocol anchor.
+pay for the new lines (self-contained blocks with a clear seam); the flag getter, the
+pre-switch refusal predicate and the in-switch delegate shapes; the SimConfig field
+append and the three constructor sites for freeholdsEnabled; the new:endpoint invocation
+for the freehold domain; the env_protocol anchor.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 
 Deliverables (at most five):
 1. The complete housing facet, command registry and null mirrors on both hosts.
 2. The SimContext-backed subsystem and its live-view/extraction pins.
-3. The authenticated status scaffold, both error catalogs and dark command dispatch.
+3. The authenticated status scaffold, both error catalogs, the freeholdsEnabled boot
+   config and dark command dispatch.
 4. The unchanged RL action-space exclusion and decisive parity/negative tests.
 
 The facet reserves opaque public plot identity separately from internal ownership. No
@@ -78,6 +87,32 @@ Add the exact C03 build-presence stub and metadata guard contract below in this 
 facet/registry output; 08 implements authority and 08a the public boolean.
 No source census or monolith ceiling is a timeless literal: remeasure at the synced
 implementation head and record a changed fact in state.md before editing consumers.
+
+THE PHASE 01 FACET MEMBER LIST (the reference every parity pin and QA audits against;
+recorded in progress.md "01 Foundation" as the same list):
+- data members, null on both hosts until their producer lights them: `myFreehold`
+  (D20; 05 lights it) and `freeholdLayout` (09 consumes it, 08a lights it through the
+  descriptor);
+- the clock-base method `housingNowMs()` on the farmNowMs shape (the sim clock offline,
+  Date.now() online; 13 and 16 consume it, no subtraction of another clock);
+- dark no-op methods, one per registered command: `freeholdEnter`, `freeholdLeave`,
+  `placeFurnishing`, `moveFurnishing`, `removeFurnishing`, `undoPlacement`,
+  `redoPlacement`, `payLedger`, `setVisitPolicy` and `setFreeholdBuildPresence` (C03).
+Later phases APPEND members with their own five parity-pin edits and never rename these:
+12 appends `buildStation` and `myAmenities`, 17 appends `placeTrophy` and
+`clearPlinth`, 18 appends `freeholdVisitors`, 21 appends `contributeUpgrade` and
+`finishUpgrade`, 30a appends `guildHallBoards`, 34 appends `myWard` and `moveWard`, 42
+appends `myFreeholds`, and every other later member is named the same way in its own
+phase file with the parity pin updated in that same change. No file adds a member
+silently.
+
+MIXED-RELEASE TOLERANCE (verified behavior, recorded here because 01 adds the wire
+commands): a NEW client sending a housing command to an OLD server lands in the
+server/game.ts `default` arm as a protocol anomaly (a lane draw, no kick), so a client
+never sends a housing command unless a housing surface is visible; an OLD client
+receiving a housing event drops it at the HUD event switch, and its strict bank-style
+decoder rejects an unknown self-key OBJECT, never the whole frame. 05 and 08a restate
+the rule for the events they add.
 
 Parallel Agent fan-out, four slices, each given ONLY the Explore summary and its own
 files (they touch disjoint files except the two shared pin files named below, which the
@@ -94,8 +129,16 @@ coordinator edits last):
   key, tier, layout rows, trophies, condition stamp, ledger fields, visit policy, rev),
   the ctx.freeholds live map primitive plus its buildSimContext binding and the
   sim_context.test.ts fake-host and live-view pins, the src/sim/CLAUDE.md system-table
-  row, and the sim.ts extraction that pays for the delegates (a self-contained block the
-  Explore summary named), then LOWER the sim.ts ceiling in tests/monolith_budget.test.ts.
+  row, the `freeholdsEnabled?: boolean` field appended to SimConfig in src/sim/types.ts
+  beside devCommands (D85: optional, default false so deterministic tests, parity traces
+  and the RL env opt in explicitly; exposed as a read-only ctx primitive), with
+  src/main.ts and headless/env_server.ts passing `freeholdsEnabled: true` (D3: the
+  offline and headless hosts stay live) and server/sim_boot_config.ts mapping it from
+  freeholdsEnabled(process.env) so a dark realm boots a Sim whose later content spawns
+  (03: the furnisher and its stock; 06: the gate prompt and the Hearth Key grant) are
+  skipped while item, dungeon and layout DATA still merge; and the sim.ts extraction that
+  pays for the delegates (a self-contained block the Explore summary named), then LOWER
+  the sim.ts ceiling in tests/monolith_budget.test.ts.
 - Agent SERVER: server/freehold_config.ts (freeholdsEnabled(env) strict '1', read live),
   `npm run new:endpoint -- --domain freehold --method GET --path /api/freehold`
   creates server/freehold.ts, tests/server/freehold.test.ts, and the append-only
@@ -109,11 +152,22 @@ coordinator edits last):
   EXPECTED_CODES in tests/server/http/error_codes.test.ts, and KNOWN_CODES in
   tests/api_error_code_parity.test.ts. Adapt the GET /api/freehold status stub to answer
   freehold.disabled while dark; it is the registry-only precedent. Add
-  server/freehold_wire.ts with
-  dispatchFreeholdCommand(sim, session, command, msg, pid) refusing every housing command
-  at dispatch while dark (the refusedRiftForgeCommand shape; case labels only in
-  game.ts, paid for by an extraction and a lowered game.ts ceiling), the .env.example row,
-  tests/server/freehold_routes.test.ts and tests/server/freehold_wire.test.ts, the
+  server/freehold_wire.ts with BOTH dispatch halves: a PRE-SWITCH
+  refusedFreeholdCommand(cmd, env) predicate (the refusedRiftForgeCommand shape: refuses
+  every housing command while dark BEFORE the heavySelfMarkOnReceipt mark, answers
+  commandOutcome false with no notice, and bumps a metrics counter) plus the IN-SWITCH
+  dispatchFreeholdCommand(sim, session, command, msg, pid) delegate for lit arms (the
+  dispatchFarmingCommand accept-return shape; 05 lights the first arms); case labels only
+  in game.ts, paid for by an extraction and a lowered game.ts ceiling; the .env.example
+  row (commented out, the RIFT_FORGE_ENABLED shape) and the DEPLOY.md "Operational
+  notes" row beside the RIFT_FORGE_ENABLED bullet: `FREEHOLDS_ENABLED` defaults off, is
+  read live as the strict '1', and production never enables it before the release gates
+  in docs/freeholds/state.md "Tracked release and handoff gates" are signed (27-qa and
+  39-qa read this row); tests/server/freehold_routes.test.ts and
+  tests/server/freehold_wire.test.ts (the latter also pins the buildRealmSimConfig
+  mapping of FREEHOLDS_ENABLED to SimConfig.freeholdsEnabled for the values '1', unset,
+  '0' and 'true', plus a
+  source-text arm that both non-server constructors pass `freeholdsEnabled: true`); the
   surface_inventory.ts row.
 - Agent HEADLESS: the headless/CLAUDE.md housing cut paragraph beside the farming cut and
   the ACTIONS exclusion `it` in tests/env_protocol.test.ts (no freehold_* or housing verb
@@ -168,7 +222,9 @@ INVARIANTS THIS PHASE MUST KEEP:
 - Token firewall as state.md scopes it: no on-chain word (wallet, token, $WOC, mint,
   holder, marketplace, on-chain, Solana) in src/sim/; the Book of Deeds is game
   content and is not firewall vocabulary.
-- The flag defaults OFF and refuses at dispatch; pinned.
+- The flag defaults OFF and refuses at dispatch; pinned. Dark also means the sim boot
+  config is false on that realm (D85), so no housing gate, furnisher stock or Hearth Key
+  reaches a player; the offline and headless hosts stay live (D3).
 - The word "phase" appears in no code, comment, commit, or PR text.
 
 Out of scope (do NOT do in this phase):
@@ -186,9 +242,12 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/server/freehold_wire.test.ts`.
 - Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
   cross-platform-sync (the facet and stubs), architecture-reviewer (the SimContext
-  append and the sim.ts extraction), privacy-security-review (server/ and src/net/
-  touched). Prompt each for COVERAGE not filtering; each writes its report to a file. Do
-  not commit until all findings, including nits, are resolved and freshly reviewed.
+  append, the SimConfig field and the sim.ts extraction), privacy-security-review
+  (server/ and src/net/ touched), server-hot-path-reviewer (the pre-switch predicate on
+  every command receipt and the status route), test-coverage-auditor (every pin), then
+  qa-checklist (the completion gate). Prompt each for COVERAGE not filtering; each writes
+  its report to a file. Do not commit until all findings, including nits, are resolved
+  and freshly reviewed.
 
 FINAL REVIEW AND COMPLETION CONTRACT:
 - Required reviewers for the actual promised surfaces: cross-platform-sync, architecture-reviewer, privacy-security-review, server-hot-path-reviewer, test-coverage-auditor, qa-checklist.
@@ -207,26 +266,37 @@ STEP 4 - COMMIT CADENCE:
 `git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
 - feat(world_api): add the IWorldHousing facet with stub implementations in both worlds
 - feat(sim): add the freehold module skeleton behind SimContext
-- feat(server): add the FREEHOLDS_ENABLED gate and the freehold dispatch sibling
+- feat(server): add the FREEHOLDS_ENABLED gate and the freehold dispatch sibling (the
+  .env.example and DEPLOY.md rows ride this commit)
 - test(headless): pin the housing exclusion from the RL action space
 Then `npm run ci:changed` after the LAST commit; read the exit code.
 
 STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
-- [ ] IWorldHousing exists with the member set in progress.md "01 Foundation", present
-  with the same kind on Sim and ClientWorld; the parity pin's five edits are in.
+- [ ] IWorldHousing exists with exactly the member list in STEP 2 ("THE PHASE 01 FACET
+  MEMBER LIST", the same list recorded in progress.md "01 Foundation"), present with the
+  same kind on Sim and ClientWorld; FACET_HOUSING in tests/world_api_parity.test.ts equals
+  that list and the pin's five edits are in.
 - [ ] ctx.freeholds is a live view with its sim_context.test.ts pins; the freehold/ row
   is in src/sim/CLAUDE.md; sim.ts, game.ts, and online.ts ceilings are LOWER than before.
 - [ ] Every housing command refuses at dispatch with FREEHOLDS_ENABLED unset (pinned for
-  each command); GET /api/freehold answers freehold.disabled while dark. The generated
+  each command: commandOutcome false and NO heavy-self dirty mark, through the pre-switch
+  predicate); GET /api/freehold answers freehold.disabled while dark; .env.example
+  carries the commented FREEHOLDS_ENABLED row and DEPLOY.md "Operational notes" documents
+  it as default off and never enabled in production before the signed release gates. The
+  generated
   module/test were moved to the chosen _routes paths with both imports repaired;
   freehold.invalid_input and freehold.disabled retain all five catalog/mapping/pin rows.
 - [ ] tests/env_protocol.test.ts pins that ACTIONS carries no housing verb.
+- [ ] SimConfig.freeholdsEnabled exists (D85): tests/server/freehold_wire.test.ts pins the
+  buildRealmSimConfig mapping for '1', unset, '0' and 'true' and the source-text arm
+  proves src/main.ts and headless/env_server.ts pass true; the field is read only through
+  its ctx primitive (pinned in tests/sim_context.test.ts).
 - [ ] myFreehold is null on both hosts; src/net/freehold_snapshot_wire.ts exists with an
   empty allowlist and is the only decode home; the S3 guard and the API error parity pass.
 - [ ] All STEP 3 suites green; all required reviewers confirm all findings resolved and the fresh fix review passed.
 
 STEP 6 - DOC UPDATES + MEMORY:
-- Update docs/freeholds/progress.md (status row 01, notes, deferrals) and
+- Update docs/freeholds/progress.md (status row 01, notes, named unsigned gates) and
   docs/freeholds/state.md (the per-phase ledger row 01: new files, IWorld members,
   commands, the error code, the flag; any locked decision).
 - Record surprising rules learned in memory for the next session.

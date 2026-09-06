@@ -8,7 +8,8 @@ No housing implementation is claimed complete by this planning file.
 ### Starter Prompt
 ```
 This is Phase 07a of the Freeholds and Guildhalls feature: transactional mutations and global claim fencing.
-Harness: Claude Code. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block for effort and fan-out.
 This prompt names no model. Keep independent implementation owners disjoint; the parent
 integrates shared callers and pins after their reports return.
 
@@ -30,7 +31,7 @@ STEP 1 - LOAD CONTEXT (through agents, never planning docs or coordinators direc
   implementation-plan.md review table, ux-spec.md and the three content/art artifacts.
 - It reads the following existing seams and prior outputs, returning exact exports,
   readers/writers, pin sites, known failure behavior and a promised-versus-tree table:
-  - PRIOR07 server/freehold_db.ts and freehold_persist.ts, src/sim/freehold/state.ts.
+  - PRIOR 07 server/freehold_db.ts and freehold_persist.ts, src/sim/freehold/state.ts.
   - EXISTING server/character_save_transaction.ts::beginCharacterSaveTx (deadline owner),
     server/character_save_statement.ts::runFencedCharacterUpdate and
     server/db.ts save composition (read through the Explore agent),
@@ -51,13 +52,24 @@ STEP 1 - LOAD CONTEXT (through agents, never planning docs or coordinators direc
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 Deliverables (at most five):
 1. NEW server/freehold_claim_db.ts::acquireFreeholdClaim/releaseFreeholdClaim owns a
-   DB-enforced lease plus monotonically increasing fencing generation per opaque plot ID.
-   All realm processes must prove the current fence before admission and mutation; one
-   plot has one active authoritative claim. A crashed holder expires under the existing
-   lease policy, then a new claimant gets a newer generation; late old saves cannot commit.
-   Use bounded lazy load/single-flight and honest busy/retry on foreign claim/pool pressure.
-   Lease policy/timing reuses verified authority infrastructure, never a sim clock or a
-   guessed housing timeout. No live client/transaction spans a player visit.
+   DB-enforced lease plus monotonically increasing fencing generation per opaque plot ID
+   in the NEW freehold_plot_claims table under FREEHOLD_CLAIM_SCHEMA (one active claim
+   per plot_id; ensureSchema position after FREEHOLD_SCHEMA and before
+   STORAGE_PURCHASE_SCHEMA). All realm processes must prove the current fence before
+   admission and mutation; one plot has one active authoritative claim. The reused lease
+   policy is expiry PLUS heartbeat (server/db.ts LEASE_TTL_SECONDS, PROCESS_LEASE_HOLDER,
+   the acquireCharacterLease ON CONFLICT arms and nonce rotation), so this phase names
+   the renewer: NEW renewFreeholdClaims, a PeriodicSaveWrites member registered in
+   PERIODIC_SAVE_WRITE_NAMES beside heartbeatLeases on the same 30 s cadence, renews
+   every claim that has a live session, an in-flight operation or a loaded plot with
+   visitors. The offline-owner visit case (07 keeps the plot loaded for visitors) is
+   the reason: no character autosave of the owner holds that claim, so the renewer,
+   not a visitor's character heartbeat, keeps it alive. A crashed holder stops
+   renewing and expires under that policy, then a new claimant gets a newer generation;
+   late old saves cannot commit. Use bounded lazy load/single-flight and honest
+   busy/retry on foreign claim/pool pressure. Lease policy/timing reuses that verified
+   authority infrastructure, never a sim clock or a guessed housing timeout. No live
+   client/transaction spans a player visit.
 2. NEW server/freehold_mutation.ts::commitFreeholdMutation composes exact item/gold
    transfers with housing effects in ONE bounded character-save transaction. Acquire
    character FIFO before plot/shared-resource serialization and admission; no queue wait
@@ -71,17 +83,46 @@ Deliverables (at most five):
    lifecycle/FK/trigger/custody ordering constraint. Material/gold, plot/fund,
    receipt/replay and character lease refusal abort all halves.
 3. NEW server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation
-   owns durable discoverable operation intent and compact applied identities. Bind opaque
+   owns durable discoverable operation intent and compact applied identities in the NEW
+   freehold_operations (intent) and freehold_operation_receipts (applied tombstone)
+   tables under FREEHOLD_OPERATION_SCHEMA, placed in ensureSchema beside
+   FREEHOLD_CLAIM_SCHEMA; a growth gauge modelled on server/bank_ledger_growth_monitor.ts
+   and pinned in tests/server/main_retention_wiring.test.ts observes the receipts table
+   (and 07b's history table) with a keep-forever comment at the DDL. Bind opaque
    plot ID, internal account/character or guild authority, operation kind, immutable
    fingerprint, exact-copy references, expected durable revision and fence generation.
    Intent is committed before external spend; apply identity and housing/inventory effect
-   commit together. Applied receipt identity is permanent replay authority unless signed
-   service replay-horizon evidence proves safe tombstone compaction. Live key arrays are
-   only acceleration. 15 extends this row for service quote/receipt data, never a parallel
-   receipt subsystem. No database lock/client spans service IO.
+   commit together; the applied-identity guard is a unique constraint, never a
+   SELECT-then-INSERT. Applied receipt identity is permanent replay authority unless
+   signed service replay-horizon evidence proves safe tombstone compaction. Live key
+   arrays are only acceleration. ON DELETE policy per row class (D88): intent rows
+   cascade with their account only when no open operation exists; applied tombstones
+   retain a nonidentifying operation identity with the account reference nulled or
+   scalar and cascade only under the accepted retention schedule (the data
+   inventory/retention schedule artifact of the "Counsel, Terms and storefront model"
+   gate row); an open housing operation blocks character or account deletion through a
+   NEW CharacterFreeholdOperationOpen refusal class in server/character_delete_db.ts,
+   the storage_purchase_db.ts guard_pending_storage_purchase_parent_delete shape in all
+   four parts: a NEW guard_open_freehold_operation_parent_delete trigger on characters
+   and accounts raising SQLSTATE 55006, that class, the stable HTTP body code
+   character.freehold_operation_open (NEW CHARACTER_FREEHOLD_OPERATION_OPEN_BODY in
+   server/character_delete_http.ts beside CHARACTER_STORAGE_PURCHASE_OPEN_BODY, its
+   server/http/error_codes.ts row and its English catalog row
+   apiError.character.freehold_operation_open in src/ui/i18n.catalog/api_error.ts,
+   mapped in src/ui/api_error_i18n.ts, the S3 guard), and the account-side SQLSTATE
+   55006 consumers (server/federated_auth_db.ts and the accepted hard-deletion path),
+   which tell the housing trigger from the storage trigger by trigger name in the
+   error detail and map it to the same code. 15
+   extends this row for service quote/receipt data, never a parallel receipt subsystem.
+   No database lock/client spans service IO.
 4. Recovery is a bounded admitted producer using the same mutation writer: on restart,
    disconnect, timeout, stale response or failed apply, discover intent and reconcile the
-   original operation ID. Pending is not success; never silently retry with a new ID.
+   original operation ID. A lost COMMIT answer is a distinct ambiguous outcome: verify
+   by original operation identity with a locked read (the server/character_delete_db.ts
+   ambiguousCommitLanded FOR KEY SHARE verify, CHARACTER_DELETE_VERIFY_SQL, and the
+   server/guild_create_db.ts commit_ambiguous durability precedents), never a plain
+   SELECT that races the hung COMMIT, and never re-apply before that verify resolves.
+   Pending is not success; never silently retry with a new ID.
    ACK and publish public/wire state only after commit; offline Sim executes the same
    pure mutation plan synchronously with deterministic exact-copy behavior. Failed fences
    quiesce the claim and require authoritative reload, without discarding acknowledged
@@ -92,7 +133,14 @@ Deliverables (at most five):
    exact touch-set lock graph, query/index plan inventory and bounded workload evidence
    under docs/freeholds implementation ledger references. Include old-character nonce,
    stale plot fence, stale durable revision, duplicate operation, missing copy, dirty
-   autosave race, transaction failure after each half, and no-client-across-service-IO.
+   autosave race, transaction failure after each half, no-client-across-service-IO, and
+   the service contract's required PG-proof rows mirrored here: ambiguous COMMIT (destroy
+   the client after COMMIT is sent; landed proves no second apply, not-landed exactly one
+   later apply), the claim renewer keeping a live idle claim past LEASE_TTL_SECONDS and
+   reclaim advancing the generation once renewal stops, character/account deletion while
+   an intent is open (the D88 refusal, then exactly one custody location) and the
+   per-row-class deletion outcomes, lease takeover, storage start/apply and guild replay
+   interleaves, including pending legacy side effects.
    Parent integrates every legacy-save call-site hook and reviews relative ordering.
 
 ACCOUNT HEARTH TRANSACTION PARTICIPANT:
@@ -122,8 +170,9 @@ D9 AND DEVELOPER AUTHORITY BOUNDARY:
   Do not add a trusted distribution field to the game server to rescue an unverified
   purchase. Unknown eligibility refuses NEW spend; already accepted payments retain
   recovery under their original operation identity, with no DB client across service IO.
-- The 07 local developer permission and fixture cannot satisfy service authorization,
-  mint a paid receipt, cross into online authority or replace durable transfer proof.
+- The 05 local developer permission and fixture (D81) cannot satisfy service
+  authorization, mint a paid receipt, cross into online authority or replace a durable
+  transfer proof.
   Phase 15 extends these operation rows and consumes the signed service authorization
   contract; it does not fork receipt/recovery machinery or weaken D9.
 <!-- core-d9-authority:end -->
@@ -175,7 +224,9 @@ ACCOUNT AUTHORITY COMPOSITION EXTENSIONS:
 STEP 3 - VALIDATION + REVIEW DISPATCH:
 - npx tsc --noEmit; npx vitest run tests/server/freehold_mutation.test.ts
   tests/server/freehold_persist.test.ts tests/server/freehold_db.test.ts
-  tests/freehold_state.test.ts tests/architecture.test.ts tests/monolith_budget.test.ts.
+  tests/freehold_state.test.ts tests/architecture.test.ts tests/monolith_budget.test.ts
+  tests/api_error_code_parity.test.ts tests/localization_fixes.test.ts (the D88 guard's
+  code and English row).
 - npm run db:up; with TEST_DATABASE_URL set for the disposable development DB,
   npx vitest run tests/server/freehold_mutation.pg.test.ts
   tests/server/freehold_claim.pg.test.ts. The PG summary must show executed passing tests.
@@ -197,16 +248,19 @@ STEP 4 - COMMIT CADENCE:
   the last commit and read its exit code. Do not push or open/merge a PR.
 
 STEP 5 - ACCEPTANCE CRITERIA:
-- [ ] Only one global claim is authoritative per plot; lease expiration/reclaim advances
-  the fence, late old writes refuse and full pool/foreign realm emits busy without loss.
+- [ ] Only one global claim is authoritative per plot; the renewer keeps a live claim
+  past LEASE_TTL_SECONDS, lease expiration/reclaim advances the fence, late old writes
+  refuse and full pool/foreign realm emits busy without loss.
 - [ ] Each cross-record mutation commits every half or none in real PG; nonce/lease,
   plot/fund revision and receipt refusal cannot persist item loss or duplicate ownership.
 - [ ] Lock graph preserves legacy relative order including bank receipts before guild
   replay, the InitPlan race is closed by pre-lock+nonce fence, and no queue or service IO
   holds a client/transaction. Deadline/admission/cancellation evidence is recorded.
-- [ ] Restart recovers discoverable intents with the original identity; replay after
-  live-cache compaction never repeats an effect. ACK follows commit, and stale reload
-  cannot erase acknowledged custody. Export/delete/retention/byte bounds cover all rows.
+- [ ] Restart recovers discoverable intents with the original identity; a lost COMMIT
+  answer is resolved by the locked verify before any re-apply; replay after live-cache
+  compaction never repeats an effect. ACK follows commit, and stale reload cannot erase
+  acknowledged custody. Export, the D88 per-row-class deletion policy, the open-operation
+  deletion guard, retention and byte bounds cover all rows in real PG.
 - [ ] 08/13/15 and later consumers name this composition boundary; no independent
   character/housing autosave is described as an atomic item or money transfer.
 - [ ] All scoped checks and the shared contribution gate passed, every required review
@@ -216,7 +270,7 @@ STEP 6 - DOC UPDATES + MEMORY:
 - Update progress.md row 07a and state.md's implementation ledger with exact files,
   exported symbols, schema/wire/command keys, measured bounds, artifacts and evidence.
   Keep planning "settled" distinct from implementation "built". Record no anonymous
-  deferral; carry the named external acceptance artifact/release gate when applicable.
+  deferral; carry every named unsigned release gate when applicable.
 - Record useful traps in the freeholds memory entry within the authorized scope.
 
 STEP 7 - FINAL RESPONSE FORMAT:

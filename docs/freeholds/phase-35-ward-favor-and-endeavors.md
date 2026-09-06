@@ -1,4 +1,4 @@
-# Phase 35: permanent ward Favor and monthly Endeavors
+# Phase 35: Ward favor and Endeavors
 
 This implementation file and its QA are the complete contract for this bounded slice.
 The locked decisions in `state.md`, the content/measurement manifests and `ux-spec.md`
@@ -8,8 +8,8 @@ are authoritative. Nothing in this planning packet is marked built.
 ```
 This is Phase 35 of the Freeholds and Guildhalls feature: permanent ward Favor and monthly Endeavors.
 
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and
-fan-out; this prompt names no model.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out; this prompt names no model.
 
 Goal: let shared accomplishments permanently expand decoration capacity while monthly cosmetic Endeavors use their own authority-fed calendar and bounded durable awards.
 
@@ -27,14 +27,15 @@ STEP 0 - PRE-FLIGHT:
   patches/.
 - If state.md "Push policy" records a stacked wave branch, work on that branch instead of
   feature/freeholds.
-- Memory scan: MEMORY.md and entries on the realm calendar feed, the escrow-delta idiom,
-  never-sell-power sweeps, sim_context callback pins, test-pin traps.
+- Gotchas scan (Codex has no memory step): state.md "Gotchas (read before the matching
+  phase)" entries on the realm calendar feed, the escrow-delta idiom, never-sell-power
+  sweeps, sim_context callback pins, test-pin traps.
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
@@ -52,8 +53,8 @@ Spawn one Explore agent to read and summarize:
   src/ui/i18n.catalog/hud_chrome.ts (housing namespace)
 - tests/freehold_content.test.ts (the power-neutral sweep), tests/freehold_wards.test.ts,
   tests/sim_context.test.ts, tests/parity/trace.ts
-- docs/freeholds/ux-spec.md and the signed content, measurement, service and policy
-  artifacts referenced by state.md that this slice consumes.
+- docs/freeholds/ux-spec.md and the content, measurement, service and policy artifacts
+  referenced by state.md that this slice consumes (signed, or still open release gates).
 The agent returns: the exact existing event and calendar seams, the chosen UTC month feed, atomic
 contribution/reward paths and panel family. Favor capacity never decays. Monthly
 Endeavor progress resets independently. Retain four ranks and +10 decor per rank as
@@ -84,17 +85,27 @@ Assign disjoint implementation ownership by the following 5 deliverables.
 The coordinator alone edits shared parity/command/snapshot/monolith pins after workers
 finish. Workers receive only the context report and owned files, preserve others' edits,
 and return full reports to the scratchpad with a path and short summary.
-1. Permanent capacity and calendar: ward_favor_core.ts derives the highest unlocked
-   rank monotonically from validated contributions, and layout_core.ts uses the
-   permanent bonus. Persist each credited plot's highest unlocked capacity award so
-   a later ward move never retracts its unlocked capacity; lazy delivery uses that
-   durable award identity. realm_month_core.ts consumes an authority-fed UTC calendar-month
-   key; update server/sim_calendar_feed.ts and SimContext pins only as needed. Month
-   boundaries reset Endeavor counters, never capacity, placed furniture or eligibility.
-   No Date, wall-clock or network call enters sim code.
+1. Permanent capacity and calendar: NEW src/sim/freehold/ward_favor_core.ts (pure)
+   derives the highest unlocked rank monotonically from validated contributions, and
+   layout_core.ts uses the permanent bonus. The capacity award is a property of the
+   stable plot ID (D80): persist each credited plot's highest unlocked award on that ID
+   so a later ward move never retracts it, it travels with the plot through a 38
+   transfer, the seller's fresh tier-0 record starts at the base budget, and a 42 second
+   plot starts at base with its own award; lazy delivery uses that durable per-plot
+   award identity. NEW src/sim/freehold/realm_month_core.ts (a pure sim leaf; the
+   server feeds it) derives the Endeavor month as the UTC calendar month
+   utcDay.slice(0, 7) from the authority-fed utcDay (D84, D58), or from a utcMonth field
+   fed beside utcDay in server/sim_calendar_feed.ts::feedRealmCalendar with its pin in
+   tests/sim_context.test.ts; never resetDay, which is the 03:00 realm-reset civil day.
+   The boundary fixture 2026-10-01T03:30Z (2026-09-30 23:30 in America/New_York, where
+   resetDay still reads 2026-09-30) yields month 2026-10. Month boundaries reset
+   Endeavor counters, never capacity, placed furniture or eligibility. No Date,
+   wall-clock or network call enters sim code.
 2. Authored Endeavor content: src/sim/content/freehold/endeavors.ts carries append-only
-   goal/metric/reward IDs and exact approved weights/thresholds/targets from the
-   signed content manifest. Monthly activities are cosmetic, no stat, training,
+   goal/metric/reward IDs (goals `freehold_endeavor_<goal>`, reward props
+   `freehold_endeavor_reward_<prop>`) and exact approved weights/thresholds/targets from
+   content-manifest.md's Endeavor rows and the CAL-ENDEAVORS workbook artifact
+   (UNSIGNED until approved). Monthly activities are cosmetic, no stat, training,
    recipe/drop/gathering advantage or paid input. The manifest states distinct-visit
    identity and contribution fingerprints; unknown/unapproved rows cannot activate.
    Include final prop art, names/IP check, source records, wiki and applicable deed/
@@ -105,22 +116,51 @@ and return full reports to the scratchpad with a path and short summary.
 3. Durable progress and awards: one observer on existing accepted events creates
    identified contribution deltas, deduped atomically with progress under ward
    serialization. Persist permanent rank, calendar-specific counters, completion ID,
-   eligible member snapshot and per-account award identity using additive bounded
-   rows. Cosmetic prop rewards go to actual safe item custody; trophy display unlocks
+   eligible member snapshot, per-account reward-delivery identity and the per-plot
+   capacity award (D80) using additive bounded rows. Cosmetic prop rewards go to
+   actual safe item custody; trophy display unlocks
    go to trophy records, never counterfeit inventory. Lazy award on member load/entry
    or indexed resumable admitted batches, not a whole-guild housing rewrite. Crashes,
    duplicate events, alts and overlapping workers cannot duplicate progress/reward.
 4. Ward panel and wire: serialize the ward projection once per revision, decode it
-   strictly in ward_wire.ts and extend the Steward-family cold window/painter. Show
-   permanent capacity separately from monthly progress with reward silhouettes that
-   obey spoiler policy; keyed loading/empty/complete/error states, current ACL, focus
-   and mobile rules from ux-spec. Add desktop/compact/tablet captures and parity pins.
+   strictly in src/net/ward_wire.ts and extend the Steward-family cold window/painter.
+   Show permanent capacity separately from monthly progress with reward silhouettes
+   that obey spoiler policy; the keyed loading/empty/in-progress/complete/hidden-reward/
+   unavailable states use the exact English rows below (D92), current ACL, focus and
+   mobile rules from ux-spec. Append the rows to ux-spec section 10, extend the
+   `housing-ward` section 11 target with the six favor/endeavor scenes
+   ward-endeavors-loading, ward-endeavors-empty, ward-endeavor-in-progress,
+   ward-endeavor-complete, ward-endeavor-hidden-reward and ward-endeavors-unavailable x
+   desktop/compact/tablet (18 variants, the 553 milestone), regenerate
+   ux-key-manifest.json and ux-shot-manifest.json in
+   the same change, and add the parity pins.
 5. Proof: tests/freehold_ward_favor.test.ts covers permanent ranks across month/ward
    transitions, injected calendar boundaries, pure twin-run determinism and no paid
    input. Real-PG races, duplicate/restart completion and lazy offline-member delivery
    prove exactly-once awards and bounded plans/query counts; positive cosmetic
    allowlist has a failing forbidden-reward control. Retention folds completed progress
    only after durable completion/award identities preserve replay authority.
+
+Exact English keys this phase ships (D92; {month} and {date} through formatDateTime,
+counts through formatNumber; the window title reuses 34's ward.title, and the two
+section-title rows ward.favor and ward.endeavors are shipped here, not by 34):
+
+| Key | Exact English |
+| --- | --- |
+| hudChrome.housing.ward.favor | Neighborhood Favor |
+| hudChrome.housing.ward.endeavors | Neighborhood Endeavors |
+| hudChrome.housing.ward.favorRank | Favor rank {rank} of {maximum} |
+| hudChrome.housing.ward.favorCapacity | Permanent decor bonus: +{count} |
+| hudChrome.housing.ward.favorTooltip | Favor comes from paying your Ledger on time, from distinct neighbors visiting, and from completed Endeavors. It never decays and never drops when your home moves. |
+| hudChrome.housing.ward.endeavorMonth | Endeavors for {month} |
+| hudChrome.housing.ward.endeavorProgress | {current} of {goal} |
+| hudChrome.housing.ward.endeavorComplete | Complete |
+| hudChrome.housing.ward.endeavorReward | Reward: {reward} |
+| hudChrome.housing.ward.endeavorRewardHidden | The reward is revealed when this Endeavor is complete. |
+| hudChrome.housing.ward.endeavorsEmpty | No Endeavors are running this month. |
+| hudChrome.housing.ward.endeavorsLoading | Loading Endeavors... |
+| hudChrome.housing.ward.endeavorsUnavailable | Endeavors are unavailable right now. Your Favor is unchanged. |
+| hudChrome.housing.ward.endeavorsReset | Progress resets on {date}. |
 
 INVARIANTS THIS PHASE MUST KEEP:
 Every player-visible string, including error, aria, tooltip and empty-state text,
@@ -200,7 +240,8 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/sim_context.test.ts tests/monolith_budget.test.ts tests/freehold_ward_favor.test.ts
   tests/freehold_wards.test.ts tests/freehold_content.test.ts tests/freehold_determinism.test.ts
   tests/world_api_parity.test.ts tests/snapshots.test.ts tests/localization_fixes.test.ts
-  tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts` plus the
+  tests/hud_update_drive.test.ts tests/mobile_window_coverage.test.ts
+  tests/pr_shot_targets.test.ts` plus the
   tests/server/ suites the SERVER slice added and the pg-armed twin; `npm run i18n:gen`
   then `npx vitest run tests/i18n_completeness.test.ts`; `node scripts/pr_screenshots.mjs`;
   parity goldens if regenerated.
@@ -219,10 +260,10 @@ emoji, or word "phase" appears in a commit message. Keep generated output with i
 authoring source. Run npm run ci:changed after the last commit and read its exit code.
 
 STEP 5 - ACCEPTANCE CRITERIA:
-- [ ] Four-rank/+10 approved targets remain permanent across all month boundaries; the UTC Endeavor calendar resets only its own progress.
+- [ ] Four-rank/+10 approved targets remain permanent across all month boundaries; the UTC Endeavor month (utcDay.slice(0, 7), D84; the 2026-10-01T03:30Z fixture yields 2026-10) resets only its own progress; the capacity award travels with the stable plot ID across a transfer fixture and the seller's fresh record starts at base (D80).
 - [ ] Every weight, threshold, goal and reward has an exact approved manifest row and runtime literal pin; no guessed contribution formula or purchase input.
 - [ ] Real-PG duplicate/concurrent/restart progress and award cases grant once, preserve offline eligibility and use bounded lazy or resumable delivery.
-- [ ] Ward panel shows permanent capacity and monthly progress distinctly on desktop/compact/tablet; current authorization, spoiler-safe silhouettes and strict wire parity pass.
+- [ ] Ward panel shows permanent capacity and monthly progress distinctly on desktop/compact/tablet; current authorization, spoiler-safe silhouettes and strict wire parity pass; the favor/endeavor key rows and the six `housing-ward` endeavor scenes (ward-endeavors-loading, ward-endeavors-empty, ward-endeavor-in-progress, ward-endeavor-complete, ward-endeavor-hidden-reward, ward-endeavors-unavailable) are registered and both manifests regenerated (D92).
 - [ ] All suites, content art obligations, DB plans/growth evidence, reviews and contribution gate pass.
 
 STEP 6 - DOC UPDATES + MEMORY:

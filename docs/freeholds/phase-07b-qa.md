@@ -6,7 +6,8 @@ state.md decisions and ux-spec.md are the acceptance contract.
 ### Starter Prompt
 ```
 This is Phase 07b QA of the Freeholds and Guildhalls feature: account lifecycle and protection history.
-Harness: Claude Code. Follow root CLAUDE.md working-style and effort/fan-out rules.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block and its effort/fan-out rules.
 
 Goal: verify every promised behavior and artifact, apply ALL findings including nits,
 and have a second fresh reviewer verify the fix round before recording a verdict.
@@ -36,15 +37,22 @@ STEP 2 - AUDIT:
   - Race two characters, two plots and two realms; stale session/fence/CAS, old-generation
     hydration, periodic/leave/shutdown failure and replacement must preserve newer state.
     Same observed fact cannot mint another return generation or grace interval.
-  - Start with literal unbound07, bound old/future/malformed/oversized and restored rows.
-    Verify prospective empty binding, explicit refusal of ambiguous history, preservation
-    of originals, accepted policy identity and no implicit serving-realm/UTC conversion.
+  - Start with literal unbound_no_history 07 rows, bound old/future/malformed/oversized
+    and restored rows. Verify prospective empty binding, explicit refusal of ambiguous
+    history, preservation of originals, accepted policy identity and no implicit
+    serving-realm/UTC conversion; absence/return/grace day boundaries use the resetDay
+    vocabulary from the zone the accepted binding resolves (one day key for one account
+    across two processes with different REALM_RESET_TZ, never the serving process
+    constant) and epoch-ms stamps are display-only (D84).
   - Keep a plot unloaded through several absence/return cycles; compare exact protection
     union with a small independent reference, including overlap with service suspension,
     DST, gaps, provisional/finalized corrections and preserved immutable credits.
   - Verify safe explicit table exports, soft deactivation/restoration, character deletion,
-    true account deletion, sale boundary and buyer-prospective lifecycle. Prove legacy
-    release capability limits and rollback quiescence, not just untouched new tables.
+    true account deletion (head and history rows cascade with the account; an open
+    housing operation refuses it with 07a's CharacterFreeholdOperationOpen class, D88),
+    sale boundary and buyer-prospective lifecycle.
+    Prove legacy release capability limits and rollback quiescence, not just untouched
+    new tables.
   - Execute real PG locks/plans at measured sizes; no reversed legacy/FK/maintenance edge,
     per-tick SQL, client-held queue wait, unbounded history load or destructive pruning.
 - Required domain COVERAGE review: database-performance-reviewer, migration-safety, privacy-security-review, server-hot-path-reviewer, architecture-reviewer, cross-platform-sync, test-coverage-auditor, qa-checklist.
@@ -71,19 +79,22 @@ LATER GUILD LIFECYCLE EXTENSION (owned by 28a, same 07b family):
   hall/credit/operation facts. 29/13a consume exact history and union with outages.
 
 LATER GUILD CLEAR ADMISSION EXTENSION (31 implementation, 07b seam proof now):
-- Verify a typed participant hook on the existing prepare/commit/cancel admission
+- Verify a typed participant hook on 07b's NEW prepare/commit/cancel admission
   reservation with a bounded fake: all-or-none pre-publication extension, cancellation,
   stale generation, surviving resume, takeover and authoritative leave. The
-  initial opaque injected token needs no future31 import. Once31 is implemented,
+  initial opaque injected token needs no future 31 import. Once 31 is implemented,
   GuildClearCharacterAdmissionToken is owned by the lifecycle reservation; matching
   prepareGuildClearCharacterAdmission/commitGuildClearCharacterAdmission/
   cancelGuildClearCharacterAdmission calls settle before authenticated publication.
   Interleave a prepared unpublished character with new Nythraxis source reservation
-  in both orders; both envelopes must include that generation. A refusal publishes
-  no session or partial capacity and creates no secondary waiter queue.
+  in both orders; both envelopes must include that generation. Capacity exhaustion
+  publishes the session and records the auditable clear-not-captured gap with an
+  operator alert (D83); a failed extension publishes no partial capacity and creates
+  no secondary waiter queue.
 - 31 later installs createGuildClearAdmission to cover every live unconsumed Nythraxis
-  life for every admitted authenticated character, including administrator admission.
-  Neither RAID_MAX nor MAX_PLAYERS_PER_REALM is a hard room-envelope proof. Leave
+  life for every admitted authenticated character, including administrator admission;
+  it never refuses join, dungeon entry or revival (D83). Neither RAID_MAX nor
+  MAX_PLAYERS_PER_REALM is a hard room-envelope proof. Leave
   releases only unused participant capacity; captured candidates remain independently
   retained until known committed outcome handoff. The 31 producer owns exact byte/slot,
   source-life, activation/respawn and real save integration tests; do not require its

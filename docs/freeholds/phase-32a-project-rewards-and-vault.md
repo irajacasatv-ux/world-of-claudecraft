@@ -1,4 +1,4 @@
-# Phase 32a: project trophies, cosmetic vendors and the Materials Vault chest
+# Phase 32a: Project rewards and direct vault access
 
 Wave C. This implementation file and its paired QA own only the deliverables
 below. The locked decisions, content numbers, content-manifest.md,
@@ -9,7 +9,7 @@ acceptance row applies to the paired QA; nothing is built by this planning packe
 
 1. Project-completion trophies from durable completed-project proof.
 2. Completion-unlocked guild cosmetic furnishing vendor stock with an exact manifest.
-3. Manor/Bastion direct Materials Vault chest with service-specific authorization.
+3. Manor direct Materials Vault chest with service-specific authorization (D47: Manor only).
 4. Final art, shared interaction UX and complete unlock/custody/content evidence.
 
 ## Shared authority and persistence dependency
@@ -17,7 +17,7 @@ acceptance row applies to the paired QA; nothing is built by this planning packe
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -49,8 +49,9 @@ NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provide
 committed immutable protection source, and createFreeholdLifecycleCoordinator captures
 authenticated observation time before queueing. Derive a return before presence
 advances; stale observations, fenced sessions and replay cannot mint grace. The
-accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
-and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+lifecycle-policy-binding artifact (accepted or still a named gate) names
+lifecyclePolicyId, sourceCalendarId and resetPolicyId; serving realm, browser zone or
+guessed UTC cannot rebind history.
 13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
 and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
 or account calendar ingress, source-history array on plots, polling job or receipt store.
@@ -87,7 +88,8 @@ entry/build/undo remain available; durable payment retains original operation re
 The game server and Sim remain ignorant of physical distribution. The future economy
 service owns eligibility verification and opaque authorization bound to account,
 purpose/SKU, policy, quote and operation, with issuer/verifier conformance in the
-accepted service artifact. A first-party web checkout session alone is insufficient.
+service artifact (accepted or still a named gate). A first-party web checkout session
+alone is insufficient.
 Client channel labels, Origin, UA, arbitrary JSON, linked Steam/Epic accounts and the
 game-service secret never prove eligibility; do not add a trusted channel field to the
 game server. The client capability map controls presentation, not purchase authority.
@@ -136,8 +138,8 @@ STEP 0 - PRE-FLIGHT:
   origin/feature/masterwrought while PR #3872 is open, otherwise newest origin/release/**
   and remove the dependency block after merge. Run release-merge-audit after a nonempty
   merge and pnpm install --frozen-lockfile if patches/ moved. Never use main.
-- Read root and applicable local CLAUDE.md in full; memory scan MEMORY.md, freeholds
-  packet entry, test-pin traps, apply ALL findings, review the review-fix round.
+- Read root and applicable local CLAUDE.md in full; read state.md Gotchas (the matching
+  cluster and the test-pin traps), apply ALL findings, review the review-fix round.
 
 STEP 1 - LOAD CONTEXT THROUGH AGENTS:
 Have a reader summarize this file, its QA, state.md locked decisions and content numbers,
@@ -180,17 +182,19 @@ STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
   claim's unlock. Project trophies use existing sync and original completion proof,
   remain idempotent through rejoin/restart and cost no decor points. Deliver the
   agreed vendor/project deed/wiki/art/name obligations in the same change.
-- VAULT owner: Manor owner at their chest or a current Bastion member at the authorized
-  hall chest may open their own personal Materials Vault at condition 30 or above.
-  It is access to existing capacity, not a new container or shared guild vault.
-  Foreign/guest/revoked membership, wrong claim, distance and condition 29 refuse.
-  The guild bank chest still opens only guild bank and personal Strongbox only personal
+- VAULT owner: the Manor owner at their own chest may open their own personal Materials
+  Vault at condition 30 or above (D47: the direct vault chest is the Manor unlock only).
+  No guild tier carries a personal-vault chest: at a Great Hall or Bastion the guild
+  bank chest opens only the guild bank for any rank, and no rank widens or narrows
+  personal vault access. It is access to existing capacity, not a new container or
+  shared guild vault. Every non-owner (guest, visitor, any guild rank at a hall chest),
+  wrong claim, distance and condition 29 refuse. Personal Strongbox opens only personal
   bank; no generic nearBanker widening. emitVaultSelfKeys follows the same authorized
   gate; raw operation and private-data projection are both checked. Hall station draw
   from a member's own vault already exists from 30 and does not imply this chest.
 - CLIENT/ART owner: final trophy/vendor/chest models and measured anchors reuse the
   scheduler, shared inventory/tooltip/Steward families and ux-spec. Capture locked,
-  completed, unavailable, wrong-rank/guest, full storage and success states plus
+  completed, unavailable, non-owner/guest, full storage and success states plus
   condition 30/29 on desktop/compact/tablet with keyboard/gamepad/touch focus return.
   Every new item gets committed WebP/provenance, M16 obligation, eligible Reliquary
   page and wiki; trophy records get no item pages. Preserve exact-copy custody in all
@@ -219,8 +223,10 @@ Ordinary authorized gold/Marks furnishing vendors are gameplay acquisition. Thei
 existing platform-neutral admission remains available on every housing-use platform,
 including native, Steam, Epic and Seeker; they neither accept Claudium nor consume a
 paid-service eligibility capability. The feature/counsel/Terms release gates still
-apply to housing enablement. Test paid-store absence independently from the visible,
-authorized ordinary vendor and its insufficient-gold/Marks and locked-project states.
+apply to housing enablement. Vendor purchases debit the buying member's own gold or
+Marks, never the Hall Fund; fund custody and its end-of-life stay with 29 (D78). Test
+paid-store absence independently from the visible, authorized ordinary vendor and its
+insufficient-gold/Marks and locked-project states.
 The economy-service price rule above governs paid service prices, not local gameplay
 recipe/vendor gold or Marks rows pinned in CAL-HALL-STOCK.
 
@@ -313,9 +319,10 @@ STEP 5 - ACCEPTANCE:
   incomplete/foreign/replayed projects cannot grant it and no new gameplay power appears.
 - [ ] Vendor hydration is deterministic and conditional on the completed guild claim;
   approved costs/source/art and every same-change content obligation are present.
-- [ ] Chest admission and emitVaultSelfKeys agree for owner/member/current rank,
-  plot, distance and condition 30/29; guests cannot see private vault contents, and
-  Strongbox/guild chest retain separate service gates and original capacity.
+- [ ] Chest admission and emitVaultSelfKeys agree for the Manor owner versus every
+  non-owner (guest, visitor and any guild rank at a hall chest, which never opens a
+  personal vault), plot, distance and condition 30/29; guests cannot see private vault
+  contents, and Strongbox/guild chest retain separate service gates and original capacity.
 - [ ] Exact-copy storage/purchase and existing station-vault paths preserve custody;
   final art, LOW prewarm/perf and desktop/compact/tablet state screenshots pass.
 - [ ] All required checks, money/surface gates, shared gate and fresh-fix reviews pass.

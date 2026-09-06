@@ -6,7 +6,8 @@ state.md decisions and ux-spec.md are the acceptance contract.
 ### Starter Prompt
 ```
 This is Phase 07c QA of the Freeholds and Guildhalls feature: account first-tier arrival eligibility.
-Harness: Claude Code. Follow root CLAUDE.md working-style and effort/fan-out rules.
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
+block and its effort/fan-out rules.
 
 Goal: verify every promised behavior and artifact, apply ALL findings including nits,
 and have a second fresh reviewer verify the fix round before recording a verdict.
@@ -33,14 +34,16 @@ STEP 2 - AUDIT:
   - Verify normalized schema, explicit account loader/insert writer and accepted tier
     allowlist separately from unknown/future stored-ID preservation. No whole-set rewrite.
   - Race same/different tier marks from two plots and processes; fault before insert,
-    rollback and commit-before-ACK. Assert exactly one durable mark, at-most-once optional
+    rollback (then retry on the same process: the mirror is unchanged and the retried
+    insert wins) and commit-before-ACK. Assert exactly one durable mark, at-most-once optional
     eligibility and no guarantee of visual delivery. Guest/rejected/seen return writes zero.
   - Replay historical positive acceptance to a fresh client, resume same transition and
     deliver out-of-order frames; assert zero new first-tier directive/welcome cue. Distinct
     accepted returns receive one ordinary cue; render completion creates no authority.
   - Verify isolated offline/headless account fixture sets, no online-imported browser
     permission, full private mark-set exclusion and actual encoder evidence sentinels.
-  - Exercise character delete, account soft-deactivate/restore, hard delete, sale/transfer,
+  - Exercise character delete, account soft-deactivate/restore, hard delete (cascade of
+    marks under D88, refused while a 07a operation is open), sale/transfer,
     explicit safe exports, real FK/unique waits and no per-tick/snapshot SQL.
 - Required domain COVERAGE review: database-performance-reviewer, migration-safety, privacy-security-review, server-hot-path-reviewer, architecture-reviewer, cross-platform-sync, test-coverage-auditor, qa-checklist.
   Database performance runs before new DB decisions and on the finished diff. Parent
@@ -49,14 +52,15 @@ STEP 2 - AUDIT:
 STEP 3 - VALIDATION:
 - npx tsc --noEmit; npx vitest run tests/server/freehold_arrival_db.test.ts
   tests/freehold_arrival_authority.test.ts tests/freehold_state.test.ts
-  tests/freehold_determinism.test.ts tests/architecture.test.ts tests/world_api_parity.test.ts.
+  tests/architecture.test.ts tests/world_api_parity.test.ts. (08 creates
+  tests/freehold_determinism.test.ts; it is not run here.)
 - With TEST_DATABASE_URL set for the disposable private schema, npx vitest run
   tests/server/freehold_arrival_db.pg.test.ts tests/server/freehold_mutation.pg.test.ts.
 - Verify literal query counts and actual mark outcomes under concurrent connection/process
   fixtures, account deletion/FK waits and rollback. Reconnect a new client after historical
   positive acceptance and assert zero new directive/cue rather than trusting client cache.
 - Run actual export/account/character lifecycle, SimContext/headless and encoder suites
-  found by the source census, plus all 07 bridge fixture tests affected by the mirror.
+  found by the source census, plus all 05 bridge fixture tests affected by the mirror.
 - Run every scoped command listed in the implementation file and node scripts/gate_select.mjs.
   A skipped PG suite is not a pass. Assert work happened, use literal expected outcomes,
   include controls that pass when a rejected precondition is removed, and never derive

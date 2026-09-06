@@ -1,6 +1,7 @@
 # Freeholds numeric provenance and calibration workbook
 
-Status: approved, UNBUILT packet handoff under R01 to R46. This is a filled inventory
+Status: approved, UNBUILT packet handoff under R01 to R46 and the round-2 dispositions
+D76-D93 (R47-R64, applied as recommended and awaiting Fernando's word). This is a filled inventory
 of existing working targets, verified source baselines and concrete unsigned production
 artifacts. It contains no invented final balance values. [state.md](state.md) owns
 adopted numbers and decisions; [content-manifest.md](content-manifest.md) owns exact
@@ -41,19 +42,20 @@ Illustrative dollars and multipliers never calculate an in-game payment.
 | Hearth Key | 60 minutes; one account cooldown shared across later destinations | State and approved R41 | 07/07a account-row authority, 06/42 consumers; transaction timestamp and cross-alt/process/destination denial/race tests |
 | Snapped yaw | 15 degrees | Proposal 10 and inspected editor `ROTATE_STEP_RAD` reference | 08/11 PLACEMENT; pure sim-owned value, no editor import |
 | Personal visitor progression | Cottage 8, Lodge 12, Manor 16, Keep 20, Citadel 24 | State working progression | 18/26/40; owner-account sessions excluded; capacity controls admission, not rendering |
+| Guild-hall visitor cap | Meeting Hall, Great Hall, Bastion: UNSIGNED (the Cottage row 8 stands until Fernando signs the hall-tier values, D77) | State D77 and the Visitors row; no invented literal | 32 CONTENT/LAYOUT sets the column from the signed rows; 28 pins the Cottage stand-in |
 | Inn visitor cap | 8 | Approved TUNING R24, reused Cottage target; not a classic-era fact | Fernando owns the approved target; 18 admission fixtures |
 | Public entry throttle | One knock per account and plot per 10 seconds | State plus R24/R25 identity clarification | 26 SERVER; authenticated rate-limit tests, ordinary owner entry unaffected |
-| Ward capacity | 50 plots, 24 admitted occupants | State selected working values within proposal 24 to 50 plot range | 34 DB/INTERIOR; transactional admission and measured footprint; all admitted players visible |
-| Favor | 4 ranks; 10 additional decor per rank; capacity permanent under R32 | State targets plus approved no-loss refinement | 35 CONTENT; signed threshold/reward artifact before enable |
-| Endeavor cadence | Authority's UTC calendar month | Proposal monthly cadence plus R32 | 35 CALENDAR/CONTENT; calendar boundary and restart proof |
-| Showcase | 13 weeks per season; one account vote per realm season; no self-vote | State duration and R33 | 36 SOCIAL; published anchor, immutable close/result identity |
+| Ward capacity | 50 plots, 24 admitted occupants | Proposal 6.9 adopted working bounds (50 plot slots, 24 admitted occupants) retained by D57 | 34 DB/INTERIOR; transactional admission and measured footprint; all admitted players visible |
+| Favor | 4 ranks; 10 additional decor per rank; capacity permanent under R32; awards are properties of the stable plot ID and travel with the plot (D80) | State targets plus approved no-loss refinement | 35 CONTENT; signed threshold/reward artifact before enable |
+| Endeavor cadence | Authority's UTC calendar month, utcDay.slice(0, 7), never resetDay (D84) | Proposal monthly cadence plus R32 | 35 CALENDAR/CONTENT; calendar boundary and restart proof |
+| Showcase | 13 weeks per season on resetDay realm weeks and the Tuesday anchor (D84); one account vote per realm season; no self-vote | State duration and R33 | 36 SOCIAL; published anchor, immutable close/result identity |
 | Guest book | 50 entries per plot; closed reactions wave/cheer/admire | State cap and approved R34 enum | 36 SOCIAL/DB; concurrent insert/prune and deterministic oldest order |
-| Guest author rate | One reaction per account, plot and realm day | Approved TUNING R34 | Fernando owns the approved target; 36 per-account/day persistence fixture |
-| Guild donor cap | One current weekly Hall Ledger-equivalent per account per realm week across alts | Approved TUNING R28, not a GW2 rate | 29 SERVICE/CONTENT; accepted unit/currency normalization schedule |
+| Guest author rate | One reaction per account, plot and realm day (the resetDay realm day, D84) | Approved TUNING R34 | Fernando owns the approved target; 36 per-account/day persistence fixture |
+| Guild donor cap | One current weekly Hall Ledger-equivalent per account per realm week (ledgerWeekOf, D84) across alts; a ceiling, never a requirement to donate | Approved TUNING R28, not a GW2 rate | 29 SERVICE/CONTENT; accepted unit/currency normalization schedule |
 | Contribution retention | 90 days | State operational working value | 29 DB; bounded indexed retention and donor export proofs |
-| Dye palette/channels | 8 dye IDs; 0 to 2 declared tint channels per item | State and approved manifest palette | 41 ART/CONTENT; exact neutral-lit swatches and recipes signed |
+| Dye palette/channels | 8 dye IDs; 0 to 2 declared tint channels per item; picker enabled by the home apothecary station amenity, no station GLB (D90) | State and approved manifest palette | 41 ART/CONTENT; exact neutral-lit swatches and recipes signed |
 | Saved layouts | 5 slots per plot | State | 41a CORE/DB; all entry/byte caps include every saved layout |
-| Second-home bill | Each integer line rounded up after multiplying primary approved units by 1.5 | State multiplier and approved R41 rounding | 42 CONTENT/SERVICE; ceil boundary pins, price remains service-owned |
+| Second-home bill | Each integer Ledger, prepay and upgrade line rounded up after multiplying primary approved units by 1.5; no second-home upgrade refusal (D93) | State multiplier, approved R41 rounding and D93 | 42 CONTENT/SERVICE; ceil boundary pins, price remains service-owned |
 | Initial burn/treasury example | 25% / 75% | Adopted proposal working split | 15 accepted service statement; no game calculation |
 | Resale example | 3% burn, 7% treasury, 90% seller; royalty separately quoted/published | State working split | 37/38 accepted deed service/counsel artifact, no game calculation |
 | Furnishing roster | A: 8 vendor + 10 crafted = 18; 3 patterns teach outputs inside ten. B: 20 additional, 2 per existing craft | Actual packet arithmetic and approved R12 manifest | 03/04/22 CONTENT; exact roster and page union pins |
@@ -76,7 +78,7 @@ price band.
 | `src/sim/content/farm_crops.ts::farmCropSkillThreshold` | Crop tier threshold `(tier - 1) * 25` | Existing planting band only, never a new furnishing recipe gate |
 | `src/sim/content/items.ts::FISHING_TABLES_BY_BAND` | Source band/zone, all outcomes including empty hooks and junk | Replay actual catches, not max-stack counts or successful-cast-only averages |
 | `src/sim/content/recipes.ts` | Existing reagent/output/skill/acquisition/station rows | Concrete comparator rows below; preserve training/admission/discount logic |
-| `src/sim/professions/masterwrought_materials.ts::emberWeekAnchorOf` | Pure most-recent Tuesday from injected resetDay; empty calendar returns empty | Reuse/extract the calendar leaf for shared realm-week identity, never import keystone grants into housing |
+| `src/sim/professions/masterwrought_materials.ts::emberWeekAnchorOf` | Pure most-recent Tuesday from injected resetDay; empty calendar returns empty | 13 extracts the calendar leaf into src/sim/realm_week.ts (re-exported unchanged) and ledgerWeekOf is that helper for shared realm-week identity (D84); never import keystone grants into housing |
 | `src/sim/content/apex_patterns.ts`, `farm_patterns.ts` | Pattern ID and teaching contracts, output-derived quality, uniform sellValue 100 | Pattern shape only; existing luck weights/Marks prices are not housing rates |
 
 Concrete recipe comparators in `src/sim/content/recipes.ts`: weaponcrafting
@@ -145,18 +147,19 @@ exact selected IDs/units and the content-tier meaning explicitly.
 ## D. Realm-week schedule and quantity rounding contract
 
 03 produces a versioned, finite content schedule with stable row IDs, sorted eligible
-family alternatives from section C and signed quantity vectors. The conceptual artifact schedule key is
-`(contentVersion, realmWeekAnchor)`: NEW planned metadata fields, not existing
-exports or schema members. 03 owns both planned schedule-key fields in NEW
+family alternatives from section C and signed quantity vectors. The conceptual artifact
+schedule key is `(contentVersion, realmWeekAnchor)`: NEW planned metadata fields, not
+existing exports or schema members. 03 owns both planned schedule-key fields in NEW
 `src/sim/content/freehold/ledger_schedule.ts`; 13 consumes them in NEW
-`src/sim/freehold/ledger_core.ts`, preserving the version on each immutable quoted
-bill. Persisted bill/operation identity follows the 07/07a contract. The tuple never uses
-account, guild, character, local timezone or an RNG draw. The anchor uses the authority-fed Tuesday week semantics already
-carried by `emberWeekAnchorOf`; sharing that pure calendar logic belongs to the
-foundation/calendar owner. Same content and same injected week yield the same
-ordered bill for every owner. A schedule version also fixes every later prepaid week
-it quotes. Empty, malformed or backwards calendar data never creates a fresh bill or
-consumes a prepay credit.
+`src/sim/freehold/ledger_core.ts`, preserving the version on each immutable quoted bill.
+Persisted bill/operation identity follows the 07/07a contract. The tuple never uses
+account, guild, character, local timezone or an RNG draw. The anchor uses the
+authority-fed Tuesday week semantics already carried by `emberWeekAnchorOf`; 13 extracts
+that pure calendar leaf into `src/sim/realm_week.ts` (re-exported unchanged) and
+`ledgerWeekOf(resetDay)` is the housing name for it (D84). Same content and same injected
+week yield the same ordered bill for every owner. A schedule version also fixes every
+later prepaid week it quotes. Empty, malformed or backwards calendar data never creates a
+fresh bill or consumes a prepay credit.
 
 File 13a owns the authoritative calendar's finalized historical facts. Account
 protection comes from 07b's committed lifecycle history across every absence/return
@@ -198,7 +201,10 @@ weeks; it does not multiply today's bill by the number of weeks. Confirm shows t
 fixed complete batch before one atomic deduction.
 
 Bags-only, vault-only and automatic bags-then-vault use the SAME source-mode planner
-for affordability, displayed line counts, confirmation and actual deduction. Fine
+for affordability, displayed line counts, confirmation and actual deduction. Upgrade
+contributions pass the same explicit source-mode argument (bags, or the vault inside the
+owner's own claim) and a confirmed fee whose last leg cannot finish because bags are
+full re-attempts without a second fee (D89). Fine
 substitution preference applies inside each explicitly selected source. Immutable
 bills retain the planned `contentVersion` metadata and paid status through price changes, restart, service
 outage and calendar rollover. A confirmed Call satisfies the current unpaid bill
@@ -255,22 +261,22 @@ a verbal claim that numbers are "tuned" is insufficient.
 
 | Artifact / all fields it must produce | Final value now | Source and derivation | Owner / producing implementation | Acceptance and release gate |
 |---|---|---|---|---|
-| CAL-LEDGER-A: every week/tier line ID, units, allowed grades, cycle/version, allocation and tolerance | UNSIGNED calibration output | Sections C to E; state targets; measured gatherer report | 03 CONTENT; 13 UPKEEP; Fernando/service | All cycle fixtures, noncrafter purchase path, immutable prepay, four-week 20 report before enable |
+| CAL-LEDGER-A: every week/tier line ID, units, allowed grades, cycle/version, allocation and tolerance | UNSIGNED calibration output | Sections C to E; state targets; measured gatherer report | 03 CONTENT; 13 UPKEEP; Fernando/service | All cycle fixtures, noncrafter purchase path, immutable prepay, four-week 20 report before enable; ledger_core.ts takes the prepay cap as an injected input with LEDGER_PREPAY_MAX_WEEKS as the shipped default: 25a proves 12 through the injected cap and raises the default only in the change that records the signed twelve-week CAL-LEDGER-A version and the 13a calendar-authority acceptance in state.md |
 | CAL-VENDOR-A: buy/sell copper and quality for each eight basic IDs | UNSIGNED per-item table | Existing low-tier furnishing-comparable item/material values and recorded acquisition burden; no arbitragable sell floor | 03 CONTENT; Fernando | Exact per-ID price/quality fixtures and economy invariant; 20 release |
-| CAL-RECIPES-A: per ten recipe reagent ID/count, resultCount, skillReq, quality, station, acquisition and craft fee | UNSIGNED per-recipe table | Full concrete comparator rows above; existing training/gain/discount/fee semantics; protected-input and no-power checks | 04 CONTENT; Fernando | Every allowed archetype discount path, maximum batch, positive skill/gain and tradable output tested; 20 release |
+| CAL-RECIPES-A: per ten recipe reagent ID/count, resultCount, skillReq, itemLevelBudget (the craft gold-sink driver; the bronze hoe precedent in src/sim/content/recipes.ts carries 10), quality, station, acquisition and craft fee | UNSIGNED per-recipe table | Full concrete comparator rows above; existing training/gain/discount/fee semantics; protected-input and no-power checks | 04 CONTENT; Fernando | Every allowed archetype discount path, maximum batch, positive skill/gain and tradable output tested; 20 release |
 | CAL-PATTERNS-A: three Marks amounts, output-derived qualities, source rows | UNSIGNED, sellValue already 100 | Existing pattern shape plus approved recipe burden; deterministic Marks valve | 04 CONTENT; Fernando | Exactly three one-to-one patterns, no luck route, all icons/source pages; 20 release |
 | CAL-DECOR-A/B: each item decorCost and all render cost measurements | UNSIGNED positive integer costs | Measured shipping model triangles/primitives/materials/residency and legal layout packing; state room caps | 03/04 CONTENT with 19 ART; 22 extends; Fernando | Finite row bound, fully furnished maximum-layout LOW/perf capture; 20/27 release |
-| CAL-UPGRADE: each tier's exact material bill and quoted fee/product conditions | UNSIGNED bill table; live fee SERVICE QUOTE | State ladder, existing eligible upper materials, approved acquisition burden, no intermediate/keystone | 21/32/40 CONTENT and SERVICE | Every tier noncrafter purchase path, safe overflow refusal, one durable receipt; 27/33/44 release |
-| CAL-RECIPES-B: twenty complete recipe rows and six pattern costs/weights | UNSIGNED complete table | Manifest craft/surface/channel roster; comparator/economy calibration; existing raid/rift draw semantics | 22 CONTENT; Fernando | Exactly twenty outputs/two per craft; one luck channel plus Marks per pattern; replay draw-order proof; 27 release |
-| CAL-HALL-CAP: material/copper allowance and service currency allowance, rounding, conversion version and retained donor identity | UNSIGNED normalization schedule; approved target 1 ledger-equivalent | R28 current Hall Ledger value and service-authoritative pooled balance, no game token arithmetic | 29 SERVICE/CONTENT/DB; Fernando | Account-across-alts concurrent cap, mixed contributions, refunds and realm-week rollover; 33 release |
+| CAL-UPGRADE: each tier's exact material bill and quoted fee/product conditions; bill legs are integer item units (D33, D89), never stackSize | UNSIGNED bill table; live fee SERVICE QUOTE | State ladder, existing eligible upper materials, approved acquisition burden, no intermediate/keystone | 21/32/40 CONTENT and SERVICE | Every tier noncrafter purchase path, safe overflow refusal, one durable receipt; 27/33/44 release |
+| CAL-RECIPES-B: twenty complete recipe rows (per recipe: reagent ID and integer item units, resultCount, skillReq, quality, station, acquisition, itemLevelBudget, which drives the craft gold sink in src/sim/professions/crafting.ts), six pattern Marks costs, the nythraxis_housing per-row weight and the rift Draw 8 chance | UNSIGNED complete table | Manifest craft/surface/channel roster; comparator/economy calibration; existing raid/rift draw semantics | 22 CONTENT; Fernando | Exactly twenty outputs/two per craft; one luck channel plus Marks per pattern; replay draw-order proof; 27 release |
+| CAL-HALL-CAP: material/copper allowance and service currency allowance, rounding, conversion version and retained donor identity | UNSIGNED normalization schedule; approved target 1 ledger-equivalent | R28 current Hall Ledger value and service-authoritative pooled balance, no game token arithmetic | 29 SERVICE/CONTENT/DB; Fernando | Account-across-alts concurrent cap, mixed contributions, refunds, the D78 end-of-life pro-rata refund by original receipt with the officer withdraw-to-guild-bank verb, and realm-week rollover; 33 release |
 | CAL-HALL-STOCK: exact allowed pre-existing furniture IDs per completed hall tier and vendor presence | UNSIGNED stock availability/price table | Manifest A/B cosmetics only; actual completed project state | 32a CONTENT/SERVICE | No power/training bypass, deterministic hydrate, no artificial duration; 33 release |
 | CAL-FAVOR: four rank thresholds, ledger/visit/Endeavor event weights, positive daily/account limits where needed, permanent rewards | UNSIGNED event/rank table | Existing deduplicable ledger/visit/completion records and approved cooperative effort calibration, state 4/+10 targets | 35 CONTENT; Fernando | Distinct real visits only, self/alt/farm prevention, idempotent bounded reward delivery, no loss on month reset; 39 release |
 | CAL-ENDEAVORS: exact monthly objective/reward IDs, thresholds and contribution limits | UNSIGNED monthly content table | Existing cosmetic ledger/visit/content events; measured cooperative cohort and no-new-power constraint | 35 CONTENT; Fernando | Monthly authority boundaries; all objectives reachable without new profession/power; 39 release |
 | CAL-SOCIAL: Showcase season anchor/result identity, exact cosmetic reward source and reaction rate | UNSIGNED anchor/reward schedule; R34 approved one/day | Section G; existing 13-week/50-entry targets and approved account rules | 36 SOCIAL/CONTENT; Fernando | Concurrent vote/book caps, privacy, close/restart/bounded reward proof; 39 release |
-| CAL-DYES: eight recipes, item qualities/values, skills/stations, channel/mask/color values | UNSIGNED recipe and measured swatch table | Exact manifest dye roster; approved neutral-lit material board; existing Alchemy recipe/economy methods | 41 CONTENT/ART; Fernando | All eight obtainable; zero power; condition/proximity gate; actual copy consumption and masks; 44 release |
+| CAL-DYES: eight recipes, item qualities/values, skills/stations, channel/mask/color values | UNSIGNED recipe and measured swatch table | Exact manifest dye roster; approved neutral-lit material board; existing Alchemy recipe/economy methods | 41 CONTENT/ART; Fernando | All eight obtainable; zero power; the apothecary-amenity condition/proximity gate (D90); actual copy consumption and masks; 44 release |
 | CAL-SERVICE: every personal/guild Charter, Call, upgrade, later deed and second-home price; royalties, conversion and burn statement | SERVICE SIGNATURE REQUIRED | Accepted economy-service catalog/quote and counsel/Terms artifacts | 15/21/29/32/37/38/40/42 SERVICE | All three money gates, distribution capability, durable recovery and published exact policy |
 | MEASURE-SPACE: room grid/dimensions, floor polygons, fixed anchors, paths and per-model bounds | UNSIGNED measurement artifact | Approved art/room geometry and maximum legal fixture construction, section H | 03/06/08/19/25/34 ART/CORE | Sim/render parity, arrival safety, physical layout and LOW captures before relevant content enable |
-| MEASURE-BOUNDS: plot/layout/queue/log entry and byte limits, JSON codec and worst-case fixtures | UNSIGNED derived hard-bound artifact | Section H, actual legal catalog and schema parser bounds | 07/08/19/25/34/41 CORE/DB | Reject oversize before parse/mutation, indexed finite growth, restart/concurrency tests before each wave |
+| MEASURE-BOUNDS: plot/layout/queue/log entry and byte limits, JSON codec, worst-case fixtures and the two 41a layout-share import bounds, the per-session layout_import lane budget (the NEW MsgLane member in server/msg_lanes.ts) and the per-account import budget (a bounded LRU map keyed by accountId in phase-26's idiom), both frames per window | UNSIGNED derived hard-bound artifact | Section H, actual legal catalog and schema parser bounds | 07/08/17/19/24/25/28a/29/31/34/41/41a CORE/DB | Reject oversize before parse/mutation, indexed finite growth, restart/concurrency tests before each wave |
 
 The per-item tables expand over EVERY manifest row and every new recipe/pattern/dye
 ID, not a sampled subset. The artifact author records the final exact table in this
@@ -280,7 +286,10 @@ values only by producing a new signed version and preserving already paid bills.
 
 ## G. Month and season anchor derivation
 
-Realm month is the authority UTC `YYYY-MM` derived from validated injected resetDay.
+Realm month is the authority UTC `YYYY-MM` derived from validated injected utcDay
+(utcDay.slice(0, 7), or a utcMonth fed beside utcDay in feedRealmCalendar), never resetDay,
+which is the 03:00 realm-reset civil day (D84). The fixture 2026-10-01T03:30Z (2026-09-30
+23:30 in America/New_York) yields 2026-10.
 Month start/end use the authority's civil calendar, never a client's timezone or a
 fixed thirty-day approximation. Monthly progress resets; permanent Favor capacity
 and placed property do not.
@@ -295,14 +304,16 @@ then stable plot ID. Retain a durable season result and reward identity independ
 of the bounded entry/vote tables. 36 owns entry, vote and book retention separately;
 retention cannot delete the evidence required to prevent duplicate awards.
 
-Guest-book daily consumption survives the visible entry lifecycle. File 36 owns
-NEW freehold_guest_book_daily_claims in server/freehold_social_db.ts, with unique
-(account_id, plot_id, realm_day_id). Its globally stable realm_day_id preserves
-the signed CAL-SOCIAL calendar/reset binding across revisions. calendar_id/reset_id
-are immutable references, not alternate uniqueness rails that reopen a day. Pruning
-to the existing visible-entry cap, owner/moderation deletion or restart never clears
-that day's claim. Current ACL/input, reviewed plot participant, conflict-safe claim,
-append and deterministic prune share one transaction; failure rolls everything back.
+Guest-book daily consumption survives the visible entry lifecycle. File 36 owns NEW
+freehold_guest_book_daily_claims in server/freehold_social_db.ts, with unique (account_id,
+plot_id, realm_day_id). Its globally stable realm_day_id is the resetDay realm day (D84),
+never utcDay, and preserves the signed CAL-SOCIAL calendar/reset binding across revisions.
+The guest book opens from the existing gate-door interactable (the D4 object entity whose
+prompt 26's knock already extends); 36 adds no new world entity. calendar_id/reset_id are
+immutable references, not alternate uniqueness rails that reopen a day. Pruning to the
+existing visible-entry cap, owner/moderation deletion or restart never clears that day's
+claim. Current ACL/input, reviewed plot participant, conflict-safe claim, append and
+deterministic prune share one transaction; failure rolls everything back.
 
 NEW pruneFreeholdGuestBookDailyClaims performs bounded indexed cleanup only after
 the nonregressing admission/closed-day watermark excludes that day for every supported

@@ -20,7 +20,7 @@ completeness; fix what the audit finds; record a verdict.
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
   while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
@@ -58,7 +58,8 @@ every issue including low-severity and uncertain ones; ranking happens later):
 - TEST COVERAGE: the sweep uses a synthetic def, never a shipped id; every `it` has a
   DECISIVE assertion (a literal reason token or a false result, never a constant
   self-comparison); every refusal arm has a negative case AND a control that the same call
-  succeeds for an eligible kind; the market chip test drives the real itemMatchesType;
+  succeeds for an eligible kind; the market chip test drives the exported
+  marketItemMatches (which calls the private itemMatchesType arm);
   tests/item_icons.test.ts still proves no committed WebP is orphaned; missing cases (a
   furnishing on a bar slot, a furnishing in mail, a furnishing in the guild bank).
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture import

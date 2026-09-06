@@ -6,21 +6,24 @@ The next implementation starts only after this audit passes.
 ### Starter Prompt
 ```
 This is Phase 34 QA of the Freeholds and Guildhalls feature.
-Harness: Codex, not Claude. Follow the root CLAUDE.md working-style block for effort and fan-out.
+Harness: Codex, not Claude (D74). Follow the root CLAUDE.md "Working style by model
+capability" block for effort and fan-out.
 Goal: verify every promised deliverable, adversarial failure case and settled ruling
 against the real implementation diff; fix all findings and review the fix round.
 
 STEP 0 - PRE-FLIGHT:
 Work in the state.md worktree/branch. Verify git status is clean; ask if it is dirty.
 Sync per state.md "Worktree, base, and merge-forward"; after a non-empty merge run the
-release-merge-audit skill and install frozen dependencies if patches/ moved. Scan memory
-for test-pin traps, "apply ALL findings" and "review the review-fix round".
+release-merge-audit skill and install frozen dependencies if patches/ moved. Read
+state.md "Gotchas (read before the matching phase)" and implementation-plan.md for
+test-pin traps, "apply ALL findings" and "review the review-fix round" (Codex has no
+memory step).
 
 ASSET EXECUTION REQUIREMENT: Every shipping asset-generation or replacement task
 in this phase, including GLBs, references, icons and images, must be executed by
 Codex, not Claude (D74). Use the sanctioned imagegen/image-to-GLB workflow and its
 provenance, runtime registration, fingerprint and in-context checks. This planning
-audit creates no game assets. Final art is required here;44a is a residual sweep,
+audit creates no game assets. Final art is required here; 44a is a residual sweep,
 not permission to leave a placeholder for a later phase.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly):
@@ -46,6 +49,12 @@ and evidence to a file. Audit these specific requirements:
   malformed decode, byte ceiling, deterministic exteriors and collider lifetime.
 - Verify query/index inventory, reverse FK/export paths, bounded cache keys, after-commit
   busts, pool/admission deadlines, scheduler prewarm and final art screenshot proof.
+- Verify the myWard read and moveWard command parity batches; the exact ward key rows
+  (roster, occupancy, anchor, door, move and the denied wardFull/wardBusy/wardSame rows)
+  in ux-key-manifest.json and the registered `housing-ward` variants (ward-square,
+  ward-exterior, ward-roster, ward-busy-cap, ward-door, ward-move-review) in
+  ux-shot-manifest.json (D92); live-ward saturation refuses through freeholdDenied at the
+  INSTANCE_SLOT_COUNT pool ceiling, never a restated number.
 Audit strict decode, malformed/max-size preservation, current authorization, keyed
 player strings, focus return and all input modes where UI exists, deterministic
 three-host parity, no monolith growth, and test-pin freshness where applicable.

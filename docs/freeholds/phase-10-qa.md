@@ -9,7 +9,7 @@ This is Phase 10 (QA) of the Freeholds and Guildhalls feature: audit the furnish
 colliders (the generalised runtime collider region registry, the sim publish on claim
 and change, the client publish from the descriptor).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 10 diff for correctness against every deliverable and acceptance
@@ -21,7 +21,7 @@ audit finds; record a verdict.
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Base and merge-forward" (merge origin/feature/masterwrought
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge origin/feature/masterwrought
   while PR #3872 is open, else the newest origin/release/**; release-merge-audit after a
   non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the forward-walk-inherits-reverse-gate
@@ -60,10 +60,12 @@ every issue including low-severity and uncertain ones; ranking happens later):
   and on free, and NEVER in a sweep; the client clears the previous region before
   setting the new one and clears on session end; the owner and a guest collide
   identically; a def with r: 0 publishes no circle; every claim holds its own collision
-  token on the InstanceSlot, allocated at claim and released on free, and no freehold
-  publish touches ctx.riftCollisionToken; the reader resolves a position's token through
-  the claim at that position; self_motion_rift_lift.ts either needed no twin (stated
-  why) or got one.
+  token on the InstanceSlot (the interface now in instance_slot.ts), allocated at claim
+  and released on free, and no freehold publish uses the host token as its identity;
+  the reader derives the one candidate origin under the host token (dungeonAt plus the
+  UNCLAMPED slot inverse, bounds-checked against the region) and honours the per-claim
+  ownership stamp on set and clear; self_motion_rift_lift.ts either needed no twin
+  (stated why) or got one.
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion that fails on regression (the
   equivalence pin drives positions BETWEEN thresholds on both sides of a wall and
   compares full answers, not booleans; the blocks-movement pin proves the same walk
@@ -71,9 +73,14 @@ every issue including low-severity and uncertain ones; ranking happens later):
   determinism pin compares collider arrays element-wise across two Sims; the
   no-per-tick pin exercises updateInstances and asserts zero publishes; the
   concurrent-claims pin places in claim A, walks in claim B, then frees A and walks in B
-  again); orphaned tests; missing negative cases (two claims of the same def in adjacent
-  slots do not share a region or a token; a stale region or token after free; a row at a
-  room edge; a rug with r: 0 beside a table with r above 0).
+  again; the candidate-origin call counter reads exactly one derivation per lookup
+  with all 24 slots of indices 15 and 16 claimed; the r-within-footprint sweep iterates
+  the real furnishings.ts table and reds when one def's r is raised above its
+  footprint; the filled-Cottage walk reaches door, arrival and hearth on both hosts
+  and reds when validatePlacement's door-path arm is removed); orphaned tests; missing
+  negative cases (two claims of the same def in adjacent slots do not share a region
+  or a token; a stale region or token after free; a stale clear with an earlier claim
+  token; a row at a room edge; a rug with r: 0 beside a table with r above 0).
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, a rift-named helper
   left in colliders.ts beside its alias, the architecture import invariant, the word
   "phase" in any code, comment, or commit message, em dashes or emojis, generated files
@@ -81,8 +88,9 @@ every issue including low-severity and uncertain ones; ranking happens later):
   modules, the colliders.ts ceiling lowered and not raised.
 Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
 the diff touched (architecture-reviewer, cross-platform-sync, privacy-security-review,
-test-coverage-auditor), and finally qa-checklist (the completion gate), all for
-COVERAGE, all to files.
+server-hot-path-reviewer for the per-claim registry read on the movement, sight and
+pathing hot paths, test-coverage-auditor), and finally qa-checklist (the completion
+gate), all for COVERAGE, all to files.
 
 SETTLED COVERAGE ADDITIONS:
 - The sibling/band resolver choice is closed. Exercise exact band/slot boundaries,
@@ -101,7 +109,9 @@ STEP 3 - VALIDATION:
   summary that every rift suite RAN and passed.
 
 FINAL REVIEW AND COMPLETION CONTRACT:
-- Required reviewers for the actual promised surfaces: architecture-reviewer, cross-platform-sync, privacy-security-review, test-coverage-auditor, qa-checklist.
+- Required reviewers for the actual promised surfaces: architecture-reviewer,
+  cross-platform-sync, privacy-security-review, server-hot-path-reviewer,
+  test-coverage-auditor, qa-checklist.
   Dispatch each for COVERAGE and wait for every report. Apply ALL findings including
   nits, then a FRESH reviewer reads the entire fix round. Earlier slice lists are
   ownership examples; this complete roster is the minimum finishing dispatch.

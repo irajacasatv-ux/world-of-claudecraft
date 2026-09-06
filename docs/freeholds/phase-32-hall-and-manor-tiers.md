@@ -1,4 +1,4 @@
-# Phase 32: Great Hall, Manor and Bastion upgrade projects
+# Phase 32: Great Hall, Manor, Bastion tiers and build projects
 
 Wave C. This implementation file and its paired QA own only the deliverables
 below. The locked decisions, content numbers, content-manifest.md,
@@ -18,7 +18,7 @@ acceptance row applies to the paired QA; nothing is built by this planning packe
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -50,8 +50,9 @@ NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provide
 committed immutable protection source, and createFreeholdLifecycleCoordinator captures
 authenticated observation time before queueing. Derive a return before presence
 advances; stale observations, fenced sessions and replay cannot mint grace. The
-accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
-and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+lifecycle-policy-binding artifact (accepted or still a named gate) names
+lifecyclePolicyId, sourceCalendarId and resetPolicyId; serving realm, browser zone or
+guessed UTC cannot rebind history.
 13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
 and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
 or account calendar ingress, source-history array on plots, polling job or receipt store.
@@ -88,7 +89,8 @@ entry/build/undo remain available; durable payment retains original operation re
 The game server and Sim remain ignorant of physical distribution. The future economy
 service owns eligibility verification and opaque authorization bound to account,
 purpose/SKU, policy, quote and operation, with issuer/verifier conformance in the
-accepted service artifact. A first-party web checkout session alone is insufficient.
+service artifact (accepted or still a named gate). A first-party web checkout session
+alone is insufficient.
 Client channel labels, Origin, UA, arbitrary JSON, linked Steam/Epic accounts and the
 game-service secret never prove eligibility; do not add a trusted channel field to the
 game server. The client capability map controls presentation, not purchase authority.
@@ -153,8 +155,8 @@ STEP 0 - PRE-FLIGHT:
   origin/feature/masterwrought while PR #3872 is open, otherwise newest origin/release/**
   and remove the dependency block after merge. Run release-merge-audit after a nonempty
   merge and pnpm install --frozen-lockfile if patches/ moved. Never use main.
-- Read root and applicable local CLAUDE.md in full; memory scan MEMORY.md, freeholds
-  packet entry, test-pin traps, apply ALL findings, review the review-fix round.
+- Read root and applicable local CLAUDE.md in full; read state.md Gotchas (the matching
+  cluster and the test-pin traps), apply ALL findings, review the review-fix round.
 
 STEP 1 - LOAD CONTEXT THROUGH AGENTS:
 Have a reader summarize this file, its QA, state.md locked decisions and content numbers,
@@ -186,6 +188,10 @@ history/finality and required Codex asset execution where applicable.
 STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
 - CONTENT/LAYOUT owner: append great_hall (2 rooms,120 decor,8 plinths,2 amenities),
   manor and bastion (3 rooms,200 decor,14 plinths,3 amenities) from state Content numbers.
+  The visitor cap column (D77): manor 16 (state.md Visitors row); meeting_hall,
+  great_hall and bastion take the Fernando-signed hall-tier rows in
+  content-numbers-workbook.md, an unsigned release gate until signed, with the Cottage
+  row standing until then (D77); never an invented literal.
   Use next verified free DungeonDef indexes, record them before touching consumers;
   no guessed index literal. Layouts and lifts remain content, with the six interior
   integration seams, empty spawns, owner claim, guideVisible false and no Finder row.
@@ -196,13 +202,24 @@ STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
 - SIM/TRANSFER owner: generalize 21's project state behind a small tested module.
   Contributions accumulate permanently until approved bill and confirmed fee are both
   satisfied, whichever arrives last; completion is immediate, with no artificial
-  multi-week duration or forced waiting. Members donate to the Hall Fund through 29;
-  officers authorize project payments from that fund, never a parallel direct-to-project
-  contribution rail. Respect current rank, the signed per-account cap schedule and
-  separate service balance revision. Exact fitting furnishing copies and member trophy
-  provenance carry across. Preview overflow and refuse before new mutation if bags
-  cannot hold safe returns. No mail custody branch. Full completion/custody/receipt
-  effects commit together; no expiry, lost contribution or duplicate grant.
+  multi-week duration or forced waiting. Two rails, never mixed: the Manor uses 21's
+  owner-only contribute_upgrade rail unchanged with the explicit source mode (bags, or
+  the vault inside the owner's own claim; D89), no rank and no fund; the Great Hall and
+  Bastion use 29's Hall Fund, where members donate through 29 and officers authorize
+  project payments from that fund, never a parallel direct-to-project contribution
+  rail. Fund custody stays with 29: its officer-plus withdraw-to-guild-bank verb and the
+  disband end-of-life refund are 29's and never a project rail (D78). Respect current
+  rank, the per-account cap schedule (an unsigned release gate until its signature is
+  on file) and separate service balance revision. Exact fitting furnishing copies and
+  member trophy provenance carry across. Guild-tier overflow custody target: a
+  non-fitting exact copy returns to the bags of the account that placed it (28's
+  departure-detach custody when that account is no longer a member), never to the
+  completing officer; the Manor returns to the owner's bags per 21. Preview overflow
+  and, if any return cannot be made safely (including a placing character that is not a
+  live participant of the completing transaction), refuse with the keyed bags_full
+  reason before any fee or material mutation, with the preview naming the copies to
+  remove. No mail custody branch. Full completion/custody/receipt effects commit
+  together; no expiry, lost contribution or duplicate grant.
 - SERVER owner: append the three price-free SKU rows and draft service-contract
   outcomes, use 07a's sole durable intent/receipt boundary extended by 15 and 07a's global plot fence/atomic
   save. Unknown SKU, stale quote, replay, second upgrade, wrong rank/unverified service authorization and dark
@@ -320,10 +337,15 @@ as coherent reviewed commits. Never push, open or merge a PR from this file.
 
 STEP 5 - ACCEPTANCE:
 - [ ] Fresh literal tier pins and exact approved manifests cover all three tiers;
-  rendered walls, floors and colliders share measured content and protected circulation.
+  rendered walls, floors and colliders share measured content and protected circulation;
+  the manor visitor cap 16 is pinned as a literal in tests/freehold_content.test.ts and
+  the hall-tier cap gate is recorded (D77).
 - [ ] Bill-first and fee-first complete immediately when both are confirmed, with no
   new elapsed-time requirement; concurrent members contribute through the capped fund,
-  officers approve, all contributed value and exact copies survive refusal/restart.
+  officers approve, all contributed value and exact copies survive refusal/restart; a
+  two-officer overflow case in tests/freehold_build_project.test.ts asserts copy custody
+  unchanged (the placer's bags, never the completing officer's) and the keyed refusal;
+  the Manor rail accepts no rank or fund input.
 - [ ] PG races/crash/lease/CAS and durable receipt replay prove one completion and
   atomic resource/overflow custody; both dispatch arms enforce every money/surface gate.
 - [ ] Required project/interior screenshots show pending/refused/overflow/member/officer

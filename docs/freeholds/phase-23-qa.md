@@ -61,7 +61,7 @@ information must remain legible through ambient grade, materials and silhouettes
 This file extends the single producer from 07a, not a second account or guild payment
 system: NEW server/freehold_mutation.ts::commitFreeholdMutation and
 server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation own
-durable intent, applied identities, global claim fencing and atomic effects. Phase15
+durable intent, applied identities, global claim fencing and atomic effects. Phase 15
 adds service quote/receipt fields to those rows; later files consume them. No separate
 guild/account receipt journal, ordinary-arrival receipt, writer queue or recovery loop.
 Extend 07a's reviewed actual touch-set manifest with this file's exact participants.
@@ -93,8 +93,9 @@ NEW server/freehold_lifecycle_db.ts::loadFreeholdLifecycleProtectionPage provide
 committed immutable protection source, and createFreeholdLifecycleCoordinator captures
 authenticated observation time before queueing. Derive a return before presence
 advances; stale observations, fenced sessions and replay cannot mint grace. The
-accepted lifecycle-policy-binding artifact names lifecyclePolicyId, sourceCalendarId
-and resetPolicyId; serving realm, browser zone or guessed UTC cannot rebind history.
+lifecycle-policy-binding artifact (accepted or still a named release gate) names
+lifecyclePolicyId, sourceCalendarId and resetPolicyId; serving realm, browser zone or
+guessed UTC cannot rebind history.
 13a owns server/freehold_db.ts::applyFreeholdUpkeepCalendar/loadFreeholdUpkeepCalendar
 and server/freehold_upkeep_ingress.ts::createFreeholdUpkeepIngress. No duplicate guild
 or account calendar ingress, source-history array on plots, polling job or receipt store.
@@ -160,7 +161,7 @@ This is Phase 23 (QA) of the Freeholds and Guildhalls feature: audit the Legend 
 and the remaining trophy families (eligibility, the finishes, the plaque projection,
 the props, the cosmetic wear below 30, every content obligation).
 
-Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Claude Code. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 23 diff for correctness against every deliverable and acceptance
@@ -190,9 +191,17 @@ Spawn one Explore agent to read and summarize:
   tests/freehold_condition.test.ts, tests/freehold_content.test.ts,
   tests/deeds_content.test.ts,
   tests/reliquary_content.test.ts, tests/trophy_tooltip_view.test.ts,
-  tests/snapshots.test.ts, tests/renderer_compile_gate.test.ts, the parity goldens
-The agent returns: the promised-versus-delivered table per family (the complete promised
-family manifest, including every wave A generic display upgraded here, each with its source id, trophy id, finish, final prop); the plaque fields the descriptor carries and where each is read from; every
+  tests/snapshots.test.ts, tests/renderer_compile_gate.test.ts,
+  tests/freehold_command_chain_online.test.ts, tests/server/freehold_wire.test.ts, the
+  parity goldens
+The agent returns: the promised-versus-delivered table per family (every 23-owned row of
+content-manifest.md "Specialized trophy model inventory for 23", every MOUNT_KEYS entry
+mapped or excluded, all ten prog_grandmaster_<craft> deeds, dgn_rift and dgn_rift_s_rank,
+including every wave A generic display upgraded here, each with its source id, trophy id,
+finish, final prop); the plaque fields the descriptor carries and where each is read from
+(signer, the owning character's prog_legendmaker deed day or the dateUnknown arm); the
+Legend Stand copy reference fields; the wire, decode and mirror lines with their owning
+slice and the older-decoder fixture; every
 test added with what it asserts; every write the trophy module performs (it should
 perform none outside the freehold record); any TODO, unused import, or stub.
 
@@ -206,21 +215,43 @@ STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report 
 file and replying with the path plus a short summary; prompt each for COVERAGE: report
 every issue including low-severity and uncertain ones; ranking happens later):
 - CORRECTNESS: every family's source id exists in the tree and maps to exactly one
-  trophy id; the finish per tier is right on both hosts; the Legend Stand reads the
-  item and never moves, locks, binds, or consumes it, and darkens (never removes) when
-  the item leaves possession; the retro grant is idempotent across a second join and a
-  relog; a visitor sees the owner's trophies through the descriptor; no hidden instance
-  field crosses the wire; below condition 30 the hearth light is cold and every finish
+  trophy id, and the delivered family set equals the 23-owned manifest inventory (no
+  fixed mount count; MOUNT_KEYS under the availability filter); the finish per tier is
+  right on both hosts; the Legend Stand reads the
+  item and never moves, locks, binds, or consumes it, keeps its stable copy reference
+  across a lock toggle and an enchant, and darkens (never removes) when
+  the item leaves possession, resolving two identical copies identically on both hosts;
+  the plaque shows the signer and the owning character's
+  prog_legendmaker deed day only when that character's legendariesForged counter equals
+  1, otherwise the dateUnknown key, never a synthesized or first-promotion day, and
+  nothing under src/sim/professions/ changed; provenance reads the captured snapshot
+  written at grant (D79) as utcDay stamps (D84); the retro grant is idempotent across a
+  second join and a
+  relog; capture never refuses join, enterDungeon or respawn (D83); a visitor sees the
+  owner's trophies through the descriptor; no hidden instance
+  field crosses the wire; the plaque, finish and inactive picks decode through the strict
+  allowlist and an older decoder shows bronze with a hidden plaque; below condition 30
+  the hearth light is cold and every finish
   dull on both hosts, restored at 30, nothing removed and no actionable readout hidden
   (D22); the extractions are move-not-rewrite.
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion (source ids as fresh
-  literals; a negative case per family and per Legend Stand rule; the no-item sweep
-  compares every trophy id against ITEMS and would fail on a collision; the
-  never-tradable pin exercises the market, trade, mail, and bank arms; the zero-Rng pin
+  literals; a negative case per family and per Legend Stand rule, including the
+  promoted copy with no recorded day, the two-promotions-on-one-character fixture that
+  shows dateUnknown on both stands, the duplicate-copy fixture that agrees on both
+  hosts, and the lock-toggle and enchant cases that keep the
+  stand lit; the no-item sweep
+  compares every trophy id against ITEMS, every mergeItems part and the ALL_RECIPES
+  result ids and would fail on a synthetic colliding id; the
+  never-tradable pin drives the market, trade, mail, and bank arms WITH a placed trophy
+  record present and asserts none can address it, and the SimContext spies record no
+  addItem, removeItem, market, mail or bank primitive from placing and removing it (a
+  pin that passes with no trophy code is a defect); the D83 pin joins with capture
+  exhausted; the old-client pin uses an older-decoder fixture, not a comment; the zero-Rng pin
   uses the observer, not an inference); orphaned tests; the parity scenario fires the
   retro path.
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, the architecture
-  import invariant (reliquary write ownership), the word "phase" in any code, comment,
+  import invariant (reliquary write ownership), any write under src/sim/professions/,
+  the word "phase" in any code, comment,
   or commit message, em dashes or emojis, generated files hand-edited, any shipped stand-in, a finish material attached outside the scheduler, the local
   CLAUDE.md rows accurate.
 - Required reviewers: architecture-reviewer, content-obligations-reviewer, render-performance-reviewer, frontend-seam-reviewer, cross-platform-sync, privacy-security-review, migration-safety, database-performance-reviewer, server-hot-path-reviewer, test-coverage-auditor, qa-checklist. Each reports COVERAGE to a file.

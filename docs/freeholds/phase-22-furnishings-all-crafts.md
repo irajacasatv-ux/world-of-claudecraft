@@ -2,12 +2,14 @@
 
 Wave B, the Lodge tier and the rest of the first wave. The spec is `progress.md` "22
 Furnishings across all ten crafts and the R8 pattern channels"; the decisions are
-`state.md` Locked decisions and the approved artifact manifests (D13 pattern access, D14 one existing craft per recipe). This
-phase ships exactly twenty additional furnishings (the ten existing crafts
+`state.md` Locked decisions and the approved artifact manifests (D53 pattern channels, D38
+the twenty-output roster, D14 one existing craft per recipe). This phase ships exactly twenty additional furnishings (the ten existing crafts
 produce the roster; produce decoration is counted inside it), their recipes, the rare patterns on the three R8 channels with the
-D13 quartermaster valve, every content obligation (icons with provenance, models through
+D53 quartermaster valve, every content obligation (icons with provenance, models through
 the image-to-glb pipeline, deeds, Reliquary Hearth shelf pages, wiki regen, name fills),
-and proves the market chip at volume. It is a content phase: batch-heavy.
+and proves the market chip at volume. It is a content phase, batch-heavy, plus exactly
+two appended luck-channel draws (a content tail group in src/sim/content/dungeons.ts and
+one sim-logic draw in src/sim/rift/progression.ts, the only sim logic 22 touches).
 
 ## Settled delivery and acceptance contract
 
@@ -64,14 +66,14 @@ This is Phase 22 of the Freeholds and Guildhalls feature: furnishings across all
 crafts and the R8 pattern channels (exactly twenty additional furnishings and their recipes, the rare
 patterns on raid, rift, and quartermaster, art and every content obligation).
 
-Harness: Codex. All asset generation must be done by Codex, not Claude. Follow the root CLAUDE.md "Working style and effort by model"
+Harness: Codex. All asset generation must be done by Codex, not Claude. Follow the root CLAUDE.md "Working style by model capability"
 block for effort and fan-out; this prompt names no model.
 ULTRACODE: add the keyword `ultracode` to this prompt when you paste it: the phase is
 batch-heavy (exactly twenty additional furnishing defs, recipes, patterns, icons, and models).
 
 Goal: widen the furnishing catalogue to thirty-eight pieces (eighteen from wave A plus twenty here) across every craft with
 recipes on existing crafts, rare patterns on the three R8 channels each also reachable
-through the Heroic Quartermaster (D13), art and every same-change obligation landed, and
+through the Heroic Quartermaster (D53), art and every same-change obligation landed, and
 the furnishing market chip proven against the full roster.
 
 STEP 0 - PRE-FLIGHT:
@@ -88,10 +90,11 @@ STEP 0 - PRE-FLIGHT:
   patches/.
 - If state.md "Push policy" records a stacked wave B branch, work on that branch instead
   of feature/freeholds; the merge-forward rule is unchanged.
-- Memory scan: MEMORY.md and entries on the content obligations catalog cluster, the
+- Gotcha scan (Codex carries no Claude memory): docs/freeholds/state.md "Gotchas (read
+  before the matching phase)" entries on the content obligations cluster, the
   authored-art pin trap (pin the CONTRACT beside the blob), test-pin traps, the
-  provisioner firewall, the image-to-glb and asset-pipeline gotchas, "dead agents' disk
-  output before re-running".
+  provisioner firewall, the image-to-glb and asset-pipeline gotchas, and dead agents'
+  disk output before re-running.
 
 STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
 Spawn one Explore agent to read and summarize:
@@ -102,10 +105,15 @@ Spawn one Explore agent to read and summarize:
   shape), src/sim/content/freehold/trophies.ts (to keep trophy ids disjoint),
   src/sim/data.ts (the mergeItems and recipe merge sites), src/sim/types.ts
   (FurnishingItemDef, RecipeItemDef), src/sim/content/CLAUDE.md
-- The three channels: src/sim/content/dungeons.ts (the nythraxis_patterns rollGroup, the
-  raid tail), src/sim/rift/progression.ts (addRiftClearGearLoot, the rift clear draw),
-  src/sim/content/heroic_vendor.ts (the Heroic Quartermaster Marks stock, the D13
-  valve); src/sim/content/apex_patterns.ts and farm_patterns.ts headers (the channel
+- The three channels: src/sim/content/dungeons.ts (the nythraxis_patterns and
+  nythraxis_farm tail rollGroups on nythraxis_scourge_of_thornpeak and their append-only
+  contract: the housing channel is a NEW tail group appended BELOW nythraxis_farm, never
+  a row added to either existing group), src/sim/rift/progression.ts
+  (addRiftClearGearLoot's numbered append-only draw list and the sorted exported
+  RIFT_PATTERN_ITEM_IDS and FARM_RIFT_DROP_ITEM_IDS whose order is the draw contract:
+  the housing channel is a NEW appended Draw 8 over its own sorted exported list, never
+  an insertion into either existing list), src/sim/content/heroic_vendor.ts (the Heroic
+  Quartermaster Marks stock, the D53 valve); src/sim/content/apex_patterns.ts and farm_patterns.ts headers (the channel
   doctrine and the id contract pattern_<output>); src/sim/professions/pattern_items.ts
   (resolvePatternLearn)
 - src/sim/content/farm_crops.ts (produce ids for the Farming props and cooking inputs),
@@ -144,18 +152,36 @@ roster, tests/deeds_content.test.ts and tests/reliquary_content.test.ts counts,
 src/sim/data.ts merges, `npm run wiki:content`, the fingerprint pins):
 - Agent CRAFT-A: the ten exact manifest rows for weaponcrafting, armorcrafting, leatherworking,
   tailoring, and engineering (defs with footprint, measured r, decor cost, approved surface metadata,
-  a model key; recipes on the existing craft with tier 1 to 4 materials; no stat, buff,
+  a model key; recipes on the existing craft with tier 1 to 4 materials; every
+  ProfessionRecipeRecord balance field, skillReq, reagent item units per D33, quality and
+  itemLevelBudget (the craft gold sink input), is a signed workbook CAL-RECIPES-B row
+  before activation; no stat, buff,
   or drop field; item names in the item-names domain with M16 fills where wordy).
 - Agent CRAFT-B: two furnishings each for alchemy, inscription, jewelcrafting, cooking,
-  and enchanting (produce inputs allowed on cooking and alchemy only), with produce props and garden markers counted inside the twenty-output roster;
+  and enchanting (produce inputs allowed on cooking and alchemy only; the same signed
+  CAL-RECIPES-B row per recipe as CRAFT-A), with produce props and garden markers counted inside the twenty-output roster;
   the two produce decorations use the exact NEW approved recipe rows on the existing Cooking craft
   specified by content-manifest.md, never a Farming trainer or new craft.
 - Agent CHANNELS: the rare patterns in furnishing_patterns.ts (RecipeItemDef rows
   pattern_<output>, quality derived from the output, sellValue 100, tradable drops,
   never a Reliquary page): each pattern has exactly one named raid OR rift luck channel in the manifest,
-  plus its Heroic Quartermaster Marks row (D13), never both luck channels by default; no fourth channel; the
+  plus its Heroic Quartermaster Marks row (D53), never both luck channels by default; no fourth channel.
+  The raid channel is a NEW partitioned tail rollGroup `nythraxis_housing` appended BELOW
+  `nythraxis_farm` on nythraxis_scourge_of_thornpeak carrying the three raid patterns at
+  the per-row weight the workbook's CAL-RECIPES-B row signs; the rift channel is a NEW
+  appended Draw 8 at the end of addRiftClearGearLoot in src/sim/rift/progression.ts (one
+  ctx.rng.chance at the signed chance, then one ctx.rng.int pick over a NEW sorted
+  exported HOUSING_RIFT_PATTERN_ITEM_IDS holding the three rift patterns), so every
+  existing draw keeps its stream position; zero changed bytes in the existing
+  nythraxis_patterns and nythraxis_farm rows and in RIFT_PATTERN_ITEM_IDS and
+  FARM_RIFT_DROP_ITEM_IDS; every golden the two appended draws reach (nythraxis_full_pull,
+  nythraxis_heroic_claim, rift_clear_rewards, rift_clear_rewards_b, rift_clear_rewards_c
+  and rift_clear_rewards_s under tests/parity/golden/) re-recorded with UPDATE_PARITY=1
+  in their own commit; the
   tests/apex_pattern_channels.test.ts referential sweep and
-  tests/recipe_pattern_items.test.ts shipped sweeps extended for the new rows.
+  tests/recipe_pattern_items.test.ts shipped sweeps extended for the new rows, and the
+  tests/dungeons.test.ts group pins plus the tests/farm_seed_channels.test.ts and
+  tests/rift_rank_tuning.test.ts list pins re-asserted with their existing literals.
 - Agent ART: a WebP icon plus a mapping.json provenance row for every new item id
   (furnishings and patterns) under the woc-item-icon-v1 contract; a GLB per new
   furnishing through the image-to-glb skill (exporter, optimizer, fingerprint pins,
@@ -165,16 +191,19 @@ Every agent writes any report longer than a screen to a file and replies with th
 plus a short summary. Never `mode: "plan"` on teammates.
 
 INVARIANTS THIS PHASE MUST KEEP:
-- Determinism: content only; no Rng draw from any furnishing path; the channel draws
-  ride the existing raid and rift rolls unchanged in order (a parity scenario proves the
-  draw order if a rollGroup gains a row).
+- Determinism: content plus exactly the two appended channel draws named in Agent
+  CHANNELS (a sim-logic change in src/sim/rift/progression.ts and a tail group in
+  src/sim/content/dungeons.ts); no Rng draw from any furnishing path; every existing raid
+  and rift draw keeps its stream position under both files' append-only contracts, which
+  the re-recorded goldens (nythraxis_full_pull, nythraxis_heroic_claim and the four
+  rift_clear_rewards scenarios) prove.
 - Never sell power: no furnishing carries a stat, buff, gathering, or drop field (the
   power-neutral sweep); Well Fed from a feast is the only buff in a house.
 - Never a Perfecting keystone, a gear intermediate, or the quickening catalyst in any
   furnishing recipe (tests/provisioner_firewall.test.ts sweeps ALL_RECIPES); produce
   feeds cooking and alchemy lines only; recipes and their stationType gates unchanged;
   no new craft (Carpenter and Mason are explicitly outside this packet); zero new farm beds.
-- D13: a luck-gated drop is never a pattern's only faucet; every pattern is
+- D53: a luck-gated drop is never a pattern's only faucet; every pattern is
   Marks-purchasable; no pattern takes a Reliquary page; furnishing items qualify under the appended Hearth shelf contract.
 - Every content obligation lands in the SAME change: deeds (Homesteader), Reliquary
   Hearth shelf pages, wiki regen plus guide.* keys, committed WebP art with provenance,
@@ -190,7 +219,8 @@ INVARIANTS THIS PHASE MUST KEEP:
 Out of scope (do NOT do in this phase):
 - Activation of wall/table/fixed-ceiling placement (25 owns validation and controls); trophies of any
   kind (Phase 23); dyes (Phase 41); seasonal sets; delve rewards as a channel.
-- Any sim, server, wire, or UI logic change; the market chip already exists (Phase 02),
+- Any sim, server, wire, or UI logic change beyond the two appended channel draws in
+  Agent CHANNELS; the market chip already exists (Phase 02),
   this phase proves it against the roster. Typed surface metadata follows the exact
   approved manifest; 25 alone enables those placement modes, with unsupported-mode
   refusal until its shared validators land.
@@ -204,13 +234,20 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
   tests/market_filters.test.ts tests/item_icons.test.ts
   tests/item_art_consistency.test.ts tests/deeds_content.test.ts
   tests/reliquary_content.test.ts tests/furnishing_item_kind.test.ts
-  tests/architecture.test.ts tests/renderer_compile_gate.test.ts` plus the model
-  fingerprint suite Phase 19 named; `npm run wiki:content` then `npx vitest run
+  tests/architecture.test.ts tests/renderer_compile_gate.test.ts tests/dungeons.test.ts
+  tests/farm_seed_channels.test.ts tests/rift_rank_tuning.test.ts tests/parity/parity_a.test.ts
+  tests/parity/parity_b.test.ts tests/parity/parity_c.test.ts tests/parity/parity_d.test.ts
+  tests/parity/parity_e.test.ts tests/parity/parity_f.test.ts tests/parity/parity_g.test.ts
+  tests/parity/coverage_a.test.ts tests/parity/coverage_b.test.ts
+  tests/parity/coverage_c.test.ts` plus the model
+  fingerprint suite Phase 19 named; parity goldens regenerated with UPDATE_PARITY=1 in
+  their own commit for the scenarios the two appended draws reach; `npm run wiki:content`
+  then `npx vitest run
   tests/guide.test.ts`; `npm run i18n:gen` then `npx vitest run
   tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`;
   `npm run asset:budget`; `npm run perf:tour` through the Cottage with the new models
   registered (zero live-program events).
-- Required reviewers: content-obligations-reviewer, render-performance-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist. Each reports COVERAGE to a file.
+- Required reviewers: architecture-reviewer, cross-platform-sync, content-obligations-reviewer, render-performance-reviewer, frontend-seam-reviewer, test-coverage-auditor, qa-checklist. Each reports COVERAGE to a file.
   Apply ALL findings including nits; a fresh reviewer reads every fix. The actual diff
   may trigger additional specialists; database review runs before decisions and again
   on the finished diff for database surfaces.
@@ -218,8 +255,8 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
 STEP 4 - COMMIT CADENCE:
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
 `git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
-- feat(content): add furnishings across all ten crafts and the Farming produce props
-- feat(content): add the rare furnishing patterns on the raid, rift, and quartermaster channels
+- feat(content): add furnishings across all ten crafts and the Cooking produce props
+- feat(sim): add the housing raid tail group and rift draw for the rare furnishing patterns
 - feat(render): register the furnishing models and icons with provenance
 - test(content): pin the furnishing roster, the pattern channels, and the market chip at volume
 Then `npm run ci:changed` after the LAST commit; read the exit code.
@@ -228,6 +265,15 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] Every new recipe resolves through resolvePatternLearn or a trainer row on an
   EXISTING craft; every pattern reaches exactly its channel and the Marks row;
   tests/apex_pattern_channels.test.ts finds no fourth channel.
+- [ ] The diff shows zero changed bytes in the existing nythraxis_patterns and
+  nythraxis_farm rows and in RIFT_PATTERN_ITEM_IDS and FARM_RIFT_DROP_ITEM_IDS;
+  tests/dungeons.test.ts, tests/farm_seed_channels.test.ts and
+  tests/rift_rank_tuning.test.ts stay green on their existing literals; the parity golden
+  regen commit exists; architecture-reviewer and cross-platform-sync report.
+- [ ] Every balance field of the twenty recipes (skillReq, reagent item units, quality,
+  itemLevelBudget) and the two channel rates (the nythraxis_housing per-row weight and
+  the rift Draw 8 chance) is a signed CAL-RECIPES-B row before activation, and
+  tests/freehold_content.test.ts pins each as a fresh literal.
 - [ ] tests/freehold_content.test.ts pins the full furnishing roster by fresh literal
   ids, the power-neutral sweep, and the keystone sweep; tests/market_filters.test.ts
   lists every furnishing under the chip.
