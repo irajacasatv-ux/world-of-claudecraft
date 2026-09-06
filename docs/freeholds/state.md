@@ -34,7 +34,8 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
-Phase 01 (`phase-01-foundation.md`): NOT STARTED. R01-R46 and D73-D75 are approved;
+Phase 01 (`phase-01-foundation.md`): IMPLEMENTED LOCALLY on 2026-09-06 (four code commits
+plus this ledger), awaiting `phase-01-qa.md`. R01-R46 and D73-D75 are approved;
 D76-D93 (settlement round 2, R47-R64) were approved by Fernando on 2026-09-06 with the words
 "approve all recommendations R47-R64"; the review-fix round is applied across the packet,
 freshly reviewed and committed locally. Implementation remains unbuilt; the branch stays local.
@@ -1251,7 +1252,7 @@ replaces the marker with its actual outputs.
 
 | Phase | New files | IWorld members | SimEvents | Wire keys and commands | Endpoints | Tables | i18n keys |
 |---|---|---|---|---|---|---|---|
-| 01 | | | | | | | |
+| 01 | `src/world_api/housing.ts`, `src/sim/freehold/{types,state,commands,index}.ts` + `CLAUDE.md`, `src/net/freehold_snapshot_wire.ts`, `server/freehold_config.ts`, `server/freehold_wire.ts`, `server/freehold_routes.ts`; extractions `src/sim/mob/move_toward.ts`, `server/live_location.ts`, `src/net/blank_entity.ts`, `src/game/seo_metadata.ts`; tests `freehold_module`, `freehold_snapshot_wire`, `freehold_command_chain_online`, `move_toward`, `seo_metadata`, `server/freehold_wire`, `server/freehold_routes` | `myFreehold`, `freeholdLayout` (data, null); `housingNowMs`, `freeholdEnter`, `freeholdLeave`, `placeFurnishing`, `moveFurnishing`, `removeFurnishing`, `undoPlacement`, `redoPlacement`, `payLedger`, `setVisitPolicy`, `setFreeholdBuildPresence` (dark no-ops); SimContext `ctx.freeholds` (live map) and `ctx.freeholdsEnabled` (read-only); `SimConfig.freeholdsEnabled` | none | `freehold_enter`, `freehold_leave`, `place_furnishing`, `move_furnishing`, `remove_furnishing`, `undo_placement`, `redo_placement`, `pay_ledger`, `set_visit_policy`, `set_freehold_build_presence` (refused pre-switch while `FREEHOLDS_ENABLED !== '1'`; `freehold_enter` jail-blocked); self keys: none (empty allowlist) | GET `/api/freehold` (bearer read guard behind the dedicated tier-1-only `HOUSING_READ_POLICY` IP limiter, 60/min, no tier-2 write; `freehold.disabled` 503 while dark, `{ enabled: true, freehold: null }` lit) | none | `apiError.freehold.invalid_input` (generated, reserved), `apiError.freehold.disabled` (English plus the five M16 non-Latin fills); metrics `woc_freehold_refused_total`; env `FREEHOLDS_ENABLED` (strict `'1'`, default off, `.env.example` + `DEPLOY.md` + `turbo.json`) |
 | 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
 | 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
 | 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
@@ -1291,6 +1292,36 @@ message is performed in this documentation session.
   against either literal. Every delegate or case label added must be paid for by
   extracting an existing block first, then lower the ceiling. `IWORLD_MEMBERS` probes
   the prototypes, so facet methods stay one-line delegates on `Sim` and `ClientWorld`.
+- Measured at the 01 head (2026-09-06, base still `origin/feature/masterwrought` 0f53c92ff7,
+  PR 3872 open): `src/main.ts` ALSO sat at zero slack (11459) and needed a fourth
+  extraction for its one `freeholdsEnabled` line. The four ceilings after 01 equal the
+  files exactly: `src/sim/sim.ts` 11983, `server/game.ts` 10301, `src/net/online.ts` 5708,
+  `src/main.ts` 11384. Every later phase re-reads the pins; 02's furnishing kind touches
+  `src/sim/types.ts`, not a monolith, but any `sim.ts` merge line still owes an extraction.
+- Locked during 01 (engineering, no product change): (a) the offline flag is gated like
+  its two sibling live-world flags, `freeholdsEnabled: world === undefined` in `src/main.ts`,
+  so the stock offline world is lit (D3) while custom editor play-test maps and the editor
+  viewport (`src/editor/3d/viewport.ts`) boot dark; the headless env passes `true`.
+  (b) `SimConfig.freeholdsEnabled` on a realm is a BOOT SNAPSHOT of `FREEHOLDS_ENABLED`
+  (a running realm needs a restart); only the wire predicate and the status route read the
+  env live. (c) `freehold_enter` joined `JAILED_BLOCKED_COMMANDS` (a door step into instanced
+  space); `freehold_leave` is deliberately not jail-blocked. (d) GET `/api/freehold` mounts
+  a DEDICATED housing read limiter (`HOUSING_READ_POLICY`: IP-keyed, 60/min, tier-2 `none`
+  so an allowed request pays no pg UPSERT; `HOUSING_READ_MAX_PER_MINUTE` in
+  `server/ratelimit.ts`, pinned in `tests/server/tunables.test.ts`) AHEAD of the bearer guard
+  and keeps auth AHEAD of the flag check (the flag never leaks to an anonymous probe); every
+  later housing endpoint (15, 30a) follows that onion order. (e) `ctx.freeholdsEnabled` has zero production
+  consumers until 03 (furnisher stock) and 06 (gate prompt, Hearth Key); the waiver is
+  recorded beside the zero-consumer rule in `src/sim/CLAUDE.md`. (f) `ctx.freeholds` is
+  owner-keyed: the first `loadFreehold` caller (05/07) pairs it with `evictFreehold` at
+  account or character unload in the same change and registers the table prune in
+  `server/retention_sweep.ts` with the DDL (07). (g) `freeholdTransitionId` is a
+  ClientWorld-only mirror; its first consumer (08a) lands it on `IWorldHousing` and both
+  hosts with the parity pin. (h) the first behavioral read of `ctx.freeholdsEnabled` adds a
+  parity scenario booting the flag true (03). (i) the housing UI (11) gates its senders on a
+  server-advertised capability so a dark realm never burns a command-lane token per click.
+  (j) the real housing command bodies (08) re-validate the payload shape inside
+  `src/sim/freehold/` so the offline host enforces what `server/freehold_wire.ts` enforces.
 - `OtherItemDef.kind` is an `Exclude` list: add `'furnishing'` to it or the new kind
   silently becomes a generic usable (Phase 02).
 - `tests/market_filters.test.ts` fails on any `ItemKind` without a browse bucket.

@@ -13,7 +13,7 @@ the chain. The current next implementation is
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
-| 01 Foundation | Not started | | | |
+| 01 Foundation | Implemented locally, awaiting 01 QA | 2026-09-06 | | Six reviewers (cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist): 0 blocking, 11 should-fix, ~25 nits, ALL applied; fresh review of the fix round PASS; gates unsigned (see notes) |
 | 01 QA | Not started | | | |
 | 02 Furnishing item kind | Not started | | | |
 | 02 QA | Not started | | | |
@@ -171,6 +171,25 @@ member is named in its own phase file with the parity pin updated in that same c
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
 After phase-01-qa.md: [phase-02-furnishing-item-kind.md](phase-02-furnishing-item-kind.md).
+
+Status notes (2026-09-06, implemented locally, branch not pushed): all four deliverables
+landed with zero player-visible behavior. Evidence: `npx tsc --noEmit` clean; the STEP 3
+suites plus the extraction and fix-round suites (47 files, 1959 tests) green; biome clean
+on the 51 changed files; the four monolith ceilings LOWERED to the exact new counts
+(sim.ts 11983, game.ts 10301, online.ts 5708, main.ts 11384) after four verbatim
+extractions (moveToward, liveLocationFor, blankEntity, updateSeoMetadata). Review round:
+six reviewers, 0 blocking, every should-fix and nit applied (jailed row for
+freehold_enter, a dedicated tier-1-only read limiter on the status route, boot-snapshot wording, opaque-id
+bounds, the sender-to-server drift guard, the decode-walk seam, the same-seed lit/dark arm,
+the events-drained arm, the direct ctx.moveToward binding), then a fresh two-reviewer read of
+the fix round (5 should-fix, 8 nits, all applied: the dedicated HOUSING_READ_POLICY, the
+opaque-id chain arms, the anomaly-observer pin, the narrowed firewall allowlist). The locked engineering decisions are in state.md "Gotchas" (a) to (j). Named
+unsigned gates: the "Runtime safety and distribution" row in state.md "Tracked release
+and handoff gates" stays unsigned (01 supplied the strict live FREEHOLDS_ENABLED gate and
+its dark route/command/catalog proof; the forbidden-submodel absence and the management
+flow approval remain open); the four other gate rows are untouched by 01. Deferred to the
+release fill: the housing term family (Freehold, Steward's Ledger, Hearth Key) joins
+`scripts/i18n_glossary.json` when the UI keys land.
 
 #### 02 Furnishing item kind
 
