@@ -113,6 +113,7 @@ const REGISTRY_ONLY_PATHS = new Set<string>([
   '/api/reliquary/rarity',
   '/api/deeds/broadcasts',
   '/api/characters/:id/deeds-recent',
+  '/api/freehold',
   '/api/characters/:id/appearance-reroll',
   '/api/steam/link',
   '/api/steam/status',
@@ -348,6 +349,9 @@ describe('registry completeness: migrated baseline (public reads + auth + charac
     { method: 'GET', path: '/api/guilds/roster' },
     { method: 'GET', path: '/api/deeds/broadcasts' },
     { method: 'POST', path: '/api/deeds/broadcasts' },
+    // The Freeholds status read (server/freehold_routes.ts): registry-only like
+    // the Steam trio, env-gated dark until FREEHOLDS_ENABLED=1.
+    { method: 'GET', path: '/api/freehold' },
     // The reliquary rarity read (server/reliquary.ts): registry-only on the
     // same terms as the deeds family, and it shares their cache and flight.
     { method: 'GET', path: '/api/reliquary/rarity' },

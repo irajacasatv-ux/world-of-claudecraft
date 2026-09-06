@@ -5014,6 +5014,10 @@ export const cs_CZ: EnTranslations = {
       "stepup_wallet_mismatch": "Tvá propojená peněženka se od vydání tohoto potvrzení změnila. Začni prodej znovu.",
       "stepup_binding_mismatch": "Toto potvrzení peněženky neodpovídá tomuto prodeji. Začni prodej znovu.",
       "stepup_signature_invalid": "Podpis peněženky se nepodařilo ověřit. Začni prodej znovu."
+    },
+    "freehold": {
+      "invalid_input": "Invalid input.",
+      "disabled": "Freeholds are not enabled on this realm."
     }
   },
   "guide": {

@@ -375,6 +375,16 @@ export const ERROR_CODES = deepFreeze({
   'woc_market.stepup_binding_mismatch': { params: [] },
   // The wallet signature did not verify against the challenge (403).
   'woc_market.stepup_signature_invalid': { params: [] },
+
+  // --- Freeholds (player housing) family codes (server/freehold_routes.ts).
+  // The whole surface is env-gated: with FREEHOLDS_ENABLED unset the status
+  // read answers freehold.disabled, the steam.disabled precedent. ---
+
+  // The status read's input validation reject (400), scaffolded with the route.
+  'freehold.invalid_input': { params: [] },
+  // Freeholds are not enabled on this realm (feature-off 503; the
+  // steam.disabled precedent).
+  'freehold.disabled': { params: [] },
 } as const);
 
 /** A stable error code: one of the keys of ERROR_CODES. */

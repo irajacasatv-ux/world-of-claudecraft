@@ -1196,6 +1196,23 @@ export const SURFACE_INVENTORY: readonly SurfaceRoute[] = [
     limiter: null,
     requireOwnedExpected: null,
   },
+  // Freeholds (server/freehold_routes.ts): the housing status read, a
+  // registry-only RouteDef born after the migration like the deeds family, and
+  // env-gated dark (freehold.disabled 503 until FREEHOLDS_ENABLED=1) behind the
+  // shared bearer read guard, with its OWN per-IP housing-read limiter
+  // (HOUSING_READ_POLICY, tier-1 only, never the shared public-read bucket)
+  // mounted ahead of the guard so a dark realm's constant 503 never buys
+  // unbounded token and moderation reads.
+  {
+    dispatcher: DISPATCH.mainApi,
+    method: 'GET',
+    path: '/api/freehold',
+    handler: 'server/freehold_routes.ts freeholdHandler (registry-only RouteDef)',
+    contentType: PROBLEM_JSON,
+    authScope: AUTH_SCOPE.bearer,
+    limiter: 'housingReadRateLimited',
+    requireOwnedExpected: null,
+  },
   // Reliquary (server/reliquary.ts): the population-rarity aggregate, a
   // registry-only RouteDef born after the migration like the deeds family, and
   // the deeds-rarity row shape exactly (anonymous public JSON read, budgeted

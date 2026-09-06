@@ -5014,6 +5014,10 @@ export const fr_CA: EnTranslations = {
       "stepup_wallet_mismatch": "Votre portefeuille lié a changé depuis l'émission de cette confirmation. Recommencez la vente.",
       "stepup_binding_mismatch": "Cette confirmation de portefeuille ne correspond pas à cette vente. Recommencez la vente.",
       "stepup_signature_invalid": "La signature du portefeuille n'a pas pu être vérifiée. Recommencez la vente."
+    },
+    "freehold": {
+      "invalid_input": "Invalid input.",
+      "disabled": "Freeholds are not enabled on this realm."
     }
   },
   "guide": {

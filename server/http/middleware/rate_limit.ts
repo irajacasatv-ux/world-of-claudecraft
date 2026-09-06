@@ -37,6 +37,8 @@ import {
   discordRateLimited,
   EPIC_LINK_MAX_PER_MINUTE,
   epicLinkRateLimited,
+  HOUSING_READ_MAX_PER_MINUTE,
+  housingReadRateLimited,
   MAP_MUTATION_MAX_PER_MINUTE,
   mapMutationRateLimited,
   mergeFusedOutcomes,
@@ -80,12 +82,14 @@ export type RateLimitKeyClass = 'ip' | 'ip+account';
  * It is the deliberate per-policy opt-out the two-tier resolver spec calls
  * for: tier-2 costs one pg UPSERT per ALLOWED request (two for 'ip+account'),
  * so a mounted high-volume policy stays tier-1-only with a one-word policy
- * edit instead of a resolver change. The one 'none' policy today is
- * WOC_MARKET_READ_POLICY (the marketplace's polled GET surface): paying two
+ * edit instead of a resolver change. The two 'none' policies today are
+ * WOC_MARKET_READ_POLICY (the marketplace's polled GET surface: paying two
  * pg writes per ALLOWED poll would have out-costed the very reads its caches
- * remove, and the tier-1 sliding window still meters the flood per process.
+ * remove) and HOUSING_READ_POLICY (a bound mounted to make a dark realm's
+ * status read CHEAPER, which one pg write per allowed request would undo);
+ * the tier-1 sliding window still meters the flood per process for both.
  * Every other policy is 'global'; the derivation guard test pins the full
- * table, this one opt-out included, so a silently-added second 'none' fails
+ * table, these two opt-outs included, so a silently-added third 'none' fails
  * there.
  */
 export type RateLimitTier2 = 'global' | 'none';
@@ -214,6 +218,27 @@ export const PUBLIC_READ_POLICY: RateLimitPolicy = {
   windowSeconds: WINDOW_SECONDS,
   tier1: (ctx) => publicReadRateLimited(ctx.req),
   tier2: 'global',
+};
+
+// The Freeholds status read (GET /api/freehold, server/freehold_routes.ts).
+// Its OWN per-IP bucket, housing only: never the shared public-read map, so a
+// NAT-mate pulling assets or browsing the map cannot spend the housing budget
+// for every account behind that IP. It mounts AHEAD of the bearer guard so a
+// dark realm's constant 503 is bounded before the guard's two Postgres reads.
+// TIER-1 ONLY, the second sanctioned opt-out beside WOC_MARKET_READ_POLICY:
+// the mount exists to make a dark realm cheaper, and tier-2 'global' would
+// charge every ALLOWED request one rate_limits UPSERT on top of the guard's
+// reads, more than the unmetered route paid. The same single-process caveat
+// applies: a realm fronted by several concurrent processes grants a full
+// window per process. Flood observability is unchanged (the tier-1 429 path
+// feeds rate_limit_hits_total either way).
+export const HOUSING_READ_POLICY: RateLimitPolicy = {
+  name: 'housing_read',
+  keyClass: 'ip',
+  limit: HOUSING_READ_MAX_PER_MINUTE,
+  windowSeconds: WINDOW_SECONDS,
+  tier1: (ctx) => housingReadRateLimited(ctx.req),
+  tier2: 'none',
 };
 
 export const WOC_BALANCE_POLICY: RateLimitPolicy = {

@@ -9181,6 +9181,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'apiError.epic.already_linked': '계정에 이미 연동된 Epic 계정이 있습니다.',
   'apiError.epic.account_taken': '해당 Epic 계정은 이미 다른 계정에 연결되어 있습니다.',
   'apiError.epic.upstream': 'Epic이 응답하지 않습니다. 잠시 후 다시 시도해 주세요.',
+  'apiError.freehold.invalid_input': '입력이 올바르지 않습니다.',
+  'apiError.freehold.disabled': '이 서버에서는 자유 영지가 활성화되어 있지 않습니다.',
   'apiError.db.conflict': '변경 사항이 다른 업데이트와 충돌했습니다. 다시 시도해 주세요.',
   'apiError.rate_limit.exceeded': '요청이 너무 많습니다. {seconds} 후에 다시 시도하세요.',
   'apiError.internal.error': '서버 측에서 문제가 발생했습니다. 다시 시도해 주세요.',

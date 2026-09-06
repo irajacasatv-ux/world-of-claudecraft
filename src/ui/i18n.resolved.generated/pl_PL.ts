@@ -5014,6 +5014,10 @@ export const pl_PL: EnTranslations = {
       "stepup_wallet_mismatch": "Twój podłączony portfel zmienił się, odkąd wydano to potwierdzenie. Rozpocznij sprzedaż od nowa.",
       "stepup_binding_mismatch": "To potwierdzenie portfela nie pasuje do tej sprzedaży. Rozpocznij sprzedaż od nowa.",
       "stepup_signature_invalid": "Podpis portfela nie został zweryfikowany. Rozpocznij sprzedaż od nowa."
+    },
+    "freehold": {
+      "invalid_input": "Invalid input.",
+      "disabled": "Freeholds are not enabled on this realm."
     }
   },
   "guide": {

@@ -44,6 +44,7 @@
     "CROWD_R",
     "CROWD_SETTLE_MS",
     "CROWD_W",
+    "FREEHOLDS_ENABLED",
     "GATE_MAX_WORKERS",
     "GATE_FAST_BASE",
     "GATE_NO_LOCK",

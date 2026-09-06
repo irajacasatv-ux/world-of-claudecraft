@@ -227,6 +227,9 @@ export const WOC_GUILD_BANK_INCIDENTS_TOTAL = 'woc_guild_bank_incidents_total';
 /** Rift forge wire commands refused while the gate is closed (server/rift_forge_gate.ts). */
 export const WOC_RIFT_FORGE_REFUSED_TOTAL = 'woc_rift_forge_refused_total';
 
+/** Freeholds wire commands refused while the realm is dark (server/freehold_wire.ts). */
+export const WOC_FREEHOLD_REFUSED_TOTAL = 'woc_freehold_refused_total';
+
 /** Total Materials Vault ledger incidents, by kind. Its own metric rather than
  *  a kind on the guild series: the vault is a personal per-character store, so
  *  a guild-bank alert rule must never fire on it. */
@@ -871,6 +874,12 @@ export function registerGameStateMetrics(
     registers: [registry],
   });
 
+  const freeholdRefusals = new Counter({
+    name: WOC_FREEHOLD_REFUSED_TOTAL,
+    help: 'Total Freeholds wire commands refused while the realm is dark; the stock client sends none until the housing UI ships, so a non-zero rate means a modified client is probing, or a realm forgot FREEHOLDS_ENABLED.',
+    registers: [registry],
+  });
+
   const chatMessages = new Counter({
     name: WOC_CHAT_MESSAGES_TOTAL,
     help: 'Total player chat messages routed to other players (any channel).',
@@ -1214,6 +1223,13 @@ export function registerGameStateMetrics(
     riftForgeRefused(): void {
       try {
         riftForgeRefusals.inc();
+      } catch {
+        // Drop the sample rather than propagate into the dispatch path.
+      }
+    },
+    freeholdRefused(): void {
+      try {
+        freeholdRefusals.inc();
       } catch {
         // Drop the sample rather than propagate into the dispatch path.
       }

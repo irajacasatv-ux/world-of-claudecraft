@@ -203,6 +203,8 @@ export const API_ERROR_KEYS = {
   'woc_market.stepup_wallet_mismatch': 'apiError.woc_market.stepup_wallet_mismatch',
   'woc_market.stepup_binding_mismatch': 'apiError.woc_market.stepup_binding_mismatch',
   'woc_market.stepup_signature_invalid': 'apiError.woc_market.stepup_signature_invalid',
+  'freehold.invalid_input': 'apiError.freehold.invalid_input',
+  'freehold.disabled': 'apiError.freehold.disabled',
 } satisfies Record<string, TranslationKey>;
 
 /** The message of an Error, or the string form of any other thrown value. */

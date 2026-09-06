@@ -9199,6 +9199,8 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'apiError.epic.already_linked': 'このアカウントには既にEpicアカウントが連携されています。',
   'apiError.epic.account_taken': 'そのEpicアカウントは既に別のアカウントに連携されています。',
   'apiError.epic.upstream': 'Epicから応答がありません。しばらくしてからもう一度お試しください。',
+  'apiError.freehold.invalid_input': '入力が無効です。',
+  'apiError.freehold.disabled': 'このレルムではフリーホールドは有効になっていません。',
   'apiError.db.conflict': 'その変更が別の更新と競合しました。もう一度お試しください。',
   'apiError.rate_limit.exceeded': 'リクエストが多すぎます。{seconds} 後に再度お試しください。',
   'apiError.internal.error': 'サーバー側で問題が発生しました。もう一度お試しください。',

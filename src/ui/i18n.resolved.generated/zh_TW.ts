@@ -5014,6 +5014,10 @@ export const zh_TW: EnTranslations = {
       "stepup_wallet_mismatch": "該確認簽發後綁定的錢包已變更。請重新發起出售。",
       "stepup_binding_mismatch": "該錢包確認與本次出售不符。請重新發起出售。",
       "stepup_signature_invalid": "錢包簽名驗證失敗。請重新發起出售。"
+    },
+    "freehold": {
+      "invalid_input": "輸入無效。",
+      "disabled": "本伺服器未啟用自由領地。"
     }
   },
   "guide": {

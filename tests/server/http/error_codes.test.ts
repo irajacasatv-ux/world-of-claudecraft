@@ -153,6 +153,8 @@ const EXPECTED_CODES = [
   'cheater_mark.reason_required',
   'cheater_mark.invalid_duration',
   'cheater_mark.not_marked',
+  'freehold.invalid_input',
+  'freehold.disabled',
 ];
 
 describe('ERROR_CODES catalog', () => {

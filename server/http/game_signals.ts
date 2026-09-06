@@ -3,7 +3,7 @@
 // woc_ws_rate_kicks_total, woc_input_frames_missed_total,
 // woc_chat_messages_total, woc_characters_created_total,
 // woc_guild_bank_incidents_total, woc_rift_forge_refused_total,
-// woc_vault_ledger_incidents_total) reach the exporter
+// woc_freehold_refused_total, woc_vault_ledger_incidents_total) reach the exporter
 // through this one process-wide slot instead of each emission site (game.ts
 // message dispatch and inbound gate/lanes, chat routing, characters.ts create
 // path) threading a sink through its constructors. main.ts
@@ -254,6 +254,15 @@ export interface GameMetricsCounters {
    * per-token) so a prober cannot drive cardinality.
    */
   riftForgeRefused(): void;
+  /**
+   * One Freeholds wire command refused while the realm is dark
+   * (server/freehold_wire.ts, FREEHOLDS_ENABLED unset). The stock client sends
+   * none until the housing UI ships, so a non-zero rate means a modified client
+   * is probing dark housing; once the UI ships it is also the signal that a
+   * realm forgot the flag. The counter is deliberately label-free (nothing
+   * per-player, per-account, or per-token) so a prober cannot drive cardinality.
+   */
+  freeholdRefused(): void;
   /** One player chat message routed to other players (any channel). */
   chatMessage(): void;
   /** One configured General quota decision, under a fixed six-value label. */
@@ -359,6 +368,7 @@ export const noopGameMetricsCounters: GameMetricsCounters = {
   wsRateKick() {},
   wsInputSeqGap() {},
   riftForgeRefused() {},
+  freeholdRefused() {},
   chatMessage() {},
   generalChatQuota() {},
   generalChatQuotaDbCall() {},

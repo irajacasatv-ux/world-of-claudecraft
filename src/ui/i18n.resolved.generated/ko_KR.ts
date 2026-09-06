@@ -5014,6 +5014,10 @@ export const ko_KR: EnTranslations = {
       "stepup_wallet_mismatch": "이 확인이 발급된 후 연동된 지갑이 변경되었습니다. 판매를 다시 시작하세요.",
       "stepup_binding_mismatch": "해당 지갑 확인은 이 판매와 일치하지 않습니다. 판매를 다시 시작하세요.",
       "stepup_signature_invalid": "지갑 서명을 확인할 수 없습니다. 판매를 다시 시작하세요."
+    },
+    "freehold": {
+      "invalid_input": "입력이 올바르지 않습니다.",
+      "disabled": "이 서버에서는 자유 영지가 활성화되어 있지 않습니다."
     }
   },
   "guide": {

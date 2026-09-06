@@ -764,6 +764,13 @@ For off-box safety, sync the directory to S3 occasionally:
   wire commands (upgrade/enchant/socket), whose client UI has not shipped.
   Enable it only on PTR or internal playtest realms
   (`server/rift_forge_gate.ts`).
+- `FREEHOLDS_ENABLED` defaults off, is read live as the strict '1', and
+  production never enables it before the release gates in
+  docs/freeholds/state.md "Tracked release and handoff gates" are signed
+  (`server/freehold_config.ts`). A running realm needs a restart to pick up
+  a change, because the realm Sim boots with the value
+  (`server/sim_boot_config.ts`); only the wire verdict and the status route
+  read it live.
 - **Community test profile**: on a disposable public test realm, set
   `PROVISION_TEST_ACCOUNTS=1` in the host `.env`, then restart the game
   container. The flag gives newly created accounts nine level-20 characters,

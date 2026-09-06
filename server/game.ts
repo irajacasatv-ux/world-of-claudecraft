@@ -246,6 +246,7 @@ import { assembleEventsFrame, filterRoutableEvents, serializeEventFragments } fr
 import { buildEventPidIndex, forEachSelectedEventIndex } from './event_pid_index';
 import { appendFarmPlotsWire, dispatchFarmingCommand } from './farming_commands';
 import { fishingBandLabel, isKoi, isRodFeeRecipe } from './fishing_telemetry';
+import { dispatchFreeholdCommand, refusedFreeholdCommand } from './freehold_wire';
 import {
   classifyOnlineGeneralChat,
   GENERAL_CHAT_QUOTA_MAX_IN_FLIGHT,
@@ -301,6 +302,7 @@ import {
   createListReadGuard,
   type ListReadGuardState,
 } from './list_read_guard';
+import { type AdminLiveLocation, liveLocationFor } from './live_location';
 import { type LiveSharedIp, sharedIpsFromLiveSessions } from './live_shared_ips';
 import { mergeCustodyParcelOverlay } from './mail_custody_overlay';
 import { rearmMailPartitionsOnFailure, writeDirtyMailPartitions } from './mail_partition_rearm';
@@ -825,6 +827,9 @@ const JAILED_BLOCKED_COMMANDS = new Set<string>([
   'duel_accept',
   'unstuck',
   'card_queue_join',
+  // A door step into instanced space (the enter_dungeon shape); freehold_leave
+  // stays unlisted because leaving lands the player where jail enforcement re-cages them.
+  'freehold_enter',
 ]);
 
 // How often to re-broadcast online players' $WOC holder-tier flair. Each wallet
@@ -839,7 +844,6 @@ const PLAYTIME_GRANT_MS = 5 * 60_000;
 const PLAYTIME_POINTS = 10;
 const DAILY_REWARD_ACTIVITY_MS = 60_000;
 const RELAY_COOLDOWN_MS = 8_000; // min gap between a player's "!" community posts
-const ADMIN_LOCATION_POI_RADIUS = 32;
 
 export interface ClientSession extends MovementInputSessionState {
   ws: WebSocket;
@@ -1159,17 +1163,7 @@ export interface AdminLiveAura {
   permanent?: boolean;
 }
 
-export interface AdminLiveLocation {
-  kind: 'overworld' | 'dungeon' | 'delve';
-  zoneId: string | null;
-  zone: string;
-  instanceId: string | null;
-  instance: string | null;
-  instanceSlot: number | null;
-  poiIndex: number | null;
-  poi: string | null;
-  poiDistance: number | null;
-}
+export type { AdminLiveLocation } from './live_location';
 
 export interface AdminLivePlayer {
   pid: number;
@@ -5665,69 +5659,6 @@ export class GameServer {
     );
   }
 
-  private liveLocationFor(e: Entity): AdminLiveLocation {
-    const instance = this.sim.instanceInfoAt(e.pos);
-    const dungeonId = e.dungeonId ?? instance?.dungeonId ?? null;
-    if (dungeonId) {
-      const dungeon = DUNGEONS[dungeonId];
-      const zone = dungeon
-        ? zoneAt(dungeon.doorPos.x, dungeon.doorPos.z)
-        : zoneAt(e.pos.x, e.pos.z);
-      return {
-        kind: 'dungeon',
-        zoneId: zone.id,
-        zone: zone.name,
-        instanceId: dungeonId,
-        instance: dungeon?.name ?? dungeonId,
-        instanceSlot: instance?.slot ?? null,
-        poiIndex: null,
-        poi: null,
-        poiDistance: null,
-      };
-    }
-
-    const delveRun = this.sim.delveRunForPlayer(e.id);
-    if (delveRun) {
-      const delve = DELVES[delveRun.delveId];
-      const zone = delve ? zoneAt(delve.doorPos.x, delve.doorPos.z) : zoneAt(e.pos.x, e.pos.z);
-      return {
-        kind: 'delve',
-        zoneId: zone.id,
-        zone: zone.name,
-        instanceId: delveRun.delveId,
-        instance: delve?.name ?? delveRun.delveId,
-        instanceSlot: delveRun.slot,
-        poiIndex: null,
-        poi: null,
-        poiDistance: null,
-      };
-    }
-
-    const zone = zoneAt(e.pos.x, e.pos.z);
-    let bestIndex: number | null = null;
-    let bestDistance = ADMIN_LOCATION_POI_RADIUS;
-    for (let i = 0; i < zone.pois.length; i++) {
-      const poi = zone.pois[i];
-      const distance = Math.hypot(e.pos.x - poi.x, e.pos.z - poi.z);
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        bestIndex = i;
-      }
-    }
-    const poi = bestIndex === null ? null : zone.pois[bestIndex];
-    return {
-      kind: 'overworld',
-      zoneId: zone.id,
-      zone: zone.name,
-      instanceId: null,
-      instance: null,
-      instanceSlot: null,
-      poiIndex: bestIndex,
-      poi: poi?.label ?? null,
-      poiDistance: poi ? round2(bestDistance) : null,
-    };
-  }
-
   liveSessions(): AdminLivePlayer[] {
     const now = Date.now();
     const players: AdminLivePlayer[] = [];
@@ -5735,7 +5666,7 @@ export class GameServer {
       const e = this.sim.entities.get(session.pid);
       const meta = this.sim.meta(session.pid);
       if (!e || !meta) continue;
-      const location = this.liveLocationFor(e);
+      const location = liveLocationFor(this.sim, e);
       const zone = location.instance ?? location.zone;
       const moveSpeedMultiplier = round2(this.sim.moveSpeedMult(e));
       players.push({
@@ -6487,6 +6418,19 @@ export class GameServer {
       this.sendCommandOutcome(session, msg, false);
       return;
     }
+    // The Freeholds wire (the ten housing commands) ships dark by default: the
+    // arms stay closed until the realm explicitly opts in (FREEHOLDS_ENABLED=1;
+    // rationale in server/freehold_wire.ts), so a crafted frame cannot reach
+    // even a no-op stub on a realm that has not lit housing. Refused ABOVE the
+    // heavy-self dirty flag below, so a blocked command cannot force a re-diff.
+    if (refusedFreeholdCommand(msg.cmd)) {
+      // Label-free by contract (game_signals.ts): the counter is the ops signal
+      // that a modified client probes dark housing (and that a realm forgot
+      // the flag once the UI ships).
+      gameMetricsCounters().freeholdRefused();
+      this.sendCommandOutcome(session, msg, false);
+      return;
+    }
     // A command that can change a heavy self field forces the next snapshot to
     // re-diff those fields (combat-only commands like cast/target/attack do not,
     // which is what keeps the gating a win during a fight). The arm-marked
@@ -7004,6 +6948,27 @@ export class GameServer {
         // command-schema suite scans this switch for the dispatch universe.
         // Arm-marked heavy-self members mark only when the frame reached the sim.
         if (dispatchFarmingCommand(sim, msg, pid) && heavySelfMarkOnAccept(command)) {
+          session.selfHeavyDirty = true;
+        }
+        break;
+      case 'freehold_enter':
+      case 'freehold_leave':
+      case 'place_furnishing':
+      case 'move_furnishing':
+      case 'remove_furnishing':
+      case 'undo_placement':
+      case 'redo_placement':
+      case 'pay_ledger':
+      case 'set_visit_policy':
+      case 'set_freehold_build_presence':
+        // The housing command bodies live whole in server/freehold_wire.ts. The
+        // labels stay HERE: the command-schema suite scans this switch for the
+        // dispatch universe. The dark-realm refusal sits above the switch.
+        // Arm-marked heavy-self members mark only when the frame reached the sim.
+        if (
+          dispatchFreeholdCommand(sim, session, command, msg, pid) &&
+          heavySelfMarkOnAccept(command)
+        ) {
           session.selfHeavyDirty = true;
         }
         break;

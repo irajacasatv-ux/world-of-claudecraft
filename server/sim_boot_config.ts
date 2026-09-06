@@ -10,6 +10,7 @@ import {
   type VaultConsumptionAdmission,
 } from '../src/sim/types';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { freeholdsEnabled } from './freehold_config';
 import { nextRaidResetMs, nextWeeklyRaidResetMs } from './raid_reset';
 import { REALM_RESET_TIME_ZONE } from './realm';
 import { STORAGE_PRICES } from './storage_prices';
@@ -38,6 +39,13 @@ export function buildRealmSimConfig(
     worldBossAtBoot: true,
     // Ranked rift portals spawn on the live realm (dev/test worlds opt in).
     riftPortals: true,
+    // D85: a dark realm boots a Sim that skips every housing spawn while the
+    // item, dungeon and layout DATA still merge. Resolved ONCE, here at boot,
+    // through server/freehold_config.ts (the strict '1' opt-in; default off):
+    // this field is a boot snapshot, not a live read, so a running realm needs
+    // a restart to pick up a flag change. The wire verdict and the status
+    // route re-read the env per call; only the Sim half freezes.
+    freeholdsEnabled: freeholdsEnabled(process.env),
     // Distance-cull idle-mob AI (issue #2703): shouldSkipIdleMobTick skips a
     // wild, unbuffed, out-of-combat mob's per-tick aggro scan and wander
     // movement while it sits farther than this from EVERY connected player,

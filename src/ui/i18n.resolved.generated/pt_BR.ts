@@ -5014,6 +5014,10 @@ export const pt_BR: EnTranslations = {
       "stepup_wallet_mismatch": "Sua carteira vinculada mudou desde que essa confirmação foi emitida. Inicie a venda novamente.",
       "stepup_binding_mismatch": "Essa confirmação da carteira não corresponde a essa venda. Inicie a venda novamente.",
       "stepup_signature_invalid": "A assinatura da carteira não pôde ser verificada. Inicie a venda novamente."
+    },
+    "freehold": {
+      "invalid_input": "Invalid input.",
+      "disabled": "Freeholds are not enabled on this realm."
     }
   },
   "guide": {

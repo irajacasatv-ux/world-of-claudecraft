@@ -652,6 +652,30 @@ export function resetPublicReadRateLimits(): void {
   publicReadIpAttempts.clear();
 }
 
+// The authenticated Freeholds status read (GET /api/freehold,
+// server/freehold_routes.ts) meters on its OWN per-IP bucket, never the shared
+// public-read map above: that map also fronts the map, asset, deeds,
+// reliquary, guild-roster and battleground reads, so one client pulling
+// assets behind a shared IP (CGNAT, a campus, a household) would spend the
+// housing budget for every account behind it. Sized like the public-read
+// bucket: a status read per login or window open, never a poll. The pipeline
+// policy over it (HOUSING_READ_POLICY) is tier-1 only.
+export const HOUSING_READ_MAX_PER_MINUTE = 60;
+const housingReadIpAttempts = new Map<string, number[]>();
+
+export function housingReadRateLimited(req: http.IncomingMessage): RateLimitOutcome {
+  return recordSlidingWindowAttempt(
+    housingReadIpAttempts,
+    requestIp(req),
+    HOUSING_READ_MAX_PER_MINUTE,
+  );
+}
+
+/** Reset the housing-read throttle. Test-only: keeps scoped buckets isolated. */
+export function resetHousingReadRateLimits(): void {
+  housingReadIpAttempts.clear();
+}
+
 // Per-account character-mutation throttle (create / rename / delete / takeover).
 // These deliberate, rare actions had NO dedicated limiter before the API-pipeline
 // migration (they were gated only by the full session). A new per-action, per-(IP

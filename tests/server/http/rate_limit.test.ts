@@ -7,6 +7,8 @@
 // store slot is reset to null in afterEach so a store installed by one test never
 // leaks into another.
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type AttackSignalKeyKind,
@@ -31,6 +33,7 @@ import {
   CLAUDIUM_SPEND_POLICY,
   CLAUDIUM_SPEND_PRE_AUTH_POLICY,
   DISCORD_POLICY,
+  HOUSING_READ_POLICY,
   PUBLIC_READ_POLICY,
   type RateLimitPolicy,
   REPORTS_CREATE_POLICY,
@@ -50,6 +53,7 @@ import {
   CLAUDIUM_QUOTE_MAX_PER_MINUTE,
   CLAUDIUM_SPEND_MAX_PER_MINUTE,
   DISCORD_MAX_PER_MINUTE,
+  HOUSING_READ_MAX_PER_MINUTE,
   PUBLIC_READ_MAX_PER_MINUTE,
   REPORTS_CREATE_MAX_PER_MINUTE,
   resetCardUploadRateLimits,
@@ -412,13 +416,36 @@ describe('rateLimit: policy derivation guard', () => {
       // Every mounted-and-unmounted policy is pg-global backed in the table.
       expect(policy.tier2, `${policy.name} tier2`).toBe('global');
     }
-    // The ONE sanctioned tier-1-only opt-out, pinned beside the rule it
-    // excepts: the marketplace's polled GET surface, where tier-2 'global'
-    // would spend two rate_limits UPSERTs per ALLOWED poll. A second silent
+    // The TWO sanctioned tier-1-only opt-outs, pinned beside the rule they
+    // except: the marketplace's polled GET surface, where tier-2 'global'
+    // would spend two rate_limits UPSERTs per ALLOWED poll, and the housing
+    // status read, a bound mounted to make a dark realm's request CHEAPER
+    // (one pg write per allowed request would undo it). A third silent
     // 'none' belongs in this test or it does not ship.
     expect(WOC_MARKET_READ_POLICY.tier2).toBe('none');
     expect(WOC_MARKET_READ_POLICY.limit).toBe(WOC_MARKET_READ_MAX_PER_MINUTE);
     expect(WOC_MARKET_READ_POLICY.windowSeconds).toBe(WINDOW_SECONDS);
+    expect(HOUSING_READ_POLICY.tier2).toBe('none');
+    expect(HOUSING_READ_POLICY.keyClass).toBe('ip');
+    expect(HOUSING_READ_POLICY.limit).toBe(HOUSING_READ_MAX_PER_MINUTE);
+    expect(HOUSING_READ_POLICY.windowSeconds).toBe(WINDOW_SECONDS);
+    // HOUSING_READ_MAX_PER_MINUTE and PUBLIC_READ_MAX_PER_MINUTE are both 60
+    // today, so the value comparison above cannot tell which constant the
+    // literal reads; pin the SOURCE so the housing bucket never silently
+    // follows a change to the public-read number.
+    const policySource = readFileSync(
+      join(__dirname, '..', '..', '..', 'server', 'http', 'middleware', 'rate_limit.ts'),
+      'utf8',
+    )
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    const exportAt = policySource.indexOf('export const HOUSING_READ_POLICY');
+    expect(exportAt).toBeGreaterThanOrEqual(0);
+    const housingLiteral = policySource.slice(exportAt);
+    const limitLine = housingLiteral
+      .slice(0, housingLiteral.indexOf('}'))
+      .match(/limit:\s*([A-Z_]+)/);
+    expect(limitLine?.[1]).toBe('HOUSING_READ_MAX_PER_MINUTE');
   });
 
   it("tier2 'none' SKIPS the store on an allowed request (the opt-out is real, not a label)", async () => {

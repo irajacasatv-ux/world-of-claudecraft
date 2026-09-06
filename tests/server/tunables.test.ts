@@ -47,6 +47,7 @@ import {
   CLAUDIUM_SPEND_PRE_AUTH_POLICY,
   DISCORD_POLICY,
   EPIC_LINK_POLICY,
+  HOUSING_READ_POLICY,
   MAP_MUTATION_POLICY,
   PUBLIC_READ_POLICY,
   type RateLimitPolicy,
@@ -93,6 +94,7 @@ import {
   CLAUDIUM_SPEND_MAX_PER_MINUTE,
   DISCORD_MAX_PER_MINUTE,
   EPIC_LINK_MAX_PER_MINUTE,
+  HOUSING_READ_MAX_PER_MINUTE,
   MAP_MUTATION_MAX_PER_MINUTE,
   PUBLIC_READ_MAX_PER_MINUTE,
   REPORTS_CREATE_MAX_PER_MINUTE,
@@ -299,6 +301,14 @@ describe('rate-limit POLICIES derive from the limiter constants and hold their v
       name: 'asset_upload',
       source: ASSET_UPLOAD_MAX_PER_MINUTE,
       limit: 10,
+    },
+    // The Freeholds status read: its own housing-only per-IP bucket, sized
+    // like the public read it deliberately does not share.
+    {
+      policy: HOUSING_READ_POLICY,
+      name: 'housing_read',
+      source: HOUSING_READ_MAX_PER_MINUTE,
+      limit: 60,
     },
   ];
 

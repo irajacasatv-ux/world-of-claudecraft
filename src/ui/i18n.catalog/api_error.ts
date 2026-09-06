@@ -306,4 +306,10 @@ export const apiErrorStrings = {
       'That wallet confirmation does not match this sale. Start the sale again.',
     stepup_signature_invalid: 'The wallet signature did not verify. Start the sale again.',
   },
+  // Freeholds (player housing, server/freehold_routes.ts): env-gated dark by
+  // default, the steam.disabled precedent.
+  freehold: {
+    invalid_input: 'Invalid input.',
+    disabled: 'Freeholds are not enabled on this realm.',
+  },
 };

@@ -248,6 +248,30 @@ describe('game-state metrics wiring: counters increment at their emission sites'
 
     server.stop();
   });
+
+  it('counts a dark-realm housing refusal on woc_freehold_refused_total through the real sink', async () => {
+    // The registered sink's freeholdRefused() body (server/http/game_metrics.ts)
+    // is otherwise exercised only by recording fakes; this drives the real
+    // Counter directly, then once more from its emission site (a housing frame
+    // on a dark realm, server/game.ts), so both the name and the inc() are pinned.
+    vi.stubEnv('FREEHOLDS_ENABLED', undefined);
+    const server = new GameServer();
+    try {
+      const registry = new Registry();
+      const counters = registerGameStateMetrics(registry, sourceOver(server));
+      setGameMetricsCounters(counters);
+
+      counters.freeholdRefused();
+      expect(value(await registry.metrics(), /^woc_freehold_refused_total (\d+)$/m)).toBe(1);
+
+      const session = join(server, fakeWs(), 100, 1, 'Ayla');
+      server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_enter' }));
+      expect(value(await registry.metrics(), /^woc_freehold_refused_total (\d+)$/m)).toBe(2);
+    } finally {
+      server.stop();
+      vi.unstubAllEnvs();
+    }
+  });
 });
 
 // Fake timers so the 50 ms loop runs a bounded, deterministic number of passes and the
@@ -483,6 +507,8 @@ function recordingSink() {
     // Not exercised here: the refusal site has its own recording-sink pins in
     // tests/rift_forge_gate.test.ts.
     riftForgeRefused() {},
+    // Same for the housing refusal site: tests/server/freehold_wire.test.ts.
+    freeholdRefused() {},
     chatMessage() {
       chats++;
     },

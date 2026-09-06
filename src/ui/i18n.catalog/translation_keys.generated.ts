@@ -157,6 +157,8 @@ export type TranslationKeyFlat =
   | 'apiError.epic.disabled'
   | 'apiError.epic.invalid_token'
   | 'apiError.epic.upstream'
+  | 'apiError.freehold.disabled'
+  | 'apiError.freehold.invalid_input'
   | 'apiError.guilds.invalid_roster_name'
   | 'apiError.guilds.unknown'
   | 'apiError.internal.error'

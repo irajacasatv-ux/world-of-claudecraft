@@ -12,6 +12,8 @@ export const pending: Record<string, readonly string[]> = {
   "es": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -644,6 +646,8 @@ export const pending: Record<string, readonly string[]> = {
   "es_ES": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -1276,6 +1280,8 @@ export const pending: Record<string, readonly string[]> = {
   "fr_FR": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -1923,6 +1929,8 @@ export const pending: Record<string, readonly string[]> = {
   "fr_CA": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -2571,6 +2579,8 @@ export const pending: Record<string, readonly string[]> = {
   "it_IT": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -3221,6 +3231,8 @@ export const pending: Record<string, readonly string[]> = {
   "de_DE": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -3913,6 +3925,8 @@ export const pending: Record<string, readonly string[]> = {
   "pt_BR": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -4570,6 +4584,8 @@ export const pending: Record<string, readonly string[]> = {
   "cs_CZ": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -5226,6 +5242,8 @@ export const pending: Record<string, readonly string[]> = {
   "nl_NL": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -5883,6 +5901,8 @@ export const pending: Record<string, readonly string[]> = {
   "pl_PL": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -6525,6 +6545,8 @@ export const pending: Record<string, readonly string[]> = {
   "id_ID": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -7155,6 +7177,8 @@ export const pending: Record<string, readonly string[]> = {
   "tr_TR": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -7796,6 +7820,8 @@ export const pending: Record<string, readonly string[]> = {
   "sv_SE": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -8451,6 +8477,8 @@ export const pending: Record<string, readonly string[]> = {
   "vi_VN": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
@@ -9088,6 +9116,8 @@ export const pending: Record<string, readonly string[]> = {
   "da_DK": [
     "abilityUi.cast.farming",
     "abilityUi.cast.sundering",
+    "apiError.freehold.disabled",
+    "apiError.freehold.invalid_input",
     "devCommand.actions.farmgrow.description",
     "devCommand.actions.farmgrow.label",
     "devCommand.fields.bed",
