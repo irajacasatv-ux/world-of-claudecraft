@@ -61,6 +61,7 @@ import type { IWorldDungeons } from '../src/world_api/dungeons';
 import type { IWorldEntityRoster } from '../src/world_api/entity_roster';
 import type { IWorldFarming } from '../src/world_api/farming';
 import type { IWorldGuildBank } from '../src/world_api/guild_bank';
+import type { IWorldHousing } from '../src/world_api/housing';
 import type { IWorldInteraction } from '../src/world_api/interaction';
 import type { IWorldInventory } from '../src/world_api/inventory';
 import type { IWorldLoot } from '../src/world_api/loot';
@@ -508,6 +509,24 @@ export const IWORLD_MEMBERS = [
   // data member exists for it.
   { name: 'placeFeast', kind: 'method' },
   { name: 'consumeFeast', kind: 'method' },
+  // IWorldHousing: the viewer's own freehold descriptor and the layout of the
+  // freehold they stand in (both data, null on both hosts until their producers
+  // light them), the housing clock base (the farmNowMs shape), and one dark
+  // no-op method per registered housing wire command (all methods). Later
+  // work APPENDS members here with its own pin edits and never renames these.
+  { name: 'myFreehold', kind: 'data' },
+  { name: 'freeholdLayout', kind: 'data' },
+  { name: 'housingNowMs', kind: 'method' },
+  { name: 'freeholdEnter', kind: 'method' },
+  { name: 'freeholdLeave', kind: 'method' },
+  { name: 'placeFurnishing', kind: 'method' },
+  { name: 'moveFurnishing', kind: 'method' },
+  { name: 'removeFurnishing', kind: 'method' },
+  { name: 'undoPlacement', kind: 'method' },
+  { name: 'redoPlacement', kind: 'method' },
+  { name: 'payLedger', kind: 'method' },
+  { name: 'setVisitPolicy', kind: 'method' },
+  { name: 'setFreeholdBuildPresence', kind: 'method' },
 ] as const satisfies readonly IWorldMember[];
 
 const DATA_MEMBERS = IWORLD_MEMBERS.filter((m) => m.kind === 'data');
@@ -778,10 +797,12 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // (six data, two method; no overlap, no kind flips): 354 members, 97
     // data, 257 method. Set from a suite run on the merged tree, never by
     // arithmetic in the diff. This cleanup removes that retired ferry method:
-    // 353 members, 97 data, 256 methods.
-    expect(IWORLD_MEMBERS.length).toBe(353);
-    expect(DATA_MEMBERS.length).toBe(97);
-    expect(METHOD_MEMBERS.length).toBe(256);
+    // 353 members, 97 data, 256 methods. The housing facet appends 13 (two
+    // data, eleven method) on this branch: 366 members, 99 data, 267 methods,
+    // set from a suite run.
+    expect(IWORLD_MEMBERS.length).toBe(366);
+    expect(DATA_MEMBERS.length).toBe(99);
+    expect(METHOD_MEMBERS.length).toBe(267);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -924,6 +945,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'farmPatches',
       'feedPet',
       'forfeitCardDuel',
+      'freeholdEnter',
+      'freeholdLayout',
+      'freeholdLeave',
       'friendAdd',
       'friendRemove',
       'friendlyTabTarget',
@@ -960,6 +984,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'healPet',
       'hobbyCraft',
       'honor',
+      'housingNowMs',
       'ignoreAdd',
       'ignoreRemove',
       'interact',
@@ -1006,10 +1031,12 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mountRaceStart',
       'mountRaceView',
       'mountTrainBegin',
+      'moveFurnishing',
       'moveInput',
       'moveInventoryItem',
       'moveRaidMember',
       'myFarmPlots',
+      'myFreehold',
       'nodeHarvestableByMe',
       'nodeRespawnSeconds',
       'openCommissionOrder',
@@ -1022,6 +1049,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'partyLeave',
       'partyPromote',
       'partyTradeMsRemaining',
+      'payLedger',
       'perfectItem',
       'perfectingInfo',
       'petAttack',
@@ -1031,6 +1059,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'petWaterJet',
       'pickUpObject',
       'placeFeast',
+      'placeFurnishing',
       'placeMobileStation',
       'plantCrop',
       'playCardInDuel',
@@ -1050,6 +1079,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'realm',
       'rechargeToolEffect',
       'recipeList',
+      'redoPlacement',
       'releaseEmpoweredAbility',
       'releaseSpirit',
       'reliquaryCatalogCompletion',
@@ -1061,6 +1091,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'reliquaryPageCompletion',
       'reliquaryRarity',
       'reliquaryRecent',
+      'removeFurnishing',
       'renamePet',
       'renown',
       'reportTelemetry',
@@ -1085,6 +1116,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setActiveBorder',
       'setActiveTitle',
       'setDungeonDifficulty',
+      'setFreeholdBuildPresence',
       'setGuildPledgeSettings',
       'setHelmHidden',
       'setItemLocked',
@@ -1097,6 +1129,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setSpec',
       'setStopAutoAttackOnTargetSwitch',
       'setTownFocus',
+      'setVisitPolicy',
       'slotToolEffect',
       'socialInfo',
       'socketRiftGem',
@@ -1131,6 +1164,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'trainRecipe',
       'turnInQuest',
       'unbindItem',
+      'undoPlacement',
       'unequipBag',
       'unequipItem',
       'unequipMechChroma',
@@ -1194,6 +1228,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'equipment',
       'equipmentInstances',
       'farmPatches',
+      'freeholdLayout',
       'gatheringProficiency',
       'guildBankInfo',
       'hobbyCraft',
@@ -1215,6 +1250,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketInfo',
       'moveInput',
       'myFarmPlots',
+      'myFreehold',
       'partyInfo',
       'petSpecialCommandsSupported',
       'player',
@@ -1340,6 +1376,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'farmNowMs',
       'feedPet',
       'forfeitCardDuel',
+      'freeholdEnter',
+      'freeholdLeave',
       'friendAdd',
       'friendRemove',
       'friendlyTabTarget',
@@ -1372,6 +1410,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'harvestCrop',
       'harvestNode',
       'healPet',
+      'housingNowMs',
       'ignoreAdd',
       'ignoreRemove',
       'interact',
@@ -1403,6 +1442,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'mountRaceStart',
       'mountRaceView',
       'mountTrainBegin',
+      'moveFurnishing',
       'moveInventoryItem',
       'moveRaidMember',
       'nodeHarvestableByMe',
@@ -1416,6 +1456,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'partyLeave',
       'partyPromote',
       'partyTradeMsRemaining',
+      'payLedger',
       'perfectItem',
       'perfectingInfo',
       'petAttack',
@@ -1424,6 +1465,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'petWaterJet',
       'pickUpObject',
       'placeFeast',
+      'placeFurnishing',
       'placeMobileStation',
       'plantCrop',
       'playCardInDuel',
@@ -1434,6 +1476,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'reactiveAbilityWindowRemaining',
       'readyCheckRespond',
       'rechargeToolEffect',
+      'redoPlacement',
       'releaseEmpoweredAbility',
       'releaseSpirit',
       'reliquaryCatalogCompletion',
@@ -1441,6 +1484,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'reliquaryPageClearCount',
       'reliquaryPageCompletion',
       'reliquaryRarity',
+      'removeFurnishing',
       'renamePet',
       'reportTelemetry',
       'respec',
@@ -1461,6 +1505,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setActiveBorder',
       'setActiveTitle',
       'setDungeonDifficulty',
+      'setFreeholdBuildPresence',
       'setGuildPledgeSettings',
       'setHelmHidden',
       'setItemLocked',
@@ -1473,6 +1518,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setSpec',
       'setStopAutoAttackOnTargetSwitch',
       'setTownFocus',
+      'setVisitPolicy',
       'slotToolEffect',
       'socketRiftGem',
       'sortInventory',
@@ -1498,6 +1544,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'trainRecipe',
       'turnInQuest',
       'unbindItem',
+      'undoPlacement',
       'unequipBag',
       'unequipItem',
       'unequipMechChroma',
@@ -2101,6 +2148,22 @@ const FACET_FARMING = [
   'consumeFeast',
 ] as const satisfies readonly (keyof IWorldFarming)[];
 type _ExhaustFarming = AssertNever<Exclude<keyof IWorldFarming, (typeof FACET_FARMING)[number]>>;
+const FACET_HOUSING = [
+  'myFreehold',
+  'freeholdLayout',
+  'housingNowMs',
+  'freeholdEnter',
+  'freeholdLeave',
+  'placeFurnishing',
+  'moveFurnishing',
+  'removeFurnishing',
+  'undoPlacement',
+  'redoPlacement',
+  'payLedger',
+  'setVisitPolicy',
+  'setFreeholdBuildPresence',
+] as const satisfies readonly (keyof IWorldHousing)[];
+type _ExhaustHousing = AssertNever<Exclude<keyof IWorldHousing, (typeof FACET_HOUSING)[number]>>;
 
 // The facet partition, keyed by facet for legible failure messages.
 const FACET_MEMBER_ARRAYS: Readonly<Record<string, readonly string[]>> = {
@@ -2137,6 +2200,7 @@ const FACET_MEMBER_ARRAYS: Readonly<Record<string, readonly string[]>> = {
   reliquary: FACET_RELIQUARY,
   actionBar: FACET_ACTION_BAR,
   farming: FACET_FARMING,
+  housing: FACET_HOUSING,
 };
 
 describe('W1: aggregate IWorld member set equals the disjoint union of the facets', () => {
@@ -2148,8 +2212,9 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
     // own count: +1 Reliquary facet, 33 total; -1 for the New Eastbrook
     // program's Vale Cup retirement, 32 total. The v0.41.0 sync carries both
     // arms (farming in, vale_cup out): 33 total, measured as the facet files
-    // on disk minus appearance.ts (the sweep below).
-    expect(Object.keys(FACET_MEMBER_ARRAYS).length).toBe(33);
+    // on disk minus appearance.ts (the sweep below). +1 housing facet on this
+    // branch: 34 total.
+    expect(Object.keys(FACET_MEMBER_ARRAYS).length).toBe(34);
   });
 
   it('every facet FILE on disk is a FACET_MEMBER_ARRAYS key (none can go silently unpartitioned)', () => {
@@ -2174,8 +2239,9 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
       .sort();
     expect(keys).toEqual(facetFiles);
     // Floor: the sweep walked a real directory, not an empty one. (34 until
-    // the Vale Cup facet retired with release/v0.41.0.)
-    expect(facetFiles.length).toBeGreaterThanOrEqual(33);
+    // the Vale Cup facet retired with release/v0.41.0; 34 again once the
+    // housing facet landed.)
+    expect(facetFiles.length).toBeGreaterThanOrEqual(34);
   });
 
   it('scans only through the shared walkers (self-audit)', () => {
@@ -2228,8 +2294,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(353);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(353);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(366);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(366);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

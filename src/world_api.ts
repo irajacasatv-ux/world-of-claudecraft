@@ -52,6 +52,8 @@
 //   farming.ts          IWorldFarming        the static garden-bed geography + the caller's own
 //                                            plot rows (reads only in the patches-and-plots phase)
 //   reliquary.ts        IWorldReliquary      sparse firstFind / marks / recent + pure completion
+//   housing.ts          IWorldHousing        the caller's own freehold + the layout of the one
+//                                            they stand in (null mirrors) + the ten dark commands
 //
 // THREE GATES pin this seam (run before any facet edit; the literal counts are
 // pinned THERE and re-stale here, so this prose stays count-free):
@@ -80,6 +82,7 @@ import type { IWorldDungeons } from './world_api/dungeons';
 import type { IWorldEntityRoster } from './world_api/entity_roster';
 import type { IWorldFarming } from './world_api/farming';
 import type { IWorldGuildBank } from './world_api/guild_bank';
+import type { IWorldHousing } from './world_api/housing';
 import type { IWorldInteraction } from './world_api/interaction';
 import type { IWorldInventory } from './world_api/inventory';
 import type { IWorldLoot } from './world_api/loot';
@@ -304,6 +307,7 @@ export {
   type GuildBankLogOp,
   type GuildBankLogView,
 } from './world_api/guild_bank';
+export type { FreeholdLayoutView, FreeholdView, FreeholdVisitPolicy } from './world_api/housing';
 export type {
   CivicServiceKind,
   CivicServicePlacement,
@@ -387,7 +391,8 @@ export interface IWorld
     IWorldDeeds,
     IWorldReliquary,
     IWorldMounts,
-    IWorldFarming {}
+    IWorldFarming,
+    IWorldHousing {}
 
 // ---------------------------------------------------------------------------
 // Command schema (W0b): the shared wire-token vocabulary.
@@ -749,6 +754,25 @@ export const COMMAND_NAMES = [
   // validates the ref shape and the sim resolves every gate and the one roll.
   // Appended because wire tokens are never reordered.
   'perfect_item',
+  // Freeholds (IWorldHousing, src/world_api/housing.ts): the ten housing
+  // commands. All ten are dark on both hosts in the foundation (the sim
+  // stubs decide nothing, ClientWorld mirrors nothing) and the server refuses
+  // every one at dispatch while the realm flag is off, so the vocabulary is
+  // pinned before any behavior exists. Payloads carry a carried slot or a
+  // placement id plus freehold-local numbers, the three-string visit
+  // policy, or the build-presence frame (active, plot id, accepted
+  // transition id, monotonic sequence); ownership, budgets and bounds all
+  // resolve sim-side. Appended because wire tokens are never reordered.
+  'freehold_enter',
+  'freehold_leave',
+  'place_furnishing',
+  'move_furnishing',
+  'remove_furnishing',
+  'undo_placement',
+  'redo_placement',
+  'pay_ledger',
+  'set_visit_policy',
+  'set_freehold_build_presence',
 ] as const;
 
 // The union both the send path (`online.ts`) and the dispatch switch
@@ -831,7 +855,8 @@ export type WorldFacet =
   | 'IWorldDeeds'
   | 'IWorldReliquary'
   | 'IWorldMounts'
-  | 'IWorldFarming';
+  | 'IWorldFarming'
+  | 'IWorldHousing';
 
 export const COMMAND_FACETS = {
   // IWorldCombat: ability casts, auto-attack, spirit release.
@@ -1092,4 +1117,18 @@ export const COMMAND_FACETS = {
   convert_husks: 'IWorldFarming',
   place_feast: 'IWorldFarming',
   consume_feast: 'IWorldFarming',
+  // IWorldHousing: the ten freehold commands (snake_case wire strings, by
+  // design). myFreehold and freeholdLayout (null mirrors until their
+  // producers publish a self key) and the housingNowMs clock base carry no
+  // wire command and stay untagged.
+  freehold_enter: 'IWorldHousing',
+  freehold_leave: 'IWorldHousing',
+  place_furnishing: 'IWorldHousing',
+  move_furnishing: 'IWorldHousing',
+  remove_furnishing: 'IWorldHousing',
+  undo_placement: 'IWorldHousing',
+  redo_placement: 'IWorldHousing',
+  pay_ledger: 'IWorldHousing',
+  set_visit_policy: 'IWorldHousing',
+  set_freehold_build_presence: 'IWorldHousing',
 } as const satisfies Partial<Record<ClientCommand, WorldFacet>>;

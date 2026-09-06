@@ -160,6 +160,13 @@ export function bareClient(pid: number, overrides: BareClientOverrides = {}): Cl
   c.toolEffectSlots = [];
   c.farmPatches = FARM_PATCHES;
   c.myFarmPlots = [];
+  // The housing null mirrors and the build-presence sequence, matching the
+  // class's own static defaults (src/net/online.ts): every mirror is null
+  // until a producer publishes a self key, and the sequence starts at 0.
+  c.myFreehold = null;
+  c.freeholdLayout = null;
+  c.freeholdTransitionId = null;
+  c.buildPresenceSeq = 0;
   c.delveClears = {};
   c.delveDaily = { date: '', firstClearXp: [], markClears: 0 };
   c.professionsState = { skills: [] };

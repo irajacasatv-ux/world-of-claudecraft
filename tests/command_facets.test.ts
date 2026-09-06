@@ -524,3 +524,90 @@ describe('command facet tags (farming)', () => {
     }
   });
 });
+
+// Freeholds: append the housing foundation's ten commands. The table-consistency
+// invariants in the W6 block above (no orphan tag, no dispatch-only leak)
+// already cover the new entries; this block pins the exact facet per command,
+// keyed on the WIRE strings, and that the two null mirrors and the clock base
+// stay untagged. Every command is dark on both hosts in the foundation, which
+// is exactly why the tags are pinned now: the vocabulary must not drift while
+// later work lights the bodies. Append-only: never edit a tag.
+const HOUSING_TAGS: Readonly<Record<string, string>> = {
+  freehold_enter: 'IWorldHousing',
+  freehold_leave: 'IWorldHousing',
+  place_furnishing: 'IWorldHousing',
+  move_furnishing: 'IWorldHousing',
+  remove_furnishing: 'IWorldHousing',
+  undo_placement: 'IWorldHousing',
+  redo_placement: 'IWorldHousing',
+  pay_ledger: 'IWorldHousing',
+  set_visit_policy: 'IWorldHousing',
+  set_freehold_build_presence: 'IWorldHousing',
+};
+
+describe('command facet tags (housing)', () => {
+  const tags = COMMAND_FACETS as Readonly<Record<string, string>>;
+
+  it('tags every housing command with the IWorldHousing facet', () => {
+    for (const [cmd, facet] of Object.entries(HOUSING_TAGS)) {
+      expect(tags[cmd], `facet tag for '${cmd}'`).toBe(facet);
+    }
+  });
+
+  it('preserves the snake_case housing wire strings (never normalized to camelCase)', () => {
+    // The ten wire strings pinned literally: these are the protocol, and a
+    // rename is a breaking change, not a refactor.
+    expect(Object.keys(HOUSING_TAGS).sort()).toEqual([
+      'freehold_enter',
+      'freehold_leave',
+      'move_furnishing',
+      'pay_ledger',
+      'place_furnishing',
+      'redo_placement',
+      'remove_furnishing',
+      'set_freehold_build_presence',
+      'set_visit_policy',
+      'undo_placement',
+    ]);
+    expect('freehold_enter' in tags).toBe(true);
+    expect('freehold_leave' in tags).toBe(true);
+    expect('place_furnishing' in tags).toBe(true);
+    expect('move_furnishing' in tags).toBe(true);
+    expect('remove_furnishing' in tags).toBe(true);
+    expect('undo_placement' in tags).toBe(true);
+    expect('redo_placement' in tags).toBe(true);
+    expect('pay_ledger' in tags).toBe(true);
+    expect('set_visit_policy' in tags).toBe(true);
+    expect('set_freehold_build_presence' in tags).toBe(true);
+    expect('freeholdEnter' in tags).toBe(false);
+    expect('freeholdLeave' in tags).toBe(false);
+    expect('placeFurnishing' in tags).toBe(false);
+    expect('moveFurnishing' in tags).toBe(false);
+    expect('removeFurnishing' in tags).toBe(false);
+    expect('undoPlacement' in tags).toBe(false);
+    expect('redoPlacement' in tags).toBe(false);
+    expect('payLedger' in tags).toBe(false);
+    expect('setVisitPolicy' in tags).toBe(false);
+    expect('setFreeholdBuildPresence' in tags).toBe(false);
+  });
+
+  it('names EVERY IWorldHousing tag, so an eleventh one cannot be added and forgotten', () => {
+    // The reverse direction (the farming block's idiom): a tag the table gains
+    // and this block does not is silent in the forward arms above, so read the
+    // table back and hold it to the local literal.
+    const tagged = Object.entries(tags)
+      .filter(([, facet]) => facet === 'IWorldHousing')
+      .map(([cmd]) => cmd)
+      .sort();
+    expect(tagged).toEqual(Object.keys(HOUSING_TAGS).sort());
+  });
+
+  it('does not tag the reads (myFreehold and freeholdLayout, plus the housingNowMs clock base)', () => {
+    // myFreehold and freeholdLayout are null mirrors a later self key will
+    // fill, and housingNowMs is a local clock read. None of the three sends a
+    // command, so none may be tagged.
+    for (const read of ['myFreehold', 'freeholdLayout', 'housingNowMs']) {
+      expect(read in tags, `${read} should be untagged (no wire command)`).toBe(false);
+    }
+  });
+});

@@ -132,6 +132,9 @@ import {
   type FarmPatchDef,
   type FarmPlantKnobs,
   type FarmPlotView,
+  type FreeholdLayoutView,
+  type FreeholdView,
+  type FreeholdVisitPolicy,
   type FriendInfo,
   type GuildBankInfo,
   type GuildBankLogEntry,
@@ -185,6 +188,7 @@ import { apiErrorFromBody } from './api_error';
 import { applyAuraWire, type ClientWireAura, snapshotCarriesAuras } from './aura_wire_decode';
 import { computeBackoffDelay } from './backoff';
 import { applyBankSelfWire } from './bank_snapshot_wire';
+import { blankEntity } from './blank_entity';
 import {
   type CivicServicePlacementsReader,
   createCivicServicePlacementsReader,
@@ -201,6 +205,7 @@ import {
   parseDesktopWalletHandoffStatus,
 } from './desktop_wallet_handoff';
 import { dungeonEntrySnapshotFacing } from './dungeon_entry_facing';
+import { applyFreeholdSelfWire } from './freehold_snapshot_wire';
 import {
   decodeConsecrations,
   decodeFrostRings,
@@ -1264,231 +1269,6 @@ const DESPAWN_GRACE_MIN_DIST_SQ = 70 * 70;
 // (and needs no clock at all in the decode path).
 const TARGET_ECHO_SNAPSHOT_BUDGET = 3;
 
-function blankEntity(id: number): Entity {
-  return {
-    id,
-    kind: 'mob',
-    templateId: '',
-    name: '',
-    level: 1,
-    mendTimer: 0,
-    wardTimer: 0,
-    channelTimer: 0,
-    channelRamp: 0,
-    rallyTimer: 0,
-    warcryTimer: 0,
-    petPath: [],
-    petPathCooldown: 0,
-    petOwnerHpBonus: 0,
-    castPushbackReduction: 0,
-    knockbackResistance: 0,
-    ccDurationReduction: 0,
-    pos: { x: 0, y: 0, z: 0 },
-    prevPos: { x: 0, y: 0, z: 0 },
-    facing: 0,
-    prevFacing: 0,
-    vx: 0,
-    vz: 0,
-    vy: 0,
-    onGround: true,
-    jumping: false,
-    fallStartY: 0,
-    swimStroke: 0,
-    swimDiving: false,
-    fatigueTicks: 0,
-    breathUsedTicks: 0,
-    drownTicks: 0,
-    hp: 1,
-    maxHp: 1,
-    resource: 0,
-    maxResource: 0,
-    resourceType: null,
-    overheadEmoteId: null,
-    overheadEmoteUntil: 0,
-    overheadEmoteSeq: 0,
-    stats: {
-      str: 0,
-      agi: 0,
-      sta: 0,
-      int: 0,
-      spi: 0,
-      armor: 0,
-      pvpOffense: 0,
-      pvpDefense: 0,
-    },
-    weapon: { min: 1, max: 2, speed: 2 },
-    offhandWeapon: null,
-    attackPower: 0,
-    rangedPower: 0,
-    spellPower: 0,
-    healPower: 0,
-    meleeHaste: 0,
-    rangedHaste: 0,
-    spellHaste: 0,
-    setProcs: [],
-    procReadyAt: undefined as unknown as Record<string, number>,
-    critChance: 0.05,
-    sharedCritBonus: 0,
-    critRating: 0,
-    hasteRating: 0,
-    hitRating: 0,
-    hitBonus: 0,
-    critDmgSpellBonus: 0,
-    critDmgPhysBonus: 0,
-    critDmgHealBonus: 0,
-    dodgeChance: 0.05,
-    blockChance: 0,
-    blockValue: 0,
-    moveSpeed: 7,
-    hostile: false,
-    targetId: null,
-    autoAttack: false,
-    swingTimer: 0,
-    offhandSwingTimer: 0,
-    dualWielding: false,
-    // Server-side combat state: the mirror never computes damage, so the
-    // authoritative titansGrip never needs to cross the wire.
-    titansGrip: false,
-    inCombat: false,
-    combatTimer: 99,
-    auras: [],
-    stealthed: false,
-    ccDr: new Map(),
-    castingAbility: null,
-    castRemaining: 0,
-    castTotal: 0,
-    castTargetId: null,
-    castAim: null,
-    gatherCastNodeId: '',
-    gatherCastToolRarity: '',
-    gatherCastEffectConfirmed: false,
-    craftCastRecipeId: '',
-    craftCastCommission: false,
-    craftCastBatchRemaining: 0,
-    craftCastBatchTotal: 0,
-    enchantCastItemId: '',
-    enchantCastBagSlot: 0,
-    enchantCastEnchantId: '',
-    enchantCastEquipSlot: '',
-    enchantCastConfirmReplace: false,
-    enchantCastTargetPin: '',
-    toolRechargeCastProfessionId: '',
-    fishBiteAtTick: 0,
-    fishReelDeadlineTick: 0,
-    fishCastZoneId: '',
-    channeling: false,
-    channelTickTimer: 0,
-    channelTickEvery: 0,
-    channelTicksLeft: 0,
-    gcdRemaining: 0,
-    cooldowns: new Map(),
-    queuedOnSwing: null,
-    queuedCastAbility: null,
-    queuedCastAim: null,
-    fiveSecondRule: 99,
-    comboPoints: 0,
-    comboUntil: -1,
-    overpowerUntil: -1,
-    potionCooldownUntil: -1,
-    potionCdRemaining: 0,
-    firebottleCdRemaining: 0,
-    savedMana: 0,
-    chargeTargetId: null,
-    chargeTimeLeft: 0,
-    chargePath: [],
-    followTargetId: null,
-    sitting: false,
-    riftSliding: false,
-    afk: false,
-    weaponStowed: false,
-    helmHidden: false,
-    modularAppearance: null,
-    eating: null,
-    drinking: null,
-    aiState: 'idle',
-    tappedById: null,
-    pulseTimer: 0,
-    stompTimer: 0,
-    bigCastTimer: 0,
-    deathZoneCastTimer: 0,
-    deathZoneStrikeTimer: 0,
-    infernoTimer: 0,
-    infernoRemaining: 0,
-    infernoPulsesFired: 0,
-    infernoGatesFired: 0,
-    yelledEngage: false,
-    stoneskinTimer: 0,
-    terrifyTimer: 0,
-    aoeSlowTimer: 0,
-    loudYellTimer: 0,
-    loudYellIndex: 0,
-    detonateTimer: Infinity,
-    firedSummons: 0,
-    summonedIds: [],
-    summonedAdd: false,
-    enraged: false,
-    healedThisPull: false,
-    threat: new Map(),
-    bossDamagers: new Set(),
-    forcedTargetId: null,
-    forcedTargetTimer: 0,
-    ownerId: null,
-    petMode: 'defensive',
-    petTauntTimer: 0,
-    petSkillTimer: 0,
-    petAutoTaunt: false,
-    petAutoWaterJet: false,
-    petAutoSkill: false,
-    petManualTauntPending: false,
-    spawnPos: { x: 0, y: 0, z: 0 },
-    leashAnchor: null,
-    evadeStall: 0,
-    chaseStall: 0,
-    evadeEpoch: 0,
-    combatExitHoldUntil: 0,
-    chainPullInbound: false,
-    fleeTimer: 0,
-    fleeReturnTimer: 0,
-    hasFled: false,
-    wanderTarget: null,
-    wanderTimer: 0,
-    aggroTargetId: null,
-    respawnTimer: 0,
-    corpseTimer: 0,
-    lootFfaTimer: Infinity,
-    harvestClaimedBy: null,
-    lootable: false,
-    loot: null,
-    xpValue: 0,
-    questIds: [],
-    vendorItems: [],
-    objectItemId: null,
-    dungeonId: null,
-    dead: false,
-    ghost: false,
-    corpsePos: null,
-    corpseInstanceId: null,
-    scale: 1,
-    color: 0xffffff,
-    skinCatalog: 'class',
-    skin: 0,
-    mountKey: '',
-    mountCastRemaining: 0,
-    mountCastKey: '',
-    mainhandItemId: null,
-    offhandItemId: null,
-    weaponSkinLoadout: {},
-    weaponSkinId: null,
-    equippedItems: {},
-    equippedInstances: {},
-    guild: '',
-    pledgeGuild: '',
-    guildTier: 0,
-    title: null,
-    border: null,
-  };
-}
-
 // The two wire fields a per-copy selection's ANCHOR rides on (`ord`/`n`), or
 // nothing at all when the caller named no anchor. Spread into the frame so an
 // unanchored command is byte-identical to what it always sent, which is what
@@ -1767,6 +1547,26 @@ export class ClientWorld extends ReconWireState implements IWorld {
   // live server, the same clock raidLockouts() already subtracts against.
   // Read fresh per call so a growth stage advances between snapshots.
   farmNowMs(): number {
+    return Date.now();
+  }
+  // The housing null mirrors (src/world_api/housing.ts): the caller's own
+  // freehold descriptor and the layout of the freehold they stand in. Both
+  // stay null until a producer publishes a self key; the only decode home is
+  // freehold_snapshot_wire.ts, whose allowlist admits nothing yet.
+  myFreehold: FreeholdView | null = null;
+  freeholdLayout: FreeholdLayoutView | null = null;
+  // The last accepted freehold transition id, echoed on the build-presence
+  // frame so the server can bind presence to the transition it acknowledged;
+  // null until the descriptor wire supplies one.
+  freeholdTransitionId: string | null = null;
+  // Monotonic per-session sequence for set_freehold_build_presence, so a
+  // reordered presence frame is dropped server-side. Never reset by a
+  // snapshot; a reconnect window is later work's.
+  private buildPresenceSeq = 0;
+  // The housing clock base on the farmNowMs shape: Date.now is the base the
+  // live server writes housing timestamps in (ctx.lockoutNowMs). Read fresh
+  // per call; a consumer compares against it and never subtracts another.
+  housingNowMs(): number {
     return Date.now();
   }
   // Per-delve clears (key `${delveId}:${tierId}`), mirrored from the self-wire so
@@ -3615,6 +3415,10 @@ export class ClientWorld extends ReconWireState implements IWorld {
       // module, where the delta contract, the by-reference adoption rationale,
       // and each key's malformed policy (vault clears, the rest retain) live.
       applyBankSelfWire(this, s);
+      // The housing self keys, same delta contract, decoded and applied by the
+      // sibling module (its allowlist admits nothing yet, so every housing
+      // mirror stays null and an early housing key is ignored, never fatal).
+      applyFreeholdSelfWire(this, s);
       // `guildBank` follows the same delta contract; the server encodes null
       // away from a banker, on death, and outside a guild (the proximity +
       // membership gate lives in sim guildBankInfoFor; any rank sees it, the
@@ -4621,6 +4425,49 @@ export class ClientWorld extends ReconWireState implements IWorld {
   }
   consumeFeast(feastId: number): void {
     this.cmd({ cmd: 'consume_feast', id: feastId });
+  }
+  // --- IWorldHousing: the ten freehold commands. Every one is dark on both
+  // hosts in the foundation (the sim stubs decide nothing; nothing is mirrored
+  // here), so the frames exist to pin the wire vocabulary, the dispatch guard
+  // and the send set from the start. See src/world_api/housing.ts. ---
+  freeholdEnter(): void {
+    this.cmd({ cmd: 'freehold_enter' });
+  }
+  freeholdLeave(): void {
+    this.cmd({ cmd: 'freehold_leave' });
+  }
+  placeFurnishing(slot: number, x: number, y: number, z: number, yaw: number): void {
+    this.cmd({ cmd: 'place_furnishing', slot, x, y, z, yaw });
+  }
+  moveFurnishing(placementId: number, x: number, y: number, z: number, yaw: number): void {
+    this.cmd({ cmd: 'move_furnishing', placementId, x, y, z, yaw });
+  }
+  removeFurnishing(placementId: number): void {
+    this.cmd({ cmd: 'remove_furnishing', placementId });
+  }
+  undoPlacement(): void {
+    this.cmd({ cmd: 'undo_placement' });
+  }
+  redoPlacement(): void {
+    this.cmd({ cmd: 'redo_placement' });
+  }
+  payLedger(): void {
+    this.cmd({ cmd: 'pay_ledger' });
+  }
+  setVisitPolicy(policy: FreeholdVisitPolicy): void {
+    this.cmd({ cmd: 'set_visit_policy', policy });
+  }
+  // Ephemeral build presence: the acknowledged plot id, the accepted
+  // transition id and a monotonic sequence ride beside `active`, and the
+  // server binds the authenticated session itself.
+  setFreeholdBuildPresence(active: boolean): void {
+    this.cmd({
+      cmd: 'set_freehold_build_presence',
+      active,
+      plotId: this.myFreehold?.plotId ?? null,
+      acceptedTransitionId: this.freeholdTransitionId,
+      buildPresenceSeq: ++this.buildPresenceSeq,
+    });
   }
   chat(text: string): void {
     this.cmd({ cmd: 'chat', text });
