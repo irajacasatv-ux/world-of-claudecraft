@@ -1,0 +1,226 @@
+# Phase 10: furnishing colliders (the generalised runtime region registry on both hosts)
+
+Wave A, the Cottage MVP. The spec is `progress.md` "10 Furnishing colliders"; the
+decision is `state.md` D17 (furnishings are walk-through until this phase, which
+generalises the runtime collider region registry beyond the rift band) and
+`brainstorm.md` D4 (runtime colliders regenerate from the descriptor on both hosts).
+This phase extracts the rift region registry from `src/sim/colliders.ts` into a
+sibling with the rift as its first client and NO behavior change, publishes the owner's
+placed-furnishing colliders per claim and per accepted layout change on the server and
+from the descriptor on the client, and pins that a placed table blocks movement
+identically on both hosts.
+
+### Starter Prompt
+```
+This is Phase 10 of the Freeholds and Guildhalls feature: furnishing colliders (the
+generalised runtime collider region registry, the sim publish on claim and change, the
+client publish from the descriptor).
+
+Harness: Claude Code. Follow the root CLAUDE.md "Working style and effort by model"
+block for effort and fan-out; this prompt names no model.
+ULTRACODE: not needed for this phase (three slices, one ordering constraint: the
+registry extraction lands first).
+
+Goal: make placed furnishings solid on both hosts by generalising the ONE runtime
+collider registry (today specialised to the rift band) so a freehold claim can publish
+authoredColliders(rooms, doors, ownerDecor, DUNGEON_WALL_HW) keyed by its instance
+origin, with every rift collider suite unchanged and green.
+
+STEP 0 - PRE-FLIGHT:
+- Work in the packet worktree named in docs/freeholds/state.md
+  (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds), on branch
+  feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
+  session may share this checkout).
+- Sync the base: `git fetch origin --prune`. While PR #3872 (feature/masterwrought) is
+  OPEN, merge its fresh head: `git merge origin/feature/masterwrought`. If it has MERGED,
+  discover the newest release branch (`git branch -r | grep 'origin/release/' | sort -V |
+  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
+  merge it, and delete the dependency block from state.md. After any non-empty merge run
+  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
+  patches/.
+- Memory scan: MEMORY.md and entries on the monolith ratchet (colliders.ts is a ratchet
+  target), move-not-rewrite extraction, the offline IWorld live-array aliasing, the
+  forward walk inheriting a reverse gate (drive controls BETWEEN thresholds), test-pin
+  traps.
+
+STEP 1 - LOAD CONTEXT (do NOT read planning docs directly; save your context):
+Spawn one Explore agent to read and summarize:
+- docs/freeholds/state.md, docs/freeholds/progress.md (only "10 Furnishing colliders"),
+  and this file
+- src/sim/colliders.ts: the "Procedural Rift regions" block (RiftRegion, RIFT_REGIONS,
+  allocRiftCollisionToken, setRiftRegion, clearRiftRegion, the private riftRegionAt and
+  its O(1) riftNearestFloorOriginZ candidate-origin derivation, why oz is the key and
+  every region shares RIFT_X_MIN as ox), instanceLocal, isInstancedRegion, every reader
+  that dispatches through riftRegionAt (resolveMovement, the sight and pathing samplers),
+  STATIC_INTERIOR_COLLIDERS; src/sim/collider_cells.ts (buildColliderCellIndex, the
+  MAX_BODY_RADIUS registration margin); src/sim/interior_collider_sets.ts
+  (derivedInteriorColliders: static per interior, cached per dungeon id, which is WHY
+  per-owner furniture cannot ride AuthoredDecor)
+- src/sim/rift/runs.ts (the setRiftRegion publish on spawn and the clearRiftRegion on
+  free), src/sim/rift/authored.ts (authoredColliders), src/sim/dungeon_layout.ts
+  (layoutColliders, DUNGEON_WALL_HW), src/sim/data.ts (instanceOrigin, dungeonAt,
+  instanceSlotForZ, the freehold indices 15 and 16 in the overflow band),
+  src/sim/instances/dungeons.ts (claimInstance, freeInstance, instanceOriginOf),
+  src/sim/sim.ts (the single riftCollisionToken field: the shape a per-claim token must
+  NOT copy, since one server holds many claims), src/sim/instances/instance_slot.ts
+  (freshInstanceSlot: where an append-only collisionToken field lands), src/sim/freehold/{instance.ts,
+  placement.ts,layout_core.ts,types.ts} (the claim path, the accepted-change hook, the
+  row to AuthoredDecor with r), src/sim/content/freehold/furnishings.ts (r per def from
+  Phase 03)
+- src/net/online.ts (riftCollisionToken, applyRiftStateEvent: clear the previous region
+  before setting the new one, the session-end clear), src/net/freehold_snapshot_wire.ts
+  (applyFreeholdStateEvent from Phase 08), src/render/self_motion_rift_lift.ts (mirrors
+  riftRegionAt for the self-motion lift: check whether the freehold band needs a twin or
+  is already covered by the dungeon floor arm)
+- tests/rift_collider_cells.test.ts, tests/rift_collision_region_online.test.ts,
+  tests/rift_sim.test.ts, tests/rift_wall_solidity.test.ts,
+  tests/rift_wall_swept_collision.test.ts (the five suites that must stay green
+  unchanged), tests/helpers/bare_client.ts (the client token), tests/helpers/instanced_contexts.ts,
+  tests/dungeons.test.ts, tests/monolith_budget.test.ts (colliders.ts, sim.ts,
+  online.ts rows), src/sim/CLAUDE.md
+- Root CLAUDE.md "Modularity" (extract on the rule of three; move-not-rewrite) and
+  "Invariants"
+The agent returns: the registry's exact lookup contract and the two generalisation
+shapes with their behavior-change risk (a sibling module with a band-aware
+candidate-origin derivation: rift keeps riftNearestFloorOriginZ, freehold derives
+instanceOrigin from dungeonAt(x) and instanceSlotForZ(z); versus a parameterised
+setRuntimeRegion family where the rift exports become thin aliases); every reader site
+that must dispatch to the generalised lookup; the publish and clear sites on both
+hosts; the swept-collision and solidity suites' drive shapes; the extraction that
+lowers the colliders.ts ceiling; whether self_motion_rift_lift.ts needs a twin.
+
+STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
+Sequenced fan-out, three slices; the REGISTRY slice lands and passes the five rift
+suites BEFORE the other two start (they consume its exports). Each agent gets ONLY the
+Explore summary and its own files; the coordinator edits tests/monolith_budget.test.ts
+last:
+- Agent REGISTRY: src/sim/runtime_collider_regions.ts (MOVE the region block out of
+  colliders.ts: allocRuntimeCollisionToken, setRuntimeRegion(token, ox, oz, colliders,
+  cellSize?), clearRuntimeRegion, runtimeRegionAt(token, x, z) with a band-aware
+  candidate-origin derivation; the rift names allocRiftCollisionToken, setRiftRegion,
+  clearRiftRegion stay exported as thin aliases so no caller changes and no behavior
+  changes), the colliders.ts readers re-pointed at the one lookup, the colliders.ts
+  ceiling LOWERED, tests/runtime_collider_regions.test.ts (an equivalence pin: for a
+  published rift floor every movement, sight, and pathing answer is byte-identical
+  before and after the move, driven between thresholds, not at extremes; the five rift
+  suites unchanged and green).
+- Agent SIM: src/sim/freehold/colliders.ts (publishFreeholdColliders(ctx, inst, record)
+  = authoredColliders(rooms, doors, ownerDecor, DUNGEON_WALL_HW) with ownerDecor built
+  from the layout rows and each def's r, published at the claim's instanceOriginOf under
+  ONE collision token per claim (D17): allocated with allocRuntimeCollisionToken at claim
+  and stored on the InstanceSlot in an append-only collisionToken field, released with
+  clearRuntimeRegion on free, NEVER the single ctx.riftCollisionToken shared across
+  server claims; the reader resolves a position's token through the claim at that
+  position (instanceInfoAt, then the slot's token), settled in STEP 1 and recorded in
+  state.md; clearFreeholdColliders on free), the hooks: on every claim in instance.ts,
+  after every accepted change in placement.ts, in the free path; the ctx primitive or
+  callback appended if one is needed (mirrored in tests/sim_context.test.ts),
+  tests/freehold_colliders.test.ts (a placed table blocks movement through
+  resolveMovement; removal clears; the collider set is a deterministic function of the
+  descriptor; a def with r: 0 publishes nothing; the owner and a guest collide
+  identically; two concurrent claims on one Sim keep independent regions: a table in
+  claim A never blocks in claim B and freeing A leaves B's region intact; freeing the
+  claim leaves no region and no token behind).
+- Agent NET: src/net/freehold_snapshot_wire.ts applyFreeholdStateEvent publishes the
+  same set under a token allocated per mirrored descriptor on enter and released on
+  leave (the client mirrors one claim at a time, so its lifecycle matches the server's
+  per-claim token: clear the previous region, set the new one, clear on an inactive
+  descriptor and on session end), the same
+  authoredColliders call from the same rows so both hosts collide identically, the
+  online.ts extraction if a line is needed (lowered ceiling), tests/freehold_collision_region_online.test.ts
+  (copied from tests/rift_collision_region_online.test.ts: the descriptor over the live
+  wire registers the region on the client; the client's resolveMovement answer equals
+  the server's for the same walk; leave clears).
+Every agent writes any report longer than a screen to a file and replies with the path
+plus a short summary. Never `mode: "plan"` on teammates.
+
+INVARIANTS THIS PHASE MUST KEEP:
+- Determinism: the collider set is a pure function of the descriptor and the content
+  radii; no Rng, no clock; both hosts publish from the same rows through the same
+  function.
+- No behavior change for the rift: the extraction is move-not-rewrite; the five rift
+  suites stay green without edits; the O(1) candidate-origin lookup stays O(1).
+- No per-tick work: publish only on claim, accepted change, and free; never in a sweep.
+- The physics dispatch predicate (isInstancedRegion) is never reused as the vault gate
+  (the vault_craft_gate.ts header rule); this phase touches no gate.
+- D4: furnishings stay a descriptor; the colliders are regions, never entities.
+- Sim purity (src/sim/ imports nothing from render, ui, game, or net); the token
+  firewall as state.md scopes it (no on-chain vocabulary in src/sim/: wallet, token,
+  $WOC, mint, holder, marketplace, on-chain, Solana; the Book of Deeds is game content);
+  the flag untouched.
+- i18n: the policy in docs/freeholds/implementation-plan.md; this phase adds no string.
+- Monolith ratchet: src/sim/colliders.ts, src/sim/sim.ts, and src/net/online.ts are
+  ratchet targets (sim.ts and online.ts at ZERO slack): pay with extraction, then LOWER
+  the ceiling.
+- The word "phase" appears in no code, comment, commit, or PR text.
+
+Out of scope (do NOT do in this phase):
+- Any change to swept collision, mob pathing, or line-of-sight semantics beyond reading
+  the generalised lookup.
+- The ghost's blocked state (it reads validatePlacement from layout_core, never the
+  physics registry) and any UI (Phase 11).
+- Wall and table-top snapping (Phase 25); ward exteriors (Phase 34).
+- Any render change; any content change (every def already carries r from Phase 03).
+
+STEP 3 - VALIDATION + REVIEW DISPATCH:
+- Run: `npx tsc --noEmit`; `npx vitest run tests/runtime_collider_regions.test.ts
+  tests/freehold_colliders.test.ts tests/freehold_collision_region_online.test.ts
+  tests/rift_collider_cells.test.ts tests/rift_collision_region_online.test.ts
+  tests/rift_sim.test.ts tests/rift_wall_solidity.test.ts
+  tests/rift_wall_swept_collision.test.ts tests/dungeons.test.ts
+  tests/freehold_determinism.test.ts tests/freehold_placement.test.ts
+  tests/architecture.test.ts tests/sim_context.test.ts tests/monolith_budget.test.ts
+  tests/snapshots.test.ts tests/localization_fixes.test.ts`; regenerate the parity
+  goldens with UPDATE_PARITY=1 in their own commit only if a sampled field or emit
+  changed (a region publish is not sampled; expect no change).
+- Spawn review agents per the dispatch rules in docs/freeholds/implementation-plan.md:
+  architecture-reviewer (the move-not-rewrite extraction, the publish sites, tick
+  order untouched), cross-platform-sync (both hosts collide identically; the mirror),
+  and privacy-security-review (src/net/ touched). Prompt each for COVERAGE not
+  filtering; each writes its report to a file. Do not commit until no BLOCKING issues
+  remain.
+
+STEP 4 - COMMIT CADENCE:
+4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
+`git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
+- refactor(sim): extract the runtime collider region registry with the rift as its first client
+- feat(sim): publish the owner's furnishing colliders on claim and on every layout change
+- feat(net): mirror the furnishing collider set from the freehold descriptor
+- test(sim): pin furnishing collision on both hosts and the rift suites unchanged
+Then `npm run ci:changed` after the LAST commit; read the exit code.
+
+STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
+- [ ] The five rift collider suites pass without a single edit; the equivalence pin
+  proves the rift path answers identically before and after the extraction.
+- [ ] A placed table blocks movement on the server-driven Sim and on the ClientWorld
+  fed by the descriptor; removal clears; freeing the claim leaves no region (pinned).
+- [ ] The collider set is deterministic from the descriptor (pinned in
+  tests/freehold_colliders.test.ts and the online twin); a def with r: 0 publishes no
+  circle (pinned).
+- [ ] Each claim holds its own collision token on the InstanceSlot, allocated at claim
+  and released on free; two concurrent claims keep independent regions (pinned); no
+  freehold publish uses ctx.riftCollisionToken (a grep plus the reviewer's word).
+- [ ] No publish runs per tick (a grep of the sweep paths plus the reviewer's word).
+- [ ] All STEP 3 suites green; architecture-reviewer and cross-platform-sync report no
+  BLOCKING; the colliders.ts ceiling is LOWER than before (and sim.ts or online.ts if
+  touched).
+
+STEP 6 - DOC UPDATES + MEMORY:
+- Update docs/freeholds/progress.md (status row 10, notes, deferrals) and
+  docs/freeholds/state.md (the per-phase ledger row 10: the registry module and its
+  exports, the alias rule, the per-claim token field and its reader, the publish sites;
+  flip D17's "walk-through until Phase 10" note to done).
+- Record surprising rules learned in memory for the next session.
+
+STEP 7 - FINAL RESPONSE FORMAT:
+End with: phase status, files touched, validation results, review verdicts, deferred
+items, and the FULL PATH of the next file to run:
+/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-10-qa.md
+
+STOPPING RULES:
+- Stop and ask if the generalisation cannot keep the rift's O(1) lookup or any rift
+  suite needs an edit to pass (that is a behavior change, not a move).
+- Stop and ask if a freehold region would overlap another band's candidate origin.
+- Stop if a monolith ceiling would have to be RAISED; that is a maintainer decision.
+- Do not push the branch; never merge a PR.
+```
