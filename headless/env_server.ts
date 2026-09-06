@@ -94,6 +94,9 @@ class Env {
       playerClass,
       respawnSeconds: this.config.respawnSeconds,
       autoEquip: true,
+      // Housing stays live on this host too; the RL action space carries no housing
+      // verb (headless/CLAUDE.md, pinned by tests/env_protocol.test.ts).
+      freeholdsEnabled: true,
       idleMobTickRadius: 80,
     });
     if (playerLevel !== 1) this.sim.setPlayerLevel(playerLevel);

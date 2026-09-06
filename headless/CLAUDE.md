@@ -39,6 +39,21 @@ them structural:
 The one-sim-three-hosts claim is intact: the sim CODE is identical here;
 what this host does not do is expose those commands as actions.
 
+The housing system (Freeholds) is the same kind of CUT, recorded 2026-09-06
+with the packet's foundation change: the RL action space carries no housing
+verb (none of the ten wire tokens `freehold_enter`, `freehold_leave`,
+`place_furnishing`, `move_furnishing`, `remove_furnishing`,
+`undo_placement`, `redo_placement`, `pay_ledger`, `set_visit_policy`,
+`set_freehold_build_presence` is an action). Housing is a player-facing
+surface the env never drives: no reward term reads a freehold, and every
+housing outcome is server-applied account state. The env host passes
+`freeholdsEnabled: true` to its `Sim` (D3: the offline and headless hosts
+stay live, only the realm reads a flag), so the sim module is loaded and
+identical here; what this host withholds is the action exposure, exactly as
+with farming. `tests/env_protocol.test.ts` pins the exclusion by reading the
+ten tokens from `server/freehold_wire.ts` (`FREEHOLD_WIRE_COMMANDS`) and
+asserting none is in `ACTIONS`.
+
 ## Wire protocol: NDJSON over stdin/stdout
 **IMPORTANT:** transport is line-delimited JSON on **stdin/stdout** (one object
 per line via `node:readline`). Not a socket / WS / HTTP. The Python client in

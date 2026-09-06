@@ -94,6 +94,11 @@ const mainTs = readFileSync(new URL('../src/main.ts', import.meta.url), 'utf8').
   /\r\n/g,
   '\n',
 );
+// The homepage JSON-LD graph moved whole out of main.ts into src/game/seo_metadata.ts.
+const seoTs = readFileSync(new URL('../src/game/seo_metadata.ts', import.meta.url), 'utf8').replace(
+  /\r\n/g,
+  '\n',
+);
 const padTargetPickTs = readFileSync(
   new URL('../src/game/pad_target_pick.ts', import.meta.url),
   'utf8',
@@ -107,6 +112,13 @@ const gamepadSettingsTs = readFileSync(
 const stripLineComments = (source: string) => source.replace(/^\s*\/\/.*$/gm, '');
 const mainTsCode = stripLineComments(mainTs);
 const padTargetPickCode = stripLineComments(padTargetPickTs);
+// The JSON-LD pins below read the seo module the same way, for the same
+// reason, through the two-stage stripper the freehold suites use (block
+// comments first, then line comments, keeping a `://` in a URL intact): the
+// pinned values are URL and name literals a doc comment could quote verbatim.
+const codeOnly = (source: string) =>
+  source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+const seoTsCode = codeOnly(seoTs);
 const newsFeedTs = readFileSync(new URL('../src/ui/news_feed.ts', import.meta.url), 'utf8').replace(
   /\r\n/g,
   '\n',
@@ -951,8 +963,8 @@ describe('client HTML shell', () => {
     expect(html).toContain('<meta property="og:site_name" content="World of ClaudeCraft" />');
     expect(html).toContain('"alternateName": "World of Claudecraft"');
     expect(html).toContain('"https://github.com/levy-street/world-of-claudecraft"');
-    expect(mainTs).toContain("alternateName: 'World of Claudecraft'");
-    expect(mainTs).toContain("'https://github.com/levy-street/world-of-claudecraft'");
+    expect(seoTsCode).toContain("alternateName: 'World of Claudecraft'");
+    expect(seoTsCode).toContain("'https://github.com/levy-street/world-of-claudecraft'");
     expect(robotsTxt.trim()).toBe(
       'User-agent: *\nAllow: /\n\nSitemap: https://worldofclaudecraft.com/sitemap.xml\nSitemap: https://worldofclaudecraft.com/sitemap-characters.xml',
     );

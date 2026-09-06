@@ -181,6 +181,7 @@ import {
   type SelfMotionGateArgs,
   selfMotionPredictionEnabled,
 } from './game/self_motion_gate';
+import { updateSeoMetadata } from './game/seo_metadata';
 import {
   type GameSettings,
   normalizeClickMoveButton,
@@ -647,8 +648,6 @@ applyNativeDeviceLanguage({
 // boot's profile is already resolved, and a missing bridge no-ops.
 void primeNativeDeviceMemoryHint();
 
-const SITE_URL = 'https://worldofclaudecraft.com/';
-
 const RESOURCE_KEYS = {
   mana: 'classDetails.resources.mana',
   energy: 'classDetails.resources.energy',
@@ -713,13 +712,6 @@ function trackCommunityLinkClicks(): void {
       });
     });
   });
-}
-
-function localizedSiteUrl(lang: SupportedLanguage): string {
-  if (lang === 'en') return SITE_URL;
-  const url = new URL(SITE_URL);
-  url.searchParams.set('lang', lang);
-  return url.toString();
 }
 
 declare const __APP_VERSION__: string;
@@ -5269,7 +5261,9 @@ async function startOffline(
         playerClass,
         playerName: name,
         devCommands: import.meta.env.DEV,
-        // Live-world features (custom editor play-test maps keep both off).
+        // Live-world features (custom editor play-test maps keep all three off;
+        // the stock offline world stays lit for housing, only the realm reads a flag, D3).
+        freeholdsEnabled: world === undefined,
         riftPortals: world === undefined,
         compulsoryTutorial: world === undefined,
         // Match the live server's proven-safe idle-AI interest throttle. Ordinary
@@ -7514,75 +7508,6 @@ const STATS_CACHE_TTL_MS = 30000; // 30 seconds
 
 function readTranslationKey(value: string | null): TranslationKey | null {
   return value ? (value as TranslationKey) : null;
-}
-
-function updateSeoMetadata(lang: SupportedLanguage): void {
-  const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-  const canonicalHref = localizedSiteUrl(lang);
-  if (canonical) canonical.href = canonicalHref;
-
-  const ogUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
-  if (ogUrl) ogUrl.content = canonicalHref;
-
-  const jsonLd = document.getElementById('structured-data') as HTMLScriptElement | null;
-  if (jsonLd) {
-    const sameAs = [
-      'https://github.com/levy-street/world-of-claudecraft',
-      'https://discord.com/invite/worldofclaudecraft',
-      'https://www.youtube.com/@WoClaudeCraft',
-      'https://x.com/WoClaudecraft',
-      'https://www.instagram.com/worldofclaudecraft/',
-      'https://www.tiktok.com/@worldofclaudecraft',
-      'https://www.reddit.com/r/WorldofClaudecraft/',
-    ];
-    jsonLd.textContent = JSON.stringify(
-      {
-        '@context': 'https://schema.org',
-        '@graph': [
-          {
-            '@type': 'WebSite',
-            '@id': 'https://worldofclaudecraft.com/#website',
-            name: 'World of ClaudeCraft',
-            alternateName: 'World of Claudecraft',
-            url: canonicalHref,
-            inLanguage: languageTag(lang),
-            description: t('seo.description'),
-            publisher: {
-              '@id': 'https://worldofclaudecraft.com/#organization',
-            },
-          },
-          {
-            '@type': 'Organization',
-            '@id': 'https://worldofclaudecraft.com/#organization',
-            name: 'World of ClaudeCraft',
-            url: 'https://worldofclaudecraft.com/',
-            logo: 'https://worldofclaudecraft.com/woc_logo_square.webp',
-            sameAs,
-          },
-          {
-            '@type': 'VideoGame',
-            '@id': 'https://worldofclaudecraft.com/#game',
-            name: 'World of ClaudeCraft',
-            alternateName: 'World of Claudecraft',
-            genre: t('seo.genre'),
-            playMode: t('seo.playMode'),
-            applicationCategory: t('seo.applicationCategory'),
-            operatingSystem: t('seo.operatingSystem'),
-            url: canonicalHref,
-            image: 'https://worldofclaudecraft.com/woc_logo_square.webp',
-            description: t('seo.description'),
-            inLanguage: languageTag(lang),
-            publisher: {
-              '@id': 'https://worldofclaudecraft.com/#organization',
-            },
-            sameAs,
-          },
-        ],
-      },
-      null,
-      2,
-    );
-  }
 }
 
 function translatePage(): void {

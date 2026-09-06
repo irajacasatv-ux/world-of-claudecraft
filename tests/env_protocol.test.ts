@@ -6,6 +6,7 @@ import {
   validatePlayerClass,
   validatePlayerLevel,
 } from '../headless/protocol';
+import { FREEHOLD_WIRE_COMMANDS } from '../server/freehold_wire';
 import { gainDoom } from '../src/sim/combat/affliction';
 import { addSoulFragments } from '../src/sim/combat/necromancy';
 import { CLASSES, MOBS } from '../src/sim/data';
@@ -115,6 +116,28 @@ describe('headless environment protocol validation', () => {
       expect(CLASSES[cls].abilities.length).toBeLessThanOrEqual(abilitySlots);
     }
     // 13 fixed actions (10 move/target + interact/stop/eat_drink) plus the ability slots
+    expect(NUM_ACTIONS).toBe(13 + abilitySlots);
+  });
+
+  it('exposes no housing verb in the RL action space', () => {
+    // The sim code is identical on this host (env_server.ts passes freeholdsEnabled
+    // to its Sim), but housing is a player-facing surface the env never drives: no
+    // reward term reads a freehold, and ACTIONS is append-only because every trained
+    // policy's action head is positional. headless/CLAUDE.md records the cut. The
+    // forbidden tokens come from the wire table itself, never a hand-typed list, so
+    // a housing verb that reaches ACTIONS under any wire name fails here; the two
+    // literal stems at the end catch a renamed one.
+    const housingTokens: readonly string[] = FREEHOLD_WIRE_COMMANDS;
+    // The control that keeps this pin decisive: an empty or truncated wire table
+    // would let the loop below pass vacuously.
+    expect(housingTokens).toHaveLength(10);
+    for (const token of housingTokens) {
+      expect(ACTIONS).not.toContain(token);
+      expect(ACTIONS.filter((a) => a.includes(token))).toEqual([]);
+    }
+    expect(ACTIONS.filter((a) => a.includes('freehold') || a.includes('furnishing'))).toEqual([]);
+    // The anchor above holds: 13 fixed actions plus the ability slots, nothing else.
+    const abilitySlots = ACTIONS.filter((a) => a.startsWith('ability_')).length;
     expect(NUM_ACTIONS).toBe(13 + abilitySlots);
   });
 

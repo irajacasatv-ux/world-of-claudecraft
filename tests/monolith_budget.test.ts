@@ -986,7 +986,11 @@ const MONOLITHS: MonolithRow[] = [
     // wc -l < src/sim/sim.ts after biome. Exact count.
     // Lowered 12028 -> 12006 in PR 3872 cleanup after removing the retired
     // tutorial action and its write-only account fact. Exact count, zero slack.
-    ceiling: 12006,
+    // Lowered 12006 -> 11983 on the freeholds branch: moveToward and its
+    // MOVE_SLIDE_FAN constant moved whole to src/sim/mob/move_toward.ts (a thin
+    // delegate stays), paying for the housing facet delegates and the
+    // freeholds live map. Measured with wc -l after biome. Exact count.
+    ceiling: 11983,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -1192,7 +1196,11 @@ const MONOLITHS: MonolithRow[] = [
     // DiscordClick and the registration send) were covered by NOTHING
     // behavioral, since the only suite that drives the sender drives the module.
     // Measured with wc -l after biome. Exact count, zero slack.
-    ceiling: 11459,
+    // Lowered 11459 -> 11384 on the freeholds branch: SITE_URL, localizedSiteUrl
+    // and updateSeoMetadata moved whole to src/game/seo_metadata.ts, paying for
+    // the offline freeholdsEnabled boot line. Measured with wc -l after biome.
+    // Exact count.
+    ceiling: 11384,
     seam: 'a src/game/ or src/ui/ sibling module; main.ts is a firewall, not a home',
   },
   {
@@ -1379,7 +1387,12 @@ const MONOLITHS: MonolithRow[] = [
     // Lowered 10347 -> 10336 in PR 3872 cleanup after removing the unused
     // feast signer wire field plus the retired tutorial dispatch and account-fact
     // plumbing. Measured after formatting; exact count.
-    ceiling: 10336,
+    // Lowered 10336 -> 10301 on the freeholds branch: liveLocationFor moved
+    // whole to server/live_location.ts (10298), paying for the freehold dispatch
+    // labels and the pre-switch FREEHOLDS_ENABLED refusal; the review round's
+    // jailed-command row for freehold_enter added three lines (10301). Measured
+    // after formatting; exact count.
+    ceiling: 10301,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1519,7 +1532,10 @@ const MONOLITHS: MonolithRow[] = [
     // feast signer mirror and retired tutorial command sender. Measured after
     // formatting; exact count.
     // Copy-safe Perfecting command construction extracted to perfecting_command.ts.
-    ceiling: 5861,
+    // Lowered 5861 -> 5708 on the freeholds branch: blankEntity moved whole to
+    // src/net/blank_entity.ts, paying for the housing null mirrors, senders and
+    // the freehold self-wire call. Measured after formatting; exact count.
+    ceiling: 5708,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {
