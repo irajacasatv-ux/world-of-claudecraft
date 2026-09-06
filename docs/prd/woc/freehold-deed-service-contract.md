@@ -9,11 +9,15 @@ surface. The game's account entitlement remains the authority for housing use.
 
 The surface limit follows existing D21 in
 [state.md](../../freeholds/state.md); the service and custody details remain
-adopted requirements and remain unimplemented. Every planned English key here belongs to the NEW
+adopted requirements and remain unimplemented. In-client player text referenced
+here uses only the `hudChrome.housing.*` ids pinned by
+[ux-spec.md](../../freeholds/ux-spec.md) and
+[ux-key-manifest.json](../../freeholds/ux-key-manifest.json) (D92) in the NEW
 `housing` subtree of existing `hudChromeStrings` in
-[src/ui/i18n.catalog/hud_chrome.ts](../../../src/ui/i18n.catalog/hud_chrome.ts).
-The producing UI work adds English source only and regenerates generated bundles;
-it does not edit them by hand.
+[src/ui/i18n.catalog/hud_chrome.ts](../../../src/ui/i18n.catalog/hud_chrome.ts);
+the deed copy at the end of this file is proposed English whose keys Phase 38
+names in its own file, adding English source only and regenerating generated
+bundles rather than editing them by hand.
 
 Phase 37 produces the verified service adapter, SDK/version and authority proof,
 territory enforcement, signed service/counsel artifact and conformance tests.
@@ -32,8 +36,8 @@ The [authority schedule](freehold-territory-authority-schedule.md) has no accept
 territory or irreversible-action rows yet, so production remains disabled.
 
 The [current payment source evidence](freehold-service-contract.md#current-payment-source-evidence)
-has no trusted running-distribution fact. Existing D9 in
-[brainstorm.md](../../freeholds/brainstorm.md) keeps the game server unaware of
+has no trusted running-distribution fact. Existing D9 under "Locked decisions"
+in [state.md](../../freeholds/state.md) keeps the game server unaware of
 distribution. The NEW economy-service issuer/verifier authorizes an
 actual eligible checkout channel/session and supplies an opaque account/purpose/
 SKU/policy/quote/operation-bound authorization. The game host sees the opaque
@@ -91,7 +95,7 @@ The immutable manifest contains:
 | Identity and versions | Operation, seller/buyer internal identities, opaque plot, shell/tier, asset, layout revision, entitlement revision, content schema, terms/catalog/authority versions and canonical digest |
 | Included contents | Exact persistent copy identities, content IDs, eligible transfer state, permitted dye/appearance, placement transforms and parent relations for each included furnishing |
 | Retained contents | Every excluded, bound, personal or omitted copy with verified authorized custody destination, plus the seller's trophy records/displays that detach without transferring unlock/provenance |
-| Preconditions | Current ownership/fence, no conflicting reservation/listing/paid operation, buyer plot admission, source-copy uniqueness, payload/row/byte bounds and current territory/account eligibility |
+| Preconditions | Current ownership/fence, no conflicting reservation/listing/paid operation, buyer capacity, source-copy uniqueness, payload/row/byte bounds and current territory/account eligibility. Buyer capacity (D80): the purchased plot occupies the buyer's `plot_index` 0 only when that record is at tier 0 (Inn Room); the buyer's retained copies and displays are previewed to a safe destination by the same manifest rule as the seller's; otherwise the operation refuses with the literal code `freehold.deed.buyer_capacity`. After 42, the purchased plot may occupy the buyer's free index under 42's two-plot cap. Seller post-sale rule (D80): the seller receives a fresh tier-0 record at index 0 with account trophy unlocks retained; Ward Favor capacity awards are properties of the stable plot ID and travel with the plot, and the seller's fresh record starts at the base budget. Seller wallet step-up: a fresh server-issued challenge signed by the account's linked wallet (NEW `WocStepUpOperation` value `list_freehold_plot` in 38, beside the existing `create_listing` and `accept_directed_offer` values in `server/woc_market_stepup.ts`), bound to the manifest digest plus every money figure shown; the existing `woc_market.wallet_required` and `woc_market.terms_required` error codes refuse before reservation |
 | Transfer boundary | Expected seller/buyer lifecycle revisions, original calendar/checkpoint and credit identities, authoritative transfer instant, and condition materialized through that boundary under irrevocable facts |
 | Confirmation | The exact visible included/retained preview, authoritative price/fees, accepted terms, fingerprint and both parties' valid authorization |
 
@@ -114,7 +118,7 @@ At confirmed game application, materialize condition through the transfer bounda
 under the old owner's applicable committed protection and irrevocable calendar
 facts. Preserve original calendar meaning and every immutable prepaid credit's
 bill/rate/material/receipt attribution. Seller lifecycle and arrival-tier history
-remain on the seller account. The account Hearth cooldown from NEW07
+remain on the seller account. The account Hearth cooldown from NEW 07
 `server/freehold_hearth_db.ts` also remains with each account; transfer copies or
 clears neither seller nor buyer readiness. The buyer's committed account lifecycle applies
 only prospectively after the boundary; transfer neither copies seller grace nor
@@ -133,7 +137,7 @@ operation pending or follows its accepted compensation path without another debi
 | `mint-confirmed` | Service has a final receipt for the exact asset/plot binding and verified required plugin authorities. The game commits only the optional presentation record. |
 | `listing-prepared` | Current owner, manifest, custody/reservations, eligibility and quote are validated durably. No buyer access changes. |
 | `listed-frozen` | Service confirms per-asset transfer protection and the exact listing identity. Included contents remain immutable. Guests see the last permitted public layout; private confirmation/custody details stay private. |
-| `transfer-prepared` | Current seller authority, buyer eligibility/capacity, quote, manifest and both confirmations are revalidated. A durable transfer intent exists before settlement or external transfer. |
+| `transfer-prepared` | Current seller authority, buyer eligibility and the D80 buyer capacity rule (refusing with `freehold.deed.buyer_capacity`), quote, manifest and both confirmations are revalidated. A durable transfer intent exists before settlement or external transfer. |
 | `transfer-confirmed` | Service provides the immutable successful settlement/transfer receipt. The game may now apply the prevalidated exact manifest; it cannot assume a timeout means failure. |
 | `game-applied` | `commitFreeholdMutation` atomically records the transfer-boundary condition, preserved calendar/credits, game entitlement, included copies, custody effects and receipt identity under compatible ownership/lifecycle fences. Seller account history remains theirs; buyer lifecycle applies prospectively without copied/new grace. Exactly one account holds the admitted entitlement. Only now is game completion acknowledged. |
 | `cancel-pending` | Service verifies no confirmed sale won the race. Cancel uses its original identity; cancel and settle cannot both become terminal success for the same listing. |
@@ -202,8 +206,13 @@ mint-cost literal is a runtime tariff.
 ## Support, export, retention and acceptance
 
 Support actions require an authenticated operator role, case ID, reason code,
-policy version, evidence digest and recorded authorizer. Recovery is auditable
-and operation-correlated. Refund/reversal terms identify monetary outcome,
+policy version, evidence digest and recorded authorizer. That operator tooling
+(operation lookup by opaque reference, redacted state inspection, audited
+retry/compensation requests) is service-owned and authenticated on the economy
+service; the game side owns no operator route or admin page in this packet and
+applies an accepted outcome only through the 07a/15 original-operation recovery
+reader, recording the entitlement/custody adjustment atomically. Recovery is
+auditable and operation-correlated. Refund/reversal terms identify monetary outcome,
 buyer/seller entitlement, exact copy custody and settlement/burn reconciliation;
 no partial rollback is represented as completed. Privacy export returns permitted
 account-owned housing/custody/operation history and private account arrival,
@@ -233,9 +242,14 @@ malformed or nonterminal response cannot grant the transfer or prove no debit.
 | Capable rollout and recovery | Game-server/service maintainers and Fernando: named minimum capable release, supported mixed-version matrix, quiescent rollback and pending-transfer recovery ownership | Deed enablement | Proposed/unaccepted |
 
 QA covers service-confirmed/local-failed transfer, response loss, restart, lease
-takeover, cancellation racing settlement, changed holder, stale quote, unknown
-geography, forbidden/native routes, insufficient seller custody, duplicate copies,
-buyer capacity races, same-key changed-fingerprint refusal, replay after cache
+takeover, cancellation racing settlement (the composed cases this contract
+defines: `cancel-pending` racing `transfer-confirmed`, seller disconnect during
+`listing-prepared`, and restart between `transfer-confirmed` and `game-applied`,
+each with a real-PG fixture and a literal terminal state), changed holder, stale
+quote, unknown geography, forbidden/native routes, insufficient seller custody,
+duplicate copies, buyer capacity (buyer at Inn Room, buyer at Cottage, buyer with
+two plots after 42, seller post-sale record) and its races, same-key
+changed-fingerprint refusal, replay after cache
 compaction, transfer-boundary condition/calendar/credit preservation, seller
 history retention, prospective buyer lifecycle without copied/new grace,
 deactivation/restoration/hard-deletion/export distinctions, no lapse burn and
@@ -244,13 +258,21 @@ record and authority lookup has bounded admission, query/index and retention
 evidence. Required certificates record identities, signatures, versions, digests,
 effective dates and revocation state. Unsigned fields are explicit release gates.
 
-| Proposed English key | English source | Allowed surface |
-|---|---|---|
-| `hudChrome.housing.deed.reviewContents` | Review the home and furnishings included in this sale. | Approved web/website only |
-| `hudChrome.housing.deed.custodyUnavailable` | Your excluded belongings need safe storage before this sale can proceed. | Approved web/website only |
-| `hudChrome.housing.deed.pending` | This request is being confirmed. Your request reference is saved. | Approved web/website only |
-| `hudChrome.housing.deed.recovery` | This request needs a support review. Your home records and belongings are preserved. | Approved web/website only |
-| `hudChrome.housing.deed.unavailable` | This service is unavailable for this account or location. | Approved web/website only |
+Per D92 Phase 38 names these keys in its own file under the
+`hudChrome.housing.deed.*` family with exactly this English (together with the
+sale rows the [listing drafts](freehold-store-listing-drafts.md) list); ux-spec
+and the manifest carry them with 38 as owner. The on-chain deed's player-facing
+name is "Optional Freehold Deed" (`deed.title`), never a name containing
+"Charter"; the mint action reads "Mint Freehold Deed" and its receipt "Your
+Freehold Deed is minted." (the coordinator ruling on DK F2).
+
+| Deed state | Key (`hudChrome.housing.` prefix, owner 38) | English source | Allowed surface |
+|---|---|---|---|
+| Review sale contents | `deed.saleReview` | Review the home and furnishings included in this sale. | Approved web/website only |
+| Custody unavailable | `deed.custodyUnavailable` | Your excluded belongings need safe storage before this sale can proceed. | Approved web/website only |
+| Request pending | `deed.requestPending` | This request is being confirmed. Your request reference is saved. | Approved web/website only |
+| Support recovery | `deed.supportRecovery` | This request needs a support review. Your home records and belongings are preserved. | Approved web/website only |
+| Service unavailable | `charter.serviceUnavailable` (owner 37) | This service is unavailable for this account or location. | Approved web/website only |
 
 These English rows use the existing catalog/formatter pipeline. Service and
 authority diagnostics remain separate from player text and contain no raw keys,

@@ -170,6 +170,16 @@
 </style>
 </head>
 <body>
+<!--
+  Revision note (2026-09-06): this deck is the settled propagation of the player deck
+  adopted on 2026-09-05 at revision 383fd7da83 (also the FernandoX7/add-real-estate head).
+  Slide copy was edited in place under the packet decisions recorded in
+  docs/freeholds/state.md (D27 to D31 money and checkout, D29 web-only purchase, D43 and
+  D44 placement and undo, D47 and D52 amenities and garden, D48 trophies, D53 patterns,
+  D54 to D60 guilds and wards, D63 prestige, D64 and D65 optional deeds, D67 Hearth Key)
+  and the 2026-09-06 review round (settlement, deed naming and navigation fixes). The
+  proposal status block lists the section-level changes.
+-->
 
 <section class="slide hero" id="s1">
   <div class="glow" aria-hidden="true"></div>
@@ -180,7 +190,7 @@
     <div class="claims">
       <div><b>A home is a record of feats</b>Every boss you have slain and every legendary you have named, on display.</div>
       <div><b>A home has a job</b>Your bank, your crafting stations, a hearth to return to, your guild's feast hall.</div>
-      <div><b>Built for $WOC</b>Every purchase settles in $WOC. And the game never sells power.</div>
+      <div><b>Built for $WOC</b>Land, tiers and the Master Builder's Call settle in $WOC. And the game never sells power.</div>
     </div>
   </div>
 </section>
@@ -360,7 +370,7 @@
 <section class="slide" id="s10">
   <div class="inner">
     <div class="kicker">Built for $WOC</div>
-    <h2>Every purchase settles in $WOC</h2>
+    <h2>Priced housing settles in $WOC</h2>
     <div class="cols">
       <div>
         <ul>
@@ -370,11 +380,11 @@
         </ul>
       </div>
       <div>
-        <h3>The Freehold Charter</h3>
+        <h3>The Optional Freehold Deed</h3>
         <ul>
-          <li>Later, an optional Solana charter can record your plot through approved web or website-desktop services.</li>
+          <li>Later, an optional Solana deed can record your plot through approved web or website-desktop services.</li>
           <li>A furnished sale lists the shell and transferable pieces before confirmation. Personal belongings and trophy history stay yours.</li>
-          <li>Your account grants home access; the optional charter is proof and transfer. No rent, payouts or investment promises.</li>
+          <li>Your account grants home access; the optional deed is proof and transfer. No rent, payouts or investment promises.</li>
         </ul>
       </div>
     </div>
@@ -403,8 +413,8 @@
     <ul class="phases">
       <li><span class="ph">First</span><p>Freeholds. The Cottage, the Eastbrook gate, the Hearth Key, the free Inn Room, your trophies, the first furnishings, your strongbox and a station, and the Steward's Ledger.</p></li>
       <li><span class="ph">Next</span><p>The Lodge, richer trophy forms, more furnishings, advanced surfaces and parenting, twelve-week prepay, the Kitchen Garden and wider visiting.</p></li>
-      <li><span class="ph">Together</span><p>Guildhalls. The Hall Fund, the feast hall, the war table, first-kill banners, and the next tiers.</p></li>
-      <li><span class="ph">Then</span><p>Wards and Charters. Neighborhoods, Endeavors, Showcases, and the Freehold Charter on Solana.</p></li>
+      <li><span class="ph">Then</span><p>Guildhalls. The Hall Fund, the feast hall, the war table, first-kill banners, and the next tiers.</p></li>
+      <li><span class="ph">Later</span><p>Wards and deeds. Neighborhoods, Endeavors, Showcases, and the Optional Freehold Deed on Solana.</p></li>
       <li><span class="ph">And on</span><p>The Keep and the Citadel, dyes, shared layouts, and a second home.</p></li>
     </ul>
     <p class="muted">Planned rollout, subject to release approvals. Nothing is built yet.</p>
@@ -417,8 +427,8 @@
     <h2>Come home to the Vale</h2>
     <p class="big">Freeholds and Guildhalls are planned. Your adventures can already fill their future trophy shelves.</p>
     <div class="follow">
-      <span>Discord: discord.com/invite/worldofclaudecraft</span>
-      <span>Play free: worldofclaudecraft.com</span>
+      <a href="https://discord.com/invite/worldofclaudecraft" rel="noopener">Discord: discord.com/invite/worldofclaudecraft</a>
+      <a href="https://worldofclaudecraft.com/" rel="noopener">Play free: worldofclaudecraft.com</a>
     </div>
   </div>
 </section>
@@ -434,12 +444,27 @@
     const slides = Array.from(document.querySelectorAll('.slide'));
     const counter = document.getElementById('counter');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // The programmatic scroll started by go(): while it is in flight the scroll
+    // tracker leaves `current` alone, so a second press lands on the right slide.
+    const PROGRAMMATIC_SCROLL_MS = 1500;
+    const ARRIVAL_TOLERANCE_PX = 2;
     let current = 0;
     let scrollFrame = null;
+    let pendingTarget = null;
+    let pendingTimer = null;
 
     const show = () => { counter.textContent = `${current + 1} / ${slides.length}`; };
+    const clearPending = () => {
+      pendingTarget = null;
+      if (pendingTimer !== null) { window.clearTimeout(pendingTimer); pendingTimer = null; }
+    };
     const updateCurrent = () => {
       scrollFrame = null;
+      if (pendingTarget !== null) {
+        const top = slides[pendingTarget].getBoundingClientRect().top;
+        if (Math.abs(top) > ARRIVAL_TOLERANCE_PX) return;
+        clearPending();
+      }
       const anchor = window.innerHeight / 2;
       current = 0;
       for (let index = 0; index < slides.length; index += 1) {
@@ -453,6 +478,9 @@
     };
     const go = (index) => {
       current = Math.max(0, Math.min(slides.length - 1, index));
+      clearPending();
+      pendingTarget = current;
+      pendingTimer = window.setTimeout(() => { clearPending(); scheduleCurrent(); }, PROGRAMMATIC_SCROLL_MS);
       slides[current].scrollIntoView({
         behavior: reducedMotion.matches ? 'auto' : 'smooth',
         block: 'start',
@@ -462,9 +490,15 @@
     const isInteractive = (target) => target instanceof Element && target.closest(
       'a[href], button, input, textarea, select, summary, [role="button"], [contenteditable]:not([contenteditable="false"])',
     );
+    const isDeckNavButton = (target) => target instanceof Element && target.closest('.foot button');
     const onKey = (event) => {
-      if (event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || isInteractive(event.target)) return;
+      if (event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
       const key = event.key;
+      if (isInteractive(event.target)) {
+        // The deck's own Prev/Next buttons keep Enter and Space native (activation)
+        // but still take the navigation keys, so a tabbed-to button never strands arrows.
+        if (!isDeckNavButton(event.target) || key === ' ' || key === 'Enter') return;
+      }
       if (key === 'ArrowRight' || key === 'ArrowDown' || key === 'PageDown' || key === ' ' || key === 'Enter') {
         event.preventDefault();
         go(current + 1);
@@ -482,16 +516,26 @@
     const focusDeck = () => {
       if (!isInteractive(document.activeElement)) document.body.focus({ preventScroll: true });
     };
+    // A pointer-initiated click (detail > 0) hands focus back to the deck so the
+    // arrow keys keep working; keyboard activation (detail 0) keeps its focus ring.
+    const onNavClick = (delta) => (event) => {
+      go(current + delta);
+      if (event.detail > 0) document.body.focus({ preventScroll: true });
+    };
+    // A user-driven scroll cancels the programmatic tracking guard.
+    const onUserScroll = () => { if (pendingTarget !== null) { clearPending(); scheduleCurrent(); } };
 
-    // Background shortcuts leave focused buttons, links and editable controls native.
+    // Background shortcuts leave focused links and editable controls native.
     document.body.setAttribute('tabindex', '-1');
     focusDeck();
     document.addEventListener('pointerdown', (event) => {
       if (!isInteractive(event.target)) focusDeck();
     }, { passive: true });
     window.addEventListener('keydown', onKey);
-    document.getElementById('prev').addEventListener('click', () => { go(current - 1); });
-    document.getElementById('next').addEventListener('click', () => { go(current + 1); });
+    document.getElementById('prev').addEventListener('click', onNavClick(-1));
+    document.getElementById('next').addEventListener('click', onNavClick(1));
+    window.addEventListener('wheel', onUserScroll, { passive: true });
+    window.addEventListener('touchmove', onUserScroll, { passive: true });
 
     // A viewport anchor works even when less than half of a tall slide is visible.
     window.addEventListener('scroll', scheduleCurrent, { passive: true });

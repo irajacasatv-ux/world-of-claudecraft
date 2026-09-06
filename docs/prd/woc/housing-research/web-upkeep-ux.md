@@ -6,7 +6,9 @@
 > [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
 > record the requirements adopted on 2026-09-06. Historical
 > code inventories, editor capabilities, opinions and market figures below are context,
-> not current API guarantees, WOC tuning approval or legal/store approval.
+> not current API guarantees, WOC tuning approval or legal/store approval. Body bullets
+> rewritten after capture stand beside the restored original under a "Superseded
+> 2026-09-06 by D<n>" marker; the adopted text was captured at revision 383fd7da83.
 
 Research report, 2026-09-05. Sources dated 2024 to 2026 where available; older ones are marked. Unverified items are flagged.
 
@@ -90,12 +92,22 @@ No controlled MMO evidence found. Best analogs are decor demand, not upkeep: ESO
 - ESO: no true guild halls; a member's house is designated, capped at 24 visitors. https://forums.elderscrollsonline.com/en/discussion/507894/what-does-guild-halls-offer-players
 - Guild-level trophies: GW2 and EQ2 raid trophies; WoW raid trophies are personal, no guild first-kill banners found.
 
+## Upkeep design recommendation (original lane recommendation, superseded 2026-09-06 by D31, D32, D34, D36 and D54; retained as the dated trail)
+
+- Rate: a house loses 1 condition point per day out of 100 (tier 1) and repair costs materials worth about 10% of an active player's weekly gathering output, anchored on ArcheAge's first-plot share and well under Rust's 10%/day. Tier 2 and 3 cost 1.5x and 2x per repair while decaying at the same daily rate, so the share of income stays flat.
+- Paid in: a weekly "repair order" of 3 to 5 low-tier gathered materials drawn from every gathering line (herb, ore, cloth, leather, fish, lumber), rotated so demand spreads and one material never spikes. Token quick fix priced at about 1.5x market value of the materials so it never undercuts gatherers. Never premium-currency only.
+- Grace: condition above 30 is cosmetic (scuffs, dust). Below 30, crafting stations, trophy buffs and fast travel lock (the New World and SWG pattern). Condition never reaches destruction; decor and contents are never lost (UO IDOC and EVE's abandoned-loot rule are the two most hated outcomes found).
+- Away rules: decay pauses after 7 days offline (Conan) and a returning player gets 3 repair-free days (Albion). No visit-based demolition (FFXIV).
+- Guild halls: 2x decay, paid from a guild escrow that officers can prepay 12 weeks (EQ2) and members can donate to with a contribution log; cap weekly guild contribution so large guilds do not trivialize it (GW2 favor cap).
+- Failure modes to design out: publish rates in the UI, never governor-set; cap total upkeep for multi-house owners with a progressive schedule and hard cap (ArcheAge); never raise upkeep to fight inflation (EVE scarcity); reduce or pause upkeep automatically when the market is offline (New World's 2021 cut).
+
 ## Adopted WOC upkeep and UX
 
 - Condition 0 to 100 and personal/guild daily wear 1/2 are existing WOC working targets.
   Cottage/Citadel 10%/20% of measured weekly gatherer output are calibration objectives,
-  not an ArcheAge formula. The labor-regeneration calculation above uses another denominator.
-  No tier repair multipliers from this historical lane are silently imported into the packet.
+  not an ArcheAge formula. The labor-regeneration calculation in section 1 uses another
+  denominator. The tier repair multipliers in the superseded recommendation above (1.5x and 2x)
+  are not imported into the packet.
 - Each approved realm-week bill includes produce plus rotating allowed nonproduce families.
   Exact item IDs, quantities, rates and rounding require the signed workbook before enablement.
   Service-owned Call pricing uses the valid quote; it is not a direct token repair in native

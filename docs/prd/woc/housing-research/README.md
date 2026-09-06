@@ -20,10 +20,21 @@ decision status; use each lane for its dated evidence and explicit corrections.
 | `web-upkeep-ux.md` | Web lane: upkeep economics, decor economies, trophy display, placement editor UX, housing monetization data, guild halls, and the upkeep recommendation. |
 | `web-web3-land.md` | Web lane: virtual land outcomes, why land models failed, token utility patterns, the 2026 regulatory and platform constraints, Solana specifics, guild-owned property. |
 
-The three codebase lanes were read against the worktree on 2026-09-05 (release/v0.41.4
-plus PR #3872 at head `0f53c92ff7`); the three web lanes were fetched the same day and mark
-unverified claims inline. The named seams and constants are anchors to verify, not
-promises: check them against the tree before building on them.
+The three codebase lanes were read on 2026-09-05 against the author's `add-real-estate`
+worktree (release/v0.41.4 plus PR #3872 at head `0f53c92ff7`, a head itself based on
+release/v0.42.0). The packet's own base is that PR head on release/v0.42.0 (state.md
+"Worktree, base, and merge-forward"), so the two trees differ by the commits between those
+releases; the three web lanes were fetched the same day and mark unverified claims inline.
+The named seams and constants are anchors to verify, not promises: check them against the
+tree before building on them.
+
+Revision note (2026-09-06): the proposal, the deck and these six lanes are the settled
+propagation of the text adopted on 2026-09-05 at revision `383fd7da83` (also the
+FernandoX7/add-real-estate head), edited in place under the decisions recorded in
+state.md. The proposal's status block lists its section-level changes and their decisions.
+Each lane keeps its original conclusions where they were rewritten after capture: the
+original text stands under a "Superseded 2026-09-06 by D<n>" marker beside the adopted
+replacement, so the dated trail can still be re-checked.
 
 Current status, dependency sync and next-file ownership live in
 [progress](../../../freeholds/progress.md) and [state](../../../freeholds/state.md).

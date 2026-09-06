@@ -7,11 +7,15 @@ There are no signed determinations in this draft.
 Signatures here record written acceptance; they do not establish a runtime
 cryptographic signature protocol or prove remote service authentication.
 
-Every planned English key in this draft is owned by the NEW `housing` subtree
-of existing `hudChromeStrings` in
-[src/ui/i18n.catalog/hud_chrome.ts](../../../src/ui/i18n.catalog/hud_chrome.ts).
-The subtree is unimplemented. Add English source only in the producing UI work;
-regenerate generated bundles rather than editing them.
+This memo carries no player-facing keys. In-client housing copy referenced by
+this family uses only the `hudChrome.housing.*` ids pinned by
+[ux-spec.md](../../freeholds/ux-spec.md) and
+[ux-key-manifest.json](../../freeholds/ux-key-manifest.json) (D92) in the NEW
+`housing` subtree of existing `hudChromeStrings` in
+[src/ui/i18n.catalog/hud_chrome.ts](../../../src/ui/i18n.catalog/hud_chrome.ts);
+Terms clauses and storefront metadata are separate sinks (the
+[Terms amendment](freehold-terms-amendment.md) redline and the submission
+owner's metadata file), never HUD keys.
 
 Fernando is the accountable release owner. Retained product/platform counsel owns
 the legal determination and jurisdiction schedule. The economy-service maintainer
@@ -106,13 +110,16 @@ platform approval is claimed. Unknown eligibility refuses new spend, while an
 accepted payment remains recoverable under its original operation and receipt.
 The [planned adapter owners](freehold-service-contract.md#checkout-authorization-and-the-d9-boundary)
 assign the game purchase/deed consumers and durable operation records separately
-from the external issuer/verifier. D9 is an existing decision in
-[brainstorm.md](../../freeholds/brainstorm.md); the new interfaces are adopted requirements and remain unimplemented.
+from the external issuer/verifier. D9 is an existing decision under
+"Locked decisions" in [state.md](../../freeholds/state.md); the new interfaces
+are adopted requirements and remain unimplemented.
 
 ## Required determinations and primary evidence
 
-Sources below were retrieved on 2026-09-05. Counsel revalidates policy text for the
-actual submission date and archives a dated copy/digest in the signed artifact.
+Sources below were retrieved on 2026-09-05; the Solana Mobile publisher policy
+was re-retrieved on 2026-09-06 at its current host. Counsel revalidates policy
+text for the actual submission date and archives a dated copy/digest in the
+signed artifact.
 
 | Determination artifact | Evidence and required scope | Gate disposition today |
 |---|---|---|
@@ -120,7 +127,8 @@ actual submission date and archives a dated copy/digest in the signed artifact.
 | Google classification/declaration determination | [Blockchain-based Content](https://support.google.com/googleplay/android-developer/answer/13607354). Assess the actual build and connected services, Financial features declaration applicability, billing, rewards presentation and disclosures. The packet's stronger vocabulary restriction is a product rule. | EXTERNAL determination not accepted; Play housing enablement/submission blocked. |
 | Steam product determination | [Steamworks Onboarding](https://partner.steamgames.com/doc/gettingstarted/onboarding), prohibited content item 13. It excludes blockchain applications issuing or allowing exchange of cryptocurrency/NFTs. Obtain a determination for this specific isolated build and cross-platform entitlement use. | EXTERNAL determination not accepted; Steam housing enablement/submission blocked. |
 | Epic current-policy determination | [Content Guidelines](https://cdn2.unrealengine.com/epic-games-store-content-guidelines-f8accc43356e.pdf) require applicable Blockchain Addendum compliance. The exact [Blockchain Technology Guidelines](https://dev.epicgames.com/docs/epic-games-store/requirements-guidelines/distribution-requirements/blockchain) could not be retrieved in the audit. Counsel must archive the current text and accepted agreement. | EXTERNAL current-text/acceptance artifact required; no inferred China/South Korea list or blanket link claim. |
-| Seeker current-policy determination | [dApp Store introduction](https://docs.solanamobile.com/dapp-store/intro) and [Terms of Use](https://legal.solanamobile.com/en/dapp-store-tos) do not approve this housing integration. The relocated [publisher policy](https://solanamobile.com/publisher-policy-web) could not be retrieved in the audit. | EXTERNAL current-text/acceptance artifact required; purchase and deeds stay off. |
+| Seeker current-policy determination | [dApp Store introduction](https://docs.solanamobile.com/dapp-store/intro) and [Terms of Use](https://legal.solanamobile.com/en/dapp-store-tos) do not approve this housing integration. The [Solana Mobile Publisher Policy](https://legal.solanamobile.com/publisher-policy-web) (retrieved 2026-09-06; "Last Updated: Jul 21, 2026"; the old solanamobile.com URL redirects there) states it is part of and subject to the Solana Mobile dApp Store Developer Agreement; the policy text itself carries no in-app purchase, NFT, digital-asset or territory rule and defers to that Developer Agreement and the Terms of Use, which counsel must confirm verbatim. | EXTERNAL current-text/acceptance artifact required, including the Solana Mobile dApp Store Developer Agreement (current signed text) as a named acceptance artifact; purchase and deeds stay off. |
+| Linked-Terms metadata determination | The client links one canonical Terms document from every shell ([src/ui/terms_link.ts](../../../src/ui/terms_link.ts)); the accepted Terms describe the web-only deed service the way live section 22 describes the marketplace. Determine whether linked Terms content counts as app metadata or an external purchase reference under Apple 3.1.1(a) and Google's declaration, so no per-distribution Terms rendering is invented. | EXTERNAL determination not accepted; the one-document mechanism is the only delivery mechanism proposed. |
 | Payment/territory determination | Actual signed service catalog, conversion/burn/refund schedule, age/account controls, sanctions/geography evidence and proposed Terms. Assess each approved rail and jurisdiction without treating uniqueness as a blanket exemption. | Supported list remains empty until the signed schedule accepts explicit rows. |
 | Custody/delegate determination | [Deed contract](freehold-deed-service-contract.md), per-asset transfer freeze, proposed optional authority, furnished manifest, consumer rights, account deletion/export and security controls. | No mint/list/transfer or irreversible authority use before signed acceptance. |
 
@@ -137,8 +145,10 @@ Counsel receives the actual proposed
 [economy-service contract](freehold-service-contract.md),
 [deed-service contract](freehold-deed-service-contract.md), and
 [territory/authority schedule](freehold-territory-authority-schedule.md).
-Player-facing text is supplied as English `hudChrome.housing.*` source keys.
-No legal prose from this memo is automatically inserted into the HUD.
+In-client player text is supplied as the `hudChrome.housing.*` ids pinned by
+ux-spec and the UX key manifest (D92); Terms clauses arrive as the amendment's
+redline text and store listings as storefront metadata, and no legal prose from
+this memo is automatically inserted into the HUD.
 
 The evidence bundle includes build/distribution identifiers, approved capability
 matrix, the NEW service issuer/verifier and accepted checkout-session proof,
@@ -146,8 +156,16 @@ cross-binding/expiry/replay/refusal conformance, screenshots of all reachable
 housing/store/support states, route and
 catalog-denial tests, receipt/replay/custody proof, actual purchase destination
 and return-flow captures, data inventory/retention schedule, and the complete
-public listing/review notes. Test accounts use fictional public data; credentials
-are delivered through the established secure review process, never these docs.
+public listing/review notes. It also includes the live governing documents the
+amendment reconciles: [public/terms.html](../../../public/terms.html),
+[public/privacy.html](../../../public/privacy.html),
+[TERMS_AND_CONDITIONS.md](../../../TERMS_AND_CONDITIONS.md),
+[TERMS_AND_CONDITIONS_MARKETPLACE_DRAFT.md](../../../TERMS_AND_CONDITIONS_MARKETPLACE_DRAFT.md)
+(whose open `[COUNSEL]` questions in sections 8, 9 and 10 and the section 17
+liability cap are inherited, as the 44b handoff cites them)
+and [src/ui/terms_link.ts](../../../src/ui/terms_link.ts). Test accounts use
+fictional public data; credentials are delivered through the established secure
+review process, never these docs.
 
 ## Acceptance record to be signed
 

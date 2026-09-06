@@ -11,24 +11,28 @@ receipts. Fernando owns product approval and activation. Phase 07a produces the
 game transaction composition; 13 produces pure upkeep/finality rules and NEW 13a
 produces authoritative calendar storage/ingress/host wiring; 15 produces
 the initial adapter and fake-service conformance suite; 20 validates the first
-production acceptance certificate. Phases 21, 29, 32, 37, 38, 40 and 42 append
-their SKU/effect rows and paired QA evidence before their respective activation.
+production acceptance certificate. Phase 15 appends the first two rows and
+Phases 21, 29, 32, 37, 38, 40 and 42 append their SKU/effect rows, in the uniform
+effect-inventory template below, with paired QA evidence before their
+respective activation.
 Phases 14 and 16 consume capability and price states without authorizing spend.
 
-Existing decisions underpin these adopted, unsigned contract requirements: D1 in
-[brainstorm.md](../../freeholds/brainstorm.md) supplies the once-per-account
-Charter shape; D9 there keeps the game server unaware of distribution. D21 and
-D22 in [state.md](../../freeholds/state.md) respectively constrain optional deed
-surfaces and preserve ordinary housing use at low condition. Fernando approved
+Existing decisions underpin these adopted, unsigned contract requirements: D1
+under "Locked decisions" in [state.md](../../freeholds/state.md) supplies the
+once-per-account Charter shape; D9 there keeps the game server unaware of
+distribution. D21 and D22 in the same section respectively constrain optional
+deed surfaces and preserve ordinary housing use at low condition. Fernando approved
 R01 through R46 on 2026-09-06. The new interfaces and deny-default policy
 requirements are adopted; live service behavior, tariff publication, legal
 acceptance and platform determinations still require the named external evidence.
 
-Every planned English key in this draft belongs to the NEW `housing` subtree
-of existing `hudChromeStrings` in
+In-client player text referenced by this contract uses only the
+`hudChrome.housing.*` ids pinned by [ux-spec.md](../../freeholds/ux-spec.md) and
+[ux-key-manifest.json](../../freeholds/ux-key-manifest.json) (D92) in the NEW
+`housing` subtree of existing `hudChromeStrings` in
 [src/ui/i18n.catalog/hud_chrome.ts](../../../src/ui/i18n.catalog/hud_chrome.ts).
-That subtree is not implemented. Its producing UI/content work adds English
-source values only; generated bundles are regenerated, never edited by hand.
+That subtree is not implemented. Its producing UI work adds English source
+values only; generated bundles are regenerated, never edited by hand.
 
 ## Release gates and acceptance certificate
 
@@ -142,7 +146,14 @@ their unaccepted state blocks new real spend rather than inviting an implementer
 to invent distribution attestation.
 
 Proposed game consumers are NEW `server/freehold_purchases.ts` for opaque
-authorization, quote, spend and status/reconcile adapter calls; NEW
+authorization, quote, spend and status/reconcile adapter calls, reached from the
+client through two RouteDef rows appended to the existing `server/freehold_routes.ts`
+table, POST `/api/freehold/quote` (Prepare, a mutating method with a typed body of
+sku, opaque plotId, source selection and an optional client idempotency key; a
+repeated key returns the same open intent: returns operationId, quoteId,
+catalogVersion, expiresAt, amount, currency, fee/tax disclosures and terms version,
+never the authorization reference) and GET `/api/freehold/operation/:operationId`
+(the side-effect-free status read by operation identity); NEW
 `server/freehold_operation_db.ts` for protected durable authorization bindings,
 fingerprints, intents and receipts; and later NEW
 `server/freehold_deed_proxy.ts` for deed operations through the same boundary.
@@ -223,8 +234,14 @@ unneeded payload. Any later compaction requires an accepted service-enforced
 replay horizon and proof that old identities can no longer be charged or applied.
 Hard account deletion must preserve the minimum nonidentifying anti-replay
 identity and lawfully retained audit authority specified by the accepted written
-retention schedule. Soft account deactivation is a separate operation described
-below; it does not trigger these hard-deletion rules or erase replay history.
+retention schedule (a named component of the counsel evidence bundle and the
+Terms certificate under the state.md "Counsel, Terms and storefront model" gate
+row). 07a states the ON DELETE policy per row class (D88): intent rows cascade
+only when no open operation exists; applied tombstones retain a nonidentifying
+operation identity with the account reference nulled or scalar and cascade only
+under the accepted retention schedule. Soft account deactivation is a separate
+operation described below; it does not trigger these hard-deletion rules or
+erase replay history.
 
 ## Transaction composition and workload evidence
 
@@ -262,21 +279,32 @@ The database, persistence and security reviewers validate this manifest before
 implementation decisions and on the finished diff. Disposable-PostgreSQL proof
 races housing with autosave, storage start/apply, guild replay, account/character
 deletion and lease takeover, including pending legacy side effects and ambiguous
-commits. Record aggregate outcome, bounded duration, query count, queue/pool wait,
+commits; Phase 07a's deliverable 5 and its QA mirror this list. Record aggregate outcome, bounded duration, query count, queue/pool wait,
 encoded bytes, timeout/cancellation and replay results, without private rows.
 Each growing table/read has a query/index/retention inventory, not a blanket index
 rule. Do not add an independent pool or claim guaranteed interactive reserve.
 
 ## Effect inventory and guild fund
 
-| Producer | Effect contract |
-|---|---|
-| 15 Cottage Charter | Once-per-account entitlement grant with durable receipt recovery; an already granted entitlement cannot be purchased again as a repeatable action. |
-| 15 Master Builder's Call | A confirmed result restores condition to the state.md maximum and satisfies the current unpaid weekly bill. Future prepay credits are preserved and none are added. An already-paid current bill has an explicit repair-only quote/effect. |
-| 21, 32, 40 tier upgrades | Fixed tier/input/custody preview and exact material deduction accompany the quoted effect. Refuse before new spend if overflow cannot fit in authorized safe custody. |
-| 29 guild hall/fund | Service owns pooled currency debit/credit authority; game owns atomic material/gold effects and membership/permission validation. Officers authorize paid projects. |
-| 37, 38 optional deed operations | Apply the separate deed contract, immutable furnished-sale manifest, authority schedule and territory gate. |
-| 42 second freehold | New admitted plot index and SKU; existing stable opaque plot identities remain stable. Each bill/prepay/condition record is plot-specific. |
+Every producer appends one row per SKU in this template. `SKU id` is the literal
+catalog id the producing phase names in its own file (15's two ids are recorded
+in state.md's per-phase ledger row 15 when 15 lands); `kind` is the Claudium
+spend kind literal `freehold` for every housing SKU; `idempotency scope` is the
+identity the service keys the operation on; `refund disposition` names the row
+of the signed refund schedule; `dark/outage` states the behavior while
+`FREEHOLDS_ENABLED` is off or an upkeep suspension is open.
+
+| Producer | SKU id | kind | Idempotency scope | Refund disposition | Dark/outage behavior | Effect contract |
+|---|---|---|---|---|---|---|
+| 15 Cottage Charter | `freehold_charter_cottage` | `freehold` | account-once | signed schedule row for the Charter | dark: refused and hidden from the store filter; outage: purchase unavailable, no guessed price | Once-per-account entitlement grant with durable receipt recovery; an already granted entitlement cannot be purchased again as a repeatable action. |
+| 15 Master Builder's Call | `freehold_master_builders_call` | `freehold` | account plus plot, repeatable | signed schedule row for the Call | dark: refused; outage: unavailable, and a wholly suspended week consumes no credit | A confirmed result restores condition to the state.md maximum and satisfies the current unpaid weekly bill. Future prepay credits are preserved and none are added. An already-paid current bill has an explicit repair-only quote/effect. |
+| 21 Lodge upgrade | `freehold_upgrade_lodge` | `freehold` | account plus plot, once per tier step | signed schedule row for tier fees | dark: refused; outage: unavailable | Fixed tier/input/custody preview and exact material deduction accompany the quoted effect. Upgrade contributions take an explicit source-mode argument per D37 (bags, or the vault inside the owner's own claim under D18/D47); the bill counts item units per D33; refuse before new spend if overflow cannot fit in authorized safe custody, and a confirmed fee whose last leg cannot finish because bags are full re-attempts without a second fee (D89). |
+| 32 Great Hall, Bastion and Manor | three price-free rows named by 32 | `freehold` | account or guild plus plot, once per tier step | signed schedule rows | dark: refused; outage: unavailable | Same upgrade contract as 21, with the guild owner kind's officer authorization. |
+| 29 Meeting Hall Charter | `guildhall_charter_meeting_hall` | `freehold` | guild-once, officer-plus | signed schedule row | dark: refused; outage: unavailable | Service owns pooled currency debit/credit authority; game owns atomic material/gold effects and membership/permission validation. Officers authorize paid projects. |
+| 29 Hall Fund donation | `hall_fund_donation_claudium` | `freehold` | guild plus donor account plus realm week, repeatable under the allowance | pro rata by original receipt (see the end-of-life row) | dark: refused; outage: unavailable | Currency contributions and refunds use the external intent/receipt protocol and the service's absolute result. |
+| 37, 38 optional deed operations | the service-published deed operation ids (mint, list, cancel, settle) the deed contract names | `freehold` | plot plus asset per operation ID | signed deed refund schedule | NEW spend refused while NEW `FREEHOLD_DEEDS_ENABLED` or the NEW `allowSerializedCollectibles` flag is off or the service is unavailable; accepted original operations recover | Apply the separate deed contract, immutable furnished-sale manifest, authority schedule and territory gate; buyer capacity per D80. |
+| 40 Keep, Fortress and Citadel | four tier/SKU rows named by 40 | `freehold` | account or guild plus plot, once per tier step | signed schedule rows | dark: refused; outage: unavailable | Same upgrade contract as 21, with the D63 prestige gate. |
+| 42 second freehold | `freehold_charter_second` | `freehold` | account-once at `plot_index` 1; refuses without a primary and at the two-plot cap with `freehold.second_plot_cap` | signed schedule row | refused while `FREEHOLDS_ENABLED` is off or the service is unavailable; accepted original operations recover | Grants a Cottage-tier record at the new admitted plot index (D93); the second plot upgrades through the same 21/32/40 build projects as the primary, with every integer material line at ceil(1.5x) of the approved primary line per D67, and there is no second-home upgrade refusal (D93). Existing stable opaque plot identities remain stable. Each bill/prepay/condition record is plot-specific. |
 
 Guild responses contain an absolute balance with `serviceBalanceRevision`, never
 a locally computed delta standing in for the service ledger. Older responses do
@@ -292,6 +320,12 @@ conversion computes it. Phase 29's accepted calibration artifact publishes exact
 material/gold and service-currency allowance rows, aggregation, rounding and
 refund treatment; no currency contribution activates without those rows. Member
 views show the permitted contribution audit, while membership checks remain live.
+
+| Hall Fund end-of-life (D78) | Required behavior |
+|---|---|
+| Disband with a nonzero pooled service balance | On disband (28a's tombstone disposition, D79) the pooled service balance is refunded pro rata to donor accounts by original receipt as separately identified immutable refund operations linked to those receipts; the game only requests the operation and mirrors the settled absolute balance. |
+| Fund materials and gold at disband | 29 adds an officer-plus withdraw-to-guild-bank verb for fund materials and gold on the 07a rail, used before the refund request; that verb is the materialization the disband guard requires. |
+| Disband-permitted state (28a's explicit safe disposition) | Fund materials and gold at zero and the service balance settled or refund-requested; only then does the tombstone disposition (D79) proceed. |
 
 ### Guild lifecycle authority and membership transitions
 
@@ -314,9 +348,17 @@ and exact checkpoints/finality; latest-only activity is insufficient. NEW
 observer account's binding or current serving realm.
 
 Existing [server/social_db.ts](../../../server/social_db.ts) members
-`PgSocialDb.guildMembership`, `addGuildMemberAtomic`, `transferGuildLeader` and
-`removeGuildMember`, plus [server/social.ts](../../../server/social.ts)
-`SocialTransport.onGuildMembershipChanged`, are distinct membership seams.
+`PgSocialDb.guildMembership` (returning `rosterPages` on origin/release/v0.42.0),
+`addGuildMemberAtomic` (its limit parameter removed there; the cap is read from the
+FOR UPDATE guild row up to `GUILD_ROSTER_MAX_MEMBERS`, 1,000 seats, in
+`src/sim/guild_roster.ts`), `transferGuildLeader` and `removeGuildMember`, plus
+[server/social.ts](../../../server/social.ts) `SocialTransport.onGuildMembershipChanged`
+and `buyRosterPage`, and the release's `server/guild_roster_page_db.ts` roster page
+purchase (account KEY SHARE, guilds row UPDATE, `guild_roster_receipts` insert,
+character save, all inside `beginCharacterSaveTx` behind
+`acquirePaidGuildCreateClient`; `guild_roster_receipts` cascades with guilds and
+characters), are distinct membership seams re-verified against the newest
+origin/release/** at every guild phase start (the packet base predates them).
 The display roster/cache and current stamps do not prove past membership.
 28a adds the narrowly scoped membership incarnation and transition fencing.
 Typed gameplay observations carry authenticated character/account identity,
@@ -338,7 +380,16 @@ orders. No new pool, polling listener or tick SQL. Guild-history protection neve
 requires account-head locks solely to derive presence. Hall/credit/operation/
 protection dependencies prevent destructive guild-head deletion; observer deletion
 cannot cascade guild history, and disband explicitly materializes or retains
-unresolved dependencies. Lossless compaction must prove all dependent replay safe.
+unresolved dependencies. A guild that holds any keep-forever housing row
+(`guild_deeds`, first clears) is never hard-deleted: disband is the 28a tombstone
+disposition (D79), retaining the guild row with a tombstone status, removing
+member rows, releasing the realm name through a tombstone-aware uniqueness rule
+and keeping `guild_deeds` rows attached; the guard extends the existing
+`beginGuildBankDelete` guard at both guild-deleting call sites (`guildDisband`, and
+`guildLeave` last-member-out) before any member row is deleted, and GM character or account deletion routes through the same guard
+(leadership passes to the highest-ranked remaining member or, with none, the
+tombstone disposition applies with fund disposition per D78). Lossless compaction
+must prove all dependent replay safe.
 
 Files 29/13a consume committed guild history and exactly union service outages
 before upkeep effects. Current-generation installation cannot regress a guild
@@ -404,7 +455,11 @@ reset policy, whose existing boundaries are owned by
 [server/raid_reset.ts](../../../server/raid_reset.ts) exports `resetDayKey`,
 `eventLeadDayKey`, `dailyResetRemainingSec` and `nextWeeklyRaidResetMs`, with
 [server/realm.ts](../../../server/realm.ts) export `REALM_RESET_TIME_ZONE`.
-Do not substitute an invented UTC week. Plot checkpoints and every immutable
+Do not substitute an invented UTC week: every has-the-day-rolled-over fact
+(ledger, upkeep, prepay, condition, guest-book daily admission, Showcase realm
+week, the per-account weekly cap) uses the realm day `resetDay` and the Tuesday
+week anchor, epoch-ms fields are display-only, and only the Endeavor month uses
+the UTC calendar month (D84). Plot checkpoints and every immutable
 credit retain their ORIGINAL source calendar/schema/reset-policy identity across
 claims, sale, reconnect and process/realm changes. A new identity or reset policy
 requires an explicit accepted migration contract, never implicit reinterpretation.
@@ -575,13 +630,21 @@ rail-specific reversal handling, settlement/burn reconciliation and the permitte
 local effect for each SKU. Until accepted, real spend stays disabled. Support can
 find an operation by its opaque reference, inspect permitted redacted state and
 request an audited retry/compensation; it cannot alter a terminal receipt or mint
-an unrecorded grant. Export and account-removal behavior follow the distinct
+an unrecorded grant. Ownership of that support reconciliation: the operator
+tooling is service-owned and operator-authenticated on the economy service; the
+game side owns no operator route or admin page in this packet and applies an
+accepted monetary outcome only through the 07a/15 original-operation recovery
+reader (login, store-open and bounded background recovery, the Recovery row above),
+which records the immutable linked outcome as the entitlement/effect adjustment
+atomically through 07a. A game-side operator surface would be a
+new product ruling, not an implementation choice. Export and account-removal
+behavior follow the distinct
 lifecycle paths below; neither deactivation nor an old export implementation is
 treated as proof of hard deletion or complete housing-data export.
 
 ## Account Hearth authority and admitted recovery reads
 
-NEW07 `server/freehold_hearth_db.ts` owns `FREEHOLD_HEARTH_SCHEMA`,
+NEW 07 `server/freehold_hearth_db.ts` owns `FREEHOLD_HEARTH_SCHEMA`,
 `loadFreeholdHearth` and `advanceFreeholdHearthOnClient`, backed by NEW
 `account_freehold_hearth` with account primary/FK identity, `ready_at_ms` and
 monotonic revision/clock semantics. Private plot UI is a committed mirror only.
@@ -614,7 +677,7 @@ these paths and test each one:
 
 | Path | Proposed housing contract |
 |---|---|
-| Character deletion | Preserve account housing, arrival-tier marks, account lifecycle, credits and durable operation/replay authority. |
+| Character deletion | Preserve account housing, arrival-tier marks, account lifecycle, credits and durable operation/replay authority. An open housing operation blocks character or account deletion with the mapped refusal class in `server/character_delete_db.ts` (the storage guard shape); the deletion race is in the real-PG list (D88). |
 | Soft account deactivation | Apply the account's access restriction while retaining housing, account history and operation identities under the accepted retention policy. Do not manufacture new absence/grace or delete housing through an assumed cascade. |
 | Authorized restoration | Reload the retained account/plot state and reconcile the original operations under existing identities. Do not grant a fresh Charter, first-arrival mark or fresh return grace merely because the account is restored. |
 | Separately authorized hard deletion | Explicitly remove the account's personal/public housing projections and account-owned rows according to the accepted lifecycle/retention policy, while preserving minimal lawful dispute and nonidentifying replay authority. No current soft-deactivation endpoint is claimed to implement this workflow. |
@@ -623,7 +686,10 @@ these paths and test each one:
 The required export includes owned plots and custody, private arrival-tier history,
 account lifecycle/protection checkpoints, shared-account Hearth readiness/revision,
 original calendar/bill/credit attribution,
-and permitted operation/recovery facts. It excludes operator evidence, secrets,
+and permitted operation/recovery facts. That list is the Wave A export; later
+producers append their own export/erasure rows in their phases (guest books,
+votes, wards, layouts, hall contributions and deed rows in 26, 29, 34, 35, 36, 38
+and 41a). It excludes operator evidence, secrets,
 checkout authorizations, private service diagnostics and other accounts' data.
 Unsupported or oversized stored state is preserved in its original row with a
 bounded diagnostic/reference; do not require a second bounded blob to contain an
@@ -675,15 +741,24 @@ semantics. A rollback manifest names every surviving writer/reader and who owns
 pending recovery; no discard, reinterpretation or silent replay-key pruning is
 authorized. These are future release acceptance requirements, not executed proof.
 
-| Proposed English key | English source | Surface |
-|---|---|---|
-| `hudChrome.housing.service.priceUnavailable` | Price unavailable. Please try again later. | Approved purchase surfaces |
-| `hudChrome.housing.service.quoteExpired` | This price has expired. Review the new total before confirming. | Approved purchase surfaces |
-| `hudChrome.housing.service.pending` | Your request is being checked. You can keep playing. | Initiating permitted surface |
-| `hudChrome.housing.service.reference` | Request reference: {operationId} | Support-safe result |
-| `hudChrome.housing.service.recovered` | Your request is complete. | Matching recovered operation |
-| `hudChrome.housing.service.upkeepPaused` | Upkeep is paused during the service interruption. Your home and belongings are safe. | Steward |
-| `hudChrome.housing.service.supportReview` | This request needs a support review. Your request reference is saved. | Matching operation |
+The service states below map to the manifest ids (D92); no `service.*` family
+exists. The two rows marked "16, D92" are carried by ux-spec and the manifest
+with Phase 16 as owner, which ships their English source in its own change (the
+[listing drafts](freehold-store-listing-drafts.md) list the full purchase set).
+
+| Service state | Key (`hudChrome.housing.` prefix) | English source | Surface |
+|---|---|---|---|
+| Price or catalog unavailable | `charter.unavailable` | This purchase is unavailable right now. | Approved purchase surfaces |
+| Quote loading | `charter.quoteLoading` | Loading current price... | Approved purchase surfaces |
+| Quote expired | `charter.quoteExpired` | This quote has expired. Review the current quote before confirming. | Approved purchase surfaces |
+| Price changed | `charter.priceChanged` | The price has changed. Review the new price before confirming. | Approved purchase surfaces |
+| Pending | `charter.pending` | Your purchase is being confirmed. | Initiating permitted surface |
+| Reconciling an original operation | `charter.reconciling` | Checking your original purchase. You do not need to buy again. | Matching recovered operation |
+| Request reference (16, D92) | `charter.reference` | Request reference: {operationId} | Support-safe result |
+| Charter recovered or complete | `charter.received` | Your Cottage is ready. | Matching recovered operation |
+| Call recovered or complete | `granted.call` | Your home's condition is restored. | Matching recovered operation |
+| Upkeep paused by a recorded outage | `steward.outagePause` | Upkeep is paused while the market service is unavailable. No missed upkeep will be added later. | Steward |
+| Support review (16, D92) | `charter.supportReview` | This request needs a support review. Your request reference is saved. | Matching operation |
 
 All player copy uses English catalog keys and formatted values. Technical
 settlement text is developer/service documentation, not native or storefront

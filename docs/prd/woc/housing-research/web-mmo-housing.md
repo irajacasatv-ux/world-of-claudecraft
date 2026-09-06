@@ -6,7 +6,9 @@
 > [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
 > record the requirements adopted on 2026-09-06. Historical
 > code inventories, editor capabilities, opinions and market figures below are context,
-> not current API guarantees, WOC tuning approval or legal/store approval.
+> not current API guarantees, WOC tuning approval or legal/store approval. Body bullets
+> rewritten after capture stand beside the restored original under a "Superseded
+> 2026-09-06 by D<n>" marker; the adopted text was captured at revision 383fd7da83.
 
 Sources fetched 2026-09-05; older sources are dated inline. Items I could not verify are marked.
 
@@ -80,10 +82,10 @@ Sources fetched 2026-09-05; older sources are dated inline. Items I could not ve
 3. Upkeep should be cheap, weekly, and prepayable, not daily. Daily material upkeep compounds the FFXIV "must log in" resentment; BDO's 5%/day is only tolerated because guilds pool it. Add a grace window before lockout.
 4. No land scarcity. Instanced plots for everyone (WoW, ESO, OSRS); never first-come plots or lotteries.
 5. Trophies must be earned in content and tiered by difficulty (WoW Argent/Aureate/Gleaming, OSRS mounted heads, New World trophies), and shown with provenance so the house reads as a record of feats, not an IKEA catalog.
-6. Review point-budget headroom on a published cadence. WOC proposes a review every second release, with increases only when LOW evidence supports them; no automatic rise is promised.
-7. Placement tools are comparative precedents. WOC proposes initial floor placement and bounded placement undo/redo, later planar/yaw freedom with typed surfaces and fixed ceiling anchors, and later layout sharing. Scale, full-axis gimbal and collision leniency are outside the packet.
+6. Cap by point budget, then raise it every patch. Announce the raise cadence; frozen caps are a nine-year grievance in ESO. (Superseded 2026-09-06 by D69, original retained as the dated trail. Adopted: review point-budget headroom on a published cadence; WOC proposes a review every second release, with increases only when LOW evidence supports them; no automatic rise is promised.)
+7. Free placement with stacking and linking (EQ2/WildStar/Rift lineage) beats hook grids; ship bulk move and layout save/load early, WoW is retrofitting both. (Superseded 2026-09-06 by D43, D44 and D66, original retained as the dated trail. Adopted: placement tools are comparative precedents; WOC proposes initial floor placement and bounded placement undo/redo, later planar/yaw freedom with typed surfaces and fixed ceiling anchors, and later layout sharing. Scale, full-axis gimbal and collision leniency are outside the packet.)
 8. Route decor through every profession and vendor rep you already have, and let tiers of decor be crafted, not bought.
-9. Give guests social reasons to visit. WOC excludes new rest-XP or other power bonuses; later opt-in realm Showcases and moderated reaction books provide cosmetic/social goals with separate plot-entry privacy.
+9. Build the reason to visit: a neighbor bonus (WildStar rest XP), guest books, timed showcases with trophy rewards. (Superseded 2026-09-06 by D56, D59 and D60, original retained as the dated trail. Adopted: give guests social reasons to visit; WOC excludes new rest-XP or other power bonuses; later opt-in realm Showcases and moderated reaction books provide cosmetic/social goals with separate plot-entry privacy.)
 10. Guild halls should be a shared plot with pooled escrow and amenity slots that scale with guild level (EQ2), never an auction (L2/BDO) on one realm.
-11. The adopted WOC scope sells cosmetic convenience/access on approved checkout surfaces, including tiers and optional repair. This differs from the original comparative recommendation; trophies remain free, inputs tradable, and no purchase grants combat or progression power.
+11. Keep the store cosmetic-only and keep a gold path to everything (ESO gold prices, Blizzard's "vast majority earnable" line); never sell caps, slots, or upkeep relief. (Superseded 2026-09-06 by D29 and D30 under ruling 5, original retained as the dated trail. Adopted: the WOC scope sells cosmetic convenience/access on approved checkout surfaces, including tiers and optional repair; trophies remain free, inputs tradable, and no purchase grants combat or progression power.)
 12. Budget for performance from day one: per-plot decor counts, exterior light limits, and visitor caps are the numbers every studio ended up tuning under pressure.

@@ -24,59 +24,83 @@ and hard deletion/restoration, and a named minimum capable release with quiescen
 rollback. Store review notes must describe the actual accepted build, not claim
 that an older release maintains housing semantics merely by retaining tables.
 
-## English source copy and seven listing assemblies
+## Storefront metadata copy and seven listing assemblies
 
-Every player-visible string below is a proposed English `hudChrome.housing.*`
-key owned by the NEW `housing` subtree of existing `hudChromeStrings` in
-[src/ui/i18n.catalog/hud_chrome.ts](../../../src/ui/i18n.catalog/hud_chrome.ts).
-That subtree is unimplemented. Implementing sessions add English source values
-only and regenerate generated bundles, never edit them by hand. Use the exported
-`t` from [src/ui/i18n.ts](../../../src/ui/i18n.ts) at every sink, with its
-`formatNumber` and `formatDateTime` for applicable values. Its `formatMoney`
-formats game copper; it MUST NOT format or convert Claudium, $WOC, SOL or fiat
-amounts. Phase 16 formats service amounts in the quote's actual accepted
-denomination and refuses unavailable/unsupported currency schemas.
+Three text sinks appear in this draft and each has its own delivery mechanism.
+Store listing text (title, description, screenshot alt text) is storefront
+metadata entered in App Store Connect, the Play Console, Steamworks, the Epic
+developer portal and the dApp Store publisher portal by the submission owner;
+`src/ui` never renders it, so it is NOT a `hudChrome.housing.*` key and adds no
+row to the exact UX key manifest. In-client purchase copy (the next section)
+uses ONLY the `hudChrome.housing.*` ids pinned by
+[ux-spec.md](../../freeholds/ux-spec.md) and
+[ux-key-manifest.json](../../freeholds/ux-key-manifest.json) (D92: `charter.*`,
+`steward.*`, `granted.*`); Phase 16 adds the English source values to the NEW
+`housing` subtree of existing `hudChromeStrings` in
+[src/ui/i18n.catalog/hud_chrome.ts](../../../src/ui/i18n.catalog/hud_chrome.ts)
+and regenerates generated bundles, never editing them by hand. Terms clauses
+are the third sink and live in the
+[Terms amendment](freehold-terms-amendment.md) as redline text. At every
+in-client sink use the exported `t` from [src/ui/i18n.ts](../../../src/ui/i18n.ts)
+with its `formatNumber` and `formatDateTime` for applicable values. Its
+`formatMoney` formats game copper; it MUST NOT format or convert Claudium, $WOC,
+SOL or fiat amounts. Phase 16 formats service amounts in the quote's actual
+accepted denomination and refuses unavailable/unsupported currency schemas.
 Proper nouns match the packet. Neither the ordinary Book of Deeds nor personal
 trophy provenance is the optional transfer service.
 
-| Source key | Exact English source |
+The metadata rows below are identified by a field label for the submission
+owner's per-distribution metadata file (English now; per-locale metadata is a
+later submission-owner deliverable, never an i18n catalog row). Phase 20's
+evidence bundle carries the exact submitted text and its digest.
+
+| Metadata field (not a HUD key) | Exact English source |
 |---|---|
-| `hudChrome.housing.listing.title` | A place to call home |
-| `hudChrome.housing.listing.common` | Step inside your Inn Room, arrange your furnishings and display trophies from your adventures. Set who may visit, then welcome friends into a home that feels like yours. |
-| `hudChrome.housing.listing.web` | Start with a free Inn Room. A Freehold Charter adds a Cottage with more room to decorate and an amenity slot. Housing purchases provide access, cosmetic space and convenience without adding combat power. Review the current offer in the WOC Store. |
-| `hudChrome.housing.listing.websiteDesktop` | Start with a free Inn Room. A Freehold Charter adds a Cottage with more room to decorate and an amenity slot. Housing purchases provide access, cosmetic space and convenience without adding combat power. Review the current offer in the WOC Store. |
-| `hudChrome.housing.listing.apple` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
-| `hudChrome.housing.listing.google` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
-| `hudChrome.housing.listing.steam` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
-| `hudChrome.housing.listing.epic` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
-| `hudChrome.housing.listing.seeker` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
-| `hudChrome.housing.listing.noTimeLoss` | Your home, furnishings and personal trophy records stay with you while you are away. |
-| `hudChrome.housing.listing.imageAltInn` | An Inn Room with warm hearth light, a furnishing palette and a personal trophy display. |
-| `hudChrome.housing.listing.imageAltCottage` | A decorated Cottage with a clear entry path and a view of the hearth. |
+| `title` | A place to call home |
+| `common` | Step inside your Inn Room, arrange your furnishings and display trophies from your adventures. Set who may visit, then welcome friends into a home that feels like yours. |
+| `web` | Start with a free Inn Room. A Freehold Charter adds a Cottage with more room to decorate and an amenity slot. Housing purchases provide access, cosmetic space and convenience without adding combat power. Review the current offer in the WOC Store. |
+| `websiteDesktop` | Start with a free Inn Room. A Freehold Charter adds a Cottage with more room to decorate and an amenity slot. Housing purchases provide access, cosmetic space and convenience without adding combat power. Review the current offer in the WOC Store. |
+| `apple` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
+| `google` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
+| `steam` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
+| `epic` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
+| `seeker` | Make your Inn Room your own with furnishings and trophy displays. Arrange your home, manage visits and share a quiet place with friends. |
+| `noTimeLoss` | Your home, furnishings and personal trophy records stay with you while you are away. |
+| `imageAltInn` | An Inn Room with warm hearth light, a furnishing palette and a personal trophy display. |
+| `imageAltCottage` | A decorated Cottage with a clear entry path and a view of the hearth. |
 
 | Distribution | Exact proposed listing assembly | Purchase/deed behavior |
 |---|---|---|
-| Browser web | `listing.title`, `listing.common`, `listing.web`, `listing.noTimeLoss` | Charter/Call only after all gates; deed copy absent until later separate approval |
-| Website-distributed desktop | `listing.title`, `listing.common`, `listing.websiteDesktop`, `listing.noTimeLoss` | Same gated product scope |
-| Apple App Store | `listing.title`, `listing.common`, `listing.apple`, `listing.noTimeLoss` | Housing purchase/deed content absent; use itself waits for the Apple entitlement-model determination |
-| Google Play | `listing.title`, `listing.common`, `listing.google`, `listing.noTimeLoss` | Housing purchase/deed content absent; actual build/declaration accepted before submission |
-| Steam | `listing.title`, `listing.common`, `listing.steam`, `listing.noTimeLoss` | Housing purchase/deed content absent; exact build acceptance required |
-| Epic Games Store | `listing.title`, `listing.common`, `listing.epic`, `listing.noTimeLoss` | Housing purchase/deed content absent; current policy/build acceptance required |
-| Solana dApp Store / Seeker | `listing.title`, `listing.common`, `listing.seeker`, `listing.noTimeLoss` | Housing purchase/deed content absent; current publisher-policy/build acceptance required |
+| Browser web | `title`, `common`, `web`, `noTimeLoss` | Charter/Call only after all gates; deed copy absent until later separate approval |
+| Website-distributed desktop | `title`, `common`, `websiteDesktop`, `noTimeLoss` | Same gated product scope |
+| Apple App Store | `title`, `common`, `apple`, `noTimeLoss` | Housing purchase/deed content absent; use itself waits for the Apple entitlement-model determination |
+| Google Play | `title`, `common`, `google`, `noTimeLoss` | Housing purchase/deed content absent; actual build/declaration accepted before submission |
+| Steam | `title`, `common`, `steam`, `noTimeLoss` | Housing purchase/deed content absent; exact build acceptance required |
+| Epic Games Store | `title`, `common`, `epic`, `noTimeLoss` | Housing purchase/deed content absent; current policy/build acceptance required |
+| Solana dApp Store / Seeker | `title`, `common`, `seeker`, `noTimeLoss` | Housing purchase/deed content absent; current publisher-policy/build acceptance required |
 
-In the assembly table, all shortened keys have the prefix
-`hudChrome.housing.`. The actual English values above are complete copy, not
-instructions to improvise a listing. Do not show Cottage pictures on a denied
-listing unless counsel accepts an accurate entitlement/access explanation for the
-exact build. The free Inn Room image supplies a truthful common first-wave target.
+The actual English values above are complete copy, not instructions to
+improvise a listing. Do not show Cottage pictures on a denied listing unless
+counsel accepts an accurate entitlement/access explanation for the exact build.
+The free Inn Room image supplies a truthful common first-wave target. The
+`noTimeLoss` claim must match the live Terms and Privacy Policy after the
+reconciliation the Terms amendment names (inactive-account deletion and wipe
+reservations); it is not published against an unreconciled clause.
 
 ## WOC Store purchase surface
 
-These rows are browser-web and website-desktop only. The complete purchasing
-submodel is absent elsewhere: labels, price fetch, thumbnails used as sales links,
-CTA/keyboard handlers, hidden DOM, aria text, errors, deep links and retry routes.
-Each field below binds the current accepted quote/effect; no illustrative number
-is substituted. A refused quote shows unavailability without a guessed total.
+These rows are browser-web and website-desktop only, gated by exactly the two
+`HudFeatures` rows Phase 14 injects, `freeholdPurchaseEnabled` and
+`freeholdManageOnWebsite` (D91); housing use itself is the server entitlement
+gate read through the housing facet, never a `HudFeatures` row. The complete
+purchasing submodel is absent elsewhere: labels, price fetch, thumbnails used as
+sales links, CTA/keyboard handlers, hidden DOM, aria text, errors, deep links and
+retry routes. Absence is a runtime contract (no DOM node, handler, request,
+fetched catalog, error copy or accessible text); the purchase code and its
+English keys ship dormant in every bundle under that runtime capability, and the
+reviewer notes below say so explicitly (D86). Each field below binds the current
+accepted quote/effect; no illustrative number is substituted. A refused quote
+shows unavailability without a guessed total.
 
 These adopted distribution rules govern the future housing UI and metadata;
 the housing capability map is not implemented. The
@@ -95,66 +119,100 @@ keeps external verification, the game purchase/deed consumers and protected
 durable operation bindings separate. The source block records observed outgoing
 credentials only, not an inspected remote verifier.
 
-| English source key | Exact English source |
-|---|---|
-| `hudChrome.housing.store.charterTitle` | Freehold Charter |
-| `hudChrome.housing.store.charterDescription` | Add a Cottage to your account, with more space for furnishings and personal trophy displays. Includes access and convenience, with no added combat power. |
-| `hudChrome.housing.store.charterDetails` | {roomCount} room, {decorBudget} decor capacity, {plinthBudget} trophy plinths and {amenityBudget} amenity slot. |
-| `hudChrome.housing.store.charterOwned` | Your account already has this Charter. |
-| `hudChrome.housing.store.callTitle` | Master Builder's Call |
-| `hudChrome.housing.store.callDescription` | Restore your home's condition and cover its current unpaid Steward's Ledger. Your future prepayment credits stay unchanged. |
-| `hudChrome.housing.store.callRepairOnly` | This Ledger is already paid. This Call restores condition only. |
-| `hudChrome.housing.store.price` | Total: {price} |
-| `hudChrome.housing.store.feeDetails` | Fees and taxes: {feeDetails} |
-| `hudChrome.housing.store.quoteExpiry` | Price valid until {expiresAt}. |
-| `hudChrome.housing.store.review` | Review purchase |
-| `hudChrome.housing.store.confirm` | Confirm purchase |
-| `hudChrome.housing.store.cancel` | Cancel |
-| `hudChrome.housing.store.terms` | Purchase Terms |
-| `hudChrome.housing.store.pending` | Your purchase is being checked. You can keep playing. |
-| `hudChrome.housing.store.complete` | Your purchase is complete. |
-| `hudChrome.housing.store.unavailable` | This offer is unavailable right now. |
-| `hudChrome.housing.store.expired` | This price has expired. Review the new total before confirming. |
-| `hudChrome.housing.store.manageWebsite` | Manage on the website |
+The in-client keys are the manifest ids and their exact manifest English
+(window titles, tabs and buttons in title case per D92 and DESIGN.md 5.4). The
+six rows marked "16, D92" are the Store section heading, fee and tax, quote
+validity, Purchase Terms, request-reference and support-review lines D92 adds
+under `charter.*`; ux-spec and the manifest already carry them with Phase 16 as
+owner, and 16 ships their English source in its own change. No `store.*` family
+exists.
 
-`store.charterDetails` is Cottage-specific English, populated from state Content
-numbers and the accepted catalog, not a generic sentence with guessed plural
-rules. Later SKUs author complete plural-safe keys. Display a formatted total and
-service-authored fee components through keyed structured fields; never render
-untrusted service HTML or untranslated free-form descriptions in `feeDetails`.
-The quoted effect includes target home, current bill treatment and source/balance
-facts, with an explicit confirmation and operation-correlated result.
+| Purchase state | Key (`hudChrome.housing.` prefix) | Exact English source |
+|---|---|---|
+| Store section heading (16, D92) | `charter.section` | Freeholds |
+| Charter card title | `charter.title` | Freehold Charter |
+| Charter card summary | `charter.summary` | Open a Cottage to furnish, display your trophies and welcome friends. |
+| Charter card boundary | `charter.boundary` | A cosmetic home with convenience and access features. It grants no combat power. |
+| Charter card free room | `charter.freeRoom` | An Inn Room is free for every account. |
+| Charter card art | `charter.artAria` | Cottage interior with a hearth and space for your furnishings |
+| Charter already owned | `charter.owned` | This account already has a Cottage or a larger home. |
+| Call title | `steward.call` | Master Builder's Call |
+| Call effect, current bill unpaid | `steward.callCurrentTooltip` | Pay the current unpaid Ledger and restore condition to {maximum}. Future prepaid weeks stay unchanged. |
+| Call effect, repair-only | `steward.callRepairTooltip` | Restore condition to {maximum}. Your current Ledger is already paid. Future prepaid weeks stay unchanged. |
+| Call review action | `steward.reviewCall` | Review Master Builder's Call |
+| Quote loading | `charter.quoteLoading` | Loading current price... |
+| Price | `charter.price` | Price: {price} |
+| Fees and taxes (16, D92) | `charter.feeDetails` | Fees and taxes: {feeDetails} |
+| Quote validity (16, D92) | `charter.quoteExpiry` | Price valid until {expiresAt}. |
+| Review action | `charter.review` | Review Purchase |
+| Confirm action | `charter.confirm` | Confirm Purchase |
+| Cancel action | shared confirmation prompt | The existing blocking prompt's Cancel action (no housing key) |
+| Purchase Terms link (16, D92) | `charter.terms` | Purchase Terms |
+| Pending | `charter.pending` | Your purchase is being confirmed. |
+| Reconciling an original purchase | `charter.reconciling` | Checking your original purchase. You do not need to buy again. |
+| Charter complete | `charter.received` | Your Cottage is ready. |
+| Call complete | `granted.call` | Your home's condition is restored. |
+| Receipt heading | `charter.receipt` | Purchase Confirmation |
+| Request reference (16, D92) | `charter.reference` | Request reference: {operationId} |
+| Support review (16, D92) | `charter.supportReview` | This request needs a support review. Your request reference is saved. |
+| Unavailable | `charter.unavailable` | This purchase is unavailable right now. |
+| Quote expired | `charter.quoteExpired` | This quote has expired. Review the current quote before confirming. |
+| Price changed | `charter.priceChanged` | The price has changed. Review the new price before confirming. |
+| Cancelled | `charter.cancelled` | Purchase cancelled. |
+| Management line | `steward.manageWebsite` | Manage on the Website |
+| Management line aria | `steward.manageWebsiteAria` | Open approved home management on the website |
 
-The neutral `store.manageWebsite` row is independent of purchase capability. Its
-default is absent on denied distributions. It appears only where written approval
-covers the exact destination and complete onward/return flow. It is never a way
-to route a denied platform to checkout under a different label.
+The accepted Charter card (ux-spec section 8) carries no separate capacity line;
+Cottage room, decor, plinth and amenity facts are Steward and tier facts, not
+purchase copy, and a later SKU that needs such a line names its plural-safe key
+in its own phase. Display a formatted total and service-authored fee components
+through keyed structured fields; never render untrusted service HTML or
+untranslated free-form descriptions in `feeDetails`. The quoted effect includes
+target home, current bill treatment and source/balance facts, with an explicit
+confirmation and operation-correlated result.
+
+The neutral `steward.manageWebsite` row is independent of purchase capability.
+Its default is absent on denied distributions. It appears only where written
+approval covers the exact destination and complete onward/return flow. It is
+never a way to route a denied platform to checkout under a different label.
 
 ## Later optional deed copy, approved web surfaces only
 
-These keys are included solely as the concrete future review draft for 37/38.
-They do not appear in the first-wave store or any native/Steam/Epic/Seeker listing.
-All prices and fees still come from an accepted service quote.
+This English is included solely as the concrete future review draft for 37/38.
+It does not appear in the first-wave store or any native/Steam/Epic/Seeker listing.
+All prices and fees still come from an accepted service quote. Per D92 Phase 38
+names these keys in its own file under the `hudChrome.housing.deed.*` family with
+exactly this English; ux-spec and the manifest carry them with 38 as owner. The
+on-chain deed's player-facing name is "Optional Freehold Deed" (title case) and
+never a name containing "Charter": the D1 entitlement alone is the Freehold
+Charter (the coordinator ruling on DK F2). The
+[deed contract](freehold-deed-service-contract.md) lists the same states once.
 
-| English source key | Exact English source |
-|---|---|
-| `hudChrome.housing.store.webDeedTitle` | Optional Freehold deed |
-| `hudChrome.housing.store.webDeedDescription` | Create an optional record for this Freehold through the approved service. Your game access does not require this record. |
-| `hudChrome.housing.store.webSaleReview` | Review the home and furnishings included in this sale. |
-| `hudChrome.housing.store.webSaleIncluded` | Included in the sale |
-| `hudChrome.housing.store.webSaleRetained` | Staying with you |
-| `hudChrome.housing.store.webSaleCustody` | Your personal trophy records and excluded belongings remain yours. The sale proceeds only when their safe storage is confirmed. |
-| `hudChrome.housing.store.webSaleCondition` | The home's condition is recorded through the transfer time. Existing prepayment credits keep their original terms. Account return grace does not transfer. |
-| `hudChrome.housing.store.webSalePending` | This sale is being confirmed. Its request reference is saved. |
-| `hudChrome.housing.store.webSaleAvailability` | This service is unavailable for this account or location. |
-| `hudChrome.housing.store.webSaleNoPromise` | A listing does not guarantee a buyer or a future price. |
+| Deed or sale state | Key (`hudChrome.housing.` prefix, owner 38) | Exact English source |
+|---|---|---|
+| Deed title | `deed.title` | Optional Freehold Deed |
+| Deed description | `deed.description` | Create an optional record for this Freehold through the approved service. Your game access does not require this record. |
+| Sale review | `deed.saleReview` | Review the home and furnishings included in this sale. |
+| Included contents heading | `deed.includedHeading` | Included in the sale |
+| Retained contents heading | `deed.retainedHeading` | Staying with you |
+| Custody statement | `deed.custody` | Your personal trophy records and excluded belongings remain yours. The sale proceeds only when their safe storage is confirmed. |
+| Condition and credits | `deed.conditionCredits` | The home's condition is recorded through the transfer time. Existing prepayment credits keep their original terms. Account return grace does not transfer. |
+| Sale pending | `deed.salePending` | This sale is being confirmed. Its request reference is saved. |
+| Service unavailable | `charter.serviceUnavailable` (owner 37) | This service is unavailable for this account or location. |
+| No price promise | `deed.noPricePromise` | A listing does not guarantee a buyer or a future price. |
 
 ## Proposed review notes for the submission owner
 
 The following paragraphs are actual draft reviewer correspondence, not public
 marketing. The submission owner attaches tested build facts and the signed
 certificate before sending them. They must never be used to hide connected
-services or assert a platform's approval without evidence.
+services or assert a platform's approval without evidence. Every denied-build
+note below uses "absent" in the D86 sense the certificate states explicitly:
+the housing purchase and deed submodel is not rendered or reachable at runtime
+(no DOM node, handler, request, fetched catalog, error copy or accessible text),
+while the shared bundle carries that code and its English keys dormant under the
+runtime capability; the note never claims the bundle contains no purchase
+vocabulary.
 
 | Distribution | Proposed reviewer note |
 |---|---|
@@ -176,8 +234,17 @@ implementation follow [tooltip-writing.md](../../design/tooltip-writing.md);
 these listing/confirmation rows are not substitutes for resolved mechanic
 tooltips. This is the packet's editorial rule, not a quote of platform policy.
 
+Absence on a denied storefront is a runtime contract: no DOM node, handler,
+request, fetched catalog, error copy or accessible text. Purchase code and its
+English keys ship dormant in every bundle under the runtime capability; the
+review notes above and the 44b handoff say so explicitly, counsel confirms it in
+44b, and denied-surface evidence is a DOM/handler/request scan, never a bundle
+scan (D86).
+
 For each distribution the signed certificate identifies actual build and catalog
-versions, accepted key set/digest, screenshot set, denied-surface test result,
+versions, the accepted in-client key set (the `ux-key-manifest.json` ids Phase 16
+ships, including the six 16-owned `charter.*` rows above) and its digest, the
+submitted metadata text and its digest, screenshot set, denied-surface test result,
 complete destination captures, counsel memo version, published Terms version,
 service acceptance version including NEW checkout issuer/verifier and proof,
 reviewer-correspondence archive, and Fernando's

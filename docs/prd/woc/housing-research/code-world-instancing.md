@@ -6,7 +6,9 @@
 > [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
 > record the requirements adopted on 2026-09-06. Historical
 > code inventories, editor capabilities, opinions and market figures below are context,
-> not current API guarantees, WOC tuning approval or legal/store approval.
+> not current API guarantees, WOC tuning approval or legal/store approval. Body bullets
+> rewritten after capture stand beside the restored original under a "Superseded
+> 2026-09-06 by D<n>" marker; the adopted text was captured at revision 383fd7da83.
 
 Read-only survey of the World of ClaudeCraft codebase (worktree add-real-estate,
 2026-09-05). Facts with `path:symbol` citations, organized by the seven questions,
@@ -39,7 +41,8 @@ ending with recommendation inputs.
   object drops the player at `doorPos + leaveOffset` (`leaveDungeon`).
 - Lifetime: `updateInstances` (1 Hz) frees a claim empty for
   `src/sim/types.ts:INSTANCE_EMPTY_TIMEOUT` 300 s (15 min if cleared,
-  `INSTANCE_CLEARED_EMPTY_TIMEOUT`) and despawns its entities (`freeInstance`).
+  `src/sim/instances/dungeons.ts:INSTANCE_CLEARED_EMPTY_TIMEOUT`) and despawns its
+  entities (`freeInstance`).
   Slots are never persisted; `src/sim/rift/persistence.ts` states runtime instances
   are not restored after a restart.
 - Cost model: an unclaimed slot is a plain object; a claimed one is its entities in
@@ -205,9 +208,9 @@ ending with recommendation inputs.
   `server/user_assets_db.ts`). Playtest is offline only (`playtest.ts`).
 - Reuse: `placement_transform_core.ts` and `PlacedAssetsView` are host-agnostic
   enough for an in-game furniture mode (pure core + live instancer); picking and
-  camera live in `3d/viewport.ts` / `editor_camera.ts` (free camera, DOM pointer
+  camera live in `3d/viewport.ts` / `3d/editor_camera.ts` (free camera, DOM pointer
   events), not the HUD. The HUD-side input precedent is
-  `src/ui/hud/action_bar/ground_aim.ts` + `GroundAimController` (raw point, live
+  `src/ui/hud/action_bar/ground_aim.ts` + `ground_aim_controller.ts:GroundAimController` (raw point, live
   clamp, smart seed; mouse, controller, touch) per
   `docs/design/ground-targeting-input.md`, with `IWorld.groundAimPlacementPreview`
   as the facet member pattern.
@@ -235,13 +238,17 @@ ending with recommendation inputs.
   settings must stay gameplay-neutral (`docs/design/graphics-settings-fairness.md`).
   No named minimum device; `docs/design/player-performance/baselines.md` captures
   were taken on an M4 Max, so the low tier plus the iOS process-kill guard is the
-  effective floor in the historical survey. The proposed housing room has at most three
-  authored emitters; iOS may allow two and pressure may leave one contributing light.
+  effective floor in the historical survey. (Superseded 2026-09-06 by D45, retained as
+  the dated trail: Interiors: KayKit kit, ~30 draws per instance, max 3 point lights at
+  low.) Adopted: the proposed housing room has at most three authored emitters; iOS may
+  allow two and pressure may leave one contributing light.
   Ambient grade and silhouettes must preserve actionable information in every case.
 
 ## Recommendation inputs
 
-- Instanced private plot is far cheaper: a new `DungeonDef` (next free index >= 10,
+- Instanced private plot is far cheaper: a new `DungeonDef` (next free index >= 10 at
+  capture; `src/sim/content/dungeons.ts` already uses 13 and 14 at this revision and the
+  adopted indices are 15 and 16 per D15,
   `spawns: []`, `staticDoor`, `overworldDoor`, `interior` key) inherits the slot
   pool, solo / party keys, door trigger, flat floor, interior colliders, and the
   interior renderer; Dawnhold Castle is a working template.
@@ -253,7 +260,11 @@ ending with recommendation inputs.
   deterministic regeneration on both hosts (own Rng seeded from the descriptor),
   colliders via a `setRiftRegion`-style runtime region, state saved through
   `saveWorldState` or a new table; avoid one Sim entity per furniture piece.
-- Placement UX: existing editor math is a precedent, not permission for the sim to import
+- Superseded 2026-09-06 by D42, D43 and D44 (retained as the dated trail). Placement UX:
+  compose `placement_transform_core.ts` + `PlacedAssetsView` + the ground-aim seam behind a
+  new IWorld facet member implemented in both `Sim` and `ClientWorld`, with
+  `tests/world_api_parity.test.ts` updated.
+- Adopted placement UX: existing editor math is a precedent, not permission for the sim to import
   the editor or inherit its scale/nudge/cap constants. The housing core uses measured room
   bounds; Wave A has floor placement, explicit input ownership and bounded placement-only
   undo/redo. Later typed surfaces add planar/yaw freedom and fixed ceiling anchors. Scale,
@@ -264,7 +275,10 @@ ending with recommendation inputs.
 - Risk 2: determinism: house content must never draw the shared `Rng` or read wall
   clocks; a claimed slot that reloads from DB must reconstruct identically on
   server and client (parity golden traces).
-- Risk 3: mobile LOW memory and live light allocation need measured proof through the
+- Superseded 2026-09-06 by D45 (retained as the dated trail). Risk 3: mobile LOW memory:
+  an interior must reuse the dungeon kit, stay under 3 point lights, and go through the
+  prewarm / compile-gate scheduler, or phones crash at entry.
+- Adopted risk 3: mobile LOW memory and live light allocation need measured proof through the
   existing preparation scheduler. A three-emitter authoring ceiling alone cannot establish
   safe entry or adequate readability; test the iOS and effective-one-light cases.
 - Risk 4: slot lifetime: instances are runtime-only and reaped after 300 s empty,

@@ -14,12 +14,27 @@
 > `docs/prd/woc/housing-research/`. A cited historical number does not authorize a runtime value. The economy service
 > owns prices; Fernando owns new gameplay tuning. See the [content manifest](../../freeholds/content-manifest.md)
 > and [numeric workbook](../../freeholds/content-numbers-workbook.md) for derivation and approval gates.
+>
+> **Revision note.** This text is the settled propagation, edited in place on 2026-09-06, of the
+> proposal adopted on 2026-09-05 at revision `383fd7da83` (also the FernandoX7/add-real-estate
+> head). Sections 7, 8, 9, 10, 13 and 14 were replaced (7 under D27, D29, D31 and D64; 8 under
+> D28, D29, D30 and D65; 9 under D64 and D65; 10 under D40 to D46; 13 under D1, D29, D31, D38 and
+> D50; 14 under D68 and D73 to D75). Section 3 carries two sentence edits (D5/D16 and D37), both
+> marked inline, plus one anchor correction (the Maker's Bond `signer` field, review round A3 F1).
+> The nine rulings in section 12 are unchanged and its addendum was corrected under D29. Sections
+> 1, 2, 4, 5, 6 and 11 carry propagation edits (D15, D27 to D31, D33, D43, D44, D47, D48, D52 to
+> D63, D69 and D20), and the 2026-09-06 review round added D76 to D93 citations where a sentence
+> changed. D76 to D93 (R47 to R64) are applied as recommended dispositions and await Fernando's
+> word (state.md, "Current phase"); every sentence below that cites one of them carries that
+> status. The player deck and the six research appendices were edited the same day; appendix
+> text rewritten after capture is marked Superseded with its decision beside the retained
+> original.
 
 | | |
 |---|---|
 | **Tier** | 3 - Flagship $WOC utility |
 | **Ease** | 4/5 (new sim system, new IWorld facet, new service SKUs, one new item kind) |
-| **Flywheel** | Every housing purchase settles in $WOC at the service; weekly upkeep pulls low-tier materials and farm produce off the World Market; deeds resell on the $WOC marketplace |
+| **Flywheel** | Every priced housing purchase settles in $WOC at the service; weekly upkeep pulls low-tier materials and farm produce off the World Market; deeds resell on the $WOC marketplace |
 | **Sustainability** | Recurring sink (upkeep and per-placement furnishings) on top of a one-time land sale |
 | **Release authority** | Counsel must accept the entitlement model, Terms and distribution flows; the economy service must accept settlement. Optional deeds need separate signed authority. No legal classification or store approval is claimed. |
 
@@ -102,8 +117,11 @@ runtime colliders. Furniture must follow the rift model, never one entity per pi
 
 **Professions and materials.** Six crafting stations exist as `StationDef` records with a
 20-yard proximity check that takes a station list (`inRangeStationTypes`), so a house station
-composes in without touching recipes. The material inventory has grown since the original three-tier survey. The content manifest
-uses current item IDs and source recipes; upkeep and upgrade eligibility must not be
+composes in without touching recipes. Nine node materials in three tiers (copper, iron,
+thorium ore; ironbark, ashwood, elderwood logs; silverleaf, goldleaf, sunpetal herbs) plus
+corpse harvests and vendor staples are the upkeep and furnishing inputs, plus farm produce
+(section 3); fine grades stop at gather tier 3 (state.md Material-tier facts). The content
+manifest uses current item IDs and source recipes; upkeep and upgrade eligibility must not be
 reconstructed from that historical shorthand. The professions
 design doc already sketched an off-wheel Carpenter and Mason lane "so housing and cosmetics
 never pressure the combat wheel"; the adopted scope excludes new Carpenter/Mason crafts from this packet.
@@ -112,7 +130,7 @@ File 43 produces a measured future-expansion handoff only.
 **Trophy sources.** Reliquary relics are a closed union (item, mark, mount, weapon skin,
 title) and deeds carry cosmetic-only rewards; the reliquary doc explicitly defers "housing
 museum props". The historical source families include: Thunzharr, Nythraxis, Ignivar and Varkhul,
-Korzul, Morthen, Vael, Ysolei, the Wildheart High Priest, six mounts, the realm-rare
+Korzul, Morthen, Vael, Ysolei, the Wildheart High Priest, the live mount roster, the realm-rare
 `slain:*` marks (mounted heads), seven armor sets (stands), and profession specimens.
 
 **Time and decay precedents.** There is no durability or repair mechanic anywhere, so
@@ -143,7 +161,7 @@ it in three.
 static content rows (`FARM_PATCHES`, four hubs on a tier ladder: Eastbrook, Fenbridge,
 Highwatch, the Evergarden parterre) with per-player state persisted in `CharacterState.farmPlots`
 under absolute deadlines in the authority's own clock base, load-side allowlists, a duration
-clamp, and a zero-clock offline guard (`farm_persist.ts`, `farm_projection.ts`). That offers clock and validation precedents: bed ids never renumber, hidden outcomes never cross the wire, and
+clamp, and a zero-clock offline guard (`farm_persist.ts`, `farm_projection.ts`). That offers clock and validation precedents (D5/D16: house state is its own account row, never the character blob): bed ids never renumber, hidden outcomes never cross the wire, and
 the client never subtracts a clock the authority did not use. The farmer's watch fee
 (`farm_watch_fee.ts`) is paid in kind from produce with a fixed, published consumption order:
 the model for how the Steward's Ledger consumes materials.
@@ -168,7 +186,8 @@ one; and furniture must be the persisted, descriptor-based counterpart, never a 
 `FeastState`.
 
 **Masterwrought gives housing its best trophies.** A Perfected piece promoted to legendary
-carries a player-chosen name and the maker's signature (the Maker's Bond `craftedBy`). A
+carries a player-chosen name and the maker's signature (the Maker's Bond `signer` on
+`ItemInstancePayload` in `src/sim/types.ts`, which the professions UI presents as craftedBy). A
 Legend Stand that displays the named item with both names is the single most personal trophy
 the game can offer. The new deeds map directly: `prog_legendmaker` (a plaque), the grandmaster
 deeds for jewelcrafting and inscription (workshop banners), `prog_farming_100` and its
@@ -186,9 +205,11 @@ exclusion); furnishing items may.
 **Hall-shared stations have a precedent.** The Master's Field Forge places a `partyShared`
 station whose type satisfies every party member in range (`mobile_station.ts`,
 `partySharedStationSatisfies`). A Guildhall station is the same predicate over "members
-present in the hall". Home crafting keeps the shared bags-first-then-vault planner. Ledger payment proposes
-explicit bags-only, vault-only or automatic bags-then-vault modes; preview and atomic
-deduction use the same selected mode and never silently fall back.
+present in the hall". (D37) Repairs, crafts and Ledger draws at home all go through the one
+`reagent_sources.ts` planner, never a second implementation: home crafting keeps the shared
+bags-first-then-vault behavior, and Ledger payment proposes explicit bags-only, vault-only or
+automatic bags-then-vault modes; preview and atomic deduction use the same selected mode and
+never silently fall back.
 
 **Three things housing must never touch.** Wyrmfall Core, Maker's Ember, and Sundered Essence
 are the Perfecting keystones with a tuned four-to-six-week cadence: no ledger, no furnishing
@@ -273,6 +294,7 @@ server record, not a multisig-deed experiment. See section 9 and the corrected r
    feast hall.
 3. **Priced housing uses the accepted service settlement; crafted goods and upkeep use the
    item economy.** Free trophies, visiting and decoration do not require a token payment.
+   None of it touches power.
 4. **Nothing you own is ever taken from you by a timer.** Neglect dims the house; it never
    destroys it.
 5. **It is beautiful on a phone at the LOW preset,** with the same actionable information on every supported online build whose
@@ -284,24 +306,28 @@ server record, not a multisig-deed experiment. See section 9 and the corrected r
   character shares the same personal home. The free Inn Room is the purchased Cottage's
   predecessor, not a second plot; existing trophy records and placed copies carry forward.
 - One personal plot initially and one hall per guild. A later second-home SKU has independent
-  condition, prepay and visits, with stable identity from initial persistence. Its adopted
-  1.5x material-line schedule is a WOC tuning decision, rounded up per approved integer line,
-  not an ArcheAge formula. The service owns the SKU price.
+  condition, prepay and visits, with stable identity from initial persistence. It is granted
+  at Cottage tier and upgrades through the same build projects as the primary (D93). Its
+  adopted 1.5x material-line schedule is a WOC tuning decision, rounded up per approved
+  integer line on every upgrade and Ledger line, not an ArcheAge formula; there is no
+  second-home upgrade refusal. The service owns the SKU price.
 - Reuse the dungeon slot allocator under D15, not a new arbitrary coordinate band. Runtime
   claims are finite; account entitlement is not scarce. An unavailable slot or conflicting
   realm claim gives busy/retry without an ownership waitlist or a lost home. Internal account
   and guild keys never become public plot identity.
 - Interact at the Eastbrook quay gate to choose own home or friend lookup, then explicitly
   enter. Proximity does not teleport. Authorized homes remain visitable while the owner is
-  offline. Later gates reuse this flow. Leaving uses the remembered safe source gate.
+  offline. Later gates (Fenbridge in 25a) reuse this flow. Leaving uses the remembered safe
+  source gate.
 - The Hearth Key uses the approved shared-account cooldown and normal combat/death/jail
-  admission rules. NEW07 `server/freehold_hearth_db.ts` owns `account_freehold_hearth`,
+  admission rules. NEW 07 `server/freehold_hearth_db.ts` owns `account_freehold_hearth`,
   `FREEHOLD_HEARTH_SCHEMA`, `loadFreeholdHearth` and `advanceFreeholdHearthOnClient`;
   07a advances the account row atomically with accepted remote entry, never from cached
   plot UI. Physical gate entry, refusal and already-home no-op do not advance it. Later
   destination choice in 42 shares this row across homes and alts. Transfer neither copies
   nor clears either account's cooldown. A carried Key is inventory usability, never
-  the authorization credential; account ownership and current admission rules authorize.
+  the authorization credential (the ux-spec Hearth Key contract, mirrored by file 06);
+  account ownership and current admission rules authorize, and using it consumes nothing.
 - The free no-upkeep Inn Room has a bed and three plinths. The first display requires a real
   qualifying accomplishment; a new account can have an honest empty plinth. Paid tiers need
   online entitlement; offline uses a fresh Inn Room and only explicitly authorized dev fixtures.
@@ -336,7 +362,10 @@ not an automatic promise. Personal top tiers propose the same account-level OR o
 `prog_legendmaker`, `col_reliquary_rank_5`, `dgn_nythraxis`, `dgn_ignivar`, or `dgn_varkhul`
 credit. Guild top tiers use their own recorded qualifying raid-clear deed. There is no new
 profession requirement or escalating invented grind. Upgrades preview exact-copy overflow
-and refuse before new fee/material mutation if bags cannot safely accept it.
+and refuse before new fee/material mutation if bags cannot safely accept it. Upgrade
+contributions take an explicit source-mode argument per D37 (bags, or the vault inside the
+owner's own claim under D18/D47); the bill counts item units per D33; a confirmed fee whose
+last leg cannot finish because bags are full re-attempts without a second fee (D89).
 
 ### 6.4 Trophies
 
@@ -363,12 +392,16 @@ and refuse before new fee/material mutation if bags cannot safely accept it.
   Existing `src/sim/deeds.ts::onDungeonFinalBossKilledForDeeds` mutates credited
   recipients synchronously. `GameServer.detectActivity` in `server/game.ts` observes
   `deedUnlocked`, collects `pendingDeedRecords` and requests ordinary `saveCharacter`;
-  no dedicated all-party clear-save transaction exists. NEW31 owns immutable clear
+  no dedicated all-party clear-save transaction exists. NEW 31 owns immutable clear
   candidate capture, bounded pending work, exact saved-prefix association, 07a durable
   source claim and postcommit publication. Distinct clears survive delayed coalescing,
   including clears without a new character deed. Original recipient order elects the
   carrier, not asynchronous timing; character rewards and actual save order remain intact.
   Member-assigned plinth permissions arrive through files 28/31 and section 6.8.
+  Housing capacity never gates gameplay (D83): guild-clear recording capacity never refuses
+  `GameServer.join`, `enterDungeon` or a respawn; exhaustion records a bounded, auditable
+  clear-not-captured gap with an operator alert, and character rewards, loot and existing
+  deeds are unchanged.
 
 ### 6.5 Furnishings and blueprints
 
@@ -378,7 +411,8 @@ and refuse before new fee/material mutation if bags cannot safely accept it.
   Schematic, Technique, Recipe).
 - **Every craft gets a line from existing materials:** weaponcrafting (racks, iron fittings),
   armorcrafting (stands, braziers), tailoring (rugs, curtains, banners), leatherworking (hides,
-  chairs), engineering (lamps, clocks, gadgets), alchemy (dyes and the dye station), inscription
+  chairs), engineering (lamps, clocks, gadgets), alchemy (dyes; the dye picker is enabled by
+  the apothecary station amenity, with no new amenity kind, slot or station GLB, D90), inscription
   (paintings, maps, scrolls), jewelcrafting (chandeliers, gem lamps), cooking (feast tables and
   food props, beside the real feasts), enchanting (glow effects, enchanted lights). Farming supplies existing produce; cooking recipes or gold vendors supply produce
   decoration. Farming does not become a new craft. Fixed ceiling anchors for chandeliers
@@ -408,7 +442,7 @@ and refuse before new fee/material mutation if bags cannot safely accept it.
   Guildhall station serves authorized members present, including permitted draws from their
   own personal vault. Station choices remain bounded by the tier amenity slots.
 - **Kitchen Garden:** a living tableau of the owner's account-wide real farm plots.
-  NEW17 `server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage`
+  NEW 17 `server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage`
   and `server/freehold_account_sources.ts::createFreeholdAccountSourceLoader` provide
   the bounded owner-account aggregate; 24 extends their fixed versioned projection with
   normalized farm state and source farming proficiency, without a parallel loader/table.
@@ -426,7 +460,9 @@ and refuse before new fee/material mutation if bags cannot safely accept it.
   visual condition meter.
 - **Guildhall extras:** muster board, calendar board, a pledge-board mirror, and a war table
   that shows authorized guild raid lockouts and actual recorded first kills. The first-kill
-  section is explicitly unavailable until file 31, never a generic standings redirect.
+  section is explicitly unavailable until file 31, never a generic standings redirect; 31's
+  first-kill projection reaches the client through the bounded guild-domain read 30a names,
+  with keyed ready and empty states and no new facet member (D82).
 - **Explicitly excluded:** rested XP, stat buffs, drop-rate or gathering buffs, extra farm beds,
   teleports that skip content. Convenience only.
 
@@ -468,8 +504,9 @@ and refuse before new fee/material mutation if bags cannot safely accept it.
   are WOC policy, not Conan or Albion rules. Persist the prior absence/grace transition
   before updating presence; alts cannot repeatedly reset grace. Guild absence uses eligible
   member presence. Ordinary upkeep never burns or freezes native housing access.
-- Guildhall upkeep uses the Hall Fund. Its anti-dominance contribution allowance is a new
-  account-wide weekly requirement with an accepted resource/currency schedule, not a GW2 cap.
+- Guildhall upkeep uses the Hall Fund. Its anti-dominance contribution allowance is a weekly
+  per-account ceiling (a cap, never a requirement to donate) with an accepted resource/currency
+  schedule, not a GW2 cap.
   No demolition, governor-set rates, inflation-driven rate increases or pay-or-lose prompts.
 
 ### 6.8 Guildhalls specifically
@@ -477,6 +514,12 @@ and refuse before new fee/material mutation if bags cannot safely accept it.
 - The guild record owns the hall. Officers manage layout and projects; members manage only
   their assigned personal trophy plinths. Departure detaches their displays safely while
   preserving personal unlocks/provenance. Officers cannot sell or transfer those rights.
+- Guild-owned halls admit current members always; the leader or an officer sets guild, public
+  or private visiting (friends is refused for the guild owner kind), public admission is capped
+  by the tier column, and non-members enter as guests under the ejection rules (D77). Disband
+  is the 28a tombstone disposition: the pooled service balance is refunded pro rata to donors
+  by original receipt and fund materials and gold are withdrawn to the guild bank first (D78);
+  a guild that holds any keep-forever housing row is never hard-deleted (D79).
 - The economy service owns pooled Claudium balance and debit/credit/refund history. The game
   mirrors absolute versioned results. Material/gold contributions and their audit/cap update
   are atomic. Members can read the contribution ledger; officers authorize paid projects.
@@ -493,7 +536,9 @@ and refuse before new fee/material mutation if bags cannot safely accept it.
 ### 6.9 Visiting and social
 
 - Private/friends at first launch; guild/public modes arrive with file 26. Entry checks live
-  authorization even if a roster was cached. Visitors can enter authorized homes while the
+  authorization even if a roster was cached; friend admission is the named owner character's
+  outgoing friend list, never the visitor's own list, and a block row on either side refuses
+  (D76). Visitors can enter authorized homes while the
   owner is offline; finite runtime capacity yields honest retry. Owner-account sessions do
   not count as visitors, and graphics presets never hide admitted players.
 - Switching to private stops new entry; already admitted guests may finish unless the owner
@@ -511,8 +556,10 @@ and refuse before new fee/material mutation if bags cannot safely accept it.
   vote per realm season, no self-vote or reset by ward move. Proposed 13-week seasons use the
   published realm-week anchor; ties use earliest valid entry then stable ID. Durable result
   identity precedes bounded cosmetic reward delivery.
-- Guest books are door interactables with closed wave/cheer/admire reactions, no free text.
-  Proposed rate is one per account/plot/realm day, with the retained 50-entry cap. Names and
+- Guest books open from the existing gate-door interactable (the D4 object entity whose
+  prompt 26's knock already extends) with closed wave/cheer/admire reactions, no free text.
+  Proposed rate is one per account/plot/realm day, where the day is the realm reset-day key
+  `resetDay` (D84), with the retained 50-entry cap. Names and
   reactions still require privacy, blocking and moderation. Each social table has its own
   bounded retention policy; reaction-only does not mean moderation-free.
 
@@ -580,6 +627,9 @@ and accepted service obligations. No native billing implementation is included h
   remain signed-artifact verification tasks. Do not repeat a blanket marketplace-link ban
   or claim South Korea alone is Epic's territory policy. Signed supported-country authority
   governs optional deeds; unknown country refuses.
+- Store listings, the Terms, the deck and in-game copy say the same thing: cosmetic,
+  convenience and access; the game never sells power; no wallet is required to use a home.
+  The Google Play declaration determination in the counsel memo describes the actual build.
 - No randomized paid plots/furnishings, rent, fractional rights, profit promises or timed
   loss. Counsel, the economy-service maintainer and Fernando own signed acceptance of the
   service contract, counsel memo, Terms amendment, listings and territory/authority schedule.
@@ -609,6 +659,8 @@ and accepted service obligations. No native billing implementation is included h
   No timer repossession, rent, yield, revenue share, fractional rights or randomized sales.
 - Signed counsel, Terms, service and territory/authority artifacts gate enablement. Metadata
   uniqueness and a working SDK are not substitutes for them.
+- Holder flair (chat and exterior) is a web/website-desktop presentation of the optional deed,
+  owned by 38; native, Steam and Epic construct none.
 
 ## 10. Experience and editor
 
@@ -664,7 +716,8 @@ fixed ceiling anchors, with atomic parent/child movement. Snap mode stays availa
 scale, full-axis gimbal and collision leniency are excluded from this packet; doors, bounds
 and clearance remain mandatory. Dyes arrive in file 41; save/load/share arrive in file 41a. Imports preview
 all shortfalls and reserve existing placed/bag/authorized-bank copies atomically, never mint
-missing furniture or leak private names. Dye station keeps its actual condition/proximity gate.
+missing furniture or leak private names. The dye picker is gated by the built apothecary
+station amenity's condition and proximity rules; there is no separate dye station (D90).
 
 **Trophies and guests.** Source-complete initial truthful displays with public known/unknown
 provenance; later bespoke forms are labeled later. Hidden source silhouettes follow existing
@@ -700,7 +753,7 @@ protection, whose durable marker has separate bounded retention authority.
   instancer modeled on `placed_assets.ts`, runtime colliders via a `setRiftRegion`-style
   region, an interior light rig under the point-light budget, all through the GPU preparation
   scheduler (`render-performance-reviewer` on every diff).
-- **Server:** `server/freehold_routes.ts` (RouteDef), `server/freehold_db.ts` (`freeholds`
+- **Server:** `server/freehold_routes.ts` (RouteDef), `server/freehold_db.ts` (`account_freeholds`
   with internal owner lookup, stable opaque public plot identity, bounded JSONB layout,
   globally fenced active claims, durable receipts and later deed records),
   a Claudium spend kind `freehold` beside `storage` for land, upgrades, and the instant repair,
@@ -757,7 +810,8 @@ valid queued observations without attributing old membership to a new guild.
 Files 29/13a consume committed guild history and union overlapping service outages;
 they never sum member account grace. Bounded dirty-guild batches and indexed history
 replace roster scans, per-member writes or plot fan-out. Deletion/disband retain
-unresolved hall/credit/operation dependencies. Minimum capable-release rollout,
+unresolved hall/credit/operation dependencies; disband is the tombstone disposition with the
+Hall Fund refunded or withdrawn first (D78/D79). Minimum capable-release rollout,
 quiescent rollback and completed database/security proof remain release artifacts.
 
 ## 12. Rulings adopted 2026-09-05

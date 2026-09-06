@@ -6,7 +6,9 @@
 > [proposal](../freeholds-and-guildhalls-research.md) and [state](../../../freeholds/state.md)
 > record the requirements adopted on 2026-09-06. Historical
 > code inventories, editor capabilities, opinions and market figures below are context,
-> not current API guarantees, WOC tuning approval or legal/store approval.
+> not current API guarantees, WOC tuning approval or legal/store approval. Body bullets
+> rewritten after capture stand beside the restored original under a "Superseded
+> 2026-09-06 by D<n>" marker; the adopted text was captured at revision 383fd7da83.
 
 Worktree: /Users/fernando/orca/workspaces/world-of-claudecraft/add-real-estate (read-only survey, 2026-09-05).
 
@@ -28,7 +30,7 @@ Worktree: /Users/fernando/orca/workspaces/world-of-claudecraft/add-real-estate (
 ## 3. Guilds
 
 - Ranks. `server/social.ts:GuildRank = 'leader' | 'officer' | 'member'`, mirrored in `src/sim/guild_bank.ts:GUILD_RANKS` (lockstep-pinned by `tests/guild_bank.test.ts`). Server permission checks are inline `membership.rank` comparisons in `SocialService` (invite/kick/motd/events need officer-plus; promote, demote-officer, disband need leader; `guildSetRank`). No guild levels, perks, or guild-level achievements exist (grep for guildLevel/guildPerk is empty). Guild-related deeds are per-character: `soc_guild_joined`, `soc_guild_founded`, `pvp_vcup_guild_win` in `src/sim/content/deeds.ts`.
-- Guild bank. `GuildBankState { treasury: copper, inventory, purchasedSlots }`; `GUILD_BANK_TREASURY_CAP = 1_000_000_000` copper; ladder `GUILD_BANK_RUNG_SLOTS` (24 then six rungs of 6, max 60), priced by `GUILD_BANK_RUNG_PRICES` (rung 0 purse-paid 9g, rungs 1 to 6 treasury-paid 2g50s to 100g). Withdraw permission: `requireOfficerBook` against `GUILD_BANK_EDIT_RANKS = {leader, officer}`, reading the session-only `PlayerMeta.guildMembership` stamp written by `stampGuildMembership` (`Sim.setPlayerGuildMembership`); every op also requires `nearBanker`. Any member can VIEW (`guildBankInfoFor` stamps `canEdit`). `IWorld` facet `src/world_api/guild_bank.ts`: `guildBankInfo`, `guildBankLog`, `guildBankDepositGold/WithdrawGold/Deposit/Withdraw/BuySlots`. Server modules: `server/guild_bank_state.ts`, `guild_bank_op_guard.ts` (`GUILD_BANK_OP_BURST = 10`, `GUILD_BANK_OP_REFILL_PER_SECOND = 2`), `guild_bank_settle_gate.ts`, `guild_book_holders.ts` (unsettled-holder index), `guild_bank_log.ts`, `guild_bank_receipt_db.ts`.
+- Guild bank. `GuildBankState { treasury: copper, inventory, purchasedSlots }`; `GUILD_BANK_TREASURY_CAP = 1_000_000_000` copper; ladder `GUILD_BANK_RUNG_SLOTS` (24 then six rungs of 6, max 60), priced by `GUILD_BANK_RUNG_PRICES` (rung 0 purse-paid 9g, rungs 1 to 6 treasury-paid 2g50s to 100g). Withdraw permission: `requireOfficerBook` against `GUILD_BANK_EDIT_RANKS = {leader, officer}`, reading the session-only `PlayerMeta.guildMembership` stamp written by `stampGuildMembership` (`Sim.setPlayerGuildMembership`); every op also requires `nearBanker`. Any member can VIEW (`guildBankInfoFor` stamps `canEdit`). `IWorld` facet `src/world_api/guild_bank.ts`: `guildBankInfo`, `guildBankLog`, `guildBankDepositGold/WithdrawGold/Deposit/Withdraw/BuySlots`. Server modules: `server/guild_bank_state.ts`, `guild_bank_op_guard.ts` (`GUILD_BANK_OP_BURST = 10`, `GUILD_BANK_OP_REFILL_PER_SECOND = 2`), `guild_bank_log.ts`, `guild_bank_receipt_db.ts` (the capture also named `guild_bank_settle_gate.ts` and `guild_book_holders.ts`, an unsettled-holder index, from a branch that never merged; neither file exists at this revision or on release/v0.42.0).
 - Postgres (`server/social_db.ts`): `guilds` (id, name, realm, created_at, motd, motd_set_by, pledge settings), `guild_members` (character_id PK, guild_id, rank, joined_at), `guild_events`, `guild_pledges`, `guild_pledge_cooldowns`, `guild_pledge_ladder`, `guild_banks` (guild_id PK, realm, data JSONB). Audit: `server/db.ts:bank_ledger` (op, item_id, count, copper_delta, purchased_slots_after, container 'personal'|guild, container_id). Moderation: `guild_moderation_actions` (`server/admin_guilds_schema.ts`). Guild creation is atomic in `server/guild_create_db.ts` (guild + leader + empty bank + create_fee receipt).
 - Treasury currency: gold only. No Claudium or $WOC guild treasury exists anywhere.
 - Pledge board (`docs/prd/guild-pledge-board.md`): pledges are declarations, not membership; officer-plus (the `GUILD_BANK_EDIT_RANKS` family) accept/reject; discovery via the world's town signposts (`src/ui/hud/guild_board/`), roster via `server/guild_roster.ts`.
@@ -53,12 +55,13 @@ Worktree: /Users/fernando/orca/workspaces/world-of-claudecraft/add-real-estate (
 ## Reusable seams for housing
 
 - `server/claudium.ts:parseSpendKind` + `ClaudiumGameHooks` / `configureClaudiumRuntime`: add a housing spend kind beside `storage` with a runtime hook.
-- `server/storage_purchases.ts` + `storage_purchase_db.ts`: the pending-record, idempotency-key, exactly-once apply pattern.
+- `server/storage_purchases.ts` + `storage_purchase_db.ts`: the pending-record, idempotency-key, exactly-once apply pattern. (Historical, superseded 2026-09-06: the durable-receipt half, `storage_purchase_applied_receipts`, is the exemplar state.md names; the pending-row and recovery machinery is NOT reused per D1.)
 - `src/sim/content/storage_charters.ts` (`isKnownStorageSkuId`): the game-side SKU allowlist pattern.
 - `src/net/economy_sdk.ts:startClaudiumPurchase` + `src/net/stripe_checkout.ts`: Stripe, SOL, USDC, $WOC checkout already wired in `src/main.ts`.
 - `src/sim/guild_bank.ts:requireOfficerBook` / `GUILD_BANK_EDIT_RANKS` / `stampGuildMembership`: guild-house permissions.
 - `guild_banks` JSONB-per-guild persistence (`server/social_db.ts`) and `bank_ledger` container audit rows.
-- Seeker entitlement modules are historical chain-verification precedents only. Native housing access is a server entitlement, never optional-deed verification. Adopted Seeker housing is use-only; unrelated wallet rails do not authorize housing purchase. D9 keeps distribution labels out of the game server; the new eligible-checkout verifier belongs to the service.
+- Superseded 2026-09-06 by D29 and D64 (retained as the dated trail): `server/seeker_entitlement.ts` + `seeker_ownership_verifier.ts` + `seeker_entitlement_claims`: on-chain deed claim-once, re-verify-on-use.
+- Adopted: Seeker entitlement modules are historical chain-verification precedents only. Native housing access is a server entitlement, never optional-deed verification. Adopted Seeker housing is use-only; unrelated wallet rails do not authorize housing purchase. D9 keeps distribution labels out of the game server; the new eligible-checkout verifier belongs to the service.
 - `server/bank_entitlements.ts:BANK_BONUS_SOURCES`: account-fact bonus registry.
 - `src/world_api/<domain>.ts` facet + `tests/world_api_parity.test.ts` + `src/sim/sim_context.ts` for the new sim system and IWorld surface.
 - `server/economy_telemetry.ts:SOURCE_BY_COMMAND` and `account_wealth` for reporting.

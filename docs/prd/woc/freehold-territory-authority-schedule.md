@@ -7,11 +7,13 @@ irreversible-action list are empty; neither is a deployed source export or an
 externally accepted jurisdiction/authority schedule. No country, including
 South Korea, is inferred to be approved or to be the only excluded territory.
 
-Every planned English key in this draft is owned by the NEW `housing` subtree
-of existing `hudChromeStrings` in
-[src/ui/i18n.catalog/hud_chrome.ts](../../../src/ui/i18n.catalog/hud_chrome.ts).
-The subtree is unimplemented. Add English source only in the producing UI work;
-regenerate generated bundles rather than editing them.
+In-client player text referenced by this schedule uses only the
+`hudChrome.housing.*` ids pinned by [ux-spec.md](../../freeholds/ux-spec.md) and
+[ux-key-manifest.json](../../freeholds/ux-key-manifest.json) (D92) in the NEW
+`housing` subtree of existing `hudChromeStrings` in
+[src/ui/i18n.catalog/hud_chrome.ts](../../../src/ui/i18n.catalog/hud_chrome.ts);
+the eligibility copy at the end of this file is proposed English whose keys
+Phase 37 names in its own file.
 
 Fernando owns release activation and appointment of accountable operators.
 Retained product/platform counsel owns jurisdiction, platform and authority
@@ -51,6 +53,34 @@ status, and explicit approved rows. Each approved row supplies:
 | Eligibility facts | Accepted source, freshness requirement and conflict-resolution policy for account, location, age and applicable service restrictions |
 | Legal/platform basis | Dated primary policy/agreement evidence, counsel determination and applicability to the complete connected flow |
 | Effective scope | Start/end, release/service version, revocation and required revalidation event |
+
+Each `supportedTerritories` row is a machine record with exactly these field
+names and types. Phase 37's fixture JSON schema and the external policy module's
+signed artifact MUST both validate against this table (Phase 37 produces the
+signed later deed schedule and test fixtures, exercised through real composition
+and disposable PostgreSQL in its deliverable 5 and STEP 3 validation); a field this
+table does not name
+requires a schedule revision, never an ad hoc key.
+
+| Field | Type and standard |
+|---|---|
+| `territory` | ISO 3166-1 alpha-2 country code, uppercase string, required |
+| `subdivision` | ISO 3166-2 subdivision code string for a narrower eligibility constraint, optional (absent means the whole country row) |
+| `distribution` | enum: one of the seven distribution rows the Phase 14 map defines (browser web, website-distributed desktop, Apple App Store, Google Play, Steam, Epic Games Store, Solana dApp Store / Seeker), using the literal ids 14's `distribution_surfaces.ts` exports |
+| `checkoutScope` | string id of the accepted checkout channel/session class; exact match, no wildcard, no physical-application claim |
+| `operations` | array of enum {`purchase`, `mint`, `list`, `cancel`, `settle`, `support`}; no inferred sibling permission |
+| `sku` | array of accepted catalog SKU id strings; an empty array permits no priced operation |
+| `eligibilitySource` | string id of the accepted eligibility fact source for account, location, age and service restrictions |
+| `freshnessMaxAgeMs` | integer milliseconds; an older eligibility fact refuses new spend |
+| `conflictPolicy` | enum {`refuse`, `strictestWins`} for conflicting eligibility facts |
+| `evidenceDigest` | lowercase hex SHA-256 of the dated legal/platform evidence file |
+| `determinationRef` | string id of the counsel determination record for this row |
+| `effectiveFromMs` | integer epoch milliseconds UTC |
+| `expiresAtMs` | integer epoch milliseconds UTC, or null for open-ended until revocation |
+| `minServiceVersion` | string, the service version this row applies from |
+| `minReleaseVersion` | string, the game release this row applies from |
+| `revalidationEvent` | enum {`policyChange`, `releaseChange`, `expiry`, `revocation`} |
+| `policyVersion` | integer, the artifact-level monotonic version repeated on the row |
 
 Proposed initial policy value: `supportedTerritories = []`. The NEW external
 economy-service policy module owns the signed accepted rows and the initial
@@ -112,7 +142,7 @@ authorization is separate from cached cosmetic/public projections.
 | Proposed capability | Product boundary | Required accepted evidence | Current disposition |
 |---|---|---|---|
 | Per-asset listing freeze/thaw | Protect only the target deed transfer during a recorded listing/transfer/cancel/recovery; ordinary game access remains independent | Correct asset-level creation-time delegate, operation/case identity, custody manifest, least-privilege signer, traceable outcome and thaw recovery | Proposed; cannot activate before signed service/authority acceptance |
-| Support reconciliation | Discover immutable receipts and safely complete or compensate their recorded game effects | Original operation identity, service and game evidence, authenticated operator role, accepted refund/custody policy | Proposed; production authority unaccepted |
+| Support reconciliation | Discover immutable receipts and safely complete or compensate their recorded game effects. Ownership: the operator tooling (operation lookup by opaque reference, redacted state inspection, audited retry/compensation requests) is service-owned and operator-authenticated on the economy service; the game side owns no operator route or admin page in this packet and applies an accepted outcome only through the 07a/15 original-operation recovery reader | Original operation identity, service and game evidence, authenticated service operator role, accepted refund/custody policy | Proposed; production authority unaccepted |
 | Transfer restriction for moderation/legal instruction | Restrict only the specifically authorized operation/asset according to the accepted case; no timer-based loss | Signed trigger row, legal/moderation case, authorized approver, scope/duration/review and appeal/support handling | No accepted trigger rows; disabled |
 | Irreversible burn | Never an automatic response to absence, low condition or an unpaid Ledger | Explicit signed trigger row, counsel/Fernando approval, separate burn capability at mint if required, verified case/confirmation, custody and game-entitlement disposition | Proposed initial external-policy value `approvedIrreversibleActions = []`; unimplemented and unaccepted |
 | Entitlement transfer | Only the approved confirmed furnished-sale manifest changes the game owner atomically | Service settlement/transfer receipt, both parties' eligibility/authorization, stable plot fence, exact copy/custody and durable application receipt | Proposed; unaccepted until 37/38 proof |
@@ -123,14 +153,38 @@ game source export or deployed allow/deny behavior is claimed. Each accepted
 action row names its authorized operator role, signing authority
 identifier, authentication/approval controls, allowed reason enum, evidence
 requirements, target scope, immutable audit form, review/revocation procedure and
-entitlement/custody effects. Private signing material never enters the repository,
+entitlement/custody effects. Each `approvedIrreversibleActions` row is a machine
+record with exactly these field names and types; 37's fixture JSON schema and the
+external module's signed artifact MUST both validate against it:
+
+| Field | Type and standard |
+|---|---|
+| `actionId` | string id, unique within the artifact |
+| `action` | enum {`freeze`, `thaw`, `transferRestrict`, `burn`} |
+| `targetScope` | enum {`asset`, `listing`}; collection-wide scope is not a permitted value |
+| `operatorRole` | string id of the authorized operator role |
+| `signingAuthority` | string identifier of the signing authority (an identifier, never key material) |
+| `approvalControls` | array of enum {`counselCase`, `fernandoApproval`, `twoPersonApproval`} |
+| `reasons` | array of enum {`legalInstruction`, `moderationCase`, `supportCompensation`, `ownerRequest`} |
+| `evidence` | array of enum {`caseId`, `confirmationDigest`, `custodyManifestDigest`, `operationId`} required before execution |
+| `entitlementEffect` | enum {`none`, `hold`, `restore`} |
+| `custodyEffect` | enum {`none`, `hold`, `restore`} |
+| `auditForm` | string id of the immutable audit record schema |
+| `reviewProcedure` | string id of the review/appeal procedure |
+| `revocationProcedure` | string id of the revocation procedure |
+| `effectiveFromMs` | integer epoch milliseconds UTC |
+| `expiresAtMs` | integer epoch milliseconds UTC, or null |
+| `policyVersion` | integer, the artifact-level monotonic version repeated on the row |
+
+Private signing material never enters the repository,
 game client or audit export. An SDK's ability to freeze or burn supplies none of
 these permissions. A frozen/burned external asset is not an instruction for a
 native client to lock access or erase housing state.
 
 ## Current primary-policy evidence to validate at acceptance
 
-Primary retrieval date for the packet audit: 2026-09-05.
+Primary retrieval date for the packet audit: 2026-09-05; the Solana Mobile
+publisher policy was re-retrieved on 2026-09-06 at its current host.
 
 | Surface/authority | Primary source | Acceptance obligation |
 |---|---|---|
@@ -138,7 +192,7 @@ Primary retrieval date for the packet audit: 2026-09-05.
 | Google Play | [Blockchain-based Content](https://support.google.com/googleplay/android-developer/answer/13607354) | Accept actual build/declaration and connected-flow treatment. |
 | Steam | [Steamworks Onboarding](https://partner.steamgames.com/doc/gettingstarted/onboarding) | Accept the isolated build and cross-platform entitlement model. |
 | Epic | [Content Guidelines](https://cdn2.unrealengine.com/epic-games-store-content-guidelines-f8accc43356e.pdf) and [Blockchain Technology Guidelines](https://dev.epicgames.com/docs/epic-games-store/requirements-guidelines/distribution-requirements/blockchain) | Exact blockchain page was unavailable in the audit. Counsel must obtain/archive current text and applicable agreement; no assumed territory list. |
-| Seeker | [dApp Store introduction](https://docs.solanamobile.com/dapp-store/intro), [Terms of Use](https://legal.solanamobile.com/en/dapp-store-tos), [publisher policy](https://solanamobile.com/publisher-policy-web) | Relocated publisher policy was unavailable in the audit. Obtain current text before accepting the use-only build; housing purchase/deeds remain off. |
+| Seeker | [dApp Store introduction](https://docs.solanamobile.com/dapp-store/intro), [Terms of Use](https://legal.solanamobile.com/en/dapp-store-tos), [Solana Mobile Publisher Policy](https://legal.solanamobile.com/publisher-policy-web) (retrieved 2026-09-06, "Last Updated: Jul 21, 2026") | The publisher policy is part of and subject to the Solana Mobile dApp Store Developer Agreement and carries no purchase, NFT or territory rule of its own. Counsel archives the current policy text, the Terms of Use and the Developer Agreement (current signed text) as named acceptance artifacts before accepting the use-only build; housing purchase/deeds remain off. |
 | Metaplex authority | [Permanent Freeze Delegate](https://www.metaplex.com/docs/smart-contracts/core/plugins/permanent-freeze-delegate), [Permanent Burn Delegate](https://www.metaplex.com/docs/smart-contracts/core/plugins/permanent-burn-delegate) | Verify selected service/plugin version and asset scope. Legal authorization is the separately signed schedule, never inferred from technical support. |
 
 See [counsel memo](freehold-counsel-memo.md) for the precise observed policy issues,
@@ -170,11 +224,16 @@ writer/reader/service combinations. Rollback quiesces affected new operations
 and preserves pending recovery identities; it does not claim that a pre-Freehold
 binary continues lifecycle/calendar/export or policy semantics.
 
-| Proposed English source key | English source | Surface |
-|---|---|---|
-| `hudChrome.housing.eligibility.unavailable` | This service is unavailable for this account or location. | Approved service surfaces only |
-| `hudChrome.housing.eligibility.retry` | Eligibility could not be confirmed. Please try again later. | Approved service surfaces only |
-| `hudChrome.housing.eligibility.support` | Contact support with your saved request reference. | Relevant permitted result |
+Per D92 Phase 37 names these keys in its own file under the existing
+`hudChrome.housing.charter.*` family with exactly this English; ux-spec and the
+manifest carry them with 37 as owner. The "unavailable" sentence is the same
+state the deed contract and listing drafts cite; it is named once.
+
+| Eligibility state | Key (`hudChrome.housing.` prefix, owner 37) | English source | Surface |
+|---|---|---|---|
+| Service unavailable for account or location | `charter.serviceUnavailable` | This service is unavailable for this account or location. | Approved service surfaces only |
+| Eligibility unconfirmed | `charter.eligibilityUnconfirmed` | Eligibility could not be confirmed. Please try again later. | Approved service surfaces only |
+| Support pointer | `charter.supportPointer` | Contact support with your saved request reference. | Relevant permitted result |
 
 No player diagnostic exposes raw location evidence, policy internals, signing
 authority or private account identifiers. Use the keyed safe result, while the
