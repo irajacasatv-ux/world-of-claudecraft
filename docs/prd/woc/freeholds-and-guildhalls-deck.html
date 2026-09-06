@@ -1,0 +1,469 @@
+<title>Freeholds and Guildhalls Deck</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+  /* Dark-first: a deck projects in the dark. Light is the swapped set. */
+  :root {
+    --ground: #0b0b13;
+    --surface: #15151f;
+    --surface-2: #1d1d2a;
+    --ink: #ecdfc2;
+    --ink-muted: #a89e86;
+    --gold: #e6c24a;
+    --gold-soft: rgba(230, 194, 74, 0.12);
+    --ember: #ff8a3d;
+    --ember-soft: rgba(255, 138, 61, 0.14);
+    --rule: #2a2a3a;
+    --rule-strong: #6b5a2a;
+    --code-bg: #20202d;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --ground: #efe5cf;
+      --surface: #f7f1e3;
+      --surface-2: #e9dec4;
+      --ink: #1c1826;
+      --ink-muted: #5b5366;
+      --gold: #8a6518;
+      --gold-soft: rgba(138, 101, 24, 0.12);
+      --ember: #b4521a;
+      --ember-soft: rgba(180, 82, 26, 0.12);
+      --rule: #d3c4a1;
+      --rule-strong: #b89d5c;
+      --code-bg: #e6dabd;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #efe5cf;
+    --surface: #f7f1e3;
+    --surface-2: #e9dec4;
+    --ink: #1c1826;
+    --ink-muted: #5b5366;
+    --gold: #8a6518;
+    --gold-soft: rgba(138, 101, 24, 0.12);
+    --ember: #b4521a;
+    --ember-soft: rgba(180, 82, 26, 0.12);
+    --rule: #d3c4a1;
+    --rule-strong: #b89d5c;
+    --code-bg: #e6dabd;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-snap-type: y proximity; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Alegreya", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 19px;
+    line-height: 1.5;
+  }
+  body:focus { outline: none; }
+  a { color: var(--gold); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  .slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    display: grid;
+    align-content: center;
+    padding: 72px 6vw 96px;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+  .inner { max-width: 1100px; width: 100%; margin: 0 auto; }
+  .kicker {
+    font-family: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+    font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); font-weight: 700;
+    margin-bottom: 14px;
+  }
+  h1, h2 {
+    font-family: "Cinzel", "Palatino Linotype", Palatino, Georgia, serif;
+    font-weight: 600; line-height: 1.08; margin: 0 0 22px; text-wrap: balance; letter-spacing: 0.01em;
+  }
+  h1 { font-size: clamp(44px, 7vw, 92px); }
+  h2 { font-size: clamp(30px, 4.2vw, 52px); }
+  h3 {
+    font-family: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+    font-weight: 700; font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gold);
+    margin: 0 0 10px;
+  }
+  p { margin: 0 0 12px; max-width: 62ch; }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; max-width: 62ch; }
+  li { margin-bottom: 8px; }
+  .big { font-size: clamp(20px, 2.2vw, 26px); color: var(--ink); max-width: 56ch; }
+  .muted { color: var(--ink-muted); }
+  b { font-weight: 700; }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px 44px; }
+  .cols > div { min-width: 0; }
+  .cols p, .cols ul { max-width: none; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--rule-strong); padding: 18px 20px; }
+  .card h3 { margin-bottom: 8px; }
+  .card p { font-size: 17px; margin: 0; max-width: none; }
+  .card .n { font-family: "Cinzel", Georgia, serif; font-size: 34px; color: var(--gold); line-height: 1; margin-bottom: 8px; }
+
+  .hero .glow {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 60% 50% at 70% 60%, var(--ember-soft), transparent 70%);
+  }
+  .hero .inner { position: relative; }
+  .hero .sub { font-size: clamp(20px, 2.4vw, 28px); font-style: italic; color: var(--ink-muted); max-width: 40ch; margin-bottom: 30px; }
+  .hero .claims { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; max-width: 900px; }
+  .hero .claims div { border-top: 2px solid var(--gold); padding-top: 10px; font-family: "Alegreya Sans", "Segoe UI", system-ui, sans-serif; font-size: 16px; }
+  .hero .claims b { display: block; font-size: 18px; margin-bottom: 4px; color: var(--ink); }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--surface); margin: 6px 0 14px; }
+  table { border-collapse: collapse; width: 100%; font-family: "Alegreya Sans", "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 1.4; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+  th { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); background: var(--surface-2); }
+  tr:last-child td { border-bottom: 0; }
+  td.tier { font-family: "Cinzel", Georgia, serif; color: var(--gold); white-space: nowrap; }
+
+  .quote {
+    border-left: 3px solid var(--ember); background: var(--ember-soft); padding: 14px 18px; margin: 10px 0 18px; max-width: 64ch;
+    font-size: 20px;
+  }
+  .rule-list li { padding-left: 4px; }
+  .rule-list li::marker { color: var(--gold); }
+
+  .phases { list-style: none; padding: 0; margin: 0; max-width: none; display: grid; gap: 10px; }
+  .phases li { display: grid; grid-template-columns: 150px 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); margin: 0; }
+  .phases .ph { font-family: "Cinzel", Georgia, serif; color: var(--gold); font-size: 15px; letter-spacing: 0.04em; padding-top: 3px; }
+  .phases p { margin: 0; max-width: none; }
+
+  .closing .inner { text-align: center; }
+  .closing p { margin-left: auto; margin-right: auto; }
+  .closing .follow { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; font-family: "Alegreya Sans", "Segoe UI", system-ui, sans-serif; font-size: 17px; margin-top: 18px; }
+
+  .foot {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 10px 6vw; background: var(--ground); border-top: 1px solid var(--rule);
+    font-family: "Alegreya Sans", "Segoe UI", system-ui, sans-serif; font-size: 13px; color: var(--ink-muted);
+  }
+  .foot .counter { font-variant-numeric: tabular-nums; color: var(--ink); }
+  .foot button {
+    font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--rule-strong);
+    padding: 4px 10px; cursor: pointer;
+  }
+  .foot button:hover { border-color: var(--gold); }
+
+  @media (max-width: 700px) {
+    .slide { padding: 48px 5vw 90px; }
+    .phases li { grid-template-columns: 1fr; gap: 4px; }
+    body { font-size: 17px; }
+    .foot span:last-child { display: none; }
+  }
+  @media print {
+    html { scroll-snap-type: none; }
+    .slide { min-height: auto; page-break-after: always; padding: 32px; border: 0; }
+    .foot { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<section class="slide hero" id="s1">
+  <div class="glow" aria-hidden="true"></div>
+  <div class="inner">
+    <div class="kicker">Coming to World of ClaudeCraft</div>
+    <h1>Freeholds and Guildhalls</h1>
+    <p class="sub">Your deeds, under your own roof. Player housing and guild halls, built for $WOC.</p>
+    <div class="claims">
+      <div><b>A home is a record of feats</b>Every boss you have slain and every legendary you have named, on display.</div>
+      <div><b>A home has a job</b>Your bank, your crafting stations, a hearth to return to, your guild's feast hall.</div>
+      <div><b>Built for $WOC</b>Every purchase settles in $WOC. And the game never sells power.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s2">
+  <div class="inner">
+    <div class="kicker">Trophies</div>
+    <h2>Everything you have conquered, on the wall</h2>
+    <div class="cols">
+      <div>
+        <ul>
+          <li><b>The Legend Stand:</b> a Masterwrought piece you Perfected and named, displayed with your name for it and the maker's signature.</li>
+          <li><b>Mounted heads</b> for the realm's rares. <b>Statues</b> for Thunzharr, Nythraxis, Ignivar and Varkhul, Korzul, Morthen, Vael, and Ysolei.</li>
+          <li><b>Armor stands and weapon racks</b> that show the real item, piece by piece.</li>
+          <li><b>A paddock</b> for your mounts, <b>banners</b> for your titles, and the <b>Harvestmaster's golden sheaf</b> for the garden.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="quote">Yours the moment you earn them. Everything you have already done counts from day one. Trophies are never sold.</div>
+        <p>Heroic and rift S-rank kills earn silver and gilded versions you can read from across the room. Inspect any trophy and it names the deed, the character, and the day it happened. Your visitors see the same.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s3">
+  <div class="inner">
+    <div class="kicker">Your Freehold</div>
+    <h2>Walk through the gate on the Eastbrook quay</h2>
+    <div class="cols">
+      <div>
+        <ul>
+          <li><b>Your own place,</b> shared by every character on your account. A Hearth Key walks you home from anywhere in the world.</li>
+          <li><b>The hearth</b> is the heart of the house. Its flame tells you at a glance how well kept your home is. Day turns to night inside as it does outside.</li>
+          <li><b>The Inn Room is free for everyone:</b> a bed, three trophy plinths, and your first mounted head.</li>
+          <li><b>Open house:</b> keep it private, or open the door to friends, your guild, or the whole realm.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Build it your way</h3>
+        <ul>
+          <li>Pick up anything and place it where you like. Snap it to the floor, a wall, or a table top, or turn snapping off.</li>
+          <li>Move the table and the candles come with it. Undo anything.</li>
+          <li>Mouse, gamepad, and touch on day one. Beautiful on a phone.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s4">
+  <div class="inner">
+    <div class="kicker">Tiers</div>
+    <h2>From a Cottage to a Citadel</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Tier</th><th>Freehold</th><th>Guildhall</th><th>What grows</th></tr></thead>
+        <tbody>
+          <tr><td class="tier">Common</td><td>Cottage</td><td>Meeting Hall</td><td>One warm room, your first plinths, one amenity</td></tr>
+          <tr><td class="tier">Uncommon</td><td>Lodge</td><td>Great Hall</td><td>A second room, more decor, more trophies</td></tr>
+          <tr><td class="tier">Rare</td><td>Manor</td><td>Bastion</td><td>Three rooms, a full workshop's worth of stations</td></tr>
+          <tr><td class="tier">Epic</td><td>Keep</td><td>Fortress</td><td>A courtyard. Earned by a feat, not just bought</td></tr>
+          <tr><td class="tier">Legendary</td><td>Citadel</td><td>Citadel</td><td>A tower over the ward. The tallest house is also the greatest deed</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Claim the land once, then build it up in place. Every upgrade is a build project that takes real crafted materials, so the whole economy helps raise your walls.</p>
+  </div>
+</section>
+
+<section class="slide" id="s5">
+  <div class="inner">
+    <div class="kicker">Furnishings</div>
+    <h2>Every craft builds the house</h2>
+    <div class="cols">
+      <div>
+        <ul>
+          <li><b>Weaponcrafting</b> racks and iron fittings. <b>Armorcrafting</b> stands and braziers.</li>
+          <li><b>Tailoring</b> rugs, curtains, and banners. <b>Leatherworking</b> hides and chairs.</li>
+          <li><b>Engineering</b> lamps, clocks, and gadgets. <b>Enchanting</b> glow and enchanted light.</li>
+          <li><b>Inscription</b> paintings, maps, and scrolls. <b>Jewelcrafting</b> chandeliers and gem lamps.</li>
+          <li><b>Alchemy</b> dyes. <b>Cooking</b> feast tables. <b>Farming</b> the produce on them.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Blueprints</h3>
+        <ul>
+          <li>Learn new furnishings from blueprints found in raids, rifts, and delves, or bought from the quartermaster.</li>
+          <li>Crafters will have a whole new market: every piece placed is a piece somebody made.</li>
+          <li>Furnishings trade on the World Market for gold and on the $WOC marketplace.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s6">
+  <div class="inner">
+    <div class="kicker">Amenities</div>
+    <h2>A house with a job</h2>
+    <div class="cards">
+      <div class="card"><h3>Strongbox</h3><p>Your bank, at home. A Materials Vault chest as your house grows. Guildhalls get the guild bank.</p></div>
+      <div class="card"><h3>Stations</h3><p>Forge, kitchens, apothecary, tannery, loom, toolworks. In a Guildhall, every member present can use them.</p></div>
+      <div class="card"><h3>Kitchen Garden</h3><p>Your real farm plots, growing right outside the door, with the Harvest Journal on a board.</p></div>
+      <div class="card"><h3>Feast hall</h3><p>The long table where a cook lays out the party feast before a raid night.</p></div>
+      <div class="card"><h3>Hearth</h3><p>The Hearth Key brings you here from anywhere. A lit hearth means a well-kept home.</p></div>
+      <div class="card"><h3>Never</h3><p>No stat buffs, no bonus experience, no drop-rate bonuses. Your house is convenience and pride, never power.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s7">
+  <div class="inner">
+    <div class="kicker">Upkeep</div>
+    <h2>Keep the hearth lit</h2>
+    <div class="cols">
+      <div>
+        <ul>
+          <li><b>A home wants tending.</b> Dust settles, lanterns flicker, the hearth burns low.</li>
+          <li><b>The Steward's Ledger</b> asks once a week for a few stacks of everyday materials: ore, wood, herbs, hides, cloth, fish, and produce from the farms. Gather them, buy them, or pay ahead for the season.</li>
+          <li><b>The Master Builder's Call</b> fixes everything on the spot when you would rather not go gathering.</li>
+        </ul>
+      </div>
+      <div>
+        <div class="quote">Your home is never taken away. Let it go and the stations go quiet and the hearth goes out. Nothing is ever lost, and one ledger brings it all back.</div>
+        <p>Away for a while? The house waits for you, and you get a few free days to settle back in.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s8">
+  <div class="inner">
+    <div class="kicker">Guildhalls</div>
+    <h2>A door for every guild</h2>
+    <div class="cols">
+      <div>
+        <ul>
+          <li><b>Owned by the guild.</b> Officers build; every member hangs their own trophies.</li>
+          <li><b>The Hall Fund:</b> everyone chips in materials, gold, or Claudium, and everyone can see the ledger.</li>
+          <li><b>Build projects:</b> raise the hall together, tier by tier, and hang a trophy for every one you finish.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Reasons to gather</h3>
+        <ul>
+          <li>Feast night at the long table.</li>
+          <li>The war table: lockouts, first kills, and first-kill banners on the wall.</li>
+          <li>The muster board, the guild bank, shared crafting stations.</li>
+          <li>Visiting vendors when a project completes.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s9">
+  <div class="inner">
+    <div class="kicker">Neighbors</div>
+    <h2>Wards</h2>
+    <div class="cols">
+      <div>
+        <p class="big">Down the road: shared neighborhoods of freeholds around a square, with a Guildhall on the corner.</p>
+      </div>
+      <div>
+        <ul>
+          <li>Walk the ward and see your neighbors' houses from the outside.</li>
+          <li>Monthly ward Endeavors everyone works on together, and rewards that grow everyone's home.</li>
+          <li>Seasonal Showcases: the realm votes on the finest houses, and the winners hang a trophy nobody else can.</li>
+          <li>Guest books at every door.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s10">
+  <div class="inner">
+    <div class="kicker">Built for $WOC</div>
+    <h2>Every purchase settles in $WOC</h2>
+    <div class="cols">
+      <div>
+        <ul>
+          <li><b>Claim land, raise a tier, call the Master Builder:</b> pay with Claudium however you like, and every purchase settles in $WOC behind the scenes. A share is burned. The treasury never sells.</li>
+          <li><b>Paying in $WOC is the cheapest way,</b> as it already is in the store.</li>
+          <li><b>Every ledger</b> pulls real materials off the World Market every week, so gatherers and farmers have a standing customer.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>The Freehold Charter</h3>
+        <ul>
+          <li>Later on, your Freehold Charter can be minted on Solana as proof of your home, unique to your plot.</li>
+          <li>Charters will trade on the $WOC marketplace like any other treasure, with the same burn on every sale.</li>
+          <li>A charter is a key, not a coupon: no yield, no rent, no promises of anything but a home.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s11">
+  <div class="inner">
+    <div class="kicker">Our promises</div>
+    <h2>What never changes</h2>
+    <ol class="rule-list">
+      <li><b>The game never sells power.</b> Housing is appearance, convenience, and access. Nothing you can buy changes a fight, a drop, or a level.</li>
+      <li><b>Nothing is ever repossessed.</b> Not your house, not your trophies, not your furniture.</li>
+      <li><b>Everyone gets a plot.</b> No lotteries, no land rushes, no waiting lists.</li>
+      <li><b>Trophies are earned,</b> never sold, and everything you have already done counts.</li>
+      <li><b>You do not need a profession</b> to own, raise, or keep a house. Every material is on the market.</li>
+      <li><b>It works everywhere you play,</b> on every device, at every graphics setting.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="slide" id="s12">
+  <div class="inner">
+    <div class="kicker">The road ahead</div>
+    <h2>It arrives in waves</h2>
+    <ul class="phases">
+      <li><span class="ph">First</span><p>Freeholds. The Cottage, the Eastbrook gate, the Hearth Key, the free Inn Room, your trophies, the first furnishings, your strongbox and a station, and the Steward's Ledger.</p></li>
+      <li><span class="ph">Then</span><p>Guildhalls. The Hall Fund, the feast hall, the war table, first-kill banners, and the next tiers.</p></li>
+      <li><span class="ph">Then</span><p>Wards and Charters. Neighborhoods, Endeavors, Showcases, and the Freehold Charter on Solana.</p></li>
+      <li><span class="ph">And on</span><p>The Keep and the Citadel, dyes, shared layouts, and a second home.</p></li>
+    </ul>
+    <p class="muted">Names, tiers, and details may change as we build.</p>
+  </div>
+</section>
+
+<section class="slide closing" id="s13">
+  <div class="inner">
+    <div class="kicker">World of ClaudeCraft</div>
+    <h2>Come home to the Vale</h2>
+    <p class="big">Freeholds and Guildhalls are coming. Start earning the trophies now.</p>
+    <div class="follow">
+      <span>Discord: discord.com/invite/worldofclaudecraft</span>
+      <span>Play free: worldofclaudecraft.com</span>
+    </div>
+  </div>
+</section>
+
+<div class="foot" aria-label="Deck navigation">
+  <span><button type="button" id="prev" aria-label="Previous slide">Prev</button> <button type="button" id="next" aria-label="Next slide">Next</button></span>
+  <span class="counter" id="counter">1 / 13</span>
+  <span>Arrow keys, or scroll</span>
+</div>
+
+<script>
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var counter = document.getElementById('counter');
+    var current = 0;
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function show() { counter.textContent = (current + 1) + ' / ' + slides.length; }
+    function go(i) {
+      current = Math.max(0, Math.min(slides.length - 1, i));
+      slides[current].scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+      show();
+    }
+    function onKey(e) {
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      var k = e.key;
+      if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'Enter') { e.preventDefault(); go(current + 1); }
+      else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'Backspace') { e.preventDefault(); go(current - 1); }
+      else if (k === 'Home') { e.preventDefault(); go(0); }
+      else if (k === 'End') { e.preventDefault(); go(slides.length - 1); }
+    }
+
+    // The deck often loads inside a host frame that holds keyboard focus. Take focus on
+    // load and on the first pointer touch so the arrow keys reach this document, and
+    // listen at the window in the capture phase so no descendant swallows them.
+    document.body.setAttribute('tabindex', '-1');
+    function grabFocus() { try { window.focus(); document.body.focus({ preventScroll: true }); } catch (err) {} }
+    grabFocus();
+    window.addEventListener('load', grabFocus);
+    document.addEventListener('pointerdown', grabFocus, { passive: true });
+    window.addEventListener('keydown', onKey, true);
+
+    document.getElementById('prev').addEventListener('click', function () { go(current - 1); grabFocus(); });
+    document.getElementById('next').addEventListener('click', function () { go(current + 1); grabFocus(); });
+
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting && en.intersectionRatio >= 0.5) { current = slides.indexOf(en.target); show(); }
+        });
+      }, { threshold: [0.5] });
+      slides.forEach(function (s) { io.observe(s); });
+    }
+  })();
+</script>

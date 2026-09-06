@@ -593,12 +593,45 @@ Added the same day: the app-store constraint (section 8), and the three PR-drive
 refinements in section 3 (produce joins the Ledger, the Kitchen Garden plants nothing, the
 Master Builder's Call is priced in Claudium so it exists on every platform).
 
-## 13. Roadmap
+## 13. The MVP: the Cottage slice
+
+Housing does not have to ship all at once. The architecture (one sim module, the
+instance band, the entitlement SKU, the IWorld facet) is built once in the first slice and
+only extended afterwards, so a thin vertical slice proves the whole loop.
+
+**In:**
+- Cottage tier only, account-owned, instanced from the Dawnhold template.
+- The Eastbrook gate, the Hearth Key, and the free Inn Room (three plinths, a bed).
+- Purchase with Claudium through the storage-charter flow; the service settles in $WOC.
+- Build mode v1: floor placement, rotate, nudge, remove, undo; mouse and touch.
+- Retroactive trophies from every existing deed and relic, with the provenance tooltip.
+- About twenty furnishings: vendor basics, one crafted piece per craft, three patterns
+  on the quartermaster row (no luck-gated drops yet).
+- Strongbox and one station slot.
+- Steward's Ledger v1: condition, a weekly ledger with a produce line, four-week
+  prepay, the lockout at 30, the Master Builder's Call.
+- Friends-only visiting, visitor cap 8.
+- The distribution gates from section 8.
+
+**Out until later phases:** Guildhalls and the Hall Fund, tiers above Cottage, wall and
+ceiling snapping, dyes, layout sharing, wards, Showcases, guest books, the on-chain
+Freehold Charter, the Kitchen Garden tableau, the feast hall dressing, gamepad polish
+beyond the basics.
+
+**What it proves:** the entitlement flow end to end on every platform, deterministic
+house state on both hosts, whether the ledger lifts low-tier material prices (measure
+over four weeks), trophy delight, and LOW-preset phone performance.
+
+**Long poles to start in Phase 0, in parallel with the code:** the economy-service SKUs
+and the settlement policy, the counsel memo, the store-listing text, and furniture art
+through the image-to-glb pipeline.
+
+## 14. Roadmap
 
 1. **Phase 0, decisions and paper:** the PRD off release/v0.42.0 once #3872 lands, the counsel
    memo (entitlement now, deed later), the economy-service SKU spec, the upkeep rates draft,
    the store-listing text.
-2. **Phase 1, Freehold:** Cottage and Lodge tiers, the Eastbrook gate and Hearth Key, the
+2. **Phase 1, Freehold:** the Cottage slice (section 13) first, then the Lodge tier, the Eastbrook gate and Hearth Key, the
    free Inn Room, build mode v1, about forty furnishings across all ten crafts plus vendor
    basics and the first furnishing patterns on the R8 channels, retroactive trophies from every
    existing deed and relic including the Legend Stand and the Harvestmaster sheaf, strongbox and
