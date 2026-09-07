@@ -293,7 +293,7 @@ export function buildMarketCollect(info: MarketInfo): MarketCollectBody {
     }
     sales.push({
       item,
-      ...(sale.itemName ? { itemName: sale.itemName } : {}),
+      ...(item.kind !== 'furnishing' && sale.itemName ? { itemName: sale.itemName } : {}),
       count: sale.count,
       proceeds: sale.proceeds,
       buyerName: sale.buyerName,

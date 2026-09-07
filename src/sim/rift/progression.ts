@@ -453,6 +453,7 @@ export function addRiftProgressionLoot(
  *  ineligible target rather than sliding onto a different one. Without a
  *  selection this stays the legacy newest-rift-copy walk. */
 function riftInventorySlot(meta: PlayerMeta, itemId: string, slotIndex?: number) {
+  if (ITEMS[itemId]?.kind === 'furnishing') return null;
   if (slotIndex !== undefined) {
     const named = selectedInventorySlot(meta.inventory, itemId, slotIndex);
     if (!named?.instance?.rift) return null;

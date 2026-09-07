@@ -10550,7 +10550,9 @@ const isReachableAbility = (id: string): boolean =>
 
 const itemNameToId = buildNameReverseMap(
   'item',
-  Object.entries(ITEMS).map(([id, it]) => [it.heroicOf ?? id, it.name] as const),
+  Object.entries(ITEMS).map(
+    ([id, it]) => [it.kind === 'furnishing' ? id : (it.heroicOf ?? id), it.name] as const,
+  ),
 );
 const mobNameToId = buildNameReverseMap(
   'mob',

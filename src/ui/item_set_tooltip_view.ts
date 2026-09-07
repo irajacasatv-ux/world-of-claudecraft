@@ -15,7 +15,7 @@ export interface ItemSetTooltipModel {
 export function itemSetMemberCounts(): Record<string, number> {
   const membersBySet = new Map<string, Set<string>>();
   for (const item of Object.values(ITEMS)) {
-    if (!item.set) continue;
+    if (item.kind === 'furnishing' || !item.set) continue;
     const members = membersBySet.get(item.set) ?? new Set<string>();
     // A set's piece count is its number of distinct SLOTS: the normal item, its
     // auto-generated heroic variant, and any bespoke heroic raid piece for the same
@@ -59,7 +59,9 @@ export function equippedSetTooltipPieces(
   let n = 0;
   for (const id of equippedIds) {
     if (!id) continue;
-    const wornSet = ITEMS[id]?.set;
+    const worn = ITEMS[id];
+    if (!worn || worn.kind === 'furnishing') continue;
+    const wornSet = worn.set;
     if (wornSet === undefined) continue;
     if (wornSet === setId || (lineage !== undefined && ITEM_SETS[wornSet]?.lineage === lineage)) {
       n += 1;

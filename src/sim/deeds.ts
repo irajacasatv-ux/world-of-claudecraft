@@ -695,7 +695,8 @@ export function bumpDeedStat(
 
 /** Record an item id as discovered (first time it ever enters possession).
  *  Also feeds the quality-first marks; `rolledQuality` carries an instance's
- *  rolled quality (gathered rares) which beats the static def quality.
+ *  rolled quality (gathered rares) which beats the static def quality for
+ *  eligible kinds. Furnishing uses authored quality and ignores heroic aliases.
  *  `opts.retro` is set ONLY by the join-time seed pass (seedItemDiscovery):
  *  it makes the Reliquary fill silent and flags the events it emits, so a
  *  veteran's first login after a rollout never reads as a live find. Every
@@ -739,11 +740,12 @@ export function markItemDiscovered(
       // discovery and never forces saveCharacter (30s autosave / leave).
       onReliquaryItemDiscovered(ctx, meta, id, opts);
     }
-    const quality = (id === itemId ? rolledQuality : undefined) ?? def.quality;
+    const quality =
+      (id === itemId && def.kind !== 'furnishing' ? rolledQuality : undefined) ?? def.quality;
     if (quality === 'rare' || quality === 'epic' || quality === 'legendary') {
       markVisited(ctx, meta, `quality:${quality}`);
     }
-    id = def.heroicOf;
+    id = def.kind === 'furnishing' ? undefined : def.heroicOf;
   }
 }
 

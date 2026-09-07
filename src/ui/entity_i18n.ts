@@ -596,7 +596,7 @@ export function entityTranslationManifest(): EntityTranslationManifestEntry[] {
   for (const item of Object.values(ITEMS).sort(compareById)) {
     // Heroic upgraded variants carry no name key: they share the base item's name
     // (see itemDisplayName), so they never enter the manifest.
-    if (item.heroicOf) continue;
+    if (item.heroicOf && item.kind !== 'furnishing') continue;
     entries.push(
       entry(
         'item',

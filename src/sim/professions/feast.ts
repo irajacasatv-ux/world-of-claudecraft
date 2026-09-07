@@ -81,8 +81,8 @@ import { feastPlacementHeight } from './feast_placement';
 export const FARM_FEAST_ITEM_ID = 'harvest_feast';
 export const FARM_FEAST_TEMPLATE_ID = 'farm_feast';
 
-/** THE PLACEABLE FEAST FAMILY, derived from the catalog and never hand-listed
- *  (masterwrought Phase 11k). A feast is any item def carrying `feast`, and its
+/** THE PLACEABLE FEAST FAMILY, derived from the catalog and never hand-listed.
+ *  A non-furnishing item def carrying `feast` joins this family. Its
  *  payload names the templateId its placed entity wears, so authoring one def
  *  joins the DERIVED SET at every site that keys on it. That is the whole point:
  *  before this, ONE item id and ONE templateId were module constants and five
@@ -108,7 +108,7 @@ export const FARM_FEAST_TEMPLATE_ID = 'farm_feast';
  *  in src/render/quest_objects.ts is a sixth reader but not a keyed site. */
 const FEAST_TEMPLATE_IDS: ReadonlySet<string> = new Set(
   Object.values(ITEMS).flatMap((def) =>
-    'feast' in def && def.feast ? [def.feast.templateId] : [],
+    def.kind !== 'furnishing' && 'feast' in def && def.feast ? [def.feast.templateId] : [],
   ),
 );
 
@@ -134,8 +134,8 @@ export const APEX_FEAST_CRAFT_MARK = 'apex_feast:crafted';
 
 /** Is this recipe an APEX feast bill, the capstone rung rather than the party
  *  one? Derived from the CONTENT on both axes so a fourth feast joins with no
- *  edit: the output must carry a `feast` payload, and the bill must sit at its
- *  craft's own cap. The party feast is cooking 100 against cooking's cap of
+ *  edit: the output must be a non-furnishing item with a `feast` payload, and
+ *  the bill must sit at its craft's own cap. The party feast is cooking 100 against the cap of
  *  125, so it is correctly outside; a hypothetical feast authored above a cap
  *  would be unlearnable anyway (the unlearnable-at-150 finding). */
 export function isApexFeastRecipe(recipe: {
@@ -144,7 +144,7 @@ export function isApexFeastRecipe(recipe: {
   skillReq: number;
 }): boolean {
   const def = ITEMS[recipe.resultItemId];
-  if (!def || !('feast' in def) || !def.feast) return false;
+  if (!def || def.kind === 'furnishing' || !('feast' in def) || !def.feast) return false;
   // A find over CRAFT_RING rather than craftById/craftMaxSkillFor, which THROW
   // on an unknown id: this runs on the craft-credit arm of every successful
   // craft, and a content typo should refuse the deed mark, never throw inside a
@@ -247,7 +247,7 @@ export function placeFeastAction(
     }
   }
   const def = ITEMS[itemId];
-  const info = def && 'feast' in def ? def.feast : undefined;
+  const info = def && def.kind !== 'furnishing' && 'feast' in def ? def.feast : undefined;
   // NOT a feast item at all: the refusal, never a fall-through to the party
   // feast. A caller naming a non-feast id is a bug in the caller, and placing
   // something else would spend the wrong item (the exact 11i failure mode).
@@ -441,7 +441,7 @@ export function consumeFeastAction(
   // was actually placed. Reading a module constant here is what made the
   // capstone feast serve the party feast's plate (masterwrought Phase 11k).
   const dish = ITEMS[feast.dishItemId];
-  if (!dish) return; // content invariant; pinned in the suite
+  if (!dish || dish.kind === 'furnishing') return; // content invariant; pinned in the suite
   feast.eatenBy.add(feastOwnerKey(meta));
   feast.charges -= 1;
   // The bite: one serving of the capstone dish, built by the SAME

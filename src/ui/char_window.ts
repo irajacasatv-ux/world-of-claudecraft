@@ -470,11 +470,12 @@ export class CharWindow {
     const icon = item
       ? this.deps.itemIcon(item, parts?.quality)
       : `<img class="item-icon" style="border-color:${SLOT_EMPTY_BORDER_COLOR}" src="${iconDataUrl('item', 'slot_empty')}" alt="" draggable="false">`;
-    // The worn Masterwrought mark (phase 14): a small gold diamond beside the
+    // The worn Masterwrought mark: a small gold diamond beside the
     // slot name, the paperdoll's per-slot half of the cap readout above it.
     // role=img + a t() aria-label because the diamond is CSS-drawn (no glyph
     // to read); the full cap relationship rides the row tooltip below.
-    const mwChip = item?.masterwrought
+    const isMasterwrought = item?.kind !== 'furnishing' && item?.masterwrought === true;
+    const mwChip = isMasterwrought
       ? ` <span class="equip-mw-chip" role="img" aria-label="${esc(t('hudChrome.masterwrought.pieceMark'))}"></span>`
       : '';
     row.innerHTML = `${icon}
@@ -521,12 +522,12 @@ export class CharWindow {
         // identity plus the self-only Perfected stamp, never the bond.
         const world = this.deps.world();
         const instance = wornTooltipInstance(world.equipmentInstances?.[slot]);
-        // The worn cap-relationship line (phase 14): this piece OCCUPIES one
+        // The worn cap-relationship line: this piece OCCUPIES one
         // of the Masterwrought slots, with the live in-use count, resolved at
         // hover so it tracks re-equips. Worn here, so the readout is never
         // null; the def tooltip's own Masterwrought line states the budget,
         // this one states this copy's claim on it.
-        const readout = item.masterwrought ? masterwroughtCapReadout(world.equipment, ITEMS) : null;
+        const readout = isMasterwrought ? masterwroughtCapReadout(world.equipment, ITEMS) : null;
         const mwLine = readout
           ? `<div class="tt-sub" style="color:var(--gold)">${esc(
               t('hudChrome.masterwrought.tooltipWorn', {

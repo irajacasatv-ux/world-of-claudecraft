@@ -1093,7 +1093,7 @@ function itemModelKey(
   if (direct || directExtra) return direct ?? directExtra ?? null;
 
   const item = Object.hasOwn(ITEMS, itemId) ? ITEMS[itemId] : undefined;
-  const baseId = item?.heroicOf;
+  const baseId = item?.kind === 'furnishing' ? undefined : item?.heroicOf;
   if (!baseId) return null;
   const inherited = Object.hasOwn(ITEM_WEAPON_VARIANTS, baseId)
     ? ITEM_WEAPON_VARIANTS[baseId]

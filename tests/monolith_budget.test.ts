@@ -804,7 +804,9 @@ const MONOLITHS: MonolithRow[] = [
     // compile gate gained its narrow actionable-priority override. Measured
     // after formatting, banking the three remaining inherited lines of slack.
     // Exact count, zero headroom.
-    ceiling: 12989,
+    // Lowered 12989 -> 12988 by moving the two-map prestige cache into its
+    // existing pure core. Measured after formatting; no spare lines.
+    ceiling: 12988,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {

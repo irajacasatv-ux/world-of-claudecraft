@@ -3,9 +3,9 @@
 // reagent, each with its EFFECT facts, its per-reagent affordability read from
 // the viewer's inventory, and its target slot, grouped into the four reagent-
 // derived tier sections (enchantSectionsForReagent) and sorted by paperdoll
-// slot inside each, and (2) the items eligible as the enchant target (def slot
-// matches the enchant), in two families: the BAGGED copies (enchantTargets)
-// and the WORN ones (wornEnchantTargets), since worn gear is enchanted in
+// slot inside each, and (2) the items eligible as the enchant target (the shared
+// kind and slot rule accepts the def), in two families: the BAGGED copies
+// (enchantTargets) and the WORN ones (wornEnchantTargets), since worn gear is enchanted in
 // place and needs no unequip / re-equip round trip. Not-yet-enchanted copies
 // are plain targets; already-enchanted copies surface as FLAGGED replace rows
 // (#2415) whose activation is confirm-gated by the thin consumer, each
@@ -42,6 +42,7 @@ import { countRawInSlots } from '../../../sim/item_lock';
 import { isEnchantKnown } from '../../../sim/professions/enchant_formula';
 import {
   baggedEnchantVictim,
+  enchantTargetsItem,
   isEnchantedInstance,
   replaceVictimIndex,
 } from '../../../sim/professions/enchanting';
@@ -684,8 +685,8 @@ export interface EnchantTargetRow {
   mixedHolding?: true;
 }
 
-/** The distinct held items eligible as the enchant target: def slot matches the
- *  enchant's itemSlot and at least one ENCHANTABLE copy is held. Mirrors the
+/** The distinct held items eligible as the enchant target: the shared kind and
+ *  slot rule accepts the def and at least one ENCHANTABLE copy is held. Mirrors the
  *  sim's ctx.countEnchantableItem: a plain fungible copy or a non-already-
  *  enchanted instanced copy qualifies, so a masterwork or signed copy stays
  *  eligible while an already-enchanted copy never applies silently.
@@ -724,7 +725,7 @@ export function enchantTargets(
   const enchantedByItem = new Map<string, number>();
   inventory.forEach((slot) => {
     const def = ITEMS[slot.itemId];
-    if (!def || def.slot !== enchant.itemSlot) return;
+    if (!def || !enchantTargetsItem(def, enchant)) return;
     if (!copyMeetsPerfectedGate(enchant, slot.instance)) return;
     // Both halves of the sim's bagged verdict: the copy carries the marker AND
     // the copy the sim would judge for THIS row's arm does (the plain apply's
@@ -857,7 +858,7 @@ export function wornEnchantTargets(
     const itemId = equipment[slot];
     if (!itemId) continue;
     const def = ITEMS[itemId];
-    if (!def || def.slot !== enchant.itemSlot) continue;
+    if (!def || !enchantTargetsItem(def, enchant)) continue;
     const instance = equippedInstances[slot];
     if (!copyMeetsPerfectedGate(enchant, instance)) continue;
     if (instance && isEnchantedInstance(instance)) {

@@ -43,6 +43,7 @@
 // suite proves the real predicates.
 
 import { createHash, randomBytes } from 'node:crypto';
+import { ITEMS } from '../src/sim/data';
 import { itemCopyPin } from '../src/sim/item_copy_ref';
 import type { ItemInstancePayload } from '../src/sim/types';
 import { verifySolanaSignature } from './wallet_link';
@@ -191,8 +192,12 @@ function safeMessagePiece(raw: string): string {
  *  quality/masterwork, enchant, and provenance a player recognizes, so
  *  "list <id>" names WHICH copy leaves the bags. Empty when the copy carries
  *  no distinguishing payload. Every interpolated field is sanitized. */
-function copyDescriptor(instance: ItemInstancePayload | null): string {
+function copyDescriptor(itemId: string, instance: ItemInstancePayload | null): string {
   if (!instance) return '';
+  if (ITEMS[itemId]?.kind === 'furnishing') {
+    const signer = safeMessagePiece(instance.signer ?? '');
+    return signer ? `crafted by ${signer}` : '';
+  }
   const bits: string[] = [];
   // Prefer the live differentiators (masterwork/enchant/provenance) over the
   // legacy quality string, but name whatever the copy actually carries so a
@@ -224,13 +229,12 @@ export function buildStepUpMessage(opts: {
   expiresAtIso: string;
 }): string {
   const b = opts.binding;
+  const copy = b.operation === 'create_listing' ? copyDescriptor(b.itemId, b.expectInstance) : '';
   const action =
     b.operation === 'create_listing'
       ? [
           `Action: list ${b.itemId} on the $WOC Exchange`,
-          ...(copyDescriptor(b.expectInstance) === ''
-            ? []
-            : [`Copy: ${copyDescriptor(b.expectInstance)}`]),
+          ...(copy ? [`Copy: ${copy}`] : []),
           `Format: ${b.format}`,
           `Starting price: ${usd(b.startCents)}`,
           `Reserve: ${b.reserveCents === null ? 'none' : usd(b.reserveCents)}`,

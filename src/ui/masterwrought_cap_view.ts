@@ -1,4 +1,4 @@
-// The Masterwrought equip-cap visibility model (Masterwrought phase 14): how
+// The Masterwrought equip-cap visibility model: how
 // many worn pieces carry the masterwrought flag, against the sim's own cap.
 //
 // A pure core (UI_PURE_CORES, tests/architecture.test.ts): no DOM, no host
@@ -7,9 +7,9 @@
 // from the one sim rule (src/sim/equipment_rules.ts): the cap is the imported
 // MASTERWROUGHT_EQUIP_CAP constant, and the walk counts exactly what
 // masterwroughtConflictSlot counts (a worn id whose def carries the
-// `masterwrought` flag; duplicates legal, a two-hander counts once), pinned
-// equivalent in tests/masterwrought_cap_view.test.ts so the readout can never
-// say "1 of 2" while the equip rule refuses.
+// `masterwrought` flag and is not furnishing; duplicates legal, a two-hander
+// counts once), pinned equivalent in tests/masterwrought_cap_view.test.ts so the
+// readout can never say "1 of 2" while the equip rule refuses.
 import { MASTERWROUGHT_EQUIP_CAP, MASTERWROUGHT_LEGENDARY_CAP } from '../sim/equipment_rules';
 import { ALL_EQUIP_SLOTS, type EquipSlot, type ItemDef } from '../sim/types';
 import { itemNumber } from './item_instance_tooltip';
@@ -27,7 +27,8 @@ export function wornMasterwroughtSlots(
   for (const slot of ALL_EQUIP_SLOTS) {
     const wornId = equipment[slot];
     if (!wornId) continue;
-    if (items[wornId]?.masterwrought === true) slots.push(slot);
+    const item = items[wornId];
+    if (item?.kind !== 'furnishing' && item?.masterwrought === true) slots.push(slot);
   }
   return slots;
 }

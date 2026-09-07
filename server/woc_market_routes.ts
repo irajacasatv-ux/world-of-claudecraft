@@ -10,6 +10,7 @@
 // surface fail-closed, and the dev economy additionally requires
 // ALLOW_DEV_COMMANDS=1 (wired in main.ts, never here).
 
+import { ITEMS } from '../src/sim/data';
 import type { ItemInstancePayload } from '../src/sim/types';
 import { adminDb } from './admin';
 import { accountAndScopeForToken, moderationStatusForAccount } from './db';
@@ -382,6 +383,7 @@ function optionalInstance(value: unknown): ItemInstancePayload | null | undefine
 // ---------------------------------------------------------------------------
 
 function listingView(row: WocListingRow, viewerAccount: number | null): Record<string, unknown> {
+  const def = ITEMS[row.itemId];
   const reserveMet =
     row.reserveCents === null
       ? null
@@ -390,7 +392,7 @@ function listingView(row: WocListingRow, viewerAccount: number | null): Record<s
     id: row.id,
     item: row.item,
     itemId: row.itemId,
-    quality: row.quality,
+    quality: def?.kind === 'furnishing' ? (def.quality ?? 'common') : row.quality,
     format: row.format,
     sellerName: row.sellerName,
     mine: viewerAccount !== null && row.sellerAccount === viewerAccount,

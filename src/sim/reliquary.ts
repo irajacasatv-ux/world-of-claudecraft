@@ -607,7 +607,7 @@ export function noteRelicObtain(meta: PlayerMeta, itemId: string, copies = 1): v
       if (state.firstFind[id] === undefined) state.firstFind[id] = {};
       wrote = true;
     }
-    id = def.heroicOf;
+    id = def.kind === 'furnishing' ? undefined : def.heroicOf;
   }
   if (wrote) bumpReliquaryWireRev(state);
 }

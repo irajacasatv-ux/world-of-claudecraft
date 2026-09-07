@@ -3,9 +3,9 @@
 // emitter (vfx.ts legendaryRegalia), and the renderer's cached wiring.
 //
 // The load-bearing claims here:
-//   - the predicate is a pure function of the four allowlisted eqi wire fields
-//     and keys on rolled.quality alone, so it renders identically offline,
-//     online, self, and peer (the perfected host-parity trap stays out);
+//   - the predicate reads projected rolled quality and authored item kind,
+//     so it renders identically offline, online, self, and peer without
+//     requiring a private rank or custody field;
 //   - the shed is the weapon_vfx_shed_core distance arm: anchored to the FIXED
 //     CHARACTER_LOD_RANGE_SQ, eased, quantized, floored, never 0;
 //   - the palette is the legendary quality orange, single-sourced;
@@ -46,7 +46,7 @@ const blankStrings = (source: string): string =>
     .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
     .replace(/`(?:[^`\\]|\\.)*`/g, '``');
 
-describe('legendaryRegaliaActive: the four-field wire predicate', () => {
+describe('legendaryRegaliaActive: the legacy projected-quality predicate', () => {
   const worn = (inst: ItemInstancePayload): Partial<Record<string, ItemInstancePayload>> => ({
     chest: inst,
   });
@@ -350,9 +350,9 @@ describe('legendary regalia graphics fairness (sheddable prestige cosmetic)', ()
     expect(source).not.toMatch(/staticRangeSq|characterLodBands|crowdLodScaleSq|visibleRigs/);
   });
 
-  it('the core reads no actionable or non-wire state', () => {
+  it('the core reads no actionable or private copy state', () => {
     // `perfected` is gameplay state now carried by both entity mirrors. The
-    // cosmetic glow still keys only on rolled quality, never on active rank.
+    // cosmetic glow reads rolled quality and authored kind, never active rank.
     const source = read(CORE);
     for (const token of [
       'perfected',
@@ -372,7 +372,7 @@ describe('legendary regalia graphics fairness (sheddable prestige cosmetic)', ()
     }
   });
 
-  it('matches the eqi wire allowlist in server/game.ts and reads only rolled', () => {
+  it('matches the eqi wire allowlist and reads only rolled quality from copies', () => {
     // Source-scrape the eqi projection loop (the item_instance_transfer.test.ts
     // cross-pin) so widening the wire without re-judging this predicate reds.
     const game = read('server/game.ts');
@@ -454,49 +454,14 @@ describe('legendary regalia graphics fairness (sheddable prestige cosmetic)', ()
     const emitAt = renderer.indexOf('if (emitDt > 0) this.vfx.legendaryRegalia(e.id, emitDt);');
     expect(emitAt, 'the shed emit call is missing').toBeGreaterThan(gateAt);
     const slice = renderer.slice(gateAt, emitAt + 80);
-    // recomputed ONLY on reference identity change: the predicate call sits
-    // inside the ref-diff guard, so the per-frame cost is one pointer compare.
-    // NESTING, not source order (the Phase 16 QA): an unconditional recompute
-    // moved BELOW the guard would still satisfy an index comparison, so walk
-    // the guard's braces and require the recompute inside its span.
-    const refGuardAt = slice.indexOf('if (v.legendaryRegaliaRef !== e.equippedInstances)');
-    const recomputeAt = slice.indexOf(
-      'v.legendaryRegalia = legendaryRegaliaActive(e.equippedInstances);',
-    );
-    expect(refGuardAt).toBeGreaterThan(-1);
-    expect(recomputeAt).toBeGreaterThan(refGuardAt);
-    const guardOpenAt = slice.indexOf('{', refGuardAt);
-    let guardDepth = 0;
-    let guardCloseAt = -1;
-    for (let i = guardOpenAt; i < slice.length; i++) {
-      if (slice[i] === '{') guardDepth++;
-      else if (slice[i] === '}') {
-        guardDepth--;
-        if (guardDepth === 0) {
-          guardCloseAt = i;
-          break;
-        }
-      }
-    }
-    expect(guardCloseAt, 'the ref-diff guard block never closes').toBeGreaterThan(guardOpenAt);
-    expect(
-      recomputeAt > guardOpenAt && recomputeAt < guardCloseAt,
-      'the predicate recompute must sit INSIDE the ref-diff guard braces',
-    ).toBe(true);
-    // ... and exactly ONCE: indexOf finds only the first occurrence, so a
-    // second unconditional recompute duplicated below the guard would pass a
-    // first-occurrence check while defeating the one-pointer-compare claim.
-    expect(
-      slice.split('v.legendaryRegalia = legendaryRegaliaActive(e.equippedInstances);'),
-      'the recompute must appear exactly once in the wiring slice',
-    ).toHaveLength(2);
-    // ... and exactly once in the WHOLE file: a duplicate just past the
-    // slice window (below the emit, same presentation block) would evade the
-    // slice-scoped count.
-    expect(
-      renderer.split('v.legendaryRegalia = legendaryRegaliaActive(e.equippedInstances);'),
-      'a second recompute exists outside the wiring slice',
-    ).toHaveLength(2);
+    // The pure core owns both reference invalidations. Behavioral tests in
+    // furnishing_regalia.test.ts pin unchanged-input elision and either-map
+    // replacement; the renderer must delegate once instead of retaining a
+    // second cache or recomputing unconditionally elsewhere.
+    const update = 'updateLegendaryRegaliaCache(v, e.equippedInstances, e.equippedItems, ITEMS);';
+    expect(slice.split(update)).toHaveLength(2);
+    expect(renderer.split(update)).toHaveLength(2);
+    expect(renderer).not.toContain('legendaryRegaliaActive(');
     // the emit is suppressed for a reduced-motion viewer (the lich-aura
     // precedent; an accessibility choice by the viewer, never a graphics shed;
     // the fairness doc's regalia bullet names this arm). The decision is the
@@ -607,8 +572,7 @@ describe('legendary regalia graphics fairness (sheddable prestige cosmetic)', ()
     ).toContain(beforeGate);
     expect(gateAt, 'the regalia gate must open inside the dead guard').toBeGreaterThan(openAt);
     expect(emitAt, 'the regalia emit must land inside the dead guard').toBeLessThan(closeAt);
-    // the cached pair lives on the view
-    expect(renderer).toContain('legendaryRegalia?: boolean;');
-    expect(renderer).toContain('legendaryRegaliaRef?: unknown;');
+    // The view carries the caller-owned cache shared with the pure updater.
+    expect(renderer).toContain('EntityView extends RickshawMountViewState, LegendaryRegaliaCache');
   });
 });

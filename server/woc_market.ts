@@ -57,7 +57,6 @@ import {
   bondCents,
   type ListingParamsRefusal,
   listingEligibility,
-  listingSoldNoticeCustodyRef,
   minNextBidCents,
   settlementCustodyRef,
   strikeSuspensionMs,
@@ -1712,7 +1711,10 @@ export class WocMarketService {
           sellerWallet: wallet,
           item: extract.extracted,
           itemId: extract.extracted.itemId,
-          quality: extract.extracted.instance?.rolled?.quality ?? def?.quality ?? 'common',
+          quality:
+            def?.kind === 'furnishing'
+              ? (def.quality ?? 'common')
+              : (extract.extracted.instance?.rolled?.quality ?? def?.quality ?? 'common'),
           category: def ? exchangeBrowseCategory(def) : null,
           subcategory: def ? exchangeBrowseSubcategory(def) : null,
           params: args.params,
@@ -3904,7 +3906,6 @@ export class WocMarketService {
   private async processDueBonds(budgetBroke?: { bonds: boolean }): Promise<number> {
     const startedAtMs = this.now();
     const due = await this.deps.db.bondsDue(this.cfg.realm, SWEEP_BATCH);
-    let walked = 0;
     for (const bid of due) {
       // The budget check runs BETWEEN rows, never mid-RPC: a row in flight
       // finishes (its verdict writes), and the remainder stays due for the
@@ -3916,7 +3917,6 @@ export class WocMarketService {
         if (budgetBroke) budgetBroke.bonds = true;
         break;
       }
-      walked++;
       try {
         if (bid.bondReference === null) {
           // Nothing was ever transferred; close the loop locally.

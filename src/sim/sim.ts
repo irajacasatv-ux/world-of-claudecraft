@@ -8390,9 +8390,9 @@ export class Sim {
       opts?.craftedRecipeId,
       opts?.materialSources,
     );
-    // Discovery ledger: the instance's rolled quality (gathered rares) beats
-    // the static def quality for the quality-first marks. `movement` rides
-    // along exactly as in addItem above (provenance only, never membership).
+    // Discovery resolves rolled quality for eligible kinds; furnishing uses
+    // authored quality. `movement` rides along exactly as in addItem above
+    // (provenance only, never membership).
     deedsMod.markItemDiscovered(
       this.ctx,
       meta,
@@ -9107,16 +9107,16 @@ export class Sim {
     // src/sim/auto_equip_gate.ts.
     if (autoEquipFamilyConflict(def, itemId, meta, (id) => ITEMS[id])) return;
     if (def.kind === 'weapon') {
-      const cur = meta.equipment.mainhand ? ITEMS[meta.equipment.mainhand]?.weapon : null;
+      const cur = ITEMS[meta.equipment.mainhand ?? ''];
       const next = def.weapon;
-      if (next && (!cur || next.min + next.max > cur.min + cur.max))
+      if (next && (cur?.kind !== 'weapon' || next.min + next.max > cur.weapon.min + cur.weapon.max))
         this.equipItem(itemId, meta.entityId);
     } else {
       // resolveEquipSlot maps a ring item to its concrete ring1/ring2 key
       // (empty-first), so auto-equip fills an open jewelry slot too.
       const slot = resolveEquipSlot(def, meta.equipment);
-      const curId = slot ? meta.equipment[slot] : undefined;
-      const cur = curId ? ITEMS[curId] : null;
+      const worn = slot ? ITEMS[meta.equipment[slot] ?? ''] : null;
+      const cur = worn?.kind === 'furnishing' ? null : worn;
       if (!cur || (def.stats?.armor ?? 0) > (cur.stats?.armor ?? 0))
         this.equipItem(itemId, meta.entityId);
     }

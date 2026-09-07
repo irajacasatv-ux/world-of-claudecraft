@@ -79,6 +79,7 @@ function charmItemFor(effectId: string): ItemDef | undefined {
   if (charmItems === undefined) {
     charmItems = new Map();
     for (const def of Object.values(ITEMS)) {
+      if (def.kind === 'furnishing') continue;
       if (def.use?.type === 'toolEffect' && !charmItems.has(def.use.effectId)) {
         charmItems.set(def.use.effectId, def);
       }

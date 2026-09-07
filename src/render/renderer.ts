@@ -21,6 +21,7 @@ import {
   delveOrigin,
   delveSlotAt,
   INSTANCE_SLOT_COUNT,
+  ITEMS,
   instanceOrigin,
   isArenaPos,
   isBgPos,
@@ -384,7 +385,11 @@ import {
 import { IslandGuidance } from './island_guidance';
 import { buildJailScene, type JailSceneView } from './jail_scene';
 import { buildJungleFeatures, type JungleFeaturesView } from './jungle_features';
-import { legendaryRegaliaActive, legendaryRegaliaEmitDt } from './legendary_regalia_core';
+import {
+  type LegendaryRegaliaCache,
+  legendaryRegaliaEmitDt,
+  updateLegendaryRegaliaCache,
+} from './legendary_regalia_core';
 import { stepLichHeartbeat } from './lich_audio_state_core';
 import { LightPulses } from './light_pulses';
 import {
@@ -1051,7 +1056,7 @@ interface AoeRingSlot {
   elapsed: number; // seconds since spawn; >= AOE_RING_LIFETIME means free
 }
 
-export interface EntityView extends RickshawMountViewState {
+export interface EntityView extends RickshawMountViewState, LegendaryRegaliaCache {
   group: THREE.Group;
   /** rigged glTF visual for characters; null for object views (doors/crates) */
   visual: CharacterVisual | null;
@@ -1131,9 +1136,6 @@ export interface EntityView extends RickshawMountViewState {
   formCompilePending: THREE.Object3D | null;
   lastOverheadEmoteKey: string | null;
   recklessSkullsSpawned?: boolean;
-  // orange worn-gear glow, recomputed only on equippedInstances identity change
-  legendaryRegalia?: boolean;
-  legendaryRegaliaRef?: unknown;
   // render-space position last frame, for true u/s locomotion speed
   lastX: number;
   lastZ: number;
@@ -11474,10 +11476,7 @@ export class Renderer {
           else if (hasShadowform) this.vfx.formAura(e.id, 'shadowform', dt);
           // orange worn-gear motes: STATIC-preset-gated sheddable prestige
           if (e.kind === 'player' && gfxTierAtLeast(GFX.effectsTier, 'medium')) {
-            if (v.legendaryRegaliaRef !== e.equippedInstances) {
-              v.legendaryRegaliaRef = e.equippedInstances;
-              v.legendaryRegalia = legendaryRegaliaActive(e.equippedInstances);
-            }
+            updateLegendaryRegaliaCache(v, e.equippedInstances, e.equippedItems, ITEMS);
             const emitDt = legendaryRegaliaEmitDt(v.legendaryRegalia, this.reducedMotion(), dt, d2);
             if (emitDt > 0) this.vfx.legendaryRegalia(e.id, emitDt);
           }

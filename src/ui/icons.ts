@@ -4270,7 +4270,7 @@ export function weaponIconUrl(id: string): string | null {
 
   // Keep ITEM_WEAPON_VARIANTS base-oriented and mirror held-model inheritance.
   const item = Object.hasOwn(ITEMS, id) ? ITEMS[id] : undefined;
-  const baseId = item?.heroicOf;
+  const baseId = item?.kind === 'furnishing' ? undefined : item?.heroicOf;
   return baseId && Object.hasOwn(ITEM_WEAPON_VARIANTS, baseId)
     ? `${WEAPON_ICON_DIR}/${baseId}.webp`
     : null;

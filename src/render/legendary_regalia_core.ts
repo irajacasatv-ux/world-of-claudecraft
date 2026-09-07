@@ -1,23 +1,16 @@
 // The orange (promoted legendary) world-space identity: whether a worn set
 // earns the forge-mote drift, and how strongly to emit it at a viewer distance.
 //
-// THE PREDICATE IS A PURE FUNCTION OF THE FOUR ALLOWLISTED WIRE FIELDS ONLY
-// (signer/enchant/rolled/name, the server's eqi projection in server/game.ts).
-// It keys on `rolled?.quality === 'legendary'`, nothing else. The `perfected`
-// stamp is deliberately OFF the peer wire while the OFFLINE entity mirror
-// carries it in full, so any read of it here would render differently per host
-// and per self/peer; the strict promoted conjunction is therefore not
-// computable for a peer, and this module must never try.
+// The predicate uses projected rolled quality plus the equipped item's authored
+// kind. Furnishing never earns a worn-gear promotion mark. An unresolved legacy
+// item keeps the old rolled-quality behavior until its definition is available.
+// No rank, custody, or chosen-name field participates, so self and peer mirrors
+// answer identically from the same equipped IDs and quality.
 //
-// 2026-08-29: keying on the honest roll means legacy masterwork-bumped
-// legendary-rolled copies glow too, by D13-4's display doctrine (display
-// follows the honest roll: legacy legendary-rolled copies keep their legendary
-// display, exactly as the bags window colors those names orange today), and a
-// moderation name-stripped promoted copy (D13-5) keeps glowing for the same
-// reason. Def-level legendary DROPS (ITEMS[id].quality === 'legendary', only
-// reachable via equippedItems) are deliberately OUT of scope: this is the
-// crafted-promotion mark, and widening it to drops is a maintainer option,
-// not a default.
+// Legacy masterwork-bumped legendary rolls glow too, by D13-4's display
+// doctrine: display follows the honest roll. A moderation name-stripped copy
+// likewise keeps its glow (D13-5). Def-level legendary drops remain outside
+// this crafted-promotion mark; widening it to drops is a maintainer option.
 //
 // The emit scale is the weapon_vfx_shed_core distance arm: 1 inside a
 // full-strength fraction of the FIXED CHARACTER_LOD_RANGE_SQ anchor (never the
@@ -40,7 +33,7 @@
 //
 // Three/DOM-free and deterministic (a registered RENDER_PURE_CORE).
 
-import type { ItemInstancePayload } from '../sim/types';
+import type { ItemDef, ItemInstancePayload } from '../sim/types';
 import { CHARACTER_LOD_RANGE_SQ } from './crowd_lod';
 
 /** The legendary quality orange (QUALITY_COLOR.legendary, TIERS.legendary.hex). */
@@ -89,14 +82,40 @@ const STEP_DOWN_SQ: readonly number[] = (() => {
   return thresholds;
 })();
 
-/** True while any worn slot carries a legendary-rolled payload. */
+/** True while a non-furnishing worn slot carries a legendary-rolled payload.
+ * Missing equipped IDs or definitions retain the legacy quality-only reading. */
 export function legendaryRegaliaActive(
   instances: Partial<Record<string, ItemInstancePayload>>,
+  equipment?: Partial<Record<string, string>>,
+  items?: Readonly<Record<string, ItemDef>>,
 ): boolean {
   for (const slot in instances) {
+    const itemId = equipment?.[slot];
+    if (itemId && items?.[itemId]?.kind === 'furnishing') continue;
     if (instances[slot]?.rolled?.quality === 'legendary') return true;
   }
   return false;
+}
+
+/** Caller-owned view state; both mirrored maps follow reference replacement. */
+export interface LegendaryRegaliaCache {
+  legendaryRegalia?: boolean;
+  legendaryRegaliaRef?: Partial<Record<string, ItemInstancePayload>>;
+  legendaryRegaliaItemsRef?: Partial<Record<string, string>>;
+}
+
+/** Recompute only when an input map changes, with no payload reads on a cache hit. */
+export function updateLegendaryRegaliaCache(
+  cache: LegendaryRegaliaCache,
+  instances: Partial<Record<string, ItemInstancePayload>>,
+  equipment: Partial<Record<string, string>>,
+  items: Readonly<Record<string, ItemDef>>,
+): void {
+  if (cache.legendaryRegaliaRef === instances && cache.legendaryRegaliaItemsRef === equipment)
+    return;
+  cache.legendaryRegaliaRef = instances;
+  cache.legendaryRegaliaItemsRef = equipment;
+  cache.legendaryRegalia = legendaryRegaliaActive(instances, equipment, items);
 }
 
 /**

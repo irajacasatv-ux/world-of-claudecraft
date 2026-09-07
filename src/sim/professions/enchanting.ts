@@ -1286,7 +1286,8 @@ function resolveReplaceEnchantBagged(
   return enchantSuccess(itemId, enchantId, vaultDraws);
 }
 
-function enchantTargetsItem(itemDef: ItemDef, enchant: EnchantDef): boolean {
+/** The item-kind and slot boundary shared by authoritative and preview targets. */
+export function enchantTargetsItem(itemDef: ItemDef, enchant: EnchantDef): boolean {
   if (itemDef.kind === 'furnishing') return false;
   return itemDef.slot === enchant.itemSlot;
 }

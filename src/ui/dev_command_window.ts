@@ -10,12 +10,7 @@ import {
   devCategoryVisible,
   filteredDevActions,
 } from './dev_command_view';
-import {
-  DEV_ITEM_PICKER_LIMIT,
-  type DevItemCandidate,
-  rankDevItems,
-  resolveDevItem,
-} from './dev_item_picker_view';
+import { type DevItemCandidate, rankDevItems, resolveDevItem } from './dev_item_picker_view';
 import { markDialogRoot } from './dialog_root';
 import { classDisplayName, tEntity } from './entity_i18n';
 import { esc } from './esc';
@@ -36,12 +31,11 @@ function devItemCandidates(): readonly DevItemCandidate[] {
   itemCandidates = Object.values(ITEMS).map((item) => ({
     id: item.id,
     name: tEntity({ kind: 'item', id: item.id, field: 'name' }),
-    slot: item.slot,
+    slot: item.kind === 'furnishing' ? undefined : item.slot,
     quality: item.quality,
-    // ItemDef.heroicOf marks a generated heroic variant. All 57 duplicate display
-    // names in ITEMS are exactly these, so this flag is what makes an otherwise
-    // identical-looking pair of rows distinguishable.
-    heroic: item.heroicOf !== undefined,
+    // Generated heroic gear borrows its base name, so the tag distinguishes
+    // those rows. Furnishing keeps its own authored identity.
+    heroic: item.kind !== 'furnishing' && item.heroicOf !== undefined,
   }));
   return itemCandidates;
 }

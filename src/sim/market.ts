@@ -853,9 +853,11 @@ export class Market {
       // sold; without it the seller's collection is a bare copper total.
       recordSale(col.sales, {
         itemId: listing.itemId,
-        // The sold COPY's chosen name, while the listing still exists to read
-        // it from; undefined for a plain copy, which is most of them.
-        itemName: listing.instance?.name,
+        // Furnishing keeps its authored identity even if an old copy carries
+        // an equipment-only chosen name. Eligible copies keep their own names.
+        ...(def.kind !== 'furnishing' && listing.instance?.name
+          ? { itemName: listing.instance.name }
+          : {}),
         count: listing.count,
         price: listing.price,
         proceeds,
