@@ -132,8 +132,11 @@ coordinator edits last):
   row, the `freeholdsEnabled?: boolean` field appended to SimConfig in src/sim/types.ts
   beside devCommands (D85: optional, default false so deterministic tests, parity traces
   and the RL env opt in explicitly; exposed as a read-only ctx primitive), with
-  src/main.ts and headless/env_server.ts passing `freeholdsEnabled: true` (D3: the
-  offline and headless hosts stay live) and server/sim_boot_config.ts mapping it from
+  headless/env_server.ts passing `freeholdsEnabled: true` and src/main.ts passing
+  `freeholdsEnabled: world === undefined` (D3: the offline and headless hosts stay
+  live; the offline flag is gated like its two sibling live-world flags so the STOCK
+  offline world is lit while custom editor play-test maps and the editor viewport boot
+  dark, locked as state.md Gotchas (a)) and server/sim_boot_config.ts mapping it from
   freeholdsEnabled(process.env) so a dark realm boots a Sim whose later content spawns
   (03: the furnisher and its stock; 06: the gate prompt and the Hearth Key grant) are
   skipped while item, dungeon and layout DATA still merge; and the sim.ts extraction that
@@ -167,7 +170,9 @@ coordinator edits last):
   tests/server/freehold_wire.test.ts (the latter also pins the buildRealmSimConfig
   mapping of FREEHOLDS_ENABLED to SimConfig.freeholdsEnabled for the values '1', unset,
   '0' and 'true', plus a
-  source-text arm that both non-server constructors pass `freeholdsEnabled: true`); the
+  source-text arm that each non-server constructor passes its own literal:
+  `freeholdsEnabled: true` in headless/env_server.ts and
+  `freeholdsEnabled: world === undefined` in src/main.ts, one `new Sim(` site each); the
   surface_inventory.ts row.
 - Agent HEADLESS: the headless/CLAUDE.md housing cut paragraph beside the farming cut and
   the ACTIONS exclusion `it` in tests/env_protocol.test.ts (no freehold_* or housing verb
@@ -262,6 +267,15 @@ FINAL REVIEW AND COMPLETION CONTRACT:
   skipped required suite or a reviewer report alone is not a passing shared gate.
 
 STEP 4 - COMMIT CADENCE:
+The four commits below are ONE ATOMIC UNIT and only the tip is expected green.
+The split is by surface for reviewability, not for bisectability: the facet
+commit imports src/sim/freehold/types.ts and appends the ten COMMAND_NAMES
+tokens before the sim module and the game.ts case labels exist, so `tsc` and the
+parity and command-schema suites are red at the first two commits by
+construction. Do not bisect inside this range, and do not reorder the commits to
+chase a green intermediate: the vocabulary, the module and the dispatch labels
+have to land together to typecheck at all.
+
 4 commits, Conventional Commits with scope and a body, EXPLICIT paths, never
 `git add -A`, no em dashes or emojis, the word "phase" nowhere in the message:
 - feat(world_api): add the IWorldHousing facet with stub implementations in both worlds
@@ -289,8 +303,12 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] tests/env_protocol.test.ts pins that ACTIONS carries no housing verb.
 - [ ] SimConfig.freeholdsEnabled exists (D85): tests/server/freehold_wire.test.ts pins the
   buildRealmSimConfig mapping for '1', unset, '0' and 'true' and the source-text arm
-  proves src/main.ts and headless/env_server.ts pass true; the field is read only through
-  its ctx primitive (pinned in tests/sim_context.test.ts).
+  proves headless/env_server.ts passes `true` and src/main.ts passes
+  `world === undefined` (state.md Gotchas (a): the stock offline world is lit, editor
+  play-test maps stay dark); the field is read only through its ctx primitive, pinned
+  positively (the read-through) AND negatively (a src/sim source scan holding
+  `cfg.freeholdsEnabled` to exactly the ctor default and the ctx getter) in
+  tests/sim_context.test.ts.
 - [ ] myFreehold is null on both hosts; src/net/freehold_snapshot_wire.ts exists with an
   empty allowlist and is the only decode home; the S3 guard and the API error parity pass.
 - [ ] All STEP 3 suites green; all required reviewers confirm all findings resolved and the fresh fix review passed.

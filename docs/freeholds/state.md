@@ -1322,6 +1322,42 @@ message is performed in this documentation session.
   server-advertised capability so a dark realm never burns a command-lane token per click.
   (j) the real housing command bodies (08) re-validate the payload shape inside
   `src/sim/freehold/` so the offline host enforces what `server/freehold_wire.ts` enforces.
+  (k) `FreeholdPlotId` is BRANDED (`src/sim/freehold/types.ts`), so a raw string, and in
+  particular a `FreeholdState.ownerKey`, cannot be assigned to a public `plotId`; the only
+  constructor is `asFreeholdPlotId`. 07's row mapper casts once at the database boundary.
+  (l) `ctx.freeholds` is a `Map`, so it walks in INSERTION order, which is host-dependent
+  once 07 feeds it. Sim code that iterates it MUST sort by owner key first or the three
+  hosts fork on one seed.
+  (m) `serializeFreehold` neutralizes `isDecorating` to false at the persistence boundary
+  (C03: ephemeral presence never saves), so 07 cannot forget to strip it.
+  (n) `ctx.freeholdsEnabled` is NOT re-checked in the sim command bodies, so
+  `refusedFreeholdCommand` in `server/game.ts` is the SOLE dark-realm enforcement today.
+  Whoever lands the first real body (08) either opens it with a `ctx.freeholdsEnabled`
+  early return or records the ruling that the dispatch gate is the one gate.
+  (o) `ClientWorld.buildPresenceSeq` is advisory and monotonic-WITH-GAPS: it advances even
+  when the frame is dropped (spectating, closed socket), and no server-side ordering or
+  drop logic exists yet. C03 must never treat it as a dense counter.
+  (p) The five coined non-Latin renderings of "Freehold" are now locked in
+  `scripts/i18n_glossary.json` under the `housingSystem` category (ja and ru transliterate,
+  ko and both zh render the meaning; that split is the recorded ruling). Later housing
+  surfaces reuse those forms and never re-coin a per-surface variant.
+  (q) Three server-side throwaway Sims (`server/main.ts` initialCharacterState,
+  `server/pbe_boost.ts`, `server/community_test_accounts.ts`) construct without
+  `freeholdsEnabled`, so they are dark even on a lit realm. Harmless while no housing
+  behavior exists; it becomes a hazard at 05/07 if a fresh character's default freehold
+  record is stamped at serialize-character time, because a boosted or provisioned
+  character would come out without one.
+  (r) The four 01 commits are ONE ATOMIC UNIT: the facet commit imports the sim types and
+  appends the wire tokens before the module and the game.ts labels exist, so only the tip
+  typechecks. Do not bisect inside `4c982784ff..c946091c07`.
+  (s) The `blank_entity.ts` extraction is a neutral-default entity FACTORY, not the
+  "decode block into a `src/net/*_wire.ts` sibling" the phase file named; the relief is
+  equivalent and the move is verbatim, but the substitution is deliberate. The fourth
+  extraction (`updateSeoMetadata` out of `src/main.ts`) is likewise unnamed in the phase
+  file and justified by the remeasure clause.
+  (t) `moveToward`'s doc comment lost an em dash during the otherwise verbatim move (the
+  repo forbids em dashes and a Stop hook blocks them), so a future auditor diffing the two
+  bodies will find one comment line that is not byte-identical. Everything executable is.
 - `OtherItemDef.kind` is an `Exclude` list: add `'furnishing'` to it or the new kind
   silently becomes a generic usable (Phase 02).
 - `tests/market_filters.test.ts` fails on any `ItemKind` without a browse bucket.
