@@ -296,6 +296,8 @@ const UI_PURE_CORES = [
   'src/ui/hud/professions/craft_denial_line_view.ts',
   'src/ui/hud/professions/elixir_tooltip_view.ts',
   'src/ui/hud/professions/recipe_pattern_tooltip_view.ts',
+  'src/ui/hud/housing/furnishing_tooltip_view.ts',
+  'src/ui/mount_tooltip_view.ts',
   'src/ui/hud/professions/wellfed_stat_keys.ts',
   'src/ui/hud/professions/wellfed_tooltip_view.ts',
   'src/ui/hud/professions/feast_tooltip_view.ts',

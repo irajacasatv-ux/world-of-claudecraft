@@ -441,7 +441,7 @@ const MONOLITHS: MonolithRow[] = [
     // src/ui/rest_indicator_painter.ts, which paid for writing the accessible
     // name beside the tooltip AND for the two-line arena-signature note.
     // Exact count, zero slack.
-    ceiling: 18716,
+    ceiling: 18703,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

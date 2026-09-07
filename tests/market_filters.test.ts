@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/sim/data';
 import {
   deriveBagSizeFilters,
@@ -18,6 +18,15 @@ import {
   MARKET_RARITY_FILTERS,
   MARKET_WEAPON_TYPE_FILTERS,
 } from '../src/ui/market_filters';
+
+import { FURNISHING } from './fixtures/furnishing_item';
+
+beforeEach(() => {
+  ITEMS[FURNISHING.id] = structuredClone(FURNISHING);
+});
+afterEach(() => {
+  delete ITEMS[FURNISHING.id];
+});
 
 // Every bag the content catalog ships, resolved from the merged ITEMS table rather
 // than a hand-listed set, so a bag added later is covered by these cases for free.
@@ -72,6 +81,7 @@ describe('World Market filters', () => {
       'material',
       'cosmetic',
       'pattern',
+      'furnishing',
       'other',
     ]);
     expect(MARKET_ARMOR_TYPE_FILTERS).toEqual([

@@ -1,21 +1,21 @@
 # Freeholds and Guildhalls: progress
 
-Implementation has not started. Product settlement and external sign-off are distinct
-from implementation and QA completion. No completed date, passing runtime verdict or
-built feature is recorded by this packet audit.
+Foundation implementation and QA are complete locally. Furnishing item-kind implementation
+is complete locally with passing validation and fresh review; its paired QA is next. Product
+settlement and external sign-off remain distinct from implementation and QA completion.
 
 ## Status
 
-There are 56 bounded work items and 56 paired QA rows. All 112 rows are Not started;
-44 original numeric items retain their IDs and twelve suffixed pairs are inserted into
-the chain. The current next implementation is
-[phase-01-foundation.md](phase-01-foundation.md).
+There are 56 bounded work items and 56 paired QA rows; their actual status is recorded
+below. The 44 original numeric items retain their IDs and twelve suffixed pairs are
+inserted into the chain. The next handoff is
+[phase-02-qa.md](phase-02-qa.md).
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
 | 01 Foundation | Complete (QA PASS), local | 2026-09-06 | 2026-09-06 | Six reviewers (cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist): 0 blocking, 11 should-fix, ~25 nits, ALL applied; fresh review of the fix round PASS; gates unsigned (see notes) |
 | 01 QA | PASS | 2026-09-06 | 2026-09-06 | Twelve auditors and reviewers (six bespoke audits plus the six required reviewers: cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist). About 156 raw findings, deduplicated to 51 distinct: 1 blocking (self-inflicted, a glossary keyPattern registered ahead of its keys, caught by two reviewers and fixed), 0 blocking in the original 01 implementation. ALL resolved: 37 by a code, test or doc change; 14 recorded as reviewed-with-no-change-warranted, each with its reason. Fresh fix-round review VERDICT PASS at 4361ed5989 (zero blocking; it confirmed zero pre-existing assertions were weakened or removed, all four removed expect lines being equal-or-stronger replacements), and its three remaining findings were applied after it: the twelve-of-thirteen delegate correction, the vacuous descriptor arm replaced by a mutation-proven source pin, and the blank_entity scrape taught to follow Entity's heritage clause. Tip 2e247df270. Gates unsigned, see notes |
-| 02 Furnishing item kind | Not started | | | |
+| 02 Furnishing item kind | Complete, local | 2026-09-06 | 2026-09-06 | Typecheck, 447 scoped tests, gate_select, all required reviews, fresh fix review and post-commit ci:changed PASS; paired QA next (see notes) |
 | 02 QA | Not started | | | |
 | 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Not started | | | |
 | 03 QA | Not started | | | |
@@ -224,8 +224,54 @@ Deliverables (at most five):
 2. Kind presentation, the market filter, All-only ordinary bags and the icon fallback.
 3. The registered tooltip core, English housing keys and decisive consumer fixtures.
 
-Regenerates ux-key-manifest.json (4 keys owned) in this phase with every cited count
-updated (D92).
+Regenerated `ux-key-manifest.json` from the approved UX tables. The result is byte-identical:
+all four owner-02 rows were already present in the 557-key approved inventory, so no cited
+count changes (D92).
+
+Status notes (2026-09-06, implemented locally, branch not pushed): `FurnishingItemDef`
+adds the narrow `furnishing` kind, required collision radius and floor-only placement
+metadata, with inherited power and use fields prohibited. The synthetic fixture drives
+explicit refusal, crafting, storage, transfer, presentation and browse behavior. No
+furnishing content ID or asset is shipped. `KIND_RANK` places furnishing at 11, after tool
+at 10 and before mount at 12, preserving every existing kind's relative order. Ordinary
+bag categories are unchanged and furnishing remains reachable through All only.
+
+The housing tooltip core returns approved keys and resolved values; the maker line reads
+only `ItemInstancePayload.signer`. Extracting the mount tooltip lowered the `hud.ts`
+ceiling from 18716 to 18703. The complete new English leaf inventory is:
+
+| Key | English |
+|---|---|
+| `itemUi.kind.furnishing` | Furnishing |
+| `itemUi.market.filterTypeFurnishing` | Furnishings |
+| `hudChrome.housing.furnishing.footprint` | Footprint: {width} by {depth} cells. |
+| `hudChrome.housing.furnishing.decorCost` | Decor cost: {cost}. |
+| `hudChrome.housing.furnishing.surfaceFloor` | Placed on the floor. |
+| `hudChrome.housing.furnishing.maker` | Made by {maker}. |
+
+Completion evidence:
+- Scoped validation: PASS; typecheck exit 0, 447 scoped tests, 253 neighboring tests,
+  and 76 localization tests passed (3 existing release-tier skips). Exact commands and
+  evidence are in [furnishing-item-kind-validation.md](furnishing-item-kind-validation.md).
+- Required COVERAGE reviews: cross-platform-sync, architecture-reviewer,
+  frontend-seam-reviewer, test-coverage-auditor and qa-checklist completed. Every code,
+  test and documentation finding/nit is addressed; the final browser probes passed.
+  Reports and closure evidence are linked from furnishing-item-kind-validation.md.
+- Fresh review of the entire fix round: [PASS](reviews/furnishing-item-kind/fresh-fix.md);
+  all original findings and nits resolved, including the complete browser evidence.
+- `node scripts/gate_select.mjs`: PASS, exit 0, all 12 steps green; full-suite fallback
+  passed 54864 tests plus 343 browser regressions, typechecks, builds and security checks.
+- Three scoped commits: item gates `83f847e6cb`, UI `b98007b01e`, and the final synthetic
+  consumer test/evidence commit. `npm run ci:changed` after the last commit: PASS, exit 0.
+  The final evidence amendment is followed by the same post-commit check.
+- Paired `phase-02-qa.md`: next in a fresh session, not yet started.
+
+Named unsigned release gates remain economy catalog/authorization/settlement; counsel,
+Terms and storefront model; optional deed territories and irreversible authority;
+approved numerical rows; source calendar/lifecycle/rollout capability; final asset and
+image replacement evidence; and runtime safety/distribution. Their owners and acceptance
+artifacts remain in `state.md` under Tracked release and handoff gates. This implementation
+does not sign or activate them.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.

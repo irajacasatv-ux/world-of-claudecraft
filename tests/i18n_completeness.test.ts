@@ -35,6 +35,7 @@ import {
   zh_CN,
   zh_TW,
 } from '../src/ui/i18n';
+import { pending } from '../src/ui/i18n.resolved.generated/pending';
 
 // Whole-catalog i18n completeness guards that the per-key sample tests in
 // localization_coverage.test.ts do not cover: full interpolation-token parity
@@ -87,6 +88,45 @@ function placeholders(value: string): string[] {
 }
 
 const enFlat = flatten(en);
+
+// Furnishing contributors author this exact English inventory; release still
+// requires translations via i18n_status_registry.test.ts. Only a declared key
+// recorded as pending may defer M16.
+const FURNISHING_CONTRIBUTOR_KEYS = new Set([
+  'itemUi.kind.furnishing',
+  'itemUi.market.filterTypeFurnishing',
+  'hudChrome.housing.furnishing.footprint',
+  'hudChrome.housing.furnishing.decorCost',
+  'hudChrome.housing.furnishing.surfaceFloor',
+  'hudChrome.housing.furnishing.maker',
+]);
+
+function isPendingFurnishingKey(key: string, localePending: readonly string[]): boolean {
+  return FURNISHING_CONTRIBUTOR_KEYS.has(key) && localePending.includes(key);
+}
+
+describe('furnishing contributor translation boundary', () => {
+  it('accepts only declared pending leaves at contributor tier', () => {
+    expect(
+      isPendingFurnishingKey('hudChrome.housing.furnishing.maker', [
+        'hudChrome.housing.furnishing.maker',
+      ]),
+    ).toBe(true);
+    for (const key of [
+      'hudChrome.housing.furnishing.unknown',
+      'hudChrome.housing.build.decorTooltip',
+      'itemUi.kind.recipe',
+      'hudChrome.housing.furnishing.maker:42',
+      '',
+    ]) {
+      expect(isPendingFurnishingKey(key, [key]), key).toBe(false);
+    }
+  });
+
+  it('refuses translated leaves so a later English regression is still caught', () => {
+    expect(isPendingFurnishingKey('itemUi.kind.furnishing', [])).toBe(false);
+  });
+});
 
 describe('i18n whole-catalog completeness', () => {
   beforeAll(async () => {
@@ -211,7 +251,8 @@ describe('i18n whole-catalog completeness', () => {
           wordy(enValue) &&
           flat[key] === enValue &&
           !BRAND_ALLOW.has(key) &&
-          !isDevelopmentOnly(key)
+          !isDevelopmentOnly(key) &&
+          !isPendingFurnishingKey(key, pending[lang] ?? [])
         ) {
           leaks.push(`${lang} ${key}: "${enValue}"`);
         }

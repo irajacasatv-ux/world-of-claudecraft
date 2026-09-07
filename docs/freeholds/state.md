@@ -34,14 +34,19 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
-Phase 01 (`phase-01-foundation.md`): COMPLETE INCLUDING QA on 2026-09-06, verdict PASS, still
-LOCAL. Four code commits plus the ledger, then the QA fix round
-(`c946091c07..2e247df270`). NEXT = `phase-02-furnishing-item-kind.md` in a FRESH session.
-The QA round's own detail is in `progress.md` row "01 QA"; do NOT re-run the 01 audit or
-re-raise its judged findings. R01-R46 and D73-D75 are approved;
+Phase 02 (`phase-02-furnishing-item-kind.md`): IMPLEMENTATION COMPLETE LOCALLY on 2026-09-06.
+Scoped validation, the shared gate, all required reviews, fresh fix review and the
+post-commit check passed. Three scoped implementation commits follow the dependency
+merge; see `progress.md` row "02 Furnishing item kind" and its validation report.
+NEXT = `phase-02-qa.md` in a FRESH session. Its paired QA has not started.
+The dependency sync merged the fresh PR #3872 head `82dd05db72` through merge commit
+`16f2aeed`; the PR remains OPEN, so the dependency block above still applies.
+Phase 01 remains COMPLETE INCLUDING QA, verdict PASS (`c946091c07..2e247df270`). Its QA
+round's own detail is in `progress.md` row "01 QA"; do NOT re-run that audit or re-raise
+its judged findings. R01-R46 and D73-D75 are approved;
 D76-D93 (settlement round 2, R47-R64) were approved by Fernando on 2026-09-06 with the words
 "approve all recommendations R47-R64"; the review-fix round is applied across the packet,
-freshly reviewed and committed locally. Implementation remains unbuilt; the branch stays local.
+freshly reviewed and committed locally. Later implementation remains unbuilt; the branch stays local.
 
 ## Settle audit facts (verified 2026-09-05 and 2026-09-06)
 These facts were recorded before dependent implementation instructions changed. They
@@ -1256,12 +1261,27 @@ replaces the marker with its actual outputs.
 | Phase | New files | IWorld members | SimEvents | Wire keys and commands | Endpoints | Tables | i18n keys |
 |---|---|---|---|---|---|---|---|
 | 01 | `src/world_api/housing.ts`, `src/sim/freehold/{types,state,commands,index}.ts` + `CLAUDE.md`, `src/net/freehold_snapshot_wire.ts`, `server/freehold_config.ts`, `server/freehold_wire.ts`, `server/freehold_routes.ts`; extractions `src/sim/mob/move_toward.ts`, `server/live_location.ts`, `src/net/blank_entity.ts`, `src/game/seo_metadata.ts`; tests `freehold_module`, `freehold_snapshot_wire`, `freehold_command_chain_online`, `move_toward`, `seo_metadata`, `server/freehold_wire`, `server/freehold_routes` | `myFreehold`, `freeholdLayout` (data, null); `housingNowMs`, `freeholdEnter`, `freeholdLeave`, `placeFurnishing`, `moveFurnishing`, `removeFurnishing`, `undoPlacement`, `redoPlacement`, `payLedger`, `setVisitPolicy`, `setFreeholdBuildPresence` (dark no-ops); SimContext `ctx.freeholds` (live map) and `ctx.freeholdsEnabled` (read-only); `SimConfig.freeholdsEnabled` | none | `freehold_enter`, `freehold_leave`, `place_furnishing`, `move_furnishing`, `remove_furnishing`, `undo_placement`, `redo_placement`, `pay_ledger`, `set_visit_policy`, `set_freehold_build_presence` (refused pre-switch while `FREEHOLDS_ENABLED !== '1'`; `freehold_enter` jail-blocked); self keys: none (empty allowlist) | GET `/api/freehold` (bearer read guard behind the dedicated tier-1-only `HOUSING_READ_POLICY` IP limiter, 60/min, no tier-2 write; `freehold.disabled` 503 while dark, `{ enabled: true, freehold: null }` lit) | none | `apiError.freehold.invalid_input` (generated, reserved), `apiError.freehold.disabled` (English plus the five M16 non-Latin fills); metrics `woc_freehold_refused_total`; env `FREEHOLDS_ENABLED` (strict `'1'`, default off, `.env.example` + `DEPLOY.md` + `turbo.json`) |
+| 02 | `src/sim/item_storage_rules.ts`; `src/ui/hud/housing/{index.ts,CLAUDE.md,furnishing_tooltip_view.ts,furnishing_tooltip.ts}`; extraction `src/ui/mount_tooltip_view.ts`; fixture `tests/fixtures/furnishing_item.ts`; tests `tests/furnishing_item_kind.test.ts`, `tests/furnishing_tooltip_view.test.ts`, `tests/mount_tooltip_view.test.ts` | none | none | ItemKind `furnishing` and `FurnishingItemDef`; no new command or snapshot key | none | none | English only: `itemUi.kind.furnishing`, `itemUi.market.filterTypeFurnishing`, `hudChrome.housing.furnishing.footprint`, `hudChrome.housing.furnishing.decorCost`, `hudChrome.housing.furnishing.surfaceFloor`, `hudChrome.housing.furnishing.maker` |
 | 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
 | 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
 | 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
 | 30 (planned) | NEW `tests/guild_chest_opener.test.ts` | none | | | | | `guild.chestMembersOnly`, `guild.stationMembersOnly`, `guild.amenitiesPaused`; shot target `housing-hall-amenities` (38 variants) |
 | 30a (planned) | `server/guild_hall_boards.ts` | `guildHallBoards()` | | | GET `/api/guilds/hall-boards` | | `guild.lockouts`, `guild.firstKills`, `guild.lockoutRow`, `guild.ownLockoutRow`, `guild.noLockouts`, `guild.firstKillsUnavailable`, `guild.membersOnly`, `guild.boardLoading` |
 | 31 (planned) | `server/freehold_guild_clear_admission.ts`, `server/freehold_guild_clear_bridge.ts`, `src/sim/freehold/guild_clear_contract.ts` | none (D82) | | | fills 30a's firstKills arm | `guild_deeds` | `guild.firstKillRow` |
+
+
+02 implementation notes: furnishing has `KIND_RANK` 11, immediately after tool 10 and
+before mount 12; all existing relative ordering is preserved. Ordinary bag categories
+are unchanged, with furnishings reachable through All only. The floor tooltip is a
+registered pure core and the maker value comes from the copy signer, never the def.
+The mount tooltip extraction lowers the `hud.ts` ceiling from 18716 to 18703. The UX
+key manifest was regenerated byte-identically at 557 approved rows, including the four
+existing owner-02 rows; no inventory count changed. No shipped furnishing ID or asset
+was added. Scoped validation and `node scripts/gate_select.mjs` passed. The required COVERAGE
+reviews, fresh fix-round review and final browser evidence all passed;
+post-commit `npm run ci:changed` passed with exit 0. Three scoped commits are local,
+with final evidence in `progress.md`; paired `phase-02-qa.md` is next. The named release
+and handoff gates below remain unsigned.
 
 ## Tracked release and handoff gates
 
