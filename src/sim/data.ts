@@ -5,6 +5,7 @@
 // and owns the world-layout constants.
 
 import { FREEHOLD_FURNISHER, FREEHOLD_FURNISHINGS } from './content/freehold';
+import { FURNISHING_PATTERN_ITEMS } from './content/freehold/furnishing_patterns';
 import { BASE_ITEMS } from './content/items';
 import type {
   CampDef,
@@ -361,6 +362,7 @@ export const ITEMS: Record<string, ItemDef> = mergeItems(
   PROFESSION_ITEMS,
   APEX_PATTERN_ITEMS,
   FARM_PATTERN_ITEMS,
+  FURNISHING_PATTERN_ITEMS,
   ZONE2_ITEMS,
   ZONE3_ITEMS,
   TEMPLE_ITEMS,

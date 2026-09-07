@@ -15,7 +15,7 @@
 //   3. NO acquisition surface in live content OUTSIDE the sanctioned host
 //      registry carries a pattern id (masterwrought R8: three pillars, no
 //      fourth), one sweep per surface so a failure names the leaking surface;
-//   4. the phase 02 sweep floor: EXACTLY 34 shipped kind:'recipe' defs, each
+//   4. the shipped sweep floor: EXACTLY 55 kind:'recipe' defs, each
 //      teaching a drop-acquirable recipe (recipe_pattern_items.test.ts sweeps
 //      the shape but is floorless; the literal here is the floor);
 //   5. the draw-order documentation pin for the rift ledger comment.
@@ -39,6 +39,7 @@ import { DELVE_SHOPS } from '../src/sim/content/delves';
 import { drownedLitanyChestItemsForTier } from '../src/sim/content/delves/drowned_litany_loot';
 import { delveChestItemsForTier } from '../src/sim/content/delves/lockpick_tiers';
 import { ENCHANTS } from '../src/sim/content/enchants';
+import { FURNISHING_RECIPES } from '../src/sim/content/freehold/furnishing_recipes';
 import { FARM_HEROIC_PATTERN_GROUP, HEROIC_BOSS_LOOT } from '../src/sim/content/heroic_loot';
 import { HEROIC_VENDOR_NPC_ID, HEROIC_VENDOR_STOCK } from '../src/sim/content/heroic_vendor';
 import { CRUCIBLE_VENDOR_NPC_ID, CRUCIBLE_VENDOR_STOCK } from '../src/sim/content/ignivar_loot';
@@ -168,12 +169,12 @@ describe('masterwrought R8 referential contract: every drop recipe reaches exact
   // counts are LITERAL floors (the recorded phase decisions), never re-derived.
   const apexDropRecipes = ALL_RECIPES.filter((recipe) => recipe.acquisition?.includes('drop'));
 
-  it('the drop-acquisition recipe set partitions the legacy families plus 33 Crucible recipes', () => {
+  it('the drop-acquisition recipe set partitions seven disjoint families', () => {
     // 38 since masterwrought Phase 11i: three angler cooking rows plus the
     // apex rod's schematic, the first pattern teaching a row outside the
     // three APEX_* tables. 40 since masterwrought Phase 11k, which retired
     // 11i's capstone feast row and minted three apex role feasts in its place.
-    expect(apexDropRecipes).toHaveLength(73);
+    expect(apexDropRecipes).toHaveLength(76);
     const gear = apexDropRecipes.filter((r) => APEX_GEAR_RECIPES.includes(r));
     const armor = apexDropRecipes.filter((r) => APEX_ARMOR_RECIPES.includes(r));
     const consumable = apexDropRecipes.filter((r) => APEX_CONSUMABLE_RECIPES.includes(r));
@@ -186,6 +187,7 @@ describe('masterwrought R8 referential contract: every drop recipe reaches exact
     // how the consumable literal moved.
     const rod = apexDropRecipes.filter((r) => ROD_RECIPES.includes(r));
     const crucible = apexDropRecipes.filter((r) => CRUCIBLE_COLLECTION_RECIPES.includes(r));
+    const furnishing = apexDropRecipes.filter((r) => FURNISHING_RECIPES.includes(r));
     expect(gear).toHaveLength(10);
     expect(armor).toHaveLength(10);
     // THIRTEEN: the eight phase-11 consumables, 11i's two surviving angler
@@ -194,17 +196,30 @@ describe('masterwrought R8 referential contract: every drop recipe reaches exact
     expect(farm).toHaveLength(6);
     expect(rod).toHaveLength(1);
     expect(crucible).toHaveLength(33);
-    // No drop recipe outside the five families: one with no assigned channel
+    expect(furnishing).toHaveLength(3);
+    // No drop recipe outside the seven families: one with no assigned channel
     // would slip every family loop, so it fails here.
     expect(
-      gear.length + armor.length + consumable.length + farm.length + rod.length + crucible.length,
+      gear.length +
+        armor.length +
+        consumable.length +
+        farm.length +
+        rod.length +
+        crucible.length +
+        furnishing.length,
     ).toBe(apexDropRecipes.length);
     // And the families are DISJOINT, which a bare sum cannot show: a recipe
     // counted by two filters would balance the equality above while meaning
     // something quite different.
-    const familyIds = [...gear, ...armor, ...consumable, ...farm, ...rod, ...crucible].map(
-      (r) => r.id,
-    );
+    const familyIds = [
+      ...gear,
+      ...armor,
+      ...consumable,
+      ...farm,
+      ...rod,
+      ...crucible,
+      ...furnishing,
+    ].map((r) => r.id);
     expect(new Set(familyIds).size).toBe(familyIds.length);
   });
 
@@ -233,6 +248,10 @@ describe('masterwrought R8 referential contract: every drop recipe reaches exact
           'crucible_raid',
           'crucible_vendor',
         ]);
+        continue;
+      }
+      if (FURNISHING_RECIPES.includes(recipe)) {
+        expect(channels, `${recipe.id} has only the deterministic Marks route`).toEqual(['vendor']);
         continue;
       }
       if (!isFarm) {
@@ -652,18 +671,13 @@ describe('the no-fourth-channel sweep (masterwrought R8: three pillars, no fourt
   });
 });
 
-describe('the phase 02 sweep floor', () => {
+describe('the shipped recipe-item sweep floor', () => {
   it('every shipped pattern teaches drop-acquirable recipes, and only the Zeal formula teaches an enchant', () => {
-    // recipe_pattern_items.test.ts sweeps every kind:'recipe' def for this
-    // shape but is deliberately floorless (it predates shipped content); the
-    // literal here is the floor, and the referential arms above make it
-    // un-gameable (a 35th def would also have to seat a channel to pass them).
-    // 28 apex plus the 6 farming patterns Phase 11f added.
+    // All 55 teaching items: 43 ordinary patterns plus 12 Crucible manuals/formula.
+    // The merged referential and channel sweeps make this literal non-vacuous.
     const recipeDefs = Object.values(ITEMS).filter((def) => def.kind === 'recipe');
-    // 38 since masterwrought Phase 11i (the angler's endgame block), 40 since
-    // Phase 11k (three apex feast recipes in, 11i's capstone feast out).
-    expect(recipeDefs).toHaveLength(52);
-    expect(recipeDefs.filter((def) => !CRUCIBLE_SCROLL_IDS.includes(def.id))).toHaveLength(40);
+    expect(recipeDefs).toHaveLength(55);
+    expect(recipeDefs.filter((def) => !CRUCIBLE_SCROLL_IDS.includes(def.id))).toHaveLength(43);
     let recipesTaught = 0;
     let enchantsTaught = 0;
     for (const def of recipeDefs) {
@@ -682,7 +696,7 @@ describe('the phase 02 sweep floor', () => {
         recipesTaught++;
       }
     }
-    expect(recipesTaught).toBe(73);
+    expect(recipesTaught).toBe(76);
     expect(enchantsTaught).toBe(1);
   });
 });

@@ -246,4 +246,8 @@ export const HEROIC_VENDOR_STOCK: readonly HeroicVendorOffer[] = [
   { itemId: 'evergarden_greens_seed', marks: 12 },
   { itemId: 'gilded_yam_seed', marks: 12 },
   { itemId: 'evergarden_pumpkin_seed', marks: 12 },
+  // Accepted furnishing development goals, purchased only through this counter.
+  { itemId: 'pattern_freehold_clockwork_lamp', marks: 16 },
+  { itemId: 'pattern_freehold_chart_easel', marks: 16 },
+  { itemId: 'pattern_freehold_jewel_floor_lamp', marks: 16 },
 ];

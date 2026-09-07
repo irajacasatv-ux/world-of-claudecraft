@@ -12,6 +12,7 @@ import { bagsFullError } from '../bags';
 import { HEROIC_MARK_ITEM_ID } from '../content/dungeon_difficulty';
 import { HEROIC_VENDOR_NPC_ID, HEROIC_VENDOR_STOCK } from '../content/heroic_vendor';
 import { ITEMS } from '../data';
+import { isFreeholdCraftAvailable } from '../freehold';
 import type { SimContext } from '../sim_context';
 import { dist2d, type Entity, INTERACT_RANGE } from '../types';
 
@@ -31,7 +32,7 @@ export function buyHeroicVendorItem(ctx: SimContext, itemId: string, pid?: numbe
   if (!r) return;
   const { meta, e: p } = r;
   const entry = HEROIC_VENDOR_STOCK.find((s) => s.itemId === itemId);
-  if (!entry) {
+  if (!entry || !isFreeholdCraftAvailable(ctx.freeholdsEnabled, itemId)) {
     ctx.error(meta.entityId, 'That item is not sold here.');
     return;
   }

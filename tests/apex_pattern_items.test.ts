@@ -16,6 +16,7 @@
 import { describe, expect, it } from 'vitest';
 import { CRUCIBLE_COLLECTIONS } from '../src/sim/content/crucible_collections';
 import { ENCHANTS } from '../src/sim/content/enchants';
+import { FURNISHING_RECIPES } from '../src/sim/content/freehold/furnishing_recipes';
 import { CRAFT_RING } from '../src/sim/content/professions';
 import {
   ALL_RECIPES,
@@ -70,7 +71,15 @@ const FARM_PATTERN_IDS = FARM_RECIPES.filter((r) => r.acquisition?.includes('dro
 const ROD_PATTERN_IDS = ROD_RECIPES.filter((r) => r.acquisition?.includes('drop')).map(
   (r) => `pattern_${r.resultItemId}`,
 );
-const EVERY_PATTERN_ID = [...ALL_PATTERN_IDS, ...FARM_PATTERN_IDS, ...ROD_PATTERN_IDS];
+const FURNISHING_PATTERN_IDS = FURNISHING_RECIPES.filter((r) =>
+  r.acquisition?.includes('drop'),
+).map((r) => `pattern_${r.resultItemId}`);
+const EVERY_PATTERN_ID = [
+  ...ALL_PATTERN_IDS,
+  ...FARM_PATTERN_IDS,
+  ...ROD_PATTERN_IDS,
+  ...FURNISHING_PATTERN_IDS,
+];
 const CRUCIBLE_SCROLL_IDS = [
   ...CRUCIBLE_COLLECTIONS.map((collection) => `pattern_${collection.id}`),
   'formula_lastflame_zeal',
@@ -109,13 +118,13 @@ describe('apex pattern defs (the drop-taught pattern universe)', () => {
       .map((def) => def.id)
       .sort();
     expect(shippedRecipeKind).toEqual([...EVERY_PATTERN_ID, ...CRUCIBLE_SCROLL_IDS].sort());
-    expect(EVERY_PATTERN_ID).toHaveLength(40);
+    expect(EVERY_PATTERN_ID).toHaveLength(43);
     expect(CRUCIBLE_SCROLL_IDS).toHaveLength(12);
-    expect(shippedRecipeKind).toHaveLength(52);
+    expect(shippedRecipeKind).toHaveLength(55);
     // No id belongs to both halves: a collision would let the union stay the
     // right SIZE while one table quietly shadowed the other in mergeItems.
     expect(new Set(EVERY_PATTERN_ID).size).toBe(EVERY_PATTERN_ID.length);
-    expect(new Set([...EVERY_PATTERN_ID, ...CRUCIBLE_SCROLL_IDS]).size).toBe(52);
+    expect(new Set([...EVERY_PATTERN_ID, ...CRUCIBLE_SCROLL_IDS]).size).toBe(55);
   });
 
   it('each Crucible manual teaches all three slot alternatives and the formula teaches only Zeal', () => {

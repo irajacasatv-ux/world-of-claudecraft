@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import { HEROIC_DUNGEON_TUNING, HEROIC_MARK_ITEM_ID } from '../src/sim/content/dungeon_difficulty';
 import { FARM_CROPS } from '../src/sim/content/farm_crops';
+import { FURNISHING_RECIPES } from '../src/sim/content/freehold/furnishing_recipes';
 import { HEROIC_VENDOR_ITEMS, HEROIC_VENDOR_STOCK } from '../src/sim/content/heroic_vendor';
 import {
   ALL_RECIPES,
@@ -71,7 +72,7 @@ describe('heroic vendor stock: item-level and budget pins', () => {
   // counter is kind 'armor' and nothing else, so the loop now says what it
   // means instead of naming the rows it happens not to want.
   it('every gear offer is a real epic level-20 jewelry item at item level 26', () => {
-    expect(HEROIC_VENDOR_STOCK.length).toBe(39);
+    expect(HEROIC_VENDOR_STOCK.length).toBe(42);
     const gearOffers = HEROIC_VENDOR_STOCK.filter((o) => ITEMS[o.itemId]?.kind === 'armor');
     expect(gearOffers.length).toBe(10);
     // The partition is exhaustive: every row is gear, the one material, a
@@ -84,7 +85,7 @@ describe('heroic vendor stock: item-level and budget pins', () => {
         `${offer.itemId} is neither gear, a material, a pattern nor a seed`,
       ).toContain(ITEMS[offer.itemId]?.kind);
     }
-    expect(nonGear.length, 'one core plus twenty patterns plus eight seeds').toBe(29);
+    expect(nonGear.length, 'one core plus twenty-three patterns plus eight seeds').toBe(32);
     for (const offer of gearOffers) {
       const item = ITEMS[offer.itemId];
       expect(item, offer.itemId).toBeTruthy();
@@ -175,13 +176,22 @@ describe('heroic vendor stock: item-level and budget pins', () => {
       pattern_evergarden_braised_greens: 12,
       pattern_harvest_feast: 12,
     };
-    const PATTERN_PRICES: Record<string, number> = {
+    const LEGACY_PATTERN_PRICES: Record<string, number> = {
       ...APEX_PATTERN_PRICES,
       ...ANGLER_PATTERN_PRICES,
       ...FARM_PATTERN_PRICES,
     };
+    const FURNISHING_PATTERN_PRICES: Record<string, number> = {
+      pattern_freehold_clockwork_lamp: 16,
+      pattern_freehold_chart_easel: 16,
+      pattern_freehold_jewel_floor_lamp: 16,
+    };
+    const PATTERN_PRICES: Record<string, number> = {
+      ...LEGACY_PATTERN_PRICES,
+      ...FURNISHING_PATTERN_PRICES,
+    };
 
-    it('prices every pattern row by its RUNG: 12 below skill 125, 16 at it', () => {
+    it('preserves twenty legacy rung prices and three accepted furnishing prices', () => {
       // The kind read, not an id prefix: a pattern row whose def vanished
       // from ITEMS must fall out of this census and red the exact-set pin.
       const patternOffers = HEROIC_VENDOR_STOCK.filter((o) => ITEMS[o.itemId]?.kind === 'recipe');
@@ -189,19 +199,27 @@ describe('heroic vendor stock: item-level and budget pins', () => {
       for (const offer of patternOffers) {
         expect(offer.marks, offer.itemId).toBe(PATTERN_PRICES[offer.itemId]);
       }
-      // The three blocks, counted apart so a row moving between them (or a
+      // The four blocks, counted apart so a row moving between them (or a
       // block silently emptying) reds here rather than balancing out inside the
       // merged map above.
       expect(Object.keys(APEX_PATTERN_PRICES)).toHaveLength(11);
       expect(Object.keys(ANGLER_PATTERN_PRICES)).toHaveLength(3);
       expect(Object.keys(FARM_PATTERN_PRICES)).toHaveLength(6);
-      expect(patternOffers).toHaveLength(20);
-      // AND THE RULE THE TITLE NOW STATES, derived over the whole counter
-      // rather than restated per block: this is what the old title's "six at 12
-      // and two at 16" was really claiming, and unlike a split it cannot rot
-      // when a rung is added. Every row's price is decided by the skillReq of
-      // the recipe it teaches, at the family's two points and nowhere else.
-      for (const offer of patternOffers) {
+      expect(Object.keys(LEGACY_PATTERN_PRICES)).toHaveLength(20);
+      expect(Object.keys(FURNISHING_PATTERN_PRICES)).toHaveLength(3);
+      expect(Object.keys(PATTERN_PRICES)).toHaveLength(23);
+      expect(patternOffers).toHaveLength(23);
+      const legacyOffers = patternOffers.filter((offer) => offer.itemId in LEGACY_PATTERN_PRICES);
+      const furnishingOffers = patternOffers.filter(
+        (offer) => offer.itemId in FURNISHING_PATTERN_PRICES,
+      );
+      expect(legacyOffers).toHaveLength(20);
+      expect(furnishingOffers).toHaveLength(3);
+      expect(
+        new Set([...legacyOffers, ...furnishingOffers].map((offer) => offer.itemId)).size,
+      ).toBe(23);
+      // The established families retain their skill-based price rule.
+      for (const offer of legacyOffers) {
         const def = ITEMS[offer.itemId];
         if (def?.kind !== 'recipe') throw new Error(`${offer.itemId} must be a recipe def`);
         const taught = ALL_RECIPES.find((r) => r.id === def.teachesRecipeId);
@@ -209,6 +227,19 @@ describe('heroic vendor stock: item-level and budget pins', () => {
         expect(offer.marks, `${offer.itemId} rung price`).toBe(
           (taught?.skillReq ?? 0) >= 125 ? 16 : 12,
         );
+      }
+      // The accepted furnishing calibration sets longer cosmetic goals at 16
+      // Marks while their teaching threshold remains skill 50.
+      for (const offer of furnishingOffers) {
+        const def = ITEMS[offer.itemId];
+        if (def?.kind !== 'recipe') throw new Error(`${offer.itemId} must be a recipe def`);
+        const taught = FURNISHING_RECIPES.find((recipe) => recipe.id === def.teachesRecipeId);
+        expect(taught, `${offer.itemId} teaches a furnishing recipe`).toBeDefined();
+        if (!taught) throw new Error(`${offer.itemId} has no furnishing recipe`);
+        expect(taught?.skillReq).toBe(50);
+        expect(taught?.acquisition).toEqual(['drop']);
+        expect(ITEMS[taught.resultItemId]?.kind).toBe('furnishing');
+        expect(offer.marks).toBe(16);
       }
       // The mark family has exactly TWO points and this counter uses only
       // those: a third price appearing anywhere here is a maintainer decision
@@ -262,22 +293,29 @@ describe('heroic vendor stock: item-level and budget pins', () => {
       // rod's schematic teaches a ROD_RECIPES row, the first thing on this
       // counter that is not a consumable at all.
       const rodRecipeIds = new Set(ROD_RECIPES.map((r) => r.id));
+      const furnishingRecipeIds = new Set(FURNISHING_RECIPES.map((r) => r.id));
       for (const itemId of Object.keys(PATTERN_PRICES)) {
         const def = ITEMS[itemId];
         expect(def, itemId).toBeTruthy();
         if (def?.kind !== 'recipe') throw new Error(`${itemId} must be a kind-'recipe' def`);
         const isApex = apexRecipeIds.has(def.teachesRecipeId);
         expect(
-          isApex || farmRecipeIds.has(def.teachesRecipeId) || rodRecipeIds.has(def.teachesRecipeId),
+          isApex ||
+            farmRecipeIds.has(def.teachesRecipeId) ||
+            rodRecipeIds.has(def.teachesRecipeId) ||
+            furnishingRecipeIds.has(def.teachesRecipeId),
           `${itemId} -> ${def.teachesRecipeId} belongs to no shipped recipe table`,
         ).toBe(true);
         // Quality is NOT uniform across this counter any more, and that is the
         // ruling: recipe rarity tracks the power of what it teaches, so the
         // apex patterns are epic and the farm patterns carry their dish's own
         // quality. Derived from the taught output, never restated.
-        const taught = [...APEX_CONSUMABLE_RECIPES, ...FARM_RECIPES, ...ROD_RECIPES].find(
-          (r) => r.id === def.teachesRecipeId,
-        );
+        const taught = [
+          ...APEX_CONSUMABLE_RECIPES,
+          ...FARM_RECIPES,
+          ...ROD_RECIPES,
+          ...FURNISHING_RECIPES,
+        ].find((r) => r.id === def.teachesRecipeId);
         // Resolve the output BEFORE comparing: an unresolved taught row would
         // otherwise make both sides undefined and the assertion vacuous, which
         // is how the rod schematic first passed this arm while its recipe table
@@ -454,22 +492,42 @@ describe('heroic vendor buy path', () => {
 });
 
 describe('heroic vendor shop view (pure)', () => {
-  it('resolves stock rows with affordability and drops unknown ids', () => {
-    const view = buildHeroicVendorView(
-      [...HEROIC_VENDOR_STOCK, { itemId: 'no_such_item', marks: 1 }],
-      ITEMS,
-      12,
-    );
-    // The literal, not HEROIC_VENDOR_STOCK.length: both sides of that compare
-    // move together, so a vanished row would pass it (the unknown-id drop is
-    // what this fixture proves; the row census literal is pinned above).
-    expect(view.rows.length).toBe(39);
-    expect(view.balance).toBe(12);
-    const ring = view.rows.find((r) => r.itemId === 'seal_of_the_nine_oaths');
-    const neck = view.rows.find((r) => r.itemId === 'yumis_keepsake_locket');
-    expect(ring?.affordable).toBe(true); // 12 >= 12
-    expect(neck?.affordable).toBe(false); // 12 < 16
-  });
+  it.each([
+    { freeholdsEnabled: false, expectedRows: 39 },
+    { freeholdsEnabled: true, expectedRows: 42 },
+  ])(
+    'resolves stock and affordability with freeholdsEnabled=$freeholdsEnabled',
+    ({ freeholdsEnabled, expectedRows }) => {
+      const view = buildHeroicVendorView(
+        [...HEROIC_VENDOR_STOCK, { itemId: 'no_such_item', marks: 1 }],
+        ITEMS,
+        12,
+        freeholdsEnabled,
+      );
+      // The literal, not HEROIC_VENDOR_STOCK.length: both sides of that compare
+      // move together, so a vanished row would pass it (the unknown-id drop is
+      // what this fixture proves; the row census literal is pinned above).
+      expect(view.rows.length).toBe(expectedRows);
+      expect(view.balance).toBe(12);
+      const ring = view.rows.find((r) => r.itemId === 'seal_of_the_nine_oaths');
+      const neck = view.rows.find((r) => r.itemId === 'yumis_keepsake_locket');
+      expect(ring?.affordable).toBe(true); // 12 >= 12
+      expect(neck?.affordable).toBe(false); // 12 < 16
+      expect(
+        view.rows
+          .filter((row) => row.itemId.startsWith('pattern_freehold_'))
+          .map((row) => row.itemId),
+      ).toEqual(
+        freeholdsEnabled
+          ? [
+              'pattern_freehold_clockwork_lamp',
+              'pattern_freehold_chart_easel',
+              'pattern_freehold_jewel_floor_lamp',
+            ]
+          : [],
+      );
+    },
+  );
 });
 
 describe('heroic mark reward persistence', () => {
