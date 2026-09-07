@@ -90,7 +90,8 @@ function validProgress(copy: SwapCopy): boolean {
   const { payload, rank } = copy;
   if (!Number.isInteger(rank) || rank < 0 || rank > PERFECTING_RANKS) return false;
   if (payload?.perfected !== true && rank >= PERFECTING_RANKS) return false;
-  if (!ITEMS[copy.itemId] || !recipeForResultItem(copy.itemId)) return false;
+  const def = ITEMS[copy.itemId];
+  if (!def || def.kind === 'furnishing' || !recipeForResultItem(copy.itemId)) return false;
   if (payload?.perfected && payload.perfecting !== undefined) return false;
   if (payload?.perfectingBonus !== undefined && !isValidPerfectingBonus(payload.perfectingBonus))
     return false;

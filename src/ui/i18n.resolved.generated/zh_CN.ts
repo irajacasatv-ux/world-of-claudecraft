@@ -3150,6 +3150,7 @@ export const zh_CN: EnTranslations = {
       "statEnchanted": "+{value} {stat}（附魔）",
       "enchantedFallback": "已附魔",
       "partyTradeWindow": "在接下来的{time}内，你可以将此物品交易给共同获得该掉落的玩家。装备后交易期限即告结束。",
+      "partyTradeWindowCustody": "You may trade this item to players who shared its drop for the next {time}.",
       "perfectedBadge": "臻至完美",
       "perfectingRank": "完美化：第{rank}阶，共{ranks}阶",
       "materialSourceGatherer": "{count} × 由{name}采集",

@@ -333,7 +333,7 @@ export function recalcPlayerStats(
     const itemId = equipment[slot];
     if (!itemId) continue;
     const item = ITEMS[itemId];
-    if (!item) continue;
+    if (!item || item.kind === 'furnishing') continue;
     // Gear above the wearer's level is inert: it stays equipped (still rendered
     // and occupying the slot, see the render mirrors below) but grants no stats,
     // armor, spell power, or set pieces until the character reaches its required
@@ -552,7 +552,10 @@ export function recalcPlayerStats(
   // damage (and drop the weapon-type flags, e.g. dagger, that gate abilities)
   // until the wearer is high enough level. The mainhand still stays worn (see
   // e.mainhandItemId below) so the weapon model keeps rendering.
-  const mainhand = equipment.mainhand ? ITEMS[equipment.mainhand] : undefined;
+  const mainhand =
+    equipment.mainhand && ITEMS[equipment.mainhand]?.kind !== 'furnishing'
+      ? ITEMS[equipment.mainhand]
+      : undefined;
   const weapon =
     mainhand?.weapon && meetsLevelRequirement(lvl, mainhand)
       ? mainhand.weapon
@@ -591,8 +594,7 @@ export function recalcPlayerStats(
   // over-level weapon's procs are inert too). Gated on the item actually being
   // a weapon, mirroring the e.weapon derivation above (so a non-weapon mainhand,
   // were one ever stored, never resolves to a held model).
-  e.mainhandItemId =
-    equipment.mainhand && ITEMS[equipment.mainhand]?.weapon ? equipment.mainhand : null;
+  e.mainhandItemId = equipment.mainhand && mainhand?.weapon ? equipment.mainhand : null;
   e.offhandItemId =
     equipment.offhand &&
     (ITEMS[equipment.offhand]?.kind === 'weapon' ||

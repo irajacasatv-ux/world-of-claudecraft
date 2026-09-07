@@ -3150,6 +3150,7 @@ export const nl_NL: EnTranslations = {
       "statEnchanted": "+{value} {stat} (Betoverd)",
       "enchantedFallback": "Betoverd",
       "partyTradeWindow": "Je kunt dit voorwerp de komende {time} ruilen met spelers die deze buit deelden. Uitrusten beëindigt het ruilvenster.",
+      "partyTradeWindowCustody": "You may trade this item to players who shared its drop for the next {time}.",
       "perfectedBadge": "Perfected",
       "perfectingRank": "Perfecting: rank {rank} of {ranks}",
       "materialSourceGatherer": "{count} × Collected by {name}",

@@ -222,6 +222,7 @@ const UI_PURE_CORES = [
   // its import bans are enforced here rather than only by the residual
   // no-host rule.
   'src/ui/item_instance_tooltip.ts',
+  'src/ui/item_instance_view.ts',
   'src/ui/worn_item_cell_view.ts',
   'src/ui/proc_overlay_view.ts',
   'src/ui/chat_ignore_core.ts',

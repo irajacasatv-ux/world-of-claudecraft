@@ -64,7 +64,12 @@ export function withPerfectingBonus(
   recipe: Pick<ProfessionRecipeRecord, 'level'>,
   payload: ItemInstancePayload,
 ): ItemInstancePayload {
-  if (!def || !crucibleCollectionForItem(def.id) || payload.perfectingBonus !== undefined)
+  if (
+    !def ||
+    def.kind === 'furnishing' ||
+    !crucibleCollectionForItem(def.id) ||
+    payload.perfectingBonus !== undefined
+  )
     return payload;
   return { ...payload, perfectingBonus: perfectedBonusStats(def, recipe) ?? {} };
 }

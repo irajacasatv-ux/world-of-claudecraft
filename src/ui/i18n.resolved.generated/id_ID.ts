@@ -3150,6 +3150,7 @@ export const id_ID: EnTranslations = {
       "statEnchanted": "+{value} {stat} (Dimantrai)",
       "enchantedFallback": "Dimantrai",
       "partyTradeWindow": "Kamu dapat memperdagangkan barang ini kepada pemain yang berbagi jarahannya selama {time} berikutnya. Memakainya mengakhiri jendela perdagangan.",
+      "partyTradeWindowCustody": "You may trade this item to players who shared its drop for the next {time}.",
       "perfectedBadge": "Perfected",
       "perfectingRank": "Perfecting: rank {rank} of {ranks}",
       "materialSourceGatherer": "{count} × Collected by {name}",

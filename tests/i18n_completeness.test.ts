@@ -105,6 +105,29 @@ function isPendingFurnishingKey(key: string, localePending: readonly string[]): 
   return FURNISHING_CONTRIBUTOR_KEYS.has(key) && localePending.includes(key);
 }
 
+// The generic custody line is separate from the locked housing inventory.
+// Only its exact key while release-pending may follow the English-only workflow.
+function isPendingCustodyKey(key: string, localePending: readonly string[]): boolean {
+  return key === 'hudChrome.itemTooltip.partyTradeWindowCustody' && localePending.includes(key);
+}
+
+describe('custody tooltip contributor translation boundary', () => {
+  it('permits only the declared custody key while that locale still records it pending', () => {
+    const key = 'hudChrome.itemTooltip.partyTradeWindowCustody';
+    expect(isPendingCustodyKey(key, [key])).toBe(true);
+    expect(isPendingCustodyKey(key, [])).toBe(false);
+    for (const unrelated of [
+      'hudChrome.itemTooltip.partyTradeWindow',
+      'hudChrome.itemTooltip.partyTradeWindowCustody:42',
+      'hudChrome.itemTooltip.unknown',
+      '',
+    ]) {
+      expect(isPendingCustodyKey(unrelated, [unrelated]), unrelated).toBe(false);
+    }
+    expect(isPendingFurnishingKey(key, [key])).toBe(false);
+  });
+});
+
 describe('furnishing contributor translation boundary', () => {
   it('accepts only declared pending leaves at contributor tier', () => {
     expect(
@@ -252,7 +275,8 @@ describe('i18n whole-catalog completeness', () => {
           flat[key] === enValue &&
           !BRAND_ALLOW.has(key) &&
           !isDevelopmentOnly(key) &&
-          !isPendingFurnishingKey(key, pending[lang] ?? [])
+          !isPendingFurnishingKey(key, pending[lang] ?? []) &&
+          !isPendingCustodyKey(key, pending[lang] ?? [])
         ) {
           leaks.push(`${lang} ${key}: "${enValue}"`);
         }

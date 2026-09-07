@@ -3150,6 +3150,7 @@ export const vi_VN: EnTranslations = {
       "statEnchanted": "+{value} {stat} (Đã Pháp Khắc)",
       "enchantedFallback": "Đã Pháp Khắc",
       "partyTradeWindow": "Bạn có thể giao dịch vật phẩm này cho những người chơi đã cùng nhận nó rơi ra, trong {time} tới. Trang bị nó sẽ kết thúc khoảng thời gian giao dịch này.",
+      "partyTradeWindowCustody": "You may trade this item to players who shared its drop for the next {time}.",
       "perfectedBadge": "Perfected",
       "perfectingRank": "Perfecting: rank {rank} of {ranks}",
       "materialSourceGatherer": "{count} × Collected by {name}",

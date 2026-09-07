@@ -40,7 +40,7 @@ import { formatMoney, type TranslationKey, t } from './i18n';
 import { QUALITY_COLOR } from './icons';
 import {
   cornerMarkHtml,
-  INSTANCE_GLYPH_ARIA_KEYS,
+  instanceGlyphAriaKey,
   lockMarkHtml,
   UNKNOWN_INSTANCE_GLYPH_ARIA_KEYS,
 } from './item_instance_glyph_mark';
@@ -337,7 +337,8 @@ export class VaultTab {
     // The fine rim (bag-rim-fine) joins per the release's all-surfaces
     // mark-family rule: a fine grade is marked in bags, bank, and guild bank,
     // so the vault row beside them marks it the same way.
-    const glyphKind = model.kind === 'special' ? bagInstanceGlyphKind(model.instance) : null;
+    const glyphKind =
+      model.kind === 'special' ? bagInstanceGlyphKind(model.instance, item?.kind) : null;
     const cornerMark = bagCornerMark(glyphKind, null, model.fine);
     const locked = model.kind === 'special' && isItemLocked(model.instance);
     row.className = `vault-row vault-row-${model.kind}${model.atCap ? ' at-cap' : ''}${model.overCap ? ' over-cap' : ''}${bagRimClasses(null, model.fine)}`;
@@ -370,7 +371,7 @@ export class VaultTab {
       : glyphKind
         ? t(
             model.known
-              ? INSTANCE_GLYPH_ARIA_KEYS[glyphKind]
+              ? instanceGlyphAriaKey(glyphKind, item?.kind)
               : UNKNOWN_INSTANCE_GLYPH_ARIA_KEYS[glyphKind],
             {
               ...(model.known ? { item: name } : { id: itemId }),

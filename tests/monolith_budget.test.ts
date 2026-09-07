@@ -448,7 +448,8 @@ const MONOLITHS: MonolithRow[] = [
     // LOWERED 18679 -> 18677 at the professions-merge-crucible integration.
     // Measured with wc -l < src/ui/hud.ts after biome. Exact count, zero slack.
     // Dependency integration composes both extractions; measured after merge.
-    ceiling: 18664,
+    // Furnishing card delegation saves another line; measured after formatting.
+    ceiling: 18663,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

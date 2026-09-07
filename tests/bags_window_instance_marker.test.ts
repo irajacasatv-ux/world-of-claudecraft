@@ -12,12 +12,14 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { InvSlot, QuestProgress } from '../src/sim/types';
+import { ITEMS } from '../src/sim/data';
+import type { InvSlot, ItemInstancePayload, QuestProgress } from '../src/sim/types';
 import { bagInstanceGlyphKind } from '../src/ui/bag_instance_glyph_view';
 import { BagsWindow, type BagsWindowDeps } from '../src/ui/bags_window';
 import { QUALITY_COLOR } from '../src/ui/icons';
 import { ItemDragState } from '../src/ui/item_drag_state';
 import type { IWorld } from '../src/world_api';
+import { FURNISHING } from './fixtures/furnishing_item';
 
 function fakeWorld(inventory: InvSlot[], questLog: Map<string, QuestProgress> = new Map()): IWorld {
   return {
@@ -100,6 +102,45 @@ function windowFor(
 }
 
 describe('bag_instance_glyph_view: kind priority', () => {
+  it.each([
+    { signed: true, locked: false },
+    { signed: true, locked: true },
+    { signed: false, locked: false },
+  ])(
+    'the bag furnishing cell keeps custody marks without power claims ($signed, $locked)',
+    ({ signed, locked }) => {
+      const previous = ITEMS[FURNISHING.id];
+      ITEMS[FURNISHING.id] = { ...FURNISHING, heroicOf: 'wyrmfall_pendant' };
+      try {
+        const copy: ItemInstancePayload = {
+          ...(signed ? { signer: 'Anna' } : {}),
+          locked,
+          name: 'Forbidden Crown',
+          perfected: true,
+          rolled: { quality: 'legendary', masterwork: true, stats: { str: 100 } },
+          enchant: 'enchant_chest_stamina',
+        };
+        const root = windowFor([{ itemId: FURNISHING.id, count: 1, instance: copy }]);
+        const cell = root.querySelector('button.bag-item');
+        expect(cell?.getAttribute('aria-label')).toBe(
+          `Steel Side Table, quantity 1${locked ? ', locked' : signed ? ', maker-marked copy' : ''}`,
+        );
+        expect(cell?.querySelector(signed ? '.bi-glyph-signed' : '.bi-instance')).not.toBeNull();
+        expect(cell?.querySelector('.bi-masterwork-seal, .bi-glyph-enchanted')).toBeNull();
+        expect(iconCalls).toEqual([{ id: FURNISHING.id, quality: 'rare' }]);
+        const gear = windowFor([{ itemId: 'worn_sword', count: 1, instance: copy }]);
+        expect(gear.querySelector('.bi-masterwork-seal')).not.toBeNull();
+        expect(gear.querySelector('button.bag-item')?.getAttribute('aria-label')).toContain(
+          'Forbidden Crown',
+        );
+        expect(iconCalls).toEqual([{ id: 'worn_sword', quality: 'legendary' }]);
+      } finally {
+        if (previous === undefined) delete ITEMS[FURNISHING.id];
+        else ITEMS[FURNISHING.id] = previous;
+      }
+    },
+  );
+
   it('resolves each single marker to its own kind', () => {
     expect(bagInstanceGlyphKind({ rolled: { masterwork: true, stats: { str: 1 } } })).toBe(
       'masterwork',

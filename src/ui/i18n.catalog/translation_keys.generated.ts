@@ -10154,6 +10154,7 @@ export type TranslationKeyFlat =
   | 'hudChrome.itemTooltip.materialSourceUnrecorded'
   | 'hudChrome.itemTooltip.materialSourceUnrecordedSigned'
   | 'hudChrome.itemTooltip.partyTradeWindow'
+  | 'hudChrome.itemTooltip.partyTradeWindowCustody'
   | 'hudChrome.itemTooltip.perfectedBadge'
   | 'hudChrome.itemTooltip.perfectingRank'
   | 'hudChrome.itemTooltip.requiresLevel'

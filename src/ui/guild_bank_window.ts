@@ -59,7 +59,7 @@ import {
 } from './guild_bank_view';
 import { formatMoney, t } from './i18n';
 import { QUALITY_COLOR } from './icons';
-import { cornerMarkHtml, INSTANCE_GLYPH_ARIA_KEYS, lockMarkHtml } from './item_instance_glyph_mark';
+import { cornerMarkHtml, instanceGlyphAriaKey, lockMarkHtml } from './item_instance_glyph_mark';
 import { knownItemDef } from './known_item';
 import { guildMaterialWithdrawSelection } from './material_source_storage_actions';
 import {
@@ -562,7 +562,7 @@ export class GuildBankTab {
     // enter the guild bank, so the quest arm is always null. The unknown-id
     // arm below shares this mint: a stale or removed id is never in the local
     // grade table, so fineMark is false there and only the glyph can paint.
-    const glyphKind = bagInstanceGlyphKind(slot.instance);
+    const glyphKind = bagInstanceGlyphKind(slot.instance, item?.kind);
     const fineMark = bagFineMark(slot.itemId);
     const cornerMark = bagCornerMark(glyphKind, null, fineMark);
     const instanceMark = cornerMarkHtml(cornerMark);
@@ -645,7 +645,7 @@ export class GuildBankTab {
             locked
               ? 'hudChrome.bags.itemAriaLocked'
               : glyphKind
-                ? INSTANCE_GLYPH_ARIA_KEYS[glyphKind]
+                ? instanceGlyphAriaKey(glyphKind, item?.kind)
                 : 'itemUi.bags.itemAria',
             {
               item: itemName,

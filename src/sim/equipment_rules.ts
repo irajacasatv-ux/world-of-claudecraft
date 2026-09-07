@@ -84,7 +84,7 @@ export function slotAcceptsItem(item: ItemDef, slot: EquipSlot): boolean {
   return item.slot === slot;
 }
 
-// Every legendary item is unique-equipped: a character wears at most one copy
+// Every legendary equipment item is unique-equipped: a character wears at most one copy
 // of a given legendary at a time. Derived from quality rather than a per-item
 // flag so a new legendary can never forget to opt in. Since 2026-08-27
 // (phase 13) the instance widening is ADD-ONLY and PROMOTION-SCOPED, not a
@@ -106,6 +106,7 @@ export function slotAcceptsItem(item: ItemDef, slot: EquipSlot): boolean {
 // disagreeing about a legacy copy is a decision, not drift; do not "fix"
 // either side to match the other.
 export function isUniqueEquipped(item: ItemDef, instance?: ItemInstancePayload): boolean {
+  if (item.kind === 'furnishing') return false;
   if (item.quality === 'legendary') return true;
   // Crafted set membership first shipped with Crucible collections, after
   // legacy quality rolls retired. Their only legendary writer is promotion,
@@ -209,7 +210,7 @@ export function equipCandidateIndex(
 // Exported since phase 13: the promotion mints legendary-ROLLED copies, so
 // presentation consumers (the instance tooltip) read the same one rule.
 export function effectiveQuality(
-  def: ItemDef,
+  def: { quality?: string },
   instance: ItemInstancePayload | undefined,
 ): string | undefined {
   return instance?.rolled?.quality ?? def.quality;
@@ -300,14 +301,14 @@ export function masterwroughtConflictSlot(
   instances?: Partial<Record<EquipSlot, ItemInstancePayload>>,
   incomingQuality?: string,
 ): MasterwroughtConflict | null {
-  if (!item.masterwrought) return null;
+  if (item.kind === 'furnishing' || !item.masterwrought) return null;
   const worn: { slot: EquipSlot; legendary: boolean }[] = [];
   for (const slot of ALL_EQUIP_SLOTS) {
     if (ignoreSlots.includes(slot)) continue;
     const wornId = equipment[slot];
     if (!wornId) continue;
     const def = lookup(wornId);
-    if (!def?.masterwrought) continue;
+    if (!def || def.kind === 'furnishing' || !def.masterwrought) continue;
     worn.push({ slot, legendary: effectiveQuality(def, instances?.[slot]) === 'legendary' });
   }
   if (worn.length >= MASTERWROUGHT_EQUIP_CAP) return { slot: worn[0].slot, reason: 'cap' };

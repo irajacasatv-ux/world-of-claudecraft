@@ -9,9 +9,11 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { ITEMS } from '../src/sim/data';
 import type { InvSlot, ItemInstancePayload } from '../src/sim/types';
 import { BankWindow, type BankWindowDeps } from '../src/ui/bank_window';
 import type { BankInfo, IWorld } from '../src/world_api';
+import { FURNISHING } from './fixtures/furnishing_item';
 
 function bankInfo(slots: InvSlot[], capacity = 12): BankInfo {
   return {
@@ -84,6 +86,40 @@ function slot(itemId: string, instance?: ItemInstancePayload, count = 1): InvSlo
 }
 
 describe('bank grid instanced-slot marker', () => {
+  it.each([false, true])(
+    'a banked furnishing keeps its authored identity and truthful copy glyph (signed %s)',
+    (signed) => {
+      const previous = ITEMS[FURNISHING.id];
+      ITEMS[FURNISHING.id] = { ...FURNISHING, heroicOf: 'wyrmfall_pendant' };
+      try {
+        const copy: ItemInstancePayload = {
+          ...(signed ? { signer: 'Anna' } : {}),
+          name: 'Forbidden Crown',
+          perfected: true,
+          rolled: { quality: 'legendary', masterwork: true, stats: { str: 100 } },
+          enchant: 'enchant_chest_stamina',
+        };
+        const root = windowFor([slot(FURNISHING.id, copy)]);
+        const cell = root.querySelector('button.bank-item');
+        expect(cell?.getAttribute('aria-label')).toBe(
+          `Steel Side Table, quantity 1${signed ? ', maker-marked copy' : ''}`,
+        );
+        expect(cell?.querySelector(signed ? '.bi-glyph-signed' : '.bi-instance')).not.toBeNull();
+        expect(cell?.querySelector('.bi-masterwork-seal, .bi-glyph-enchanted')).toBeNull();
+        expect(iconCalls).toEqual([{ id: FURNISHING.id, quality: 'rare' }]);
+        const gear = windowFor([slot('worn_sword', copy)]);
+        expect(gear.querySelector('.bi-masterwork-seal')).not.toBeNull();
+        expect(gear.querySelector('button.bank-item')?.getAttribute('aria-label')).toContain(
+          'Forbidden Crown',
+        );
+        expect(iconCalls).toEqual([{ id: 'worn_sword', quality: 'legendary' }]);
+      } finally {
+        if (previous === undefined) delete ITEMS[FURNISHING.id];
+        else ITEMS[FURNISHING.id] = previous;
+      }
+    },
+  );
+
   it('a promoted copy keeps its chosen name in the aria and asks the icon for its legendary rim', () => {
     // The all-surfaces rule on the personal bank, both halves: the cell
     // authority (worn_item_cell_view.ts) hands the grid the chosen name for
@@ -300,11 +336,10 @@ describe('bank-item instance mark stylesheet contract', () => {
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\/\/[^\n]*/g, '');
     expect(painter).toContain('cornerMarkHtml(cornerMark)');
-    expect(painter).toContain('bagInstanceGlyphKind(slot.instance)');
-    // The KNOWN key family must be used on its own: the lookbehind skips the
-    // UNKNOWN_ sibling, whose name contains this one as a substring (a bare
-    // contain could never fail while the import line exists).
-    expect(painter).toMatch(/(?<!UNKNOWN_)INSTANCE_GLYPH_ARIA_KEYS\[glyphKind\]/);
+    expect(painter).toContain('bagInstanceGlyphKind(slot.instance, item?.kind)');
+    // Known definitions resolve kind-aware wording; unknown ids keep their
+    // explicit unknown-item family without guessing a kind.
+    expect(painter).toContain('instanceGlyphAriaKey(glyphKind, item?.kind)');
     expect(painter).toContain('UNKNOWN_INSTANCE_GLYPH_ARIA_KEYS[glyphKind]');
     // The fine mark composes through the same pure cores and shared mint bags
     // use: id-based decision, corner priority from bag_corner_mark_view, rim

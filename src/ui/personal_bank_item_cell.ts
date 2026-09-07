@@ -14,7 +14,7 @@ import { t } from './i18n';
 import { QUALITY_COLOR } from './icons';
 import {
   cornerMarkHtml,
-  INSTANCE_GLYPH_ARIA_KEYS,
+  instanceGlyphAriaKey,
   lockMarkHtml,
   UNKNOWN_INSTANCE_GLYPH_ARIA_KEYS,
 } from './item_instance_glyph_mark';
@@ -62,7 +62,7 @@ export function buildPersonalBankItemCell(
     '--bank-slot-quality',
     QUALITY_COLOR[slot.qualityKey] ?? QUALITY_DEFAULT_COLOR,
   );
-  const glyphKind = bagInstanceGlyphKind(slot.instance);
+  const glyphKind = bagInstanceGlyphKind(slot.instance, item?.kind);
   const cornerMark = bagCornerMark(glyphKind, null, fineMark);
   const locked = isItemLocked(slot.instance);
   const parts = item ? wornItemCellParts(item, slot.instance) : null;
@@ -74,7 +74,7 @@ export function buildPersonalBankItemCell(
           locked
             ? 'hudChrome.bags.itemAriaLocked'
             : glyphKind
-              ? INSTANCE_GLYPH_ARIA_KEYS[glyphKind]
+              ? instanceGlyphAriaKey(glyphKind, item?.kind)
               : 'itemUi.bags.itemAria',
           { item: parts.name, count: countLabel },
         )

@@ -3150,6 +3150,7 @@ export const ko_KR: EnTranslations = {
       "statEnchanted": "+{value} {stat} (마법부여)",
       "enchantedFallback": "마법부여됨",
       "partyTradeWindow": "앞으로 {time} 동안 이 아이템을 같은 전리품을 함께 획득한 플레이어와 거래할 수 있습니다. 착용하면 거래 기간이 끝납니다.",
+      "partyTradeWindowCustody": "You may trade this item to players who shared its drop for the next {time}.",
       "perfectedBadge": "완전해짐",
       "perfectingRank": "완전화: {ranks}단계 중 {rank}단계",
       "materialSourceGatherer": "{count} × {name} 채집",

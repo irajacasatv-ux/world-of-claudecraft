@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/sim/data';
 import type { CoreStats, ItemDef } from '../src/sim/types';
 import { itemStatDeltas } from '../src/ui/item_compare';
+import { FURNISHING } from './fixtures/furnishing_item';
 
 function armor(
   id: string,
@@ -39,6 +40,45 @@ function weapon(id: string, min: number, max: number, speed: number): ItemDef {
 }
 
 describe('itemStatDeltas', () => {
+  it('treats restored furnishing copies as zero equipped power and refuses them as candidates', () => {
+    const candidate = armor('candidate', { str: 10 });
+    const copy = { rolled: { stats: { str: 100 } } };
+    expect(itemStatDeltas(candidate, FURNISHING, undefined, copy)).toEqual([
+      { stat: 'str', delta: 10, decimals: 0 },
+    ]);
+    expect(itemStatDeltas(FURNISHING, candidate, copy)).toEqual([]);
+    expect(itemStatDeltas(candidate, armor('worn', {}), undefined, copy)).toEqual([
+      { stat: 'str', delta: -90, decimals: 0 },
+    ]);
+  });
+
+  it('ignores every malformed furnishing combat field on the equipped side', () => {
+    const candidate = weapon('candidate', 14, 28, 2);
+    const malformed = {
+      ...FURNISHING,
+      slot: 'mainhand',
+      weapon: { min: 140, max: 280, speed: 2 },
+      stats: { str: 100, armor: 200 },
+      spellPower: 300,
+      healPower: 400,
+      pvpOffenseRating: 500,
+      pvpDefenseRating: 500,
+      hitRating: 600,
+      critRating: 700,
+      hasteRating: 800,
+    } as unknown as ItemDef;
+    const copy = { rolled: { stats: { str: 100 } } };
+    const before = structuredClone({ malformed, copy });
+    expect(itemStatDeltas(candidate, malformed, undefined, copy)).toEqual([
+      { stat: 'dps', delta: 10.5, decimals: 1 },
+    ]);
+    expect(itemStatDeltas(malformed, candidate, copy)).toEqual([]);
+    expect(itemStatDeltas(candidate, weapon('worn', 140, 280, 2))).toEqual([
+      { stat: 'dps', delta: -94.5, decimals: 1 },
+    ]);
+    expect({ malformed, copy }).toEqual(before);
+  });
+
   it('reports positive deltas for an upgrade and negative for a downgrade', () => {
     const candidate = armor('better', { armor: 50, str: 5, sta: 3 });
     const equipped = armor('worse', { armor: 40, str: 2, sta: 8 });

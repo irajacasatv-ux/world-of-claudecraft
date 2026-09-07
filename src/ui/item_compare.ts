@@ -37,10 +37,11 @@ function weaponDps(w: ItemDef['weapon']): number {
 // bake (masterwork, enchant, the Perfected R5 delta) moves the delta the same
 // way it moves the worn numbers.
 function effectiveStat(
-  def: ItemDef,
+  def: ItemDef | undefined,
   instance: ItemInstancePayload | undefined,
   stat: keyof CoreStats,
 ): number {
+  if (!def) return 0;
   const rolled = activeItemInstanceStats(instance)?.[stat];
   return (def.stats?.[stat] ?? 0) + (Number.isFinite(rolled) ? (rolled as number) : 0);
 }
@@ -59,20 +60,22 @@ export function itemStatDeltas(
   itemInstance?: ItemInstancePayload,
   equippedInstance?: ItemInstancePayload,
 ): StatDelta[] {
+  if (item.kind === 'furnishing') return [];
+  const equippedPower = equipped.kind === 'furnishing' ? undefined : equipped;
   const out: StatDelta[] = [];
-  const dpsDelta = weaponDps(item.weapon) - weaponDps(equipped.weapon);
+  const dpsDelta = weaponDps(item.weapon) - weaponDps(equippedPower?.weapon);
   if (Math.abs(dpsDelta) >= 0.05) out.push({ stat: 'dps', delta: dpsDelta, decimals: 1 });
 
   const stats: Array<keyof CoreStats & CompareStat> = ['armor', 'str', 'agi', 'sta', 'int', 'spi'];
   for (const k of stats) {
     const delta =
-      effectiveStat(item, itemInstance, k) - effectiveStat(equipped, equippedInstance, k);
+      effectiveStat(item, itemInstance, k) - effectiveStat(equippedPower, equippedInstance, k);
     if (Math.abs(delta) >= 0.5) out.push({ stat: k, delta, decimals: 0 });
   }
 
-  const warfareRating = (def: ItemDef): number =>
-    Math.min(def.pvpOffenseRating ?? 0, def.pvpDefenseRating ?? 0);
-  const warfareDelta = warfareRating(item) - warfareRating(equipped);
+  const warfareRating = (def: ItemDef | undefined): number =>
+    Math.min(def?.pvpOffenseRating ?? 0, def?.pvpDefenseRating ?? 0);
+  const warfareDelta = warfareRating(item) - warfareRating(equippedPower);
   if (Math.abs(warfareDelta) >= 0.5) {
     out.push({ stat: 'warfare', delta: warfareDelta, decimals: 0 });
   }
@@ -82,12 +85,12 @@ export function itemStatDeltas(
   // compare rows (the old "no content item carries it" carve-out is retired).
   const affixes = ['spellPower', 'healPower'] as const;
   for (const k of affixes) {
-    const delta = (item[k] ?? 0) - (equipped[k] ?? 0);
+    const delta = (item[k] ?? 0) - (equippedPower?.[k] ?? 0);
     if (Math.abs(delta) >= 0.5) out.push({ stat: k, delta, decimals: 0 });
   }
   const ratings = ['hitRating', 'critRating', 'hasteRating'] as const;
   for (const k of ratings) {
-    const delta = (item[k] ?? 0) - (equipped[k] ?? 0);
+    const delta = (item[k] ?? 0) - (equippedPower?.[k] ?? 0);
     if (Math.abs(delta) >= 0.5) out.push({ stat: k, delta, decimals: 0 });
   }
   return out;

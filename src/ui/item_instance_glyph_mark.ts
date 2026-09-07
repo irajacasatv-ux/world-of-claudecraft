@@ -5,7 +5,7 @@
 // the thin markup so every surface paints the same masterwork seal,
 // enchanted/signed/bound glyph, generic wedge, or fine-grade seal. Marks are
 // aria-hidden: the cell's accessible name carries the per-copy fact via
-// INSTANCE_GLYPH_ARIA_KEYS (or the unknown-id siblings); the fine grade needs
+// instanceGlyphAriaKey (or the unknown-id siblings); the fine grade needs
 // no aria arm because the item NAME carries the grade word in every locale.
 //
 // The mark FAMILY is all-surfaces by rule: a new mark (grade, purpose, or
@@ -42,6 +42,15 @@ export const INSTANCE_GLYPH_ARIA_KEYS: Readonly<
   bound: 'hudChrome.bags.itemAriaBound',
   generic: 'hudChrome.bags.itemAriaInstanced',
 };
+
+/** A generic furnishing copy has no maker or power claim to announce. */
+export function instanceGlyphAriaKey(
+  glyph: NonNullable<BagInstanceGlyphKind>,
+  kind?: string,
+): TranslationKey {
+  if (kind === 'furnishing' && glyph === 'generic') return 'itemUi.bags.itemAria';
+  return INSTANCE_GLYPH_ARIA_KEYS[glyph];
+}
 
 /** Unknown-id siblings: keep the UNKNOWN signal beside the per-copy flag. */
 export const UNKNOWN_INSTANCE_GLYPH_ARIA_KEYS: Readonly<

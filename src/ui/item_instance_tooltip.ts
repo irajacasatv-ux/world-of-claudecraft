@@ -23,6 +23,7 @@ import { esc } from './esc';
 import { MASTERWORK_SEAL_IMAGE_URL } from './hud/professions/profession_art';
 import { formatMoney, formatNumber, type TranslationKey, t } from './i18n';
 import { QUALITY_COLOR } from './icons';
+import { itemPresentationInstance } from './item_instance_view';
 import { ITEM_QUALITY_LABEL_KEYS } from './item_kind_label';
 import { itemNameColor } from './item_name_color';
 import {
@@ -97,11 +98,11 @@ export function wornTooltipInstance(
  *  promotion-scoped and does not count it, for migration safety. The
  *  disagreement is a decision, not drift; the twin comment lives on
  *  isUniqueEquipped. */
-export function tooltipEffectiveQuality(
-  def: ItemDef,
+export function tooltipEffectiveQuality<Quality extends string>(
+  def: { kind?: string; quality?: Quality },
   instance: ItemInstancePayload | undefined,
-): ItemDef['quality'] {
-  const quality = effectiveQuality(def, instance);
+): Quality | ItemDef['quality'] {
+  const quality = effectiveQuality(def, itemPresentationInstance(def.kind, instance));
   return quality !== undefined && Object.hasOwn(ITEM_QUALITY_LABEL_KEYS, quality)
     ? (quality as NonNullable<ItemDef['quality']>)
     : def.quality;
@@ -120,6 +121,7 @@ export function instanceTitleHtml(
   instance: ItemInstancePayload | undefined,
   defName: string,
 ): string {
+  instance = itemPresentationInstance(def.kind, instance);
   const color = itemNameColor({ kind: def.kind, quality: tooltipEffectiveQuality(def, instance) });
   if (instance?.name === undefined) {
     return `<div class="tt-title" style="color:${color}">${esc(defName)}</div>`;
@@ -157,7 +159,8 @@ export function instanceBindingLines(
 /** The bind-on-pickup party trade window line (src/sim/loot/bop_trade_window.ts),
  *  rendered right under the def's Soulbound line it qualifies: while the
  *  copy's window is unexpired, the piece can still be traded to the players
- *  who shared its drop, and equipping it ends that early. `msRemainingFor` is
+ *  who shared its drop. Equipping gear ends its window early; a furnishing
+ *  states only the custody deadline because it cannot equip. `msRemainingFor` is
  *  IWorld.partyTradeMsRemaining, injected because only the world knows which
  *  clock `untilMs` was stamped from (tick-derived offline, epoch online);
  *  this builder stays a Node-testable pure string function. Renders nothing
@@ -167,13 +170,19 @@ export function instanceBindingLines(
 export function instancePartyTradeLine(
   instance: ItemInstancePayload | undefined,
   msRemainingFor: (untilMs: number) => number,
+  kind?: ItemDef['kind'],
 ): string {
   const untilMs = instance?.partyTrade?.untilMs;
   if (untilMs === undefined || !Number.isFinite(untilMs)) return '';
   const remainingMs = msRemainingFor(untilMs);
   if (remainingMs <= 0) return '';
   return `<div class="tt-sub" style="color:var(--gold)">${esc(
-    t('hudChrome.itemTooltip.partyTradeWindow', { time: durationText(remainingMs / 1000) }),
+    t(
+      kind === 'furnishing'
+        ? 'hudChrome.itemTooltip.partyTradeWindowCustody'
+        : 'hudChrome.itemTooltip.partyTradeWindow',
+      { time: durationText(remainingMs / 1000) },
+    ),
   )}</div>`;
 }
 

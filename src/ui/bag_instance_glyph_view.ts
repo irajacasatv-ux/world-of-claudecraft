@@ -23,6 +23,7 @@
 
 import { isEnchantedInstance } from '../sim/professions/enchanting';
 import type { ItemInstancePayload } from '../sim/types';
+import { itemPresentationInstance } from './item_instance_view';
 
 export type BagInstanceGlyphKind =
   | 'masterwork'
@@ -33,8 +34,13 @@ export type BagInstanceGlyphKind =
   | null;
 
 /** The single glyph kind for one bag stack's payload, or null for a plain
- *  fungible stack (no payload, no corner glyph). */
-export function bagInstanceGlyphKind(instance?: ItemInstancePayload): BagInstanceGlyphKind {
+ *  fungible stack (no payload, no corner glyph). Furnishing copy facts pass
+ *  through the shared presentation projection before priority is resolved. */
+export function bagInstanceGlyphKind(
+  instance?: ItemInstancePayload,
+  kind?: string,
+): BagInstanceGlyphKind {
+  instance = itemPresentationInstance(kind, instance);
   if (!instance) return null;
   if (instance.rolled?.masterwork === true) return 'masterwork';
   if (isEnchantedInstance(instance)) return 'enchanted';

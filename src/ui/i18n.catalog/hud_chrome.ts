@@ -4294,6 +4294,8 @@ export const hudChromeStrings = {
     // tooltip-writing rule: it is the one trigger a player can regret.
     partyTradeWindow:
       'You may trade this item to players who shared its drop for the next {time}. Equipping it ends the trade window.',
+    partyTradeWindowCustody:
+      'You may trade this item to players who shared its drop for the next {time}.',
     // Phase 14, the Perfecting badges (item_instance_tooltip.ts
     // instanceBadgeLines): the Perfected stamp as its own gold line (the
     // owner's paperdoll and bag surfaces; the peer inspect card never

@@ -4,13 +4,49 @@
 // per dimension with a disagreeing def so each field is decisive on its own.
 import { describe, expect, it } from 'vitest';
 import { ITEMS } from '../src/sim/data';
+import type { ItemInstancePayload } from '../src/sim/types';
+import { bagQualityKey } from '../src/ui/bags_view';
 import { itemDisplayName } from '../src/ui/entity_i18n';
 import { QUALITY_COLOR } from '../src/ui/icons';
 import { wornItemCellParts } from '../src/ui/worn_item_cell_view';
+import { FURNISHING } from './fixtures/furnishing_item';
 
 const APEX_NECK = 'wyrmfall_pendant'; // an epic apex def
 
 describe('wornItemCellParts', () => {
+  it('furnishing identity and rim use authored fields while promoted gear retains its copy fields', () => {
+    const previous = ITEMS[FURNISHING.id];
+    ITEMS[FURNISHING.id] = FURNISHING;
+    try {
+      const copy: ItemInstancePayload = {
+        name: 'Forbidden Crown',
+        rolled: { quality: 'legendary', masterwork: true, stats: { str: 100 } },
+        perfected: true,
+        signer: 'Anna',
+        locked: true,
+      };
+      const before = structuredClone(copy);
+      const aliased = { ...FURNISHING, heroicOf: APEX_NECK };
+      expect(itemDisplayName(aliased)).toBe('Steel Side Table');
+      expect(wornItemCellParts(aliased, copy)).toEqual({
+        name: 'Steel Side Table',
+        quality: 'rare',
+        color: '#0070dd',
+      });
+      expect(bagQualityKey(FURNISHING, copy)).toBe('rare');
+      expect(wornItemCellParts(ITEMS[APEX_NECK], copy)).toEqual({
+        name: 'Forbidden Crown',
+        quality: 'legendary',
+        color: '#ff8000',
+      });
+      expect(bagQualityKey(ITEMS[APEX_NECK], copy)).toBe('legendary');
+      expect(copy).toEqual(before);
+    } finally {
+      if (previous === undefined) delete ITEMS[FURNISHING.id];
+      else ITEMS[FURNISHING.id] = previous;
+    }
+  });
+
   it('a bare copy reads the def: its name, its quality, its color', () => {
     const def = ITEMS[APEX_NECK];
     expect(def.quality).toBe('epic');

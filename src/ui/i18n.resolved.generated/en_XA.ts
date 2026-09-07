@@ -3150,6 +3150,7 @@ export const en_XA: EnTranslations = {
       "statEnchanted": "[+{value} {stat} (Éñçĥáñţéð)]",
       "enchantedFallback": "[Éñçĥáñţéð]",
       "partyTradeWindow": "[Ýóú ɱáý ţŕáðé ţĥíš íţéɱ ţó þļáýéŕš ŵĥó šĥáŕéð íţš ðŕóþ ƒóŕ ţĥé ñéẋţ {time}. Éɋúíþþíñĝ íţ éñðš ţĥé ţŕáðé ŵíñðóŵ.]",
+      "partyTradeWindowCustody": "[Ýóú ɱáý ţŕáðé ţĥíš íţéɱ ţó þļáýéŕš ŵĥó šĥáŕéð íţš ðŕóþ ƒóŕ ţĥé ñéẋţ {time}.]",
       "perfectedBadge": "[Þéŕƒéçţéð]",
       "perfectingRank": "[Þéŕƒéçţíñĝ: ŕáñķ {rank} óƒ {ranks}]",
       "materialSourceGatherer": "[{count} × Çóļļéçţéð ƀý {name}]",

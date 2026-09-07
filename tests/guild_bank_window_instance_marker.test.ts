@@ -17,6 +17,7 @@ import { ITEMS } from '../src/sim/data';
 import type { InvSlot, ItemInstancePayload } from '../src/sim/types';
 import { BankWindow, type BankWindowDeps } from '../src/ui/bank_window';
 import type { BankInfo, GuildBankInfo, GuildBankLogView, IWorld } from '../src/world_api';
+import { FURNISHING } from './fixtures/furnishing_item';
 
 // Real merged-table ids, derived so a content rename cannot rot this suite
 // into the unknown-id path: a plain tradeable def and a soulbound def (the
@@ -121,6 +122,38 @@ beforeEach(() => {
 });
 
 describe('guild bank grid instanced-slot marker', () => {
+  it.each([false, true])(
+    'a guild-banked furnishing keeps its authored identity and truthful copy glyph (signed %s)',
+    (signed) => {
+      const previous = ITEMS[FURNISHING.id];
+      ITEMS[FURNISHING.id] = { ...FURNISHING, heroicOf: 'wyrmfall_pendant' };
+      try {
+        const copy: ItemInstancePayload = {
+          ...(signed ? { signer: 'Anna' } : {}),
+          name: 'Forbidden Crown',
+          perfected: true,
+          rolled: { quality: 'legendary', masterwork: true, stats: { str: 100 } },
+          enchant: 'enchant_chest_stamina',
+        };
+        const root = harness([{ itemId: FURNISHING.id, count: 1, instance: copy }]);
+        const cell = cellsOf(root)[0];
+        expect(cell?.getAttribute('aria-label')).toBe(
+          `Steel Side Table, quantity 1${signed ? ', maker-marked copy' : ''}`,
+        );
+        expect(cell?.querySelector(signed ? '.bi-glyph-signed' : '.bi-instance')).not.toBeNull();
+        expect(cell?.querySelector('.bi-masterwork-seal, .bi-glyph-enchanted')).toBeNull();
+        expect(iconCalls).toEqual([{ id: FURNISHING.id, quality: 'rare' }]);
+        const gear = harness([{ itemId: 'worn_sword', count: 1, instance: copy }]);
+        expect(gear.querySelector('.bi-masterwork-seal')).not.toBeNull();
+        expect(cellsOf(gear)[0].getAttribute('aria-label')).toContain('Forbidden Crown');
+        expect(iconCalls).toEqual([{ id: 'worn_sword', quality: 'legendary' }]);
+      } finally {
+        if (previous === undefined) delete ITEMS[FURNISHING.id];
+        else ITEMS[FURNISHING.id] = previous;
+      }
+    },
+  );
+
   it('a named legendary-rolled copy announces its chosen name and asks for its rim', () => {
     // No promoted copy reaches the guild grid today (bound copies are refused
     // at the anonymous pipe), but the cell describes its copy through the same
@@ -252,8 +285,8 @@ describe('guild bank painter mark contract (source pins)', () => {
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\/\/[^\n]*/g, '');
     expect(painter).toContain('cornerMarkHtml(cornerMark)');
-    expect(painter).toContain('bagInstanceGlyphKind(slot.instance)');
-    expect(painter).toMatch(/(?<!UNKNOWN_)INSTANCE_GLYPH_ARIA_KEYS\[glyphKind\]/);
+    expect(painter).toContain('bagInstanceGlyphKind(slot.instance, item?.kind)');
+    expect(painter).toContain('instanceGlyphAriaKey(glyphKind, item?.kind)');
     // The guild pane never uses the UNKNOWN_ key family (see the aria case
     // above); a switch to it must be a deliberate edit, not drift.
     expect(painter).not.toContain('UNKNOWN_INSTANCE_GLYPH_ARIA_KEYS');

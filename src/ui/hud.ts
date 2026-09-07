@@ -464,7 +464,7 @@ import { LockpickController } from './hud/delve/lockpick_controller';
 import { RiteController } from './hud/delve/rite_controller';
 import { FiestaController } from './hud/fiesta/fiesta_controller';
 import { GuildBoardWindow } from './hud/guild_board';
-import { furnishingTooltipLines } from './hud/housing';
+import { furnishingItemTooltip } from './hud/housing';
 import { LootRollController } from './hud/loot/loot_roll_controller';
 import { lootSettingsView } from './hud/loot/loot_settings_view';
 import { renderLootSettingsWindow } from './hud/loot/loot_settings_window';
@@ -6441,6 +6441,7 @@ export class Hud {
     instance?: ItemInstancePayload,
     materialSources?: MaterialComposition,
   ): string {
+    if (item.kind === 'furnishing') return furnishingItemTooltip(item, instance, this.sim);
     // Quest items are a purpose class, not a quality tier: title and kind use
     // quest gold, and the kind line is "Quest Item" alone (never "Common Quest
     // Item"). Story lines (related quest, progress, rules, orphaned) come from
@@ -6695,7 +6696,6 @@ export class Hud {
     if (item.kind === 'recipe') {
       html += recipePatternTooltipLines(item, this.sim.craftingIdentity);
     }
-    html += furnishingTooltipLines(item, instance);
     html += feastTooltipLines(item);
     // Quest story block (related quest, progress, rules, orphaned). Replaces the
     // old plain "Quest Item" desc that doubled the kind line.
@@ -6716,8 +6716,7 @@ export class Hud {
     html += itemRequiredLevelLine(item, this.sim.player.level);
     html += this.itemProcBlock(item);
     html += this.itemSetBlock(item);
-    if (item.kind !== 'furnishing')
-      html += materialMakersMarkLines(item, instance, materialSources);
+    html += materialMakersMarkLines(item, instance, materialSources);
     // Stackables state their per-slot cap (sim/bags.ts stackSizeOf), so a
     // player holding a single potion learns more copies will share the slot;
     // 1-per-slot kinds, mounts, and charge-bearing payloads render nothing.
@@ -6847,7 +6846,7 @@ export class Hud {
     const gear: GearStatSource[] = [];
     for (const id of Object.values(sim.equipment)) {
       const item = id ? ITEMS[id] : null;
-      if (!item || (!item.stats && !item.spellPower)) continue;
+      if (!item || !isItemLevelEligible(item) || (!item.stats && !item.spellPower)) continue;
       gear.push({
         name: itemDisplayName(item),
         stats: item.stats,
@@ -6874,7 +6873,7 @@ export class Hud {
       hasteRating: p.hasteRating,
       hitRating: p.hitRating,
       parryChance: sim.cfg.playerClass === 'warrior' ? warriorParryChance(p.stats.str) : 0,
-      dps: weaponDps(wpn?.weapon, p.attackPower),
+      dps: weaponDps(wpn?.kind === 'weapon' ? wpn.weapon : undefined, p.attackPower),
       gear,
       buffs,
     });

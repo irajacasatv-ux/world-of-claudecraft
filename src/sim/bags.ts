@@ -80,16 +80,8 @@ export const BAG_SOCKETS = 4;
 const DEFAULT_STACK = 20;
 
 /** Kinds that never stack: each copy occupies its own slot, classic style.
- *  Recipe patterns and furnishings join gear here. */
-const UNSTACKED_KINDS = new Set([
-  'weapon',
-  'armor',
-  'held_offhand',
-  'bag',
-  'tool',
-  'recipe',
-  'furnishing',
-]);
+ *  Recipe patterns join gear here; furnishings take the unconditional head guard. */
+const UNSTACKED_KINDS = new Set(['weapon', 'armor', 'held_offhand', 'bag', 'tool', 'recipe']);
 
 /** Max copies per inventory slot. Furnishings always use one slot per copy.
  *  Otherwise explicit `stackSize` wins, then the unstacked-kind default. */

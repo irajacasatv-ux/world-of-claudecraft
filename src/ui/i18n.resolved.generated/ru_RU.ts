@@ -3150,6 +3150,7 @@ export const ru_RU: EnTranslations = {
       "statEnchanted": "+{value} {stat} (зачаровано)",
       "enchantedFallback": "Зачаровано",
       "partyTradeWindow": "Вы можете передать этот предмет игрокам, разделившим эту добычу, ещё в течение {time}. Надев предмет, вы завершите период обмена.",
+      "partyTradeWindowCustody": "You may trade this item to players who shared its drop for the next {time}.",
       "perfectedBadge": "Доведён до совершенства",
       "perfectingRank": "Совершенствование: ранг {rank} из {ranks}",
       "materialSourceGatherer": "{count} × Сборщик: {name}",

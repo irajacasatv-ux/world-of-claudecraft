@@ -475,7 +475,7 @@ export function itemDisplayName(item: ItemDef): string {
   // drop reads the same as its normal counterpart). The heroic distinction shows as
   // an "[HEROIC]" tag on the tooltip's quality/kind line, not in the name, so a
   // variant never needs its own translated name key.
-  if (item.heroicOf) {
+  if (item.heroicOf && item.kind !== 'furnishing') {
     const base = ITEMS[item.heroicOf];
     return base ? itemDisplayName(base) : item.heroicOf;
   }

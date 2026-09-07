@@ -1,7 +1,10 @@
 // @vitest-environment happy-dom
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import ts from 'typescript';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ITEMS } from '../src/sim/data';
+import type { PlayerEquipment, PlayerEquipmentInstances } from '../src/sim/entity';
 import { Sim } from '../src/sim/sim';
 import type { FurnishingItemDef, ItemDef, ItemInstancePayload } from '../src/sim/types';
 import { Hud } from '../src/ui/hud';
@@ -11,9 +14,11 @@ import {
 } from '../src/ui/hud/action_bar/action_bar_controller';
 import { HOTBAR_ACTION_MIME, type HotbarAction } from '../src/ui/hud/action_bar/hotbar';
 import { furnishingTooltipLines, furnishingTooltipRows } from '../src/ui/hud/housing';
+import { buildPlayerCardData } from '../src/ui/hud/player_card/player_card_data';
 import { setLanguage } from '../src/ui/i18n';
 import { hudChromeStrings } from '../src/ui/i18n.catalog/hud_chrome';
 import { makeWriterFacet } from '../src/ui/painter_host';
+import type { StatId, StatTooltipModel } from '../src/ui/stat_tooltip';
 import type { IWorld } from '../src/world_api';
 import { FURNISHING } from './fixtures/furnishing_item';
 import { EMPTY_TEST_WORLD } from './sim_shared';
@@ -44,23 +49,45 @@ const furnishing: FurnishingItemDef = {
   },
 };
 
-function composedTooltip(item: ItemDef, instance?: ItemInstancePayload): string {
+function composedTooltip(
+  item: ItemDef,
+  instance?: ItemInstancePayload,
+  world?: IWorld,
+  compare = false,
+): string {
   const hud = Object.create(Hud.prototype) as {
     sim: IWorld;
     itemTooltip(item: ItemDef, compare: boolean, instance?: ItemInstancePayload): string;
   };
-  hud.sim = new Sim({
-    seed: 42,
-    playerClass: 'warrior',
-    autoEquip: false,
-    world: EMPTY_TEST_WORLD,
-  });
-  return hud.itemTooltip(item, false, instance);
+  hud.sim =
+    world ??
+    new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
+  return hud.itemTooltip(item, compare, instance);
 }
 
 afterEach(() => setLanguage('en'));
 
 describe('furnishingTooltipRows', () => {
+  it('has no runtime import closure, DOM, Three, or localization runtime access', () => {
+    const source = readFileSync('src/ui/hud/housing/furnishing_tooltip_view.ts', 'utf8');
+    const runtime = ts.transpileModule(source, {
+      compilerOptions: {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        removeComments: true,
+      },
+    }).outputText;
+    expect(runtime).toContain('export function furnishingTooltipRows(');
+    expect(runtime).not.toMatch(
+      /\b(?:import|require|document|window|navigator|globalThis|localStorage|sessionStorage|THREE)\b/,
+    );
+  });
+
   it('footprint uses the literal key, resolved dimensions, and approved English', () => {
     expect(furnishingTooltipRows(furnishing)[0]).toEqual({
       key: 'hudChrome.housing.furnishing.footprint',
@@ -165,6 +192,190 @@ describe('furnishingTooltipRows', () => {
 });
 
 describe('furnishing tooltip composition', () => {
+  const gear: Extract<ItemDef, { kind: 'armor' }> = {
+    id: 'probe_furnishing_tooltip_gear',
+    name: 'Tooltip Test Armor',
+    kind: 'armor',
+    slot: 'chest',
+    armorType: 'mail',
+    quality: 'rare',
+    sellValue: 0,
+  };
+  const powerCopies: { name: string; instance: ItemInstancePayload; claim: string }[] = [
+    {
+      name: 'legacy rolled combat stats',
+      instance: { rolled: { stats: { str: 50 } } },
+      claim: '+50 Strength (Enchanted)',
+    },
+    {
+      name: 'masterwork seal and rolled stats',
+      instance: { rolled: { stats: { str: 9 }, masterwork: true } },
+      claim: 'Masterwork',
+    },
+    { name: 'Perfected stamp', instance: { perfected: true }, claim: 'Perfected' },
+    {
+      name: 'promoted copy name and quality',
+      instance: { perfected: true, name: '<Forged Name>', rolled: { quality: 'legendary' } },
+      claim: '&lt;Forged Name&gt;',
+    },
+    {
+      name: 'Perfecting progress',
+      instance: { perfecting: 2 },
+      claim: 'Perfecting: rank 2 of 4',
+    },
+    {
+      name: 'enchant bonus',
+      instance: { enchant: 'enchant_chest_stamina', rolled: { stats: { sta: 4 } } },
+      claim: '+4 Stamina (Enchanted)',
+    },
+    {
+      name: 'Rift power and upgrade metadata',
+      instance: {
+        rolled: { stats: { str: 50 } },
+        rift: {
+          sourceEventId: 'tooltip_rift_probe',
+          tier: 'A',
+          power: 10,
+          upgradeLevel: 2,
+          maxUpgradeLevel: 6,
+          baseStats: { str: 50 },
+          gemSlots: 2,
+          gems: ['probe_gem'],
+        },
+      },
+      claim: 'Rift upgrade 2/6',
+    },
+  ];
+
+  it.each(powerCopies)(
+    'HUD refuses $name claims on furnishing while eligible gear keeps them',
+    ({ instance, claim }) => {
+      const copy: ItemInstancePayload = { signer: '<Maker>', locked: true, ...instance };
+      const before = structuredClone(copy);
+      const expected = composedTooltip(furnishing, { signer: '<Maker>', locked: true });
+      const html = composedTooltip(furnishing, copy);
+      expect(composedTooltip(gear, copy)).toContain(claim);
+      expect(html).toBe(expected);
+      expect(html).toContain('Made by &lt;Maker&gt;.');
+      expect(html).toContain('Locked');
+      expect(html).not.toContain(claim);
+      expect(copy).toEqual(before);
+    },
+  );
+
+  it.each(['heroic', 'heroicOf'] as const)(
+    'HUD refuses the inherited %s tag on a furnishing while gear retains it',
+    (field) => {
+      const extra = field === 'heroic' ? { heroic: true } : { heroicOf: 'eastbrook_arming_sword' };
+      const item: FurnishingItemDef = { ...furnishing, ...extra };
+      expect(composedTooltip({ ...gear, ...extra })).toContain('[HEROIC]');
+      expect(composedTooltip(item)).toBe(composedTooltip(furnishing));
+    },
+  );
+
+  it('HUD refuses malformed furnishing equipment and consumable capabilities without changing source data', () => {
+    const malformed = {
+      ...furnishing,
+      slot: 'mainhand',
+      armorType: 'mail',
+      weapon: { min: 17, max: 29, speed: 2 },
+      stats: { str: 61, armor: 84 },
+      spellPower: 73,
+      healPower: 79,
+      hitRating: 83,
+      hasteRating: 89,
+      critRating: 97,
+      pvpOffenseRating: 101,
+      pvpDefenseRating: 101,
+      foodHp: 103,
+      drinkMana: 107,
+      potionHp: 109,
+      potionHpPctMax: 0.23,
+      potionMana: 113,
+      elixir: { aura: 'Tooltip Test Buff', kind: 'buff_ap', value: 127, duration: 3600 },
+      use: { type: 'hearth' },
+      stackSize: 20,
+      bagSlots: 12,
+      set: 'slagbreaker',
+      masterwrought: true,
+    } as unknown as ItemDef;
+    const before = structuredClone(malformed);
+    expect(composedTooltip({ ...gear, stats: { str: 61, armor: 84 } })).toContain('+61 Strength');
+    const food: ItemDef = {
+      id: 'probe_furnishing_tooltip_food',
+      name: 'Tooltip Test Food',
+      kind: 'food',
+      foodHp: 103,
+      sellValue: 0,
+    };
+    expect(composedTooltip(food)).toContain('103 health');
+    const html = composedTooltip(malformed);
+    expect(html).toBe(composedTooltip(furnishing));
+    expect(html).toContain('Footprint: 2 by 3 cells.');
+    expect(html).toContain('Decor cost: 7.');
+    expect(html).not.toMatch(/Strength|Armor|Power|Rating|Use:|Masterwrought|Slagbreaker|damage/);
+    expect(malformed).toEqual(before);
+  });
+
+  it('HUD retains genuine soulbound, copy lock, maker and party-trade facts', () => {
+    const item: FurnishingItemDef = { ...furnishing, soulbound: true };
+    const copy: ItemInstancePayload = {
+      signer: '<Maker>',
+      locked: true,
+      partyTrade: { untilMs: 60000, eligible: ['Maker'] },
+      rolled: { stats: { str: 50 }, masterwork: true },
+      perfected: true,
+    };
+    const html = composedTooltip(item, copy);
+    expect(html).toContain('Soulbound');
+    expect(html).toContain('Locked');
+    expect(html).toContain('Made by &lt;Maker&gt;.');
+    expect(html).toContain('1 minute');
+    expect(html).not.toContain('Masterwork');
+    expect(html).not.toContain('Perfected');
+    expect(html).not.toContain('Strength');
+  });
+
+  it.each([
+    { untilMs: 60000, duration: '1 minute' },
+    { untilMs: 3600000, duration: '1 hour' },
+  ])(
+    'furnishing custody text preserves $duration without an impossible equip instruction',
+    ({ untilMs, duration }) => {
+      const copy: ItemInstancePayload = { partyTrade: { untilMs, eligible: ['Maker'] } };
+      const sentence = `You may trade this item to players who shared its drop for the next ${duration}.`;
+      const html = composedTooltip(furnishing, copy);
+      expect(html).toContain(`${sentence}</div>`);
+      expect(html).not.toContain('Equipping it ends the trade window.');
+      expect(composedTooltip(gear, copy)).toContain(
+        `${sentence} Equipping it ends the trade window.`,
+      );
+    },
+  );
+
+  it.each([0, -1])('expired furnishing party-trade deadline %s has no trade promise', (untilMs) => {
+    const copy: ItemInstancePayload = { partyTrade: { untilMs, eligible: ['Maker'] } };
+    expect(composedTooltip(furnishing, copy)).not.toContain('You may trade this item');
+    expect(composedTooltip(gear, copy)).not.toContain('You may trade this item');
+  });
+
+  it('HUD retains authored furnishing rarity and vendor value with no invented placement metadata', () => {
+    const item: FurnishingItemDef = {
+      ...furnishing,
+      quality: 'epic',
+      sellValue: 12345,
+      furnishing: { ...furnishing.furnishing, footprint: { width: 5, depth: 8 }, decorCost: 0 },
+    };
+    const html = composedTooltip(item, { rolled: { quality: 'legendary' } });
+    expect(html).toContain('Epic Furnishing');
+    expect(html).not.toContain('Legendary');
+    expect(html).toContain('Sell price: 1g 23s 45c');
+    expect(html).toContain('Footprint: 5 by 8 cells.');
+    expect(html).toContain('Decor cost: 0.');
+    expect(composedTooltip({ ...item, noVendorSell: true })).not.toContain('Sell price:');
+    expect(composedTooltip({ ...item, soulbound: true })).not.toContain('Sell price:');
+  });
+
   it('renders ordered English lines with formatted resolved numbers', () => {
     const large: FurnishingItemDef = {
       ...furnishing,
@@ -232,6 +443,124 @@ describe('furnishing tooltip composition', () => {
     expect(html).toContain('Locked');
     expect(html).not.toContain('Made by');
     expect(html).not.toContain('Footprint:');
+  });
+});
+
+describe('loaded furnishings in equipment display projections', () => {
+  const armor: Extract<ItemDef, { kind: 'armor' }> = {
+    id: 'probe_furnishing_hover_armor',
+    name: 'Tooltip Armor Control',
+    kind: 'armor',
+    armorType: 'mail',
+    slot: 'chest',
+    stats: { str: 10 },
+    sellValue: 0,
+  };
+  const weapon: Extract<ItemDef, { kind: 'weapon' }> = {
+    id: 'probe_furnishing_display_weapon',
+    name: 'Tooltip Weapon Control',
+    kind: 'weapon',
+    slot: 'mainhand',
+    weapon: { min: 14, max: 28, speed: 2 },
+    stats: { str: 17 },
+    spellPower: 23,
+    sellValue: 0,
+  };
+  const previous = new Map<string, ItemDef | undefined>();
+  beforeEach(() => {
+    for (const item of [furnishing, armor, weapon]) {
+      previous.set(item.id, ITEMS[item.id]);
+      ITEMS[item.id] = item;
+    }
+  });
+  afterEach(() => {
+    for (const [id, item] of previous) {
+      if (item === undefined) delete ITEMS[id];
+      else ITEMS[id] = item;
+    }
+    previous.clear();
+  });
+
+  function loaded(equipment: PlayerEquipment, instances: PlayerEquipmentInstances = {}): Sim {
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: false,
+      world: EMPTY_TEST_WORLD,
+    });
+    const state = sim.serializeCharacter(sim.playerId);
+    if (!state) throw new Error('Tooltip fixture character state is missing');
+    state.equipment = structuredClone(equipment);
+    state.equipmentInstance = structuredClone(instances);
+    sim.primaryId = sim.addPlayer('warrior', 'Tooltip Reader', { state, autoEquip: false });
+    return sim;
+  }
+
+  function statModel(world: IWorld, stat: StatId): StatTooltipModel {
+    const hud = Object.assign(Object.create(Hud.prototype), { sim: world }) as {
+      statModel(stat: StatId): StatTooltipModel;
+    };
+    return hud.statModel(stat);
+  }
+
+  it('the actual armor hover compares against zero furnishing power and keeps real gear deltas', () => {
+    const copy: ItemInstancePayload = { rolled: { stats: { str: 100 } } };
+    const world = loaded({ chest: furnishing.id }, { chest: copy });
+    const html = composedTooltip(armor, undefined, world, true);
+    expect(html).toContain('<div class="tt-green">+10 Strength</div>');
+    expect(html).not.toContain('90 Strength');
+    expect(html).not.toContain('100 Strength');
+    expect(world.equipment.chest).toBe(furnishing.id);
+    expect(world.equipmentInstances.chest).toEqual(copy);
+    const control = loaded({ chest: armor.id }, { chest: copy });
+    expect(composedTooltip(armor, undefined, control, true)).toContain(
+      '<div class="tt-red">−100 Strength</div>',
+    );
+    expect(composedTooltip(furnishing, copy, world, true)).not.toContain('If you equip');
+  });
+
+  it('stat hover sources and DPS reflect the loaded combat state while real weapons remain active', () => {
+    ITEMS[furnishing.id] = {
+      ...furnishing,
+      weapon: weapon.weapon,
+      stats: weapon.stats,
+      spellPower: weapon.spellPower,
+    } as unknown as ItemDef;
+    const world = loaded({ mainhand: furnishing.id });
+    expect(world.player.weapon).toEqual({ min: 1, max: 2, speed: 2 });
+    expect(statModel(world, 'str').sources.filter((source) => source.kind === 'gear')).toEqual([]);
+    expect(
+      statModel(world, 'spellPower').sources.filter((source) => source.kind === 'gear'),
+    ).toEqual([]);
+    expect(statModel(world, 'dps').statValue - world.player.attackPower / 14).toBeCloseTo(0.75);
+    const control = loaded({ mainhand: weapon.id });
+    expect(statModel(control, 'str').sources).toContainEqual({ kind: 'gear', value: 17 });
+    expect(statModel(control, 'spellPower').sources).toContainEqual({ kind: 'gear', value: 23 });
+    expect(statModel(control, 'dps').statValue - control.player.attackPower / 14).toBeCloseTo(10.5);
+  });
+
+  it('the player card reports fist DPS for loaded furnishing while real weapon DPS remains visible', () => {
+    ITEMS[furnishing.id] = { ...furnishing, weapon: weapon.weapon } as unknown as ItemDef;
+    const world = loaded({ mainhand: furnishing.id });
+    const card = (sim: IWorld) =>
+      buildPlayerCardData(sim, {
+        characterImage: 'data:image/png;base64,test',
+        referral: null,
+        standing: null,
+        balance: null,
+        showDevBadges: false,
+        slotName: (slot) => slot,
+      });
+    expect(card(world).combatStats).toContainEqual({
+      label: 'Damage/sec',
+      value: (0.75 + world.player.attackPower / 14).toFixed(1),
+    });
+    const control = loaded({ mainhand: weapon.id });
+    expect(card(control).combatStats).toContainEqual({
+      label: 'Damage/sec',
+      value: (10.5 + control.player.attackPower / 14).toFixed(1),
+    });
+    expect(world.equipment.mainhand).toBe(furnishing.id);
   });
 });
 

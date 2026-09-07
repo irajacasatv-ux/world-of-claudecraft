@@ -2,7 +2,7 @@ import { ITEMS } from '../../../sim/data';
 import type { EquipSlot } from '../../../sim/types';
 import type { IWorld } from '../../../world_api';
 import { deedTitleText } from '../../deed_i18n';
-import { classDisplayName, itemDisplayName } from '../../entity_i18n';
+import { classDisplayName } from '../../entity_i18n';
 import { formatNumber, t } from '../../i18n';
 import { weaponDps } from '../../stat_tooltip';
 import { wornItemCellParts } from '../../worn_item_cell_view';
@@ -42,7 +42,7 @@ export function buildPlayerCardData(world: IWorld, input: PlayerCardDataInput): 
   }
 
   const weapon = world.equipment.mainhand ? ITEMS[world.equipment.mainhand] : null;
-  const dps = weaponDps(weapon?.weapon, player.attackPower);
+  const dps = weaponDps(weapon?.kind === 'weapon' ? weapon.weapon : undefined, player.attackPower);
   const primaryStats: PlayerCardStat[] = [
     { label: t('itemUi.stats.str'), value: number(player.stats.str) },
     { label: t('itemUi.stats.agi'), value: number(player.stats.agi) },

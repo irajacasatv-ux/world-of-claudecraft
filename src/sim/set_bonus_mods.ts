@@ -35,7 +35,9 @@ export function wornSetCounts(equipment: EquipmentMap | undefined): Map<string, 
   const counts = new Map<string, number>();
   for (const itemId of Object.values(equipment ?? {})) {
     if (!itemId) continue;
-    const setId = ITEMS[itemId]?.set;
+    const item = ITEMS[itemId];
+    if (item?.kind === 'furnishing') continue;
+    const setId = item?.set;
     if (setId) counts.set(setId, (counts.get(setId) ?? 0) + 1);
   }
   return counts;

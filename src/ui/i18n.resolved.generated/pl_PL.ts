@@ -3150,6 +3150,7 @@ export const pl_PL: EnTranslations = {
       "statEnchanted": "+{value} {stat} (Zaklęty)",
       "enchantedFallback": "Zaklęty",
       "partyTradeWindow": "Możesz wymienić ten przedmiot z graczami, z którymi wypadł, jeszcze przez {time}. Założenie go kończy okno wymiany.",
+      "partyTradeWindowCustody": "You may trade this item to players who shared its drop for the next {time}.",
       "perfectedBadge": "Perfected",
       "perfectingRank": "Perfecting: rank {rank} of {ranks}",
       "materialSourceGatherer": "{count} × Collected by {name}",

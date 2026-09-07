@@ -3150,6 +3150,7 @@ export const ja_JP: EnTranslations = {
       "statEnchanted": "+{value} {stat}（エンチャント）",
       "enchantedFallback": "エンチャント済み",
       "partyTradeWindow": "このアイテムはあと{time}の間、同じドロップを分かち合ったプレイヤーと取引できます。装備すると取引期間は終了します。",
+      "partyTradeWindowCustody": "You may trade this item to players who shared its drop for the next {time}.",
       "perfectedBadge": "完全化済み",
       "perfectingRank": "完全化：ランク{rank}／{ranks}",
       "materialSourceGatherer": "{count} × {name}が採集",

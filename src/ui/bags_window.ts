@@ -90,7 +90,7 @@ import type { BagItemDrag, ItemDragState } from './item_drag_state';
 import { resolveDropTargetAt } from './item_drop_hit_test';
 import {
   cornerMarkHtml,
-  INSTANCE_GLYPH_ARIA_KEYS,
+  instanceGlyphAriaKey,
   instanceGlyphMarkHtml,
   lockMarkHtml,
   UNKNOWN_INSTANCE_GLYPH_ARIA_KEYS,
@@ -1031,7 +1031,7 @@ export class BagsWindow {
       // masterwork > quest seal > fine seal > enchanted / signed / bound >
       // generic wedge. The fine rim/wash is independent of which seal wins the
       // corner (a masterwork fine stack keeps its rim).
-      const glyphKind = bagInstanceGlyphKind(s.instance);
+      const glyphKind = bagInstanceGlyphKind(s.instance, item.kind);
       const cornerMark = bagCornerMark(glyphKind, questMark, fineMark);
       const locked = isItemLocked(s.instance);
       row.style.setProperty('--bag-slot-quality', qColor);
@@ -1047,7 +1047,7 @@ export class BagsWindow {
         : questMark
           ? 'hudChrome.bags.itemAriaQuest'
           : glyphKind
-            ? INSTANCE_GLYPH_ARIA_KEYS[glyphKind]
+            ? instanceGlyphAriaKey(glyphKind, item.kind)
             : 'itemUi.bags.itemAria';
       row.setAttribute(
         'aria-label',

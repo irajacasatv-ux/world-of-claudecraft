@@ -20,6 +20,7 @@ import {
   exchangeItemCategory,
 } from '../src/sim/exchange_eligibility';
 import { guildBankPipeRefusal } from '../src/sim/guild_bank';
+import { extractTradableCopy } from '../src/sim/inventory_extract';
 import { compareBagStacks } from '../src/sim/inventory_sort';
 import { primaryStatBudget, slotStatMultForItem } from '../src/sim/item_budget';
 import {
@@ -28,6 +29,7 @@ import {
   itemLevel,
   itemScore,
   primaryStatSum,
+  resetItemLevelCache,
 } from '../src/sim/item_level';
 import { isStorableItemKind } from '../src/sim/item_storage_rules';
 import { MAIL_DELIVERY_SECONDS } from '../src/sim/mail/post_office';
@@ -58,6 +60,7 @@ import {
 } from '../src/sim/professions/enchanting';
 import {
   craftForApexItem,
+  PERFECTING_ATTEMPT_COST,
   perfectedBonusStats,
   perfectingInfoFrom,
   resolvePerfectingAttempt,
@@ -108,10 +111,40 @@ import {
 import { marketNameColor } from '../src/ui/market_name_color';
 import { marketFilterMenus } from '../src/ui/market_view';
 import { MarketWindow } from '../src/ui/market_window';
+import { wocTradableSlot } from '../src/ui/trade_woc_view';
+import { lockedOutRows, sellableRows } from '../src/ui/woc_market_view';
 import { FURNISHING } from './fixtures/furnishing_item';
 import { stripComments } from './helpers/strip_comments';
 
 const ID = FURNISHING.id;
+const GEAR: ItemDef = {
+  id: 'test_furnishing_gear_control',
+  name: 'Control Sword',
+  kind: 'weapon',
+  slot: 'mainhand',
+  quality: 'rare',
+  sellValue: 1,
+  requiredLevel: 1,
+  stats: { str: 10, armor: 20 },
+  weapon: { min: 10, max: 10, speed: 2 },
+  heroicOf: 'test_furnishing_source',
+};
+const TOOL: ItemDef = {
+  id: 'test_furnishing_tool_control',
+  name: 'Control Pick',
+  kind: 'tool',
+  sellValue: 1,
+  use: { type: 'gatherTool', professionId: 'mining', tier: 9 },
+};
+function malformedPower(): ItemDef {
+  return {
+    ...GEAR,
+    ...FURNISHING,
+    slot: 'mainhand',
+    stats: GEAR.stats,
+    weapon: GEAR.weapon,
+  } as unknown as ItemDef;
+}
 const QUEST_ID = 'supply_crate';
 const SIGNED: ItemInstancePayload = { signer: 'Testmaker' };
 const RECIPE: ProfessionRecipeRecord = {
@@ -139,9 +172,15 @@ const MODE: BagMode = {
 
 beforeEach(() => {
   ITEMS[ID] = structuredClone(FURNISHING);
+  ITEMS[GEAR.id] = structuredClone(GEAR);
+  ITEMS[TOOL.id] = structuredClone(TOOL);
+  resetItemLevelCache();
 });
 afterEach(() => {
   delete ITEMS[ID];
+  delete ITEMS[GEAR.id];
+  delete ITEMS[TOOL.id];
+  resetItemLevelCache();
   vi.restoreAllMocks();
 });
 
@@ -183,11 +222,18 @@ function errors(sim: Sim): string[] {
   return sim.drainEvents().flatMap((event) => (event.type === 'error' ? [event.text] : []));
 }
 function expectNoMutation(sim: Sim, run: () => unknown): unknown {
-  const before = structuredClone(sim.serializeCharacter(sim.playerId));
-  expect(before).not.toBeNull();
+  // Saves omit casts, auras, consumption and cooldowns. Capture every entity
+  // too, including entities a forged feast or summon could create.
+  const snapshot = () =>
+    structuredClone({
+      character: sim.serializeCharacter(sim.playerId),
+      entities: [...sim.entities],
+    });
+  const before = snapshot();
+  expect(before.character).not.toBeNull();
   const draw = vi.spyOn(sim.rng, 'next');
   const result = run();
-  expect(sim.serializeCharacter(sim.playerId)).toEqual(before);
+  expect(snapshot()).toEqual(before);
   expect(draw).not.toHaveBeenCalled();
   return result;
 }
@@ -229,7 +275,9 @@ describe('furnishing definition and inventory', () => {
     // @ts-expect-error furnishings cannot supply stats
     const stats: FurnishingItemDef = { ...FURNISHING, stats: { str: 1 } };
     // @ts-expect-error furnishings cannot carry item-use actions
-    const use: FurnishingItemDef = { ...FURNISHING, use: { type: 'hearth' } };
+    const use: FurnishingItemDef = { ...FURNISHING, use: { type: 'fishing' } };
+    // @ts-expect-error the broad union must not admit furnishing through OtherItemDef
+    const broadUse: ItemDef = { ...FURNISHING, use: { type: 'fishing' } };
     const feast: FurnishingItemDef = {
       ...FURNISHING,
       // @ts-expect-error furnishings cannot grant feast effects
@@ -239,7 +287,24 @@ describe('furnishing definition and inventory', () => {
     const stack: FurnishingItemDef = { ...FURNISHING, stackSize: 20 };
     // @ts-expect-error furnishing provenance belongs to the copy
     const signer: FurnishingItemDef = { ...FURNISHING, signer: 'Defmaker' };
-    void [missingRadius, stats, use, feast, stack, signer];
+    void [missingRadius, stats, use, broadUse, feast, stack, signer];
+  });
+  it('accepts either boolean plinth value and rejects a numeric plinth through the broad union', () => {
+    const raised: ItemDef = {
+      ...FURNISHING,
+      furnishing: { ...FURNISHING.furnishing, plinth: true },
+    };
+    const floor: ItemDef = {
+      ...FURNISHING,
+      furnishing: { ...FURNISHING.furnishing, plinth: false },
+    };
+    const omitted: ItemDef = { ...FURNISHING };
+    expect(raised.furnishing.plinth).toBe(true);
+    expect(floor.furnishing.plinth).toBe(false);
+    expect(omitted.furnishing.plinth).toBeUndefined();
+    // @ts-expect-error furnishing plinth accepts only a boolean when present
+    const numeric: ItemDef = { ...FURNISHING, furnishing: { ...FURNISHING.furnishing, plinth: 1 } };
+    void numeric;
   });
   it('keeps every placement field required and every power field uninhabitable', () => {
     type Placement = FurnishingItemDef['furnishing'];
@@ -388,74 +453,87 @@ describe('furnishing refusal and power gates', () => {
       'shaman',
       'druid',
     ] as const) {
-      expect(canEquipItem(cls, FURNISHING), cls).toBe(false);
+      expect(canEquipItem(cls, malformedPower()), cls).toBe(false);
+      expect(canEquipItem(cls, GEAR), cls).toBe(true);
     }
   });
   it('resolves no equip slot', () => {
-    expect(resolveEquipSlot(FURNISHING, {})).toBeNull();
+    expect(resolveEquipSlot(malformedPower(), {})).toBeNull();
+    expect(resolveEquipSlot(GEAR, {})).toBe('mainhand');
   });
   it('rejects targeted equipment slots', () => {
-    expect(slotAcceptsItem(FURNISHING, 'mainhand')).toBe(false);
-    expect(canEquipItemInSlot('warrior', FURNISHING, 'mainhand')).toBe(false);
+    expect(slotAcceptsItem(malformedPower(), 'mainhand')).toBe(false);
+    expect(canEquipItemInSlot('warrior', malformedPower(), 'mainhand')).toBe(false);
+    expect(slotAcceptsItem(GEAR, 'mainhand')).toBe(true);
+    expect(canEquipItemInSlot('warrior', GEAR, 'mainhand')).toBe(true);
   });
   it('equip command consumes and moves nothing', () => {
     const sim = makeSim();
     give(sim);
     ITEMS[ID] = { ...FURNISHING, slot: 'mainhand', stats: { str: 50 } } as unknown as ItemDef;
-    expectNoMutation(sim, () => sim.equipItem(ID));
-  });
-  it('use command consumes nothing and grants no effect', () => {
-    const sim = makeSim();
-    give(sim, ID, SIGNED);
-    ITEMS[ID] = {
-      ...FURNISHING,
-      use: { type: 'hearth' },
-      potionHp: 100,
-      feast: { charges: 2 },
-    } as unknown as ItemDef;
-    expect(expectNoMutation(sim, () => sim.useItem(ID))).toBeUndefined();
-    expect(sim.drainEvents()).toEqual([]);
+    expect(expectNoMutation(sim, () => sim.equipItem(ID))).toBeUndefined();
+    give(sim, GEAR.id);
+    sim.equipItem(GEAR.id);
+    expect(sim.equipment.mainhand).toBe(GEAR.id);
+    expect(sim.countItem(GEAR.id)).toBe(0);
   });
   it('disenchant refuses before spending a copy or drawing randomness', () => {
     const sim = makeSim();
     give(sim);
     expect(isDisenchantable(FURNISHING)).toBe(false);
+    expect(isDisenchantable(GEAR)).toBe(true);
     expect(expectNoMutation(sim, () => resolveDisenchant(sim.ctx, sim.playerId, ID))).toEqual({
       ok: false,
       itemId: ID,
       reason: 'not_disenchantable',
     });
+    give(sim, GEAR.id);
+    expect(resolveDisenchant(sim.ctx, sim.playerId, GEAR.id)?.ok).toBe(true);
+    expect(sim.countItem(GEAR.id)).toBe(0);
   });
   it('disenchant admission refuses the same item kind', () => {
     const sim = makeSim();
     give(sim);
-    expect(evaluateDisenchantAdmission(sim.ctx, sim.playerId, ID)).toEqual({
+    expect(
+      expectNoMutation(sim, () => evaluateDisenchantAdmission(sim.ctx, sim.playerId, ID)),
+    ).toEqual({
       ok: false,
       itemId: ID,
       reason: 'not_disenchantable',
     });
+    give(sim, GEAR.id);
+    expect(evaluateDisenchantAdmission(sim.ctx, sim.playerId, GEAR.id)).toBeNull();
   });
   it('has no typed disenchant reagent', () => {
     expect(typedSecondaryFor(FURNISHING)).toBeNull();
+    expect(typedSecondaryFor(GEAR)).toBe('resonant_steel');
   });
   it('salvage refuses before spending a copy or drawing randomness', () => {
     const sim = makeSim();
     give(sim);
     expect(isSalvageable(FURNISHING)).toBe(false);
+    expect(isSalvageable(GEAR)).toBe(true);
     expect(expectNoMutation(sim, () => resolveSalvage(sim.ctx, sim.playerId, ID))).toEqual({
       ok: false,
       itemId: ID,
       reason: 'not_salvageable',
     });
+    give(sim, GEAR.id);
+    expect(resolveSalvage(sim.ctx, sim.playerId, GEAR.id)?.ok).toBe(true);
+    expect(sim.countItem(GEAR.id)).toBe(0);
   });
   it('salvage admission refuses the same item kind', () => {
     const sim = makeSim();
     give(sim);
-    expect(evaluateSalvageAdmission(sim.ctx, sim.playerId, ID)).toEqual({
+    expect(
+      expectNoMutation(sim, () => evaluateSalvageAdmission(sim.ctx, sim.playerId, ID)),
+    ).toEqual({
       ok: false,
       itemId: ID,
       reason: 'not_salvageable',
     });
+    give(sim, GEAR.id);
+    expect(evaluateSalvageAdmission(sim.ctx, sim.playerId, GEAR.id)).toBeNull();
   });
   it('sundering refuses without starting a cast or moving a copy', () => {
     const sim = makeSim();
@@ -464,6 +542,12 @@ describe('furnishing refusal and power gates', () => {
     expectNoMutation(sim, () => extractEssence(sim.ctx, ID, sim.playerId));
     expect(sim.player.castingAbility).toBeNull();
     expect(errors(sim)).toEqual(['Only raid-won epics can be sundered.']);
+    // Raid provenance is keyed by the shipped encounter source index.
+    const raidGear = Object.values(ITEMS).find(isSunderable)!;
+    expect(isSunderable(raidGear)).toBe(true);
+    give(sim, raidGear.id);
+    extractEssence(sim.ctx, raidGear.id, sim.playerId);
+    expect(sim.player.castingAbility).toBe('sundering');
   });
   it('perfecting refuses without spending materials or altering a copy', () => {
     const sim = makeSim();
@@ -473,8 +557,21 @@ describe('furnishing refusal and power gates', () => {
       resolvePerfectingAttempt(sim.ctx, sim.playerId, { bag: 0, itemId: ID }),
     );
     expect(errors(sim)).toEqual(['Only Masterwrought items can be perfected.']);
+    ITEMS[GEAR.id] = { ...GEAR, masterwrought: true } as ItemDef;
+    vi.spyOn(recipeContent, 'recipeForResultItem').mockReturnValue({
+      ...RECIPE,
+      resultItemId: GEAR.id,
+    });
+    sim.meta(sim.playerId)!.craftSkills.weaponcrafting = 125;
+    give(sim, GEAR.id);
+    for (const cost of PERFECTING_ATTEMPT_COST) sim.addItem(cost.itemId, cost.count);
+    const bag = sim.inventory.findIndex((slot) => slot.itemId === GEAR.id);
+    vi.spyOn(sim.rng, 'next').mockReturnValue(0);
+    resolvePerfectingAttempt(sim.ctx, sim.playerId, { bag, itemId: GEAR.id });
+    expect(sim.inventory[bag].instance?.perfecting).toBe(1);
+    expect(errors(sim)).toEqual([]);
   });
-  it('has no Perfecting view over either host mirror', () => {
+  it('has no Perfecting view from the shared inventory projection', () => {
     const sim = makeSim();
     give(sim);
     expect(
@@ -486,41 +583,74 @@ describe('furnishing refusal and power gates', () => {
         craftSkills: sim.meta(sim.playerId)!.craftSkills,
       }),
     ).toBeNull();
+    ITEMS[GEAR.id] = { ...GEAR, masterwrought: true } as ItemDef;
+    give(sim, GEAR.id);
+    expect(
+      perfectingInfoFrom({
+        ref: { bag: 1, itemId: GEAR.id },
+        inventory: sim.inventory,
+        equipment: {},
+        equipmentInstances: {},
+        craftSkills: sim.meta(sim.playerId)!.craftSkills,
+      })?.itemId,
+    ).toBe(GEAR.id);
   });
   it('cannot receive a Perfecting stat bonus from malformed power data', () => {
     const malformed = { ...FURNISHING, slot: 'helmet', stats: { str: 10 } } as unknown as ItemDef;
     expect(perfectedBonusStats(malformed, { level: 1 })).toBeNull();
+    expect(perfectedBonusStats(GEAR, { level: 1 })?.str).toBeGreaterThan(0);
   });
-  it('refuses enchanting without spending the copy or reagents', () => {
-    const sim = makeSim();
-    give(sim);
-    ITEMS[ID] = { ...FURNISHING, slot: 'mainhand' } as unknown as ItemDef;
-    expect(
-      expectNoMutation(sim, () =>
-        resolveApplyEnchant(sim.ctx, sim.playerId, ID, 'enchant_weapon_might'),
-      ),
-    ).toEqual({
-      ok: false,
-      itemId: ID,
-      enchantId: 'enchant_weapon_might',
-      reason: 'wrong_slot',
-    });
-  });
-  it('refuses enchant admission before starting a cast', () => {
-    const sim = makeSim();
-    give(sim);
-    ITEMS[ID] = { ...FURNISHING, slot: 'mainhand' } as unknown as ItemDef;
-    expect(
-      expectNoMutation(sim, () =>
-        evaluateApplyEnchantAdmission(sim.ctx, sim.playerId, ID, 'enchant_weapon_might'),
-      ),
-    ).toEqual({
-      ok: false,
-      itemId: ID,
-      enchantId: 'enchant_weapon_might',
-      reason: 'wrong_slot',
-    });
-    expect(sim.player.castingAbility).toBeNull();
+  it.each([
+    { shape: 'bagged', worn: false, replace: false },
+    { shape: 'worn', worn: true, replace: false },
+    { shape: 'bagged replacement', worn: false, replace: true },
+    { shape: 'worn replacement', worn: true, replace: true },
+  ])('refuses $shape enchant admission and resolution with eligible controls', (row) => {
+    for (const apply of [evaluateApplyEnchantAdmission, resolveApplyEnchant]) {
+      const sim = makeSim();
+      const meta = sim.meta(sim.playerId)!;
+      ITEMS[ID] = malformedPower();
+      const payload = row.replace
+        ? { enchant: 'enchant_weapon_intellect', rolled: { stats: { int: 2 } } }
+        : undefined;
+      sim.addItem('arcane_dust', 5);
+      if (row.worn) {
+        meta.equipment.mainhand = ID;
+        meta.equipmentInstance = payload ? { mainhand: payload } : {};
+      } else give(sim, ID, payload);
+      expect(
+        expectNoMutation(sim, () =>
+          apply(
+            sim.ctx,
+            sim.playerId,
+            ID,
+            'enchant_weapon_might',
+            row.worn ? 'mainhand' : undefined,
+            row.replace,
+          ),
+        ),
+      ).toEqual({
+        ok: false,
+        itemId: ID,
+        enchantId: 'enchant_weapon_might',
+        reason: 'wrong_slot',
+      });
+      if (row.worn) meta.equipment.mainhand = GEAR.id;
+      else {
+        sim.inventory.splice(1, 1);
+        give(sim, GEAR.id, payload);
+      }
+      const result = apply(
+        sim.ctx,
+        sim.playerId,
+        GEAR.id,
+        'enchant_weapon_might',
+        row.worn ? 'mainhand' : undefined,
+        row.replace,
+      );
+      if (apply === evaluateApplyEnchantAdmission) expect(result).toBeNull();
+      else expect(result?.ok).toBe(true);
+    }
   });
   it('does not generate heroic power variants even from malformed slot data', () => {
     const malformed = { ...FURNISHING, slot: 'helmet', stats: { str: 10 } } as unknown as ItemDef;
@@ -556,6 +686,8 @@ describe('furnishing refusal and power gates', () => {
   it('cannot receive a commission bond', () => {
     expect(isCommissionEligibleKind('furnishing')).toBe(false);
     expect(isCommissionEligible(FURNISHING)).toBe(false);
+    expect(isCommissionEligibleKind('weapon')).toBe(true);
+    expect(isCommissionEligible(GEAR)).toBe(true);
   });
   it('refuses unbinding without clearing a copy lock or charging copper', () => {
     const sim = makeSim();
@@ -566,10 +698,24 @@ describe('furnishing refusal and power gates', () => {
       reason: 'unbind_not_eligible',
       fee: 10000,
     });
+    give(sim, GEAR.id, { signer: 'Testmaker', boundTo: sim.playerId, bindOnTrade: true });
+    const station = sim.ctx.stationPlacements[0];
+    sim.player.pos.x = station.pos.x;
+    sim.player.pos.z = station.pos.z;
+    expect(unbindItem(sim.ctx, GEAR.id, sim.playerId)).toEqual({
+      ok: true,
+      itemId: GEAR.id,
+      fee: 10000,
+    });
+    expect(
+      sim.inventory.find((slot) => slot.itemId === GEAR.id)?.instance?.boundTo,
+    ).toBeUndefined();
+    expect(sim.copper).toBe(0);
   });
   it('has no crafting stat bonus', () => {
     const def = { ...FURNISHING, slot: 'helmet', stats: { str: 10 } } as unknown as ItemDef;
     expect(craftBonusStatsFor(def, RECIPE)).toBeNull();
+    expect(craftBonusStatsFor(GEAR, { ...RECIPE, level: 20 })?.str).toBeGreaterThan(0);
   });
   it('retains the existing signer rarity rule', () => {
     for (const [quality, signed] of [
@@ -582,6 +728,8 @@ describe('furnishing refusal and power gates', () => {
       expect(mintsSignerPayload(FURNISHING, quality), quality).toBe(signed);
     }
     expect(mintsSignedCraftOutput(FURNISHING)).toBe(true);
+    expect(mintsSignedCraftOutput({ ...FURNISHING, quality: 'poor' })).toBe(false);
+    expect(mintsSignedCraftOutput({ ...FURNISHING, quality: undefined })).toBe(false);
   });
   it('crafts a signed furnishing without power', () => {
     const sim = makeSim();
@@ -595,35 +743,56 @@ describe('furnishing refusal and power gates', () => {
     ]);
   });
   it('has no item-level eligibility', () => {
-    expect(isItemLevelEligible(FURNISHING)).toBe(false);
+    expect(isItemLevelEligible(malformedPower())).toBe(false);
+    expect(isItemLevelEligible(GEAR)).toBe(true);
   });
   it('has no item level', () => {
-    expect(itemLevel(FURNISHING)).toBeUndefined();
+    expect(itemLevel(malformedPower())).toBeUndefined();
+    expect(itemLevel(GEAR)).toBe(25);
   });
   it('has no expected stat budget', () => {
-    expect(expectedStatBudget(FURNISHING)).toBeUndefined();
+    expect(expectedStatBudget(malformedPower())).toBeUndefined();
+    expect(expectedStatBudget(GEAR)).toBe(14);
   });
   it('has no slot stat multiplier', () => {
-    expect(slotStatMultForItem(FURNISHING)).toBeUndefined();
+    expect(
+      slotStatMultForItem({ ...malformedPower(), occupiesHand: false } as ItemDef),
+    ).toBeUndefined();
+    expect(
+      slotStatMultForItem({
+        id: 'test_worn_control',
+        name: 'Control Quiver',
+        kind: 'held_offhand',
+        sellValue: 1,
+        slot: 'offhand',
+        occupiesHand: false,
+      }),
+    ).toBe(0.45);
   });
-  it('has zero primary stat budget', () => {
+  it('has zero raw budget because the valid furnishing shape has no slot', () => {
     expect(primaryStatBudget(20, 'rare', FURNISHING.slot)).toBe(0);
+    expect(primaryStatBudget(20, 'rare', GEAR.slot)).toBe(11);
   });
   it('has no scored primary stats', () => {
-    expect(primaryStatSum(FURNISHING)).toBe(0);
+    expect(primaryStatSum(malformedPower())).toBe(0);
+    expect(primaryStatSum(GEAR)).toBe(10);
   });
   it('has no item power score', () => {
-    expect(itemScore(FURNISHING)).toBe(0);
+    expect(itemScore(malformedPower())).toBe(0);
+    expect(itemScore(GEAR)).toBeGreaterThan(10);
   });
   it('cannot serve as a gathering tool', () => {
     expect(gatherToolTier(FURNISHING, 'mining')).toBeUndefined();
+    expect(gatherToolTier(TOOL, 'mining')).toBe(9);
   });
-  it('cannot serve as a fishing implement', () => {
-    ITEMS[ID] = {
-      ...FURNISHING,
-      use: { type: 'gatherTool', professionId: 'fishing', tier: 9 },
-    } as unknown as ItemDef;
+  it.each([
+    { type: 'fishing' } as const,
+    { type: 'gatherTool', professionId: 'fishing', tier: 9 } as const,
+  ])('cannot serve as a fishing implement through $type', (use) => {
+    ITEMS[ID] = { ...FURNISHING, use } as unknown as ItemDef;
+    ITEMS[TOOL.id] = { ...TOOL, use } as ItemDef;
     expect(hasFishingImplement([{ itemId: ID, count: 1 }], ITEMS)).toBe(false);
+    expect(hasFishingImplement([{ itemId: TOOL.id, count: 1 }], ITEMS)).toBe(true);
   });
   it('ignores forged gathering capabilities', () => {
     const malformed = {
@@ -631,6 +800,7 @@ describe('furnishing refusal and power gates', () => {
       use: { type: 'gatherTool', professionId: 'mining', tier: 9 },
     } as unknown as ItemDef;
     expect(gatherToolTier(malformed, 'mining')).toBeUndefined();
+    expect(gatherToolTier(TOOL, 'mining')).toBe(9);
   });
   it('refuses furnishing copies as tool-effect charms', () => {
     const tool = Object.values(ITEMS).find(
@@ -658,6 +828,25 @@ describe('furnishing refusal and power gates', () => {
         undefined,
       ),
     ).toEqual({ ok: false, reason: 'no_charm' });
+    expect(inventory).toEqual(before);
+    const charm: ItemDef = {
+      id: ID,
+      name: 'Control Charm',
+      sellValue: 1,
+      kind: 'tool',
+      use: { type: 'toolEffect', effectId: 'makers_charm' },
+    };
+    expect(
+      resolveSlotToolEffect(
+        inventory,
+        'mining',
+        'makers_charm',
+        'always',
+        { ...ITEMS, [ID]: charm },
+        undefined,
+        undefined,
+      ),
+    ).toMatchObject({ ok: true, consumeIndex: 1 });
     expect(inventory).toEqual(before);
   });
 });
@@ -1385,9 +1574,11 @@ describe('furnishing presentation and input', () => {
   });
   it('has no bag use hint', () => {
     expect(bagTooltipHintKey(FURNISHING, MODE)).toBe('');
+    expect(bagTooltipHintKey(GEAR, MODE)).toBe('itemUi.tooltip.clickEquip');
   });
   it('has no ordinary bag click action', () => {
     expect(bagItemAction(FURNISHING, MODE)).toBe('none');
+    expect(bagItemAction(GEAR, MODE)).toBe('use');
   });
   it('ordinary bag clicks invoke no command or repaint', () => {
     const call = vi.fn();
@@ -1401,6 +1592,16 @@ describe('furnishing presentation and input', () => {
     };
     run.runBagAction.call(fake, FURNISHING, { itemId: ID, count: 1 }, {} as MouseEvent);
     expect(call).not.toHaveBeenCalled();
+    const useItem = vi.fn();
+    const control = { itemId: TOOL.id, count: 1 };
+    Object.assign(fake, { copyRefFor: () => ({ slotIndex: 0 }) });
+    Object.assign(fake.deps, {
+      world: () => ({ useItem, inventory: [control] }),
+      useGatherTool: () => false,
+      renderCharIfOpen: vi.fn(),
+    });
+    run.runBagAction.call(fake, TOOL, control, {} as MouseEvent);
+    expect(useItem).toHaveBeenCalledWith(TOOL.id, { slotIndex: 0 });
   });
   it('keeps special bag storage and trading actions', () => {
     expect(bagItemAction(FURNISHING, { ...MODE, bankOpen: true, bankDeposit: true })).toBe(
@@ -1412,18 +1613,33 @@ describe('furnishing presentation and input', () => {
   });
   it('has no bag capacity tooltip line', () => {
     expect(bagSlotsLineKey(FURNISHING)).toBeNull();
+    expect(
+      bagSlotsLineKey({
+        kind: 'bag',
+        bagSlots: 4,
+      }),
+    ).toBe('itemUi.tooltip.bagSlots');
   });
   it('offers only its lock toggle in the context menu', () => {
     expect(bagItemContextActions(FURNISHING, ID)).toEqual([
       { id: 'lock', labelKey: 'hudChrome.bags.lockItem' },
     ]);
     expect(bagItemNewActions(FURNISHING, ID, { locked: true })).toEqual(['unlock']);
+    expect(bagItemContextActions(GEAR, GEAR.id)).toEqual([
+      { id: 'default', labelKey: 'hudChrome.itemMenu.equip' },
+      { id: 'disenchant', labelKey: 'hudChrome.itemMenu.disenchant' },
+      { id: 'salvage', labelKey: 'hudChrome.itemMenu.salvage' },
+      { id: 'lock', labelKey: 'hudChrome.bags.lockItem' },
+    ]);
+    expect(bagItemNewActions(GEAR, GEAR.id, { locked: true })).toEqual(['disenchant', 'unlock']);
   });
   it('cannot be dragged onto the paperdoll', () => {
     expect(isPaperdollDraggable(FURNISHING)).toBe(false);
+    expect(isPaperdollDraggable(GEAR)).toBe(true);
   });
   it('rejects the paperdoll drop by literal action', () => {
     expect(paperdollDropAction(FURNISHING, 'mainhand', 'warrior', 20)).toBe('blockedSlot');
+    expect(paperdollDropAction(GEAR, 'mainhand', 'warrior', 20)).toBe('equip');
   });
   it('uses ordinary rarity colors for item names', () => {
     for (const [quality, color] of [
@@ -1448,6 +1664,19 @@ describe('furnishing presentation and input', () => {
   });
   it('has no armor badge', () => {
     expect(marketArmorBadge(FURNISHING)).toBeNull();
+    expect(
+      marketArmorBadge({
+        id: 'test_badge_control',
+        name: 'Control Helm',
+        kind: 'armor',
+        armorType: 'mail',
+        slot: 'helmet',
+        sellValue: 1,
+      }),
+    ).toEqual({
+      armorType: 'mail',
+      labelKey: 'hudChrome.itemArmorType.mail',
+    });
   });
   it('never presents a furnishing as heroic gear', () => {
     for (const def of [
@@ -1456,17 +1685,32 @@ describe('furnishing presentation and input', () => {
     ]) {
       expect(isHeroicItem(def)).toBe(false);
       expect(marketHeroicStar(def, 'Heroic')).toBe('');
+      const control = { ...GEAR, heroic: def.heroic, heroicOf: def.heroicOf };
+      expect(isHeroicItem(control)).toBe(true);
+      expect(marketHeroicStar(control, 'Heroic')).toContain('aria-label="Heroic"');
     }
   });
   it('has no pattern mark', () => {
     expect(marketPatternMark(FURNISHING, 'Pattern')).toBe('');
+    expect(
+      marketPatternMark(
+        {
+          id: 'test_pattern_control',
+          name: 'Control Pattern',
+          kind: 'recipe',
+          sellValue: 1,
+          teachesRecipeId: 'test_recipe',
+        },
+        'Pattern',
+      ),
+    ).toContain('aria-label="Pattern"');
   });
   it('keeps malformed furnishing capabilities out of every UI action', () => {
     const def = {
       ...FURNISHING,
       slot: 'mainhand',
       armorType: 'mail',
-      use: { type: 'hearth' },
+      use: { type: 'fishing' },
       feast: { charges: 2 },
     } as unknown as ItemDef;
     ITEMS[ID] = def;
@@ -1482,27 +1726,36 @@ describe('furnishing presentation and input', () => {
     ]) {
       ITEMS[ID] = { ...FURNISHING, use } as unknown as ItemDef;
       expect(bar().isAssignableAction(itemAction)).toBe(false);
+      ITEMS[TOOL.id] = { ...TOOL, use } as ItemDef;
+      expect(bar().isAssignableAction({ type: 'item', id: TOOL.id })).toBe(true);
     }
   });
   it('refuses action-bar assignment', () => {
     const controller = bar();
     expect(controller.isAssignableAction(itemAction)).toBe(false);
     expect(controller.actions).not.toContainEqual(itemAction);
+    expect(controller.isAssignableAction({ type: 'item', id: TOOL.id })).toBe(true);
   });
   it('refuses direct bar replacement', () => {
     const controller = bar();
     controller.replaceActions([itemAction]);
     expect(controller.actions[0]).toBeNull();
+    controller.replaceActions([{ type: 'item', id: TOOL.id }]);
+    expect(controller.actions[0]).toEqual({ type: 'item', id: TOOL.id });
   });
   it('refuses loadout bar replacement', () => {
     const controller = bar();
     controller.replaceActionsForLoadout([itemAction], new Set(['sunder_armor']));
     expect(controller.actions[0]).toBeNull();
+    controller.replaceActionsForLoadout([{ type: 'item', id: TOOL.id }], new Set(['sunder_armor']));
+    expect(controller.actions[0]).toEqual({ type: 'item', id: TOOL.id });
   });
   it('refuses configurable attack-slot replacement', () => {
     const controller = bar();
     controller.replaceAttackAction(itemAction);
     expect(controller.attackAction).toBeNull();
+    controller.replaceAttackAction({ type: 'item', id: TOOL.id });
+    expect(controller.attackAction).toEqual({ type: 'item', id: TOOL.id });
   });
   it('drops a persisted furnishing attack action without disturbing the normal bar', () => {
     const key = 'woc_hotbar_warrior_FurnishingTester';
@@ -1525,5 +1778,86 @@ describe('furnishing presentation and input', () => {
     controller.init();
     expect(controller.actions[0]).toBeNull();
     expect(controller.actions[1]).toEqual({ type: 'ability', id: 'sunder_armor' });
+  });
+});
+
+describe('furnishing Exchange consumer parity', () => {
+  it.each(['poor', 'common', 'uncommon', 'rare', 'epic', 'legendary', undefined] as const)(
+    'keeps %s furnishings eligible through picker, staged trade and custody',
+    (quality) => {
+      ITEMS[ID] = { ...FURNISHING, quality, soulbound: true };
+      const inventory = [{ itemId: ID, count: 1, instance: { ...SIGNED } }];
+      expect(
+        sellableRows(inventory, 'legendary', { mounts: true, mechChromas: false }).map(
+          (row) => row.itemId,
+        ),
+      ).toEqual([ID]);
+      expect(lockedOutRows(inventory, 'legendary', { mounts: true, mechChromas: false })).toEqual(
+        [],
+      );
+      expect(sellableRows(inventory, 'common', { mounts: false, mechChromas: true })).toEqual([]);
+      expect(wocTradableSlot(inventory[0], ITEMS)).toBe(true);
+      expect(
+        extractTradableCopy(inventory, { index: 0, itemId: ID, expectInstance: SIGNED }, ITEMS[ID]),
+      ).toEqual({ ok: true, extracted: { itemId: ID, count: 1, instance: SIGNED } });
+      expect(inventory).toEqual([]);
+    },
+  );
+
+  it.each([
+    {
+      name: 'owner lock',
+      instance: { ...SIGNED, locked: true },
+      flags: {},
+      reason: 'locked',
+      unlockable: true,
+    },
+    {
+      name: 'bound copy',
+      instance: { ...SIGNED, boundTo: 9 },
+      flags: {},
+      reason: 'bound_copy',
+      unlockable: false,
+    },
+    {
+      name: 'armed bond',
+      instance: { ...SIGNED, bindOnTrade: true },
+      flags: {},
+      reason: 'bind_armed',
+      unlockable: false,
+    },
+    {
+      name: 'market exclusion',
+      instance: SIGNED,
+      flags: { noMarketList: true },
+      reason: 'no_market_list',
+      unlockable: false,
+    },
+  ])('honors $name in picker, staged trade and custody with an eligible control', (row) => {
+    ITEMS[ID] = { ...FURNISHING, ...row.flags };
+    const inventory = [{ itemId: ID, count: 1, instance: structuredClone(row.instance) }];
+    const before = structuredClone(inventory);
+    expect(sellableRows(inventory, 'epic', { mounts: true, mechChromas: true })).toEqual([]);
+    expect(
+      lockedOutRows(inventory, 'epic', { mounts: true, mechChromas: true }).map(
+        (entry) => entry.itemId,
+      ),
+    ).toEqual(row.unlockable ? [ID] : []);
+    expect(wocTradableSlot(inventory[0], ITEMS)).toBe(false);
+    expect(extractTradableCopy(inventory, { index: 0, itemId: ID }, ITEMS[ID])).toEqual({
+      ok: false,
+      reason: row.reason,
+    });
+    expect(inventory).toEqual(before);
+    ITEMS[ID] = structuredClone(FURNISHING);
+    const eligible = [{ itemId: ID, count: 1, instance: { ...SIGNED } }];
+    expect(
+      sellableRows(eligible, 'epic', { mounts: true, mechChromas: true }).map(
+        (entry) => entry.itemId,
+      ),
+    ).toEqual([ID]);
+    expect(wocTradableSlot(eligible[0], ITEMS)).toBe(true);
+    expect(extractTradableCopy(eligible, { index: 0, itemId: ID }, ITEMS[ID]).ok).toBe(true);
+    expect(eligible).toEqual([]);
   });
 });

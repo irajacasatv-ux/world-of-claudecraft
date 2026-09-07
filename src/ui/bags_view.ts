@@ -604,10 +604,13 @@ function isPlaceStationBagUse(use: unknown): boolean {
  *  legendary keeps its rim in the bag, bank, and guild bank grids alike. The
  *  painter maps this to a color token; centralizing the default here keeps the
  *  fallback out of the painter as a magic string. */
-export function bagQualityKey(item: { quality?: string }, instance?: ItemInstancePayload): string {
-  // tooltipEffectiveQuality reads only `quality`, so the narrow cell shape the
-  // bank rows pass (a def that may be gone resolves to {}) is safe to hand it.
-  return tooltipEffectiveQuality(item as ItemDef, instance) ?? 'common';
+export function bagQualityKey(
+  item: { kind?: string; quality?: string },
+  instance?: ItemInstancePayload,
+): string {
+  // The quality projection also reads kind to exclude furnishing promotion.
+  // A missing def resolves to {}, preserving the unknown cell's legacy fallback.
+  return tooltipEffectiveQuality(item, instance) ?? 'common';
 }
 
 /** The three grid states: the whole bag is empty, the filter matched nothing, or

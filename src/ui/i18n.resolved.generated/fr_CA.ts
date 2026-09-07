@@ -3150,6 +3150,7 @@ export const fr_CA: EnTranslations = {
       "statEnchanted": "+{value} {stat} (Enchanté)",
       "enchantedFallback": "Enchanté",
       "partyTradeWindow": "Vous pouvez échanger cet objet aux joueurs qui ont partagé son butin pendant encore {time}. L'équiper met fin à la fenêtre d'échange.",
+      "partyTradeWindowCustody": "You may trade this item to players who shared its drop for the next {time}.",
       "perfectedBadge": "Perfected",
       "perfectingRank": "Perfecting: rank {rank} of {ranks}",
       "materialSourceGatherer": "{count} × Collected by {name}",
