@@ -1,0 +1,2475 @@
+{
+  "version": "freehold-crafted-development-geometry-v1",
+  "status": "DEVELOPMENT TUNING, proposed, awaiting Fernando acceptance",
+  "productionEnabled": false,
+  "approval": null,
+  "reproduction": "node scripts/freeholds/crafted_geometry_measure.mjs",
+  "toolVersions": {
+    "@gltf-transform/core": "4.4.1",
+    "@gltf-transform/extensions": "4.4.1",
+    "meshoptimizer": "1.0.1",
+    "three": "0.185.1",
+    "typescript": "6.0.2"
+  },
+  "inputs": [
+    {
+      "path": "docs/freeholds/crafted-content-trial-2026-09-07/geometry-proposal.json",
+      "bytes": 8417,
+      "sha256": "d944116ea84fedc226635cb74fa5c6dadccca531622439f8b47e84e2d2e6825f"
+    },
+    {
+      "path": "scripts/freeholds/crafted_geometry_measure.mjs",
+      "bytes": 11997,
+      "sha256": "625ff37ebb1df683d343a43486078abf2fead18510f044a623a3c99562ed02ca"
+    },
+    {
+      "path": "scripts/freeholds/geometry_core.mjs",
+      "bytes": 4411,
+      "sha256": "9525a397bbf3c0df64d01963a160ae4a563fdafa35baa3e98c063570ecd54615"
+    },
+    {
+      "path": "scripts/freeholds/geometry_source.mjs",
+      "bytes": 2068,
+      "sha256": "a421be793fd6340e2ab4f8939f6b054613ae9b19a0110b3a866ebac83ac21189"
+    },
+    {
+      "path": "src/render/props.ts",
+      "bytes": 135556,
+      "sha256": "ee1689bb0613d3a0c8dc49b9273a6e5b09fb1fd2660f142aa496987ce5fe0f65"
+    },
+    {
+      "path": "src/render/lastkeep_dressing.ts",
+      "bytes": 27476,
+      "sha256": "de3f98d16dfe521e51d090c0a66aa90c86488dc9bcf65ee9f79afc9667b2cef5"
+    },
+    {
+      "path": "src/render/rift_decor.ts",
+      "bytes": 9093,
+      "sha256": "ebdf851444eea5b1ed93ec824bdd159006a68150f1793a8c387728bcda848472"
+    },
+    {
+      "path": "src/render/yumi_maze.ts",
+      "bytes": 17424,
+      "sha256": "6d0712a55f23ff5da1aa1ca3ba7d6c579d70a3b69112458f67a6ba5782902e69"
+    },
+    {
+      "path": "src/render/artisan_row_props.ts",
+      "bytes": 1775,
+      "sha256": "70efbe5d40ef4037c870e249af6d9864d01ca80e82bdbb77524d9a809947cc9c"
+    },
+    {
+      "path": "src/render/streetlamp_assets.ts",
+      "bytes": 16570,
+      "sha256": "1d1e30d4f55a799cfc8a739363d8182ae689c18b1b890515cbcfb48542014773"
+    },
+    {
+      "path": "docs/freeholds/content-manifest.md",
+      "bytes": 40387,
+      "sha256": "c7ddc1a70d4511d47b03fb307edb4fafc940733d30b7a10b15edddcf53ef4fe0"
+    },
+    {
+      "path": "docs/freeholds/art-brief.md",
+      "bytes": 37338,
+      "sha256": "60b8f184a353adbb48605122ac0fcf02fd13ebad78de1baf5698a4ffe9957710"
+    },
+    {
+      "path": "docs/freeholds/content-numbers-workbook.md",
+      "bytes": 40264,
+      "sha256": "6b89444416733c15a9e0f4a869e1efbc9df688e63a21cbd4460ef1f981997499"
+    },
+    {
+      "path": "docs/freeholds/content-trial-2026-09-07/geometry-measurements.json",
+      "bytes": 51504,
+      "sha256": "aa3e35884452ff6c2b228c439ee731daf5fddace19bd213601aae3a16d8bc8f1"
+    },
+    {
+      "path": "scripts/assets/specs/garden_town.json",
+      "bytes": 3527,
+      "sha256": "724705ba5360487e6a8af79a58d25d93ecb107d13d172010005008baa29a2859"
+    },
+    {
+      "path": "scripts/assets/specs/dungeon.json",
+      "bytes": 14149,
+      "sha256": "39de5efe5d568f9c246fbef606cb204af835948955b7430bc16684a8a27590a4"
+    },
+    {
+      "path": "scripts/assets/specs/drakelands_castle.json",
+      "bytes": 12006,
+      "sha256": "a54146d2912c62fdb4c934a6bc6e3d8f7513856c655e5d6a678fa5792b4a284e"
+    },
+    {
+      "path": "scripts/assets/specs/asset_bits.json",
+      "bytes": 855,
+      "sha256": "fb07e6ffe1143593b050f59ea627a15c054cc4b71945cf10880fe03620688b7a"
+    },
+    {
+      "path": "scripts/assets/battleground/dressing.mjs",
+      "bytes": 40028,
+      "sha256": "0c397101ba7ebe53aef822aa3bfeaaf65485cb40c18a5fafe49dd545d7e97475"
+    },
+    {
+      "path": "CREDITS.md",
+      "bytes": 79911,
+      "sha256": "59978dfafc326da033d765ce10a84a32641704261b195781ec991fb023705891"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "bytes": 361124,
+      "sha256": "a26e452e853824b4b9a1e2b6f62374c5a5b3f3d5224b128bf9d57df4b79b19fa"
+    }
+  ],
+  "gridProposal": {
+    "referenceAsset": "public/models/dungeon/floor_tile_small.glb",
+    "referenceAxis": 0,
+    "proposedSubdivisions": 4,
+    "reason": "Reuse accepted vendor trial quarter-tile arithmetic; this is not final room-grid signoff.",
+    "measuredPitch": 0.5,
+    "reference": {
+      "source": {
+        "path": "public/models/dungeon/floor_tile_small.glb",
+        "bytes": 28040,
+        "sha256": "02a3d76515b27ae064c012a04eb8375da672da45ad48770c0522b0108bfeef85"
+      },
+      "license": "Existing KayKit reference asset, CREDITS.md CC0 attribution",
+      "defaultScene": "Scene",
+      "animationsPresent": [],
+      "state": "static default pose, no animation playback",
+      "nodeTransformedBounds": {
+        "min": [
+          -1,
+          -0.09995346150822329,
+          -1
+        ],
+        "max": [
+          1,
+          0.04995345703787493,
+          1
+        ],
+        "size": [
+          2,
+          0.14990691854609822,
+          2
+        ]
+      },
+      "primitives": [
+        {
+          "node": "floor_tile_small",
+          "mesh": "Cube.15992",
+          "primitive": 0,
+          "worldMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            -0.02500000223517418,
+            0,
+            1
+          ],
+          "rawAccessorBounds": {
+            "min": [
+              -1,
+              -0.07495345927304911,
+              -1
+            ],
+            "max": [
+              1,
+              0.07495345927304911,
+              1
+            ],
+            "size": [
+              2,
+              0.14990691854609822,
+              2
+            ]
+          },
+          "nodeTransformedBounds": {
+            "min": [
+              -1,
+              -0.09995346150822329,
+              -1
+            ],
+            "max": [
+              1,
+              0.04995345703787493,
+              1
+            ],
+            "size": [
+              2,
+              0.14990691854609822,
+              2
+            ]
+          },
+          "triangles": 66,
+          "vertices": 104,
+          "positionComponentType": 5122,
+          "positionNormalized": true,
+          "material": "texture"
+        }
+      ],
+      "metrics": {
+        "triangles": 66,
+        "primitives": 1,
+        "materials": 1,
+        "decodedGeometryBytes": 1748,
+        "encodedTextureBytes": 24520
+      },
+      "textures": [
+        {
+          "name": "dungeon_texture",
+          "mimeType": "image/ktx2",
+          "size": [
+            512,
+            512
+          ],
+          "encodedBytes": 24520,
+          "sha256": "14bd176a3ad34fa25575eba61aa8b3b5aca481d4008df6cdfa95221d004edc6c"
+        }
+      ],
+      "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+    }
+  },
+  "decorProposal": {
+    "referenceAsset": "public/models/dungeon/chair.glb",
+    "referenceItem": "freehold_spindle_chair",
+    "method": "ceil maximum chair-relative triangles/primitives/materials/decodedGeometryBytes ratio, minimum one. Texture payloads are recorded separately; no GPU-time calibration.",
+    "reference": {
+      "source": {
+        "path": "public/models/dungeon/chair.glb",
+        "bytes": 35564,
+        "sha256": "e69174fcb023d1a4198eb7e6c8f85c6ba0f13bd8cd74fb3901243522e97ae444"
+      },
+      "license": "Existing KayKit reference asset, CREDITS.md CC0 attribution",
+      "defaultScene": "Scene",
+      "animationsPresent": [],
+      "state": "static default pose, no animation playback",
+      "nodeTransformedBounds": {
+        "min": [
+          -0.37372929857641496,
+          2.9802318834981634e-8,
+          -0.37502149747282304
+        ],
+        "max": [
+          0.37631554411321916,
+          1.2265056371688843,
+          0.3750233452168111
+        ],
+        "size": [
+          0.7500448426896341,
+          1.2265056073665654,
+          0.7500448426896341
+        ]
+      },
+      "primitives": [
+        {
+          "node": "chair",
+          "mesh": "chair",
+          "primitive": 0,
+          "worldMatrix": [
+            0.6132528036832827,
+            0,
+            0,
+            0,
+            0,
+            0.6132528036832827,
+            0,
+            0,
+            0,
+            0,
+            0.6132528036832827,
+            0,
+            0.0012931227684020996,
+            0.6132528334856016,
+            9.238719940185547e-7,
+            1
+          ],
+          "rawAccessorBounds": {
+            "min": [
+              -0.6115298928800318,
+              -1,
+              -0.6115298928800318
+            ],
+            "max": [
+              0.6115298928800318,
+              1,
+              0.6115298928800318
+            ],
+            "size": [
+              1.2230597857600636,
+              2,
+              1.2230597857600636
+            ]
+          },
+          "nodeTransformedBounds": {
+            "min": [
+              -0.37372929857641496,
+              2.9802318834981634e-8,
+              -0.37502149747282304
+            ],
+            "max": [
+              0.37631554411321916,
+              1.2265056371688843,
+              0.3750233452168111
+            ],
+            "size": [
+              0.7500448426896341,
+              1.2265056073665654,
+              0.7500448426896341
+            ]
+          },
+          "triangles": 294,
+          "vertices": 506,
+          "positionComponentType": 5122,
+          "positionNormalized": true,
+          "material": "texture"
+        }
+      ],
+      "metrics": {
+        "triangles": 294,
+        "primitives": 1,
+        "materials": 1,
+        "decodedGeometryBytes": 8342,
+        "encodedTextureBytes": 27841
+      },
+      "textures": [
+        {
+          "name": "dungeon_texture",
+          "mimeType": "image/ktx2",
+          "size": [
+            512,
+            512
+          ],
+          "encodedBytes": 27841,
+          "sha256": "4d20faa5711dd532e39fa0cf25778afca7b0cffd5ad05deb4ff5f9d6625af84a"
+        }
+      ],
+      "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+    }
+  },
+  "fixtureBoundary": "Open development lattice and per-object containment only. No approved room polygon, protected doorway/arrival corridor, maximum legal room packing, final GLB reconciliation or LOW-device proof is claimed.",
+  "rows": [
+    {
+      "id": "freehold_weapon_rack",
+      "fixtureId": "crafted-geometry-v1:freehold_weapon_rack",
+      "mapping": {
+        "id": "freehold_weapon_rack",
+        "asset": "public/models/biome/hex_weaponrack.glb",
+        "sourceModelKey": "PROP_ASSET_DEFS.hexWeaponRack",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Inspected empty freestanding timber rack with broad base and crossbar. No weapons are present; final bracket and workmanship design remains unbuilt.",
+        "propKey": "hexWeaponRack",
+        "targetHeight": 1.5,
+        "heightReason": "Measured authored unit-scale rack height is 0.23999996483325958 world units. Propose three accepted grid cells (1.5 units) tall, deriving scale as 1.5 / measured height. This is new household tuning, not a verified existing placement transform."
+      },
+      "scaleDerivation": {
+        "targetHeight": 1.5,
+        "measuredSourceHeight": 0.23999996483325958,
+        "effectiveScale": 6.2500009158006655,
+        "arithmetic": "targetHeight / measuredSourceHeight"
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/biome/hex_weaponrack.glb",
+          "bytes": 29532,
+          "sha256": "ce9c93a09a5c961a49cef4e723dbb14458dbf2634e77a265e73fae139f0c9f18"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.10000331916473686,
+            0,
+            -0.07000448539633447
+          ],
+          "max": [
+            0.10000519671104728,
+            0.23999996483325958,
+            0.060004345921465696
+          ],
+          "size": [
+            0.20000851587578414,
+            0.23999996483325958,
+            0.13000883131780017
+          ]
+        },
+        "primitives": [
+          {
+            "node": "weaponrack",
+            "mesh": "weaponrack",
+            "primitive": 0,
+            "worldMatrix": [
+              0.11999998241662979,
+              0,
+              0,
+              0,
+              0,
+              0.11999998241662979,
+              0,
+              0,
+              0,
+              0,
+              0.11999998241662979,
+              0,
+              9.387731552124023e-7,
+              0.11999998241662979,
+              -0.005000069737434387,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.8333689382610553,
+                -1,
+                -0.5417035431989502
+              ],
+              "max": [
+                0.8333689382610553,
+                1,
+                0.5417035431989502
+              ],
+              "size": [
+                1.6667378765221106,
+                2,
+                1.0834070863979004
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.10000331916473686,
+                0,
+                -0.07000448539633447
+              ],
+              "max": [
+                0.10000519671104728,
+                0.23999996483325958,
+                0.060004345921465696
+              ],
+              "size": [
+                0.20000851587578414,
+                0.23999996483325958,
+                0.13000883131780017
+              ]
+            },
+            "triangles": 42,
+            "vertices": 84,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "hexagons_medieval"
+          }
+        ],
+        "metrics": {
+          "triangles": 42,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 1344,
+          "encodedTextureBytes": 26164
+        },
+        "textures": [
+          {
+            "name": "hexagons_medieval",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 26164,
+            "sha256": "b384d8cddb81d3351c6fa7ac484680375230e5ee08ffdd11d6a18afa185eb9a0"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          -9.387731552124023e-7,
+          0,
+          0.005000069737434387
+        ],
+        "scale": [
+          6.2500009158006655,
+          6.2500009158006655,
+          6.2500009158006655
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.6250267036957914,
+            0,
+            -0.4062776573992126
+          ],
+          "max": [
+            0.6250267036957914,
+            1.5,
+            0.4062776573992126
+          ],
+          "size": [
+            1.2500534073915828,
+            1.5,
+            0.8125553147984252
+          ]
+        },
+        "intendedWorldHeight": 1.5,
+        "measuredVertexRadius": 0.7454662401709541,
+        "conservativeBoxRadius": 0.7454662401709541,
+        "footprint": {
+          "width": 3,
+          "depth": 2
+        },
+        "r": 1,
+        "collisionClass": "solid",
+        "circleSlack": 0.2545337598290459,
+        "envelopeSlack": [
+          0.24994659260841723,
+          0.18744468520157476
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 3
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 0.14285714285714285,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 0.1611124430592184
+        },
+        "decorCost": 1
+      }
+    },
+    {
+      "id": "freehold_iron_brazier",
+      "fixtureId": "crafted-geometry-v1:freehold_iron_brazier",
+      "mapping": {
+        "id": "freehold_iron_brazier",
+        "asset": "public/models/props/yumi_brazier_stand.glb",
+        "sourceModelKey": "YUMI_MAZE_ASSET_URL.brazier_stand",
+        "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+        "identity": "Inspected raised empty bowl on a stable pedestal. Material finish and iron rivets are not represented by this diagnostic; no flame or point light is included.",
+        "targetHeight": 1.5,
+        "heightReason": "Propose three accepted development grid cells high for a household standing bowl; source dimension measured before deriving the uniform scale."
+      },
+      "scaleDerivation": {
+        "targetHeight": 1.5,
+        "measuredSourceHeight": 1.2999999523162842,
+        "effectiveScale": 1.15384619616898,
+        "arithmetic": "targetHeight / measuredSourceHeight"
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/props/yumi_brazier_stand.glb",
+          "bytes": 264676,
+          "sha256": "d40737b062f86859806b6e3aacb89924fbd0a3773a714ba8c747077da2efacbe"
+        },
+        "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.3523453345292801,
+            0,
+            -0.3523453345292801
+          ],
+          "max": [
+            0.3523453345292801,
+            1.2999999523162842,
+            0.3523453345292801
+          ],
+          "size": [
+            0.7046906690585601,
+            1.2999999523162842,
+            0.7046906690585601
+          ]
+        },
+        "primitives": [
+          {
+            "node": "tripo_node_6b4d01f9-ad48-4719-8ca1-b532f61f94f6",
+            "mesh": "tripo_mesh_6b4d01f9-ad48-4719-8ca1-b532f61f94f6",
+            "primitive": 0,
+            "worldMatrix": [
+              0.6499999761581421,
+              0,
+              0,
+              0,
+              0,
+              0.6499999761581421,
+              0,
+              0,
+              0,
+              0,
+              0.6499999761581421,
+              0,
+              0,
+              0.6499999761581421,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.5420697653126622,
+                -1,
+                -0.5420697653126622
+              ],
+              "max": [
+                0.5420697653126622,
+                1,
+                0.5420697653126622
+              ],
+              "size": [
+                1.0841395306253243,
+                2,
+                1.0841395306253243
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.3523453345292801,
+                0,
+                -0.3523453345292801
+              ],
+              "max": [
+                0.3523453345292801,
+                1.2999999523162842,
+                0.3523453345292801
+              ],
+              "size": [
+                0.7046906690585601,
+                1.2999999523162842,
+                0.7046906690585601
+              ]
+            },
+            "triangles": 1951,
+            "vertices": 2712,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "tripo_material_6b4d01f9-ad48-4719-8ca1-b532f61f94f6"
+          }
+        ],
+        "metrics": {
+          "triangles": 1951,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 46962,
+          "encodedTextureBytes": 227895
+        },
+        "textures": [
+          {
+            "name": "Color_6b4d01f9-ad48-4719-8ca1-b532f61f94f6",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 40973,
+            "sha256": "360517edca90c049f021fe5579c384d7aa408e69bd43b2ca6d06739b42211738"
+          },
+          {
+            "name": "ORM_6b4d01f9-ad48-4719-8ca1-b532f61f94f6",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 9881,
+            "sha256": "c3ce514163b3c64829a55fcd621f48d174614ac831377078bdef70cfcfe174ba"
+          },
+          {
+            "name": "NormalGL_6b4d01f9-ad48-4719-8ca1-b532f61f94f6",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 177041,
+            "sha256": "182a08b1c0cd1c86d25b9c99c14054576ef002c3f110c321bc286fb5477a4743"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1.15384619616898,
+          1.15384619616898,
+          1.15384619616898
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.4065523239844966,
+            0,
+            -0.4065523239844966
+          ],
+          "max": [
+            0.4065523239844966,
+            1.5,
+            0.4065523239844966
+          ],
+          "size": [
+            0.8131046479689932,
+            1.5,
+            0.8131046479689932
+          ]
+        },
+        "intendedWorldHeight": 1.5,
+        "measuredVertexRadius": 0.4204277342628329,
+        "conservativeBoxRadius": 0.5749518103931757,
+        "footprint": {
+          "width": 2,
+          "depth": 2
+        },
+        "r": 0.5,
+        "collisionClass": "solid",
+        "circleSlack": 0.07957226573716708,
+        "envelopeSlack": [
+          0.18689535203100682,
+          0.18689535203100682
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 6.636054421768708,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 5.629585231359386
+        },
+        "decorCost": 7
+      }
+    },
+    {
+      "id": "freehold_patchwork_rug",
+      "fixtureId": "crafted-geometry-v1:freehold_patchwork_rug",
+      "mapping": {
+        "id": "freehold_patchwork_rug",
+        "source": "src/render/rift_decor.ts",
+        "sourceFunction": "buildRug",
+        "sourceModelKey": "buildRug",
+        "scale": [
+          0.25,
+          1,
+          0.15384615384615385
+        ],
+        "underlay": true,
+        "floorLift": 0.02,
+        "identity": "Exact accepted flat rug recipe and 2 by 4 world-unit transform. No patchwork panels or stitch texture; zero collision comes from underlay class.",
+        "scaleReason": "Reuse vendor development rug dimensions: one by two measured floor tiles; retained source floor lift 0.02."
+      },
+      "scaleDerivation": {
+        "effectiveScale": [
+          0.25,
+          1,
+          0.15384615384615385
+        ],
+        "arithmetic": "explicit proposal scale; see mapping source/reason"
+      },
+      "measurement": {
+        "source": {
+          "path": "src/render/rift_decor.ts",
+          "bytes": 9093,
+          "sha256": "ebdf851444eea5b1ed93ec824bdd159006a68150f1793a8c387728bcda848472"
+        },
+        "sourceFunction": "buildRug",
+        "sourceFunctionSha256": "ea95a5f4a867496179626d82ad868a2ae12b017df6f43375d502b4ca55fb2ae4",
+        "license": "World of ClaudeCraft project source, root MIT code license",
+        "method": "Instantiate the exact guarded PlaneGeometry recipe, then measure its rotated Float32 vertices and existing Y offset. No shipping model exists for this recipe.",
+        "rawAccessorBounds": {
+          "min": [
+            -4,
+            -13,
+            0
+          ],
+          "max": [
+            4,
+            13,
+            0
+          ],
+          "size": [
+            8,
+            26,
+            0
+          ]
+        },
+        "nodeTransformedBounds": {
+          "min": [
+            -4,
+            0.019999999999999206,
+            -13
+          ],
+          "max": [
+            4,
+            0.020000000000000795,
+            13
+          ],
+          "size": [
+            8,
+            1.5890067039947553e-15,
+            26
+          ]
+        },
+        "sourceRotationX": -1.5707963267948966,
+        "sourceTranslation": [
+          0,
+          0.02,
+          0
+        ],
+        "metrics": {
+          "triangles": 2,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 140,
+          "encodedTextureBytes": 0
+        },
+        "textures": [],
+        "residencyBoundary": "Geometry array bytes measured. The existing transparent material may add overdraw; no GPU frame-time equivalence is claimed."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          -0.019999999999999206,
+          0
+        ],
+        "scale": [
+          0.25,
+          1,
+          0.15384615384615385
+        ],
+        "postScaleTranslation": [
+          0,
+          0.02,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -1,
+            0.02,
+            -2
+          ],
+          "max": [
+            1,
+            0.02000000000000159,
+            2
+          ],
+          "size": [
+            2,
+            1.5890067039947553e-15,
+            4
+          ]
+        },
+        "intendedWorldHeight": 1.5890067039947553e-15,
+        "measuredVertexRadius": 2.23606797749979,
+        "conservativeBoxRadius": 2.23606797749979,
+        "footprint": {
+          "width": 4,
+          "depth": 8
+        },
+        "r": 0,
+        "collisionClass": "walk_through_underlay",
+        "circleSlack": null,
+        "envelopeSlack": [
+          0,
+          0
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 8,
+            "depth": 4
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 0.006802721088435374,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 0.016782546152001917
+        },
+        "decorCost": 1
+      }
+    },
+    {
+      "id": "freehold_hide_armchair",
+      "fixtureId": "crafted-geometry-v1:freehold_hide_armchair",
+      "mapping": {
+        "id": "freehold_hide_armchair",
+        "asset": "public/models/dungeon/chair.glb",
+        "sourceModelKey": "PROP_ASSET_DEFS.kcasChair",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Existing upright wooden chair proxy. It has no soft hide sling, stitching or armchair width; accept as numeric development placeholder only and remeasure final armchair.",
+        "propKey": "kcasChair",
+        "scale": 1.3,
+        "scaleSource": "src/render/lastkeep_dressing.ts",
+        "scaleWitness": "add('kcasChair', 'guest_east', 9.6, 85.5, 2.5, 1.3);"
+      },
+      "scaleDerivation": {
+        "effectiveScale": 1.3,
+        "arithmetic": "explicit proposal scale; see mapping source/reason"
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/chair.glb",
+          "bytes": 35564,
+          "sha256": "e69174fcb023d1a4198eb7e6c8f85c6ba0f13bd8cd74fb3901243522e97ae444"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.37372929857641496,
+            2.9802318834981634e-8,
+            -0.37502149747282304
+          ],
+          "max": [
+            0.37631554411321916,
+            1.2265056371688843,
+            0.3750233452168111
+          ],
+          "size": [
+            0.7500448426896341,
+            1.2265056073665654,
+            0.7500448426896341
+          ]
+        },
+        "primitives": [
+          {
+            "node": "chair",
+            "mesh": "chair",
+            "primitive": 0,
+            "worldMatrix": [
+              0.6132528036832827,
+              0,
+              0,
+              0,
+              0,
+              0.6132528036832827,
+              0,
+              0,
+              0,
+              0,
+              0.6132528036832827,
+              0,
+              0.0012931227684020996,
+              0.6132528334856016,
+              9.238719940185547e-7,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.6115298928800318,
+                -1,
+                -0.6115298928800318
+              ],
+              "max": [
+                0.6115298928800318,
+                1,
+                0.6115298928800318
+              ],
+              "size": [
+                1.2230597857600636,
+                2,
+                1.2230597857600636
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.37372929857641496,
+                2.9802318834981634e-8,
+                -0.37502149747282304
+              ],
+              "max": [
+                0.37631554411321916,
+                1.2265056371688843,
+                0.3750233452168111
+              ],
+              "size": [
+                0.7500448426896341,
+                1.2265056073665654,
+                0.7500448426896341
+              ]
+            },
+            "triangles": 294,
+            "vertices": 506,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "texture"
+          }
+        ],
+        "metrics": {
+          "triangles": 294,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 8342,
+          "encodedTextureBytes": 27841
+        },
+        "textures": [
+          {
+            "name": "dungeon_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27841,
+            "sha256": "4d20faa5711dd532e39fa0cf25778afca7b0cffd5ad05deb4ff5f9d6625af84a"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          -0.0012931227684020996,
+          -2.9802318834981634e-8,
+          -9.238719940185547e-7
+        ],
+        "scale": [
+          1.3,
+          1.3,
+          1.3
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.48752914774826217,
+            0,
+            -0.48752914774826217
+          ],
+          "max": [
+            0.48752914774826217,
+            1.5944572895765352,
+            0.48752914774826217
+          ],
+          "size": [
+            0.9750582954965243,
+            1.5944572895765352,
+            0.9750582954965243
+          ]
+        },
+        "intendedWorldHeight": 1.5944572895765352,
+        "measuredVertexRadius": 0.672419332660102,
+        "conservativeBoxRadius": 0.6894703327977889,
+        "footprint": {
+          "width": 2,
+          "depth": 2
+        },
+        "r": 1,
+        "collisionClass": "solid",
+        "circleSlack": 0.327580667339898,
+        "envelopeSlack": [
+          0.02494170450347566,
+          0.02494170450347566
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 1,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 1
+        },
+        "decorCost": 1
+      }
+    },
+    {
+      "id": "freehold_clockwork_lamp",
+      "fixtureId": "crafted-geometry-v1:freehold_clockwork_lamp",
+      "mapping": {
+        "id": "freehold_clockwork_lamp",
+        "asset": "public/models/dungeon/lantern_standing.glb",
+        "sourceModelKey": "battleground assetId dungeon/lantern_standing",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Weighted low cage proxy; no exposed winding mechanism or Engineering workmanship. Existing cage form inspected in accepted vendor evidence. No emitted light or animation is added.",
+        "scale": 1.5,
+        "scaleSource": "scripts/assets/battleground/dressing.mjs",
+        "scaleWitness": "assetId: 'dungeon/lantern_standing',\n      x: r4(room.x + 5.6),\n      z: r4(room.z),\n      rotY: 0,\n      scale: 1.5,"
+      },
+      "scaleDerivation": {
+        "effectiveScale": 1.5,
+        "arithmetic": "explicit proposal scale; see mapping source/reason"
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/lantern_standing.glb",
+          "bytes": 34196,
+          "sha256": "bd3aaea19a21580e7d04ebee72fc9723380da8c8f23a5514a31122e570b3c890"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.3199926108293772,
+            -2.9802322387695312e-8,
+            -0.3199926108293772
+          ],
+          "max": [
+            0.3199926108293772,
+            0.9251917004585266,
+            0.3199926108293772
+          ],
+          "size": [
+            0.6399852216587544,
+            0.925191730260849,
+            0.6399852216587544
+          ]
+        },
+        "primitives": [
+          {
+            "node": "lantern_standing",
+            "mesh": "Cube.134",
+            "primitive": 0,
+            "worldMatrix": [
+              0.4625958651304245,
+              0,
+              0,
+              0,
+              0,
+              0.4625958651304245,
+              0,
+              0,
+              0,
+              0,
+              0.4625958651304245,
+              0,
+              0,
+              0.4625958353281021,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.6917325357829524,
+                -1,
+                -0.6917325357829524
+              ],
+              "max": [
+                0.6917325357829524,
+                1,
+                0.6917325357829524
+              ],
+              "size": [
+                1.3834650715659047,
+                2,
+                1.3834650715659047
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.3199926108293772,
+                -2.9802322387695312e-8,
+                -0.3199926108293772
+              ],
+              "max": [
+                0.3199926108293772,
+                0.9251917004585266,
+                0.3199926108293772
+              ],
+              "size": [
+                0.6399852216587544,
+                0.925191730260849,
+                0.6399852216587544
+              ]
+            },
+            "triangles": 264,
+            "vertices": 338,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "HalloweenBits"
+          }
+        ],
+        "metrics": {
+          "triangles": 264,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 5978,
+          "encodedTextureBytes": 27828
+        },
+        "textures": [
+          {
+            "name": "halloweenbits_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27828,
+            "sha256": "796cdd66192b236146d1db3d80d12e3aa44086bacbef3caaeca17713487961ce"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          2.9802322387695312e-8,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.4799889162440658,
+            0,
+            -0.4799889162440658
+          ],
+          "max": [
+            0.4799889162440658,
+            1.3877875953912735,
+            0.4799889162440658
+          ],
+          "size": [
+            0.9599778324881316,
+            1.3877875953912735,
+            0.9599778324881316
+          ]
+        },
+        "intendedWorldHeight": 1.3877875953912735,
+        "measuredVertexRadius": 0.6788068351411215,
+        "conservativeBoxRadius": 0.6788068351411215,
+        "footprint": {
+          "width": 2,
+          "depth": 2
+        },
+        "r": 1,
+        "collisionClass": "solid",
+        "circleSlack": 0.3211931648588785,
+        "envelopeSlack": [
+          0.04002216751186838,
+          0.04002216751186838
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 0.8979591836734694,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 0.7166147206904819
+        },
+        "decorCost": 1
+      }
+    },
+    {
+      "id": "freehold_glass_floor_lamp",
+      "fixtureId": "crafted-geometry-v1:freehold_glass_floor_lamp",
+      "mapping": {
+        "id": "freehold_glass_floor_lamp",
+        "asset": "public/models/dungeon/lantern_standing.glb",
+        "sourceModelKey": "battleground assetId dungeon/lantern_standing",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Floor-supported low cage proxy; no amber glass vessel or Alchemy workmanship. Existing cage form inspected in accepted vendor evidence. No emitted light or animation is added.",
+        "scale": 1.5,
+        "scaleSource": "scripts/assets/battleground/dressing.mjs",
+        "scaleWitness": "assetId: 'dungeon/lantern_standing',\n      x: r4(room.x + 5.6),\n      z: r4(room.z),\n      rotY: 0,\n      scale: 1.5,"
+      },
+      "scaleDerivation": {
+        "effectiveScale": 1.5,
+        "arithmetic": "explicit proposal scale; see mapping source/reason"
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/lantern_standing.glb",
+          "bytes": 34196,
+          "sha256": "bd3aaea19a21580e7d04ebee72fc9723380da8c8f23a5514a31122e570b3c890"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.3199926108293772,
+            -2.9802322387695312e-8,
+            -0.3199926108293772
+          ],
+          "max": [
+            0.3199926108293772,
+            0.9251917004585266,
+            0.3199926108293772
+          ],
+          "size": [
+            0.6399852216587544,
+            0.925191730260849,
+            0.6399852216587544
+          ]
+        },
+        "primitives": [
+          {
+            "node": "lantern_standing",
+            "mesh": "Cube.134",
+            "primitive": 0,
+            "worldMatrix": [
+              0.4625958651304245,
+              0,
+              0,
+              0,
+              0,
+              0.4625958651304245,
+              0,
+              0,
+              0,
+              0,
+              0.4625958651304245,
+              0,
+              0,
+              0.4625958353281021,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.6917325357829524,
+                -1,
+                -0.6917325357829524
+              ],
+              "max": [
+                0.6917325357829524,
+                1,
+                0.6917325357829524
+              ],
+              "size": [
+                1.3834650715659047,
+                2,
+                1.3834650715659047
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.3199926108293772,
+                -2.9802322387695312e-8,
+                -0.3199926108293772
+              ],
+              "max": [
+                0.3199926108293772,
+                0.9251917004585266,
+                0.3199926108293772
+              ],
+              "size": [
+                0.6399852216587544,
+                0.925191730260849,
+                0.6399852216587544
+              ]
+            },
+            "triangles": 264,
+            "vertices": 338,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "HalloweenBits"
+          }
+        ],
+        "metrics": {
+          "triangles": 264,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 5978,
+          "encodedTextureBytes": 27828
+        },
+        "textures": [
+          {
+            "name": "halloweenbits_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27828,
+            "sha256": "796cdd66192b236146d1db3d80d12e3aa44086bacbef3caaeca17713487961ce"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          2.9802322387695312e-8,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.4799889162440658,
+            0,
+            -0.4799889162440658
+          ],
+          "max": [
+            0.4799889162440658,
+            1.3877875953912735,
+            0.4799889162440658
+          ],
+          "size": [
+            0.9599778324881316,
+            1.3877875953912735,
+            0.9599778324881316
+          ]
+        },
+        "intendedWorldHeight": 1.3877875953912735,
+        "measuredVertexRadius": 0.6788068351411215,
+        "conservativeBoxRadius": 0.6788068351411215,
+        "footprint": {
+          "width": 2,
+          "depth": 2
+        },
+        "r": 1,
+        "collisionClass": "solid",
+        "circleSlack": 0.3211931648588785,
+        "envelopeSlack": [
+          0.04002216751186838,
+          0.04002216751186838
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 0.8979591836734694,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 0.7166147206904819
+        },
+        "decorCost": 1
+      }
+    },
+    {
+      "id": "freehold_chart_easel",
+      "fixtureId": "crafted-geometry-v1:freehold_chart_easel",
+      "mapping": {
+        "id": "freehold_chart_easel",
+        "asset": "public/models/props/inscription_lectern.glb",
+        "sourceModelKey": "ARTISAN_ASSET_URL.inscription_lectern (retained inventory metadata)",
+        "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+        "identity": "Inspected freestanding book lectern proxy with pedestal. It is not a parchment chart easel: no geographic content is introduced and final chart form requires replacement and remeasurement.",
+        "targetHeight": 1.5,
+        "heightReason": "Propose three accepted development grid cells high; existing retained metadata target is 1.1, so this is an explicit new household proposal, not the current placement transform."
+      },
+      "scaleDerivation": {
+        "targetHeight": 1.5,
+        "measuredSourceHeight": 1.100000023841858,
+        "effectiveScale": 1.3636363340803421,
+        "arithmetic": "targetHeight / measuredSourceHeight"
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/props/inscription_lectern.glb",
+          "bytes": 228212,
+          "sha256": "9561ddd05b882b23e7d23a94ab9f11ff43171674c7256d89345b5cb4d2441416"
+        },
+        "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.2766533462471618,
+            0,
+            -0.37991577714829877
+          ],
+          "max": [
+            0.2766533462471618,
+            1.100000023841858,
+            0.37991577714829877
+          ],
+          "size": [
+            0.5533066924943236,
+            1.100000023841858,
+            0.7598315542965975
+          ]
+        },
+        "primitives": [
+          {
+            "node": "tripo_node_f5b42411-e450-475b-92ef-c07794363a4c",
+            "mesh": "tripo_mesh_f5b42411-e450-475b-92ef-c07794363a4c",
+            "primitive": 0,
+            "worldMatrix": [
+              0.550000011920929,
+              0,
+              0,
+              0,
+              0,
+              0.550000011920929,
+              0,
+              0,
+              0,
+              0,
+              0.550000011920929,
+              0,
+              0,
+              0.550000011920929,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.5030060731833857,
+                -1,
+                -0.6907559434797205
+              ],
+              "max": [
+                0.5030060731833857,
+                1,
+                0.6907559434797205
+              ],
+              "size": [
+                1.0060121463667715,
+                2,
+                1.381511886959441
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.2766533462471618,
+                0,
+                -0.37991577714829877
+              ],
+              "max": [
+                0.2766533462471618,
+                1.100000023841858,
+                0.37991577714829877
+              ],
+              "size": [
+                0.5533066924943236,
+                1.100000023841858,
+                0.7598315542965975
+              ]
+            },
+            "triangles": 2100,
+            "vertices": 2774,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "tripo_material_f5b42411-e450-475b-92ef-c07794363a4c"
+          }
+        ],
+        "metrics": {
+          "triangles": 2100,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 48662,
+          "encodedTextureBytes": 191325
+        },
+        "textures": [
+          {
+            "name": "Color_f5b42411-e450-475b-92ef-c07794363a4c",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 49523,
+            "sha256": "39b1dac31b558aa72bb2cead2f64ba84f44557c84a8e55e0b544754c4ec518f4"
+          },
+          {
+            "name": "ORM_f5b42411-e450-475b-92ef-c07794363a4c",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 24106,
+            "sha256": "11c192a8a7ee5f1436dbe362643f7bba75964373ca9f5fb1f6e25bf37d6a5d1f"
+          },
+          {
+            "name": "NormalGL_f5b42411-e450-475b-92ef-c07794363a4c",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 117696,
+            "sha256": "b352f01074e0ea65226777ab8b3d7f100475fa28fa41964920f6b6de9843cfc3"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1.3636363340803421,
+          1.3636363340803421,
+          1.3636363340803421
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.3772545548875393,
+            0,
+            -0.5180669576097904
+          ],
+          "max": [
+            0.3772545548875393,
+            1.5,
+            0.5180669576097904
+          ],
+          "size": [
+            0.7545091097750786,
+            1.5,
+            1.0361339152195808
+          ]
+        },
+        "intendedWorldHeight": 1.5,
+        "measuredVertexRadius": 0.6012515230511192,
+        "conservativeBoxRadius": 0.6408700115861716,
+        "footprint": {
+          "width": 2,
+          "depth": 3
+        },
+        "r": 1,
+        "collisionClass": "solid",
+        "circleSlack": 0.3987484769488808,
+        "envelopeSlack": [
+          0.24549089022492143,
+          0.46386608478041924
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 3,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 7.142857142857143,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 5.833373291776552
+        },
+        "decorCost": 8
+      }
+    },
+    {
+      "id": "freehold_jewel_floor_lamp",
+      "fixtureId": "crafted-geometry-v1:freehold_jewel_floor_lamp",
+      "mapping": {
+        "id": "freehold_jewel_floor_lamp",
+        "asset": "public/models/props/streetlamp_amberfall_crystal.glb",
+        "sourceModelKey": "STREETLAMP_ASSET_DEFS.amberfall_crystal",
+        "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+        "identity": "Inspected faceted lamp head suspended from a substantial freestanding post and foot. Floor-supported streetlamp proxy, not a ceiling chandelier. Final metal jewel setting and household proportions remain unbuilt.",
+        "targetHeight": 2,
+        "heightReason": "Propose four accepted development grid cells high. Current streetlamp targetHeight is 5.5 and uses separate footprint normalization; this trial instead uniformly scales decoded source geometry to 2 world units and recenters combined X/Z bounds."
+      },
+      "scaleDerivation": {
+        "targetHeight": 2,
+        "measuredSourceHeight": 5.5,
+        "effectiveScale": 0.36363636363636365,
+        "arithmetic": "targetHeight / measuredSourceHeight"
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/props/streetlamp_amberfall_crystal.glb",
+          "bytes": 107408,
+          "sha256": "0bc09ff610e99db7df715dbf5101e8517fd7e8d0278e2372755475be797c446f"
+        },
+        "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -1.1784035767693106,
+            0,
+            -0.7158040101321451
+          ],
+          "max": [
+            1.1784035767693106,
+            5.5,
+            0.7158040101321451
+          ],
+          "size": [
+            2.3568071535386212,
+            5.5,
+            1.4316080202642902
+          ]
+        },
+        "primitives": [
+          {
+            "node": "tripo_node_c2bceb06-2a74-445f-a2dd-defdcc5e67fd",
+            "mesh": "tripo_mesh_c2bceb06-2a74-445f-a2dd-defdcc5e67fd",
+            "primitive": 0,
+            "worldMatrix": [
+              2.75,
+              0,
+              0,
+              0,
+              0,
+              2.75,
+              0,
+              0,
+              0,
+              0,
+              2.75,
+              0,
+              0,
+              2.75,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.42851039155247655,
+                -1,
+                -0.26029236732078004
+              ],
+              "max": [
+                0.42851039155247655,
+                1,
+                0.26029236732078004
+              ],
+              "size": [
+                0.8570207831049531,
+                2,
+                0.5205847346415601
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -1.1784035767693106,
+                0,
+                -0.7158040101321451
+              ],
+              "max": [
+                1.1784035767693106,
+                5.5,
+                0.7158040101321451
+              ],
+              "size": [
+                2.3568071535386212,
+                5.5,
+                1.4316080202642902
+              ]
+            },
+            "triangles": 1076,
+            "vertices": 1149,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "tripo_material_c2bceb06-2a74-445f-a2dd-defdcc5e67fd"
+          },
+          {
+            "node": "tripo_node_c2bceb06-2a74-445f-a2dd-defdcc5e67fd",
+            "mesh": "tripo_mesh_c2bceb06-2a74-445f-a2dd-defdcc5e67fd",
+            "primitive": 1,
+            "worldMatrix": [
+              2.75,
+              0,
+              0,
+              0,
+              0,
+              2.75,
+              0,
+              0,
+              0,
+              0,
+              2.75,
+              0,
+              0,
+              2.75,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                0.08410901211584826,
+                0.45988341929380167,
+                -0.05285805841242714
+              ],
+              "max": [
+                0.3346354564043092,
+                0.6985686819055758,
+                0.18591875972777488
+              ],
+              "size": [
+                0.25052644428846094,
+                0.23868526261177408,
+                0.23877681814020202
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                0.2312997833185827,
+                4.014679403057954,
+                -0.14535966063417463
+              ],
+              "max": [
+                0.9202475051118503,
+                4.671063875240334,
+                0.511276589251381
+              ],
+              "size": [
+                0.6889477217932676,
+                0.6563844721823795,
+                0.6566362498855556
+              ]
+            },
+            "triangles": 72,
+            "vertices": 67,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "LAMP_GLASS"
+          },
+          {
+            "node": "tripo_node_c2bceb06-2a74-445f-a2dd-defdcc5e67fd",
+            "mesh": "tripo_mesh_c2bceb06-2a74-445f-a2dd-defdcc5e67fd",
+            "primitive": 2,
+            "worldMatrix": [
+              2.75,
+              0,
+              0,
+              0,
+              0,
+              2.75,
+              0,
+              0,
+              0,
+              0,
+              2.75,
+              0,
+              0,
+              2.75,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                0.14526810510574664,
+                0.4980925931577502,
+                0.005615405743583483
+              ],
+              "max": [
+                0.27347636341441084,
+                0.6603595080416272,
+                0.1274452955717643
+              ],
+              "size": [
+                0.1282082583086642,
+                0.16226691488387707,
+                0.1218298898281808
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                0.3994872890408033,
+                4.119754631183813,
+                0.01544236579485458
+              ],
+              "max": [
+                0.7520599993896298,
+                4.565988647114475,
+                0.3504745628223518
+              ],
+              "size": [
+                0.3525727103488265,
+                0.4462340159306617,
+                0.3350321970274972
+              ]
+            },
+            "triangles": 20,
+            "vertices": 60,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "LAMP_SOURCE"
+          }
+        ],
+        "metrics": {
+          "triangles": 1168,
+          "primitives": 3,
+          "materials": 3,
+          "decodedGeometryBytes": 23356,
+          "encodedTextureBytes": 86759
+        },
+        "textures": [
+          {
+            "name": "NormalGL_c2bceb06-2a74-445f-a2dd-defdcc5e67fd",
+            "mimeType": "image/ktx2",
+            "size": [
+              256,
+              256
+            ],
+            "encodedBytes": 56373,
+            "sha256": "8098d19cc14c11698e16ceabc7c7b7fc2fcbb1f46011d9c5582d95bc3126ad9a"
+          },
+          {
+            "name": "Color_c2bceb06-2a74-445f-a2dd-defdcc5e67fd",
+            "mimeType": "image/ktx2",
+            "size": [
+              256,
+              256
+            ],
+            "encodedBytes": 17620,
+            "sha256": "0f7141d0ff941c65387289d9372de0e461e3d5b1fde1e6f2133c0afef8a86dbb"
+          },
+          {
+            "name": "ORM_c2bceb06-2a74-445f-a2dd-defdcc5e67fd",
+            "mimeType": "image/ktx2",
+            "size": [
+              256,
+              256
+            ],
+            "encodedBytes": 12766,
+            "sha256": "7cb2ee08cbba499df8d88c065726e9767c938724ecaebe626181de497e7ffc6b"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.36363636363636365,
+          0.36363636363636365,
+          0.36363636363636365
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.4285103915524766,
+            0,
+            -0.26029236732078004
+          ],
+          "max": [
+            0.4285103915524766,
+            2,
+            0.26029236732078004
+          ],
+          "size": [
+            0.8570207831049532,
+            2,
+            0.5205847346415601
+          ]
+        },
+        "intendedWorldHeight": 2,
+        "measuredVertexRadius": 0.43909473260808396,
+        "conservativeBoxRadius": 0.5013713914394325,
+        "footprint": {
+          "width": 2,
+          "depth": 2
+        },
+        "r": 0.5,
+        "collisionClass": "solid",
+        "circleSlack": 0.06090526739191604,
+        "envelopeSlack": [
+          0.14297921689504678,
+          0.4794152653584399
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 3.9727891156462585,
+          "primitives": 3,
+          "materials": 3,
+          "decodedGeometryBytes": 2.7998081994725483
+        },
+        "decorCost": 4
+      }
+    },
+    {
+      "id": "freehold_set_supper_table",
+      "fixtureId": "crafted-geometry-v1:freehold_set_supper_table",
+      "mapping": {
+        "id": "freehold_set_supper_table",
+        "asset": "public/models/dungeon/table_medium_tablecloth_decorated_b.glb",
+        "sourceModelKey": "existing GLB filename table_medium_tablecloth_decorated_b (no furnishing registration)",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Existing table with cloth and inert tabletop composition. No charges, food grants, Well Fed, consumption or station functionality is reused. Inspected whole height includes a tall bottle above the table surface; height is not tabletop height.",
+        "scale": 1.25,
+        "scaleReason": "Propose same scalar as accepted vendor round table, not a claimed existing placement scale for this exact table; full measured extents must be accepted."
+      },
+      "scaleDerivation": {
+        "effectiveScale": 1.25,
+        "arithmetic": "explicit proposal scale; see mapping source/reason"
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/table_medium_tablecloth_decorated_b.glb",
+          "bytes": 47504,
+          "sha256": "48463d0766272e0dd22f2d76bc19f03837b51c57396e68bf209ca66e77cfc308"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.9999998211860657,
+            -0.000012043810331374694,
+            -0.9999998211860657
+          ],
+          "max": [
+            1.0000001788139343,
+            1.885726656711535,
+            1.0000001788139343
+          ],
+          "size": [
+            2,
+            1.8857387005218662,
+            2
+          ]
+        },
+        "primitives": [
+          {
+            "node": "table_medium_tablecloth_decorated_B",
+            "mesh": "table_medium_tablecloth_decorated_B",
+            "primitive": 0,
+            "worldMatrix": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              1.7881393432617188e-7,
+              0.9428573064506018,
+              1.7881393432617188e-7,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -1,
+                -0.9428693502609332,
+                -1
+              ],
+              "max": [
+                1,
+                0.9428693502609332,
+                1
+              ],
+              "size": [
+                2,
+                1.8857387005218664,
+                2
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.9999998211860657,
+                -0.000012043810331374694,
+                -0.9999998211860657
+              ],
+              "max": [
+                1.0000001788139343,
+                1.885726656711535,
+                1.0000001788139343
+              ],
+              "size": [
+                2,
+                1.8857387005218662,
+                2
+              ]
+            },
+            "triangles": 1200,
+            "vertices": 1618,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "texture"
+          }
+        ],
+        "metrics": {
+          "triangles": 1200,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 28234,
+          "encodedTextureBytes": 27841
+        },
+        "textures": [
+          {
+            "name": "dungeon_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27841,
+            "sha256": "4d20faa5711dd532e39fa0cf25778afca7b0cffd5ad05deb4ff5f9d6625af84a"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          -1.7881393432617188e-7,
+          0.000012043810331374694,
+          -1.7881393432617188e-7
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -1.25,
+            0,
+            -1.25
+          ],
+          "max": [
+            1.25,
+            2.3571733756523328,
+            1.25
+          ],
+          "size": [
+            2.5,
+            2.3571733756523328,
+            2.5
+          ]
+        },
+        "intendedWorldHeight": 2.3571733756523328,
+        "measuredVertexRadius": 1.7457877448222516,
+        "conservativeBoxRadius": 1.7677669529663689,
+        "footprint": {
+          "width": 5,
+          "depth": 5
+        },
+        "r": 2,
+        "collisionClass": "solid",
+        "circleSlack": 0.25421225517774837,
+        "envelopeSlack": [
+          0,
+          0
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 5,
+            "depth": 5
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 4.081632653061225,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 3.3845600575401584
+        },
+        "decorCost": 5
+      }
+    },
+    {
+      "id": "freehold_glow_lantern",
+      "fixtureId": "crafted-geometry-v1:freehold_glow_lantern",
+      "mapping": {
+        "id": "freehold_glow_lantern",
+        "asset": "public/models/dungeon/lantern_standing.glb",
+        "sourceModelKey": "battleground assetId dungeon/lantern_standing",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Existing substantial low standing cage proxy. No Enchanting finish, animated glow, point light or gameplay effect is included.",
+        "scale": 1,
+        "scaleReason": "Reuse accepted vendor cage normalization and authored unit scale; shared source is explicit, not ten distinct finished models."
+      },
+      "scaleDerivation": {
+        "effectiveScale": 1,
+        "arithmetic": "explicit proposal scale; see mapping source/reason"
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/lantern_standing.glb",
+          "bytes": 34196,
+          "sha256": "bd3aaea19a21580e7d04ebee72fc9723380da8c8f23a5514a31122e570b3c890"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.3199926108293772,
+            -2.9802322387695312e-8,
+            -0.3199926108293772
+          ],
+          "max": [
+            0.3199926108293772,
+            0.9251917004585266,
+            0.3199926108293772
+          ],
+          "size": [
+            0.6399852216587544,
+            0.925191730260849,
+            0.6399852216587544
+          ]
+        },
+        "primitives": [
+          {
+            "node": "lantern_standing",
+            "mesh": "Cube.134",
+            "primitive": 0,
+            "worldMatrix": [
+              0.4625958651304245,
+              0,
+              0,
+              0,
+              0,
+              0.4625958651304245,
+              0,
+              0,
+              0,
+              0,
+              0.4625958651304245,
+              0,
+              0,
+              0.4625958353281021,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.6917325357829524,
+                -1,
+                -0.6917325357829524
+              ],
+              "max": [
+                0.6917325357829524,
+                1,
+                0.6917325357829524
+              ],
+              "size": [
+                1.3834650715659047,
+                2,
+                1.3834650715659047
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.3199926108293772,
+                -2.9802322387695312e-8,
+                -0.3199926108293772
+              ],
+              "max": [
+                0.3199926108293772,
+                0.9251917004585266,
+                0.3199926108293772
+              ],
+              "size": [
+                0.6399852216587544,
+                0.925191730260849,
+                0.6399852216587544
+              ]
+            },
+            "triangles": 264,
+            "vertices": 338,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "HalloweenBits"
+          }
+        ],
+        "metrics": {
+          "triangles": 264,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 5978,
+          "encodedTextureBytes": 27828
+        },
+        "textures": [
+          {
+            "name": "halloweenbits_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27828,
+            "sha256": "796cdd66192b236146d1db3d80d12e3aa44086bacbef3caaeca17713487961ce"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          2.9802322387695312e-8,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.3199926108293772,
+            0,
+            -0.3199926108293772
+          ],
+          "max": [
+            0.3199926108293772,
+            0.925191730260849,
+            0.3199926108293772
+          ],
+          "size": [
+            0.6399852216587544,
+            0.925191730260849,
+            0.6399852216587544
+          ]
+        },
+        "intendedWorldHeight": 0.925191730260849,
+        "measuredVertexRadius": 0.45253789009408096,
+        "conservativeBoxRadius": 0.45253789009408096,
+        "footprint": {
+          "width": 2,
+          "depth": 2
+        },
+        "r": 0.5,
+        "collisionClass": "solid",
+        "circleSlack": 0.04746210990591904,
+        "envelopeSlack": [
+          0.3600147783412456,
+          0.3600147783412456
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 0.8979591836734694,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 0.7166147206904819
+        },
+        "decorCost": 1
+      }
+    }
+  ]
+}

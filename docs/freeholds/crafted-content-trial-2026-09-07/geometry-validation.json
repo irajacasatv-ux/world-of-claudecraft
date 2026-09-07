@@ -1,0 +1,74 @@
+{
+  "status": "executed, passed; pending parent contribution gate",
+  "productionEnabled": false,
+  "approval": null,
+  "checks": [
+    {
+      "command": "npx @biomejs/biome check --write scripts/freeholds/crafted_geometry_measure.mjs scripts/freeholds/crafted_geometry_inspection.mjs",
+      "outcome": "exit 0, 2 files formatted"
+    },
+    {
+      "command": "node scripts/freeholds/crafted_geometry_measure.mjs > docs/freeholds/crafted-content-trial-2026-09-07/geometry-measurements.json",
+      "outcome": "exit 0; all per-row containment and quarter-turn assertions pass; source snapshot unchanged"
+    },
+    {
+      "command": "node scripts/freeholds/crafted_geometry_measure.mjs > /tmp/crafted-geometry-rerun.json",
+      "outcome": "exit 0"
+    },
+    {
+      "command": "cmp docs/freeholds/crafted-content-trial-2026-09-07/geometry-measurements.json /tmp/crafted-geometry-rerun.json",
+      "outcome": "exit 0; byte-identical second run"
+    },
+    {
+      "command": "npx vitest run tests/freehold_trial_geometry.test.ts",
+      "outcome": "exit 0; 1 file, 12 tests passed"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/freeholds/crafted-content-trial-2026-09-07/geometry-proposal.json",
+      "bytes": 8417,
+      "sha256": "d944116ea84fedc226635cb74fa5c6dadccca531622439f8b47e84e2d2e6825f"
+    },
+    {
+      "path": "docs/freeholds/crafted-content-trial-2026-09-07/geometry-measurements.json",
+      "bytes": 75312,
+      "sha256": "c340590e9b89415432f7c0712dacfea273486d3cc42b20900f1ae0004336a8c8"
+    },
+    {
+      "path": "scripts/freeholds/crafted_geometry_measure.mjs",
+      "bytes": 11997,
+      "sha256": "625ff37ebb1df683d343a43486078abf2fead18510f044a623a3c99562ed02ca"
+    },
+    {
+      "path": "scripts/freeholds/crafted_geometry_inspection.mjs",
+      "bytes": 3107,
+      "sha256": "8e8d089963183fa4540b4d72cfca9941112e384a1524dc98c5ba191fdab3dcae"
+    },
+    {
+      "path": "docs/freeholds/crafted-content-trial-2026-09-07/geometry-rack-inspection.png",
+      "bytes": 37489,
+      "sha256": "faccf37554077a9409c08136c5a834e4e430760eb0e8de148744a9b90f931a7f"
+    },
+    {
+      "path": "docs/freeholds/crafted-content-trial-2026-09-07/geometry-jewel-inspection.png",
+      "bytes": 45591,
+      "sha256": "356c4f56afefa82d0f919a9eb42f526ab3faf7807020990ea110d180daaefd10"
+    },
+    {
+      "path": "docs/freeholds/crafted-content-trial-2026-09-07/geometry-chart-inspection.png",
+      "bytes": 52940,
+      "sha256": "4782fbcfb6afb5d9eb402ca8bf7e245c53eb62252ce7c87f6c253d2252d6d8a7"
+    },
+    {
+      "path": "docs/freeholds/crafted-content-trial-2026-09-07/geometry-brazier-inspection.png",
+      "bytes": 68179,
+      "sha256": "d2d7068f6c99727b1e148c19ae79959677c197ebb68617dab65849b156eb0fa2"
+    },
+    {
+      "path": "docs/freeholds/crafted-content-trial-2026-09-07/geometry-table-inspection.png",
+      "bytes": 77074,
+      "sha256": "d84407331c15571a9b9608a4d43c79097094fef5ed7f133cbb477eabd39fd05d"
+    }
+  ]
+}

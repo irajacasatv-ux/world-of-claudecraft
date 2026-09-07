@@ -74,6 +74,7 @@ import { bagPools, fitsAll } from '../bags';
 import { CRAFT_BATCH_MAX, CRAFT_GOLD_SINK_COPPER_PER_BUDGET } from '../content/professions';
 import { recipeById } from '../content/recipes';
 import { ITEMS } from '../data';
+import { isFreeholdCraftAvailable } from '../freehold';
 import { countUnlockedInSlots, removeUnlockedFromSlots } from '../item_lock';
 import { holdsMaterialSignature } from '../material_signatures';
 import {
@@ -375,6 +376,9 @@ export function acquireRecipeForRecipe(
   source: 'trainer' | 'drop' | 'quest',
 ): AcquireRecipeResult {
   const recipeId = recipe.id;
+  if (!isFreeholdCraftAvailable(ctx.freeholdsEnabled, recipe.resultItemId)) {
+    return { ok: false, recipeId, reason: 'unknown_recipe' };
+  }
   const meta = ctx.players.get(pid);
   if (!meta) return { ok: false, recipeId, reason: 'unknown_recipe' };
   if (isRecipeKnown(meta, recipe)) return { ok: false, recipeId, reason: 'already_known' };
@@ -839,6 +843,9 @@ export function resolveCraftForRecipe(
   recipe: ProfessionRecipeRecord,
   commission = false,
 ): CraftResult {
+  if (!isFreeholdCraftAvailable(ctx.freeholdsEnabled, recipe.resultItemId)) {
+    return { ok: false, recipeId: recipe.id, reason: 'unknown_recipe' };
+  }
   const denial = evaluateCraftAdmission(ctx, pid, recipe, commission);
   if (denial) return denial;
   const meta = ctx.players.get(pid);
@@ -1311,6 +1318,7 @@ export function maxCraftCountForRecipe(
   recipe: ProfessionRecipeRecord,
   pid: number,
 ): number {
+  if (!isFreeholdCraftAvailable(ctx.freeholdsEnabled, recipe.resultItemId)) return 0;
   const meta = ctx.players.get(pid);
   const craftSkills = meta ? meta.craftSkills : {};
   // Never promise a batch the resolve refuses. One-use quest knowledge
@@ -1499,7 +1507,9 @@ export function craftItem(
     return { ok: false, recipeId, reason: 'busy' };
   }
   const recipe = recipeById(recipeId);
-  if (!recipe) return { ok: false, recipeId, reason: 'unknown_recipe' };
+  if (!recipe || !isFreeholdCraftAvailable(ctx.freeholdsEnabled, recipe.resultItemId)) {
+    return { ok: false, recipeId, reason: 'unknown_recipe' };
+  }
   const denial = evaluateCraftAdmission(ctx, meta.entityId, recipe, commission);
   if (denial) return denial;
   const matsMax = maxCraftCountForRecipe(ctx, recipe, meta.entityId);

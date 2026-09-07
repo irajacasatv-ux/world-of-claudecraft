@@ -57,7 +57,6 @@ import { resolveColdsightAbilityForSpec } from '../sim/combat/hunter_coldsight';
 import { resolveHunterSharedAbilityForTalents } from '../sim/combat/hunter_shared';
 import { warriorParryChance } from '../sim/combat/warrior_hit_table';
 import { DEEDS } from '../sim/content/deeds';
-import { HEROIC_MARK_ITEM_ID } from '../sim/content/dungeon_difficulty';
 import { HEROIC_VENDOR_STOCK } from '../sim/content/heroic_vendor';
 import { CRUCIBLE_VENDOR_STOCK } from '../sim/content/ignivar_loot';
 import { isOnMountRaceStartPlatform } from '../sim/content/mounts';
@@ -500,7 +499,7 @@ import { craftDenyMessage } from './hud/professions/crafting_deny_core';
 import { parseCraftingTab, serializeCraftingTab } from './hud/professions/crafting_tab_pref';
 import {
   buildCraftingView,
-  craftingReagentSig,
+  craftingWindowRefreshSig,
   craftLearnHints,
   craftOwnsTab,
 } from './hud/professions/crafting_view';
@@ -578,7 +577,7 @@ import { closeOpenTouchMenu } from './hud/tap_menu';
 import { dismissBuyQuantityPrompts } from './hud/vendor/buy_quantity_prompt_window';
 import { buildCrucibleVendorView } from './hud/vendor/crucible_vendor_view';
 import { renderCrucibleVendorWindow } from './hud/vendor/crucible_vendor_window';
-import { buildHeroicVendorView } from './hud/vendor/heroic_vendor_view';
+import { buildHeroicVendorViewForWorld } from './hud/vendor/heroic_vendor_view';
 import { renderHeroicVendorWindow } from './hud/vendor/heroic_vendor_window';
 import { TrainLearnTracker } from './hud/vendor/train_learn_core';
 import { buildTrainView, isRecipeKnownForViewer } from './hud/vendor/train_view';
@@ -15282,13 +15281,10 @@ export class Hud {
     if (this.openHeroicVendorNpcId === null) return;
     const npc = this.sim.entities.get(this.openHeroicVendorNpcId);
     if (!npc) return;
-    const balance = this.sim.inventory
-      .filter((slot) => slot.itemId === HEROIC_MARK_ITEM_ID)
-      .reduce((sum, slot) => sum + slot.count, 0);
     renderHeroicVendorWindow(
       $('#vendor-window'),
       entityDisplayName(npc),
-      buildHeroicVendorView(HEROIC_VENDOR_STOCK, ITEMS, balance),
+      buildHeroicVendorViewForWorld(this.sim),
       {
         ...this.presentationBag,
         hideTooltip: () => this.hideTooltip(),
@@ -15503,6 +15499,7 @@ export class Hud {
       $('#train-window'),
       entityDisplayName(npc),
       buildTrainView(npc.templateId, {
+        freeholdsEnabled: this.sim.cfg.freeholdsEnabled === true,
         stations: this.sim.stationPlacements,
         knownRecipes: identity.knownRecipes,
         craftSkills: identity.craftSkills,
@@ -15906,11 +15903,7 @@ export class Hud {
     // offline Sim clones per read, so a second read would both waste the
     // clone and (worse) let the two see different snapshots across a tick.
     const craftVaultStock = this.sim.craftVaultStock;
-    this.lastCraftingReagentSig = craftingReagentSig(
-      this.sim.inventory,
-      this.sim.player.name,
-      craftVaultStock,
-    );
+    this.lastCraftingReagentSig = craftingWindowRefreshSig(this.sim, craftVaultStock);
     const session = this.craftCastSessionForPlayer();
     this.lastCraftingCastSig = craftCastActivitySig(session);
     // The window lists only KNOWN recipes, so an unlearned trainer
@@ -16469,15 +16462,11 @@ export class Hud {
    * Repaint an OPEN crafting window when the bag facts behind its Craft gate
    * actually moved (issue #2375). Cheap enough for the slow band and for every
    * inventory delta: the window has to be open before the signature is built
-   * at all, and an unchanged bag never reaches the painter.
+   * at all, and unchanged materials plus host capability elide the painter.
    */
   private refreshOpenCraftingIfReagentsChanged(): void {
     if ($('#crafting-window').style.display !== 'flex') return;
-    if (
-      craftingReagentSig(this.sim.inventory, this.sim.player.name, this.sim.craftVaultStock) ===
-      this.lastCraftingReagentSig
-    )
-      return;
+    if (craftingWindowRefreshSig(this.sim) === this.lastCraftingReagentSig) return;
     this.renderCrafting();
   }
 

@@ -374,6 +374,7 @@ import type { PerfCaptureResult, PerfCaptureStatus } from './perf_capture_types'
 import { dispatchPerfectItemCommand } from './perfect_item_command';
 import { parsePerfectingSwapCommand } from './perfecting_swap_command';
 import { runPeriodicSaveFlush } from './periodic_save_flush';
+import { buildWorldHello } from './world_hello';
 
 export type { PerfCaptureResult, PerfCaptureStatus } from './perf_capture_types';
 
@@ -3767,24 +3768,10 @@ export class GameServer {
       })
       .catch((err) => console.error('failed to open play session:', err));
 
-    this.send(session, {
-      t: 'hello',
-      pid,
-      seed: this.sim.cfg.seed,
-      name,
-      cls,
-      realm: REALM,
-      // Staff advert for admin-gated client surfaces (the /dev Spawns tab).
-      // Every gated command is re-checked server-side, so a forged true is inert.
-      admin: session.isAdmin,
-      // Soft (cosmetic) words the client masks locally when its profanity
-      // filter is on. Hard words are never sent — they're enforced server-side.
-      softWords: this.chatFilter.softWords(),
-      // Epoch ms of an active chat mute, or null. Lets the client show status
-      // at login; sending is still gated server-side regardless.
-      chatMutedUntil: session.chatMutedUntil ?? null,
-      movementWire: session.movementWireVersion,
-    });
+    this.send(
+      session,
+      buildWorldHello(this.sim.cfg, session, cls, REALM, this.chatFilter.softWords()),
+    );
     // Only the entering player sees their own world-entry notice; we don't
     // broadcast it to everyone (and likewise don't broadcast departures below).
     this.send(session, {
@@ -3933,18 +3920,10 @@ export class GameServer {
     session.selfHeavyDirty = true;
     session.lastWireRev = -1;
     session.lastArenaWireTick = -ARENA_WIRE_INTERVAL_TICKS;
-    this.send(session, {
-      t: 'hello',
-      pid: session.pid,
-      seed: this.sim.cfg.seed,
-      name: session.name,
-      cls,
-      realm: REALM,
-      admin: session.isAdmin,
-      softWords: this.chatFilter.softWords(),
-      chatMutedUntil: session.chatMutedUntil ?? null,
-      movementWire: session.movementWireVersion,
-    });
+    this.send(
+      session,
+      buildWorldHello(this.sim.cfg, session, cls, REALM, this.chatFilter.softWords()),
+    );
     // No self "entered the world" notice here: on a seamless reconnect the
     // player never saw themselves leave (and friends never got a presence
     // flap), so the fresh join notice would read as a glitch.

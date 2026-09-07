@@ -12,10 +12,11 @@
 // acquisition list OR the id is in the viewer's mirrored knownRecipes;
 // teachable = 'trainer' acquisition AND the viewer's craft tier meets the
 // recipe's tier AND not yet known; locked = 'trainer' acquisition AND tier
-// unmet. Locked rows are ALWAYS produced (the visible ladder: the player
-// must see what a master will eventually teach), never dropped.
+// unmet. Enabled content retains every locked row so the player can see
+// what a master will eventually teach. Disabled host content is omitted.
 
 import { ALL_RECIPES, recipeById } from '../../../sim/content/recipes';
+import { isFreeholdCraftAvailable } from '../../../sim/freehold';
 import type { StationType } from '../../../sim/professions/stations';
 import {
   teachTierMet,
@@ -61,6 +62,8 @@ export interface TrainView {
 }
 
 export interface TrainViewDeps {
+  /** Presentation-only host capability; absent defaults to disabled. */
+  freeholdsEnabled?: boolean;
   /** Physical stations exposed by the active IWorld. */
   stations: readonly StationDef[];
   /** The viewer's mirrored known-recipe ids (CraftingIdentityView.knownRecipes). */
@@ -218,6 +221,7 @@ export function buildTrainView(masterNpcId: string, deps: TrainViewDeps): TrainV
   if (deps.confirmedRecipes) for (const id of deps.confirmedRecipes) known.add(id);
   const rows: TrainRow[] = [];
   for (const recipe of ALL_RECIPES) {
+    if (!isFreeholdCraftAvailable(deps.freeholdsEnabled === true, recipe.resultItemId)) continue;
     if (trainingStationTypeFor(recipe) !== station.type) continue;
     const state = rowState(recipe, known, deps.craftSkills);
     if (state === null) continue;

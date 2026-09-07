@@ -697,10 +697,9 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     // Per-craft rare-tier milestones: exactly the crafts that ship a
     // rare-or-better GEAR/CONSUMABLE recipe today (re-derived from the real
     // content tables, never hand-copied), each at standard renown with no
-    // reward. Enchanting's only rare-quality outputs are the tool-effect
-    // charms (gatherers_cache/artisans_eye, TOOL_EFFECT_RECIPES): consumable
-    // recharge implements, not the graded gear/food/potion class this deed
-    // rewards, so they are excluded from the derivation the same way the
+    // reward. Enchanting supplies tool-effect charms and decorative furnishings,
+    // which are outside the graded gear/food/potion class this deed rewards.
+    // Both kinds are excluded from this derivation, the same way the
     // deed's own comment excludes enchanting; jewelcrafting joined the set
     // with the Masterwrought phase 05 base catalog (its rung-50 rare
     // jewelry), and inscription with the phase 06 catalog (its rung-50 rare
@@ -710,7 +709,7 @@ describe('audited launch totals (literals: update deliberately with the catalog)
         ALL_RECIPES.some((r) => {
           if (r.professionId !== craftId) return false;
           const item = ITEMS[r.resultItemId];
-          if (item?.use?.type === 'toolEffect') return false;
+          if (item?.use?.type === 'toolEffect' || item?.kind === 'furnishing') return false;
           const quality = item?.quality;
           return quality === 'rare' || quality === 'epic' || quality === 'legendary';
         }),
@@ -736,7 +735,7 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       expect(deed.trigger).toEqual({ kind: 'visit', markId: `craft_rare:${craftId}` });
     }
     // No deed keys off enchanting: that craft stays out of the per-craft
-    // rare-tier set (no item-def output to grade).
+    // rare-tier set (no qualifying gear, food or potion output).
     for (const craftId of ['enchanting']) {
       expect(DEEDS[`prog_${craftId}_rare`], craftId).toBeUndefined();
     }

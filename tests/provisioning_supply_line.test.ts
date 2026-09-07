@@ -878,8 +878,12 @@ describe('masterwrought R17 RULE 2: the accent rule', () => {
     // alchemy herb map and total in tests/provisioning_supply_line_apex.test.ts:
     // a careless edit that adds a tenth key on a new row now has to move this
     // number too.
+    // Accepted furnishing bills add three readings across Glass Floor Lamp and Set Supper Table.
     const REFUSED_UNDER_COUNT_READING = [
       'recipe_elixir_of_the_serpent/frost_gourd',
+      'recipe_freehold_glass_floor_lamp/frost_gourd',
+      'recipe_freehold_set_supper_table/frost_gourd',
+      'recipe_freehold_set_supper_table/highland_barley',
       'recipe_laden_hearth/fine_evergarden_greens',
       'recipe_marlows_grand_roast/frost_gourd',
       'recipe_marlows_grand_roast/highland_barley',
@@ -890,7 +894,7 @@ describe('masterwrought R17 RULE 2: the accent rule', () => {
     expect(
       new Set(REFUSED_UNDER_COUNT_READING.map((k) => k.split('/')[0])).size,
       'shipped rows the count reading would force an edit to',
-    ).toBe(4);
+    ).toBe(6);
     // THE THREE PLATES ARE PINNED OUT, not merely absent. An entry leaving this
     // list is the interesting direction (it makes the open decision look
     // cheaper), so the mechanism that retired them is asserted rather than
@@ -973,10 +977,11 @@ describe('masterwrought R18 and farming D24: the displacement guard', () => {
     // The claim this arm makes has never been "the numbers do not move"; it is
     // "herbalism loses nothing", and a total that only ever climbs is what says
     // so.
+    // Furnishing additions: Chart Easel adds goldleaf 2; Rug/Lamp/Easel/Table add sunpetal 1/1/2/1.
     expect(totals).toEqual({
       silverleaf_herb: 28,
-      goldleaf_herb: 33,
-      sunpetal_herb: 58,
+      goldleaf_herb: 35,
+      sunpetal_herb: 63,
     });
   });
 
@@ -993,12 +998,13 @@ describe('masterwrought R18 and farming D24: the displacement guard', () => {
         0,
       );
     };
-    expect(totalFor(['game_meat']), 'the skinning meat line').toBe(28);
-    expect(totalFor(['prime_cut']), 'the rare harvest specimen').toBe(12);
+    // Set Supper Table adds game meat 4, prime cut 1 and salt 2; all older bills hold.
+    expect(totalFor(['game_meat']), 'the skinning meat line').toBe(32);
+    expect(totalFor(['prime_cut']), 'the rare harvest specimen').toBe(13);
     // 39 since masterwrought Phase 11i: its three cooking rows take salt 2 each.
     // 43 since Phase 11k: minus the retired capstone's 2, plus 2 on each of the
     // three apex feasts that replace it.
-    expect(totalFor(['cooking_salt']), 'the salt line').toBe(43);
+    expect(totalFor(['cooking_salt']), 'the salt line').toBe(45);
     // 77 since 11i, which is the largest single move any line here has taken and
     // is the phase's whole point: fishing fed only its own rod ladder before it.
     // 95 since Phase 11k: the three apex feasts each carry the WHOLE high-band

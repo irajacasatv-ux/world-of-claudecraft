@@ -50,6 +50,7 @@
 import type { ProfessionRecipeRecord } from '../professions/types';
 import { CRUCIBLE_COLLECTION_RECIPES } from './crucible_collections';
 import { FORGEBREAKER_RECIPES } from './forgebreaker_recipe';
+import { FURNISHING_RECIPES } from './freehold/furnishing_recipes';
 
 // Economy invariant: the reagent lists of the former
 // LEGACY_GOLD_POSITIVE_RECIPE_IDS members below were reworked so
@@ -4680,6 +4681,7 @@ export const ALL_RECIPES: ProfessionRecipeRecord[] = [
   ...ENGINEERING_ONRAMP_RECIPES,
   ...CRUCIBLE_COLLECTION_RECIPES,
   ...FORGEBREAKER_RECIPES,
+  ...FURNISHING_RECIPES,
 ];
 
 // O(1) indexes for the two per-lookup resolvers below (the recipe table grows

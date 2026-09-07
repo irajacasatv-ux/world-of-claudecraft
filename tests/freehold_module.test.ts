@@ -379,6 +379,7 @@ describe('src/sim/freehold/ source scan', () => {
     expect(files).toEqual([
       'CLAUDE.md',
       'commands.ts',
+      'crafted_availability.ts',
       'index.ts',
       'should_spawn_npc.ts',
       'state.ts',

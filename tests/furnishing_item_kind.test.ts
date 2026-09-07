@@ -389,7 +389,7 @@ describe('furnishing definition and inventory', () => {
     const other = source.slice(source.indexOf('interface OtherItemDef'));
     expect(other).toMatch(/kind:\s*Exclude<\s*ItemKind,[^>]*'furnishing'/);
   });
-  it('covers exactly the eight authored furnishings and the hostile-payload test fixture', () => {
+  it('covers exactly eighteen authored furnishings and the hostile-payload test fixture', () => {
     expect(
       Object.values(ITEMS)
         .filter((def) => def.kind === 'furnishing')
@@ -403,6 +403,16 @@ describe('furnishing definition and inventory', () => {
       'freehold_brass_lantern',
       'freehold_storage_chest',
       'freehold_open_bookshelf',
+      'freehold_weapon_rack',
+      'freehold_iron_brazier',
+      'freehold_patchwork_rug',
+      'freehold_hide_armchair',
+      'freehold_clockwork_lamp',
+      'freehold_glass_floor_lamp',
+      'freehold_chart_easel',
+      'freehold_jewel_floor_lamp',
+      'freehold_set_supper_table',
+      'freehold_glow_lantern',
       ID,
     ]);
   });

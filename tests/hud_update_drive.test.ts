@@ -364,10 +364,9 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     guard: {
       kind: 'hud',
       proof:
-        // Phase 04 (craft-from-vault) moved this pin: the guard gained the
-        // craftVaultStock term so a vault-only stock change repaints an open
-        // window (the signature's V-prefixed vault rows).
-        'if (craftingReagentSig(this.sim.inventory, this.sim.player.name, this.sim.craftVaultStock) === this.lastCraftingReagentSig) return;',
+        // The shared signature includes host capability, bags, player name,
+        // and vault stock so each change repaints an open crafting window.
+        'if (craftingWindowRefreshSig(this.sim) === this.lastCraftingReagentSig) return;',
     },
     why: 'the other half of the Craft gate: rebuilds the crafting window when the bags move',
   },
@@ -1801,7 +1800,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         'dungeon_finder_window.ts: if (sig === this.lastSig) {',
         'hud/battleground/battleground_proposal_popup.ts: if (view.sig !== this.lastSig) {',
         'hud.ts: if (craftCastActivitySig(session) !== this.lastCraftingCastSig) {',
-        'hud.ts: if (craftingReagentSig(this.sim.inventory, this.sim.player.name, this.sim.craftVaultStock) === this.lastCraftingReagentSig) return;',
+        'hud.ts: if (craftingWindowRefreshSig(this.sim) === this.lastCraftingReagentSig) return;',
         'hud.ts: if (sig !== this.lastLootSettingsSig) {',
         // Phase 20: the progression-block latch for the open character sheet.
         'hud.ts: if (sig === this.lastCharSheetSig) return;',

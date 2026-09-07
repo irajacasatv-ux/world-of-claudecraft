@@ -149,12 +149,9 @@ export function useRecipePatternItem(
   const learned = missing.every(
     (recipe) => acquireRecipe(ctx, meta.entityId, recipe.id, 'drop').ok,
   );
-  // Defense in depth, the unlockMechChromaFromItem idiom: the resolver already
-  // proved every condition this mint re-checks against the same recipe record
-  // and the same live meta, so this arm is UNREACHABLE today and exists for
-  // the day the mint grows a condition the resolver does not know. Return
-  // without consuming rather than eating the copy for nothing; a lost pattern
-  // is unrecoverable, a silent no-op is not.
+  // A dark host can refuse furnishing acquisition after the pure preview.
+  // Keep the selected copy and restore the previous knowledge on any refused
+  // grant, so an unavailable recipe never costs the player their pattern.
   if (!learned) {
     meta.knownRecipes = previousKnowledge;
     return;

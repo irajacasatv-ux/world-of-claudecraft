@@ -17,6 +17,7 @@ export {
   setVisitPolicy,
   undoPlacement,
 } from './commands';
+export { isFreeholdCraftAvailable } from './crafted_availability';
 export { shouldSpawnSurfaceNpc } from './should_spawn_npc';
 export {
   defaultFreeholdState,

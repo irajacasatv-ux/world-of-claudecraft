@@ -45,6 +45,8 @@ import { extractTradableCopyImpl, grantTradableCopyImpl } from './broker_custody
 import { campSpawnOffset } from './camp_scatter';
 import type { CharacterState, PetState } from './character_state';
 import type { ItemCopyAnchor } from './item_copy_anchor';
+import { recipesForFreeholdAvailability } from './professions/recipe_visibility';
+import { trainRecipe as trainRecipeImpl } from './professions/train_recipe';
 
 export type { CharacterState, PetState } from './character_state';
 
@@ -201,7 +203,6 @@ import { dailyRewardsStub } from './daily_rewards_stub';
 import type { DelveShopGate, DelveShopOffer } from './data';
 import {
   ABILITIES,
-  ALL_RECIPES,
   abilitiesKnownAt,
   arenaOrigin,
   CLASSES,
@@ -603,7 +604,6 @@ import {
 import * as townFocusCommands from './professions/town_focus_commands';
 import {
   grandfatherKnownRecipes,
-  resolveTrain,
   sanitizeKnownRecipeIds,
   type TrainResult,
 } from './professions/training';
@@ -8688,7 +8688,7 @@ export class Sim {
   // per-player state), same shape both worlds can serve without a wire
   // round-trip.
   get recipeList(): readonly RecipeDef[] {
-    return ALL_RECIPES;
+    return recipesForFreeholdAvailability(this.ctx.freeholdsEnabled);
   }
 
   /** Static crafting-station anchors from this Sim's authored world bundle. */
@@ -8774,22 +8774,7 @@ export class Sim {
   // the event plus the lastTrainResult probe (the craftItem single-surface
   // doctrine: no ctx.error toast, or the deny would print twice).
   trainRecipe(recipeId: string, pid?: number): void {
-    if (refusedWhileDead(this.ctx, pid)) return;
-    const r = this.ctx.resolve(pid);
-    if (!r) return;
-    const result = resolveTrain(this.stationPlacements, r.meta, r.e.pos, recipeId);
-    if (result.ok) {
-      r.meta.copper -= result.fee;
-      acquireRecipeImpl(this.ctx, r.meta.entityId, recipeId, 'trainer');
-    }
-    r.meta.lastTrainResult = result;
-    this.emit({
-      type: 'trainResult',
-      ok: result.ok,
-      recipeId: result.recipeId,
-      reason: result.reason,
-      pid: r.meta.entityId,
-    });
+    trainRecipeImpl(this.ctx, recipeId, pid);
   }
 
   // Maker's Bond unbind command (Professions 2.0): a thin entry

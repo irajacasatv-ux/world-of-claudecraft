@@ -123,6 +123,21 @@
       "formatter": {
         "enabled": false
       }
+    },
+    {
+      "includes": [
+        "docs/freeholds/crafted-content-art-2026-09-07/items.accepted-art.json",
+        "docs/freeholds/crafted-content-art-2026-09-07/naming-originality.json",
+        "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json",
+        "docs/freeholds/crafted-content-art-2026-09-07/staged-art.json",
+        "docs/freeholds/crafted-content-trial-2026-09-07/calibration.json",
+        "docs/freeholds/crafted-content-trial-2026-09-07/geometry-measurements.json",
+        "docs/freeholds/crafted-content-trial-2026-09-07/geometry-proposal.json",
+        "docs/freeholds/crafted-content-trial-2026-09-07/economy-measurements.json"
+      ],
+      "formatter": {
+        "enabled": false
+      }
     }
   ]
 }

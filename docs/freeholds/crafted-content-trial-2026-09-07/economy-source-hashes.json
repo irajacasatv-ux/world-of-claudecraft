@@ -1,0 +1,2012 @@
+[
+  {
+    "path": "docs/freeholds/content-manifest.md",
+    "bytes": 40387,
+    "sha256": "c7ddc1a70d4511d47b03fb307edb4fafc940733d30b7a10b15edddcf53ef4fe0"
+  },
+  {
+    "path": "docs/freeholds/content-numbers-workbook.md",
+    "bytes": 40264,
+    "sha256": "6b89444416733c15a9e0f4a869e1efbc9df688e63a21cbd4460ef1f981997499"
+  },
+  {
+    "path": "docs/freeholds/content-trial-2026-09-07/acceptance.md",
+    "bytes": 3667,
+    "sha256": "026d727ebe09bb16e26c373840db9e485eca4b36695c7fb03eef9fa5facccae9"
+  },
+  {
+    "path": "pnpm-lock.yaml",
+    "bytes": 361124,
+    "sha256": "a26e452e853824b4b9a1e2b6f62374c5a5b3f3d5224b128bf9d57df4b79b19fa"
+  },
+  {
+    "path": "scripts/freeholds/crafted_economy_measure.mjs",
+    "bytes": 4744,
+    "sha256": "4d60806a294219b2dfeed2d932da6ac617c953cca227acd7d5af669d3300bd35"
+  },
+  {
+    "path": "scripts/freeholds/crafted_economy_probe.ts",
+    "bytes": 16965,
+    "sha256": "92639dce3ad6f9d425860dbe2e4f6ffc8d8c0479b7342c4176246c67a8c62d74"
+  },
+  {
+    "path": "src/sim/bag_pools.ts",
+    "bytes": 6934,
+    "sha256": "6a15c5d5b5ae47a6cd722fdfd9d3774f970e27a4410595718c6756bbb691643d"
+  },
+  {
+    "path": "src/sim/bags.ts",
+    "bytes": 35647,
+    "sha256": "9e645b5396a68a4afbc1d3773c9f021b04ae92f80a954b47e4c7e89d4058e27a"
+  },
+  {
+    "path": "src/sim/bank.ts",
+    "bytes": 52384,
+    "sha256": "b6e6fad4e17353666d7462b3eaf30843aa65ccda7566ea973e309a2f1c06fbbe"
+  },
+  {
+    "path": "src/sim/banker_chest_layout.ts",
+    "bytes": 5938,
+    "sha256": "7de7961d5022091ced39321d226aca0199a4e867a79fb05a5f8e465bbcaf879d"
+  },
+  {
+    "path": "src/sim/battleground_field.ts",
+    "bytes": 6713,
+    "sha256": "6c32d9434300c7381f78275e70506c773d0f436be808d8a488184079d5995534"
+  },
+  {
+    "path": "src/sim/battleground_layout.ts",
+    "bytes": 7763,
+    "sha256": "bd9383a88051e6583e5b005ca2849869e2ab62faf77798bc91fd48738d16b86a"
+  },
+  {
+    "path": "src/sim/beacon_spiral.ts",
+    "bytes": 3774,
+    "sha256": "37744ae731126cad80298a6cea79e8e9f6fbd366bd687451bf6f1a9fc47bb06a"
+  },
+  {
+    "path": "src/sim/border_edges.ts",
+    "bytes": 3780,
+    "sha256": "7dd7be7f164df110cc7ec6708f693bd9b09887f34d4357af434c80d3aa91e862"
+  },
+  {
+    "path": "src/sim/building_layout.ts",
+    "bytes": 5968,
+    "sha256": "7eb371b41e152ae1ede41a4841916777fa95f8e39eaacd71d7c385f53059740b"
+  },
+  {
+    "path": "src/sim/bulwark_layout.ts",
+    "bytes": 8283,
+    "sha256": "3b21ac564b45a9e98f52b79fd3bd319d147ad9d9ca84f02d53bda77b793d25f2"
+  },
+  {
+    "path": "src/sim/castle_layout.ts",
+    "bytes": 31185,
+    "sha256": "5296c877dca32dac7cfba975ef34d235c0a40032621b91c4f498c0eeb9cf4478"
+  },
+  {
+    "path": "src/sim/collider_cells.ts",
+    "bytes": 5201,
+    "sha256": "882ebb79ccecf92435b1cd7ca1f733d862708a2f324a8eb60ab759716cbf883c"
+  },
+  {
+    "path": "src/sim/colliders.ts",
+    "bytes": 100862,
+    "sha256": "818563d41a414c2fb74765dc35014d45b4c5b972af8c10e41ca3d5f614414af7"
+  },
+  {
+    "path": "src/sim/combat/action_replacement.ts",
+    "bytes": 3708,
+    "sha256": "77dfe4793b388dddda4027a04cab98f33d3a7d8ac554197fbb131a9b577088ca"
+  },
+  {
+    "path": "src/sim/combat/cc.ts",
+    "bytes": 6766,
+    "sha256": "45ce245e50b46b666b445a27ae81aaac3e06c77b02ecc4edde542870a898c01e"
+  },
+  {
+    "path": "src/sim/combat/convergence.ts",
+    "bytes": 2669,
+    "sha256": "a478c0e63023c763621038b90a8a46034a5c33c539939f833ba3c6e7f807b2c7"
+  },
+  {
+    "path": "src/sim/combat/crafted_collection_effects.ts",
+    "bytes": 9156,
+    "sha256": "57b8fe6c05d5d6c759bec6928f33ebe074a383beb99f03f8d6b03401791e6c52"
+  },
+  {
+    "path": "src/sim/combat/druid_engines.ts",
+    "bytes": 16794,
+    "sha256": "e0164eb01846c894da32394285623ae924b0c369e9d75cb786fa371ab5030a10"
+  },
+  {
+    "path": "src/sim/combat/equip_procs.ts",
+    "bytes": 7999,
+    "sha256": "b7cd754236f2745938125bd702d297da818edad45c34ad40082cb6d6c1a55734"
+  },
+  {
+    "path": "src/sim/combat/fire_mage.ts",
+    "bytes": 15435,
+    "sha256": "d36061c21209904c69587410be569e6dfe6d0e7bab6c97c53ea0de11c965e547"
+  },
+  {
+    "path": "src/sim/combat/form_swing.ts",
+    "bytes": 6895,
+    "sha256": "60e864ed76c069a0ca452c6628f42272b20d787e655fa7fbb5c1421298179cfa"
+  },
+  {
+    "path": "src/sim/combat/forms.ts",
+    "bytes": 669,
+    "sha256": "acc80526bb4c99573349bb5dc2be134d7c7b0c0da3b4ab9c8d30725671c15dae"
+  },
+  {
+    "path": "src/sim/combat/greater_invisibility.ts",
+    "bytes": 1490,
+    "sha256": "0689f9f701ec3819059cdab90344803e9234e974ab6a7b33593b8e1472e8f045"
+  },
+  {
+    "path": "src/sim/combat/group_targeting.ts",
+    "bytes": 1375,
+    "sha256": "e49253b66eb863c7838140c1fe389befa04f0347ee5b722b75939d408c21a7c0"
+  },
+  {
+    "path": "src/sim/combat/guardians.ts",
+    "bytes": 5361,
+    "sha256": "60f3f9a6642a51f9483c1a17589d0727c29031b2b6a29df2cb7f200eb7aa1894"
+  },
+  {
+    "path": "src/sim/combat/heal.ts",
+    "bytes": 10823,
+    "sha256": "a885572be246c761e89f7ddadc1f324c3bdcbda2f37c1113af14e9435d96eb98"
+  },
+  {
+    "path": "src/sim/combat/hunter_coldsight.ts",
+    "bytes": 3466,
+    "sha256": "42b9173f71de7e9b76011d355c355933e5cde35bde1881e4a41ae805b97de98e"
+  },
+  {
+    "path": "src/sim/combat/hunter_packlord.ts",
+    "bytes": 10813,
+    "sha256": "fc77abef13b0318d9eb5f7196cc151febbbdf7a70a046ef0adedd280fbb2e6df"
+  },
+  {
+    "path": "src/sim/combat/hunter_shared.ts",
+    "bytes": 25536,
+    "sha256": "72b79f9785a6144227dfae691adce8f37f021f00424a4ba01d0c315136fbeaee"
+  },
+  {
+    "path": "src/sim/combat/hunter_trap.ts",
+    "bytes": 6869,
+    "sha256": "f38201a7ddb5567239a6ead4b0813b528abdca11d1befb3e1acc6a86e0d58b6d"
+  },
+  {
+    "path": "src/sim/combat/necromancy.ts",
+    "bytes": 29959,
+    "sha256": "0ddbcdc1fedca2305641081bf2ce4ec22073b067da82c1983b6509183a5ba27f"
+  },
+  {
+    "path": "src/sim/combat/necromancy_dominion.ts",
+    "bytes": 4435,
+    "sha256": "cee9e25ddfc7e7216eccda4b7643f6ecde845eaad0e17963f7404c3fb8d87483"
+  },
+  {
+    "path": "src/sim/combat/paladin_aegis.ts",
+    "bytes": 4290,
+    "sha256": "98a3e2638590b10ef464c62063b5c6fcd760b296da1e4afefaf98c93d18a91e9"
+  },
+  {
+    "path": "src/sim/combat/paladin_beacon.ts",
+    "bytes": 3600,
+    "sha256": "dbb5281242975de8e878c6a61e3ca3624c149a1b22271caaafdb26b9eca85dc6"
+  },
+  {
+    "path": "src/sim/combat/paladin_sun_verdict.ts",
+    "bytes": 6451,
+    "sha256": "404febc0907522ce39a667386e842c921de3965dc85b14dd77a23902997729db"
+  },
+  {
+    "path": "src/sim/combat/paladin_support.ts",
+    "bytes": 3242,
+    "sha256": "3c02fa03ad30b80eb1c6854081a889cee2ad1ca9baa818f0ef48922372e57fa4"
+  },
+  {
+    "path": "src/sim/combat/paladin_veilbound_state.ts",
+    "bytes": 249,
+    "sha256": "83cf1b9075a2c0fb5606f4b13831eab906010b172e6b029b9a9b79c3b6fa1829"
+  },
+  {
+    "path": "src/sim/combat/priest/talents.ts",
+    "bytes": 7252,
+    "sha256": "f8709272a054b2be6037973dc086ea720749539213557f9804e06909a30e8126"
+  },
+  {
+    "path": "src/sim/combat/pull_eligibility.ts",
+    "bytes": 678,
+    "sha256": "c9e101975f02b39290d1bb8d25bd259d807c9454d51b0b40aeae64897f03bed4"
+  },
+  {
+    "path": "src/sim/combat/raid_wipe_cooldowns.ts",
+    "bytes": 849,
+    "sha256": "161f484e93eace9665ed3914dcd8ad6c3adf46614cb5b864f80d7d72b7df1175"
+  },
+  {
+    "path": "src/sim/combat/ring_of_frost.ts",
+    "bytes": 2992,
+    "sha256": "0e05d8cefa1b7262c10a36d7578020bcdf28201873957309a88a275206c12c33"
+  },
+  {
+    "path": "src/sim/combat/rogue_engines.ts",
+    "bytes": 17123,
+    "sha256": "bc1d332f63d4d4c05329fbc5a4b63f126879b0afc53f2f9a2c53dc116f4a7271"
+  },
+  {
+    "path": "src/sim/combat/rogue_talents.ts",
+    "bytes": 3241,
+    "sha256": "a98f3764d92cc034f569c9a7e7f72a1ef1ff80b44552ed99a6d38012dc627e64"
+  },
+  {
+    "path": "src/sim/combat/set_bonus_wearer.ts",
+    "bytes": 1025,
+    "sha256": "a663b81f882677af381364d5470f52bdda18e873be4ad5adf163802df71d73db"
+  },
+  {
+    "path": "src/sim/combat/shaman_talents.ts",
+    "bytes": 14944,
+    "sha256": "7918f3ba5c60eebfaf5b0a594e6cf28752025f36fe05aa4bf54f3a764e332f40"
+  },
+  {
+    "path": "src/sim/combat/spell_resist.ts",
+    "bytes": 5485,
+    "sha256": "2a275de7f7e08c66a8d4d67f06a85dd4235b17c7ab710822bb68d7e9d0cca820"
+  },
+  {
+    "path": "src/sim/combat/talent_procs.ts",
+    "bytes": 12665,
+    "sha256": "a1c942279005bb833d3e1d3e43dd0476f4321caf594a1f2e4f21b56b0b7f584e"
+  },
+  {
+    "path": "src/sim/combat/temporal_hourglass.ts",
+    "bytes": 9930,
+    "sha256": "7c422bb801b9f25f0522f95392d92dac7827e5f17f9f914edd4fdfd5632e4094"
+  },
+  {
+    "path": "src/sim/combat/warlock_meteor_events.ts",
+    "bytes": 492,
+    "sha256": "d54d399864db4db8e49886ebb2b1bffa8e5c2fea3d7aac3c6e479f10e5adc913"
+  },
+  {
+    "path": "src/sim/combat/warlock_talents.ts",
+    "bytes": 11732,
+    "sha256": "44eca5c6c91bb1702bc74c422379130bc0d5934776f63c5d9efe40d147f31970"
+  },
+  {
+    "path": "src/sim/combat/warrior_stances.ts",
+    "bytes": 5348,
+    "sha256": "4383312df0144d8d47d36a419736bf5d1bde56afe6aba60010af8183947f6c83"
+  },
+  {
+    "path": "src/sim/consuming.ts",
+    "bytes": 3232,
+    "sha256": "f64dac1a2d3cd3cb18d56fc303ae72c7cfe480a6aa3888bb104ff26d0064ef33"
+  },
+  {
+    "path": "src/sim/content/amberfall.ts",
+    "bytes": 21409,
+    "sha256": "dc8d62d86d792f5502943345ab09e969aadd521a310aa7533c666c2e657c0af3"
+  },
+  {
+    "path": "src/sim/content/apex_patterns.ts",
+    "bytes": 13017,
+    "sha256": "e518649e0a8d21a885c8b5582ec4b4cc3107d77ffd52221ebb0897d924304d3a"
+  },
+  {
+    "path": "src/sim/content/choice_rows_classic.ts",
+    "bytes": 73004,
+    "sha256": "3e4cf3768ceee3e8d4c65ac5f9c87d546aa7cee1fdba424751b5f666402ac7b4"
+  },
+  {
+    "path": "src/sim/content/classes.ts",
+    "bytes": 283758,
+    "sha256": "57682a04d5d30e8b9e20da52f9839d1ea5e810ace4e7ff053325aeb05e68db09"
+  },
+  {
+    "path": "src/sim/content/crucible_collections.ts",
+    "bytes": 9581,
+    "sha256": "ccc9a9adb60030b5cef0257010acac80c6f3bbf00e75c2f4604a3bcb6e8166ea"
+  },
+  {
+    "path": "src/sim/content/crucible_professions.ts",
+    "bytes": 1469,
+    "sha256": "b7ddeaaa78f8de66800ee34cbeb786d5eefed29e069344f0443cbb543dd16b43"
+  },
+  {
+    "path": "src/sim/content/deeds.ts",
+    "bytes": 120934,
+    "sha256": "31c91db0f47236461b483b018e9ec875bfb3e15bf22cb932e605bd4a66f7534d"
+  },
+  {
+    "path": "src/sim/content/delves/affixes.ts",
+    "bytes": 1374,
+    "sha256": "9ea53c2bbc4b99e7f162460674757d1a3df01f4dcc4290f1885ca73c243f7b9e"
+  },
+  {
+    "path": "src/sim/content/delves/collapsed_reliquary.ts",
+    "bytes": 5142,
+    "sha256": "b023a1a766f6a8e1377459321d65f8f2aa37bc1347f380fdef7c4d8161068027"
+  },
+  {
+    "path": "src/sim/content/delves/companions.ts",
+    "bytes": 1009,
+    "sha256": "6ad870f2b73e53e133deb8311f84b5e4372bbee6f82df0a06f38accab0a7be5d"
+  },
+  {
+    "path": "src/sim/content/delves/drowned_litany.ts",
+    "bytes": 8227,
+    "sha256": "8f747166e6a63d36b8c20bae0d4feb43ba592376d2df0eb6139f4489aab1acb3"
+  },
+  {
+    "path": "src/sim/content/delves/drowned_litany_loot.ts",
+    "bytes": 3318,
+    "sha256": "665e0841345ab533783d7838576c4997d9bab79687c6e89bf2b8edf736c6a374"
+  },
+  {
+    "path": "src/sim/content/delves/index.ts",
+    "bytes": 2412,
+    "sha256": "905a7f7b20dcda3828d38a9620c12515508db60582b933057961d94cd06c5145"
+  },
+  {
+    "path": "src/sim/content/delves/items.ts",
+    "bytes": 9762,
+    "sha256": "b6d626b68321570127eb7ef68e0535343fce8163480cbeac9cf84bac3dbebe56"
+  },
+  {
+    "path": "src/sim/content/delves/lockpick_tiers.ts",
+    "bytes": 4796,
+    "sha256": "b9b2ff24883243b8011fd78986dd337516b773c641a001bfd2a69b7747b532a7"
+  },
+  {
+    "path": "src/sim/content/delves/mobs.ts",
+    "bytes": 12017,
+    "sha256": "ad08b9f801b5aa737d02ebc7fa544d6000aa6035d09d06af835c4eb7622973ff"
+  },
+  {
+    "path": "src/sim/content/delves/shop.ts",
+    "bytes": 13557,
+    "sha256": "b364692deb035a8b830d751aa26d1c50dfacb1327790920fc6624c42242ce9fd"
+  },
+  {
+    "path": "src/sim/content/drakelands.ts",
+    "bytes": 39796,
+    "sha256": "b7b89f006d8a41524fb0bcb7edfe949010c0b0293a665eda277fcb5d949d4ce1"
+  },
+  {
+    "path": "src/sim/content/dungeon_difficulty.ts",
+    "bytes": 24201,
+    "sha256": "3c078d431ff6b83ae4cfb11bb0b00506c2f537767eb7ea010ba6a2918a948179"
+  },
+  {
+    "path": "src/sim/content/dungeons.ts",
+    "bytes": 69524,
+    "sha256": "f9d6cba303f50958d89eb6a594b6e9002146bd8b1f20e21eee166b562e233264"
+  },
+  {
+    "path": "src/sim/content/ember_coast.ts",
+    "bytes": 24835,
+    "sha256": "606595b111a0aa0fc4d827bad339e33c7025fae45dd1f86e1a7ad6f6405e4c6c"
+  },
+  {
+    "path": "src/sim/content/enchants.ts",
+    "bytes": 26848,
+    "sha256": "bb871e177430206d7918667ec8e3bd325cc3cdc343e85ea5865a4e53c460b0ba"
+  },
+  {
+    "path": "src/sim/content/evergarden.ts",
+    "bytes": 37924,
+    "sha256": "950b5c8bf8bcc0287a8bfd962dd7a72b783cb3a318637019bd0bae094e382a72"
+  },
+  {
+    "path": "src/sim/content/farm_crops.ts",
+    "bytes": 18804,
+    "sha256": "844547b547ac94089cc26e6f2803a7222284cfe667064fd46def3f280b16f292"
+  },
+  {
+    "path": "src/sim/content/farm_patterns.ts",
+    "bytes": 6616,
+    "sha256": "c367d6134c816a607cb81d13d861b7f1c6dd55b12a6b3664dda3dbe8ca173287"
+  },
+  {
+    "path": "src/sim/content/farshore.ts",
+    "bytes": 26397,
+    "sha256": "51d25e69068dca3e3d4642c90b27d8f165e17d727f0567a625a248c05081a1c2"
+  },
+  {
+    "path": "src/sim/content/forgebreaker_recipe.ts",
+    "bytes": 909,
+    "sha256": "8dc1bf55fc8f8e90340a9d1bbe02ebbdd4bb25346baf673be09fbd83b0230802"
+  },
+  {
+    "path": "src/sim/content/freehold/charters.ts",
+    "bytes": 544,
+    "sha256": "efc4e38ac076b627f93e09689af9889596ab07f8b4c2df8c865f0693c3d5382d"
+  },
+  {
+    "path": "src/sim/content/freehold/furnishings.ts",
+    "bytes": 3733,
+    "sha256": "18b1e9b3088493f09543f57a455a3bf6974a23ddd4beb010f757a777bfb00ffb"
+  },
+  {
+    "path": "src/sim/content/freehold/index.ts",
+    "bytes": 690,
+    "sha256": "5eae64d71a1c596c4a4bf2504a08190ee85cd2a6c349f7faca9e1b9c1c0053ee"
+  },
+  {
+    "path": "src/sim/content/freehold/ledger_schedule.ts",
+    "bytes": 4075,
+    "sha256": "1a35f224ec8659f90b56ff6137733d593a31739228107e9a929ad82c11604cab"
+  },
+  {
+    "path": "src/sim/content/freehold/ledger_trial.ts",
+    "bytes": 9836,
+    "sha256": "3498107e94a0391e8fa50fc6b810a273aea1956b6865abb4ffa5cca5957b9f05"
+  },
+  {
+    "path": "src/sim/content/freehold/tiers.ts",
+    "bytes": 1915,
+    "sha256": "22e4ada31f25157263fcb516cc3e5499ffee31e46bba75de5a05083dadf99bd7"
+  },
+  {
+    "path": "src/sim/content/frostveil.ts",
+    "bytes": 26815,
+    "sha256": "60c6551a863f114a977ccefd0e3a392620686e26cbbb78ee5072a40cef8385e5"
+  },
+  {
+    "path": "src/sim/content/galecrest.ts",
+    "bytes": 36615,
+    "sha256": "1aed431164042a2d4993a50d43b52981df2b0761b776656fe3a7fc22dcfe198a"
+  },
+  {
+    "path": "src/sim/content/gather_nodes.ts",
+    "bytes": 48718,
+    "sha256": "552990c33cdbe6f26496c40718efb33d46aa061d81bca76882352be07d4893fd"
+  },
+  {
+    "path": "src/sim/content/graveyards.ts",
+    "bytes": 5383,
+    "sha256": "c5a26ad66e9bb11e0f9ce9a68d63e504c81b86c536d165421b21ef75afddc390"
+  },
+  {
+    "path": "src/sim/content/ground_pickup_lines.ts",
+    "bytes": 8206,
+    "sha256": "0015e4c351ae04f0f94e8b52df871eb52a525c9b7b69aed272b160f49e1c8e4e"
+  },
+  {
+    "path": "src/sim/content/heroic_loot.ts",
+    "bytes": 33813,
+    "sha256": "c528c79c7fb5fe0962239294b4814ae36693a573d77c51aa31b792669d503441"
+  },
+  {
+    "path": "src/sim/content/heroic_variants.ts",
+    "bytes": 12473,
+    "sha256": "3357acb38f3f8ee6edd372187bd5d25618593b82e12a45fbf5518dd12a9775a4"
+  },
+  {
+    "path": "src/sim/content/heroic_vendor.ts",
+    "bytes": 10942,
+    "sha256": "8cfc5e500c94d81a2518f570574dd41f1274297198291655d0e40f985f9f8093"
+  },
+  {
+    "path": "src/sim/content/ignivar_drops.ts",
+    "bytes": 2311,
+    "sha256": "ff7bf0fcbd160ca529110dc5e7a4ac937d3648079f0c39c4a9c134943ad5d722"
+  },
+  {
+    "path": "src/sim/content/ignivar_loot.ts",
+    "bytes": 93233,
+    "sha256": "bce234f30352b0750c24cb89cf4e021565212b20f1ebacfaa0c867b719f1b3bc"
+  },
+  {
+    "path": "src/sim/content/ignivar_raid_lore.ts",
+    "bytes": 7502,
+    "sha256": "0ba55753ca02353daed8278632409e39f9bf03ffd4550ee03924272a8957cd5f"
+  },
+  {
+    "path": "src/sim/content/ignivar_set_bonuses.ts",
+    "bytes": 59075,
+    "sha256": "c51cb1dd62c2643be7b6e9b252d08e9635856691f1a7abe7870427316909718c"
+  },
+  {
+    "path": "src/sim/content/item_sets.ts",
+    "bytes": 37347,
+    "sha256": "c8833b7b6bd9988cd33a1412bf9b64a224fef99b1ceec0828c6e0a5101704a53"
+  },
+  {
+    "path": "src/sim/content/items.ts",
+    "bytes": 148000,
+    "sha256": "612f4c7eb09881e94bcb3dbe3bb67e48f4547bfe19253f4cbd457fc1979667b4"
+  },
+  {
+    "path": "src/sim/content/mage_pets.ts",
+    "bytes": 1454,
+    "sha256": "41861e38408f304a875f63b130cf2535ec44c3f27d6414f6a57415486d9811fd"
+  },
+  {
+    "path": "src/sim/content/mailboxes.ts",
+    "bytes": 2904,
+    "sha256": "f3802bb40a8c527e492b190b14ccfb79e1af661c5d77d436a822525f03de1d4d"
+  },
+  {
+    "path": "src/sim/content/mounts.ts",
+    "bytes": 18802,
+    "sha256": "167dcb8f9e974e40213d37b38ef8443e4ed83010e1875c6e366c126a01b0feb8"
+  },
+  {
+    "path": "src/sim/content/necromancy.ts",
+    "bytes": 2452,
+    "sha256": "6ab49a4a4d1078d30f22ea9e55157c14a2b879edab1c0fbb08c40c05c18a8a9e"
+  },
+  {
+    "path": "src/sim/content/nightbloom.ts",
+    "bytes": 21624,
+    "sha256": "cf3e456238e9c6a335e3d51f8779f6d45cbf14e712de3d44cf8e0625b256a230"
+  },
+  {
+    "path": "src/sim/content/noticeboards.ts",
+    "bytes": 7913,
+    "sha256": "668b5cdf58ffa567d1f35bdbc38cad8456c1082148291a1fd56cea2566e06575"
+  },
+  {
+    "path": "src/sim/content/paladin_core_abilities.ts",
+    "bytes": 26908,
+    "sha256": "adfe08ce39dd12cdb8f7376049e25759b8497074b202588c97f68f2258941ada"
+  },
+  {
+    "path": "src/sim/content/palmreach.ts",
+    "bytes": 26456,
+    "sha256": "cf1b9e5a1488060688306664a6baa6dc4c7ed3e0f834560964b801feed7df7c5"
+  },
+  {
+    "path": "src/sim/content/practice_dummies.ts",
+    "bytes": 9571,
+    "sha256": "5c311e288987b85299657ffb6a69e4cc981e9cefd4ea63be91b60b6d16497d37"
+  },
+  {
+    "path": "src/sim/content/priest.ts",
+    "bytes": 4255,
+    "sha256": "26705fea0d9d3c18376bdaaaed1112751d5d3be0642991996b51d02d8fadf185"
+  },
+  {
+    "path": "src/sim/content/profession_items.ts",
+    "bytes": 62206,
+    "sha256": "5e4a687d35657361bacf0b1faafd2852e4399c0a3c037e42ddcf1934a08fc00b"
+  },
+  {
+    "path": "src/sim/content/professions.ts",
+    "bytes": 28371,
+    "sha256": "ab189bb1d87db8a385c76285cc60c1206a773c84487a34d3e36d64aeb6b4308e"
+  },
+  {
+    "path": "src/sim/content/proving_shore.ts",
+    "bytes": 51197,
+    "sha256": "0f4bb5c82816155ed0c083f0ea64ebb7e9b3df4a002adc8ae576b68a4ad11b0f"
+  },
+  {
+    "path": "src/sim/content/pvp_honor.ts",
+    "bytes": 25127,
+    "sha256": "bd1da9f54664ae9d73dce15034cd7bb988e5a535e10543fc470f8f514eedcf49"
+  },
+  {
+    "path": "src/sim/content/realm.ts",
+    "bytes": 48443,
+    "sha256": "3087180f8e363fbb7497d7b6506839a309ef6ea95740faa337d6aee756037278"
+  },
+  {
+    "path": "src/sim/content/recipes.ts",
+    "bytes": 200802,
+    "sha256": "2cc5686aa1600e5d898e6f28eb492e0657dbffcf868cbc91984531127b06229a"
+  },
+  {
+    "path": "src/sim/content/reliquary.ts",
+    "bytes": 92636,
+    "sha256": "b1fb1c14036f9e874fe3796ceada3a8b26a4e709400cf903ab1f25d7146b0705"
+  },
+  {
+    "path": "src/sim/content/rift/infernal_citadel.ts",
+    "bytes": 17501,
+    "sha256": "3d03f5fdba4d6cdaf88caa16f4fe8a4dfcccdcf4e95007649c4b42cc14353f74"
+  },
+  {
+    "path": "src/sim/content/rift/items.ts",
+    "bytes": 17571,
+    "sha256": "ef014d76ff36b625beb3dfb52e6261097715615d244d42a8b737c28d8a4eaa91"
+  },
+  {
+    "path": "src/sim/content/rift/mobs.ts",
+    "bytes": 32152,
+    "sha256": "cdbfa489c0067d6dd7ac2e3d3b93c7bb023653543bb6a1a0b472e36d937ec3de"
+  },
+  {
+    "path": "src/sim/content/rift/monster_index.ts",
+    "bytes": 5693,
+    "sha256": "4eb5171790d42905a63031234e43e1ed4bd767fc5d45d1b551b6019a7617c79e"
+  },
+  {
+    "path": "src/sim/content/rift/themes.ts",
+    "bytes": 4150,
+    "sha256": "b6a8db54082d7fcc3b7dc51b71ea3fd2b69be7ed840fb63b69c30b2f1f133af3"
+  },
+  {
+    "path": "src/sim/content/shaman_tuning.ts",
+    "bytes": 193,
+    "sha256": "f3593db88cea21b4b05ab87f5b5085063ee4f5cad1b93089dc5369fb5d6e1044"
+  },
+  {
+    "path": "src/sim/content/spec_baselines.ts",
+    "bytes": 10984,
+    "sha256": "7e90c14e35ae4c6e0b97b4af1787b3146c8b5aa3a25ea7c6872ecb3e767d22c7"
+  },
+  {
+    "path": "src/sim/content/storage_charters.ts",
+    "bytes": 4337,
+    "sha256": "7340d8367613d44d038e5156b54f18e5b057fe04760ab1088c0436e040138343"
+  },
+  {
+    "path": "src/sim/content/talent_abilities_v2.ts",
+    "bytes": 310,
+    "sha256": "704200d7ab109997bd364d4ec117b0277dc3d4d19c3370798f0fae7f74442b6b"
+  },
+  {
+    "path": "src/sim/content/talent_abilities_v2_a.ts",
+    "bytes": 17353,
+    "sha256": "381a67027577f62ecdd6d8d4b2002892ecca03586aa177313023c3658c7e9b96"
+  },
+  {
+    "path": "src/sim/content/talent_abilities_v2_b.ts",
+    "bytes": 8765,
+    "sha256": "8f0aa35ab0cf3fc68ad7a0249f6a41ea5b5897480a397f4aca6551d72dcfd7f5"
+  },
+  {
+    "path": "src/sim/content/talent_rows.ts",
+    "bytes": 3258,
+    "sha256": "7bd779ab5c21dd2a949e016f834843c5adbb95a2de02adf3f458447555ee8392"
+  },
+  {
+    "path": "src/sim/content/talents.ts",
+    "bytes": 34808,
+    "sha256": "c718585194d9dc1add155c3e5e2b8740d32785affc74c76109a8f448907e1fba"
+  },
+  {
+    "path": "src/sim/content/talents_classic.ts",
+    "bytes": 14432,
+    "sha256": "240a169ff9ad7c8ec7a42a4de0206b51abad703f4e3cfa86cb8c5acc1767a8cd"
+  },
+  {
+    "path": "src/sim/content/talents_warrior.ts",
+    "bytes": 2537,
+    "sha256": "32a92226b0f24a0ba7d0cd7e97682b67319138f2cb9eb8db446523e1cb234680"
+  },
+  {
+    "path": "src/sim/content/temple.ts",
+    "bytes": 28159,
+    "sha256": "8f9e63623442f0d6b8be3d43d40e7e97cc42d055ac08ed010d747f4bd734bd32"
+  },
+  {
+    "path": "src/sim/content/tunnels.ts",
+    "bytes": 982,
+    "sha256": "8c90de34f46d6299f424fe8acd7dbafebc4b78a8116c9145ec41acb8b6852480"
+  },
+  {
+    "path": "src/sim/content/vale_coast.ts",
+    "bytes": 2075,
+    "sha256": "efada88351303805430350928f36f211e72e1520a2af97081f563ef78cf1cf69"
+  },
+  {
+    "path": "src/sim/content/warlock_pets.ts",
+    "bytes": 2627,
+    "sha256": "989846a50fc866593e0adf8d950dc31cc54da91d3bc1619af49011fb656741bb"
+  },
+  {
+    "path": "src/sim/content/warrior_rows.ts",
+    "bytes": 9211,
+    "sha256": "39348fb9341a795bb252bfb93953d76d551e3692f195c0b6b66c20a32016c907"
+  },
+  {
+    "path": "src/sim/content/weapon_skin_rules.ts",
+    "bytes": 12172,
+    "sha256": "258e68f04851af9911ef3b30c0d1b814b0fe19560d8a7d22e0751376acc406bd"
+  },
+  {
+    "path": "src/sim/content/weapon_skins.ts",
+    "bytes": 8485,
+    "sha256": "229e3c4cff95d32ef53ceb88c8b8040ae4ec1b3b53f8337e06e41c15ac71042b"
+  },
+  {
+    "path": "src/sim/content/wildheart.ts",
+    "bytes": 13498,
+    "sha256": "59f35b0ce58d88b70646bdada6cbf8e159db3c0803ae04bdc5f4d11c6351e689"
+  },
+  {
+    "path": "src/sim/content/willowfen.ts",
+    "bytes": 22662,
+    "sha256": "f381e78748b0420e170203974c2ae8a63f90ea1d1501a3d400b6c94b64507350"
+  },
+  {
+    "path": "src/sim/content/wraithwood.ts",
+    "bytes": 23222,
+    "sha256": "53e79fe79793dfda3061c50b5b77cd59a0b17bd4088c1da21a7ff7885bb9b5ef"
+  },
+  {
+    "path": "src/sim/content/yumi.ts",
+    "bytes": 1009,
+    "sha256": "7d921731f9feb0d52c68fb7fa1df1d8caf3932d7243072e3f8a64dea3fc6f23d"
+  },
+  {
+    "path": "src/sim/content/zone1.ts",
+    "bytes": 105080,
+    "sha256": "eae9e301c85df3cbdb88ebab6f41d6d42d9402a1476550b1c5444cceb64bb9da"
+  },
+  {
+    "path": "src/sim/content/zone2.ts",
+    "bytes": 81091,
+    "sha256": "4acbedd9285bb1262998914f37e743f0d1af99dcc7b5896994978a1939efb6df"
+  },
+  {
+    "path": "src/sim/content/zone3.ts",
+    "bytes": 154274,
+    "sha256": "57e69e9c4ebfd1ddf9009492a6929d5ad4e00cae95012977e78163aced52bed6"
+  },
+  {
+    "path": "src/sim/corpse_interaction.ts",
+    "bytes": 1854,
+    "sha256": "25243dcd4bfcb7d054728911a048105afc616468010614f7918b9710f71fbb43"
+  },
+  {
+    "path": "src/sim/corpse_loot_state.ts",
+    "bytes": 5627,
+    "sha256": "f8da84807f514b0749eecce082ce34c8bb4160fa29edbd94c30f825164d58509"
+  },
+  {
+    "path": "src/sim/data.ts",
+    "bytes": 58404,
+    "sha256": "ec1c671a90bb8bd3eef8c33bae9b6e6042084008c47a60b18b2672d47a809b6c"
+  },
+  {
+    "path": "src/sim/dawnhold_layout.ts",
+    "bytes": 13782,
+    "sha256": "d3bd89bbfb5205c679a626d79ab5ef19a7546e30bb62ecbd0f938811c2996264"
+  },
+  {
+    "path": "src/sim/dead_gate.ts",
+    "bytes": 2038,
+    "sha256": "41b5a7c7c38d0468f4bff53cc9e70df8f6d77e51ed066628751070fa6a7773d9"
+  },
+  {
+    "path": "src/sim/deck_surfaces.ts",
+    "bytes": 1715,
+    "sha256": "9670d675cfaca96aa27b04b0cea17ebff9e5bc018d688b27970b030d98f23a6d"
+  },
+  {
+    "path": "src/sim/decor_prop_colliders.ts",
+    "bytes": 2451,
+    "sha256": "85d1fc1b61498fe32b77f4056d06eec282311e703265b84bb91cae994a989567"
+  },
+  {
+    "path": "src/sim/decoration_dims.ts",
+    "bytes": 4255,
+    "sha256": "1ca07b9c80772a0425555fc824d82271f019429b6efa4a53cfa02689aa22ecf1"
+  },
+  {
+    "path": "src/sim/deeds.ts",
+    "bytes": 100820,
+    "sha256": "8ce78ab49e21745a2a3129d639b61e888029cbdc0e26c08d801f4f6e92fb38bd"
+  },
+  {
+    "path": "src/sim/delve_layout.ts",
+    "bytes": 7600,
+    "sha256": "ba45bc2d7494c6078b8827bf892989726d4ba3d47fcc7560897cc05e697ace8d"
+  },
+  {
+    "path": "src/sim/delve_litany_layout.ts",
+    "bytes": 32311,
+    "sha256": "d1ebdb5049b68dcedd1713d2b5890afbef06ea5faadaebbbe3b643308fcae9c3"
+  },
+  {
+    "path": "src/sim/delves/drowned_litany_boss.ts",
+    "bytes": 17808,
+    "sha256": "e40ece6429ba464bc1b116e83d0ba0a38d1d9b87041833af95506865dea9545b"
+  },
+  {
+    "path": "src/sim/delves/drowned_litany_rite.ts",
+    "bytes": 14222,
+    "sha256": "f9a0581cdb0f649d1626f594293770827c9cb0965d4b302167b425b03854dcb2"
+  },
+  {
+    "path": "src/sim/delves/drowned_litany_rooms.ts",
+    "bytes": 13711,
+    "sha256": "4e2e8ac7282cd4fc846ff8a04350b82f5424db15dc7c695d23df505c907d3846"
+  },
+  {
+    "path": "src/sim/delves/rite_tuning.ts",
+    "bytes": 1417,
+    "sha256": "c0ad0c08a57d32f9dab7506ee7ab5ee4fc4275d49163915da724a5e2db7f83c8"
+  },
+  {
+    "path": "src/sim/delves/runs.ts",
+    "bytes": 79826,
+    "sha256": "b45d8cbfbec5a7f1bbd11bc5e8e83271ef9547b35f5e9e8fabaf30af3a1f5178"
+  },
+  {
+    "path": "src/sim/dock_layout.ts",
+    "bytes": 3727,
+    "sha256": "27d3083a6d8964209a5f5436d82eed13c4c1ca533f96aa67ab4d0eb485216341"
+  },
+  {
+    "path": "src/sim/dungeon_door_jambs.ts",
+    "bytes": 1422,
+    "sha256": "1b3a37d82c7f1f162dfe14cb3a60639ef96f4aa7dc186ef742252d720c676857"
+  },
+  {
+    "path": "src/sim/dungeon_floor.ts",
+    "bytes": 3766,
+    "sha256": "faad8c5aad98c9abb0124bf80349a14efc800f5ff69a495db05499637f5ee9fb"
+  },
+  {
+    "path": "src/sim/dungeon_layout.ts",
+    "bytes": 54178,
+    "sha256": "2b2edeeab53c601e99bda2b71de7cefbc41f421b5527216dae3b1a2058804a6d"
+  },
+  {
+    "path": "src/sim/eastbrook_harbor.ts",
+    "bytes": 3109,
+    "sha256": "660edbfa66d0660bee6d3b24d0f30cb29b69c310eaf30e221242481de704601a"
+  },
+  {
+    "path": "src/sim/eastbrook_layout.ts",
+    "bytes": 41612,
+    "sha256": "d53f5425a23e3f30a61d604edbdedc3c9a46bd8803f942ee41b470f0ce92669e"
+  },
+  {
+    "path": "src/sim/ember_lava_layout.ts",
+    "bytes": 8124,
+    "sha256": "22ce75b0c1b3bb12500129137490100ae8d4f6dcfd9c5ba5990873efe6dfadaf"
+  },
+  {
+    "path": "src/sim/ember_lilies.ts",
+    "bytes": 6108,
+    "sha256": "4e56320e7fcb2967c0e69a77e259b2ca481da4549b1b4618e5342d47c1f5eefd"
+  },
+  {
+    "path": "src/sim/encounters/encounter_wipe.ts",
+    "bytes": 1737,
+    "sha256": "41106e07f3e25edf2818c44a41a5fea394fb68321dcc2eafcf642e97cbbea1ee"
+  },
+  {
+    "path": "src/sim/encounters/ignivar.ts",
+    "bytes": 60489,
+    "sha256": "905e514369b9b00525629538a72b147d5ca747ad98a0c9331dbf6f8c4719ffb6"
+  },
+  {
+    "path": "src/sim/encounters/ignivar_dialogue.ts",
+    "bytes": 1579,
+    "sha256": "1e611caac25d2443ae285bfdf7aeef47fed0b82239b0c4d7591cbb776b75e084"
+  },
+  {
+    "path": "src/sim/encounters/scripted_walk.ts",
+    "bytes": 787,
+    "sha256": "df73c3947b2523662700a4fe598c67168963d48e442f8a4b40ff116ed4ce7c27"
+  },
+  {
+    "path": "src/sim/encounters/varkhul.ts",
+    "bytes": 105723,
+    "sha256": "4c2e39c8ef6bd00caaa51bf1ac0b0e2d72e2aa081d1a6f421735fad3ee929348"
+  },
+  {
+    "path": "src/sim/encounters/varkhul_dialogue.ts",
+    "bytes": 841,
+    "sha256": "a09ae165c42c3a3307e8874214296db67341d75637785936a7ff87adbd831b04"
+  },
+  {
+    "path": "src/sim/entity.ts",
+    "bytes": 36927,
+    "sha256": "6666efa965afad04a087e0a72925e04c9a7d28d737b7b0f8539844afaaf67496"
+  },
+  {
+    "path": "src/sim/entity_roster.ts",
+    "bytes": 18235,
+    "sha256": "6e08ee305e099104adc85c0408354b55dec588847d0a65194c2811417be8186d"
+  },
+  {
+    "path": "src/sim/equipment_rules.ts",
+    "bytes": 22299,
+    "sha256": "2675309c53d68520ab7dcc95b7269b165260d6339b7660a7ba80f0b0299addd6"
+  },
+  {
+    "path": "src/sim/fen_willows.ts",
+    "bytes": 8709,
+    "sha256": "e73d722fbd71f535b51d3385f95be456b4f7485a9c98cbc8d6ffbfbf726687c9"
+  },
+  {
+    "path": "src/sim/fenbridge_layout.ts",
+    "bytes": 31204,
+    "sha256": "8d9e8a1520d047bd8e72a92022a9f74f776a092d53df68ac48cc986fc008e169"
+  },
+  {
+    "path": "src/sim/fingerprint128.ts",
+    "bytes": 2565,
+    "sha256": "5e5c6a4ebbcb46fb82d0d30e8461e8af2abe44eedf09f7e23bd407ddb79b4e90"
+  },
+  {
+    "path": "src/sim/forgefather_fortress.ts",
+    "bytes": 23588,
+    "sha256": "0732fcf8b977a572528fa178a2f227e0eae5fa8e8697c41c494130bbc0ad6cf2"
+  },
+  {
+    "path": "src/sim/format_money.ts",
+    "bytes": 972,
+    "sha256": "1353d61a35f0a9806c9d04d782f0e9a0cfb35c4db51fdc7323a384a089b05fc1"
+  },
+  {
+    "path": "src/sim/gale_harbor.ts",
+    "bytes": 4984,
+    "sha256": "048ac012e3090658ed6fa38ff380d513b01c010528379cb84b6db2c51e6c4c99"
+  },
+  {
+    "path": "src/sim/geometry2d.ts",
+    "bytes": 4314,
+    "sha256": "1d176f22bf0c9f9ec1bc08ae5ad195719d3dc78c53f8a157686f6f6b7d3d579d"
+  },
+  {
+    "path": "src/sim/hex_building_dims.ts",
+    "bytes": 2739,
+    "sha256": "8a0560a5224a948e2d8ee239a1ecc6b1523c48b7deed65428530d36bcdc182a8"
+  },
+  {
+    "path": "src/sim/ignivar_arena.ts",
+    "bytes": 7350,
+    "sha256": "c4cc4448d9d4a963b234cded847b655a276bf832cf8339f7cdd110410612a546"
+  },
+  {
+    "path": "src/sim/ignivar_forge_chains.ts",
+    "bytes": 12899,
+    "sha256": "dabb55c3755e3742789f3a3dd09ab3540f83216313efb5f8b036c25b93c2b8c0"
+  },
+  {
+    "path": "src/sim/ignivar_forge_judgment.ts",
+    "bytes": 4602,
+    "sha256": "4d541e2d5be2f75c1b35597cdd8e41b8518f7e8ce9a51589a8c0265686cb80a5"
+  },
+  {
+    "path": "src/sim/ignivar_forge_lift.ts",
+    "bytes": 3143,
+    "sha256": "6ef4b5dec6b20f9071b975acee956cb759330b3dde9929ba15ccd3d7c28c7ffa"
+  },
+  {
+    "path": "src/sim/ignivar_forge_wave.ts",
+    "bytes": 3132,
+    "sha256": "8f2d558c239ef3ee5d685f784ccc7c8319b8a4049506bd5af5b33ae5111f8431"
+  },
+  {
+    "path": "src/sim/ignivar_meteors.ts",
+    "bytes": 8128,
+    "sha256": "67459eec04808a6e17455b326b2e006ad3fa5bab2dd09f20221740b705440aa5"
+  },
+  {
+    "path": "src/sim/ignivar_props.ts",
+    "bytes": 24438,
+    "sha256": "2bcfec115e5f726364952f5aa8870e6334ca0591c11b4e200ff06deac055a3a3"
+  },
+  {
+    "path": "src/sim/ignivar_raid_ids.ts",
+    "bytes": 1938,
+    "sha256": "b2e5b308cc087dbb2b59d28d137cef84af7fecd806d98c47572fc666f8145a93"
+  },
+  {
+    "path": "src/sim/ignivar_raid_progression.ts",
+    "bytes": 2391,
+    "sha256": "eeecc14d9e2eaafcfb957aa45b2032a1282434a846b734c0241bb5fb0158cc72"
+  },
+  {
+    "path": "src/sim/instance_exit_memory.ts",
+    "bytes": 3710,
+    "sha256": "d6e583be9ba6710c1f9ecfe36cfb1ac7d919e253698050b78f0f4b9d1d45669a"
+  },
+  {
+    "path": "src/sim/instances/difficulty.ts",
+    "bytes": 6385,
+    "sha256": "1716a75b185634ee9abf9793c9ac32910d27b30735156dc27b82ab73546d8272"
+  },
+  {
+    "path": "src/sim/instances/dungeon_spawn_miniboss.ts",
+    "bytes": 710,
+    "sha256": "057c18420281f388b4cac1ab80c5d7ea3e8bce42041631835f004cc2b514efd2"
+  },
+  {
+    "path": "src/sim/instances/dungeons.ts",
+    "bytes": 70658,
+    "sha256": "157c21adf090b20e37aa7eda4be84edec931a2f62931d830ab38d1ba8484e694"
+  },
+  {
+    "path": "src/sim/instances/ignivar_entry.ts",
+    "bytes": 3855,
+    "sha256": "375d444ac25939c44a8fbbd863cc406ea381a0e3d865f3a0143050029cd0c7be"
+  },
+  {
+    "path": "src/sim/instances/ignivar_exit.ts",
+    "bytes": 2417,
+    "sha256": "b2aed7af9f2d46e7b1903cc8cdebdcb5c586498fca41a07b8df6a43343fec4b2"
+  },
+  {
+    "path": "src/sim/instances/ignivar_lava_hazard.ts",
+    "bytes": 1982,
+    "sha256": "3f62dd559fbddeae146e41b4226a7af3e724c07986879a05cfb8548caabe83b0"
+  },
+  {
+    "path": "src/sim/instances/raid_boss_room_welcome.ts",
+    "bytes": 1614,
+    "sha256": "704936ce58980026670566719916825b44a019214010c1c0649b35b65b7f515d"
+  },
+  {
+    "path": "src/sim/interior_collider_sets.ts",
+    "bytes": 1756,
+    "sha256": "06cfb0fea5ff8bb0e897b3342b967088d2f87a8b6795b486f7fcf31c35acfe35"
+  },
+  {
+    "path": "src/sim/item_budget.ts",
+    "bytes": 11224,
+    "sha256": "202545164ce574a1d148ca6036fad80d7d930b02435df00370104bd0d401e691"
+  },
+  {
+    "path": "src/sim/item_copy_anchor.ts",
+    "bytes": 5276,
+    "sha256": "50eb59785d02142b102b7dd9359c1101db7643794cff038faf469e50521bee55"
+  },
+  {
+    "path": "src/sim/item_copy_ref.ts",
+    "bytes": 14756,
+    "sha256": "b51e09644ae9ed24e325848faf289bfd4adfc367193af8339da71310f8ec22bb"
+  },
+  {
+    "path": "src/sim/item_instance_load.ts",
+    "bytes": 17996,
+    "sha256": "e616595151add474c34ce970634852eb824e30b2345c5f0a2fd5960f4ed960e2"
+  },
+  {
+    "path": "src/sim/item_instance_merge.ts",
+    "bytes": 4088,
+    "sha256": "39cb34bbd558aee420fab4c161ee23a5a0daad04f8255c838402fbe3169d0fd2"
+  },
+  {
+    "path": "src/sim/item_instance_stats.ts",
+    "bytes": 1103,
+    "sha256": "d5e6d463630da4e165b15c79c6b21e9652ffb05117762f210c421b7cb63f903a"
+  },
+  {
+    "path": "src/sim/item_level.ts",
+    "bytes": 21761,
+    "sha256": "d9f851a873acceb5149093622a9fcc58dbed96cf576ca29a37300b8dd6402db5"
+  },
+  {
+    "path": "src/sim/item_level_req.ts",
+    "bytes": 3395,
+    "sha256": "3533502e4131a730afdb2e367c3d388490defd4cd5b0fb47f4d57a3eefb88f77"
+  },
+  {
+    "path": "src/sim/item_lock.ts",
+    "bytes": 7798,
+    "sha256": "a600cf20c28d34eecbcf1ae016139d341687a77504c89525d542f7ac9a550890"
+  },
+  {
+    "path": "src/sim/item_lock_flag.ts",
+    "bytes": 957,
+    "sha256": "41b3fe2e58387f3d703feebe275212d6d9fd4adae82ee5f2b8bc4c935907dda1"
+  },
+  {
+    "path": "src/sim/item_storage_rules.ts",
+    "bytes": 259,
+    "sha256": "ae151151c7ecdf08deafa676a8be3aa250049618ef1ac52ad8f8a5afcdb51395"
+  },
+  {
+    "path": "src/sim/jail.ts",
+    "bytes": 4962,
+    "sha256": "d5c452a5cca08a21cab2fd59535b7e6edaaf37f4cbbccb7e19c28621c2b61200"
+  },
+  {
+    "path": "src/sim/launch_paperdoll_slots.ts",
+    "bytes": 1606,
+    "sha256": "6b7f8f75d3e840d18d294db5c0264db375ac09d5f62822bc877874f76c354aff"
+  },
+  {
+    "path": "src/sim/lockpick.ts",
+    "bytes": 16410,
+    "sha256": "141a2aee548e1334add971eaba7588d53ef8140f33781aae0c34ad22dd4bed82"
+  },
+  {
+    "path": "src/sim/loot/bop_trade_window.ts",
+    "bytes": 6969,
+    "sha256": "9013514892be9e5291fbe1c011ed25ca7a8d1f8ce4e18c4b25846259e3b7370e"
+  },
+  {
+    "path": "src/sim/loot/loot_difficulty_gate.ts",
+    "bytes": 1119,
+    "sha256": "b7c4f37639d98eca775539ce0ebf23db826cd3cdbfef396b72e9770624da28de"
+  },
+  {
+    "path": "src/sim/loot/loot_ffa.ts",
+    "bytes": 2557,
+    "sha256": "4da482626e3f6bebd43964495d91673cb360f6fa34a5ba5fa3fd01031a29858d"
+  },
+  {
+    "path": "src/sim/loot/loot_roll.ts",
+    "bytes": 48650,
+    "sha256": "9b08da26eb976e9423d564450d60a6d4b9e2090440acd9e97e121720d2e89dcc"
+  },
+  {
+    "path": "src/sim/loot_master.ts",
+    "bytes": 1581,
+    "sha256": "b384c2adb4eaf3e059b8dd24f8e904f93fc6fef58519b39db398d68b713f5936"
+  },
+  {
+    "path": "src/sim/material_container_move.ts",
+    "bytes": 1650,
+    "sha256": "604cea20fd41318585d1af8af37426b74d78d724550deb4d67950996f54f19ed"
+  },
+  {
+    "path": "src/sim/material_derivation.ts",
+    "bytes": 5530,
+    "sha256": "c9808f88ace68c9973bdb65490f55857630bb234b2633231716afd9012d8b506"
+  },
+  {
+    "path": "src/sim/material_gatherer.ts",
+    "bytes": 11803,
+    "sha256": "d8adfda6cc9a90cfd9c12bfc918c2393ebb2a0454e4216d1fb73d070273b3aca"
+  },
+  {
+    "path": "src/sim/material_ids.ts",
+    "bytes": 1791,
+    "sha256": "140e2fe56fff4fa3d2e53a29f07f95b85bf0b3823777458d4c99c797d8d11dd2"
+  },
+  {
+    "path": "src/sim/material_inventory_hub.ts",
+    "bytes": 1957,
+    "sha256": "7214564e026d5297d679cb4e8624a3ca3c8f507efaa6699205d990c3cc1216ae"
+  },
+  {
+    "path": "src/sim/material_inventory_take.ts",
+    "bytes": 15459,
+    "sha256": "a31ed1cfbb3876af8ef7cc3ea39a6282a56fc0475e8314c3a9657b6d655640d3"
+  },
+  {
+    "path": "src/sim/material_inventory_units.ts",
+    "bytes": 6948,
+    "sha256": "53984385dd20102f2f540bfc3418517a64a984845b2bd46eb275eaeddd96cfc3"
+  },
+  {
+    "path": "src/sim/material_item_custody.ts",
+    "bytes": 12363,
+    "sha256": "e747b8ac1fdd5bb217071d2eec0203888d95d2860c2c9c8c0ccd1610bf179b76"
+  },
+  {
+    "path": "src/sim/material_payload_identity.ts",
+    "bytes": 4691,
+    "sha256": "065bf6f350deb18a7a1413ba3788bce197a50a3f41ddd6e4f97bdc4aa465d8ab"
+  },
+  {
+    "path": "src/sim/material_signatures.ts",
+    "bytes": 1789,
+    "sha256": "717d16624f3205b75fbe994cbf92067d2dcecfc351508e1510041ac250f42dc2"
+  },
+  {
+    "path": "src/sim/material_slot_load.ts",
+    "bytes": 2820,
+    "sha256": "57ee2958fc57046ce8d7eb82e71a32a1a5b312c2f29c4db5ce5fbe6c6d1035bd"
+  },
+  {
+    "path": "src/sim/material_source_transfer_selection.ts",
+    "bytes": 4909,
+    "sha256": "ef13a0fae30ef8d8b2c9b3185c14855f517a6f0297b845c96457075df4e5ef34"
+  },
+  {
+    "path": "src/sim/material_sources.ts",
+    "bytes": 20460,
+    "sha256": "1f59e636c9b3326fecd533fc506c1900f5f04f3f8aa87d32efa75875f9065fc1"
+  },
+  {
+    "path": "src/sim/material_stack.ts",
+    "bytes": 9542,
+    "sha256": "6eb8c93dca0923847086d839e5c27d4137f07c7cdbc9e99129cea0669c223b96"
+  },
+  {
+    "path": "src/sim/material_stack_packing.ts",
+    "bytes": 10193,
+    "sha256": "9c550e69311c3eb349265e1ad393a6244783f7fb7316176fe6b08e69615f74c0"
+  },
+  {
+    "path": "src/sim/material_stack_selection.ts",
+    "bytes": 1495,
+    "sha256": "090b775b78f9f7e800cc563de34296bfd7bf46d4ff4b6c51b7780738274c3516"
+  },
+  {
+    "path": "src/sim/materials_vault.ts",
+    "bytes": 62091,
+    "sha256": "cdef37dc8826ea8efee2735bff61ffef2816cdcb59978b62293f8e2ec136bfb6"
+  },
+  {
+    "path": "src/sim/mob/aggro_ranges.ts",
+    "bytes": 1315,
+    "sha256": "7a64aedd170e48908e16781ef889afba3fb62d254e54cc9d82ed5930790370f1"
+  },
+  {
+    "path": "src/sim/mob/chain_pull_transit.ts",
+    "bytes": 3968,
+    "sha256": "a64d4feb07a78f935bcbb99e0a355ca53feb8aba17dc54ffe0d0a6e9334970e1"
+  },
+  {
+    "path": "src/sim/mob/combat_profile.ts",
+    "bytes": 13545,
+    "sha256": "c86129bc1ef127590798519c8f0ee198676f5bb54b149a05b6730a34368e1a04"
+  },
+  {
+    "path": "src/sim/mob/derelict_bomber.ts",
+    "bytes": 4880,
+    "sha256": "a6003d1a7deb38f783f91f1fa6c3f91e33d412774df2bf73eb60202debc639fa"
+  },
+  {
+    "path": "src/sim/mob/dragonkin_brood.ts",
+    "bytes": 14918,
+    "sha256": "85ff08ca1dadbaadd1269e16bf684cf3f941ee7f6629b234090159e364ba2fab"
+  },
+  {
+    "path": "src/sim/mob/dungeon_miniboss_stomp.ts",
+    "bytes": 3211,
+    "sha256": "1bd52b37cca471b405c26f4ca61e67bdffac7ea97107f7f57dea8daaec966532"
+  },
+  {
+    "path": "src/sim/mob/healer_channel.ts",
+    "bytes": 1173,
+    "sha256": "21c99f4acd8c667b3a9accddf08fd3e059e24c340fee5008b3a597d1c9d130f5"
+  },
+  {
+    "path": "src/sim/mob/ignivar_trash_automata.ts",
+    "bytes": 6734,
+    "sha256": "8c516ee0d57b4025d66f9bc0d0b0dcf82fbecb221ea44efc8f12085509ff2b58"
+  },
+  {
+    "path": "src/sim/mob/mechanic_spacing.ts",
+    "bytes": 6270,
+    "sha256": "67fdb290fe6702d68df2930e92b888a943434986351f8cabe175d1b1ad4204fe"
+  },
+  {
+    "path": "src/sim/mob/quest_gated_aggro.ts",
+    "bytes": 2215,
+    "sha256": "5098cd4bc500888b6b9287b5624a5491846223706d6d7e0d0bfbe47f163c4c69"
+  },
+  {
+    "path": "src/sim/mob/reachability.ts",
+    "bytes": 6270,
+    "sha256": "fd1d26c528fc94803a8c6733163ebb60dc7cb17aa19c442130531861a55e46af"
+  },
+  {
+    "path": "src/sim/mob/rift_escape_window.ts",
+    "bytes": 7513,
+    "sha256": "ce14a274f907ea87274324414725f410d546dedd306f73bd156ce62a3d977009"
+  },
+  {
+    "path": "src/sim/mob/targeting.ts",
+    "bytes": 8355,
+    "sha256": "ece2ba909078e68409aeaf2ea48c867479d0913d8567be46d71e065848718ede"
+  },
+  {
+    "path": "src/sim/mob/yells.ts",
+    "bytes": 1413,
+    "sha256": "472d1c1aab789aa155e5556582897a84dec49eac8b1088e254fa1489a0b701e3"
+  },
+  {
+    "path": "src/sim/mob_combat.ts",
+    "bytes": 7456,
+    "sha256": "d57c7e7865502273ac15b5376d5ef7499e2e42092a98661b3f7075ae4400def0"
+  },
+  {
+    "path": "src/sim/moderation/cheater_mark.ts",
+    "bytes": 6017,
+    "sha256": "0f37d88a8f8c49bbde1fc4f229d9e5f769bbf173536ce9daf195e139fa33da93"
+  },
+  {
+    "path": "src/sim/moderation/index.ts",
+    "bytes": 376,
+    "sha256": "6c60b9d3aaff11bf19e6b0fd09547c6201d65d1b09273b3cc87f5bcac8d7261e"
+  },
+  {
+    "path": "src/sim/mounts.ts",
+    "bytes": 18842,
+    "sha256": "7a55ca2ce2407e9864f1424ac0948d8302421ba49944b306b07d75d44905c6c4"
+  },
+  {
+    "path": "src/sim/paladin_devotion.ts",
+    "bytes": 13938,
+    "sha256": "4ddfe6d2384d905abf1d31ebd654278248e83b0badf2ef5a528b1c868c0223ef"
+  },
+  {
+    "path": "src/sim/pathfind.ts",
+    "bytes": 12286,
+    "sha256": "b0121c98c419f63df8110ccf2eb5e2a000801785d88f6568ed5c3015fb70852f"
+  },
+  {
+    "path": "src/sim/pet/pet_ai.ts",
+    "bytes": 29677,
+    "sha256": "9de483ece8cea73723338a31de26bfae697961dbb606458f2c11d11c2f21851a"
+  },
+  {
+    "path": "src/sim/pet/pet_commands.ts",
+    "bytes": 38788,
+    "sha256": "e65b61ceda29e9ea610baf0a2c457f7d9ebacc3467a91624465a929276538f1d"
+  },
+  {
+    "path": "src/sim/pet/pet_match_return.ts",
+    "bytes": 4930,
+    "sha256": "93ff7b15e7f7f8ec33e53c421a454a93ead9e3328ee0c04d6aa34d65b2153507"
+  },
+  {
+    "path": "src/sim/pet/pet_owner_revive.ts",
+    "bytes": 4479,
+    "sha256": "9ae5ad14f19395f97ecea3b727a0a4e3a215cc5028796c3c81517e8be2ded9d5"
+  },
+  {
+    "path": "src/sim/pet/pet_return.ts",
+    "bytes": 7850,
+    "sha256": "7405fd327cc2ebcb12f9b9764f8fa7c7d60d39a739121c076c5cdf6602fa3738"
+  },
+  {
+    "path": "src/sim/pet/pet_scaling.ts",
+    "bytes": 8026,
+    "sha256": "01fd358870e90834986dfdb635a4d27bdb8ee16f855fce46da46af6ca3871674"
+  },
+  {
+    "path": "src/sim/pet/pet_selection.ts",
+    "bytes": 1302,
+    "sha256": "264dd27e17de40682a95bc7e878beb94e74bea5358bfc6b168b3ca0fe9e49f66"
+  },
+  {
+    "path": "src/sim/pet/pet_taunt_gate.ts",
+    "bytes": 1601,
+    "sha256": "af7131d2cefb9f500452bc12b12dd16fbd59a07775a485d100509711cb191984"
+  },
+  {
+    "path": "src/sim/pet/warlock_pet_growth.ts",
+    "bytes": 385,
+    "sha256": "d21fc6c57d1a10d8f82a4edaaf8f8764bdd6ca3c7ae72105cdfafe449f6665d6"
+  },
+  {
+    "path": "src/sim/pet/warlock_pet_skills.ts",
+    "bytes": 4035,
+    "sha256": "142a0058ca62cb4afca0ea37f2ef7444cba192c4990ae778558ada081d8ba580"
+  },
+  {
+    "path": "src/sim/physics/character.ts",
+    "bytes": 22186,
+    "sha256": "f823f17159143d0ea3c6be9905e77ca608233d4062a88bebffbd23d6c4ff2ef4"
+  },
+  {
+    "path": "src/sim/physics/index.ts",
+    "bytes": 481,
+    "sha256": "f8f6ee3967b74cac7fc61919406fd5116aa4e811047bc627d61c210411b32aaa"
+  },
+  {
+    "path": "src/sim/physics/sweep.ts",
+    "bytes": 8013,
+    "sha256": "84d9860cdc7d1397c55254027a797af2b3ed464fe655f4a7965710ac82e10de7"
+  },
+  {
+    "path": "src/sim/professions/archetype.ts",
+    "bytes": 38047,
+    "sha256": "eac0a491ee4ea9f9eecc7035a27881404ebbb76ee190dd590c8710e38d5a97fe"
+  },
+  {
+    "path": "src/sim/professions/cadence.ts",
+    "bytes": 6095,
+    "sha256": "e7a8349ff2cd1fa1851d97cec681cae8340d29021e6018dfd54a576353c590f3"
+  },
+  {
+    "path": "src/sim/professions/collection_manual.ts",
+    "bytes": 812,
+    "sha256": "fde19fc2a2ed5769d7f12aee1556c529f2701419809ff139f6f88f4c2e77adc1"
+  },
+  {
+    "path": "src/sim/professions/combo_eligibility.ts",
+    "bytes": 2108,
+    "sha256": "91f6e0e4284d2c4c2424bff5ff6be80fba571924c45693db204f4888ed87181a"
+  },
+  {
+    "path": "src/sim/professions/commission.ts",
+    "bytes": 14671,
+    "sha256": "c89434ce4521400b0a49c0c82652be5cb2dd77faea9333e3e5232d69cd0a26a5"
+  },
+  {
+    "path": "src/sim/professions/corpse_harvest_grant.ts",
+    "bytes": 16873,
+    "sha256": "19f9df0895ecf7da52d1b8e315c6f4594ce5d4c6fd1c7c3d9b4063a09bd11731"
+  },
+  {
+    "path": "src/sim/professions/corpse_harvest_inspection.ts",
+    "bytes": 8654,
+    "sha256": "820964714637e641109a34886b2fd249df8e0c14cf3b350cb7591a13e0af577e"
+  },
+  {
+    "path": "src/sim/professions/corpse_harvest_scope.ts",
+    "bytes": 5660,
+    "sha256": "486a2c564c0f8f0d931a5e37e23bae1b6711f818102cdffdb50d88e3068a97fb"
+  },
+  {
+    "path": "src/sim/professions/corpse_harvest_session.ts",
+    "bytes": 11950,
+    "sha256": "d85c2f84634423d7194e85e7302ff42983ae84db64402a993f4187b0932c09a8"
+  },
+  {
+    "path": "src/sim/professions/craft_cast_duration.ts",
+    "bytes": 1745,
+    "sha256": "bb3f480f8e238c566d4c7fbbaaa00ab887a72dc3236dec999404837ad3cad86a"
+  },
+  {
+    "path": "src/sim/professions/craft_reagent_plan.ts",
+    "bytes": 3868,
+    "sha256": "74e2aab5a93c752a7a3f66ba9f477bd8ca4a49bd948d5f5d7946ce0e143f3132"
+  },
+  {
+    "path": "src/sim/professions/crafting.ts",
+    "bytes": 85139,
+    "sha256": "9dc93fbc9d932980cd66cf0449986018a4d8b5d0b395e5beb6467ebcfc7a1352"
+  },
+  {
+    "path": "src/sim/professions/disenchant_reagents.ts",
+    "bytes": 4075,
+    "sha256": "60ef86b6ecfeaef65b2b95f69f41a6eafd545c10165fff6e6c26017218d71f90"
+  },
+  {
+    "path": "src/sim/professions/enchant_formula.ts",
+    "bytes": 1989,
+    "sha256": "1cf7a2bd19e73aa331e439999719654d2aa0d5ba90c31ff568eb2f9fc53165c6"
+  },
+  {
+    "path": "src/sim/professions/enchanting.ts",
+    "bytes": 84706,
+    "sha256": "aa704795dc7ab3679105429d72e0c843371afec13fc9543afcf9b5d71624aac6"
+  },
+  {
+    "path": "src/sim/professions/feast.ts",
+    "bytes": 25236,
+    "sha256": "6c52da46c90024d62d483831432983e957986cb52039d5e9231fdfe1115c89e9"
+  },
+  {
+    "path": "src/sim/professions/feast_lifecycle.ts",
+    "bytes": 1817,
+    "sha256": "a63f98b208f7ca703c6dbbecb93a85e89473a78ca4fbf43b2e30256c5f4e78cd"
+  },
+  {
+    "path": "src/sim/professions/feast_placement.ts",
+    "bytes": 898,
+    "sha256": "831f15e0d5eb99c213afd5d7d19b1e2ac08e20bc61cd1ecb434a497ba92568ce"
+  },
+  {
+    "path": "src/sim/professions/focus.ts",
+    "bytes": 20042,
+    "sha256": "4be7c9e4f8b8d254038889571d046e21601f213df73c7aff8662da831aa22296"
+  },
+  {
+    "path": "src/sim/professions/gather_events.ts",
+    "bytes": 8209,
+    "sha256": "917426694af39083cd9a1ec21b4ad0cf1b6aaad3b89bed9f56497ee3e152f46f"
+  },
+  {
+    "path": "src/sim/professions/gathering.ts",
+    "bytes": 82762,
+    "sha256": "2072c7793dee6931bfd9504a17e30a37f639153f2f4323311338d9ec99d1dae7"
+  },
+  {
+    "path": "src/sim/professions/gathering_materials.ts",
+    "bytes": 5304,
+    "sha256": "069f322b83ff24ca0bba9e77914db7db4c50c02d552e793617880f558620ddb2"
+  },
+  {
+    "path": "src/sim/professions/harvest_admission.ts",
+    "bytes": 10736,
+    "sha256": "768c4e680eef8cd69d475432484306e2a00a78951585efde8e72a91f26b27f21"
+  },
+  {
+    "path": "src/sim/professions/harvest_ordinary_fit.ts",
+    "bytes": 831,
+    "sha256": "9f788dfc4122817f7bc761fdd2703ce29b4007b9fc5f30b976c269f07f2c287a"
+  },
+  {
+    "path": "src/sim/professions/harvest_preference.ts",
+    "bytes": 11633,
+    "sha256": "00c260ad490010dde515ca330ebeed0ddb6a0b2018f087fc83adb85264e538a8"
+  },
+  {
+    "path": "src/sim/professions/harvest_yields.ts",
+    "bytes": 4086,
+    "sha256": "d7cf2a46d59bde2613bda797d958c0d7732323ed82eb33774a385f53fc2e2780"
+  },
+  {
+    "path": "src/sim/professions/jack_variance.ts",
+    "bytes": 2370,
+    "sha256": "142f4efb1c9cad8d683954b7812bc76eb16b0a40390cbd6b6e08d21f4dc94ed3"
+  },
+  {
+    "path": "src/sim/professions/legendary_name.ts",
+    "bytes": 1880,
+    "sha256": "33064b46fc68f3d8a7c01fef8c0096cd28228b0c0aa790fa2d3577f7bea3abe4"
+  },
+  {
+    "path": "src/sim/professions/masterwork.ts",
+    "bytes": 7489,
+    "sha256": "a6cf9d47ffe0689b64f47a61ae76d9b869d84168bf6f294e2e50ba12b9ac7879"
+  },
+  {
+    "path": "src/sim/professions/masterwrought_materials.ts",
+    "bytes": 16858,
+    "sha256": "947291cea336ae2eb705ee5fc683f6b2dd70c77e2d58acd586d19af29603ec07"
+  },
+  {
+    "path": "src/sim/professions/material_grades.ts",
+    "bytes": 12366,
+    "sha256": "e81cddfe552cd91d2896efa751cfb6e174b8cb1ff2c787b4e5d389ba022b16c0"
+  },
+  {
+    "path": "src/sim/professions/material_tier.ts",
+    "bytes": 6449,
+    "sha256": "7021620f7e2908c5f4f5680682a093753dddfe13f70fa6f62517ee5833971fd0"
+  },
+  {
+    "path": "src/sim/professions/mobile_station.ts",
+    "bytes": 13878,
+    "sha256": "ae5d74d70a12220be2534517249a459069570c76908d323c5574e3da909b89ab"
+  },
+  {
+    "path": "src/sim/professions/pattern_items.ts",
+    "bytes": 11110,
+    "sha256": "59086137c748dd7dbd9aba961deacdf5ff0ce0b8ab61742b23cc12381fdcf8c3"
+  },
+  {
+    "path": "src/sim/professions/perfecting.ts",
+    "bytes": 32740,
+    "sha256": "7b0e5251851194bde6f64272f3fad0fb1e8634b29be670f2005cf50052bcd1c0"
+  },
+  {
+    "path": "src/sim/professions/perfecting_bonus.ts",
+    "bytes": 2875,
+    "sha256": "42b3b78e3b98c79d5a42be5c803112f2f6cecf9e76ef70a0a4e4b8f9b22727fc"
+  },
+  {
+    "path": "src/sim/professions/perfecting_copy.ts",
+    "bytes": 2782,
+    "sha256": "5c61fef84a6900c80d06f85f9f4647d44a568561b83080af665fa5cd11019d39"
+  },
+  {
+    "path": "src/sim/professions/profession_xp.ts",
+    "bytes": 2226,
+    "sha256": "262e7feda54bd6a077acdcfe62f5f25acd2cc6dfbf6621e6f5ba59daaa87885a"
+  },
+  {
+    "path": "src/sim/professions/proficiency_bands.ts",
+    "bytes": 1550,
+    "sha256": "94a8f20042082492c90ae1d039ed6768deae4bf5d4bd5f50ea6dd886bdc40c9b"
+  },
+  {
+    "path": "src/sim/professions/reagent_sources.ts",
+    "bytes": 7189,
+    "sha256": "86f85a23956cac85953f98f02b7a1bd202bf80d52ff3a79e612df18de5e253b5"
+  },
+  {
+    "path": "src/sim/professions/salvage_materials.ts",
+    "bytes": 495,
+    "sha256": "fdcb36b179f56c362ff1671e834e0e72d5439a1b1a29a85945f597483b10522b"
+  },
+  {
+    "path": "src/sim/professions/session_teardown.ts",
+    "bytes": 1701,
+    "sha256": "ff7980a93318a52ce313b1f739d61eff5a893b0c52e40012b3ff2e6fa63b55f7"
+  },
+  {
+    "path": "src/sim/professions/stations.ts",
+    "bytes": 5249,
+    "sha256": "d0e4854e2b1c27104b802bd69a0692d5d8c46645a1ebc2d3d08751b9bd425627"
+  },
+  {
+    "path": "src/sim/professions/tools.ts",
+    "bytes": 57791,
+    "sha256": "ae65309729e79d443b81f41f74eb3af5ff23ca51852082d70796c5f59c6c5af4"
+  },
+  {
+    "path": "src/sim/professions/training.ts",
+    "bytes": 12865,
+    "sha256": "c4b78fce4a03c3ad62027cc70cb5b69469ad1e6ce6aa1a30b41691b972700ba8"
+  },
+  {
+    "path": "src/sim/professions/wheel.ts",
+    "bytes": 10385,
+    "sha256": "a42261dae4a3c1e6837184ce05b4f9391c8088ad8dda4db087848eda65c0fe52"
+  },
+  {
+    "path": "src/sim/professions/wield_gate.ts",
+    "bytes": 8289,
+    "sha256": "c5a69943fcbce20229a2e46c075763a9e92c0181eb0c486763989439f1fde8fa"
+  },
+  {
+    "path": "src/sim/projectile_travel.ts",
+    "bytes": 6526,
+    "sha256": "484651ac8e0d5871c30d89d93ca1c9dd941bb8ed230f55819fa936ab62f03d1a"
+  },
+  {
+    "path": "src/sim/prop_layout.ts",
+    "bytes": 14893,
+    "sha256": "243fdf305a5a97b0ffc8fa5398adbb0a9c70903482ac998c018dc5df16e0e28e"
+  },
+  {
+    "path": "src/sim/pvp/honor.ts",
+    "bytes": 21111,
+    "sha256": "0895157b214992938f737b2eab90edf0be20ce04ac22651de150e79918f7c075"
+  },
+  {
+    "path": "src/sim/pvp/honor_event.ts",
+    "bytes": 5758,
+    "sha256": "3c01cb63de0035bc01e438e53c672d4b13db69f8a1237b2cf46b8a68087bd10e"
+  },
+  {
+    "path": "src/sim/pvp/index.ts",
+    "bytes": 1965,
+    "sha256": "d9cce350fcdf49909c65cbefc7789b0f846bce2d3f87b0155fefbd14814c8458"
+  },
+  {
+    "path": "src/sim/pvp/power.ts",
+    "bytes": 1796,
+    "sha256": "d4b2f9331f72943efb18c2def251356531a7238180bbf2e5ac05b343ca2a603a"
+  },
+  {
+    "path": "src/sim/quests/quest_credit.ts",
+    "bytes": 8406,
+    "sha256": "973da293de3c2888b5877faac9c6056b5bb93712fa072b27eaed6202525f614f"
+  },
+  {
+    "path": "src/sim/quests/quest_owned_count.ts",
+    "bytes": 1683,
+    "sha256": "b82104ab1d3e9ca31d98a93a37f6bdae1d0e2a086a456df9a14edbd79342cbd6"
+  },
+  {
+    "path": "src/sim/reach_decks.ts",
+    "bytes": 4036,
+    "sha256": "488d3a98cfd792fa5287cd022bb2ea4b6d0c1355b6bda8e3bc12076c8837ae7d"
+  },
+  {
+    "path": "src/sim/reliquary.ts",
+    "bytes": 74554,
+    "sha256": "d70712b6c9ba21976fd6b7854cbef062459d529dd195ce47a58c7d7f4e0aee3f"
+  },
+  {
+    "path": "src/sim/respawn_policy.ts",
+    "bytes": 10398,
+    "sha256": "e47e7ebdea1f6d1b938e3e6308946db40159b8efb10f1cb535de3550ee19e0f9"
+  },
+  {
+    "path": "src/sim/resurrection.ts",
+    "bytes": 9908,
+    "sha256": "8dc34411c92dacc23ebcd3bfca6a7bd7efd7d35676db96e0b8fa653193256177"
+  },
+  {
+    "path": "src/sim/ride_height.ts",
+    "bytes": 4498,
+    "sha256": "511dfbb2590ef413beb43ac9ad00043213ffad83c090a2df641c379baf9b1a43"
+  },
+  {
+    "path": "src/sim/rift/authored.ts",
+    "bytes": 10911,
+    "sha256": "6fdf75641d468b71ddd72bb50f4ef8ac394c17406edd3c42baed27860be702c5"
+  },
+  {
+    "path": "src/sim/rift/entry_clearance.ts",
+    "bytes": 2845,
+    "sha256": "b8643ceff444095f400f9b1edc649136c7568d91923fb05fb725fbc7737cc7c9"
+  },
+  {
+    "path": "src/sim/rift/fx.ts",
+    "bytes": 1056,
+    "sha256": "ba53032ca5eb804975b2f41057138779c7a1f5dd9228d0a233ddb99cdab923ed"
+  },
+  {
+    "path": "src/sim/rift/loot_pools.ts",
+    "bytes": 5174,
+    "sha256": "5f777b8f5afcb4c6f2dcc6076cce92ffc6f652f2b6361d2a0d952be62f2e5e3b"
+  },
+  {
+    "path": "src/sim/rift/portals.ts",
+    "bytes": 19493,
+    "sha256": "3ef2d2917d77fd86f46f206df2b9589615ef8e10545fb238a4acbf87b5071e7a"
+  },
+  {
+    "path": "src/sim/rift/progression.ts",
+    "bytes": 24480,
+    "sha256": "4a0a20c0154a64b591a6726766bad796443f3c9e17dac5e36393e554487d23fc"
+  },
+  {
+    "path": "src/sim/rift/race.ts",
+    "bytes": 1831,
+    "sha256": "5c681a7cec404583a5f2fe86f90ef428aaf5be20fbf813b0ae764bb9065df918"
+  },
+  {
+    "path": "src/sim/rift/ranks.ts",
+    "bytes": 16962,
+    "sha256": "3c31c02222d631681c818c59b08dbb23f4444eca25aa7529ebfa9961e3058af9"
+  },
+  {
+    "path": "src/sim/rift/rift_gen.ts",
+    "bytes": 38704,
+    "sha256": "0bfdfb205c6fea150cdd3b9cd4850996e2e73df308207269a3de1beb3032028d"
+  },
+  {
+    "path": "src/sim/rift/rift_lockpick.ts",
+    "bytes": 11047,
+    "sha256": "028e039b2cc3777e2ce649741a22ed49a8687b3af3009531f0bcbf81a75aaeef"
+  },
+  {
+    "path": "src/sim/rift/runs.ts",
+    "bytes": 83327,
+    "sha256": "79a9f1a1f6e72dad1008946f27e0927f90d9742a4bfcc03e4fe77f84fed0e632"
+  },
+  {
+    "path": "src/sim/rift/style.ts",
+    "bytes": 2676,
+    "sha256": "3135debb067f63215f74161a427adefe6c6fa36b53c3fcd0de3d129e08c05cda"
+  },
+  {
+    "path": "src/sim/rift/upgrade.ts",
+    "bytes": 10200,
+    "sha256": "76cc6a253d08d99a586627177fe3caf4b15d8393c1807554a2a376bef1926ed7"
+  },
+  {
+    "path": "src/sim/rift/upgrader_draft.ts",
+    "bytes": 7634,
+    "sha256": "2b39944a2160afdb392689881cc562f3b1a3b51ffb1f2ae2afbc9aad1a7c4c89"
+  },
+  {
+    "path": "src/sim/rng.ts",
+    "bytes": 3590,
+    "sha256": "9a4e273cefdb63fe891b00161753b52abbc4c8b222ca9f1141b48757339d29ab"
+  },
+  {
+    "path": "src/sim/sim_context.ts",
+    "bytes": 87979,
+    "sha256": "a772d5379d595cb254668fb3492974ba513e015086bb72c0685b4c2e993f8cad"
+  },
+  {
+    "path": "src/sim/social/arena.ts",
+    "bytes": 50512,
+    "sha256": "d09f9c52f635c9a2f8469a366a2f218c7708ec7e9287dac6b37d00ac3c829ed0"
+  },
+  {
+    "path": "src/sim/social/battleground.ts",
+    "bytes": 100137,
+    "sha256": "f1aeb1e777bdae4d6a5393de7ce486abf05b88ac3faa5ca116511c54ced0af9d"
+  },
+  {
+    "path": "src/sim/social/battleground_backfill.ts",
+    "bytes": 4363,
+    "sha256": "1c53f8d7ebc4bec5b05dfda7d7330a618e8437215dc82851b148f9cba681715f"
+  },
+  {
+    "path": "src/sim/social/battleground_outcomes.ts",
+    "bytes": 2915,
+    "sha256": "c01de24be5618bda0e9777b5465c0dd3da3b4407ddefd73653829b4bf39049c4"
+  },
+  {
+    "path": "src/sim/social/battleground_party.ts",
+    "bytes": 6681,
+    "sha256": "c854552e26a804755993c8c937373a64fe03604f5c3fdd551e5d3fc5385e7763"
+  },
+  {
+    "path": "src/sim/social/battleground_proposal.ts",
+    "bytes": 12172,
+    "sha256": "393b31ed3fdb52b88db0f31cfe9e50ae36bf664ec6c86fa7b2b3515d363cd8c2"
+  },
+  {
+    "path": "src/sim/social/duel.ts",
+    "bytes": 13250,
+    "sha256": "f8d7798d38f1f49e472abda474af58cdda1e89b4b46832eb040f3563917f60db"
+  },
+  {
+    "path": "src/sim/spell_scaling.ts",
+    "bytes": 7828,
+    "sha256": "e370ba1455db0572ae1af5cec307fabc0d654909a5724e5e7511a276b7d4127d"
+  },
+  {
+    "path": "src/sim/spirit.ts",
+    "bytes": 24206,
+    "sha256": "de9e0b48dcecc30c3d051fbe364a66cb36275f4997fc4b8cf248d3750132b382"
+  },
+  {
+    "path": "src/sim/streetlamp_layout.ts",
+    "bytes": 16469,
+    "sha256": "24cd43b1b6b93977ee1b1f88dfee5cad7f156977cd8de81b855b7dae7d3b200e"
+  },
+  {
+    "path": "src/sim/streetlamp_style.ts",
+    "bytes": 4708,
+    "sha256": "cd1d9bade2034fc03bb353ae4902afdeb79750c291b57fac85a4de22baa8f527"
+  },
+  {
+    "path": "src/sim/stun_dr.ts",
+    "bytes": 7253,
+    "sha256": "b32f0bd9fb748cf09714cd1abe95085345052332c9be2e72bbab838b48502963"
+  },
+  {
+    "path": "src/sim/talent_hit_mult.ts",
+    "bytes": 2180,
+    "sha256": "203c1cb78aa6fe0b0d419d0bf1ac00c74084ab70e24b581bd639b50a61ad871a"
+  },
+  {
+    "path": "src/sim/teleport_arrival.ts",
+    "bytes": 339,
+    "sha256": "da263dfc1fd1d028eacb89fec67c46731bb3e8e8496e1a3672c20d41e1b0cc57"
+  },
+  {
+    "path": "src/sim/terrain_calm_anchors.ts",
+    "bytes": 13862,
+    "sha256": "f1666828625428db963bf8824b62e00a97e667ad44b0b134d308a25f90bd2dfb"
+  },
+  {
+    "path": "src/sim/terrain_region_index.ts",
+    "bytes": 9000,
+    "sha256": "75a66dc998c56515c79a31c28887a84cb27d47312c80609aee1d77d332f3bf34"
+  },
+  {
+    "path": "src/sim/terrain_relief.ts",
+    "bytes": 8417,
+    "sha256": "8abe822d87aeef9f04382196edb5d20192e028956496385f46840c92217581a9"
+  },
+  {
+    "path": "src/sim/thornhollow_field.generated.ts",
+    "bytes": 959303,
+    "sha256": "3a770ecfc01499bfd0ad10a73f1b16401a2baad65b3966e42bbe2c547ca399d1"
+  },
+  {
+    "path": "src/sim/threat.ts",
+    "bytes": 5735,
+    "sha256": "92a1ea970da17543104c645010aa99fef2bf126609ae0432712a25c46300cd41"
+  },
+  {
+    "path": "src/sim/town_props.ts",
+    "bytes": 7006,
+    "sha256": "8a456745b31acae932a9e22e328f3e1106b8e5282f97b0072b6b26c8800d8100"
+  },
+  {
+    "path": "src/sim/tutorial/ability_drill.ts",
+    "bytes": 6424,
+    "sha256": "5d799628e87e8bf9ee60d33b9226341b7caf66e14ab4cb762d83aedc44a0af95"
+  },
+  {
+    "path": "src/sim/tutorial/death_lesson.ts",
+    "bytes": 4747,
+    "sha256": "1ae81380845b0ca16790a69235ccf178fd19800e072a57c6a2b4298fd2f5b40f"
+  },
+  {
+    "path": "src/sim/tutorial/starting_attack.ts",
+    "bytes": 4319,
+    "sha256": "87df98785a0a9f560758c19f5f1a7bda4a973d0b7f7df953e3ab5c5619644218"
+  },
+  {
+    "path": "src/sim/types.ts",
+    "bytes": 425701,
+    "sha256": "5bd5ee47b236f008a0c42a84c45db16a5c61aaa794db7f249305c2178e861dcc"
+  },
+  {
+    "path": "src/sim/unstuck_cooldown.ts",
+    "bytes": 555,
+    "sha256": "a3ae299495765b95e605afbf4914c213c787b8936e901e3c92c293c4cd92d720"
+  },
+  {
+    "path": "src/sim/varkhul_anvil_meteors.ts",
+    "bytes": 2262,
+    "sha256": "45235826d153259f8e463e2ee331053d9a640f0612fc6f06ab3a8440cd43029a"
+  },
+  {
+    "path": "src/sim/varkhul_anvils_decree.ts",
+    "bytes": 639,
+    "sha256": "4607bbccf708e5abde8d070a0c9e868124b91a272db84539f2f758a79e1d10ba"
+  },
+  {
+    "path": "src/sim/varkhul_assembly.ts",
+    "bytes": 22687,
+    "sha256": "f8ba55b093ea811336ac9e8e4208f007fd1e3f1f483f021b8b73b701522b6a82"
+  },
+  {
+    "path": "src/sim/varkhul_cinder_artificer.ts",
+    "bytes": 1915,
+    "sha256": "07207adfdf8af2ef3fa60717c0418d2040e843ac9a66fae8641b8ccdd9ea415a"
+  },
+  {
+    "path": "src/sim/varkhul_cinder_orbs.ts",
+    "bytes": 4464,
+    "sha256": "41891868bea438bb2a4747a128f8b1a8843cc04a7bd86b5896baf29b9d32d140"
+  },
+  {
+    "path": "src/sim/varkhul_engage.ts",
+    "bytes": 4231,
+    "sha256": "5e0925567cb1ca4361b95f9ba9892bcb1226c0ff68e7e188a0dc51182752f7f7"
+  },
+  {
+    "path": "src/sim/varkhul_forge_beams.ts",
+    "bytes": 6295,
+    "sha256": "9ace96b520099723e4345892334ecf02d36bb08febff4a62a89a09d4ebf46286"
+  },
+  {
+    "path": "src/sim/varkhul_forge_intermission.ts",
+    "bytes": 7965,
+    "sha256": "9d84d21c3d31332b0e0e95ddf45704a2b30fd15e6dfca461b1ab46ce629d5f10"
+  },
+  {
+    "path": "src/sim/varkhul_forgestorm.ts",
+    "bytes": 1551,
+    "sha256": "c11cfed952526321ba8e545ce24dc98d0d66b40ceb19b6e278ece3f8f4914ffd"
+  },
+  {
+    "path": "src/sim/varkhul_frontal.ts",
+    "bytes": 1674,
+    "sha256": "3de747a1697f764168bd7797f5668b4e8dd2dd706c5a9975ff15015b9649325a"
+  },
+  {
+    "path": "src/sim/varkhul_intercept_beam.ts",
+    "bytes": 5204,
+    "sha256": "b0d8b88aaa416cc921c36ac01c21db28320e8ca802fdf730e1be5e130a42e60a"
+  },
+  {
+    "path": "src/sim/varkhul_shared_pyre.ts",
+    "bytes": 2395,
+    "sha256": "6f47b657853ab3d4012e616bfbb3cb6e56f096bd52b1a95ddb9e589925fd30ce"
+  },
+  {
+    "path": "src/sim/varkhul_worldfire.ts",
+    "bytes": 3516,
+    "sha256": "3310b7f50b61c896fc13f50c632bfa9f4552e2f9bcf165d9c721d1a384303d8d"
+  },
+  {
+    "path": "src/sim/vault_craft_gate.ts",
+    "bytes": 18038,
+    "sha256": "78ef6bcbc45385b7cd6f5e80f46f4182b501b69debdbdeee9cf76e0e45accd56"
+  },
+  {
+    "path": "src/sim/vault_material_sources.ts",
+    "bytes": 22094,
+    "sha256": "ae11f8c44a09c6c34ea35ca0ea3a88b3c17e53e6e058e994522fc23404a20d8b"
+  },
+  {
+    "path": "src/sim/vault_slot_ops.ts",
+    "bytes": 13298,
+    "sha256": "db1e74956ecee3228a96811abf2ce609013eec73c5fb8468ce282a1a860cec80"
+  },
+  {
+    "path": "src/sim/walk_lifts.ts",
+    "bytes": 1242,
+    "sha256": "a3998b2a514ec893a744f43f7bc4242e10577297a0fc5536df3bb3f0c9954db6"
+  },
+  {
+    "path": "src/sim/wildheart_field.ts",
+    "bytes": 10666,
+    "sha256": "5ac6adc721f962ae959ab4f80fc50d8d57f57177bb411333f37bcc2b84ddaab1"
+  },
+  {
+    "path": "src/sim/world.ts",
+    "bytes": 253566,
+    "sha256": "003db22b02fc21f43304497daef2c98429894c3757943e109f7b3bd8659cd16b"
+  },
+  {
+    "path": "src/sim/world_boss.ts",
+    "bytes": 13484,
+    "sha256": "b1db4e2ccf1517bce2a4cbb0d51d0e2dcbc07f5d897345ad3e5fa689855b10de"
+  },
+  {
+    "path": "src/sim/yumi_maze_layout.ts",
+    "bytes": 14575,
+    "sha256": "f34ffe080b5d535505f17808702a69794961bad0dafdcadfc9253112831ae390"
+  },
+  {
+    "path": "tests/helpers/reagent_unit_value.ts",
+    "bytes": 1666,
+    "sha256": "cf3ecbf19d022476ccce156830fdac3ca1bbceb29cb813fd04915001f5800b18"
+  }
+]

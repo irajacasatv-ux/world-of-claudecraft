@@ -1,0 +1,874 @@
+{
+  "artifactId": "freehold-crafted-development-calibration-v1",
+  "status": "PROPOSAL_AWAITING_FERNANDO_ACCEPTANCE",
+  "proposedDay": "2026-09-07",
+  "owner": "Fernando",
+  "producer": "Codex",
+  "approvalIdentity": null,
+  "approvalDay": null,
+  "productionApproved": false,
+  "supersedes": null,
+  "preference": "Progression set: seven mid-skill recipes, three longer Marks goals",
+  "enchantingChoice": "Proposed rare-gear essence substitution; awaiting owner acceptance of the complete artifact.",
+  "scope": "Exact development recipe/output/pattern literals and existing-model transforms/footprints/radii/decor costs for ten crafted furnishings. No production activation or final art approval.",
+  "numericDerivations": {
+    "resultCount": "One physical furnishing per comparator batch, including consumable-craft batches; proposed calibration.",
+    "skillReq": "50, existing rare learning rung shared across ten crafts by proposed calibration.",
+    "itemLevelBudget": "20, inherited from the named rare-rung band comparator; gold-sink driver only, no furnishing power.",
+    "level": "15, existing non-consumable rare-rung XP level from the same band comparator; all outputs are durable decor.",
+    "marks": "16, exact premium Marks pattern precedent; 48 for all three; no playtime or reset-count claim.",
+    "resale": "Transfer the accepted vendor-furnishing 60/250 ratio to the minimum counterfactual input value; floor copper. Requires new acceptance."
+  },
+  "units": {
+    "reagents": "whole item units per craft",
+    "skillReq": "craft skill points",
+    "itemLevelBudget": "craft fee budget points",
+    "level": "effective profession XP content level",
+    "sellValue": "copper per item",
+    "craftFeeCopper": "copper per craft",
+    "trainingFeeCopper": "copper per one-time trainer unlock",
+    "marks": "Heroic Marks per one-time pattern",
+    "footprint": "0.5-world-unit grid cells",
+    "r": "world units",
+    "decorCost": "whole chair-relative decor points"
+  },
+  "sourceRevision": "49ed3f09333f4f1293edda9a98fe590c5651c20e",
+  "economySourceGraphSha256": "93eb265ba15d6e62e4eb877615af78bc66bd1c0547ef36b5251204f1cd0d0f83",
+  "records": [
+    {
+      "itemId": "freehold_weapon_rack",
+      "name": "Weapon Rack",
+      "recipe": {
+        "id": "recipe_freehold_weapon_rack",
+        "professionId": "weaponcrafting",
+        "resultItemId": "freehold_weapon_rack",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "elderwood_log",
+            "count": 1
+          },
+          {
+            "itemId": "thorium_ore",
+            "count": 2
+          },
+          {
+            "itemId": "rough_hide",
+            "count": 2
+          },
+          {
+            "itemId": "smithing_flux",
+            "count": 1
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "forge",
+        "acquisition": [
+          "trainer"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 58,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": 10000,
+      "pattern": null,
+      "modelSource": {
+        "id": "freehold_weapon_rack",
+        "asset": "public/models/biome/hex_weaponrack.glb",
+        "sourceModelKey": "PROP_ASSET_DEFS.hexWeaponRack",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Inspected empty freestanding timber rack with broad base and crossbar. No weapons are present; final bracket and workmanship design remains unbuilt.",
+        "propKey": "hexWeaponRack",
+        "targetHeight": 1.5,
+        "heightReason": "Measured authored unit-scale rack height is 0.23999996483325958 world units. Propose three accepted grid cells (1.5 units) tall, deriving scale as 1.5 / measured height. This is new household tuning, not a verified existing placement transform."
+      },
+      "transform": {
+        "translationBeforeScale": [
+          -9.387731552124023e-07,
+          0,
+          0.005000069737434387
+        ],
+        "scale": [
+          6.2500009158006655,
+          6.2500009158006655,
+          6.2500009158006655
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 3,
+        "depth": 2
+      },
+      "r": 1,
+      "collisionClass": "solid",
+      "decorCost": 1,
+      "economyFixture": "recipe_freehold_weapon_rack",
+      "geometryFixture": "crafted-geometry-v1:freehold_weapon_rack"
+    },
+    {
+      "itemId": "freehold_iron_brazier",
+      "name": "Iron Brazier",
+      "recipe": {
+        "id": "recipe_freehold_iron_brazier",
+        "professionId": "armorcrafting",
+        "resultItemId": "freehold_iron_brazier",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "thorium_ore",
+            "count": 4
+          },
+          {
+            "itemId": "iron_ore",
+            "count": 24
+          },
+          {
+            "itemId": "smithing_flux",
+            "count": 2
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "forge",
+        "acquisition": [
+          "trainer"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 64,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": 10000,
+      "pattern": null,
+      "modelSource": {
+        "id": "freehold_iron_brazier",
+        "asset": "public/models/props/yumi_brazier_stand.glb",
+        "sourceModelKey": "YUMI_MAZE_ASSET_URL.brazier_stand",
+        "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+        "identity": "Inspected raised empty bowl on a stable pedestal. Material finish and iron rivets are not represented by this diagnostic; no flame or point light is included.",
+        "targetHeight": 1.5,
+        "heightReason": "Propose three accepted development grid cells high for a household standing bowl; source dimension measured before deriving the uniform scale."
+      },
+      "transform": {
+        "translationBeforeScale": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1.15384619616898,
+          1.15384619616898,
+          1.15384619616898
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 2,
+        "depth": 2
+      },
+      "r": 0.5,
+      "collisionClass": "solid",
+      "decorCost": 7,
+      "economyFixture": "recipe_freehold_iron_brazier",
+      "geometryFixture": "crafted-geometry-v1:freehold_iron_brazier"
+    },
+    {
+      "itemId": "freehold_patchwork_rug",
+      "name": "Patchwork Rug",
+      "recipe": {
+        "id": "recipe_freehold_patchwork_rug",
+        "professionId": "tailoring",
+        "resultItemId": "freehold_patchwork_rug",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "sunpetal_herb",
+            "count": 1
+          },
+          {
+            "itemId": "homespun_cloth",
+            "count": 4
+          },
+          {
+            "itemId": "spool_of_thread",
+            "count": 2
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "loom",
+        "acquisition": [
+          "trainer"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 43,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": 10000,
+      "pattern": null,
+      "modelSource": {
+        "id": "freehold_patchwork_rug",
+        "source": "src/render/rift_decor.ts",
+        "sourceFunction": "buildRug",
+        "sourceModelKey": "buildRug",
+        "scale": [
+          0.25,
+          1,
+          0.15384615384615385
+        ],
+        "underlay": true,
+        "floorLift": 0.02,
+        "identity": "Exact accepted flat rug recipe and 2 by 4 world-unit transform. No patchwork panels or stitch texture; zero collision comes from underlay class.",
+        "scaleReason": "Reuse vendor development rug dimensions: one by two measured floor tiles; retained source floor lift 0.02."
+      },
+      "transform": {
+        "translationBeforeScale": [
+          0,
+          -0.019999999999999206,
+          0
+        ],
+        "scale": [
+          0.25,
+          1,
+          0.15384615384615385
+        ],
+        "postScaleTranslation": [
+          0,
+          0.02,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 4,
+        "depth": 8
+      },
+      "r": 0,
+      "collisionClass": "walk_through_underlay",
+      "decorCost": 1,
+      "economyFixture": "recipe_freehold_patchwork_rug",
+      "geometryFixture": "crafted-geometry-v1:freehold_patchwork_rug"
+    },
+    {
+      "itemId": "freehold_hide_armchair",
+      "name": "Hide Armchair",
+      "recipe": {
+        "id": "recipe_freehold_hide_armchair",
+        "professionId": "leatherworking",
+        "resultItemId": "freehold_hide_armchair",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "pristine_hide",
+            "count": 1
+          },
+          {
+            "itemId": "rough_hide",
+            "count": 4
+          },
+          {
+            "itemId": "thorium_ore",
+            "count": 1
+          },
+          {
+            "itemId": "tanning_agent",
+            "count": 2
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "tannery",
+        "acquisition": [
+          "trainer"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 26,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": 10000,
+      "pattern": null,
+      "modelSource": {
+        "id": "freehold_hide_armchair",
+        "asset": "public/models/dungeon/chair.glb",
+        "sourceModelKey": "PROP_ASSET_DEFS.kcasChair",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Existing upright wooden chair proxy. It has no soft hide sling, stitching or armchair width; accept as numeric development placeholder only and remeasure final armchair.",
+        "propKey": "kcasChair",
+        "scale": 1.3,
+        "scaleSource": "src/render/lastkeep_dressing.ts",
+        "scaleWitness": "add('kcasChair', 'guest_east', 9.6, 85.5, 2.5, 1.3);"
+      },
+      "transform": {
+        "translationBeforeScale": [
+          -0.0012931227684020996,
+          -2.9802318834981634e-08,
+          -9.238719940185547e-07
+        ],
+        "scale": [
+          1.3,
+          1.3,
+          1.3
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 2,
+        "depth": 2
+      },
+      "r": 1,
+      "collisionClass": "solid",
+      "decorCost": 1,
+      "economyFixture": "recipe_freehold_hide_armchair",
+      "geometryFixture": "crafted-geometry-v1:freehold_hide_armchair"
+    },
+    {
+      "itemId": "freehold_clockwork_lamp",
+      "name": "Clockwork Lamp",
+      "recipe": {
+        "id": "recipe_freehold_clockwork_lamp",
+        "professionId": "engineering",
+        "resultItemId": "freehold_clockwork_lamp",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "copper_ore",
+            "count": 6
+          },
+          {
+            "itemId": "smithing_flux",
+            "count": 2
+          },
+          {
+            "itemId": "arcane_dust",
+            "count": 3
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "toolworks",
+        "acquisition": [
+          "drop"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 9,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": null,
+      "pattern": {
+        "id": "pattern_freehold_clockwork_lamp",
+        "marks": 16,
+        "sellValue": 100,
+        "quality": "rare",
+        "acquisition": "deterministic Heroic Quartermaster only"
+      },
+      "modelSource": {
+        "id": "freehold_clockwork_lamp",
+        "asset": "public/models/dungeon/lantern_standing.glb",
+        "sourceModelKey": "battleground assetId dungeon/lantern_standing",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Weighted low cage proxy; no exposed winding mechanism or Engineering workmanship. Existing cage form inspected in accepted vendor evidence. No emitted light or animation is added.",
+        "scale": 1.5,
+        "scaleSource": "scripts/assets/battleground/dressing.mjs",
+        "scaleWitness": "assetId: 'dungeon/lantern_standing',\n      x: r4(room.x + 5.6),\n      z: r4(room.z),\n      rotY: 0,\n      scale: 1.5,"
+      },
+      "transform": {
+        "translationBeforeScale": [
+          0,
+          2.9802322387695312e-08,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 2,
+        "depth": 2
+      },
+      "r": 1,
+      "collisionClass": "solid",
+      "decorCost": 1,
+      "economyFixture": "recipe_freehold_clockwork_lamp",
+      "geometryFixture": "crafted-geometry-v1:freehold_clockwork_lamp"
+    },
+    {
+      "itemId": "freehold_glass_floor_lamp",
+      "name": "Glass Floor Lamp",
+      "recipe": {
+        "id": "recipe_freehold_glass_floor_lamp",
+        "professionId": "alchemy",
+        "resultItemId": "freehold_glass_floor_lamp",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "pristine_venom_gland",
+            "count": 1
+          },
+          {
+            "itemId": "venom_gland",
+            "count": 2
+          },
+          {
+            "itemId": "frost_gourd",
+            "count": 1
+          },
+          {
+            "itemId": "sunpetal_herb",
+            "count": 1
+          },
+          {
+            "itemId": "glass_vial",
+            "count": 1
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "apothecary",
+        "acquisition": [
+          "trainer"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 53,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": 10000,
+      "pattern": null,
+      "modelSource": {
+        "id": "freehold_glass_floor_lamp",
+        "asset": "public/models/dungeon/lantern_standing.glb",
+        "sourceModelKey": "battleground assetId dungeon/lantern_standing",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Floor-supported low cage proxy; no amber glass vessel or Alchemy workmanship. Existing cage form inspected in accepted vendor evidence. No emitted light or animation is added.",
+        "scale": 1.5,
+        "scaleSource": "scripts/assets/battleground/dressing.mjs",
+        "scaleWitness": "assetId: 'dungeon/lantern_standing',\n      x: r4(room.x + 5.6),\n      z: r4(room.z),\n      rotY: 0,\n      scale: 1.5,"
+      },
+      "transform": {
+        "translationBeforeScale": [
+          0,
+          2.9802322387695312e-08,
+          0
+        ],
+        "scale": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 2,
+        "depth": 2
+      },
+      "r": 1,
+      "collisionClass": "solid",
+      "decorCost": 1,
+      "economyFixture": "recipe_freehold_glass_floor_lamp",
+      "geometryFixture": "crafted-geometry-v1:freehold_glass_floor_lamp"
+    },
+    {
+      "itemId": "freehold_chart_easel",
+      "name": "Chart Easel",
+      "recipe": {
+        "id": "recipe_freehold_chart_easel",
+        "professionId": "inscription",
+        "resultItemId": "freehold_chart_easel",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "sunpetal_herb",
+            "count": 2
+          },
+          {
+            "itemId": "arcane_essence",
+            "count": 2
+          },
+          {
+            "itemId": "glass_vial",
+            "count": 1
+          },
+          {
+            "itemId": "goldleaf_herb",
+            "count": 2
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "apothecary",
+        "acquisition": [
+          "drop"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 60,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": null,
+      "pattern": {
+        "id": "pattern_freehold_chart_easel",
+        "marks": 16,
+        "sellValue": 100,
+        "quality": "rare",
+        "acquisition": "deterministic Heroic Quartermaster only"
+      },
+      "modelSource": {
+        "id": "freehold_chart_easel",
+        "asset": "public/models/props/inscription_lectern.glb",
+        "sourceModelKey": "ARTISAN_ASSET_URL.inscription_lectern (retained inventory metadata)",
+        "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+        "identity": "Inspected freestanding book lectern proxy with pedestal. It is not a parchment chart easel: no geographic content is introduced and final chart form requires replacement and remeasurement.",
+        "targetHeight": 1.5,
+        "heightReason": "Propose three accepted development grid cells high; existing retained metadata target is 1.1, so this is an explicit new household proposal, not the current placement transform."
+      },
+      "transform": {
+        "translationBeforeScale": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1.3636363340803421,
+          1.3636363340803421,
+          1.3636363340803421
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 2,
+        "depth": 3
+      },
+      "r": 1,
+      "collisionClass": "solid",
+      "decorCost": 8,
+      "economyFixture": "recipe_freehold_chart_easel",
+      "geometryFixture": "crafted-geometry-v1:freehold_chart_easel"
+    },
+    {
+      "itemId": "freehold_jewel_floor_lamp",
+      "name": "Jewel Floor Lamp",
+      "recipe": {
+        "id": "recipe_freehold_jewel_floor_lamp",
+        "professionId": "jewelcrafting",
+        "resultItemId": "freehold_jewel_floor_lamp",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "thorium_ore",
+            "count": 4
+          },
+          {
+            "itemId": "arcane_essence",
+            "count": 2
+          },
+          {
+            "itemId": "smithing_flux",
+            "count": 2
+          },
+          {
+            "itemId": "iron_ore",
+            "count": 2
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "forge",
+        "acquisition": [
+          "drop"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 39,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": null,
+      "pattern": {
+        "id": "pattern_freehold_jewel_floor_lamp",
+        "marks": 16,
+        "sellValue": 100,
+        "quality": "rare",
+        "acquisition": "deterministic Heroic Quartermaster only"
+      },
+      "modelSource": {
+        "id": "freehold_jewel_floor_lamp",
+        "asset": "public/models/props/streetlamp_amberfall_crystal.glb",
+        "sourceModelKey": "STREETLAMP_ASSET_DEFS.amberfall_crystal",
+        "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+        "identity": "Inspected faceted lamp head suspended from a substantial freestanding post and foot. Floor-supported streetlamp proxy, not a ceiling chandelier. Final metal jewel setting and household proportions remain unbuilt.",
+        "targetHeight": 2,
+        "heightReason": "Propose four accepted development grid cells high. Current streetlamp targetHeight is 5.5 and uses separate footprint normalization; this trial instead uniformly scales decoded source geometry to 2 world units and recenters combined X/Z bounds."
+      },
+      "transform": {
+        "translationBeforeScale": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          0.36363636363636365,
+          0.36363636363636365,
+          0.36363636363636365
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 2,
+        "depth": 2
+      },
+      "r": 0.5,
+      "collisionClass": "solid",
+      "decorCost": 4,
+      "economyFixture": "recipe_freehold_jewel_floor_lamp",
+      "geometryFixture": "crafted-geometry-v1:freehold_jewel_floor_lamp"
+    },
+    {
+      "itemId": "freehold_set_supper_table",
+      "name": "Set Supper Table",
+      "recipe": {
+        "id": "recipe_freehold_set_supper_table",
+        "professionId": "cooking",
+        "resultItemId": "freehold_set_supper_table",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "prime_cut",
+            "count": 1
+          },
+          {
+            "itemId": "game_meat",
+            "count": 4
+          },
+          {
+            "itemId": "highland_barley",
+            "count": 2
+          },
+          {
+            "itemId": "frost_gourd",
+            "count": 2
+          },
+          {
+            "itemId": "sunpetal_herb",
+            "count": 1
+          },
+          {
+            "itemId": "cooking_salt",
+            "count": 2
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "kitchens",
+        "acquisition": [
+          "trainer"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 54,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": 10000,
+      "pattern": null,
+      "modelSource": {
+        "id": "freehold_set_supper_table",
+        "asset": "public/models/dungeon/table_medium_tablecloth_decorated_b.glb",
+        "sourceModelKey": "existing GLB filename table_medium_tablecloth_decorated_b (no furnishing registration)",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Existing table with cloth and inert tabletop composition. No charges, food grants, Well Fed, consumption or station functionality is reused. Inspected whole height includes a tall bottle above the table surface; height is not tabletop height.",
+        "scale": 1.25,
+        "scaleReason": "Propose same scalar as accepted vendor round table, not a claimed existing placement scale for this exact table; full measured extents must be accepted."
+      },
+      "transform": {
+        "translationBeforeScale": [
+          -1.7881393432617188e-07,
+          1.2043810331374694e-05,
+          -1.7881393432617188e-07
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 5,
+        "depth": 5
+      },
+      "r": 2,
+      "collisionClass": "solid",
+      "decorCost": 5,
+      "economyFixture": "recipe_freehold_set_supper_table",
+      "geometryFixture": "crafted-geometry-v1:freehold_set_supper_table"
+    },
+    {
+      "itemId": "freehold_glow_lantern",
+      "name": "Glow Lantern",
+      "recipe": {
+        "id": "recipe_freehold_glow_lantern",
+        "professionId": "enchanting",
+        "resultItemId": "freehold_glow_lantern",
+        "resultCount": 1,
+        "reagents": [
+          {
+            "itemId": "arcane_essence",
+            "count": 20
+          },
+          {
+            "itemId": "arcane_dust",
+            "count": 6
+          }
+        ],
+        "skillReq": 50,
+        "itemLevelBudget": 20,
+        "level": 15,
+        "stationType": "toolworks",
+        "acquisition": [
+          "trainer"
+        ]
+      },
+      "quality": "rare",
+      "sellValue": 60,
+      "tradable": true,
+      "craftFeeCopper": 40,
+      "trainingFeeCopper": 10000,
+      "pattern": null,
+      "modelSource": {
+        "id": "freehold_glow_lantern",
+        "asset": "public/models/dungeon/lantern_standing.glb",
+        "sourceModelKey": "battleground assetId dungeon/lantern_standing",
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+        "identity": "Existing substantial low standing cage proxy. No Enchanting finish, animated glow, point light or gameplay effect is included.",
+        "scale": 1,
+        "scaleReason": "Reuse accepted vendor cage normalization and authored unit scale; shared source is explicit, not ten distinct finished models."
+      },
+      "transform": {
+        "translationBeforeScale": [
+          0,
+          2.9802322387695312e-08,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0
+      },
+      "footprint": {
+        "width": 2,
+        "depth": 2
+      },
+      "r": 0.5,
+      "collisionClass": "solid",
+      "decorCost": 1,
+      "economyFixture": "recipe_freehold_glow_lantern",
+      "geometryFixture": "crafted-geometry-v1:freehold_glow_lantern"
+    }
+  ],
+  "sealedEvidence": [
+    {
+      "path": "economy-measurements.json",
+      "sha256": "8e7a10f6b5f1e073c1652fe4819a0c16a8f44071e1f8b1649c2d70afa4f8e64e",
+      "bytes": 1925504
+    },
+    {
+      "path": "economy-source-hashes.json",
+      "sha256": "ae6a87764ce2e63337d62decb677780733588b50352e649f0cd0025bae663de1",
+      "bytes": 62500
+    },
+    {
+      "path": "geometry-proposal.json",
+      "sha256": "d944116ea84fedc226635cb74fa5c6dadccca531622439f8b47e84e2d2e6825f",
+      "bytes": 8417
+    },
+    {
+      "path": "geometry-measurements.json",
+      "sha256": "c340590e9b89415432f7c0712dacfea273486d3cc42b20900f1ae0004336a8c8",
+      "bytes": 75312
+    },
+    {
+      "path": "geometry-validation.json",
+      "sha256": "1ccf3e29a4013374950cd49aa5d6da4fe88b57af662d04c6f5cf9e73c3bab0b7",
+      "bytes": 2967
+    },
+    {
+      "path": "geometry-review.md",
+      "sha256": "c039a5d5b72bbb3d7b4b6425596e185b6c85b0fe87a4d9ce6f82793d031715bc",
+      "bytes": 16417
+    },
+    {
+      "path": "proposal.md",
+      "sha256": "88dbf435e3282feff5e7dccbb01b42d00adcdbbfeb61f36cf232ce51fba0e5e7",
+      "bytes": 10811
+    }
+  ],
+  "activationGatesStillOpen": [
+    "Owner acceptance of this exact artifact version and hash for disabled development.",
+    "Implementation acquisition, bag-slot use, trainer path, crafting, full batch, output trade, power-neutral, channel/economy/firewall tests.",
+    "All same-change final icons/provenance, names/M16, Hearth pages, guide/wiki.",
+    "Final GLBs with remeasured geometry and costs, legal maximum room layouts, arrival/navigation and LOW/performance evidence.",
+    "Existing production numeric approvals and content release gates."
+  ]
+}

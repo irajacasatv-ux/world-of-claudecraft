@@ -6,8 +6,12 @@
 // lives in heroic_vendor_window.ts. DOM-free and i18n-free so
 // tests/heroic_vendor.test.ts can drive it directly.
 
-import type { HeroicVendorOffer } from '../../../sim/content/heroic_vendor';
+import { HEROIC_MARK_ITEM_ID } from '../../../sim/content/dungeon_difficulty';
+import { HEROIC_VENDOR_STOCK, type HeroicVendorOffer } from '../../../sim/content/heroic_vendor';
+import { ITEMS } from '../../../sim/data';
+import { isFreeholdCraftAvailable } from '../../../sim/freehold';
 import type { ItemDef } from '../../../sim/types';
+import type { IWorld } from '../../../world_api';
 
 export interface HeroicShopRow {
   itemId: string;
@@ -30,11 +34,12 @@ export function buildHeroicVendorView(
   stock: readonly HeroicVendorOffer[],
   items: Record<string, ItemDef>,
   balance: number,
+  freeholdsEnabled = false,
 ): HeroicShopView {
   const rows: HeroicShopRow[] = [];
   for (const offer of stock) {
     const item = items[offer.itemId];
-    if (!item) continue;
+    if (!item || !isFreeholdCraftAvailable(freeholdsEnabled === true, offer.itemId)) continue;
     rows.push({
       itemId: offer.itemId,
       item,
@@ -43,4 +48,19 @@ export function buildHeroicVendorView(
     });
   }
   return { rows, balance };
+}
+
+// Compose the existing purse and row reads outside the HUD coordinator.
+export function buildHeroicVendorViewForWorld(
+  world: Pick<IWorld, 'inventory' | 'cfg'>,
+): HeroicShopView {
+  const balance = world.inventory
+    .filter((slot) => slot.itemId === HEROIC_MARK_ITEM_ID)
+    .reduce((sum, slot) => sum + slot.count, 0);
+  return buildHeroicVendorView(
+    HEROIC_VENDOR_STOCK,
+    ITEMS,
+    balance,
+    world.cfg.freeholdsEnabled === true,
+  );
 }

@@ -1,5 +1,7 @@
 import type { MaterialComposition } from '../sim/material_sources';
 import type { MaterialStackSelection } from '../sim/material_stack_selection';
+import { recipesForFreeholdAvailability } from '../sim/professions/recipe_visibility';
+import { anchorFields } from './item_copy_anchor_wire';
 import { materialStorageTransferPayload } from './material_storage_command';
 
 // Online play: REST auth client + WebSocket world mirror.
@@ -34,7 +36,6 @@ import {
 import { resolveActiveWeaponSkin, withWeaponSkinApplied } from '../sim/content/weapon_skin_rules';
 import { WEAPON_SKINS } from '../sim/content/weapon_skins';
 import {
-  ALL_RECIPES,
   abilitiesKnownAt,
   CLASSES,
   dungeonAt,
@@ -1280,22 +1281,12 @@ const DESPAWN_GRACE_MIN_DIST_SQ = 70 * 70;
 // (and needs no clock at all in the decode path).
 const TARGET_ECHO_SNAPSHOT_BUDGET = 3;
 
-// The two wire fields a per-copy selection's ANCHOR rides on (`ord`/`n`), or
-// nothing at all when the caller named no anchor. Spread into the frame so an
-// unanchored command is byte-identical to what it always sent, which is what
-// keeps the golden traces still and an older server working unchanged; the
-// server re-derives the anchor against its own bags and refuses a mismatch
-// (src/sim/item_copy_anchor.ts).
-function anchorFields(target: NamedSlotTarget): { ord?: number; n?: number } {
-  return target.anchor ? { ord: target.anchor.ordinal, n: target.anchor.count } : {};
-}
-
 export class ClientWorld extends ReconWireState implements IWorld {
   // --- IWorldEntityRoster: roster + player reads, mirrored from snapshots. The
   // `player` getter lives below the ctor (it reads `entities`/`playerId`). `known`
   // is IWorldCombat-owned but rides here as a self-wire mirror field with the rest
   // of the roster data. ---
-  cfg: { seed: number; playerClass: PlayerClass };
+  cfg: IWorld['cfg'];
   entities = new Map<number, Entity>();
   playerId = -1;
   private ownPlayerId = -1;
@@ -1619,10 +1610,10 @@ export class ClientWorld extends ReconWireState implements IWorld {
   nodeRespawnSeconds(nodeId: string): number | null {
     return this.nodeCooldowns?.get(nodeId) ?? null;
   }
-  // Static content read (#1127, extended #1132): the full recipe list (common
-  // tier plus combo recipes) ships with the client bundle like every other
-  // content table, so this needs no wire round-trip. See src/world_api/professions.ts.
-  recipeList: readonly RecipeDef[] = ALL_RECIPES;
+  // Static bundled content read: the boot capability selects a stable visible
+  // subset, refreshed on each hello. Catalog lookup stays complete; recipe
+  // discovery needs no additional request. See src/world_api/professions.ts.
+  recipeList: readonly RecipeDef[] = recipesForFreeholdAvailability(false);
   // Station anchors resolve the ACTIVE content bundle, exactly like the
   // offline Sim's stationPlacements (byte-identical on shipped hosts, where
   // the active bundle wraps the builtin STATIONS reference); no snapshot
@@ -2360,6 +2351,9 @@ export class ClientWorld extends ReconWireState implements IWorld {
       this.playerId = msg.pid;
       this.ownPlayerId = msg.pid;
       this.cfg.seed = msg.seed;
+      if (msg.freeholdsEnabled === true) this.cfg.freeholdsEnabled = true;
+      else delete this.cfg.freeholdsEnabled;
+      this.recipeList = recipesForFreeholdAvailability(this.cfg.freeholdsEnabled === true);
       if (typeof msg.realm === 'string') this.realm = msg.realm;
       this.accountAdmin = msg.admin === true;
       if (Array.isArray(msg.softWords)) {

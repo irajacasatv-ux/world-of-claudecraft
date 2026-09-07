@@ -35,6 +35,7 @@ import { trainingStationTypeFor } from '../../../sim/professions/training';
 import type { ProfessionRecipeRecord } from '../../../sim/professions/types';
 import { MINIMAL_TIER_MULTIPLIER, REDUCED_TIER_MULTIPLIER } from '../../../sim/professions/wheel';
 import type { InvSlot, ItemDef, StationDef } from '../../../sim/types';
+import type { IWorld } from '../../../world_api';
 import { isRecipeKnownForViewer } from '../../hud/vendor/train_view';
 import { recipeDurationSec } from './craft_cast_view';
 
@@ -415,8 +416,8 @@ export function buildCraftingView(
 }
 
 // Every item id any recipe consumes, derived ONCE from static content. Both
-// hosts serve ALL_RECIPES verbatim as IWorld#recipeList (src/sim/sim.ts,
-// src/net/online.ts), and reagent ids are authored literals, so this set can
+// hosts serve capability-filtered subsets through IWorld#recipeList, and
+// reagent ids are authored literals, so this complete catalog-derived set can
 // never miss a reagent the window might row.
 // Grades included: three of the nine fine grades (the eastbrook ones) are
 // reagents in NO recipe, so a declared-id-only set would let a player gather
@@ -487,6 +488,16 @@ export function craftingReagentSig(
     for (const [itemId, count] of vaultRows) sig += `V:${itemId}:${count}|`;
   }
   return sig;
+}
+
+// Include the host capability so an unchanged bag still refreshes after reconnect.
+// A painter may pass its captured vault read to keep the signature and rows aligned.
+export function craftingWindowRefreshSig(
+  world: Pick<IWorld, 'inventory' | 'cfg' | 'craftVaultStock'> & { player: { name: string } },
+  vaultStock = world.craftVaultStock,
+): string {
+  const host = world.cfg.freeholdsEnabled === true ? 'H1|' : 'H0|';
+  return host + craftingReagentSig(world.inventory, world.player.name, vaultStock);
 }
 
 // ---------------------------------------------------------------------------

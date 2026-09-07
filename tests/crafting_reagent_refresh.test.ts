@@ -23,14 +23,17 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { ALL_RECIPES } from '../src/sim/content/recipes';
+import { ITEMS as CATALOG_ITEMS } from '../src/sim/data';
 import type { InvSlot, ItemDef } from '../src/sim/types';
 import { Hud } from '../src/ui/hud';
 import {
   buildCraftingView,
   craftingReagentSig,
+  craftingWindowRefreshSig,
   type RecipeDefLike,
 } from '../src/ui/hud/professions/crafting_view';
 import { renderCraftingWindow } from '../src/ui/hud/professions/crafting_window';
+import { bareClient } from './helpers/bare_client';
 
 const VIEWER = 'Fernando';
 
@@ -191,7 +194,7 @@ describe('craftingReagentSig', () => {
 // ---------------------------------------------------------------------------
 
 interface CraftingRefreshHarness {
-  sim: { inventory: InvSlot[]; player: { name: string } };
+  sim: Parameters<typeof craftingWindowRefreshSig>[0];
   renderCrafting: ReturnType<typeof vi.fn>;
   lastCraftingReagentSig: string;
   refreshOpenCraftingIfReagentsChanged(): void;
@@ -210,6 +213,8 @@ function makeHud(inventory: InvSlot[]): {
   let reads = 0;
   const player = { name: VIEWER };
   hud.sim = {
+    cfg: { seed: 20061, playerClass: 'warrior' },
+    craftVaultStock: null,
     get inventory() {
       reads++;
       return bag;
@@ -220,7 +225,7 @@ function makeHud(inventory: InvSlot[]): {
   // field declares it ('' until the first paint arms it).
   hud.lastCraftingReagentSig = '';
   hud.renderCrafting = vi.fn(() => {
-    hud.lastCraftingReagentSig = craftingReagentSig(bag, player.name);
+    hud.lastCraftingReagentSig = craftingWindowRefreshSig(hud.sim);
   });
   document.getElementById('crafting-window')?.remove();
   const el = document.createElement('div');
@@ -238,6 +243,79 @@ function makeHud(inventory: InvSlot[]): {
 }
 
 describe('refreshOpenCraftingIfReagentsChanged', () => {
+  it.each([false, true])(
+    'repaints once after a capability-changing reconnect with unchanged materials (enabled %s)',
+    (enabled) => {
+      const world = bareClient(1, { inventory: oneOfTwo(), craftVaultStock: { iron_ore: 3 } });
+      world.craftingIdentity.knownRecipes = ['recipe_freehold_weapon_rack'];
+      const hello = (value: boolean) =>
+        (world as unknown as { onMessage(raw: string): void }).onMessage(
+          JSON.stringify({ t: 'hello', pid: 1, seed: 20061, freeholdsEnabled: value }),
+        );
+      hello(!enabled);
+      const { hud } = makeHud([]);
+      hud.sim = world;
+      const displayed: string[][] = [];
+      hud.renderCrafting = vi.fn(() => {
+        hud.lastCraftingReagentSig = craftingWindowRefreshSig(world, world.craftVaultStock);
+        const known = new Set(world.craftingIdentity.knownRecipes);
+        displayed.push(
+          buildCraftingView(
+            world.recipeList.filter((row) => known.has(row.id)),
+            world.inventory,
+            CATALOG_ITEMS,
+            {},
+            undefined,
+            undefined,
+            world.player.name,
+            world.craftVaultStock,
+          ).recipes.map((row) => row.recipeId),
+        );
+      });
+      const reconnectHud = hud as CraftingRefreshHarness & {
+        resyncAfterReconnect(): void;
+        onInventoryChanged(): void;
+      };
+      Object.assign(hud, {
+        marketWindow: { onReconnected: vi.fn() },
+        repaintOpenServiceWindows: vi.fn(),
+        renderCharIfOpen: vi.fn(),
+      });
+      document.getElementById('bags')?.remove();
+      const bags = document.createElement('div');
+      bags.id = 'bags';
+      bags.style.display = 'none';
+      document.body.appendChild(bags);
+      hud.refreshOpenCraftingIfReagentsChanged();
+      expect(displayed.at(-1)).toEqual(enabled ? [] : ['recipe_freehold_weapon_rack']);
+      hud.renderCrafting.mockClear();
+      const before = JSON.stringify([
+        world.inventory,
+        world.craftVaultStock,
+        world.player.pos,
+        world.craftingIdentity.knownRecipes,
+      ]);
+      world.onReconnected = () => reconnectHud.resyncAfterReconnect();
+      (world as unknown as { reconnectAttempts: number }).reconnectAttempts = 1;
+      hello(enabled);
+      reconnectHud.onInventoryChanged();
+      expect(
+        JSON.stringify([
+          world.inventory,
+          world.craftVaultStock,
+          world.player.pos,
+          world.craftingIdentity.knownRecipes,
+        ]),
+      ).toBe(before);
+      expect(hud.renderCrafting).toHaveBeenCalledTimes(1);
+      expect(displayed.at(-1)).toEqual(enabled ? ['recipe_freehold_weapon_rack'] : []);
+      reconnectHud.onInventoryChanged();
+      hud.refreshOpenCraftingIfReagentsChanged();
+      expect(hud.renderCrafting).toHaveBeenCalledTimes(1);
+      expect(world.craftingIdentity.knownRecipes).toEqual(['recipe_freehold_weapon_rack']);
+    },
+  );
+
   it('latches on the first probe, then elides an unchanged bag', () => {
     const { hud } = makeHud(oneOfTwo());
     hud.refreshOpenCraftingIfReagentsChanged();
@@ -320,7 +398,7 @@ describe('crafting window bag-freshness wiring (source pins)', () => {
     // so the formatter's wrap choice cannot re-break it.
     expect(renderCrafting).toContain('const craftVaultStock = this.sim.craftVaultStock;');
     expect(renderCrafting).toMatch(
-      /this\.lastCraftingReagentSig = craftingReagentSig\(\s*this\.sim\.inventory,\s*this\.sim\.player\.name,\s*craftVaultStock,?\s*\)/,
+      /this\.lastCraftingReagentSig = craftingWindowRefreshSig\(this\.sim,\s*craftVaultStock\)/,
     );
     // The single-read rule pinned DIRECTLY: exactly one getter read in the
     // whole method (comments stripped), so a regression that hands the BUILD

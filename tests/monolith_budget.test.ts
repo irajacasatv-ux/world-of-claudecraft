@@ -449,7 +449,9 @@ const MONOLITHS: MonolithRow[] = [
     // Measured with wc -l < src/ui/hud.ts after biome. Exact count, zero slack.
     // Dependency integration composes both extractions; measured after merge.
     // Furnishing card delegation saves another line; measured after formatting.
-    ceiling: 18663,
+    // Lowered after extracting furnishing presentation and shared wire composition.
+    // Shared crafting refresh signature also extracts repeated world input composition.
+    ceiling: 18652,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -1012,7 +1014,8 @@ const MONOLITHS: MonolithRow[] = [
     // with wc -l < src/sim/sim.ts after biome. Exact count, zero slack.
     // Dependency integration composes both extractions; measured after merge.
     // Surface NPC construction moved to surface_npc_bootstrap.ts. Exact count.
-    ceiling: 11955,
+    // Training command availability and application moved to professions/train_recipe.ts.
+    ceiling: 11940,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -1423,7 +1426,8 @@ const MONOLITHS: MonolithRow[] = [
     // (whose own arm read 10333) land together and their savings compose.
     // Measured with wc -l < server/game.ts after biome. Exact count, zero slack.
     // Dependency integration composes both extractions; measured after merge.
-    ceiling: 10292,
+    // Lowered after extracting furnishing presentation and shared wire composition.
+    ceiling: 10271,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1572,7 +1576,8 @@ const MONOLITHS: MonolithRow[] = [
     // src/net/professions_self_mirror.ts (applyProfessionsSelfMirror). Exact
     // count, zero slack.
     // Dependency integration composes both extractions; measured after merge.
-    ceiling: 5701,
+    // Lowered after extracting furnishing presentation and shared wire composition.
+    ceiling: 5695,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {

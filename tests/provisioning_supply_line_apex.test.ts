@@ -23,6 +23,7 @@ import { describe, expect, it } from 'vitest';
 import { CRUCIBLE_COLLECTION_RECIPES } from '../src/sim/content/crucible_collections';
 import { FARM_CROPS, farmCropSkillThreshold } from '../src/sim/content/farm_crops';
 import { FORGEBREAKER_RECIPES } from '../src/sim/content/forgebreaker_recipe';
+import { FURNISHING_RECIPES } from '../src/sim/content/freehold';
 import { GATHERING_PROFESSIONS } from '../src/sim/content/professions';
 import {
   ALL_RECIPES,
@@ -509,6 +510,7 @@ describe('masterwrought Phase 11h: the eight rows, per row', () => {
       'the six-entry rows: two from Phase 11g and four 11h reached. It briefly ' +
         "carried 11i's capstone feast, retired at Phase 11k.",
     ).toEqual([
+      'recipe_freehold_set_supper_table',
       'recipe_grand_cauldron',
       'recipe_ironhusk_flask',
       'recipe_marlows_grand_roast',
@@ -830,6 +832,7 @@ describe('masterwrought Phase 11h GATE C: the flask crop', () => {
     const alchemyHerbPerRecipe: Record<string, number> = {
       recipe_elixir_of_the_boar: 2,
       recipe_elixir_of_the_serpent: 1,
+      recipe_freehold_glass_floor_lamp: 1,
       recipe_goldleaf_healing_draught: 4,
       recipe_goldleaf_mana_draught: 2,
       recipe_grand_cauldron: 6,
@@ -866,10 +869,11 @@ describe('masterwrought Phase 11h GATE C: the flask crop', () => {
     // phase 11l, whose trophy row recipe_lesser_healing_potion (re-picked by
     // the 11l QA from recipe_healing_potion) added goldleaf 1 (a
     // pure addition, so R18's no-reduction direction still holds).
+    // The furnishing lamp adds one sunpetal herb without reducing an existing bill.
     expect(
       Object.values(alchemyHerbPerRecipe).reduce((t, n) => t + n, 0),
       "alchemy's whole herb demand",
-    ).toBe(45);
+    ).toBe(46);
   });
 
   it('every apex alchemy row that took a crop still consumes an herb', () => {
@@ -1479,10 +1483,13 @@ describe('masterwrought Phase 11h: what it did NOT touch', () => {
     expect(
       ALL_RECIPES.filter(
         (recipe) =>
-          !CRUCIBLE_COLLECTION_RECIPES.includes(recipe) && !FORGEBREAKER_RECIPES.includes(recipe),
+          !CRUCIBLE_COLLECTION_RECIPES.includes(recipe) &&
+          !FORGEBREAKER_RECIPES.includes(recipe) &&
+          !FURNISHING_RECIPES.includes(recipe),
       ),
     ).toHaveLength(170);
-    expect(ALL_RECIPES).toHaveLength(204);
+    expect(FURNISHING_RECIPES).toHaveLength(10);
+    expect(ALL_RECIPES).toHaveLength(214);
     for (const row of APEX_ROWS) {
       expect(requireRecipe(row.id).skillReq, `${row.id} rung`).toBe(row.rung);
     }

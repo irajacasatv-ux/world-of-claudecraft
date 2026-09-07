@@ -217,6 +217,16 @@ describe('the REAL catalog clears every mount and every chroma plate', () => {
       'freehold_brass_lantern',
       'freehold_storage_chest',
       'freehold_open_bookshelf',
+      'freehold_weapon_rack',
+      'freehold_iron_brazier',
+      'freehold_patchwork_rug',
+      'freehold_hide_armchair',
+      'freehold_clockwork_lamp',
+      'freehold_glass_floor_lamp',
+      'freehold_chart_easel',
+      'freehold_jewel_floor_lamp',
+      'freehold_set_supper_table',
+      'freehold_glow_lantern',
     ];
     expect(
       Object.values(ITEMS)

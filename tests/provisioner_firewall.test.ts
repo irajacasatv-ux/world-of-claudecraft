@@ -124,7 +124,9 @@ function gearChainRecipes() {
 
 /** Every alternative and allowed grade is covered in the registry and each bill.
  * The existing recipe exclusions remain shared with the provisioner sweep. */
-function ledgerEligibilityViolations(rows: readonly FreeholdLedgerEligibilityDef[]): string[] {
+function ledgerEligibilityViolations(
+  rows: readonly Pick<FreeholdLedgerEligibilityDef, 'alternativeId' | 'gradeIds'>[],
+): string[] {
   const protectedOutputs = new Set(
     gearChainRecipes()
       .filter(
@@ -515,5 +517,100 @@ describe('masterwrought R17: the provisioner firewall', () => {
       [...rungs].filter((rung) => rung >= 75).length,
       'produce must feed a rung at or above 75 after the Phase 11f climb',
     ).toBeGreaterThan(0);
+  });
+});
+
+// Furnishing outputs admit produce only for the two consumable crafts. The
+// existing hoe and consumable-intermediate exceptions remain independent.
+function furnishingReagentAllowed(
+  recipe: { professionId: string; resultItemId: string },
+  itemId: string,
+): boolean {
+  if (ITEMS[recipe.resultItemId]?.kind !== 'furnishing' || !ITEMS[itemId]) return false;
+  if (ledgerEligibilityViolations([{ alternativeId: itemId, gradeIds: [] }]).length) return false;
+  if (Object.values(FARM_CROPS).some((crop) => crop.seedItemId === itemId)) return false;
+  return (
+    !FARM_ITEM_IDS.has(itemId) ||
+    recipe.professionId === 'cooking' ||
+    recipe.professionId === 'alchemy'
+  );
+}
+
+describe('crafted furnishings: the provisioner firewall', () => {
+  const recipes = ALL_RECIPES.filter((recipe) => ITEMS[recipe.resultItemId]?.kind === 'furnishing');
+
+  it('covers every bill and admits produce only in cooking and alchemy decor', () => {
+    expect(recipes).toHaveLength(10);
+    for (const recipe of recipes) {
+      expect(recipe.reagents.length, recipe.id).toBeGreaterThan(0);
+      for (const reagent of recipe.reagents) {
+        expect(
+          furnishingReagentAllowed(recipe, reagent.itemId),
+          `${recipe.id}: ${reagent.itemId}`,
+        ).toBe(true);
+      }
+    }
+    expect(
+      recipes
+        .filter((recipe) => recipe.reagents.some((reagent) => FARM_ITEM_IDS.has(reagent.itemId)))
+        .map((recipe) => recipe.professionId)
+        .sort(),
+    ).toEqual(['alchemy', 'cooking']);
+  });
+
+  it('rejects every protected material even in the two produce-eligible crafts', () => {
+    const protectedIds = [
+      ...new Set([
+        ...PERFECTING_MATERIAL_IDS,
+        'quickening_catalyst',
+        ...gearChainRecipes()
+          .filter(
+            (recipe) =>
+              !isGatheringToolRecipe(recipe.resultItemId) && !isConsumableIntermediate(recipe),
+          )
+          .map((recipe) => recipe.resultItemId),
+      ]),
+    ];
+    expect(protectedIds.length).toBeGreaterThan(30);
+    for (const recipe of recipes)
+      for (const itemId of protectedIds) {
+        expect(furnishingReagentAllowed(recipe, itemId), `${recipe.id}: ${itemId}`).toBe(false);
+      }
+  });
+
+  it('proves the produce exception refuses seeds, a gear craft and a non-furnishing output', () => {
+    const cooking = recipes.find((recipe) => recipe.professionId === 'cooking');
+    const forbiddenCrafts = [
+      'weaponcrafting',
+      'armorcrafting',
+      'tailoring',
+      'leatherworking',
+      'engineering',
+      'inscription',
+      'jewelcrafting',
+      'enchanting',
+    ];
+    const gearOutput = ALL_RECIPES.find((recipe) => ITEMS[recipe.resultItemId]?.slot !== undefined);
+    if (!cooking || !gearOutput) throw new Error('Missing firewall controls');
+    for (const crop of Object.values(FARM_CROPS)) {
+      for (const itemId of [crop.produceItemId, crop.fineProduceItemId]) {
+        expect(furnishingReagentAllowed(cooking, itemId)).toBe(true);
+        expect(furnishingReagentAllowed({ ...cooking, professionId: 'alchemy' }, itemId)).toBe(
+          true,
+        );
+        for (const professionId of forbiddenCrafts) {
+          expect(
+            furnishingReagentAllowed({ ...cooking, professionId }, itemId),
+            `${professionId}: ${itemId}`,
+          ).toBe(false);
+        }
+        expect(
+          furnishingReagentAllowed({ ...cooking, resultItemId: gearOutput.resultItemId }, itemId),
+        ).toBe(false);
+      }
+      expect(furnishingReagentAllowed(cooking, crop.seedItemId)).toBe(false);
+    }
+    expect(furnishingReagentAllowed(cooking, 'missing_reagent')).toBe(false);
+    expect(furnishingReagentAllowed(cooking, 'copper_ore')).toBe(true);
   });
 });

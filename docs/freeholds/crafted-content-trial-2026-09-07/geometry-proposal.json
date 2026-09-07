@@ -1,0 +1,122 @@
+{
+  "version": "freehold-crafted-development-geometry-v1",
+  "status": "DEVELOPMENT TUNING, proposed, awaiting Fernando acceptance",
+  "productionEnabled": false,
+  "approval": null,
+  "supersedes": null,
+  "owner": "ART/CORE geometry; CONTENT/ART decor; Fernando accepts development tuning",
+  "grid": {
+    "referenceAsset": "public/models/dungeon/floor_tile_small.glb",
+    "referenceAxis": 0,
+    "proposedSubdivisions": 4,
+    "reason": "Reuse accepted vendor trial quarter-tile arithmetic; this is not final room-grid signoff."
+  },
+  "decor": {
+    "referenceAsset": "public/models/dungeon/chair.glb",
+    "referenceItem": "freehold_spindle_chair",
+    "method": "ceil maximum chair-relative triangles/primitives/materials/decodedGeometryBytes ratio, minimum one. Texture payloads are recorded separately; no GPU-time calibration."
+  },
+  "items": [
+    {
+      "id": "freehold_weapon_rack",
+      "asset": "public/models/biome/hex_weaponrack.glb",
+      "sourceModelKey": "PROP_ASSET_DEFS.hexWeaponRack",
+      "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+      "identity": "Inspected empty freestanding timber rack with broad base and crossbar. No weapons are present; final bracket and workmanship design remains unbuilt.",
+      "propKey": "hexWeaponRack",
+      "targetHeight": 1.5,
+      "heightReason": "Measured authored unit-scale rack height is 0.23999996483325958 world units. Propose three accepted grid cells (1.5 units) tall, deriving scale as 1.5 / measured height. This is new household tuning, not a verified existing placement transform."
+    },
+    {
+      "id": "freehold_iron_brazier",
+      "asset": "public/models/props/yumi_brazier_stand.glb",
+      "sourceModelKey": "YUMI_MAZE_ASSET_URL.brazier_stand",
+      "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+      "identity": "Inspected raised empty bowl on a stable pedestal. Material finish and iron rivets are not represented by this diagnostic; no flame or point light is included.",
+      "targetHeight": 1.5,
+      "heightReason": "Propose three accepted development grid cells high for a household standing bowl; source dimension measured before deriving the uniform scale."
+    },
+    {
+      "id": "freehold_patchwork_rug",
+      "source": "src/render/rift_decor.ts",
+      "sourceFunction": "buildRug",
+      "sourceModelKey": "buildRug",
+      "scale": [
+        0.25,
+        1,
+        0.15384615384615385
+      ],
+      "underlay": true,
+      "floorLift": 0.02,
+      "identity": "Exact accepted flat rug recipe and 2 by 4 world-unit transform. No patchwork panels or stitch texture; zero collision comes from underlay class.",
+      "scaleReason": "Reuse vendor development rug dimensions: one by two measured floor tiles; retained source floor lift 0.02."
+    },
+    {
+      "id": "freehold_hide_armchair",
+      "asset": "public/models/dungeon/chair.glb",
+      "sourceModelKey": "PROP_ASSET_DEFS.kcasChair",
+      "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+      "identity": "Existing upright wooden chair proxy. It has no soft hide sling, stitching or armchair width; accept as numeric development placeholder only and remeasure final armchair.",
+      "propKey": "kcasChair",
+      "scale": 1.3,
+      "scaleSource": "src/render/lastkeep_dressing.ts",
+      "scaleWitness": "add('kcasChair', 'guest_east', 9.6, 85.5, 2.5, 1.3);"
+    },
+    {
+      "id": "freehold_clockwork_lamp",
+      "asset": "public/models/dungeon/lantern_standing.glb",
+      "sourceModelKey": "battleground assetId dungeon/lantern_standing",
+      "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+      "identity": "Weighted low cage proxy; no exposed winding mechanism or Engineering workmanship. Existing cage form inspected in accepted vendor evidence. No emitted light or animation is added.",
+      "scale": 1.5,
+      "scaleSource": "scripts/assets/battleground/dressing.mjs",
+      "scaleWitness": "assetId: 'dungeon/lantern_standing',\n      x: r4(room.x + 5.6),\n      z: r4(room.z),\n      rotY: 0,\n      scale: 1.5,"
+    },
+    {
+      "id": "freehold_glass_floor_lamp",
+      "asset": "public/models/dungeon/lantern_standing.glb",
+      "sourceModelKey": "battleground assetId dungeon/lantern_standing",
+      "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+      "identity": "Floor-supported low cage proxy; no amber glass vessel or Alchemy workmanship. Existing cage form inspected in accepted vendor evidence. No emitted light or animation is added.",
+      "scale": 1.5,
+      "scaleSource": "scripts/assets/battleground/dressing.mjs",
+      "scaleWitness": "assetId: 'dungeon/lantern_standing',\n      x: r4(room.x + 5.6),\n      z: r4(room.z),\n      rotY: 0,\n      scale: 1.5,"
+    },
+    {
+      "id": "freehold_chart_easel",
+      "asset": "public/models/props/inscription_lectern.glb",
+      "sourceModelKey": "ARTISAN_ASSET_URL.inscription_lectern (retained inventory metadata)",
+      "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+      "identity": "Inspected freestanding book lectern proxy with pedestal. It is not a parchment chart easel: no geographic content is introduced and final chart form requires replacement and remeasurement.",
+      "targetHeight": 1.5,
+      "heightReason": "Propose three accepted development grid cells high; existing retained metadata target is 1.1, so this is an explicit new household proposal, not the current placement transform."
+    },
+    {
+      "id": "freehold_jewel_floor_lamp",
+      "asset": "public/models/props/streetlamp_amberfall_crystal.glb",
+      "sourceModelKey": "STREETLAMP_ASSET_DEFS.amberfall_crystal",
+      "license": "World of ClaudeCraft project asset, CREDITS.md generated prop row; existing Tripo AI model retained with project-only reuse, not CC0",
+      "identity": "Inspected faceted lamp head suspended from a substantial freestanding post and foot. Floor-supported streetlamp proxy, not a ceiling chandelier. Final metal jewel setting and household proportions remain unbuilt.",
+      "targetHeight": 2,
+      "heightReason": "Propose four accepted development grid cells high. Current streetlamp targetHeight is 5.5 and uses separate footprint normalization; this trial instead uniformly scales decoded source geometry to 2 world units and recenters combined X/Z bounds."
+    },
+    {
+      "id": "freehold_set_supper_table",
+      "asset": "public/models/dungeon/table_medium_tablecloth_decorated_b.glb",
+      "sourceModelKey": "existing GLB filename table_medium_tablecloth_decorated_b (no furnishing registration)",
+      "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+      "identity": "Existing table with cloth and inert tabletop composition. No charges, food grants, Well Fed, consumption or station functionality is reused. Inspected whole height includes a tall bottle above the table surface; height is not tabletop height.",
+      "scale": 1.25,
+      "scaleReason": "Propose same scalar as accepted vendor round table, not a claimed existing placement scale for this exact table; full measured extents must be accepted."
+    },
+    {
+      "id": "freehold_glow_lantern",
+      "asset": "public/models/dungeon/lantern_standing.glb",
+      "sourceModelKey": "battleground assetId dungeon/lantern_standing",
+      "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture/Halloween/Medieval Hexagon attribution; retained GLB is measurement source",
+      "identity": "Existing substantial low standing cage proxy. No Enchanting finish, animated glow, point light or gameplay effect is included.",
+      "scale": 1,
+      "scaleReason": "Reuse accepted vendor cage normalization and authored unit scale; shared source is explicit, not ten distinct finished models."
+    }
+  ]
+}

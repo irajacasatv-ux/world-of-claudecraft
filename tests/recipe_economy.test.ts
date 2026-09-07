@@ -11,6 +11,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { FURNISHING_RECIPES } from '../src/sim/content/freehold/furnishing_recipes';
 import {
   CRAFT_GOLD_SINK_COPPER_PER_BUDGET,
   HARVEST_COMPONENT_ITEMS,
@@ -637,6 +638,10 @@ describe('REFERENTIAL INTEGRITY', () => {
       const use = ITEMS[r.resultItemId]?.use;
       return use?.type === 'gatherTool' && use.tier <= TRAINER_TAUGHT_ROD_MAX_TIER;
     }).length;
+    const furnishingTrainerRows = FURNISHING_RECIPES.filter((r) =>
+      r.acquisition?.includes('trainer'),
+    );
+    expect(furnishingTrainerRows).toHaveLength(7);
     expect(trainerRecipes).toBe(
       LADDER_RECIPES.length +
         COMBO_RECIPES.length +
@@ -649,7 +654,8 @@ describe('REFERENTIAL INTEGRITY', () => {
         TROPHY_RECIPES.length +
         ENGINEERING_ONRAMP_RECIPES.length +
         BAG_RECIPES.length +
-        farmTrainerRows,
+        farmTrainerRows +
+        furnishingTrainerRows.length,
     );
     // The sibling literal for the 11o term: two rows, both trainer-taught.
     expect(ENGINEERING_ONRAMP_RECIPES, 'the engineering on-ramp is two rows').toHaveLength(2);

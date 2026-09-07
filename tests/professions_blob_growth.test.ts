@@ -45,6 +45,8 @@ import { DEEDS } from '../src/sim/content/deeds';
 import { ENCHANTS } from '../src/sim/content/enchants';
 import { FARM_CROPS } from '../src/sim/content/farm_crops';
 import { FARM_BED_IDS } from '../src/sim/content/farm_patches';
+import { FREEHOLD_CRAFTED_FURNISHING_IDS, FURNISHING_RECIPES } from '../src/sim/content/freehold';
+import { FURNISHING_PATTERN_ITEMS } from '../src/sim/content/freehold/furnishing_patterns';
 import { GATHER_NODES } from '../src/sim/content/gather_nodes';
 import {
   CRAFT_RING,
@@ -881,8 +883,8 @@ describe('the professions blob growth bound (phase 16)', () => {
     expect(s2.knownRecipes ?? []).toHaveLength(RETAINABLE_KNOWN_IDS.size);
     expect(new Set(s2.knownRecipes)).toEqual(RETAINABLE_KNOWN_IDS);
     expect(MAX_KNOWN_RECIPE_IDS).toBe(512);
-    expect(new Set(ALL_RECIPES.map((recipe) => recipe.id)).size).toBe(204);
-    expect(RETAINABLE_KNOWN_IDS.size).toBe(205);
+    expect(new Set(ALL_RECIPES.map((recipe) => recipe.id)).size).toBe(214);
+    expect(RETAINABLE_KNOWN_IDS.size).toBe(215);
     expect(RETAINABLE_KNOWN_IDS.size).toBeLessThan(MAX_KNOWN_RECIPE_IDS);
     expect(s2.knownRecipes).toContain('enchant_weapon_lastflame_zeal');
     // Derived from the refusal policy so a profession becoming slottable
@@ -1162,8 +1164,11 @@ describe('the professions blob growth bound (phase 16)', () => {
     // (Zeal) - 10 (legal equipment payloads, including new binding/provenance,
     // replacing the invented three-stat rolls). Same narrow tracking band.
     // One quest recipe adds exactly 30 UTF-8 bytes to retained knowledge.
-    expect(bytes).toBeGreaterThan(18457);
-    expect(bytes).toBeLessThan(18838);
+    // Crafted furnishings add 324 UTF-8 bytes in ten retained recipe ids.
+    // Real settled measurement: 18,837 + 324 = 19,161; preserve the tracking width.
+    expect(bytes).toBe(19161);
+    expect(bytes).toBeGreaterThan(18781);
+    expect(bytes).toBeLessThan(19162);
     // Strictly dominated by the band's upper edge while the band holds:
     // kept as documentation that the structural ceiling also bounds this
     // state, never the live guard.
@@ -1948,8 +1953,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // professions arm pins, so the two measurements can never describe
     // different fixtures.
     const professions = professionsBytes(s2);
-    expect(professions).toBeGreaterThan(18457);
-    expect(professions).toBeLessThan(18838);
+    expect(professions).toBeGreaterThan(18781);
+    expect(professions).toBeLessThan(19162);
 
     // Every container really reached its ceiling through the load (the
     // `field in state` and non-empty pins above are the pattern): a load clamp
@@ -2154,6 +2159,44 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // 156,144; the six fixture-repair deltas below sum to 53,117 exactly.
     // Most growth is previously omitted stored progress and promotion, not a
     // per-swap ledger or solely the two new fields.
+    // Isolate the accepted crafted cohort before checking older catalog baselines.
+    const craftedRecipeIds = FURNISHING_RECIPES.map((recipe) => recipe.id);
+    const craftedItemIds = [
+      ...FREEHOLD_CRAFTED_FURNISHING_IDS,
+      ...Object.keys(FURNISHING_PATTERN_ITEMS),
+    ];
+    expect(craftedRecipeIds).toHaveLength(10);
+    expect(craftedItemIds).toHaveLength(13);
+    const beforeCrafted = structuredClone(s2);
+    beforeCrafted.knownRecipes = beforeCrafted.knownRecipes?.filter(
+      (id) => !craftedRecipeIds.includes(id),
+    );
+    if (beforeCrafted.deedStats) {
+      beforeCrafted.deedStats.itemsDiscovered = beforeCrafted.deedStats.itemsDiscovered?.filter(
+        (id) => !craftedItemIds.includes(id),
+      );
+    }
+    for (const id of FREEHOLD_CRAFTED_FURNISHING_IDS) {
+      expect(s2.reliquary?.firstFind?.[id]).toEqual({ clears: 999, count: 999_999 });
+      delete beforeCrafted.reliquary?.firstFind?.[id];
+    }
+    expect(s2.reliquary?.illuminatedPages).toContain('hearth_first_crafts');
+    if (beforeCrafted.reliquary) {
+      beforeCrafted.reliquary.illuminatedPages = beforeCrafted.reliquary.illuminatedPages?.filter(
+        (id) => id !== 'hearth_first_crafts',
+      );
+    }
+    const craftedDelta = Object.fromEntries(
+      (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
+        key,
+        fieldBytes(s2, key) - fieldBytes(beforeCrafted, key),
+      ]),
+    );
+    expect(craftedDelta).toEqual({ knownRecipes: 324, deedStats: 355, reliquary: 576 });
+    const beforeCraftedBytes = Buffer.byteLength(JSON.stringify(beforeCrafted), 'utf8');
+    expect(beforeCraftedBytes).toBe(210203);
+    expect(bytes - beforeCraftedBytes).toBe(1255);
+    expect(bytes).toBe(211458);
     const fixtureBaseline = {
       equipment: 273,
       equipmentInstance: 1593,
@@ -2165,7 +2208,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     const fixtureDelta = Object.fromEntries(
       Object.entries(fixtureBaseline).map(([key, value]) => [
         key,
-        fieldBytes(s2, key as keyof typeof fixtureBaseline) - value,
+        fieldBytes(beforeCrafted, key as keyof typeof fixtureBaseline) - value,
       ]),
     );
     expect(fixtureDelta).toEqual({
@@ -2193,14 +2236,19 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       'field_kit must appear exactly once in the settled itemsDiscovered set',
     ).toHaveLength(1);
     const withoutFieldKit: CharacterState = {
-      ...s2,
+      ...beforeCrafted,
       deedStats: {
-        ...s2.deedStats,
-        itemsDiscovered: (s2.deedStats?.itemsDiscovered ?? []).filter((id) => id !== 'field_kit'),
+        ...beforeCrafted.deedStats,
+        itemsDiscovered: (beforeCrafted.deedStats?.itemsDiscovered ?? []).filter(
+          (id) => id !== 'field_kit',
+        ),
       },
     };
     const counterfactualBytes = Buffer.byteLength(JSON.stringify(withoutFieldKit), 'utf8');
-    expect(bytes - counterfactualBytes, 'field_kit contributes exactly one array entry').toBe(12);
+    expect(
+      beforeCraftedBytes - counterfactualBytes,
+      'field_kit contributes exactly one array entry',
+    ).toBe(12);
     const furnishingIds = [
       'freehold_timber_bed',
       'freehold_round_table',
@@ -2211,7 +2259,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       'freehold_storage_chest',
       'freehold_open_bookshelf',
     ];
-    const withoutFurnishings = JSON.parse(JSON.stringify(s2)) as CharacterState;
+    const withoutFurnishings = structuredClone(beforeCrafted);
     for (const id of furnishingIds) {
       expect(s2.deedStats?.itemsDiscovered).toContain(id);
       expect(s2.reliquary?.firstFind?.[id]).toEqual({ clears: 999, count: 999_999 });
@@ -2226,10 +2274,14 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       withoutFurnishings.reliquary.illuminatedPages =
         withoutFurnishings.reliquary.illuminatedPages?.filter((id) => id !== 'hearth_basics');
     }
-    expect(fieldBytes(s2, 'deedStats') - fieldBytes(withoutFurnishings, 'deedStats')).toBe(188);
-    expect(fieldBytes(s2, 'reliquary') - fieldBytes(withoutFurnishings, 'reliquary')).toBe(444);
+    expect(
+      fieldBytes(beforeCrafted, 'deedStats') - fieldBytes(withoutFurnishings, 'deedStats'),
+    ).toBe(188);
+    expect(
+      fieldBytes(beforeCrafted, 'reliquary') - fieldBytes(withoutFurnishings, 'reliquary'),
+    ).toBe(444);
     const beforeFurnishingsBytes = Buffer.byteLength(JSON.stringify(withoutFurnishings), 'utf8');
-    expect(bytes - beforeFurnishingsBytes).toBe(632);
+    expect(beforeCraftedBytes - beforeFurnishingsBytes).toBe(632);
     expect(beforeFurnishingsBytes).toBe(209571);
     const withoutFurnishingsAndFieldKit: CharacterState = {
       ...withoutFurnishings,
@@ -2264,7 +2316,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     const historicalBytes = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
     expect(beforeHomesteaderBytes - historicalBytes).toBe(85);
     expect(counterfactualBytes).toBe(210191);
-    expect(bytes).toBe(210203);
+    expect(beforeCraftedBytes).toBe(210203);
 
     // The one-time hammer recipe/proof content adds against the pre-hammer,
     // field-kit-excluded fixture (156144): the Crucible fixture-repair deltas
@@ -2334,8 +2386,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // +12 wherever it lands, proven above via counterfactualBytes), shifted
     // by that same +12 and the independently pinned +85 from the two new
     // deeds and +632 from furnishings without widening: 209,823..210,204.
-    expect(bytes, reMint).toBeGreaterThan(209823);
-    expect(bytes, reMint).toBeLessThan(210204);
+    // Crafted cohort adds exactly 1,255 bytes; shift the 381-byte band without widening.
+    expect(bytes, reMint).toBeGreaterThan(211078);
+    expect(bytes, reMint).toBeLessThan(211459);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was
@@ -2343,7 +2396,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // step was derived from, not this arm's measurement). The previous
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
     // after the real merge settle: this combined fixture (hammer content plus
-    // field_kit, Homesteader deeds and furnishings) is 210,203 bytes, 19,173 bytes below the
+    // field_kit, Homesteader deeds and all furnishings) is 211,458 bytes, 17,918 bytes below the
     // threshold. Pin the measured relation: a lower threshold or further
     // content growth crossing it requires re-measuring and reviewing both
     // sides together, never silently widening this test's narrow tracking

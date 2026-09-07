@@ -148,6 +148,20 @@ describe('hud.ts crafting known-filter (source pins)', () => {
 });
 
 describe('hud.ts train window wiring (source pins)', () => {
+  it('passes the strict host capability into the actual trainer view build', () => {
+    const render = hudMethod('private renderTrain(): void {');
+    expect(render).toMatch(
+      /buildTrainView\(npc\.templateId,\s*\{\s*freeholdsEnabled:\s*this\.sim\.cfg\.freeholdsEnabled === true,/,
+    );
+  });
+
+  it('builds the actual heroic vendor rows through the active IWorld capability', () => {
+    const render = hudMethod('private renderHeroicVendor(): void {');
+    expect(render).toMatch(
+      /renderHeroicVendorWindow\(\s*\$\('#vendor-window'\),\s*entityDisplayName\(npc\),\s*buildHeroicVendorViewForWorld\(this\.sim\),/,
+    );
+  });
+
   it('feeds the pure view core from the IWorld identity mirror and routes trains to the seam', () => {
     expect(hudSource).toContain('knownRecipes: identity.knownRecipes');
     expect(hudSource).toContain('onTrain: (recipeId) => this.trainRecipeClicked(recipeId)');

@@ -17,6 +17,7 @@ import { ALL_RECIPES } from '../src/sim/content/recipes';
 import { ITEMS } from '../src/sim/data';
 import type { ItemDef } from '../src/sim/types';
 import { gatherToolTooltipLines } from '../src/ui/gather_tool_tooltip';
+import { furnishingTooltipLines } from '../src/ui/hud/housing/furnishing_tooltip';
 import { cookingCatchHintKey } from '../src/ui/hud/professions/cooking_catch_hint_view';
 import { elixirTooltipLines } from '../src/ui/hud/professions/elixir_tooltip_view';
 import { feastTooltipLines } from '../src/ui/hud/professions/feast_tooltip_view';
@@ -28,6 +29,7 @@ import { wellFedTooltipLines } from '../src/ui/hud/professions/wellfed_tooltip_v
 import { toolEffectTooltipLines } from '../src/ui/tool_effect_tooltip';
 
 const EFFECT_SOURCES: Array<[string, (def: ItemDef) => boolean]> = [
+  ['furnishing placement facts', (def) => furnishingTooltipLines(def) !== ''],
   ['weapon damage', (def) => def.weapon !== undefined],
   ['stat lines', (def) => Object.values(def.stats ?? {}).some((v) => v !== undefined)],
   [
@@ -140,6 +142,7 @@ describe('crafted item tooltip coverage', () => {
     expect(end).toBeGreaterThan(start);
     const body = hudSrc.slice(start, end);
     for (const call of [
+      'furnishingItemTooltip(item, instance, this.sim)',
       'gatherToolTooltipLines(item)',
       'toolEffectTooltipLines(item)',
       'mobileStationTooltipLines(item, stationNameText)',

@@ -3,7 +3,8 @@ import type { Entity, MoveInput, PlayerClass, WorldContent } from '../sim/types'
 export interface IWorldEntityRoster {
   // `world` is the offline editor play-test world (carries render-only placements
   // for the renderer); optional and absent online.
-  cfg: { seed: number; playerClass: PlayerClass; world?: WorldContent };
+  // Presentation capability; absent is disabled and acquisition remains authoritative.
+  cfg: { seed: number; playerClass: PlayerClass; world?: WorldContent; freeholdsEnabled?: boolean };
   entities: Map<number, Entity>;
   playerId: number;
   player: Entity;

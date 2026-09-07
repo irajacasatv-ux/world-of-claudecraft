@@ -11,8 +11,8 @@ import { EMPTY_MST_CRAFTS } from '../../src/net/crafting_wire';
 import { ClientWorld } from '../../src/net/online';
 import { FARM_PATCHES } from '../../src/sim/content/farm_patches';
 import { emptyAllocation } from '../../src/sim/content/talents';
-import { ALL_RECIPES } from '../../src/sim/data';
 import { freshDeedStats } from '../../src/sim/deeds';
+import { recipesForFreeholdAvailability } from '../../src/sim/professions/recipe_visibility';
 import { emptyCraftSkills } from '../../src/sim/professions/wheel';
 import { emptyMoveInput, type PlayerClass } from '../../src/sim/types';
 
@@ -180,7 +180,7 @@ export function bareClient(pid: number, overrides: BareClientOverrides = {}): Cl
   c.professionsState = { skills: [] };
   c.townFocus = {};
   c.nodeCooldowns = new Map();
-  c.recipeList = ALL_RECIPES;
+  c.recipeList = recipesForFreeholdAvailability(false);
   // stationPlacements is a getter on ClientWorld (it resolves the active
   // content bundle, which wraps the builtin STATIONS on shipped hosts), so
   // the bare client already reads STATIONS without an assignment here.
