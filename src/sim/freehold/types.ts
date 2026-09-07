@@ -19,8 +19,13 @@ declare const freeholdPlotIdBrand: unique symbol;
 export type FreeholdPlotId = string & { readonly [freeholdPlotIdBrand]: true };
 
 /** Build an opaque plot identity from a raw string (a database row, a fixture,
- *  a generated id). THE ONLY constructor: callers pass a value that is already
- *  a public identity, never an owner or account key.
+ *  a generated id). THE ONE SANCTIONED constructor, by CONVENTION rather than by
+ *  the type system: a bare `as FreeholdPlotId` still compiles anywhere and no
+ *  guard scans for it, so this is the single place to LOOK for where public
+ *  identities come from, not a mechanical gate. What the brand DOES enforce
+ *  mechanically is the direction that matters: a plain string, and so an
+ *  ownerKey, cannot reach a plotId by assignment. Callers pass a value that is
+ *  already a public identity, never an owner or account key.
  *
  *  CONSTRAINT ON WHOEVER GENERATES THESE (05/07): the id has to survive the
  *  wire, and server/freehold_wire.ts admits 1 to 64 characters of

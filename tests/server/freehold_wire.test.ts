@@ -298,7 +298,9 @@ const MALFORMED: ReadonlyArray<[HousingCommand, string, Record<string, unknown>]
   ],
   // An OMITTED field is a distinct shape from a wrong-typed one: `undefined`
   // must fail every guard rather than be read as an absent-and-therefore-fine
-  // default. One row per field of the four-field presence frame.
+  // default. One row per field of the four-field presence frame: three here,
+  // and `missing buildPresenceSeq` already sits with the guard-dimension rows
+  // above, so all four omissions are driven.
   [
     'set_freehold_build_presence',
     'missing active',

@@ -25,11 +25,13 @@ export {
   myFreeholdView,
   serializeFreehold,
 } from './state';
-// Four of the type re-exports below have no importer yet and are RESERVED, not
-// dead: FreeholdPlotId and FreeholdLayoutRow land consumers at 07/08a,
-// FreeholdTier at 03, FreeholdTrophyRecord at 17. They are listed here so the
-// directory's public shape is frozen before its producers exist; do not strip
-// them as unused.
+// Three of the type re-exports below have no importer ANYWHERE yet and are
+// RESERVED, not dead: FreeholdLayoutRow lands consumers at 07/08a, FreeholdTier
+// at 03, FreeholdTrophyRecord at 17. Counted repo-wide rather than through this
+// barrel, because most consumers import the type they want from ./types
+// directly (the type-only exception below), so today only FreeholdState is
+// actually imported through here. They are listed so the directory's public
+// shape is frozen before its producers exist; do not strip them as unused.
 export type {
   FreeholdLayoutRow,
   FreeholdLayoutView,

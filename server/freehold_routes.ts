@@ -34,10 +34,10 @@
 // cheaper must never add a database write the unmetered route did not pay.
 //
 // What the limiter does NOT do is remove those two guard reads on an ALLOWED
-// request. The existing cache for exactly that pair, woc_auth_guard_cache.ts,
-// is deliberately marketplace-scoped with a wiring pin, so this route
-// correctly does not use it and the per-request cost is ACCEPTED rather than
-// mitigated. That is fine while the answer is a constant flag. The next
+// request. The existing cache for that exact pair,
+// server/woc_auth_guard_cache.ts, is deliberately marketplace-scoped with a
+// wiring pin, so this route correctly does not use it, and the per-request
+// cost is ACCEPTED rather than mitigated. That is fine while the answer is a constant flag. The next
 // housing endpoint with a real body (15, 30a) must re-take the decision:
 // either widen the guard cache past its marketplace scope along with its
 // bust-coverage pin, or use the keyed bounded per-account shape of

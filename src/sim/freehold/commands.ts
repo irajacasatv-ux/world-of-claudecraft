@@ -16,9 +16,10 @@
 // indistinguishable from one without them.
 //
 // THE FLAG IS NOT RE-CHECKED HERE, and the first real body owes that decision.
-// Today `server/game.ts`'s pre-switch `refusedFreeholdCommand` is the ONLY
-// server-side enforcement of the dark-realm rule: `ctx.freeholdsEnabled` reaches
-// the sim (D85) but nothing reads it, so the dispatch gate is a single point of
+// Today `server/game.ts`'s pre-switch `refusedFreeholdCommand` is the only
+// server-side enforcement of the dark-realm rule ON THE COMMAND WIRE (the REST
+// status read gates itself in server/freehold_routes.ts). `ctx.freeholdsEnabled`
+// reaches the sim (D85) but nothing reads it, so that gate is a single point of
 // failure the moment a body does something. Whoever lands the first real body
 // either opens it with a `ctx.freeholdsEnabled` early return (defense in depth,
 // and the offline host then honors its own opt-in the way it honors the payload

@@ -80,8 +80,11 @@ the wire; the public descriptor carries an opaque plot id only.
   and is imported by path, exactly as `pvp/index.ts` documents; none does yet.
   ONE STANDING EXCEPTION, and it is the majority of the importers: a consumer
   that wants nothing but TYPES imports `./types` (or `.../freehold/types`)
-  directly rather than the barrel. `src/sim/sim_context.ts` must, because a
-  barrel import there is a type-level cycle; `src/world_api/housing.ts`,
+  directly rather than the barrel. `src/sim/sim_context.ts` does, to keep the
+  seam out of a barrel cycle it does not need: the type-only import would
+  compile, since types are erased, but the directory's own modules import back
+  through it, so this is a convention worth keeping rather than a compiler
+  compulsion. `src/world_api/housing.ts`,
   `src/net/freehold_snapshot_wire.ts` and `server/freehold_wire.ts` do because
   the seam, the wire and the server should pull in no runtime value from the
   sim package at all. Runtime consumers (today `src/sim/sim.ts`) use the barrel.

@@ -35,7 +35,7 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 Phase 01 (`phase-01-foundation.md`): COMPLETE INCLUDING QA on 2026-09-06, verdict PASS, still
-LOCAL. Four code commits plus the ledger, then a seven-commit QA fix round
+LOCAL. Four code commits plus the ledger, then the QA fix round
 (`c946091c07..2e247df270`). NEXT = `phase-02-furnishing-item-kind.md` in a FRESH session.
 The QA round's own detail is in `progress.md` row "01 QA"; do NOT re-run the 01 audit or
 re-raise its judged findings. R01-R46 and D73-D75 are approved;
@@ -1334,7 +1334,8 @@ message is performed in this documentation session.
   (m) `serializeFreehold` neutralizes `isDecorating` to false at the persistence boundary
   (C03: ephemeral presence never saves), so 07 cannot forget to strip it.
   (n) `ctx.freeholdsEnabled` is NOT re-checked in the sim command bodies, so
-  `refusedFreeholdCommand` in `server/game.ts` is the SOLE dark-realm enforcement today.
+  `refusedFreeholdCommand` in `server/game.ts` is the sole enforcement on the COMMAND WIRE
+  today (the REST status read gates itself in `server/freehold_routes.ts`).
   Whoever lands the first real body (08) either opens it with a `ctx.freeholdsEnabled`
   early return or records the ruling that the dispatch gate is the one gate.
   (o) `ClientWorld.buildPresenceSeq` is advisory and monotonic-WITH-GAPS: it advances even
@@ -1350,9 +1351,10 @@ message is performed in this documentation session.
   behavior exists; it becomes a hazard at 05/07 if a fresh character's default freehold
   record is stamped at serialize-character time, because a boosted or provisioned
   character would come out without one.
-  (r) The four 01 commits are ONE ATOMIC UNIT: the facet commit imports the sim types and
+  (r) The 01 commits are ONE ATOMIC UNIT: the facet commit imports the sim types and
   appends the wire tokens before the module and the game.ts labels exist, so only the tip
-  typechecks. Do not bisect inside `4c982784ff..c946091c07`.
+  typechecks. Do not bisect inside `4c982784ff..c946091c07`, which holds FIVE commits:
+  the four code commits plus the ledger commit that closes them.
   (s) The `blank_entity.ts` extraction is a neutral-default entity FACTORY, not the
   "decode block into a `src/net/*_wire.ts` sibling" the phase file named; the relief is
   equivalent and the move is verbatim, but the substitution is deliberate. The fourth
