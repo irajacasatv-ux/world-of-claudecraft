@@ -127,6 +127,16 @@ const FANOUT_ARMS: readonly string[] = [
   'this.questTracker.relocalize|',
   'this.delveTracker.relocalize|',
   'this.riftTracker.relocalize|',
+  // The gathering goal tracker (Intentional Gathering PR4): its repaint
+  // signature is the raw GatheringGoalView (ids/counts/enums), all
+  // text-independent, so a locale switch alone never moves it and the arm
+  // forces one rebuild. NOT in half 2's ANSWERED list: the controller module
+  // itself calls no t()/tPlural()/tEntity() (every string is emitted by the
+  // separate gathering_goal_painter.ts it delegates to), so the discovery
+  // sweep's own EMITS_TEXT half never finds gathering_goal_controller.ts's
+  // lastSignature memo, and a registry row naming an undiscovered module
+  // would fail as stale rather than as unclassified.
+  'this.gatheringGoalController.relocalize|',
   'this.partyFramesPainter.relocalize|',
   'this.raidBossGuideWindow.relocalize|',
   'this.mapPainter.relocalize|',
@@ -160,6 +170,10 @@ const FANOUT_ARMS: readonly string[] = [
   // locale and no flip would re-mint (Phase 14).
   'this.lootWindow.relocalize|',
   'this.harvestJournalWindow.relocalize|',
+  // The shared corpse-harvest preference picker's relocalize gates itself
+  // (isOpen inside) and carries the exact focused control across via the
+  // focus-key seam (Intentional Gathering PR3).
+  'this.harvestPreferenceController.relocalize|',
   // The plant sheet's relocalize gates itself (paint only while open), so the
   // arm carries no guard of its own.
   'this.plantSheetWindow.relocalize|',
@@ -285,9 +299,9 @@ interface AnsweredSurface extends GatedModule {
 const ANSWERED: readonly AnsweredSurface[] = [
   {
     file: 'hud/loot/loot_window_controller.ts',
-    memos: ['corpseSig'],
+    memos: ['corpseSig', 'harvestStatusSig'],
     answer: 'this.lootWindow.relocalize',
-    why: 'the corpse signature holds action availability and loot quantities; locale changes rebuild once while preserving explicit choices and focus',
+    why: 'the corpse signature holds action availability and loot quantities, and the harvest-status signature holds the deliberate timed-harvest cast/reservation state (Intentional Gathering PR3); locale changes rebuild once while preserving explicit choices and focus',
   },
   {
     file: 'hud/battleground/battleground_scoreboard_painter.ts',

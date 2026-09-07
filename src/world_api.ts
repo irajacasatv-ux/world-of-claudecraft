@@ -190,7 +190,14 @@ export type {
 // orange piece's chosen name) and the self wire carries the `fplot` farm-plot
 // delta. An epoch-25 client can neither render Perfected copies nor a farm,
 // and an epoch-25 server omits both, stranding Perfecting progress and plots.
-export const ONLINE_WORLD_LAYOUT_VERSION = 26 as const;
+// 27 = Material stacks carry exact per-source counts. Older clients cannot
+// describe a selected source or preserve its identity through item commands.
+// 28 = Corpse harvesting replaced the raw components array with a remembered,
+// id-only per-material harvest preference plus a correlated status query.
+// Epoch 27 clients still send the old components-array harvest command, which
+// the server now rejects outright, and cannot render the new preference or
+// query state, so mixed binaries must fail closed.
+export const ONLINE_WORLD_LAYOUT_VERSION = 28 as const;
 export const ONLINE_WORLD_AUTH_TYPE = `auth-world-${ONLINE_WORLD_LAYOUT_VERSION}` as const;
 // The one wire literal both sides emit for a layout-epoch mismatch. The server
 // rejects with it, the client synthesizes it for pre-epoch servers, and the UI
@@ -311,6 +318,7 @@ export type { FreeholdLayoutView, FreeholdView, FreeholdVisitPolicy } from './wo
 export type {
   CivicServiceKind,
   CivicServicePlacement,
+  CorpseHarvestInfo,
   WorldInteractionOutcome,
 } from './world_api/interaction';
 export type { MailInfo, MailKindView, MailMessageView } from './world_api/mail';
@@ -322,6 +330,8 @@ export type {
   CraftingIdentityView,
   CraftResultView,
   DisenchantResultView,
+  PerfectingSwapInfoView,
+  PerfectingSwapRequest,
   PlayerProfessionsView,
   RecipeDef,
   ToolEffectSlotView,
@@ -773,6 +783,42 @@ export const COMMAND_NAMES = [
   'pay_ledger',
   'set_visit_policy',
   'set_freehold_build_presence',
+  'material_separate',
+  'material_combine',
+  // The corpse-harvest preference (Intentional Gathering PR3): a stored
+  // player setting, never a harvest action (no kit/location/combat/cost
+  // gate). `raw` is a material item id or the 'all' token
+  // (HARVEST_PREFERENCE_ALL_TOKEN), re-validated server-side through the
+  // same parseHarvestPreferenceCommand the sim's own load path uses.
+  // Appended at the END because wire tokens are never reordered. Like
+  // harvest_node/craft_item and the rest of the IWorldProfessions surface,
+  // this is deliberately UNTAGGED in COMMAND_FACETS below (the row-less W6
+  // PARTIAL design; see FACET_PROFESSIONS in tests/world_api_parity.test.ts).
+  'set_harvest_preference',
+  // The selected-corpse status query (corpse-status-contract.md): a
+  // correlated, non-mutating read (`{id, rid}` in, `{t:'corpseHarvestInfo',
+  // id, rid, info}` out), never a harvest action. Appended at the END, like
+  // every wire token above.
+  'inspectCorpseHarvest',
+  // Intentional Gathering PR4 (docs/prd/intentional-gathering/goal-projection-
+  // contract.md): track/clear the viewer's single explicit gathering goal.
+  // `track_gathering_recipe` carries a recipe id plus the requested batch
+  // count; `track_gathering_commission` carries only the order id (the sim
+  // resolves and captures the live accepted order itself); `clear_gathering_
+  // goal` carries no payload. Like harvest_node/craft_item and the rest of the
+  // IWorldProfessions surface, these are deliberately UNTAGGED in
+  // COMMAND_FACETS below (the row-less W6 PARTIAL design; see
+  // FACET_PROFESSIONS in tests/world_api_parity.test.ts). Appended at the END
+  // because wire tokens are never reordered.
+  'track_gathering_recipe',
+  'track_gathering_commission',
+  'clear_gathering_goal',
+  // The Perfecting rank exchange (IWorldProfessions.swapPerfectingRanks): swap
+  // the rank progress of two owned pinned copies from the same Crucible collection
+  // (which may be different slots or item ids) after explicit confirmation.
+  // Appended at the END, after the gathering-goal cluster above, because wire
+  // tokens are never reordered.
+  'swap_perfecting_ranks',
 ] as const;
 
 // The union both the send path (`online.ts`) and the dispatch switch
@@ -833,6 +879,7 @@ export type WorldFacet =
   | 'IWorldCosmetics'
   | 'IWorldQuests'
   | 'IWorldProgressionXp'
+  | 'IWorldProfessions'
   | 'IWorldTalents'
   | 'IWorldPet'
   | 'IWorldParty'
@@ -887,15 +934,18 @@ export const COMMAND_FACETS = {
   // authoritative inventory copy; every cost and payload is validated again
   // in the sim before the item instance is changed. (salvage_item rides the
   // professions surface and, like the other enchanting-family commands and
-  // perfect_item, has no facet row here: the IWorldProfessions surface is
-  // row-less by the W6 PARTIAL design, its members pinned by
+  // perfect_item, has no facet row here: the legacy professions commands
+  // remain row-less by the W6 PARTIAL design, their members pinned by
   // tests/world_api_parity.test.ts FACET_PROFESSIONS instead.)
   rift_upgrade_item: 'IWorldInventory',
   rift_enchant_item: 'IWorldInventory',
   rift_socket_gem: 'IWorldInventory',
+  swap_perfecting_ranks: 'IWorldProfessions',
   // IWorldInventory: the one-shot bag clean-up; the sim re-derives the whole
   // arrangement, so there is no payload to validate.
   inv_sort: 'IWorldInventory',
+  material_separate: 'IWorldInventory',
+  material_combine: 'IWorldInventory',
   // IWorldTelemetry: fire-and-forget metrics sink.
   telemetry: 'IWorldTelemetry',
   // IWorldProgressionXp: opt-in cosmetic prestige (leaderboard is a REST GET, no

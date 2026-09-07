@@ -334,6 +334,7 @@ export const pt_BR: EnTranslations = {
         "maker": "Made by {maker}."
       }
     },
+    "materialStackSelectionUnavailable": "That material selection is no longer available.",
     "warlock": {
       "doomLabel": "Condenação",
       "fateThreadsLabel": "Fios do Destino",
@@ -2419,6 +2420,35 @@ export const pt_BR: EnTranslations = {
         "tusk": "Presa",
         "meat": "Carne",
         "cloth": "Pano"
+      },
+      "preferenceLabel": "Harvest preference: {preference}",
+      "changeButton": "Change",
+      "harvestActionTooltip": "Harvests with your current preference over {seconds} seconds. Requires a Field Kit. Each body can be harvested once. The killer and their party have priority for {prioritySeconds} seconds. Dropped loot stays available.",
+      "checkingStatus": "Checking harvest status...",
+      "statusUnavailable": "Harvest status is not available right now.",
+      "harvestStarting": "Starting harvest...",
+      "allBenefit": "Gathers every available material from this body.",
+      "focusBenefit": "Focuses the harvest on {material}.",
+      "tierBonusHint": "Focuses the harvest on {material}: +{tierBonus} tier over All materials.",
+      "denial": {
+        "actorDead": "You must be alive to harvest.",
+        "actorInCombat": "You cannot harvest while in combat.",
+        "actorBusy": "You are already busy.",
+        "corpseInvalid": "This corpse can no longer be harvested.",
+        "wrongWorld": "This corpse is not in your world.",
+        "outOfRange": "Move closer to harvest this body.",
+        "noFieldKit": "You need a Field Kit to harvest.",
+        "reservedSelf": "You are already harvesting this body.",
+        "reservedOther": "{name} is harvesting this body.",
+        "reservedOtherUnknown": "Another player is harvesting this body.",
+        "priorityProtected": "Another player has priority on this body right now.",
+        "corpseExpiring": "This body will not last long enough to harvest.",
+        "preferenceMalformed": "Your harvest preference is invalid. Choose one to continue.",
+        "nothingToHarvest": "This body has nothing your Field Kit can harvest.",
+        "materialUnavailable": "{material} is not on this body.",
+        "materialUnavailableWithList": "{material} is not on this body. Available: {materials}.",
+        "bagsFull": "Your bags are too full to harvest.",
+        "malformedInput": "Something went wrong. Try again."
       }
     },
     "townFocus": {
@@ -2437,6 +2467,70 @@ export const pt_BR: EnTranslations = {
       "respecTierInstantOption": "Instantâneo (custo total)",
       "respecCostFree": "Grátis",
       "respecCostLine": "Custa {coin} e {materials}"
+    },
+    "harvestPreference": {
+      "title": "Harvest Preference",
+      "allLabel": "All materials",
+      "applyButton": "Apply",
+      "cancelButton": "Cancel",
+      "pickHint": "Choose what to harvest before applying.",
+      "currentUnavailable": "Your current choice, {material}, is not offered here.",
+      "unknownMaterial": "Unavailable material",
+      "currentChoiceLabel": "Current: {choice}"
+    },
+    "gatheringSource": {
+      "title": "Where to find {material}",
+      "corpseExample": "{creature} ({zone})",
+      "corpseExampleTagged": "{creature} ({zone}, {tag})",
+      "rareTag": "rare",
+      "eliteTag": "elite",
+      "gatedTag": "quest-gated",
+      "moreSources": "and {count} more",
+      "moreZones": "and {count} more zones",
+      "premiumChance": "Rare or better {material} harvests also yield {specimen} when there is room in your bags.",
+      "specimenOfBase": "{material} is a rare or better harvest bonus from {base}, from the same creatures shown above, never a separate guaranteed find.",
+      "nodeZone": "{zone} (tier {tier}+ tool)",
+      "nodeFineNote": "A gathering tool of tier {tier}+ upgrades this to its fine grade at a matching vein.",
+      "farmNote": "Grown from a planted seed, ready after about {duration}. Needs farming skill {skill}+ and a tier {tier}+ hoe.",
+      "fishingZoneProven": "{zone} waters (proficiency {skill}+, rod tier {tier}+)",
+      "fishingZoneUnproven": "Some waters need proficiency {skill}+ and rod tier {tier}+; no specific spot is confirmed yet."
+    },
+    "gatheringGoal": {
+      "title": "Gathering Goal",
+      "close": "Clear gathering goal",
+      "clearButton": "Clear",
+      "empty": "No gathering goal set.",
+      "recipeGoalLabel": "{name} x{count}",
+      "commissionGoalLabel": "Commission: {name} x{count}",
+      "craftCountLine": "{count} crafts tracked",
+      "unknownRecipeLabel": "Unknown recipe",
+      "invalidGoalLabel": "No longer tracked",
+      "statusCollecting": "Collecting",
+      "statusReady": "Ready",
+      "statusUnavailable": "Unavailable",
+      "statusDelivered": "Delivered",
+      "statusCancelled": "Cancelled",
+      "statusExpired": "Expired",
+      "readyHint": "Materials on hand. Crafting still needs gold, a station, and bag space.",
+      "reasonInvalidGoal": "This goal is no longer valid.",
+      "reasonUnknownRecipe": "That recipe no longer exists.",
+      "reasonRecipeUnavailable": "That recipe is no longer available to you.",
+      "reasonCommissionUnavailable": "That commission is no longer tracked. Track it again from the board if it is still listed.",
+      "reasonDailyLimit": "That recipe has already been crafted today.",
+      "reasonBatchLimit": "That batch size is no longer valid.",
+      "materialLine": "{name}: {reachable} of {required}",
+      "materialCarried": "{count} carried",
+      "materialStored": "{count} in storage",
+      "materialMissing": "{count} missing",
+      "materialInaccessible": "{count} unavailable for crafting",
+      "storageRestrictedNote": "Some materials are in storage you cannot reach from here.",
+      "payableCraftsLine": "Enough on hand for {count} more.",
+      "setPreferenceButton": "Set as harvest preference",
+      "setPreferenceButtonAria": "Set {name} as your harvest preference",
+      "currentPreferenceLabel": "Current harvest preference",
+      "currentPreferenceAria": "{name} is your current harvest preference",
+      "sourcesToggle": "Sources",
+      "sourcesToggleAria": "Sources for {name}"
     },
     "party": {
       "promoteLeader": "Promover a Líder",
@@ -2795,6 +2889,7 @@ export const pt_BR: EnTranslations = {
       "healEcho": "Cair abaixo de {threshold}% de vida restaura {value} de vida",
       "increase": {
         "ap": "Aumenta el poder de ataque en {value}",
+        "str": "Increases Strength by {value}",
         "sp": "Aumenta o poder de feitiço em {value}",
         "armor": "Aumenta la armadura en {value}",
         "int": "Aumenta el intelecto en {value}",
@@ -2805,6 +2900,7 @@ export const pt_BR: EnTranslations = {
       },
       "reduce": {
         "ap": "Reduce el poder de ataque en {value}",
+        "str": "Reduces Strength by {value}",
         "armor": "Reduce la armadura en {value}",
         "int": "Reduce el intelecto en {value}",
         "agi": "Reduce la agilidad en {value}",
@@ -3055,7 +3151,33 @@ export const pt_BR: EnTranslations = {
       "enchantedFallback": "Encantado",
       "partyTradeWindow": "Você pode negociar este item com jogadores que compartilharam esse saque pelos próximos {time}. Equipá-lo encerra a janela de troca.",
       "perfectedBadge": "Perfected",
-      "perfectingRank": "Perfecting: rank {rank} of {ranks}"
+      "perfectingRank": "Perfecting: rank {rank} of {ranks}",
+      "materialSourceGatherer": "{count} × Collected by {name}",
+      "materialSourceGathererSigned": "{count} × Collected by {name}, signed by {signer}",
+      "materialSourceUnrecorded": "{count} × No gatherer recorded",
+      "materialSourceUnrecordedSigned": "{count} × No gatherer recorded, signed by {name}",
+      "materialSourceMore": "+{sources} more sources, {units} units"
+    },
+    "materialSources": {
+      "detailsTitle": "Sources for {item}",
+      "pickerTitle": "Choose sources from {item}",
+      "close": "Close material sources",
+      "view": "Sources",
+      "choose": "Sources",
+      "viewAria": "View all material sources for {item}",
+      "chooseAria": "Choose material sources to move for {item}",
+      "cancel": "Cancel",
+      "confirm": "Move selected units",
+      "listAria": "Material source list",
+      "total": "{units} units in this stack",
+      "row": "{count} units: {source}",
+      "gatherer": "Collected by {name}",
+      "gathererSigned": "Collected by {name}, signed by {signer}",
+      "unrecorded": "No gatherer recorded",
+      "unrecordedSigned": "No gatherer recorded, signed by {name}",
+      "quantityAria": "Units from {source}, up to {count}",
+      "decreaseAria": "Decrease units from {source}",
+      "increaseAria": "Increase units from {source}"
     },
     "materialHint": {
       "fineGrade": "Grau fino. Coletado de um veio de nível pleno com uma ferramenta de nível acima do material, e conta como a versão comum sempre que uma for exigida.",
@@ -3581,6 +3703,7 @@ export const pt_BR: EnTranslations = {
       "herbalism": "Herborismo",
       "fishing": "Pesca",
       "farming": "Farming",
+      "corpseHarvesting": "Corpse Harvesting",
       "notReady": "Este nó de recursos ainda não se regenerou para você.",
       "gatherLine": "Você coleta: {name}.",
       "gatherLineQty": "Você coleta: {name} x{qty}.",
@@ -3787,6 +3910,7 @@ export const pt_BR: EnTranslations = {
       "leatherworking": "Couraria"
     },
     "enchantName": {
+      "enchant_weapon_lastflame_zeal": "Last Flame's Zeal",
       "enchant_weapon_might": "Weapon Etching: Might",
       "enchant_weapon_intellect": "Weapon Etching: Spellpower",
       "enchant_offhand_stamina": "Offhand Etching: Stamina",
@@ -3834,6 +3958,9 @@ export const pt_BR: EnTranslations = {
       "enchant_chest_lucent_stamina": "Chest Etching: Lucent Stamina",
       "enchant_feet_lucent_agility": "Boot Etching: Lucent Agility",
       "enchant_lucent_infusion": "Lucent Infusion"
+    },
+    "enchantDescription": {
+      "enchant_weapon_lastflame_zeal": "Your landed melee attacks can grant 50 Strength for 15 sec and heal you for 200 health. Healing modifiers apply. Each hit rolls 1% per 0.6 sec of the striking weapon's base speed. No internal cooldown. Each hand has its own buff; repeated triggers refresh that hand. Ranged attacks do not trigger this effect. Wolf Form uses its 1 sec base swing speed instead."
     },
     "professions": {
       "title": "Profissões",
@@ -3941,6 +4068,11 @@ export const pt_BR: EnTranslations = {
       "qtyDecreaseAria": "Diminuir quantidade de criação, atualmente {count}",
       "qtyIncreaseAria": "Aumentar quantidade de criação, atualmente {count}",
       "qtyValueAria": "Quantidade de criação, {count}",
+      "goalQtyRowAria": "Goal quantity",
+      "goalQtyDecreaseAria": "Decrease goal quantity, currently {count}",
+      "goalQtyIncreaseAria": "Increase goal quantity, currently {count}",
+      "trackGoalButton": "Track",
+      "trackGoalButtonAria": "Track {count} crafts of {name} as your gathering goal",
       "batchRemaining": "{remaining} de {total} restantes",
       "batchRemainingAria": "{remaining} de {total} criações restantes",
       "durationChip": "{seconds}s",
@@ -4066,9 +4198,14 @@ export const pt_BR: EnTranslations = {
       "applyEnchant": "Aplicar Encantamento",
       "sunder": "Sunder",
       "sell": "Vender",
-      "sellAll": "Vender tudo ({count})"
+      "sellAll": "Vender tudo ({count})",
+      "viewSources": "View sources",
+      "separateByGatherer": "Separate by gatherer",
+      "takeChosenQuantity": "Take out chosen quantity",
+      "combine": "Combine material stacks"
     },
     "enchanting": {
+      "recipeNotLearned": "Learn the formula before applying this enchant.",
       "disenchantedLine": "Você desencanta {item}.",
       "disenchantedYield": "Você desencanta {item} em {material}.",
       "disenchantedYieldQty": "Você desencanta {item} em {material} x{qty}.",
@@ -4156,7 +4293,8 @@ export const pt_BR: EnTranslations = {
       "outOfRange": "Você deve estar na estação para treinar."
     },
     "pattern": {
-      "teaches": "Use: Teaches you how to craft {item}."
+      "teaches": "Use: Teaches you how to craft {item}.",
+      "teachesEnchant": "Use: Teaches you how to apply {enchant}."
     },
     "unbind": {
       "title": "Desvinculação: {name}",
@@ -4180,12 +4318,35 @@ export const pt_BR: EnTranslations = {
       "perfecting": "A piece on the Perfecting track, or already Perfected, stays bound."
     },
     "perfecting": {
+      "swapTitle": "Exchange Perfecting ranks",
+      "swapIntro": "Choose another owned piece from this collection. Exchange ranks at the matching crafting station, out of combat, with craft skill {skill}. No materials or failure roll.",
+      "swapChoose": "Choose a second piece to preview the exchange.",
+      "swapRank": "{name}: rank {before} to {after}",
+      "swapAction": "Review rank exchange",
+      "swapPending": "Exchanging ranks",
+      "swapConfirm": "Both pieces become permanently bound to you. Exchange their Perfecting ranks?",
+      "swapConfirmAccept": "Bind and exchange ranks",
+      "swapPreserve": "Neither item is consumed. Names, cosmetic legendary promotion, and enchants stay on their original pieces. Equipment limits still apply.",
+      "swapEnchantInactive": "Its Perfected-only enchant becomes inactive until this piece is Perfected again.",
+      "swapEnchantActive": "Its Perfected-only enchant becomes active again.",
+      "swapSuccess": "Perfecting ranks exchanged. Both pieces are permanently bound.",
+      "swapInterrupted": "We could not confirm the exchange after reconnecting. Check both pieces' ranks before choosing another exchange.",
+      "swapChanged": "The selected pieces changed. Choose them again and review the new ranks.",
+      "swapDead": "You must be alive to exchange ranks.",
+      "swapBusy": "Leave combat and finish your current action before exchanging ranks.",
+      "swapInvalid": "These pieces have unsupported Perfecting progress and cannot exchange ranks.",
+      "swapSameRank": "These pieces already have the same Perfecting rank.",
+      "swapSkill": "You need skill {skill} in this collection's craft.",
+      "swapStation": "Move to the matching crafting station to exchange ranks.",
+      "swapLocked": "Unlock both pieces before exchanging ranks.",
+      "enchantInactive": "Enchantment inactive: this piece must be Perfected. The enchantment is preserved.",
       "title": "Perfecting",
       "close": "Close the Perfecting window",
       "openButton": "Perfecting",
       "openButtonAria": "Open the Perfecting window",
       "empty": "You hold no Masterwrought piece. The apex recipes forge one.",
       "wornChip": "Worn",
+      "bagCopy": "Bag copy {index} of {count}",
       "rowRank": "Rank {rank} of {ranks}",
       "rowPerfected": "Perfected",
       "rankAnnounce": "{name} reaches Perfecting rank {rank} of {ranks}.",
@@ -4254,6 +4415,7 @@ export const pt_BR: EnTranslations = {
       "acceptButton": "Aceitar",
       "deliverButton": "Entregar",
       "deliverHint": "Crie a peça encomendada (com a opção de encomenda ativada), depois volte aqui para entregá-la.",
+      "trackButton": "Track",
       "opened": "Você publica uma encomenda de {item}.",
       "cancelled": "Você cancela a encomenda de {item}.",
       "accepted": "Você aceita a encomenda de {item}.",
@@ -5501,6 +5663,7 @@ export const pt_BR: EnTranslations = {
       "mapTitle": "O mapa do mundo e seus rastreadores",
       "mapBody": "M abre o mapa do mundo: o continente desenhado por completo, com sua própria seta nele, as zonas e seus nomes, os pontos de interesse ao seu redor, os portais de viagem e os nós de coleta que você já encontrou. Seu grupo também aparece nele. Dentro de uma incursão, o mapa muda para um esquema das salas que você já explorou.\n\nDescendo pelo lado direito, sob o minimapa, uma pilha de rastreadores mantém seus afazeres atuais à vista sem que você precise abrir nada: suas missões acompanhadas e os objetivos delas, seu progresso em feitos, a incursão em que você está e qualquer fenda da qual você esteja participando. O rastreador de missões se recolhe quando você quiser a tela de volta.",
       "mapBodyZoneFirst": "M opens the world map on the zone you are standing in, with your own arrow on it, the points of interest around you, the quest givers with their marks and the areas your objectives sit in, the crafting stations, mailboxes, noticeboards and garden beds, the dungeon entrances, and every gathering node in the zone, grayed out while it regrows and marked when your tools are not up to it. Your party shows on it too. Right-click the map, or press its World map button, and it pulls back to the continent, every zone drawn with its name, where a click on a zone opens that zone's map. Step into a delve, a dungeon, a rift or a castle keep and the map switches to a floor plan of where you stand; the Thornhollow Fields battleground gets a field map of its own.\n\nDown the right side, under the minimap, a stack of trackers keeps your current business in view without opening anything: your tracked quests and their objectives, your deed progress, your Reliquary pages, the delve you are in, and any rift you are taking part in. The quest tracker collapses when you want the screen back.",
+      "gatheringGoalTrackerBody": "A gathering goal tracker joins the stack once you Track a recipe in the crafting window or a commission on the board: it names the recipe or commission you are tracking, how many you are collecting for, and how far your held and stored materials get you there. Track replaces your current goal, and Clear drops it explicitly; neither one ever changes your harvest preference.",
       "chatTitle": "A janela de chat",
       "chatBody": "No canto inferior esquerdo. Pressione Enter para começar a digitar e Enter de novo para enviar.\n\nDuas abas estão sempre lá: Chat, o registro combinado de tudo que é dito ao seu redor, e Combate, o registro escrito da sua luta. O botão de mais adiciona outras, uma por canal: Dizer, Gritar, Grupo, Geral, Mundo, Procurando Grupo, Guilda e Oficial, além de uma aba de Sussurro que reúne num só lugar cada sussurro que você envia e recebe. Digitar numa aba de canal envia para aquele canal sem que você precise redigitar o comando.\n\nA janela inteira pode ser arrastada para outro lugar e redimensionada, e ela lembra onde você a deixou.",
       "keyWindowsTitle": "Janelas que você abre com uma tecla",
@@ -6598,10 +6761,13 @@ export const pt_BR: EnTranslations = {
       "provenanceBody": "Um trabalho fino neste mundo lembra seu criador: coletas e criações raras ou melhores chegam assinadas (Coletado por, Feito por), uma obra-prima termina um nível de qualidade acima com o nome do criador sempre nela, e uma peça por encomenda se vincula ao destinatário pelo Vínculo do Criador. A página de Economia de Criação traz as regras completas, de assinaturas e acúmulo até taxas de desvinculação.",
       "endgameHeading": "The Masterwrought endgame",
       "endgameBody": "Above every craft's trainer ladder sits one shared summit: the Masterwrought family, the crafted pieces wearing the gold Unique-Equipped: Masterwrought tag the Gear page describes. The chain has the same shape whichever craft climbs it: apex patterns found rather than taught, daily-gated intermediate crafts that pace the work, and three shared materials every ladder drinks from. The finished pieces trade freely like any other crafted work (the Crafting Economy page carries the trading rules), and the two-piece wearing cap keeps them an accent on a build rather than a whole kit, so a crafter who never sets foot in the deepest endgame still sells to the people who live there.",
+      "endgameBodyRaidCollections": "Masterwrought is the shared family marked Unique-Equipped: Masterwrought. The older apex ladder still uses its found patterns, daily intermediate crafts, and shared endgame materials. The Crucible collections are a separate raid-funded route, not another set of costs added to that ladder. Both families share the same two-piece wearing cap, so they compete for the same two places in your build. Finished pieces trade freely until Perfecting or a commission binds the individual copy.",
       "endgamePatternsBody": "The patterns arrive through three channels, and the recipe tables on every craft page label each row's own: found in the deepest endgame victories, sold by the Heroic Quartermaster for Heroic Marks, or both at once. The split is deliberate. The gear patterns are found and never sold, the consumable patterns sit on the quartermaster's counter from day one, and the farming patterns ride both roads. Patterns are ordinary tradable goods besides, so a find you cannot use is a find you can sell.",
+      "endgamePatternsBodyCollections": "The older gear patterns are found rather than sold; the older consumable patterns are sold by the Heroic Quartermaster for Heroic Marks, and farming patterns use both routes. Crucible collection manuals and the Last Flame's Zeal formula instead drop from either Crucible boss on either difficulty. Their shared drop group has a 30% chance per boss, choosing one of twelve equally likely scrolls. The Crucible quartermaster also sells any of these scrolls for one core, a deterministic alternative to a lucky drop. Each collection manual teaches all three of its recipes at skill 100. A partly learned manual fills the missing lessons and consumes only one scroll. Manuals and formulas can be traded.",
       "endgameMaterialsBody": "Three shared materials feed the chain. The Wyrmfall Core is the tradable catalyst: each of the deepest endgame's final victories pays a credited character 1 to 3 cores, once per source per day, the highest rift clears pay a fixed count of their own on the same daily clock, and the Heroic Quartermaster sells one for 12 Heroic Marks as the bad-luck backstop; cores trade freely. The Sundered Essence is soulbound, and sundering is its only source: any character can sunder, no profession asked, and the cast breaks a raid-won piece of epic gear of the tier into exactly one essence, the gear itself being the price. The Maker's Ember is soulbound too, and it is the chain's clock: one per week per character, granted on your first eligible endgame completion of the week, and a missed week is never lost, since the embers accrue and pay out on your next completion.",
       "endgameMaterialsBodyAnyRaid": "Three shared materials feed the chain. The Wyrmfall Core is the tradable catalyst: each of the deepest endgame's final victories pays a credited character 1 to 3 cores, once per source per day, the highest rift clears pay a fixed count of their own on the same daily clock, and the Heroic Quartermaster sells one for 12 Heroic Marks as the bad-luck backstop; cores trade freely. The Sundered Essence is soulbound, and sundering is its only source: any character can sunder, no profession asked, and the cast breaks a raid-won piece of epic gear, from any raid and either difficulty, into exactly one essence, the gear itself being the price. The Maker's Ember is soulbound too, and it is the chain's clock: one per week per character, granted on your first eligible endgame completion of the week, and a missed week is never lost, since the embers accrue and pay out on your next completion.",
       "perfectingHeading": "Perfecting, and the orange promotion",
+      "crucibleCollectionsBody": "Each of the eleven Crucible collections offers chest, waist, and feet pieces in its own native armor and role profile. Any two pieces activate its only set bonus, even before Perfecting; there is no three-piece bonus. Each item starts at item level 35 and costs 3 Cores of the Last Flame plus ordinary high-grade gathering materials, so a pair costs six cores before the optional manual purchase. No Wyrmfall Core, daily intermediate, or Maker's Ember is required for the base craft. At rank four, Perfecting raises the primary-stat budget to item level 38. Perfecting still follows its own weekly Ember progression, independent of obtaining and wearing the base gear.\n\nYou can exchange Perfecting ranks between two copies from the same collection at the appropriate crafting station, with skill 125, while alive, idle, and out of combat. The ranks are swapped, never duplicated, and each slot applies its own Perfected stat bonus. The exchange has no material cost and no cooldown. Both copies bind to you; their individual names, enchants, and maker marks stay with their original items.",
       "perfectingBody": "A finished apex piece is not the end of its story. Its owner, with 125 skill in the craft that made it, can walk the piece up four ranks of Perfecting. Each attempt spends one Maker's Ember, one Sundered Essence, and one Prismglass Setting, and succeeds four times in five; a miss costs the materials and nothing else, the piece is never harmed or set back. The first attempt binds the piece to the one perfecting it, so a copy meant for sale is sold before the work begins. A Perfected piece carries a stat bonus over its base, and Perfected is exactly what the Lucent Infusion waits for: the one enchant the Enchanting page marks Perfected only lands on nothing less.\n\nThe walk can begin one rank in. A masterwork proc on an apex craft cannot finish the piece a tier finer, since apex is already the top of the ladder, so it grants the head start instead: the piece comes off the bench at the first rank of Perfecting, with three ranks left to walk rather than four. It is the same roll and the same odds the Masterworks section on every craft page publishes, spent on a rank instead of a quality.",
       "promotionBody": "The last step is the orange promotion, and it is the Deed of Making's whole purpose. Bring a Perfected piece and one Deed of Making, an inscriptionist's skill-125 writ, and the copy is promoted into a legendary carrying a name of your own choosing. No roll rides it: the promotion is deterministic, the stats do not change at all, and what changes is the name and the color. The deed is tradable, so the scribe and the wearer need never be the same person, and the family cap keeps its one extra line: a character wears at most one legendary Masterwrought piece among their two.",
       "stationsHeading": "Bancadas e os três centros",
@@ -6785,10 +6951,12 @@ export const pt_BR: EnTranslations = {
       "masteryBody": "Cada receita na janela exibe seu estado de ganho nas cores clássicas: laranja significa ganho total, amarelo metade, verde um quarto, cinza nada. Os limites são exatos, cada {step} de habilidade é um nível, e uma receita perde uma cor para cada nível que cai abaixo do seu.\n\nComo os ganhos são determinísticos (uma criação com ganho total sempre avança exatamente um ponto), você pode planejar toda a escalada pela lista: trabalhe um degrau enquanto está laranja, treine o próximo degrau quando virar amarelo, e nunca gaste materiais em uma criação cinza esperando progresso. No limite de {cap} o número para, mas as receitas, a chance de obra-prima e os lucros continuam funcionando.",
       "masterworkHeading": "Obras-primas",
       "masterworkBody": "Toda criação bem-sucedida é exatamente o que a receita promete, e às vezes um pouco mais: uma obra-prima termina a mesma peça um nível de qualidade acima, com os atributos de bônus já embutidos no momento da criação. Ela só soma, nunca rebaixa, e permanece abaixo do patamar de raide, então o equipamento criado pode ser excelente sem substituir um drop de raide.\n\nA chance é publicada, não mística: {base}% de base, mais {perTier}% por nível que a sua habilidade estiver acima da receita, mais {signed}% quando entra qualquer reagente assinado, mais {spec}% depois que você está especializado, com materiais de nível mais alto somando de 1 a 2% a mais, tudo limitado a {cap}%. Só uma peça com atributos de verdade pode melhorar, então comuns sem atributos, ferramentas e consumíveis nunca geram o proc; um ofício inativo nunca produz uma, e um ofício de passatempo não pode fazer obra-prima acima do seu teto raro.\n\nUm trabalho fino carrega quem o fez. Os resultados raros ou melhores saem assinados, cada cópia (Feito por; materiais coletados levam Coletado por), e uma obra-prima é sempre assinada, qualquer que seja a sua qualidade. Uma assinatura é proveniência, não uma tranca: bens assinados são negociados, enviados pelo correio e listados no Mercado Mundial livremente.",
+      "masterworkBodyRaidCollections": "Every successful craft is exactly what the recipe promises, and sometimes a little more: a masterwork finishes the same piece one quality tier finer, with the bonus stats baked in at craft time. It is add-only, never a downgrade. Ordinary crafting follows its existing gear ladder; the raid-funded Crucible collections are a separate alternative at the current raid tier.\n\nThe apex Masterwrought crafts are the one exception, and they pay the same proc a different way. An apex piece already sits at the top of its ladder, so there is no finer tier to finish it in; a masterwork there hands the piece over one rank into Perfecting instead, a free first rank on the four-rank walk the Professions page describes. Nothing is baked into the stats, and the chance and its gates are the ones below.\n\nThe chance is published, not mystical: {base}% base, plus {perTier}% per tier your skill sits above the recipe, plus {signed}% when any signed reagent goes in, plus {spec}% once you are specialized, with higher-tier materials adding 1 to 2% more, all capped at {cap}%. Only a piece with real stats can improve, so statless commons, tools, and consumables never proc; a dormant craft never produces one, and a hobby craft cannot masterwork past its rare ceiling.\n\nFine work carries its maker. Rare and better outputs are signed, every copy (Crafted by; gathered materials carry Gathered by), a masterwork is always signed whatever its quality. A signature is provenance, not a lock: signed goods trade, mail, and list on the World Market freely.",
       "trainingHeading": "Treinamento",
       "trainingBody": "Trainer recipes come from the resident masters, taught at their stations. The rule is one line: a master teaches a recipe once your tier in the craft has reached the recipe's own tier, and nothing else gates it, not your level, not your archetype. The gear and consumable ladders run their rungs at skill 0, 25, and 50, and every craft adds one 75-rung intermediate above them, taught at its station (Enchanting's is the Lucent Reagent, beside its two charm recipes on the 25 rung); Engineering's two rod lessons continue its ladder at 75 and 125, so a fresh rung opens as your tiers climb.\n\nFees are one-time and flat by rung: the starting rung is free, the skill 25 rung costs {tier1} a recipe, the skill 50 rung {tier2}, and the 75 and 125 rungs above them carry their own fees, listed beside each recipe in the table. You must stand at the master's actual station to train, and a mobile station never counts. The common field recipes and the six crafted land-tool recipes need no training at all; every character knows them from the start.",
       "specializationHeading": "Especialização",
       "specializationBody": "Na habilidade {at}, este ofício especializa você, sem missão necessária: receitas custam {pct}% menos materiais a partir daí, e a especialização adiciona seu próprio bônus à chance de obra-prima.\n\nEspecialistas também aprendem a levar a oficina consigo: um artesão especializado pode montar uma bancada móvel no campo por dez minutos de cada vez, então receitas vinculadas a bancada podem ser trabalhadas na boca da mina em vez de voltar à cidade. Seus limites são deliberados: nunca conta como treinamento com um mestre ou para desvincular uma peça por encomenda, e expira no seu temporizador quer você a tenha usado ou não.",
+      "specializationBodyUndiscounted": "At skill {at} this craft specializes you, no quest needed: discountable recipe materials cost {pct}% less from then on, and specialization adds its own bump to the masterwork chance. Raid-core costs are never discounted.\n\nSpecialists also learn to take the workshop with them: a specialized crafter can set up a mobile station in the field for ten minutes at a time, so station-bound recipes can be worked at the mine mouth instead of back in town. Its limits are deliberate: it never counts for training with a master or for unbinding a commissioned piece, and it expires on its timer whether or not you used it.",
       "ench": {
         "disenchantHeading": "Desencantamento",
         "disenchantNote": "O desencantamento pega qualquer arma ou peça de armadura de qualidade comum ou melhor e consome uma cópia, pegando uma cópia comum antes de uma encantada; quando só restam cópias encantadas, uma delas é destruída, com encantamento e tudo. Peças comuns e incomuns se desfazem em um punhado aleatório de Pó de Toque, um pouco mais rico para peças mais raras e de nível mais alto; a partir de raro o rendimento muda de forma, exatamente uma Essência de Toque de uma peça rara ou um Fragmento de Toque de uma épica ou lendária, mais um secundário tipado vinculado ao material da peça.",
@@ -6815,7 +6983,9 @@ export const pt_BR: EnTranslations = {
         "bonusFmt": "+{value} {stat}",
         "enchantsNoteOffhand": "Enchants come in four tiers. The base tier runs on Chime Dust (with a little Essence at the high end) and covers the weapon slot, the off hand, and every armor slot, with enough stat-axis options that every build finds something for each slot: shields and held caster off hands take a Stamina enchant of their own, so no equipped slot is enchant dead. The Greater tier costs one Chime Shard plus Essence: stronger bonuses on the highest-impact slots. Shards feed three more sinks besides: the two charm recipes at five apiece, the top rung of tool-effect recharges, and the Lucent tier, where the weapon and chest enchants take one each and the Infusion two, so bank a few before you spend.\n\nBetween them sit the five Runed enchants, one consumer per typed secondary, so nothing you mill is ever a dead end: Runed Edge (weapon, Strength, consumes Resonant Steel), Runed Sigil (weapon, Intellect, Resonant Timber), Runed Weave (chest, Spirit, Resonant Thread), Runed Hide (legs, Agility, Resonant Hide), and Runed Links (helmet, Stamina, Resonant Links). Each also takes two Chime Essence; where a slot and stat have both a base and a Greater enchant, the Runed bonus lands between them, while Runed Weave is the strongest chest Spirit enchant outright and Runed Hide is the only legs Agility enchant at all. The exact bonuses are all in the table below.\n\nAbove them all sits the Lucent tier, the capstone work of the craft and the only enchants that ask for any skill in it at all: Enchanting 100 for the four, 125 for the Infusion, shown in the Skill column below. Each one takes a Lucent Reagent, and each adds one more step on its own slot: the weapon (a Might and a Spellpower option), the chest, and the boots. The last of them, the Lucent Infusion, takes hold only on a piece that has been Perfected, and no piece can be yet: it is authored ahead of the Perfecting work it waits on.",
         "enchantsNoteInfusionLive": "Enchants come in four tiers. The base tier runs on Chime Dust (with a little Essence at the high end) and covers the weapon slot, the off hand, and every armor slot, with enough stat-axis options that every build finds something for each slot: shields and held caster off hands take a Stamina enchant of their own, so no equipped slot is enchant dead. The Greater tier costs one Chime Shard plus Essence: stronger bonuses on the highest-impact slots. Shards feed three more sinks besides: the two charm recipes at five apiece, the top rung of tool-effect recharges, and the Lucent tier, where the weapon and chest enchants take one each and the Infusion two, so bank a few before you spend.\n\nBetween them sit the five Runed enchants, one consumer per typed secondary, so nothing you mill is ever a dead end: Runed Edge (weapon, Strength, consumes Resonant Steel), Runed Sigil (weapon, Intellect, Resonant Timber), Runed Weave (chest, Spirit, Resonant Thread), Runed Hide (legs, Agility, Resonant Hide), and Runed Links (helmet, Stamina, Resonant Links). Each also takes two Chime Essence; where a slot and stat have both a base and a Greater enchant, the Runed bonus lands between them, while Runed Weave is the strongest chest Spirit enchant outright and Runed Hide is the only legs Agility enchant at all. The exact bonuses are all in the table below.\n\nAbove them all sits the Lucent tier, the capstone work of the craft and the only enchants that ask for any skill in it at all: Enchanting 100 for the four, 125 for the Infusion, shown in the Skill column below. Each one takes a Lucent Reagent, and each adds one more step on its own slot: the weapon (a Might and a Spellpower option), the chest, and the boots. The last of them, the Lucent Infusion, takes hold only on a piece that has been Perfected: Perfecting is the wearer's own work, not the enchanter's, and the Professions page tells how a piece earns it.",
+        "enchantsNoteRaidFormula": "Enchants come in four tiers. The base tier runs on Chime Dust (with a little Essence at the high end) and covers the weapon slot, the off hand, and every armor slot, with enough stat-axis options that every build finds something for each slot: shields and held caster off hands take a Stamina enchant of their own, so no equipped slot is enchant dead. The Greater tier costs one Chime Shard plus Essence: stronger bonuses on the highest-impact slots. Shards feed three more sinks besides: the two charm recipes at five apiece, the top rung of tool-effect recharges, and the Lucent tier, where the weapon and chest enchants take one each and the Infusion two, so bank a few before you spend.\n\nBetween them sit the five Runed enchants, one consumer per typed secondary, so nothing you mill is ever a dead end: Runed Edge (weapon, Strength, consumes Resonant Steel), Runed Sigil (weapon, Intellect, Resonant Timber), Runed Weave (chest, Spirit, Resonant Thread), Runed Hide (legs, Agility, Resonant Hide), and Runed Links (helmet, Stamina, Resonant Links). Each also takes two Chime Essence; where a slot and stat have both a base and a Greater enchant, the Runed bonus lands between them, while Runed Weave is the strongest chest Spirit enchant outright and Runed Hide is the only legs Agility enchant at all. The exact bonuses are all in the table below.\n\nAbove the ordinary lower tiers sits the Lucent tier, the capstone ordinary work of the craft: Enchanting 100 for the four, 125 for the Infusion, shown in the Skill column below. Each one takes a Lucent Reagent, and each adds one more step on its own slot: the weapon (a Might and a Spellpower option), the chest, and the boots. The last of them, the Lucent Infusion, takes hold only on a piece that has been Perfected: Perfecting is the wearer's own work, not the enchanter's, and the Professions page tells how a piece earns it.\n\nLast Flame's Zeal is a separate raid formula, not a free ordinary enchant. Learn its tradable formula at Enchanting 100 before applying it. Each application uses 3 Cores of the Last Flame and 2 Chime Shards; the formula can drop in the Crucible or be bought from its quartermaster for one core. Its melee proc and weapon-speed rules are shown in full below.",
         "charmsHeading": "Amuletos para as ferramentas de um coletor",
+        "formulaRequired": "Formula required",
         "charmsBody": "O Encantamento também é de onde vêm os amuletos de um coletor. O Engenhoqueiro Gizzel ensina os dois na oficina de ferramentas de Eastbrook assim que seu Encantamento chega a 25: o Alforje do Coletor, que acrescenta uma unidade a uma colheita, e o Olhar do Artesão, que eleva o grau do que sai. Cada um é criado uma única vez, depois encaixado em uma picareta, um machado ou uma foice, onde gasta uma carga só nas colheitas que ele de fato melhora.\n\nA recarga é onde o ofício continua rendendo. As cargas são restauradas por quem quer que seja dono da ferramenta, não por um encantador visitante, e a recarga custa metade dos materiais quando esse dono é o encantador que assinou o amuleto, e menos ainda com uma especialização em Encantamento. Então um amuleto vendido no balcão é uma venda única, enquanto os amuletos que andam nas suas próprias ferramentas são os baratos de manter funcionando. A escada completa de cargas e materiais está em qualquer página de profissão de coleta, na seção Efeitos de ferramenta."
       },
       "gatherIntro": {
@@ -6924,7 +7094,8 @@ export const pt_BR: EnTranslations = {
         "commissionsHeading": "Encomendas e o Vínculo do Artesão",
         "commissionsBody": "Uma encomenda é uma criação feita para alguém. Ao criar uma arma, uma peça de armadura ou um item secundário sustentado (uma poção não pode carregar um vínculo), o artesão pode marcar a criação como encomenda: a peça acabada se comporta normalmente nas mãos de quem a fez, mas no momento em que troca de mãos em uma negociação ela se vincula à pessoa que a recebeu. É o Vínculo do Artesão: o comprador recebe sua peça, e a peça não pode ser repassada nem revendida.\n\nOs vínculos não são eternos, apenas caros. Qualquer mestre de posto desvincular uma peça vinculada enquanto você estiver na estação (uma estação móvel nunca oferece o serviço), por uma taxa definida pela qualidade do item: 25 pratas para incomum, 1 ouro para raro, 4 ouros para épico, com um lendário pagando a taxa épica e uma peça comum encomendada a taxa de incomum.\n\nA taxa compra uma lousa limpa, não uma cura: a peça ainda é uma encomenda, então ela se vincula novamente a quem a receber na próxima negociação, e todo o resto, assinatura, obra-prima e encantamentos, permanece intacto.",
         "provenanceHeading": "Trabalho assinado",
-        "provenanceBody": "Some items carry a name. Hover one and the tooltip says Gathered by so-and-so on a raw material, or Crafted by so-and-so on a finished piece: the same mark, worded for how the item came to be. A signature is part of the item itself, travels with it through trades, the bank, the mail, the World Market, and even a vendor buyback, and never fades.\n\nGathering signs its best work automatically: any harvest that rolls rare or better arrives signed, and rare finds sign their entire five-fold windfall. A corpse harvest's lucky roll signs its yield where the family has no specimen to give, and where it does, keeps the yield plain and mints the signed pristine specimen beside it. Crafting signs along the same line: every copy of a rare or better output mints signed, and a masterwork always signs whatever its quality, so the finest version of any piece always names its maker. The one thing that can cost you a signature is a full bag: a signed unit needs room of its own, or a matching signed stack, to land in.\n\nA stack of items shares one identity, so two copies merge only when every mark matches exactly: same item, same signer, same masterwork stats, same enchant, same bond. A signed log never joins a plain pile in either direction (merging would erase somebody's name), but identical payloads merge happily, so twenty ore signed by the same gatherer sit in one stack and a windfall does not shred your bags.\n\nSignatures pay crafters back: holding any signed copy of a needed reagent at the bench, whoever signed it, adds 2 percentage points of masterwork chance, and holding a reagent signed by your own hand cuts that reagent's required quantity by one (never below one). Your own signed rare-or-better work even keeps teaching you, today through crafted potions alone: drink a rare draught you brewed and signed and a small trickle of skill flows back to the craft that made it, as long as that craft is one of your active majors. It really is the potion arm and nothing else, so an elixir, a scroll, or an apex flask teaches you nothing back however finely it was signed.",
+        "provenanceBody": "Some items carry a name. A material's source lines say who collected each group of units, while a separate signed-by mark identifies the premium signer when there is one. Those facts are independent: ordinary gathered material records a collector without gaining a signature, and legacy signed stock can name its signer while honestly saying no gatherer was recorded. A finished piece instead says who crafted it. These records travel with the item through trades, the bank, the mail, the World Market, and even a vendor buyback, and never fade.\n\nGathering signs its best work automatically: any harvest that rolls rare or better arrives signed, and rare finds sign their entire five-fold windfall. A corpse harvest's lucky roll signs its yield where the family has no specimen to give, and where it does, keeps the yield plain and mints the signed pristine specimen beside it. Crafting signs along the same line: every copy of a rare or better output mints signed, and a masterwork always signs whatever its quality, so the finest version of any piece always names its maker. An ordinary material's signature rides the units themselves and cannot be lost merely because a compatible stack already contains another collector or signer. A distinct pristine specimen is a separate item and still needs room; if it cannot fit, the ordinary corpse yield remains but the specimen is lost.\n\nFinished items keep one strict identity, so two copies merge only when every mark matches exactly: same item, same signer, same masterwork stats, same enchant, same bond. Compatible materials share a slot across collectors and signers while keeping a count for each source. The hover tooltip summarizes the sources; open Sources for the full list. Separate by gatherer keeps those stacks apart in your bags, and sorting respects that choice. Transferred material can stack normally with the recipient's materials.\n\nSignatures pay crafters back: holding any signed copy of a needed reagent at the bench, whoever signed it, adds 2 percentage points of masterwork chance, and holding a reagent signed by your own hand cuts that reagent's required quantity by one (never below one). Your own signed rare-or-better work even keeps teaching you, today through crafted potions alone: drink a rare draught you brewed and signed and a small trickle of skill flows back to the craft that made it, as long as that craft is one of your active majors. It really is the potion arm and nothing else, so an elixir, a scroll, or an apex flask teaches you nothing back however finely it was signed.",
+        "provenanceBodyUndiscounted": "Some items carry a name. A material's source lines say who collected each group of units, while a separate signed-by mark identifies the premium signer when there is one. Those facts are independent: ordinary gathered material records a collector without gaining a signature, and legacy signed stock can name its signer while honestly saying no gatherer was recorded. A finished piece instead says who crafted it. These records travel with the item through trades, the bank, the mail, the World Market, and even a vendor buyback, and never fade.\n\nGathering signs its best work automatically: any harvest that rolls rare or better arrives signed, and rare finds sign their entire five-fold windfall. A corpse harvest's lucky roll signs its yield where the family has no specimen to give, and where it does, keeps the yield plain and mints the signed pristine specimen beside it. Crafting signs along the same line: every copy of a rare or better output mints signed, and a masterwork always signs whatever its quality, so the finest version of any piece always names its maker. An ordinary material's signature rides the units themselves and cannot be lost merely because a compatible stack already contains another collector or signer. A distinct pristine specimen is a separate item and still needs room; if it cannot fit, the ordinary corpse yield remains but the specimen is lost.\n\nFinished items keep one strict identity, so two copies merge only when every mark matches exactly: same item, same signer, same masterwork stats, same enchant, same bond. Compatible materials share a slot across collectors and signers while keeping a count for each source. The hover tooltip summarizes the sources; open Sources for the full list. Separate by gatherer keeps those stacks apart in your bags, and sorting respects that choice. Transferred material can stack normally with the recipient's materials.\n\nSignatures pay crafters back: holding any signed copy of a needed reagent at the bench, whoever signed it, adds 2 percentage points of masterwork chance, and holding a reagent signed by your own hand cuts that reagent's required quantity by one (never below one), unless that reagent is marked undiscountable; raid cores always keep their full cost. Your own signed rare-or-better work even keeps teaching you, today through crafted potions alone: drink a rare draught you brewed and signed and a small trickle of skill flows back to the craft that made it, as long as that craft is one of your active majors. It really is the potion arm and nothing else, so an elixir, a scroll, or an apex flask teaches you nothing back however finely it was signed.",
         "collectorsHeading": "Colecionadores, troféus e o preço de uma história",
         "collectorsBody": "Os vendedores são cegos à proveniência: um item assinado é vendido a um PNJ exatamente pelo seu preço comum. O prêmio de uma assinatura existe apenas entre jogadores, o que é precisamente o que o torna interessante: uma pilha de minério inesperado assinada por um coletor famoso, um Corte Principal de uma colheita sortuda, uma lâmina obra-prima com o nome de um artesão aposentado, todos custam o que a memória de alguém diz que valem.\n\nO Livro dos Feitos apoia o mesmo instinto: Veia Imaculada, Cerne Ancião, Flor ao Luar, Um Espécime Perfeito e Lampejo de Esperança são marcas de colecionador com zero de Renome que existem apenas para provar que um momento aconteceu com você. Guarde o item que conquistou o feito e você tem o recibo. Nada disso é poder; a proveniência não compra atributos nem vence batalhas, é o rastro de papel do jogo para dias felizes.",
         "castPaceHeading": "Tempo de conjuração e o dreno de ouro",
@@ -6938,7 +7109,9 @@ export const pt_BR: EnTranslations = {
         "castPaceRecharge": "Recarga de efeito de ferramenta: {seconds} s de conjuração",
         "castPaceBatch": "Criação em lote: até {count} em um único pedido, uma conjuração cada",
         "doctrineHeading": "Jogadores negociam com jogadores",
+        "introRaidCollections": "How coin moves through the trades: the exact fees and sinks, what actually sells, World Market rules, work orders, commissions, and the place of raid-funded collections alongside ordinary crafting.",
         "doctrineBody": "A economia de criação é construída sobre uma ideia: jogadores abastecem jogadores. Coletores alimentam artesãos, artesãos alimentam aventureiros e raideiros, e demolidores alimentam encantadores, com vendedores e mestres de posto nas bordas para absorver itens indesejados e moedas em vez de competir com você. Se quiser ganhar dinheiro com uma profissão, seu cliente é uma pessoa: aprenda o que outros jogadores consomem, precifique em relação ao Mercado Mundial e trate os sistemas de PNJ como um piso para seus preços, não como o mercado em si.\n\nO equipamento criado é ajustado para ficar abaixo do patamar de raide: mesmo uma obra-prima está apenas um nível de qualidade acima da receita, nunca além de lendário, e seu orçamento de atributos fica abaixo da faixa do saque de raide. A forja te prepara para o conteúdo mais difícil; ela não o substitui. Isso mantém artesãos, raideiros e o mercado em um triângulo estável: os drops de raide permanecem aspiracionais, e as peças criadas permanecem o melhor equipamento que o dinheiro pode de fato comprar.",
+        "doctrineBodyRaidCollections": "The crafting economy is built on one idea: players supply players. Gatherers feed crafters, crafters feed questers and raiders, and breakers feed enchanters, with vendors and station masters standing at the edges to absorb junk and coin rather than to compete with you. If you want to make money from a profession, your customer is a person: learn what other players burn through, price against the World Market, and treat the NPC systems as a floor under your prices, not as the market itself.\n\nOrdinary crafted equipment supports the climb into endgame. The Crucible's raid-funded collections also offer an alternative to current raid drops: their materials come from raiding, while crafting turns those materials into a chosen armor and role profile. Their three slot choices and any-two bonus allow different combinations with raid gear. They still share the global two-piece Masterwrought cap, so crafting complements the rest of the raid kit without supplying an entire replacement set.",
         "orderBoardHeading": "O quadro de encomendas",
         "orderBoardBody": "Você não precisa procurar um artesão no chat. Abra sua janela de criação e o quadro de encomendas está a um clique de distância no cabeçalho dela. Qualquer um pode publicar um pedido ali: nomeie a receita que quer feita, depois deixe-o aberto para qualquer artesão aceitar, ou direcione-o a um artesão específico, que passa a ser a única pessoa que pode pegá-lo. Um artesão navegando pelo quadro aceita um pedido, e aceitar o compromete, então um trabalho é sempre feito por apenas uma pessoa por vez.\n\nNada fica retido quando você publica: um pedido não reserva moedas nem materiais, então o preço e quem fornece os reagentes ficam entre vocês dois, combinados do jeito que qualquer encomenda é combinada. Você pode cancelar seu próprio pedido enquanto ele ainda estiver aberto, e um pedido que ninguém aceita expira sozinho depois de um dia. Assim que um artesão aceita, a entrega é o que fecha o trabalho.\n\nA entrega acontece cara a cara. O artesão faz a peça como encomenda, vem até você e a entrega, então mantenha um espaço de bolsa livre para recebê-la. O que chega segue as regras comuns de encomenda abaixo, vinculando-se a você pelo Vínculo do Artesão.",
         "commissionsBoardNote": "Há duas formas de chegar a uma encomenda: um pedido que você publica no quadro acima, que leva o trabalho até um artesão, e um artesão simplesmente escolhendo fazer uma peça para você. As duas terminam no mesmo vínculo."
@@ -6965,7 +7138,7 @@ export const pt_BR: EnTranslations = {
         "title": "Perguntas Frequentes sobre Profissões",
         "intro": "Respostas rápidas para as perguntas que os artesãos fazem com mais frequência.",
         "q1": "Why do my signed items not stack?",
-        "a1": "A signed item is an instanced item: it carries its own little record (the signer, any rolled quality, masterwork stats, an enchant, a bond) instead of being an anonymous copy. Two copies merge into one stack only when those records match exactly.\n\nIn practice: rare ore you gathered yourself stacks with more rare ore you gathered yourself, because both say Gathered by you and nothing else differs. The same material signed by a friend sits in its own slot, and a plain unsigned copy never merges into a signed stack. Bags, bank, trade, mail, and the World Market all follow this one rule.",
+        "a1": "Finished items still follow the strict instance rule: two copies merge only when their signer, rolled properties, masterwork stats, enchant, bond, and other identity all match exactly. A signed blade therefore stays apart from a plain one.\n\nMaterials are the exception. Compatible stacks of the same material can merge even when their collectors or signers differ, because the stack keeps a count for each source. The hover tooltip summarizes the sources; open Sources for the full list. Separate by gatherer keeps those stacks apart in your bags, and sorting respects that choice. Transferred material can stack normally with the recipient's materials.",
         "q2": "As receitas comuns aumentam minha perícia para sempre?",
         "a2": "No. Every recipe is scored by how far it sits below your current bracket in that craft, the classic orange, yellow, green, gray reading: full gain at or above your bracket, half one tier below, a quarter two tiers below, and nothing three or more below. Brackets are every 25 skill, so the free skill 0 recipes stop teaching you anything at 75 skill.\n\nThe caps are also lower than the classic 300 you might expect: each of the ten earnable crafts caps at 125, Mining, Logging, and Herbalism cap at 100, and Fishing runs long at 200. Climbing means moving up to recipes at your own bracket, not grinding the cheapest one.",
         "q3": "Qual é a diferença entre saquear e colher um cadáver?",
@@ -14132,6 +14305,9 @@ export const pt_BR: EnTranslations = {
       "lastflame_core": {
         "name": "Núcleo da Última Chama"
       },
+      "forgefathers_ember": {
+        "name": "Forgefather's Ember"
+      },
       "slagbreaker_helmet": {
         "name": "Elmo Quebraescória"
       },
@@ -14743,6 +14919,144 @@ export const pt_BR: EnTranslations = {
       },
       "deed_of_making": {
         "name": "Deed of Making"
+      },
+      "crucible_str_mail_chest": {
+        "name": "Crucible Striker's Hauberk"
+      },
+      "crucible_str_mail_waist": {
+        "name": "Crucible Striker's Girdle"
+      },
+      "crucible_str_mail_feet": {
+        "name": "Crucible Striker's Sabatons"
+      },
+      "crucible_tank_mail_chest": {
+        "name": "Crucible Guardian's Hauberk"
+      },
+      "crucible_tank_mail_waist": {
+        "name": "Crucible Guardian's Girdle"
+      },
+      "crucible_tank_mail_feet": {
+        "name": "Crucible Guardian's Sabatons"
+      },
+      "crucible_caster_mail_chest": {
+        "name": "Crucible Spellcaster's Hauberk"
+      },
+      "crucible_caster_mail_waist": {
+        "name": "Crucible Spellcaster's Girdle"
+      },
+      "crucible_caster_mail_feet": {
+        "name": "Crucible Spellcaster's Sabatons"
+      },
+      "crucible_healer_mail_chest": {
+        "name": "Crucible Healer's Hauberk"
+      },
+      "crucible_healer_mail_waist": {
+        "name": "Crucible Healer's Girdle"
+      },
+      "crucible_healer_mail_feet": {
+        "name": "Crucible Healer's Sabatons"
+      },
+      "crucible_agi_leather_chest": {
+        "name": "Crucible Skirmisher's Jerkin"
+      },
+      "crucible_agi_leather_waist": {
+        "name": "Crucible Skirmisher's Belt"
+      },
+      "crucible_agi_leather_feet": {
+        "name": "Crucible Skirmisher's Boots"
+      },
+      "crucible_str_leather_chest": {
+        "name": "Crucible Prowler's Jerkin"
+      },
+      "crucible_str_leather_waist": {
+        "name": "Crucible Prowler's Belt"
+      },
+      "crucible_str_leather_feet": {
+        "name": "Crucible Prowler's Boots"
+      },
+      "crucible_tank_leather_chest": {
+        "name": "Crucible Guardian's Jerkin"
+      },
+      "crucible_tank_leather_waist": {
+        "name": "Crucible Guardian's Belt"
+      },
+      "crucible_tank_leather_feet": {
+        "name": "Crucible Guardian's Boots"
+      },
+      "crucible_caster_leather_chest": {
+        "name": "Crucible Spellcaster's Jerkin"
+      },
+      "crucible_caster_leather_waist": {
+        "name": "Crucible Spellcaster's Belt"
+      },
+      "crucible_caster_leather_feet": {
+        "name": "Crucible Spellcaster's Boots"
+      },
+      "crucible_healer_leather_chest": {
+        "name": "Crucible Healer's Jerkin"
+      },
+      "crucible_healer_leather_waist": {
+        "name": "Crucible Healer's Belt"
+      },
+      "crucible_healer_leather_feet": {
+        "name": "Crucible Healer's Boots"
+      },
+      "crucible_caster_cloth_chest": {
+        "name": "Crucible Spellcaster's Robe"
+      },
+      "crucible_caster_cloth_waist": {
+        "name": "Crucible Spellcaster's Sash"
+      },
+      "crucible_caster_cloth_feet": {
+        "name": "Crucible Spellcaster's Slippers"
+      },
+      "crucible_healer_cloth_chest": {
+        "name": "Crucible Healer's Robe"
+      },
+      "crucible_healer_cloth_waist": {
+        "name": "Crucible Healer's Sash"
+      },
+      "crucible_healer_cloth_feet": {
+        "name": "Crucible Healer's Slippers"
+      },
+      "pattern_crucible_str_mail": {
+        "name": "Pattern: Crucible Striker's Mail"
+      },
+      "pattern_crucible_tank_mail": {
+        "name": "Pattern: Crucible Guardian's Mail"
+      },
+      "pattern_crucible_caster_mail": {
+        "name": "Pattern: Crucible Spellcaster's Mail"
+      },
+      "pattern_crucible_healer_mail": {
+        "name": "Pattern: Crucible Healer's Mail"
+      },
+      "pattern_crucible_agi_leather": {
+        "name": "Pattern: Crucible Skirmisher's Leather"
+      },
+      "pattern_crucible_str_leather": {
+        "name": "Pattern: Crucible Prowler's Leather"
+      },
+      "pattern_crucible_tank_leather": {
+        "name": "Pattern: Crucible Guardian's Leather"
+      },
+      "pattern_crucible_caster_leather": {
+        "name": "Pattern: Crucible Spellcaster's Leather"
+      },
+      "pattern_crucible_healer_leather": {
+        "name": "Pattern: Crucible Healer's Leather"
+      },
+      "pattern_crucible_caster_cloth": {
+        "name": "Pattern: Crucible Spellcaster's Cloth"
+      },
+      "pattern_crucible_healer_cloth": {
+        "name": "Pattern: Crucible Healer's Cloth"
+      },
+      "formula_lastflame_zeal": {
+        "name": "Formula: Last Flame's Zeal"
+      },
+      "field_kit": {
+        "name": "Field Kit"
       },
       "conjured_water4": {
         "name": "Água de Nascente Conjurada"
@@ -17640,6 +17954,26 @@ export const pt_BR: EnTranslations = {
           }
         }
       },
+      "q_forgefathers_requiem": {
+        "title": "The Forgefather's Requiem",
+        "text": "Varkhul kept an ember of the Last Spring at his heart. Recover it from him and bring it to me. With Weaponcrafting skill 125, you can learn to shape Forgebreaker yourself. His defeat on either difficulty will yield the ember while this task is active.",
+        "completion": "It still sings. Keep the ember: your hammer will need its voice. I have taught you one shaping of Forgebreaker. The ember and the shaping are spent only when your craft succeeds.",
+        "objectives": {
+          "0": {
+            "label": "Forgefather's Ember recovered"
+          }
+        }
+      },
+      "q_requiem_at_the_forge": {
+        "title": "Requiem at the Forge",
+        "text": "Take the ember, fifteen Cores of the Last Flame, Fine Osmium Ore and Fine Highpine Logs to a forge. Shape Forgebreaker yourself, then return to me with it in your bags or equipped. You keep the hammer, and it binds to you. This shaping can create only one hammer.",
+        "completion": "The spring's voice carries through the iron. What Varkhul chained, your hands have set free. Carry Forgebreaker well, smith.",
+        "objectives": {
+          "0": {
+            "label": "Forgebreaker forged and carried"
+          }
+        }
+      },
       "q_mogger": {
         "title": "Mogger deve cair",
         "text": "Mogger partiu carroças, achatou cercas e matou gado suficiente para esvaziar metade do Vale. Não o enfrente só. Leve dois companheiros fortes ao prado oeste e derrube a fera de vez.",
@@ -19837,6 +20171,50 @@ export const pt_BR: EnTranslations = {
         "bonus2": "Aumenta o poder de ataque em 40.",
         "bonus4": "Seus acertos críticos com armas estilhaçam o alvo com Estilhaço Ósseo, causando 8 de sangramento a cada 2 s por 12 s. Acumula até 3 vezes.",
         "bonus6": "Aumenta em 4% as velocidades de ataque e conjuração e em 3% o Acerto. Acertos críticos da sua arma estilhaçam o alvo com Estilhaçaossos, causando 5 de dano a cada 2 s por 12 s. Acumula até 3 vezes."
+      },
+      "crucible_agi_leather": {
+        "name": "Crucible Skirmisher's Leather",
+        "bonus2": "Your direct Physical damage and your pets' direct Physical damage build a charge, at most once per second. At 6 charges, you and your pets deal 8% more damage for 6 sec. Charges expire after 8 sec without a qualifying hit and cannot build during the damage bonus. Charges and the damage bonus end when you leave combat or stop wearing two pieces of this collection."
+      },
+      "crucible_caster_cloth": {
+        "name": "Crucible Spellcaster's Cloth",
+        "bonus2": "Your magic damage and your pets' magic damage build a charge, at most once per second, including damage over time. At 6 charges, you and your pets deal 8% more damage for 6 sec. Charges expire after 8 sec without a qualifying hit and cannot build during the damage bonus. Charges and the damage bonus end when you leave combat or stop wearing two pieces of this collection."
+      },
+      "crucible_caster_leather": {
+        "name": "Crucible Spellcaster's Leather",
+        "bonus2": "Your magic damage and your pets' magic damage build a charge, at most once per second, including damage over time. At 6 charges, you and your pets deal 8% more damage for 6 sec. Charges expire after 8 sec without a qualifying hit and cannot build during the damage bonus. Charges and the damage bonus end when you leave combat or stop wearing two pieces of this collection."
+      },
+      "crucible_caster_mail": {
+        "name": "Crucible Spellcaster's Mail",
+        "bonus2": "Your magic damage and your pets' magic damage build a charge, at most once per second, including damage over time. At 6 charges, you and your pets deal 8% more damage for 6 sec. Charges expire after 8 sec without a qualifying hit and cannot build during the damage bonus. Charges and the damage bonus end when you leave combat or stop wearing two pieces of this collection."
+      },
+      "crucible_healer_cloth": {
+        "name": "Crucible Healer's Cloth",
+        "bonus2": "Healing an ally who is in combat turns 20% of your overhealing into a shield on that ally for 6 sec. Includes healing over time and damage converted into healing. This also works when healing yourself in combat. Protection from all wearers is limited to 5% of the recipient's maximum health. Additional overhealing fills the shield without extending its duration. This protection does not trigger other healing effects. Your shields end when the shielded ally leaves combat, you die, or you stop wearing two pieces of this collection."
+      },
+      "crucible_healer_leather": {
+        "name": "Crucible Healer's Leather",
+        "bonus2": "Healing an ally who is in combat turns 20% of your overhealing into a shield on that ally for 6 sec. Includes healing over time and damage converted into healing. This also works when healing yourself in combat. Protection from all wearers is limited to 5% of the recipient's maximum health. Additional overhealing fills the shield without extending its duration. This protection does not trigger other healing effects. Your shields end when the shielded ally leaves combat, you die, or you stop wearing two pieces of this collection."
+      },
+      "crucible_healer_mail": {
+        "name": "Crucible Healer's Mail",
+        "bonus2": "Healing an ally who is in combat turns 20% of your overhealing into a shield on that ally for 6 sec. Includes healing over time and damage converted into healing. This also works when healing yourself in combat. Protection from all wearers is limited to 5% of the recipient's maximum health. Additional overhealing fills the shield without extending its duration. This protection does not trigger other healing effects. Your shields end when the shielded ally leaves combat, you die, or you stop wearing two pieces of this collection."
+      },
+      "crucible_str_leather": {
+        "name": "Crucible Prowler's Leather",
+        "bonus2": "Your direct Physical damage and your pets' direct Physical damage build a charge, at most once per second. At 6 charges, you and your pets deal 8% more damage for 6 sec. Charges expire after 8 sec without a qualifying hit and cannot build during the damage bonus. Charges and the damage bonus end when you leave combat or stop wearing two pieces of this collection."
+      },
+      "crucible_str_mail": {
+        "name": "Crucible Striker's Mail",
+        "bonus2": "Your direct Physical damage and your pets' direct Physical damage build a charge, at most once per second. At 6 charges, you and your pets deal 8% more damage for 6 sec. Charges expire after 8 sec without a qualifying hit and cannot build during the damage bonus. Charges and the damage bonus end when you leave combat or stop wearing two pieces of this collection."
+      },
+      "crucible_tank_leather": {
+        "name": "Crucible Guardian's Leather",
+        "bonus2": "Enemy damage starts a 10 sec counting period. When health lost during that period reaches 40% of your maximum health, gain a shield absorbing 8% of your maximum health for 6 sec. Can occur once every 20 sec. Absorbed damage and self-damage do not count. Stored damage and the shield end when you leave combat or stop wearing two pieces of this collection. The cooldown does not reset."
+      },
+      "crucible_tank_mail": {
+        "name": "Crucible Guardian's Mail",
+        "bonus2": "Enemy damage starts a 10 sec counting period. When health lost during that period reaches 40% of your maximum health, gain a shield absorbing 8% of your maximum health for 6 sec. Can occur once every 20 sec. Absorbed damage and self-damage do not count. Stored damage and the shield end when you leave combat or stop wearing two pieces of this collection. The cooldown does not reset."
       },
       "dawnforged": {
         "name": "Vestes Forjadas pelo Alvorecer",

@@ -3,7 +3,7 @@
 //
 // Three things are under test and they are deliberately different in kind. The
 // pure helper is pinned on its own, including the threshold LITERAL: asserting
-// the constant against itself would pass for any value, so the number 163_840 is
+// the constant against itself would pass for any value, so the number 229_376 is
 // written out here and a re-mint has to be a reviewed edit in two files. The
 // call site is then exercised through the REAL saveCharacterState with a mocked
 // pool, because the load-bearing claim is not "a warning is produced" but "an
@@ -77,7 +77,7 @@ function realCharacterState(): CharacterState {
 function oversizedCharacterState(): CharacterState {
   const state = realCharacterState();
   const questsDone = [...state.questsDone];
-  for (let i = questsDone.length; questsDone.length < 3000; i++) {
+  for (let i = questsDone.length; questsDone.length < 4000; i++) {
     questsDone.push(`synthetic_blob_padding_quest_${i}_${'x'.repeat(40)}`);
   }
   return { ...state, questsDone };
@@ -88,9 +88,17 @@ function oversizedCharacterState(): CharacterState {
 // The release/v0.41.0 save path wraps the client in DbTransactionDeadline,
 // which attaches and detaches an 'error' listener, so the fake carries the
 // EventEmitter pair too (no-ops: these tests never surface a client error).
+// The one answer stands in for every statement, so it carries the SOURCE
+// PRE-IMAGE columns the save's locking read (or its RETURNING) really answers
+// with: a character holding neither container yet. Without them the save paths
+// would be reading a row that answers no projection, which they refuse rather
+// than treat as an empty bank (server/character_material_sources_db.ts).
 function transactionClient() {
   const client = { query: vi.fn(), release: vi.fn(), on: vi.fn(), removeListener: vi.fn() };
-  client.query.mockResolvedValue({ rows: [], rowCount: 1 } as never);
+  client.query.mockResolvedValue({
+    rows: [{ before_bank: null, before_vault: null }],
+    rowCount: 1,
+  } as never);
   return client;
 }
 
@@ -102,32 +110,33 @@ function characterUpdateCall(client: ReturnType<typeof transactionClient>) {
 
 describe('characterBlobSizeWarning: the pure decision', () => {
   it('pins the warn threshold to its literal value', () => {
-    // The number itself, not the constant compared against itself. 163,840 is
-    // 160 KiB, the smallest 32-KiB step above the measured legal worst case
-    // (151,656 bytes, frozen by the professions_blob_growth whole-character arm)
-    // and one 32-KiB step below the 262,144-byte guild-bank row scale; re-minted
-    // from 131,072 by qr-19-character-blob-warn-threshold. See the derivation in
-    // server/character_blob_size.ts. Moving it means re-measuring.
-    expect(CHARACTER_BLOB_WARN_BYTES).toBe(163_840);
+    // The number itself, not the constant compared against itself. 229,376 is
+    // 224 KiB, the smallest 32-KiB step above the measured storage-rich fixture
+    // (209,261 bytes, frozen by the professions_blob_growth whole-character arm)
+    // and one 32-KiB step below the 262,144-byte guild-bank row scale. The
+    // database review approved this re-mint from 163,840 after measuring legal
+    // Crucible payloads through serialize/load. Moving it means re-measuring.
+    expect(CHARACTER_BLOB_WARN_BYTES).toBe(229_376);
   });
 
   it('stays silent below the threshold and AT it (the bound is inclusive)', () => {
     expect(characterBlobSizeWarning(1, 0)).toBeNull();
     expect(characterBlobSizeWarning(1, 38_900)).toBeNull();
-    expect(characterBlobSizeWarning(1, 163_839)).toBeNull();
-    expect(characterBlobSizeWarning(1, 163_840)).toBeNull();
+    expect(characterBlobSizeWarning(1, 209_261)).toBeNull();
+    expect(characterBlobSizeWarning(1, 229_375)).toBeNull();
+    expect(characterBlobSizeWarning(1, 229_376)).toBeNull();
   });
 
   it('warns one byte past the threshold and above', () => {
-    expect(characterBlobSizeWarning(1, 163_841)).not.toBeNull();
+    expect(characterBlobSizeWarning(1, 229_377)).not.toBeNull();
     expect(characterBlobSizeWarning(1, 1_000_000)).not.toBeNull();
   });
 
   it('names the character and the measured size, so the line is actionable', () => {
-    const warning = characterBlobSizeWarning(4291, 200_000);
+    const warning = characterBlobSizeWarning(4291, 300_000);
     expect(warning).toContain('4291');
-    expect(warning).toContain('200000');
-    expect(warning).toContain('163840-byte');
+    expect(warning).toContain('300000');
+    expect(warning).toContain('229376-byte');
   });
 
   it('leaves a real freshly serialized character far under the threshold', () => {
@@ -219,7 +228,7 @@ describe('saveCharacterState: the size signal never gates the write', () => {
 
   it('takes the characters row lock BEFORE the fenced UPDATE (qr-19-live-nonce-fence-write-loss)', async () => {
     // D145: the four live save paths run their fenced UPDATE through
-    // runFencedCharacterUpdate, which issues the FOR NO KEY UPDATE row lock FIRST.
+    // runFencedCharacterSave, which issues the FOR NO KEY UPDATE row lock FIRST.
     // If the lock came after (or not at all) the fence's InitPlan is decided before
     // the row is held and a mid-wait lease displacement is invisible (the write
     // loss the offline twin red-proved against real Postgres). Position AND text,
@@ -237,17 +246,22 @@ describe('saveCharacterState: the size signal never gates the write', () => {
     expect(lockIdx).toBeLessThan(updateIdx);
   });
 
-  it('a no-nonce (none) save SKIPS the row lock (the D145 conditional)', async () => {
-    // runFencedCharacterUpdate takes the lock only for a fenced (nonce) save; an
-    // unfenced 'none' write has no uncorrelated subquery and no race, so it must
-    // not pay the extra round trip. A revert to lock-always would red here (the
-    // behavior 0e7ffa296d introduced was otherwise unpinned).
+  it('a no-nonce (none) save pays NO extra round trip (the D145 conditional)', async () => {
+    // runFencedCharacterSave gives a fenced (nonce) save a separate lock
+    // statement; an unfenced 'none' write has no uncorrelated subquery and no
+    // race, so it must not pay the extra round trip. It still needs the source
+    // pre-image, so it takes the lock INSIDE its one statement (the MATERIALIZED
+    // CTE) rather than skipping it. A revert to a separate lock statement here,
+    // or to no lock at all, reds.
     const client = transactionClient();
     dbMock.connect.mockResolvedValue(client as never);
     await saveCharacterState(106, 12, realCharacterState()); // no leaseNonce -> 'none'
     const statements = client.query.mock.calls.map((call) => String(call[0]));
-    expect(statements.some((s) => s.includes('FOR NO KEY UPDATE'))).toBe(false);
-    expect(statements.some((s) => s.includes('UPDATE characters SET'))).toBe(true);
+    const touching = statements.filter((s) => s.includes('characters'));
+    expect(touching).toHaveLength(1);
+    expect(touching[0]).toContain('WITH previous AS MATERIALIZED (');
+    expect(touching[0]).toContain('FOR NO KEY UPDATE');
+    expect(touching[0]).toContain('UPDATE characters AS c');
   });
 });
 
@@ -335,7 +349,7 @@ describe('every character write path inherits the signal (the shared chokepoint)
 
   it('saveCharacterAndMarketState takes the row lock before the fenced UPDATE (D145)', async () => {
     // The other three live save paths run the fenced UPDATE through the same
-    // runFencedCharacterUpdate, so pin the lock-before-update ordering on each
+    // runFencedCharacterSave, so pin the lock-before-update ordering on each
     // (a bare transaction.query on any one reinstates the write-loss race).
     const client = transactionClient();
     dbMock.connect.mockResolvedValue(client as never);
@@ -349,18 +363,21 @@ describe('every character write path inherits the signal (the shared chokepoint)
     expect(lockIdx).toBeLessThan(updateIdx);
   });
 
-  it('saveCharacterStateOnClient is EXCLUDED from the D145 row lock (escrow occupancy invariant)', async () => {
+  it('saveCharacterStateOnClient is EXCLUDED from the D145 row-lock STATEMENT (escrow occupancy)', async () => {
     // This arm's callers are the marketplace escrow and paid guild creation;
-    // adding the D145 row lock there would push their base workload past the
-    // autosave-period occupancy ceiling the tunables ladder pins
-    // (baseWorkloadCeilingMs < autosaveMs). So it keeps its pre-D145 shape: the
-    // fenced UPDATE with no separate row-lock SELECT. The three DIRECT live paths
-    // do take the lock (pinned above and in guild_bank_db.test.ts).
+    // adding a separate D145 row-lock STATEMENT there would push their base
+    // workload past the autosave-period occupancy ceiling the tunables ladder
+    // pins (baseWorkloadCeilingMs < autosaveMs). So it stays at ONE statement,
+    // which is also why its source pre-image rides a MATERIALIZED CTE inside
+    // that statement instead of a second read. The three DIRECT live paths take
+    // the separate lock (pinned above and in guild_bank_db.test.ts).
     const client = transactionClient();
     await saveCharacterStateOnClient(client as never, 204, 60, realCharacterState(), 'session-a');
     const statements = client.query.mock.calls.map((call) => String(call[0]));
-    expect(statements.some((s) => s.includes('FOR NO KEY UPDATE'))).toBe(false);
-    expect(statements.some((s) => s.includes('UPDATE characters SET'))).toBe(true);
+    const touching = statements.filter((s) => s.includes('characters'));
+    expect(touching).toHaveLength(1);
+    expect(touching[0]).toContain('WITH previous AS MATERIALIZED (');
+    expect(touching[0]).toContain('UPDATE characters AS c');
   });
 
   it('stays silent on all three paths for an ordinary character', async () => {

@@ -1,3 +1,6 @@
+import type { LocalGathererIdentity } from './material_gatherer';
+import { cloneMaterialData, cloneMaterialPayload } from './material_payload_identity';
+import type { MaterialComposition } from './material_sources';
 // Core shared types for the simulation. The sim layer has zero DOM/rendering deps.
 
 import type { ChatSenderFlair, StreamerLinks } from './account_flair';
@@ -6,6 +9,10 @@ import type { CraftDef, GatheringProfessionId, ToolEffectId } from './content/pr
 import type { LockSession, LootTier, PickAction, StepResult, VisibleCell } from './lockpick';
 import type { FishingCatchBand } from './professions/fishing_bands';
 import type { HarvestYield } from './professions/harvest_yields';
+import type {
+  PerfectingSwapDenyReason,
+  PerfectingSwapRequest,
+} from './professions/perfecting_swap';
 import type { RespawnWindow } from './respawn_policy';
 import type {
   VarkhulAssemblyDifficulty,
@@ -179,6 +186,11 @@ export const TOOL_RECHARGE_CAST_ID = 'tool_recharge';
 // (silence exemption, no spell queue, damage cancels instead of pushing back,
 // item use blocked while it runs).
 export const FARMING_CAST_ID = 'farming';
+// The corpse-harvest cast (Intentional Gathering, PR3): same activity-marker
+// shape as gather/craft/fishing. HARVEST_CAST_SECONDS (professions/
+// harvest_admission.ts) is the frozen duration; professions/
+// corpse_harvest_session.ts owns the whole session.
+export const CORPSE_HARVEST_CAST_ID = 'corpse_harvest';
 // The non-spell casts: castingAbility sentinels that are activities, not
 // abilities. They share one semantics bundle at the casting choke points:
 // exempt from silence and school lockouts, no blink-through, no spell queue,
@@ -196,8 +208,34 @@ export function isNonSpellCast(castId: string | null): boolean {
     castId === SALVAGE_CAST_ID ||
     castId === SUNDER_CAST_ID ||
     castId === TOOL_RECHARGE_CAST_ID ||
-    castId === FARMING_CAST_ID
+    castId === FARMING_CAST_ID ||
+    castId === CORPSE_HARVEST_CAST_ID
   );
+}
+
+// Corpse-harvest per-corpse state (Intentional Gathering, PR3), transient:
+// never persisted, never on the wire. Lives on the mob Entity so the single
+// live reservation and the kill-credit priority snapshot travel with the
+// corpse itself. `token` is a fresh, unexported-shape marker object minted
+// once per `recordCorpseHarvestDeath` (or lazily on first admitted harvest
+// for a corpse that never went through a recorded death, e.g. a bare test
+// fixture): comparing it by REFERENCE is what lets an in-flight session tell
+// its own corpse apart from a same-entity-id corpse that despawned and came
+// back (respawnMob reuses the entity id), since a fresh token never equals an
+// old one even though every primitive field could coincidentally match.
+export interface CorpseHarvestState {
+  readonly token: object;
+  /** ctx.time the kill-credit priority window closes; 0 (or any time already
+   *  passed) means the corpse is public. */
+  priorityEndsAt: number;
+  /** Stable priority keys snapshotted once at death (see
+   *  professions/harvest_admission.ts `harvestPriorityKeyFor`); never
+   *  recomputed from live party state. Empty means nobody is owed the
+   *  window. */
+  readonly priorityMemberKeys: readonly string[];
+  /** entityId of the actor holding the single live reservation/cast against
+   *  this corpse, or null when nobody has one. */
+  reservedBy: number | null;
 }
 // Seconds an empty instance idles before it resets. Shared by the dungeon instance
 // reaper (instances/dungeons.ts) and the delve reaper (sim.ts). NYTHRAXIS_BOSS_ID
@@ -335,6 +373,7 @@ export type AuraKind =
   | 'pet_spellhaste'
   | 'buff_armor'
   | 'buff_int'
+  | 'buff_str'
   | 'buff_agi'
   | 'buff_dodge'
   | 'buff_speed'
@@ -923,6 +962,9 @@ export type ItemUse =
   // type never carries a durability field (this repo has no durability
   // mechanic anywhere), so a base tool can never become unusable.
   | { type: 'gatherTool'; professionId: GatheringProfessionId; tier: number }
+  // A reusable all-class tool that opens the shared harvest-preference picker
+  // (runtime integration lands separately; this item's use arm only marks it).
+  | { type: 'harvestPreference' }
   // A crafted tool-effect charm (the acquisition craft): the item form of one
   // TOOL_EFFECTS entry. Consumed by the slot_tool_effect command through
   // resolveSlotToolEffect (src/sim/professions/tools.ts), never by useItem:
@@ -1520,6 +1562,11 @@ export interface MountItemDef extends BaseItemDef {
 export interface RecipeItemDef extends BaseItemDef {
   kind: 'recipe';
   teachesRecipeId: string;
+  /** A collection manual teaches these recipes atomically. The first id also
+   *  occupies teachesRecipeId for legacy discovery and preview consumers. */
+  teachesRecipeIds?: readonly string[];
+  /** A formula uses the enchant catalog rather than the crafting catalog. */
+  teachesEnchantId?: string;
   armorType?: never;
   weapon?: never;
   use?: never;
@@ -1591,18 +1638,19 @@ export interface ItemInstancePayload {
    *  cloneItemInstancePayload's spread covers it; the load bound keeps only a
    *  legal in-range integer (item_instance_load.ts, drop-only). */
   perfecting?: number;
+  /** Permanent Perfecting binding, retained when a collection rank swap leaves rank zero. */
+  perfectingBound?: true;
+  /** This collection copy's immutable primary bonus, applied in rolled.stats only while Perfected. */
+  perfectingBonus?: Partial<CoreStats>;
   /** Marks a copy that has completed the Perfecting stage (Masterwrought R1).
    *  Minted by phase 12's rank walk (professions/perfecting.ts
    *  resolvePerfectingAttempt, when the track reaches PERFECTING_RANKS); the
    *  phase 10 Lucent Infusion guard (content/enchants.ts requiresPerfected,
    *  professions/enchanting.ts) reads it. Only ever `true`; absent is an
-   *  ordinary copy, so pre-phase saves load clean. Deliberately kept OFF the
-   *  server's `eqi` peer wire allowlist (the phase 12 decision, executed:
-   *  an INSPECTING viewer cannot see another player's Perfected MARKER; the
-   *  R5 bonus merged into rolled.stats rides `eqi` unlabeled, exactly as a
-   *  masterwork roll does, so the stats are visible and the stamp is not);
-   *  the OWNER sees it via the wholesale `inv` mirror and the whole `einst`
-   *  self mirror. */
+   *  ordinary copy, so pre-phase saves load clean. Included in the public
+   *  inspect projection so Perfected-only enchants can correctly become
+   *  dormant after rank exchange; mid-track ranks and binding/bonus
+   *  provenance remain owner-only via `inv` and `einst`. */
   perfected?: true;
   /** Player-chosen legendary name (Masterwrought phase 13, R3): stamped by the
    *  orange promotion (professions/perfecting.ts, the chain
@@ -1612,7 +1660,7 @@ export interface ItemInstancePayload {
    *  Player-authored TEXT, always a VALUE and never an i18n key: standalone it
    *  renders raw through the entity-name path (esc, untranslated); composed
    *  lines interpolate it into a t() template (the feast/makers-mark
-   *  precedent). Unlike `perfected` above this field is COSMETIC PRESTIGE and
+   *  precedent). This field is COSMETIC PRESTIGE and
    *  deliberately JOINS the server's `eqi` peer wire allowlist and
    *  publicInstanceView (the phase 13 decision: an inspecting viewer seeing
    *  the name is the point of the promotion), beside signer/enchant/rolled.
@@ -1665,6 +1713,12 @@ export interface ItemInstancePayload {
 export function cloneItemInstancePayload(src: ItemInstancePayload): ItemInstancePayload {
   const instance: ItemInstancePayload = { ...src };
   if (src.charges) instance.charges = { ...src.charges };
+  if (
+    src.perfectingBonus &&
+    typeof src.perfectingBonus === 'object' &&
+    !Array.isArray(src.perfectingBonus)
+  )
+    instance.perfectingBonus = { ...src.perfectingBonus };
   if (src.rolled)
     instance.rolled = {
       ...src.rolled,
@@ -1699,6 +1753,10 @@ export function cloneItemInstancePayload(src: ItemInstancePayload): ItemInstance
 export interface InvSlot {
   itemId: string;
   count: number;
+  /** Exact surviving material sources. Absent on legacy homogeneous saves. */
+  materialSources?: MaterialComposition;
+  /** Owner grouping choice, retained by sorting/saving and stripped on transfer. */
+  materialSeparated?: true;
   /** Additive, optional per-instance payload (#1165). Absent for ordinary fungible stacks. */
   instance?: ItemInstancePayload;
   /** Recipe id that minted this stack when crafting provenance matters but the
@@ -1718,8 +1776,19 @@ export interface InvSlot {
 // equipped-instance map, src/sim/professions/enchanting.ts) for why that is
 // unsafe and what this clones instead.
 export function cloneInvSlot<T extends InvSlot>(slot: T): T {
-  if (!slot.instance) return { ...slot };
-  return { ...slot, instance: cloneItemInstancePayload(slot.instance) };
+  const copied = { ...slot };
+  if (slot.instance) {
+    copied.instance =
+      slot.materialSources === undefined
+        ? cloneItemInstancePayload(slot.instance)
+        : cloneMaterialPayload(slot.instance);
+  }
+  // Copy before load validation without interpreting malformed source data.
+  // A rejected descriptor must never be silently replaced with unknown stock.
+  if (slot.materialSources !== undefined) {
+    copied.materialSources = cloneMaterialData(slot.materialSources);
+  }
+  return copied;
 }
 
 /** ONE unit lifted out of an inventory slot, carrying BOTH provenance channels
@@ -1738,6 +1807,8 @@ export function cloneInvSlot<T extends InvSlot>(slot: T): T {
 export interface InventoryUnit {
   instance: ItemInstancePayload | undefined;
   craftedRecipeId: string | undefined;
+  /** Exact material source for this one unit; payload stays canonical. */
+  materialSources?: MaterialComposition;
 }
 
 export interface LootSlot extends InvSlot {
@@ -4413,6 +4484,10 @@ export interface QuestDef {
   xpReward: number;
   copperReward: number;
   itemRewards: Partial<Record<PlayerClass, string>>;
+  // Teaches through acquisition source 'quest' on a successful turn-in.
+  // The recipe's own craft skill floor is checked before any rewards or
+  // consumption, so an early hand-in cannot lose the recipe.
+  recipeReward?: string;
   requiresQuest?: string; // prerequisite quest id (must be turned in)
   // Acceptance requires the purchased riding skill (PlayerMeta.ridingTrained).
   // Enforced in finalizeQuestAccept so every accept path (npc, linked share,
@@ -4425,7 +4500,7 @@ export interface QuestDef {
   minLevel?: number;
   retired?: boolean; // remains finishable if already accepted, but cannot be newly accepted
   // OWNERSHIP collect objectives instead of DELIVERY ones: the collect count
-  // includes copies worn in a bag socket (quests/quest_owned_count.ts) and the
+  // includes worn equipment and bag sockets (quests/quest_owned_count.ts) and the
   // turn-in never consumes them. For a quest that asks the player to acquire
   // and KEEP a thing rather than fetch it, e.g. the tutorial island's Pouch
   // and Purse: it tells the player to buy a Linen Pouch and buckle it on, so
@@ -4805,6 +4880,8 @@ export interface Entity extends ClientMirroredEntityFields {
   rangedHaste: number;
   spellHaste: number;
   setProcs: SetProc[];
+  /** Derived from two worn pieces of one Crucible crafting collection; never saved. */
+  craftedCollectionId?: string;
   procReadyAt: Record<string, number>;
   critChance: number; // 0..1
   critRating: number; // accumulated crit rating from gear + set bonuses
@@ -5296,6 +5373,13 @@ export interface Entity extends ClientMirroredEntityFields {
   // (src/sim/professions/gathering.ts), which the client resolves locally off
   // `tid` (#2513).
   harvestClaimedBy: number | null;
+  // Corpse-harvest CAST state (Intentional Gathering, PR3): the kill-credit
+  // priority window and the single live reservation against a timed harvest
+  // cast, transient (never persisted, never on the wire), owned by
+  // professions/corpse_harvest_session.ts. Absent means no death was ever
+  // recorded for this corpse (a bare fixture, or content lootable outside a
+  // kill): treated as immediately public with no reservation.
+  corpseHarvestState?: CorpseHarvestState;
   despawnTimer?: number;
   // An unconditional lifetime countdown. Unlike despawnTimer, combat, retargeting,
   // and evade transitions never clear this timer.
@@ -6210,6 +6294,13 @@ export type SimEvent = { pid?: number } & (
   // Structured data only (pid supplied by the union intersection); the client
   // builds every visible string, the mailbox precedent.
   | { type: 'bank' }
+  // Asks the client to open the corpse-harvest preference picker (the Field
+  // Kit's 'harvestPreference' use effect, Intentional Gathering PR3). `pid`
+  // is REQUIRED here, unlike `mailbox`/`bank` above: this is minted directly
+  // from an item-use command body rather than routed through the union
+  // intersection's usual pid-supplied-by-caller convention, so a future
+  // caller cannot accidentally emit it world-wide with no owner.
+  | { type: 'harvestPreferenceOpen'; pid: number }
   // Interacting with a town noticeboard. Structured and personal: the client
   // owns localized feedback, and online routing sends it only to the reader.
   // 'listings' carries the board's posted notices verbatim (guild names and
@@ -6889,6 +6980,7 @@ export type SimEvent = { pid?: number } & (
       reason?:
         | 'unknown_item'
         | 'unknown_enchant'
+        | 'recipe_not_learned'
         | 'wrong_slot'
         | 'not_held'
         | 'insufficient_materials'
@@ -7009,6 +7101,20 @@ export type SimEvent = { pid?: number } & (
         | 'unbind_no_space'
         | 'unbind_cannot_afford';
       fee: number;
+    }
+  // Personal, text-free confirmation outcome. Echo both capture tokens so a
+  // stale refusal cannot complete a newer prompt for the same item ids.
+  | {
+      type: 'perfectingSwapResult';
+      ok: boolean;
+      sourceItemId?: string;
+      targetItemId?: string;
+      sourceRank?: number;
+      targetRank?: number;
+      craftId?: string | null;
+      skillReq?: number;
+      reason?: PerfectingSwapDenyReason;
+      request?: PerfectingSwapRequest;
     }
   // Commission order board outcome (issue #1298): mirrors one of
   // professions/commission_order.ts's four result shapes (OpenOrderResult/
@@ -8020,6 +8126,21 @@ export interface SimConfig {
   // before a craft or enchant consumes from the Materials Vault. Offline and
   // headless hosts omit it and receive an inert successful reservation.
   vaultConsumptionAdmission?: VaultConsumptionAdmission;
+  // The material-gatherer identity for the player this constructor MINTS (the
+  // primary offline/headless character), allocated by the HOST outside the sim
+  // and passed in whole (src/sim/material_gatherer.ts). A VALUE, never a
+  // factory: the sim reads it once at construction and never derives one, so
+  // the same explicit inputs always give the same attribution and no clock,
+  // randomness or crypto is reachable from here.
+  //
+  // A production browser or headless host ALWAYS supplies it for a real player.
+  // Omitting it (a unit test, a probe rig, the editor viewport) is the supported
+  // UNKNOWN case: that player gathers unrecorded stock exactly as before this
+  // feature, and nothing is invented from the seed, the entity id or the name.
+  //
+  // Secondary players a host adds later carry their OWN id through
+  // addPlayer({ localGathererIdentity }); this field never covers them.
+  gathererIdentity?: LocalGathererIdentity;
 }
 
 export function emptyMoveInput(): MoveInput {

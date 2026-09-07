@@ -122,8 +122,9 @@ const EXEMPT: ReadonlyArray<{ cmd: string; why: string }> = [
  * dispatch arm consumes (server/CLAUDE.md module-first), so the inline
  * Number.isInteger scan above cannot see them. An entry here is NOT an
  * exemption: the teeth move with the parse. The arm must CALL the named
- * parser, the parser module must carry the integer check on the named cell
- * field, and the parsed ref must reach the sim call in the same arm, so a
+ * dispatcher with its frame and authoritative host. That dispatcher must call
+ * the parser, whose module carries the integer check on the named cell field,
+ * and forward the parsed ref to the sim, so a
  * command in this family keeps the whole addressed contract. (perfect_item
  * was first classified EXEMPT with a prose pointer at its pins; the QA
  * test-decisiveness lane flagged that precedent as eroding the guard for
@@ -136,6 +137,7 @@ const PARSE_CORE_COMMANDS: ReadonlyArray<{
   cellField: string;
   senderFields: string[];
   senderHelper: { symbol: string; module: string };
+  dispatchHelper: { symbol: string; module: string };
 }> = [
   {
     cmd: 'perfect_item',
@@ -147,8 +149,63 @@ const PARSE_CORE_COMMANDS: ReadonlyArray<{
     // name drops the FIELD, never the frame).
     senderFields: ['slot', 'bag', 'item', 'copy', 'name'],
     senderHelper: { symbol: 'perfectingCommand', module: './perfecting_command' },
+    dispatchHelper: {
+      symbol: 'dispatchPerfectItemCommand',
+      module: '../server/perfect_item_command.ts',
+    },
   },
 ];
+
+/**
+ * Item commands whose full per-copy target is validated inside a dedicated
+ * host-agnostic parse-core module (server/material_stack_wire.ts) rather than
+ * an inline Number.isInteger dispatch arm: the Masterwrought stack-grouping
+ * commands (material_combine/material_separate). NOT an exemption:
+ * dispatchInventoryGroupingCommand validates the full target (bag slotIndex,
+ * the 32-hex copy pin, the ordinal+count anchor) before forwarding
+ * intent.target to the sim, and material_separate additionally validates any
+ * selected source composition before forwarding intent.selectedSources.
+ *
+ * `exactSend` is the EXACT (whitespace-normalized) sender window: the same
+ * strict-body precedent PARSE_CORE_COMMANDS uses below, not a substring
+ * `toContain`. A substring check on 'target'/'ordinal'/'count' would still
+ * pass with the validation or the forward deleted, since those words also
+ * appear in comments, types and imports; only an exact bounded body catches that.
+ */
+const STRUCTURED_PARSE_CORE_COMMANDS: ReadonlyArray<{
+  cmd: string;
+  exactSend: string;
+}> = [
+  {
+    cmd: 'material_separate',
+    exactSend: "cmd: 'material_separate', item: itemId, target, sources: selectedSources });",
+  },
+  { cmd: 'material_combine', exactSend: "cmd: 'material_combine', item: itemId, target });" },
+];
+
+// Comment-stripped so a validation or dispatch fragment quoted in prose can
+// neither satisfy a positive pin nor hide a deleted one (the stripComments
+// precedent in tests/pool_wiring_pins.test.ts, tests/architecture.test.ts).
+const stripComments = (src: string): string =>
+  src
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+const MATERIAL_STACK_WIRE_SRC = stripComments(
+  readFileSync(new URL('../server/material_stack_wire.ts', import.meta.url), 'utf8'),
+);
+const SERVER_STRIPPED = stripComments(SERVER);
+
+/** The body of a top-level `export function <name>(` declaration, bounded to
+ *  the next top-level `export function` (or end of file if it is the last one). */
+function exportedFnBody(src: string, name: string): string {
+  const signature = `export function ${name}(`;
+  const at = src.indexOf(signature);
+  expect(at, `${signature} not found`).toBeGreaterThan(-1);
+  const rest = src.slice(at);
+  const next = rest.indexOf('\nexport function ', 1);
+  return next === -1 ? rest : rest.slice(0, next);
+}
 
 /** Sender windows from ClientWorld, one per token occurrence, keyed by the
  *  wire token they send. Every sender routes through the private cmd()
@@ -251,7 +308,7 @@ describe('every item command can name the copy it acts on', () => {
 
   it.each(PARSE_CORE_COMMANDS)(
     '$cmd names its copy through the $parser parse core, with teeth',
-    ({ cmd, parser, module, cellField, senderFields, senderHelper }) => {
+    ({ cmd, parser, module, cellField, senderFields, senderHelper, dispatchHelper }) => {
       // The sender now delegates its complementary worn/bagged shapes to a
       // pure helper. Follow the actual import, and require EVERY occurrence
       // to spread its whole result with the live reads, ref and name. The
@@ -277,15 +334,109 @@ describe('every item command can name the copy it acts on', () => {
       const rest = SERVER.slice(at + `case '${cmd}':`.length);
       const nextCase = rest.indexOf("case '");
       const arm = nextCase === -1 ? rest : rest.slice(0, nextCase);
-      expect(arm, `${cmd} must parse through ${parser} in its OWN arm`).toContain(`${parser}(`);
+      expect(arm, `${cmd} must delegate its OWN frame and authoritative host`).toMatch(
+        new RegExp(`${dispatchHelper.symbol}\\(msg,\\s*\\{\\s*sim,\\s*pid,`),
+      );
+      const dispatchImport = dispatchHelper.module.replace('../server/', './').replace(/\.ts$/, '');
+      expect(SERVER).toContain(`import { ${dispatchHelper.symbol} } from '${dispatchImport}';`);
+      const dispatchSource = readFileSync(new URL(dispatchHelper.module, import.meta.url), 'utf8');
+      expect(dispatchSource).toContain(`export function ${dispatchHelper.symbol}(`);
+      expect(dispatchSource).toContain(`const ref = ${parser}(msg);`);
+      expect(dispatchSource).toContain('if (!ref) return;');
       const parserSource = readFileSync(new URL(module, import.meta.url), 'utf8');
       expect(parserSource, `${parser} must carry the integer check on msg.${cellField}`).toContain(
         `Number.isInteger(msg.${cellField})`,
       );
-      const simCall = arm.slice(arm.indexOf('sim.'));
-      expect(simCall, `${cmd} must forward the parsed ref to the sim call`).toMatch(/\bref\b/);
+      expect(dispatchSource, `${cmd} must forward the parsed ref to the sim call`).toContain(
+        'host.sim.perfectItemAs(host.pid, ref, named.name);',
+      );
     },
   );
+
+  it.each(STRUCTURED_PARSE_CORE_COMMANDS)(
+    '$cmd sends its EXACT full per-copy target shape on the wire',
+    ({ cmd, exactSend }) => {
+      const windows = senderWindowsFor(cmd);
+      expect(windows.length, `no ClientWorld sender found for ${cmd}`).toBeGreaterThan(0);
+      // Exact, not a substring: a deleted `target`/`sources` field, or an
+      // added override after the object literal, changes this string.
+      for (const [i, body] of windows.entries()) {
+        expect(
+          body.replace(/\s+/g, ' ').trim(),
+          `${cmd} occurrence ${i + 1} must send its exact target shape`,
+        ).toBe(exactSend);
+      }
+    },
+  );
+
+  it('server delegates both material stack commands to dispatchInventoryGroupingCommand, bounded to the next case', () => {
+    // A shared fall-through group (inv_move/inv_sort join it too), unlike the
+    // dispatchIn rows above which each own a single case label: material_stack_wire.ts
+    // is an if/else if dispatcher, not a switch of its own case labels. Bounded
+    // to the next `case '` (the same technique the ADDRESSED_COMMANDS arm test
+    // uses above), never a fixed char count that could drift past a deleted call.
+    const at = SERVER_STRIPPED.indexOf("case 'material_separate':");
+    expect(at, "no game.ts label for 'material_separate'").toBeGreaterThan(-1);
+    const afterLabel1 = SERVER_STRIPPED.slice(at + "case 'material_separate':".length);
+    expect(
+      afterLabel1.trimStart().startsWith("case 'material_combine':"),
+      'material_separate must fall through directly to material_combine, with no statement in between',
+    ).toBe(true);
+    const label2 = "case 'material_combine':";
+    const afterLabel2 = afterLabel1.slice(afterLabel1.indexOf(label2) + label2.length);
+    const nextCase = afterLabel2.indexOf("case '");
+    const group = nextCase === -1 ? afterLabel2 : afterLabel2.slice(0, nextCase);
+    expect(
+      group,
+      'the material stack group must delegate to dispatchInventoryGroupingCommand',
+    ).toContain('dispatchInventoryGroupingCommand(sim, pid, msg)');
+  });
+
+  it('parseMaterialGroupingIntent validates the full per-copy target BEFORE constructing it', () => {
+    const body = exportedFnBody(MATERIAL_STACK_WIRE_SRC, 'parseMaterialGroupingIntent');
+    const constructAt = body.indexOf('const target = {');
+    expect(constructAt, 'target construction site not found').toBeGreaterThan(-1);
+    // Every guard must sit in the VALIDATION prefix, before the target is
+    // built: a check moved after construction (or deleted) fails this rather
+    // than a loose file-wide toContain that a comment or a type could satisfy.
+    const validation = body.slice(0, constructAt);
+    for (const needle of [
+      "typeof slotIndex !== 'number'",
+      '!Number.isSafeInteger(slotIndex)',
+      'slotIndex < 0',
+      "typeof pin !== 'string'",
+      '/^[0-9a-f]{32}$/.test(pin)',
+      '!Number.isSafeInteger(ordinal)',
+      '!Number.isSafeInteger(count)',
+      'ordinal < 0',
+      'count <= ordinal',
+      'return null;',
+    ]) {
+      expect(
+        validation,
+        `parseMaterialGroupingIntent must validate "${needle}" before constructing target`,
+      ).toContain(needle);
+    }
+  });
+
+  it('dispatchInventoryGroupingCommand parses, refuses null, and forwards the EXACT intent shape to the sim', () => {
+    const body = exportedFnBody(MATERIAL_STACK_WIRE_SRC, 'dispatchInventoryGroupingCommand');
+    const parseAt = body.indexOf('const intent = parseMaterialGroupingIntent(msg);');
+    expect(parseAt, 'must call parseMaterialGroupingIntent(msg)').toBeGreaterThan(-1);
+    // Exact, whitespace-normalized, from the parse call to the end of the
+    // function: pins the null-refusal happening BEFORE either sim call, and
+    // pins both sim calls' exact argument lists (intent.target on both,
+    // intent.selectedSources only on separate) in one assertion a deleted or
+    // reordered line cannot survive.
+    const tail = body.slice(parseAt).replace(/\s+/g, ' ').trim();
+    expect(tail).toBe(
+      'const intent = parseMaterialGroupingIntent(msg); if (!intent) return; ' +
+        "if (msg.cmd === 'material_separate') " +
+        'sim.separateMaterialStack(intent.itemId, intent.target, intent.selectedSources, pid); ' +
+        "else if (msg.cmd === 'material_combine') " +
+        'sim.combineMaterialStacks(intent.itemId, intent.target, pid); } }',
+    );
+  });
 
   it('the actual Perfecting sender helper emits both copy-addressed shapes and preserves a capture', () => {
     const itemId = 'wyrmfall_pendant';
@@ -325,14 +476,29 @@ describe('every item command can name the copy it acts on', () => {
     }
     const addressed = new Set(ADDRESSED_COMMANDS.map((r) => r.cmd));
     const parseCore = new Set(PARSE_CORE_COMMANDS.map((r) => r.cmd));
+    const structuredParseCore = new Set(STRUCTURED_PARSE_CORE_COMMANDS.map((r) => r.cmd));
     for (const row of EXEMPT) {
       expect(addressed.has(row.cmd), `${row.cmd} cannot be both addressed and exempt`).toBe(false);
       expect(parseCore.has(row.cmd), `${row.cmd} cannot be both parse-core and exempt`).toBe(false);
+      expect(
+        structuredParseCore.has(row.cmd),
+        `${row.cmd} cannot be both structured-parse-core and exempt`,
+      ).toBe(false);
     }
     for (const row of PARSE_CORE_COMMANDS) {
       expect(addressed.has(row.cmd), `${row.cmd} cannot be both addressed and parse-core`).toBe(
         false,
       );
+    }
+    for (const row of STRUCTURED_PARSE_CORE_COMMANDS) {
+      expect(
+        addressed.has(row.cmd),
+        `${row.cmd} cannot be both addressed and structured-parse-core`,
+      ).toBe(false);
+      expect(
+        parseCore.has(row.cmd),
+        `${row.cmd} cannot be both parse-core and structured-parse-core`,
+      ).toBe(false);
     }
   });
 
@@ -353,6 +519,7 @@ describe('every item command can name the copy it acts on', () => {
     const classified = new Set([
       ...ADDRESSED_COMMANDS.map((r) => r.cmd),
       ...PARSE_CORE_COMMANDS.map((r) => r.cmd),
+      ...STRUCTURED_PARSE_CORE_COMMANDS.map((r) => r.cmd),
       ...EXEMPT.map((r) => r.cmd),
     ]);
     const unclassified = [...sending].filter((c) => !classified.has(c)).sort();

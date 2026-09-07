@@ -1692,9 +1692,9 @@ export const RELIQUARY_PAGES: readonly ReliquaryPageDef[] = freezePageTable([
   // earn a prestige surface it should be an authored per-lineage page shape
   // (the honor-stock precedent), a curator decision recorded for the
   // maintainer. Emberward is catalogued on Varkhul's heroic page because its
-  // 3 percent roll is heroic-only. Forgebreaker remains absent while its
-  // crafting route is pending; an unearnable slot must never sit on a
-  // conquerors page because it would dead-end col_reliquary_conquerors.
+  // 3 percent roll is heroic-only. Forgebreaker's one-time quest shaping
+  // lives on its own personal professions page, never a conquerors page:
+  // its class restriction must not dead-end col_reliquary_conquerors.
   {
     id: 'conquerors_ignivar',
     shelf: 'conquerors',
@@ -1739,9 +1739,8 @@ export const RELIQUARY_PAGES: readonly ReliquaryPageDef[] = freezePageTable([
     desc: 'Epic spoils claimed from Varkhul, Forgefather of the Last Flame.',
     clearSource: { kind: 'dungeon', dungeonId: 'ignivar_inner_crucible', difficulty: 'normal' },
     // The wing's one boss drops every normal relic on the page. Emberward is
-    // heroic-only and lives on the heroic page below. Forgebreaker is not
-    // paged while its crafting route is pending; a relic row requires a live
-    // source, so it pages with its recipe chain.
+    // heroic-only and lives on the heroic page below. Forgebreaker lives on
+    // its personal professions page because the quest craft is not boss loot.
     sourceDefault: fromBoss('varkhul_forgefather_of_the_last_flame'),
     relics: items(
       'orb_of_the_last_spring',
@@ -1770,6 +1769,62 @@ export const RELIQUARY_PAGES: readonly ReliquaryPageDef[] = freezePageTable([
     clearSource: { kind: 'dungeon', dungeonId: 'ignivar_inner_crucible', difficulty: 'heroic' },
     sourceDefault: fromBoss('varkhul_forgefather_of_the_last_flame'),
     relics: items(...RELIQUARY_HEROIC_GEAR.varkhul_forgefather_of_the_last_flame),
+  },
+  {
+    id: 'professions_crucible',
+    shelf: 'professions',
+    name: 'Crucible Craftsmanship',
+    desc: 'Eleven raid-crafted collections, each offering a chest, waist, and feet piece. Manuals and formulas are knowledge, not relics.',
+    clearSource: { kind: 'none' },
+    relics: items(
+      ['crucible_str_mail_chest', fromProfession('armorcrafting')],
+      ['crucible_str_mail_waist', fromProfession('armorcrafting')],
+      ['crucible_str_mail_feet', fromProfession('armorcrafting')],
+      ['crucible_tank_mail_chest', fromProfession('armorcrafting')],
+      ['crucible_tank_mail_waist', fromProfession('armorcrafting')],
+      ['crucible_tank_mail_feet', fromProfession('armorcrafting')],
+      ['crucible_caster_mail_chest', fromProfession('armorcrafting')],
+      ['crucible_caster_mail_waist', fromProfession('armorcrafting')],
+      ['crucible_caster_mail_feet', fromProfession('armorcrafting')],
+      ['crucible_healer_mail_chest', fromProfession('armorcrafting')],
+      ['crucible_healer_mail_waist', fromProfession('armorcrafting')],
+      ['crucible_healer_mail_feet', fromProfession('armorcrafting')],
+      ['crucible_agi_leather_chest', fromProfession('leatherworking')],
+      ['crucible_agi_leather_waist', fromProfession('leatherworking')],
+      ['crucible_agi_leather_feet', fromProfession('leatherworking')],
+      ['crucible_str_leather_chest', fromProfession('leatherworking')],
+      ['crucible_str_leather_waist', fromProfession('leatherworking')],
+      ['crucible_str_leather_feet', fromProfession('leatherworking')],
+      ['crucible_tank_leather_chest', fromProfession('leatherworking')],
+      ['crucible_tank_leather_waist', fromProfession('leatherworking')],
+      ['crucible_tank_leather_feet', fromProfession('leatherworking')],
+      ['crucible_caster_leather_chest', fromProfession('leatherworking')],
+      ['crucible_caster_leather_waist', fromProfession('leatherworking')],
+      ['crucible_caster_leather_feet', fromProfession('leatherworking')],
+      ['crucible_healer_leather_chest', fromProfession('leatherworking')],
+      ['crucible_healer_leather_waist', fromProfession('leatherworking')],
+      ['crucible_healer_leather_feet', fromProfession('leatherworking')],
+      ['crucible_caster_cloth_chest', fromProfession('tailoring')],
+      ['crucible_caster_cloth_waist', fromProfession('tailoring')],
+      ['crucible_caster_cloth_feet', fromProfession('tailoring')],
+      ['crucible_healer_cloth_chest', fromProfession('tailoring')],
+      ['crucible_healer_cloth_waist', fromProfession('tailoring')],
+      ['crucible_healer_cloth_feet', fromProfession('tailoring')],
+    ),
+  },
+  // The one-time quest shaping is class-restricted and soulbound. Its own
+  // page celebrates the smith without making an impossible requirement for
+  // the five classes that cannot take the chain. Appended at the true tail
+  // to preserve page order; the shelf still places it under professions.
+  {
+    id: 'professions_forgebreaker',
+    shelf: 'professions',
+    name: 'Forgebreaker',
+    desc: 'The voice of the Last Spring, freed from the forge and carried in a hammer of your own making.',
+    clearSource: { kind: 'none' },
+    excludeFromCompletion: 'personal',
+    sourceDefault: fromProfession('weaponcrafting'),
+    relics: items('varkhul_forgebreaker'),
   },
 ]);
 

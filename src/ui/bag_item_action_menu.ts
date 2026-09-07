@@ -33,6 +33,11 @@
 
 import { ENCHANTS } from '../sim/content/enchants';
 import { ITEMS } from '../sim/data';
+import type { MaterialComposition } from '../sim/material_sources';
+import {
+  captureMaterialStackSelection,
+  type MaterialStackSelection,
+} from '../sim/material_stack_selection';
 import type { EquipSlot, InvSlot, ItemDef, ItemInstancePayload, ItemSlot } from '../sim/types';
 import type { IWorld } from '../world_api';
 import {
@@ -59,7 +64,9 @@ import {
   wornEnchantTargets,
 } from './hud/professions/enchant_apply_view';
 import { formatNumber, t } from './i18n';
+import type { TranslationKey } from './i18n.catalog';
 import { itemNumber, itemStatName } from './item_instance_tooltip';
+import type { MaterialSourcesDialogOptions } from './material_sources_dialog';
 import { wornItemCellParts } from './worn_item_cell_view';
 
 /** Modifier class the picker states set on the shared #ctx-menu element: the
@@ -125,6 +132,9 @@ export interface BagMenuTarget {
   /** The clicked slot object, for the re-resolve. Absent only for a caller that
    *  cannot name one, which then keeps the raw-index behavior. */
   slot?: InvSlot;
+  /** The bag cell that opened the menu, used for modal focus return and to
+   * identify the owning window for the shared prompt inert gate. */
+  opener?: HTMLElement;
   /** Refuse this action with the honest not-held toast. This menu has no error
    *  surface of its own, so the bags window (which owns one) supplies it. */
   refuseNotHeld(): void;
@@ -147,6 +157,9 @@ export interface BagItemActionMenuDeps {
   /** Repaint the bags grid after a command (offline immediacy; online the loot
    *  mirror repaints again when it lands). */
   afterAction(): void;
+  /** Open the shared source details/picker dialog. Optional until the HUD supplies
+   *  the one root/focus-manager bridge; source mutation rows remain live without it. */
+  openMaterialSources?: (options: MaterialSourcesDialogOptions) => void;
 }
 
 export class BagItemActionMenu {
@@ -173,10 +186,19 @@ export class BagItemActionMenu {
     instance?: ItemInstancePayload,
     vendorSellCount?: number,
     runSellAll?: () => void,
+    materialSources?: MaterialComposition,
   ): void {
+    const materialSelection =
+      vendorSellCount === undefined && target.index >= 0
+        ? captureMaterialStackSelection(this.deps.world().inventory, itemId, target.index)
+        : null;
     const actions =
       vendorSellCount === undefined
-        ? bagItemContextActions(def, itemId, instance)
+        ? bagItemContextActions(def, itemId, instance, materialSources, true).filter(
+            (action) =>
+              this.deps.openMaterialSources !== undefined ||
+              (action.id !== 'viewSources' && action.id !== 'takeChosenQuantity'),
+          )
         : vendorSellContextActions(vendorSellCount);
     const rows = actions.map((action) => ({
       act: action.id,
@@ -196,11 +218,62 @@ export class BagItemActionMenu {
       else if (id === 'salvage') this.confirmDestroy('salvage', itemId, target.index);
       else if (id === 'sunder') this.confirmDestroy('sunder', itemId, target.index);
       else if (id === 'applyEnchant') this.openEnchantPicker(itemId, x, y);
+      else if (id === 'viewSources' && materialSources !== undefined) {
+        this.openMaterialSources(def, materialSources, target.opener);
+      } else if (id === 'separateByGatherer') {
+        if (materialSelection === null) target.refuseNotHeld();
+        else {
+          this.deps.world().separateMaterialStack(itemId, materialSelection);
+          this.deps.afterAction();
+        }
+      } else if (id === 'takeChosenQuantity' && materialSources !== undefined) {
+        if (materialSelection === null) target.refuseNotHeld();
+        else
+          this.openMaterialPicker(def, itemId, materialSources, materialSelection, target.opener);
+      } else if (id === 'combine') {
+        if (materialSelection === null) target.refuseNotHeld();
+        else {
+          this.deps.world().combineMaterialStacks(itemId, materialSelection);
+          this.deps.afterAction();
+        }
+      }
       // Lock/unlock (issue 3042): a plain in-place toggle, never destructive,
       // so it skips the confirm-dialog family every disenchant/salvage row
       // routes through and applies immediately like the classic default row.
       else if (id === 'lock') this.setLocked(itemId, target, true);
       else if (id === 'unlock') this.setLocked(itemId, target, false);
+    });
+  }
+
+  private openMaterialSources(
+    def: ItemDef,
+    sources: MaterialComposition,
+    opener?: HTMLElement,
+  ): void {
+    const open = this.deps.openMaterialSources;
+    if (!open) return;
+    this.deps.ctxMenu.element().style.display = 'none';
+    open({ itemName: itemDisplayName(def), sources, opener });
+  }
+
+  private openMaterialPicker(
+    def: ItemDef,
+    itemId: string,
+    sources: MaterialComposition,
+    selection: MaterialStackSelection,
+    opener?: HTMLElement,
+  ): void {
+    const open = this.deps.openMaterialSources;
+    if (!open) return;
+    this.deps.ctxMenu.element().style.display = 'none';
+    open({
+      itemName: itemDisplayName(def),
+      sources,
+      opener,
+      onConfirm: (selected) => {
+        this.deps.world().separateMaterialStack(itemId, selection, selected.sources);
+        this.deps.afterAction();
+      },
     });
   }
 
@@ -328,6 +401,7 @@ export class BagItemActionMenu {
     return {
       synced: world.craftingIdentity.synced,
       enchantingSkill: world.craftingIdentity.craftSkills.enchanting ?? 0,
+      knownRecipes: world.craftingIdentity.knownRecipes,
       // The worn set, for the Perfected candidate scan alone: a Perfected copy
       // on the body must keep the capstone row live, since the target step
       // lists worn copies beside bagged ones. The same two reads
@@ -426,14 +500,16 @@ export class BagItemActionMenu {
         // The effect line reuses the item tooltip's own stat-line key and stat
         // names, so "+4 Stamina" reads identically here and on the enchanted
         // copy's tooltip; no new i18n for the effect itself.
-        const effectsText = pick.effects
-          .map((effect) =>
-            t('itemUi.tooltip.stat', {
-              value: itemNumber(effect.value),
-              stat: itemStatName(effect.stat),
-            }),
-          )
-          .join(', ');
+        const effectsText = ENCHANTS[pick.enchantId]?.weaponProc
+          ? t(`hudChrome.enchantDescription.${pick.enchantId}` as TranslationKey)
+          : pick.effects
+              .map((effect) =>
+                t('itemUi.tooltip.stat', {
+                  value: itemNumber(effect.value),
+                  stat: itemStatName(effect.stat),
+                }),
+              )
+              .join(', ');
         const effectHtml = effectsText
           ? `<span class="ctx-item-effect">${esc(effectsText)}</span>`
           : '';
@@ -446,15 +522,18 @@ export class BagItemActionMenu {
         // size bump: on a phone this sub-line is the ONLY explanation of why a
         // visible row cannot be tapped, so it is not reference fine print.
         const skillHtml = pick.skillMet ? '' : this.gateMeta(this.skillGateText(pick.skillReq));
+        const knownHtml = pick.known
+          ? ''
+          : this.gateMeta(t('hudChrome.enchanting.recipeNotLearned'));
         const perfectedHtml = pick.perfectedMet
           ? ''
           : this.gateMeta(t('hudChrome.enchanting.notPerfected'));
-        const html = `${esc(t(enchantNameKey(pick.enchantId)))}${effectHtml}<span class="ctx-item-meta">${esc(this.deps.slotName(pick.itemSlot as ItemSlot))}: ${reagentsHtml}</span>${skillHtml}${perfectedHtml}`;
+        const html = `${esc(t(enchantNameKey(pick.enchantId)))}${effectHtml}<span class="ctx-item-meta">${esc(this.deps.slotName(pick.itemSlot as ItemSlot))}: ${reagentsHtml}</span>${skillHtml}${knownHtml}${perfectedHtml}`;
         // One routing rule over every dimension: a row is selectable only when
         // it clears ALL of them, so hover and click agree and no gate can be
         // answered later, on the target list, with a sentence about the bags.
         rows.push(
-          pick.affordable && pick.skillMet && pick.perfectedMet
+          pick.affordable && pick.skillMet && pick.known && pick.perfectedMet
             ? { act: `enchant:${pick.enchantId}`, html }
             : { html, disabled: true },
         );

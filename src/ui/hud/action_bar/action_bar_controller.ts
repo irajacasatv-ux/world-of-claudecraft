@@ -353,7 +353,8 @@ export class ActionBarController {
       item?.kind === 'potion' ||
       item?.kind === 'mount' ||
       item?.use?.type === 'fishing' ||
-      item?.use?.type === 'gatherTool'
+      item?.use?.type === 'gatherTool' ||
+      item?.use?.type === 'harvestPreference'
     );
   }
 

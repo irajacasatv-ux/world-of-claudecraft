@@ -441,7 +441,14 @@ const MONOLITHS: MonolithRow[] = [
     // src/ui/rest_indicator_painter.ts, which paid for writing the accessible
     // name beside the tooltip AND for the two-line arena-signature note.
     // Exact count, zero slack.
-    ceiling: 18703,
+    // LOWERED 18695 -> 18679 at the Intentional Gathering packet: the
+    // commission-order result line's param/tone resolution moved to
+    // src/ui/hud/professions/commission_order_feedback.ts. Exact count, zero
+    // slack.
+    // LOWERED 18679 -> 18677 at the professions-merge-crucible integration.
+    // Measured with wc -l < src/ui/hud.ts after biome. Exact count, zero slack.
+    // Dependency integration composes both extractions; measured after merge.
+    ceiling: 18664,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -990,7 +997,18 @@ const MONOLITHS: MonolithRow[] = [
     // MOVE_SLIDE_FAN constant moved whole to src/sim/mob/move_toward.ts (a thin
     // delegate stays), paying for the housing facet delegates and the
     // freeholds live map. Measured with wc -l after biome. Exact count.
-    ceiling: 11983,
+    // Perfecting read/command adapters moved to professions/perfecting_world_view.ts.
+    // LOWERED 11987 -> 11985 at the Intentional Gathering packet:
+    // serializeCharacter's sparse save fragments now live beside their
+    // owning serializers instead of inline, paying for the new
+    // gathering-goal IWorld delegates and PlayerMeta fields. Exact count,
+    // zero slack.
+    // LOWERED 11985 -> 11983 at the professions-merge-crucible integration:
+    // both the Perfecting adapter move and the Intentional Gathering
+    // save-fragment move land together, and their savings compose. Measured
+    // with wc -l < src/sim/sim.ts after biome. Exact count, zero slack.
+    // Dependency integration composes both extractions; measured after merge.
+    ceiling: 11960,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -1200,7 +1218,9 @@ const MONOLITHS: MonolithRow[] = [
     // and updateSeoMetadata moved whole to src/game/seo_metadata.ts, paying for
     // the offline freeholdsEnabled boot line. Measured with wc -l after biome.
     // Exact count.
-    ceiling: 11384,
+    // Offline gathering identity bootstrap moved to offline_world_config.ts.
+    // Dependency integration composes both extractions; measured after merge.
+    ceiling: 11371,
     seam: 'a src/game/ or src/ui/ sibling module; main.ts is a firewall, not a home',
   },
   {
@@ -1392,7 +1412,14 @@ const MONOLITHS: MonolithRow[] = [
     // labels and the pre-switch FREEHOLDS_ENABLED refusal; the review round's
     // jailed-command row for freehold_enter added three lines (10301). Measured
     // after formatting; exact count.
-    ceiling: 10301,
+    // Perfecting command parsing and naming dispatch now live in
+    // server/perfect_item_command.ts; rank exchange remains a thin adapter.
+    // LOWERED 10330 -> 10327 at the professions-merge-crucible integration:
+    // both this extraction and the Intentional Gathering dispatch trimming
+    // (whose own arm read 10333) land together and their savings compose.
+    // Measured with wc -l < server/game.ts after biome. Exact count, zero slack.
+    // Dependency integration composes both extractions; measured after merge.
+    ceiling: 10292,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1535,7 +1562,13 @@ const MONOLITHS: MonolithRow[] = [
     // Lowered 5861 -> 5708 on the freeholds branch: blankEntity moved whole to
     // src/net/blank_entity.ts, paying for the housing null mirrors, senders and
     // the freehold self-wire call. Measured after formatting; exact count.
-    ceiling: 5708,
+    // Source-aware storage payload construction moved to material_storage_command.ts.
+    // LOWERED 5856 -> 5854 at the Intentional Gathering packet: the
+    // professions snapshot self-mirror decode moved to
+    // src/net/professions_self_mirror.ts (applyProfessionsSelfMirror). Exact
+    // count, zero slack.
+    // Dependency integration composes both extractions; measured after merge.
+    ceiling: 5701,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {
@@ -1955,7 +1988,9 @@ const MONOLITHS: MonolithRow[] = [
     // the copy and the active language, so it went to
     // src/ui/bank_item_name_core.ts and the window's private method went with
     // it. Measured after the fix round, the phase 17 rule.
-    ceiling: 1937,
+    // LOWERED 1937 -> 1859: personal bank item painting now lives in
+    // personal_bank_item_cell.ts; this coordinator only composes the cell.
+    ceiling: 1859,
     seam: 'a pure view-core plus a thin painter sibling (src/ui/CLAUDE.md)',
   },
   {
@@ -1971,15 +2006,20 @@ const MONOLITHS: MonolithRow[] = [
     // another method cluster here.
     file: 'src/ui/hud/professions/professions_window.ts',
     // Harvest entry chrome and bindings now live in a sibling controller.
-    ceiling: 838,
+    ceiling: 836,
     seam: 'a pure view-core plus a thin painter sibling (src/ui/hud/CLAUDE.md)',
   },
   {
     // ADDED with the row above, same phase, same reasoning, same seam. The
     // crafting window composes the family view-cores; growth belongs in a
     // sibling module behind src/ui/hud/professions/index.ts.
+    // LOWERED 774 -> 766 at the Intentional Gathering packet: the gathering-
+    // goal Track control moved to
+    // src/ui/hud/professions/gathering_goal_track_row.ts, and the
+    // apex-channel-to-translation-key table moved to apex_recipe_view.ts.
+    // Exact count, zero slack.
     file: 'src/ui/hud/professions/crafting_window.ts',
-    ceiling: 774,
+    ceiling: 766,
     seam: 'a pure view-core plus a thin painter sibling (src/ui/hud/CLAUDE.md)',
   },
 ];

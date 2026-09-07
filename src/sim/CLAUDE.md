@@ -76,7 +76,7 @@ plausibly covers means the table needs a new row in the same change.
 | `combat/casting_lifecycle.ts` | `updateCasting`, `castAbility(BySlot)`, `cancelCast`, `pushbackCast`, GCD/cost/cooldown |
 | `combat/effect_dispatch.ts` | `runEffects` (the per-effect switch) |
 | `combat/auto_attack.ts` | start/stop/update auto-attack, `meleeSwing`, `rangedSwing` |
-| `combat/equip_procs.ts` + `combat/set_procs.ts` | legendary weapon on-action procs; item-set bonus procs |
+| `combat/equip_procs.ts` + `combat/set_procs.ts` + `combat/crafted_collection_effects.ts` | legendary weapon and per-hand enchant procs; item-set bonus procs; shared crafted-collection damage windows, tank wards, and overheal protection |
 | `combat/empower_next.ts` + `combat/thorns_charge.ts` | next-cast empower/free aura consumption; charge-limited thorns |
 | the per-class combat suites | EVERY class has one: flat `combat/<class>_*.ts` prefixed siblings (the `paladin_*` family, `warrior_stances.ts`, `rogue_engines.ts`, `druid_engines.ts`, the `shaman_*` and `hunter_*` sets, the mage `fire_mage.ts`/`frost_mage.ts`/`chronomancy.ts` modules, the warlock `necromancy*` set beside the shared class-talent state in `warlock_talents.ts`) or a per-class subdirectory once the family earns one (`combat/priest/` is the precedent: the class's suite behind one directory; `ls` it for the module set). A new class mechanic lands as a new sibling in its class's suite, never inside a shared dispatcher |
 | `projectile_travel.ts` | in-flight homing projectiles: `pendingProjectiles` + the prologue `advancePendingProjectiles` phase |
@@ -206,6 +206,27 @@ those rather than a roster here. The ones whose CONTRACT you cannot infer from t
   `freePoolSlots`/`poolOccupancyOf`/`totalPoolCapacity`/`generalOnlyPools`. The material
   predicate arrives INJECTED (bind `isMaterialItemId` the way `bags.ts` does); phase 06
   reuses the module for the bank.
+- `vault_material_sources.ts` + `vault_slot_ops.ts`: the Materials Vault's SOURCE-AWARE
+  half, split rules-from-bodies so `materials_vault.ts` stays the state, the capacity math
+  and the four command shells. The first is a pure leaf with everything injected (the
+  compact count record, the identity collection, the material set), shared by
+  `materials_vault.ts` AND `vault_craft_gate.ts` so neither invents a second definition:
+  the deposit ROUTING rule (`needsSourceRow`, re-exported as the vault's
+  `isVaultSpecialSlot`; a count map has nowhere to put a gatherer, so a stack carrying
+  recorded provenance joins the identity collection), the migrate-on-touch fold predicate
+  (`absorbsCompactStock`), the automatic-draw ELIGIBILITY rule (`autoDrawableRow` /
+  `autoDrawableUnits`: unchanged from before per-unit provenance, premium buckets and rows
+  keeping per-copy identity excluded, a mixed row exposing its eligible count rather than
+  refusing whole), and the one per-id drawable total BOTH the read
+  (`drawableVaultProjection`) and the spend (`planVaultDraw`, which refuses anything past
+  it) compute the same way, so they agree by construction. The second holds the three
+  per-slot BODIES as inert decisions `materials_vault.ts` applies (`planVaultDeposit`,
+  `planVaultRowWithdraw` with the bag fit injected, `loadVaultSpecialRow`), which is what
+  keeps every store mutation in one file for the cvault wire's rev-bump enumeration.
+  NEITHER owns a load policy: `material_slot_load.ts` is the shared
+  pre-validate/coerce/normalize triple every container runs, and an unreadable row refuses
+  the whole character load. The vault has NO separation feature: `materialSeparated` is a
+  bank and bags owner flag, stripped on deposit and never persisted here. Both draw NO rng.
 - `material_ids.ts` + `material_derivation.ts`: the ONE material-set derive both sides
   share. `material_derivation.ts` is runtime-import-free by contract (every content
   table arrives as a parameter); `material_ids.ts` derives ONE frozen registry EAGERLY

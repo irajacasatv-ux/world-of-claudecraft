@@ -57,7 +57,6 @@ import {
 import { cleanPetName } from '../src/sim/pet/pet_commands';
 import { livePlaytimeSeconds } from '../src/sim/playtime';
 import { effectiveFishingBand } from '../src/sim/professions/fishing';
-import { RESPEC_TIER_CONFIG, type RespecPaymentTier } from '../src/sim/professions/focus';
 import { cancelProfessionSessionOnDisplacement } from '../src/sim/professions/session_teardown';
 import { restoreToolEffectSlotAction } from '../src/sim/professions/tool_effect_actions';
 import type { ToolEffectConfirmMode } from '../src/sim/professions/tools';
@@ -179,6 +178,11 @@ import {
   refreshCheaterMark,
 } from './cheater_mark_runtime';
 import {
+  cancelCorpseHarvestCastOnDisconnect,
+  harvestCorpseCommandOutcome,
+} from './corpse_harvest_commands';
+import { dispatchCorpseHarvestInspection } from './corpse_harvest_inspection';
+import {
   type CosmeticOpGuardState,
   consumeCosmeticOpToken,
   createCosmeticOpGuard,
@@ -247,6 +251,9 @@ import { buildEventPidIndex, forEachSelectedEventIndex } from './event_pid_index
 import { appendFarmPlotsWire, dispatchFarmingCommand } from './farming_commands';
 import { fishingBandLabel, isKoi, isRodFeeRecipe } from './fishing_telemetry';
 import { dispatchFreeholdCommand, refusedFreeholdCommand } from './freehold_wire';
+import { dispatchGatheringGoalCommand } from './gathering_goal_commands';
+import { appendGatheringGoalSelfWire } from './gathering_goal_wire';
+import { appendGatheringSelfWire } from './gathering_self_wire';
 import {
   classifyOnlineGeneralChat,
   GENERAL_CHAT_QUOTA_MAX_IN_FLIGHT,
@@ -307,6 +314,8 @@ import { type LiveSharedIp, sharedIpsFromLiveSessions } from './live_shared_ips'
 import { mergeCustodyParcelOverlay } from './mail_custody_overlay';
 import { rearmMailPartitionsOnFailure, writeDirtyMailPartitions } from './mail_partition_rearm';
 import { buyWithSoldVolume } from './market_sold_volume';
+import { readMaterialSourceTransferWire } from './material_source_transfer_wire';
+import { dispatchInventoryGroupingCommand } from './material_stack_wire';
 import { EMPTY_ACCOUNT_COSMETICS, reconcileWornMechChromaForJoin } from './mech_chroma_reconcile';
 import {
   applyMobScanTick,
@@ -362,7 +371,8 @@ import {
 import { PartyFrameProjectionCache } from './party_frame_projection';
 import { applyBoostKitToPlayer, pbeBoostEnabled } from './pbe_boost';
 import type { PerfCaptureResult, PerfCaptureStatus } from './perf_capture_types';
-import { parsePerfectItemRef, resolvePerfectItemName } from './perfect_item_ref';
+import { dispatchPerfectItemCommand } from './perfect_item_command';
+import { parsePerfectingSwapCommand } from './perfecting_swap_command';
 import { runPeriodicSaveFlush } from './periodic_save_flush';
 
 export type { PerfCaptureResult, PerfCaptureStatus } from './perf_capture_types';
@@ -412,6 +422,7 @@ import {
 } from './tick_perf_log';
 import { createTickSaveObserver, TickProfiler, type TickProfilerSample } from './tick_profiler';
 import { hrtimeToMs, TickRateMeter } from './tick_rate_meter';
+import { applyTownFocusCommand } from './town_focus_command';
 import { maybeTrackDay7Retained, trackLevelMilestoneCapi } from './ua_capi';
 import { recordUnstuckEvent } from './unstuck_records';
 import { buildVarkhulPortalReplayBatch, varkhulPortalReplayFrame } from './varkhul_portal_replay';
@@ -949,6 +960,8 @@ export interface ClientSession extends MovementInputSessionState {
   dungeonEntryFacing: entryFacing.DungeonEntryFacingFence;
   // sim time of the last movement input frame, used to clear stale held input
   lastInputAt: number;
+  // Sim time of the next inspectCorpseHarvest throttle this session may pass.
+  nextCorpseHarvestInspectAt?: number;
   // serialized form of each delta self field as last sent to this client;
   // a field is omitted from a snapshot while its serialization is unchanged
   lastSent: Record<string, string>;
@@ -1254,14 +1267,15 @@ function identityFields(e: Entity): Record<string, unknown> {
     // `eq` above: players only, only when at least one worn piece carries a
     // payload, riding the identity record (wireCacheFor diffs the identity
     // JSON, so an equip/unequip of an instanced piece re-emits automatically).
-    // Data minimization: only the cosmetic inspect fields (signer, enchant,
-    // rolled, name) leave the server; boundTo, charges, and the bindOnTrade
+    // Data minimization: only the inspect fields (signer, enchant,
+    // rolled, name, perfected) leave the server; boundTo, charges, and the bindOnTrade
     // arm are gameplay state no inspecting client needs and never ride this key.
     // The pub allowlist below is what enforces this, so a new non-cosmetic
     // ItemInstancePayload field is excluded by construction; the owner still
     // sees their own payload in full via the self `inv` mirror. 2026-08-27:
     // `name` (the player-chosen legendary name, Masterwrought phase 13) is
-    // the FIRST cosmetic JOIN since the rule was written.
+    // the FIRST cosmetic JOIN since the rule was written. The visible Perfected
+    // marker now lets inspect resolve active versus dormant enchants accurately.
     let eqi: Record<string, unknown> | undefined;
     for (const [slot, inst] of Object.entries(e.equippedInstances)) {
       if (!inst) continue;
@@ -1270,6 +1284,7 @@ function identityFields(e: Entity): Record<string, unknown> {
       if (inst.enchant !== undefined) pub.enchant = inst.enchant;
       if (inst.rolled !== undefined) pub.rolled = inst.rolled;
       if (inst.name !== undefined) pub.name = inst.name;
+      if (inst.perfected === true) pub.perfected = inst.perfected;
       for (const _ in pub) {
         if (eqi === undefined) eqi = {};
         eqi[slot] = pub;
@@ -3972,6 +3987,7 @@ export class GameServer {
     if (session.spectating) this.exitSpectate(session, false);
     if (session.jailVisit) this.exitJailVisit(session, false);
     this.cancelAndRecordUnstuck(session);
+    cancelCorpseHarvestCastOnDisconnect(this.sim, session.pid);
     session.linkdead = true;
     session.graceUntil = Date.now() + LINKDEAD_GRACE_MS;
     this.botDetector.setTrackingConnection(session.botTrackingContext, false);
@@ -6530,30 +6546,26 @@ export class GameServer {
         if (typeof msg.id === 'number') sim.autoLoot(msg.id, pid);
         break;
       case 'harvestCorpse':
-        if (typeof msg.id === 'number') {
-          const components = Array.isArray(msg.components)
-            ? msg.components.filter((c): c is string => typeof c === 'string')
-            : undefined;
-          sim.harvestCorpse(msg.id, components, pid);
-        }
+        this.sendCommandOutcome(session, msg, harvestCorpseCommandOutcome(sim, msg, pid));
+        break;
+      case 'inspectCorpseHarvest':
+        dispatchCorpseHarvestInspection(sim, session, msg, pid, (f) => this.send(session, f));
         break;
       case 'set_town_focus':
-        if (msg.allocation && typeof msg.allocation === 'object') {
-          const allocation: Record<string, number> = {};
-          for (const [k, v] of Object.entries(msg.allocation as Record<string, unknown>)) {
-            if (typeof v === 'number') allocation[k] = v;
-          }
-          // #1144: the payment tier picks which RESPEC_TIER_CONFIG row prices
-          // the re-spec. Untrusted input, so it is checked against the real
-          // config keys rather than cast; a missing/malformed tier (an older
-          // client, or a hand-crafted frame) falls back to 'time', the free
-          // tier, so it never charges a client that never chose a tier.
-          const tier: RespecPaymentTier =
-            typeof msg.tier === 'string' && Object.hasOwn(RESPEC_TIER_CONFIG, msg.tier)
-              ? (msg.tier as RespecPaymentTier)
-              : 'time';
-          sim.setTownFocus(allocation, tier, pid);
-        }
+        applyTownFocusCommand(sim, msg, pid);
+        break;
+      // The authenticated player's preference is a setting; the sim validates it.
+      case 'set_harvest_preference':
+        if (typeof msg.raw === 'string') sim.setHarvestPreference(msg.raw, pid);
+        break;
+      // Intentional Gathering PR4: track/clear the viewer's single explicit
+      // gathering goal (see gathering_goal_commands.ts for the validation).
+      // command bodies live whole in gathering_goal_commands.ts; the labels
+      // stay HERE since the command-schema suite scans this switch.
+      case 'track_gathering_recipe':
+      case 'track_gathering_commission':
+      case 'clear_gathering_goal':
+        dispatchGatheringGoalCommand(sim, command, msg, pid);
         break;
       case 'lootRoll':
         if (
@@ -6629,16 +6641,10 @@ export class GameServer {
         }
         break;
       case 'inv_move':
-        // Manual bag order (a drag between bag cells). Both indices are re-validated
-        // inside the sim against the live bag, so a bogus pair is simply refused.
-        if (typeof msg.from === 'number' && typeof msg.to === 'number') {
-          sim.moveInventoryItem(msg.from, msg.to, pid);
-        }
-        break;
       case 'inv_sort':
-        // The one-shot bag clean-up. No payload: the sim re-derives the whole
-        // arrangement from the live inventory, so there is nothing to trust.
-        sim.sortInventory(pid);
+      case 'material_separate':
+      case 'material_combine':
+        dispatchInventoryGroupingCommand(sim, pid, msg);
         break;
       case 'unequip_item':
         if (typeof msg.slot === 'string' && isEquipSlot(msg.slot)) {
@@ -6814,31 +6820,22 @@ export class GameServer {
         if (typeof msg.item === 'string') sim.unbindItem(msg.item, pid);
         break;
       case 'perfect_item': {
-        // The Perfecting stage (Masterwrought phase 12): the untrusted ref
-        // parse is the pure core in server/perfect_item_ref.ts (a null drops
-        // the frame whole); the sim re-validates the ref against its own bags
-        // and paperdoll and resolves the deny ladder and the one roll itself;
-        // the outcome reaches this client as the sim's own error/log lines
-        // plus the heavy self re-diff (perfect_item is a HEAVY_SELF_CMDS
-        // member: an attempt spends materials and mutates a payload in place).
-        // Phase 13: the optional legendary name's whole decision is the pure
-        // core resolvePerfectItemName (shape-first, screen NORMALIZED). Phase
-        // 18 narrows its refusal: only a copy the sim would route to the
-        // promotion ladder can consume the name, so this is the one site that
-        // can answer that (the frame cannot), and an offensive name on any
-        // other copy is STRIPPED rather than costing the attempt. The read is
-        // a thunk so it is paid only when the screen actually matches.
-        const ref = parsePerfectItemRef(msg);
-        if (ref) {
-          const promoting = () => sim.perfectingInfo(ref, pid)?.perfected === true;
-          const named = resolvePerfectItemName(msg, offensiveName, promoting);
-          if (named.refused) this.sendChatNotice(session, 'That name is not allowed.');
-          else {
-            // Arm-marked: the heavy-self mark rides the frame that reaches the sim,
-            // never the malformed-ref or screened-name refusals above.
+        dispatchPerfectItemCommand(msg, {
+          sim,
+          pid,
+          offensiveName,
+          accepted: () => {
             if (heavySelfMarkOnAccept(command)) session.selfHeavyDirty = true;
-            sim.perfectItemAs(pid, ref, named.name);
-          }
+          },
+          refusedName: () => this.sendChatNotice(session, 'That name is not allowed.'),
+        });
+        break;
+      }
+      case 'swap_perfecting_ranks': {
+        const request = parsePerfectingSwapCommand(msg);
+        if (request) {
+          if (heavySelfMarkOnAccept(command)) session.selfHeavyDirty = true;
+          sim.swapPerfectingRanks(request, pid);
         }
         break;
       }
@@ -7968,9 +7965,11 @@ export class GameServer {
         if (!this.consumeGuildBankOp(session, receivedAtMs / 1000)) break;
         if (typeof msg.slot === 'number') {
           const slot = msg.slot;
-          const count = typeof msg.count === 'number' ? msg.count : undefined;
+          const transfer = readMaterialSourceTransferWire(msg, slot);
+          if (transfer === null) break;
+          const { count, selection } = transfer;
           this.runGuildBankOp(session, { pid }, 'deposit', () =>
-            sim.guildBankDepositFor(pid, slot, count),
+            sim.guildBankDepositFor(pid, slot, count, selection),
           );
         }
         break;
@@ -7978,9 +7977,11 @@ export class GameServer {
         if (!this.consumeGuildBankOp(session, receivedAtMs / 1000)) break;
         if (typeof msg.slot === 'number') {
           const slot = msg.slot;
-          const count = typeof msg.count === 'number' ? msg.count : undefined;
+          const transfer = readMaterialSourceTransferWire(msg, slot);
+          if (transfer === null) break;
+          const { count, selection } = transfer;
           this.runGuildBankOp(session, { pid }, 'withdraw', () =>
-            sim.guildBankWithdrawFor(pid, slot, count),
+            sim.guildBankWithdrawFor(pid, slot, count, selection),
           );
         }
         break;
@@ -9077,24 +9078,14 @@ export class GameServer {
     maybe('denc', this.sim.lastDisenchantResultFor(anchorSession.pid));
     maybe('ench', this.sim.lastEnchantResultFor(anchorSession.pid));
     maybe('salv', this.sim.lastSalvageResultFor(anchorSession.pid));
-    maybe('tfocus', this.sim.townFocusFor(anchorSession.pid));
-    // Raw gathering-profession proficiency map (IWorld `gatheringProficiency`,
-    // #1119), a second small read alongside `prof` for the ORIGINAL flat-map
-    // shape used by the `/dev gather` chat cheat and existing consumers. Wire
-    // key `gprof`; see TERSE_TO_IWORLD/ALL_DELTA_KEYS in tests/snapshots.test.ts.
-    maybe('gprof', this.sim.gatheringProficiencyFor(anchorSession.pid));
-    // Slotted tool effects (IWorld `toolEffectSlots`). Wire key `tslot`; see
-    // TERSE_TO_IWORLD/ALL_DELTA_KEYS in tests/snapshots.test.ts. Empty for
-    // every player who has never slotted one, so after the first snapshot of a
-    // session (which carries `"tslot":[]`, as every registered key does while
-    // lastSent is empty) the key delta-elides away for almost everyone. The
-    // charge counter moves only on a harvest that actually spends one, so this
-    // is a cheap diff rather than a per-tick churn. The empty arm compares the
-    // constant '[]' directly (byte-identical to maybe(...)): stringifying the
-    // shared frozen empty projection per player per tick bought nothing.
-    const tslotRows = this.sim.toolEffectSlotsFor(anchorSession.pid);
-    if (tslotRows.length === 0) maybeSerialized('tslot', '[]');
-    else maybe('tslot', tslotRows);
+    // Gathering-adjacent self fields (tfocus/gprof/tslot/hpref): extracted to
+    // gathering_self_wire.ts to keep this coordinator under its monolith
+    // ceiling; see that module for the per-field comments this call replaces.
+    appendGatheringSelfWire(this.sim, anchorSession.pid, maybe, maybeSerialized);
+    // Intentional Gathering PR4: the owner-only tracked-goal full view. Its
+    // own leaf (gathering_goal_wire.ts) rather than folded into the call
+    // above: a distinct feature's single field, a full-view replacement.
+    appendGatheringGoalSelfWire(this.sim, anchorSession.pid, maybe);
     // Riding skill: persisted, so the client knows whether to show the riding
     // trainer UI without waiting on a mount/select command to fail. Wire key
     // `mntRtd`; delta-guarded, only changes once (false to true, never back).

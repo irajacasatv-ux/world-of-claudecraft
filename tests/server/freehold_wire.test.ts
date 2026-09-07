@@ -712,12 +712,12 @@ describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freehold
 
   it('the offline stock world and the headless host construct their Sim lit (D3), from exactly one site each', () => {
     // The stock offline world is lit; custom editor play-test maps (a `world`
-    // argument) and the editor viewport stay dark by design, so main.ts
-    // gates the flag like its two sibling live-world flags. Every `new Sim(`
+    // argument) and the editor viewport stay dark by design. The offline
+    // configuration helper owns that policy. Every `new Sim(`
     // in each file is counted so a second construction cannot slip past the
     // pin unread.
     const expected: ReadonlyArray<[string, string]> = [
-      ['src/main.ts', 'freeholdsEnabled: world === undefined'],
+      ['src/main.ts', 'offlineWorldConfig('],
       ['headless/env_server.ts', 'freeholdsEnabled: true'],
     ];
     for (const [rel, literal] of expected) {
@@ -729,6 +729,8 @@ describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freehold
       const call = balancedCall(src, src.indexOf('(', sites[0])).replace(/\s+/g, ' ');
       expect(call, `${rel}: the new Sim( literal passes ${literal}`).toContain(literal);
     }
+    const config = codeOnly(repoFile('src/game/offline_world_config.ts'));
+    expect(config).toContain('freeholdsEnabled: options.world === undefined');
   });
 });
 

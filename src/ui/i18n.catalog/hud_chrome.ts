@@ -18,6 +18,7 @@ export const hudChromeStrings = {
       maker: 'Made by {maker}.',
     },
   },
+  materialStackSelectionUnavailable: 'That material selection is no longer available.',
   warlock: {
     doomLabel: 'Condemnation',
     fateThreadsLabel: 'Fate Threads',
@@ -3073,6 +3074,54 @@ export const hudChromeStrings = {
       meat: 'Meat',
       cloth: 'Cloth',
     },
+    // Intentional Gathering PR3, corpse-status-contract.md: the corpse
+    // popup's harvest section now shows the ONE remembered global preference
+    // plus its live status against THIS body (denial, reservation,
+    // concentration benefit) and a Change entry into the shared preference
+    // picker, replacing the per-tag checkbox section above. The keys above
+    // stay live for Town Focus (which reuses the components map) and for the
+    // retired-picker's own defensive arms; nothing above is removed.
+    preferenceLabel: 'Harvest preference: {preference}',
+    changeButton: 'Change',
+    // Live placeholders off the real admission constants
+    // (sim/professions/harvest_admission.ts HARVEST_CAST_SECONDS/
+    // HARVEST_PRIORITY_SECONDS), never a hardcoded duration; the painter
+    // resolves both through formatNumber. States the real rules (a timed
+    // cast, the kit requirement, the once-per-corpse claim, the kill-credit
+    // priority window, and that ordinary loot is untouched) rather than
+    // promising a specific material: All is a real preference choice too.
+    harvestActionTooltip:
+      'Harvests with your current preference over {seconds} seconds. Requires a Field Kit. Each body can be harvested once. The killer and their party have priority for {prioritySeconds} seconds. Dropped loot stays available.',
+    checkingStatus: 'Checking harvest status...',
+    statusUnavailable: 'Harvest status is not available right now.',
+    harvestStarting: 'Starting harvest...',
+    // Never a quantity/specimen promise: gathers what the body carries, not a
+    // guaranteed amount of it.
+    allBenefit: 'Gathers every available material from this body.',
+    focusBenefit: 'Focuses the harvest on {material}.',
+    tierBonusHint: 'Focuses the harvest on {material}: +{tierBonus} tier over All materials.',
+    denial: {
+      actorDead: 'You must be alive to harvest.',
+      actorInCombat: 'You cannot harvest while in combat.',
+      actorBusy: 'You are already busy.',
+      corpseInvalid: 'This corpse can no longer be harvested.',
+      wrongWorld: 'This corpse is not in your world.',
+      outOfRange: 'Move closer to harvest this body.',
+      noFieldKit: 'You need a Field Kit to harvest.',
+      reservedSelf: 'You are already harvesting this body.',
+      reservedOther: '{name} is harvesting this body.',
+      // A reservation the query cannot yet name (missing/blank name): the
+      // honest generic line rather than a sentence with a blank subject.
+      reservedOtherUnknown: 'Another player is harvesting this body.',
+      priorityProtected: 'Another player has priority on this body right now.',
+      corpseExpiring: 'This body will not last long enough to harvest.',
+      preferenceMalformed: 'Your harvest preference is invalid. Choose one to continue.',
+      nothingToHarvest: 'This body has nothing your Field Kit can harvest.',
+      materialUnavailable: '{material} is not on this body.',
+      materialUnavailableWithList: '{material} is not on this body. Available: {materials}.',
+      bagsFull: 'Your bags are too full to harvest.',
+      malformedInput: 'Something went wrong. Try again.',
+    },
   },
   // #1143: persistent town focus allocation panel. Reuses the corpseHarvest
   // component-name map above for consistency; only town-focus-specific copy
@@ -3100,6 +3149,149 @@ export const hudChromeStrings = {
     respecTierInstantOption: 'Instant (full cost)',
     respecCostFree: 'Free',
     respecCostLine: 'Costs {coin} and {materials}',
+  },
+  // The shared corpse-harvest preference picker (Intentional Gathering PR3):
+  // one radio choice of All or a single material, reused unmodified by the
+  // Field Kit use, Professions, and corpse Change entrances. A setting only:
+  // no cost, kit requirement, or harvest-outcome text lives here.
+  harvestPreference: {
+    title: 'Harvest Preference',
+    allLabel: 'All materials',
+    applyButton: 'Apply',
+    cancelButton: 'Cancel',
+    // Shown whenever nothing is currently selected: a malformed saved
+    // preference or one naming a material this list does not offer, both of
+    // which ask for an explicit new choice rather than defaulting to All.
+    pickHint: 'Choose what to harvest before applying.',
+    // {material} is either the stored material's localized name or, when it
+    // no longer resolves to a real material, unknownMaterial below.
+    currentUnavailable: 'Your current choice, {material}, is not offered here.',
+    unknownMaterial: 'Unavailable material',
+    // The Professions entry button's remembered-choice subtitle (#2510-shaped
+    // shared picker): {choice} is allLabel, a real material's localized name,
+    // or unknownMaterial, never a raw internal id.
+    currentChoiceLabel: 'Current: {choice}',
+  },
+  // Source-info detail shown under the GENERAL harvest-preference picker
+  // (Field Kit use, Professions) beside the currently drafted material row
+  // only, never on the corpse Change picker: Intentional Gathering PR5.
+  // Every {creature}/{zone}/{material} value is a pre-resolved display name,
+  // never a raw internal id.
+  gatheringSource: {
+    title: 'Where to find {material}',
+    corpseExample: '{creature} ({zone})',
+    corpseExampleTagged: '{creature} ({zone}, {tag})',
+    rareTag: 'rare',
+    eliteTag: 'elite',
+    gatedTag: 'quest-gated',
+    moreSources: 'and {count} more',
+    moreZones: 'and {count} more zones',
+    // {material} and {specimen} are both resolved item display names (the
+    // wording concept: "Rare or better Rough Hide harvests also yield
+    // Pristine Hide when there is room in your bags"). Named by the actual
+    // materials, never by the internal component tag, and stated as a
+    // chance on the roll itself, never a prediction about one corpse.
+    premiumChance:
+      'Rare or better {material} harvests also yield {specimen} when there is room in your bags.',
+    // Shown on a SPECIMEN's own source detail (viewing the specimen item
+    // directly, not the base material it rides on): {material} is the
+    // specimen's own display name, {base} the base material's. States the
+    // condition and the underlying material honestly: never implies the
+    // specimen is a separate guaranteed harvest or promises a specific body.
+    specimenOfBase:
+      '{material} is a rare or better harvest bonus from {base}, from the same creatures shown above, never a separate guaranteed find.',
+    // {zone} and {tier} name the CHEAPEST real vein this zone actually
+    // ships (the lowest GatherNodeDef.tier that yields this material there),
+    // never a blanket "any tool" claim.
+    nodeZone: '{zone} (tier {tier}+ tool)',
+    nodeFineNote:
+      'A gathering tool of tier {tier}+ upgrades this to its fine grade at a matching vein.',
+    farmNote:
+      'Grown from a planted seed, ready after about {duration}. Needs farming skill {skill}+ and a tier {tier}+ hoe.',
+    // {skill} is the fishing proficiency effectiveFishingBand needs to reach
+    // this catch's band; {tier} is the rod tier that band, or the zone's own
+    // access gate, actually demands (whichever is stricter).
+    fishingZoneProven: '{zone} waters (proficiency {skill}+, rod tier {tier}+)',
+    fishingZoneUnproven:
+      'Some waters need proficiency {skill}+ and rod tier {tier}+; no specific spot is confirmed yet.',
+  },
+  // The persistent gathering goal panel (Intentional Gathering PR4): a
+  // compact "what am I collecting for" readout, tracked from the crafting
+  // window's own Track control or the commission board's Track control, and
+  // cleared explicitly. It never selects or applies a harvest preference on
+  // its own; setPreferenceButton is the one explicit shortcut to that other
+  // setting.
+  gatheringGoal: {
+    title: 'Gathering Goal',
+    // The Clear button's full accessible name (aria-label). The visible
+    // label is the short clearButton below: the panel is rail-width, and a
+    // header row wide enough for the whole sentence pushed the title down to
+    // a few illegible characters.
+    close: 'Clear gathering goal',
+    clearButton: 'Clear',
+    empty: 'No gathering goal set.',
+    // {name} the localized result item name, {count} the TOTAL OUTPUT units
+    // (craftCount * recipe.resultCount), never the raw craft count alone.
+    recipeGoalLabel: '{name} x{count}',
+    commissionGoalLabel: 'Commission: {name} x{count}',
+    // Shown beside the label ONLY when the recipe's own resultCount makes the
+    // craft count and the total output diverge (a stack recipe), so the
+    // output figure above is never mistaken for how many crafts are queued.
+    craftCountLine: '{count} crafts tracked',
+    unknownRecipeLabel: 'Unknown recipe',
+    // The header title when a PERSISTED goal selection is invalid (goal null,
+    // but a reason is present): distinct from true no-selection, which hides
+    // the panel entirely (see renderGatheringGoalPanel's own contract).
+    invalidGoalLabel: 'No longer tracked',
+    statusCollecting: 'Collecting',
+    statusReady: 'Ready',
+    statusUnavailable: 'Unavailable',
+    statusDelivered: 'Delivered',
+    statusCancelled: 'Cancelled',
+    statusExpired: 'Expired',
+    // Ready means the listed materials are on hand; it promises nothing about
+    // gold, a station, or bag space (root CLAUDE.md's gameplay-neutral
+    // wording rule applies to this text too: state the fact, not the promise
+    // the fact does not make).
+    readyHint: 'Materials on hand. Crafting still needs gold, a station, and bag space.',
+    reasonInvalidGoal: 'This goal is no longer valid.',
+    reasonUnknownRecipe: 'That recipe no longer exists.',
+    reasonRecipeUnavailable: 'That recipe is no longer available to you.',
+    // A full reload always drops the client's tracking link even when the
+    // accepted commission order itself still exists server-side, so this
+    // must not claim the order is gone: it tells the player where to look.
+    reasonCommissionUnavailable:
+      'That commission is no longer tracked. Track it again from the board if it is still listed.',
+    reasonDailyLimit: 'That recipe has already been crafted today.',
+    reasonBatchLimit: 'That batch size is no longer valid.',
+    materialLine: '{name}: {reachable} of {required}',
+    // Carried and in-storage are ALWAYS rendered (they are the row's own
+    // allocation breakdown, not a warning that only appears on shortfall,
+    // which is what missing/inaccessible below are).
+    materialCarried: '{count} carried',
+    materialStored: '{count} in storage',
+    materialMissing: '{count} missing',
+    // Covers BOTH a stored unit outside this container's reach AND a locked
+    // carried slot: never claim every unit counted here is in storage.
+    materialInaccessible: '{count} unavailable for crafting',
+    storageRestrictedNote: 'Some materials are in storage you cannot reach from here.',
+    payableCraftsLine: 'Enough on hand for {count} more.',
+    setPreferenceButton: 'Set as harvest preference',
+    setPreferenceButtonAria: 'Set {name} as your harvest preference',
+    // Shown INSTEAD of setPreferenceButton/setPreferenceButtonAria when the
+    // row's target is already the active preference (row.isCurrentHarvestPreference,
+    // read from the authoritative world mirror): a disabled, read-only state,
+    // never a second Set action for the same target.
+    currentPreferenceLabel: 'Current harvest preference',
+    currentPreferenceAria: '{name} is your current harvest preference',
+    // The per-material "Sources" disclosure (Intentional Gathering PR5): a
+    // native <details>/<summary> label, so no separate aria-expanded copy is
+    // needed (the browser announces the disclosure state on its own).
+    sourcesToggle: 'Sources',
+    // The disclosure's accessible name: every row shares the visible label
+    // "Sources" (rail-width), so a screen reader hears "Sources for {name}"
+    // per row instead of an unhelpful repeated "Sources, Sources, Sources".
+    sourcesToggleAria: 'Sources for {name}',
   },
   // Party leadership: the right-click "Promote to Leader" handoff action shown on a
   // party member's context menu to the current leader. Lives in the English-only
@@ -3662,6 +3854,7 @@ export const hudChromeStrings = {
     healEcho: 'Falling below {threshold}% health restores {value} health',
     increase: {
       ap: 'Increases attack power by {value}',
+      str: 'Increases Strength by {value}',
       sp: 'Increases spell power by {value}',
       armor: 'Increases armor by {value}',
       int: 'Increases Intellect by {value}',
@@ -3672,6 +3865,7 @@ export const hudChromeStrings = {
     },
     reduce: {
       ap: 'Reduces attack power by {value}',
+      str: 'Reduces Strength by {value}',
       armor: 'Reduces armor by {value}',
       int: 'Reduces Intellect by {value}',
       agi: 'Reduces Agility by {value}',
@@ -4108,6 +4302,48 @@ export const hudChromeStrings = {
     // the sim's PERFECTING_RANKS, never literals in copy.
     perfectedBadge: 'Perfected',
     perfectingRank: 'Perfecting: rank {rank} of {ranks}',
+    // Per-unit material provenance (item_instance_tooltip.ts
+    // materialSourceLines over the pure material_sources_view.ts model): one
+    // line per recorded descriptor, stating the surviving unit count first so a
+    // long list scans down its numbers. {count} is a formatted number and
+    // {name} is a historic display-name SNAPSHOT carried on the stack, never a
+    // live profile read.
+    //
+    // Four keys rather than a line plus a suffix, because the premium signature
+    // and the gatherer are independent facts and each combination is a
+    // different sentence: a recorded gatherer never implies the signature's
+    // crafting benefit, and legacy signed stock has no recorded gatherer at all,
+    // so it says so plainly and names the signer AS the signer instead of
+    // inventing an attribution for units nobody recorded.
+    materialSourceGatherer: '{count} × Collected by {name}',
+    materialSourceGathererSigned: '{count} × Collected by {name}, signed by {signer}',
+    materialSourceUnrecorded: '{count} × No gatherer recorded',
+    materialSourceUnrecordedSigned: '{count} × No gatherer recorded, signed by {name}',
+    materialSourceMore: '+{sources} more sources, {units} units',
+  },
+  // Full material-source details dialog. The picker quantities are exact units
+  // from one captured descriptor key; the command revalidates the captured
+  // selection before changing the inventory.
+  materialSources: {
+    detailsTitle: 'Sources for {item}',
+    pickerTitle: 'Choose sources from {item}',
+    close: 'Close material sources',
+    view: 'Sources',
+    choose: 'Sources',
+    viewAria: 'View all material sources for {item}',
+    chooseAria: 'Choose material sources to move for {item}',
+    cancel: 'Cancel',
+    confirm: 'Move selected units',
+    listAria: 'Material source list',
+    total: '{units} units in this stack',
+    row: '{count} units: {source}',
+    gatherer: 'Collected by {name}',
+    gathererSigned: 'Collected by {name}, signed by {signer}',
+    unrecorded: 'No gatherer recorded',
+    unrecordedSigned: 'No gatherer recorded, signed by {name}',
+    quantityAria: 'Units from {source}, up to {count}',
+    decreaseAria: 'Decrease units from {source}',
+    increaseAria: 'Increase units from {source}',
   },
   // Purpose hints for the eight enchanting materials
   // (src/ui/hud/professions/material_hint_view.ts), keyed by item id there. Each says what the
@@ -4915,6 +5151,12 @@ export const hudChromeStrings = {
     herbalism: 'Herbalism',
     fishing: 'Fishing',
     farming: 'Farming',
+    // The sixth family (masterwrought decision C): a gathering FAMILY
+    // without being a gathering PROFESSION (src/sim/professions/
+    // gathering_supply.ts CORPSE_HARVEST_FAMILY). Sits beside its five
+    // siblings above rather than in a second registry: the gathering goal
+    // panel's per-material source label is the one reader today.
+    corpseHarvesting: 'Corpse Harvesting',
     // #1866: click/tap/interact-key error when a targeted node's per-viewer
     // respawn timer has not elapsed yet (IWorldProfessions#nodeHarvestableByMe).
     notReady: 'This resource node has not respawned for you yet.',
@@ -5421,6 +5663,7 @@ export const hudChromeStrings = {
   // by enchant_apply_view.ts enchantNameKey in the Apply Enchant picker; never
   // the raw def name in the DOM.
   enchantName: {
+    enchant_weapon_lastflame_zeal: "Last Flame's Zeal",
     enchant_weapon_might: 'Weapon Etching: Might',
     enchant_weapon_intellect: 'Weapon Etching: Spellpower',
     enchant_offhand_stamina: 'Offhand Etching: Stamina',
@@ -5472,6 +5715,10 @@ export const hudChromeStrings = {
     enchant_chest_lucent_stamina: 'Chest Etching: Lucent Stamina',
     enchant_feet_lucent_agility: 'Boot Etching: Lucent Agility',
     enchant_lucent_infusion: 'Lucent Infusion',
+  },
+  enchantDescription: {
+    enchant_weapon_lastflame_zeal:
+      "Your landed melee attacks can grant 50 Strength for 15 sec and heal you for 200 health. Healing modifiers apply. Each hit rolls 1% per 0.6 sec of the striking weapon's base speed. No internal cooldown. Each hand has its own buff; repeated triggers refresh that hand. Ranged attacks do not trigger this effect. Wolf Form uses its 1 sec base swing speed instead.",
   },
   // Professions window (Professions 2.0): the read-only craft-wheel
   // window. Craft and pair NAMES resolve through craftName / archetypePair
@@ -5667,6 +5914,15 @@ export const hudChromeStrings = {
     qtyDecreaseAria: 'Decrease craft quantity, currently {count}',
     qtyIncreaseAria: 'Increase craft quantity, currently {count}',
     qtyValueAria: 'Craft quantity, {count}',
+    // The gathering-goal Track control (Intentional Gathering PR4): its OWN
+    // quantity stepper, deliberately separate from the craft-batch qty group
+    // above (which clamps to the current mats-fit and so cannot express a
+    // shortage to plan a goal around). Track REPLACES the current goal.
+    goalQtyRowAria: 'Goal quantity',
+    goalQtyDecreaseAria: 'Decrease goal quantity, currently {count}',
+    goalQtyIncreaseAria: 'Increase goal quantity, currently {count}',
+    trackGoalButton: 'Track',
+    trackGoalButtonAria: 'Track {count} crafts of {name} as your gathering goal',
     // Batch progress on the in-window strip ({remaining} / {total} localized).
     batchRemaining: '{remaining} of {total} remaining',
     batchRemainingAria: '{remaining} of {total} crafts remaining',
@@ -5949,6 +6205,10 @@ export const hudChromeStrings = {
     // vendorSellContextActions), the total held across every bag.
     sell: 'Sell',
     sellAll: 'Sell all ({count})',
+    viewSources: 'View sources',
+    separateByGatherer: 'Separate by gatherer',
+    takeChosenQuantity: 'Take out chosen quantity',
+    combine: 'Combine material stacks',
   },
   // Enchanting actions (Professions 2.0): the result toasts for the
   // disenchant / apply-enchant / salvage commands (enchanting_view.ts maps each
@@ -5957,6 +6217,7 @@ export const hudChromeStrings = {
   // Craft Cast System Phase 5: concurrent-cast denies use per-action busy keys
   // (cast duration paces; the shared "too quickly" quota is retired).
   enchanting: {
+    recipeNotLearned: 'Learn the formula before applying this enchant.',
     // The SOLE player-visible lines for these actions (#2430). The grant hub's
     // "You receive:" lines no longer print for a disenchant or a salvage yield
     // (the loot event's callerLogs flag), so the Yield variants below name the
@@ -6160,6 +6421,7 @@ export const hudChromeStrings = {
   // name of the item the taught recipe crafts (entity i18n, never a raw id).
   pattern: {
     teaches: 'Use: Teaches you how to craft {item}.',
+    teachesEnchant: 'Use: Teaches you how to apply {enchant}.',
   },
   // Maker's Bond unbind service window + result lines (Professions 2.0):
   // the station master's second gossip service beside training.
@@ -6213,12 +6475,40 @@ export const hudChromeStrings = {
   // recorded rank-0 shape; whether the sim should close that hole is a
   // maintainer read in the Phase 14 QA ledger).
   perfecting: {
+    swapTitle: 'Exchange Perfecting ranks',
+    swapIntro:
+      'Choose another owned piece from this collection. Exchange ranks at the matching crafting station, out of combat, with craft skill {skill}. No materials or failure roll.',
+    swapChoose: 'Choose a second piece to preview the exchange.',
+    swapRank: '{name}: rank {before} to {after}',
+    swapAction: 'Review rank exchange',
+    swapPending: 'Exchanging ranks',
+    swapConfirm: 'Both pieces become permanently bound to you. Exchange their Perfecting ranks?',
+    swapConfirmAccept: 'Bind and exchange ranks',
+    swapPreserve:
+      'Neither item is consumed. Names, cosmetic legendary promotion, and enchants stay on their original pieces. Equipment limits still apply.',
+    swapEnchantInactive:
+      'Its Perfected-only enchant becomes inactive until this piece is Perfected again.',
+    swapEnchantActive: 'Its Perfected-only enchant becomes active again.',
+    swapSuccess: 'Perfecting ranks exchanged. Both pieces are permanently bound.',
+    swapInterrupted:
+      "We could not confirm the exchange after reconnecting. Check both pieces' ranks before choosing another exchange.",
+    swapChanged: 'The selected pieces changed. Choose them again and review the new ranks.',
+    swapDead: 'You must be alive to exchange ranks.',
+    swapBusy: 'Leave combat and finish your current action before exchanging ranks.',
+    swapInvalid: 'These pieces have unsupported Perfecting progress and cannot exchange ranks.',
+    swapSameRank: 'These pieces already have the same Perfecting rank.',
+    swapSkill: "You need skill {skill} in this collection's craft.",
+    swapStation: 'Move to the matching crafting station to exchange ranks.',
+    swapLocked: 'Unlock both pieces before exchanging ranks.',
+    enchantInactive:
+      'Enchantment inactive: this piece must be Perfected. The enchantment is preserved.',
     title: 'Perfecting',
     close: 'Close the Perfecting window',
     openButton: 'Perfecting',
     openButtonAria: 'Open the Perfecting window',
     empty: 'You hold no Masterwrought piece. The apex recipes forge one.',
     wornChip: 'Worn',
+    bagCopy: 'Bag copy {index} of {count}',
     rowRank: 'Rank {rank} of {ranks}',
     rowPerfected: 'Perfected',
     // The status-region announcements (role=status beside the repaint shell):
@@ -6312,6 +6602,9 @@ export const hudChromeStrings = {
     deliverButton: 'Deliver',
     deliverHint:
       'Craft the commissioned piece (with the commission toggle on), then come back here to deliver it.',
+    // The gathering goal Track control (Intentional Gathering PR4): shown
+    // beside Deliver on an order this viewer has accepted to craft.
+    trackButton: 'Track',
     // commissionOrderResult chat lines, one success line per action (the
     // trainResult single-surface rule) plus the shared deny-reason set.
     opened: 'You post a commission order for {item}.',

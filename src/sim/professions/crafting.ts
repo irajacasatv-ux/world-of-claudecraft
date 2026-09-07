@@ -75,11 +75,11 @@ import { CRAFT_BATCH_MAX, CRAFT_GOLD_SINK_COPPER_PER_BUDGET } from '../content/p
 import { recipeById } from '../content/recipes';
 import { ITEMS } from '../data';
 import { countUnlockedInSlots, removeUnlockedFromSlots } from '../item_lock';
+import { holdsMaterialSignature } from '../material_signatures';
 import {
   consumePlayerVaultStock,
   consumeVaultStock,
   craftVaultStockFor,
-  drawableCounterFor,
   emitVaultCraftConsume,
   type MaterialsVaultState,
 } from '../materials_vault';
@@ -98,6 +98,7 @@ import { archetypeCeilingFor, craftSkillGainMultiplier } from './archetype';
 import { comboEligibility } from './combo_eligibility';
 import { isCommissionEligible } from './commission';
 import { craftCastDurationSec } from './craft_cast_duration';
+import { planCraftReagentDraw } from './craft_reagent_plan';
 import { isDisenchantable } from './enchanting';
 import { APEX_FEAST_CRAFT_MARK, isApexFeastRecipe } from './feast';
 import { announceMasterworkZone } from './gather_events';
@@ -118,13 +119,8 @@ import { countAcrossGrades, type GradeRemoval, materialGradeIds } from './materi
 import { materialTierBonusForReagents } from './material_tier';
 import { isStationActive, partySharedStationSatisfies } from './mobile_station';
 import { PERFECTING_HEADSTART_RANK } from './perfecting';
+import { withPerfectingBonus } from './perfecting_bonus';
 import { craftActionXp } from './profession_xp';
-import {
-  countMinusPlanned,
-  planReagentSourceDraw,
-  type ReagentSourcePlan,
-  tallyPlannedTakes,
-} from './reagent_sources';
 import { isAtStation, stationTypeForCraft } from './stations';
 import type { ProfessionReagent, ProfessionRecipeRecord } from './types';
 import {
@@ -399,7 +395,7 @@ export function holdsSelfSignedInstance(
   playerName: string,
   itemId: string,
 ): boolean {
-  return inventory.some((s) => s.itemId === itemId && s.instance?.signer === playerName);
+  return holdsMaterialSignature(inventory, itemId, playerName);
 }
 
 /** Whether `meta` holds an inventory slot for `itemId` carrying a signed
@@ -441,7 +437,7 @@ function hasSelfSignedInstance(meta: PlayerMeta, itemId: string): boolean {
  *  same inversion the sibling exists to prevent. */
 function hasSignedInstance(meta: PlayerMeta, itemId: string): boolean {
   const gradeIds = materialGradeIds(itemId);
-  return meta.inventory.some((s) => gradeIds.includes(s.itemId) && !!s.instance?.signer);
+  return gradeIds.some((gradeId) => holdsMaterialSignature(meta.inventory, gradeId));
 }
 
 /** The result of resolving one reagent's required quantity: the final count
@@ -500,6 +496,7 @@ export function requiredReagentCountFor(
   professionId: string,
   isJackOfAllTrades = false,
 ): RequiredReagentResult {
+  if (reagent.noDiscount) return { count: reagent.count, selfSignedBonusApplied: false };
   const afterSelfSigned = hasSelfSigned ? Math.max(1, reagent.count - 1) : reagent.count;
   const multiplier = materialCostMultiplier(craftSkills, professionId);
   const jackMultiplier = isJackOfAllTrades ? 1 - JACK_MATERIAL_DISCOUNT_PCT : 1;
@@ -507,74 +504,6 @@ export function requiredReagentCountFor(
     count: Math.max(1, Math.floor(afterSelfSigned * multiplier * jackMultiplier)),
     selfSignedBonusApplied: afterSelfSigned < reagent.count,
   };
-}
-
-/** The vault-side counting callback for one craft evaluation, or null when
- *  this player draws from their bags alone (no vault stock, or standing
- *  somewhere vault draw is refused: vault_craft_gate.ts).
- *
- *  Built ONCE per evaluation and shared by every reagent in the recipe, so the
- *  place gate is asked once rather than per reagent, and so the availability
- *  check, the capacity gate, the consumption and the batch simulation can
- *  never disagree about whether the vault is in play for this attempt. A null
- *  return is the byte-identical-to-before path: every plan below then reduces
- *  to the carried-only walk the craft has always performed. The adapter body
- *  is the shared drawableCounterFor (materials_vault.ts, the rule of three);
- *  this alias keeps the craft-side name its call sites and pins read. */
-const vaultCounterFor = drawableCounterFor;
-
-/**
- * THE craft-side planner: resolve where EVERY reagent of one attempt comes
- * from, bags first and then the Materials Vault, and answer null the moment
- * any of them cannot be paid in full.
- *
- * Four sites consume this and none of them re-derives the order: the
- * availability check, the bag-capacity scratch gate, the real consumption, and
- * the Create All batch simulation. PLAN-THEN-APPLY is the shape, deliberately:
- * every site learns the whole attempt is payable before any of it is spent, so
- * a craft is all-or-nothing across both pools and a reagent list that fails on
- * its LAST line cannot leave the earlier lines already consumed.
- *
- * BOTH pools are tallied across reagents, because planning spends nothing.
- * Without the tallies, two reagents naming one material (or two whose grade
- * ladders overlap) are each promised the same units, and the attempt is
- * admitted for a price it can only half pay: the consume drains the first
- * line, the second finds nothing, and the output is granted anyway. That
- * conservation hole is closed on the CARRIED side as well as the new vault
- * side, even though the carried half predates this phase, and it changes no
- * shipped answer: no recipe in content names one material twice or overlaps
- * two reagents' grade ladders, which is exactly why it survived this long.
- *
- * Callers supply their own `carriedCount` (countUnlockedInSlots over the live
- * inventory for the real paths and over a scratch copy for the simulating
- * ones, so every plan spends only unlocked units, issue 3042; the lock-only
- * denial probe alone counts locked copies too, via ctx.countItem) and their own
- * `requiredFor` (the batch simulation re-derives the hold-keyed self-signed
- * discount per iteration; everyone else reads it off the meta). One plan per
- * reagent, in reagent order, so callers may pair the two by index.
- */
-function planCraftReagentDraw(
-  reagents: readonly ProfessionReagent[],
-  requiredFor: (reagent: ProfessionReagent) => number,
-  carriedCount: (id: string) => number,
-  vaultStock: Record<string, number> | null,
-): readonly ReagentSourcePlan[] | null {
-  const carriedPlanned = new Map<string, number>();
-  const vaultPlanned = new Map<string, number>();
-  const carried = countMinusPlanned(carriedCount, carriedPlanned);
-  const vault = countMinusPlanned(vaultCounterFor(vaultStock), vaultPlanned);
-  const plans: ReagentSourcePlan[] = [];
-  for (const reagent of reagents) {
-    // Planned across the reagent's grades, in the same order and from the same
-    // pools the consumption spends them, so no gate can promise units the
-    // removal would not find.
-    const plan = planReagentSourceDraw(reagent.itemId, requiredFor(reagent), carried, vault);
-    if (plan.shortfall !== 0) return null;
-    tallyPlannedTakes(carriedPlanned, plan.carried);
-    tallyPlannedTakes(vaultPlanned, plan.vault);
-    plans.push(plan);
-  }
-  return plans;
 }
 
 /** Whether the given player currently holds every reagent a recipe requires,
@@ -678,7 +607,7 @@ export function meetsComboRequirement(
  *  side-effect-free: a STALE window is left in place here (admission must
  *  not mutate), and resolveCraftForRecipe rolls it at stamp time. Draws no
  *  rng. */
-function craftDailyLimitReached(
+export function craftDailyLimitReached(
   ctx: SimContext,
   meta: PlayerMeta | undefined,
   recipe: ProfessionRecipeRecord,
@@ -1220,10 +1149,10 @@ export function resolveCraftForRecipe(
     // occupies the same one slot the plain signed shape already models.
     // Remainder copies (no shipped apex recipe has any) land exactly as the
     // masterwork arm's do.
-    const payload: ItemInstancePayload = {
+    const payload: ItemInstancePayload = withPerfectingBonus(def, recipe, {
       signer: meta.name,
       perfecting: PERFECTING_HEADSTART_RANK,
-    };
+    });
     if (commissioned) payload.bindOnTrade = true;
     ctx.addItemInstance(recipe.resultItemId, payload, pid, 1, {
       silent: true,
@@ -1248,7 +1177,7 @@ export function resolveCraftForRecipe(
       }
     }
   } else if (meta && mintsSignedCraftOutput(def)) {
-    const payload: ItemInstancePayload = { signer: meta.name };
+    const payload: ItemInstancePayload = withPerfectingBonus(def, recipe, { signer: meta.name });
     if (commissioned) payload.bindOnTrade = true;
     ctx.addItemInstance(recipe.resultItemId, payload, pid, recipe.resultCount, {
       silent: true,
@@ -1305,6 +1234,10 @@ export function resolveCraftForRecipe(
       if (xp > 0) ctx.grantXp(xp, meta);
     }
   }
+  // A single-use quest shaping is spent only after the output is granted.
+  // The normal known-recipe admission closes direct replays and batch tails;
+  // failed casts and failed material/capacity checks never reach this point.
+  if (recipe.consumeOnCraft && meta) meta.knownRecipes.delete(recipe.id);
   const result: CraftResult = {
     ok: true,
     recipeId: recipe.id,
@@ -1380,17 +1313,23 @@ export function maxCraftCountForRecipe(
 ): number {
   const meta = ctx.players.get(pid);
   const craftSkills = meta ? meta.craftSkills : {};
-  // Masterwrought phase 07: never promise a batch the resolve refuses. A
+  // Never promise a batch the resolve refuses. One-use quest knowledge
+  // permits one craft while learned and none after it is consumed.
+  // Masterwrought phase 07: a
   // oncePerDay recipe previews at most ONE craft, zero once today's stamp is
   // set (the same stamp-and-knownness read the admission gate denies on,
   // kept term-for-term in step with the gate at evaluateCraftAdmission), so
   // the Create All affordance and the qty clamp can never overpromise.
-  const dailyCap = recipe.oncePerDay
-    ? craftDailyLimitReached(ctx, meta, recipe) && isRecipeKnown(meta, recipe)
-      ? 0
-      : 1
-    : CRAFT_BATCH_MAX;
-  if (recipe.reagents.length === 0) return dailyCap;
+  const craftCap = recipe.consumeOnCraft
+    ? isRecipeKnown(meta, recipe)
+      ? 1
+      : 0
+    : recipe.oncePerDay
+      ? craftDailyLimitReached(ctx, meta, recipe) && isRecipeKnown(meta, recipe)
+        ? 0
+        : 1
+      : CRAFT_BATCH_MAX;
+  if (recipe.reagents.length === 0) return craftCap;
   if (!meta) {
     // No meta resolves no inventory to simulate: keep the one-shot division
     // (no self-signed copy, and by the same reasoning no locked copy either,
@@ -1407,7 +1346,7 @@ export function maxCraftCountForRecipe(
       const have = countAcrossGrades(reagent.itemId, (id) => ctx.countItem(id, pid));
       max = Math.min(max, Math.floor(have / required));
     }
-    return Math.min(Math.max(0, max), dailyCap);
+    return Math.min(Math.max(0, max), craftCap);
   }
   // Simulate the batch craft by craft on a scratch copy, re-deriving each
   // craft's per-reagent requirement from the SCRATCH state: the #1145
@@ -1473,7 +1412,7 @@ export function maxCraftCountForRecipe(
     }
     crafts++;
   }
-  return Math.min(crafts, dailyCap);
+  return Math.min(crafts, craftCap);
 }
 
 /** Clamp a requested batch count: default/invalid -> 1, floor, then

@@ -2,6 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ITEMS } from '../src/sim/data';
+import { Sim } from '../src/sim/sim';
 import type { FurnishingItemDef, ItemDef, ItemInstancePayload } from '../src/sim/types';
 import { Hud } from '../src/ui/hud';
 import {
@@ -13,7 +14,21 @@ import { furnishingTooltipLines, furnishingTooltipRows } from '../src/ui/hud/hou
 import { setLanguage } from '../src/ui/i18n';
 import { hudChromeStrings } from '../src/ui/i18n.catalog/hud_chrome';
 import { makeWriterFacet } from '../src/ui/painter_host';
+import type { IWorld } from '../src/world_api';
 import { FURNISHING } from './fixtures/furnishing_item';
+import { EMPTY_TEST_WORLD } from './sim_shared';
+
+// The tooltip and action-bar paths do not render character previews. Keep the
+// real HUD methods while avoiding unrelated GLB preloads in the DOM test host.
+vi.mock('../src/render/characters', () => ({ CharacterPreview: class {} }));
+vi.mock('../src/render/characters/assets', () => ({ preloadMechAssets: vi.fn() }));
+vi.mock('../src/render/characters/portrait', () => ({
+  onPortraitsReady: vi.fn(),
+  onPortraitUpdate: vi.fn(),
+  playerPortraitDataUrl: vi.fn(),
+  portraitsReady: vi.fn(() => false),
+  visualPortraitDataUrl: vi.fn(),
+}));
 
 const furnishing: FurnishingItemDef = {
   id: 'probe_furnishing_tooltip',
@@ -31,8 +46,15 @@ const furnishing: FurnishingItemDef = {
 
 function composedTooltip(item: ItemDef, instance?: ItemInstancePayload): string {
   const hud = Object.create(Hud.prototype) as {
+    sim: IWorld;
     itemTooltip(item: ItemDef, compare: boolean, instance?: ItemInstancePayload): string;
   };
+  hud.sim = new Sim({
+    seed: 42,
+    playerClass: 'warrior',
+    autoEquip: false,
+    world: EMPTY_TEST_WORLD,
+  });
   return hud.itemTooltip(item, false, instance);
 }
 

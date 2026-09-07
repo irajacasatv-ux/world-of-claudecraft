@@ -834,20 +834,28 @@ describe('item-art audit builder', () => {
     ) as Record<string, unknown>;
     expect(verified).toMatchObject({
       catalogPath: 'tmp/imagegen/item-art-consistency/final-audit/catalog.json',
-      catalogSha256: 'febda89453efdcf50432cf3cab6ba638435b301eea6c429e9e0046b8a829e25e',
-      catalogBytes: 657748,
+      // Measured by an actual `--verify-only` run over the merged tree, including
+      // the Forgebreaker quest's forgefathers_ember art in the Crucible batch;
+      // receipt: /tmp/professions-merge-pr3885-art-verify.json.
+      catalogSha256: '6dfe10fcbc5806a4296760a362d6c36d1c8a5823b6795ec696fc47bb8aed366d',
+      catalogBytes: 684325,
       rendererFingerprint: '41f5404c4d6d9643c8f03b9d88a8546e44564cc03a1baabdd4a72cb9258a2da7',
-      catalogCount: 1209,
-      liveItemCount: 1224,
+      // 1,209 (Masterwrought) + 1 (Field Kit) + 45 (Crucible professions) + 1
+      // (the Forgebreaker quest's forgefathers_ember proof item) = 1,256.
+      catalogCount: 1256,
+      // 1,224 (Masterwrought) + 1 (Field Kit) + 45 (Crucible professions) + 1
+      // (forgefathers_ember) = 1,271.
+      liveItemCount: 1271,
       generatedHeroicDefinitions: 64,
       heroicDefinitionsWithOwnWebp: 48,
       heroicWeaponArtAliases: 16,
       groupCount: 25,
-      sheetPageCount: 30,
-      sheetCount: 240,
-      sheetModeCounts: Object.fromEntries(ITEM_ART_AUDIT_MODES.map((mode) => [mode, 30])),
+      sheetPageCount: 31,
+      sheetCount: 248,
+      sheetModeCounts: Object.fromEntries(ITEM_ART_AUDIT_MODES.map((mode) => [mode, 31])),
       sheetSetSha256: null,
-      shippingCatalogSha256: 'bdec0afdcd3349a34b74bca9b0e01aee5b3ab2b3a82568bd9019fe0b0bb0b38c',
+      // Same `--verify-only` receipt as the catalogSha256 note above.
+      shippingCatalogSha256: '56570a72b0538ce4b9632583f614baa07c4c962f2cf8c53364a9bf4b25f03fd7',
       machineChecksPassed: true,
       verdict: null,
     });

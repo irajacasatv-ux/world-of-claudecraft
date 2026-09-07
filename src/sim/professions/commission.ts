@@ -10,8 +10,9 @@
 //
 // - Eligibility: the 2026-07-20 maintainer ruling scopes the opt-in to
 //   EQUIPMENT ONLY (weapon, armor, held_offhand: the kinds that already carry
-//   instances). The craft resolver consults isCommissionEligible and silently
-//   ignores the flag for any other kind, so a tampered command can never arm
+//   instances), excluding soulbound equipment that cannot be delivered. The
+//   craft resolver consults isCommissionEligible and silently ignores the
+//   flag for ineligible output, so a tampered command can never arm
 //   a potion (server authority: the flag is a boolean, the marker is minted
 //   server-side).
 // - The unbind fee: tier-scaled on the training-fee family by the item DEF's
@@ -52,10 +53,10 @@ export function isCommissionEligibleKind(kind: ItemDef['kind'] | undefined): boo
   return kind === 'weapon' || kind === 'armor' || kind === 'held_offhand';
 }
 
-/** The def-level form of the opt-in rule. Everything ineligible ignores the
- *  commission flag at craft time. */
+/** The def-level form of the opt-in rule. Soulbound equipment is owner-only,
+ *  not a deliverable commission. Everything ineligible ignores the flag at craft time. */
 export function isCommissionEligible(def: ItemDef | undefined): boolean {
-  return !!def && isCommissionEligibleKind(def.kind);
+  return !!def && !def.soulbound && isCommissionEligibleKind(def.kind);
 }
 
 // The unbind fee ladder, in copper, indexed from the uncommon rung of
@@ -88,14 +89,18 @@ export type UnbindDenyReason =
   | 'unbind_no_space'
   | 'unbind_cannot_afford';
 
-/** A copy carrying the Perfecting fields (Masterwrought phase 12): mid-track
- *  (`perfecting`) or Perfected. Says nothing about boundTo by itself (a
+/** A copy carrying permanent collection binding, mid-track progress, or
+ *  Perfected status. Says nothing about boundTo by itself (a
  *  head-started craft carries `perfecting: 1` unbound); every caller checks
  *  the bind first. Shared by the resolver's serviceable-copy walk and the
  *  unbind window's row predicate (src/ui/hud/vendor/unbind_view.ts), so the
  *  listed rows and the resolver skip the same copies. */
 export function isPerfectingBound(instance: ItemInstancePayload | undefined): boolean {
-  return instance?.perfecting !== undefined || instance?.perfected === true;
+  return (
+    instance?.perfectingBound === true ||
+    instance?.perfecting !== undefined ||
+    instance?.perfected === true
+  );
 }
 
 export interface UnbindResult {
@@ -164,11 +169,12 @@ function holdsPerfectingBoundCopy(meta: PlayerMeta, itemId: string): boolean {
  *    Perfected copy (its R5 bonus merged into rolled.stats) re-enter trade
  *    and the market, handing another character above-raid power without
  *    spending the Maker's Embers that pace the stage (qr-12-CADENCE). A copy
- *    bound by a FAILED first attempt carries no marker (rank 0, no R5 bonus)
+ *    from the original non-collection roster bound by a FAILED first attempt
+ *    carries no marker (rank 0, no R5 bonus)
  *    and is byte-identical to an ordinary Maker's Bond, so this rung does not
  *    see it and the service clears it for the fee: the recorded rank-0 shape
- *    (pinned in tests/professions_commissions.test.ts; whether to close it is
- *    a maintainer read in the Masterwrought Phase 14 QA ledger).
+ *    (pinned in tests/professions_commissions.test.ts). New collection copies
+ *    retain perfectingBound even at rank zero, including after an exchange.
  *    firstBoundSlotIndex never picks a marker-carrying copy, so an ordinary
  *    Maker's Bond copy of the same id beside it still unbinds (the window
  *    lists exactly that copy); the refusal fires only when EVERY bound copy

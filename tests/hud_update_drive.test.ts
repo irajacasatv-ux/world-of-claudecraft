@@ -1061,7 +1061,8 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     guard: {
       kind: 'module',
       module: 'hud/loot/loot_window_controller.ts',
-      proof: 'if (!force && sig === this.corpseSig) return availability;',
+      proof:
+        'const unchanged = sig === this.corpseSig && harvestSig === this.harvestStatusSig; if (!force && unchanged) return availability;',
     },
     why: 'closes the loot window when the player walks away, and repaints the open corpse body when its advertised loot/harvest set changes',
   },
@@ -1321,7 +1322,7 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
       // local sig binding): render() re-latches lastSig from the one input it
       // painted, so this band never re-acts on a stale one.
       proof:
-        'const input = this.buildInput(); const sig = professionsRefreshSig(input); if (sig === this.lastSig) return;',
+        'const input = this.buildInput(); const sig = professionsRefreshSig(input, harvestPreferenceLocalSig(this.deps.world().harvestPreference)); if (sig === this.lastSig) return;',
     },
     why: 'the professions window',
   },
@@ -1363,6 +1364,13 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     gate: '',
     surface: 'chrome',
     why: 'the always-on Reliquary tracker (not gated on a window): pinned pages fill from normal play and an illuminated page drops off',
+  },
+  {
+    call: 'this.gatheringGoalController.update',
+    band: 'slow',
+    gate: '',
+    surface: 'chrome',
+    why: 'the always-on gathering goal tracker (Intentional Gathering PR4, not gated on a window): a projection change has no dedicated event, so it rides the same slow poll; the module itself signature-gates the rebuild so an unchanged goal touches no DOM (a chrome row carries no guard field, same as updateDeedTracker/updateReliquaryTracker beside it)',
   },
   {
     call: 'this.trackerStackAnchor.apply',
@@ -1718,7 +1726,9 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // and the farming affordance row are different calls), and the window
       // delta lands once, so the split below was counted from the merged table
       // rather than carried over from either side.
-    ).toEqual({ window: 47, chrome: 85, none: 17 });
+      // chrome 85 -> 86: the gathering goal tracker's own signature-gated
+      // repaint (Intentional Gathering PR4, gatheringGoalController.update).
+    ).toEqual({ window: 47, chrome: 86, none: 17 });
     const windows = HUD_UPDATE_DRIVES.filter((r) => r.surface === 'window');
     expect(windows.map((r) => r.call)).toContain('this.spellbookWindow.tickOpen');
     expect(windows.map((r) => r.call)).toContain('this.refreshOpenTownFocusIfChanged');
@@ -1802,7 +1812,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         // The corpse popup's own latch. `force` is the relocalize arm, which
         // rebuilds through the same guard past a signature a locale switch
         // cannot move, so the flag is part of the line the pin looks for.
-        'hud/loot/loot_window_controller.ts: if (!force && sig === this.corpseSig) return availability;',
+        'hud/loot/loot_window_controller.ts: const unchanged = sig === this.corpseSig && harvestSig === this.harvestStatusSig; if (!force && unchanged) return availability;',
         'hud/professions/farming_plant_sheet_window.ts: if (view.status !== this.paintedStatus) this.paint();',
         'hud/quest/quest_dialog_controller.ts: if (this.introHintVisibleFor(npc) !== this.lastIntroHintVisible || gossipRowSig(this.offerableRows(npc)) !== this.lastGossipRowSig) { this.refresh(); }',
         'mailbox_window.ts: if (sig === this.lastSig) return;',
@@ -1813,7 +1823,7 @@ describe('Hud.update() drives exactly the registered set, on the registered band
         // The professions guard hashes the freshly built input inline (no local
         // sig binding): render() re-latches lastSig from the one input it
         // painted, so the band never re-acts on a stale signature.
-        'hud/professions/professions_window.ts: const input = this.buildInput(); const sig = professionsRefreshSig(input); if (sig === this.lastSig) return;',
+        'hud/professions/professions_window.ts: const input = this.buildInput(); const sig = professionsRefreshSig(input, harvestPreferenceLocalSig(this.deps.world().harvestPreference)); if (sig === this.lastSig) return;',
         'reliquary_window.ts: const input = this.buildInput(); const sig = this.sigFromInput(input); if (sig === this.lastSig) return;',
         'social_window.ts: if (struct !== this.lastStruct) {',
         // #2519 replaced the joined signature string this used to build every frame with

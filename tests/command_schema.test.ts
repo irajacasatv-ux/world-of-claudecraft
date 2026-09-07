@@ -140,13 +140,12 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // counts each move by one over the eighth composition; dispatch-only stays
 // 13. Set from a suite run on the merged tree, never by arithmetic in the
 // diff.
-// The housing facet adds ten send + dispatch pairs (freehold_enter,
-// freehold_leave, place_furnishing, move_furnishing, remove_furnishing,
-// undo_placement, redo_placement, pay_ledger, set_visit_policy,
-// set_freehold_build_presence): 223/236, dispatch-only still 13. Set from a
-// suite run.
-const EXPECTED_SEND_COUNT = 223;
-const EXPECTED_DISPATCH_COUNT = 236;
+// The merged command universe includes housing, material grouping, harvest
+// preference, corpse inspection, gathering goals and Perfecting rank exchange.
+// Counts are re-derived with the send and dispatch scans below; dispatch-only
+// commands remain unchanged.
+const EXPECTED_SEND_COUNT = 231;
+const EXPECTED_DISPATCH_COUNT = 244;
 const EXPECTED_DISPATCH_ONLY_COUNT = 13;
 
 // The chat sub-channel routing switch (server/game.ts `switch

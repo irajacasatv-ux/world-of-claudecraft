@@ -37,12 +37,10 @@ describe('isTransferLockedInstance', () => {
 });
 
 describe('publicInstanceView: the display trim', () => {
-  it('projects exactly signer/enchant/rolled/name and drops the rest', () => {
+  it('projects inspect identity and Perfected activity, keeping rank and binding private', () => {
     // The fixture carries EVERY dropped field by name, the Perfecting pair
-    // included, so the exclusion is pinned directly here rather than only
-    // transitively through the eqi cross-pin below. `name` (the player-chosen
-    // legendary name, Masterwrought phase 13) is the one cosmetic JOIN since
-    // the allowlist was written: it projects, the Perfected marker does not.
+    // included, so privacy is pinned directly rather than only transitively
+    // through the eqi cross-pin. Perfected is visible for dormant enchants.
     const full: ItemInstancePayload = {
       signer: 'Ayla',
       enchant: 'ench_stat_str',
@@ -53,12 +51,15 @@ describe('publicInstanceView: the display trim', () => {
       boundTo: 12,
       perfecting: 2,
       perfected: true,
+      perfectingBound: true,
+      perfectingBonus: { str: 2 },
     };
     expect(publicInstanceView(full)).toEqual({
       signer: 'Ayla',
       enchant: 'ench_stat_str',
       rolled: { quality: 'legendary', stats: { str: 2 }, masterwork: true },
       name: "Vel'tara's Oath",
+      perfected: true,
     });
   });
 
@@ -76,14 +77,27 @@ describe('publicInstanceView: the display trim', () => {
     // still holds every non-cosmetic field out by name.
     const game = readFileSync(new URL('../server/game.ts', import.meta.url), 'utf8');
     const projected = [...game.matchAll(/pub\.(\w+) = inst\.(\w+);/g)].map((m) => m[1]);
-    expect(projected.sort()).toEqual(['enchant', 'name', 'rolled', 'signer']);
+    expect(projected.sort()).toEqual(['enchant', 'name', 'perfected', 'rolled', 'signer']);
     const transfer = readFileSync(
       new URL('../src/sim/item_instance_transfer.ts', import.meta.url),
       'utf8',
     );
     const trimmed = [...transfer.matchAll(/pub\.(\w+) = /g)].map((m) => m[1]);
-    expect([...new Set(trimmed)].sort()).toEqual(['enchant', 'name', 'rolled', 'signer']);
-    for (const banned of ['boundTo', 'bindOnTrade', 'charges', 'perfecting', 'perfected']) {
+    expect([...new Set(trimmed)].sort()).toEqual([
+      'enchant',
+      'name',
+      'perfected',
+      'rolled',
+      'signer',
+    ]);
+    for (const banned of [
+      'boundTo',
+      'bindOnTrade',
+      'charges',
+      'perfecting',
+      'perfectingBound',
+      'perfectingBonus',
+    ]) {
       expect(transfer.includes(`pub.${banned}`), `${banned} must never project`).toBe(false);
     }
   });
@@ -168,19 +182,23 @@ describe('removeMatchingInstance', () => {
 });
 
 describe('canGrantCopies / grantCopies: the shared exchange-pipe pair', () => {
-  it('capacity: plain-stack room is not instanced room, and the reverse', () => {
+  it('capacity: plain-stack room excludes enchanted payloads in either direction', () => {
     const inventory: InvSlot[] = [{ itemId: 'pristine_hide', count: 1 }];
     // One free slot short: the plain stack tops up, the instanced copy needs
     // its own slot.
     expect(canGrantCopies(inventory, { general: 1, materials: 0 }, 'pristine_hide', 1)).toBe(true);
     expect(
-      canGrantCopies(inventory, { general: 1, materials: 0 }, 'pristine_hide', 1, SIGNED),
+      canGrantCopies(inventory, { general: 1, materials: 0 }, 'pristine_hide', 1, {
+        enchant: 'ench_stat_str',
+      }),
     ).toBe(false);
     const signedStack: InvSlot[] = [
-      { itemId: 'pristine_hide', count: 1, instance: { signer: 'Ayla' } },
+      { itemId: 'pristine_hide', count: 1, instance: { enchant: 'ench_stat_str' } },
     ];
     expect(
-      canGrantCopies(signedStack, { general: 1, materials: 0 }, 'pristine_hide', 1, SIGNED),
+      canGrantCopies(signedStack, { general: 1, materials: 0 }, 'pristine_hide', 1, {
+        enchant: 'ench_stat_str',
+      }),
     ).toBe(true);
     expect(canGrantCopies(signedStack, { general: 1, materials: 0 }, 'pristine_hide', 1)).toBe(
       false,
