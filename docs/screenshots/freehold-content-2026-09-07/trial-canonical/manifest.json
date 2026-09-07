@@ -1,0 +1,95 @@
+{
+  "contract": "Canonical change-aware target set; initial missing mobile Overview completed by an unchanged failed-target-only retry. Original warning/error receipts retained. Fourteen target slots covered; first run is not represented as clean.",
+  "commands": [
+    "GAME_URL=http://127.0.0.1:5179 SHOTS_DIR=tmp/freehold-trial-canonical DIFF_FILE=tmp/freehold-trial-visual.diff node scripts/pr_screenshots.mjs",
+    "GAME_URL=http://127.0.0.1:5179 SHOTS_DIR=tmp/freehold-trial-canonical-retry DIFF_FILE=tmp/freehold-trial-visual.diff node tmp/freehold-trial-canonical-retry.mjs"
+  ],
+  "runs": [
+    {
+      "run": "initial",
+      "captured": 13,
+      "targetErrors": [
+        "TARGET reliquary-window/mobile: reliquary window did not open"
+      ],
+      "consoleWarnings": 125
+    },
+    {
+      "run": "retry",
+      "captured": 1,
+      "targetErrors": [],
+      "consoleWarnings": 13
+    }
+  ],
+  "shots": [
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/01-reliquary-window-desktop.png",
+      "sha256": "f59bbf64ae08c621a09ef0317f45a2e293b2718f238ba28f3ea699a6f4a27b0f"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/03-reliquary-page-desktop.png",
+      "sha256": "7144b48905425a811df08b8edc178cbb2287438feb51be9fdb9319f230f35292"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/04-reliquary-page-mobile.png",
+      "sha256": "788d77ca26e1bfe4e7d1ba4d6351bf49f016e833e1ac8c5b91e4a85a9b7aec4c"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/05-reliquary-rift-page-desktop.png",
+      "sha256": "efadd6b47e86f402a17cd41f713406c79fc34fe3788e42050fbaf21efde44f83"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/06-reliquary-rift-page-mobile.png",
+      "sha256": "74e777247260378a63e6c662858f5bb45ec9bb3915865ce7191b8465b9f15af7"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/07-reliquary-rares-page-desktop.png",
+      "sha256": "4c72ae4bcc63a252cd08d2cf04020362701834e1b398abc605ea37c5c5a57229"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/08-reliquary-rares-page-mobile.png",
+      "sha256": "63b9619a7d90c05d8e0a7caaad6e28c1f453d5981d5141010f2d54e0e12a9167"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/09-reliquary-vault-shelf-desktop.png",
+      "sha256": "82299f8bddbfd22e7c331f5d508e4dfaa83734cd5fc20b6f2334d257b8646d78"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/10-reliquary-vault-shelf-mobile.png",
+      "sha256": "1925c7e1c8802d4266be86016db661f5d6356d157c0c0977b8414385d692a195"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/11-reliquary-vault-page-desktop.png",
+      "sha256": "1f1eef58caeb9a470c605a0416860288428532095ab79d2943ef3fc559fd6869"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/12-reliquary-vault-page-mobile.png",
+      "sha256": "e781b8630d513c95332b68907b235fc77126d644e1e56d46437be69e6ef0b32f"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/13-reliquary-riftbound-page-desktop.png",
+      "sha256": "bacaeb680bd819981dd16ab9bc54cdae6bbc56ce088531ce52fca1445b85cee7"
+    },
+    {
+      "run": "initial",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/initial/14-reliquary-riftbound-page-mobile.png",
+      "sha256": "1551e6beac22eb192c4393ba8d277e43cbf5992384fd4d38b52dddcba12fd05a"
+    },
+    {
+      "run": "retry",
+      "path": "docs/screenshots/freehold-content-2026-09-07/trial-canonical/retry/01-reliquary-window-mobile.png",
+      "sha256": "1bd55bb05622416f12d14e7cfd05ae9bad7162ed6927bc150a7494b63306a04e"
+    }
+  ]
+}

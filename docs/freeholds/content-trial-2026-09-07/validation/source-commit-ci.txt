@@ -1,0 +1,15 @@
+Command: npm run ci:changed
+Commit: e1be8757823fbb30b9b8d6b941e2d78ff18008e9
+Observed exit: 0
+Raw log: /tmp/freehold-completion-source-commit-ci.log
+Raw log SHA-256: 47fe9c9d28d4ce95535ebd61b4a867ad559a60acbeae1dc25be3b26eca2ea63c
+Raw log bytes: 11249108
+
+[ci:changed] --since=origin/release/v0.42.0
+Checked 1920 files in 1202ms. No fixes applied.
+Found 5214 warnings.
+Found 51 infos.
+
+This compact receipt preserves observed command summaries. The coordinator
+repeats the command after the final evidence commit and reports that final
+result with the task handoff, without an evidence-only commit loop.

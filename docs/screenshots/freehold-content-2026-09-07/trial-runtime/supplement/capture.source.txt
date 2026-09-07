@@ -1,0 +1,98 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import puppeteer from 'puppeteer-core';
+import { BROWSER_PATH } from '../scripts/browser_path.mjs';
+import { enterOfflineGame, dismissEntryOverlays } from '../scripts/enter_offline_game.mjs';
+import { suppressGpuNotice } from '../scripts/lib/gpu_notice_suppress.mjs';
+const out='tmp/freehold-trial-runtime-supplement'; fs.mkdirSync(out,{recursive:true});
+const ids=['freehold_timber_bed','freehold_round_table','freehold_spindle_chair','freehold_low_stool','freehold_woven_rug','freehold_brass_lantern','freehold_storage_chest','freehold_open_bookshelf'];
+const record={fixture:'Local stock offline world, development content enabled. Harness moves player to the authored NPC, clears starter inventory and grants exactly 2000 copper; all furnishings acquired through real vendor UI. No placement or production enable is claimed.',captures:[],checks:[],errors:[]};
+const browser=await puppeteer.launch({executablePath:BROWSER_PATH,headless:'new',protocolTimeout:240000,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader'],defaultViewport:{width:1600,height:900}});
+try {
+for (const mobile of [true]) {
+ const variant=mobile?'mobile-landscape':'desktop'; const page=await browser.newPage();
+ page.on('pageerror',e=>record.errors.push(variant+': '+e.message));
+ if(mobile)await page.emulate({viewport:{width:844,height:390,isMobile:true,hasTouch:true,deviceScaleFactor:2},userAgent:'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36'});
+ await page.evaluateOnNewDocument(()=>{localStorage.setItem('locale','en');localStorage.setItem('woc_settings',JSON.stringify({graphicsPreset:1,graphicsDefaultApplied:true}));localStorage.removeItem('woc_entry_probe');});
+ await suppressGpuNotice(page);
+ await page.goto('http://127.0.0.1:5179/'+(mobile?'mobile.html':''),{waitUntil:'networkidle0',timeout:120000});
+ if(!await enterOfflineGame(page,{charClass:'warrior',charName:'Alden',selectorTimeoutMs:90000,gameBootTimeoutMs:180000,settleMs:2000}))throw new Error('World boot failed');
+ await page.waitForFunction(()=>{const el=document.querySelector('#loading-screen');return !el||getComputedStyle(el).display==='none'||getComputedStyle(el).visibility==='hidden';},{timeout:180000});
+ await page.waitForFunction(()=>document.body.classList.contains('game-active')&&getComputedStyle(document.querySelector('#start-screen')).display==='none',{timeout:180000});
+ await dismissEntryOverlays(page);
+ const state=await page.evaluate(()=>{const sim=window.__game.sim,m=sim.players.get(sim.playerId),npcs=[...sim.entities.values()].filter(e=>e.templateId==='freehold_furnisher'); if(npcs.length!==1)throw new Error('Furnisher count '+npcs.length);m.inventory.splice(0);m.copper=2000;sim.player.pos={...npcs[0].pos,x:npcs[0].pos.x+1};sim.player.prevPos={...sim.player.pos};window.__game.hud.reliquaryWindow.openWithPage('hearth_basics');return{enabled:sim.cfg.freeholdsEnabled,npc:npcs[0].pos,stock:npcs[0].vendorItems};});
+ record.checks.push({variant,...state});
+ await page.waitForFunction(()=>{const g=window.__game;return g.renderer.isZoneReadyAt(g.sim.player.pos.x,g.sim.player.pos.z);},{timeout:180000});
+ await page.waitForFunction(()=>!document.querySelector('#loading-screen')?.classList.contains('visible'),{timeout:180000});
+ await dismissEntryOverlays(page);
+ async function clickLive(selector){await page.$eval(selector,e=>e.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));const point=await page.$eval(selector,el=>{const r=el.getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2};});if(mobile)await page.touchscreen.tap(point.x,point.y);else await page.mouse.click(point.x,point.y);}
+ async function shot(name,selector){
+   await page.waitForFunction(sel=>{const el=document.querySelector(sel);return el&&el.getBoundingClientRect().height>0&&getComputedStyle(el).display!=='none';},{timeout:20000},selector);
+   await page.waitForFunction(()=>{const e=document.querySelector('#loading-screen');return !e||getComputedStyle(e).display==='none'||getComputedStyle(e).visibility==='hidden';},{timeout:180000});
+   await page.evaluate(()=>document.fonts.ready);
+   await page.evaluate(()=>document.querySelector('#perf-nudge .perf-nudge-dismiss')?.click());
+   await new Promise(r=>setTimeout(r,400));
+   const file=out+'/'+variant+'-'+name+'.png';
+   const box=await page.$eval(name==='missing-source-tooltip'?'body':selector,e=>{const r=e.getBoundingClientRect(),x=Math.max(0,r.x-12),y=Math.max(0,r.y-12);return {x,y,width:Math.max(1,Math.min(innerWidth,r.right+12)-x),height:Math.max(1,Math.min(innerHeight,r.bottom+12)-y)};});
+   await page.screenshot({path:file,clip:box});
+   const ui=await page.$eval(selector,el=>({text:el.innerText,rect:el.getBoundingClientRect().toJSON(),scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
+   record.captures.push({variant,name,file,sha256:crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),...ui});console.log('captured '+variant+'-'+name);
+ }
+ await page.waitForFunction(()=>document.querySelectorAll('#reliquary-window .reliquary-cell').length===8);
+ const missing=await page.$$eval('#reliquary-window .reliquary-cell',els=>els.map(e=>e.getAttribute('aria-label')));
+ if(!missing.every(s=>s.includes('Freehold Furnisher')))throw new Error('Missing source route');record.checks.push({variant,missingAria:missing});
+ await page.waitForFunction(()=>{const e=document.querySelector('[data-pin="hearth_basics"]'),r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));},{timeout:180000});
+ await shot('hearth-missing','#reliquary-window');
+ const pin='[data-focus-key="pin:hearth_basics"]';
+ await clickLive(pin); await page.waitForFunction(()=>document.querySelector('[data-pin="hearth_basics"]').getAttribute('aria-pressed')==='true');
+ await shot('hearth-pinned','#reliquary-window');
+ await clickLive(pin); await page.waitForFunction(()=>document.querySelector('[data-pin="hearth_basics"]').getAttribute('aria-pressed')==='false');
+ record.checks.push({variant,pinAndUnpin:true});
+ if(!mobile){await page.hover('[data-focus-key="cell:item:freehold_timber_bed"]');await page.waitForFunction(()=>{const e=document.querySelector('#tooltip');return e&&getComputedStyle(e).display!=='none'&&e.textContent.includes('Freehold Furnisher');});await shot('missing-source-tooltip','#reliquary-window');}
+ await page.evaluate(()=>{const g=window.__game;g.hud.reliquaryWindow.close();g.hud.openVendor([...g.sim.entities.values()].find(e=>e.templateId==='freehold_furnisher').id);});
+ await page.waitForFunction(()=>document.querySelectorAll('#vendor-window [data-coach-item]').length===8);
+ await page.waitForFunction(()=>[...document.querySelectorAll('#vendor-window img')].every(i=>i.complete&&i.naturalWidth>0));
+ await shot('vendor-stock','#vendor-window');
+ if(mobile){await page.$eval('[data-coach-item="freehold_open_bookshelf"]',e=>e.scrollIntoView({block:'center',behavior:'instant'}));await shot('vendor-stock-lower','#vendor-window');}
+ for(const [i,id] of ids.entries()) {const sel='#vendor-window [data-coach-item="'+id+'"]';if(i===0&&!mobile){await page.focus(sel);await page.keyboard.press('Enter');}else await clickLive(sel);await page.waitForFunction(id=>window.__game.sim.inventory.some(s=>s.itemId===id),{},id);}
+ const purchase=await page.evaluate(()=>{const s=window.__game.sim,m=s.players.get(s.playerId);return{copper:s.copper,inventory:s.inventory,discovered:[...m.deedStats.itemsDiscovered].filter(id=>id.startsWith('freehold_')),illuminated:m.reliquary.illuminatedPages.has('hearth_basics')};});
+ if(purchase.copper!==0||purchase.discovered.length!==8||!purchase.illuminated)throw new Error('Acquisition failed '+JSON.stringify(purchase));record.checks.push({variant,purchase});
+ await shot('vendor-purchased','#vendor-window');
+ await page.evaluate(()=>{window.__game.hud.closeVendor();window.__game.hud.reliquaryWindow.open('overview');});
+ await shot('overview','#reliquary-window');
+ for(const lang of ['ja_JP']) {
+   await page.evaluate(async lang=>{const l=await import('/src/ui/i18n.ts');const r=await import('/src/ui/reliquary_i18n.ts');await l.ensureLocaleLoaded(lang);await r.ensureReliquaryLocalesLoaded(lang);l.setLanguage(lang);window.__game.hud.reliquaryWindow.openWithPage('hearth_basics');},lang);
+   await page.waitForFunction(()=>document.querySelectorAll('#reliquary-window .reliquary-cell--owned').length===8,{timeout:20000});
+   await page.waitForFunction(()=>[...document.querySelectorAll('#reliquary-window img')].every(i=>i.complete&&i.naturalWidth>0));
+   await shot('hearth-owned-'+lang,'#reliquary-window');
+   await page.$eval('[data-focus-key="cell:item:freehold_open_bookshelf"]',e=>e.scrollIntoView({block:'end',behavior:'instant'}));
+   await shot('hearth-owned-grid-'+lang,'#reliquary-window');
+   if(lang==='ja_JP') {
+     const needle=await page.evaluate(async()=>{const l=await import('/src/ui/i18n.ts');return '木組みのベッド';});
+     await page.focus('.reliquary-search'); await page.type('.reliquary-search',needle);
+     await page.waitForFunction(()=>document.querySelectorAll('#reliquary-window .reliquary-cell').length===1);
+     const focused=await page.evaluate(()=>document.activeElement?.classList.contains('reliquary-search'));
+     if(!focused)throw new Error('Search focus lost');
+     await shot('hearth-japanese-search','#reliquary-window');
+     record.checks.push({variant,localizedSearch:needle,focusRetained:focused});
+     await page.focus('.reliquary-search');await page.$eval('.reliquary-search',e=>e.select());await page.keyboard.press('Backspace');
+     await page.waitForFunction(()=>document.querySelectorAll('#reliquary-window .reliquary-cell').length===8);
+   }
+ }
+ if(mobile){await page.setViewport({width:390,height:844,isMobile:true,hasTouch:true,deviceScaleFactor:2});await page.waitForFunction(()=>innerHeight>innerWidth);await shot('portrait-orientation','#rotate-device');}
+ await page.close();
+}
+for(const mobile of []) {
+ const variant=mobile?'guide-mobile':'guide-desktop',page=await browser.newPage();
+ await page.setViewport({width:mobile?390:1440,height:mobile?844:900,deviceScaleFactor:1});
+ await page.goto('http://127.0.0.1:5179/wiki/reliquary?lang=en#reliquary-shelf-hearth',{waitUntil:'networkidle0',timeout:120000});
+ await page.waitForSelector('#reliquary-hearth_basics');
+ await page.$eval('#reliquary-shelf-hearth',e=>e.scrollIntoView({block:'center'}));
+ await page.evaluate(()=>document.fonts.ready);
+ const el=await page.$('#reliquary-shelf-hearth'),file=out+'/'+variant+'.png';await el.screenshot({path:file});
+ const text=await el.evaluate(e=>e.innerText);if(!text.includes('Hearth Basics (8)'))throw new Error('Guide missing Hearth');
+ record.captures.push({variant,name:'hearth',file,sha256:crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),text});console.log('captured '+variant);
+ await page.close();
+}
+} catch(error){record.errors.push(error.stack);throw error;}finally{await browser.close();fs.writeFileSync(out+'/manifest.json',JSON.stringify(record,null,2)+'\n');}
+if(record.errors.length)process.exitCode=1;

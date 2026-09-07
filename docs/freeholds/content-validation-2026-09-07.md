@@ -1,5 +1,9 @@
 # Freeholds content implementation evidence, 2026-09-07
 
+This is the historical partial checkpoint before development trial acceptance.
+Current completion evidence is in [content-final-validation-2026-09-07.md](content-final-validation-2026-09-07.md).
+The source-absence statements and old gate totals below describe that checkpoint.
+
 ## Status and scope
 
 **PARTIAL/BLOCKED, local. Full feature acceptance is NOT READY.**

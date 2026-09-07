@@ -1,0 +1,27 @@
+{
+  "command": "node scripts/gate_select.mjs",
+  "exitCode": 0,
+  "stepsPassed": 12,
+  "unit": {
+    "passedFiles": 3853,
+    "skippedFiles": 34,
+    "passedTests": 57726,
+    "expectedFailures": 2,
+    "skippedTests": 541
+  },
+  "browser": {
+    "passedFiles": 43,
+    "passedTests": 376
+  },
+  "rawLogSha256": "4e7574450f8c98458c8ea68b2b39b09a12cd7c9f02b8b8379596de2421db3d2e",
+  "rawLogBytes": 11589160,
+  "rawLogAtExecution": "/tmp/freehold-trial-shared-gate-final.log",
+  "receipt": "shared-gate.log",
+  "incidentalOutputsRestored": [
+    "docs/screenshots/intentional-gathering-pr1/corpse-choice-desktop.png",
+    "docs/screenshots/intentional-gathering-pr1/corpse-choice-mobile-landscape.png",
+    "docs/screenshots/intentional-gathering-pr1/corpse-choice-mobile-portrait.png",
+    "docs/screenshots/intentional-gathering-pr1/crop-choice-desktop.png",
+    "docs/screenshots/intentional-gathering-pr2/source-picker-1280x720.png"
+  ]
+}

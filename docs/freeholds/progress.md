@@ -1,22 +1,18 @@
 # Freeholds and Guildhalls: progress
 
 Foundation and furnishing item-kind implementation and QA are complete locally.
-The furnishing audit verdict is PASS, with all 40 findings resolved and independently
-reviewed, the complete shared gate green and final evidence recorded below. Content
-work 03 is PARTIAL/BLOCKED as of 2026-09-07: approved tables, deed rewards and Hearth
-consumer support are authored locally, while unsigned numeric/geometry artifacts
-block the operational Ledger and furnishing catalog. Scoped validation and the six
-required reviews have finished. The shared gate passed all 12 steps, and fresh
-whole-fix review passed the implemented scope with no open findings or nits.
-Product settlement and external sign-off remain distinct from implementation
-and QA completion.
+Content work 03 now includes the accepted development trial, all eight furnishings,
+the gated furnisher and actual Hearth page. Fernando accepted the concrete trial
+on 2026-09-07; implementation and distinct paired QA are complete, verdict PASS.
+Production calibration and activation remain separate. NPC voice is explicitly
+required before feature shipment. See the current 03 notes and acceptance record.
 
 ## Status
 
 There are 56 bounded work items and 56 paired QA rows; their actual status is recorded
 below. The 44 original numeric items retain their IDs and twelve suffixed pairs are
 inserted into the chain. The next handoff is
-[phase-03-content-tiers-and-basics.md](phase-03-content-tiers-and-basics.md).
+[phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md).
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
@@ -24,8 +20,8 @@ inserted into the chain. The next handoff is
 | 01 QA | PASS | 2026-09-06 | 2026-09-06 | Twelve auditors and reviewers (six bespoke audits plus the six required reviewers: cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist). About 156 raw findings, deduplicated to 51 distinct: 1 blocking (self-inflicted, a glossary keyPattern registered ahead of its keys, caught by two reviewers and fixed), 0 blocking in the original 01 implementation. ALL resolved: 37 by a code, test or doc change; 14 recorded as reviewed-with-no-change-warranted, each with its reason. Fresh fix-round review VERDICT PASS at 4361ed5989 (zero blocking; it confirmed zero pre-existing assertions were weakened or removed, all four removed expect lines being equal-or-stronger replacements), and its three remaining findings were applied after it: the twelve-of-thirteen delegate correction, the vacuous descriptor arm replaced by a mutation-proven source pin, and the blank_entity scrape taught to follow Entity's heritage clause. Tip 2e247df270. Gates unsigned, see notes |
 | 02 Furnishing item kind | Complete, local | 2026-09-06 | 2026-09-06 | Original implementation validation PASS; paired QA repairs and current evidence are recorded in row 02 QA and the notes below |
 | 02 QA | PASS, local | 2026-09-07 | 2026-09-07 | 40 findings found and 40 resolved, zero deferred. Fresh entire-fix review PASS at d386635394 across 110 changed files and all four repair commits; final documentation and checklist PASS with both wording nits resolved. Final shared gate exit 0, all 12 steps green; 58,083 Vitest and 373 browser tests passed; standalone i18n/status PASS. Post-commit ci:changed actual exit 0 at c881543258 with clean status; the same check follows the evidence-only amendment. See furnishing-item-kind-qa-validation.md |
-| 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | PARTIAL/BLOCKED, local | 2026-09-07 | | Frozen approved tiers/Charter/eligible IDs, explicit pending Ledger schedule, manual Homesteader deeds/rewards and hidden empty Hearth support are committed locally. CAL-LEDGER-A, CAL-VENDOR-A, CAL-DECOR-A/B and MEASURE-SPACE remain unsigned; no operational bill, furnishing item, furnisher or Hearth item page. See 03 notes, content-validation-2026-09-07.md and content-completion-checklist-2026-09-07.md. No push. |
-| 03 QA | PARTIAL/BLOCKED, local | 2026-09-07 | | Scoped checks and six required COVERAGE reviews finished; repairable findings addressed. Visual evidence accepted; shared gate PASS (57665 unit and 373 browser tests), fresh whole-fix review PASS with no open findings or nits. Missing approved content still prevents overall PASS. See content-validation-2026-09-07.md. |
+| 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Complete (QA PASS), local | 2026-09-07 | 2026-09-07 | Accepted twelve-bill development cycle, eight common 250/60 furnishings, measured geometry, gated freehold_furnisher, manual Homesteader rewards and hearth_basics (eight ordinary item relics). Production remains disabled. See content-trial-2026-09-07/acceptance.md and content-final-validation-2026-09-07.md. No push. |
+| 03 QA | PASS, local | 2026-09-07 | 2026-09-07 | 39 distinct findings found and resolved, zero open. Paired correctness/coverage/hygiene, finishing and conditional reviews PASS, including fresh repairs. Final shared gate exit 0, all 12 steps; 57,726 unit and 376 browser tests passed. Runtime and canonical visual evidence accepted. Four reviewed completion commits; post-source-commit ci:changed exit 0, repeated after the final evidence commit with its result in the task handoff. See content-final-validation-2026-09-07.md. |
 | 04 Content: crafted furnishings and quartermaster patterns | Not started | | | |
 | 04 QA | Not started | | | |
 | 05 Instance claim | Not started | | | |
@@ -335,6 +331,34 @@ Deliverables (at most five):
 5. Literal content/firewall/economy/source-freeze tests and the approved manifest
    evidence.
 
+03 accepted development implementation, 2026-09-07:
+
+The [accepted trial](content-trial-2026-09-07/acceptance.md) supplies the complete
+measured development basis; [revalidation](content-trial-2026-09-07/revalidation.md)
+repeats the actual producers with identical accepted values. The twelve-bill
+`freehold-ledger-tuning-v1` cycle uses produce plus two rotating eligible families.
+All eight common furnishings cost 250/60 copper and retain their measured
+stand-in footprints, radii and decor costs. `freehold_furnisher` has exactly that
+stock and spawns only on enabled hosts; its addition preserves existing terrain,
+NPC ordering and RNG. Real purchases, custody, discovery and current dark-host
+reload are covered. `hearth_basics` contains all eight ordinary item relics;
+current catalog pins are 42 pages, 474 raw slots, 438 full-completion slots and
+409 character-completion slots. Homesteader deeds remain manual and cosmetic.
+
+Implementation and paired QA PASS. The [current validation record](content-final-validation-2026-09-07.md)
+contains exact commands, all reviews, inspected capture manifests and the four
+completion commit groups. Source commits are `a6bf26fad9`, `9121f0d94f` and
+`e1be875782`, followed by the final evidence closeout. Original
+accepted artifacts remain immutable. CAL-LEDGER-A, CAL-VENDOR-A, CAL-DECOR-A/B
+and MEASURE-SPACE still require their named final production/room/asset/LOW
+acceptance; the development decision does not replace those gates. The exact
+Freehold Furnisher greeting voice is required before shipping, per Fernando's
+explicit deferral. Compatible fleet-wide catalogs and a pre-enable backup remain
+required before furnishing acquisition is activated in production.
+
+<details>
+<summary>Historical partial checkpoint before development trial acceptance</summary>
+
 03 implementation checkpoint, 2026-09-07, PARTIAL/BLOCKED:
 
 - `src/sim/content/freehold/{tiers.ts,charters.ts,ledger_schedule.ts,index.ts}` and
@@ -405,6 +429,8 @@ prevent 03 QA PASS. Keep 03 QA uncompleted until its actual content criteria pas
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
+</details>
+
 After phase-03-qa.md: [phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md).
 
 #### 04 Content: crafted furnishings and quartermaster patterns

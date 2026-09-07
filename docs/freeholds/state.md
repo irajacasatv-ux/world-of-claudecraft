@@ -34,22 +34,21 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
-Phase 03 (`phase-03-content-tiers-and-basics.md`): PARTIAL/BLOCKED locally on
-2026-09-07. Frozen approved tier/Charter/eligible-material data, manual Homesteader
-deeds and their title/border rewards, and empty-safe Hearth consumer support are
-authored. CAL-LEDGER-A has no operational schedule or quantities; CAL-VENDOR-A,
-CAL-DECOR-A/B and MEASURE-SPACE have no approved complete furnishing rows. No furnishing
-item, furnisher entity/stock or Hearth item page has been added. Scoped validation
-and six required COVERAGE reviews are finished. Visual evidence is accepted.
-The shared gate passed all 12 steps; fresh whole-fix review passed the implemented
-scope with no open findings or nits. Evidence is in `content-validation-2026-09-07.md`;
-neither implementation completion nor a QA PASS is claimed. Completed work is
-committed locally in reviewed chunks; no push. The remaining producer, approval
-and implementation sequence is in `content-completion-checklist-2026-09-07.md`.
-See the 03 ledger notes below, `progress.md` row 03 and
-`content-source-freeze-2026-09-07.md` for exact landed scope and unsigned gates.
-NEXT remains `phase-03-content-tiers-and-basics.md` until its blocked deliverables
-are complete; the paired audit is `phase-03-qa.md`.
+Phase 03 (`phase-03-content-tiers-and-basics.md`): COMPLETE INCLUDING QA,
+verdict PASS locally on 2026-09-07. All 39 distinct completion-round findings
+are resolved; fresh repair and final record reviews pass. The shared gate passed
+all twelve steps, with 57726 unit tests and 376 browser tests passing.
+Fernando accepted the exact trial in `content-trial-2026-09-07/acceptance.md`.
+The twelve-bill version, eight furnishing records, gated `freehold_furnisher`,
+actual `hearth_basics`, manual Homesteader rewards, art and localization exist.
+Production remains disabled. Final production calibration, shipping models,
+room/LOW evidence and the explicitly deferred NPC voice remain named gates.
+See `content-final-validation-2026-09-07.md` and the current 03 ledger notes.
+NEXT: `phase-04-content-crafted-and-patterns.md`. Completion source commits are
+`a6bf26fad9`, `9121f0d94f` and `e1be875782`, followed by this final evidence
+closeout. The post-source-commit check passed; the task handoff records the
+repeated `ci:changed` result after the actual final commit and clean status.
+No push or merge has occurred.
 
 Previous phase 02 (`phase-02-furnishing-item-kind.md`): COMPLETE INCLUDING QA, verdict PASS
 locally on 2026-09-07. All 40 distinct findings have independently
@@ -1287,7 +1286,7 @@ only and never declares its remaining deliverables or paired QA complete.
 |---|---|---|---|---|---|---|---|
 | 01 | `src/world_api/housing.ts`, `src/sim/freehold/{types,state,commands,index}.ts` + `CLAUDE.md`, `src/net/freehold_snapshot_wire.ts`, `server/freehold_config.ts`, `server/freehold_wire.ts`, `server/freehold_routes.ts`; extractions `src/sim/mob/move_toward.ts`, `server/live_location.ts`, `src/net/blank_entity.ts`, `src/game/seo_metadata.ts`; tests `freehold_module`, `freehold_snapshot_wire`, `freehold_command_chain_online`, `move_toward`, `seo_metadata`, `server/freehold_wire`, `server/freehold_routes` | `myFreehold`, `freeholdLayout` (data, null); `housingNowMs`, `freeholdEnter`, `freeholdLeave`, `placeFurnishing`, `moveFurnishing`, `removeFurnishing`, `undoPlacement`, `redoPlacement`, `payLedger`, `setVisitPolicy`, `setFreeholdBuildPresence` (dark no-ops); SimContext `ctx.freeholds` (live map) and `ctx.freeholdsEnabled` (read-only); `SimConfig.freeholdsEnabled` | none | `freehold_enter`, `freehold_leave`, `place_furnishing`, `move_furnishing`, `remove_furnishing`, `undo_placement`, `redo_placement`, `pay_ledger`, `set_visit_policy`, `set_freehold_build_presence` (refused pre-switch while `FREEHOLDS_ENABLED !== '1'`; `freehold_enter` jail-blocked); self keys: none (empty allowlist) | GET `/api/freehold` (bearer read guard behind the dedicated tier-1-only `HOUSING_READ_POLICY` IP limiter, 60/min, no tier-2 write; `freehold.disabled` 503 while dark, `{ enabled: true, freehold: null }` lit) | none | `apiError.freehold.invalid_input` (generated, reserved), `apiError.freehold.disabled` (English plus the five M16 non-Latin fills); metrics `woc_freehold_refused_total`; env `FREEHOLDS_ENABLED` (strict `'1'`, default off, `.env.example` + `DEPLOY.md` + `turbo.json`) |
 | 02 | `src/sim/item_storage_rules.ts`; `src/ui/hud/housing/{index.ts,CLAUDE.md,furnishing_tooltip_view.ts,furnishing_tooltip.ts}`; extraction `src/ui/mount_tooltip_view.ts`; QA shared projection `src/ui/item_instance_view.ts`; fixture `tests/fixtures/furnishing_item.ts`; original furnishing and mount tooltip tests plus 22 QA suites, including actual consumer/tool/commerce/feast host parity, loaded power, custody/journal restart, identity and presentation | none | none | ItemKind `furnishing` and `FurnishingItemDef`; no new command or snapshot key | none | none | English only: `itemUi.kind.furnishing`, `itemUi.market.filterTypeFurnishing`, `hudChrome.housing.furnishing.footprint`, `hudChrome.housing.furnishing.decorCost`, `hudChrome.housing.furnishing.surfaceFloor`, `hudChrome.housing.furnishing.maker`; generic custody leaf `hudChrome.itemTooltip.partyTradeWindowCustody` |
-| 03 (PARTIAL/BLOCKED) | `src/sim/content/freehold/{tiers.ts,charters.ts,ledger_schedule.ts,index.ts,CLAUDE.md}`; `tests/freehold_content.test.ts`, `tests/freehold_deed_records.test.ts`, `tests/reliquary_hearth_shelf.test.ts`, `tests/reliquary_hearth_window.test.ts`, `tests/guide_reliquary_hearth.test.ts`; source/name/art evidence in `docs/freeholds/`; two `public/ui/deeds/homesteader_first_*.webp` crests; existing deed/reliquary/UI/guide/i18n consumers updated | none | none | none; no furnishing item or vendor definition, stock or spawn | none | none | `hudChrome.reliquary.navHearth`, `guide.reliquaryPage.shelf.hearth`; normal Homesteader/Householder deed name/description and Homesteader title localization, with five non-Latin fills; no new furnishing item or world-entity name row |
+| 03 (complete, paired QA PASS) | `src/sim/content/freehold/{tiers,charters,ledger_schedule,ledger_trial,furnishings,index}.ts` plus local guidance; `src/sim/{surface_npc_bootstrap.ts,freehold/should_spawn_npc.ts}`; `scripts/freeholds/` measured economy/geometry producers; focused content, ledger, producer, furnishing, rollback, NPC, terrain, empty-Hearth and browser keyboard suites; accepted trial/art evidence and eight item WebPs | none | none | exactly eight furnishing ItemDefs; NPC freehold_furnisher and gated stock; existing wire shape unchanged | none | none | eight `entities.items.freehold_*.name` leaves; world entity name/title/greeting for freehold_furnisher; Hearth shelf and hearth_basics name/description; Homesteader/Householder labels and rewards; English plus five required non-Latin fills |
 | 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
 | 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
 | 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
@@ -1326,6 +1325,38 @@ standalone i18n generation/status and the repeated 110-file source seal passed.
 The final verdict documentation, checklist and post-verdict-commit check are
 recorded through the QA validation handoff. The named release and handoff gates
 below remain unsigned.
+
+03 accepted development implementation notes, 2026-09-07:
+
+- The immutable original acceptance and integrated producer replay are in
+  `content-trial-2026-09-07/{acceptance,revalidation}.md`. Fernando accepted the
+  fourteen-visit laboratory basis, not measured player hours. Runtime production
+  approval remains false and its production schedule null; the separate trial
+  lookup returns one of twelve frozen bills for an injected week ordinal.
+- Exact item IDs: `freehold_timber_bed`, `freehold_round_table`,
+  `freehold_spindle_chair`, `freehold_low_stool`, `freehold_woven_rug`,
+  `freehold_brass_lantern`, `freehold_storage_chest`, `freehold_open_bookshelf`.
+  Each is common, 250/60 copper, cosmetic, individually stored and backed by the
+  accepted measured stand-in geometry and registered painted art.
+- `freehold_furnisher` is appended and admitted before entity construction only
+  for lit hosts. It uses existing terrain, without a new smoothing pad. Existing
+  terrain goldens and dark NPC/RNG fingerprints are preserved. Hearth publishes
+  `hearth_basics` with those eight items and the actual vendor source. Current
+  catalog totals: 42 pages / 474 raw / 438 full / 409 character slots.
+- Homesteader deeds remain the manual `homesteader_first_furnishing` and
+  `homesteader_first_cottage`, with the Homesteader title and `householder` border.
+  Future placement and Cottage purchase grant sites remain later work.
+- The maximal persisted fixture is 210203 bytes; the eight discoveries and Hearth
+  metadata add 188 + 444 = 632 bytes. Earlier Homesteader 85 and Field Kit 12 byte
+  attribution, narrow tracking band and 229376-byte warning threshold remain.
+- Final shared gate, inspected visual evidence, paired QA and fresh review PASS;
+  see `content-final-validation-2026-09-07.md` for the exact commands, four commit
+  groups and all 39 resolved findings. NPC voice is an explicit pre-shipping
+  requirement. Production enable still needs final numerical/geometry acceptance,
+  compatible fleet-wide catalogs and the documented pre-enable backup boundary.
+
+<details>
+<summary>Historical partial checkpoint before development trial acceptance</summary>
 
 03 implementation notes, 2026-09-07, PARTIAL/BLOCKED:
 
@@ -1393,6 +1424,8 @@ below remain unsigned.
   being committed. The final post-commit `npm run ci:changed` result is reported
   in task completion. No push occurred.
 
+</details>
+
 ## Tracked release and handoff gates
 
 There are no unanswered settlement questions. Signatures, measured calibration and
@@ -1407,7 +1440,7 @@ question. Never present unsigned drafts as legal/platform/service acceptance.
 | Counsel, Terms and storefront model | ../prd/woc/freehold-counsel-memo.md, freehold-terms-amendment.md and freehold-store-listing-drafts.md; 14/15/16, checked 20 and revisited 44b | Legal team and Fernando approve/publish the applicable model before production enable or a housing-bearing storefront submission. Final 44b revisits the completed implementation and prepares the legal-team handoff. |
 | Optional deed territories and irreversible authority | ../prd/woc/freehold-deed-service-contract.md and freehold-territory-authority-schedule.md; 37/38, checked 39 and 44b | Service/legal/Fernando sign supported territories, per-asset powers and transfer/irreversible-operation policy before optional deed activation. Unknown eligibility refuses new operations; accepted operation recovery remains required. |
 | Approved numerical rows | content-numbers-workbook.md and content-manifest.md; each named producer; the four-week measured report at NEW FUTURE docs/freeholds/ledger-calibration-report.md and the every-second-release budget review at NEW FUTURE docs/freeholds/housing-budget-review.md, both created by 20 and extended by later closes | Fernando owns gameplay target acceptance and the service owns prices. Exact trial derivations, rounding, source and measured calibration/signature precede runtime activation; no missing quantity is guessed. |
-| Current content source freeze | content-source-freeze-2026-09-07.md; CAL-LEDGER-A, CAL-VENDOR-A, CAL-DECOR-A/B and MEASURE-SPACE, with each exact field and source hash | CONTENT/UPKEEP/ECONOMY QA produce Ledger calibration for Fernando/service approval; CONTENT produces vendor rows and CONTENT/ART decor costs for Fernando approval; ART/CORE produces approved space measurements. All four remain unsigned. Item icons and eligible material IDs authorize neither operational bills nor incomplete furnishing definitions. |
+| Accepted development content; production calibration unsigned | content-trial-2026-09-07/acceptance.md and revalidation.md supersede the historical content-source-freeze-2026-09-07.md for development; CAL-LEDGER-A, CAL-VENDOR-A, CAL-DECOR-A/B and MEASURE-SPACE retain named final acceptance | Fernando accepted the measured trial on 2026-09-07. CONTENT/UPKEEP/ECONOMY QA still produce final Ledger calibration for Fernando/service approval; CONTENT/ART and ART/CORE retain final vendor, decor, room/model/LOW approval. Production remains disabled. |
 | Source calendar, lifecycle and rollout capability | Future persistence-rollout-contract.md, lifecycle-policy-binding.md, lifecycle-db-contract.md and upkeep-calendar-db-contract.md from 07/07b/13a | Named service/operations/DB owners accept account source/reset-policy assignment, immutable history/finality, bounds, capable-release rollout/rollback and actual PG proof before upkeep activation. |
 | Final assets and image replacement | art-brief.md/content-manifest.md and per-wave final-asset proof; final 44a icon/image replacement | Codex asset sessions use existing intake/provenance/export/compile/LOW/screenshot gates. No placeholder is counted as a final shipping asset; final 44a rechecks all feature-created icons/images before 44b. |
 | Runtime safety and distribution | 01 strict live FREEHOLDS_ENABLED gate; 37 FREEHOLD_DEEDS_ENABLED (default off, requires freeholdsEnabled); 38 NEW allowSerializedCollectibles policy switch (default off, beside allowMounts/allowMechChromas in server/woc_market_routes.ts); 14 seven-distribution capability matrix; every priced implementation and QA | Packet owners prove dark route/command/catalog behavior, complete forbidden submodel absence and independently approved management flow before activation. |
@@ -1419,15 +1452,18 @@ message is performed in this documentation session.
 
 ## Gotchas (read before the matching phase)
 
-- Content source freeze (2026-09-07): an approved item/material ID list is not a
-  signed quantity, price, quality, decor cost or measured geometry. Images do not
-  authorize numbers. Keep the Ledger schedule explicitly pending with `schedule: null`
-  until its approved rows exist. Hearth's declared shelf/nav support must stay hidden
-  while it has no authored page; `hearth_basics` can publish only after its actual
-  item and NPC source references resolve. Do not inflate completion with planned
-  furnishing IDs or invent a Hearth page cap. See the source-freeze record and
-  `tests/reliquary_hearth_shelf.test.ts` for the distinction between declared and
-  published shelf content.
+- Accepted content trial (2026-09-07): preserve the exact original artifacts and
+  accepted twelve-bill version; production approval remains false/null. The
+  actual eight-item Hearth page is published. Empty-catalog fallback still uses
+  Overview and is exercised by the real window with an injected older catalog.
+  Do not restore historical absence assertions or invent a page cap. NPC voice
+  remains required before shipping. Older catalog readers discard new discovery
+  and Reliquary metadata; acquisition enable requires compatible fleet-wide
+  catalogs and a pre-enable backup, not merely flipping the feature flag off.
+- Terrain (2026-09-07): a new NPC definition normally creates an automatic calm
+  pad even when that NPC does not spawn. The furnisher deliberately uses existing
+  ground. Both terrain goldens must remain unchanged; a feature flag must not
+  split shared terrain between hosts.
 - Catalog expansion (2026-09-07): the maximal character fixture earns every deed,
   so even currently manual-only records grow its serialized deed map. Isolate each
   new entry before historical content equations; the Homesteader pair contributes

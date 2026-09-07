@@ -1,0 +1,28 @@
+{
+  "catalogPath": "tmp/imagegen/item-art-consistency/final-audit/catalog.json",
+  "catalogSha256": "6b9435d5feb3fbdac671d4af3a39197c1f1bb93f12cee73f008fd4acf1b9bf5d",
+  "catalogBytes": 689307,
+  "rendererFingerprint": "41f5404c4d6d9643c8f03b9d88a8546e44564cc03a1baabdd4a72cb9258a2da7",
+  "catalogCount": 1264,
+  "liveItemCount": 1279,
+  "generatedHeroicDefinitions": 64,
+  "heroicDefinitionsWithOwnWebp": 48,
+  "heroicWeaponArtAliases": 16,
+  "groupCount": 26,
+  "sheetPageCount": 32,
+  "sheetCount": 256,
+  "sheetModeCounts": {
+    "128-color": 32,
+    "40-color": 32,
+    "28-color": 32,
+    "22-color": 32,
+    "28-grayscale": 32,
+    "64-circle": 32,
+    "small-multiview": 32,
+    "identity": 32
+  },
+  "sheetSetSha256": null,
+  "shippingCatalogSha256": "af54a5675c5254de434a17eae49bf84b832cb572f94b4a9d1ff8e104491ed18a",
+  "machineChecksPassed": true,
+  "verdict": null
+}

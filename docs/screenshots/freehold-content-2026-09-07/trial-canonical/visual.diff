@@ -1,0 +1,1896 @@
+diff --git a/src/render/characters/npc_looks.ts b/src/render/characters/npc_looks.ts
+index 2343078c55..49ea911524 100644
+--- a/src/render/characters/npc_looks.ts
++++ b/src/render/characters/npc_looks.ts
+@@ -106,6 +106,24 @@ const kit = (set: ArmorSetId, over: Partial<ArmorLoadout> = {}): ArmorLoadout =>
+ // --- the roster --------------------------------------------------------------
+
+ export const NPC_LOOKS: Record<string, NpcLookDef> = {
++  // A practical Eastbrook craftswoman in warm leathers, with a clear face.
++  freehold_furnisher: {
++    app: {
++      gender: 'female',
++      hair: 'sidepart',
++      ...hair(28, 0.4, 0.25),
++      brows: 'soft',
++      eyeShape: 'round',
++      ...eyes(42, 0.35, 0.32),
++      ...skin(27, 0.42, 0.58),
++      mouth: 'smile',
++      face: face({ cheeks: 0.18, chin: 0.1, smirk: 0.08 }),
++      body: body({ shoulders: 0.12, chest: 0.08 }),
++      outfit: 'ember',
++    },
++    worn: kit('rogue', { arms: null, hands: null }),
++    props: 'none',
++  },
+   // === Eastbrook Vale: the starter valley, warm and rustic =================
+   // The Merchant: gold on black, a man who owns the market and dresses like it.
+   the_merchant: {
+diff --git a/src/sim/content/reliquary.ts b/src/sim/content/reliquary.ts
+index 0d060a3e81..9fd5e0dca2 100644
+--- a/src/sim/content/reliquary.ts
++++ b/src/sim/content/reliquary.ts
+@@ -1827,6 +1827,24 @@ export const RELIQUARY_PAGES: readonly ReliquaryPageDef[] = freezePageTable([
+     sourceDefault: fromProfession('weaponcrafting'),
+     relics: items('varkhul_forgebreaker'),
+   },
++  {
++    id: 'hearth_basics',
++    shelf: 'hearth',
++    name: 'Hearth Basics',
++    desc: 'Simple furnishings sold by the Freehold Furnisher in Eastbrook.',
++    clearSource: { kind: 'none' },
++    sourceDefault: fromVendor('freehold_furnisher'),
++    relics: items(
++      'freehold_timber_bed',
++      'freehold_round_table',
++      'freehold_spindle_chair',
++      'freehold_low_stool',
++      'freehold_woven_rug',
++      'freehold_brass_lantern',
++      'freehold_storage_chest',
++      'freehold_open_bookshelf',
++    ),
++  },
+ ]);
+
+ /** Append-only page order (table order). */
+diff --git a/src/ui/i18n.catalog/guide.ts b/src/ui/i18n.catalog/guide.ts
+index 856c20dcd7..a93060dc9b 100644
+--- a/src/ui/i18n.catalog/guide.ts
++++ b/src/ui/i18n.catalog/guide.ts
+@@ -2275,7 +2275,7 @@ export const guideStrings = {
+   // spoiler-safe reference, not a localized surface).
+   reliquaryPage: {
+     intro:
+-      'The Reliquary is the museum of unique spoils you have catalogued: dungeon chase uniques, profession trophies, mounts, weapon skins, and titles. It pairs with the Book of Deeds the way a trophy hall pairs with an achievement book.',
++      'The Reliquary is the museum of unique spoils you have catalogued: dungeon chase uniques, profession trophies, mounts, weapon skins, titles, and furnishings. It pairs with the Book of Deeds the way a trophy hall pairs with an achievement book.',
+     howHeading: 'How the collection works',
+     howBody:
+       'Open The Reliquary in game (default Shift+X). Each shelf holds pages of unique relics. Fill a silhouette when you obtain that piece for the first time on the character, and illuminate a page when every relic on it is filled. A few pages are labeled Retired or Personal: they sit outside completion, so they never gate a shelf or the whole catalog. Live finds toast and refresh the open window; progress is character-scoped except weapon skins, which are account cosmetics.',
+diff --git a/src/ui/i18n.catalog/items.ts b/src/ui/i18n.catalog/items.ts
+index 8f34e9d3fb..fed8e28b17 100644
+--- a/src/ui/i18n.catalog/items.ts
++++ b/src/ui/i18n.catalog/items.ts
+@@ -3003,6 +3003,14 @@ const ITEM_ENTITY_IDS = [
+   // The Field Kit: appended at the END under the append-only contract,
+   // behind the prior masterwrought appends; resolves BY KEY.
+   'field_kit',
++  'freehold_timber_bed',
++  'freehold_round_table',
++  'freehold_spindle_chair',
++  'freehold_low_stool',
++  'freehold_woven_rug',
++  'freehold_brass_lantern',
++  'freehold_storage_chest',
++  'freehold_open_bookshelf',
+ ] as const;
+
+ type ItemEntityId = (typeof ITEM_ENTITY_IDS)[number];
+@@ -3655,6 +3663,14 @@ const APPENDED_ITEM_NAMES: Partial<Record<ItemEntityId, string>> = {
+   pattern_crucible_healer_cloth: "Pattern: Crucible Healer's Cloth",
+   formula_lastflame_zeal: "Formula: Last Flame's Zeal",
+   field_kit: 'Field Kit',
++  freehold_timber_bed: 'Timber Bed',
++  freehold_round_table: 'Round Table',
++  freehold_spindle_chair: 'Spindle Chair',
++  freehold_low_stool: 'Low Stool',
++  freehold_woven_rug: 'Woven Rug',
++  freehold_brass_lantern: 'Brass Lantern',
++  freehold_storage_chest: 'Storage Chest',
++  freehold_open_bookshelf: 'Open Bookshelf',
+ };
+
+ function itemTranslations(names: readonly string[]): ItemEntityTranslations {
+diff --git a/src/ui/i18n.catalog/translation_keys.generated.ts b/src/ui/i18n.catalog/translation_keys.generated.ts
+index c2b0b8fead..85f9df3597 100644
+--- a/src/ui/i18n.catalog/translation_keys.generated.ts
++++ b/src/ui/i18n.catalog/translation_keys.generated.ts
+@@ -2730,6 +2730,14 @@ export type TranslationKeyFlat =
+   | 'entities.items.formula_lastflame_zeal.name'
+   | 'entities.items.fountain_court_mantle.name'
+   | 'entities.items.frayed_prayer_beads.name'
++  | 'entities.items.freehold_brass_lantern.name'
++  | 'entities.items.freehold_low_stool.name'
++  | 'entities.items.freehold_open_bookshelf.name'
++  | 'entities.items.freehold_round_table.name'
++  | 'entities.items.freehold_spindle_chair.name'
++  | 'entities.items.freehold_storage_chest.name'
++  | 'entities.items.freehold_timber_bed.name'
++  | 'entities.items.freehold_woven_rug.name'
+   | 'entities.items.frost_gourd.name'
+   | 'entities.items.frost_gourd_seed.name'
+   | 'entities.items.frost_lentils.name'
+@@ -4026,6 +4034,9 @@ export type TranslationKeyFlat =
+   | 'entities.npcs.forgemistress_darva.greeting'
+   | 'entities.npcs.forgemistress_darva.name'
+   | 'entities.npcs.forgemistress_darva.title'
++  | 'entities.npcs.freehold_furnisher.greeting'
++  | 'entities.npcs.freehold_furnisher.name'
++  | 'entities.npcs.freehold_furnisher.title'
+   | 'entities.npcs.fury.greeting'
+   | 'entities.npcs.fury.name'
+   | 'entities.npcs.fury.title'
+diff --git a/src/ui/i18n.locales/ja_JP.ts b/src/ui/i18n.locales/ja_JP.ts
+index 7962840ffa..334f0b3d24 100644
+--- a/src/ui/i18n.locales/ja_JP.ts
++++ b/src/ui/i18n.locales/ja_JP.ts
+@@ -6512,7 +6512,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
+   'guide.nav.deeds': '功績の書',
+   'guide.nav.reliquary': '聖遺物庫',
+   'guide.reliquaryPage.intro':
+-    '聖遺物庫は、カタログに載せたユニークな戦利品の博物館です。ダンジョンの追撃装備、職業のトロフィー、マウント、武器スキン、称号。功績の書に対して、トロフィー室と実績帳のような関係です。',
++    '聖遺物庫は、カタログに載せたユニークな戦利品の博物館です。ダンジョンの追撃装備、職業のトロフィー、マウント、武器スキン、称号、家具。功績の書に対して、トロフィー室と実績帳のような関係です。',
+   'guide.reliquaryPage.howHeading': 'コレクションの仕組み',
+   'guide.reliquaryPage.howBody':
+     'ゲーム内で聖遺物庫を開きます（既定は Shift+X）。各棚にユニークな聖遺物のページがあります。キャラクターが初めてその品を得るとシルエットが埋まり、ページ上のすべてが埋まると点灯します。「絶版」や「専用」と表示される一部のページは達成の対象外で、棚や全体の完成を妨げることはありません。ライブの発見はトーストと開いているウィンドウの更新になります。進捗はキャラクター単位で、武器スキンだけはアカウントの見た目です。',
+@@ -15522,4 +15522,17 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
+   'hudChrome.itemMenu.combine': '素材スタックを結合',
+   'hudChrome.reliquary.navHearth': '炉辺',
+   'guide.reliquaryPage.shelf.hearth': '炉辺',
++  // Freehold household goods and the Eastbrook furnisher.
++  'entities.items.freehold_timber_bed.name': '木組みのベッド',
++  'entities.items.freehold_round_table.name': '丸テーブル',
++  'entities.items.freehold_spindle_chair.name': '縦桟の椅子',
++  'entities.items.freehold_low_stool.name': '低いスツール',
++  'entities.items.freehold_woven_rug.name': '織りの敷物',
++  'entities.items.freehold_brass_lantern.name': '真鍮のランタン',
++  'entities.items.freehold_storage_chest.name': '収納箱',
++  'entities.items.freehold_open_bookshelf.name': '扉のない本棚',
++  'entities.npcs.freehold_furnisher.name': 'フリーホールドの家具商',
++  'entities.npcs.freehold_furnisher.title': '家庭用品',
++  'entities.npcs.freehold_furnisher.greeting':
++    '丈夫な椅子に、暖かなランタン。本を置く場所もありますよ。どうぞご覧ください。',
+ };
+diff --git a/src/ui/i18n.locales/ko_KR.ts b/src/ui/i18n.locales/ko_KR.ts
+index d08cb754f9..847b10da5c 100644
+--- a/src/ui/i18n.locales/ko_KR.ts
++++ b/src/ui/i18n.locales/ko_KR.ts
+@@ -6493,7 +6493,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
+   'guide.nav.deeds': '업적의 서',
+   'guide.nav.reliquary': '성물고',
+   'guide.reliquaryPage.intro':
+-    '성물고는 목록에 올린 고유 전리품의 박물관입니다. 던전 추격 장비, 전문 기술 트로피, 탈것, 무기 스킨, 칭호. 공적 책과의 관계는 트로피 홀과 업적 책과 같습니다.',
++    '성물고는 목록에 올린 고유 전리품의 박물관입니다. 던전 추격 장비, 전문 기술 트로피, 탈것, 무기 스킨, 칭호, 가구. 공적 책과의 관계는 트로피 홀과 업적 책과 같습니다.',
+   'guide.reliquaryPage.howHeading': '수집 작동 방식',
+   'guide.reliquaryPage.howBody':
+     "게임에서 성물고를 엽니다(기본 Shift+X). 각 선반에 고유 성유물 페이지가 있습니다. 캐릭터가 그 조각을 처음 얻으면 실루엣이 채워지고, 페이지의 모든 성유물이 채워지면 페이지가 밝혀집니다. '단종' 또는 '전용'으로 표시된 일부 페이지는 달성 대상에서 제외되어 선반이나 전체 완성을 막지 않습니다. 실시간 발견은 알림과 열린 창 새로고침으로 이어집니다. 진행도는 캐릭터 단위이며 무기 스킨만 계정 장식입니다.",
+@@ -15535,4 +15535,17 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
+   'hudChrome.itemMenu.combine': '재료 묶음 합치기',
+   'hudChrome.reliquary.navHearth': '보금자리',
+   'guide.reliquaryPage.shelf.hearth': '보금자리',
++  // Freehold household goods and the Eastbrook furnisher.
++  'entities.items.freehold_timber_bed.name': '목재 침대',
++  'entities.items.freehold_round_table.name': '원형 탁자',
++  'entities.items.freehold_spindle_chair.name': '살대 등받이 의자',
++  'entities.items.freehold_low_stool.name': '낮은 걸상',
++  'entities.items.freehold_woven_rug.name': '직조 깔개',
++  'entities.items.freehold_brass_lantern.name': '황동 랜턴',
++  'entities.items.freehold_storage_chest.name': '수납 상자',
++  'entities.items.freehold_open_bookshelf.name': '개방형 책장',
++  'entities.npcs.freehold_furnisher.name': '자유 영지 가구상',
++  'entities.npcs.freehold_furnisher.title': '가정용품',
++  'entities.npcs.freehold_furnisher.greeting':
++    '튼튼한 의자, 따뜻한 랜턴, 책을 놓을 자리까지. 한번 둘러보세요.',
+ };
+diff --git a/src/ui/i18n.locales/ru_RU.ts b/src/ui/i18n.locales/ru_RU.ts
+index 220c343bf0..d2c4023b4a 100644
+--- a/src/ui/i18n.locales/ru_RU.ts
++++ b/src/ui/i18n.locales/ru_RU.ts
+@@ -6633,7 +6633,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
+   'guide.nav.deeds': 'Книга деяний',
+   'guide.nav.reliquary': 'Реликварий',
+   'guide.reliquaryPage.intro':
+-    'Реликварий: музей уникальных трофеев из вашего каталога: добыча из подземелий, трофеи профессий, скакуны, облики оружия и титулы. Он относится к Книге деяний как зал трофеев к книге достижений.',
++    'Реликварий: музей уникальных трофеев из вашего каталога: добыча из подземелий, трофеи профессий, скакуны, облики оружия, титулы и мебель. Он относится к Книге деяний как зал трофеев к книге достижений.',
+   'guide.reliquaryPage.howHeading': 'Как устроена коллекция',
+   'guide.reliquaryPage.howBody':
+     'Откройте Реликварий в игре (по умолчанию Shift+X). На каждой полке страницы уникальных реликвий. Силуэт заполняется, когда персонаж впервые получает предмет; страница озаряется, когда заполнены все её реликвии. Некоторые страницы помечены «Выведено» или «Личное»: они вне зачёта и не мешают завершению полки или каталога. Новые находки показывают тост и обновляют открытое окно. Прогресс по персонажу, кроме обликов оружия: это косметика аккаунта.',
+@@ -15756,4 +15756,17 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
+   'hudChrome.itemMenu.combine': 'Объединить стопки материалов',
+   'hudChrome.reliquary.navHearth': 'Очаг',
+   'guide.reliquaryPage.shelf.hearth': 'Очаг',
++  // Freehold household goods and the Eastbrook furnisher.
++  'entities.items.freehold_timber_bed.name': 'Деревянная кровать',
++  'entities.items.freehold_round_table.name': 'Круглый стол',
++  'entities.items.freehold_spindle_chair.name': 'Стул с точёными прутьями',
++  'entities.items.freehold_low_stool.name': 'Низкий табурет',
++  'entities.items.freehold_woven_rug.name': 'Тканый ковёр',
++  'entities.items.freehold_brass_lantern.name': 'Латунный фонарь',
++  'entities.items.freehold_storage_chest.name': 'Сундук для вещей',
++  'entities.items.freehold_open_bookshelf.name': 'Открытый книжный шкаф',
++  'entities.npcs.freehold_furnisher.name': 'Мебельщица фригольда',
++  'entities.npcs.freehold_furnisher.title': 'Товары для дома',
++  'entities.npcs.freehold_furnisher.greeting':
++    'Крепкий стул, тёплый фонарь, место для книг. Присмотритесь.',
+ };
+diff --git a/src/ui/i18n.locales/zh_CN.ts b/src/ui/i18n.locales/zh_CN.ts
+index d7226b0d30..c19efbe51e 100644
+--- a/src/ui/i18n.locales/zh_CN.ts
++++ b/src/ui/i18n.locales/zh_CN.ts
+@@ -6297,7 +6297,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
+   'guide.nav.deeds': '功绩之书',
+   'guide.nav.reliquary': '圣物库',
+   'guide.reliquaryPage.intro':
+-    '圣物库是你已收录的独特战利品博物馆：地下城追逐装备、专业奖杯、坐骑、武器外观与头衔。它与功绩之书的关系，就像奖杯厅与成就簿的关系。',
++    '圣物库是你已收录的独特战利品博物馆：地下城追逐装备、专业奖杯、坐骑、武器外观、头衔与家具。它与功绩之书的关系，就像奖杯厅与成就簿的关系。',
+   'guide.reliquaryPage.howHeading': '收藏如何运作',
+   'guide.reliquaryPage.howBody':
+     '在游戏中打开圣物库（默认 Shift+X）。每个架上有多页独特圣物。角色首次获得该件时填满剪影；一页上的圣物全部填满时点亮该页。少数页面标注“绝版”或“专属”：它们不计入达成，不会阻碍书架或全库的完成。实时发现会弹出提示并刷新已打开的窗口；进度按角色计算，武器外观除外（账号外观）。',
+@@ -15197,4 +15197,16 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
+   'hudChrome.itemMenu.combine': '合并素材堆叠',
+   'hudChrome.reliquary.navHearth': '炉边',
+   'guide.reliquaryPage.shelf.hearth': '炉边',
++  // Freehold household goods and the Eastbrook furnisher.
++  'entities.items.freehold_timber_bed.name': '木架床',
++  'entities.items.freehold_round_table.name': '圆桌',
++  'entities.items.freehold_spindle_chair.name': '木杆靠背椅',
++  'entities.items.freehold_low_stool.name': '矮凳',
++  'entities.items.freehold_woven_rug.name': '编织地毯',
++  'entities.items.freehold_brass_lantern.name': '黄铜提灯',
++  'entities.items.freehold_storage_chest.name': '储物箱',
++  'entities.items.freehold_open_bookshelf.name': '开放式书架',
++  'entities.npcs.freehold_furnisher.name': '自由领地家具商',
++  'entities.npcs.freehold_furnisher.title': '家居用品',
++  'entities.npcs.freehold_furnisher.greeting': '结实的椅子，温暖的提灯，还有放书的地方。来看看吧。',
+ };
+diff --git a/src/ui/i18n.locales/zh_TW.ts b/src/ui/i18n.locales/zh_TW.ts
+index 4d9d4fd539..48f2bf2320 100644
+--- a/src/ui/i18n.locales/zh_TW.ts
++++ b/src/ui/i18n.locales/zh_TW.ts
+@@ -6299,7 +6299,7 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
+   'guide.nav.deeds': '功績之書',
+   'guide.nav.reliquary': '聖物庫',
+   'guide.reliquaryPage.intro':
+-    '聖物庫是你已收錄的獨特戰利品博物館：地城追逐裝備、專業獎盃、坐騎、武器外觀與頭銜。它與功績之書的關係，就像獎盃廳與成就簿的關係。',
++    '聖物庫是你已收錄的獨特戰利品博物館：地城追逐裝備、專業獎盃、坐騎、武器外觀、頭銜與家具。它與功績之書的關係，就像獎盃廳與成就簿的關係。',
+   'guide.reliquaryPage.howHeading': '收藏如何運作',
+   'guide.reliquaryPage.howBody':
+     '在遊戲中開啟聖物庫（預設 Shift+X）。每個架上有多頁獨特聖物。角色首次獲得該件時填滿剪影；一頁上的聖物全部填滿時點亮該頁。少數頁面標註「絕版」或「專屬」：它們不計入達成，不會阻礙書架或全庫的完成。即時發現會跳出提示並重新整理已開啟的視窗；進度按角色計算，武器外觀除外（帳號外觀）。',
+@@ -15203,4 +15203,16 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
+   'hudChrome.itemMenu.combine': '合併素材堆疊',
+   'hudChrome.reliquary.navHearth': '爐邊',
+   'guide.reliquaryPage.shelf.hearth': '爐邊',
++  // Freehold household goods and the Eastbrook furnisher.
++  'entities.items.freehold_timber_bed.name': '木架床',
++  'entities.items.freehold_round_table.name': '圓桌',
++  'entities.items.freehold_spindle_chair.name': '木桿靠背椅',
++  'entities.items.freehold_low_stool.name': '矮凳',
++  'entities.items.freehold_woven_rug.name': '編織地毯',
++  'entities.items.freehold_brass_lantern.name': '黃銅提燈',
++  'entities.items.freehold_storage_chest.name': '儲物箱',
++  'entities.items.freehold_open_bookshelf.name': '開放式書架',
++  'entities.npcs.freehold_furnisher.name': '自由領地家具商',
++  'entities.npcs.freehold_furnisher.title': '家居用品',
++  'entities.npcs.freehold_furnisher.greeting': '結實的椅子，溫暖的提燈，還有放書的地方。來看看吧。',
+ };
+diff --git a/src/ui/i18n.resolved.generated/cs_CZ.ts b/src/ui/i18n.resolved.generated/cs_CZ.ts
+index 400b17929f..a419f0db4c 100644
+--- a/src/ui/i18n.resolved.generated/cs_CZ.ts
++++ b/src/ui/i18n.resolved.generated/cs_CZ.ts
+@@ -15061,6 +15061,30 @@ export const cs_CZ: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Vyčarovaná pramenitá voda"
+       },
+@@ -17108,6 +17132,11 @@ export const cs_CZ: EnTranslations = {
+         "title": "Ochránkyně pobřeží",
+         "greeting": "Příliv bere a příliv platí, {playerName}. Vedu si účet obojího: co pobíhalové ukořistí z vraků a co poctivé ruce donesou zpátky nahoru touhle cestou."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Hlídač přílivu",
+diff --git a/src/ui/i18n.resolved.generated/da_DK.ts b/src/ui/i18n.resolved.generated/da_DK.ts
+index 65ec1ba202..03cc7e7e51 100644
+--- a/src/ui/i18n.resolved.generated/da_DK.ts
++++ b/src/ui/i18n.resolved.generated/da_DK.ts
+@@ -15061,6 +15061,30 @@ export const da_DK: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Fremmanet kildevand"
+       },
+@@ -17108,6 +17132,11 @@ export const da_DK: EnTranslations = {
+         "title": "Vogter af Stranden",
+         "greeting": "Tidevandet tager, og tidevandet betaler, {playerName}. Jeg holder regnskab med begge dele: hvad skrablerne napper fra vragene, og hvad ærlige hænder bærer med op ad denne sti."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Tidevogter",
+diff --git a/src/ui/i18n.resolved.generated/de_DE.ts b/src/ui/i18n.resolved.generated/de_DE.ts
+index d8fdfc4721..beb0da53af 100644
+--- a/src/ui/i18n.resolved.generated/de_DE.ts
++++ b/src/ui/i18n.resolved.generated/de_DE.ts
+@@ -15061,6 +15061,30 @@ export const de_DE: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Herbeigezaubertes Quellwasser"
+       },
+@@ -17108,6 +17132,11 @@ export const de_DE: EnTranslations = {
+         "title": "Hüterin des Strands",
+         "greeting": "Die Flut nimmt, und die Flut zahlt, {playerName}. Ich führe die Rechnung über beides: was die Krabbler von den Wracks zwicken, und was ehrliche Hände diesen Pfad wieder heraufbringen."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Gezeitenwächter",
+diff --git a/src/ui/i18n.resolved.generated/en.ts b/src/ui/i18n.resolved.generated/en.ts
+index 6aaf6edd47..ac656fd8cd 100644
+--- a/src/ui/i18n.resolved.generated/en.ts
++++ b/src/ui/i18n.resolved.generated/en.ts
+@@ -6573,7 +6573,7 @@ export const en: EnTranslations = {
+       "platformBody": "If you link a Steam or Epic Games account from the desktop app, the deeds you earn are mirrored outward as achievements on that account. The game world stays the authority: you earn the deed here, it is recorded on your character, and the achievement follows after. Not every deed has a matching achievement, and if one does not arrive right away it catches up the next time you log in. Linking is only ever a link, never a way to sign in."
+     },
+     "reliquaryPage": {
+-      "intro": "The Reliquary is the museum of unique spoils you have catalogued: dungeon chase uniques, profession trophies, mounts, weapon skins, and titles. It pairs with the Book of Deeds the way a trophy hall pairs with an achievement book.",
++      "intro": "The Reliquary is the museum of unique spoils you have catalogued: dungeon chase uniques, profession trophies, mounts, weapon skins, titles, and furnishings. It pairs with the Book of Deeds the way a trophy hall pairs with an achievement book.",
+       "howHeading": "How the collection works",
+       "howBody": "Open The Reliquary in game (default Shift+X). Each shelf holds pages of unique relics. Fill a silhouette when you obtain that piece for the first time on the character, and illuminate a page when every relic on it is filled. A few pages are labeled Retired or Personal: they sit outside completion, so they never gate a shelf or the whole catalog. Live finds toast and refresh the open window; progress is character-scoped except weapon skins, which are account cosmetics.",
+       "ranksHeading": "Curator ranks",
+@@ -15061,6 +15061,30 @@ export const en: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Conjured Springwater"
+       },
+@@ -17108,6 +17132,11 @@ export const en: EnTranslations = {
+         "title": "Keeper of the Strand",
+         "greeting": "The tide takes and the tide pays, {playerName}. I keep the tally of both: what the scuttlers pinch off the wrecks, and what honest hands carry back up this path."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Tidewatcher",
+diff --git a/src/ui/i18n.resolved.generated/en_CA.ts b/src/ui/i18n.resolved.generated/en_CA.ts
+index 33aa9dbd94..6ab9d228c8 100644
+--- a/src/ui/i18n.resolved.generated/en_CA.ts
++++ b/src/ui/i18n.resolved.generated/en_CA.ts
+@@ -6573,7 +6573,7 @@ export const en_CA: EnTranslations = {
+       "platformBody": "If you link a Steam or Epic Games account from the desktop app, the deeds you earn are mirrored outward as achievements on that account. The game world stays the authority: you earn the deed here, it is recorded on your character, and the achievement follows after. Not every deed has a matching achievement, and if one does not arrive right away it catches up the next time you log in. Linking is only ever a link, never a way to sign in."
+     },
+     "reliquaryPage": {
+-      "intro": "The Reliquary is the museum of unique spoils you have catalogued: dungeon chase uniques, profession trophies, mounts, weapon skins, and titles. It pairs with the Book of Deeds the way a trophy hall pairs with an achievement book.",
++      "intro": "The Reliquary is the museum of unique spoils you have catalogued: dungeon chase uniques, profession trophies, mounts, weapon skins, titles, and furnishings. It pairs with the Book of Deeds the way a trophy hall pairs with an achievement book.",
+       "howHeading": "How the collection works",
+       "howBody": "Open The Reliquary in game (default Shift+X). Each shelf holds pages of unique relics. Fill a silhouette when you obtain that piece for the first time on the character, and illuminate a page when every relic on it is filled. A few pages are labeled Retired or Personal: they sit outside completion, so they never gate a shelf or the whole catalog. Live finds toast and refresh the open window; progress is character-scoped except weapon skins, which are account cosmetics.",
+       "ranksHeading": "Curator ranks",
+@@ -15061,6 +15061,30 @@ export const en_CA: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Conjured Springwater"
+       },
+@@ -17108,6 +17132,11 @@ export const en_CA: EnTranslations = {
+         "title": "Keeper of the Strand",
+         "greeting": "The tide takes and the tide pays, {playerName}. I keep the tally of both: what the scuttlers pinch off the wrecks, and what honest hands carry back up this path."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Tidewatcher",
+diff --git a/src/ui/i18n.resolved.generated/en_XA.ts b/src/ui/i18n.resolved.generated/en_XA.ts
+index bb2243236f..adf70a42d2 100644
+--- a/src/ui/i18n.resolved.generated/en_XA.ts
++++ b/src/ui/i18n.resolved.generated/en_XA.ts
+@@ -6573,7 +6573,7 @@ export const en_XA: EnTranslations = {
+       "platformBody": "[Íƒ ýóú ļíñķ á Šţéáɱ óŕ Éþíç Ĝáɱéš áççóúñţ ƒŕóɱ ţĥé ðéšķţóþ áþþ, ţĥé ðééðš ýóú éáŕñ áŕé ɱíŕŕóŕéð óúţŵáŕð áš áçĥíéʋéɱéñţš óñ ţĥáţ áççóúñţ. Ţĥé ĝáɱé ŵóŕļð šţáýš ţĥé áúţĥóŕíţý: ýóú éáŕñ ţĥé ðééð ĥéŕé, íţ íš ŕéçóŕðéð óñ ýóúŕ çĥáŕáçţéŕ, áñð ţĥé áçĥíéʋéɱéñţ ƒóļļóŵš áƒţéŕ. Ñóţ éʋéŕý ðééð ĥáš á ɱáţçĥíñĝ áçĥíéʋéɱéñţ, áñð íƒ óñé ðóéš ñóţ áŕŕíʋé ŕíĝĥţ áŵáý íţ çáţçĥéš úþ ţĥé ñéẋţ ţíɱé ýóú ļóĝ íñ. Ļíñķíñĝ íš óñļý éʋéŕ á ļíñķ, ñéʋéŕ á ŵáý ţó šíĝñ íñ.]"
+     },
+     "reliquaryPage": {
+-      "intro": "[Ţĥé Ŕéļíɋúáŕý íš ţĥé ɱúšéúɱ óƒ úñíɋúé šþóíļš ýóú ĥáʋé çáţáļóĝúéð: ðúñĝéóñ çĥášé úñíɋúéš, þŕóƒéššíóñ ţŕóþĥíéš, ɱóúñţš, ŵéáþóñ šķíñš, áñð ţíţļéš. Íţ þáíŕš ŵíţĥ ţĥé Ɓóóķ óƒ Ðééðš ţĥé ŵáý á ţŕóþĥý ĥáļļ þáíŕš ŵíţĥ áñ áçĥíéʋéɱéñţ ƀóóķ.]",
++      "intro": "[Ţĥé Ŕéļíɋúáŕý íš ţĥé ɱúšéúɱ óƒ úñíɋúé šþóíļš ýóú ĥáʋé çáţáļóĝúéð: ðúñĝéóñ çĥášé úñíɋúéš, þŕóƒéššíóñ ţŕóþĥíéš, ɱóúñţš, ŵéáþóñ šķíñš, ţíţļéš, áñð ƒúŕñíšĥíñĝš. Íţ þáíŕš ŵíţĥ ţĥé Ɓóóķ óƒ Ðééðš ţĥé ŵáý á ţŕóþĥý ĥáļļ þáíŕš ŵíţĥ áñ áçĥíéʋéɱéñţ ƀóóķ.]",
+       "howHeading": "[Ĥóŵ ţĥé çóļļéçţíóñ ŵóŕķš]",
+       "howBody": "[Óþéñ Ţĥé Ŕéļíɋúáŕý íñ ĝáɱé (ðéƒáúļţ Šĥíƒţ+Ẋ). Éáçĥ šĥéļƒ ĥóļðš þáĝéš óƒ úñíɋúé ŕéļíçš. Ƒíļļ á šíļĥóúéţţé ŵĥéñ ýóú óƀţáíñ ţĥáţ þíéçé ƒóŕ ţĥé ƒíŕšţ ţíɱé óñ ţĥé çĥáŕáçţéŕ, áñð íļļúɱíñáţé á þáĝé ŵĥéñ éʋéŕý ŕéļíç óñ íţ íš ƒíļļéð. Á ƒéŵ þáĝéš áŕé ļáƀéļéð Ŕéţíŕéð óŕ Þéŕšóñáļ: ţĥéý šíţ óúţšíðé çóɱþļéţíóñ, šó ţĥéý ñéʋéŕ ĝáţé á šĥéļƒ óŕ ţĥé ŵĥóļé çáţáļóĝ. Ļíʋé ƒíñðš ţóášţ áñð ŕéƒŕéšĥ ţĥé óþéñ ŵíñðóŵ; þŕóĝŕéšš íš çĥáŕáçţéŕ-šçóþéð éẋçéþţ ŵéáþóñ šķíñš, ŵĥíçĥ áŕé áççóúñţ çóšɱéţíçš.]",
+       "ranksHeading": "[Çúŕáţóŕ ŕáñķš]",
+@@ -15061,6 +15061,30 @@ export const en_XA: EnTranslations = {
+       "field_kit": {
+         "name": "[Ƒíéļð Ķíţ]"
+       },
++      "freehold_timber_bed": {
++        "name": "[Ţíɱƀéŕ Ɓéð]"
++      },
++      "freehold_round_table": {
++        "name": "[Ŕóúñð Ţáƀļé]"
++      },
++      "freehold_spindle_chair": {
++        "name": "[Šþíñðļé Çĥáíŕ]"
++      },
++      "freehold_low_stool": {
++        "name": "[Ļóŵ Šţóóļ]"
++      },
++      "freehold_woven_rug": {
++        "name": "[Ŵóʋéñ Ŕúĝ]"
++      },
++      "freehold_brass_lantern": {
++        "name": "[Ɓŕášš Ļáñţéŕñ]"
++      },
++      "freehold_storage_chest": {
++        "name": "[Šţóŕáĝé Çĥéšţ]"
++      },
++      "freehold_open_bookshelf": {
++        "name": "[Óþéñ Ɓóóķšĥéļƒ]"
++      },
+       "conjured_water4": {
+         "name": "[Çóñĵúŕéð Šþŕíñĝŵáţéŕ]"
+       },
+@@ -17108,6 +17132,11 @@ export const en_XA: EnTranslations = {
+         "title": "[Ķééþéŕ óƒ ţĥé Šţŕáñð]",
+         "greeting": "[Ţĥé ţíðé ţáķéš áñð ţĥé ţíðé þáýš, {playerName}. Í ķééþ ţĥé ţáļļý óƒ ƀóţĥ: ŵĥáţ ţĥé šçúţţļéŕš þíñçĥ óƒƒ ţĥé ŵŕéçķš, áñð ŵĥáţ ĥóñéšţ ĥáñðš çáŕŕý ƀáçķ úþ ţĥíš þáţĥ.]"
+       },
++      "freehold_furnisher": {
++        "name": "[Ƒŕééĥóļð Ƒúŕñíšĥéŕ]",
++        "title": "[Ĥóúšéĥóļð Ĝóóðš]",
++        "greeting": "[Á šţúŕðý çĥáíŕ, á ŵáŕɱ ļáñţéŕñ, á þļáçé ƒóŕ ýóúŕ ƀóóķš. Ĥáʋé á ļóóķ.]"
++      },
+       "tidewatcher_ondrel": {
+         "name": "[Óñðŕéļ Ʋáñé]",
+         "title": "[Ţíðéŵáţçĥéŕ]",
+diff --git a/src/ui/i18n.resolved.generated/es.ts b/src/ui/i18n.resolved.generated/es.ts
+index 0d21964485..f87829c970 100644
+--- a/src/ui/i18n.resolved.generated/es.ts
++++ b/src/ui/i18n.resolved.generated/es.ts
+@@ -15061,6 +15061,30 @@ export const es: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Agua de Manantial Conjurada"
+       },
+@@ -17108,6 +17132,11 @@ export const es: EnTranslations = {
+         "title": "Guardiana de la Playa",
+         "greeting": "La marea quita y la marea paga, {playerName}. Yo llevo la cuenta de las dos cosas: lo que los correteadores rapiñan de los naufragios, y lo que las manos honestas traen de vuelta por este sendero."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Vigía de la Marea",
+diff --git a/src/ui/i18n.resolved.generated/es_ES.ts b/src/ui/i18n.resolved.generated/es_ES.ts
+index 84a4c63ccf..9c059cd526 100644
+--- a/src/ui/i18n.resolved.generated/es_ES.ts
++++ b/src/ui/i18n.resolved.generated/es_ES.ts
+@@ -15061,6 +15061,30 @@ export const es_ES: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Agua de Manantial Invocada"
+       },
+@@ -17108,6 +17132,11 @@ export const es_ES: EnTranslations = {
+         "title": "Guardiana de la Playa",
+         "greeting": "La marea quita y la marea paga, {playerName}. Yo llevo la cuenta de las dos cosas: lo que los correteadores rapiñan de los naufragios, y lo que las manos honestas traen de vuelta por este sendero."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Vigía de la Marea",
+diff --git a/src/ui/i18n.resolved.generated/fr_CA.ts b/src/ui/i18n.resolved.generated/fr_CA.ts
+index c997a52bbd..edc2095fcb 100644
+--- a/src/ui/i18n.resolved.generated/fr_CA.ts
++++ b/src/ui/i18n.resolved.generated/fr_CA.ts
+@@ -15061,6 +15061,30 @@ export const fr_CA: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Eau de source conjurée"
+       },
+@@ -17108,6 +17132,11 @@ export const fr_CA: EnTranslations = {
+         "title": "Gardienne de la Grève",
+         "greeting": "La marée prend et la marée paie, {playerName}. Je tiens le compte des deux : ce que les coureurs arrachent aux épaves, et ce que des mains honnêtes rapportent en remontant ce chemin."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Veille-marées",
+diff --git a/src/ui/i18n.resolved.generated/fr_FR.ts b/src/ui/i18n.resolved.generated/fr_FR.ts
+index c7697898ac..6732774bdd 100644
+--- a/src/ui/i18n.resolved.generated/fr_FR.ts
++++ b/src/ui/i18n.resolved.generated/fr_FR.ts
+@@ -15061,6 +15061,30 @@ export const fr_FR: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Eau de source invoquée"
+       },
+@@ -17108,6 +17132,11 @@ export const fr_FR: EnTranslations = {
+         "title": "Gardienne de la Grève",
+         "greeting": "La marée prend et la marée paie, {playerName}. Je tiens le compte des deux : ce que les coureurs arrachent aux épaves, et ce que des mains honnêtes rapportent en remontant ce chemin."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Veille-marées",
+diff --git a/src/ui/i18n.resolved.generated/id_ID.ts b/src/ui/i18n.resolved.generated/id_ID.ts
+index 762fb17918..605970a6a9 100644
+--- a/src/ui/i18n.resolved.generated/id_ID.ts
++++ b/src/ui/i18n.resolved.generated/id_ID.ts
+@@ -15061,6 +15061,30 @@ export const id_ID: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Air Mata Air Sihir"
+       },
+@@ -17108,6 +17132,11 @@ export const id_ID: EnTranslations = {
+         "title": "Penjaga Pesisir",
+         "greeting": "Pasang mengambil dan pasang membayar, {playerName}. Aku menyimpan catatan keduanya: apa yang dicubit para perayap dari bangkai-bangkai kapal, dan apa yang dibawa naik oleh tangan-tangan jujur di jalan setapak ini."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Pengawas Pasang",
+diff --git a/src/ui/i18n.resolved.generated/it_IT.ts b/src/ui/i18n.resolved.generated/it_IT.ts
+index 166e918488..26a1463b24 100644
+--- a/src/ui/i18n.resolved.generated/it_IT.ts
++++ b/src/ui/i18n.resolved.generated/it_IT.ts
+@@ -15061,6 +15061,30 @@ export const it_IT: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Acqua sorgiva evocata"
+       },
+@@ -17108,6 +17132,11 @@ export const it_IT: EnTranslations = {
+         "title": "Custode della Spiaggia",
+         "greeting": "La marea prende e la marea paga, {playerName}. Io tengo il conto di entrambe le cose: quello che i granchi corridori strappano ai relitti, e quello che mani oneste riportano su per questo sentiero."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Guardamarea",
+diff --git a/src/ui/i18n.resolved.generated/ja_JP.ts b/src/ui/i18n.resolved.generated/ja_JP.ts
+index cc74e6a797..c09f2eba3b 100644
+--- a/src/ui/i18n.resolved.generated/ja_JP.ts
++++ b/src/ui/i18n.resolved.generated/ja_JP.ts
+@@ -6573,7 +6573,7 @@ export const ja_JP: EnTranslations = {
+       "platformBody": "デスクトップ版アプリからSteamまたはEpic Gamesのアカウントを連携すると、獲得した功績が、そのアカウントの実績として外側にも映し出されます。あくまでゲーム世界が本体です。功績はここで獲得され、あなたのキャラクターに記録され、実績はそのあとについてきます。すべての功績に対応する実績があるわけではありませんし、すぐに届かなかった場合も、次にログインしたときに追いつきます。連携はどこまでも連携であって、サインインの手段になることは決してありません。"
+     },
+     "reliquaryPage": {
+-      "intro": "聖遺物庫は、カタログに載せたユニークな戦利品の博物館です。ダンジョンの追撃装備、職業のトロフィー、マウント、武器スキン、称号。功績の書に対して、トロフィー室と実績帳のような関係です。",
++      "intro": "聖遺物庫は、カタログに載せたユニークな戦利品の博物館です。ダンジョンの追撃装備、職業のトロフィー、マウント、武器スキン、称号、家具。功績の書に対して、トロフィー室と実績帳のような関係です。",
+       "howHeading": "コレクションの仕組み",
+       "howBody": "ゲーム内で聖遺物庫を開きます（既定は Shift+X）。各棚にユニークな聖遺物のページがあります。キャラクターが初めてその品を得るとシルエットが埋まり、ページ上のすべてが埋まると点灯します。「絶版」や「専用」と表示される一部のページは達成の対象外で、棚や全体の完成を妨げることはありません。ライブの発見はトーストと開いているウィンドウの更新になります。進捗はキャラクター単位で、武器スキンだけはアカウントの見た目です。",
+       "ranksHeading": "キュレーターランク",
+@@ -15061,6 +15061,30 @@ export const ja_JP: EnTranslations = {
+       "field_kit": {
+         "name": "野外用キット"
+       },
++      "freehold_timber_bed": {
++        "name": "木組みのベッド"
++      },
++      "freehold_round_table": {
++        "name": "丸テーブル"
++      },
++      "freehold_spindle_chair": {
++        "name": "縦桟の椅子"
++      },
++      "freehold_low_stool": {
++        "name": "低いスツール"
++      },
++      "freehold_woven_rug": {
++        "name": "織りの敷物"
++      },
++      "freehold_brass_lantern": {
++        "name": "真鍮のランタン"
++      },
++      "freehold_storage_chest": {
++        "name": "収納箱"
++      },
++      "freehold_open_bookshelf": {
++        "name": "扉のない本棚"
++      },
+       "conjured_water4": {
+         "name": "魔法の湧き水"
+       },
+@@ -17108,6 +17132,11 @@ export const ja_JP: EnTranslations = {
+         "title": "浜辺の番人",
+         "greeting": "潮は奪い、潮は払う、{playerName}。私はその両方の帳簿をつけている。蟹どもが難破船から掠め取るものと、正直な手がこの道を運び上げてくるものとをね。"
+       },
++      "freehold_furnisher": {
++        "name": "フリーホールドの家具商",
++        "title": "家庭用品",
++        "greeting": "丈夫な椅子に、暖かなランタン。本を置く場所もありますよ。どうぞご覧ください。"
++      },
+       "tidewatcher_ondrel": {
+         "name": "オンドレル・ヴェイン",
+         "title": "潮見の番人",
+diff --git a/src/ui/i18n.resolved.generated/ko_KR.ts b/src/ui/i18n.resolved.generated/ko_KR.ts
+index 3fbb4e7974..8872373dc1 100644
+--- a/src/ui/i18n.resolved.generated/ko_KR.ts
++++ b/src/ui/i18n.resolved.generated/ko_KR.ts
+@@ -6573,7 +6573,7 @@ export const ko_KR: EnTranslations = {
+       "platformBody": "데스크톱 앱에서 Steam이나 Epic Games 계정을 연동하면, 여러분이 얻은 업적이 그 계정의 도전 과제로 함께 기록됩니다. 언제나 게임 세계가 기준입니다. 업적은 이곳에서 얻어 캐릭터에 새겨지고, 도전 과제는 그 뒤를 따라옵니다. 모든 업적에 짝이 되는 도전 과제가 있는 것은 아니며, 바로 도착하지 않더라도 다음에 접속할 때 따라잡습니다. 연동은 어디까지나 연동일 뿐, 로그인 수단이 되지는 않습니다."
+     },
+     "reliquaryPage": {
+-      "intro": "성물고는 목록에 올린 고유 전리품의 박물관입니다. 던전 추격 장비, 전문 기술 트로피, 탈것, 무기 스킨, 칭호. 공적 책과의 관계는 트로피 홀과 업적 책과 같습니다.",
++      "intro": "성물고는 목록에 올린 고유 전리품의 박물관입니다. 던전 추격 장비, 전문 기술 트로피, 탈것, 무기 스킨, 칭호, 가구. 공적 책과의 관계는 트로피 홀과 업적 책과 같습니다.",
+       "howHeading": "수집 작동 방식",
+       "howBody": "게임에서 성물고를 엽니다(기본 Shift+X). 각 선반에 고유 성유물 페이지가 있습니다. 캐릭터가 그 조각을 처음 얻으면 실루엣이 채워지고, 페이지의 모든 성유물이 채워지면 페이지가 밝혀집니다. '단종' 또는 '전용'으로 표시된 일부 페이지는 달성 대상에서 제외되어 선반이나 전체 완성을 막지 않습니다. 실시간 발견은 알림과 열린 창 새로고침으로 이어집니다. 진행도는 캐릭터 단위이며 무기 스킨만 계정 장식입니다.",
+       "ranksHeading": "큐레이터 등급",
+@@ -15061,6 +15061,30 @@ export const ko_KR: EnTranslations = {
+       "field_kit": {
+         "name": "야외 도구 키트"
+       },
++      "freehold_timber_bed": {
++        "name": "목재 침대"
++      },
++      "freehold_round_table": {
++        "name": "원형 탁자"
++      },
++      "freehold_spindle_chair": {
++        "name": "살대 등받이 의자"
++      },
++      "freehold_low_stool": {
++        "name": "낮은 걸상"
++      },
++      "freehold_woven_rug": {
++        "name": "직조 깔개"
++      },
++      "freehold_brass_lantern": {
++        "name": "황동 랜턴"
++      },
++      "freehold_storage_chest": {
++        "name": "수납 상자"
++      },
++      "freehold_open_bookshelf": {
++        "name": "개방형 책장"
++      },
+       "conjured_water4": {
+         "name": "창조된 샘물"
+       },
+@@ -17108,6 +17132,11 @@ export const ko_KR: EnTranslations = {
+         "title": "바닷가의 파수꾼",
+         "greeting": "조수는 앗아 가고, 조수는 값을 치릅니다, {playerName}. 나는 그 양쪽 장부를 다 맡고 있죠. 종종게들이 난파선에서 집어 가는 것과, 정직한 손이 이 길로 날라 오는 것을요."
+       },
++      "freehold_furnisher": {
++        "name": "자유 영지 가구상",
++        "title": "가정용품",
++        "greeting": "튼튼한 의자, 따뜻한 랜턴, 책을 놓을 자리까지. 한번 둘러보세요."
++      },
+       "tidewatcher_ondrel": {
+         "name": "온드렐 베인",
+         "title": "조수지기",
+diff --git a/src/ui/i18n.resolved.generated/nl_NL.ts b/src/ui/i18n.resolved.generated/nl_NL.ts
+index f54bd08719..0a319b627f 100644
+--- a/src/ui/i18n.resolved.generated/nl_NL.ts
++++ b/src/ui/i18n.resolved.generated/nl_NL.ts
+@@ -15061,6 +15061,30 @@ export const nl_NL: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Getoverd bronwater"
+       },
+@@ -17108,6 +17132,11 @@ export const nl_NL: EnTranslations = {
+         "title": "Hoeder van het Strand",
+         "greeting": "Het getij neemt en het getij betaalt, {playerName}. Ik houd van beide de tel bij: wat de scharrelaars van de wrakken pikken, en wat eerlijke handen dit pad weer op dragen."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Tijwachter",
+diff --git a/src/ui/i18n.resolved.generated/pending.ts b/src/ui/i18n.resolved.generated/pending.ts
+index ed3966dd25..1fc43c8d17 100644
+--- a/src/ui/i18n.resolved.generated/pending.ts
++++ b/src/ui/i18n.resolved.generated/pending.ts
+@@ -135,6 +135,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -291,6 +299,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_cult_orders.objectives.0.label",
+     "entities.quests.q_farm_intro.completion",
+@@ -1014,6 +1025,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -1170,6 +1189,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_cult_orders.objectives.0.label",
+     "entities.quests.q_farm_intro.completion",
+@@ -1896,6 +1918,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -2062,6 +2092,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_cult_orders.objectives.0.label",
+     "entities.quests.q_farm_intro.completion",
+@@ -2790,6 +2823,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -2956,6 +2997,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_cult_orders.objectives.0.label",
+     "entities.quests.q_farm_intro.completion",
+@@ -3686,6 +3730,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -3849,6 +3901,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_cult_orders.objectives.0.label",
+     "entities.quests.q_farm_intro.completion",
+@@ -4584,6 +4639,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -4754,6 +4817,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_cult_orders.objectives.0.label",
+     "entities.quests.q_drogmar.text",
+@@ -5550,6 +5616,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -5714,6 +5788,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_cult_orders.objectives.0.label",
+     "entities.quests.q_farm_intro.completion",
+@@ -6454,6 +6531,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -6612,6 +6697,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.npcs.provisioner_fenna.title",
+     "entities.npcs.sexton_marrow.title",
+     "entities.npcs.widow_tansy.title",
+@@ -7362,6 +7450,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -7521,6 +7617,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.npcs.provisioner_fenna.title",
+     "entities.npcs.sexton_marrow.title",
+     "entities.npcs.widow_tansy.title",
+@@ -8266,6 +8365,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -8425,6 +8532,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_drogmar.text",
+     "entities.quests.q_farm_intro.completion",
+@@ -9156,6 +9266,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -9314,6 +9432,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_farm_intro.completion",
+     "entities.quests.q_farm_intro.objectives.0.label",
+@@ -10033,6 +10154,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -10192,6 +10321,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_drogmar.text",
+     "entities.quests.q_farm_intro.completion",
+@@ -10920,6 +11052,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -11078,6 +11218,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.npcs.provisioner_fenna.title",
+     "entities.npcs.sexton_marrow.title",
+     "entities.npcs.widow_tansy.title",
+@@ -11822,6 +11965,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -11981,6 +12132,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.quests.q_af_sprites_and_spigots.objectives.0.label",
+     "entities.quests.q_drogmar.text",
+     "entities.quests.q_farm_intro.completion",
+@@ -12706,6 +12860,14 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.items.forgefold_legguards.name",
+     "entities.items.forgefold_plating.name",
+     "entities.items.formula_lastflame_zeal.name",
++    "entities.items.freehold_brass_lantern.name",
++    "entities.items.freehold_low_stool.name",
++    "entities.items.freehold_open_bookshelf.name",
++    "entities.items.freehold_round_table.name",
++    "entities.items.freehold_spindle_chair.name",
++    "entities.items.freehold_storage_chest.name",
++    "entities.items.freehold_timber_bed.name",
++    "entities.items.freehold_woven_rug.name",
+     "entities.items.frost_gourd.name",
+     "entities.items.frost_gourd_seed.name",
+     "entities.items.frost_lentils.name",
+@@ -12865,6 +13027,9 @@ export const pending: Record<string, readonly string[]> = {
+     "entities.npcs.farmer_verbena.greeting",
+     "entities.npcs.farmer_verbena.name",
+     "entities.npcs.farmer_verbena.title",
++    "entities.npcs.freehold_furnisher.greeting",
++    "entities.npcs.freehold_furnisher.name",
++    "entities.npcs.freehold_furnisher.title",
+     "entities.npcs.provisioner_fenna.title",
+     "entities.npcs.sexton_marrow.title",
+     "entities.npcs.widow_tansy.title",
+diff --git a/src/ui/i18n.resolved.generated/pl_PL.ts b/src/ui/i18n.resolved.generated/pl_PL.ts
+index 4aacc849bf..eabd53655e 100644
+--- a/src/ui/i18n.resolved.generated/pl_PL.ts
++++ b/src/ui/i18n.resolved.generated/pl_PL.ts
+@@ -15061,6 +15061,30 @@ export const pl_PL: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Wyczarowana woda źródlana"
+       },
+@@ -17108,6 +17132,11 @@ export const pl_PL: EnTranslations = {
+         "title": "Strażniczka Wybrzeża",
+         "greeting": "Przypływ zabiera i przypływ płaci, {playerName}. Prowadzę rachunek obu tych rzeczy: tego, co czołgacze wyrywają z wraków, i tego, co uczciwe ręce znoszą z powrotem tą ścieżką."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Strażnik Przypływów",
+diff --git a/src/ui/i18n.resolved.generated/pt_BR.ts b/src/ui/i18n.resolved.generated/pt_BR.ts
+index 22935adf8a..49cfaa6ef2 100644
+--- a/src/ui/i18n.resolved.generated/pt_BR.ts
++++ b/src/ui/i18n.resolved.generated/pt_BR.ts
+@@ -15061,6 +15061,30 @@ export const pt_BR: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Água de Nascente Conjurada"
+       },
+@@ -17108,6 +17132,11 @@ export const pt_BR: EnTranslations = {
+         "title": "Guardiã da Praia",
+         "greeting": "A maré leva e a maré paga, {playerName}. Eu mantenho a conta das duas coisas: o que os corredores arrancam dos destroços, e o que mãos honestas trazem de volta por este caminho."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Vigia das Marés",
+diff --git a/src/ui/i18n.resolved.generated/ru_RU.ts b/src/ui/i18n.resolved.generated/ru_RU.ts
+index 9b94181502..3db6f6efef 100644
+--- a/src/ui/i18n.resolved.generated/ru_RU.ts
++++ b/src/ui/i18n.resolved.generated/ru_RU.ts
+@@ -6573,7 +6573,7 @@ export const ru_RU: EnTranslations = {
+       "platformBody": "Если вы привяжете учётную запись Steam или Epic Games в настольном приложении, заработанные вами деяния отражаются наружу как достижения в этой учётной записи. Главным остаётся игровой мир: деяние вы зарабатываете здесь, оно записывается вашему персонажу, а достижение приходит следом. Парное достижение есть не у каждого деяния, а если оно не пришло сразу, то догонит вас при следующем входе в игру. Привязка, это всегда только привязка и никогда не способ войти в игру."
+     },
+     "reliquaryPage": {
+-      "intro": "Реликварий: музей уникальных трофеев из вашего каталога: добыча из подземелий, трофеи профессий, скакуны, облики оружия и титулы. Он относится к Книге деяний как зал трофеев к книге достижений.",
++      "intro": "Реликварий: музей уникальных трофеев из вашего каталога: добыча из подземелий, трофеи профессий, скакуны, облики оружия, титулы и мебель. Он относится к Книге деяний как зал трофеев к книге достижений.",
+       "howHeading": "Как устроена коллекция",
+       "howBody": "Откройте Реликварий в игре (по умолчанию Shift+X). На каждой полке страницы уникальных реликвий. Силуэт заполняется, когда персонаж впервые получает предмет; страница озаряется, когда заполнены все её реликвии. Некоторые страницы помечены «Выведено» или «Личное»: они вне зачёта и не мешают завершению полки или каталога. Новые находки показывают тост и обновляют открытое окно. Прогресс по персонажу, кроме обликов оружия: это косметика аккаунта.",
+       "ranksHeading": "Ранги хранителя",
+@@ -15061,6 +15061,30 @@ export const ru_RU: EnTranslations = {
+       "field_kit": {
+         "name": "Полевой набор"
+       },
++      "freehold_timber_bed": {
++        "name": "Деревянная кровать"
++      },
++      "freehold_round_table": {
++        "name": "Круглый стол"
++      },
++      "freehold_spindle_chair": {
++        "name": "Стул с точёными прутьями"
++      },
++      "freehold_low_stool": {
++        "name": "Низкий табурет"
++      },
++      "freehold_woven_rug": {
++        "name": "Тканый ковёр"
++      },
++      "freehold_brass_lantern": {
++        "name": "Латунный фонарь"
++      },
++      "freehold_storage_chest": {
++        "name": "Сундук для вещей"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Открытый книжный шкаф"
++      },
+       "conjured_water4": {
+         "name": "Сотворённая родниковая вода"
+       },
+@@ -17108,6 +17132,11 @@ export const ru_RU: EnTranslations = {
+         "title": "Хранительница побережья",
+         "greeting": "Прилив берет, и прилив платит, {playerName}. Я веду счет и тому и другому: тому, что крабы таскают с обломков, и тому, что честные руки несут вверх по этой тропе."
+       },
++      "freehold_furnisher": {
++        "name": "Мебельщица фригольда",
++        "title": "Товары для дома",
++        "greeting": "Крепкий стул, тёплый фонарь, место для книг. Присмотритесь."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ондрел Вейн",
+         "title": "Страж приливов",
+diff --git a/src/ui/i18n.resolved.generated/sv_SE.ts b/src/ui/i18n.resolved.generated/sv_SE.ts
+index 8e83624a3c..fabbb2413b 100644
+--- a/src/ui/i18n.resolved.generated/sv_SE.ts
++++ b/src/ui/i18n.resolved.generated/sv_SE.ts
+@@ -15061,6 +15061,30 @@ export const sv_SE: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Frambesvärjt källvatten"
+       },
+@@ -17108,6 +17132,11 @@ export const sv_SE: EnTranslations = {
+         "title": "Väktare av Stranden",
+         "greeting": "Tidvattnet tar och tidvattnet betalar, {playerName}. Jag för räkenskap över båda: det krabborna knipsar loss från vraken, och det ärliga händer bär tillbaka upp den här stigen."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Tidvattenväktare",
+diff --git a/src/ui/i18n.resolved.generated/tr_TR.ts b/src/ui/i18n.resolved.generated/tr_TR.ts
+index 37c2bc129d..45f5df757a 100644
+--- a/src/ui/i18n.resolved.generated/tr_TR.ts
++++ b/src/ui/i18n.resolved.generated/tr_TR.ts
+@@ -15061,6 +15061,30 @@ export const tr_TR: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Sihirle Yaratılmış Kaynak Suyu"
+       },
+@@ -17108,6 +17132,11 @@ export const tr_TR: EnTranslations = {
+         "title": "Kumsalın Bekçisi",
+         "greeting": "Gelgit alır, gelgit öder, {playerName}. İkisinin de hesabını tutarım: yürüyücülerin enkazlardan çaldığını, ve dürüst ellerin bu yoldan yukarı taşıdığını."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Gelgit Gözcüsü",
+diff --git a/src/ui/i18n.resolved.generated/vi_VN.ts b/src/ui/i18n.resolved.generated/vi_VN.ts
+index 768e27cc30..c0a5c31684 100644
+--- a/src/ui/i18n.resolved.generated/vi_VN.ts
++++ b/src/ui/i18n.resolved.generated/vi_VN.ts
+@@ -15061,6 +15061,30 @@ export const vi_VN: EnTranslations = {
+       "field_kit": {
+         "name": "Field Kit"
+       },
++      "freehold_timber_bed": {
++        "name": "Timber Bed"
++      },
++      "freehold_round_table": {
++        "name": "Round Table"
++      },
++      "freehold_spindle_chair": {
++        "name": "Spindle Chair"
++      },
++      "freehold_low_stool": {
++        "name": "Low Stool"
++      },
++      "freehold_woven_rug": {
++        "name": "Woven Rug"
++      },
++      "freehold_brass_lantern": {
++        "name": "Brass Lantern"
++      },
++      "freehold_storage_chest": {
++        "name": "Storage Chest"
++      },
++      "freehold_open_bookshelf": {
++        "name": "Open Bookshelf"
++      },
+       "conjured_water4": {
+         "name": "Nước Suối Được Tạo Phép"
+       },
+@@ -17108,6 +17132,11 @@ export const vi_VN: EnTranslations = {
+         "title": "Người Giữ Bờ Cát",
+         "greeting": "Thủy triều lấy đi và thủy triều trả lại, {playerName}. Ta ghi sổ cả hai: những gì lũ kẻ bò cắp đi từ xác tàu, và những gì đôi tay lương thiện mang trở lên theo con đường này."
+       },
++      "freehold_furnisher": {
++        "name": "Freehold Furnisher",
++        "title": "Household Goods",
++        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
++      },
+       "tidewatcher_ondrel": {
+         "name": "Ondrel Vane",
+         "title": "Người Canh Thủy Triều",
+diff --git a/src/ui/i18n.resolved.generated/zh_CN.ts b/src/ui/i18n.resolved.generated/zh_CN.ts
+index 3dab2d1108..c6ff37896d 100644
+--- a/src/ui/i18n.resolved.generated/zh_CN.ts
++++ b/src/ui/i18n.resolved.generated/zh_CN.ts
+@@ -6573,7 +6573,7 @@ export const zh_CN: EnTranslations = {
+       "platformBody": "如果你在桌面客户端中关联了 Steam 或 Epic Games 账号，你所获得的功绩会向外同步为该账号上的成就。游戏世界始终是准绳：功绩在这里挣得，记录在你的角色身上，成就随后跟上。并非每一项功绩都有对应的成就；若某个成就没有立刻到账，它会在你下次登录时补上。关联永远只是关联，绝不是一种登录方式。"
+     },
+     "reliquaryPage": {
+-      "intro": "圣物库是你已收录的独特战利品博物馆：地下城追逐装备、专业奖杯、坐骑、武器外观与头衔。它与功绩之书的关系，就像奖杯厅与成就簿的关系。",
++      "intro": "圣物库是你已收录的独特战利品博物馆：地下城追逐装备、专业奖杯、坐骑、武器外观、头衔与家具。它与功绩之书的关系，就像奖杯厅与成就簿的关系。",
+       "howHeading": "收藏如何运作",
+       "howBody": "在游戏中打开圣物库（默认 Shift+X）。每个架上有多页独特圣物。角色首次获得该件时填满剪影；一页上的圣物全部填满时点亮该页。少数页面标注“绝版”或“专属”：它们不计入达成，不会阻碍书架或全库的完成。实时发现会弹出提示并刷新已打开的窗口；进度按角色计算，武器外观除外（账号外观）。",
+       "ranksHeading": "策展人等级",
+@@ -15061,6 +15061,30 @@ export const zh_CN: EnTranslations = {
+       "field_kit": {
+         "name": "野外工具包"
+       },
++      "freehold_timber_bed": {
++        "name": "木架床"
++      },
++      "freehold_round_table": {
++        "name": "圆桌"
++      },
++      "freehold_spindle_chair": {
++        "name": "木杆靠背椅"
++      },
++      "freehold_low_stool": {
++        "name": "矮凳"
++      },
++      "freehold_woven_rug": {
++        "name": "编织地毯"
++      },
++      "freehold_brass_lantern": {
++        "name": "黄铜提灯"
++      },
++      "freehold_storage_chest": {
++        "name": "储物箱"
++      },
++      "freehold_open_bookshelf": {
++        "name": "开放式书架"
++      },
+       "conjured_water4": {
+         "name": "魔法泉水"
+       },
+@@ -17108,6 +17132,11 @@ export const zh_CN: EnTranslations = {
+         "title": "海滩的看守",
+         "greeting": "潮水会拿走，潮水也会偿还，{playerName}。这两笔账都由我来记：掠蟹从残骸里夹走的，和诚实的双手沿这条路扛上来的。"
+       },
++      "freehold_furnisher": {
++        "name": "自由领地家具商",
++        "title": "家居用品",
++        "greeting": "结实的椅子，温暖的提灯，还有放书的地方。来看看吧。"
++      },
+       "tidewatcher_ondrel": {
+         "name": "翁德雷尔·凡恩",
+         "title": "守潮者",
+diff --git a/src/ui/i18n.resolved.generated/zh_TW.ts b/src/ui/i18n.resolved.generated/zh_TW.ts
+index f13d0fbc3f..32d35d8cba 100644
+--- a/src/ui/i18n.resolved.generated/zh_TW.ts
++++ b/src/ui/i18n.resolved.generated/zh_TW.ts
+@@ -6573,7 +6573,7 @@ export const zh_TW: EnTranslations = {
+       "platformBody": "如果你在電腦版應用程式中連結了 Steam 或 Epic Games 帳號，你所贏得的功績便會向外同步，成為該帳號上的成就。遊戲世界始終是權威所在：你在這裡贏得功績，它記在你的角色身上，成就隨後才跟上。並非每個功績都有對應的成就，而某個成就若沒有立刻送達，也會在你下次登入時補上。連結永遠只是連結，絕不是一種登入方式。"
+     },
+     "reliquaryPage": {
+-      "intro": "聖物庫是你已收錄的獨特戰利品博物館：地城追逐裝備、專業獎盃、坐騎、武器外觀與頭銜。它與功績之書的關係，就像獎盃廳與成就簿的關係。",
++      "intro": "聖物庫是你已收錄的獨特戰利品博物館：地城追逐裝備、專業獎盃、坐騎、武器外觀、頭銜與家具。它與功績之書的關係，就像獎盃廳與成就簿的關係。",
+       "howHeading": "收藏如何運作",
+       "howBody": "在遊戲中開啟聖物庫（預設 Shift+X）。每個架上有多頁獨特聖物。角色首次獲得該件時填滿剪影；一頁上的聖物全部填滿時點亮該頁。少數頁面標註「絕版」或「專屬」：它們不計入達成，不會阻礙書架或全庫的完成。即時發現會跳出提示並重新整理已開啟的視窗；進度按角色計算，武器外觀除外（帳號外觀）。",
+       "ranksHeading": "策展人等級",
+@@ -15061,6 +15061,30 @@ export const zh_TW: EnTranslations = {
+       "field_kit": {
+         "name": "野外工具包"
+       },
++      "freehold_timber_bed": {
++        "name": "木架床"
++      },
++      "freehold_round_table": {
++        "name": "圓桌"
++      },
++      "freehold_spindle_chair": {
++        "name": "木桿靠背椅"
++      },
++      "freehold_low_stool": {
++        "name": "矮凳"
++      },
++      "freehold_woven_rug": {
++        "name": "編織地毯"
++      },
++      "freehold_brass_lantern": {
++        "name": "黃銅提燈"
++      },
++      "freehold_storage_chest": {
++        "name": "儲物箱"
++      },
++      "freehold_open_bookshelf": {
++        "name": "開放式書架"
++      },
+       "conjured_water4": {
+         "name": "魔法泉水"
+       },
+@@ -17108,6 +17132,11 @@ export const zh_TW: EnTranslations = {
+         "title": "海灘的看守",
+         "greeting": "潮水會拿走，潮水也會償還，{playerName}。這兩筆帳都由我來記：掠蟹從殘骸裡夾走的，和誠實的雙手沿這條路扛上來的。"
+       },
++      "freehold_furnisher": {
++        "name": "自由領地家具商",
++        "title": "家居用品",
++        "greeting": "結實的椅子，溫暖的提燈，還有放書的地方。來看看吧。"
++      },
+       "tidewatcher_ondrel": {
+         "name": "翁德瑞爾·韋恩",
+         "title": "守潮者",
+diff --git a/src/ui/reliquary_i18n.locales/ja_JP.ts b/src/ui/reliquary_i18n.locales/ja_JP.ts
+index bbda6dcd9e..c11f345cbc 100644
+--- a/src/ui/reliquary_i18n.locales/ja_JP.ts
++++ b/src/ui/reliquary_i18n.locales/ja_JP.ts
+@@ -200,4 +200,8 @@ export const table: ReliquaryLocaleTable = {
+     name: 'フォージブレイカー',
+     desc: '鍛冶場から解き放たれ、自ら作った槌に宿る最後の泉の声。',
+   },
++  hearth_basics: {
++    name: '炉辺の基本家具',
++    desc: 'イーストブルックのフリーホールドの家具商が販売する素朴な家具。',
++  },
+ };
+diff --git a/src/ui/reliquary_i18n.locales/ko_KR.ts b/src/ui/reliquary_i18n.locales/ko_KR.ts
+index 0a87e007b2..0301952b5b 100644
+--- a/src/ui/reliquary_i18n.locales/ko_KR.ts
++++ b/src/ui/reliquary_i18n.locales/ko_KR.ts
+@@ -200,4 +200,8 @@ export const table: ReliquaryLocaleTable = {
+     name: '화로파괴자',
+     desc: '대장간에서 풀려나 직접 만든 망치에 깃든 마지막 샘의 목소리.',
+   },
++  hearth_basics: {
++    name: '아늑한 집의 기본 가구',
++    desc: '이스트브룩의 자유 영지 가구상이 판매하는 소박한 가구입니다.',
++  },
+ };
+diff --git a/src/ui/reliquary_i18n.locales/ru_RU.ts b/src/ui/reliquary_i18n.locales/ru_RU.ts
+index 59f6d0d5eb..d66e2d0888 100644
+--- a/src/ui/reliquary_i18n.locales/ru_RU.ts
++++ b/src/ui/reliquary_i18n.locales/ru_RU.ts
+@@ -198,4 +198,8 @@ export const table: ReliquaryLocaleTable = {
+     name: 'Горнолом',
+     desc: 'Голос Последнего Источника, освобождённый из горна и заключённый в молоте вашей работы.',
+   },
++  hearth_basics: {
++    name: 'Простой домашний уют',
++    desc: 'Простая мебель, которую продаёт мебельщица фригольда в Истбруке.',
++  },
+ };
+diff --git a/src/ui/reliquary_i18n.locales/zh_CN.ts b/src/ui/reliquary_i18n.locales/zh_CN.ts
+index f1619e957f..e157df8fbc 100644
+--- a/src/ui/reliquary_i18n.locales/zh_CN.ts
++++ b/src/ui/reliquary_i18n.locales/zh_CN.ts
+@@ -199,4 +199,8 @@ export const table: ReliquaryLocaleTable = {
+     name: '碎炉者',
+     desc: '末泉的声音从锻炉中解放，寄宿在你亲手打造的战锤中。',
+   },
++  hearth_basics: {
++    name: '炉边基础家具',
++    desc: '伊斯特布鲁克的自由领地家具商出售的简朴家具。',
++  },
+ };
+diff --git a/src/ui/reliquary_i18n.locales/zh_TW.ts b/src/ui/reliquary_i18n.locales/zh_TW.ts
+index 0bbe949ef0..6f7dcc7777 100644
+--- a/src/ui/reliquary_i18n.locales/zh_TW.ts
++++ b/src/ui/reliquary_i18n.locales/zh_TW.ts
+@@ -199,4 +199,8 @@ export const table: ReliquaryLocaleTable = {
+     name: '碎爐者',
+     desc: '末泉的聲音從鍛爐中解放，寄宿在你親手打造的戰鎚中。',
+   },
++  hearth_basics: {
++    name: '爐邊基礎家具',
++    desc: '伊斯特布魯克的自由領地家具商出售的簡樸家具。',
++  },
+ };
+diff --git a/src/ui/world_entity_i18n.ts b/src/ui/world_entity_i18n.ts
+index 18e1cdc40d..ade6321673 100644
+--- a/src/ui/world_entity_i18n.ts
++++ b/src/ui/world_entity_i18n.ts
+@@ -358,6 +358,7 @@ const NPC_IDS = [
+   'overseer_pell',
+   'drillmaster_rook',
+   'tidewarden_nel',
++  'freehold_furnisher',
+ ] as const;
+
+ const QUEST_IDS = [

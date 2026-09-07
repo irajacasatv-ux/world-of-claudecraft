@@ -1,0 +1,26 @@
+[gate:select] full gate step list, selective vitest step
+[gate:select] suite: 3887 test files (2691 graph-visible, 318 blind, 878 partial); always-run 1196
+[gate:select] diff base: origin/release/v0.42.0 (integration base origin/release/v0.42.0); 3083 changed path(s)
+[gate:select] mode=full (broad/unclassified change (.claude/hooks/qa-stop.sh, .codex/hooks/ensure-hooks.sh, .codex/hooks/qa-stop.sh, ...): running the full suite)
+[gate:select] workers=8
+[gate:select] i18n + wiki + sfx artifacts: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run i18n:gen wiki:content sfx:check --ui=stream
+ Tasks:    3 successful, 3 total
+[gate:select] i18n freshness: git diff --exit-code -- src/ui/i18n.resolved.generated src/admin/i18n.resolved.generated src/ui/i18n.catalog/translation_keys.generated.ts
+[gate:select] sfx manifest regen: node scripts/build_sfx_manifest.mjs
+[gate:select] media manifest regen: node scripts/build_media_manifest.mjs generate
+[gate:select] manifest trackedness: git ls-files --error-unmatch -- src/game/sfx_manifest.generated.ts src/guide/content.generated.ts src/render/assets/manifest.generated.ts public/audio/sfx/runtime-pack.json scripts/sfx/sfx_gain_ceiling.generated.json
+[gate:select] manifest freshness: git diff --exit-code -- src/game/sfx_manifest.generated.ts src/guide/content.generated.ts src/render/assets/manifest.generated.ts public/audio/sfx/runtime-pack.json scripts/sfx/sfx_gain_ceiling.generated.json
+[gate:select] malware scan: npm run security:gate
+> world-of-claudecraft@0.41.0 security:gate
+[gate:select] biome (changed files): npm run ci:changed
+[gate:select] vitest (full suite, planner fell back): /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/vitest run --maxWorkers=8
+ Test Files  3853 passed | 34 skipped (3887)
+      Tests  57726 passed | 2 expected fail | 541 skipped (58269)
+[gate:select] browser regressions: npm run test:browser
+ Test Files  43 passed (43)
+      Tests  376 passed (376)
+[gate:select] typecheck + env/server/bot builds: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run check:types build:env build:server build:bot --ui=stream
+ Tasks:    5 successful, 5 total
+[gate:select] client build: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run build:bundle --ui=stream
+ Tasks:    3 successful, 3 total
+[gate:select] PASS: all 12 steps green (vitest workers: 8)

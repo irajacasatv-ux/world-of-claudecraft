@@ -1,5 +1,12 @@
 # Freeholds content source freeze, 2026-09-07
 
+Historical initial checkpoint. Development admission was subsequently accepted
+in [the exact trial record](content-trial-2026-09-07/acceptance.md) and checked by
+[integrated revalidation](content-trial-2026-09-07/revalidation.md). The inventory
+and absent-input descriptions below refer to this earlier checkpoint; they do
+not instruct later work to remove the now-admitted content. Production approval
+remains a separate gate.
+
 Status: evidence inventory only. No furnishing or Ledger numeric artifact is approved
 by this record. Production furnishing acquisition and Ledger billing remain disabled. The exact known values
 and missing producers below are intended for review; they do not authorize guessed

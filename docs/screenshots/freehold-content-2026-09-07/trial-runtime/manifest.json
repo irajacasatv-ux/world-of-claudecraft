@@ -1,0 +1,722 @@
+{
+  "fixture": "Local stock offline world, development content enabled. Harness moves player to the authored NPC, clears starter inventory and grants exactly 2000 copper; all furnishings acquired through real vendor UI. No placement or production enable is claimed.",
+  "captures": [
+    {
+      "variant": "desktop",
+      "name": "hearth-missing",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-hearth-missing.png",
+      "sha256": "750f800eda61855504d099dc0fa67e4fd5761a6bf748f5d71bc37a02d4c2da5f",
+      "text": "The Reliquary\n0/438 relics\nUnranked Curator\n0%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n0/87\nHearth\n0/8\nBack to shelf\nHearth Basics\nPin\n\nSimple furnishings sold by the Freehold Furnisher in Eastbrook.\n\n0/8\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 440,
+        "y": 90,
+        "width": 720,
+        "height": 336.046875,
+        "top": 90,
+        "right": 1160,
+        "bottom": 426.046875,
+        "left": 440
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-pinned",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-hearth-pinned.png",
+      "sha256": "e48d50419ccc880bd9fb9b2f51df5f2d25a5b30437b164267d57ded63e1ee8fd",
+      "text": "The Reliquary\n0/438 relics\nUnranked Curator\n0%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n0/87\nHearth\n0/8\nBack to shelf\nHearth Basics\nUnpin\n\nSimple furnishings sold by the Freehold Furnisher in Eastbrook.\n\n0/8\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 440,
+        "y": 90,
+        "width": 720,
+        "height": 336.046875,
+        "top": 90,
+        "right": 1160,
+        "bottom": 426.046875,
+        "left": 440
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "missing-source-tooltip",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-missing-source-tooltip.png",
+      "sha256": "a2a044e0dcf60490bb86df885b176911cba20458397abe6380d175d6fa38e4b8",
+      "text": "The Reliquary\n0/438 relics\nUnranked Curator\n0%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n0/87\nHearth\n0/8\nBack to shelf\nHearth Basics\nPin\n\nSimple furnishings sold by the Freehold Furnisher in Eastbrook.\n\n0/8\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 440,
+        "y": 90,
+        "width": 720,
+        "height": 336.046875,
+        "top": 90,
+        "right": 1160,
+        "bottom": 426.046875,
+        "left": 440
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "vendor-stock",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-vendor-stock.png",
+      "sha256": "b1289b78077b71bcbdb9141c32615f4dce4bbb0e3c6fe1d9c74a7c3653d52c5a",
+      "text": "Freehold Furnisher: Goods\n1x\n5x\n10x\nCustom\nTimber Bed\n2\nsilver\n50\ncopper\nRound Table\n2\nsilver\n50\ncopper\nSpindle Chair\n2\nsilver\n50\ncopper\nLow Stool\n2\nsilver\n50\ncopper\nWoven Rug\n2\nsilver\n50\ncopper\nBrass Lantern\n2\nsilver\n50\ncopper\nStorage Chest\n2\nsilver\n50\ncopper\nOpen Bookshelf\n2\nsilver\n50\ncopper\nSell Junk\nBuyback\nNo items\nClick an item in your bags to sell it while this window is open.",
+      "rect": {
+        "x": 428,
+        "y": 90,
+        "width": 744,
+        "height": 388,
+        "top": 90,
+        "right": 1172,
+        "bottom": 478,
+        "left": 428
+      },
+      "scrollWidth": 740,
+      "clientWidth": 740
+    },
+    {
+      "variant": "desktop",
+      "name": "vendor-purchased",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-vendor-purchased.png",
+      "sha256": "ab0ebbbe87b687bea2246baf6efdf209dbcd348497411ceb5bc71a5c0571801c",
+      "text": "Freehold Furnisher: Goods\n1x\n5x\n10x\nCustom\nTimber Bed\n2\nsilver\n50\ncopper\nRound Table\n2\nsilver\n50\ncopper\nSpindle Chair\n2\nsilver\n50\ncopper\nLow Stool\n2\nsilver\n50\ncopper\nWoven Rug\n2\nsilver\n50\ncopper\nBrass Lantern\n2\nsilver\n50\ncopper\nStorage Chest\n2\nsilver\n50\ncopper\nOpen Bookshelf\n2\nsilver\n50\ncopper\nSell Junk\nBuyback\nNo items\nClick an item in your bags to sell it while this window is open.",
+      "rect": {
+        "x": 428,
+        "y": 90,
+        "width": 744,
+        "height": 388,
+        "top": 90,
+        "right": 1172,
+        "bottom": 478,
+        "left": 428
+      },
+      "scrollWidth": 740,
+      "clientWidth": 740
+    },
+    {
+      "variant": "desktop",
+      "name": "overview",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-overview.png",
+      "sha256": "180178ee8940e5c51490847c43dc04f027016afab8a2f5cf330cd54f6f3470ce",
+      "text": "The Reliquary\n8/438 relics\nApprentice Curator\n2%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n0/87\nHearth\n8/8\n\nYour overall total counts each relic once; shelf and page counts list every slot, so a relic shown on more than one page is counted by each of them.\n\nRecent finds:\nOpen Bookshelf\nStorage Chest\nBrass Lantern\nWoven Rug\nLow Stool\nSpindle Chair\nRound Table\nTimber Bed\nNearly complete:\nPages within reach of completion gather here.\nConquerors\n0/313\nNothing catalogued on this shelf yet.\nProfessions\n0/58\nNothing catalogued on this shelf yet.\nHorizons\n0/87\nNothing catalogued on this shelf yet.\nHearth\n8/8\nLatest find: Open Bookshelf",
+      "rect": {
+        "x": 468,
+        "y": 118,
+        "width": 720,
+        "height": 439,
+        "top": 118,
+        "right": 1188,
+        "bottom": 557,
+        "left": 468
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-owned-en",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-hearth-owned-en.png",
+      "sha256": "a3691ed334bcc0638798f2940ba0f1c08a860abd7b9abdecc100731a4e954e22",
+      "text": "The Reliquary\n8/438 relics\nApprentice Curator\n2%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n0/87\nHearth\n8/8\nBack to shelf\nHearth Basics\nIlluminated\n\nSimple furnishings sold by the Freehold Furnisher in Eastbrook.\n\n8/8\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 468,
+        "y": 118,
+        "width": 720,
+        "height": 336.046875,
+        "top": 118,
+        "right": 1188,
+        "bottom": 454.046875,
+        "left": 468
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-owned-zh_CN",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-hearth-owned-zh_CN.png",
+      "sha256": "6403b4834bb1f6c1d864932744e51d4363db9b4e59434ad23cd7edb335b40617",
+      "text": "\u5723\u7269\u5e93\n8/438 \u4ef6\u5723\u7269\n\u89c1\u4e60\u7b56\u5c55\u4eba\n2%\n\u754c\u9762\u8ffd\u8e2a\u5668\n\u603b\u89c8\n\u5f81\u670d\u8005\n0/313\n\u4e13\u4e1a\n0/58\n\u8fdc\u666f\n0/87\n\u7089\u8fb9\n8/8\n\u8fd4\u56de\u4e66\u67b6\n\u7089\u8fb9\u57fa\u7840\u5bb6\u5177\n\u5df2\u70b9\u4eae\n\n\u4f0a\u65af\u7279\u5e03\u9c81\u514b\u7684\u81ea\u7531\u9886\u5730\u5bb6\u5177\u5546\u51fa\u552e\u7684\u7b80\u6734\u5bb6\u5177\u3002\n\n8/8\n\u5168\u90e8\n\u5df2\u6536\u5f55\n\u5c1a\u672a\u83b7\u5f97\n\u4f7f\u7528\u65b9\u5411\u952e\u5728\u5723\u7269\u4e4b\u95f4\u79fb\u52a8\uff0cHome \u952e\u548c End \u952e\u8df3\u5230\u9996\u5c3e\u3002",
+      "rect": {
+        "x": 468,
+        "y": 118,
+        "width": 720,
+        "height": 340.046875,
+        "top": 118,
+        "right": 1188,
+        "bottom": 458.046875,
+        "left": 468
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-owned-zh_TW",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-hearth-owned-zh_TW.png",
+      "sha256": "b388290de662a98831268cab80c76d97b7ade74c742061201abe332617552e92",
+      "text": "\u8056\u7269\u5eab\n8/438 \u4ef6\u8056\u7269\n\u898b\u7fd2\u7b56\u5c55\u4eba\n2%\n\u4ecb\u9762\u8ffd\u8e64\u5668\n\u7e3d\u89bd\n\u5f81\u670d\u8005\n0/313\n\u5c08\u696d\n0/58\n\u9060\u666f\n0/87\n\u7210\u908a\n8/8\n\u8fd4\u56de\u66f8\u67b6\n\u7210\u908a\u57fa\u790e\u5bb6\u5177\n\u5df2\u9ede\u4eae\n\n\u4f0a\u65af\u7279\u5e03\u9b6f\u514b\u7684\u81ea\u7531\u9818\u5730\u5bb6\u5177\u5546\u51fa\u552e\u7684\u7c21\u6a38\u5bb6\u5177\u3002\n\n8/8\n\u5168\u90e8\n\u5df2\u6536\u9304\n\u5c1a\u672a\u7372\u5f97\n\u4f7f\u7528\u65b9\u5411\u9375\u5728\u8056\u7269\u4e4b\u9593\u79fb\u52d5\uff0cHome \u9375\u548c End \u9375\u8df3\u5230\u9996\u5c3e\u3002",
+      "rect": {
+        "x": 468,
+        "y": 118,
+        "width": 720,
+        "height": 340.046875,
+        "top": 118,
+        "right": 1188,
+        "bottom": 458.046875,
+        "left": 468
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-owned-ja_JP",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-hearth-owned-ja_JP.png",
+      "sha256": "cb1bb673e2a6ea2cf7264352142b9d88c6ab780c02d107bb2a8ac0156d99eb4d",
+      "text": "\u8056\u907a\u7269\u5eab\n\u8056\u907a\u7269 8/438\n\u898b\u7fd2\u3044\u30ad\u30e5\u30ec\u30fc\u30bf\u30fc\n2%\nHUD\u30c8\u30e9\u30c3\u30ab\u30fc\n\u6982\u8981\n\u5f81\u670d\u8005\n0/313\n\u5c02\u9580\u6280\u80fd\n0/58\n\u5730\u5e73\n0/87\n\u7089\u8fba\n8/8\n\u68da\u306b\u623b\u308b\n\u7089\u8fba\u306e\u57fa\u672c\u5bb6\u5177\n\u7167\u8000\u6e08\u307f\n\n\u30a4\u30fc\u30b9\u30c8\u30d6\u30eb\u30c3\u30af\u306e\u30d5\u30ea\u30fc\u30db\u30fc\u30eb\u30c9\u306e\u5bb6\u5177\u5546\u304c\u8ca9\u58f2\u3059\u308b\u7d20\u6734\u306a\u5bb6\u5177\u3002\n\n8/8\n\u3059\u3079\u3066\n\u53ce\u8535\u6e08\u307f\n\u672a\u767a\u898b\n\u77e2\u5370\u30ad\u30fc\u3067\u8056\u907a\u7269\u3092\u79fb\u52d5\u3001Home \u30ad\u30fc\u3068 End \u30ad\u30fc\u3067\u5148\u982d\u3068\u672b\u5c3e\u306b\u79fb\u52d5\u3057\u307e\u3059\u3002",
+      "rect": {
+        "x": 468,
+        "y": 118,
+        "width": 720,
+        "height": 345.046875,
+        "top": 118,
+        "right": 1188,
+        "bottom": 463.046875,
+        "left": 468
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-japanese-search",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-hearth-japanese-search.png",
+      "sha256": "51ec426a897cbab7a44357fbef27948afb7abd953af3d6472a468aff3468bc85",
+      "text": "\u8056\u907a\u7269\u5eab\n\u8056\u907a\u7269 8/438\n\u898b\u7fd2\u3044\u30ad\u30e5\u30ec\u30fc\u30bf\u30fc\n2%\nHUD\u30c8\u30e9\u30c3\u30ab\u30fc\n\u6982\u8981\n\u5f81\u670d\u8005\n0/313\n\u5c02\u9580\u6280\u80fd\n0/58\n\u5730\u5e73\n0/87\n\u7089\u8fba\n8/8\n\u68da\u306b\u623b\u308b\n\u7089\u8fba\u306e\u57fa\u672c\u5bb6\u5177\n\u7167\u8000\u6e08\u307f\n\n\u30a4\u30fc\u30b9\u30c8\u30d6\u30eb\u30c3\u30af\u306e\u30d5\u30ea\u30fc\u30db\u30fc\u30eb\u30c9\u306e\u5bb6\u5177\u5546\u304c\u8ca9\u58f2\u3059\u308b\u7d20\u6734\u306a\u5bb6\u5177\u3002\n\n8/8\n\u3059\u3079\u3066\n\u53ce\u8535\u6e08\u307f\n\u672a\u767a\u898b\n\u77e2\u5370\u30ad\u30fc\u3067\u8056\u907a\u7269\u3092\u79fb\u52d5\u3001Home \u30ad\u30fc\u3068 End \u30ad\u30fc\u3067\u5148\u982d\u3068\u672b\u5c3e\u306b\u79fb\u52d5\u3057\u307e\u3059\u3002\n1 \u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f\u3002",
+      "rect": {
+        "x": 468,
+        "y": 118,
+        "width": 720,
+        "height": 345.046875,
+        "top": 118,
+        "right": 1188,
+        "bottom": 463.046875,
+        "left": 468
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-owned-ko_KR",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-hearth-owned-ko_KR.png",
+      "sha256": "5d2a8e20443f4b2ed6e4118a5504a9ef28faf1a35be34fc8bc1353f71a97ed9d",
+      "text": "\uc131\ubb3c\uace0\n\uc131\ubb3c 8/438\n\uacac\uc2b5 \ud050\ub808\uc774\ud130\n2%\nHUD \ucd94\uc801\uae30\n\uac1c\uc694\n\uc815\ubcf5\uc790\n0/313\n\uc804\ubb38 \uae30\uc220\n0/58\n\uc9c0\ud3c9\n0/87\n\ubcf4\uae08\uc790\ub9ac\n8/8\n\uc120\ubc18\uc73c\ub85c \ub3cc\uc544\uac00\uae30\n\uc544\ub291\ud55c \uc9d1\uc758 \uae30\ubcf8 \uac00\uad6c\n\uc870\uba85\ub428\n\n\uc774\uc2a4\ud2b8\ube0c\ub8e9\uc758 \uc790\uc720 \uc601\uc9c0 \uac00\uad6c\uc0c1\uc774 \ud310\ub9e4\ud558\ub294 \uc18c\ubc15\ud55c \uac00\uad6c\uc785\ub2c8\ub2e4.\n\n8/8\n\uc804\uccb4\n\uc218\ub85d\ub428\n\uc544\uc9c1 \uc5c6\uc74c\n\ubc29\ud5a5\ud0a4\ub85c \uc131\ubb3c \uc0ac\uc774\ub97c \uc774\ub3d9\ud558\uace0, Home \ud0a4\uc640 End \ud0a4\ub85c \ucc98\uc74c\uacfc \ub05d\uc73c\ub85c \uc774\ub3d9\ud569\ub2c8\ub2e4.",
+      "rect": {
+        "x": 468,
+        "y": 118,
+        "width": 720,
+        "height": 336.046875,
+        "top": 118,
+        "right": 1188,
+        "bottom": 454.046875,
+        "left": 468
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-owned-ru_RU",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/desktop-hearth-owned-ru_RU.png",
+      "sha256": "dae6ba1d2eea799ecbe0b8aad1e9e182974f18ee0a3d025ef1e9fe856b48b566",
+      "text": "\u0420\u0435\u043b\u0438\u043a\u0432\u0430\u0440\u0438\u0439\n8/438 \u0440\u0435\u043b\u0438\u043a\u0432\u0438\u0439\n\u0423\u0447\u0435\u043d\u0438\u043a \u0445\u0440\u0430\u043d\u0438\u0442\u0435\u043b\u044f\n2\u00a0%\n\u0421\u043f\u0438\u0441\u043e\u043a \u043d\u0430 \u044d\u043a\u0440\u0430\u043d\u0435\n\u041e\u0431\u0437\u043e\u0440\n\u0417\u0430\u0432\u043e\u0435\u0432\u0430\u0442\u0435\u043b\u0438\n0/313\n\u041f\u0440\u043e\u0444\u0435\u0441\u0441\u0438\u0438\n0/58\n\u0413\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u044b\n0/87\n\u041e\u0447\u0430\u0433\n8/8\n\u041d\u0430\u0437\u0430\u0434 \u043a \u043f\u043e\u043b\u043a\u0435\n\u041f\u0440\u043e\u0441\u0442\u043e\u0439 \u0434\u043e\u043c\u0430\u0448\u043d\u0438\u0439 \u0443\u044e\u0442\n\u041e\u0437\u0430\u0440\u0435\u043d\u043e\n\n\u041f\u0440\u043e\u0441\u0442\u0430\u044f \u043c\u0435\u0431\u0435\u043b\u044c, \u043a\u043e\u0442\u043e\u0440\u0443\u044e \u043f\u0440\u043e\u0434\u0430\u0451\u0442 \u043c\u0435\u0431\u0435\u043b\u044c\u0449\u0438\u0446\u0430 \u0444\u0440\u0438\u0433\u043e\u043b\u044c\u0434\u0430 \u0432 \u0418\u0441\u0442\u0431\u0440\u0443\u043a\u0435.\n\n8/8\n\u0412\u0441\u0435\n\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u044b\n\u041d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b\n\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439\u0442\u0435 \u0441\u0442\u0440\u0435\u043b\u043a\u0438 \u0434\u043b\u044f \u043f\u0435\u0440\u0435\u0445\u043e\u0434\u0430 \u043c\u0435\u0436\u0434\u0443 \u0440\u0435\u043b\u0438\u043a\u0432\u0438\u044f\u043c\u0438, Home \u0438 End \u0434\u043b\u044f \u043f\u0435\u0440\u0435\u0445\u043e\u0434\u0430 \u043a \u043d\u0430\u0447\u0430\u043b\u0443 \u0438 \u043a\u043e\u043d\u0446\u0443.",
+      "rect": {
+        "x": 468,
+        "y": 118,
+        "width": 720,
+        "height": 336.046875,
+        "top": 118,
+        "right": 1188,
+        "bottom": 454.046875,
+        "left": 468
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-missing",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-hearth-missing.png",
+      "sha256": "c6792f5d8be80e8f08662b41d24e0b9e095e1901557e5dd7c37c8cac9b0e1c9e",
+      "text": "The Reliquary\n0/438 relics\nUnranked Curator\n0%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n0/87\nHearth\n0/8\nBack to shelf\nHearth Basics\nPin\n\nSimple furnishings sold by the Freehold Furnisher in Eastbrook.\n\n0/8\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-pinned",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-hearth-pinned.png",
+      "sha256": "73e609eaa90a7978ab1107a1600a8522741c7782b0d710b2dcd36b6d47adb67b",
+      "text": "The Reliquary\n0/438 relics\nUnranked Curator\n0%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n0/87\nHearth\n0/8\nBack to shelf\nHearth Basics\nUnpin\n\nSimple furnishings sold by the Freehold Furnisher in Eastbrook.\n\n0/8\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "vendor-stock",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-vendor-stock.png",
+      "sha256": "54b58725b01f146323bb3344072179fbb7ef7b8d7837a814b4d14c94d197c2af",
+      "text": "Freehold Furnisher: Goods\n1x\n5x\n10x\nCustom\nTimber Bed\n2\nsilver\n50\ncopper\nRound Table\n2\nsilver\n50\ncopper\nSpindle Chair\n2\nsilver\n50\ncopper\nLow Stool\n2\nsilver\n50\ncopper\nWoven Rug\n2\nsilver\n50\ncopper\nBrass Lantern\n2\nsilver\n50\ncopper\nStorage Chest\n2\nsilver\n50\ncopper\nOpen Bookshelf\n2\nsilver\n50\ncopper\nSell Junk\nBuyback\nNo items\nClick an item in your bags to sell it while this window is open.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 412,
+        "height": 308,
+        "top": 10,
+        "right": 422,
+        "bottom": 318,
+        "left": 10
+      },
+      "scrollWidth": 409,
+      "clientWidth": 409
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "vendor-stock-lower",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-vendor-stock-lower.png",
+      "sha256": "63c2309e6e6a571b024bf8c4c56145383cd1001c8f57889d9b8a4ff08d0e8194",
+      "text": "Freehold Furnisher: Goods\n1x\n5x\n10x\nCustom\nTimber Bed\n2\nsilver\n50\ncopper\nRound Table\n2\nsilver\n50\ncopper\nSpindle Chair\n2\nsilver\n50\ncopper\nLow Stool\n2\nsilver\n50\ncopper\nWoven Rug\n2\nsilver\n50\ncopper\nBrass Lantern\n2\nsilver\n50\ncopper\nStorage Chest\n2\nsilver\n50\ncopper\nOpen Bookshelf\n2\nsilver\n50\ncopper\nSell Junk\nBuyback\nNo items\nClick an item in your bags to sell it while this window is open.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 412,
+        "height": 308,
+        "top": 10,
+        "right": 422,
+        "bottom": 318,
+        "left": 10
+      },
+      "scrollWidth": 409,
+      "clientWidth": 409
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "vendor-purchased",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-vendor-purchased.png",
+      "sha256": "5da84adf339465a2a576b51cdfda5fefbf248a50b7fee1754ea20bfc9e87e649",
+      "text": "Freehold Furnisher: Goods\n1x\n5x\n10x\nCustom\nTimber Bed\n2\nsilver\n50\ncopper\nRound Table\n2\nsilver\n50\ncopper\nSpindle Chair\n2\nsilver\n50\ncopper\nLow Stool\n2\nsilver\n50\ncopper\nWoven Rug\n2\nsilver\n50\ncopper\nBrass Lantern\n2\nsilver\n50\ncopper\nStorage Chest\n2\nsilver\n50\ncopper\nOpen Bookshelf\n2\nsilver\n50\ncopper\nSell Junk\nBuyback\nNo items\nClick an item in your bags to sell it while this window is open.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 412,
+        "height": 308,
+        "top": 10,
+        "right": 422,
+        "bottom": 318,
+        "left": 10
+      },
+      "scrollWidth": 409,
+      "clientWidth": 409
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "overview",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-overview.png",
+      "sha256": "a837ca1df7404fadb9fbfdce97c934cab7ca8f22e4cbaf0e94cd4742f974d76c",
+      "text": "The Reliquary\n8/438 relics\nApprentice Curator\n2%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n0/87\nHearth\n8/8\n\nYour overall total counts each relic once; shelf and page counts list every slot, so a relic shown on more than one page is counted by each of them.\n\nRecent finds:\nOpen Bookshelf\nStorage Chest\nBrass Lantern\nWoven Rug\nLow Stool\nSpindle Chair\nRound Table\nTimber Bed\nNearly complete:\nPages within reach of completion gather here.\nConquerors\n0/313\nNothing catalogued on this shelf yet.\nProfessions\n0/58\nNothing catalogued on this shelf yet.\nHorizons\n0/87\nNothing catalogued on this shelf yet.\nHearth\n8/8\nLatest find: Open Bookshelf",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-owned-en",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-hearth-owned-en.png",
+      "sha256": "e143b5a1ea07ece37f21aee807f28db42b076da261f6b4655f52429177b9f0d6",
+      "text": "The Reliquary\n8/438 relics\nApprentice Curator\n2%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n0/87\nHearth\n8/8\nBack to shelf\nHearth Basics\nIlluminated\n\nSimple furnishings sold by the Freehold Furnisher in Eastbrook.\n\n8/8\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-owned-zh_CN",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-hearth-owned-zh_CN.png",
+      "sha256": "7251040a4368bfda19f1aead747bd3ede6a6cf6cc11a6df166acc7dc0622c17b",
+      "text": "\u5723\u7269\u5e93\n8/438 \u4ef6\u5723\u7269\n\u89c1\u4e60\u7b56\u5c55\u4eba\n2%\n\u754c\u9762\u8ffd\u8e2a\u5668\n\u603b\u89c8\n\u5f81\u670d\u8005\n0/313\n\u4e13\u4e1a\n0/58\n\u8fdc\u666f\n0/87\n\u7089\u8fb9\n8/8\n\u8fd4\u56de\u4e66\u67b6\n\u7089\u8fb9\u57fa\u7840\u5bb6\u5177\n\u5df2\u70b9\u4eae\n\n\u4f0a\u65af\u7279\u5e03\u9c81\u514b\u7684\u81ea\u7531\u9886\u5730\u5bb6\u5177\u5546\u51fa\u552e\u7684\u7b80\u6734\u5bb6\u5177\u3002\n\n8/8\n\u5168\u90e8\n\u5df2\u6536\u5f55\n\u5c1a\u672a\u83b7\u5f97\n\u4f7f\u7528\u65b9\u5411\u952e\u5728\u5723\u7269\u4e4b\u95f4\u79fb\u52a8\uff0cHome \u952e\u548c End \u952e\u8df3\u5230\u9996\u5c3e\u3002",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-owned-zh_TW",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-hearth-owned-zh_TW.png",
+      "sha256": "de863a72ffbe8a46655185e0e5af9d67ec1653c6cf11fe9e7b5cfae3d636ff28",
+      "text": "\u8056\u7269\u5eab\n8/438 \u4ef6\u8056\u7269\n\u898b\u7fd2\u7b56\u5c55\u4eba\n2%\n\u4ecb\u9762\u8ffd\u8e64\u5668\n\u7e3d\u89bd\n\u5f81\u670d\u8005\n0/313\n\u5c08\u696d\n0/58\n\u9060\u666f\n0/87\n\u7210\u908a\n8/8\n\u8fd4\u56de\u66f8\u67b6\n\u7210\u908a\u57fa\u790e\u5bb6\u5177\n\u5df2\u9ede\u4eae\n\n\u4f0a\u65af\u7279\u5e03\u9b6f\u514b\u7684\u81ea\u7531\u9818\u5730\u5bb6\u5177\u5546\u51fa\u552e\u7684\u7c21\u6a38\u5bb6\u5177\u3002\n\n8/8\n\u5168\u90e8\n\u5df2\u6536\u9304\n\u5c1a\u672a\u7372\u5f97\n\u4f7f\u7528\u65b9\u5411\u9375\u5728\u8056\u7269\u4e4b\u9593\u79fb\u52d5\uff0cHome \u9375\u548c End \u9375\u8df3\u5230\u9996\u5c3e\u3002",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-owned-ja_JP",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-hearth-owned-ja_JP.png",
+      "sha256": "02fee8d5b7f196347ef4a2ae5420468e5ba0d6721a90bb809126a1f01bdb93fb",
+      "text": "\u8056\u907a\u7269\u5eab\n\u8056\u907a\u7269 8/438\n\u898b\u7fd2\u3044\u30ad\u30e5\u30ec\u30fc\u30bf\u30fc\n2%\nHUD\u30c8\u30e9\u30c3\u30ab\u30fc\n\u6982\u8981\n\u5f81\u670d\u8005\n0/313\n\u5c02\u9580\u6280\u80fd\n0/58\n\u5730\u5e73\n0/87\n\u7089\u8fba\n8/8\n\u68da\u306b\u623b\u308b\n\u7089\u8fba\u306e\u57fa\u672c\u5bb6\u5177\n\u7167\u8000\u6e08\u307f\n\n\u30a4\u30fc\u30b9\u30c8\u30d6\u30eb\u30c3\u30af\u306e\u30d5\u30ea\u30fc\u30db\u30fc\u30eb\u30c9\u306e\u5bb6\u5177\u5546\u304c\u8ca9\u58f2\u3059\u308b\u7d20\u6734\u306a\u5bb6\u5177\u3002\n\n8/8\n\u3059\u3079\u3066\n\u53ce\u8535\u6e08\u307f\n\u672a\u767a\u898b\n\u77e2\u5370\u30ad\u30fc\u3067\u8056\u907a\u7269\u3092\u79fb\u52d5\u3001Home \u30ad\u30fc\u3068 End \u30ad\u30fc\u3067\u5148\u982d\u3068\u672b\u5c3e\u306b\u79fb\u52d5\u3057\u307e\u3059\u3002",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-japanese-search",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-hearth-japanese-search.png",
+      "sha256": "9e80c8cdc9ad97aaef5bac26e7191fef44d7300954cfc25ff312e18d907f77b6",
+      "text": "\u8056\u907a\u7269\u5eab\n\u8056\u907a\u7269 8/438\n\u898b\u7fd2\u3044\u30ad\u30e5\u30ec\u30fc\u30bf\u30fc\n2%\nHUD\u30c8\u30e9\u30c3\u30ab\u30fc\n\u6982\u8981\n\u5f81\u670d\u8005\n0/313\n\u5c02\u9580\u6280\u80fd\n0/58\n\u5730\u5e73\n0/87\n\u7089\u8fba\n8/8\n\u68da\u306b\u623b\u308b\n\u7089\u8fba\u306e\u57fa\u672c\u5bb6\u5177\n\u7167\u8000\u6e08\u307f\n\n\u30a4\u30fc\u30b9\u30c8\u30d6\u30eb\u30c3\u30af\u306e\u30d5\u30ea\u30fc\u30db\u30fc\u30eb\u30c9\u306e\u5bb6\u5177\u5546\u304c\u8ca9\u58f2\u3059\u308b\u7d20\u6734\u306a\u5bb6\u5177\u3002\n\n8/8\n\u3059\u3079\u3066\n\u53ce\u8535\u6e08\u307f\n\u672a\u767a\u898b\n\u77e2\u5370\u30ad\u30fc\u3067\u8056\u907a\u7269\u3092\u79fb\u52d5\u3001Home \u30ad\u30fc\u3068 End \u30ad\u30fc\u3067\u5148\u982d\u3068\u672b\u5c3e\u306b\u79fb\u52d5\u3057\u307e\u3059\u3002\n1 \u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f\u3002",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-owned-ko_KR",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-hearth-owned-ko_KR.png",
+      "sha256": "a27c3edfa379cb1dfb278f7972b9bffc6f8315c0df204b8349d519ee604e1da2",
+      "text": "\uc131\ubb3c\uace0\n\uc131\ubb3c 8/438\n\uacac\uc2b5 \ud050\ub808\uc774\ud130\n2%\nHUD \ucd94\uc801\uae30\n\uac1c\uc694\n\uc815\ubcf5\uc790\n0/313\n\uc804\ubb38 \uae30\uc220\n0/58\n\uc9c0\ud3c9\n0/87\n\ubcf4\uae08\uc790\ub9ac\n8/8\n\uc120\ubc18\uc73c\ub85c \ub3cc\uc544\uac00\uae30\n\uc544\ub291\ud55c \uc9d1\uc758 \uae30\ubcf8 \uac00\uad6c\n\uc870\uba85\ub428\n\n\uc774\uc2a4\ud2b8\ube0c\ub8e9\uc758 \uc790\uc720 \uc601\uc9c0 \uac00\uad6c\uc0c1\uc774 \ud310\ub9e4\ud558\ub294 \uc18c\ubc15\ud55c \uac00\uad6c\uc785\ub2c8\ub2e4.\n\n8/8\n\uc804\uccb4\n\uc218\ub85d\ub428\n\uc544\uc9c1 \uc5c6\uc74c\n\ubc29\ud5a5\ud0a4\ub85c \uc131\ubb3c \uc0ac\uc774\ub97c \uc774\ub3d9\ud558\uace0, Home \ud0a4\uc640 End \ud0a4\ub85c \ucc98\uc74c\uacfc \ub05d\uc73c\ub85c \uc774\ub3d9\ud569\ub2c8\ub2e4.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-owned-ru_RU",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-hearth-owned-ru_RU.png",
+      "sha256": "1875f779fb6d90c9b487694d425729fc7410f66bfd3167d8b5415ce0665113e0",
+      "text": "\u0420\u0435\u043b\u0438\u043a\u0432\u0430\u0440\u0438\u0439\n8/438 \u0440\u0435\u043b\u0438\u043a\u0432\u0438\u0439\n\u0423\u0447\u0435\u043d\u0438\u043a \u0445\u0440\u0430\u043d\u0438\u0442\u0435\u043b\u044f\n2\u00a0%\n\u0421\u043f\u0438\u0441\u043e\u043a \u043d\u0430 \u044d\u043a\u0440\u0430\u043d\u0435\n\u041e\u0431\u0437\u043e\u0440\n\u0417\u0430\u0432\u043e\u0435\u0432\u0430\u0442\u0435\u043b\u0438\n0/313\n\u041f\u0440\u043e\u0444\u0435\u0441\u0441\u0438\u0438\n0/58\n\u0413\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u044b\n0/87\n\u041e\u0447\u0430\u0433\n8/8\n\u041d\u0430\u0437\u0430\u0434 \u043a \u043f\u043e\u043b\u043a\u0435\n\u041f\u0440\u043e\u0441\u0442\u043e\u0439 \u0434\u043e\u043c\u0430\u0448\u043d\u0438\u0439 \u0443\u044e\u0442\n\u041e\u0437\u0430\u0440\u0435\u043d\u043e\n\n\u041f\u0440\u043e\u0441\u0442\u0430\u044f \u043c\u0435\u0431\u0435\u043b\u044c, \u043a\u043e\u0442\u043e\u0440\u0443\u044e \u043f\u0440\u043e\u0434\u0430\u0451\u0442 \u043c\u0435\u0431\u0435\u043b\u044c\u0449\u0438\u0446\u0430 \u0444\u0440\u0438\u0433\u043e\u043b\u044c\u0434\u0430 \u0432 \u0418\u0441\u0442\u0431\u0440\u0443\u043a\u0435.\n\n8/8\n\u0412\u0441\u0435\n\u041a\u0430\u0442\u0430\u043b\u043e\u0433\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u044b\n\u041d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b\n\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0439\u0442\u0435 \u0441\u0442\u0440\u0435\u043b\u043a\u0438 \u0434\u043b\u044f \u043f\u0435\u0440\u0435\u0445\u043e\u0434\u0430 \u043c\u0435\u0436\u0434\u0443 \u0440\u0435\u043b\u0438\u043a\u0432\u0438\u044f\u043c\u0438, Home \u0438 End \u0434\u043b\u044f \u043f\u0435\u0440\u0435\u0445\u043e\u0434\u0430 \u043a \u043d\u0430\u0447\u0430\u043b\u0443 \u0438 \u043a\u043e\u043d\u0446\u0443.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "portrait-orientation",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/mobile-landscape-portrait-orientation.png",
+      "sha256": "4dce8d1299d086527bb987c9a312436b610b4466bcf53dff0ae1fe41ba87d563",
+      "text": "\u21bb\nRotate to Landscape\nPortrait mode is not supported. Rotate your device to landscape to continue.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "top": 0,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "scrollWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "variant": "guide-desktop",
+      "name": "hearth",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/guide-desktop.png",
+      "sha256": "3c1d9b78b37e34bd4c9ddaa13b14f310e3be8493c683c2a1715514a025ac08d9",
+      "text": "Hearth (1)\nHearth Basics (8)\n\nTimber Bed, Round Table, Spindle Chair, Low Stool, Woven Rug, Brass Lantern, Storage Chest, Open Bookshelf"
+    },
+    {
+      "variant": "guide-mobile",
+      "name": "hearth",
+      "file": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/guide-mobile.png",
+      "sha256": "2a1ae1b155c965999298e020309e72e81f838eda779bf2d297d23a6228d86482",
+      "text": "Hearth (1)\nHearth Basics (8)\n\nTimber Bed, Round Table, Spindle Chair, Low Stool, Woven Rug, Brass Lantern, Storage Chest, Open Bookshelf"
+    }
+  ],
+  "checks": [
+    {
+      "variant": "desktop",
+      "enabled": true,
+      "npc": {
+        "x": -66,
+        "y": -0.3226466769196748,
+        "z": -96
+      },
+      "stock": [
+        "freehold_timber_bed",
+        "freehold_round_table",
+        "freehold_spindle_chair",
+        "freehold_low_stool",
+        "freehold_woven_rug",
+        "freehold_brass_lantern",
+        "freehold_storage_chest",
+        "freehold_open_bookshelf"
+      ]
+    },
+    {
+      "variant": "desktop",
+      "missingAria": [
+        "Timber Bed, not yet found, Sold by Freehold Furnisher",
+        "Round Table, not yet found, Sold by Freehold Furnisher",
+        "Spindle Chair, not yet found, Sold by Freehold Furnisher",
+        "Low Stool, not yet found, Sold by Freehold Furnisher",
+        "Woven Rug, not yet found, Sold by Freehold Furnisher",
+        "Brass Lantern, not yet found, Sold by Freehold Furnisher",
+        "Storage Chest, not yet found, Sold by Freehold Furnisher",
+        "Open Bookshelf, not yet found, Sold by Freehold Furnisher"
+      ]
+    },
+    {
+      "variant": "desktop",
+      "pinAndUnpin": true
+    },
+    {
+      "variant": "desktop",
+      "purchase": {
+        "copper": 0,
+        "inventory": [
+          {
+            "itemId": "freehold_timber_bed",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_round_table",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_spindle_chair",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_low_stool",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_woven_rug",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_brass_lantern",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_storage_chest",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_open_bookshelf",
+            "count": 1
+          }
+        ],
+        "discovered": [
+          "freehold_timber_bed",
+          "freehold_round_table",
+          "freehold_spindle_chair",
+          "freehold_low_stool",
+          "freehold_woven_rug",
+          "freehold_brass_lantern",
+          "freehold_storage_chest",
+          "freehold_open_bookshelf"
+        ],
+        "illuminated": true
+      }
+    },
+    {
+      "variant": "desktop",
+      "localizedSearch": "\u6728\u7d44\u307f\u306e\u30d9\u30c3\u30c9",
+      "focusRetained": true
+    },
+    {
+      "variant": "mobile-landscape",
+      "enabled": true,
+      "npc": {
+        "x": -66,
+        "y": -0.3226466769196748,
+        "z": -96
+      },
+      "stock": [
+        "freehold_timber_bed",
+        "freehold_round_table",
+        "freehold_spindle_chair",
+        "freehold_low_stool",
+        "freehold_woven_rug",
+        "freehold_brass_lantern",
+        "freehold_storage_chest",
+        "freehold_open_bookshelf"
+      ]
+    },
+    {
+      "variant": "mobile-landscape",
+      "missingAria": [
+        "Timber Bed, not yet found, Sold by Freehold Furnisher",
+        "Round Table, not yet found, Sold by Freehold Furnisher",
+        "Spindle Chair, not yet found, Sold by Freehold Furnisher",
+        "Low Stool, not yet found, Sold by Freehold Furnisher",
+        "Woven Rug, not yet found, Sold by Freehold Furnisher",
+        "Brass Lantern, not yet found, Sold by Freehold Furnisher",
+        "Storage Chest, not yet found, Sold by Freehold Furnisher",
+        "Open Bookshelf, not yet found, Sold by Freehold Furnisher"
+      ]
+    },
+    {
+      "variant": "mobile-landscape",
+      "pinAndUnpin": true
+    },
+    {
+      "variant": "mobile-landscape",
+      "purchase": {
+        "copper": 0,
+        "inventory": [
+          {
+            "itemId": "freehold_timber_bed",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_round_table",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_spindle_chair",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_low_stool",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_woven_rug",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_brass_lantern",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_storage_chest",
+            "count": 1
+          },
+          {
+            "itemId": "freehold_open_bookshelf",
+            "count": 1
+          }
+        ],
+        "discovered": [
+          "freehold_timber_bed",
+          "freehold_round_table",
+          "freehold_spindle_chair",
+          "freehold_low_stool",
+          "freehold_woven_rug",
+          "freehold_brass_lantern",
+          "freehold_storage_chest",
+          "freehold_open_bookshelf"
+        ],
+        "illuminated": true
+      }
+    },
+    {
+      "variant": "mobile-landscape",
+      "localizedSearch": "\u6728\u7d44\u307f\u306e\u30d9\u30c3\u30c9",
+      "focusRetained": true
+    }
+  ],
+  "errors": [],
+  "command": "node tmp/freehold-trial-capture.mjs",
+  "source": "capture.source.txt",
+  "exitCode": 0
+}
