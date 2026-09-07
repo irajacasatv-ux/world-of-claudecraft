@@ -12,6 +12,7 @@ import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
 import { moveToward } from '../src/sim/mob/move_toward';
 import { PLAYER_BODY_RADIUS, PLAYER_MAX_CLIMB_SLOPE, PLAYER_SWIM_DEPTH } from '../src/sim/pathfind';
+import { floorHeightAt } from '../src/sim/physics/character';
 import { swimSurfaceY } from '../src/sim/player_motion';
 import type { SimContext } from '../src/sim/sim_context';
 import { angleTo, DT, type Entity, type Vec3 } from '../src/sim/types';
@@ -207,5 +208,115 @@ describe('the waterline gate and the swim surface (the lake heart)', () => {
     const g = groundHeight(want.x, want.z, SEED);
     expect(e.pos.y).toBe(swimSurfaceY(want.x, want.z, SEED));
     expect(e.pos.y).toBeGreaterThan(g); // the surface ride, not the terrain snap
+  });
+});
+
+// The two arms the dry-spot and deep-lake fixtures above deliberately leave
+// inert. Both were verbatim in the move, so nothing is broken; they are pinned
+// here because they are now unguarded in their NEW home, and the player arm in
+// particular carries a real bug history (the feared-player-inside-a-rampart fix
+// its own comment documents).
+describe('mob/move_toward.ts: the steep-wall gate', () => {
+  // A cliff face in the far west wall band. From half a yard below the lip,
+  // aiming straight at it, five of the seven fan candidates land on unwalkably
+  // steep ground UPHILL of the mover and must be skipped; the two widest
+  // slides stay open. Probed against the real terrain, not assumed.
+  const FROM: Vec3 = { x: -1200, y: 0, z: 273.5 };
+  const DEST: Vec3 = { x: -1200, y: 0, z: 273 };
+  const GATED = [0, 0.5, -0.5, 1.0, -1.0];
+  const OPEN = [1.6, -1.6];
+
+  it('the fixture really is a steep uphill face (the precondition, measured)', () => {
+    const h0 = groundHeight(FROM.x, FROM.z, SEED);
+    for (const off of FAN) {
+      const c = candidateFrom(FROM, DEST, off);
+      const gated =
+        nearSteepWalls(c.x, c.z) &&
+        terrainSteepnessAt(c.x, c.z, SEED) > PLAYER_MAX_CLIMB_SLOPE &&
+        groundHeight(c.x, c.z, SEED) > h0;
+      expect(gated, `off ${off}`).toBe(GATED.includes(off));
+    }
+  });
+
+  it('skips every uphill candidate BEFORE the resolver, and considers only the open ones', () => {
+    // The gate `continue`s ahead of ctx.resolveMovePoint, so the resolver call
+    // set is the observable proof that the skip happened. If the wall clause
+    // were deleted, all seven candidates would be resolved instead of two.
+    const { ctx, resolveMovePoint } = makeCtx(clear);
+    const e = moverAt(FROM);
+    moveToward(ctx, e, DEST, SPEED);
+    const resolvedOffsets = resolveMovePoint.mock.calls.map(([nx, nz]) => {
+      const hit = FAN.find((off) => {
+        const c = candidateFrom(FROM, DEST, off);
+        return near(c.x, nx as number) && near(c.z, nz as number);
+      });
+      return hit;
+    });
+    expect(resolvedOffsets).toEqual(OPEN);
+    for (const off of GATED) expect(resolvedOffsets).not.toContain(off);
+  });
+});
+
+describe('mob/move_toward.ts: the player floor arm', () => {
+  // A standable prop top: the terrain underfoot sits well below the surface a
+  // body actually rests on, so the two height sources disagree and the arm is
+  // observable. A mob keeps the raw terrain snap; a player must take the floor.
+  const ON_PROP: Vec3 = { x: -377, y: 0, z: 27 };
+
+  it('the fixture really has a prop above the terrain (the precondition, measured)', () => {
+    const g = groundHeight(ON_PROP.x, ON_PROP.z, SEED);
+    const floor = floorHeightAt(SEED, ON_PROP.x, ON_PROP.z, PLAYER_BODY_RADIUS, g + 1.2);
+    expect(floor).toBeGreaterThan(g + 0.4);
+  });
+
+  it('lands a PLAYER on the prop floor and a MOB on the raw terrain, from one spot', () => {
+    // The resolver pins both movers at the same destination cell, so the only
+    // difference between the two arms is the height source the kind selects.
+    const stay: Resolver = () => ({ x: ON_PROP.x, z: ON_PROP.z });
+    const dest: Vec3 = { x: ON_PROP.x + 5, y: 0, z: ON_PROP.z };
+
+    const mob = moverAt(ON_PROP);
+    mob.pos.y = groundHeight(ON_PROP.x, ON_PROP.z, SEED) + 1.2;
+    moveToward(makeCtx(stay).ctx, mob, dest, SPEED);
+    expect(mob.kind).toBe('mob');
+    expect(mob.pos.y).toBeCloseTo(groundHeight(ON_PROP.x, ON_PROP.z, SEED), 6);
+
+    const player = moverAt(ON_PROP);
+    player.kind = 'player';
+    player.pos.y = groundHeight(ON_PROP.x, ON_PROP.z, SEED) + 1.2;
+    moveToward(makeCtx(stay).ctx, player, dest, SPEED);
+    expect(player.pos.y).toBeCloseTo(
+      floorHeightAt(SEED, ON_PROP.x, ON_PROP.z, PLAYER_BODY_RADIUS, player.pos.y + 1e-3),
+      6,
+    );
+    // The two arms really did diverge: this is what the kind check buys.
+    expect(player.pos.y).toBeGreaterThan(mob.pos.y + 0.4);
+  });
+});
+
+describe('mob/move_toward.ts: degenerate steps', () => {
+  it('reports arrival WITHOUT writing facing when already at the destination', () => {
+    // The `d < 0.3` early return is the one path that does not stamp e.facing;
+    // every other path does. Worth pinning because it is a real asymmetry.
+    const { ctx, resolveMovePoint } = makeCtx(clear);
+    const e = mover();
+    e.facing = 1.234;
+    expect(moveToward(ctx, e, { ...ORIGIN }, SPEED)).toBe(true);
+    expect(e.facing).toBe(1.234);
+    expect(e.pos.x).toBe(ORIGIN.x);
+    expect(e.pos.z).toBe(ORIGIN.z);
+    expect(resolveMovePoint).not.toHaveBeenCalled();
+  });
+
+  it('a zero speed stamps the heading but moves nothing', () => {
+    // step === 0, so every candidate equals the current position and no
+    // progress clears the 1e-3 seed: the mover holds still but still turns.
+    const { ctx } = makeCtx(clear);
+    const e = mover();
+    const dest: Vec3 = { x: ORIGIN.x + 10, y: 0, z: ORIGIN.z };
+    expect(moveToward(ctx, e, dest, 0)).toBe(false);
+    expect(e.facing).toBeCloseTo(angleTo(ORIGIN, dest), 9);
+    expect(e.pos.x).toBeCloseTo(ORIGIN.x, 9);
+    expect(e.pos.z).toBeCloseTo(ORIGIN.z, 9);
   });
 });

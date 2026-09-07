@@ -39,6 +39,8 @@ import {
   WOC_CHARACTER_STATE_BYTES_P99,
   WOC_CHARACTERS_CREATED_TOTAL,
   WOC_CHAT_MESSAGES_TOTAL,
+  WOC_FREEHOLD_REFUSED_TOTAL,
+  WOC_RIFT_FORGE_REFUSED_TOTAL,
   WOC_COPPER_CREDITED_TOTAL,
   WOC_COPPER_SPENT_TOTAL,
   WOC_DB_BACKEND_CANCEL_FAILURES_TOTAL,
@@ -851,6 +853,11 @@ describe('registerGameStateMetrics: throughput counters via the returned sink', 
 
     expect(WOC_WS_MESSAGES_TOTAL).toBe('woc_ws_messages_total');
     expect(WOC_CHAT_MESSAGES_TOTAL).toBe('woc_chat_messages_total');
+    // The two refusal counters follow the same shape and are pinned by name
+    // here so the exported constant and the series a dashboard queries can
+    // never drift apart silently.
+    expect(WOC_RIFT_FORGE_REFUSED_TOTAL).toBe('woc_rift_forge_refused_total');
+    expect(WOC_FREEHOLD_REFUSED_TOTAL).toBe('woc_freehold_refused_total');
     expect(WOC_CHARACTERS_CREATED_TOTAL).toBe('woc_characters_created_total');
     expect(WOC_BANK_LEDGER_GROWTH_LIMIT_REFUSALS_TOTAL).toBe(
       'woc_bank_ledger_growth_limit_refusals_total',

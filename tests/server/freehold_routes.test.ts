@@ -23,6 +23,7 @@ process.env.DATABASE_URL ||= 'postgres://test:test@127.0.0.1:5433/wocc_new_endpo
 import type * as http from 'node:http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  type FreeholdStatusBody,
   resetFreeholdDbForTests,
   routes,
   setFreeholdDbForTests,
@@ -310,10 +311,11 @@ describe('GET /api/freehold: lit realm (FREEHOLDS_ENABLED=1)', () => {
     authenticatedDb();
     const ctx = bearerCtx();
     await runRoute(ctx);
-    expect(captured(ctx.res)).toMatchObject({
-      status: 200,
-      body: { enabled: true, freehold: null },
-    });
+    // Typed against the exported contract, not a loose literal: if the route's
+    // declared body shape ever changes, this assignment stops compiling rather
+    // than silently continuing to assert a stale shape.
+    const expected: FreeholdStatusBody = { enabled: true, freehold: null };
+    expect(captured(ctx.res)).toMatchObject({ status: 200, body: expected });
     expect(Object.keys(captured(ctx.res).body as object).sort()).toEqual(['enabled', 'freehold']);
   });
 

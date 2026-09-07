@@ -965,6 +965,13 @@ describe('client HTML shell', () => {
     expect(html).toContain('"https://github.com/levy-street/world-of-claudecraft"');
     expect(seoTsCode).toContain("alternateName: 'World of Claudecraft'");
     expect(seoTsCode).toContain("'https://github.com/levy-street/world-of-claudecraft'");
+    // The extraction moved the BODY to its own module and its own suite, which
+    // left the CALL unpinned: deleting this one line keeps both suites green
+    // while the live site silently stops re-stamping canonical, og:url and the
+    // JSON-LD graph on a locale switch. Pin the call site where the shell owns
+    // it, exactly once, inside the localized-shell refresh.
+    expect(mainTsCode.match(/updateSeoMetadata\(lang\)/g) ?? []).toHaveLength(1);
+    expect(mainTsCode).toContain("import { updateSeoMetadata } from './game/seo_metadata';");
     expect(robotsTxt.trim()).toBe(
       'User-agent: *\nAllow: /\n\nSitemap: https://worldofclaudecraft.com/sitemap.xml\nSitemap: https://worldofclaudecraft.com/sitemap-characters.xml',
     );

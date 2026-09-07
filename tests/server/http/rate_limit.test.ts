@@ -18,6 +18,7 @@ import {
 } from '../../../server/http/attack_signals';
 import { mapError } from '../../../server/http/errors';
 import { logger } from '../../../server/http/logger';
+import * as policyModule from '../../../server/http/middleware/rate_limit';
 import {
   CARD_UPLOAD_POLICY,
   CHARACTER_CREATE_POLICY,
@@ -446,6 +447,41 @@ describe('rateLimit: policy derivation guard', () => {
       .slice(0, housingLiteral.indexOf('}'))
       .match(/limit:\s*([A-Z_]+)/);
     expect(limitLine?.[1]).toBe('HOUSING_READ_MAX_PER_MINUTE');
+  });
+
+  it('EXHAUSTIVELY: exactly two exported policies opt out of tier 2, by name', () => {
+    // The rule's own comment in rate_limit.ts promises that "a silently-added
+    // third 'none' fails there". The hand-written table above cannot keep that
+    // promise: it lists a subset of the module's exported policies, so a third
+    // opt-out added to neither list ships green. Sweep every export instead, so
+    // the claim is true of the MODULE and not of a list someone must remember
+    // to extend.
+    const everyPolicy = Object.entries(policyModule)
+      .filter(
+        (entry): entry is [string, RateLimitPolicy] =>
+          typeof entry[1] === 'object' &&
+          entry[1] !== null &&
+          'tier1' in entry[1] &&
+          'tier2' in entry[1] &&
+          'keyClass' in entry[1],
+      )
+      .map(([exportName, policy]) => ({ exportName, policy }));
+    // Floor: the sweep walked a real module, not an empty one, and saw more
+    // policies than the hand-written table above lists.
+    expect(everyPolicy.length).toBeGreaterThan(20);
+
+    const optOuts = everyPolicy
+      .filter(({ policy }) => policy.tier2 === 'none')
+      .map(({ exportName }) => exportName)
+      .sort();
+    expect(optOuts).toEqual(['HOUSING_READ_POLICY', 'WOC_MARKET_READ_POLICY']);
+
+    // And every other exported policy really is 'global', so the sweep above
+    // cannot pass by classifying an unknown value as neither.
+    for (const { exportName, policy } of everyPolicy) {
+      if (optOuts.includes(exportName)) continue;
+      expect(policy.tier2, `${exportName} tier2`).toBe('global');
+    }
   });
 
   it("tier2 'none' SKIPS the store on an allowed request (the opt-out is real, not a label)", async () => {

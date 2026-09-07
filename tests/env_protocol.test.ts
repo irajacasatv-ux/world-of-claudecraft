@@ -124,18 +124,49 @@ describe('headless environment protocol validation', () => {
     // to its Sim), but housing is a player-facing surface the env never drives: no
     // reward term reads a freehold, and ACTIONS is append-only because every trained
     // policy's action head is positional. headless/CLAUDE.md records the cut. The
-    // forbidden tokens come from the wire table itself, never a hand-typed list, so
-    // a housing verb that reaches ACTIONS under any wire name fails here; the two
-    // literal stems at the end catch a renamed one.
-    const housingTokens: readonly string[] = FREEHOLD_WIRE_COMMANDS;
-    // The control that keeps this pin decisive: an empty or truncated wire table
-    // would let the loop below pass vacuously.
+    // forbidden tokens are written FRESH here, as literals, so this pin does not
+    // move when the source table moves: a coordinated rename that renamed a wire
+    // token AND added an RL action under the old name would slide past a list
+    // derived from the module under guard. The source table is then cross-pinned
+    // against these literals, so the two cannot drift apart silently either.
+    const housingTokens = [
+      'freehold_enter',
+      'freehold_leave',
+      'place_furnishing',
+      'move_furnishing',
+      'remove_furnishing',
+      'undo_placement',
+      'redo_placement',
+      'pay_ledger',
+      'set_visit_policy',
+      'set_freehold_build_presence',
+    ] as const;
+    expect([...FREEHOLD_WIRE_COMMANDS].sort()).toEqual([...housingTokens].sort());
+    // The control that keeps this pin decisive: an empty or truncated literal
+    // list would let the loop below pass vacuously.
     expect(housingTokens).toHaveLength(10);
     for (const token of housingTokens) {
       expect(ACTIONS).not.toContain(token);
       expect(ACTIONS.filter((a) => a.includes(token))).toEqual([]);
     }
-    expect(ACTIONS.filter((a) => a.includes('freehold') || a.includes('furnishing'))).toEqual([]);
+    // Stems, so a housing verb landing under a NEW name is caught too. Every
+    // distinctive word in the ten tokens above is represented.
+    // The stem matcher's own positive control: `includes` really does see a
+    // housing verb when one is present, so the empty results below are an
+    // absence in ACTIONS and not a matcher that never matches.
+    expect(['freehold_enter', 'move'].filter((a) => a.includes('freehold'))).toHaveLength(1);
+    for (const stem of [
+      'freehold',
+      'furnishing',
+      'housing',
+      'placement',
+      'visit_policy',
+      'ledger',
+      'plot',
+      'decorat',
+    ]) {
+      expect(ACTIONS.filter((a) => a.includes(stem)), `RL action matching '${stem}'`).toEqual([]);
+    }
     // The anchor above holds: 13 fixed actions plus the ability slots, nothing else.
     const abilitySlots = ACTIONS.filter((a) => a.startsWith('ability_')).length;
     expect(NUM_ACTIONS).toBe(13 + abilitySlots);

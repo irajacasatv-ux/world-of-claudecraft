@@ -43,6 +43,7 @@ import { FREEHOLD_WIRE_COMMANDS } from '../server/freehold_wire';
 import { type ClientSession, GameServer } from '../server/game';
 import { noopGameMetricsCounters, setGameMetricsCounters } from '../server/http/game_signals';
 import { ClientWorld } from '../src/net/online';
+import { asFreeholdPlotId } from '../src/sim/freehold/types';
 import type { PlayerClass } from '../src/sim/types';
 
 const PROBE_CLASS: PlayerClass = 'warrior';
@@ -410,7 +411,7 @@ describe('the build-presence frame carries the mirrored ids through the opaque-i
   /** The client's own presence frame with the two mirrors stamped first. */
   function presenceFrom(plotId: string, transitionId: string): string {
     return captureRaw((w) => {
-      w.myFreehold = { plotId, tier: 'inn_room', visitPolicy: 'closed' };
+      w.myFreehold = { plotId: asFreeholdPlotId(plotId), tier: 'inn_room', visitPolicy: 'closed' };
       w.freeholdTransitionId = transitionId;
       w.setFreeholdBuildPresence(true);
     });

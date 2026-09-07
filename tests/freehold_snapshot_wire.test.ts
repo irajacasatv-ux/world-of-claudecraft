@@ -16,6 +16,7 @@ import {
   type FreeholdSelfMirrors,
 } from '../src/net/freehold_snapshot_wire';
 import type { ClientWorld } from '../src/net/online';
+import { asFreeholdPlotId } from '../src/sim/freehold/types';
 import type { FreeholdLayoutView, FreeholdView } from '../src/sim/freehold/types';
 import { COMMAND_FACETS, COMMAND_NAMES } from '../src/world_api';
 import { bareClient } from './helpers/bare_client';
@@ -84,12 +85,12 @@ function nullMirrors(): FreeholdSelfMirrors {
 }
 
 function freeholdView(): FreeholdView {
-  return { plotId: 'plot-7', tier: 'cottage', visitPolicy: 'friends' };
+  return { plotId: asFreeholdPlotId('plot-7'), tier: 'cottage', visitPolicy: 'friends' };
 }
 
 function layoutView(): FreeholdLayoutView {
   return {
-    plotId: 'plot-7',
+    plotId: asFreeholdPlotId('plot-7'),
     rows: [{ placementId: 1, itemId: 'oak_chair', x: 1, y: 0, z: 2, yaw: 0 }],
   };
 }
@@ -238,6 +239,35 @@ describe('the decode walk (applyWithDecoders, the seam applyFreeholdSelfWire del
     expect(flat.match(/\bconst ADMITTED_KEYS\b/g)).toHaveLength(1);
     expect(flat.match(/\bconst DECODER_BY_KEY\b/g)).toHaveLength(1);
   });
+
+  it('online.ts WIRES the decode home in, and decodes no housing key inline (source pin)', () => {
+    // The decoder being correct is worthless if nothing calls it, and while the
+    // allowlist is empty a deleted call site is behaviorally invisible: every
+    // suite in the repo stays green, and 05/08a would then fill an allowlist
+    // into a walk that never runs. So pin BOTH halves on comment-stripped
+    // source: the call exists inside the self-record block beside its bank
+    // sibling, and no housing mirror is assigned anywhere else in the file.
+    const online = codeOnly(readFileSync(new URL('../src/net/online.ts', import.meta.url), 'utf8'));
+
+    const call = online.indexOf('applyFreeholdSelfWire(this, s)');
+    expect(call, 'online.ts must call the housing decode home').toBeGreaterThanOrEqual(0);
+    // Inside the same self-record walk as the bank sibling, not stranded in
+    // some unrelated method: the bank call is the anchor and sits just above.
+    const bank = online.indexOf('applyBankSelfWire(this, s)');
+    expect(bank).toBeGreaterThanOrEqual(0);
+    expect(call).toBeGreaterThan(bank);
+    expect(online.slice(bank, call)).not.toContain('applySnapshot');
+    // Exactly one call site, so a duplicate cannot double-apply a future key.
+    expect(online.match(/applyFreeholdSelfWire\(/g)).toHaveLength(1);
+
+    // THE ONLY DECODE HOME: the two housing mirrors are assigned only by their
+    // class-field initializers (`= null`), never by an inline `this.myFreehold =
+    // s.something` the way 05/08a would be tempted to write inside applySnapshot.
+    for (const mirror of ['myFreehold', 'freeholdLayout', 'freeholdTransitionId']) {
+      const assignments = online.match(new RegExp(`this\\.${mirror}\\s*=`, 'g')) ?? [];
+      expect(assignments, `${mirror} must not be assigned outside the decode home`).toEqual([]);
+    }
+  });
 });
 
 describe('ClientWorld housing mirrors', () => {
@@ -370,7 +400,7 @@ describe('ClientWorld housing senders (the real send path)', () => {
         t: 'cmd',
         cmd: 'set_freehold_build_presence',
         active: true,
-        plotId: 'plot-7',
+        plotId: asFreeholdPlotId('plot-7'),
         acceptedTransitionId: 'transition-3',
         buildPresenceSeq: 1,
       },

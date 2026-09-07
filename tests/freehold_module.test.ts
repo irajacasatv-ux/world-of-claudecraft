@@ -8,14 +8,16 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
+  asFreeholdPlotId,
   defaultFreeholdState,
   evictFreehold,
   type FreeholdState,
   loadFreehold,
   serializeFreehold,
 } from '../src/sim/freehold';
+import type { FreeholdPlotId, FreeholdView } from '../src/sim/freehold/types';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { SimEvent } from '../src/sim/types';
@@ -81,6 +83,36 @@ describe('IWorldHousing on the offline Sim (dark)', () => {
     for (const name of ['housingNowMs', ...STUBS.map(([n]) => n)]) {
       expect(typeof Object.getOwnPropertyDescriptor(Sim.prototype, name)?.value).toBe('function');
     }
+  });
+
+  it('every delegate REACHES the module and resolves the caller (deleting one is not invisible)', () => {
+    // "Changes nothing" is also true of a delegate deleted outright, so the
+    // no-op pin below cannot see the wiring. Every module body opens with
+    // `ctx.resolve(pid)`, so spying that one seam proves each Sim method
+    // actually reaches src/sim/freehold/ AND pins the `pid ?? this.primaryId`
+    // default at the same time. (ctx.resolve is an own data property bound in
+    // the ctor, so the spy takes.)
+    const sim = makeSim();
+    const pid = sim.primaryId;
+    for (const [name, call] of STUBS) {
+      const resolve = vi.spyOn(sim.ctx, 'resolve');
+      call(sim, pid);
+      expect(resolve, `${name} with an explicit pid`).toHaveBeenCalledTimes(1);
+      expect(resolve.mock.calls[0][0], `${name} passes the pid through`).toBe(pid);
+
+      resolve.mockClear();
+      call(sim);
+      expect(resolve, `${name} with the default pid`).toHaveBeenCalledTimes(1);
+      expect(resolve.mock.calls[0][0], `${name} defaults to primaryId`).toBe(sim.primaryId);
+      resolve.mockRestore();
+    }
+    // The two descriptors are delegates too, not `return null` bodies on the
+    // coordinator: reading them reaches the module and resolves the caller.
+    const resolve = vi.spyOn(sim.ctx, 'resolve');
+    expect(sim.myFreehold).toBeNull();
+    expect(sim.freeholdLayout).toBeNull();
+    expect(resolve).not.toHaveBeenCalled(); // they resolve nothing YET, but they do delegate
+    resolve.mockRestore();
   });
 
   it('every stub changes nothing, emits nothing and draws no rng, with an explicit pid and with the default', () => {
@@ -159,9 +191,9 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
   };
 
   it('defaultFreeholdState is the free tier-0 Inn Room, exactly', () => {
-    expect(defaultFreeholdState('acct:1', 'plot-1')).toEqual({
+    expect(defaultFreeholdState('acct:1', asFreeholdPlotId('plot-1'))).toEqual({
       ownerKey: 'acct:1',
-      plotId: 'plot-1',
+      plotId: asFreeholdPlotId('plot-1'),
       tier: 'inn_room',
       layout: [],
       trophies: [],
@@ -177,7 +209,7 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
 
   it('load then serialize round-trips an equal VALUE copy that aliases nothing', () => {
     const { ctx, freeholds } = fakeCtx();
-    const input = defaultFreeholdState('acct:1', 'plot-1');
+    const input = defaultFreeholdState('acct:1', asFreeholdPlotId('plot-1'));
     input.layout.push({ placementId: 3, itemId: 'oak_chair', x: 1, y: 0, z: 2, yaw: 0.25 });
     input.trophies.push({ plinth: 1, trophyId: 'boar_head' });
     input.rev = 4;
@@ -203,11 +235,69 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
     expect(serializeFreehold(ctx, 'acct:none')).toBeNull();
   });
 
+  it('keeps the public descriptor free of the owner stamp, by shape and by type', () => {
+    // The invariant the whole housing surface rests on: the public identity and
+    // the internal owner stamp are DIFFERENT values, and only the first ever
+    // reaches a client. Two arms, because prose alone let `plotId: ownerKey`
+    // type-check before the brand landed:
+    //  (1) SHAPE: a FreeholdView carries exactly three keys, so a producer that
+    //      spreads a whole FreeholdState into the descriptor reds here.
+    const state = defaultFreeholdState('acct:secret-owner-key', asFreeholdPlotId('plot-1'));
+    const view: FreeholdView = {
+      plotId: state.plotId,
+      tier: state.tier,
+      visitPolicy: state.visitPolicy,
+    };
+    expect(Object.keys(view).sort()).toEqual(['plotId', 'tier', 'visitPolicy']);
+    expect(Object.values(view)).not.toContain(state.ownerKey);
+    expect(JSON.stringify(view)).not.toContain('secret-owner-key');
+    //  (2) TYPE: the owner key is a bare string and the plot id is branded, so
+    //      assigning one to the other is a compile error. @ts-expect-error is
+    //      the assertion: if the brand were removed this line would compile and
+    //      tsc would fail the build for an UNUSED expect-error, which is exactly
+    //      the regression signal we want.
+    // @ts-expect-error a raw owner key must never satisfy the opaque plot identity
+    const forged: FreeholdPlotId = state.ownerKey;
+    expect(typeof forged).toBe('string');
+  });
+
+  it('strips ephemeral build presence from the snapshot and nothing else (C03)', () => {
+    // Presence is a live per-session fact and must never reach SQL or JSON, so
+    // the persistence boundary neutralizes it rather than trusting 07 to
+    // remember. Every OTHER field must survive: the negative control below
+    // drives a record whose fields are all off their defaults, so a strip that
+    // widened to a second field would fail here rather than pass quietly.
+    const { ctx, freeholds } = fakeCtx();
+    const input: FreeholdState = {
+      ownerKey: 'acct:7',
+      plotId: asFreeholdPlotId('plot-7'),
+      tier: 'manor',
+      layout: [{ placementId: 2, itemId: 'oak_bench', x: 4, y: 1, z: 5, yaw: 1.5 }],
+      trophies: [{ plinth: 3, trophyId: 'wolf_skull' }],
+      condition: 62,
+      conditionStampDay: 19,
+      ledgerPaidThroughDay: 24,
+      ledgerPrepaidWeeks: 2,
+      visitPolicy: 'open',
+      isDecorating: true,
+      rev: 11,
+    };
+    loadFreehold(ctx, 'acct:7', input);
+    // The LIVE record keeps presence: only the snapshot drops it.
+    expect(freeholds.get('acct:7')?.isDecorating).toBe(true);
+
+    const out = serializeFreehold(ctx, 'acct:7');
+    expect(out?.isDecorating).toBe(false);
+    expect(out).toEqual({ ...input, isDecorating: false });
+    // And the strip does not alias: the live row is untouched by the snapshot.
+    expect(freeholds.get('acct:7')?.isDecorating).toBe(true);
+  });
+
   it('is load-once: a live record is never overwritten until evicted', () => {
     const { ctx, freeholds } = fakeCtx();
-    loadFreehold(ctx, 'acct:1', defaultFreeholdState('acct:1', 'plot-1'));
+    loadFreehold(ctx, 'acct:1', defaultFreeholdState('acct:1', asFreeholdPlotId('plot-1')));
     const second = {
-      ...defaultFreeholdState('acct:1', 'plot-2'),
+      ...defaultFreeholdState('acct:1', asFreeholdPlotId('plot-2')),
       tier: 'cottage' as const,
       rev: 9,
     };
@@ -224,9 +314,9 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
 
   it('pins the live ownerKey to the map key and ignores an empty key', () => {
     const { ctx, freeholds } = fakeCtx();
-    loadFreehold(ctx, 'acct:2', defaultFreeholdState('acct:mismatch', 'plot-1'));
+    loadFreehold(ctx, 'acct:2', defaultFreeholdState('acct:mismatch', asFreeholdPlotId('plot-1')));
     expect(freeholds.get('acct:2')?.ownerKey).toBe('acct:2');
-    loadFreehold(ctx, '', defaultFreeholdState('', 'plot-9'));
+    loadFreehold(ctx, '', defaultFreeholdState('', asFreeholdPlotId('plot-9')));
     expect(freeholds.size).toBe(1);
     expect(freeholds.has('')).toBe(false);
     evictFreehold(ctx, 'acct:never'); // evicting nothing is a no-op, never a throw
@@ -264,6 +354,26 @@ describe('src/sim/freehold/ source scan', () => {
       expect(code, f).toContain('export ');
       expect(code.match(banned)?.[0] ?? null, f).toBeNull();
     }
+  });
+
+  it('imports Sim nowhere: the modules see the SimContext seam and nothing past it', () => {
+    // The other half of the SimContext contract, which the clock/rng scan above
+    // does not cover: a module behind the seam must not import Sim concretely
+    // or reach past ctx into Sim internals. Both modules are type-only on
+    // SimContext today; this holds that line as the bodies land.
+    const simImport = /from\s+['"][^'"]*\/sim(?:\.js)?['"]|\bimport\b[^;]*\bSim\b/;
+    for (const f of files.filter((n) => n.endsWith('.ts'))) {
+      const code = codeOnly(readFileSync(join(dir, f), 'utf8'));
+      const importLines = code
+        .split('\n')
+        .filter((line) => line.trimStart().startsWith('import'))
+        .join('\n');
+      expect(importLines.match(simImport)?.[0] ?? null, f).toBeNull();
+    }
+    // The scan's own edge: a real Sim import WOULD be caught, so widening the
+    // regex cannot quietly make this vacuous.
+    expect("import type { Sim } from '../sim';".match(simImport)).not.toBeNull();
+    expect("import type { SimContext } from '../sim_context';".match(simImport)).toBeNull();
   });
 
   // The three sibling housing modules outside src/sim/ (the facet, the client

@@ -6,9 +6,11 @@
 //   2. The real `Sim.ctx`: every stub delegates to the still-on-Sim method of the
 //      same name, and the seam leaves same-seed-same-world determinism intact.
 
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { createDeedRuntime } from '../src/sim/deeds';
-import { defaultFreeholdState } from '../src/sim/freehold';
+import { asFreeholdPlotId, defaultFreeholdState } from '../src/sim/freehold';
 import { createMobScanCounters } from '../src/sim/mob/scan_counters';
 import { Rng } from '../src/sim/rng';
 import { Sim } from '../src/sim/sim';
@@ -644,11 +646,50 @@ describe('createSimContext (isolated, fake host)', () => {
     const { host } = makeFakeHost();
     const ctx = createSimContext(host);
     expect(ctx.freeholds).toBe(host.freeholds);
-    host.freeholds.set('acct:1', defaultFreeholdState('acct:1', 'plot-1'));
-    expect(ctx.freeholds.get('acct:1')).toEqual(defaultFreeholdState('acct:1', 'plot-1'));
+    host.freeholds.set('acct:1', defaultFreeholdState('acct:1', asFreeholdPlotId('plot-1')));
+    expect(ctx.freeholds.get('acct:1')).toEqual(
+      defaultFreeholdState('acct:1', asFreeholdPlotId('plot-1')),
+    );
     // Mutation through the ctx side is visible on the host side too: one map.
     ctx.freeholds.delete('acct:1');
     expect(host.freeholds.size).toBe(0);
+  });
+
+  it('is the ONLY read of cfg.freeholdsEnabled anywhere in src/sim (source pin)', () => {
+    // The acceptance criterion is that the flag is read "only through its ctx
+    // primitive". The read-through arm below pins the positive half; this pins
+    // the negative one, which is the half that actually constrains 03 and 06.
+    // Without it, a direct `this.cfg.freeholdsEnabled` inside sim.ts (exactly
+    // what a furnisher-stock or gate-prompt author would reach for) ships green.
+    const simDir = join(__dirname, '..', 'src', 'sim');
+    const codeOnly = (src: string): string =>
+      src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+    const walk = (dir: string): string[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) return walk(full);
+        return entry.name.endsWith('.ts') ? [full] : [];
+      });
+    const files = walk(simDir);
+    // Anti-vacuity floor: the walk saw the real tree, including sim.ts itself.
+    expect(files.length).toBeGreaterThan(100);
+    expect(files.some((f) => f.endsWith(`${sep}sim.ts`))).toBe(true);
+
+    const hits: string[] = [];
+    for (const file of files) {
+      const code = codeOnly(readFileSync(file, 'utf8'));
+      for (const line of code.split('\n')) {
+        if (/\bcfg\.freeholdsEnabled\b/.test(line))
+          hits.push(`${relative(simDir, file)}: ${line.trim()}`);
+      }
+    }
+    // Exactly two sanctioned sites: the ctor default that resolves the optional
+    // SimConfig field, and the ctx getter that publishes it. Any third hit is a
+    // direct read that bypasses the primitive.
+    expect(hits.sort()).toEqual([
+      'sim.ts: freeholdsEnabled: cfg.freeholdsEnabled ?? false,',
+      'sim.ts: return sim.cfg.freeholdsEnabled;',
+    ]);
   });
 
   it('reads freeholdsEnabled through to the host (the compulsoryTutorial boot-flag shape)', () => {
@@ -725,7 +766,7 @@ describe('Sim.ctx (real seam delegation)', () => {
     const sim = makeSim();
     expect(sim.ctx.freeholds).toBe(sim.freeholds); // one map: the multi-Sim isolation contract
     expect(sim.ctx.freeholds.size).toBe(0);
-    sim.freeholds.set('acct:1', defaultFreeholdState('acct:1', 'plot-1'));
+    sim.freeholds.set('acct:1', defaultFreeholdState('acct:1', asFreeholdPlotId('plot-1')));
     expect(sim.ctx.freeholds.get('acct:1')?.tier).toBe('inn_room');
     expect(sim.ctx.freeholdsEnabled).toBe(false); // D85: off unless the host opts in
     const live = new Sim({

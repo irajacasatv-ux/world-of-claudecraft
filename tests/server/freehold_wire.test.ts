@@ -12,8 +12,12 @@
 //    invoked), answers ok:false on the commandOutcome ack channel for rid
 //    frames AND stays refused for the rid-less frame shape an attacker
 //    actually sends, books one freeholdRefused metric per attempt, and never
-//    sets the heavy-self dirty flag (with a receipt-marked member driven
-//    through the same harness as the control that the flag is observable);
+//    sets the heavy-self dirty flag. Read that last one precisely: no housing
+//    token is a heavy-self member yet, so the per-command flag assertions
+//    cannot fail on their own. What carries the criterion is the SOURCE
+//    ordering pin (the refusal sits above the receipt mark) plus the pinned
+//    premise that both heavy-self sets are housing-free, with a receipt-marked
+//    member (inv_sort) as the control that the flag is observable at all;
 //    a non-housing command through the same wiring is untouched by this
 //    predicate, and an unrecognised token lands in the default arm (proved by
 //    its unknown_command protocol anomaly) with no kick and no housing
@@ -73,7 +77,7 @@ import {
   refusedFreeholdCommand,
 } from '../../server/freehold_wire';
 import { GameServer } from '../../server/game';
-import { heavySelfMarkOnReceipt } from '../../server/heavy_self';
+import { heavySelfMarkOnAccept, heavySelfMarkOnReceipt } from '../../server/heavy_self';
 import { noopGameMetricsCounters, setGameMetricsCounters } from '../../server/http/game_signals';
 import { refusedRiftForgeCommand } from '../../server/rift_forge_gate';
 import { buildRealmSimConfig } from '../../server/sim_boot_config';
@@ -287,6 +291,32 @@ const MALFORMED: ReadonlyArray<[HousingCommand, string, Record<string, unknown>]
     'array-valued plotId',
     { ...WELL_FORMED.set_freehold_build_presence, plotId: ['plot-a'] },
   ],
+  // An OMITTED field is a distinct shape from a wrong-typed one: `undefined`
+  // must fail every guard rather than be read as an absent-and-therefore-fine
+  // default. One row per field of the four-field presence frame.
+  [
+    'set_freehold_build_presence',
+    'missing active',
+    { plotId: 'plot-a', acceptedTransitionId: null, buildPresenceSeq: 1 },
+  ],
+  [
+    'set_freehold_build_presence',
+    'missing plotId',
+    { active: true, acceptedTransitionId: null, buildPresenceSeq: 1 },
+  ],
+  [
+    'set_freehold_build_presence',
+    'missing acceptedTransitionId',
+    { active: true, plotId: 'plot-a', buildPresenceSeq: 1 },
+  ],
+  // Beyond Number.MAX_SAFE_INTEGER the value is no longer an exact integer, so
+  // a sequence that large cannot be compared for monotonicity: refuse it here
+  // rather than let C03 inherit a lossy counter.
+  [
+    'set_freehold_build_presence',
+    'buildPresenceSeq past the safe-integer range',
+    { ...WELL_FORMED.set_freehold_build_presence, buildPresenceSeq: 2 ** 53 },
+  ],
 ];
 
 /** The widest ids the opaque-id bound admits, one per field (the positive
@@ -443,6 +473,24 @@ describe('freeholds wire: dark realm dispatch', () => {
     expect(fc.sent.filter((m) => m.t === 'commandOutcome' && m.ok === false)).toEqual([]);
   });
 
+  it('no housing token is a heavy-self member, which is WHY the mark assertions above are safe', () => {
+    // Honest statement of what the twenty `selfHeavyDirty` assertions in this
+    // file can and cannot prove. Neither heavy-self set contains a housing
+    // token today, so those assertions cannot fail on their own: what actually
+    // carries the acceptance criterion is the source-ordering pin below (the
+    // refusal sits above the receipt mark) plus this premise. Pinning the
+    // premise means the day a housing command joins either set, THIS arm reds
+    // and forces the vacuous assertions to be rewritten as real ones instead
+    // of silently staying green against a member that now marks.
+    expect(FREEHOLD_WIRE_COMMANDS.filter((c) => heavySelfMarkOnReceipt(c))).toEqual([]);
+    expect(FREEHOLD_WIRE_COMMANDS.filter((c) => heavySelfMarkOnAccept(c))).toEqual([]);
+    // The corollary, stated so it is not mistaken for coverage: the
+    // `&& heavySelfMarkOnAccept(command)` arm of the game.ts housing case group
+    // is therefore unreachable today and its true branch has no test. It is
+    // deliberate forward scaffolding for the first arm-marked housing member.
+    expect(heavySelfMarkOnAccept('set_freehold_build_presence')).toBe(false);
+  });
+
   it('the heavy-self dirty flag IS observable through this harness (a receipt-marked member sets it)', () => {
     // The "no heavy-self mark" assertions above and in the lit block can only
     // fail if the flag is reachable at all through handleMessage; no housing
@@ -538,6 +586,30 @@ describe('freeholds wire: lit realm dispatch reaches the dark Sim stubs', () => 
         false,
       );
       expect(stub).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['closed', 'friends', 'open'] as const)(
+    'set_visit_policy accepts the policy %s and hands that exact value to the stub',
+    (policy) => {
+      // The server allowlist is `[...] as const satisfies readonly
+      // FreeholdVisitPolicy[]`, and `satisfies` permits a SUBSET: dropping
+      // 'open' and 'closed' from it still compiles and would refuse the real
+      // client's own frames forever. The fixtures elsewhere in this file only
+      // ever send 'friends', so each value needs its own accepted arm.
+      process.env.FREEHOLDS_ENABLED = '1';
+      const { server, session, pid } = housingSession();
+      const stub = vi.spyOn(server.sim, 'setVisitPolicy');
+      expect(
+        dispatchFreeholdCommand(
+          server.sim,
+          session,
+          'set_visit_policy',
+          { cmd: 'set_visit_policy', policy },
+          pid,
+        ),
+      ).toBe(true);
+      expect(stub).toHaveBeenCalledWith(policy, pid);
     },
   );
 
@@ -651,6 +723,40 @@ describe('freeholds wire: a jailed session cannot step through its own door', ()
     expect(literal).toContain("'enter_dungeon'");
     expect(literal).toContain("'freehold_enter'");
     expect(literal).not.toContain("'freehold_leave'");
+  });
+
+  it('on a DARK realm the jail arm answers first, so the housing counter under-counts a jailed prober', () => {
+    // Ordering fact worth pinning rather than discovering later: the jailed
+    // check sits ABOVE the housing refusal, so a jailed session probing
+    // freehold_enter on a dark realm takes the jail arm and never books
+    // woc_freehold_refused_total. The command is still refused, so this is an
+    // ops-signal gap, not a security one. Pinned so a future reorder of the
+    // dispatch prologue is a deliberate decision and not an accident, and so
+    // the counter's documented meaning stays honest.
+    delete process.env.FREEHOLDS_ENABLED;
+    const refusals = recordingRefusalSink();
+    const { server, fc, session } = housingSession();
+    session.jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
+    const enter = vi.spyOn(server.sim, 'freeholdEnter');
+    session.selfHeavyDirty = false;
+
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_enter', rid: 81 }));
+
+    // Refused, and never reaches the sim: the security property holds.
+    expect(enter).not.toHaveBeenCalled();
+    expect(fc.sent.filter((m) => m.t === 'commandOutcome')).toEqual([
+      { t: 'commandOutcome', rid: 81, ok: false },
+    ]);
+    expect(session.selfHeavyDirty).toBe(false);
+    // But the jail arm owns the refusal, so the housing counter stays at zero.
+    expect(refusals.count()).toBe(0);
+
+    // The contrast that makes the above a statement about the JAIL arm and not
+    // about dark realms generally: an unjailed session on the same dark realm
+    // does book the counter.
+    const free = housingSession();
+    free.server.handleMessage(free.session, JSON.stringify({ t: 'cmd', cmd: 'freehold_enter' }));
+    expect(refusals.count()).toBe(1);
   });
 
   it('on a LIT realm, freehold_enter from a jailed session is refused before the stub and freehold_leave is not', () => {
