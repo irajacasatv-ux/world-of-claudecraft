@@ -19,6 +19,12 @@ the wire; the public descriptor carries an opaque plot id only.
   first `loadFreehold` caller pairs with `evictFreehold` at account or
   character unload in the same change, and the table's prune registers in
   `server/retention_sweep.ts` when its DDL lands.
+  DETERMINISM, before anyone iterates it: `ctx.freeholds` is a `Map`, so it
+  walks in INSERTION order, and once 07 feeds it that order is host-dependent
+  (server: per-account login arrival; offline: one record; headless: whatever
+  the env seeds). Sim code that iterates the map MUST sort by owner key first.
+  Relying on Map order forks the three hosts on one seed, and it is the kind
+  of fork the parity gate only catches once a record actually exists.
 - `commands.ts` owns one exported body per wire command, shaped
   `(ctx, pid, ...args)`. Each resolves the caller in-module through
   `ctx.resolve(pid)` the way `professions/enchanting.ts`,
@@ -30,8 +36,23 @@ the wire; the public descriptor carries an opaque plot id only.
   state, emit an event or draw rng until its owner lands it, so a host that
   runs them is indistinguishable from one that does not.
 - `Sim` keeps thin same-named delegates for the facet (the `IWorldHousing`
-  members right after the farming block in `sim.ts`); the descriptors read null
-  until 05 and 08a light them and `housingNowMs` is the `farmNowMs` clock base.
+  members right after the farming block in `sim.ts`); every one of the thirteen
+  delegates into this directory, the two descriptors included, so lighting them
+  at 05/08a is an edit HERE and never a growing body inside the zero-slack
+  `sim.ts` coordinator.
+- `housingNowMs` is the `farmNowMs` clock base, and it must NEVER be read from
+  inside `tick()`. On the authoritative server `cfg.lockoutNowMs` is a real wall
+  clock, so a housing pass that sampled it per tick (a condition decay or a
+  ledger-due sweep at 13 are the obvious candidates) would fork the world off
+  its seed. It is a COSMETIC base for a consumer comparing one housing timestamp
+  against "now", nothing more; the authoritative facts stay descriptor fields.
+- `ClientWorld.buildPresenceSeq` (the online half, `src/net/online.ts`) is
+  RESERVED for C03 and carries two properties later work must not overread. No
+  server-side ordering or drop logic exists yet: `server/freehold_wire.ts`
+  type-guards the field and discards it, so nothing is reordered or dropped
+  today. And it is advisory rather than dense: the counter advances even when
+  the frame is not actually sent (spectating, or a closed socket), so C03 must
+  treat it as monotonic-WITH-GAPS and never as a contiguous count.
 - The host opt-in is `SimConfig.freeholdsEnabled` (D85: optional, default
   false; the stock offline world and the headless env pass true, the server
   maps its realm env), read only as the `ctx.freeholdsEnabled` primitive.
@@ -54,6 +75,13 @@ the wire; the public descriptor carries an opaque plot id only.
   (explicit re-export lists, never `export *`). A module that ever needs a
   runtime import from a package that imports this barrel stays out of the list
   and is imported by path, exactly as `pvp/index.ts` documents; none does yet.
+  ONE STANDING EXCEPTION, and it is the majority of the importers: a consumer
+  that wants nothing but TYPES imports `./types` (or `.../freehold/types`)
+  directly rather than the barrel. `src/sim/sim_context.ts` must, because a
+  barrel import there is a type-level cycle; `src/world_api/housing.ts`,
+  `src/net/freehold_snapshot_wire.ts` and `server/freehold_wire.ts` do because
+  the seam, the wire and the server should pull in no runtime value from the
+  sim package at all. Runtime consumers (today `src/sim/sim.ts`) use the barrel.
 - Design: `docs/prd/woc/freeholds-and-guildhalls-research.md` (the research
   and the decision record it cites).
 - Cover changes in `tests/freehold_module.test.ts` (the dark-host pins: null

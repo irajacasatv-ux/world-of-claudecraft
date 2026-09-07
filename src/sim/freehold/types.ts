@@ -2,8 +2,28 @@
 // SimContext, so a Vitest, the server's row mapper (07) and the wire (08a) all
 // import the same names. Field names may gain members later; none is renamed.
 
-/** Opaque public plot identity, never an account or guild ownership key. */
-export type FreeholdPlotId = string;
+/** Opaque public plot identity, never an account or guild ownership key.
+ *
+ *  BRANDED ON PURPOSE. The one invariant this whole surface rests on is that the
+ *  public descriptor's identity and the internal owner stamp are different
+ *  values: `FreeholdState.ownerKey` keys the live map and never leaves the sim,
+ *  while `plotId` is the only identity a client ever sees. As a bare `string`
+ *  alias, `plotId: state.ownerKey` type-checked, so the invariant lived in prose
+ *  and one careless producer at 05 or 08a would have shipped the owner key to
+ *  every viewer. The brand makes that assignment a compile error, and the only
+ *  way to construct one is `asFreeholdPlotId`, which is the single place to look for
+ *  where public identities come from. Freezing it now costs a call at each
+ *  construction site; retrofitting it after 05, 07 and 08a have producers would
+ *  cost a migration. */
+declare const freeholdPlotIdBrand: unique symbol;
+export type FreeholdPlotId = string & { readonly [freeholdPlotIdBrand]: true };
+
+/** Build an opaque plot identity from a raw string (a database row, a fixture,
+ *  a generated id). THE ONLY constructor: callers pass a value that is already
+ *  a public identity, never an owner or account key. */
+export function asFreeholdPlotId(raw: string): FreeholdPlotId {
+  return raw as FreeholdPlotId;
+}
 
 /** The one freehold ladder; the Inn Room is tier 0 and free for every account. */
 export type FreeholdTier = 'inn_room' | 'cottage' | 'lodge' | 'manor' | 'keep' | 'citadel';

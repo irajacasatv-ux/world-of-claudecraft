@@ -17,7 +17,20 @@ export {
   setVisitPolicy,
   undoPlacement,
 } from './commands';
-export { defaultFreeholdState, evictFreehold, loadFreehold, serializeFreehold } from './state';
+export { asFreeholdPlotId } from './types';
+export {
+  defaultFreeholdState,
+  evictFreehold,
+  freeholdLayoutView,
+  loadFreehold,
+  myFreeholdView,
+  serializeFreehold,
+} from './state';
+// Four of the type re-exports below have no importer yet and are RESERVED, not
+// dead: FreeholdPlotId and FreeholdLayoutRow land consumers at 07/08a,
+// FreeholdTier at 03, FreeholdTrophyRecord at 17. They are listed here so the
+// directory's public shape is frozen before its producers exist; do not strip
+// them as unused.
 export type {
   FreeholdLayoutRow,
   FreeholdLayoutView,

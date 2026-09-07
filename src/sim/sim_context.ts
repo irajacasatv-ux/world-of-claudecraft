@@ -388,6 +388,11 @@ export interface SimContextPrimitives {
   // the ONE load path, the snapshot and the evict; the server feeds it per
   // realm in 07). Sim-owned Map mutated in place, never reassigned, so a live
   // read-only view like guildBanks. Empty on every host until 05.
+  // DETERMINISM: a Map iterates in INSERTION order, and once 07 feeds this the
+  // insertion order is host-dependent (the server inserts per account login
+  // arrival, the offline world inserts one record, the env whatever it seeds).
+  // Any sim code that iterates this map must therefore sort by owner key
+  // first; relying on Map order would fork the three hosts on one seed.
   readonly freeholds: Map<string, FreeholdState>;
 }
 

@@ -11867,15 +11867,15 @@ export class Sim {
     consumeFeastAction(this.ctx, r.e, r.meta, feastId);
   }
 
-  // Housing (IWorldHousing). Dark on this host: both descriptors read null until
-  // 05 and 08a light them; every command delegates into src/sim/freehold/, where
-  // the body resolves the caller and decides nothing. housingNowMs is the farmNowMs clock base.
+  // Housing (IWorldHousing). Dark here: all thirteen members delegate into
+  // src/sim/freehold/, where the bodies decide nothing. housingNowMs is the
+  // farmNowMs clock base, NEVER read inside tick() (freehold/CLAUDE.md).
   get myFreehold(): FreeholdView | null {
-    return null;
+    return freeholdMod.myFreeholdView(this.ctx, this.primaryId);
   }
 
   get freeholdLayout(): FreeholdLayoutView | null {
-    return null;
+    return freeholdMod.freeholdLayoutView(this.ctx, this.primaryId);
   }
 
   housingNowMs(): number {

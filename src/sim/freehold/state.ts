@@ -6,7 +6,12 @@
 // draws no rng and reads no clock.
 
 import type { SimContext } from '../sim_context';
-import type { FreeholdPlotId, FreeholdState } from './types';
+import type {
+  FreeholdLayoutView,
+  FreeholdPlotId,
+  FreeholdState,
+  FreeholdView,
+} from './types';
 
 /** Every account's default record: the free tier-0 Inn Room with nothing
  *  placed, full condition, unstamped day counters, no prepaid weeks, closed to
@@ -40,6 +45,25 @@ function cloneFreeholdState(state: FreeholdState): FreeholdState {
   };
 }
 
+/** The caller's own freehold as the PUBLIC descriptor: opaque plot identity,
+ *  tier and visit policy, never the owner key. Null until 05 lights the claim
+ *  and gives this a record to project. It is a real module function rather
+ *  than a `return null` on the Sim so that lighting it is an edit HERE, not a
+ *  growing getter body inside the zero-slack sim.ts coordinator. */
+export function myFreeholdView(ctx: SimContext, pid: number): FreeholdView | null {
+  void ctx;
+  void pid;
+  return null;
+}
+
+/** The furnishing layout of the freehold the caller stands in, one row per
+ *  placement. Null until 08a publishes it; same delegate rationale as above. */
+export function freeholdLayoutView(ctx: SimContext, pid: number): FreeholdLayoutView | null {
+  void ctx;
+  void pid;
+  return null;
+}
+
 /** Install an owner's record through the ONE load path. LOAD-ONCE like
  *  loadGuildBank: an owner whose record is already live is skipped, because
  *  overwriting it would drop placements not yet flushed by 07; to reload,
@@ -49,17 +73,29 @@ function cloneFreeholdState(state: FreeholdState): FreeholdState {
 export function loadFreehold(ctx: SimContext, ownerKey: string, state: FreeholdState): void {
   if (ownerKey === '') return;
   if (ctx.freeholds.has(ownerKey)) return;
-  ctx.freeholds.set(ownerKey, { ...cloneFreeholdState(state), ownerKey });
+  const live = cloneFreeholdState(state);
+  live.ownerKey = ownerKey;
+  ctx.freeholds.set(ownerKey, live);
 }
 
 /** Snapshot an owner's record for persistence, as a value copy. Null means the
  *  owner has NO live record: the persistence caller must skip the write, never
- *  persist a default over a real row. 07 decides which fields reach the row
- *  (isDecorating is ephemeral and never persisted). */
+ *  persist a default over a real row. 07 decides which of the remaining fields
+ *  reach the row.
+ *
+ *  `isDecorating` is EPHEMERAL BUILD PRESENCE (C03) and is neutralized to false
+ *  HERE rather than left to the caller: presence is a live, per-session fact
+ *  that must never save to SQL or JSON, and a snapshot taken while an owner is
+ *  mid-edit would otherwise carry a true through whatever 07 writes and reload
+ *  a decorating flag nobody is holding. Making the boundary mechanical means a
+ *  later persistence caller cannot forget it, and the public boolean 08a
+ *  publishes is always explicitly false on a freshly loaded record. */
 export function serializeFreehold(ctx: SimContext, ownerKey: string): FreeholdState | null {
   const state = ctx.freeholds.get(ownerKey);
   if (!state) return null;
-  return cloneFreeholdState(state);
+  const snapshot = cloneFreeholdState(state);
+  snapshot.isDecorating = false;
+  return snapshot;
 }
 
 /** The SANCTIONED evict: drop an owner's record from the live map, the first

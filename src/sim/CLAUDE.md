@@ -252,9 +252,14 @@ foreign hot paths, reachable via `SimContext`):
 
 If you ever find a `SimContext` member with zero consumers, that is dead scaffolding:
 remove the declaration AND its binding in the same change, then re-run the parity gate.
-Standing exception: `ctx.freeholdsEnabled` (the housing host opt-in) lands consumer-free by
-design and keeps its binding; its first consumers are the furnisher stock (03) and the
-Eastbrook gate prompt (06), which read it when they land.
+Standing exception, the WHOLE housing scaffolding until 05/07, not just one member:
+`ctx.freeholdsEnabled` (the housing host opt-in) and `ctx.freeholds` (the owner-keyed
+record map) both land consumer-free by design and keep their bindings, and so do the four
+`src/sim/freehold/state.ts` lifecycle helpers behind them (`defaultFreeholdState`,
+`loadFreehold`, `serializeFreehold`, `evictFreehold`), which are called by tests only
+today. First consumers: the furnisher stock (03) and the Eastbrook gate prompt (06) read
+the flag; the claim (05) and persistence (07) drive the map and its helpers. Deleting any
+of them under the rule above would remove the load path 05/07 are built on.
 
 ## Determinism as it bites here
 - Randomness: `this.rng` only; `time`/`tickCount` are sim-clock fields advanced by `tick()`, use them, not wall-clock. The banned-API list is enforced mechanically by `tests/architecture.test.ts`.

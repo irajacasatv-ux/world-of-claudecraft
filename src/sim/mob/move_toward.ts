@@ -21,7 +21,7 @@ const MAX_CLIMB_SLOPE = PLAYER_MAX_CLIMB_SLOPE;
 // only evaluated past the first entry when that straight step is obstructed.
 const MOVE_SLIDE_FAN = [0, 0.5, -0.5, 1.0, -1.0, 1.6, -1.6];
 
-// Step `e` one tick toward `dest`. With `ignoreObstacles`, the mover passes
+// Step `e` one tick toward `dest`. With `ignoreObstacles`, the mover phases
 // straight through props, used to free a stuck evader, and forced on for
 // templates flagged `phasesThroughObstacles` (mountain-sized world bosses
 // that must never wedge on a collider mid-chase). Returns true on arrival.
