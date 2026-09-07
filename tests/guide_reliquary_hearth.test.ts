@@ -23,6 +23,23 @@ describe('wiki Hearth shelf', () => {
           { kind: 'item', name: 'Open Bookshelf' },
         ],
       },
+      {
+        id: 'hearth_first_crafts',
+        shelf: 'hearth',
+        name: 'First Hearth Crafts',
+        relics: [
+          { kind: 'item', name: 'Weapon Rack' },
+          { kind: 'item', name: 'Iron Brazier' },
+          { kind: 'item', name: 'Patchwork Rug' },
+          { kind: 'item', name: 'Hide Armchair' },
+          { kind: 'item', name: 'Clockwork Lamp' },
+          { kind: 'item', name: 'Glass Floor Lamp' },
+          { kind: 'item', name: 'Chart Easel' },
+          { kind: 'item', name: 'Jewel Floor Lamp' },
+          { kind: 'item', name: 'Set Supper Table' },
+          { kind: 'item', name: 'Glow Lantern' },
+        ],
+      },
     ]);
     const html = reliquaryCatalogSections(GUIDE_RELIQUARY);
     expect(html).toContain('id="reliquary-shelf-hearth"');
@@ -33,6 +50,9 @@ describe('wiki Hearth shelf', () => {
     );
     expect(html).toContain('Timber Bed');
     expect(html).toContain('Open Bookshelf');
+    expect(html).toContain('id="reliquary-hearth_first_crafts"');
+    expect(html).toContain('Weapon Rack');
+    expect(html).toContain('Glow Lantern');
   });
 
   it('omits an empty Hearth shelf when rendering an empty catalog', () => {

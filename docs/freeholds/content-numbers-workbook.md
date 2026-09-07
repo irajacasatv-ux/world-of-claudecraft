@@ -1,6 +1,6 @@
 # Freeholds numeric provenance and calibration workbook
 
-Status: approved, UNBUILT packet handoff under R01 to R46 and the round-2 dispositions
+Status: approved packet with crafted development implementation complete locally under R01 to R46 and the round-2 dispositions
 D76-D93 (R47-R64, applied as recommended and approved on 2026-09-06). This is a filled inventory
 of existing working targets, verified source baselines and concrete unsigned production
 artifacts. It contains no invented final balance values. [state.md](state.md) owns
@@ -252,7 +252,81 @@ material price rise. No numeric sample-size threshold or middle-tier burden curv
 is invented here: Fernando and service sign the recorded sampling/precision plan
 before it can authorize bills. A report with inadequate evidence fails the gate.
 
-## F. Unsigned production artifact register
+## F. Development acceptance and unsigned production artifact register
+
+### Signed development rows, 2026-09-07
+
+Fernando accepted `freehold-crafted-development-calibration-v1` through
+[the exact acceptance record](crafted-content-trial-2026-09-07/acceptance.md).
+The accepted [calibration.json](crafted-content-trial-2026-09-07/calibration.json)
+SHA-256 is `c211e11ae3289fc5ae8745f27c13c3253164dcf9188641fbcbf3c150fa479e2b`.
+The immutable payload retains its proposal-time pending fields; the acceptance
+record supersedes those fields only for disabled development. Source revision is
+`49ed3f09333f4f1293edda9a98fe590c5651c20e`; its `sealedEvidence` lists the exact
+producer source hashes, economy measurements, geometry measurements and reviews.
+This is the signed development source for the rows below. `productionApproved`
+remains `false`; production calibration and activation remain unsigned.
+
+| Development record | Accepted fields | Producer and remaining acceptance boundary |
+|---|---|---|
+| CAL-RECIPES-A | Exact ten recipe rows below; resultCount 1, skillReq 50, itemLevelBudget 20, level 15, rare output, craft fee 40 copper each; seven trainer unlocks at 10000 copper each | 04 CONTENT; live training, admission and shared economy semantics preserved; integrated shared gate PASS; final evidence in crafted-content-trial-2026-09-07/implementation-validation.md |
+| CAL-PATTERNS-A | Three rare patterns below, 16 Heroic Marks each (48 total), sellValue 100 copper, exactly one taught recipe each; quartermaster only | 04 CONTENT; no luck channel or Reliquary pattern slots; acquisition and channel validation PASS; final evidence in crafted-content-trial-2026-09-07/implementation-validation.md |
+| CAL-FURN-A | Ten output sellValues, measured stand-in transforms, footprint/radius/collision class and positive decorCost from each accepted record | 04 CONTENT development application of CAL-DECOR-A and MEASURE-SPACE; final GLB, room and LOW evidence remain unsigned |
+
+All ten output IDs have recipe ID `recipe_<outputId>` and one output per craft.
+Materials below are whole item units per craft. Every output is tradable decor;
+quality and fee budget confer no stats, charges, aura or other power. Trainer rows
+use the existing static station. Pattern recipes retain `acquisition: ['drop']`
+for the existing teaching-item contract, with deterministic quartermaster-only
+pattern availability.
+
+| Output ID | Craft / station | Learning | Exact material bill | Output sellValue (copper) |
+|---|---|---|---|---|
+| `freehold_weapon_rack` | weaponcrafting / forge | trainer | `elderwood_log` 1, `thorium_ore` 2, `rough_hide` 2, `smithing_flux` 1 | 58 |
+| `freehold_iron_brazier` | armorcrafting / forge | trainer | `thorium_ore` 4, `iron_ore` 24, `smithing_flux` 2 | 64 |
+| `freehold_patchwork_rug` | tailoring / loom | trainer | `sunpetal_herb` 1, `homespun_cloth` 4, `spool_of_thread` 2 | 43 |
+| `freehold_hide_armchair` | leatherworking / tannery | trainer | `pristine_hide` 1, `rough_hide` 4, `thorium_ore` 1, `tanning_agent` 2 | 26 |
+| `freehold_clockwork_lamp` | engineering / toolworks | pattern | `copper_ore` 6, `smithing_flux` 2, `arcane_dust` 3 | 9 |
+| `freehold_glass_floor_lamp` | alchemy / apothecary | trainer | `pristine_venom_gland` 1, `venom_gland` 2, `frost_gourd` 1, `sunpetal_herb` 1, `glass_vial` 1 | 53 |
+| `freehold_chart_easel` | inscription / apothecary | pattern | `sunpetal_herb` 2, `arcane_essence` 2, `glass_vial` 1, `goldleaf_herb` 2 | 60 |
+| `freehold_jewel_floor_lamp` | jewelcrafting / forge | pattern | `thorium_ore` 4, `arcane_essence` 2, `smithing_flux` 2, `iron_ore` 2 | 39 |
+| `freehold_set_supper_table` | cooking / kitchens | trainer | `prime_cut` 1, `game_meat` 4, `highland_barley` 2, `frost_gourd` 2, `sunpetal_herb` 1, `cooking_salt` 2 | 54 |
+| `freehold_glow_lantern` | enchanting / toolworks | trainer | `arcane_essence` 20, `arcane_dust` 6 | 60 |
+
+| Pattern ID | Display name | Teaches |
+|---|---|---|
+| `pattern_freehold_clockwork_lamp` | Schematic: Clockwork Lamp | `recipe_freehold_clockwork_lamp` |
+| `pattern_freehold_chart_easel` | Technique: Chart Easel | `recipe_freehold_chart_easel` |
+| `pattern_freehold_jewel_floor_lamp` | Design: Jewel Floor Lamp | `recipe_freehold_jewel_floor_lamp` |
+
+Geometry uses the accepted 0.5-world-unit development grid. Footprints are width
+by depth in cells; radius is world units. The rug alone is a walk-through
+underlay. Exact normalization, scale, source identity limitations and all vertex
+measurements remain in the accepted payload and its sealed geometry evidence;
+this summary does not round or replace those transforms.
+
+| Output ID | Footprint (cells) | Radius | Decor cost |
+|---|---|---|---|
+| `freehold_weapon_rack` | 3 x 2 | 1 | 1 |
+| `freehold_iron_brazier` | 2 x 2 | 0.5 | 7 |
+| `freehold_patchwork_rug` | 4 x 8 | 0 | 1 |
+| `freehold_hide_armchair` | 2 x 2 | 1 | 1 |
+| `freehold_clockwork_lamp` | 2 x 2 | 1 | 1 |
+| `freehold_glass_floor_lamp` | 2 x 2 | 1 | 1 |
+| `freehold_chart_easel` | 2 x 3 | 1 | 8 |
+| `freehold_jewel_floor_lamp` | 2 x 2 | 0.5 | 4 |
+| `freehold_set_supper_table` | 5 x 5 | 2 | 5 |
+| `freehold_glow_lantern` | 2 x 2 | 0.5 | 1 |
+
+One copy of each crafted stand-in costs 30 decor points, already above the Inn's
+20-point budget. No budget increases follow. Retained proxies are not the final
+crafted model family, and open-lattice containment does not prove legal room
+packing, protected arrival/corridors, camera/navigation or actual LOW performance.
+The final `scripts/assets/freehold_crafted/` family, exporter
+`export_freehold_crafted.mjs`, spec `freehold_crafted.json` and parsed
+`tests/freehold_crafted_asset.test.ts` remain the 19 ART producer's named gates.
+
+### Unsigned production artifacts
 
 Every row below is a concrete deliverable with a closed method and gate. UNSIGNED
 is the final-value field today. Its producer fills exact literals from evidence,
@@ -263,8 +337,8 @@ a verbal claim that numbers are "tuned" is insufficient.
 |---|---|---|---|---|
 | CAL-LEDGER-A: every week/tier line ID, units, allowed grades, cycle/version, allocation and tolerance | UNSIGNED calibration output | Sections C to E; state targets; measured gatherer report | 03 CONTENT; 13 UPKEEP; Fernando/service | All cycle fixtures, noncrafter purchase path, immutable prepay, four-week 20 report before enable; ledger_core.ts takes the prepay cap as an injected input with LEDGER_PREPAY_MAX_WEEKS as the shipped default: 25a proves 12 through the injected cap and raises the default only in the change that records the signed twelve-week CAL-LEDGER-A version and the 13a calendar-authority acceptance in state.md |
 | CAL-VENDOR-A: buy/sell copper and quality for each eight basic IDs | UNSIGNED per-item table | Existing low-tier furnishing-comparable item/material values and recorded acquisition burden; no arbitragable sell floor | 03 CONTENT; Fernando | Exact per-ID price/quality fixtures and economy invariant; 20 release |
-| CAL-RECIPES-A: per ten recipe reagent ID/count, resultCount, skillReq, itemLevelBudget (the craft gold-sink driver; the bronze hoe precedent in src/sim/content/recipes.ts carries 10), quality, station, acquisition and craft fee | UNSIGNED per-recipe table | Full concrete comparator rows above; existing training/gain/discount/fee semantics; protected-input and no-power checks | 04 CONTENT; Fernando | Every allowed archetype discount path, maximum batch, positive skill/gain and tradable output tested; 20 release |
-| CAL-PATTERNS-A: three Marks amounts, output-derived qualities, source rows | UNSIGNED, sellValue already 100 | Existing pattern shape plus approved recipe burden; deterministic Marks valve | 04 CONTENT; Fernando | Exactly three one-to-one patterns, no luck route, all icons/source pages; 20 release |
+| CAL-RECIPES-A: per ten recipe reagent ID/count, resultCount, skillReq, itemLevelBudget (the craft gold-sink driver; the bronze hoe precedent in src/sim/content/recipes.ts carries 10), quality, station, acquisition and craft fee | UNSIGNED for production; signed development v1 above | Full concrete comparator rows above; existing training/gain/discount/fee semantics; protected-input and no-power checks | 04 CONTENT; Fernando | Every allowed archetype discount path, maximum batch, positive skill/gain and tradable output tested; 20 release |
+| CAL-PATTERNS-A: three Marks amounts, output-derived qualities, source rows | UNSIGNED for production; signed development v1 above, sellValue 100 | Existing pattern shape plus approved recipe burden; deterministic Marks valve | 04 CONTENT; Fernando | Exactly three one-to-one patterns, no luck route, all icons/source pages; 20 release |
 | CAL-DECOR-A/B: each item decorCost and all render cost measurements | UNSIGNED positive integer costs | Measured shipping model triangles/primitives/materials/residency and legal layout packing; state room caps | 03/04 CONTENT with 19 ART; 22 extends; Fernando | Finite row bound, fully furnished maximum-layout LOW/perf capture; 20/27 release |
 | CAL-UPGRADE: each tier's exact material bill and quoted fee/product conditions; bill legs are integer item units (D33, D89), never stackSize | UNSIGNED bill table; live fee SERVICE QUOTE | State ladder, existing eligible upper materials, approved acquisition burden, no intermediate/keystone | 21/32/40 CONTENT and SERVICE | Every tier noncrafter purchase path, safe overflow refusal, one durable receipt; 27/33/44 release |
 | CAL-RECIPES-B: twenty complete recipe rows (per recipe: reagent ID and integer item units, resultCount, skillReq, quality, station, acquisition, itemLevelBudget, which drives the craft gold sink in src/sim/professions/crafting.ts), six pattern Marks costs, the nythraxis_housing per-row weight and the rift Draw 8 chance | UNSIGNED complete table | Manifest craft/surface/channel roster; comparator/economy calibration; existing raid/rift draw semantics | 22 CONTENT; Fernando | Exactly twenty outputs/two per craft; one luck channel plus Marks per pattern; replay draw-order proof; 27 release |

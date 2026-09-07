@@ -3779,7 +3779,7 @@ describe('Guide professions pages and routes', () => {
       c.recipes.map((r) => ({ cap: c.maxSkill, gain: r.gain })),
     );
     // 33 Crucible crafts and the one-time Forgebreaker quest recipe.
-    expect(rows.length, 'published recipe rows').toBe(204);
+    expect(rows.length, 'published recipe rows').toBe(214);
     expect(
       rows.filter((r) => r.gain.zeroAt > r.cap).length,
       'rows carrying at least one unreachable boundary',
@@ -5812,17 +5812,8 @@ describe('the craft ladder prose keeps its counts derived or count-free (Masterw
   });
 
   it('the armorcrafting and jewelcrafting ladder counts are held to the live ladders', () => {
-    // These two sentences still spell "nine ... in three rungs"; that is true
-    // of the wearable ladder (LADDER_RECIPES, three per rung) and of the
-    // jewelcrafting trainer rows below the intermediate rung, so the claim is
-    // pinned to those tables rather than reworded: the day either table
-    // moves, this reds and the sentence is reworded count-free with its
-    // overlays swept in the same change.
-    // Both arms filter ALL_RECIPES (every list), not LADDER_RECIPES: the
-    // vector that staled alchemy's sentence was a trainer row landing on an
-    // existing rung from a DIFFERENT list (a TROPHY_RECIPES row at 25), which
-    // a ladder-scoped filter cannot see. The per-rung distribution is pinned,
-    // not only the rung set, since each sentence names three items per rung.
+    // Equipment ladder counts remain exact across every recipe family.
+    // The separate decor trainer row is pinned below and grants no equipment.
     const perRung = (rows: readonly { skillReq: number }[]): Record<number, number> => {
       const counts: Record<number, number> = {};
       for (const r of rows) counts[r.skillReq] = (counts[r.skillReq] ?? 0) + 1;
@@ -5832,12 +5823,22 @@ describe('the craft ladder prose keeps its counts derived or count-free (Masterw
       ALL_RECIPES.filter(
         (r) =>
           r.professionId === craft &&
+          ITEMS[r.resultItemId]?.kind !== 'furnishing' &&
           (r.acquisition ?? []).includes('trainer') &&
           r.skillReq <= 50 &&
           !COMBO_RECIPES.some((c) => c.id === r.id),
       );
     const armor = t('guide.profPages.craftProse.armorcrafting.ladderBody');
-    expect(armor).toContain('nine recipes in three rungs');
+    expect(armor).toContain('The equipment ladder is nine recipes in three rungs');
+    const armorFurnishings = ALL_RECIPES.filter(
+      (r) =>
+        r.professionId === 'armorcrafting' &&
+        r.acquisition?.includes('trainer') &&
+        ITEMS[r.resultItemId]?.kind === 'furnishing',
+    );
+    expect(armorFurnishings.map((r) => [r.id, r.skillReq])).toEqual([
+      ['recipe_freehold_iron_brazier', 50],
+    ]);
     // The Boundstone Helm is the one trainer-taught armorcrafting row in the
     // band that is NOT a ladder rung (a Smith combination recipe the sentence
     // names separately), so it is excluded by its combo membership, pinned.

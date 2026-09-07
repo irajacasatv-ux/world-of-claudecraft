@@ -34,7 +34,25 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
-Phase 03 (`phase-03-content-tiers-and-basics.md`): COMPLETE INCLUDING QA,
+Phase 04 (`phase-04-content-crafted-and-patterns.md`): DEVELOPMENT IMPLEMENTATION
+COMPLETE locally on 2026-09-07. Fernando
+accepted exact development v1 in `crafted-content-trial-2026-09-07/acceptance.md`,
+SHA-256 `c211e11ae3289fc5ae8745f27c13c3253164dcf9188641fbcbf3c150fa479e2b`.
+The ten crafted outputs/recipes, three deterministic 16-Mark patterns,
+`hearth_first_crafts`, thirteen final icons/provenance and 42 runtime captures
+are implemented and accepted. The shared gate passed all twelve steps, exit 0;
+database performance and persistence reviews PASS. Implementation QA/fresh
+review records close against this final evidence. Four authorized commits are
+recorded; post-fourth-commit `npm run ci:changed` passed with exit 0 (1967 files,
+existing warnings only), with clean status observed. The check repeats after the
+documentation-only amendment to the fourth commit; no fifth commit is introduced.
+See `crafted-content-trial-2026-09-07/implementation-validation.md` for exact
+commands/results and review closure. No push. Production remains disabled and
+`productionApproved` stays false; numeric activation, final GLB, room and hardware
+LOW gates remain unsigned. The distinct paired 04 QA audit is Not started;
+NEXT: `phase-04-qa.md`, before implementation 05.
+
+Previous phase 03 (`phase-03-content-tiers-and-basics.md`): COMPLETE INCLUDING QA,
 verdict PASS locally on 2026-09-07. All 39 distinct completion-round findings
 are resolved; fresh repair and final record reviews pass. The shared gate passed
 all twelve steps, with 57726 unit tests and 376 browser tests passing.
@@ -44,7 +62,7 @@ actual `hearth_basics`, manual Homesteader rewards, art and localization exist.
 Production remains disabled. Final production calibration, shipping models,
 room/LOW evidence and the explicitly deferred NPC voice remain named gates.
 See `content-final-validation-2026-09-07.md` and the current 03 ledger notes.
-NEXT: `phase-04-content-crafted-and-patterns.md`. Completion source commits are
+Its completion source commits are
 `a6bf26fad9`, `9121f0d94f` and `e1be875782`, followed by this final evidence
 closeout. The post-source-commit check passed; the task handoff records the
 repeated `ci:changed` result after the actual final commit and clean status.
@@ -1287,6 +1305,7 @@ only and never declares its remaining deliverables or paired QA complete.
 | 01 | `src/world_api/housing.ts`, `src/sim/freehold/{types,state,commands,index}.ts` + `CLAUDE.md`, `src/net/freehold_snapshot_wire.ts`, `server/freehold_config.ts`, `server/freehold_wire.ts`, `server/freehold_routes.ts`; extractions `src/sim/mob/move_toward.ts`, `server/live_location.ts`, `src/net/blank_entity.ts`, `src/game/seo_metadata.ts`; tests `freehold_module`, `freehold_snapshot_wire`, `freehold_command_chain_online`, `move_toward`, `seo_metadata`, `server/freehold_wire`, `server/freehold_routes` | `myFreehold`, `freeholdLayout` (data, null); `housingNowMs`, `freeholdEnter`, `freeholdLeave`, `placeFurnishing`, `moveFurnishing`, `removeFurnishing`, `undoPlacement`, `redoPlacement`, `payLedger`, `setVisitPolicy`, `setFreeholdBuildPresence` (dark no-ops); SimContext `ctx.freeholds` (live map) and `ctx.freeholdsEnabled` (read-only); `SimConfig.freeholdsEnabled` | none | `freehold_enter`, `freehold_leave`, `place_furnishing`, `move_furnishing`, `remove_furnishing`, `undo_placement`, `redo_placement`, `pay_ledger`, `set_visit_policy`, `set_freehold_build_presence` (refused pre-switch while `FREEHOLDS_ENABLED !== '1'`; `freehold_enter` jail-blocked); self keys: none (empty allowlist) | GET `/api/freehold` (bearer read guard behind the dedicated tier-1-only `HOUSING_READ_POLICY` IP limiter, 60/min, no tier-2 write; `freehold.disabled` 503 while dark, `{ enabled: true, freehold: null }` lit) | none | `apiError.freehold.invalid_input` (generated, reserved), `apiError.freehold.disabled` (English plus the five M16 non-Latin fills); metrics `woc_freehold_refused_total`; env `FREEHOLDS_ENABLED` (strict `'1'`, default off, `.env.example` + `DEPLOY.md` + `turbo.json`) |
 | 02 | `src/sim/item_storage_rules.ts`; `src/ui/hud/housing/{index.ts,CLAUDE.md,furnishing_tooltip_view.ts,furnishing_tooltip.ts}`; extraction `src/ui/mount_tooltip_view.ts`; QA shared projection `src/ui/item_instance_view.ts`; fixture `tests/fixtures/furnishing_item.ts`; original furnishing and mount tooltip tests plus 22 QA suites, including actual consumer/tool/commerce/feast host parity, loaded power, custody/journal restart, identity and presentation | none | none | ItemKind `furnishing` and `FurnishingItemDef`; no new command or snapshot key | none | none | English only: `itemUi.kind.furnishing`, `itemUi.market.filterTypeFurnishing`, `hudChrome.housing.furnishing.footprint`, `hudChrome.housing.furnishing.decorCost`, `hudChrome.housing.furnishing.surfaceFloor`, `hudChrome.housing.furnishing.maker`; generic custody leaf `hudChrome.itemTooltip.partyTradeWindowCustody` |
 | 03 (complete, paired QA PASS) | `src/sim/content/freehold/{tiers,charters,ledger_schedule,ledger_trial,furnishings,index}.ts` plus local guidance; `src/sim/{surface_npc_bootstrap.ts,freehold/should_spawn_npc.ts}`; `scripts/freeholds/` measured economy/geometry producers; focused content, ledger, producer, furnishing, rollback, NPC, terrain, empty-Hearth and browser keyboard suites; accepted trial/art evidence and eight item WebPs | none | none | exactly eight furnishing ItemDefs; NPC freehold_furnisher and gated stock; existing wire shape unchanged | none | none | eight `entities.items.freehold_*.name` leaves; world entity name/title/greeting for freehold_furnisher; Hearth shelf and hearth_basics name/description; Homesteader/Householder labels and rewards; English plus five required non-Latin fills |
+| 04 (development implementation complete, local) | `src/sim/content/freehold/{furnishing_recipes,furnishing_patterns}.ts`; `src/sim/freehold/crafted_availability.ts`; `src/sim/professions/{recipe_visibility,train_recipe}.ts`; `src/net/item_copy_anchor_wire.ts`; `server/world_hello.ts`; crafted economy/geometry producers under `scripts/freeholds/`; `tests/{furnishing_recipes,furnishing_pattern_items,furnishing_crafting,freehold_crafted_availability,freehold_crafted_presentation,freehold_crafted_art,recipe_visibility}.test.ts`; accepted calibration evidence and `crafted-content-art-2026-09-07/catalog-verification.json`; current census in `scripts/item_art_audit.mjs`; accepted final runtime evidence | existing `cfg` gains optional `freeholdsEnabled`; existing `recipeList` reflects host availability through `ctx.freeholdsEnabled` on Sim | none | `hello.freeholdsEnabled` mirrors host availability; existing commands retained; ten output and three pattern ItemDefs | none | none | thirteen `entities.items.<id>.name` leaves listed below; `hearth_first_crafts` name in all eighteen base Reliquary locale tables and full desc in five non-Latin tables; changed `guide.reliquaryPage.catalogBody` and `guide.profPages.craftProse.armorcrafting.ladderBody`; English plus five M16 item/guide fills |
 | 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
 | 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
 | 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
@@ -1294,6 +1313,112 @@ only and never declares its remaining deliverables or paired QA complete.
 | 30a (planned) | `server/guild_hall_boards.ts` | `guildHallBoards()` | | | GET `/api/guilds/hall-boards` | | `guild.lockouts`, `guild.firstKills`, `guild.lockoutRow`, `guild.ownLockoutRow`, `guild.noLockouts`, `guild.firstKillsUnavailable`, `guild.membersOnly`, `guild.boardLoading` |
 | 31 (planned) | `server/freehold_guild_clear_admission.ts`, `server/freehold_guild_clear_bridge.ts`, `src/sim/freehold/guild_clear_contract.ts` | none (D82) | | | fills 30a's firstKills arm | `guild_deeds` | `guild.firstKillRow` |
 
+
+04 accepted development implementation inventory, 2026-09-07:
+
+- Signed development CAL-RECIPES-A, CAL-PATTERNS-A and CAL-FURN-A are in
+  `content-numbers-workbook.md`, tied to `crafted-content-trial-2026-09-07/acceptance.md`
+  and exact SHA-256 `c211e11ae3289fc5ae8745f27c13c3253164dcf9188641fbcbf3c150fa479e2b`.
+  The immutable proposal's pending fields are historical; its acceptance supersedes
+  them for development only. Production approval remains false.
+- `FURNISHING_RECIPES` is merged through `src/sim/content/recipes.ts::ALL_RECIPES`;
+  `FURNISHING_PATTERN_ITEMS` merges through `src/sim/data.ts`. Outputs extend
+  `src/sim/content/freehold/furnishings.ts`; the vendor's eight-item stock remains
+  a distinct inventory. Every output below has recipe ID `recipe_<outputId>` and
+  name key `entities.items.<outputId>.name` in `src/ui/i18n.catalog/items.ts`.
+
+| Output ID | English name | Craft / learning |
+|---|---|---|
+| `freehold_weapon_rack` | Weapon Rack | weaponcrafting / trainer |
+| `freehold_iron_brazier` | Iron Brazier | armorcrafting / trainer |
+| `freehold_patchwork_rug` | Patchwork Rug | tailoring / trainer |
+| `freehold_hide_armchair` | Hide Armchair | leatherworking / trainer |
+| `freehold_clockwork_lamp` | Clockwork Lamp | engineering / pattern |
+| `freehold_glass_floor_lamp` | Glass Floor Lamp | alchemy / trainer |
+| `freehold_chart_easel` | Chart Easel | inscription / pattern |
+| `freehold_jewel_floor_lamp` | Jewel Floor Lamp | jewelcrafting / pattern |
+| `freehold_set_supper_table` | Set Supper Table | cooking / trainer |
+| `freehold_glow_lantern` | Glow Lantern | enchanting / trainer |
+
+- Pattern IDs/names: `pattern_freehold_clockwork_lamp` (Schematic: Clockwork Lamp),
+  `pattern_freehold_chart_easel` (Technique: Chart Easel), and
+  `pattern_freehold_jewel_floor_lamp` (Design: Jewel Floor Lamp). Each has its own
+  `entities.items.<patternId>.name` key, rare quality, sellValue 100, corresponding
+  `recipe_<outputId>` teaching ID and one 16-Mark `HEROIC_VENDOR_STOCK` offer in
+  `src/sim/content/heroic_vendor.ts`. No luck route or pattern relic is added.
+- Exactly `hearth_basics`, then `hearth_first_crafts`, form the current Hearth
+  page inventory. The new page contains the ten outputs above in this order, each
+  with its own profession source; its name is First Hearth Crafts. English name
+  and desc are owned by `src/sim/content/reliquary.ts`, with `hearth_first_crafts`
+  name rows in all eighteen base `src/ui/reliquary_i18n.locales/` tables. The five
+  full non-Latin desc rows are in `{zh_CN,zh_TW,ja_JP,ko_KR,ru_RU}.ts`; the thirteen
+  remaining base locale page-name obligations were repaired during the full gate.
+  Changed guide keys are `guide.reliquaryPage.catalogBody` and
+  `guide.profPages.craftProse.armorcrafting.ladderBody`. Item names and both guide
+  keys have English sources plus the five M16 fills; compiled locale generation
+  and wiki freshness passed in the shared gate.
+- Verified catalog totals are 43 pages / 484 raw slots / 337 unique
+  item IDs / 448 full-completion slots / 419 character-completion slots. Channel
+  pins preserve Crucible: 55 recipe items, 76 drop recipes, 43 non-Crucible recipe
+  items; furnishings are the seventh disjoint family. Historical 03 totals below
+  describe its completion snapshot, not the current catalog.
+- Thirteen item-specific `public/ui/items/<id>.webp` assets and
+  `public/ui/items/mapping.json` provenance are authored under
+  `crafted-content-art-2026-09-07/`; the final rug/provenance v2 has visual
+  acceptance. `catalog-verification.json` records 1277 art catalog entries and
+  1292 live item definitions, matching the current `scripts/item_art_audit.mjs`
+  census. Its machine checks passed but its verdict remains null. The accepted
+  runtime manifest is
+  `docs/screenshots/freehold-crafted-content-2026-09-07/runtime/manifest.json`,
+  SHA-256 `09ab384da4112f60b75cf8ebff986451dad6fda709fef158dda160713c653832`,
+  143845 bytes. Its 42 captures are sixteen desktop, twenty-two mobile including
+  scroll/portrait, two guide catalog and two catalog-prose views. Six actual
+  locales, all thirteen icons, real bags/bank/vendor/tooltips/mail/trainer
+  surfaces and three real purchases spending 48 Marks to zero on both desktop
+  and mobile are verified, with zero page errors or unloaded images. Frontend
+  reviewer and coordinator accepted the set without remaining art/capture nits;
+  `items.accepted-art.json::review.runtime` records acceptance. This is software
+  browser emulation; it proves neither physical-device/hardware LOW performance
+  nor final GLBs/placement. This acceptance does not close the distinct paired 04 QA audit.
+- Serialization measurement in `tests/professions_blob_growth.test.ts` now has
+  215 known recipes including retired entries (previously 205), 19161 profession
+  bytes and a 211458-byte maximal character fixture. The exact 1255-byte growth
+  is 324 known-recipe bytes + 355 discovery bytes + 576 Hearth metadata bytes.
+  The counterfactual 210203-byte baseline remains tested. The structural
+  profession ceiling remains 20480 bytes; the server's 229376-byte threshold is
+  still a warning, not a save cap. Finished database performance and persistence
+  reviews PASS in `crafted-content-trial-2026-09-07/reviews/implementation-*.md`.
+  Disabling the flag on this build preserves state. An older binary preserves
+  unknown item copies and recipe strings but may discard unknown discoveries and
+  Reliquary progress during load/save; lossless old-binary rollback is not claimed.
+  The permanent item-ID golden appends only these thirteen IDs; it does not
+  rewrite historical membership.
+- Full-gate repairs cover Hearth/profile/guide/bag/Exchange/art/recipe/source
+  pins and item IDs, with focused checks green. Sim's recipe list reads the
+  capability through `ctx`, preserving the sole config-reader contract. The
+  final shared command was
+  `GATE_SELECT_BASE=49ed3f09333f4f1293edda9a98fe590c5651c20e node scripts/gate_select.mjs`:
+  exit 0, all twelve steps green. Unit results: 3860 files passed / 34 skipped;
+  57858 tests passed / 2 expected failures / 541 existing conditional skips.
+  Browser results: 43 files / 376 tests passed. Typechecks, environment/server/
+  bot/client builds, freshness, security and SFX all passed. Exact command/results
+  and reviewer closure are recorded in
+  `crafted-content-trial-2026-09-07/implementation-validation.md`, with execution
+  log `/tmp/freeholds-crafted-gate-final.log` and reports in its `reviews/`
+  directory. Final QA/fresh-review records replace their interim evidence status.
+  Four authorized completion commits are recorded. The post-fourth-commit
+  `npm run ci:changed` passed with exit 0, 1967 files checked and existing warnings
+  only; working-tree status was clean. This receipt is incorporated by amending
+  only the fourth documentation commit, keeping exactly four commits. The parent
+  reruns `npm run ci:changed` after the actual final amended commit and records
+  that result in the handoff. No commit hash is pinned to the pre-amendment state.
+- Remaining production art/space gates: final crafted reference
+  `docs/freeholds/art/references/freehold-crafted-a-board.png`, model family
+  `scripts/assets/freehold_crafted/`, exporter `export_freehold_crafted.mjs`, spec
+  `freehold_crafted.json`, parsed `tests/freehold_crafted_asset.test.ts`, remeasured
+  final geometry/decor costs, legal maximum room packing/one-over refusal,
+  protected arrival/navigation and actual LOW performance. Existing numeric,
+  service and activation gates remain closed.
 
 02 implementation notes: furnishing has `KIND_RANK` 11, immediately after tool 10 and
 before mount 12; all existing relative ordering is preserved. Ordinary bag categories
@@ -1341,8 +1466,8 @@ below remain unsigned.
 - `freehold_furnisher` is appended and admitted before entity construction only
   for lit hosts. It uses existing terrain, without a new smoothing pad. Existing
   terrain goldens and dark NPC/RNG fingerprints are preserved. Hearth publishes
-  `hearth_basics` with those eight items and the actual vendor source. Current
-  catalog totals: 42 pages / 474 raw / 438 full / 409 character slots.
+  `hearth_basics` with those eight items and the actual vendor source. The
+  catalog totals at 03 completion were: 42 pages / 474 raw / 438 full / 409 character slots.
 - Homesteader deeds remain the manual `homesteader_first_furnishing` and
   `homesteader_first_cottage`, with the Homesteader title and `householder` border.
   Future placement and Cottage purchase grant sites remain later work.
@@ -1452,6 +1577,26 @@ message is performed in this documentation session.
 
 ## Gotchas (read before the matching phase)
 
+- Crafted availability (2026-09-07): a new `hello.freeholdsEnabled` value must
+  invalidate the open crafting view signature even when inventory and profession
+  data are unchanged. Keep the capability in the existing refresh signature;
+  `tests/crafting_reagent_refresh.test.ts` drives this reconnect case.
+- Recipe catalog cache (2026-09-07): the dark filtered list must follow supported
+  `ALL_RECIPES` length changes while preserving stable identity when unchanged.
+  Rebuild on the same length invalidation contract as the live recipe index;
+  `tests/recipe_visibility.test.ts` covers insertion and removal.
+- Crafted channel census (2026-09-07): after the Crucible merge,
+  `tests/apex_pattern_channels.test.ts` pins 55 recipe items, 76 drop recipes and
+  seven disjoint families; 43 is the non-Crucible recipe-item count. Do not apply
+  the old 40-to-43 total or sixth-family instructions to the merged catalog.
+- Runtime capture (2026-09-07): change locale through the actual Options
+  `changeLanguage` fanout. Importing a fresh Vite i18n module can mutate a second
+  module instance while the live HUD stays English; inspect the rendered locale
+  before accepting a localized capture.
+- Item action slots (2026-09-07): neither furnishing nor recipe items have an
+  action-slot surface. Capture their real bag, tooltip, crafting, vendor and
+  Reliquary contexts as applicable; do not invent an action-slot proof for either
+  kind or add a furnishing use action to satisfy the capture harness.
 - Accepted content trial (2026-09-07): preserve the exact original artifacts and
   accepted twelve-bill version; production approval remains false/null. The
   actual eight-item Hearth page is published. Empty-catalog fallback still uses

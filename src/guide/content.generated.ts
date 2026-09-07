@@ -7850,6 +7850,53 @@ export const GUIDE_RELIQUARY: GuideReliquaryPage[] = [
         "name": "Open Bookshelf"
       }
     ]
+  },
+  {
+    "id": "hearth_first_crafts",
+    "shelf": "hearth",
+    "name": "First Hearth Crafts",
+    "relics": [
+      {
+        "kind": "item",
+        "name": "Weapon Rack"
+      },
+      {
+        "kind": "item",
+        "name": "Iron Brazier"
+      },
+      {
+        "kind": "item",
+        "name": "Patchwork Rug"
+      },
+      {
+        "kind": "item",
+        "name": "Hide Armchair"
+      },
+      {
+        "kind": "item",
+        "name": "Clockwork Lamp"
+      },
+      {
+        "kind": "item",
+        "name": "Glass Floor Lamp"
+      },
+      {
+        "kind": "item",
+        "name": "Chart Easel"
+      },
+      {
+        "kind": "item",
+        "name": "Jewel Floor Lamp"
+      },
+      {
+        "kind": "item",
+        "name": "Set Supper Table"
+      },
+      {
+        "kind": "item",
+        "name": "Glow Lantern"
+      }
+    ]
   }
 ];
 
@@ -8704,6 +8751,44 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
           "minimalAt": 75,
           "zeroAt": 100
         }
+      },
+      {
+        "id": "recipe_freehold_clockwork_lamp",
+        "name": "Clockwork Lamp",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "toolworks",
+        "acquisition": "vendor",
+        "feeCopper": 0,
+        "materials": [
+          {
+            "itemId": "copper_ore",
+            "name": "Copper Ore",
+            "count": 6
+          },
+          {
+            "itemId": "smithing_flux",
+            "name": "Smithing Flux",
+            "count": 2
+          },
+          {
+            "itemId": "arcane_dust",
+            "name": "Chime Dust",
+            "count": 3
+          }
+        ],
+        "output": {
+          "name": "Clockwork Lamp",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
+        }
       }
     ]
   },
@@ -9483,6 +9568,54 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
           "reducedAt": 50,
           "minimalAt": 75,
           "zeroAt": 100
+        }
+      },
+      {
+        "id": "recipe_freehold_glass_floor_lamp",
+        "name": "Glass Floor Lamp",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "apothecary",
+        "acquisition": "trainer",
+        "feeCopper": 10000,
+        "materials": [
+          {
+            "itemId": "pristine_venom_gland",
+            "name": "Pristine Venom Gland",
+            "count": 1
+          },
+          {
+            "itemId": "venom_gland",
+            "name": "Venom Gland",
+            "count": 2
+          },
+          {
+            "itemId": "frost_gourd",
+            "name": "Frost Gourd",
+            "count": 1
+          },
+          {
+            "itemId": "sunpetal_herb",
+            "name": "Sunpetal Herb",
+            "count": 1
+          },
+          {
+            "itemId": "glass_vial",
+            "name": "Glass Vial",
+            "count": 1
+          }
+        ],
+        "output": {
+          "name": "Glass Floor Lamp",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
         }
       }
     ]
@@ -11241,6 +11374,59 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
             "minutes": 10
           }
         }
+      },
+      {
+        "id": "recipe_freehold_set_supper_table",
+        "name": "Set Supper Table",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "kitchens",
+        "acquisition": "trainer",
+        "feeCopper": 10000,
+        "materials": [
+          {
+            "itemId": "prime_cut",
+            "name": "Prime Cut",
+            "count": 1
+          },
+          {
+            "itemId": "game_meat",
+            "name": "Game Meat",
+            "count": 4
+          },
+          {
+            "itemId": "highland_barley",
+            "name": "Highland Barley",
+            "count": 2
+          },
+          {
+            "itemId": "frost_gourd",
+            "name": "Frost Gourd",
+            "count": 2
+          },
+          {
+            "itemId": "sunpetal_herb",
+            "name": "Sunpetal Herb",
+            "count": 1
+          },
+          {
+            "itemId": "cooking_salt",
+            "name": "Cooking Salt",
+            "count": 2
+          }
+        ],
+        "output": {
+          "name": "Set Supper Table",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
+        }
       }
     ]
   },
@@ -12646,6 +12832,49 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
           "minimalAt": 150,
           "zeroAt": 175
         }
+      },
+      {
+        "id": "recipe_freehold_hide_armchair",
+        "name": "Hide Armchair",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "tannery",
+        "acquisition": "trainer",
+        "feeCopper": 10000,
+        "materials": [
+          {
+            "itemId": "pristine_hide",
+            "name": "Pristine Hide",
+            "count": 1
+          },
+          {
+            "itemId": "rough_hide",
+            "name": "Rough Hide",
+            "count": 4
+          },
+          {
+            "itemId": "thorium_ore",
+            "name": "Osmium Ore",
+            "count": 1
+          },
+          {
+            "itemId": "tanning_agent",
+            "name": "Tanning Agent",
+            "count": 2
+          }
+        ],
+        "output": {
+          "name": "Hide Armchair",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
+        }
       }
     ]
   },
@@ -13790,6 +14019,44 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
           "minimalAt": 150,
           "zeroAt": 175
         }
+      },
+      {
+        "id": "recipe_freehold_patchwork_rug",
+        "name": "Patchwork Rug",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "loom",
+        "acquisition": "trainer",
+        "feeCopper": 10000,
+        "materials": [
+          {
+            "itemId": "sunpetal_herb",
+            "name": "Sunpetal Herb",
+            "count": 1
+          },
+          {
+            "itemId": "homespun_cloth",
+            "name": "Homespun Cloth",
+            "count": 4
+          },
+          {
+            "itemId": "spool_of_thread",
+            "name": "Spool of Thread",
+            "count": 2
+          }
+        ],
+        "output": {
+          "name": "Patchwork Rug",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
+        }
       }
     ]
   },
@@ -14192,6 +14459,49 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
           "minimalAt": 150,
           "zeroAt": 175
         }
+      },
+      {
+        "id": "recipe_freehold_chart_easel",
+        "name": "Chart Easel",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "apothecary",
+        "acquisition": "vendor",
+        "feeCopper": 0,
+        "materials": [
+          {
+            "itemId": "sunpetal_herb",
+            "name": "Sunpetal Herb",
+            "count": 2
+          },
+          {
+            "itemId": "arcane_essence",
+            "name": "Chime Essence",
+            "count": 2
+          },
+          {
+            "itemId": "glass_vial",
+            "name": "Glass Vial",
+            "count": 1
+          },
+          {
+            "itemId": "goldleaf_herb",
+            "name": "Goldleaf Herb",
+            "count": 2
+          }
+        ],
+        "output": {
+          "name": "Chart Easel",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
+        }
       }
     ]
   },
@@ -14319,6 +14629,39 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
           "reducedAt": 100,
           "minimalAt": 125,
           "zeroAt": 150
+        }
+      },
+      {
+        "id": "recipe_freehold_glow_lantern",
+        "name": "Glow Lantern",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "toolworks",
+        "acquisition": "trainer",
+        "feeCopper": 10000,
+        "materials": [
+          {
+            "itemId": "arcane_essence",
+            "name": "Chime Essence",
+            "count": 20
+          },
+          {
+            "itemId": "arcane_dust",
+            "name": "Chime Dust",
+            "count": 6
+          }
+        ],
+        "output": {
+          "name": "Glow Lantern",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
         }
       }
     ]
@@ -14863,6 +15206,49 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
           "reducedAt": 125,
           "minimalAt": 150,
           "zeroAt": 175
+        }
+      },
+      {
+        "id": "recipe_freehold_jewel_floor_lamp",
+        "name": "Jewel Floor Lamp",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "forge",
+        "acquisition": "vendor",
+        "feeCopper": 0,
+        "materials": [
+          {
+            "itemId": "thorium_ore",
+            "name": "Osmium Ore",
+            "count": 4
+          },
+          {
+            "itemId": "arcane_essence",
+            "name": "Chime Essence",
+            "count": 2
+          },
+          {
+            "itemId": "smithing_flux",
+            "name": "Smithing Flux",
+            "count": 2
+          },
+          {
+            "itemId": "iron_ore",
+            "name": "Iron Ore",
+            "count": 2
+          }
+        ],
+        "output": {
+          "name": "Jewel Floor Lamp",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
         }
       }
     ]
@@ -15570,6 +15956,49 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
           "reducedAt": 150,
           "minimalAt": 175,
           "zeroAt": 200
+        }
+      },
+      {
+        "id": "recipe_freehold_weapon_rack",
+        "name": "Weapon Rack",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "forge",
+        "acquisition": "trainer",
+        "feeCopper": 10000,
+        "materials": [
+          {
+            "itemId": "elderwood_log",
+            "name": "Highpine Log",
+            "count": 1
+          },
+          {
+            "itemId": "thorium_ore",
+            "name": "Osmium Ore",
+            "count": 2
+          },
+          {
+            "itemId": "rough_hide",
+            "name": "Rough Hide",
+            "count": 2
+          },
+          {
+            "itemId": "smithing_flux",
+            "name": "Smithing Flux",
+            "count": 1
+          }
+        ],
+        "output": {
+          "name": "Weapon Rack",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
         }
       }
     ]
@@ -16728,6 +17157,44 @@ export const GUIDE_PROF_CRAFTS: GuideProfCraft[] = [
           "reducedAt": 125,
           "minimalAt": 150,
           "zeroAt": 175
+        }
+      },
+      {
+        "id": "recipe_freehold_iron_brazier",
+        "name": "Iron Brazier",
+        "skillReq": 50,
+        "tier": 2,
+        "station": "forge",
+        "acquisition": "trainer",
+        "feeCopper": 10000,
+        "materials": [
+          {
+            "itemId": "thorium_ore",
+            "name": "Osmium Ore",
+            "count": 4
+          },
+          {
+            "itemId": "iron_ore",
+            "name": "Iron Ore",
+            "count": 24
+          },
+          {
+            "itemId": "smithing_flux",
+            "name": "Smithing Flux",
+            "count": 2
+          }
+        ],
+        "output": {
+          "name": "Iron Brazier",
+          "count": 1,
+          "quality": "rare"
+        },
+        "combo": null,
+        "oncePerDay": false,
+        "gain": {
+          "reducedAt": 75,
+          "minimalAt": 100,
+          "zeroAt": 125
         }
       }
     ]
@@ -19944,6 +20411,11 @@ export const GUIDE_PROF_PROVISIONING: GuideProfProvisioning = {
         },
         {
           "itemId": "marlows_grand_roast",
+          "placeable": false,
+          "station": false
+        },
+        {
+          "itemId": "freehold_set_supper_table",
           "placeable": false,
           "station": false
         },
