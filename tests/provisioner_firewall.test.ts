@@ -32,6 +32,11 @@
 import { describe, expect, it } from 'vitest';
 import { FARM_CROPS } from '../src/sim/content/farm_crops';
 import {
+  FREEHOLD_LEDGER_ELIGIBILITY,
+  FREEHOLD_LEDGER_SCHEDULE,
+  type FreeholdLedgerEligibilityDef,
+} from '../src/sim/content/freehold';
+import {
   ALL_RECIPES,
   APEX_ARMOR_RECIPES,
   APEX_GEAR_RECIPES,
@@ -116,6 +121,111 @@ function gearChainRecipes() {
     ),
   ];
 }
+
+/** Every alternative and allowed grade is covered even before bills are approved.
+ * The existing recipe exclusions remain shared with the provisioner sweep. */
+function ledgerEligibilityViolations(rows: readonly FreeholdLedgerEligibilityDef[]): string[] {
+  const protectedOutputs = new Set(
+    gearChainRecipes()
+      .filter(
+        (recipe) =>
+          !isGatheringToolRecipe(recipe.resultItemId) && !isConsumableIntermediate(recipe),
+      )
+      .map((recipe) => recipe.resultItemId),
+  );
+  return rows
+    .flatMap((row) => [row.alternativeId, ...row.gradeIds])
+    .filter(
+      (id) =>
+        PERFECTING_MATERIAL_IDS.includes(id) ||
+        GEAR_INTERMEDIATE_WORDS.some((word) => id.includes(word)) ||
+        protectedOutputs.has(id) ||
+        id === CATALYST_ID ||
+        id === 'quickening_catalyst',
+    );
+}
+
+describe('Freehold ledger eligibility: the provisioner firewall', () => {
+  it('sweeps every approved alternative and grade while the production schedule is absent', () => {
+    expect(FREEHOLD_LEDGER_ELIGIBILITY).toHaveLength(18);
+    expect(FREEHOLD_LEDGER_ELIGIBILITY.flatMap((row) => row.gradeIds)).toHaveLength(28);
+    expect([...new Set(FREEHOLD_LEDGER_ELIGIBILITY.map((row) => row.family))]).toEqual([
+      'ore',
+      'wood',
+      'herb',
+      'hide',
+      'cloth',
+      'fish',
+      'produce',
+    ]);
+    for (const row of FREEHOLD_LEDGER_ELIGIBILITY) {
+      expect(row.gradeIds.length, row.alternativeId).toBeGreaterThan(0);
+      for (const id of [row.alternativeId, ...row.gradeIds]) expect(ITEMS[id], id).toBeDefined();
+    }
+    expect(ledgerEligibilityViolations(FREEHOLD_LEDGER_ELIGIBILITY)).toEqual([]);
+    expect(FREEHOLD_LEDGER_SCHEDULE.schedule).toBeNull();
+  });
+
+  it('detects protected material injection into every alternative and grade position', () => {
+    const forbiddenIds = [
+      ...PERFECTING_MATERIAL_IDS,
+      ...GEAR_INTERMEDIATE_WORDS.map((word) => `synthetic_${word}`),
+      CATALYST_ID,
+      'quickening_catalyst',
+    ];
+    expect(forbiddenIds).toHaveLength(11);
+    let probes = 0;
+    for (const [rowIndex, row] of FREEHOLD_LEDGER_ELIGIBILITY.entries()) {
+      for (const id of forbiddenIds) {
+        const altered = FREEHOLD_LEDGER_ELIGIBILITY.map((entry, index) =>
+          index === rowIndex ? { ...entry, alternativeId: id } : entry,
+        );
+        expect(
+          ledgerEligibilityViolations(altered),
+          `${row.alternativeId}: alternative ${id}`,
+        ).toContain(id);
+        probes++;
+        for (const gradeIndex of row.gradeIds.keys()) {
+          const alteredGrades = FREEHOLD_LEDGER_ELIGIBILITY.map((entry, index) =>
+            index === rowIndex
+              ? {
+                  ...entry,
+                  gradeIds: entry.gradeIds.map((grade, position) =>
+                    position === gradeIndex ? id : grade,
+                  ),
+                }
+              : entry,
+          );
+          expect(
+            ledgerEligibilityViolations(alteredGrades),
+            `${row.alternativeId}: grade ${gradeIndex} ${id}`,
+          ).toContain(id);
+          probes++;
+        }
+      }
+    }
+    expect(probes).toBe(506);
+  });
+
+  it('keeps the existing gear output protection active beyond the named word families', () => {
+    const outputs = [
+      ...new Set(
+        gearChainRecipes()
+          .filter(
+            (recipe) =>
+              !isGatheringToolRecipe(recipe.resultItemId) && !isConsumableIntermediate(recipe),
+          )
+          .map((recipe) => recipe.resultItemId),
+      ),
+    ];
+    expect(outputs.length).toBeGreaterThan(20);
+    expect(outputs).toContain('quickening_catalyst');
+    for (const id of outputs) {
+      const row = { ...FREEHOLD_LEDGER_ELIGIBILITY[0], gradeIds: ['copper_ore', id] };
+      expect(ledgerEligibilityViolations([row]), id).toContain(id);
+    }
+  });
+});
 
 describe('masterwrought R17: the provisioner firewall', () => {
   it('sweeps a non-empty farm family and a non-empty recipe table', () => {
