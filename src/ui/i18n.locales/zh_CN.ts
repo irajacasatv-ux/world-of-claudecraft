@@ -15195,4 +15195,6 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemMenu.separateByGatherer': '按采集者拆分',
   'hudChrome.itemMenu.takeChosenQuantity': '取出指定数量',
   'hudChrome.itemMenu.combine': '合并素材堆叠',
+  'hudChrome.reliquary.navHearth': '炉边',
+  'guide.reliquaryPage.shelf.hearth': '炉边',
 };

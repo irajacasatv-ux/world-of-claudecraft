@@ -416,13 +416,13 @@ describe('i18n whole-catalog completeness', () => {
   // the same shelf two things. English alignment is trivially true; the drift risk
   // is a translator filling one surface and not the other, so this sweeps EVERY
   // supported locale.
-  it('names the three Reliquary shelves identically in the window and the wiki', () => {
+  it('names Reliquary shelves identically in the window and the wiki', () => {
     const navProfessions = 'hudChrome.reliquary.navProfessions';
     const professionsTitle = 'hudChrome.professions.title';
     const drift: string[] = [];
     for (const lang of supportedLanguages) {
       const flat = flatten(TABLES[lang]);
-      for (const shelf of ['conquerors', 'professions', 'horizons'] as const) {
+      for (const shelf of ['conquerors', 'professions', 'horizons', 'hearth'] as const) {
         const nav = `hudChrome.reliquary.nav${shelf[0].toUpperCase()}${shelf.slice(1)}`;
         const wiki = `guide.reliquaryPage.shelf.${shelf}`;
         // Both keys must EXIST: a renamed key would otherwise compare

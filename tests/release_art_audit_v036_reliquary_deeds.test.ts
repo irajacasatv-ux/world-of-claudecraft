@@ -190,7 +190,7 @@ describe('v0.36 release-audit Reliquary deed art', () => {
     }
   });
 
-  it('keeps the historical audit sealed while the current ledger reaches 288 painted deeds', () => {
+  it('keeps the historical audit sealed while the current ledger reaches 290 painted deeds', () => {
     // The audit's own claim is historical: the 271 deeds live at the v0.36
     // audit are ALL painted, the six Masterwrought jewelcrafting and
     // inscription milestone deeds (phases 05 and 06) each shipped their
@@ -221,9 +221,9 @@ describe('v0.36 release-audit Reliquary deed art', () => {
       // The personal hammer quest ships with the explicit category-crest fallback.
       'hid_forgebreaker',
     ]);
-    // Current arithmetic: 299 live - 11 explicitly pending = 288 painted.
-    expect(DEED_ORDER).toHaveLength(299);
-    expect(DEED_IMAGE_IDS.size).toBe(288);
+    // Current arithmetic: 301 live - 11 explicitly pending = 290 painted.
+    expect(DEED_ORDER).toHaveLength(301);
+    expect(DEED_IMAGE_IDS.size).toBe(290);
     expect(DEED_ORDER.filter((id) => !DEED_IMAGE_IDS.has(id))).toEqual([...DEED_ART_PENDING]);
     expect(sorted(DEED_IMAGE_IDS)).toEqual(
       sorted(DEED_ORDER.filter((id) => !DEED_ART_PENDING.has(id))),

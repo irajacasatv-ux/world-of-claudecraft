@@ -15754,4 +15754,6 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemMenu.separateByGatherer': 'Разделить по сборщикам',
   'hudChrome.itemMenu.takeChosenQuantity': 'Взять выбранное количество',
   'hudChrome.itemMenu.combine': 'Объединить стопки материалов',
+  'hudChrome.reliquary.navHearth': 'Очаг',
+  'guide.reliquaryPage.shelf.hearth': 'Очаг',
 };

@@ -27,7 +27,7 @@ import {
 } from './rift/items';
 
 /** Top-level shelf ids (Overview is virtual UI, not a catalog shelf row). */
-export type ReliquaryShelfId = 'conquerors' | 'professions' | 'horizons';
+export type ReliquaryShelfId = 'conquerors' | 'professions' | 'horizons' | 'hearth';
 
 /** How a page reads lifetime clear / kill counts from existing player state. */
 export type ReliquaryClearSource =
@@ -455,6 +455,7 @@ export const RELIQUARY_HORIZON_TITLES = [
   // docs/prd/ignivar-raid-loot.md): every non-hidden title deed pages here
   // per the locked titles-page rule.
   'dgn_varkhul_flawless',
+  'homesteader_first_furnishing',
 ] as const;
 
 // Profession lifetime mark ids (Phase 7). Prefer existing visited namespaces

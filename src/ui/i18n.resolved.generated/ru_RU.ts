@@ -4574,6 +4574,7 @@ export const ru_RU: EnTranslations = {
       "navConquerors": "Завоеватели",
       "navProfessions": "Профессии",
       "navHorizons": "Горизонты",
+      "navHearth": "Очаг",
       "navCountAria": "{shelf}: заполнено {owned} из {total} реликвий",
       "shelfEmpty": "На этой полке пока нет страниц.",
       "pageComplete": "Озарено",
@@ -6588,7 +6589,8 @@ export const ru_RU: EnTranslations = {
       "shelf": {
         "conquerors": "Завоеватели",
         "professions": "Профессии",
-        "horizons": "Горизонты"
+        "horizons": "Горизонты",
+        "hearth": "Очаг"
       }
     },
     "wishPage": {

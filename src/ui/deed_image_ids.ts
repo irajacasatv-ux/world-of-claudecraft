@@ -175,6 +175,8 @@ export const DEED_IMAGE_IDS: ReadonlySet<string> = new Set([
   'hid_roll_hundred',
   'hid_saul_footnote',
   'hid_yumi_cheer',
+  'homesteader_first_cottage',
+  'homesteader_first_furnishing',
   'prog_alchemy_50',
   'prog_alchemy_rare',
   'prog_armorcrafting_50',

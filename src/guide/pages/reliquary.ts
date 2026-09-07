@@ -9,12 +9,13 @@ import { hrefFor } from '../routes';
 import type { GuidePage } from './types';
 import { lead, related } from './ui';
 
-const SHELF_ORDER = ['conquerors', 'professions', 'horizons'] as const;
+const SHELF_ORDER = ['conquerors', 'professions', 'horizons', 'hearth'] as const;
 
 const SHELF_LABEL_KEYS: Record<(typeof SHELF_ORDER)[number], TranslationKey> = {
   conquerors: 'guide.reliquaryPage.shelf.conquerors',
   professions: 'guide.reliquaryPage.shelf.professions',
   horizons: 'guide.reliquaryPage.shelf.horizons',
+  hearth: 'guide.reliquaryPage.shelf.hearth',
 };
 
 /** Tag word + explanatory line for an outside-completion page, keyed by the

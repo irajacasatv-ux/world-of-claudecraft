@@ -3297,6 +3297,24 @@ export const DEEDS: Record<string, DeedDef> = {
     trigger: { kind: 'quest', questId: 'q_requiem_at_the_forge' },
     hidden: true,
   },
+  homesteader_first_furnishing: {
+    id: 'homesteader_first_furnishing',
+    name: 'Homesteader',
+    desc: 'Place your first furnishing in your Freehold.',
+    category: 'progression',
+    renown: 5,
+    trigger: { kind: 'manual' },
+    reward: { kind: 'title', text: 'Homesteader' },
+  },
+  homesteader_first_cottage: {
+    id: 'homesteader_first_cottage',
+    name: 'Householder',
+    desc: 'Receive your first Cottage for this character.',
+    category: 'progression',
+    renown: 5,
+    trigger: { kind: 'manual' },
+    reward: { kind: 'border', slug: 'householder' },
+  },
 };
 
 for (const def of Object.values(DEEDS)) {

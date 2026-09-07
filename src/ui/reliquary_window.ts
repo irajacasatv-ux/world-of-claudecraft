@@ -85,6 +85,7 @@ import {
   reliquaryRecentSig,
   reliquaryRefreshSig,
   reliquarySecondaryClears,
+  reliquaryVisibleNav,
 } from './reliquary_view';
 import { rovingTarget } from './roving_index';
 import { svgIcon } from './ui_icons';
@@ -103,6 +104,7 @@ const NAV_LABEL_KEYS: Record<ReliquaryNavId, TranslationKey> = {
   conquerors: 'hudChrome.reliquary.navConquerors',
   professions: 'hudChrome.reliquary.navProfessions',
   horizons: 'hudChrome.reliquary.navHorizons',
+  hearth: 'hudChrome.reliquary.navHearth',
 };
 
 // The SR-only description the relic grid points at, plus the literal key list
@@ -263,7 +265,7 @@ export class ReliquaryWindow {
 
   open(nav?: ReliquaryNavId): void {
     if (nav !== undefined) {
-      this.nav = nav;
+      this.nav = reliquaryVisibleNav(RELIQUARY_PAGES).includes(nav) ? nav : 'overview';
       // A nav-bearing open is a deep link to a SHELF, so the persisted page has
       // to go: the view resolves an open pageId from the WHOLE catalog, so a
       // page belonging to another shelf would otherwise paint under the shelf
@@ -281,7 +283,7 @@ export class ReliquaryWindow {
       // A shelf deep link is a navigation, so arm the rail button for it (see
       // focusNavId). This is what makes the ALREADY-OPEN branch below do
       // something a non-sighted player can perceive.
-      this.focusNavId = nav;
+      this.focusNavId = this.nav;
     }
     // Captured before render() consumes the one-shots: a cold deep link parks
     // focus on the target page header (or the target rail button) instead of
@@ -1178,10 +1180,9 @@ export class ReliquaryWindow {
   }
 
   /**
-   * The three shelf cards: where the Overview stops being a strip of leftovers
-   * and becomes the way into the catalog. Always all three, in the model's
-   * order (which is the rail's order), each one a real nav button the shared
-   * [data-nav] wiring already drives.
+   * Authored shelf cards make Overview an entry into the catalog. Keep the
+   * model's order, shared with the rail, and use the existing [data-nav]
+   * buttons. Shelves without authored pages remain absent.
    */
   private shelfCardsHtml(cards: readonly ReliquaryShelfCardModel[]): string {
     const rows = cards

@@ -4574,6 +4574,7 @@ export const cs_CZ: EnTranslations = {
       "navConquerors": "Dobyvatelé",
       "navProfessions": "Profese",
       "navHorizons": "Obzory",
+      "navHearth": "Hearth",
       "navCountAria": "{shelf}: vyplněno {owned} z {total} relikvií",
       "shelfEmpty": "Na této polici zatím nejsou žádné stránky.",
       "pageComplete": "Iluminováno",
@@ -6588,7 +6589,8 @@ export const cs_CZ: EnTranslations = {
       "shelf": {
         "conquerors": "Dobyvatelé",
         "professions": "Profese",
-        "horizons": "Obzory"
+        "horizons": "Obzory",
+        "hearth": "Hearth"
       }
     },
     "wishPage": {

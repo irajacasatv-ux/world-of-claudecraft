@@ -381,7 +381,11 @@ describe('Reliquary Conqueror catalog structure', () => {
     expect(RELIQUARY_PAGES.length).toBe(41);
     expect(
       RELIQUARY_PAGES.every(
-        (p) => p.shelf === 'conquerors' || p.shelf === 'professions' || p.shelf === 'horizons',
+        (p) =>
+          p.shelf === 'conquerors' ||
+          p.shelf === 'professions' ||
+          p.shelf === 'horizons' ||
+          p.shelf === 'hearth',
       ),
     ).toBe(true);
     expect(HORIZON_PAGES.map((p) => p.id)).toEqual([
@@ -450,7 +454,7 @@ describe('Reliquary Conqueror catalog structure', () => {
     // heroic page in the same release re-slots a relic already catalogued, so
     // it moves neither this pair nor the character pair below.
     // Eleven Crucible collections add 33 distinct crafted item relics.
-    expect(full).toEqual({ owned: 429, total: 429 });
+    expect(full).toEqual({ owned: 430, total: 430 });
     const character = catalogCharacterCompletion({
       itemsDiscovered: allOwned,
       marks: allOwned,
@@ -471,7 +475,7 @@ describe('Reliquary Conqueror catalog structure', () => {
     // overview (only the weapon skins are account-scoped). Lanternback Troll
     // and Chimeglass Tortoise add two more character-scoped slots: 366. The
     // Cluckwork Mech Bird is another character-scoped mount slot: 367.
-    expect(character).toEqual({ owned: 400, total: 400 });
+    expect(character).toEqual({ owned: 401, total: 401 });
   });
 
   it('pins the final measured catalog shape: total slots and distinct marks', () => {
@@ -518,7 +522,7 @@ describe('Reliquary Conqueror catalog structure', () => {
     expect(
       slots,
       `slot total moved; per page: ${RELIQUARY_PAGES.map((p) => `${p.id}=${p.relics.length}`).join(', ')}`,
-    ).toBe(465);
+    ).toBe(466);
     // Distinct mark ids: the 10 shipped before Phase 21, the 19 rare-slain
     // proofs of conquerors_rares_of_the_realm, the two craft masterwork
     // marks (masterwork:jewelcrafting, masterwork:inscription), and the
@@ -3025,7 +3029,7 @@ const EXPECTED_DISTINCT_SOURCES: Record<string, number> = {
   // rows: 36 + the four Phase 18 completion-ladder titles + the Grandmaster
   // Jewelcrafting and Inscription titles + the farming Harvestmaster + the
   // Crucible raid's flawless title.
-  horizons_titles: 44,
+  horizons_titles: 45,
   // 29 = 27 distinct rift mobs across the ten rare multi-hints (eight theme
   // bosses + both citadel bosses + 17 trash carriers), plus the B and S rank
   // doors. The rift_first_clear activity left with the bands.

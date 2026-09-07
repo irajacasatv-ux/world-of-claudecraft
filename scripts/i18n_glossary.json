@@ -71,14 +71,16 @@
       ]
     },
     "reliquaryShelves": {
-      "note": "The three Reliquary shelf names, aligned between the window nav (hudChrome.reliquary.nav*) and the wiki reliquary page (guide.reliquaryPage.shelf.*). Conquerors: zh_CN 征服者, zh_TW 征服者, ja 征服者, ko 정복자, ru Завоеватели. Professions locks to the professions window title (hudChrome.professions.title): zh_CN 专业, zh_TW 專業, ja 専門技能, ko 전문 기술, ru Профессии. Horizons uses the metaphorical new-horizons reading, never the literal horizon line: zh_CN 远景, zh_TW 遠景, ja 地平, ko 지평, ru Горизонты. Keep each identical on both surfaces wherever a shelf is named.",
+      "note": "The Reliquary shelf names, aligned between the window nav (hudChrome.reliquary.nav*) and the wiki reliquary page (guide.reliquaryPage.shelf.*). Conquerors: zh_CN 征服者, zh_TW 征服者, ja 征服者, ko 정복자, ru Завоеватели. Professions locks to the professions window title (hudChrome.professions.title): zh_CN 专业, zh_TW 專業, ja 専門技能, ko 전문 기술, ru Профессии. Horizons uses the metaphorical new-horizons reading, never the literal horizon line: zh_CN 远景, zh_TW 遠景, ja 地平, ko 지평, ru Горизонты. Hearth names the comfort of home: zh_CN 炉边, zh_TW 爐邊, ja 炉辺, ko 보금자리, ru Очаг. Keep each identical on both surfaces wherever a shelf is named.",
       "keyPatterns": [
         "hudChrome.reliquary.navConquerors",
         "hudChrome.reliquary.navProfessions",
         "hudChrome.reliquary.navHorizons",
+        "hudChrome.reliquary.navHearth",
         "guide.reliquaryPage.shelf.conquerors",
         "guide.reliquaryPage.shelf.professions",
-        "guide.reliquaryPage.shelf.horizons"
+        "guide.reliquaryPage.shelf.horizons",
+        "guide.reliquaryPage.shelf.hearth"
       ]
     },
     "steamLink": {

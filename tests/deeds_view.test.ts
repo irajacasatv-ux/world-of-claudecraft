@@ -881,21 +881,23 @@ describe('real catalog integration', () => {
     // Crucible raid deeds, all visible non-feat DUNGEON deeds (the release's
     // own identity read 281 - 4 - 9 = 268 and 272), so they join both counts;
     // 298 - 4 - 9 = 285, and the bucket sum adds the 4 feat rows back = 289.
-    expect(view.summary.visibleTotal).toBe(285);
+    // The two Freehold milestones are visible, non-feat progression deeds.
+    expect(view.summary.visibleTotal).toBe(287);
     // The bucket sum adds the feat-flagged rows back on top (3 on the Feats
     // shelf plus the off-prefix capstone on Collection).
-    expect(view.categories.reduce((n, c) => n + c.visible, 0)).toBe(289);
+    expect(view.categories.reduce((n, c) => n + c.visible, 0)).toBe(291);
   });
 
   it('offers exactly the live catalog border deeds once they are earned', () => {
-    // The four shipped border rewards, pinned as literals in DEED_ORDER order:
-    // a fifth border deed (or one re-homed in the order) has to move this pin,
+    // The shipped border rewards, pinned as literals in DEED_ORDER order:
+    // a new border deed (or one re-homed in the order) has to move this pin,
     // which is the moment to check it has an accent palette and picker copy.
     const borderIds = [
       'prog_prestige_10',
       'dgn_deepward',
       'col_discovery_250',
       'col_reliquary_rank_5',
+      'homesteader_first_cottage',
     ];
     const view = buildDeedsView(
       makeInput({
@@ -911,6 +913,7 @@ describe('real catalog integration', () => {
       { id: 'dgn_deepward', active: true },
       { id: 'col_discovery_250', active: false },
       { id: 'col_reliquary_rank_5', active: false },
+      { id: 'homesteader_first_cottage', active: false },
     ]);
     // Every id the picker offers really carries a border reward (never a title
     // deed leaking across).

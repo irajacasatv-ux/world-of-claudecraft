@@ -1512,7 +1512,7 @@ export interface GuideReliquaryRelic {
 }
 export interface GuideReliquaryPage {
   id: string;
-  shelf: 'conquerors' | 'professions' | 'horizons';
+  shelf: 'conquerors' | 'professions' | 'horizons' | 'hearth';
   name: string;
   /** Outside-completion reason (rule 7): present only on labeled pages. */
   excludeFromCompletion?: 'retired' | 'personal';

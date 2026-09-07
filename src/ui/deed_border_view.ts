@@ -24,7 +24,7 @@
 import { DEEDS } from '../sim/content/deeds';
 
 /** Per-slug seal-face discriminant shared by every Deed Heraldry surface. */
-export type BorderMotifKind = 'catalogue' | 'vault' | 'ward' | 'laurel';
+export type BorderMotifKind = 'catalogue' | 'vault' | 'ward' | 'laurel' | 'home';
 
 /** One line in normalized seal space. Renderers transform these static
  *  coordinates into their own seal bounds without creating a second motif
@@ -36,9 +36,9 @@ export interface BorderMotifPrimitive {
   readonly y2: number;
 }
 
-// The four existing identities from the original cartouche, normalized around
-// the center of the forged seal: Catalogue page lines, the Vault diamond knot,
-// the Ward key, and mirrored Laurel sprigs. The arrays and every line record are
+// Seal identities normalized around the center: Catalogue page lines, the
+// Vault diamond knot, the Ward key, mirrored Laurel sprigs, and a cottage
+// roof and doorway. The arrays and every line record are
 // frozen because every heraldry surface receives these exact shared objects.
 const BORDER_MOTIF_PRIMITIVES: Readonly<Record<BorderMotifKind, readonly BorderMotifPrimitive[]>> =
   Object.freeze({
@@ -59,6 +59,16 @@ const BORDER_MOTIF_PRIMITIVES: Readonly<Record<BorderMotifKind, readonly BorderM
       Object.freeze({ x1: 0, y1: -0.9, x2: -0.45, y2: -0.4 }),
       Object.freeze({ x1: 0, y1: -0.9, x2: 0.45, y2: -0.4 }),
       Object.freeze({ x1: 0, y1: 0.6, x2: 0.75, y2: 0.6 }),
+    ]),
+    home: Object.freeze([
+      Object.freeze({ x1: -0.8, y1: 0, x2: 0, y2: -0.8 }),
+      Object.freeze({ x1: 0, y1: -0.8, x2: 0.8, y2: 0 }),
+      Object.freeze({ x1: -0.6, y1: -0.2, x2: -0.6, y2: 0.8 }),
+      Object.freeze({ x1: -0.6, y1: 0.8, x2: 0.6, y2: 0.8 }),
+      Object.freeze({ x1: 0.6, y1: 0.8, x2: 0.6, y2: -0.2 }),
+      Object.freeze({ x1: -0.2, y1: 0.8, x2: -0.2, y2: 0.2 }),
+      Object.freeze({ x1: -0.2, y1: 0.2, x2: 0.2, y2: 0.2 }),
+      Object.freeze({ x1: 0.2, y1: 0.2, x2: 0.2, y2: 0.8 }),
     ]),
     laurel: Object.freeze([
       Object.freeze({ x1: -0.1, y1: 0, x2: -0.75, y2: -0.75 }),
@@ -159,9 +169,9 @@ export function deedHeraldryStyle(accent: Pick<BorderAccent, 'frame' | 'edge' | 
 // and motif kind. Literal color strings, not CSS vars, because the canvas
 // cannot read a custom property cheaply per plate per frame; the portrait
 // ring receives these same literals through the painter instead of
-// duplicating them in hud.css. Four deliberately distinct reads at nameplate
-// distance: laurel green, deep teal, Catalogue antique brass, and Eternal
-// Spoils gold. Every value here is unique repo-wide ON PURPOSE, and
+// duplicating them in hud.css. Distinct reads at nameplate distance: laurel
+// green, deep teal, Catalogue antique brass, Eternal Spoils gold, and warm
+// Householder copper. Every value here is unique repo-wide ON PURPOSE, and
 // reliquary_gilt's pair carries a MECHANICAL nudge for it: the classic
 // elite/quest gold (#f2c84b, plus #ffdf8a) already lives on the scanned
 // accent path, so reusing those exact bytes would force the exact-once scan
@@ -190,6 +200,13 @@ const BORDER_ACCENTS: Readonly<Record<string, BorderAccent>> = Object.freeze({
     glow: '#8fe3f2',
     motif: 'ward',
     motifPath: borderMotifPath('ward'),
+  }),
+  householder: Object.freeze({
+    frame: '#c28a64',
+    edge: '#432b1d',
+    glow: '#f2d5bb',
+    motif: 'home',
+    motifPath: borderMotifPath('home'),
   }),
   prestige_laurels: Object.freeze({
     frame: '#8fbf6a',

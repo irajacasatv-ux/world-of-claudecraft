@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-07",
+  "taskBase": "3fa4965a3c186982aafd44b3ec9b9d9851ace52d",
+  "fixture": "Local offline fresh browser profiles. Screenshot harness explicitly grants the two manual deeds. No automatic gameplay grant, furnishing ItemDef, NPC or shipping Hearth page is added. Guide captures render generated current content without synthetic data.",
+  "display": {
+    "desktop": "1600x900, LOW software rendering",
+    "mobileLandscape": "844x390, DPR2, touch, LOW software rendering",
+    "mobilePortrait": "390x844, DPR2, touch; existing rotate-to-landscape guard is expected",
+    "guide": "1440x900"
+  },
+  "commands": [
+    {
+      "command": "node tmp/freehold-capture.mjs",
+      "result": "Initial attempt captured five desktop images, then failed on mobile navigation context loss. Corrected fresh mobile run below supplies accepted mobile output."
+    },
+    {
+      "command": "node tmp/freehold-capture-mobile.mjs",
+      "result": "exit0, five mobile landscape images and exact authored nav assertions"
+    },
+    {
+      "command": "node tmp/freehold-capture-extra.mjs",
+      "result": "exit0; desktop keyboard, portrait, world, fallback and forced colors inspected. Its stale desktop-to-portrait transition images are excluded."
+    },
+    {
+      "command": "node tmp/freehold-capture-portrait.mjs",
+      "result": "exit0; fresh portrait shows the existing orientation guard, not a supported portrait layout"
+    },
+    {
+      "command": "node tmp/freehold-capture-guide.mjs",
+      "result": "exit0; both 128px sources loaded at28px, exact reward rows and Homesteader title presence; empty Hearth absent"
+    },
+    {
+      "command": "node tmp/freehold-capture-target.mjs",
+      "result": "exit0; real border selection and a valid player target share Householder heraldry"
+    }
+  ],
+  "checks": [
+    "Both deed crests retain identity at actual Book and guide sizes.",
+    "Keyboard Enter on the real border picker sets the player border; focus visible in forced colors.",
+    "Copper home motif visible on picker previews, worn player/target headers and world nameplates.",
+    "Empty Hearth is absent from navigation and Overview; explicit open resolves to Overview with pressed state.",
+    "Mobile landscape uses the existing scrollable sheet.",
+    "The guide contains Homesteader and Householder reward rows and Homesteader on Horizons titles.",
+    "Software-rendering GPU notice on the player/target world screenshot is a harness condition; the relevant frames and nameplates are unobscured."
+  ],
+  "review": {
+    "reviewer": "Codex coordinator",
+    "verdict": "Accepted for the implemented content and expected portrait orientation policy. Operational furnishing/vendor/Hearth-page visuals remain blocked by source approval."
+  },
+  "exclusions": [
+    "tmp/freehold-runtime-extra/mobile-portrait-cosmetics.png",
+    "tmp/freehold-runtime-extra/mobile-portrait-hearth-fallback.png"
+  ],
+  "canonicalBeforeAfter": {
+    "manifest": "docs/screenshots/freehold-content-2026-09-07/comparison-manifest.json",
+    "matchedVariants": 17,
+    "beforeExit": 0,
+    "initialAfterExit": 1,
+    "retryExit": 0
+  },
+  "assets": [
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-cosmetics.png",
+      "source": "tmp/freehold-runtime-captures/desktop-cosmetics.png",
+      "sha256": "3e2eac0252cdb3b3952a06195750b6ae27563679f7920508a895eb0781509c1e",
+      "bytes": 164227,
+      "width": 560,
+      "height": 522
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-homesteader_first_cottage.png",
+      "source": "tmp/freehold-runtime-captures/desktop-homesteader_first_cottage.png",
+      "sha256": "71dffdc31834d4ab3601628e985bd21a5b3f708cef0aa59f05e1e1377c122efd",
+      "bytes": 241379,
+      "width": 560,
+      "height": 678
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-homesteader_first_furnishing.png",
+      "source": "tmp/freehold-runtime-captures/desktop-homesteader_first_furnishing.png",
+      "sha256": "c1259cb32f2ad1698a2ae877e9425c006e2f28b8d5781289d3e78d8351004a72",
+      "bytes": 241416,
+      "width": 560,
+      "height": 678
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-horizons-titles.png",
+      "source": "tmp/freehold-runtime-captures/desktop-horizons-titles.png",
+      "sha256": "9c98aaa0449c18565b5a2812c366932fccd780cfb1e92b5c8aa24aed473aa753",
+      "bytes": 252997,
+      "width": 720,
+      "height": 662
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-overview.png",
+      "source": "tmp/freehold-runtime-captures/desktop-overview.png",
+      "sha256": "48b8c68610de939ddd4526bcaeda7bc4729a4349d50ac912d77bd1166437d5f5",
+      "bytes": 111331,
+      "width": 720,
+      "height": 291
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/mobile-cosmetics.png",
+      "source": "tmp/freehold-runtime-captures/mobile-cosmetics.png",
+      "sha256": "eb2b177acd14b17c6a22f2a40009b2c4a80c4782a6f48d757e71baca3ab3bd59",
+      "bytes": 382532,
+      "width": 1648,
+      "height": 740
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/mobile-homesteader_first_cottage.png",
+      "source": "tmp/freehold-runtime-captures/mobile-homesteader_first_cottage.png",
+      "sha256": "1d58512522d3b24f393ef03e75a46baa2c31625d1e1458955537ae7e82a97d8c",
+      "bytes": 434442,
+      "width": 1648,
+      "height": 740
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/mobile-homesteader_first_furnishing.png",
+      "source": "tmp/freehold-runtime-captures/mobile-homesteader_first_furnishing.png",
+      "sha256": "220a3d476203c76fd53cb366fc0ea511373ad28961915f8cb3da7ab7d8c6de38",
+      "bytes": 415744,
+      "width": 1648,
+      "height": 740
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/mobile-horizons-titles.png",
+      "source": "tmp/freehold-runtime-captures/mobile-horizons-titles.png",
+      "sha256": "cc7176bddf27c624a2274aba5cf65a621c8c729e4761eba03f0e014ddec71735",
+      "bytes": 327204,
+      "width": 1648,
+      "height": 740
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/mobile-overview.png",
+      "source": "tmp/freehold-runtime-captures/mobile-overview.png",
+      "sha256": "34c0a6ab4a8ace10109b9763102cd42de7abb8eb8ddba18cd22d0512236ee13a",
+      "bytes": 319553,
+      "width": 1648,
+      "height": 740
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-keyboard-cosmetics.png",
+      "source": "tmp/freehold-runtime-extra/desktop-keyboard-cosmetics.png",
+      "sha256": "bfca08281780bbb98bb89028e040b13ca302de8987abde2f530ca6615ebab15a",
+      "bytes": 163009,
+      "width": 560,
+      "height": 522
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-worn-portrait.png",
+      "source": "tmp/freehold-runtime-extra/desktop-worn-portrait.png",
+      "sha256": "fc69d9a055fc456a58f6849aa18db867fd18d70ffc318eb8811a5fdd46159843",
+      "bytes": 23144,
+      "width": 612,
+      "height": 70
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-world.png",
+      "source": "tmp/freehold-runtime-extra/desktop-world.png",
+      "sha256": "3f577fca74a9d2e5ee3d582d2b2a320835ba7eaa9db8a3bdcab8e70d95f84a46",
+      "bytes": 1319854,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-hearth-fallback.png",
+      "source": "tmp/freehold-runtime-extra/desktop-hearth-fallback.png",
+      "sha256": "96af20a05c5f8dea44e05e20fe6211f410b6e1c224931bf5968fc55abfae4be1",
+      "bytes": 111513,
+      "width": 720,
+      "height": 291
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-forced-colors.png",
+      "source": "tmp/freehold-runtime-extra/desktop-forced-colors.png",
+      "sha256": "5b6589d836a3bb62ae897202665dd3df809ee9604814166914a325ab3516cfc4",
+      "bytes": 259440,
+      "width": 560,
+      "height": 520
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-worn-target.png",
+      "source": "tmp/freehold-runtime-target/desktop-worn-target.png",
+      "sha256": "48cd88fbbef41be175bfa4a3e7a38802012f3cd275993e1fd8719be1df2b3f88",
+      "bytes": 18077,
+      "width": 236,
+      "height": 70
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/runtime/desktop-player-target.png",
+      "source": "tmp/freehold-runtime-target/desktop-player-target.png",
+      "sha256": "88db8517bb890e196f65abe0df5b0d7bf91bf888d199921ec3527dcc5c4cf7bb",
+      "bytes": 1336468,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/orientation/mobile-cosmetics.png",
+      "source": "tmp/freehold-runtime-portrait/mobile-cosmetics.png",
+      "sha256": "21f729c3dd3440cdd3007cf44bf0a26940a528443113390ccc7e1d963a5bc357",
+      "bytes": 322465,
+      "width": 740,
+      "height": 1648
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/guide/guide-deeds.png",
+      "source": "tmp/freehold-runtime-guide/guide-deeds.png",
+      "sha256": "938ce7c3929943ea16a0799cb9bc1aeaff7e2d9bb7efd870ee865de03a9362ac",
+      "bytes": 156619,
+      "width": 1440,
+      "height": 900
+    },
+    {
+      "path": "docs/screenshots/freehold-content-2026-09-07/guide/guide-horizons-titles.png",
+      "source": "tmp/freehold-runtime-guide/guide-horizons-titles.png",
+      "sha256": "3f73da9e80240f2d9eb26426e2627fa15671d8862b2a2229e3c5c810a79e02eb",
+      "bytes": 72624,
+      "width": 612,
+      "height": 292
+    }
+  ]
+}

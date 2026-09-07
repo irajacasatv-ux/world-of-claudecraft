@@ -171,7 +171,8 @@ describe('profile page Reliquary pair + Curator rank lines', () => {
     // The professions parent has 367 character relics. Eleven collections add
     // three distinct armor discoveries each; their manuals are not relic slots.
     // Forgebreaker remains in its separate stacked quest contribution.
-    expect(catalogTotal).toBe(400);
+    // The Homesteader title adds one character completion slot.
+    expect(catalogTotal).toBe(401);
   });
 
   it('renders the owned/total pair and the English rank name for a ranked character', async () => {

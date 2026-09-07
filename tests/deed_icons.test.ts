@@ -9,6 +9,120 @@ import { DEED_IMAGE_IDS } from '../src/ui/deed_image_ids';
 import { DEED_BESPOKE_CRESTS, deedCrestId } from '../src/ui/deeds_view';
 import { DEED_ART_PENDING, deedImageUrl, hasCrestRecipe, iconDataUrl } from '../src/ui/icons';
 
+describe('Freehold deed art admission', () => {
+  const rows = [
+    {
+      id: 'homesteader_first_furnishing',
+      sha256: '04cb0a5473796918e41ad3c8dcafeae2b5a68de478e5fa41e9127d35a87babf7',
+      bytes: 9016,
+      bounds: [14, 13, 113, 115],
+      visiblePixels: 7962,
+      masterSha256: '2b99df979a014cf988c0d8973700dbe7026a23820f784ac5bcad25c437321bf9',
+      sourceSha256: '4abd3436b37471bf6d5a82444dc966b17c7b3276775e2fed851c611f036546df',
+      promptSha256: 'aaaab8e1f4e215accb410c9aacecb13a03160605f8e0e849ca8fc505a534f1ac',
+    },
+    {
+      id: 'homesteader_first_cottage',
+      sha256: '33fa92977e2a3f08d51b083a7f0e9f0ceaca689f8dfe5c0b35e555d93a4008f0',
+      bytes: 7110,
+      bounds: [18, 12, 109, 115],
+      visiblePixels: 6415,
+      masterSha256: '3c84bd1ff220262e918aba5b84c4beb983ea6f6ebc81b85c5b8e2d336a653ee6',
+      sourceSha256: '97b76e8b3e366cabf36ac0a8c359825a0ad49dab51c189444a283d0063d42720',
+      promptSha256: '62d56dc993a14cfe48cf74779e4767030416afec2aad625d0637a82f40f187c0',
+    },
+  ] as const;
+
+  it('pins the accepted bytes and decoded framing independently of provenance', async () => {
+    for (const row of rows) {
+      const file = path.join(deedsDir, `${row.id}.webp`);
+      const bytes = readFileSync(file);
+      expect(DEED_IMAGE_IDS.has(row.id), row.id).toBe(true);
+      expect(DEED_ART_PENDING.has(row.id), row.id).toBe(false);
+      expect(deedImageUrl(`deed_${row.id}`)).toBe(`/ui/deeds/${row.id}.webp`);
+      expect(createHash('sha256').update(bytes).digest('hex'), row.id).toBe(row.sha256);
+      expect(bytes.length, row.id).toBe(row.bytes);
+      const metadata = await sharp(bytes).metadata();
+      expect([metadata.width, metadata.height, metadata.space, metadata.hasAlpha]).toEqual([
+        128,
+        128,
+        'srgb',
+        true,
+      ]);
+      const { data, info } = await sharp(bytes)
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      let minX = 128;
+      let minY = 128;
+      let maxX = -1;
+      let maxY = -1;
+      let visible = 0;
+      for (let y = 0; y < info.height; y++) {
+        for (let x = 0; x < info.width; x++) {
+          if (data[(y * info.width + x) * info.channels + 3] < 8) continue;
+          visible++;
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        }
+      }
+      expect([minX, minY, maxX, maxY], row.id).toEqual(row.bounds);
+      expect(visible, row.id).toBe(row.visiblePixels);
+    }
+  });
+
+  it('retains exact prompts, source normalization, owner, and accepted identities', () => {
+    const manifest = JSON.parse(
+      readFileSync(
+        path.join(repoRoot, 'docs/freeholds/content-art-2026-09-07/deeds.accepted-art.json'),
+        'utf8',
+      ),
+    );
+    expect(manifest.batch).toMatchObject({
+      rasterGenerator: 'OpenAI built-in image generation',
+      executionHarness: 'Codex',
+      attempts: 2,
+      retries: 0,
+      owner: 'World of ClaudeCraft',
+    });
+    expect(manifest.targetSets.deeds).toEqual(rows.map((row) => row.id));
+    expect(manifest.assets).toHaveLength(2);
+    expect(manifest.status.canonicalConverterPass).toBe(true);
+    expect(manifest.contracts.source).toEqual({
+      width: 512,
+      height: 512,
+      alphaThreshold: 8,
+      minimumPadding: 28,
+      centerTolerance: 8,
+      coverage: [0.34, 0.61],
+    });
+    expect(manifest.processing.join(' ')).toContain('412x412');
+    const credits = readFileSync(path.join(repoRoot, 'CREDITS.md'), 'utf8');
+    for (const [index, row] of rows.entries()) {
+      const asset = manifest.assets[index];
+      expect(asset.id).toBe(row.id);
+      expect(asset.prompt).toContain('genuinely transparent RGBA');
+      expect(createHash('sha256').update(asset.prompt).digest('hex')).toBe(row.promptSha256);
+      expect(asset.accepted.sha256).toBe(row.sha256);
+      expect(asset.accepted.bytes).toBe(row.bytes);
+      expect(asset.accepted.geometry.alphaBounds).toEqual(row.bounds);
+      expect(asset.accepted.geometry.visiblePixels).toBe(row.visiblePixels);
+      expect(asset.master).toMatchObject({
+        width: 512,
+        height: 512,
+        format: 'png',
+        hasAlpha: true,
+        sha256: row.masterSha256,
+      });
+      expect(asset.source.sha256).toBe(row.sourceSha256);
+      expect(asset.generatorOutput).toContain('/.codex/generated_images/');
+      expect(credits).toContain(row.id);
+    }
+  });
+});
+
 // Gate for the committed Book of Deeds WebP icons (mirror of tests/skill_icons.test.ts and
 // tests/item_icons.test.ts). Art under public/ui/deeds/<deed_id>.webp is the source of truth
 // (128px WebP, downscaled from a reviewed 512px source by scripts/convert_deed_icons_webp.mjs),
@@ -368,8 +482,8 @@ describe('Book of Deeds webp icons', () => {
     // identities (and replaces prog_farming_100), leaving only the ten
     // release-owned castle, bank, tutorial, and Crucible rows on fallback art.
     // The self-crafted hammer's hidden celebration adds one explicit pending crest.
-    expect(DEED_ORDER, 'the merged live deed catalog').toHaveLength(299);
-    expect(DEED_IMAGE_IDS.size, 'every live deed but the pending set is painted').toBe(288);
+    expect(DEED_ORDER, 'the merged live deed catalog').toHaveLength(301);
+    expect(DEED_IMAGE_IDS.size, 'every live deed but the pending set is painted').toBe(290);
     expect(DEED_ART_PENDING_IDS).toHaveLength(11);
     expect(DEED_ART_PENDING_IDS.at(-1)).toBe('hid_forgebreaker');
     expect(DEED_ORDER.length - DEED_IMAGE_IDS.size).toBe(DEED_ART_PENDING_IDS.length);

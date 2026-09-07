@@ -1,0 +1,365 @@
+{
+  "schemaVersion": 1,
+  "taskBase": "3fa4965a3c186982aafd44b3ec9b9d9851ace52d",
+  "fixture": "Canonical offline screenshot target fixtures. These exercise existing cosmetics and layouts; the separate runtime-manifest records the two new manual deeds and Householder appearances.",
+  "beforeSource": "Archive of task base HEAD under ignored tmp/freehold-baseline-preview; public asset directory shared. Existing archived source does not reference the two new paintings.",
+  "actualDiff": "git diff HEAD -- src/ui/deed_border_view.ts src/ui/reliquary_window.ts",
+  "runner": "scripts/pr_screenshots.mjs",
+  "retry": "tmp/freehold-pr-inspect-retry.mjs copies that runner, filters only inspect-border-cartouche and raises gameBootTimeoutMs from 60000 to 180000. Canonical capture assertions and exit handling are unchanged.",
+  "review": {
+    "reviewer": "Codex coordinator",
+    "verdict": "Accepted assembled comparison coverage for all 17 variants. Before exited 0; initial after exited 1 at desktop Inspect setup with no sim; retry exited 0 for all three Inspect variants. The failed original is retained.",
+    "observed": "Fresh Overview changes 429 to 430 overall and 86 to 87 Horizons slots, preserving three authored shelves. Public deed count changes 285 to 287 and progression 68 to 70; existing picker/cartouche layout remains legible across desktop, mobile and parchment.",
+    "limits": "Offline API errors, baseline optimizer cache warning and background fixture asset-preload warnings are retained in raw note arrays. These captures are UI comparisons, not online API or background-model acceptance."
+  },
+  "matchedVariants": [
+    "reliquary-window-desktop.png",
+    "reliquary-window-mobile.png",
+    "reliquary-overview-fresh-desktop.png",
+    "reliquary-overview-fresh-mobile.png",
+    "reliquary-page-desktop.png",
+    "reliquary-page-mobile.png",
+    "nameplate-border-desktop.png",
+    "deed-heraldry-unit-frames-desktop-low.png",
+    "deed-heraldry-unit-frames-desktop-high.png",
+    "deed-heraldry-unit-frames-mobile.png",
+    "deed-heraldry-unit-frames-parchment.png",
+    "deed-border-picker-desktop.png",
+    "deed-border-picker-mobile.png",
+    "deed-border-picker-parchment.png",
+    "inspect-border-cartouche-desktop.png",
+    "inspect-border-cartouche-mobile.png",
+    "inspect-border-cartouche-parchment.png"
+  ],
+  "runs": [
+    {
+      "name": "before",
+      "exitCode": 0,
+      "originalManifestSha256": "9263b5e337500b50fae99c8d0cb4de3a36132c46aef1b30ddf04cb7051de02e9",
+      "manifest": "docs/screenshots/freehold-content-2026-09-07/before/manifest.json",
+      "captured": 17,
+      "consoleNotes": 142,
+      "otherNotes": [],
+      "assets": [
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/01-reliquary-window-desktop.png",
+          "source": "tmp/freehold-before/01-reliquary-window-desktop.png",
+          "sha256": "bb22e6d1e09d69c1b497c1ee2cbc6d8fea83634348e7c76c895292869b0cc8c1",
+          "bytes": 142965,
+          "width": 744,
+          "height": 343
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/02-reliquary-window-mobile.png",
+          "source": "tmp/freehold-before/02-reliquary-window-mobile.png",
+          "sha256": "cdb33f4de48cbb70d6c53178649382a3bb055a99445575a5146167c608335268",
+          "bytes": 359961,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/03-reliquary-overview-fresh-desktop.png",
+          "source": "tmp/freehold-before/03-reliquary-overview-fresh-desktop.png",
+          "sha256": "adc37ddbc698ca013407420b31e055f9bdc885fc9fc3d25b27428dc784ae0782",
+          "bytes": 136228,
+          "width": 744,
+          "height": 315
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/04-reliquary-overview-fresh-mobile.png",
+          "source": "tmp/freehold-before/04-reliquary-overview-fresh-mobile.png",
+          "sha256": "335b647b4ddc94ed01e259863f1f9b2305213c7be50e49f5c9449188dc01d7ec",
+          "bytes": 336437,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/05-reliquary-page-desktop.png",
+          "source": "tmp/freehold-before/05-reliquary-page-desktop.png",
+          "sha256": "2d3080c5c2cb0852a4cf854c60cb288b8e16dde2f9030f062e025f8283f16c95",
+          "bytes": 250297,
+          "width": 744,
+          "height": 580
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/06-reliquary-page-mobile.png",
+          "source": "tmp/freehold-before/06-reliquary-page-mobile.png",
+          "sha256": "2034f0bae53d7257353062fded0072d45adf87d907a39209df4e67c0daba7489",
+          "bytes": 438592,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/07-nameplate-border-desktop.png",
+          "source": "tmp/freehold-before/07-nameplate-border-desktop.png",
+          "sha256": "f705aa9ab4d93f509eb18381638d9aef59207e1ce1aa45f21159e697d2c10994",
+          "bytes": 1408353,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/08-deed-heraldry-unit-frames-desktop-low.png",
+          "source": "tmp/freehold-before/08-deed-heraldry-unit-frames-desktop-low.png",
+          "sha256": "941ee85e93a34bb3537277c1128ae4a0ca01a6007664cc60de01494bd3b1eb65",
+          "bytes": 1333014,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/09-deed-heraldry-unit-frames-desktop-high.png",
+          "source": "tmp/freehold-before/09-deed-heraldry-unit-frames-desktop-high.png",
+          "sha256": "a33003f88978a0e0816fc49748355f73e57a8e2c5c07c34375886a9af6e4c92e",
+          "bytes": 2315971,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/10-deed-heraldry-unit-frames-mobile.png",
+          "source": "tmp/freehold-before/10-deed-heraldry-unit-frames-mobile.png",
+          "sha256": "c7b67af44d046bf5e7ec38e9b59789c596c9ed330fe08b415f6eae1106a371be",
+          "bytes": 1070228,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/11-deed-heraldry-unit-frames-parchment.png",
+          "source": "tmp/freehold-before/11-deed-heraldry-unit-frames-parchment.png",
+          "sha256": "4475179850d735ee99419f4a855bc8eff4d6c208363cc14efd849e6dc420908c",
+          "bytes": 1372030,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/12-deed-border-picker-desktop.png",
+          "source": "tmp/freehold-before/12-deed-border-picker-desktop.png",
+          "sha256": "cf9f3dee6639da0c7d6a7c2c8bebbecb21705ebace26033a58707193e1a364d0",
+          "bytes": 226407,
+          "width": 584,
+          "height": 665
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/13-deed-border-picker-mobile.png",
+          "source": "tmp/freehold-before/13-deed-border-picker-mobile.png",
+          "sha256": "13ad85ffeb2599e17808a7c7b57095c05ea62163ddae3b25d28671f5f089ff5e",
+          "bytes": 364941,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/14-deed-border-picker-parchment.png",
+          "source": "tmp/freehold-before/14-deed-border-picker-parchment.png",
+          "sha256": "1ccd997f5f71c5e0c07dc30b95cb517a038667c0598c61fcfee47729939ac4df",
+          "bytes": 246565,
+          "width": 584,
+          "height": 665
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/15-inspect-border-cartouche-desktop.png",
+          "source": "tmp/freehold-before/15-inspect-border-cartouche-desktop.png",
+          "sha256": "d74c15d50e0de41373a1280e6a647295341ab8d30df52664748fb7f8e2aa14d6",
+          "bytes": 347084,
+          "width": 764,
+          "height": 696
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/16-inspect-border-cartouche-mobile.png",
+          "source": "tmp/freehold-before/16-inspect-border-cartouche-mobile.png",
+          "sha256": "004d852e710917dd8652c9d83c0cf5aebcc074a183a30589c7da06aaab156a1a",
+          "bytes": 364587,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/before/17-inspect-border-cartouche-parchment.png",
+          "source": "tmp/freehold-before/17-inspect-border-cartouche-parchment.png",
+          "sha256": "09102a984d5aad739b25719a260d8fa055b6a5d04d0fac7c737725d93ce0df84",
+          "bytes": 383535,
+          "width": 764,
+          "height": 696
+        }
+      ],
+      "retainedManifestSha256": "bb276111d79b5a8a928940eaf5447b76f483bbba92a1f23a9817245ef9715ef0",
+      "manifestNormalization": "Added one final LF byte; parsed JSON and all note arrays are unchanged. Original and retained byte identities are recorded separately."
+    },
+    {
+      "name": "after",
+      "exitCode": 1,
+      "originalManifestSha256": "a2bb65809b181a7a033a8331125e7aa7f54c938f5976b120e7818c87220614d7",
+      "manifest": "docs/screenshots/freehold-content-2026-09-07/after/manifest.json",
+      "captured": 16,
+      "consoleNotes": 135,
+      "otherNotes": [
+        "TARGET inspect-border-cartouche/desktop: inspect cartouche seeding failed: no sim"
+      ],
+      "assets": [
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/01-reliquary-window-desktop.png",
+          "source": "tmp/freehold-after/01-reliquary-window-desktop.png",
+          "sha256": "d5442b16be38f8085823e0e196e958ad8abbb79e981fe561dcedbc87f63d3abf",
+          "bytes": 142671,
+          "width": 744,
+          "height": 343
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/02-reliquary-window-mobile.png",
+          "source": "tmp/freehold-after/02-reliquary-window-mobile.png",
+          "sha256": "76fbb61d0153adb957c372713358b05c3655f5ca729137d5fcfe513fae4adb50",
+          "bytes": 355415,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/03-reliquary-overview-fresh-desktop.png",
+          "source": "tmp/freehold-after/03-reliquary-overview-fresh-desktop.png",
+          "sha256": "5e0b6a811b556fdf22535c8f4f168a23dc66eb009b7a0c9264ef9bb841c6857c",
+          "bytes": 137673,
+          "width": 744,
+          "height": 315
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/04-reliquary-overview-fresh-mobile.png",
+          "source": "tmp/freehold-after/04-reliquary-overview-fresh-mobile.png",
+          "sha256": "42549c6acd7e1a5e174433700e0f2ca14c16b03b1c91290e0cb5073fb60ca21d",
+          "bytes": 327042,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/05-reliquary-page-desktop.png",
+          "source": "tmp/freehold-after/05-reliquary-page-desktop.png",
+          "sha256": "3a8cfb134c7780996a4258b5bec702b68b53269b4716c53b93b0a8386532c2ff",
+          "bytes": 250632,
+          "width": 744,
+          "height": 580
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/06-reliquary-page-mobile.png",
+          "source": "tmp/freehold-after/06-reliquary-page-mobile.png",
+          "sha256": "2fc193a11787cae3b95592102f7f8df053b1a72cf14ff16cc681abdb0ee39f3f",
+          "bytes": 415199,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/07-nameplate-border-desktop.png",
+          "source": "tmp/freehold-after/07-nameplate-border-desktop.png",
+          "sha256": "c583edd35130efa6331f7018ee7ddc06a99ade0520b7e43f393bbe87f624b2eb",
+          "bytes": 1331600,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/08-deed-heraldry-unit-frames-desktop-low.png",
+          "source": "tmp/freehold-after/08-deed-heraldry-unit-frames-desktop-low.png",
+          "sha256": "e1bd0de8c58f12fe818f10abb6be8f4e1c36a71411065bdc82748e4b990e2c43",
+          "bytes": 1331772,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/09-deed-heraldry-unit-frames-desktop-high.png",
+          "source": "tmp/freehold-after/09-deed-heraldry-unit-frames-desktop-high.png",
+          "sha256": "751ee7c40fb8a2948b617062f4c1b855b61f170fdd257164e8f3809aad05fd47",
+          "bytes": 2329011,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/10-deed-heraldry-unit-frames-mobile.png",
+          "source": "tmp/freehold-after/10-deed-heraldry-unit-frames-mobile.png",
+          "sha256": "1a3d9dc30ef6885cefd767558f3507c6beed995f75ed73ac92dddb1afa79dca7",
+          "bytes": 1005484,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/11-deed-heraldry-unit-frames-parchment.png",
+          "source": "tmp/freehold-after/11-deed-heraldry-unit-frames-parchment.png",
+          "sha256": "5298b0803883a0d9cd17b2150a9e434af450fbf140f04dc06f0c0800afa030df",
+          "bytes": 1361834,
+          "width": 1600,
+          "height": 900
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/12-deed-border-picker-desktop.png",
+          "source": "tmp/freehold-after/12-deed-border-picker-desktop.png",
+          "sha256": "b11f8d0046f7e09500cc1620bf61d3bc14a7e157c01004ad5928cc80f8868fcf",
+          "bytes": 228045,
+          "width": 584,
+          "height": 665
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/13-deed-border-picker-mobile.png",
+          "source": "tmp/freehold-after/13-deed-border-picker-mobile.png",
+          "sha256": "bc51cdbd3fadc57497e1ea521bc9e3deae956fa3208633440923f136de86d926",
+          "bytes": 407514,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/14-deed-border-picker-parchment.png",
+          "source": "tmp/freehold-after/14-deed-border-picker-parchment.png",
+          "sha256": "5e2550789da7d61d4758d7096a73a6c04a3f5f0ba50246745ee350cd0d570f2a",
+          "bytes": 249020,
+          "width": 584,
+          "height": 665
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/16-inspect-border-cartouche-mobile.png",
+          "source": "tmp/freehold-after/16-inspect-border-cartouche-mobile.png",
+          "sha256": "d7f38e70d8cb098826e5dbefde30548547369ef55f5144d3d35fc851188619d9",
+          "bytes": 392710,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after/17-inspect-border-cartouche-parchment.png",
+          "source": "tmp/freehold-after/17-inspect-border-cartouche-parchment.png",
+          "sha256": "a8e67bb798816d17915f0e6a14e21c723368c2ed95a44ab0bc9cb6006a1a15f6",
+          "bytes": 385321,
+          "width": 764,
+          "height": 696
+        }
+      ],
+      "retainedManifestSha256": "94b863a2d4c7da4a7dc2354aafd8a2b12eb021d3e550eadcf5598e55484d1c8c",
+      "manifestNormalization": "Added one final LF byte; parsed JSON and all note arrays are unchanged. Original and retained byte identities are recorded separately."
+    },
+    {
+      "name": "after-retry",
+      "exitCode": 0,
+      "originalManifestSha256": "5114b439c3e4950c05b3de263b92c9ea2ca4782597138f80a6bccdef4b8fc8c9",
+      "manifest": "docs/screenshots/freehold-content-2026-09-07/after-retry/manifest.json",
+      "captured": 3,
+      "consoleNotes": 25,
+      "otherNotes": [],
+      "assets": [
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after-retry/01-inspect-border-cartouche-desktop.png",
+          "source": "tmp/freehold-after-retry/01-inspect-border-cartouche-desktop.png",
+          "sha256": "0d5f02593be173c3e0425be691f28e9ffae13235fc3b023504a90892070ae8be",
+          "bytes": 347518,
+          "width": 764,
+          "height": 696
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after-retry/02-inspect-border-cartouche-mobile.png",
+          "source": "tmp/freehold-after-retry/02-inspect-border-cartouche-mobile.png",
+          "sha256": "4c099c8503245af82f796b3d8790554297a4959e674c350e77773acd4ae533fc",
+          "bytes": 407795,
+          "width": 1688,
+          "height": 780
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/after-retry/03-inspect-border-cartouche-parchment.png",
+          "source": "tmp/freehold-after-retry/03-inspect-border-cartouche-parchment.png",
+          "sha256": "86c0b56cade2a5f242817c657c6f96c488d36cc72cd09162d361649bddf8232f",
+          "bytes": 384139,
+          "width": 764,
+          "height": 696
+        }
+      ],
+      "retainedManifestSha256": "10fccbecad4b0d089ee4ea6f37c8758624200fb34c90f31d56a5e49a9799299e",
+      "manifestNormalization": "Added one final LF byte; parsed JSON and all note arrays are unchanged. Original and retained byte identities are recorded separately."
+    }
+  ]
+}

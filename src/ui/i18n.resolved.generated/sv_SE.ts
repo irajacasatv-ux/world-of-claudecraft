@@ -4574,6 +4574,7 @@ export const sv_SE: EnTranslations = {
       "navConquerors": "Erövrare",
       "navProfessions": "Yrken",
       "navHorizons": "Horisonter",
+      "navHearth": "Hearth",
       "navCountAria": "{shelf}: {owned} av {total} reliker fyllda",
       "shelfEmpty": "Inga sidor på den här hyllan än.",
       "pageComplete": "Illuminerad",
@@ -6588,7 +6589,8 @@ export const sv_SE: EnTranslations = {
       "shelf": {
         "conquerors": "Erövrare",
         "professions": "Yrken",
-        "horizons": "Horisonter"
+        "horizons": "Horisonter",
+        "hearth": "Hearth"
       }
     },
     "wishPage": {

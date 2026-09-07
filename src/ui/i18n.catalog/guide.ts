@@ -2301,6 +2301,7 @@ export const guideStrings = {
       conquerors: 'Conquerors',
       professions: 'Professions',
       horizons: 'Horizons',
+      hearth: 'Hearth',
     },
   },
 

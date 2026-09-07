@@ -180,12 +180,13 @@ describe('E39 measured name-row variants stay centered and clear the seal', () =
   });
 });
 
-describe('E40 four normalized seal identities', () => {
+describe('E40 normalized seal identities', () => {
   const EXPECTED_KIND: Record<string, BorderMotifKind> = {
     curators_gilt: 'catalogue',
     reliquary_gilt: 'vault',
     deepward: 'ward',
     prestige_laurels: 'laurel',
+    householder: 'home',
   };
 
   const fingerprint = (kind: BorderMotifKind): string =>
@@ -217,7 +218,7 @@ describe('E40 four normalized seal identities', () => {
     }
   });
 
-  it('maps the four slugs to four distinct silhouettes without using color', () => {
+  it('maps the slugs to distinct silhouettes without using color', () => {
     const prints: string[] = [];
     for (const slug of BORDER_ACCENT_SLUGS) {
       const kind = EXPECTED_KIND[slug];
@@ -226,7 +227,7 @@ describe('E40 four normalized seal identities', () => {
       expect(borderAccent(slug)?.motif, slug).toBe(kind);
       prints.push(fingerprint(kind));
     }
-    expect(new Set(prints).size).toBe(4);
+    expect(new Set(prints).size).toBe(5);
   });
 });
 

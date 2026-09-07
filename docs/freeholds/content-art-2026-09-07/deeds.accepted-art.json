@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "batch": {
+    "id": "freehold-deeds-2026-09-07",
+    "acceptedDate": "2026-09-07",
+    "rasterGenerator": "OpenAI built-in image generation",
+    "executionHarness": "Codex",
+    "useCase": "stylized-concept",
+    "attempts": 2,
+    "retries": 0,
+    "owner": "World of ClaudeCraft",
+    "license": "World of ClaudeCraft project-generated art, project asset, rights reserved"
+  },
+  "targetSets": {
+    "deeds": ["homesteader_first_furnishing", "homesteader_first_cottage"]
+  },
+  "contracts": {
+    "source": {
+      "width": 512,
+      "height": 512,
+      "alphaThreshold": 8,
+      "minimumPadding": 28,
+      "centerTolerance": 8,
+      "coverage": [0.34, 0.61]
+    },
+    "shipping": {
+      "width": 128,
+      "height": 128,
+      "alphaThreshold": 8,
+      "minimumPadding": 7,
+      "centerTolerance": 2,
+      "coverage": [0.35, 0.6],
+      "maxBytes": 15360
+    }
+  },
+  "references": [
+    {
+      "path": "public/ui/deeds/prog_first_planting.webp",
+      "sha256": "865a1cd560e322bcd631a9653b9bcd421604f50ca7aac142c646a2314d78410d",
+      "bytes": 4684,
+      "role": "Coordinator viewed the existing deed crest before generation to inspect painted material, compact shape, and genuine exterior transparency; no image was supplied as an input."
+    },
+    {
+      "path": "public/ui/deeds/prog_callused_hands.webp",
+      "sha256": "50fb4ae0f9f0dcc1857df0c1868de5a885dd72911483a809552d8051cb6acafd",
+      "bytes": 5290,
+      "role": "Coordinator viewed the existing deed crest before generation to inspect painted material, compact shape, and genuine exterior transparency; no image was supplied as an input."
+    },
+    {
+      "path": "public/ui/deeds/prog_farming_100.webp",
+      "sha256": "b4d10971cdb9ee0a7de3f6f6defc0992eef3eb919261464130e7abf03d487569",
+      "bytes": 7690,
+      "role": "Coordinator viewed the existing deed crest before generation to inspect painted material, compact shape, and genuine exterior transparency; no image was supplied as an input."
+    }
+  ],
+  "processing": [
+    "Retained each generated original byte for byte.",
+    "Measured original alpha >=8 bounds. Cropped to those bounds, resized inside 412x412 with Lanczos3 preserving aspect ratio, converted to sRGB, and centered using floor((512-dimension)/2) on genuine transparent 512x512 RGBA canvas. PNG compression 9, adaptive filtering true. No background keying or conceptual image edits.",
+    "node scripts/convert_deed_icons_webp.mjs tmp/imagegen/freehold-deeds-2026-09-07/masters: exit 0, two conversions, existing eleven pending crests unchanged. Canonical 128x128 RGBA WebP q82, alphaQuality100, smartSubsample, effort6."
+  ],
+  "review": {
+    "reviewer": "Codex coordinator",
+    "sizesInspected": ["original", 512, 128, 48, 40, 32, 28, 22, "28-grayscale"],
+    "sheetPath": "docs/freeholds/content-art-2026-09-07/deed-size-review.webp",
+    "verdict": "Accepted. Complete centered silhouettes, real transparent exterior, warm readable chair and hearth separated from the cottage and key, no writing or UI frame. Retains identity at small sizes on dark and mid-value UI grounds. Runtime Book and generated guide captures also accepted; fixtures grant the manual deeds explicitly."
+  },
+  "status": {
+    "canonicalConverterPass": true,
+    "runtimeIntegrationScreenshots": "accepted for implemented deed and guide surfaces",
+    "runtimeManifest": "docs/screenshots/freehold-content-2026-09-07/runtime-manifest.json"
+  },
+  "assets": [
+    {
+      "kind": "deed",
+      "id": "homesteader_first_furnishing",
+      "name": "Homesteader",
+      "prompt": "Use case: stylized-concept.\nAsset type: fantasy game achievement crest, Homesteader.\nPrimary request: a sturdy little wooden spindle chair placed beside a compact warmly glowing stone hearth; the chair is prominent and distinct, warm dark wood with clear joinery, brass fireglow and cream stone.\nStyle: painterly tactile classic fantasy MMO achievement medallion art, carved edges and visible brushwork, broad confident shapes, soft warm upper-left key light and cool shadows. Compact heraldic vignette readable at 28, 32, 48 and 128 pixels. No photorealism.\nComposition: one centered crest on a square canvas, fully visible, balanced visual center. Subject occupies roughly 75 percent of both width and height, with at least 12 percent clear padding on every side; compact connected silhouette and opaque subject coverage near half the canvas. No letters, numbers, runes, text, watermark, UI frame, border or separate background plate.\nBackground: genuinely transparent RGBA exterior pixels, not white, black, checkerboard or painted simulated transparency. No background scene or ground plane. Preserve transparent holes and exterior. Make exactly one distinct asset, not a contact sheet. Output 1024 by 1024 transparent PNG.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07c6a-3b2c-7823-986c-ab9b07e6e3d5/exec-cd86ae5e-6be2-4c10-af34-055f79571321.png",
+      "change": "added-painting",
+      "runtimeUrl": "/ui/deeds/homesteader_first_furnishing.webp",
+      "source": {
+        "path": "tmp/imagegen/freehold-deeds-2026-09-07/originals/homesteader_first_furnishing.png",
+        "sha256": "4abd3436b37471bf6d5a82444dc966b17c7b3276775e2fed851c611f036546df",
+        "bytes": 2248082,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "hasAlpha": true,
+        "geometry": {
+          "alphaThreshold": 8,
+          "min": 0,
+          "max": 255,
+          "visiblePixels": 929544,
+          "transparentPixels": 616636,
+          "opaquePixels": 1099,
+          "coverage": 0.5911189456895828,
+          "alphaBounds": [103, 52, 1196, 1190],
+          "padding": [103, 52, 57, 63],
+          "centerOffset": [23, -5.5]
+        }
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-deeds-2026-09-07/masters/homesteader_first_furnishing.png",
+        "sha256": "2b99df979a014cf988c0d8973700dbe7026a23820f784ac5bcad25c437321bf9",
+        "bytes": 341115,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "hasAlpha": true,
+        "geometry": {
+          "alphaThreshold": 8,
+          "min": 0,
+          "max": 255,
+          "visiblePixels": 122392,
+          "transparentPixels": 136552,
+          "opaquePixels": 1895,
+          "coverage": 0.466888427734375,
+          "alphaBounds": [58, 50, 453, 461],
+          "padding": [58, 50, 58, 50],
+          "centerOffset": [0, 0]
+        }
+      },
+      "accepted": {
+        "path": "public/ui/deeds/homesteader_first_furnishing.webp",
+        "sha256": "04cb0a5473796918e41ad3c8dcafeae2b5a68de478e5fa41e9127d35a87babf7",
+        "bytes": 9016,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "hasAlpha": true,
+        "geometry": {
+          "alphaThreshold": 8,
+          "min": 0,
+          "max": 255,
+          "visiblePixels": 7962,
+          "transparentPixels": 7948,
+          "opaquePixels": 434,
+          "coverage": 0.4859619140625,
+          "alphaBounds": [14, 13, 113, 115],
+          "padding": [14, 13, 14, 12],
+          "centerOffset": [0, 0.5]
+        }
+      }
+    },
+    {
+      "kind": "deed",
+      "id": "homesteader_first_cottage",
+      "name": "Householder",
+      "prompt": "Use case: stylized-concept.\nAsset type: fantasy game achievement crest, Householder.\nPrimary request: a welcoming timber cottage with a steep roof and warmly lit open doorway, one large simple iron house key diagonally below its doorway; readable humble home silhouette, warm wood and weathered stone, copper accents.\nStyle: painterly tactile classic fantasy MMO achievement medallion art, carved edges and visible brushwork, broad confident shapes, soft warm upper-left key light and cool shadows. Compact heraldic vignette readable at 28, 32, 48 and 128 pixels. No photorealism.\nComposition: one centered crest on a square canvas, fully visible, balanced visual center. Subject occupies roughly 75 percent of both width and height, with at least 12 percent clear padding on every side; compact connected silhouette and opaque subject coverage near half the canvas. No letters, numbers, runes, text, watermark, UI frame, border or separate background plate.\nBackground: genuinely transparent RGBA exterior pixels, not white, black, checkerboard or painted simulated transparency. No background scene or ground plane. Preserve transparent holes and exterior. Make exactly one distinct asset, not a contact sheet. Output 1024 by 1024 transparent PNG.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07c6a-3b2c-7823-986c-ab9b07e6e3d5/exec-4ad4e957-ea14-4c66-a04a-4e0b51de07e3.png",
+      "change": "added-painting",
+      "runtimeUrl": "/ui/deeds/homesteader_first_cottage.webp",
+      "source": {
+        "path": "tmp/imagegen/freehold-deeds-2026-09-07/originals/homesteader_first_cottage.png",
+        "sha256": "97b76e8b3e366cabf36ac0a8c359825a0ad49dab51c189444a283d0063d42720",
+        "bytes": 1861843,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "hasAlpha": true,
+        "geometry": {
+          "alphaThreshold": 8,
+          "min": 0,
+          "max": 255,
+          "visiblePixels": 779636,
+          "transparentPixels": 776474,
+          "opaquePixels": 430,
+          "coverage": 0.4957889140714625,
+          "alphaBounds": [120, 51, 1149, 1206],
+          "padding": [120, 51, 104, 47],
+          "centerOffset": [8, 2]
+        }
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-deeds-2026-09-07/masters/homesteader_first_cottage.png",
+        "sha256": "3c84bd1ff220262e918aba5b84c4beb983ea6f6ebc81b85c5b8e2d336a653ee6",
+        "bytes": 280754,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "hasAlpha": true,
+        "geometry": {
+          "alphaThreshold": 8,
+          "min": 0,
+          "max": 255,
+          "visiblePixels": 99443,
+          "transparentPixels": 160660,
+          "opaquePixels": 1028,
+          "coverage": 0.3793449401855469,
+          "alphaBounds": [72, 50, 438, 461],
+          "padding": [72, 50, 73, 50],
+          "centerOffset": [-0.5, 0]
+        }
+      },
+      "accepted": {
+        "path": "public/ui/deeds/homesteader_first_cottage.webp",
+        "sha256": "33fa92977e2a3f08d51b083a7f0e9f0ceaca689f8dfe5c0b35e555d93a4008f0",
+        "bytes": 7110,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "hasAlpha": true,
+        "geometry": {
+          "alphaThreshold": 8,
+          "min": 0,
+          "max": 255,
+          "visiblePixels": 6415,
+          "transparentPixels": 9550,
+          "opaquePixels": 269,
+          "coverage": 0.39154052734375,
+          "alphaBounds": [18, 12, 109, 115],
+          "padding": [18, 12, 18, 12],
+          "centerOffset": [0, 0]
+        }
+      }
+    }
+  ]
+}

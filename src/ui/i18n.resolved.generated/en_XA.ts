@@ -4574,6 +4574,7 @@ export const en_XA: EnTranslations = {
       "navConquerors": "[Çóñɋúéŕóŕš]",
       "navProfessions": "[Þŕóƒéššíóñš]",
       "navHorizons": "[Ĥóŕížóñš]",
+      "navHearth": "[Ĥéáŕţĥ]",
       "navCountAria": "[{shelf}: {owned} óƒ {total} ŕéļíçš ƒíļļéð]",
       "shelfEmpty": "[Ñó þáĝéš óñ ţĥíš šĥéļƒ ýéţ.]",
       "pageComplete": "[Íļļúɱíñáţéð]",
@@ -6588,7 +6589,8 @@ export const en_XA: EnTranslations = {
       "shelf": {
         "conquerors": "[Çóñɋúéŕóŕš]",
         "professions": "[Þŕóƒéššíóñš]",
-        "horizons": "[Ĥóŕížóñš]"
+        "horizons": "[Ĥóŕížóñš]",
+        "hearth": "[Ĥéáŕţĥ]"
       }
     },
     "wishPage": {

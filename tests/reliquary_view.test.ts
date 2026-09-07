@@ -268,15 +268,16 @@ describe('curatorBorderReward', () => {
 });
 
 describe('RELIQUARY_NAV', () => {
-  it('is overview plus the three catalog shelves in fixed order', () => {
-    expect(RELIQUARY_NAV).toEqual(['overview', 'conquerors', 'professions', 'horizons']);
+  it('is overview plus the catalog shelves in fixed order', () => {
+    expect(RELIQUARY_NAV).toEqual(['overview', 'conquerors', 'professions', 'horizons', 'hearth']);
   });
 
-  it('isReliquaryNavId accepts only the four ids', () => {
+  it('isReliquaryNavId accepts only the declared ids', () => {
     expect(isReliquaryNavId('overview')).toBe(true);
     expect(isReliquaryNavId('conquerors')).toBe(true);
     expect(isReliquaryNavId('professions')).toBe(true);
     expect(isReliquaryNavId('horizons')).toBe(true);
+    expect(isReliquaryNavId('hearth')).toBe(true);
     expect(isReliquaryNavId('not_a_shelf')).toBe(false);
     expect(isReliquaryNavId('')).toBe(false);
     expect(isReliquaryNavId('Overview')).toBe(false);
@@ -301,7 +302,7 @@ describe('buildReliquaryView empty state', () => {
     expect(model.activePage).toBeNull();
   });
 
-  it('still exposes shelf totals of zero for empty shelves', () => {
+  it('still exposes unfilled shelves with no discoveries', () => {
     const model = buildReliquaryView(input());
     expect(model.shelves).toEqual([
       { id: 'overview', owned: 0, total: 0 },
@@ -546,7 +547,7 @@ describe('recent find pageId (where a chip jumps)', () => {
 });
 
 describe('Overview shelf cards', () => {
-  it('always renders exactly three cards, in RELIQUARY_SHELF_ORDER', () => {
+  it('renders only authored shelf cards, in RELIQUARY_SHELF_ORDER', () => {
     const model = buildReliquaryView(input());
     // The array ORDER is a contract the painter draws against: assert the
     // literal sequence, never just membership.

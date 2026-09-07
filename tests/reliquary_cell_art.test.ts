@@ -722,7 +722,7 @@ function makeRig(seed: { recent?: string[]; marks?: string[] } = {}): ArtRig {
 /** Open the window and navigate to one page, the way a player clicks in. */
 function openPage(
   rig: ArtRig,
-  nav: 'conquerors' | 'horizons' | 'professions',
+  nav: 'conquerors' | 'horizons' | 'professions' | 'hearth',
   pageId: string,
 ): void {
   rig.window.open(nav);

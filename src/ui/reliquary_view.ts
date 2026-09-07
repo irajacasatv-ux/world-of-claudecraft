@@ -39,12 +39,18 @@ import { DEED_STAT_KEYS, type DeedDef, type DeedStatKey, type DeedStats } from '
 import type { ReliquaryRarity } from '../world_api';
 import type { TranslationKey } from './i18n';
 
-/** Top-level nav: virtual Overview plus the three catalog shelves. */
-export const RELIQUARY_NAV = ['overview', 'conquerors', 'professions', 'horizons'] as const;
+/** Top-level nav: virtual Overview plus the catalog shelves. */
+export const RELIQUARY_NAV = [
+  'overview',
+  'conquerors',
+  'professions',
+  'horizons',
+  'hearth',
+] as const;
 export type ReliquaryNavId = (typeof RELIQUARY_NAV)[number];
 
 /**
- * The three catalog shelves in nav order. One definition, because two surfaces
+ * The catalog shelves in nav order. One definition, because two surfaces
  * depend on it agreeing: the shelf totals bucket and the Overview summary cards,
  * whose array order is a contract the painter and its tests both read.
  */
@@ -52,7 +58,13 @@ export const RELIQUARY_SHELF_ORDER: readonly ReliquaryShelfId[] = [
   'conquerors',
   'professions',
   'horizons',
+  'hearth',
 ];
+
+/** Only authored shelves have a destination; unfilled collections remain visible. */
+export function reliquaryVisibleNav(pages: readonly ReliquaryPageDef[]): ReliquaryNavId[] {
+  return RELIQUARY_NAV.filter((id) => id === 'overview' || pages.some((page) => page.shelf === id));
+}
 
 /** Named Curator rank chrome keys (Phase 6). Falls back to numeric rank label. */
 export const CURATOR_RANK_NAME_KEYS: readonly TranslationKey[] = [
@@ -491,7 +503,7 @@ export interface ReliquaryViewModel {
   recent: ReliquaryRecentFindModel[];
   nearly: ReliquaryNearlyPageModel[];
   shelves: ReliquaryNavModel[];
-  /** Overview shelf summary cards, one per shelf in RELIQUARY_SHELF_ORDER. */
+  /** Overview cards for authored shelves, in RELIQUARY_SHELF_ORDER. */
   shelfCards: ReliquaryShelfCardModel[];
   /** Pages on the active catalog shelf (empty on Overview). */
   shelfPages: ReliquaryShelfPageModel[];
@@ -748,15 +760,17 @@ export function buildReliquaryView(input: ReliquaryViewInput): ReliquaryViewMode
     bucket.total += c.total;
   }
 
-  const shelves: ReliquaryNavModel[] = RELIQUARY_NAV.map((id) => {
+  const visibleNav = reliquaryVisibleNav(input.pages);
+  const shelves: ReliquaryNavModel[] = visibleNav.map((id) => {
     if (id === 'overview') return { id, owned: 0, total: 0 };
     const t = shelfTotals.get(id) ?? { owned: 0, total: 0 };
     return { id, owned: t.owned, total: t.total };
   });
 
-  // The same totals the rail counts, plus the shelf's newest find: one card per
-  // shelf, always all three, in nav order.
-  const shelfCards: ReliquaryShelfCardModel[] = RELIQUARY_SHELF_ORDER.map((shelf) => {
+  // The same authored shelves and totals as the rail, plus each newest find.
+  const shelfCards: ReliquaryShelfCardModel[] = RELIQUARY_SHELF_ORDER.filter((shelf) =>
+    visibleNav.includes(shelf),
+  ).map((shelf) => {
     const totals = shelfTotals.get(shelf) ?? { owned: 0, total: 0 };
     const latest = shelfLatest.get(shelf);
     return {

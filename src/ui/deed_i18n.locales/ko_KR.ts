@@ -1018,4 +1018,13 @@ export const table: DeedLocaleTable = {
     name: '풀려난 샘',
     desc: '화로파괴자를 직접 벼리고 완성된 망치를 가지고 메일린에게 돌아가세요.',
   },
+  homesteader_first_furnishing: {
+    name: '개척자',
+    title: '개척자',
+    desc: '자신의 자유 영지에 첫 가구를 배치하세요.',
+  },
+  homesteader_first_cottage: {
+    name: '집주인',
+    desc: '이 캐릭터로 첫 오두막을 받으세요.',
+  },
 };

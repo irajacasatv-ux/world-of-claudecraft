@@ -967,4 +967,13 @@ export const table: DeedLocaleTable = {
     name: '解き放たれた泉',
     desc: 'フォージブレイカーを自ら鍛え、完成した槌を携えてメイリンのもとへ戻る。',
   },
+  homesteader_first_furnishing: {
+    name: '開拓者',
+    title: '開拓者',
+    desc: '自分のフリーホールドに初めて家具を置く。',
+  },
+  homesteader_first_cottage: {
+    name: '家の主',
+    desc: 'このキャラクターで初めてコテージを受け取る。',
+  },
 };

@@ -329,6 +329,7 @@ describe('CI workflow parity', () => {
       '            /docs/screenshots/eastbrook-vale-rebuild/',
       '            /docs/screenshots/far-foliage-impostors/',
       '            /docs/screenshots/fenbridge-rebuild/',
+      '            /docs/screenshots/freehold-content-2026-09-07/',
       '            /docs/screenshots/furnishing-item-kind/',
       '            /docs/screenshots/guild-bank-tab/',
       '            /docs/screenshots/guild-pledge-board/',

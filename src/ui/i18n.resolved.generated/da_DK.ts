@@ -4574,6 +4574,7 @@ export const da_DK: EnTranslations = {
       "navConquerors": "Erobrere",
       "navProfessions": "Erhverv",
       "navHorizons": "Horisonter",
+      "navHearth": "Hearth",
       "navCountAria": "{shelf}: {owned} af {total} relikvier udfyldt",
       "shelfEmpty": "Ingen sider på denne hylde endnu.",
       "pageComplete": "Illumineret",
@@ -6588,7 +6589,8 @@ export const da_DK: EnTranslations = {
       "shelf": {
         "conquerors": "Erobrere",
         "professions": "Erhverv",
-        "horizons": "Horisonter"
+        "horizons": "Horisonter",
+        "hearth": "Hearth"
       }
     },
     "wishPage": {

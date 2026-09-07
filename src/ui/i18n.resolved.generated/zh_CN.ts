@@ -4574,6 +4574,7 @@ export const zh_CN: EnTranslations = {
       "navConquerors": "征服者",
       "navProfessions": "专业",
       "navHorizons": "远景",
+      "navHearth": "炉边",
       "navCountAria": "{shelf}：已填入 {owned}/{total} 件圣物",
       "shelfEmpty": "此书架尚无页面。",
       "pageComplete": "已点亮",
@@ -6588,7 +6589,8 @@ export const zh_CN: EnTranslations = {
       "shelf": {
         "conquerors": "征服者",
         "professions": "专业",
-        "horizons": "远景"
+        "horizons": "远景",
+        "hearth": "炉边"
       }
     },
     "wishPage": {

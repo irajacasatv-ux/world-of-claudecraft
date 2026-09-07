@@ -4574,6 +4574,7 @@ export const nl_NL: EnTranslations = {
       "navConquerors": "Veroveraars",
       "navProfessions": "Beroepen",
       "navHorizons": "Horizonten",
+      "navHearth": "Hearth",
       "navCountAria": "{shelf}: {owned} van {total} relieken gevuld",
       "shelfEmpty": "Nog geen bladzijden op deze plank.",
       "pageComplete": "Verlucht",
@@ -6588,7 +6589,8 @@ export const nl_NL: EnTranslations = {
       "shelf": {
         "conquerors": "Veroveraars",
         "professions": "Beroepen",
-        "horizons": "Horizonten"
+        "horizons": "Horizonten",
+        "hearth": "Hearth"
       }
     },
     "wishPage": {

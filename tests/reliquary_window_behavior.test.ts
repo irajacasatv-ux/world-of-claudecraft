@@ -2257,6 +2257,21 @@ describe('ReliquaryWindow: the recent-find strip jumps to the relic', () => {
 });
 
 describe('ReliquaryWindow: the Overview shelf cards', () => {
+  it('keeps the prepared Hearth shelf absent until its first catalog page exists', () => {
+    expect(RELIQUARY_PAGES.some((page) => page.shelf === 'hearth')).toBe(false);
+    const rig = makeWindow(baseState(), { nav: 'hearth' });
+    expect(rig.el.querySelector('[data-nav="hearth"]')).toBeNull();
+    expect(must(rig.el, '.reliquary-rail [data-nav="overview"]').getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+    expect(shelfCards(rig.el).map((card) => card.dataset.nav)).toEqual([
+      'conquerors',
+      'professions',
+      'horizons',
+    ]);
+    expect((document.activeElement as HTMLElement | null)?.dataset.focusKey).toBe('nav:overview');
+  });
+
   it('renders exactly three cards, in the rail order, each one a shelf jump', () => {
     const rig = makeWindow(baseState(), { nav: 'overview' });
     const cards = shelfCards(rig.el);

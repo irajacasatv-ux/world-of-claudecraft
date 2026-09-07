@@ -4574,6 +4574,7 @@ export const ja_JP: EnTranslations = {
       "navConquerors": "征服者",
       "navProfessions": "専門技能",
       "navHorizons": "地平",
+      "navHearth": "炉辺",
       "navCountAria": "{shelf}：聖遺物 {owned}/{total} 埋め済み",
       "shelfEmpty": "この棚にはまだページがありません。",
       "pageComplete": "照耀済み",
@@ -6588,7 +6589,8 @@ export const ja_JP: EnTranslations = {
       "shelf": {
         "conquerors": "征服者",
         "professions": "専門技能",
-        "horizons": "地平"
+        "horizons": "地平",
+        "hearth": "炉辺"
       }
     },
     "wishPage": {

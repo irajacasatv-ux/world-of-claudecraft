@@ -3,7 +3,7 @@
 // nameplate's canvas shapes and the unit-frame portrait ring).
 //
 // The load-bearing claims here:
-//   - one palette table is the single source of truth: the four content slugs
+//   - one palette table is the single source of truth: the content slugs
 //     each resolve, and neither hud.css nor any consumer duplicates a color;
 //   - every no-accent case answers '' / null rather than guessing (a persisted
 //     id whose content record was removed, a title-reward deed, an unknown slug);
@@ -74,6 +74,7 @@ describe('deedBorderSlug: deed id -> border slug', () => {
     expect(deedBorderSlug('dgn_deepward')).toBe('deepward');
     expect(deedBorderSlug('col_discovery_250')).toBe('curators_gilt');
     expect(deedBorderSlug('col_reliquary_rank_5')).toBe('reliquary_gilt');
+    expect(deedBorderSlug('homesteader_first_cottage')).toBe('householder');
   });
 
   it('answers empty for every no-border case', () => {
@@ -115,14 +116,14 @@ describe('borderAccent: slug -> palette', () => {
     }
   });
 
-  it('gives every slug a frame line no other slug uses (the four read apart)', () => {
+  it('gives every slug a frame line no other slug uses', () => {
     const frames = BORDER_ACCENT_SLUGS.map((slug) => borderAccent(slug)?.frame);
     expect(new Set(frames).size).toBe(BORDER_ACCENT_SLUGS.length);
   });
 
   it('gives every slug a distinct motif kind', () => {
     const kinds = BORDER_ACCENT_SLUGS.map((slug) => borderAccent(slug)?.motif);
-    expect(kinds).toEqual(['catalogue', 'ward', 'laurel', 'vault']);
+    expect(kinds).toEqual(['catalogue', 'ward', 'home', 'laurel', 'vault']);
     expect(new Set(kinds).size).toBe(BORDER_ACCENT_SLUGS.length);
   });
 
@@ -150,6 +151,7 @@ describe('borderAccent: slug -> palette', () => {
     expect(BORDER_ACCENT_SLUGS).toEqual([
       'curators_gilt',
       'deepward',
+      'householder',
       'prestige_laurels',
       'reliquary_gilt',
     ]);
@@ -164,8 +166,8 @@ describe('borderAccent: slug -> palette', () => {
   });
 });
 
-describe('E40: four normalized seal identities have one static primitive owner', () => {
-  const kinds: readonly BorderMotifKind[] = ['catalogue', 'vault', 'ward', 'laurel'];
+describe('E40: normalized seal identities have one static primitive owner', () => {
+  const kinds: readonly BorderMotifKind[] = ['catalogue', 'vault', 'ward', 'laurel', 'home'];
   const fingerprint = (kind: BorderMotifKind): string =>
     borderMotifPrimitives(kind)
       .map((prim) => `${prim.x1},${prim.y1},${prim.x2},${prim.y2}`)
@@ -200,7 +202,7 @@ describe('E40: four normalized seal identities have one static primitive owner',
     }
   });
 
-  it('gives all four kinds distinct nonempty coordinate fingerprints without using color', () => {
+  it('gives all kinds distinct nonempty coordinate fingerprints without using color', () => {
     const fingerprints = kinds.map(fingerprint);
     for (const value of fingerprints) expect(value).not.toBe('');
     expect(new Set(fingerprints).size).toBe(kinds.length);
@@ -211,7 +213,7 @@ describe('E40: four normalized seal identities have one static primitive owner',
 });
 
 describe('E55: every DOM seal derives from the canonical normalized primitives', () => {
-  const kinds: readonly BorderMotifKind[] = ['catalogue', 'vault', 'ward', 'laurel'];
+  const kinds: readonly BorderMotifKind[] = ['catalogue', 'vault', 'ward', 'laurel', 'home'];
 
   it('prebuilds one stable SVG path per motif without a second coordinate table', () => {
     for (const kind of kinds) {

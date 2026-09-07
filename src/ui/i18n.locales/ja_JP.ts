@@ -15520,4 +15520,6 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemMenu.separateByGatherer': '採集者別に分ける',
   'hudChrome.itemMenu.takeChosenQuantity': '指定数を取り出す',
   'hudChrome.itemMenu.combine': '素材スタックを結合',
+  'hudChrome.reliquary.navHearth': '炉辺',
+  'guide.reliquaryPage.shelf.hearth': '炉辺',
 };

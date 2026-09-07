@@ -15533,4 +15533,6 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemMenu.separateByGatherer': '채집자별 분리',
   'hudChrome.itemMenu.takeChosenQuantity': '지정 수량 꺼내기',
   'hudChrome.itemMenu.combine': '재료 묶음 합치기',
+  'hudChrome.reliquary.navHearth': '보금자리',
+  'guide.reliquaryPage.shelf.hearth': '보금자리',
 };

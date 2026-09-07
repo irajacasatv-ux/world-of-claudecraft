@@ -4574,6 +4574,7 @@ export const de_DE: EnTranslations = {
       "navConquerors": "Eroberer",
       "navProfessions": "Berufe",
       "navHorizons": "Horizonte",
+      "navHearth": "Hearth",
       "navCountAria": "{shelf}: {owned} von {total} Reliquien gefüllt",
       "shelfEmpty": "Noch keine Seiten in diesem Regal.",
       "pageComplete": "Illuminiert",
@@ -6588,7 +6589,8 @@ export const de_DE: EnTranslations = {
       "shelf": {
         "conquerors": "Eroberer",
         "professions": "Berufe",
-        "horizons": "Horizonte"
+        "horizons": "Horizonte",
+        "hearth": "Hearth"
       }
     },
     "wishPage": {

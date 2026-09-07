@@ -665,7 +665,8 @@ describe('missing painted deed and Heroic weapon integration', () => {
     // Crucible raid deeds (276 to 281 on its own arm) join the same pending
     // side on the deed_cat_dungeon crest.
     // The personal hammer quest uses the explicitly pending hidden-category crest.
-    expect(DEED_ORDER).toHaveLength(299);
+    // Two manual Homesteader deeds each ship their own painted crest.
+    expect(DEED_ORDER).toHaveLength(301);
     expect(DEED_ART_PENDING.has('hid_forgebreaker')).toBe(true);
     expect(DEED_ORDER.filter((id) => !DEED_IMAGE_IDS.has(id))).toEqual([...DEED_ART_PENDING]);
     const credits = readFileSync(path.join(repoRoot, 'CREDITS.md'), 'utf8');

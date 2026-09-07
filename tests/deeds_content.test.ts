@@ -90,10 +90,11 @@ const PREFIX_CATEGORY: Record<string, DeedCategory> = {
   exp_: 'exploration',
   feat_: 'feat',
   hid_: 'hidden',
+  homesteader_: 'progression',
 };
 
 describe('audited launch totals (literals: update deliberately with the catalog)', () => {
-  it('ships exactly 299 deeds worth 3525 total Renown', () => {
+  it('ships exactly 301 deeds worth 3535 total Renown', () => {
     // Release base (262 / 3145 after the WARFARE lifetime-honor ladder) plus
     // four Reliquary Curator rank bridges and the five Phase 18 completion
     // ladder deeds (all nine renown 0: catalog prestige never scores the
@@ -152,8 +153,9 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     // reader can act on without seeing the diff. It went stale once already.
     // Forgebreaker's personal, class-restricted quest celebration adds one
     // hidden deed at zero Renown: 299 / 3525, all older content untouched.
-    expect(DEED_ORDER.length).toBe(299);
-    expect(ALL.reduce((sum, d) => sum + d.renown, 0)).toBe(3525);
+    // The two manual Freehold milestones add five Renown each.
+    expect(DEED_ORDER.length).toBe(301);
+    expect(ALL.reduce((sum, d) => sum + d.renown, 0)).toBe(3535);
   });
 
   it('ships the audited per-category counts', () => {
@@ -170,7 +172,7 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       // +1 the Proving Shore graduation (prog_ready_for_an_adventure) at the
       // release/v0.41.0 merge (the release's own chain read 58), then
       // +1 the Phase 13 promotion capstone prog_legendmaker.
-      progression: 68,
+      progression: 70,
       combat: 10,
       // +2 Rift coverage deeds (dgn_rift, dgn_rift_s_rank), +5 Crucible raid
       // deeds (per-boss clear pairs plus the Varkhul flawless task).
@@ -376,6 +378,8 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       'dgn_varkhul_heroic',
       'dgn_varkhul_flawless',
       'hid_forgebreaker',
+      'homesteader_first_furnishing',
+      'homesteader_first_cottage',
     ]);
     expect(DEEDS.dgn_wildheart_basin.renown).toBe(10);
     expect(DEEDS.dgn_wildheart_basin_heroic.renown).toBe(10);
@@ -759,7 +763,7 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     });
   });
 
-  it('ships exactly 46 titles and 4 borders', () => {
+  it('ships exactly 47 titles and 5 borders', () => {
     const titles = ALL.filter((d) => d.reward?.kind === 'title');
     const borders = ALL.filter((d) => d.reward?.kind === 'border');
     // Reliquary Curator ranks append 3 titles + 1 border, the WARFARE honor
@@ -770,15 +774,16 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     // prog_farming_100's Harvestmaster (the absorbed packet's D13 title
     // mandate), and the Crucible raid's flawless title (dgn_varkhul_flawless,
     // the 2026-08-30 release/v0.41.0 sync merge) one more.
-    expect(titles.length).toBe(46);
-    expect(borders.length).toBe(4);
+    expect(titles.length).toBe(47);
+    expect(borders.length).toBe(5);
     // Titles and border slugs are unique (one deed per cosmetic).
     const titleTexts = titles.map((d) => (d.reward as { text: string }).text);
-    expect(new Set(titleTexts).size).toBe(46);
+    expect(new Set(titleTexts).size).toBe(47);
     const borderSlugs = borders.map((d) => (d.reward as { slug: string }).slug);
     expect([...borderSlugs].sort()).toEqual([
       'curators_gilt',
       'deepward',
+      'householder',
       'prestige_laurels',
       'reliquary_gilt',
     ]);
@@ -966,7 +971,7 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // either side.
   // Forgebreaker's personal quest adds one hidden, zero-Renown tail row.
   // The pre-append proof below preserves every earlier trigger and value.
-  const FROZEN_CATALOG_SHA256 = 'ed5078343bcd897c66006561b7eb5bbeef7c98c0a5597807235ff4e11529e47d';
+  const FROZEN_CATALOG_SHA256 = '105aaca554a4e86af4729b9eb5af8be17884d74e64bd4008b2d918bd90e24cb7';
 
   it('every shipped deed keeps its trigger and renown unchanged', () => {
     const canonical = JSON.stringify(
@@ -999,23 +1004,26 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // release's five Crucible raid deeds, and the previous mint is the
   // d1c102c3... literal that merge rotated down here; the proof below
   // reproduces it exactly, so no older row was retro-edited by the merge.
-  // The one-time Forgebreaker quest appends one hidden, zero-Renown deed.
-  // Removing it must reproduce the preceding frozen catalogue exactly.
+  // The two Freehold milestones append after Forgebreaker.
+  // Removing them must reproduce the preceding frozen catalogue exactly.
   const PRE_APPEND_CATALOG_SHA256 =
-    '77b670a2b8eefdfb6768290dbbee7146828636c3b7327d0cb88cb5683c072a4b';
-  const APPENDED_SINCE: readonly string[] = ['hid_forgebreaker'];
+    'ed5078343bcd897c66006561b7eb5bbeef7c98c0a5597807235ff4e11529e47d';
+  const APPENDED_SINCE: readonly string[] = [
+    'homesteader_first_furnishing',
+    'homesteader_first_cottage',
+  ];
 
   it('the catalog minus the ids appended since the previous mint reproduces the previous digest', () => {
     const appended = new Set(APPENDED_SINCE);
     for (const id of APPENDED_SINCE) {
       expect(DEED_ORDER.includes(id), `${id} is in the live catalog`).toBe(true);
     }
-    // The new quest celebration sits at the true tail after the raid block.
+    // The new milestones sit at the true tail after Forgebreaker.
     // Pin its two predecessors too: this is an append into a known seat,
     // never a scattered insert or a retro-edit (the digest below proves it).
     expect(DEED_ORDER.slice(-2 - APPENDED_SINCE.length)).toEqual([
-      'dgn_varkhul_heroic',
       'dgn_varkhul_flawless',
+      'hid_forgebreaker',
       ...APPENDED_SINCE,
     ]);
     const priorRows = DEED_ORDER.filter((id) => !appended.has(id)).map((id) => {
@@ -1232,7 +1240,10 @@ describe('table shape', () => {
     // that (appended behind the branch's rows; the flawless task is its
     // final entry).
     // The one-time Forgebreaker quest's hidden celebration appends after it.
-    expect(DEED_ORDER[DEED_ORDER.length - 1]).toBe('hid_forgebreaker');
+    expect(DEED_ORDER.slice(-2)).toEqual([
+      'homesteader_first_furnishing',
+      'homesteader_first_cottage',
+    ]);
   });
 
   it('every entry key matches its id and its prefix matches its category', () => {
@@ -2055,6 +2066,7 @@ describe('the border-reward set (a public Discord feed surface since Phase 18)',
       'col_discovery_250',
       'col_reliquary_rank_5',
       'dgn_deepward',
+      'homesteader_first_cottage',
       'prog_prestige_10',
     ]);
     for (const id of borderIds) expect(DEEDS[id].hidden, id).not.toBe(true);

@@ -775,4 +775,13 @@ export const table: DeedLocaleTable = {
     name: '解放之泉',
     desc: '亲手锻造碎炉者，携带完成的战锤回到梅琳身边。',
   },
+  homesteader_first_furnishing: {
+    name: '开拓者',
+    title: '开拓者',
+    desc: '在自己的自由领地放置第一件家具。',
+  },
+  homesteader_first_cottage: {
+    name: '屋主',
+    desc: '为当前角色获得第一间小屋。',
+  },
 };

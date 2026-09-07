@@ -6800,6 +6800,7 @@ export const hudChromeStrings = {
     navConquerors: 'Conquerors',
     navProfessions: 'Professions',
     navHorizons: 'Horizons',
+    navHearth: 'Hearth',
     navCountAria: '{shelf}: {owned} of {total} relics filled',
     shelfEmpty: 'No pages on this shelf yet.',
     pageComplete: 'Illuminated',

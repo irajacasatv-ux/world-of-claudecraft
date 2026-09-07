@@ -4574,6 +4574,7 @@ export const ko_KR: EnTranslations = {
       "navConquerors": "정복자",
       "navProfessions": "전문 기술",
       "navHorizons": "지평",
+      "navHearth": "보금자리",
       "navCountAria": "{shelf}: 성물 {owned}/{total} 채움",
       "shelfEmpty": "이 선반에는 아직 페이지가 없습니다.",
       "pageComplete": "조명됨",
@@ -6588,7 +6589,8 @@ export const ko_KR: EnTranslations = {
       "shelf": {
         "conquerors": "정복자",
         "professions": "전문 기술",
-        "horizons": "지평"
+        "horizons": "지평",
+        "hearth": "보금자리"
       }
     },
     "wishPage": {

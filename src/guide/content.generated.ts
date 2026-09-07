@@ -115,7 +115,7 @@ export interface GuideReliquaryRelic {
 }
 export interface GuideReliquaryPage {
   id: string;
-  shelf: 'conquerors' | 'professions' | 'horizons';
+  shelf: 'conquerors' | 'professions' | 'horizons' | 'hearth';
   name: string;
   /** Outside-completion reason (rule 7): present only on labeled pages. */
   excludeFromCompletion?: 'retired' | 'personal';
@@ -5832,6 +5832,24 @@ export const GUIDE_DEEDS: GuideDeed[] = [
     "renown": 50,
     "feat": false,
     "crest": "/ui/deeds/prog_legendmaker.webp"
+  },
+  {
+    "id": "homesteader_first_furnishing",
+    "name": "Homesteader",
+    "category": "progression",
+    "renown": 5,
+    "feat": false,
+    "rewardTitle": "Homesteader",
+    "crest": "/ui/deeds/homesteader_first_furnishing.webp"
+  },
+  {
+    "id": "homesteader_first_cottage",
+    "name": "Householder",
+    "category": "progression",
+    "renown": 5,
+    "feat": false,
+    "rewardBorder": true,
+    "crest": "/ui/deeds/homesteader_first_cottage.webp"
   }
 ];
 
@@ -7093,6 +7111,10 @@ export const GUIDE_RELIQUARY: GuideReliquaryPage[] = [
       {
         "kind": "title",
         "name": "the Unscorched"
+      },
+      {
+        "kind": "title",
+        "name": "Homesteader"
       }
     ]
   },

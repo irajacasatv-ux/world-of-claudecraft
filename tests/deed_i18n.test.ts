@@ -85,8 +85,9 @@ describe('deed_i18n English resolution', () => {
     // Crucible raid deeds; the Varkhul flawless task carries a title (the
     // release's own chain read 281 * 2 + 43), so the title count moves to 46.
     // The personal hammer quest adds a name and desc, but no title reward.
-    expect(manifest.length).toBe(299 * 2 + 46);
-    expect(manifest.filter((row) => row.field === 'title').length).toBe(46);
+    // The Freehold pair adds two name/desc rows and the Homesteader title.
+    expect(manifest.length).toBe(301 * 2 + 47);
+    expect(manifest.filter((row) => row.field === 'title').length).toBe(47);
     expect(manifest.filter((row) => row.id === 'hid_forgebreaker')).toEqual([
       { id: 'hid_forgebreaker', field: 'name', source: 'A Spring Unchained' },
       {

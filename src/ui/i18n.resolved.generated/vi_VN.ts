@@ -4574,6 +4574,7 @@ export const vi_VN: EnTranslations = {
       "navConquerors": "Kẻ Chinh Phục",
       "navProfessions": "Nghề nghiệp",
       "navHorizons": "Chân Trời",
+      "navHearth": "Hearth",
       "navCountAria": "{shelf}: đã lấp đầy {owned} trên {total} kỳ trân",
       "shelfEmpty": "Kệ này chưa có trang nào.",
       "pageComplete": "Đã rực sáng",
@@ -6588,7 +6589,8 @@ export const vi_VN: EnTranslations = {
       "shelf": {
         "conquerors": "Kẻ Chinh Phục",
         "professions": "Nghề nghiệp",
-        "horizons": "Chân Trời"
+        "horizons": "Chân Trời",
+        "hearth": "Hearth"
       }
     },
     "wishPage": {

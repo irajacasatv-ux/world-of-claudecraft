@@ -4574,6 +4574,7 @@ export const id_ID: EnTranslations = {
       "navConquerors": "Penakluk",
       "navProfessions": "Profesi",
       "navHorizons": "Cakrawala",
+      "navHearth": "Hearth",
       "navCountAria": "{shelf}: {owned} dari {total} relik terisi",
       "shelfEmpty": "Belum ada halaman di rak ini.",
       "pageComplete": "Diterangi",
@@ -6588,7 +6589,8 @@ export const id_ID: EnTranslations = {
       "shelf": {
         "conquerors": "Penakluk",
         "professions": "Profesi",
-        "horizons": "Cakrawala"
+        "horizons": "Cakrawala",
+        "hearth": "Hearth"
       }
     },
     "wishPage": {

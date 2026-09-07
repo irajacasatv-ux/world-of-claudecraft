@@ -2201,16 +2201,36 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     };
     const counterfactualBytes = Buffer.byteLength(JSON.stringify(withoutFieldKit), 'utf8');
     expect(bytes - counterfactualBytes, 'field_kit contributes exactly one array entry').toBe(12);
+    const withoutHomesteaderDeeds: CharacterState = {
+      ...withoutFieldKit,
+      deeds: { ...withoutFieldKit.deeds },
+    };
+    const homesteaderBytes = [
+      ['homesteader_first_furnishing', 44],
+      ['homesteader_first_cottage', 41],
+    ] as const;
+    for (const [id, expectedBytes] of homesteaderBytes) {
+      expect(withoutHomesteaderDeeds.deeds?.[id]).toBe('2026-08-08');
+      const before = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
+      delete withoutHomesteaderDeeds.deeds?.[id];
+      expect(before - Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8')).toBe(
+        expectedBytes,
+      );
+    }
+    const historicalBytes = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
+    expect(counterfactualBytes - historicalBytes).toBe(85);
+    expect(counterfactualBytes).toBe(209559);
+    expect(bytes).toBe(209571);
 
     // The one-time hammer recipe/proof content adds against the pre-hammer,
     // field-kit-excluded fixture (156144): the Crucible fixture-repair deltas
     // above, plus 183 bytes of existing quest/deed/Reliquary catalog entries
-    // the hammer recipe references. Diffed against `withoutFieldKit` (not
-    // `s2`) so field_kit's 12 bytes never leak into a hammer-attributed term.
+    // the hammer recipe references. Remove field_kit and the two later
+    // Homesteader deed entries so their bytes retain separate attribution.
     // MEASURED after the real merge settle (hammer content plus field_kit
     // together): the equation and every forgeBaseline delta below hold
     // exactly as recorded on the pre-field-kit tree.
-    expect(counterfactualBytes - 156144).toBe(
+    expect(historicalBytes - 156144).toBe(
       Object.values(fixtureDelta).reduce((sum, value) => sum + value, 0) + 183,
     );
     const forgeBaseline = {
@@ -2225,20 +2245,20 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         Object.entries(forgeBaseline).map(([key, previous]) => [
           key,
           Buffer.byteLength(
-            JSON.stringify(withoutFieldKit[key as keyof typeof forgeBaseline]),
+            JSON.stringify(withoutHomesteaderDeeds[key as keyof typeof forgeBaseline]),
             'utf8',
           ) - previous,
         ]),
       ),
     ).toEqual({ questsDone: 50, knownRecipes: 30, deeds: 32, deedStats: 21, reliquary: 80 });
-    // Removing ONLY field_kit reproduces the pre-field-kit baseline WITH the
+    // Removing field_kit and the later deeds reproduces the baseline WITH the
     // hammer content still applied: 3884 alone measured 209,261 here (hammer
     // content absent); the hammer content adds its own +213 on top
     // (composed, not inferred: 3885 alone recorded that same +213 against
     // its pre-field-kit tree). MEASURED after the real merge settle: 209,474.
     expect(
-      counterfactualBytes,
-      'field_kit removed, must reproduce the recorded pre-field-kit Crucible+hammer baseline',
+      historicalBytes,
+      'later entries removed, must reproduce the recorded Crucible+hammer baseline',
     ).toBe(209474);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
@@ -2264,13 +2284,14 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(metadataDelta).toEqual({ perfectingBonus: 11880, perfectingBound: 5934 });
     // Combined fixture (Crucible baseline + hammer recipe/proof content +
-    // field_kit), measured after the real merge settle: 209,486 bytes.
+    // field_kit and Homesteader deeds), measured: 209,571 bytes.
     // Composed from both parents' own bands (3885 alone, hammer without
     // field_kit, held 209,094..209,475, width 381; field_kit adds exactly
     // +12 wherever it lands, proven above via counterfactualBytes), shifted
-    // by that same +12 without widening: 209,106..209,487.
-    expect(bytes, reMint).toBeGreaterThan(209106);
-    expect(bytes, reMint).toBeLessThan(209487);
+    // by that same +12 and the independently pinned +85 from the two new
+    // deeds without widening: 209,191..209,572.
+    expect(bytes, reMint).toBeGreaterThan(209191);
+    expect(bytes, reMint).toBeLessThan(209572);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was
@@ -2278,7 +2299,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // step was derived from, not this arm's measurement). The previous
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
     // after the real merge settle: this combined fixture (hammer content plus
-    // field_kit) is 209,486 bytes, 19,890 bytes of headroom below the
+    // field_kit and Homesteader deeds) is 209,571 bytes, 19,805 bytes below the
     // threshold. Pin the measured relation: a lower threshold or further
     // content growth crossing it requires re-measuring and reviewing both
     // sides together, never silently widening this test's narrow tracking

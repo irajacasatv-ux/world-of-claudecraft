@@ -823,7 +823,7 @@ describe('nameplate canvas surface', () => {
     }
   });
 
-  it('E40/E46: forced colors retain four distinct seal geometry fingerprints', () => {
+  it('E40/E46: forced colors retain five distinct seal geometry fingerprints', () => {
     const previousMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia');
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
@@ -858,7 +858,7 @@ describe('nameplate canvas surface', () => {
           new Set(['Canvas', 'CanvasText']),
         );
       }
-      expect(new Set(fingerprints).size).toBe(4);
+      expect(new Set(fingerprints).size).toBe(5);
     } finally {
       if (previousMatchMedia) {
         Object.defineProperty(window, 'matchMedia', previousMatchMedia);

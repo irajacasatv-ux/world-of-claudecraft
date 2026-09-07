@@ -4574,6 +4574,7 @@ export const tr_TR: EnTranslations = {
       "navConquerors": "Fatihler",
       "navProfessions": "Meslekler",
       "navHorizons": "Ufuklar",
+      "navHearth": "Hearth",
       "navCountAria": "{shelf}: {total} yadigârdan {owned} tanesi doldu",
       "shelfEmpty": "Bu rafta henüz sayfa yok.",
       "pageComplete": "Tezhipli",
@@ -6588,7 +6589,8 @@ export const tr_TR: EnTranslations = {
       "shelf": {
         "conquerors": "Fatihler",
         "professions": "Meslekler",
-        "horizons": "Ufuklar"
+        "horizons": "Ufuklar",
+        "hearth": "Hearth"
       }
     },
     "wishPage": {
