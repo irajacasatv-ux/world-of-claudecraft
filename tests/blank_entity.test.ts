@@ -14,24 +14,51 @@ import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { blankEntity } from '../src/net/blank_entity';
 
-/** Every non-optional property name declared on `interface Entity`. */
+/** Members of one interface, plus every interface it extends. `Entity` is
+ *  `extends ClientMirroredEntityFields`, and a scrape that walked only
+ *  `node.members` would silently miss a required field added to a BASE, which
+ *  is the same silent-omission failure this whole suite exists to catch. */
+function collectMembers(sf: ts.SourceFile, root: string): ts.PropertySignature[] {
+  const byName = new Map<string, ts.InterfaceDeclaration>();
+  const index = (node: ts.Node): void => {
+    if (ts.isInterfaceDeclaration(node)) byName.set(node.name.text, node);
+    ts.forEachChild(node, index);
+  };
+  index(sf);
+
+  const out: ts.PropertySignature[] = [];
+  const seen = new Set<string>();
+  const walk = (name: string): void => {
+    if (seen.has(name)) return; // a cycle cannot hang the scrape
+    seen.add(name);
+    const decl = byName.get(name);
+    if (!decl) return;
+    for (const member of decl.members) if (ts.isPropertySignature(member)) out.push(member);
+    for (const clause of decl.heritageClauses ?? []) {
+      if (clause.token !== ts.SyntaxKind.ExtendsKeyword) continue;
+      for (const t of clause.types) if (ts.isIdentifier(t.expression)) walk(t.expression.text);
+    }
+  };
+  walk(root);
+  // The scrape must have SEEN the heritage clause, not merely tolerated it:
+  // Entity extends a base, so a walk that stopped at the root would visit one
+  // interface only and this floor would red.
+  if (root === 'Entity' && seen.size < 2) {
+    throw new Error(`Entity heritage not followed: visited only ${[...seen].join(', ')}`);
+  }
+  return out;
+}
+
+/** Every non-optional property name on `Entity`, base interfaces included. */
 function requiredEntityFields(): string[] {
   const file = join(__dirname, '../src/sim/types.ts');
   const sf = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
   const names: string[] = [];
-  const visit = (node: ts.Node): void => {
-    if (ts.isInterfaceDeclaration(node) && node.name.text === 'Entity') {
-      for (const member of node.members) {
-        if (!ts.isPropertySignature(member)) continue;
-        if (member.questionToken) continue; // optional: the factory may omit it
-        if (!ts.isIdentifier(member.name)) continue;
-        names.push(member.name.text);
-      }
-      return;
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(sf);
+  for (const member of collectMembers(sf, 'Entity')) {
+    if (member.questionToken) continue; // optional: the factory may omit it
+    if (!ts.isIdentifier(member.name)) continue;
+    names.push(member.name.text);
+  }
   return names;
 }
 
@@ -61,18 +88,9 @@ describe('blankEntity: completeness', () => {
     const file = join(__dirname, '../src/sim/types.ts');
     const sf = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true);
     const declared = new Set<string>();
-    const visit = (node: ts.Node): void => {
-      if (ts.isInterfaceDeclaration(node) && node.name.text === 'Entity') {
-        for (const member of node.members) {
-          if (ts.isPropertySignature(member) && ts.isIdentifier(member.name)) {
-            declared.add(member.name.text);
-          }
-        }
-        return;
-      }
-      ts.forEachChild(node, visit);
-    };
-    visit(sf);
+    for (const member of collectMembers(sf, 'Entity')) {
+      if (ts.isIdentifier(member.name)) declared.add(member.name.text);
+    }
     expect(declared.size).toBeGreaterThan(50);
     const extra = Object.keys(blankEntity(1)).filter((k) => !declared.has(k));
     expect(extra, 'fields the factory sets that Entity does not declare').toEqual([]);
