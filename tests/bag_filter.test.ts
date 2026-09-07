@@ -534,6 +534,15 @@ describe('chip reachability census: the All-only set, pinned', () => {
     // Formula scrolls follow the existing bag-side kind-'recipe' ruling.
     'formula_lastflame_zeal',
     'frayed_prayer_beads',
+    // Furnishings have no gear, consumable, or material discriminator.
+    'freehold_brass_lantern',
+    'freehold_low_stool',
+    'freehold_open_bookshelf',
+    'freehold_round_table',
+    'freehold_spindle_chair',
+    'freehold_storage_chest',
+    'freehold_timber_bed',
+    'freehold_woven_rug',
     'gleamstag_charm',
     'gravewoven_bag',
     'guardian_core',

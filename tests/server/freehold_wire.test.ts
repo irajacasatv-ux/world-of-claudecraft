@@ -86,6 +86,8 @@ import {
 import { noopGameMetricsCounters, setGameMetricsCounters } from '../../server/http/game_signals';
 import { refusedRiftForgeCommand } from '../../server/rift_forge_gate';
 import { buildRealmSimConfig } from '../../server/sim_boot_config';
+import { ITEMS } from '../../src/sim/data';
+import { Sim } from '../../src/sim/sim';
 import { inertVaultConsumptionAdmission } from '../../src/sim/sim_context';
 import { COMMAND_FACETS, type CommandName } from '../../src/world_api';
 import { fakeWs, joinServer } from '../helpers/bare_client';
@@ -699,6 +701,39 @@ describe('freeholds wire: lit realm dispatch reaches the dark Sim stubs', () => 
 });
 
 describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freeholdsEnabled (D85)', () => {
+  it('snapshots the real furnisher spawn and stock at realm boot', () => {
+    const ids = [
+      'freehold_timber_bed',
+      'freehold_round_table',
+      'freehold_spindle_chair',
+      'freehold_low_stool',
+      'freehold_woven_rug',
+      'freehold_brass_lantern',
+      'freehold_storage_chest',
+      'freehold_open_bookshelf',
+    ];
+    vi.stubEnv('FREEHOLDS_ENABLED', undefined);
+    const dark = new Sim(buildRealmSimConfig(undefined, inertVaultConsumptionAdmission));
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    const lit = new Sim(buildRealmSimConfig(undefined, inertVaultConsumptionAdmission));
+    const vendors = (sim: Sim) =>
+      [...sim.entities.values()].filter((e) => e.templateId === 'freehold_furnisher');
+    expect(dark.cfg.freeholdsEnabled).toBe(false);
+    expect(vendors(dark)).toEqual([]);
+    expect(
+      [...dark.entities.values()].some((e) => e.vendorItems.some((id) => ids.includes(id))),
+    ).toBe(false);
+    expect(lit.cfg.freeholdsEnabled).toBe(true);
+    expect(vendors(lit)).toHaveLength(1);
+    expect(vendors(lit)[0].vendorItems).toEqual(ids);
+    vi.stubEnv('FREEHOLDS_ENABLED', '0');
+    expect(lit.cfg.freeholdsEnabled).toBe(true);
+    expect(vendors(lit)[0].vendorItems).toEqual(ids);
+    expect(vendors(dark)).toEqual([]);
+    // The shared catalog remains one host-independent module value.
+    expect(ids.map((id) => ITEMS[id]?.id)).toEqual(ids);
+  });
+
   it.each([
     ['1', true],
     [undefined, false],

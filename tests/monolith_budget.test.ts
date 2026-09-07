@@ -1011,7 +1011,8 @@ const MONOLITHS: MonolithRow[] = [
     // save-fragment move land together, and their savings compose. Measured
     // with wc -l < src/sim/sim.ts after biome. Exact count, zero slack.
     // Dependency integration composes both extractions; measured after merge.
-    ceiling: 11960,
+    // Surface NPC construction moved to surface_npc_bootstrap.ts. Exact count.
+    ceiling: 11955,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {

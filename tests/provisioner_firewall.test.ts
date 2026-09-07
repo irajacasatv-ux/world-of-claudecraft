@@ -122,7 +122,7 @@ function gearChainRecipes() {
   ];
 }
 
-/** Every alternative and allowed grade is covered even before bills are approved.
+/** Every alternative and allowed grade is covered in the registry and each bill.
  * The existing recipe exclusions remain shared with the provisioner sweep. */
 function ledgerEligibilityViolations(rows: readonly FreeholdLedgerEligibilityDef[]): string[] {
   const protectedOutputs = new Set(
@@ -146,7 +146,7 @@ function ledgerEligibilityViolations(rows: readonly FreeholdLedgerEligibilityDef
 }
 
 describe('Freehold ledger eligibility: the provisioner firewall', () => {
-  it('sweeps every approved alternative and grade while the production schedule is absent', () => {
+  it('sweeps every approved alternative and grade while production bills remain disabled', () => {
     expect(FREEHOLD_LEDGER_ELIGIBILITY).toHaveLength(18);
     expect(FREEHOLD_LEDGER_ELIGIBILITY.flatMap((row) => row.gradeIds)).toHaveLength(28);
     expect([...new Set(FREEHOLD_LEDGER_ELIGIBILITY.map((row) => row.family))]).toEqual([
@@ -163,7 +163,7 @@ describe('Freehold ledger eligibility: the provisioner firewall', () => {
       for (const id of [row.alternativeId, ...row.gradeIds]) expect(ITEMS[id], id).toBeDefined();
     }
     expect(ledgerEligibilityViolations(FREEHOLD_LEDGER_ELIGIBILITY)).toEqual([]);
-    expect(FREEHOLD_LEDGER_SCHEDULE.schedule).toBeNull();
+    expect(FREEHOLD_LEDGER_SCHEDULE.productionSchedule).toBeNull();
   });
 
   it('detects protected material injection into every alternative and grade position', () => {
@@ -224,6 +224,73 @@ describe('Freehold ledger eligibility: the provisioner firewall', () => {
       const row = { ...FREEHOLD_LEDGER_ELIGIBILITY[0], gradeIds: ['copper_ore', id] };
       expect(ledgerEligibilityViolations([row]), id).toContain(id);
     }
+  });
+
+  it('covers every selected week and grade in the accepted development cycle', () => {
+    expect(FREEHOLD_LEDGER_SCHEDULE.schedule).toHaveLength(12);
+    expect(FREEHOLD_LEDGER_SCHEDULE.schedule.flatMap((bill) => bill.lines)).toHaveLength(36);
+    let grades = 0;
+    for (const bill of FREEHOLD_LEDGER_SCHEDULE.schedule) {
+      expect(bill.lines, bill.id).toHaveLength(3);
+      expect(
+        bill.lines.filter((line) => line.family === 'produce'),
+        bill.id,
+      ).toHaveLength(1);
+      expect(ledgerEligibilityViolations(bill.lines), bill.id).toEqual([]);
+      for (const line of bill.lines) {
+        expect(Number.isSafeInteger(line.units), bill.id).toBe(true);
+        expect(line.units, bill.id).toBeGreaterThan(0);
+        for (const id of line.gradeIds) {
+          expect(ITEMS[id], `${bill.id}:${id}`).toBeDefined();
+          grades++;
+        }
+      }
+    }
+    expect(grades).toBe(60);
+    expect(FREEHOLD_LEDGER_SCHEDULE.productionApproved).toBe(false);
+  });
+
+  it('detects protected injections in every published line identity and grade position', () => {
+    const forbiddenIds = [
+      ...PERFECTING_MATERIAL_IDS,
+      ...GEAR_INTERMEDIATE_WORDS.map((word) => `synthetic_${word}`),
+      CATALYST_ID,
+      'quickening_catalyst',
+    ];
+    expect(forbiddenIds).toHaveLength(11);
+    let probes = 0;
+    for (const bill of FREEHOLD_LEDGER_SCHEDULE.schedule) {
+      for (const [lineIndex, line] of bill.lines.entries()) {
+        for (const id of forbiddenIds) {
+          const alteredIdentity = bill.lines.map((row, index) =>
+            index === lineIndex ? { ...row, alternativeId: id } : row,
+          );
+          expect(
+            ledgerEligibilityViolations(alteredIdentity),
+            `${bill.id}:${line.alternativeId}:${id}`,
+          ).toContain(id);
+          probes++;
+          for (const gradeIndex of line.gradeIds.keys()) {
+            const alteredGrade = bill.lines.map((row, index) =>
+              index === lineIndex
+                ? {
+                    ...row,
+                    gradeIds: row.gradeIds.map((grade, position) =>
+                      position === gradeIndex ? id : grade,
+                    ),
+                  }
+                : row,
+            );
+            expect(
+              ledgerEligibilityViolations(alteredGrade),
+              `${bill.id}:${line.alternativeId}:grade-${gradeIndex}:${id}`,
+            ).toContain(id);
+            probes++;
+          }
+        }
+      }
+    }
+    expect(probes).toBe(1056);
   });
 });
 

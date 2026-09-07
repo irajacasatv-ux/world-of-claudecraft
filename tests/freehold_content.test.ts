@@ -2,6 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   FREEHOLD_CHARTERS,
+  FREEHOLD_FURNISHER,
+  FREEHOLD_FURNISHING_IDS,
+  FREEHOLD_FURNISHINGS,
   FREEHOLD_LEDGER_ELIGIBILITY,
   FREEHOLD_LEDGER_SCHEDULE,
   FREEHOLD_TIER_IDS,
@@ -157,12 +160,29 @@ describe('Freehold content source freeze', () => {
     expect(() => Array.prototype.pop.call(FREEHOLD_LEDGER_ELIGIBILITY)).toThrow();
   });
 
-  it('keeps the unsigned production schedule absent without invented quantities or metadata', () => {
-    expect(FREEHOLD_LEDGER_SCHEDULE).toEqual({
-      status: 'pending_approval',
+  it('admits the accepted development cycle while production bills remain unsigned', () => {
+    expect(FREEHOLD_LEDGER_SCHEDULE).toMatchObject({
+      status: 'development_trial',
       calibrationId: 'CAL-LEDGER-A',
-      schedule: null,
+      contentVersion: 'freehold-ledger-tuning-v1',
+      developmentApproved: true,
+      productionApproved: false,
+      productionSchedule: null,
     });
+    expect(FREEHOLD_LEDGER_SCHEDULE.schedule.map((row) => row.id)).toEqual([
+      'cottage-trial-01',
+      'cottage-trial-02',
+      'cottage-trial-03',
+      'cottage-trial-04',
+      'cottage-trial-05',
+      'cottage-trial-06',
+      'cottage-trial-07',
+      'cottage-trial-08',
+      'cottage-trial-09',
+      'cottage-trial-10',
+      'cottage-trial-11',
+      'cottage-trial-12',
+    ]);
     expect(Object.isFrozen(FREEHOLD_LEDGER_SCHEDULE)).toBe(true);
     expect(() => Object.assign(FREEHOLD_LEDGER_SCHEDULE, { schedule: [] })).toThrow();
   });
@@ -179,24 +199,64 @@ describe('Freehold content source freeze', () => {
     }
   });
 
-  it('keeps every unsigned furnishing and its acquisition source outside runtime content', () => {
-    // Remove this admission guard only with the signed numeric source artifact.
-    for (const id of [
-      'freehold_timber_bed',
-      'freehold_round_table',
-      'freehold_spindle_chair',
-      'freehold_low_stool',
-      'freehold_woven_rug',
-      'freehold_brass_lantern',
-      'freehold_storage_chest',
-      'freehold_open_bookshelf',
-    ]) {
-      expect(ITEMS[id], id).toBeUndefined();
-      expect(
-        Object.values(NPCS).some((npc) => npc.vendorItems?.includes(id)),
+  it('pins every accepted trial furnishing value and its sole acquisition source', () => {
+    const rows = [
+      ['freehold_timber_bed', 'Timber Bed', 5, 7, 2.5, 4],
+      ['freehold_round_table', 'Round Table', 5, 5, 1.5, 2],
+      ['freehold_spindle_chair', 'Spindle Chair', 2, 2, 1, 1],
+      ['freehold_low_stool', 'Low Stool', 2, 2, 0.5, 1],
+      ['freehold_woven_rug', 'Woven Rug', 4, 8, 0, 1],
+      ['freehold_brass_lantern', 'Brass Lantern', 2, 2, 0.5, 1],
+      ['freehold_storage_chest', 'Storage Chest', 5, 4, 1.5, 3],
+      ['freehold_open_bookshelf', 'Open Bookshelf', 6, 1, 1.5, 8],
+    ] as const;
+    const ids = rows.map(([id]) => id);
+    expect(FREEHOLD_FURNISHING_IDS).toEqual(ids);
+    expect(Object.keys(FREEHOLD_FURNISHINGS)).toEqual(ids);
+    for (const [id, name, width, depth, r, decorCost] of rows) {
+      expect(FREEHOLD_FURNISHINGS[id]).toEqual({
         id,
-      ).toBe(false);
+        name,
+        kind: 'furnishing',
+        quality: 'common',
+        buyValue: 250,
+        sellValue: 60,
+        furnishing: { footprint: { width, depth }, r, decorCost, surface: 'floor' },
+      });
+      expect(ITEMS[id], id).toBe(FREEHOLD_FURNISHINGS[id]);
+      expect(
+        Object.values(NPCS)
+          .filter((npc) => npc.vendorItems?.includes(id))
+          .map((npc) => npc.id),
+        id,
+      ).toEqual(['freehold_furnisher']);
     }
-    expect(NPCS.freehold_furnisher).toBeUndefined();
+    expect(NPCS.freehold_furnisher).toBe(FREEHOLD_FURNISHER);
+    expect(FREEHOLD_FURNISHER.vendorItems).toEqual(ids);
+    expect(FREEHOLD_FURNISHER.questIds).toEqual([]);
+  });
+
+  it('freezes every furnishing row, nested placement field and furnisher stock at runtime', () => {
+    expect(Object.isFrozen(FREEHOLD_FURNISHING_IDS)).toBe(true);
+    expect(Object.isFrozen(FREEHOLD_FURNISHINGS)).toBe(true);
+    for (const item of Object.values(FREEHOLD_FURNISHINGS)) {
+      expect(Object.isFrozen(item), item.id).toBe(true);
+      expect(Object.isFrozen(item.furnishing), item.id).toBe(true);
+      expect(Object.isFrozen(item.furnishing.footprint), item.id).toBe(true);
+      expect(() => Object.assign(item, { buyValue: 1 })).toThrow();
+      expect(() => Object.assign(item.furnishing, { r: 99 })).toThrow();
+      expect(() => Object.assign(item.furnishing.footprint, { width: 99 })).toThrow();
+    }
+    for (const value of [
+      FREEHOLD_FURNISHER,
+      FREEHOLD_FURNISHER.pos,
+      FREEHOLD_FURNISHER.questIds,
+      FREEHOLD_FURNISHER.vendorItems,
+    ]) {
+      expect(Object.isFrozen(value)).toBe(true);
+    }
+    expect(() => Array.prototype.pop.call(FREEHOLD_FURNISHING_IDS)).toThrow();
+    expect(() => Array.prototype.pop.call(FREEHOLD_FURNISHER.vendorItems)).toThrow();
+    expect(() => Object.assign(FREEHOLD_FURNISHINGS, { freehold_forged: {} })).toThrow();
   });
 });

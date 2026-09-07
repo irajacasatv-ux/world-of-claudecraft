@@ -58,6 +58,7 @@ talk only to the **`SimContext` seam** (`sim_context.ts`).
 - `spatial.ts`: `SpatialGrid` entity hash for radius queries; re-bucketed at end of tick. Pure; imported directly.
 - `format_money.ts`: the sim's plain-English money formatter (`"3g 5s"` fragments for loot/quest/vendor/market emit text). A leaf module so `sim.ts`, `market.ts`, and `loot/loot_roll.ts` share it without a value-cycle. NOT the i18n `formatMoney` (see Player-facing text).
 - `world_seed.ts`: `WORLD_SEED`, the one shipped world seed. Every host that builds THE world and every suite asserting its geometry imports it; never re-declare the literal.
+- `surface_npc_bootstrap.ts`: authored surface NPC construction over a narrow `SimContext` view, with the coordinator's safe-position resolver injected. Preserves definition insertion order and service-anchor registration before `market.seed`; admission comes from `freehold/should_spawn_npc.ts`.
 - `obs.ts`: RL surface: `ACTIONS`/`applyAction`/`encodeObs`/`obsSize`. Consumed by `headless/` + `python/` (see those dirs).
 
 ## System modules behind SimContext (who owns what)
@@ -273,13 +274,14 @@ foreign hot paths, reachable via `SimContext`):
 
 If you ever find a `SimContext` member with zero consumers, that is dead scaffolding:
 remove the declaration AND its binding in the same change, then re-run the parity gate.
-Standing exception, the WHOLE housing scaffolding until 05/07, not just one member:
-`ctx.freeholdsEnabled` (the housing host opt-in) and `ctx.freeholds` (the owner-keyed
-record map) both land consumer-free by design and keep their bindings, and so do the four
+Standing exception, the housing record scaffolding until 05/07:
+`ctx.freeholds` (the owner-keyed record map) lands consumer-free by design and
+keeps its binding, and so do the four
 `src/sim/freehold/state.ts` lifecycle helpers behind them (`defaultFreeholdState`,
 `loadFreehold`, `serializeFreehold`, `evictFreehold`), which are called by tests only
-today. First consumers: the furnisher stock (03) and the Eastbrook gate prompt (06) read
-the flag; the claim (05) and persistence (07) drive the map and its helpers. Deleting any
+today. The furnisher already reads `ctx.freeholdsEnabled` through surface NPC
+construction; the Eastbrook gate prompt (06) will also read the flag. The claim
+(05) and persistence (07) drive the map and its helpers. Deleting any
 of them under the rule above would remove the load path 05/07 are built on.
 
 ## Determinism as it bites here

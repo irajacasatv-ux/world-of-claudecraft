@@ -826,6 +826,7 @@ describe('stock rows: the phase 11n pulls', () => {
       fury: 47,
       stablemaster_marla: 2,
       wardsmith_orun: 3,
+      freehold_furnisher: 8,
     });
   });
 });

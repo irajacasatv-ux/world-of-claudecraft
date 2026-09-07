@@ -9,6 +9,9 @@ the wire; the public descriptor carries an opaque plot id only.
   `FreeholdView` and `FreeholdLayoutView`, the tier and visit-policy unions).
   Data only: no logic, no `SimContext`, so the server row mapper and the wire
   import the same names. Names may gain members later and are never renamed.
+- `should_spawn_npc.ts` owns surface NPC admission: dynamic definitions stay
+  excluded, and the furnisher requires the host opt-in. It reads no live state
+  and draws nothing; `surface_npc_bootstrap.ts` applies it during construction.
 - `state.ts` owns the record lifecycle over the live `ctx.freeholds` map on
   the `guild_bank.ts` idiom: `defaultFreeholdState` (every account's tier-0
   Inn Room), `loadFreehold` (the ONE load path, load-once, an empty owner key
@@ -62,15 +65,12 @@ the wire; the public descriptor carries an opaque plot id only.
   The editor viewport (`src/editor/3d/viewport.ts`) and custom editor
   play-test maps boot dark by design; only the stock offline world and the
   headless env opt in.
-- Standing exception to the zero-consumer rule in `src/sim/CLAUDE.md`:
-  `ctx.freeholdsEnabled` lands consumer-free by design and keeps its binding;
-  its first consumers are the furnisher stock (03) and the Eastbrook gate
-  prompt (06), which read it when they land.
-- Parity obligation: every parity trace boots the flag false today, so the
-  first behavioral read of `ctx.freeholdsEnabled` must add a parity scenario
-  booting it true (or pin that parity covers only the dark arm) in the same
-  change; `tests/freehold_module.test.ts` pins that a lit and a dark Sim on
-  one seed agree until then.
+- `ctx.freeholdsEnabled` gates the furnisher through surface NPC construction.
+  The Eastbrook gate prompt reads it when its owner lands.
+- Golden parity traces cover the dark arm, pinned by the source boundary in
+  `tests/freehold_npc_spawn.test.ts`. That suite pins the unchanged dark
+  construction fingerprint, full geometry, and deterministic lit construction;
+  `tests/freehold_module.test.ts` proves inert commands on each configuration.
 - No store, ledger-service or ownership-service vocabulary anywhere in this
   directory: the sim is a game core, and everything that sells or transfers a
   plot stays outside `src/sim/`.

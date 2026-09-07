@@ -4,6 +4,7 @@
 // merges those records into the flat tables the rest of the engine consumes,
 // and owns the world-layout constants.
 
+import { FREEHOLD_FURNISHER, FREEHOLD_FURNISHINGS } from './content/freehold';
 import { BASE_ITEMS } from './content/items';
 import type {
   CampDef,
@@ -386,6 +387,7 @@ export const ITEMS: Record<string, ItemDef> = mergeItems(
   DUNGEON_KEEPSAKE_ITEMS,
   IGNIVAR_DROP_ITEMS,
   CRUCIBLE_PROFESSION_ITEMS,
+  FREEHOLD_FURNISHINGS,
 );
 
 export type { AggregatedSetEffect } from './content/item_sets';
@@ -457,6 +459,7 @@ export const NPCS: Record<string, NpcDef> = {
   // loop skips it). Kept in NPCS so the online client and world_entity_i18n can
   // resolve its name; spirit.ts spawns a copy at every graveyard.
   [SPIRIT_HEALER_NPC_ID]: SPIRIT_HEALER,
+  [FREEHOLD_FURNISHER.id]: FREEHOLD_FURNISHER,
 };
 
 // Graveyards + the Spirit Healer: re-exported so the Sim and spirit.ts import the

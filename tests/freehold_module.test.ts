@@ -1,8 +1,8 @@
 // Dark-host pins for src/sim/freehold/ and the IWorldHousing members on Sim.
-// This change registers housing on every host without lighting any behavior,
-// so the decisive assertions are absence: null descriptors, one shared clock
-// base, ten stubs that neither mutate, emit nor draw, a lit and a dark Sim on
-// one seed that agree, a record lifecycle that is a pure value round-trip, and
+// Housing commands remain inert while the host flag controls the furnisher.
+// These assertions cover null descriptors, one shared clock base, ten stubs
+// that neither mutate, emit nor draw on each host configuration, a record
+// lifecycle that is a pure value round-trip, and
 // a source scan that keeps the sim core and its three sibling housing modules
 // free of store vocabulary and the sim core free of wall clocks.
 
@@ -173,33 +173,31 @@ describe('IWorldHousing on the offline Sim (dark)', () => {
     expect(sim.ctx.freeholdsEnabled).toBe(false);
   });
 
-  // The offline world and the headless env boot the flag true while every
-  // test and parity trace boots it false. Nothing reads it yet, so a lit Sim
-  // and a dark Sim on one seed must stay indistinguishable; the first
-  // behavioral read owes a lit parity scenario (src/sim/freehold/CLAUDE.md).
-  it('a lit Sim and a dark Sim on one seed agree after the same ticks and stubs', () => {
-    const dark = new Sim({ seed: 1, playerClass: 'warrior' });
-    const lit = new Sim({ seed: 1, playerClass: 'warrior', freeholdsEnabled: true });
-    expect(dark.ctx.freeholdsEnabled).toBe(false);
-    expect(lit.ctx.freeholdsEnabled).toBe(true);
-    const run = (sim: Sim) => {
+  // The flag now adds the furnisher, so cross-flag entity ids may differ.
+  // On EACH configuration, commands must preserve the full seeded world.
+  it.each([false, true])('housing stubs preserve the seeded host with flag %s', (enabled) => {
+    const control = new Sim({ seed: 1, playerClass: 'warrior', freeholdsEnabled: enabled });
+    const subject = new Sim({ seed: 1, playerClass: 'warrior', freeholdsEnabled: enabled });
+    expect(control.ctx.freeholdsEnabled).toBe(enabled);
+    expect(subject.ctx.freeholdsEnabled).toBe(enabled);
+    const run = (sim: Sim, callStubs: boolean) => {
       for (let i = 0; i < 20; i++) sim.tick();
-      for (const [, call] of STUBS) call(sim);
+      if (callStubs) for (const [, call] of STUBS) call(sim);
       for (let i = 0; i < 20; i++) sim.tick();
     };
-    run(dark);
-    run(lit);
+    run(control, false);
+    run(subject, true);
     const positions = (sim: Sim) =>
       [...sim.entities.values()]
         .sort((a, b) => a.id - b.id)
         .map((e) => ({ id: e.id, pos: { ...e.pos }, facing: e.facing, hp: e.hp }));
-    expect(lit.tickCount).toBe(40);
-    expect(lit.tickCount).toBe(dark.tickCount);
-    expect(snapshot(lit, lit.primaryId)).toEqual(snapshot(dark, dark.primaryId));
-    const litPositions = positions(lit);
-    expect(litPositions.length).toBeGreaterThan(1); // the player and the world's mobs
-    expect(litPositions).toEqual(positions(dark));
-    expect(lit.rng.next()).toBe(dark.rng.next()); // the same stream position too
+    expect(subject.tickCount).toBe(40);
+    expect(subject.tickCount).toBe(control.tickCount);
+    expect(snapshot(subject, subject.primaryId)).toEqual(snapshot(control, control.primaryId));
+    const subjectPositions = positions(subject);
+    expect(subjectPositions.length).toBeGreaterThan(1); // the player and the world's mobs
+    expect(subjectPositions).toEqual(positions(control));
+    expect(subject.rng.next()).toBe(control.rng.next()); // the same stream position too
   });
 });
 
@@ -378,7 +376,14 @@ describe('src/sim/freehold/ source scan', () => {
   const files = readdirSync(dir).sort();
 
   it('covers the whole directory', () => {
-    expect(files).toEqual(['CLAUDE.md', 'commands.ts', 'index.ts', 'state.ts', 'types.ts']);
+    expect(files).toEqual([
+      'CLAUDE.md',
+      'commands.ts',
+      'index.ts',
+      'should_spawn_npc.ts',
+      'state.ts',
+      'types.ts',
+    ]);
   });
 
   it('carries no store or ledger-service vocabulary in any file, comments included', () => {

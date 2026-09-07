@@ -63,8 +63,8 @@ export interface IWorldHousing {
   // neither name the edit to revert nor replay one. Dark no-ops here.
   undoPlacement(): void;
   redoPlacement(): void;
-  // Pay the freehold's upkeep ledger forward from the caller's own copper.
-  // The price, the paid-through day and the prepaid cap all resolve
+  // Pay the freehold's upkeep ledger with the caller's eligible materials.
+  // The bill, the paid-through week and the prepaid cap all resolve
   // server-side (13 owns the rules); NO payload. Dark no-op here.
   payLedger(): void;
   // Choose who may step through the caller's freehold door: closed, friends,

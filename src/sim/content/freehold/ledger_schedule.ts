@@ -2,6 +2,14 @@
 // Source record: docs/freeholds/content-source-freeze-2026-09-07.md.
 // Each alternative is a separate line choice, with base grade before fine grade.
 // Material tiers describe gathering sources, not housing tiers.
+import { FREEHOLD_LEDGER_TRIAL_BILLS, FREEHOLD_LEDGER_TRIAL_VERSION } from './ledger_trial';
+
+/** Published bill identity metadata. The upkeep owner supplies the admitted
+ * Tuesday anchor and preserves this key on quoted and prepaid bills. */
+export interface FreeholdLedgerScheduleKey {
+  readonly contentVersion: string;
+  readonly realmWeekAnchor: string;
+}
 
 export interface FreeholdLedgerEligibilityDef {
   readonly family: 'ore' | 'wood' | 'herb' | 'hide' | 'cloth' | 'fish' | 'produce';
@@ -112,10 +120,16 @@ export const FREEHOLD_LEDGER_ELIGIBILITY: readonly FreeholdLedgerEligibilityDef[
   ),
 );
 
-// Eligibility does not approve quantities or a cycle. No production bill exists
-// until CAL-LEDGER-A has a measured artifact and explicit approval.
+// Exact development trial accepted in the separate decision record; the original
+// measured proposal remains unchanged. Production still needs its own approval.
+// Decision: docs/freeholds/content-trial-2026-09-07/acceptance.md.
 export const FREEHOLD_LEDGER_SCHEDULE = Object.freeze({
-  status: 'pending_approval',
+  status: 'development_trial',
   calibrationId: 'CAL-LEDGER-A',
-  schedule: null,
+  contentVersion: FREEHOLD_LEDGER_TRIAL_VERSION,
+  sourceArtifactSha256: 'e6e6c4334999835f30c8f81735ef113de328a23948ff77531247a123d272204d',
+  developmentApproved: true,
+  productionApproved: false,
+  productionSchedule: null,
+  schedule: FREEHOLD_LEDGER_TRIAL_BILLS,
 } as const);

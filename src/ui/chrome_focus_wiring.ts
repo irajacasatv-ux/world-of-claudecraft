@@ -30,6 +30,8 @@ export const CHROME_GUARDED_PANELS: readonly string[] = [
   '#map-window',
   '#bank-window',
   '#bags',
+  // Vendor purchases retain native keyboard activation while gameplay keys stay live.
+  '#vendor-window',
   '#deeds-window',
   '#reliquary-window',
   '#professions-window',

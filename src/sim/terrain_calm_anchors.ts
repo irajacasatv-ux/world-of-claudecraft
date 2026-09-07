@@ -20,6 +20,7 @@
 // caller-supplied probe: no Math.random, no clocks, no state. Every host
 // computes the same rings from the one shipped WORLD_SEED.
 
+import { FREEHOLD_FURNISHER_NPC_ID } from './content/freehold';
 import { OVERWORLD_GRAVEYARDS } from './content/graveyards';
 import { MAILBOXES } from './content/mailboxes';
 import { MUSTER_BOARDS, NOTICEBOARDS } from './content/noticeboards';
@@ -159,6 +160,9 @@ export function collectCalmAnchorPads(): CalmPadRow[] {
   for (const node of GATHER_NODES) pad('gatherNode', node.pos.x, node.pos.z, 5, 12, false);
   for (const id in NPCS) {
     const npc = NPCS[id];
+    // The gated furnisher uses its measured existing ground on every host.
+    // A new pad here would reshape even dark realms without spawning the NPC.
+    if (npc.id === FREEHOLD_FURNISHER_NPC_ID) continue;
     pad('npc', npc.pos.x, npc.pos.z, 6, 14, false);
   }
   // Precision-graded landforms outside the content tables: the Glacier Tarn

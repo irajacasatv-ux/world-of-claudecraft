@@ -100,6 +100,7 @@ describe('the wired roots (the surfaces the fix covers)', () => {
       '#map-window',
       '#bank-window',
       '#bags',
+      '#vendor-window',
       '#deeds-window',
       '#reliquary-window',
       '#professions-window',

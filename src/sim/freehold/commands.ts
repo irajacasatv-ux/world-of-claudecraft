@@ -19,8 +19,9 @@
 // Today `server/game.ts`'s pre-switch `refusedFreeholdCommand` is the only
 // server-side enforcement of the dark-realm rule ON THE COMMAND WIRE (the REST
 // status read gates itself in server/freehold_routes.ts). `ctx.freeholdsEnabled`
-// reaches the sim (D85) but nothing reads it, so that gate is a single point of
-// failure the moment a body does something. Whoever lands the first real body
+// reaches the sim (D85) and gates surface NPC construction, but these command
+// bodies do not read it. The dispatch gate becomes a single point of failure
+// the moment a body does something. Whoever lands the first real body
 // either opens it with a `ctx.freeholdsEnabled` early return (defense in depth,
 // and the offline host then honors its own opt-in the way it honors the payload
 // rules above) or records the explicit ruling that the dispatch gate is the one

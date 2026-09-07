@@ -389,12 +389,22 @@ describe('furnishing definition and inventory', () => {
     const other = source.slice(source.indexOf('interface OtherItemDef'));
     expect(other).toMatch(/kind:\s*Exclude<\s*ItemKind,[^>]*'furnishing'/);
   });
-  it('introduces no shipping furnishing record', () => {
+  it('covers exactly the eight authored furnishings and the hostile-payload test fixture', () => {
     expect(
       Object.values(ITEMS)
         .filter((def) => def.kind === 'furnishing')
         .map((def) => def.id),
-    ).toEqual([ID]);
+    ).toEqual([
+      'freehold_timber_bed',
+      'freehold_round_table',
+      'freehold_spindle_chair',
+      'freehold_low_stool',
+      'freehold_woven_rug',
+      'freehold_brass_lantern',
+      'freehold_storage_chest',
+      'freehold_open_bookshelf',
+      ID,
+    ]);
   });
   it('occupies one bag slot per copy', () => {
     expect(stackSizeOf(FURNISHING)).toBe(1);

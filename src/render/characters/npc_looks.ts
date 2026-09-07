@@ -106,6 +106,24 @@ const kit = (set: ArmorSetId, over: Partial<ArmorLoadout> = {}): ArmorLoadout =>
 // --- the roster --------------------------------------------------------------
 
 export const NPC_LOOKS: Record<string, NpcLookDef> = {
+  // A practical Eastbrook craftswoman in warm leathers, with a clear face.
+  freehold_furnisher: {
+    app: {
+      gender: 'female',
+      hair: 'sidepart',
+      ...hair(28, 0.4, 0.25),
+      brows: 'soft',
+      eyeShape: 'round',
+      ...eyes(42, 0.35, 0.32),
+      ...skin(27, 0.42, 0.58),
+      mouth: 'smile',
+      face: face({ cheeks: 0.18, chin: 0.1, smirk: 0.08 }),
+      body: body({ shoulders: 0.12, chest: 0.08 }),
+      outfit: 'ember',
+    },
+    worn: kit('rogue', { arms: null, hands: null }),
+    props: 'none',
+  },
   // === Eastbrook Vale: the starter valley, warm and rustic =================
   // The Merchant: gold on black, a man who owns the market and dresses like it.
   the_merchant: {

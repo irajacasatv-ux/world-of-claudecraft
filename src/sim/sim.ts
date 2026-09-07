@@ -676,6 +676,7 @@ import {
   UNSTUCK_SICKNESS_ID,
 } from './spirit';
 import { resolveStoragePrices, type StoragePrices } from './storage_prices';
+import { bootstrapSurfaceNpcs } from './surface_npc_bootstrap';
 import { repairTalentLoadouts } from './talent_loadouts';
 import {
   CURRENT_CHARACTER_CONTENT_REVISION,
@@ -2297,15 +2298,9 @@ export class Sim {
     // (render-only ownership; the editor viewport strips them from cfg.world).
     const worldContent = this.worldContent;
 
-    // NPCs — nudged out of buildings and deep water if their data position is bad
-    for (const npcDef of Object.values(worldContent.npcs)) {
-      if (npcDef.dynamic) continue; // spawned on demand by its owning system, not surface-placed
-      const safe = this.findSafePos(npcDef.pos.x, npcDef.pos.z, waterLevel() + 0.6);
-      const npc = createNpc(this.nextId++, npcDef, this.groundPos(safe.x, safe.z));
-      this.addEntity(npc);
-      if (npcDef.market) this.market.merchantIds.push(npc.id); // every auctioneer anchors the shared World Market
-      if (npcDef.banker) this.bankerIds.push(npc.id); // every bursar is a place to use the bank
-    }
+    bootstrapSurfaceNpcs(this.ctx, worldContent.npcs, this.market.merchantIds, (x, z, h) =>
+      this.findSafePos(x, z, h),
+    );
     this.market.seed();
 
     // Mobs from camps

@@ -3,8 +3,8 @@
 // added later is a visible edit. The pvp/index.ts cycle rule applies unchanged:
 // a module that needs a RUNTIME import from a package that itself imports this
 // barrel stays OUT of the list and is imported by path. No module here needs
-// one today (every import below the barrel is type-only), so there is no
-// exception to document yet.
+// one today. The surface admission leaf imports only content identities and
+// shared types, so it also stays behind the barrel without a cycle.
 export {
   freeholdEnter,
   freeholdLeave,
@@ -17,6 +17,7 @@ export {
   setVisitPolicy,
   undoPlacement,
 } from './commands';
+export { shouldSpawnSurfaceNpc } from './should_spawn_npc';
 export {
   defaultFreeholdState,
   evictFreehold,

@@ -13,6 +13,7 @@ import { MECH_CHROMAS, mechChromaItemId } from '../src/sim/content/skins';
 import { ITEMS } from '../src/sim/data';
 import {
   type ExchangeLock,
+  exchangeBrowseCategory,
   exchangeCategoryUsesQualityFloor,
   exchangeHardLock,
   exchangeItemCategory,
@@ -206,11 +207,36 @@ describe('the exchange rail refuses exactly what the sibling TRANSFER-lock pipes
 });
 
 describe('the REAL catalog clears every mount and every chroma plate', () => {
+  it('shares eligibility with mounts without inventing a riding identity for furnishings', () => {
+    const ids = [
+      'freehold_timber_bed',
+      'freehold_round_table',
+      'freehold_spindle_chair',
+      'freehold_low_stool',
+      'freehold_woven_rug',
+      'freehold_brass_lantern',
+      'freehold_storage_chest',
+      'freehold_open_bookshelf',
+    ];
+    expect(
+      Object.values(ITEMS)
+        .filter((item) => item.kind === 'furnishing')
+        .map((item) => item.id),
+    ).toEqual(ids);
+    for (const id of ids) {
+      expect(exchangeItemCategory(ITEMS[id])).toBe('mount');
+      expect(exchangeBrowseCategory(ITEMS[id])).toBe('other');
+      expect(exchangeHardLock(ITEMS[id], undefined)).toBeNull();
+      expect(Object.hasOwn(ITEMS[id], 'mount')).toBe(false);
+    }
+  });
+
   it('has a mount item per catalog mount, and all of them pass the locks', () => {
-    const mountItems = Object.values(ITEMS).filter((i) => exchangeItemCategory(i) === 'mount');
+    const mountItems = Object.values(ITEMS).filter((i) => i.kind === 'mount');
     // One tradable handle per catalog mount: a mount with no item behind it
     // would be untradable no matter what the policy said.
     expect(mountItems.length).toBe(Object.keys(MOUNTS).length);
+    expect(mountItems.every((item) => exchangeItemCategory(item) === 'mount')).toBe(true);
     const blocked = mountItems.filter((i) => exchangeHardLock(i, undefined) !== null);
     expect(blocked.map((i) => i.id)).toEqual([]);
     // Non-vacuity, weakened deliberately in v0.35.0. It used to assert that EVERY
