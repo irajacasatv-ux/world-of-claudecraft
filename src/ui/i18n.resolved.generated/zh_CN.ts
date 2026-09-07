@@ -326,6 +326,14 @@ export const zh_CN: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "谴罪",
       "fateThreadsLabel": "命运丝线",
@@ -10093,6 +10101,7 @@ export const zh_CN: EnTranslations = {
       "food": "食物",
       "drink": "饮料",
       "recipe": "图样",
+      "furnishing": "Furnishing",
       "tool": "工具",
       "potion": "药水",
       "elixir": "药剂",
@@ -10245,6 +10254,7 @@ export const zh_CN: EnTranslations = {
       "filterTypeMaterial": "材料",
       "filterTypeCosmetic": "外观",
       "filterTypePattern": "图样",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "其他",
       "filterArmorType": "护甲类型",
       "filterArmorAll": "全部护甲",

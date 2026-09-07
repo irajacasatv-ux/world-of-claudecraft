@@ -107,6 +107,7 @@ export interface BagMode {
 /** What clicking a bag item does, given the item + modes. The *Blocked variants
  *  mean the click is rejected with an error toast (no dispatch). */
 export type BagAction =
+  | 'none'
   | 'transferBlockedSoulbound'
   | 'trade'
   | 'mailAttach'
@@ -257,6 +258,7 @@ export function bagItemAction(
   // no-target rung; it must never demote the click to the default use ladder.
   if (mode.bankOpen) return 'bankDepositBlockedNoTarget';
   if (mode.petFeed) return item.kind === 'food' ? 'petFeed' : 'petFeedBlocked';
+  if (item.kind === 'furnishing') return 'none';
   // A usable quest item (e.g. the firebottle: use.type 'throw') is USED on click,
   // not discarded; only inert quest items fall through to the discard prompt.
   if (item.kind === 'quest') return item.use ? 'use' : 'discardQuest';
@@ -453,6 +455,7 @@ export function bagDestroyAction(item: BagItemInfo, mode: BagMode): BagDestroyAc
 export function bagSlotsLineKey(
   item: { kind: string; bagSlots?: number; materialsOnly?: boolean } | undefined,
 ): 'itemUi.tooltip.bagSlots' | 'itemUi.tooltip.bagSlotsMaterials' | null {
+  if (item?.kind === 'furnishing') return null;
   if (item?.kind !== 'bag') return null;
   return item.materialsOnly ? 'itemUi.tooltip.bagSlotsMaterials' : 'itemUi.tooltip.bagSlots';
 }
@@ -521,6 +524,7 @@ export function bagTooltipHintKey(
   // "Click to equip" for a click that will be refused. The hover previews the
   // exact line the click raises, the way the vendor / market cannot-hints do.
   if (mode.bankOpen) return 'hudChrome.bank.cannotDepositNow';
+  if (item.kind === 'furnishing') return '';
   if (item.kind === 'quest') return 'itemUi.tooltip.clickDestroy';
   if (item.kind === 'mount') return 'hudChrome.mounts.clickManage';
   if (

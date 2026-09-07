@@ -88,6 +88,7 @@ export function bagItemNewActions(
   itemId: string,
   instance?: ItemInstancePayload,
 ): BagItemNewActionId[] {
+  if (def.kind === 'furnishing') return [isItemLocked(instance) ? 'unlock' : 'lock'];
   const out: BagItemNewActionId[] = [];
   if (isDisenchantable(def)) out.push('disenchant');
   if (isSalvageable(def) && !isItemLocked(instance)) out.push('salvage');
@@ -108,14 +109,17 @@ export function bagItemHasContextActions(
   return bagItemNewActions(def, itemId, instance).length > 0;
 }
 
-/** The full ordered menu: the classic default row first (so left-click's binding
- *  survives as row one), then each eligible new action. */
+/** The full ordered menu: the classic default row first, then each eligible
+ *  new action. Furnishings have no default use action and keep their lock toggle. */
 export function bagItemContextActions(
   def: ItemDef,
   itemId: string,
   instance?: ItemInstancePayload,
 ): BagItemContextAction[] {
-  const rows: BagItemContextAction[] = [{ id: 'default', labelKey: defaultActionLabelKey(def) }];
+  const rows: BagItemContextAction[] = [];
+  if (def.kind !== 'furnishing') {
+    rows.push({ id: 'default', labelKey: defaultActionLabelKey(def) });
+  }
   for (const id of bagItemNewActions(def, itemId, instance)) {
     rows.push({ id, labelKey: NEW_ACTION_LABEL_KEY[id] });
   }

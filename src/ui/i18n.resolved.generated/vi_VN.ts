@@ -326,6 +326,14 @@ export const vi_VN: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "Kết Án",
       "fateThreadsLabel": "Sợi Định Mệnh",
@@ -10093,6 +10101,7 @@ export const vi_VN: EnTranslations = {
       "food": "Thức Ăn",
       "drink": "Đồ Uống",
       "recipe": "Mẫu",
+      "furnishing": "Furnishing",
       "tool": "Dụng Cụ",
       "potion": "Thuốc",
       "elixir": "Tiên Dược",
@@ -10245,6 +10254,7 @@ export const vi_VN: EnTranslations = {
       "filterTypeMaterial": "Nguyên Liệu",
       "filterTypeCosmetic": "Đồ Trang Trí",
       "filterTypePattern": "Patterns",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "Khác",
       "filterArmorType": "Loại giáp",
       "filterArmorAll": "Tất cả giáp",

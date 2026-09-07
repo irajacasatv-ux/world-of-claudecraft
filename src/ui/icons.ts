@@ -4118,6 +4118,8 @@ function itemFallback(id: string): IconRecipe | null {
   // to the name-matched trinket cascade. Inert while every shipped scroll
   // carries committed WebP; this is the artless-id backstop.
   if (it.kind === 'scroll') return r('parchment', 'leather', ['scroll'], fx);
+  // Furnishings keep a wooden crate silhouette regardless of name keywords.
+  if (it.kind === 'furnishing') return r('wood', 'earthBrown', ['crate'], fx);
   // Raw fishing catches left kind food for cooking reagents; keep a fish-like
   // procedural recipe so they never fall through to generic junk trinkets when
   // static WebP is missing. Name tokens cover cooked fish siblings and rares.

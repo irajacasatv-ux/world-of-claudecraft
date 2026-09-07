@@ -326,6 +326,14 @@ export const pt_BR: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "Condenação",
       "fateThreadsLabel": "Fios do Destino",
@@ -10093,6 +10101,7 @@ export const pt_BR: EnTranslations = {
       "food": "Comida",
       "drink": "Bebida",
       "recipe": "Molde",
+      "furnishing": "Furnishing",
       "tool": "Ferramenta",
       "potion": "Poção",
       "elixir": "Elixir",
@@ -10245,6 +10254,7 @@ export const pt_BR: EnTranslations = {
       "filterTypeMaterial": "Materiais",
       "filterTypeCosmetic": "Cosméticos",
       "filterTypePattern": "Patterns",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "Outros",
       "filterArmorType": "Tipo de armadura",
       "filterArmorAll": "Toda armadura",

@@ -95,6 +95,7 @@ export type ItemLookup = (itemId: string) => ItemDef | undefined;
 // literally the buff a raider reaches for before a pull, so burying it under 'all'
 // would hide the most-clicked consumable in the game.
 export function matchesCategory(item: ItemDef, category: BagCategory): boolean {
+  if (item.kind === 'furnishing') return category === 'all';
   switch (category) {
     case 'all':
       return true;

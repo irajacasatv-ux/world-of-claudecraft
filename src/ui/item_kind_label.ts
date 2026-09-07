@@ -49,6 +49,7 @@ const ITEM_KIND_LABEL_KEYS: Record<ItemDef['kind'], TranslationKey> = {
   bag: 'itemUi.kind.bag',
   mount: 'itemUi.kind.mount',
   recipe: 'itemUi.kind.recipe',
+  furnishing: 'itemUi.kind.furnishing',
 };
 
 export function itemQualityLabel(quality: ItemDef['quality']): string {

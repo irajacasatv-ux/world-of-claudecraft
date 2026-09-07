@@ -326,6 +326,14 @@ export const ja_JP: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "断罪",
       "fateThreadsLabel": "運命の糸",
@@ -10093,6 +10101,7 @@ export const ja_JP: EnTranslations = {
       "food": "食べ物",
       "drink": "飲み物",
       "recipe": "図案",
+      "furnishing": "Furnishing",
       "tool": "道具",
       "potion": "ポーション",
       "elixir": "エリクサー",
@@ -10245,6 +10254,7 @@ export const ja_JP: EnTranslations = {
       "filterTypeMaterial": "素材",
       "filterTypeCosmetic": "外見",
       "filterTypePattern": "図案",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "その他",
       "filterArmorType": "防具の種類",
       "filterArmorAll": "すべての防具",

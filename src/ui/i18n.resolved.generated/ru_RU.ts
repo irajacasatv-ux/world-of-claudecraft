@@ -326,6 +326,14 @@ export const ru_RU: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "Осуждение",
       "fateThreadsLabel": "Нити судьбы",
@@ -10093,6 +10101,7 @@ export const ru_RU: EnTranslations = {
       "food": "Еда",
       "drink": "Напиток",
       "recipe": "Схема",
+      "furnishing": "Furnishing",
       "tool": "Инструмент",
       "potion": "Зелье",
       "elixir": "Эликсир",
@@ -10245,6 +10254,7 @@ export const ru_RU: EnTranslations = {
       "filterTypeMaterial": "Материалы",
       "filterTypeCosmetic": "Косметика",
       "filterTypePattern": "Схемы",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "Другое",
       "filterArmorType": "Тип брони",
       "filterArmorAll": "Вся броня",

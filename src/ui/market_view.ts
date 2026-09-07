@@ -359,6 +359,8 @@ export interface MarketFilterMenus {
  * painter's source for the gate.
  */
 export function marketFilterMenus(itemType: MarketItemTypeFilter): MarketFilterMenus {
+  if (itemType === 'furnishing')
+    return { subtype: null, subtypeKind: null, armorClass: false, primaryStat: false };
   if (itemType === 'armor')
     return {
       subtype: MARKET_ARMOR_TYPE_FILTERS,

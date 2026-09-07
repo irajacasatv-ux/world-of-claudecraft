@@ -1175,6 +1175,7 @@ export class MarketWindow {
     if (filter === 'material') return t('itemUi.market.filterTypeMaterial');
     if (filter === 'cosmetic') return t('itemUi.market.filterTypeCosmetic');
     if (filter === 'pattern') return t('itemUi.market.filterTypePattern');
+    if (filter === 'furnishing') return t('itemUi.market.filterTypeFurnishing');
     if (filter === 'other') return t('itemUi.market.filterTypeOther');
     return t('itemUi.market.filterTypeAll');
   }

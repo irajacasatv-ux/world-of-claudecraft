@@ -326,6 +326,14 @@ export const pl_PL: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "Potępienie",
       "fateThreadsLabel": "Nici Przeznaczenia",
@@ -10093,6 +10101,7 @@ export const pl_PL: EnTranslations = {
       "food": "Jedzenie",
       "drink": "Napój",
       "recipe": "Wzór",
+      "furnishing": "Furnishing",
       "tool": "Narzędzie",
       "potion": "Mikstura",
       "elixir": "Eliksir",
@@ -10245,6 +10254,7 @@ export const pl_PL: EnTranslations = {
       "filterTypeMaterial": "Surowce",
       "filterTypeCosmetic": "Kosmetyczne",
       "filterTypePattern": "Patterns",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "Inne",
       "filterArmorType": "Rodzaj pancerza",
       "filterArmorAll": "Cały pancerz",

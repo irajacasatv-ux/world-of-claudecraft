@@ -34,8 +34,13 @@ export interface ItemNameColorInput {
  * (same R34 doctrine as loot_roll_controller's former qualityColor helper).
  */
 export function itemNameColor(item: ItemNameColorInput): string {
+  if (item.kind === 'furnishing') return qualityNameColor(item.quality);
   if (item.kind === 'quest') return QUEST_ITEM_NAME_COLOR;
-  const quality = item.quality ?? 'common';
+  return qualityNameColor(item.quality);
+}
+
+function qualityNameColor(value: ItemNameColorInput['quality']): string {
+  const quality = value ?? 'common';
   if (Object.hasOwn(QUALITY_COLOR, quality)) return QUALITY_COLOR[quality];
   return QUALITY_FALLBACK;
 }

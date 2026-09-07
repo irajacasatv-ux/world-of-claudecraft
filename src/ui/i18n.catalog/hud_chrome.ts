@@ -10,6 +10,14 @@
 import { armoryCollectionStrings, armorySkinStrings } from './armory';
 
 export const hudChromeStrings = {
+  housing: {
+    furnishing: {
+      footprint: 'Footprint: {width} by {depth} cells.',
+      decorCost: 'Decor cost: {cost}.',
+      surfaceFloor: 'Placed on the floor.',
+      maker: 'Made by {maker}.',
+    },
+  },
   warlock: {
     doomLabel: 'Condemnation',
     fateThreadsLabel: 'Fate Threads',

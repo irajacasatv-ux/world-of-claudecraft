@@ -326,6 +326,14 @@ export const sv_SE: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "Fördömelse",
       "fateThreadsLabel": "Ödestrådar",
@@ -10093,6 +10101,7 @@ export const sv_SE: EnTranslations = {
       "food": "Mat",
       "drink": "Dryck",
       "recipe": "Mönster",
+      "furnishing": "Furnishing",
       "tool": "Verktyg",
       "potion": "Trolldryck",
       "elixir": "Elixir",
@@ -10245,6 +10254,7 @@ export const sv_SE: EnTranslations = {
       "filterTypeMaterial": "Material",
       "filterTypeCosmetic": "Kosmetika",
       "filterTypePattern": "Patterns",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "Övrigt",
       "filterArmorType": "Rustningstyp",
       "filterArmorAll": "All rustning",

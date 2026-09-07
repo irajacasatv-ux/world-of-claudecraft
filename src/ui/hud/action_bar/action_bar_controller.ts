@@ -109,14 +109,22 @@ export class ActionBarController {
   }
 
   replaceActions(actions: HotbarAction[]): void {
-    this.actionState = sanitizeHotbarActions(actions, (id) => this.isAbilityPlacementAllowed(id));
+    this.actionState = sanitizeHotbarActions(
+      actions,
+      (id) => this.isAbilityPlacementAllowed(id),
+      (id) => ITEMS[id]?.kind !== 'furnishing',
+    );
   }
 
   replaceActionsForLoadout(
     actions: HotbarAction[],
     targetKnownAbilityIds: ReadonlySet<string>,
   ): void {
-    this.actionState = sanitizeHotbarActions(actions, (id) => this.isAbilityPlacementAllowed(id));
+    this.actionState = sanitizeHotbarActions(
+      actions,
+      (id) => this.isAbilityPlacementAllowed(id),
+      (id) => ITEMS[id]?.kind !== 'furnishing',
+    );
     this.pendingLoadoutKnownAbilityIds = new Set(targetKnownAbilityIds);
     this.knownAbilityIdsAtLastSync = new Set([
       ...this.deps.knownAbilityIds(),
@@ -129,8 +137,10 @@ export class ActionBarController {
   }
 
   replaceAttackAction(action: HotbarAction): void {
-    this.attackActionState = sanitizeHotbarAction(action, (id) =>
-      this.isAbilityPlacementAllowed(id),
+    this.attackActionState = sanitizeHotbarAction(
+      action,
+      (id) => this.isAbilityPlacementAllowed(id),
+      (id) => ITEMS[id]?.kind !== 'furnishing',
     );
   }
 
@@ -336,6 +346,7 @@ export class ActionBarController {
     // press on; the bags are its home. Elixirs, scrolls, and flasks live on the
     // mobile consumable tray instead.
     const item = ITEMS[itemId];
+    if (item?.kind === 'furnishing') return false;
     return (
       item?.kind === 'food' ||
       item?.kind === 'drink' ||

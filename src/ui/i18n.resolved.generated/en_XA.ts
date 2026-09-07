@@ -326,6 +326,14 @@ export const en_XA: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "[Ƒóóţþŕíñţ: {width} ƀý {depth} çéļļš.]",
+        "decorCost": "[Ðéçóŕ çóšţ: {cost}.]",
+        "surfaceFloor": "[Þļáçéð óñ ţĥé ƒļóóŕ.]",
+        "maker": "[Ɱáðé ƀý {maker}.]"
+      }
+    },
     "warlock": {
       "doomLabel": "[Çóñðéɱñáţíóñ]",
       "fateThreadsLabel": "[Ƒáţé Ţĥŕéáðš]",
@@ -10093,6 +10101,7 @@ export const en_XA: EnTranslations = {
       "food": "[Ƒóóð]",
       "drink": "[Ðŕíñķ]",
       "recipe": "[Þáţţéŕñ]",
+      "furnishing": "[Ƒúŕñíšĥíñĝ]",
       "tool": "[Ţóóļ]",
       "potion": "[Þóţíóñ]",
       "elixir": "[Éļíẋíŕ]",
@@ -10245,6 +10254,7 @@ export const en_XA: EnTranslations = {
       "filterTypeMaterial": "[Ɱáţéŕíáļš]",
       "filterTypeCosmetic": "[Çóšɱéţíçš]",
       "filterTypePattern": "[Þáţţéŕñš]",
+      "filterTypeFurnishing": "[Ƒúŕñíšĥíñĝš]",
       "filterTypeOther": "[Óţĥéŕ]",
       "filterArmorType": "[Áŕɱóŕ ţýþé]",
       "filterArmorAll": "[Áļļ áŕɱóŕ]",

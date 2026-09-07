@@ -59,6 +59,7 @@ const itemStringsEn = {
       // OBJECT in the bags reads apart from the KNOWLEDGE it grants, which the
       // trainer and crafting surfaces already call a recipe.
       recipe: 'Pattern',
+      furnishing: 'Furnishing',
     },
     stats: {
       armor: 'Armor',
@@ -283,6 +284,7 @@ const itemStringsEn = {
       filterTypeMaterial: 'Materials',
       filterTypeCosmetic: 'Cosmetics',
       filterTypePattern: 'Patterns',
+      filterTypeFurnishing: 'Furnishings',
       filterTypeOther: 'Other',
       filterArmorType: 'Armor type',
       filterArmorAll: 'All armor',

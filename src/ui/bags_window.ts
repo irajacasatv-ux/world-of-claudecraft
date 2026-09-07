@@ -1635,6 +1635,8 @@ export class BagsWindow {
       s.craftedRecipeId,
     );
     switch (action) {
+      case 'none':
+        return;
       case 'transferBlockedSoulbound':
         this.deps.showError(t('hudChrome.itemSoulbound'));
         return;

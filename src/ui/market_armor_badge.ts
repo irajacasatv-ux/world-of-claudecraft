@@ -17,6 +17,7 @@ export interface MarketArmorBadge {
 // Returns the Browse row armor badge for an item, or null for non-armor listings
 // (weapons, bags, materials, and so on show no badge).
 export function marketArmorBadge(item: ItemDef): MarketArmorBadge | null {
+  if (item.kind === 'furnishing') return null;
   const armorType = armorTypeForItem(item);
   const labelKey = itemArmorTypeLabelKey(item);
   if (!armorType || !labelKey) return null;
@@ -56,6 +57,7 @@ export function marketArmorPips(armorType: ArmorType, label: string): string {
 // id) or a bespoke heroic-tier item (heroic === true). Both are the same "this is
 // the heroic tier" distinction the tooltip shows as the [HEROIC] tag.
 export function isHeroicItem(item: ItemDef): boolean {
+  if (item.kind === 'furnishing') return false;
   return item.heroicOf !== undefined || item.heroic === true;
 }
 
@@ -80,6 +82,7 @@ export function marketHeroicStar(item: ItemDef, label: string): string {
 // than re-deriving it is what keeps the mark and the chip from ever disagreeing
 // about which listings are patterns.
 export function isPatternItem(item: ItemDef): boolean {
+  if (item.kind === 'furnishing') return false;
   return item.kind === 'recipe';
 }
 

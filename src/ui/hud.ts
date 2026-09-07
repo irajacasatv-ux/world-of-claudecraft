@@ -60,7 +60,7 @@ import { DEEDS } from '../sim/content/deeds';
 import { HEROIC_MARK_ITEM_ID } from '../sim/content/dungeon_difficulty';
 import { HEROIC_VENDOR_STOCK } from '../sim/content/heroic_vendor';
 import { CRUCIBLE_VENDOR_STOCK } from '../sim/content/ignivar_loot';
-import { isOnMountRaceStartPlatform, MOUNTS } from '../sim/content/mounts';
+import { isOnMountRaceStartPlatform } from '../sim/content/mounts';
 import { recipeById } from '../sim/content/recipes';
 import { RELIQUARY_PAGES, RELIQUARY_PAGES_BY_ID } from '../sim/content/reliquary';
 import { FIRST_TALENT_LEVEL, type TalentAllocation, talentsFor } from '../sim/content/talents';
@@ -469,6 +469,7 @@ import { LockpickController } from './hud/delve/lockpick_controller';
 import { RiteController } from './hud/delve/rite_controller';
 import { FiestaController } from './hud/fiesta/fiesta_controller';
 import { GuildBoardWindow } from './hud/guild_board';
+import { furnishingTooltipLines } from './hud/housing';
 import { LootRollController } from './hud/loot/loot_roll_controller';
 import { lootSettingsView } from './hud/loot/loot_settings_view';
 import { renderLootSettingsWindow } from './hud/loot/loot_settings_window';
@@ -696,9 +697,9 @@ import {
 } from './mob_idle_sfx';
 import { type MobTooltipI18n, type MobTooltipModel, mobTooltipHtml } from './mob_tooltip_view';
 import { MobileMoreDialogController } from './mobile_more_dialog';
-import { MOUNT_DESC_KEYS, mountSpecLines } from './mount_labels';
 import { MountRaceControls } from './mount_race_controls';
 import { MountRaceStrip } from './mount_race_strip';
+import { mountTooltipLines } from './mount_tooltip_view';
 import { type FrameDimension, MovableFrame } from './movable_frame';
 import { NoticeboardPopup } from './noticeboard_popup';
 import { NPC_WINDOW_CLOSE_RANGE } from './npc_service_range';
@@ -6646,6 +6647,7 @@ export class Hud {
     if (item.kind === 'recipe') {
       html += recipePatternTooltipLines(item, this.sim.craftingIdentity);
     }
+    html += furnishingTooltipLines(item, instance);
     html += feastTooltipLines(item);
     // Quest story block (related quest, progress, rules, orphaned). Replaces the
     // old plain "Quest Item" desc that doubled the kind line.
@@ -6658,22 +6660,7 @@ export class Hud {
       if (slotsKey && item.bagSlots)
         html += `<div class="tt-stat">${esc(t(slotsKey, { slots: itemNumber(item.bagSlots) }))}</div>`;
     }
-    // Collectible mount reins: the mount's flavor + specialty numbers + its
-    // ride-level gate (red below the gate, like gear's requires-level line).
-    if (item.kind === 'mount') {
-      const mountDef = MOUNTS[item.mount];
-      if (mountDef) {
-        const descKey = MOUNT_DESC_KEYS[mountDef.key];
-        if (descKey) html += `<div class="tt-desc">${esc(t(descKey))}</div>`;
-        for (const line of mountSpecLines({
-          speedPct: Math.round(mountDef.moveSpeedPct * 100),
-        }))
-          html += `<div class="tt-green">${esc(line)}</div>`;
-        // No per-mount level gate any more: the only requirement is the riding
-        // skill, so the tooltip says how to ride instead of quoting a level.
-        html += `<div class="tt-sub">${esc(t('hudChrome.mounts.useToRide'))}</div>`;
-      }
-    }
+    html += mountTooltipLines(item);
     const requiredClasses = requiredClassesForTooltip(item);
     if (requiredClasses) {
       html += `<div class="tt-sub">${esc(t('itemUi.tooltip.classes', { classes: requiredClasses.map(classDisplayName).join(', ') }))}</div>`;
@@ -6688,7 +6675,7 @@ export class Hud {
     }
     html += this.itemProcBlock(item);
     html += this.itemSetBlock(item);
-    html += instanceMakersMarkLine(instance, item);
+    if (item.kind !== 'furnishing') html += instanceMakersMarkLine(instance, item);
     // Stackables state their per-slot cap (sim/bags.ts stackSizeOf), so a
     // player holding a single potion learns more copies will share the slot;
     // 1-per-slot kinds, mounts, and charge-bearing payloads render nothing.

@@ -326,6 +326,14 @@ export const tr_TR: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "Mahkûmiyet",
       "fateThreadsLabel": "Kader İplikleri",
@@ -10093,6 +10101,7 @@ export const tr_TR: EnTranslations = {
       "food": "Yiyecek",
       "drink": "İçecek",
       "recipe": "Şema",
+      "furnishing": "Furnishing",
       "tool": "Alet",
       "potion": "Şifa İksiri",
       "elixir": "İksir",
@@ -10245,6 +10254,7 @@ export const tr_TR: EnTranslations = {
       "filterTypeMaterial": "Malzemeler",
       "filterTypeCosmetic": "Kozmetikler",
       "filterTypePattern": "Patterns",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "Diğer",
       "filterArmorType": "Zırh türü",
       "filterArmorAll": "Tüm zırhlar",

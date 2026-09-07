@@ -1,0 +1,366 @@
+{
+  "mode": "offline Chromium desktop, lowest graphics preset",
+  "fixture": "probe_furnishing_screenshot; only browser in-memory catalog and inventory",
+  "runs": [
+    {
+      "log": "/tmp/freeholds-02-extra-final.log",
+      "exitCode": 0,
+      "assertions": [
+        {
+          "check": "native B bags",
+          "observed": {
+            "text": "",
+            "aria": "Screenshot Test Furnishing, quantity 1, maker-marked copy",
+            "rect": {
+              "x": 1236,
+              "y": 705,
+              "width": 43,
+              "height": 43,
+              "top": 705,
+              "right": 1279,
+              "bottom": 748,
+              "left": 1236
+            },
+            "color": "rgb(240, 235, 216)",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        },
+        {
+          "check": "bag All asserted",
+          "observed": {
+            "chips": [
+              {
+                "key": "bagchip:all",
+                "label": "All",
+                "pressed": "true"
+              },
+              {
+                "key": "bagchip:weapon",
+                "label": "Weapons",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:armor",
+                "label": "Armor",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:consumable",
+                "label": "Consumables",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:material",
+                "label": "Materials",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:tool",
+                "label": "Tools",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:quest",
+                "label": "Quest",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:mount",
+                "label": "Mounts",
+                "pressed": "false"
+              }
+            ],
+            "itemAria": "Screenshot Test Furnishing, quantity 1, maker-marked copy",
+            "iconWidth": 96
+          }
+        },
+        {
+          "check": "bag category asserted",
+          "observed": {
+            "category": "Materials",
+            "fixtureVisible": false,
+            "body": "Bags2/16AllWeaponsArmorConsumablesMaterialsToolsQuestMountsRecentQualityNameSortNo items match your filters.Link wallet0copper"
+          }
+        },
+        {
+          "check": "normal context menu asserted",
+          "observed": [
+            {
+              "action": "lock",
+              "text": "Lock Item",
+              "role": "button"
+            }
+          ]
+        },
+        {
+          "check": "native Tab trail",
+          "observed": [
+            {
+              "match": false,
+              "label": "Close market",
+              "id": ""
+            },
+            {
+              "match": false,
+              "label": "Browse",
+              "id": ""
+            },
+            {
+              "match": false,
+              "label": "Sell",
+              "id": ""
+            },
+            {
+              "match": false,
+              "label": "Collect",
+              "id": ""
+            },
+            {
+              "match": false,
+              "label": "Search the World Market by item name",
+              "id": ""
+            },
+            {
+              "match": true,
+              "label": "Type: All types",
+              "id": ""
+            }
+          ]
+        },
+        {
+          "check": "focus asserted",
+          "observed": {
+            "selector": "[data-market-filter-menu=\"itemType\"] [data-market-filter-option=\"furnishing\"]",
+            "text": "Furnishings",
+            "aria": null,
+            "rect": {
+              "x": 282.65625,
+              "y": 403.75,
+              "width": 234.671875,
+              "height": 29.59375,
+              "top": 403.75,
+              "right": 517.328125,
+              "bottom": 433.34375,
+              "left": 282.65625
+            },
+            "color": "rgb(255, 209, 0)",
+            "background": "rgba(255, 255, 255, 0.08)",
+            "focused": true,
+            "focusVisible": true,
+            "forcedColors": false,
+            "outlineStyle": "solid",
+            "outlineWidth": "3px",
+            "outlineColor": "rgb(199, 163, 0)",
+            "outlineOffset": "2px"
+          }
+        },
+        {
+          "check": "native keyboard selection asserted",
+          "observed": {
+            "label": "Furnishings",
+            "expanded": "false",
+            "itemType": "furnishing"
+          }
+        },
+        {
+          "check": "native Tab trail",
+          "observed": [
+            {
+              "match": false,
+              "label": "Close market",
+              "id": ""
+            },
+            {
+              "match": false,
+              "label": "Browse",
+              "id": ""
+            },
+            {
+              "match": false,
+              "label": "Sell",
+              "id": ""
+            },
+            {
+              "match": false,
+              "label": "Collect",
+              "id": ""
+            },
+            {
+              "match": false,
+              "label": "Search the World Market by item name",
+              "id": ""
+            },
+            {
+              "match": true,
+              "label": "Type: Furnishings",
+              "id": ""
+            }
+          ]
+        },
+        {
+          "check": "focus asserted",
+          "observed": {
+            "selector": "[data-market-filter-menu=\"itemType\"] [data-market-filter-option=\"furnishing\"]",
+            "text": "Furnishings",
+            "aria": null,
+            "rect": {
+              "x": 282.328125,
+              "y": 402.75,
+              "width": 235.328125,
+              "height": 29.59375,
+              "top": 402.75,
+              "right": 517.65625,
+              "bottom": 432.34375,
+              "left": 282.328125
+            },
+            "color": "rgb(255, 255, 255)",
+            "background": "rgba(0, 0, 0, 0.18)",
+            "focused": true,
+            "focusVisible": true,
+            "forcedColors": true,
+            "outlineStyle": "solid",
+            "outlineWidth": "2px",
+            "outlineColor": "rgba(0, 230, 255, 0.8)",
+            "outlineOffset": "2px"
+          }
+        },
+        {
+          "check": "focus asserted",
+          "observed": {
+            "selector": "#bags [data-focus-key=\"bagchip:mount\"]",
+            "text": "Mounts",
+            "aria": null,
+            "rect": {
+              "x": 1345.71875,
+              "y": 602.96875,
+              "width": 52.625,
+              "height": 26,
+              "top": 602.96875,
+              "right": 1398.34375,
+              "bottom": 628.96875,
+              "left": 1345.71875
+            },
+            "color": "rgb(255, 255, 255)",
+            "background": "rgb(0, 0, 0)",
+            "focused": true,
+            "focusVisible": true,
+            "forcedColors": true,
+            "outlineStyle": "solid",
+            "outlineWidth": "2px",
+            "outlineColor": "rgba(0, 230, 255, 0.8)",
+            "outlineOffset": "2px"
+          }
+        }
+      ],
+      "pageErrorCount": 0
+    },
+    {
+      "log": "/tmp/freeholds-02-bag-focus.log",
+      "exitCode": 0,
+      "assertions": [
+        {
+          "check": "native B bags",
+          "observed": {
+            "text": "",
+            "aria": "Screenshot Test Furnishing, quantity 1, maker-marked copy",
+            "rect": {
+              "x": 1236,
+              "y": 705,
+              "width": 43,
+              "height": 43,
+              "top": 705,
+              "right": 1279,
+              "bottom": 748,
+              "left": 1236
+            },
+            "color": "rgb(240, 235, 216)",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        },
+        {
+          "check": "bag All asserted",
+          "observed": {
+            "chips": [
+              {
+                "key": "bagchip:all",
+                "label": "All",
+                "pressed": "true"
+              },
+              {
+                "key": "bagchip:weapon",
+                "label": "Weapons",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:armor",
+                "label": "Armor",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:consumable",
+                "label": "Consumables",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:material",
+                "label": "Materials",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:tool",
+                "label": "Tools",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:quest",
+                "label": "Quest",
+                "pressed": "false"
+              },
+              {
+                "key": "bagchip:mount",
+                "label": "Mounts",
+                "pressed": "false"
+              }
+            ],
+            "itemAria": "Screenshot Test Furnishing, quantity 1, maker-marked copy",
+            "iconWidth": 96
+          }
+        },
+        {
+          "check": "focus asserted",
+          "observed": {
+            "selector": "#bags [data-focus-key=\"bagchip:mount\"]",
+            "text": "Mounts",
+            "aria": null,
+            "rect": {
+              "x": 1345.71875,
+              "y": 602.96875,
+              "width": 52.625,
+              "height": 26,
+              "top": 602.96875,
+              "right": 1398.34375,
+              "bottom": 628.96875,
+              "left": 1345.71875
+            },
+            "color": "rgb(255, 255, 255)",
+            "background": "rgb(0, 0, 0)",
+            "focused": true,
+            "focusVisible": true,
+            "forcedColors": true,
+            "outlineStyle": "solid",
+            "outlineWidth": "2px",
+            "outlineColor": "rgba(0, 230, 255, 0.8)",
+            "outlineOffset": "2px"
+          }
+        }
+      ],
+      "pageErrorCount": 0
+    }
+  ],
+  "captureNotes": [
+    "Five screenshots retained from extra-final; its tooltip-occluded bag-focus screenshot was discarded.",
+    "The bag-focus screenshot retained from the isolated rerun moves the pointer off the bag before native Shift+Tab.",
+    "Standalone Bags has no full Tab traversal because game input consumes Tab outside inputs/textareas.",
+    "Forced-colors assertions cover named controls and focus indicators, not overall HUD contrast."
+  ]
+}

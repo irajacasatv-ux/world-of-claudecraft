@@ -326,6 +326,14 @@ export const cs_CZ: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "Odsouzení",
       "fateThreadsLabel": "Nitě osudu",
@@ -10093,6 +10101,7 @@ export const cs_CZ: EnTranslations = {
       "food": "Jídlo",
       "drink": "Nápoj",
       "recipe": "Vzor",
+      "furnishing": "Furnishing",
       "tool": "Nástroj",
       "potion": "Lektvar",
       "elixir": "Elixír",
@@ -10245,6 +10254,7 @@ export const cs_CZ: EnTranslations = {
       "filterTypeMaterial": "Materiály",
       "filterTypeCosmetic": "Kosmetika",
       "filterTypePattern": "Patterns",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "Ostatní",
       "filterArmorType": "Typ brnění",
       "filterArmorAll": "Všechno brnění",

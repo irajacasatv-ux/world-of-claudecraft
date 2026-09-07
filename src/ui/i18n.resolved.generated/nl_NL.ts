@@ -326,6 +326,14 @@ export const nl_NL: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "Verdoemenis",
       "fateThreadsLabel": "Lotsdraden",
@@ -10093,6 +10101,7 @@ export const nl_NL: EnTranslations = {
       "food": "Voedsel",
       "drink": "Drank",
       "recipe": "Patroon",
+      "furnishing": "Furnishing",
       "tool": "Gereedschap",
       "potion": "Toverdrank",
       "elixir": "Elixer",
@@ -10245,6 +10254,7 @@ export const nl_NL: EnTranslations = {
       "filterTypeMaterial": "Materialen",
       "filterTypeCosmetic": "Cosmetica",
       "filterTypePattern": "Patterns",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "Overig",
       "filterArmorType": "Pantsertype",
       "filterArmorAll": "Alle pantsers",

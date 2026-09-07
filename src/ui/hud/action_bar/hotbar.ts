@@ -59,15 +59,18 @@ export function isAbilityActionBarEligible(
 export function sanitizeHotbarAction(
   action: HotbarAction,
   isAbilityEligible: (id: string) => boolean,
+  isItemEligible?: (id: string) => boolean,
 ): HotbarAction {
+  if (action?.type === 'item' && isItemEligible?.(action.id) === false) return null;
   return action?.type === 'ability' && !isAbilityEligible(action.id) ? null : action;
 }
 
 export function sanitizeHotbarActions(
   actions: readonly HotbarAction[],
   isAbilityEligible: (id: string) => boolean,
+  isItemEligible?: (id: string) => boolean,
 ): HotbarAction[] {
-  return actions.map((action) => sanitizeHotbarAction(action, isAbilityEligible));
+  return actions.map((action) => sanitizeHotbarAction(action, isAbilityEligible, isItemEligible));
 }
 
 export function storedHotbarHasIneligibleAbility(

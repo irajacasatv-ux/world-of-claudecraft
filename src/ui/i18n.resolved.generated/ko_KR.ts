@@ -326,6 +326,14 @@ export const ko_KR: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "단죄",
       "fateThreadsLabel": "운명의 실타래",
@@ -10093,6 +10101,7 @@ export const ko_KR: EnTranslations = {
       "food": "음식",
       "drink": "음료",
       "recipe": "도안",
+      "furnishing": "Furnishing",
       "tool": "도구",
       "potion": "물약",
       "elixir": "비약",
@@ -10245,6 +10254,7 @@ export const ko_KR: EnTranslations = {
       "filterTypeMaterial": "재료",
       "filterTypeCosmetic": "외형",
       "filterTypePattern": "도안",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "기타",
       "filterArmorType": "방어구 유형",
       "filterArmorAll": "모든 방어구",

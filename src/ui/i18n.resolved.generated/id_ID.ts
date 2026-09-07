@@ -326,6 +326,14 @@ export const id_ID: EnTranslations = {
     }
   },
   "hudChrome": {
+    "housing": {
+      "furnishing": {
+        "footprint": "Footprint: {width} by {depth} cells.",
+        "decorCost": "Decor cost: {cost}.",
+        "surfaceFloor": "Placed on the floor.",
+        "maker": "Made by {maker}."
+      }
+    },
     "warlock": {
       "doomLabel": "Kecaman",
       "fateThreadsLabel": "Benang Takdir",
@@ -10093,6 +10101,7 @@ export const id_ID: EnTranslations = {
       "food": "Makanan",
       "drink": "Minuman",
       "recipe": "Pola",
+      "furnishing": "Furnishing",
       "tool": "Perkakas",
       "potion": "Ramuan",
       "elixir": "Eliksir",
@@ -10245,6 +10254,7 @@ export const id_ID: EnTranslations = {
       "filterTypeMaterial": "Bahan",
       "filterTypeCosmetic": "Kosmetik",
       "filterTypePattern": "Patterns",
+      "filterTypeFurnishing": "Furnishings",
       "filterTypeOther": "Lainnya",
       "filterArmorType": "Jenis zirah",
       "filterArmorAll": "Semua zirah",

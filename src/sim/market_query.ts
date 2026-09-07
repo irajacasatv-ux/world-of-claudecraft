@@ -18,6 +18,7 @@ export const MARKET_ITEM_TYPE_FILTERS = [
   'material',
   'cosmetic',
   'pattern',
+  'furnishing',
   'other',
 ] as const;
 export const MARKET_ARMOR_TYPE_FILTERS = [
@@ -190,6 +191,8 @@ function isCosmeticItem(item: ItemDef): boolean {
 }
 
 function itemMatchesType(item: ItemDef, filter: MarketItemTypeFilter): boolean {
+  if (filter === 'furnishing') return item.kind === 'furnishing';
+  if (item.kind === 'furnishing') return filter === 'all';
   if (filter === 'all') return true;
   if (filter === 'weapon') return item.kind === 'weapon' && item.slot === 'mainhand';
   if (filter === 'armor')
