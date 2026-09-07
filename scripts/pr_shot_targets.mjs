@@ -640,6 +640,12 @@ async function seedForcedColorsOnLowPreset(page) {
   await forcedColorsThemeSeed(page);
 }
 
+/** Manual evidence uses English even when an earlier guide variant selected Japanese. */
+async function seedEnglishFreeholdManual(page, forcedColors = false) {
+  await (forcedColors ? seedForcedColorsOnLowPreset : lowGraphicsSeed)(page);
+  await page.evaluateOnNewDocument(() => localStorage.setItem('locale', 'en'));
+}
+
 /** The tracker variants need BOTH pre-load seeds: the pin-store wipe and the
  *  low preset (a variant carries one beforeLoad, so this composes the pair). */
 async function clearPinsOnLowPreset(page) {
@@ -890,6 +896,315 @@ const dotsOffSeed = async (page) => {
 };
 
 export const TARGETS = [
+  {
+    key: 'provisioning-furnishing-guide',
+    label: 'Provisioning guide separates ornamental furnishings from food',
+    when: ['professions_provisioning', 'provisioning-furnishing-guide'],
+    variants: [
+      { key: 'desktop-intro', landing: true, beforeLoad: lowGraphicsSeed },
+      { key: 'desktop-row', landing: true, row: true, beforeLoad: lowGraphicsSeed },
+      {
+        key: 'mobile-intro',
+        landing: true,
+        mobile: true,
+        viewport: { width: 390, height: 844 },
+        beforeLoad: lowGraphicsSeed,
+      },
+      {
+        key: 'mobile-row',
+        landing: true,
+        mobile: true,
+        row: true,
+        viewport: { width: 390, height: 844 },
+        beforeLoad: lowGraphicsSeed,
+      },
+      {
+        key: 'japanese-intro',
+        landing: true,
+        mobile: true,
+        japanese: true,
+        viewport: { width: 390, height: 844 },
+        beforeLoad: lowGraphicsSeed,
+      },
+      {
+        key: 'japanese-row',
+        landing: true,
+        mobile: true,
+        japanese: true,
+        row: true,
+        viewport: { width: 390, height: 844 },
+        beforeLoad: lowGraphicsSeed,
+      },
+    ],
+    async capture(page, variant) {
+      if (!variant.mobile) {
+        await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 });
+        const cdp = await page.createCDPSession();
+        await cdp.send('Emulation.setDeviceMetricsOverride', {
+          width: 1280,
+          height: 900,
+          deviceScaleFactor: 1,
+          mobile: false,
+        });
+      }
+      await page.goto(new URL('/wiki/professions/provisioning#sec-2', page.url()).href, {
+        waitUntil: 'networkidle0',
+      });
+      await page.waitForSelector('#prov-ladder', { visible: true });
+      await page.select('#guide-lang-select', variant.japanese ? 'ja_JP' : 'en');
+      await page.waitForFunction(
+        (japanese) => document.documentElement.lang.startsWith(japanese ? 'ja' : 'en'),
+        {},
+        variant.japanese === true,
+      );
+      await wait(750);
+      const presentation = await page.evaluate((row) => {
+        const section = document.querySelector('#prov-ladder');
+        const rung = [...section.querySelectorAll('.guide-prof-bands > li')].find((el) =>
+          /50/.test(el.querySelector('strong').textContent),
+        );
+        if (!rung) throw new Error('Cooking 50 guide rung is missing');
+        const target = row ? rung : section;
+        target.scrollIntoView({ block: 'start', behavior: 'instant' });
+        window.scrollBy({ top: -100, behavior: 'instant' });
+        return {
+          paragraph: section.querySelector('p').textContent,
+          cooking50: rung.textContent.replace(/\s+/g, ' ').trim(),
+          viewport: { width: innerWidth, height: innerHeight },
+          horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
+          language: document.documentElement.lang,
+          targetTop: target.getBoundingClientRect().top,
+        };
+      }, variant.row === true);
+      if (presentation.horizontalOverflow)
+        throw new Error('provisioning guide overflows horizontally');
+      console.log(
+        '[provisioning-furnishing-guide]',
+        JSON.stringify({ leg: variant.key, presentation }),
+      );
+      await wait(500);
+      return {};
+    },
+  },
+  {
+    key: 'freehold-manual-tooltip',
+    label: 'Retained furnishing manual on enabled and disabled hosts',
+    when: ['recipe_pattern_tooltip_view', 'freehold-manual-tooltip'],
+    variants: [
+      { key: 'dark-desktop', beforeLoad: seedEnglishFreeholdManual },
+      { key: 'lit-desktop', enabled: true, beforeLoad: seedEnglishFreeholdManual },
+      { key: 'dark-mobile', mobile: true, beforeLoad: seedEnglishFreeholdManual },
+      { key: 'lit-mobile', mobile: true, enabled: true, beforeLoad: seedEnglishFreeholdManual },
+      { key: 'dark-forced-colors', beforeLoad: (page) => seedEnglishFreeholdManual(page, true) },
+    ],
+    async capture(page, variant) {
+      await page.waitForFunction(() => window.__game?.sim?.player, { timeout: 120000 });
+      await awaitVeilSettled(page);
+      await dismissEntryOverlays(page);
+      await dismissTutorialGreeting(page);
+      const itemId = 'pattern_freehold_clockwork_lamp';
+      const selector = `#bags [data-coach-item="${itemId}"]`;
+      const enabled = variant.enabled === true;
+      await page.evaluate(
+        ({ itemId, enabled }) => {
+          const { sim } = window.__game;
+          const meta = sim.players.get(sim.playerId);
+          sim.cfg.freeholdsEnabled = enabled;
+          meta.inventory = [];
+          meta.craftSkills.engineering = 50;
+          meta.knownRecipes.delete('recipe_freehold_clockwork_lamp');
+          sim.addItem(itemId, 1);
+          window.__freeholdManualUseCalls = [];
+          const originalUse = sim.useItem;
+          sim.useItem = function (...args) {
+            window.__freeholdManualUseCalls.push(args[0]);
+            return originalUse.apply(this, args);
+          };
+        },
+        { itemId, enabled },
+      );
+      // KeyB exercises the bound window opener. The item use below likewise
+      // travels through the actual row handler, never a direct sim.useItem call.
+      await page.keyboard.press('b');
+      await page.waitForSelector(selector, { visible: true });
+      await awaitVeilSettled(page);
+      await dismissEntryOverlays(page);
+      await dismissTutorialGreeting(page);
+      await page.waitForFunction(
+        () => {
+          const banner = document.querySelector('#banner');
+          return !banner || Number(getComputedStyle(banner).opacity) < 0.05;
+        },
+        { timeout: 30000 },
+      );
+      await page.evaluate((sel) => {
+        const row = document.querySelector(sel);
+        row.scrollIntoView({ block: 'center', behavior: 'instant' });
+        const r = row.getBoundingClientRect();
+        const receiver = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+        if (!row.contains(receiver))
+          throw new Error(`manual row is covered by ${receiver?.outerHTML.slice(0, 150)}`);
+      }, selector);
+      let touchActionSize;
+      if (variant.mobile) {
+        await tapEl(page, selector);
+        await page.waitForSelector('#ctx-menu [data-act="default"]', { visible: true });
+        touchActionSize = await page.evaluate(() => {
+          const r = document
+            .querySelector('#ctx-menu [data-act="default"]')
+            .getBoundingClientRect();
+          return { width: r.width, height: r.height };
+        });
+        if (touchActionSize.width < 40 || touchActionSize.height < 40) {
+          throw new Error(
+            `manual Use missed the touch target floor: ${JSON.stringify(touchActionSize)}`,
+          );
+        }
+        await tapEl(page, '#ctx-menu [data-act="default"]');
+      } else {
+        await page.focus(selector);
+        await page.keyboard.press('Enter');
+      }
+      const result = await page.evaluate((id) => {
+        const sim = window.__game.sim;
+        const meta = sim.players.get(sim.playerId);
+        return {
+          count: sim.countItem(id),
+          calls: window.__freeholdManualUseCalls,
+          known: meta.knownRecipes.has('recipe_freehold_clockwork_lamp'),
+          craftSkill: meta.craftSkills.engineering,
+          capability: sim.cfg.freeholdsEnabled,
+          preset: JSON.parse(localStorage.getItem('woc_settings')).graphicsPreset,
+          locale: localStorage.getItem('locale'),
+          feedback: document.querySelector('#error-msg')?.textContent ?? '',
+          feedbackVisible:
+            Number(getComputedStyle(document.querySelector('#error-msg')).opacity) > 0.9,
+        };
+      }, itemId);
+      const refusal = 'Freeholds are not available on this realm.';
+      const refusedInUi = result.calls.length === 0 && result.feedback === refusal;
+      const usedOnce = result.calls.length === 1 && result.calls[0] === itemId;
+      if (
+        result.count !== (enabled ? 0 : 1) ||
+        result.known !== enabled ||
+        result.preset !== 1 ||
+        result.locale !== 'en' ||
+        (enabled ? !usedOnce : !usedOnce && !refusedInUi)
+      ) {
+        throw new Error(`manual bound use disagreed with its fixture: ${JSON.stringify(result)}`);
+      }
+      if (variant.mobile && !enabled) {
+        // Wait on the browser's transition, not a Node-side delay that can
+        // outlast the short toast while software rendering is busy.
+        if (refusedInUi) {
+          await page.waitForFunction(
+            () => Number(getComputedStyle(document.querySelector('#error-msg')).opacity) > 0.9,
+          );
+        }
+        const presentation = await page.evaluate((sel) => {
+          const r = document.querySelector(sel).getBoundingClientRect();
+          const error = document.querySelector('#error-msg');
+          const box = error.getBoundingClientRect();
+          return {
+            row: { width: r.width, height: r.height },
+            viewport: { width: innerWidth, height: innerHeight },
+            feedback: error.textContent,
+            feedbackVisible: Number(getComputedStyle(error).opacity) > 0.9,
+            feedbackInViewport:
+              box.left >= 0 && box.top >= 0 && box.right <= innerWidth && box.bottom <= innerHeight,
+          };
+        }, selector);
+        if (
+          presentation.row.width < 40 ||
+          presentation.row.height < 40 ||
+          (refusedInUi && (!presentation.feedbackVisible || !presentation.feedbackInViewport))
+        ) {
+          throw new Error(`manual touch refusal is not readable: ${JSON.stringify(presentation)}`);
+        }
+        console.log(
+          '[freehold-manual-tooltip]',
+          JSON.stringify({
+            leg: variant.key,
+            refusedInUi,
+            touchActionSize,
+            boundUse: result,
+            presentation,
+          }),
+        );
+        return {};
+      }
+      await page.waitForFunction(
+        () => Number(getComputedStyle(document.querySelector('#error-msg')).opacity) < 0.05,
+      );
+      // A second retained-copy fixture makes the learning tooltip inspectable
+      // after the enabled use consumed its first copy. The result above was
+      // measured before this fixture grant and is logged separately.
+      if (enabled) {
+        await page.evaluate((id) => {
+          const { sim, hud } = window.__game;
+          sim.players.get(sim.playerId).knownRecipes.delete('recipe_freehold_clockwork_lamp');
+          sim.addItem(id, 1);
+          hud.bagsWindow.render();
+        }, itemId);
+      }
+      await page.waitForSelector(selector, { visible: true });
+      // Draggable bag rows use a hold to pick up the item. Focus opens the
+      // actual tooltip on both layouts; touch use was independently proved above.
+      await page.keyboard.press('Tab');
+      await page.focus(selector);
+      await page.waitForFunction(() => {
+        const tip = document.querySelector('#tooltip');
+        return tip && getComputedStyle(tip).display !== 'none' && tip.textContent.trim().length > 0;
+      });
+      const presentation = await page.evaluate((sel) => {
+        const tip = document.querySelector('#tooltip');
+        const cell = document.querySelector(sel);
+        const r = cell.getBoundingClientRect();
+        const box = tip.getBoundingClientRect();
+        return {
+          text: tip.textContent,
+          row: { width: r.width, height: r.height },
+          viewport: { width: innerWidth, height: innerHeight },
+          tooltipInViewport:
+            box.left >= 0 && box.top >= 0 && box.right <= innerWidth && box.bottom <= innerHeight,
+          keyboardFocused: document.activeElement === cell,
+          forcedColors: matchMedia('(forced-colors: active)').matches,
+          tooltipColor: getComputedStyle(tip).color,
+          tooltipBackground: getComputedStyle(tip).backgroundColor,
+        };
+      }, selector);
+      // Historical and current revisions share this target. Record which
+      // availability explanation actually rendered, rather than assuming the
+      // before revision already contains the repair being demonstrated.
+      const unavailable = presentation.text.includes('Freeholds are not available on this realm.');
+      const useHint = presentation.text.includes('Click to use');
+      if (
+        (enabled && (unavailable || !useHint)) ||
+        (!enabled && unavailable === useHint) ||
+        !presentation.text.includes('Schematic: Clockwork Lamp') ||
+        !presentation.tooltipInViewport
+      ) {
+        throw new Error(
+          `manual tooltip did not match the capture leg: ${JSON.stringify(presentation)}`,
+        );
+      }
+      if (variant.mobile && (presentation.row.width < 40 || presentation.row.height < 40)) {
+        throw new Error(
+          `manual row missed the touch target floor: ${JSON.stringify(presentation.row)}`,
+        );
+      }
+      console.log(
+        '[freehold-manual-tooltip]',
+        JSON.stringify({
+          leg: variant.key,
+          availabilityExplained: unavailable,
+          boundUse: result,
+          presentation,
+        }),
+      );
+      return {};
+    },
+  },
   ...masterwroughtReviewTargets({
     beforeLoad: lowGraphicsSeed,
     dismissOverlays: dismissEntryOverlays,

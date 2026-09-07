@@ -4,6 +4,7 @@
 // it directly.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import {
   classifyDiff,
@@ -1071,5 +1072,73 @@ describe('the Materials Vault evidence target', () => {
     expect(target.capture.toString()).toContain("matchMedia('(forced-colors: active)').matches");
     expect(target.capture.toString()).toContain("getElementById('tutorial-greeting')");
     expect(target.capture.toString()).toContain('signedSpecial');
+  });
+});
+
+describe('furnishing manual capture locale isolation', () => {
+  it('resets Japanese guide storage to English before every manual variant, including forced colors', async () => {
+    const plan = classifyDiff([
+      'src/guide/pages/professions_provisioning.ts',
+      'src/ui/hud/professions/recipe_pattern_tooltip_view.ts',
+    ]);
+    const related = plan.specific.filter((target: { key: string }) =>
+      ['provisioning-furnishing-guide', 'freehold-manual-tooltip'].includes(target.key),
+    );
+    expect(related.map((target: { key: string }) => target.key)).toEqual([
+      'provisioning-furnishing-guide',
+      'freehold-manual-tooltip',
+    ]);
+    const manual = related[1];
+    expect(manual.variants.map((variant: { key: string }) => variant.key)).toEqual([
+      'dark-desktop',
+      'lit-desktop',
+      'dark-mobile',
+      'lit-mobile',
+      'dark-forced-colors',
+    ]);
+    for (const variant of manual.variants) {
+      const storage = new Map([
+        ['locale', 'ja_JP'],
+        ['woc_settings', JSON.stringify({ graphicsPreset: 6 })],
+      ]);
+      const context = {
+        localStorage: {
+          getItem: (key: string) => storage.get(key) ?? null,
+          setItem: (key: string, value: string) => storage.set(key, value),
+        },
+      };
+      const mediaCalls: Array<{ method: string; payload: unknown }> = [];
+      await variant.beforeLoad({
+        async evaluateOnNewDocument(script: string | (() => void)) {
+          runInNewContext(
+            typeof script === 'string' ? script : `(${script.toString()})()`,
+            context,
+          );
+        },
+        async createCDPSession() {
+          return {
+            async send(method: string, payload: unknown) {
+              mediaCalls.push({ method, payload });
+            },
+          };
+        },
+      });
+      expect(storage.get('locale'), variant.key).toBe('en');
+      expect(JSON.parse(storage.get('woc_settings') ?? '{}').graphicsPreset, variant.key).toBe(1);
+      expect(
+        JSON.parse(storage.get('woc_settings') ?? '{}').graphicsDefaultApplied,
+        variant.key,
+      ).toBe(true);
+      expect(mediaCalls).toEqual(
+        variant.key === 'dark-forced-colors'
+          ? [
+              {
+                method: 'Emulation.setEmulatedMedia',
+                payload: { features: [{ name: 'forced-colors', value: 'active' }] },
+              },
+            ]
+          : [],
+      );
+    }
   });
 });
