@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 // The bags 'use' click routing (#2343): drives the REAL BagsWindow against a
-// jsdom container (the bags_window_instance_marker.test.ts fixture idiom) and
+// happy-dom container (the bags_window_instance_marker.test.ts fixture idiom) and
 // pins the behavior the source pin in bags_window.test.ts can only anchor
 // textually: a click on a usable item tries the gathering-tool hook first, a
 // consumed use never reaches world.useItem, and a declined use (a non-tool,
@@ -14,16 +14,24 @@ import type { IWorld } from '../src/world_api';
 function harness(
   inventory: InvSlot[],
   useGatherTool: (item: ItemDef) => boolean,
+  options: { cfg?: { freeholdsEnabled?: boolean }; touch?: boolean; trade?: boolean } = {},
 ): {
   root: HTMLElement;
   usedItems: string[];
   gatherToolCalls: ItemDef[];
   feastPlacements: number[];
+  errors: string[];
+  menuDefaults: (() => void)[];
+  tradedItems: string[];
 } {
   const usedItems: string[] = [];
   const gatherToolCalls: ItemDef[] = [];
   const feastPlacements: number[] = [];
+  const errors: string[] = [];
+  const menuDefaults: (() => void)[] = [];
+  const tradedItems: string[] = [];
   const world = {
+    cfg: options.cfg ?? {},
     inventory,
     bags: [null, null, null, null],
     bagCapacity: 16,
@@ -56,7 +64,7 @@ function harness(
     restoreFocus: noop,
     renderCharIfOpen: noop,
     vendorOpen: () => false,
-    tradeOpen: () => false,
+    tradeOpen: () => options.trade === true,
     isMarketSell: () => false,
     isMailAttach: () => false,
     isBankOpen: () => false,
@@ -67,11 +75,11 @@ function harness(
     closeVendor: noop,
     closeBank: noop,
     onClosed: noop,
-    addItemToTrade: noop,
+    addItemToTrade: (itemId) => tradedItems.push(itemId),
     stageMarketSell: noop,
     stageMailParcel: noop,
     insertItemChatLink: noop,
-    showError: noop,
+    showError: (message) => errors.push(message),
     setPendingPetFeed: noop,
     resetPetBarSig: noop,
     isHotbarItemId: () => false,
@@ -82,16 +90,17 @@ function harness(
     setDragAction: noop,
     clearActionDropTargets: noop,
     dragState: new ItemDragState(),
-    isTouchHud: () => false,
+    isTouchHud: () => options.touch === true,
     confirmVendorSell: () => true,
     markEquipDropTargets: noop,
     dropOnEquipSlot: noop,
     dropOnActionSlot: noop,
     dropOnActionRingSlot: noop,
-    openItemActionMenu: noop,
+    openItemActionMenu: (_def, _itemId, _target, _x, _y, runDefault) =>
+      menuDefaults.push(runDefault),
   };
   new BagsWindow(deps).render();
-  return { root, usedItems, gatherToolCalls, feastPlacements };
+  return { root, usedItems, gatherToolCalls, feastPlacements, errors, menuDefaults, tradedItems };
 }
 
 function clickFirstCell(root: HTMLElement): void {
@@ -145,3 +154,75 @@ describe('bags use-click gathering-tool routing (#2343)', () => {
     expect(gatherToolCalls).toEqual([]);
   });
 });
+
+describe.each([
+  'pattern_freehold_clockwork_lamp',
+  'pattern_freehold_chart_easel',
+  'pattern_freehold_jewel_floor_lamp',
+])('retained furnishing manual use feedback: %s', (itemId) => {
+  it.each([undefined, false, true])(
+    'voices current realm availability %s after touch Use',
+    (flag) => {
+      const h = harness([{ itemId, count: 1 }], () => false, {
+        cfg: { freeholdsEnabled: flag },
+        touch: true,
+      });
+      clickFirstCell(h.root);
+      expect(h.menuDefaults).toHaveLength(1);
+      expect(h.errors).toEqual([]);
+      expect(h.usedItems).toEqual([]);
+      h.menuDefaults[0]();
+      expect(h.errors).toEqual(flag === true ? [] : ['Freeholds are not available on this realm.']);
+      expect(h.usedItems).toEqual(flag === true ? [itemId] : []);
+    },
+  );
+
+  it('reads capability again when the already-open touch menu activates', () => {
+    const cfg = { freeholdsEnabled: true };
+    const h = harness([{ itemId, count: 1 }], () => false, { cfg, touch: true });
+    clickFirstCell(h.root);
+    expect(h.menuDefaults).toHaveLength(1);
+    cfg.freeholdsEnabled = false;
+    h.menuDefaults[0]();
+    expect(h.errors).toEqual(['Freeholds are not available on this realm.']);
+    expect(h.usedItems).toEqual([]);
+    cfg.freeholdsEnabled = true;
+    h.menuDefaults[0]();
+    expect(h.usedItems).toEqual([itemId]);
+    expect(h.errors).toHaveLength(1);
+  });
+
+  it('gives the same refusal on a direct desktop click', () => {
+    const h = harness([{ itemId, count: 1 }], () => false);
+    clickFirstCell(h.root);
+    expect(h.menuDefaults).toEqual([]);
+    expect(h.errors).toEqual(['Freeholds are not available on this realm.']);
+    expect(h.usedItems).toEqual([]);
+  });
+
+  it('preserves trade mode on an unavailable realm', () => {
+    const h = harness([{ itemId, count: 1 }], () => false, { touch: true, trade: true });
+    clickFirstCell(h.root);
+    expect(h.menuDefaults).toEqual([]);
+    expect(h.errors).toEqual([]);
+    expect(h.usedItems).toEqual([]);
+    expect(h.tradedItems).toEqual([itemId]);
+  });
+});
+
+describe.each(['pattern_ironhusk_flask', 'pattern_crucible_str_mail', 'formula_lastflame_zeal'])(
+  'ordinary manual touch routing: %s',
+  (itemId) => {
+    it.each([undefined, false, true])('retains ordinary Use with capability %s', (flag) => {
+      const h = harness([{ itemId, count: 1 }], () => false, {
+        cfg: { freeholdsEnabled: flag },
+        touch: true,
+      });
+      clickFirstCell(h.root);
+      expect(h.menuDefaults).toHaveLength(1);
+      h.menuDefaults[0]();
+      expect(h.errors).toEqual([]);
+      expect(h.usedItems).toEqual([itemId]);
+    });
+  },
+);

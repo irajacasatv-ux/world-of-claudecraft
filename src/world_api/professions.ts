@@ -73,11 +73,10 @@ export interface CraftingIdentityView {
   questedHobbies?: Readonly<Record<string, string>>;
 }
 
-// Static content read: the common-tier recipe list (issue #1127). A plain
-// data read (no per-player state), so it needs no wire round-trip: both
-// worlds serve the same content table directly (Sim from src/sim/data.ts,
-// ClientWorld from the same import, since recipe content ships with the
-// client bundle like every other content table).
+// Recipe definitions ship in the shared content bundle, so reading them needs
+// no wire round-trip or per-player state. Both worlds filter recipeList by the
+// host's Freehold capability; individual lookups retain the complete catalog
+// so already-owned recipe items can still be inspected on an unavailable host.
 export type RecipeDef = ProfessionRecipeRecord;
 
 // Craft-result surface (#1127): the outcome of one craftItem command, mirrored

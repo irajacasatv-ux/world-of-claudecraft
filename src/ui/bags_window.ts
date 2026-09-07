@@ -20,6 +20,7 @@
 import { audio } from '../game/audio';
 import { BACKPACK_SLOTS, bagSlotsOf } from '../sim/bags';
 import { ITEMS, QUESTS } from '../sim/data';
+import { isFreeholdCraftAvailable } from '../sim/freehold';
 import { FIREBOTTLE_COOLDOWN_SECS, FIREBOTTLE_ITEM_ID } from '../sim/interactions/firebottle_hut';
 import { baggedCopyAnchor } from '../sim/item_copy_anchor';
 import { itemCopyPin, type NamedSlotTarget } from '../sim/item_copy_ref';
@@ -1657,8 +1658,8 @@ export class BagsWindow {
   // use/equip binding), so the two can never drift apart.
   private runBagAction(item: (typeof ITEMS)[string], s: InvSlot, ev: MouseEvent): void {
     const action = bagItemAction(
-      // The vault arm needs the honest-set membership the info shape cannot
-      // carry (it has no id); every other arm ignores the extra field.
+      // Vault admission needs honest-set membership, not item-kind identity;
+      // every other arm ignores this extra field.
       { ...item, vaultMaterial: vaultMaterialIds().has(s.itemId) },
       this.bagMode(),
       s.instance,
@@ -1836,6 +1837,13 @@ export class BagsWindow {
         break;
       }
       case 'use': {
+        if (
+          item?.kind === 'recipe' &&
+          !isFreeholdCraftAvailable(this.deps.world().cfg?.freeholdsEnabled === true, item.id)
+        ) {
+          this.deps.showError(t('apiError.freehold.disabled'));
+          return;
+        }
         // Gathering tools (#2343) route through the interact-style handler
         // (nearest matching node + autorun stop) when main.ts has wired it;
         // everything else, and any unwired host, keeps the plain useItem.
