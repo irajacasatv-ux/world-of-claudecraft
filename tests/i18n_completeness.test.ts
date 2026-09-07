@@ -302,6 +302,48 @@ describe('i18n whole-catalog completeness', () => {
     }
   });
 
+  // The housingSystem glossary decision (scripts/i18n_glossary.json): the coined
+  // renderings of "Freehold" are LOCKED by the foundation's M16 fills, and the
+  // note tells every later housing surface to reuse them rather than re-coin a
+  // per-surface variant. That MUST was prose only, which is exactly how the repo
+  // paid for the masterwork re-coin once already. This guard makes it real for
+  // the one housing key that exists today; the housing UI phases extend the key
+  // list here in the same change that adds their first hudChrome.housing.* key.
+  it('keeps the locked Freehold term in every locale that has coined one', () => {
+    const LOCKED = {
+      ja_JP: 'フリーホールド',
+      ko_KR: '자유 영지',
+      ru_RU: 'Фригольды',
+      zh_CN: '自由领地',
+      zh_TW: '自由領地',
+    } as const satisfies Partial<Record<SupportedLanguage, string>>;
+    // Every housing key whose value must carry the term. One entry today; a
+    // later surface appends its own rather than starting a second guard.
+    const HOUSING_TERM_KEYS = ['apiError.freehold.disabled'];
+    const drift: string[] = [];
+    for (const [lang, term] of Object.entries(LOCKED) as [SupportedLanguage, string][]) {
+      const flat = flatten(TABLES[lang]);
+      for (const key of HOUSING_TERM_KEYS) {
+        const value = flat[key];
+        // The key must EXIST: a rename would otherwise compare undefined and pass.
+        if (typeof value !== 'string') {
+          drift.push(`${lang} missing ${key}`);
+          continue;
+        }
+        if (!value.includes(term)) drift.push(`${lang} ${key}: "${value}" lost the term "${term}"`);
+      }
+    }
+    expect(drift).toEqual([]);
+    // Anti-vacuity: the sweep ran over real locales and real keys, so an empty
+    // LOCKED map or an emptied key list cannot pass this silently.
+    expect(Object.keys(LOCKED)).toHaveLength(5);
+    expect(HOUSING_TERM_KEYS.length).toBeGreaterThan(0);
+    // And the term really is discriminating: English does not contain it.
+    const en = flatten(TABLES.en);
+    expect(typeof en['apiError.freehold.disabled']).toBe('string');
+    expect(en['apiError.freehold.disabled']).not.toContain(LOCKED.ja_JP);
+  });
+
   // Phase 11 glossary decision (scripts/i18n_glossary.json, the reliquaryShelves
   // row): the three shelf names must read the same on both surfaces that name
   // them, the in-game window rail and the wiki Reliquary page, and Professions is
