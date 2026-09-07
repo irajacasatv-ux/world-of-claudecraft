@@ -9407,7 +9407,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'apiError.epic.account_taken': 'Этот аккаунт Epic уже привязан к другому аккаунту.',
   'apiError.epic.upstream': 'Epic не отвечает. Повторите попытку чуть позже.',
   'apiError.freehold.invalid_input': 'Недопустимые данные.',
-  'apiError.freehold.disabled': 'Фригольды в этом мире не включены.',
+  'apiError.freehold.disabled': 'Фригольды недоступны в этом мире.',
   'apiError.db.conflict': 'Изменение конфликтует с другим обновлением. Повторите попытку.',
   'apiError.rate_limit.exceeded': 'Слишком много запросов. Повторите попытку через {seconds}.',
   'apiError.internal.error': 'На нашей стороне произошла ошибка. Повторите попытку.',

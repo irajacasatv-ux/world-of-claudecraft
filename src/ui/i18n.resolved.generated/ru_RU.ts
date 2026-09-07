@@ -5017,7 +5017,7 @@ export const ru_RU: EnTranslations = {
     },
     "freehold": {
       "invalid_input": "Недопустимые данные.",
-      "disabled": "Фригольды в этом мире не включены."
+      "disabled": "Фригольды недоступны в этом мире."
     }
   },
   "guide": {

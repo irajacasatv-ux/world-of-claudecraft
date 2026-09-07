@@ -5017,7 +5017,7 @@ export const ko_KR: EnTranslations = {
     },
     "freehold": {
       "invalid_input": "입력이 올바르지 않습니다.",
-      "disabled": "이 서버에서는 자유 영지가 활성화되어 있지 않습니다."
+      "disabled": "이 서버에서는 자유 영지를 이용할 수 없습니다."
     }
   },
   "guide": {

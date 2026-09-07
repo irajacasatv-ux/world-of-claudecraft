@@ -203,6 +203,10 @@ export const API_ERROR_KEYS = {
   'woc_market.stepup_wallet_mismatch': 'apiError.woc_market.stepup_wallet_mismatch',
   'woc_market.stepup_binding_mismatch': 'apiError.woc_market.stepup_binding_mismatch',
   'woc_market.stepup_signature_invalid': 'apiError.woc_market.stepup_signature_invalid',
+
+  // freehold: the env-gated Freeholds (player housing) family
+  // (server/freehold_routes.ts). Its own group on purpose: the packet's token
+  // firewall keeps housing visibly separate from the $WOC Exchange block above.
   'freehold.invalid_input': 'apiError.freehold.invalid_input',
   'freehold.disabled': 'apiError.freehold.disabled',
 } satisfies Record<string, TranslationKey>;

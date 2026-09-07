@@ -5017,7 +5017,7 @@ export const en_XA: EnTranslations = {
     },
     "freehold": {
       "invalid_input": "[Íñʋáļíð íñþúţ.]",
-      "disabled": "[Ƒŕééĥóļðš áŕé ñóţ éñáƀļéð óñ ţĥíš ŕéáļɱ.]"
+      "disabled": "[Ƒŕééĥóļðš áŕé ñóţ áʋáíļáƀļé óñ ţĥíš ŕéáļɱ.]"
     }
   },
   "guide": {

@@ -5017,7 +5017,7 @@ export const vi_VN: EnTranslations = {
     },
     "freehold": {
       "invalid_input": "Invalid input.",
-      "disabled": "Freeholds are not enabled on this realm."
+      "disabled": "Freeholds are not available on this realm."
     }
   },
   "guide": {

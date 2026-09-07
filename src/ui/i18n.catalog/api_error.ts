@@ -307,9 +307,12 @@ export const apiErrorStrings = {
     stepup_signature_invalid: 'The wallet signature did not verify. Start the sale again.',
   },
   // Freeholds (player housing, server/freehold_routes.ts): env-gated dark by
-  // default, the steam.disabled precedent.
+  // default. The GATING shape follows steam.disabled / epic.disabled; the
+  // WORDING follows woc_market.disabled, the other realm-scoped feature
+  // switch, so the family reads "is not available on this realm" rather than
+  // the operator's enabled/disabled flag vocabulary.
   freehold: {
     invalid_input: 'Invalid input.',
-    disabled: 'Freeholds are not enabled on this realm.',
+    disabled: 'Freeholds are not available on this realm.',
   },
 };

@@ -5017,7 +5017,7 @@ export const zh_TW: EnTranslations = {
     },
     "freehold": {
       "invalid_input": "輸入無效。",
-      "disabled": "本伺服器未啟用自由領地。"
+      "disabled": "本伺服器未開放自由領地。"
     }
   },
   "guide": {

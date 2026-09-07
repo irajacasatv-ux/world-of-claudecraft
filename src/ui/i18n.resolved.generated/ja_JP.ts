@@ -5017,7 +5017,7 @@ export const ja_JP: EnTranslations = {
     },
     "freehold": {
       "invalid_input": "入力が無効です。",
-      "disabled": "このレルムではフリーホールドは有効になっていません。"
+      "disabled": "このレルムではフリーホールドを利用できません。"
     }
   },
   "guide": {

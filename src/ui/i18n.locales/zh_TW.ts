@@ -8818,7 +8818,7 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'apiError.epic.account_taken': '該 Epic 帳號已連結到另一個帳號。',
   'apiError.epic.upstream': 'Epic 未回應。請稍後重試。',
   'apiError.freehold.invalid_input': '輸入無效。',
-  'apiError.freehold.disabled': '本伺服器未啟用自由領地。',
+  'apiError.freehold.disabled': '本伺服器未開放自由領地。',
   'apiError.db.conflict': '該變更與另一次更新發生衝突。請再試一次。',
   'apiError.rate_limit.exceeded': '請求過於頻繁。請在 {seconds} 後再試一次。',
   'apiError.internal.error': '我們這邊發生了問題。請再試一次。',
