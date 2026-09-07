@@ -12,6 +12,10 @@ the wire; the public descriptor carries an opaque plot id only.
 - `should_spawn_npc.ts` owns surface NPC admission: dynamic definitions stay
   excluded, and the furnisher requires the host opt-in. It reads no live state
   and draws nothing; `surface_npc_bootstrap.ts` applies it during construction.
+- `crafted_availability.ts` owns `isFreeholdCraftAvailable`, the content-identity
+  predicate used by recipe acquisition, training, crafting, vendor admission and
+  presentation. It receives the host opt-in as a value and reads no live world,
+  so catalog identities and saved ownership remain available on a dark host.
 - `state.ts` owns the record lifecycle over the live `ctx.freeholds` map on
   the `guild_bank.ts` idiom: `defaultFreeholdState` (every account's tier-0
   Inn Room), `loadFreehold` (the ONE load path, load-once, an empty owner key
@@ -65,7 +69,8 @@ the wire; the public descriptor carries an opaque plot id only.
   The editor viewport (`src/editor/3d/viewport.ts`) and custom editor
   play-test maps boot dark by design; only the stock offline world and the
   headless env opt in.
-- `ctx.freeholdsEnabled` gates the furnisher through surface NPC construction.
+- `ctx.freeholdsEnabled` gates the furnisher through surface NPC construction
+  and new crafted-furnishing acquisition through `isFreeholdCraftAvailable`.
   The Eastbrook gate prompt reads it when its owner lands.
 - Golden parity traces cover the dark arm, pinned by the source boundary in
   `tests/freehold_npc_spawn.test.ts`. That suite pins the unchanged dark
@@ -87,7 +92,9 @@ the wire; the public descriptor carries an opaque plot id only.
   compulsion. `src/world_api/housing.ts`,
   `src/net/freehold_snapshot_wire.ts` and `server/freehold_wire.ts` do because
   the seam, the wire and the server should pull in no runtime value from the
-  sim package at all. Runtime consumers (today `src/sim/sim.ts`) use the barrel.
+  sim package at all. Runtime consumers use the barrel, including `sim.ts`,
+  recipe acquisition and profession training/crafting, the Heroic Quartermaster
+  and the pure presentation consumers of `isFreeholdCraftAvailable`.
 - Design: `docs/prd/woc/freeholds-and-guildhalls-research.md` (the research
   and the decision record it cites).
 - Cover changes in `tests/freehold_module.test.ts` (the dark-host pins: null

@@ -13015,6 +13015,9 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
     '料理 {skill}',
   'guide.profPages.prov.placeableTag':
     '（食べずに据える）',
+  'guide.profPages.prov.furnishingTag': '（装飾用の家具、食べられません）',
+  'guide.profPages.prov.ladderBodyFurnishings':
+    '料理のレシピには、食事、宴、野営の製作拠点、装飾用の家具があります。食事はバッグから食べられ、中には一定時間続く強化効果を与えるものもあります。宴は地面に設置し、近くのプレイヤーと分け合えます。野営の製作拠点があれば、町を離れても料理できます。家具はフリーホールドを飾るもので、食べ物や強化効果は与えません。',
   'guide.profPages.prov.stationTag': '（野営の製作拠点）',
   'guide.profPages.prov.tableHeading':
     '頂にある食卓',

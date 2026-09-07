@@ -2,14 +2,9 @@
 // lines. English copy is asserted directly (the gather_tool_tooltip.test.ts
 // idiom).
 //
-// The taught recipes are SYNTHETIC, pushed onto the live table in beforeAll and
-// removed in afterAll (the tests/recipe_pattern_items.test.ts fixture idiom).
-// That is forced, not a shortcut: the view refuses any recipe the content table
-// does not mark drop-acquirable, and no shipped recipe carries 'drop' yet
-// (phase 11 authors that content), so a real id could only ever pin the
-// silence. The silence itself is pinned against a real trainer-only recipe
-// below, and the result ITEM ids stay real, so the teaches line still quotes
-// the shipped catalog rather than a made-up name.
+// Synthetic recipes isolate boundary values and malformed authoring shapes;
+// live collection manuals, an enchant formula, and furnishing patterns pin the
+// shipping content and its host-availability behavior.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ALL_RECIPES, recipeById } from '../src/sim/content/recipes';
 import { ITEMS } from '../src/sim/data';
@@ -36,8 +31,7 @@ const OFF_STEP_RECIPE = 'recipe_tooltip_pattern_off_step';
 // skillReq inside tier 0 (1..24), where skill 0 buckets to the SAME tier: the
 // only shape that can tell the practiced arm apart from the tier arm.
 const SUB_TIER_RECIPE = 'recipe_tooltip_pattern_sub_tier';
-// A REAL recipe, and trainer-only like every recipe shipped today: the
-// acquisition gate must silence it.
+// A real trainer-only recipe: the acquisition gate must silence it.
 const TRAINER_ONLY_RECIPE = 'recipe_sunpetal_mana_draught';
 // The grandfathered shape: NO acquisition key at all (the launch-era recipes
 // ship exactly this way), so the view's optional chain is exercised against a
@@ -474,11 +468,15 @@ describe('reachability through the real Hud tooltip', () => {
   // tests/masterwrought_tooltip.test.ts rig) with a kind:'recipe' def, so an
   // unwired or wrongly-gated call site fails here rather than shipping a
   // pattern whose hover says only "Uncommon Pattern".
-  function hudTooltip(item: ItemDef, craftingIdentity: RecipePatternViewerInput): string {
+  function hudTooltip(
+    item: ItemDef,
+    craftingIdentity: RecipePatternViewerInput,
+    freeholdsEnabled?: boolean,
+  ): string {
     const hud = Object.create(Hud.prototype) as unknown as {
       sim: {
         player: { level: number };
-        cfg: { playerClass: string };
+        cfg: { playerClass: string; freeholdsEnabled?: boolean };
         equipment: Record<string, string>;
         craftingIdentity: RecipePatternViewerInput;
       };
@@ -486,7 +484,7 @@ describe('reachability through the real Hud tooltip', () => {
     };
     hud.sim = {
       player: { level: 80 },
-      cfg: { playerClass: 'warrior' },
+      cfg: { playerClass: 'warrior', freeholdsEnabled },
       equipment: {},
       craftingIdentity,
     };
@@ -505,6 +503,75 @@ describe('reachability through the real Hud tooltip', () => {
     );
     expect(html).toContain('<div class="tt-red">Requires Alchemy 50</div>');
     expect(html).toContain('<div class="tt-red">You already know that recipe.</div>');
+  });
+
+  const FURNISHING_MANUALS = [
+    ['pattern_freehold_clockwork_lamp', 'engineering'],
+    ['pattern_freehold_chart_easel', 'inscription'],
+    ['pattern_freehold_jewel_floor_lamp', 'jewelcrafting'],
+  ] as const;
+
+  it.each(FURNISHING_MANUALS)(
+    '%s states realm unavailability for a retained copy and matches the real use result',
+    (itemId, craft) => {
+      const item = ITEMS[itemId];
+      expect(item?.kind).toBe('recipe');
+      if (item?.kind !== 'recipe') throw new Error('Missing furnishing manual');
+      for (const freeholdsEnabled of [false, true]) {
+        const sim = new Sim({
+          seed: 42,
+          playerClass: 'warrior',
+          world: EMPTY_TEST_WORLD,
+          freeholdsEnabled,
+        });
+        const meta = sim.meta(sim.playerId);
+        if (!meta) throw new Error('Missing player');
+        meta.craftSkills[craft] = 50;
+        sim.addItem(itemId, 1);
+        const slot = meta.inventory.findIndex((entry) => entry.itemId === itemId);
+        const html = hudTooltip(item, sim.craftingIdentity, sim.cfg.freeholdsEnabled);
+        if (freeholdsEnabled) {
+          expect(html).toContain('Use: Teaches you how to craft');
+          expect(html).not.toContain('Freeholds are not available on this realm.');
+        } else {
+          expect(html).toContain(
+            '<div class="tt-red">Freeholds are not available on this realm.</div>',
+          );
+          expect(html).not.toContain('Use: Teaches you how to craft');
+        }
+        sim.useItem(itemId, undefined, slot);
+        expect(meta.knownRecipes.has(item.teachesRecipeId)).toBe(freeholdsEnabled);
+        expect(sim.countItem(itemId)).toBe(freeholdsEnabled ? 0 : 1);
+      }
+    },
+  );
+
+  it.each(FURNISHING_MANUALS)(
+    '%s stays unavailable before the capability or character snapshot arrives',
+    (itemId, craft) => {
+      const item = ITEMS[itemId];
+      for (const synced of [false, true]) {
+        const state = viewer({ synced, craftSkills: { [craft]: 50 } });
+        const lines = recipePatternTooltipLines(item, state);
+        expect(lines).toBe('<div class="tt-red">Freeholds are not available on this realm.</div>');
+        expect(hudTooltip(item, state)).toContain(lines);
+      }
+    },
+  );
+
+  it('leaves ordinary manual and formula rendering identical on all capability states', () => {
+    const state = viewer({ craftSkills: { alchemy: 200, enchanting: 200, mailcrafting: 200 } });
+    for (const itemId of [
+      'pattern_ironhusk_flask',
+      'pattern_crucible_str_mail',
+      'formula_lastflame_zeal',
+    ]) {
+      const item = ITEMS[itemId];
+      const original = hudTooltip(item, state);
+      expect(original).toContain('Use: Teaches you');
+      expect(hudTooltip(item, state, false)).toBe(original);
+      expect(hudTooltip(item, state, true)).toBe(original);
+    }
   });
 
   it('adds nothing pattern-shaped for a non-pattern def', () => {

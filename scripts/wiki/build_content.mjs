@@ -1382,6 +1382,8 @@ for (const recipe of cookingRecipes) {
     // reader it was a dish. Read off the def's own use record rather than an
     // id list, so a second station joins by existing.
     station: def?.use?.type === 'placeMobileStation',
+    // Ornamental cooking outputs neither feed players nor grant a feast buff.
+    furnishing: def?.kind === 'furnishing',
   });
 }
 const provisioningLadder = [...provisioningLadderMap.entries()]
@@ -1752,7 +1754,7 @@ export interface GuideProfProvisioningLine { id: string; materials: string[]; }
 /** One rung of cooking's ladder and the outputs it teaches. */
 export interface GuideProfProvisioningRung {
   skillReq: number;
-  outputs: { itemId: string; placeable: boolean; station: boolean }[];
+  outputs: { itemId: string; placeable: boolean; station: boolean; furnishing: boolean }[];
 }
 export interface GuideProfProvisioning {
   lines: GuideProfProvisioningLine[];

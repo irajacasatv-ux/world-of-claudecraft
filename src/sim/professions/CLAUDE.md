@@ -200,7 +200,15 @@ or pure leaves, never a `Sim` import, randomness only via `ctx.rng` (guarded by
   the parity sampler excludes it (`META_EXCLUDE`).
 - `training.ts`: master training (`resolveTrain`, tier-gated learning,
   `TRAINING_FEE_BY_TIER`, the one-time `PRE_TRAINING_RECIPE_IDS`
-  grandfather).
+  grandfather). `train_recipe.ts` owns the command body: resolve the player,
+  refuse death or unavailable content, call the unchanged training validator,
+  apply a successful fee and knowledge grant, then emit the personal result.
+  `Sim.trainRecipe` is its thin `SimContext` delegate.
+- `recipe_visibility.ts`: the content-only host-availability projection for
+  `recipeList`. Lit hosts return `ALL_RECIPES`; dark hosts reuse a filtered
+  list until catalog length changes, matching `recipeById`'s supported
+  append/remove contract. It caches no player or world state; same-length
+  content replacement is outside that existing contract.
 - `pattern_items.ts`: recipe pattern items (kind 'recipe'): the pure
   `resolvePatternLearn` deny ladder (invalid silent, already-known,
   never-practiced, tier via the shared `teachTierMet`) plus the

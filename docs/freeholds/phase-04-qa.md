@@ -52,15 +52,18 @@ STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report 
 file and replying with the path plus a short summary; prompt each for COVERAGE: report
 every issue including low-severity and uncertain ones; ranking happens later):
 - CORRECTNESS: every recipe's professionId is one of the ten existing crafts and its
-  stationType is that craft's existing station (the STATION_TYPE_BY_CRAFT map, never a
-  new station); produce appears only in the cooking and alchemy bills; each pattern
+  stationType follows the existing binding: seven crafts use STATION_TYPE_BY_CRAFT,
+  while inscription explicitly uses apothecary, jewelcrafting forge and enchanting
+  toolworks under the existing legacy recipe contract, never a new station; produce
+  appears only in the cooking and alchemy bills; each pattern
   teaches a recipe whose acquisition includes 'drop' and each pattern has exactly one
   quartermaster row; the seven trainer recipes are absent from every drop channel; every
   output is `kind: 'furnishing'` with `r` and decorCost and no stat, buff, aura, or feast
   payload; the apex header count literal is still literally true and the channel suite's
-  floor, partition and header-comment literals read the new truth with a sixth family
-  arm; every recipe's itemLevelBudget and skillReq equal the CAL-RECIPES-A workbook
-  literals; nothing under src/sim/professions/ moved; the market can list every
+  floor, partition and header-comment literals pin 55 teaching items (54 recipe manuals
+  teaching 76 drop recipes plus one enchant teaching item), 43 non-Crucible teaching
+  items and seven disjoint recipe families; every recipe's itemLevelBudget and skillReq
+  equal the CAL-RECIPES-A workbook literals; nothing under src/sim/professions/ moved; the market can list every
   furnishing (R18).
 - TEST COVERAGE: the pattern suite drives resolvePatternLearn with the item in a bag
   slot and asserts the recipe known plus exactly one copy consumed; the trainer path is

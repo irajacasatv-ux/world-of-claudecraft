@@ -22,6 +22,10 @@ Only what the next session needs. Update at the end of every phase and QA.
     (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare with
     `git rev-list --left-right --count HEAD...origin/release/<newest>`, merge it, and
     DELETE this dependency block from `state.md`.
+  - Paired 04 QA sync on 2026-09-07: dependency head `54ce808436` was merged
+    through `2e24ba8818`, whose parents are original implementation tip
+    `3666d89647` and that dependency head. PR #3872 remained OPEN. The merge
+    does not itself establish a completed integration audit or final QA verdict.
   - After any non-empty merge run the `release-merge-audit` skill; if the merge touched
     `patches/`, run `pnpm install --frozen-lockfile` before anything else.
 - Push policy: the branch stays local until Fernando says to push. Pushes go to `origin`,
@@ -42,15 +46,19 @@ The ten crafted outputs/recipes, three deterministic 16-Mark patterns,
 `hearth_first_crafts`, thirteen final icons/provenance and 42 runtime captures
 are implemented and accepted. The shared gate passed all twelve steps, exit 0;
 database performance and persistence reviews PASS. Implementation QA/fresh
-review records close against this final evidence. Four authorized commits are
-recorded; post-fourth-commit `npm run ci:changed` passed with exit 0 (1967 files,
-existing warnings only), with clean status observed. The check repeats after the
-documentation-only amendment to the fourth commit; no fifth commit is introduced.
+review records close against this original implementation evidence. Its four authorized
+commits are `86eb86bbe2`, `8bd097d898`, `b3c2452b49` and `3666d89647`. The
+post-fourth-commit `npm run ci:changed` passed with exit 0 (1967 files,
+existing warnings only), with clean status observed. The original completion
+receipt called for the same check after the fourth commit's documentation-only
+amendment, preserving four implementation commits; later QA work is separate.
 See `crafted-content-trial-2026-09-07/implementation-validation.md` for exact
 commands/results and review closure. No push. Production remains disabled and
 `productionApproved` stays false; numeric activation, final GLB, room and hardware
-LOW gates remain unsigned. The distinct paired 04 QA audit is Not started;
-NEXT: `phase-04-qa.md`, before implementation 05.
+LOW gates remain unsigned. The distinct paired 04 QA audit is in progress after
+dependency integration `2e24ba8818`; no final QA verdict is recorded. Its
+professions-source freeze question remains unresolved. Current task:
+`phase-04-qa.md`, before implementation 05.
 
 Previous phase 03 (`phase-03-content-tiers-and-basics.md`): COMPLETE INCLUDING QA,
 verdict PASS locally on 2026-09-07. All 39 distinct completion-round findings
@@ -1314,7 +1322,8 @@ only and never declares its remaining deliverables or paired QA complete.
 | 31 (planned) | `server/freehold_guild_clear_admission.ts`, `server/freehold_guild_clear_bridge.ts`, `src/sim/freehold/guild_clear_contract.ts` | none (D82) | | | fills 30a's firstKills arm | `guild_deeds` | `guild.firstKillRow` |
 
 
-04 accepted development implementation inventory, 2026-09-07:
+04 accepted development implementation inventory, 2026-09-07
+(original implementation snapshot at `3666d89647`):
 
 - Signed development CAL-RECIPES-A, CAL-PATTERNS-A and CAL-FURN-A are in
   `content-numbers-workbook.md`, tied to `crafted-content-trial-2026-09-07/acceptance.md`
@@ -1326,6 +1335,10 @@ only and never declares its remaining deliverables or paired QA complete.
   `src/sim/content/freehold/furnishings.ts`; the vendor's eight-item stock remains
   a distinct inventory. Every output below has recipe ID `recipe_<outputId>` and
   name key `entities.items.<outputId>.name` in `src/ui/i18n.catalog/items.ts`.
+  Seven craft station bindings use `STATION_TYPE_BY_CRAFT`. The three explicit
+  legacy bindings are inscription/apothecary, jewelcrafting/forge and
+  enchanting/toolworks. `trainingStationTypeFor` already reads the explicit
+  recipe station before the craft-map fallback; no new station is introduced.
 
 | Output ID | English name | Craft / learning |
 |---|---|---|
@@ -1359,9 +1372,10 @@ only and never declares its remaining deliverables or paired QA complete.
   and wiki freshness passed in the shared gate.
 - Verified catalog totals are 43 pages / 484 raw slots / 337 unique
   item IDs / 448 full-completion slots / 419 character-completion slots. Channel
-  pins preserve Crucible: 55 recipe items, 76 drop recipes, 43 non-Crucible recipe
-  items; furnishings are the seventh disjoint family. Historical 03 totals below
-  describe its completion snapshot, not the current catalog.
+  pins preserve Crucible: 55 teaching items comprise 54 recipe manuals teaching
+  76 drop recipes plus one enchant teaching item. There are 43 non-Crucible
+  teaching items; furnishings are the seventh disjoint recipe family. Historical
+  03 totals below describe its completion snapshot, not the current catalog.
 - Thirteen item-specific `public/ui/items/<id>.webp` assets and
   `public/ui/items/mapping.json` provenance are authored under
   `crafted-content-art-2026-09-07/`; the final rug/provenance v2 has visual
@@ -1406,12 +1420,15 @@ only and never declares its remaining deliverables or paired QA complete.
   `crafted-content-trial-2026-09-07/implementation-validation.md`, with execution
   log `/tmp/freeholds-crafted-gate-final.log` and reports in its `reviews/`
   directory. Final QA/fresh-review records replace their interim evidence status.
-  Four authorized completion commits are recorded. The post-fourth-commit
+  The four original completion commits are `86eb86bbe2`, `8bd097d898`,
+  `b3c2452b49` and `3666d89647`. The post-fourth-commit
   `npm run ci:changed` passed with exit 0, 1967 files checked and existing warnings
   only; working-tree status was clean. This receipt is incorporated by amending
   only the fourth documentation commit, keeping exactly four commits. The parent
   reruns `npm run ci:changed` after the actual final amended commit and records
-  that result in the handoff. No commit hash is pinned to the pre-amendment state.
+  that result in the handoff. The commit IDs above identify the final original
+  implementation, not an intermediate pre-amendment state. Subsequent dependency
+  integration is `2e24ba8818`; the separate 04 QA audit remains in progress.
 - Remaining production art/space gates: final crafted reference
   `docs/freeholds/art/references/freehold-crafted-a-board.png`, model family
   `scripts/assets/freehold_crafted/`, exporter `export_freehold_crafted.mjs`, spec
@@ -1586,9 +1603,11 @@ message is performed in this documentation session.
   Rebuild on the same length invalidation contract as the live recipe index;
   `tests/recipe_visibility.test.ts` covers insertion and removal.
 - Crafted channel census (2026-09-07): after the Crucible merge,
-  `tests/apex_pattern_channels.test.ts` pins 55 recipe items, 76 drop recipes and
-  seven disjoint families; 43 is the non-Crucible recipe-item count. Do not apply
-  the old 40-to-43 total or sixth-family instructions to the merged catalog.
+  `tests/apex_pattern_channels.test.ts` pins 55 teaching items: 54 recipe manuals
+  teach 76 drop recipes and one teaching item teaches an enchant. Furnishings
+  form the seventh disjoint recipe family; 43 is the non-Crucible teaching-item
+  count. Do not apply the old 40-to-43 total or sixth-family instructions to the
+  merged catalog.
 - Runtime capture (2026-09-07): change locale through the actual Options
   `changeLanguage` fanout. Importing a fresh Vite i18n module can mutate a second
   module instance while the live HUD stays English; inspect the rendered locale

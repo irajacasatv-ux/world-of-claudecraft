@@ -12446,6 +12446,9 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
     '烹饪 {skill}',
   'guide.profPages.prov.placeableTag':
     '（摆放，而非食用）',
+  'guide.profPages.prov.furnishingTag': '（装饰家具，不可食用）',
+  'guide.profPages.prov.ladderBodyFurnishings':
+    '烹饪配方包括餐点、宴席、野战制作站和装饰家具。餐点可从背包中食用，有些会带来持续增益。宴席摆放在地上，供附近的玩家分享。野战制作站让你能在城外烹饪。家具用于装饰自由领地，不提供食物或增益。',
   'guide.profPages.prov.stationTag': '（野战制作站）',
   'guide.profPages.prov.tableHeading':
     '顶端的那张餐桌',

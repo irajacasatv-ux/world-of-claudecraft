@@ -126,8 +126,6 @@
     },
     {
       "includes": [
-        "docs/freeholds/crafted-content-art-2026-09-07/items.accepted-art.json",
-        "docs/freeholds/crafted-content-art-2026-09-07/naming-originality.json",
         "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json",
         "docs/freeholds/crafted-content-art-2026-09-07/staged-art.json",
         "docs/freeholds/crafted-content-trial-2026-09-07/calibration.json",

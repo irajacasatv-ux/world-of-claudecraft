@@ -185,9 +185,7 @@
       ]
     },
     {
-      "queries": [
-        "\"Design: Jewel Floor Lamp\" game item"
-      ],
+      "queries": ["\"Design: Jewel Floor Lamp\" game item"],
       "urls": [
         "https://www.pange.ca/hocus-pocus-treasure-island-items/",
         "https://www.diy.com/departments/valuelights-tiffany-jewel-amber-stained-glass-uplighter-floor-lamp/5016529136811_BQ.prd",
@@ -197,9 +195,7 @@
       ]
     },
     {
-      "queries": [
-        "\"First Hearth Crafts\""
-      ],
+      "queries": ["\"First Hearth Crafts\""],
       "urls": [
         "https://www.gearascendancy.com/list/items/magic-types/tikanga-and-tapu/tikanga-554-of-the-hearth-guardians-ember/",
         "https://piecedpastimes.blogspot.com/"

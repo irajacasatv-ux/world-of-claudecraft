@@ -65,10 +65,11 @@ Spawn one Explore agent to read and summarize:
   the icon pipeline recorded in state.md row 03, src/ui/world_entity_i18n.ts, the
   item-names catalog module
 - tests/apex_pattern_channels.test.ts (the no-fourth-channel sweep and the quartermaster
-  arm: does it accept a quartermaster-only pattern?; the three literal pins that redden
-  on three new drop recipes: the "phase 02 sweep floor" EXACTLY-40 kind:recipe literal,
-  the drop-recipe partition toHaveLength(40) with its five-family sum equality, and the
-  stale "34" header comment), tests/apex_pattern_items.test.ts,
+  arm: does it accept a quartermaster-only pattern?; preserve the merged Crucible
+  inventory and verify the current literals: 55 teaching items, comprising 54 recipe
+  manuals teaching 76 drop recipes plus one enchant teaching item, and seven disjoint
+  recipe families including furnishings; 43 is the non-Crucible teaching-item subset),
+  tests/apex_pattern_items.test.ts,
   tests/farm_pattern_items.test.ts (the partition and marks-valve pins),
   tests/recipe_pattern_items.test.ts (the shipped-content sweeps),
   tests/recipe_economy.test.ts, tests/provisioner_firewall.test.ts (the Phase 03 ledger
@@ -119,9 +120,13 @@ files (disjoint except the shared pin files the coordinator edits last):
   no unresolved stand/brazier, rug/banner, lamp/clock or painting/map alternatives; each with footprint, `r`,
   decorCost, a stand-in model key, tradable), and src/sim/content/freehold/
   furnishing_recipes.ts: one recipe per craft on the existing craft id and its existing
-  station type, tier 1 to 3 materials, produce only on the consumable crafts, seven rows
-  trainer-taught at the craft's existing trainer, three rows `acquisition` including
-  'drop' for the patterns; registered where ALL_RECIPES merges; the tradable-output pin
+  station binding, tier 1 to 3 materials, produce only on the consumable crafts, seven
+  rows trainer-taught through the existing static station master and three rows
+  `acquisition` including
+  'drop' for the patterns. Seven craft bindings come from STATION_TYPE_BY_CRAFT;
+  inscription explicitly uses apothecary, jewelcrafting forge and enchanting toolworks,
+  through the existing legacy-recipe station contract. Register where ALL_RECIPES
+  merges; the tradable-output pin
   (R18: a non-crafter can buy every furnishing on the market).
 - Agent PATTERNS: src/sim/content/freehold/furnishing_patterns.ts, a
   Record<string, RecipeItemDef> of three `pattern_<output>` rows (per-craft prefix,
@@ -142,17 +147,20 @@ The coordinator runs last: the furnishing-recipe arm in tests/provisioner_firewa
 can-fail control), `npm run wiki:content`, the count re-pins in
 tests/reliquary_content.test.ts (tests/recipe_pattern_items.test.ts has no count pin;
 its sweeps are behavioral), and the tests/apex_pattern_channels.test.ts re-pins landed in
-the pattern commit: the shipped kind:'recipe' floor literal 40 to 43, the drop-recipe
-partition literal 40 to 43 with a SIXTH family arm for the three furnishing drop rows so
-the family sum equality and the disjointness check still hold, and the stale header
-comment (it still says 34) corrected to the new truth.
+the pattern commit: 55 teaching items, comprising 54 recipe manuals teaching 76 drop
+recipes plus one enchant teaching item. Preserve the Crucible family's 12 manuals and
+33 recipes, the 43-item non-Crucible subset, and furnishings as the seventh disjoint
+recipe family. The family sum and header must describe this merged inventory. The old
+40-to-43 total and sixth-family premises describe the pre-Crucible planning snapshot.
 Every agent writes any report longer than a screen to a file and replies with the path
 plus a short summary. Never `mode: "plan"` on teammates.
 
 INVARIANTS THIS PHASE MUST KEEP:
 - Determinism: content only; no Rng, no clock.
-- Recipes and their stationType gates unchanged: a furnishing recipe binds to its craft's
-  existing station; evaluateCraftAdmission and resolveTrain are not edited.
+- Recipes and their stationType gates unchanged: seven craft bindings use
+  STATION_TYPE_BY_CRAFT; inscription explicitly uses apothecary, jewelcrafting forge
+  and enchanting toolworks under the existing legacy recipe contract. No new station
+  is introduced; evaluateCraftAdmission and resolveTrain are not edited.
 - Keystone exclusion: no furnishing bill names wyrmfall_core, sundered_essence,
   makers_ember, a gear intermediate, or the quickening catalyst.
 - Never sell power: every furnishing output is decor (the feast-table prop grants no Well
@@ -232,8 +240,9 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] tests/apex_pattern_channels.test.ts, tests/recipe_pattern_items.test.ts,
   tests/recipe_economy.test.ts, and tests/provisioner_firewall.test.ts (with the furnishing
   arm) are green; the src/sim/content/apex_patterns.ts header count literal is unchanged
-  and still true; the channel suite's floor and partition literals read 43 with the sixth
-  family arm and its header comment matches (pinned in the pattern commit).
+  and still true; channel literals pin 55 teaching items (54 recipe manuals teaching
+  76 drop recipes plus one enchant teaching item), 43 non-Crucible teaching items and
+  seven disjoint recipe families, with matching header comments.
 - [ ] tests/freehold_content.test.ts pins each recipe's itemLevelBudget and skillReq to the
   CAL-RECIPES-A workbook literals; no recipe carries a value the workbook does not.
 - [ ] content-obligations-reviewer confirms all findings resolved and the fresh fix review passed.

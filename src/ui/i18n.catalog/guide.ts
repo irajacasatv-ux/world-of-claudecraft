@@ -3400,8 +3400,11 @@ export const guideStrings = {
       ladderHeading: 'The ladder, rung by rung',
       ladderBody:
         'Cooking climbs in the usual brackets, and every rung is listed with what it teaches. The early rungs are single dishes you eat from your bags. Higher up the kitchen starts making things for other people: plates that carry a lasting buff, and above those the feasts, which you do not eat at all but set down on the ground for everyone standing near it.',
+      ladderBodyFurnishings:
+        'Cooking recipes include meals, feasts, field stations, and ornamental furnishings. Meals are eaten from your bags, and some leave a lasting buff. Feasts are set on the ground for nearby players to share. Field stations let you cook away from town. Furnishings decorate a Freehold and give no food or buff.',
       rungFmt: 'Cooking {skill}',
       placeableTag: '(placed, not eaten)',
+      furnishingTag: '(ornamental furnishing, not eaten)',
       // The cooking mobile station's own tag, a SIBLING KEY rather than a
       // borrowed noun in hardcoded brackets: the placeable tag above owns its
       // brackets, and ja/zh spell those FULL-WIDTH, so composing ASCII ones

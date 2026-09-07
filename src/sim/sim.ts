@@ -8625,10 +8625,10 @@ export class Sim {
     return this.nodeRespawnSecondsFor(nodeId, this.primaryId);
   }
 
-  // IWorld read surface (IWorldProfessions, #1127): the full recipe list
-  // (common tier plus combo recipes, #1132), a plain content read (no
-  // per-player state), same shape both worlds can serve without a wire
-  // round-trip.
+  // IWorld read surface (IWorldProfessions): the host-visible recipe catalog.
+  // The availability projection reads the host capability, not player state;
+  // complete catalog lookup remains available for saved knowledge and items.
+  // Both worlds expose the same recipe shape without a recipe-list wire payload.
   get recipeList(): readonly RecipeDef[] {
     return recipesForFreeholdAvailability(this.ctx.freeholdsEnabled);
   }

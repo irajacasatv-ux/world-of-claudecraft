@@ -40,13 +40,14 @@ function renderBagsHarness(
   bags: (string | null)[],
   inventory: InvSlot[] = [],
   bagCapacity = 16,
+  cfg: { freeholdsEnabled?: boolean } = {},
 ): {
   root: HTMLElement;
   tooltips: { el: HTMLElement; html: () => string }[];
   window: BagsWindow;
 } {
   document.body.innerHTML = '';
-  const world = { inventory, bags, bagCapacity, copper: 0 } as unknown as IWorld;
+  const world = { inventory, bags, bagCapacity, copper: 0, cfg } as unknown as IWorld;
   const root = document.createElement('div');
   document.body.appendChild(root);
   const noop = (): void => {};
@@ -115,6 +116,25 @@ const promptDialog = source('src/ui/prompt_dialog.ts');
 const tokens = source('src/styles/tokens.css');
 const hud = source('src/ui/hud.ts');
 const components = source('src/styles/components.css');
+
+describe('bags_window: furnishing manual capability forwarding', () => {
+  it.each([undefined, false, true])(
+    'reads the current capability (%s) when the row tooltip opens',
+    (freeholdsEnabled) => {
+      const cfg = { freeholdsEnabled };
+      const itemId = 'pattern_freehold_clockwork_lamp';
+      const { tooltips } = renderBagsHarness([], [{ itemId, count: 1 }], 16, cfg);
+      const row = tooltips.find(({ el }) => el.classList.contains('bag-item'));
+      expect(row).toBeDefined();
+      if (!row) throw new Error('Missing manual row tooltip');
+      expect(row.html().includes('Click to use')).toBe(freeholdsEnabled === true);
+      cfg.freeholdsEnabled = true;
+      expect(row.html()).toContain('Click to use');
+      cfg.freeholdsEnabled = false;
+      expect(row.html()).not.toContain('Click to use');
+    },
+  );
+});
 
 describe('bags_window: no magic values', () => {
   it('carries no literal hex color in TS (quality color comes from QUALITY_COLOR + a token)', () => {

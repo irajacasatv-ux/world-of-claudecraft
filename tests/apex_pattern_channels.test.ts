@@ -15,9 +15,9 @@
 //   3. NO acquisition surface in live content OUTSIDE the sanctioned host
 //      registry carries a pattern id (masterwrought R8: three pillars, no
 //      fourth), one sweep per surface so a failure names the leaking surface;
-//   4. the shipped sweep floor: EXACTLY 55 kind:'recipe' defs, each
-//      teaching a drop-acquirable recipe (recipe_pattern_items.test.ts sweeps
-//      the shape but is floorless; the literal here is the floor);
+//   4. the shipped sweep floor: EXACTLY 55 teaching items, comprising 54
+//      recipe documents covering 76 drop recipes and one enchant formula
+//      (recipe_pattern_items.test.ts sweeps the shape but is floorless);
 //   5. the draw-order documentation pin for the rift ledger comment.
 //
 // RE-CUT AT PHASE 11f, and the reason is worth stating because the file reads

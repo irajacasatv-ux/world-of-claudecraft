@@ -70,12 +70,8 @@ function suppliersSection(): string {
     </section>`;
 }
 
-/** Cooking's own ladder, rung by rung. The outputs a player does not eat from
- *  bags are marked as such, because a ladder that did not say so would read
- *  wrong at the top: the feasts are set on the ground, and the Laden Hearth is
- *  a field station. Both live on the 125 rung beside plates that ARE eaten, so
- *  marking only the feasts told a reader the station was a dish (the Phase 11k
- *  QA finding). */
+/** Cooking's own ladder, rung by rung. Feasts, field stations, and ornamental
+ *  furnishings carry separate labels so none reads as a meal eaten from bags. */
 function ladderSection(): string {
   const rows = GUIDE_PROF_PROVISIONING.ladder
     .map((rung) => {
@@ -100,6 +96,9 @@ function ladderSection(): string {
           if (out.station) {
             return `<li>${name} ${esc(t('guide.profPages.prov.stationTag'))}</li>`;
           }
+          if (out.furnishing) {
+            return `<li>${name} ${esc(t('guide.profPages.prov.furnishingTag'))}</li>`;
+          }
           return `<li>${name}</li>`;
         })
         .join('');
@@ -111,7 +110,7 @@ function ladderSection(): string {
     .join('');
   return `<section class="guide-block" id="prov-ladder">
       <h2>${esc(t('guide.profPages.prov.ladderHeading'))}</h2>
-      ${paras('guide.profPages.prov.ladderBody')}
+      ${paras('guide.profPages.prov.ladderBodyFurnishings')}
       <ul class="guide-prof-bands">${rows}</ul>
     </section>`;
 }

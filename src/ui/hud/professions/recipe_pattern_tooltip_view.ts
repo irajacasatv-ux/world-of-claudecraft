@@ -44,6 +44,7 @@
 import { ENCHANTS } from '../../../sim/content/enchants';
 import { recipeById } from '../../../sim/content/recipes';
 import { ITEMS } from '../../../sim/data';
+import { isFreeholdCraftAvailable } from '../../../sim/freehold';
 import { collectionManualRecipes } from '../../../sim/professions/collection_manual';
 import { tierForSkill } from '../../../sim/professions/wheel';
 import type { ItemDef } from '../../../sim/types';
@@ -121,8 +122,7 @@ export function recipePatternTooltipModel(
     const enchant = Object.hasOwn(ENCHANTS, item.teachesEnchantId)
       ? ENCHANTS[item.teachesEnchantId]
       : undefined;
-    if (!enchant || enchant.acquisition !== 'drop' || item.teachesRecipeId !== enchant.id)
-      return null;
+    if (enchant?.acquisition !== 'drop' || item.teachesRecipeId !== enchant.id) return null;
     const skill = craftSkillOf(viewer.craftSkills, 'enchanting');
     return {
       recipeId: enchant.id,
@@ -156,9 +156,20 @@ export function recipePatternTooltipModel(
 }
 
 /** The tooltip lines for one pattern item, or '' for any other item. */
-export function recipePatternTooltipLines(item: ItemDef, viewer: RecipePatternViewerInput): string {
+export function recipePatternTooltipLines(
+  item: ItemDef,
+  viewer: RecipePatternViewerInput,
+  freeholdsEnabled?: boolean,
+): string {
   const model = recipePatternTooltipModel(item, viewer);
   if (!model) return '';
+  // Realm availability is known independently of the character's first cprof
+  // snapshot. A retained manual must not promise the learn that the canonical
+  // recipe mint refuses, even when this character meets its skill requirement.
+  const outputs = model.resultItemIds ?? [model.resultItemId];
+  if (outputs.some((id) => !isFreeholdCraftAvailable(freeholdsEnabled === true, id))) {
+    return tooltipLine('tt-red', t('apiError.freehold.disabled'));
+  }
   let html = '';
   // hasOwn-gated like icons.ts itemFallback: ITEMS is a prototype-bearing
   // Record, so a resultItemId of 'constructor' would otherwise resolve a

@@ -6654,17 +6654,15 @@ export class Hud {
     // useItem), from the pure sibling view so bags, bank, crafting, vendor,
     // and market all state what the elixir does.
     html += elixirTooltipLines(item);
-    // Recipe patterns (kind 'recipe'): what the pattern teaches, the craft
-    // skill it wants (red when unmet), and the trainer's own already-known
-    // line when this character has learned it. The viewer state is the
-    // existing craftingIdentity read, so bags, bank, mail, and market all
-    // state the same three lines offline and online. The read is gated on the
-    // kind rather than left to the core's own guard: the offline Sim rebuilds
-    // craftingIdentity (a copied skill record and a SORTED known-recipe list)
-    // on every call, so no other kind's hover should pay for it; the online
-    // ClientWorld read is a plain mirrored field and free either way.
+    // Patterns share their realm, skill and knownness gates across item surfaces.
+    // Gate the identity read by kind: Sim copies and sorts this projection;
+    // other item hovers should not pay for it. ClientWorld mirrors it directly.
     if (item.kind === 'recipe') {
-      html += recipePatternTooltipLines(item, this.sim.craftingIdentity);
+      html += recipePatternTooltipLines(
+        item,
+        this.sim.craftingIdentity,
+        this.sim.cfg.freeholdsEnabled,
+      );
     }
     html += feastTooltipLines(item);
     // Quest story block (related quest, progress, rules, orphaned). Replaces the

@@ -3,9 +3,10 @@
 Foundation, furnishing item-kind and content 03 implementation and paired QA are
 complete locally. Crafted content 04 development implementation now passes its
 shared gate and implementation reviews, with final icons/provenance and runtime
-evidence accepted. Four authorized completion commits are recorded; the
-post-fourth-commit check passed with clean status. The separate 04 QA audit has
-not started.
+evidence accepted. The four original completion commits are `86eb86bbe2`,
+`8bd097d898`, `b3c2452b49` and `3666d89647`; the post-fourth-commit check passed
+with clean status. The separate 04 QA audit is
+in progress after dependency integration `2e24ba8818`; no final QA verdict is recorded.
 Production calibration, activation, final GLBs and room/hardware LOW gates remain
 unsigned; NPC voice remains required before feature shipment.
 
@@ -24,8 +25,8 @@ inserted into the chain. The next handoff is
 | 02 QA | PASS, local | 2026-09-07 | 2026-09-07 | 40 findings found and 40 resolved, zero deferred. Fresh entire-fix review PASS at d386635394 across 110 changed files and all four repair commits; final documentation and checklist PASS with both wording nits resolved. Final shared gate exit 0, all 12 steps green; 58,083 Vitest and 373 browser tests passed; standalone i18n/status PASS. Post-commit ci:changed actual exit 0 at c881543258 with clean status; the same check follows the evidence-only amendment. See furnishing-item-kind-qa-validation.md |
 | 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Complete (QA PASS), local | 2026-09-07 | 2026-09-07 | Accepted twelve-bill development cycle, eight common 250/60 furnishings, measured geometry, gated freehold_furnisher, manual Homesteader rewards and hearth_basics (eight ordinary item relics). Production remains disabled. See content-trial-2026-09-07/acceptance.md and content-final-validation-2026-09-07.md. No push. |
 | 03 QA | PASS, local | 2026-09-07 | 2026-09-07 | 39 distinct findings found and resolved, zero open. Paired correctness/coverage/hygiene, finishing and conditional reviews PASS, including fresh repairs. Final shared gate exit 0, all 12 steps; 57,726 unit and 376 browser tests passed. Runtime and canonical visual evidence accepted. Four reviewed completion commits; post-source-commit ci:changed exit 0, repeated after the final evidence commit with its result in the task handoff. See content-final-validation-2026-09-07.md. |
-| 04 Content: crafted furnishings and quartermaster patterns | Development implementation complete, local | 2026-09-07 | 2026-09-07 | Accepted development v1, ten recipes/outputs, three 16-Mark patterns, Hearth page, thirteen final icons/provenance and 42 runtime captures. Shared gate exit 0, all 12 steps; implementation QA/fresh review closeout recorded in crafted-content-trial-2026-09-07/implementation-validation.md. Four authorized commits; post-fourth-commit ci:changed exit 0 (1967 files, existing warnings only), clean status observed. The check repeats after the documentation-only amendment; no push. Production gates remain unsigned. |
-| 04 QA | Not started | | | |
+| 04 Content: crafted furnishings and quartermaster patterns | Development implementation complete, local | 2026-09-07 | 2026-09-07 | Accepted development v1, ten recipes/outputs, three 16-Mark patterns, Hearth page, thirteen final icons/provenance and 42 runtime captures. Shared gate exit 0, all 12 steps; implementation QA/fresh review closeout recorded in crafted-content-trial-2026-09-07/implementation-validation.md. Four authorized commits `86eb86bbe2`, `8bd097d898`, `b3c2452b49` and `3666d89647`; post-fourth-commit ci:changed exit 0 (1967 files, existing warnings only), clean status observed. The original completion receipt called for the same check after its documentation-only amendment; no push. Production gates remain unsigned. |
+| 04 QA | In progress | 2026-09-07 | | Original implementation range `49ed3f0933..3666d89647`; dependency `54ce808436` integrated through `2e24ba8818`. Audit and repairs are in progress; no final verdict or shared-gate claim for this candidate. The professions-source freeze question remains unresolved. |
 | 05 Instance claim | Not started | | | |
 | 05 QA | Not started | | | |
 | 06 Interiors, the Eastbrook gate, the Hearth Key | Not started | | | |
@@ -439,7 +440,7 @@ After phase-03-qa.md: [phase-04-content-crafted-and-patterns.md](phase-04-conten
 
 Implementation: [phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md). Paired audit: [phase-04-qa.md](phase-04-qa.md).
 
-Development implementation completion notes, 2026-09-07 (separate 04 QA not started):
+Development implementation completion notes, 2026-09-07 (original snapshot at `3666d89647`, before the separate 04 QA audit):
 
 - Fernando accepted development v1 in
   [acceptance.md](crafted-content-trial-2026-09-07/acceptance.md), exact SHA-256
@@ -450,12 +451,16 @@ Development implementation completion notes, 2026-09-07 (separate 04 QA not star
   furnishing output and 40 copper craft fee. Seven are trainer recipes with the
   unchanged 1-gold unlock; three are taught by the 16-Mark quartermaster patterns.
   The complete material, resale and geometry inventory is in the accepted artifact.
+  Seven crafts use `STATION_TYPE_BY_CRAFT`; the existing explicit legacy bindings
+  are inscription/apothecary, jewelcrafting/forge and enchanting/toolworks. No
+  new station or change to the existing admission/training predicates is implied.
 - `hearth_first_crafts` appends ten ordinary item relics after `hearth_basics`.
   Hearth inventory is exactly those two pages; none of the three patterns is a
   relic. Verified catalog pins: 43 pages, 484 raw
   slots, 337 unique item IDs, 448 full-completion and 419 character-completion slots.
-  Preserve the merged Crucible family: channel pins are 55 recipe items, 76 drop
-  recipes and 43 non-Crucible recipe items, with furnishing the seventh family.
+  Preserve the merged Crucible family: 55 teaching items comprise 54 recipe
+  manuals teaching 76 drop recipes plus one enchant teaching item. The
+  non-Crucible subset has 43 teaching items; furnishing is the seventh recipe family.
 - English names cover thirteen item IDs. The five required non-Latin fills are
   authored in `zh_CN`, `zh_TW`, `ja_JP`, `ko_KR` and `ru_RU`; the page has matching
   Reliquary full descriptions. The page name is now present in all eighteen base
@@ -486,13 +491,17 @@ Development implementation completion notes, 2026-09-07 (separate 04 QA not star
   performance and persistence reviews PASS. Required QA/fresh-review reports
   under `crafted-content-trial-2026-09-07/reviews/implementation-*.md` are refreshed
   for this final evidence; earlier interim statuses are historical snapshots.
-- Four authorized completion commits are recorded. After the fourth,
+- The four original completion commits are `86eb86bbe2`, `8bd097d898`,
+  `b3c2452b49` and `3666d89647`. After the fourth,
   `npm run ci:changed` passed with exit 0, 1967 files checked and existing warnings
   only; working-tree status was clean. This receipt is incorporated by amending
   only the fourth documentation commit, preserving four commits. The parent
   repeats `npm run ci:changed` after the actual final amended commit and records
   that result in the final handoff. No push. Separate row 04 QA remains Not
-  started; its next handoff is `phase-04-qa.md`, before implementation 05.
+  started at this implementation snapshot. The subsequent audit is now in
+  progress under `phase-04-qa.md`, after integration `2e24ba8818` of dependency
+  `54ce808436`. It has no final verdict yet, and the professions-source freeze
+  question remains unresolved; implementation 05 has not started.
 - Final crafted GLBs and remeasurement (`scripts/assets/freehold_crafted/`,
   `export_freehold_crafted.mjs`, `freehold_crafted.json`,
   `tests/freehold_crafted_asset.test.ts`), legal maximum room layouts,

@@ -68,6 +68,7 @@ describe('crafted furnishing availability on dark hosts', () => {
           recipe.acquisition?.includes('trainer') ? 'trainer' : 'drop',
         ),
       ).toEqual({ ok: false, recipeId: recipe.id, reason: 'unknown_recipe' });
+      expect(meta.knownRecipes.has(recipe.id)).toBe(false);
       meta.knownRecipes.add(recipe.id);
       sim.craftItem(recipe.id);
       expect(sim.player.craftCastRecipeId).toBe('');

@@ -1,7 +1,7 @@
 // Recipe training (Professions 2.0): learning a trainer-taught recipe
 // from the resident master at its craft's station. Pure validation only: the
 // side effects (charging the fee, acquireRecipe, the trainResult event) live
-// with the caller (Sim.trainRecipe), so `resolveTrain` can be exercised
+// with the caller (train_recipe.ts), so `resolveTrain` can be exercised
 // directly by tests the way crafting.ts's resolve* functions are.
 //
 // The locked general predicate: a master teaches a recipe

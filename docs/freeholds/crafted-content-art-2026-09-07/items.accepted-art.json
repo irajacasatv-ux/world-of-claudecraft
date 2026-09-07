@@ -42,16 +42,7 @@
   },
   "review": {
     "reviewer": "Codex art implementation agent",
-    "sizesInspected": [
-      "original",
-      512,
-      128,
-      40,
-      28,
-      22,
-      "28-grayscale",
-      "64-circle"
-    ],
+    "sizesInspected": ["original", 512, 128, 40, 28, 22, "28-grayscale", "64-circle"],
     "sheets": [
       {
         "path": "docs/freeholds/crafted-content-art-2026-09-07/master-review-1.webp",

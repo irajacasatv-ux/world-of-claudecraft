@@ -1861,6 +1861,7 @@ export class BagsWindow {
         mode,
         s.instance,
         s.craftedRecipeId,
+        this.deps.world().cfg?.freeholdsEnabled,
       );
       const extra = key ? `<div class="tt-sub">${esc(t(key))}</div>` : '';
       // Advertise the shift-click partial deposit on a splittable stack, the bank

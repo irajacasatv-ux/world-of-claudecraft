@@ -12999,6 +12999,9 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
     '요리 {skill}',
   'guide.profPages.prov.placeableTag':
     '(먹지 않고 차려 둠)',
+  'guide.profPages.prov.furnishingTag': '(장식용 가구, 먹을 수 없음)',
+  'guide.profPages.prov.ladderBodyFurnishings':
+    '요리 제작법에는 음식, 잔치, 야전 제작 거점, 장식용 가구가 있습니다. 음식은 가방에서 먹을 수 있으며, 일부는 일정 시간 강화 효과를 줍니다. 잔치는 땅에 차려 근처 플레이어와 나눕니다. 야전 제작 거점이 있으면 마을 밖에서도 요리할 수 있습니다. 가구는 자유 영지를 꾸미는 용도이며 음식이나 강화 효과를 주지 않습니다.',
   'guide.profPages.prov.stationTag': '(야전 제작 거점)',
   'guide.profPages.prov.tableHeading':
     '꼭대기의 식탁',

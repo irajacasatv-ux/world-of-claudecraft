@@ -355,7 +355,7 @@ export interface GuideProfProvisioningLine { id: string; materials: string[]; }
 /** One rung of cooking's ladder and the outputs it teaches. */
 export interface GuideProfProvisioningRung {
   skillReq: number;
-  outputs: { itemId: string; placeable: boolean; station: boolean }[];
+  outputs: { itemId: string; placeable: boolean; station: boolean; furnishing: boolean }[];
 }
 export interface GuideProfProvisioning {
   lines: GuideProfProvisioningLine[];
@@ -20426,37 +20426,44 @@ export const GUIDE_PROF_PROVISIONING: GuideProfProvisioning = {
         {
           "itemId": "eastbrook_glazed_carrots",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "eastbrook_root_pottage",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "herbed_marsh_pike",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "hunters_game_skewer",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "pan_seared_perch",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "tough_jerky",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "vale_hearth_loaf",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         }
       ]
     },
@@ -20466,32 +20473,38 @@ export const GUIDE_PROF_PROVISIONING: GuideProfProvisioning = {
         {
           "itemId": "ashwood_smoked_eel",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "fenbridge_beet_braise",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "fenbridge_rice_bowl",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "fenbridge_rice_pudding",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "frostgill_chowder",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "goldleaf_game_stew",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         }
       ]
     },
@@ -20501,27 +20514,32 @@ export const GUIDE_PROF_PROVISIONING: GuideProfProvisioning = {
         {
           "itemId": "anglers_feast_platter",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "highwatch_barley_bannock",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "marlows_grand_roast",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "freehold_set_supper_table",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": true
         },
         {
           "itemId": "silvered_carp_supper",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         }
       ]
     },
@@ -20531,22 +20549,26 @@ export const GUIDE_PROF_PROVISIONING: GuideProfProvisioning = {
         {
           "itemId": "highwatch_barley_porridge",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "highwatch_gourd_soup",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "peppered_deepbarb_catfish",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "seasoned_stock",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         }
       ]
     },
@@ -20556,42 +20578,50 @@ export const GUIDE_PROF_PROVISIONING: GuideProfProvisioning = {
         {
           "itemId": "evergarden_braised_greens",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "evergarden_harvest_platter",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "evergarden_sunmelon_tart",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "harvest_feast",
           "placeable": true,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "roast_hollowgill_sturgeon",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "sageleaf_chowder",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "stonepot_stew",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "warspice_skewers",
           "placeable": false,
-          "station": false
+          "station": false,
+          "furnishing": false
         }
       ]
     },
@@ -20601,22 +20631,26 @@ export const GUIDE_PROF_PROVISIONING: GuideProfProvisioning = {
         {
           "itemId": "sageleaf_feast",
           "placeable": true,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "stonepot_feast",
           "placeable": true,
-          "station": false
+          "station": false,
+          "furnishing": false
         },
         {
           "itemId": "laden_hearth",
           "placeable": false,
-          "station": true
+          "station": true,
+          "furnishing": false
         },
         {
           "itemId": "warspice_feast",
           "placeable": true,
-          "station": false
+          "station": false,
+          "furnishing": false
         }
       ]
     }

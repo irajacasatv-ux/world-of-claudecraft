@@ -11,11 +11,12 @@
 
 import { poolCapacityOf, poolOccupancyOf } from '../sim/bag_pools';
 import { BACKPACK_SLOTS } from '../sim/bags';
+import { isFreeholdCraftAvailable } from '../sim/freehold';
 import { type BagCells, layoutBagCells } from '../sim/inventory_order';
 import { isTransferLockedInstance } from '../sim/item_instance_transfer';
 import type { Quality } from '../sim/loot_master';
 import { isMaterialItemId } from '../sim/material_ids';
-import type { InvSlot, ItemDef, ItemInstancePayload } from '../sim/types';
+import type { InvSlot, ItemInstancePayload } from '../sim/types';
 import {
   applyBagFilter,
   type BagFilterState,
@@ -29,6 +30,8 @@ export type { BagCells };
 
 /** The item facts the bag click/tooltip logic needs (a subset of ItemDef). */
 export interface BagItemInfo {
+  /** Catalog identity for host-gated furnishing manuals. */
+  id?: string;
   kind: string;
   noMarketList?: boolean;
   /** Refused by the sim's vendor sell path (src/sim/items.ts sellItem). */
@@ -54,9 +57,8 @@ export interface BagItemInfo {
   // be added here on purpose.
   feast?: { charges: number; durationTicks: number; dishItemId: string };
   /** The id is in the Materials Vault's honest material set
-   *  (vaultMaterialIds()). Computed by the CALLER (this info shape carries no
-   *  id to test); read only by the vaultDeposit mode arm, so every other
-   *  caller may omit it. */
+   *  (vaultMaterialIds()). Computed by the caller; read only by the
+   *  vaultDeposit mode arm, so every other caller may omit it. */
   vaultMaterial?: boolean;
 }
 
@@ -471,6 +473,8 @@ export function bagTooltipHintKey(
   /** The slot's crafting provenance marker, the bagItemAction twin: read only
    *  by the vaultDeposit arm. */
   craftedRecipeId?: string,
+  /** Absent capability is dark, matching the authoritative host opt-in. */
+  freeholdsEnabled?: boolean,
 ): BagTooltipHintKey {
   if (item.soulbound && (mode.tradeOpen || mode.mailAttach || mode.marketSell || mode.vendorOpen))
     return 'hudChrome.itemSoulbound';
@@ -569,6 +573,13 @@ export function bagTooltipHintKey(
   // Patterns are usable but carry no `use` payload (the kind IS the payload),
   // so the kind joins this arm to reach the shared use hint; without it the
   // hover stayed silent about a click that learns a recipe.
+  if (
+    item.kind === 'recipe' &&
+    item.id &&
+    !isFreeholdCraftAvailable(freeholdsEnabled === true, item.id)
+  ) {
+    return ''; // The shared item tooltip explains realm unavailability once.
+  }
   if (item.kind === 'recipe' || item.use) return 'itemUi.tooltip.clickUse';
   return '';
 }

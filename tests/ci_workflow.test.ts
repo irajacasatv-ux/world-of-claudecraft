@@ -471,15 +471,10 @@ describe('CI workflow parity', () => {
         const match = line.match(/^docs\/screenshots\/([A-Za-z0-9._-]+)\//);
         if (match) indexDirs.add(match[1]);
       }
-      // Vacuity floor near the real count (254 subtrees on 2026-08-25, after
-      // the seventeenth release sync brought the tutorial island, guild board
-      // and Double Honor evidence; 249 on 2026-08-24). The
-      // 169 this comment carried was accurate on 2026-08-14; ten days of
-      // committed evidence took it to 235 at efb1220e85, 248 at the 11l stamp
-      // and 249 after the sixteenth release sync, so a floor of 160 had rotted
-      // by ACCUMULATION, not by a miscount: re-measure it at every release
-      // sync (the 11l QA), and keep it within a few subtrees of the count.
-      expect(indexDirs.size).toBeGreaterThanOrEqual(245);
+      // The integrated catalog has 306 tracked screenshot subtrees (2026-09-07).
+      // Keep this floor near that measured count so truncated discovery cannot
+      // silently satisfy the exact reference/cone coupling below.
+      expect(indexDirs.size).toBeGreaterThanOrEqual(306);
     }
     // The guard's own file is excluded from the corpus: its SPARSE_CONE
     // literal above names every cone subtree, so counting it would satisfy
@@ -533,10 +528,9 @@ describe('CI workflow parity', () => {
         `unexpected tracked paths are missing from the screenshot-reference corpus: ${missing.join(', ')}`,
       ).toEqual([]);
       const corpus = corpusCandidates.filter((file) => existsSync(join(repoRoot, file)));
-      // Vacuity floor near the real count (about 6,600 tracked
-      // reference-carrying files on 2026-08-14): an emptied enumeration
-      // cannot green the coupling by scanning nothing.
-      expect(corpus.length).toBeGreaterThanOrEqual(6_000);
+      // The integrated index contains 9,402 reference-bearing files (2026-09-07).
+      // An emptied or truncated enumeration must not green the coupling.
+      expect(corpus.length).toBeGreaterThanOrEqual(9_402);
       for (const file of corpus) {
         const source = readFileSync(join(repoRoot, file), 'utf8');
         for (const match of source.matchAll(/docs\/screenshots\/([A-Za-z0-9._-]+)/g)) {

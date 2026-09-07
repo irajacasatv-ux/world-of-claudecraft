@@ -580,6 +580,7 @@ describe('crafted furnishings: the provisioner firewall', () => {
 
   it('proves the produce exception refuses seeds, a gear craft and a non-furnishing output', () => {
     const cooking = recipes.find((recipe) => recipe.professionId === 'cooking');
+    const alchemy = recipes.find((recipe) => recipe.professionId === 'alchemy');
     const forbiddenCrafts = [
       'weaponcrafting',
       'armorcrafting',
@@ -591,26 +592,31 @@ describe('crafted furnishings: the provisioner firewall', () => {
       'enchanting',
     ];
     const gearOutput = ALL_RECIPES.find((recipe) => ITEMS[recipe.resultItemId]?.slot !== undefined);
-    if (!cooking || !gearOutput) throw new Error('Missing firewall controls');
+    if (!cooking || !alchemy || !gearOutput) throw new Error('Missing firewall controls');
+    const eligibleRecipes = [cooking, alchemy];
     for (const crop of Object.values(FARM_CROPS)) {
       for (const itemId of [crop.produceItemId, crop.fineProduceItemId]) {
-        expect(furnishingReagentAllowed(cooking, itemId)).toBe(true);
-        expect(furnishingReagentAllowed({ ...cooking, professionId: 'alchemy' }, itemId)).toBe(
-          true,
-        );
+        for (const recipe of eligibleRecipes) {
+          expect(furnishingReagentAllowed(recipe, itemId), recipe.id).toBe(true);
+          expect(
+            furnishingReagentAllowed({ ...recipe, resultItemId: gearOutput.resultItemId }, itemId),
+            `${recipe.professionId}: non-furnishing output`,
+          ).toBe(false);
+        }
         for (const professionId of forbiddenCrafts) {
           expect(
             furnishingReagentAllowed({ ...cooking, professionId }, itemId),
             `${professionId}: ${itemId}`,
           ).toBe(false);
         }
-        expect(
-          furnishingReagentAllowed({ ...cooking, resultItemId: gearOutput.resultItemId }, itemId),
-        ).toBe(false);
       }
-      expect(furnishingReagentAllowed(cooking, crop.seedItemId)).toBe(false);
+      for (const recipe of eligibleRecipes) {
+        expect(furnishingReagentAllowed(recipe, crop.seedItemId), recipe.id).toBe(false);
+      }
     }
-    expect(furnishingReagentAllowed(cooking, 'missing_reagent')).toBe(false);
-    expect(furnishingReagentAllowed(cooking, 'copper_ore')).toBe(true);
+    for (const recipe of eligibleRecipes) {
+      expect(furnishingReagentAllowed(recipe, 'missing_reagent'), recipe.id).toBe(false);
+      expect(furnishingReagentAllowed(recipe, 'copper_ore'), recipe.id).toBe(true);
+    }
   });
 });

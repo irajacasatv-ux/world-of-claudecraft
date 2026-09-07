@@ -795,6 +795,60 @@ describe('bag mode chain order pin (insertion guard)', () => {
   });
 });
 
+describe('retained furnishing manual bag hints', () => {
+  const manuals = [
+    'pattern_freehold_clockwork_lamp',
+    'pattern_freehold_chart_easel',
+    'pattern_freehold_jewel_floor_lamp',
+  ];
+
+  it.each(manuals)('%s advertises learning only on a host that enables Freeholds', (id) => {
+    const item = CATALOG_ITEMS[id];
+    expect(item?.kind).toBe('recipe');
+    for (const capability of [undefined, false, true]) {
+      expect(bagTooltipHintKey(item, NO_MODE, undefined, undefined, capability)).toBe(
+        capability ? 'itemUi.tooltip.clickUse' : '',
+      );
+    }
+  });
+
+  it.each(manuals)(
+    '%s preserves every transfer and bank hint while Freeholds is disabled',
+    (id) => {
+      const item = CATALOG_ITEMS[id];
+      const modes = [
+        [{ tradeOpen: true }, 'itemUi.tooltip.clickTradeOffer'],
+        [{ mailAttach: true }, 'hudChrome.mailbox.clickAttach'],
+        [{ marketSell: true }, 'itemUi.tooltip.clickMarketList'],
+        [{ vendorOpen: true }, 'itemUi.tooltip.clickSell'],
+        [{ guildBankDeposit: true }, 'hudChrome.bank.guildDepositHint'],
+        [{ bankDeposit: true }, 'hudChrome.bank.depositHint'],
+        [{ vaultDeposit: true }, 'hudChrome.bank.vaultCannotDeposit'],
+        [{ bankOpen: true }, 'hudChrome.bank.cannotDepositNow'],
+      ] as const;
+      for (const [mode, expected] of modes) {
+        expect(bagTooltipHintKey(item, { ...NO_MODE, ...mode }, undefined, undefined, false)).toBe(
+          expected,
+        );
+      }
+    },
+  );
+
+  it('preserves ordinary manual and formula use hints with an absent, false, or true capability', () => {
+    for (const id of [
+      'pattern_ironhusk_flask',
+      'pattern_crucible_str_mail',
+      'formula_lastflame_zeal',
+    ]) {
+      for (const capability of [undefined, false, true]) {
+        expect(
+          bagTooltipHintKey(CATALOG_ITEMS[id], NO_MODE, undefined, undefined, capability),
+        ).toBe('itemUi.tooltip.clickUse');
+      }
+    }
+  });
+});
+
 describe('bagTooltipHintKey', () => {
   it('matches the mode-then-kind branch', () => {
     expect(bagTooltipHintKey(ITEMS.sword, { ...NO_MODE, tradeOpen: true })).toBe(

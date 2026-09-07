@@ -406,7 +406,7 @@ describe('freeholds flag: the pure verdict', () => {
     // of every session; this Proxy counts the reads so that reorder reds.
     // The rift forge sibling (server/rift_forge_gate.ts) makes the same
     // claim on the same shape and takes the same env argument, so the same
-    // counting env pins both dark-wire gates here.
+    // counting env pins the short-circuit in both wire gates here.
     let reads = 0;
     const countingEnv = new Proxy({} as NodeJS.ProcessEnv, {
       get(target, prop, receiver) {
@@ -423,8 +423,11 @@ describe('freeholds flag: the pure verdict', () => {
     expect(refusedRiftForgeCommand('cast', countingEnv)).toBe(false);
     expect(refusedRiftForgeCommand('freehold_enter', countingEnv)).toBe(false);
     expect(reads).toBe(0);
-    expect(refusedRiftForgeCommand('rift_upgrade_item', countingEnv)).toBe(true);
+    expect(refusedRiftForgeCommand('rift_upgrade_item', countingEnv)).toBe(false);
     expect(reads).toBe(1);
+    countingEnv.RIFT_FORGE_ENABLED = '0';
+    expect(refusedRiftForgeCommand('rift_upgrade_item', countingEnv)).toBe(true);
+    expect(reads).toBe(2);
   });
 
   it('the gate list is exactly the COMMAND_FACETS rows tagged IWorldHousing, both ways', () => {
