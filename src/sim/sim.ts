@@ -11867,9 +11867,9 @@ export class Sim {
     consumeFeastAction(this.ctx, r.e, r.meta, feastId);
   }
 
-  // Housing (IWorldHousing). Dark here: all thirteen members delegate into
-  // src/sim/freehold/, where the bodies decide nothing. housingNowMs is the
-  // farmNowMs clock base, NEVER read inside tick() (freehold/CLAUDE.md).
+  // Housing (IWorldHousing). Dark here: twelve of the thirteen members delegate
+  // into src/sim/freehold/, where the bodies decide nothing. The thirteenth,
+  // housingNowMs, is a one-line clock alias, NEVER read in tick() (CLAUDE.md).
   get myFreehold(): FreeholdView | null {
     return freeholdMod.myFreeholdView(this.ctx, this.primaryId);
   }

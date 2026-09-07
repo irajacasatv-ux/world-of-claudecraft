@@ -36,10 +36,13 @@ the wire; the public descriptor carries an opaque plot id only.
   state, emit an event or draw rng until its owner lands it, so a host that
   runs them is indistinguishable from one that does not.
 - `Sim` keeps thin same-named delegates for the facet (the `IWorldHousing`
-  members right after the farming block in `sim.ts`); every one of the thirteen
-  delegates into this directory, the two descriptors included, so lighting them
+  members right after the farming block in `sim.ts`). TWELVE of the thirteen
+  delegate into this directory, the two descriptors included, so lighting those
   at 05/08a is an edit HERE and never a growing body inside the zero-slack
-  `sim.ts` coordinator.
+  `sim.ts` coordinator. The thirteenth, `housingNowMs`, deliberately has no
+  module counterpart: it is a one-line alias for the host clock the coordinator
+  already owns, and it stays that way. If it ever needs a decision, it moves
+  into this directory first rather than growing a body on the coordinator.
 - `housingNowMs` is the `farmNowMs` clock base, and it must NEVER be read from
   inside `tick()`. On the authoritative server `cfg.lockoutNowMs` is a real wall
   clock, so a housing pass that sampled it per tick (a condition decay or a

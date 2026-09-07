@@ -106,13 +106,32 @@ describe('IWorldHousing on the offline Sim (dark)', () => {
       expect(resolve.mock.calls[0][0], `${name} defaults to primaryId`).toBe(sim.primaryId);
       resolve.mockRestore();
     }
-    // The two descriptors are delegates too, not `return null` bodies on the
-    // coordinator: reading them reaches the module and resolves the caller.
-    const resolve = vi.spyOn(sim.ctx, 'resolve');
+    // The two DESCRIPTORS need a different proof. They read null and resolve
+    // nobody today, so no runtime probe can tell a delegate from a `return
+    // null` body on the coordinator: a resolve spy stays silent either way, and
+    // asserting that silence would pin nothing. What actually matters is that
+    // the body lives in the module, so 05/08a lights it there instead of
+    // growing the zero-slack coordinator. Pin that on comment-stripped source.
     expect(sim.myFreehold).toBeNull();
     expect(sim.freeholdLayout).toBeNull();
-    expect(resolve).not.toHaveBeenCalled(); // they resolve nothing YET, but they do delegate
-    resolve.mockRestore();
+    // Comments stripped first, or a `return null;` in prose would fail the
+    // negative arm and a delegate named only in a comment would pass the
+    // positive one (the source-pin trap this repo has paid for before).
+    const simSrc = readFileSync(join(__dirname, '..', 'src', 'sim', 'sim.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    for (const [member, fn] of [
+      ['myFreehold', 'myFreeholdView'],
+      ['freeholdLayout', 'freeholdLayoutView'],
+    ] as const) {
+      const at = simSrc.indexOf(`get ${member}()`);
+      expect(at, `Sim must declare the ${member} getter`).toBeGreaterThanOrEqual(0);
+      const body = simSrc.slice(at, simSrc.indexOf('\n  }', at));
+      expect(body, `${member} must delegate, not answer inline`).toContain(`freeholdMod.${fn}(`);
+      expect(body, `${member} must not carry an inline literal answer`).not.toMatch(
+        /return\s+null\s*;/,
+      );
+    }
   });
 
   it('every stub changes nothing, emits nothing and draws no rng, with an explicit pid and with the default', () => {
