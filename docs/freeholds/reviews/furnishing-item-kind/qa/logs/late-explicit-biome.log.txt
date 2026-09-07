@@ -1,0 +1,360 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+src/ui/dev_command_window.ts:14:3 lint/correctness/noUnusedImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Several of these imports are unused.
+
+    12 │ } from './dev_command_view';
+    13 │ import {
+  > 14 │   DEV_ITEM_PICKER_LIMIT,
+       │   ^^^^^^^^^^^^^^^^^^^^^
+    15 │   type DevItemCandidate,
+    16 │   rankDevItems,
+
+  i Unused imports might be the result of an incomplete refactoring.
+
+  i Unsafe fix: Remove the unused imports.
+
+     12  12 │   } from './dev_command_view';
+     13  13 │   import {
+     14     │ - ··DEV_ITEM_PICKER_LIMIT,
+     15  14 │     type DevItemCandidate,
+     16  15 │     rankDevItems,
+
+
+tests/furnishing_auto_equip.test.ts:102:16 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    100 │     world: EMPTY_TEST_WORLD,
+    101 │   });
+  > 102 │   const meta = sim.meta(sim.playerId)!;
+        │                ^^^^^^^^^^^^^^^^^^^^^^^
+    103 │   meta.inventory.splice(0);
+    104 │   meta.equipment = { [slot]: itemId };
+
+
+tests/furnishing_discovery.test.ts:54:19 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    52 │     const sim = world();
+    53 │     const pid = sim.addPlayer('warrior', 'Finder');
+  > 54 │     const state = sim.serializeCharacter(pid)!;
+       │                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    55 │     state.inventory = [{ itemId: FURNISHING.id, count: 1, instance: COPY }];
+    56 │     state.deedStats = {
+
+
+tests/furnishing_discovery.test.ts:62:22 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    60 │     const loaded = world();
+    61 │     const restoredPid = loaded.addPlayer('warrior', 'Veteran', { state });
+  > 62 │     const restored = loaded.meta(restoredPid)!;
+       │                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+    63 │     expect(restored.deedStats.itemsDiscovered.has(FURNISHING.id)).toBe(true);
+    64 │     expect(restored.deedStats.itemsDiscovered.has(BASE_ID)).toBe(true);
+
+
+tests/furnishing_discovery.test.ts:77:20 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    75 │       const sim = world();
+    76 │       const pid = sim.addPlayer('warrior', 'Finder');
+  > 77 │       const meta = sim.meta(pid)!;
+       │                    ^^^^^^^^^^^^^^
+    78 │       sim.addItemInstance(itemId, COPY, pid);
+    79 │       expect(meta.inventory.find((slot) => slot.itemId === itemId)?.instance).toEqual(COPY);
+
+
+tests/furnishing_discovery.test.ts:102:24 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    100 │       const loaded = world();
+    101 │       const loadedPid = loaded.addPlayer('warrior', 'Finder', { state: saved });
+  > 102 │       const restored = loaded.meta(loadedPid)!;
+        │                        ^^^^^^^^^^^^^^^^^^^^^^^
+    103 │       expect([...restored.deedStats.itemsDiscovered].sort()).toEqual(discoveries.sort());
+    104 │       expect(restored.reliquary.counts[itemId === FURNISHING.id ? FURNISHING.id : BASE_ID]).toBe(2);
+
+
+tests/furnishing_discovery.test.ts:118:21 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    116 │       const sim = world();
+    117 │       const pid = sim.addPlayer('warrior', 'Finder');
+  > 118 │       const state = sim.serializeCharacter(pid)!;
+        │                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    119 │       state.deedStats = { itemsDiscovered: [] };
+    120 │       state.inventory = [];
+
+
+tests/furnishing_discovery.test.ts:125:51 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    123 │       const slot = { itemId: FURNISHING.id, count: 1, instance: COPY };
+    124 │       if (container === 'inventory') state.inventory = [slot];
+  > 125 │       if (container === 'bank') state.bank = { ...state.bank!, inventory: [slot] };
+        │                                                   ^^^^^^^^^^^
+    126 │       if (container === 'equipment') {
+    127 │         state.equipment = { mainhand: FURNISHING.id };
+
+
+tests/furnishing_discovery.test.ts:134:20 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    132 │         state: JSON.parse(JSON.stringify(state)) as CharacterState,
+    133 │       });
+  > 134 │       const meta = loaded.meta(loadedPid)!;
+        │                    ^^^^^^^^^^^^^^^^^^^^^^^
+    135 │       expect(meta.deedStats.itemsDiscovered.has(FURNISHING.id)).toBe(true);
+    136 │       expect(meta.deedStats.itemsDiscovered.has(BASE_ID)).toBe(false);
+
+
+tests/furnishing_exchange_identity.test.ts:173:27 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    171 │   const persisted = await h.db.listingById('Claudemoon', out.listing.id);
+    172 │   expect(persisted).not.toBeNull();
+  > 173 │   return { ...h, listing: persisted! };
+        │                           ^^^^^^^^^^
+    174 │ }
+    175 │ function listingView(itemId: string): WocListingView {
+
+
+tests/furnishing_exchange_identity.test.ts:287:12 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    285 │     if (view.kind !== 'ready') throw new Error('missing ready market');
+    286 │     expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+  > 287 │     expect(view.browse.detail!.row.quality).toBe('rare');
+        │            ^^^^^^^^^^^^^^^^^^^
+    288 │     expect(view.activity!.listings.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    289 │     expect(view.browse.rows[0].instance).toBe(rows[0].item.instance);
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+    285 285 │       if (view.kind !== 'ready') throw new Error('missing ready market');
+    286 286 │       expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    287     │ - ····expect(view.browse.detail!.row.quality).toBe('rare');
+        287 │ + ····expect(view.browse.detail?.row.quality).toBe('rare');
+    288 288 │       expect(view.activity!.listings.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    289 289 │       expect(view.browse.rows[0].instance).toBe(rows[0].item.instance);
+
+
+tests/furnishing_exchange_identity.test.ts:288:12 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    286 │     expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    287 │     expect(view.browse.detail!.row.quality).toBe('rare');
+  > 288 │     expect(view.activity!.listings.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+        │            ^^^^^^^^^^^^^^
+    289 │     expect(view.browse.rows[0].instance).toBe(rows[0].item.instance);
+    290 │     expect(rows).toEqual(before);
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+    286 286 │       expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    287 287 │       expect(view.browse.detail!.row.quality).toBe('rare');
+    288     │ - ····expect(view.activity!.listings.map((row)·=>·row.quality)).toEqual(['rare',·'legendary']);
+        288 │ + ····expect(view.activity?.listings.map((row)·=>·row.quality)).toEqual(['rare',·'legendary']);
+    289 289 │       expect(view.browse.rows[0].instance).toBe(rows[0].item.instance);
+    290 290 │       expect(rows).toEqual(before);
+
+
+tests/furnishing_exchange_identity.test.ts:336:11 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    334 │       account: { accountId: 7, scope: 'read' },
+    335 │     });
+  > 336 │     await route!.handler(ctx);
+        │           ^^^^^^
+    337 │     const response = ctx.res as unknown as FakeRes;
+    338 │     expect(response.statusCode).toBe(200);
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+    334 334 │         account: { accountId: 7, scope: 'read' },
+    335 335 │       });
+    336     │ - ····await·route!.handler(ctx);
+        336 │ + ····await·route?.handler(ctx);
+    337 337 │       const response = ctx.res as unknown as FakeRes;
+    338 338 │       expect(response.statusCode).toBe(200);
+
+
+tests/furnishing_exchange_identity.test.ts:357:7 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    355 │       'rift-forged',
+    356 │       'customized',
+  > 357 │       COPY.name!,
+        │       ^^^^^^^^^^
+    358 │     ])
+    359 │       expect(text).not.toContain(word);
+
+
+tests/furnishing_feast_admission.test.ts:125:20 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    123 │     (selection) => {
+    124 │       const sim = world();
+  > 125 │       const meta = sim.meta(sim.playerId)!;
+        │                    ^^^^^^^^^^^^^^^^^^^^^^^
+    126 │       const named = selection === 'named slot';
+    127 │       expect(sim.countItem(FURNISHING.id)).toBe(1);
+
+
+tests/furnishing_feast_admission.test.ts:154:18 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    152 │   it('refuses a furnishing dish before consuming a serving and accepts the food control', () => {
+    153 │     const sim = world();
+  > 154 │     const meta = sim.meta(sim.playerId)!;
+        │                  ^^^^^^^^^^^^^^^^^^^^^^^
+    155 │     placeFeastAction(sim.ctx, sim.player, meta, 1, FIXTURE.feastId);
+    156 │     const [[id, feast]] = [...sim.ctx.feasts];
+
+
+tests/furnishing_asset_identity.test.ts:6:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  × Sort the imported names.
+
+    4 │ import type { ItemDef } from '../src/sim/types';
+    5 │ import { entityTranslationManifest, itemDisplayName } from '../src/ui/entity_i18n';
+  > 6 │ import { iconDataUrl, ITEM_IMAGE_IDS, weaponIconUrl } from '../src/ui/icons';
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    7 │ import { FURNISHING } from './fixtures/furnishing_item';
+    8 │
+
+  i Safe fix: Organize imports and exports (Biome)
+
+     4  4 │   import type { ItemDef } from '../src/sim/types';
+     5  5 │   import { entityTranslationManifest, itemDisplayName } from '../src/ui/entity_i18n';
+     6    │ - import·{·iconDataUrl,·ITEM_IMAGE_IDS,·weaponIconUrl·}·from·'../src/ui/icons';
+        6 │ + import·{·ITEM_IMAGE_IDS,·iconDataUrl,·weaponIconUrl·}·from·'../src/ui/icons';
+     7  7 │   import { FURNISHING } from './fixtures/furnishing_item';
+     8  8 │
+
+
+tests/furnishing_discovery.test.ts:4:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━
+
+  × Sort the imported names.
+
+    2 │ import * as catalog from '../src/sim/content/reliquary';
+    3 │ import { ITEMS } from '../src/sim/data';
+  > 4 │ import { Sim, type CharacterState } from '../src/sim/sim';
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    5 │ import type { ItemDef, ItemInstancePayload } from '../src/sim/types';
+    6 │ import { FURNISHING } from './fixtures/furnishing_item';
+
+  i Safe fix: Organize imports and exports (Biome)
+
+      2   2 │   import * as catalog from '../src/sim/content/reliquary';
+      3   3 │   import { ITEMS } from '../src/sim/data';
+      4     │ - import·{·Sim,·type·CharacterState·}·from·'../src/sim/sim';
+          4 │ + import·{·type·CharacterState,·Sim·}·from·'../src/sim/sim';
+      5   5 │   import type { ItemDef, ItemInstancePayload } from '../src/sim/types';
+      6   6 │   import { FURNISHING } from './fixtures/furnishing_item';
+
+
+tests/furnishing_enchant_picker.test.ts:4:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  × Sort the imported names.
+
+     2 │ import { ITEMS } from '../src/sim/data';
+     3 │ import type { InvSlot, ItemDef, ItemInstancePayload } from '../src/sim/types';
+   > 4 │ import {
+       │ ^^^^^^^^
+   > 5 │   type EnchantViewerInput,
+   > 6 │   enchantTargets,
+   > 7 │   enchantsForReagent,
+   > 8 │   wornEnchantTargets,
+   > 9 │ } from '../src/ui/hud/professions/enchant_apply_view';
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    10 │ import { FURNISHING } from './fixtures/furnishing_item';
+    11 │
+
+  i Safe fix: Organize imports and exports (Biome)
+
+      4   4 │   import {
+      5   5 │     type EnchantViewerInput,
+      6     │ - ··enchantTargets,
+      7     │ - ··enchantsForReagent,
+          6 │ + ··enchantsForReagent,
+          7 │ + ··enchantTargets,
+      8   8 │     wornEnchantTargets,
+      9   9 │   } from '../src/ui/hud/professions/enchant_apply_view';
+
+
+tests/furnishing_worn_presentation.test.ts:4:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━
+
+  × Some imports or exports are not organized.
+
+     3 │ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+   > 4 │ import { ITEMS, ITEM_SETS } from '../src/sim/data';
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   > 5 │ import { Sim } from '../src/sim/sim';
+        ...
+   > 9 │ import { setLanguage } from '../src/ui/i18n';
+  > 10 │ import { iconDataUrl, ITEM_IMAGE_IDS } from '../src/ui/icons';
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    11 │ import { ItemDragState } from '../src/ui/item_drag_state';
+    12 │ import {
+
+  i Sort the imported names.
+
+    3 │ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+  > 4 │ import { ITEMS, ITEM_SETS } from '../src/sim/data';
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    5 │ import { Sim } from '../src/sim/sim';
+    6 │ import type { EquipSlot, ItemDef, ItemInstancePayload } from '../src/sim/types';
+
+  i Sort the imported names.
+
+     8 │ import { Hud } from '../src/ui/hud';
+     9 │ import { setLanguage } from '../src/ui/i18n';
+  > 10 │ import { iconDataUrl, ITEM_IMAGE_IDS } from '../src/ui/icons';
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    11 │ import { ItemDragState } from '../src/ui/item_drag_state';
+    12 │ import {
+
+  i Safe fix: Organize imports and exports (Biome)
+
+      2   2 │
+      3   3 │   import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+      4     │ - import·{·ITEMS,·ITEM_SETS·}·from·'../src/sim/data';
+          4 │ + import·{·ITEM_SETS,·ITEMS·}·from·'../src/sim/data';
+      5   5 │   import { Sim } from '../src/sim/sim';
+      6   6 │   import type { EquipSlot, ItemDef, ItemInstancePayload } from '../src/sim/types';
+    ······· │
+      8   8 │   import { Hud } from '../src/ui/hud';
+      9   9 │   import { setLanguage } from '../src/ui/i18n';
+     10     │ - import·{·iconDataUrl,·ITEM_IMAGE_IDS·}·from·'../src/ui/icons';
+         10 │ + import·{·ITEM_IMAGE_IDS,·iconDataUrl·}·from·'../src/ui/icons';
+     11  11 │   import { ItemDragState } from '../src/ui/item_drag_state';
+     12  12 │   import {
+
+
+The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.
+Diagnostics not shown: 36.
+Checked 39 files in 238ms. No fixes applied.
+Found 5 errors.
+Found 51 warnings.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.

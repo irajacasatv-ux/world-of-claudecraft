@@ -1,0 +1,10 @@
+ M docs/freeholds/progress.md
+ M docs/freeholds/state.md
+ M docs/screenshots/intentional-gathering-pr1/corpse-choice-desktop.png
+ M docs/screenshots/intentional-gathering-pr1/corpse-choice-mobile-landscape.png
+ M docs/screenshots/intentional-gathering-pr1/corpse-choice-mobile-portrait.png
+ M docs/screenshots/intentional-gathering-pr1/crop-choice-desktop.png
+ M docs/screenshots/intentional-gathering-pr2/source-picker-1280x720.png
+?? docs/freeholds/furnishing-item-kind-qa-validation.md
+?? docs/freeholds/reviews/furnishing-item-kind/qa/
+?? docs/screenshots/furnishing-item-kind/qa/

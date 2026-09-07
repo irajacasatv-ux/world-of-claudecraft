@@ -1,0 +1,50 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const root = process.argv[2] ?? process.cwd();
+const source = readFileSync(resolve(root, 'docs/freeholds/ux-spec.md'), 'utf8');
+const manifestPath = resolve(root, 'docs/freeholds/ux-key-manifest.json');
+const checkedIn = readFileSync(manifestPath, 'utf8');
+const rows = [];
+let table = false;
+let tableCount = 0;
+for (const [index, line] of source.split('\n').entries()) {
+  if (/^\|\s*NEW key\s*\|\s*English value\s*\|\s*Owner\s*\|$/.test(line)) {
+    table = true;
+    tableCount += 1;
+    continue;
+  }
+  if (!line.startsWith('|')) table = false;
+  if (!/^\|\s*hudChrome\.housing\./.test(line)) continue;
+  assert.ok(table, `Housing key outside an approved key table at line ${index + 1}`);
+  const match = /^\|\s*(hudChrome\.housing\.[A-Za-z0-9_.]+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$/.exec(line);
+  assert.ok(match, `Unparsed approved housing key at line ${index + 1}`);
+  const [, key, value, owner] = match;
+  assert.ok(value.length > 0 && owner.length > 0, `Empty value or owner for ${key}`);
+  rows.push({ key, value, owner });
+}
+assert.ok(tableCount > 1, 'The census must cover every approved key table');
+assert.equal(rows.length, 557, 'The complete approved inventory must be reconstructed');
+assert.equal(new Set(rows.map(({ key }) => key)).size, rows.length, 'Duplicate approved key');
+assert.deepEqual(rows.filter(({ owner }) => owner === '02'), [
+  { key: 'hudChrome.housing.furnishing.footprint', value: 'Footprint: {width} by {depth} cells.', owner: '02' },
+  { key: 'hudChrome.housing.furnishing.decorCost', value: 'Decor cost: {cost}.', owner: '02' },
+  { key: 'hudChrome.housing.furnishing.surfaceFloor', value: 'Placed on the floor.', owner: '02' },
+  { key: 'hudChrome.housing.furnishing.maker', value: 'Made by {maker}.', owner: '02' },
+]);
+const nonnumericOwners = [...new Set(rows.map(({ owner }) => owner).filter((owner) => !/^\d+$/.test(owner)))];
+assert.deepEqual(nonnumericOwners, ['30a', '41a'], 'Do not silently omit owners with letter suffixes');
+assert.equal(rows.filter(({ owner }) => owner === '30a').length, 8);
+assert.equal(rows.filter(({ owner }) => owner === '41a').length, 19);
+const reconstructed = `${JSON.stringify(rows, null, 2)}\n`;
+assert.deepEqual(JSON.parse(checkedIn), rows, 'Approved values, owners and encounter order differ');
+assert.equal(checkedIn, reconstructed, 'The committed manifest is not byte-identical to reconstruction');
+const output = '/tmp/freeholds-02-audit/ux-key-manifest.reconstructed.json';
+writeFileSync(output, reconstructed);
+const digest = createHash('sha256').update(reconstructed).digest('hex');
+console.log(`PASS: ${rows.length} unique approved rows from ${tableCount} key tables, byte-identical to ${manifestPath}`);
+console.log(`PASS: all four owner-02 keys, all 8 owner-30a keys, all 19 owner-41a keys`);
+console.log(`SHA-256: ${digest}`);
+console.log(`Reconstruction: ${output}`);

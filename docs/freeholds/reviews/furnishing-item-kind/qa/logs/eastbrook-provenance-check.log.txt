@@ -1,0 +1,38 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+ ❯ tests/eastbrook_polish_capture_contract.test.ts (16 tests | 1 failed) 625ms
+     × pins baseline revision provenance and hashes every v2 polish input separately 35ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/eastbrook_polish_capture_contract.test.ts > Eastbrook polish capture contract > pins baseline revision provenance and hashes every v2 polish input separately
+AssertionError: Eastbrook polish composite fingerprint mismatch.
+  computed from this tree: 4d905dd48ae3d9280e087da37ace5864e82d0e42f70cc2192ab3b24ebd87ab63
+  pinned in the test:      d137e84a98c7eca03d0ea7eadc8d1a3a0665f726d6bd54e6c2b9a3af7995f493
+  inputs that moved (leaves differing from the committed evidence seals):
+    runtimeRender.renderer.sha256
+      sealed:   cafdf478c76f97a2cb94c2e653984c1b0b33440b53e71b2225084183e41d92a6
+      computed: 4663541d35af2332b51d42ddb9afe6b82b775879294bb6cd6b08c8c53eaa78d9
+  every fingerprinted input matches HEAD: this committed tree computes the value
+  above everywhere (local and CI), the pin is stale, and a re-mint is legitimate.
+  One-step re-mint (recomputes all three pinned literals and sweeps the evidence seals):
+    node scripts/assets/eastbrook_grand_armoury/remint_polish_provenance.mjs
+ ❯ tests/eastbrook_polish_capture_contract.test.ts:906:14
+    904|       // when a pin is already stale stays unit-tested with injected
+    905|       // seal-reader and git (tests/eastbrook_provenance_diagnostics.t…
+    906|       expect.fail(
+       |              ^
+    907|         diagnostics.buildPolishProvenanceMismatchReport({
+    908|           pinnedFingerprint: PINNED_POLISH_COMPOSITE_FINGERPRINT,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 29 passed (30)
+   Start at  06:58:43
+   Duration  1.05s (transform 235ms, setup 337ms, import 201ms, tests 852ms, environment 0ms)

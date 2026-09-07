@@ -1,0 +1,434 @@
+{
+  "gameUrl": "http://127.0.0.1:5189",
+  "expectFixed": true,
+  "browserPath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "variants": [
+    {
+      "variant": {
+        "key": "desktop",
+        "width": 1600,
+        "height": 900,
+        "mobile": false
+      },
+      "gesture": "native mouse hover",
+      "injected": {
+        "item": {
+          "id": "probe_furnishing_qa_tooltip",
+          "name": "Screenshot Test Furnishing",
+          "kind": "furnishing",
+          "quality": "rare",
+          "sellValue": 25,
+          "soulbound": true,
+          "furnishing": {
+            "footprint": {
+              "width": 2,
+              "depth": 3
+            },
+            "r": 0,
+            "decorCost": 7,
+            "surface": "floor"
+          }
+        },
+        "instance": {
+          "signer": "<Maker & Co>",
+          "locked": true,
+          "partyTrade": {
+            "untilMs": 5406249,
+            "eligible": [
+              "Testmaker"
+            ]
+          },
+          "name": "Forged Power Name",
+          "perfected": true,
+          "perfecting": 2,
+          "enchant": "enchant_chest_stamina",
+          "rolled": {
+            "quality": "legendary",
+            "stats": {
+              "str": 999,
+              "sta": 777
+            },
+            "masterwork": true
+          },
+          "rift": {
+            "sourceEventId": "tooltip_visual_probe",
+            "tier": "A",
+            "power": 10,
+            "upgradeLevel": 2,
+            "maxUpgradeLevel": 6,
+            "baseStats": {
+              "str": 999
+            },
+            "gemSlots": 2,
+            "gems": [
+              "probe_gem"
+            ]
+          }
+        },
+        "sellerKey": "998",
+        "untilMs": 5406249,
+        "remainingMs": 5400000,
+        "imageUrl": null,
+        "recipe": {
+          "bg": "wood",
+          "pal": "earthBrown",
+          "prims": [
+            {
+              "p": "crate"
+            }
+          ],
+          "fx": [
+            "glow"
+          ]
+        },
+        "merchant": "the_merchant"
+      },
+      "row": {
+        "point": {
+          "x": 70,
+          "y": 227.671875
+        },
+        "name": "Screenshot Test Furnishing",
+        "accessibleText": "Screenshot Test Furnishing",
+        "iconClass": "item-icon q-rare",
+        "bounds": {
+          "x": 22,
+          "y": 204.671875,
+          "width": 754,
+          "height": 46,
+          "top": 204.671875,
+          "right": 776,
+          "bottom": 250.671875,
+          "left": 22
+        },
+        "html": "<span class=\"mkt-collect-item\"><img class=\"item-icon q-rare\" src=\"[omitted procedural data URL]\" alt=\"\" draggable=\"false\"><span class=\"mkt-collect-name\" style=\"color:var(--mkt-name-rare)\">Screenshot Test Furnishing</span></span>",
+        "iconSize": [
+          96,
+          96
+        ],
+        "hiddenBeforeNative": true
+      },
+      "card": {
+        "lines": [
+          "Screenshot Test Furnishing",
+          "Rare Furnishing",
+          "Soulbound",
+          "You may trade this item to players who shared its drop for the next 1 hour.",
+          "Locked",
+          "Footprint: 2 by 3 cells.",
+          "Decor cost: 7.",
+          "Placed on the floor.",
+          "Made by <Maker & Co>."
+        ],
+        "bounds": {
+          "x": 84,
+          "y": 26,
+          "width": 332.640625,
+          "height": 191.25,
+          "top": 26,
+          "right": 416.640625,
+          "bottom": 217.25,
+          "left": 84
+        },
+        "html": "<div class=\"tt-title\" style=\"color:#0070dd\">Screenshot Test Furnishing</div><div class=\"tt-sub\">Rare Furnishing</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Soulbound</div><div class=\"tt-sub\" style=\"color:var(--gold)\">You may trade this item to players who shared its drop for the next 1 hour.</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Locked</div><div class=\"tt-desc\">Footprint: 2 by 3 cells.</div><div class=\"tt-desc\">Decor cost: 7.</div><div class=\"tt-desc\">Placed on the floor.</div><div class=\"tt-desc\">Made by &lt;Maker &amp; Co&gt;.</div>",
+        "remainingMs": 5395899,
+        "events": [
+          {
+            "event": "mouseenter",
+            "trusted": true,
+            "pointerType": null
+          },
+          {
+            "event": "mouseenter",
+            "trusted": true,
+            "pointerType": null
+          },
+          {
+            "event": "mouseenter",
+            "trusted": true,
+            "pointerType": null
+          }
+        ],
+        "clipped": false,
+        "viewport": {
+          "width": 1600,
+          "height": 900
+        }
+      },
+      "screenshots": [
+        "desktop.png",
+        "desktop-card.png"
+      ]
+    },
+    {
+      "variant": {
+        "key": "mobile-landscape",
+        "width": 844,
+        "height": 390,
+        "mobile": true
+      },
+      "gesture": "native touch long press",
+      "injected": {
+        "item": {
+          "id": "probe_furnishing_qa_tooltip",
+          "name": "Screenshot Test Furnishing",
+          "kind": "furnishing",
+          "quality": "rare",
+          "sellValue": 25,
+          "soulbound": true,
+          "furnishing": {
+            "footprint": {
+              "width": 2,
+              "depth": 3
+            },
+            "r": 0,
+            "decorCost": 7,
+            "surface": "floor"
+          }
+        },
+        "instance": {
+          "signer": "<Maker & Co>",
+          "locked": true,
+          "partyTrade": {
+            "untilMs": 5404199,
+            "eligible": [
+              "Testmaker"
+            ]
+          },
+          "name": "Forged Power Name",
+          "perfected": true,
+          "perfecting": 2,
+          "enchant": "enchant_chest_stamina",
+          "rolled": {
+            "quality": "legendary",
+            "stats": {
+              "str": 999,
+              "sta": 777
+            },
+            "masterwork": true
+          },
+          "rift": {
+            "sourceEventId": "tooltip_visual_probe",
+            "tier": "A",
+            "power": 10,
+            "upgradeLevel": 2,
+            "maxUpgradeLevel": 6,
+            "baseStats": {
+              "str": 999
+            },
+            "gemSlots": 2,
+            "gems": [
+              "probe_gem"
+            ]
+          }
+        },
+        "sellerKey": "998",
+        "untilMs": 5404199,
+        "remainingMs": 5400000,
+        "imageUrl": null,
+        "recipe": {
+          "bg": "wood",
+          "pal": "earthBrown",
+          "prims": [
+            {
+              "p": "crate"
+            }
+          ],
+          "fx": [
+            "glow"
+          ]
+        },
+        "merchant": "the_merchant"
+      },
+      "row": {
+        "point": {
+          "x": 72,
+          "y": 166.671875
+        },
+        "name": "Screenshot Test Furnishing",
+        "accessibleText": "Screenshot Test Furnishing",
+        "iconClass": "item-icon q-rare",
+        "bounds": {
+          "x": 24,
+          "y": 143.671875,
+          "width": 363.8125,
+          "height": 46,
+          "top": 143.671875,
+          "right": 387.8125,
+          "bottom": 189.671875,
+          "left": 24
+        },
+        "html": "<span class=\"mkt-collect-item\"><img class=\"item-icon q-rare\" src=\"[omitted procedural data URL]\" alt=\"\" draggable=\"false\"><span class=\"mkt-collect-name\" style=\"color:var(--mkt-name-rare)\">Screenshot Test Furnishing</span></span>",
+        "iconSize": [
+          96,
+          96
+        ],
+        "hiddenBeforeNative": true
+      },
+      "card": {
+        "lines": [
+          "Screenshot Test Furnishing",
+          "Rare Furnishing",
+          "Soulbound",
+          "You may trade this item to players who shared its drop for the next 1 hour.",
+          "Locked",
+          "Footprint: 2 by 3 cells.",
+          "Decor cost: 7.",
+          "Placed on the floor.",
+          "Made by <Maker & Co>."
+        ],
+        "bounds": {
+          "x": 86,
+          "y": 8,
+          "width": 332.640625,
+          "height": 191.25,
+          "top": 8,
+          "right": 418.640625,
+          "bottom": 199.25,
+          "left": 86
+        },
+        "html": "<div class=\"tt-title\" style=\"color:#0070dd\">Screenshot Test Furnishing</div><div class=\"tt-sub\">Rare Furnishing</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Soulbound</div><div class=\"tt-sub\" style=\"color:var(--gold)\">You may trade this item to players who shared its drop for the next 1 hour.</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Locked</div><div class=\"tt-desc\">Footprint: 2 by 3 cells.</div><div class=\"tt-desc\">Decor cost: 7.</div><div class=\"tt-desc\">Placed on the floor.</div><div class=\"tt-desc\">Made by &lt;Maker &amp; Co&gt;.</div>",
+        "remainingMs": 5395650,
+        "events": [
+          {
+            "event": "pointerdown",
+            "trusted": true,
+            "pointerType": "touch"
+          }
+        ],
+        "clipped": false,
+        "viewport": {
+          "width": 844,
+          "height": 390
+        }
+      },
+      "screenshots": [
+        "mobile-landscape.png",
+        "mobile-landscape-card.png"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "variant": "desktop",
+      "type": "http",
+      "status": 502,
+      "path": "/api/site-presence"
+    },
+    {
+      "variant": "desktop",
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "desktop",
+      "type": "http",
+      "status": 502,
+      "path": "/api/project-stats"
+    },
+    {
+      "variant": "desktop",
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "desktop",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (npc_modular_walking_staff): Error: character asset not preloaded: models/weapons/brasscrown_walking_staff.glb"
+    },
+    {
+      "variant": "desktop",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (mob_training_dummy): Error: character asset not preloaded: models/creatures/training_dummy.glb"
+    },
+    {
+      "variant": "desktop",
+      "type": "http",
+      "status": 502,
+      "path": "/api/site-presence"
+    },
+    {
+      "variant": "desktop",
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "http",
+      "status": 502,
+      "path": "/api/site-presence"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "http",
+      "status": 502,
+      "path": "/api/project-stats"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (skel_minion): Error: character asset not preloaded: models/chars/enemies/skeleton_minion.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (mob_wolf): Error: character asset not preloaded: models/creatures/wolf_basic.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (mob_grix): Error: character asset not preloaded: models/creatures/grix.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (skel_boss): Error: character asset not preloaded: models/chars/enemies/skeleton_mage.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (mob_murloc): Error: character asset not preloaded: models/creatures/frog.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (greyjaw): Error: character asset not preloaded: models/creatures/greyjaw.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (skel_mage): Error: character asset not preloaded: models/chars/enemies/skeleton_mage.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (mob_kobold_digger): Error: character asset not preloaded: models/creatures/kobold.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (mob_spider): Error: character asset not preloaded: models/creatures/spider.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (mob_boar): Error: character asset not preloaded: models/creatures/wild_boar.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "type": "console",
+      "message": "character visual unavailable, skipping view (npc_modular_walking_staff): Error: character asset not preloaded: models/weapons/brasscrown_walking_staff.glb"
+    }
+  ],
+  "failures": []
+}

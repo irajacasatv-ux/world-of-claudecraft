@@ -1,0 +1,1569 @@
+server/wallet.ts:127:    if (body.kind === 'link') {
+server/wallet.ts:140:      (body.kind === 'transaction'
+server/wallet.ts:142:        : body.kind === 'stepup' && /^[0-9a-f]{32}$/.test(nonce));
+server/wallet.ts:160:      body.kind === 'transaction'
+server/wallet.ts:190:    if (action.kind === 'transaction') return json(res, 200, action);
+server/wallet.ts:191:    if (action.kind === 'stepup') {
+server/wallet.ts:227:  if (!isSolanaAddress(address) || !signature || (body.kind === 'link' && !nonce)) {
+server/wallet.ts:234:  if (body.kind === 'link') result = { kind: 'link', address, signature, nonce };
+server/wallet.ts:235:  else if (body.kind === 'transaction') result = { kind: 'transaction', address, signature };
+server/wallet.ts:236:  else if (body.kind === 'stepup') result = { kind: 'stepup', address, signature };
+src/sim/professions/gathering_goal_projection.ts:78:    goal.kind === 'invalid' ? unavailable(null, 'invalid_goal') : commissionState(meta);
+src/sim/professions/gathering_goal_projection.ts:90:  if (goal.kind === 'invalid') return unavailable(null, 'invalid_goal');
+server/woc_market_routes.ts:395:    quality: def?.kind === 'furnishing' ? (def.quality ?? 'common') : row.quality,
+server/character_sheet.ts:131:  return reward?.kind === 'title' ? reward.text : null;
+server/character_sheet.ts:256:  if (entry.kind === 'mark') return RELIQUARY_MARK_ENGLISH.get(entry.id) ?? null;
+server/steam/web_api.ts:42:  if (verdict.kind === 'malformed') return { kind: 'upstream' };
+server/snapshot_timer_wire.ts:217:      aura.kind === 'stasis' &&
+src/sim/professions/fishing.ts:721:  const isGreyFishingJunk = ITEMS[caught]?.kind === 'junk' && !isRawCookingCatch(caught);
+server/steam/routes.ts:65:  if (outcome.kind === 'upstream') throw new HttpError(503, 'steam.upstream');
+server/steam/routes.ts:66:  if (outcome.kind === 'invalid' || outcome.kind === 'malformed') {
+server/steam/routes.ts:69:  if (outcome.kind === 'banned') throw new HttpError(403, 'steam.banned');
+src/sim/professions/commission.ts:52:  if (kind === 'furnishing') return false;
+src/sim/professions/commission.ts:53:  return kind === 'weapon' || kind === 'armor' || kind === 'held_offhand';
+src/sim/dead_target.ts:14:  if (e.kind === 'mob' && e.ownerId !== viewerId && corpseHasDecayed(e.dead, e.corpseTimer)) {
+src/sim/dead_target.ts:18:  if (e.kind === 'player') return true;
+src/sim/dead_target.ts:20:  return e.kind === 'mob' && e.ownerId === viewerId;
+server/guild_bank_lazy_loader.ts:208:    if (kind === 'permanent') {
+server/guild_bank_lazy_loader.ts:215:      if (kind === 'busy') {
+server/guild_bank_lazy_loader.ts:220:    if (kind === 'busy') {
+src/sim/entity_roster.ts:156:  if (e.kind === 'player') ctx.playerGrid.insert(e);
+src/sim/entity_roster.ts:173:  if (e.kind === 'player' && e.templateId === 'paladin') {
+src/sim/entity_roster.ts:184:  if (e.kind === 'mob') {
+src/sim/entity_roster.ts:189:  if (e.kind === 'player') ctx.playerGrid.remove(e);
+src/sim/entity_roster.ts:207:  if (e.kind === 'player') ctx.playerGrid.update(e);
+src/sim/entity_roster.ts:231:      e.kind === 'mob' &&
+server/deeds_records.ts:97:  if (def.reward?.kind === 'border') return { deedName: def.name };
+server/deeds_records.ts:98:  if (def.reward?.kind === 'title') return { deedName: def.name, deedTitle: def.reward.text };
+src/ui/talent_i18n.ts:10747:    if (effect.kind === 'buff_ap') values.attackPower = formatNumber(effect.value, lang);
+src/ui/talent_i18n.ts:10748:    if (effect.kind === 'buff_spellpower') values.spellPower = formatNumber(effect.value, lang);
+src/ui/talent_i18n.ts:11014:      if (effect.kind === 'shield_wall') {
+src/ui/talent_i18n.ts:11018:        effect.kind === 'buff_haste' || effect.kind === 'buff_speed'
+src/ui/talent_i18n.ts:11266:    if (request.kind === 'talentMastery') {
+src/ui/talent_i18n.ts:11271:    if (request.kind === 'talentSpec') {
+src/ui/talent_i18n.ts:11279:    if (request.kind === 'talentChoice') {
+src/ui/talent_i18n.ts:11288:  if (request.kind === 'talentMastery') {
+src/ui/talent_i18n.ts:11298:  if (request.kind === 'talentSpec') {
+src/ui/talent_i18n.ts:11309:  if (request.kind === 'talentChoice') {
+src/ui/talent_i18n.ts:11388:  if (entry.kind === 'talentSpec' || entry.kind === 'talentMastery') {
+src/ui/talent_i18n.ts:11390:      (candidate) => candidate.id === (entry.kind === 'talentSpec' ? entry.id : entry.specId),
+src/sim/items.ts:191:      mainhand?.kind === 'weapon' &&
+src/sim/items.ts:207:    mainhand?.kind === 'weapon' &&
+src/sim/items.ts:525:  if (def?.kind === 'furnishing') return;
+src/sim/items.ts:817:  if (def?.kind === 'furnishing') return;
+src/sim/items.ts:962:  if (def.kind === 'food' || def.kind === 'drink') {
+src/sim/items.ts:975:    const slot = def.kind === 'food' ? 'eating' : 'drinking';
+src/sim/items.ts:979:        def.kind === 'food' ? 'You are already eating.' : 'You are already drinking.',
+src/sim/items.ts:1004:      text: def.kind === 'food' ? 'You sit down to eat.' : 'You sit down to drink.',
+src/sim/items.ts:1008:  } else if (def.kind === 'potion') {
+src/sim/items.ts:1075:  } else if (def.kind === 'elixir' || def.kind === 'scroll' || def.kind === 'flask') {
+src/sim/items.ts:1093:    const isFlask = def.kind === 'flask';
+src/sim/items.ts:1164:    if (def.kind === 'scroll') {
+src/sim/items.ts:1179:  } else if (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') {
+src/sim/items.ts:1184:  } else if (def.kind === 'bag') {
+src/sim/items.ts:1186:  } else if (def.kind === 'mount') {
+src/sim/items.ts:1192:  } else if (def.kind === 'recipe') {
+src/sim/items.ts:1290:  if (def.kind === 'mount') {
+src/sim/items.ts:1384:      e.kind === 'npc' && e.vendorItems.length > 0 && dist2d(p.pos, e.pos) <= INTERACT_RANGE + 2,
+src/sim/items.ts:1469:  if (def.kind === 'quest') {
+server/desktop_wallet_handoff.ts:398:      if (result.kind === 'link') {
+server/desktop_wallet_handoff.ts:417:      if (entry.action.kind === 'stepup') {
+src/sim/broker_custody.ts:47:    if (def?.kind === 'mount' && r.e.mountKey === def.mount && !mountOwned(r.meta, def.mount)) {
+src/sim/exchange_eligibility.ts:70:  if (def.kind === 'furnishing') return 'mount';
+src/sim/exchange_eligibility.ts:71:  if (def.kind === 'mount') return 'mount';
+src/sim/exchange_eligibility.ts:88:  if (def.kind === 'furnishing') return 'other';
+src/sim/exchange_eligibility.ts:89:  if (def.kind === 'mount') return 'mount';
+src/sim/exchange_eligibility.ts:91:  if (def.kind === 'weapon') return 'weapon';
+src/sim/exchange_eligibility.ts:94:  if (def.kind === 'armor' || def.kind === 'held_offhand') return 'armor';
+src/sim/exchange_eligibility.ts:165:  if (def.kind === 'quest') return 'quest_item';
+server/woc_market_stepup.ts:197:  if (ITEMS[itemId]?.kind === 'furnishing') {
+server/woc_market.ts:1715:            def?.kind === 'furnishing'
+src/sim/professions/perfecting_swap.ts:94:  if (!def || def.kind === 'furnishing' || !recipeForResultItem(copy.itemId)) return false;
+server/moderation_service.ts:73:  return kind === 'spectate' || kind === 'unspectate' ? 'moderation.spectate' : 'moderation.act';
+src/sim/vendor_stack.ts:25:  if (def.kind === 'furnishing') return 1;
+src/sim/vendor_stack.ts:26:  return def.kind === 'food' || def.kind === 'drink' ? VENDOR_STACK_SIZE : 1;
+server/admin_market_metrics.ts:52:      .filter((def) => def.kind === 'recipe')
+src/sim/market_query.ts:61:    ...[...new Set(items.filter((item) => item.kind === 'bag').map((item) => item.bagSlots ?? 0))]
+src/sim/market_query.ts:194:  if (filter === 'furnishing') return item.kind === 'furnishing';
+src/sim/market_query.ts:195:  if (item.kind === 'furnishing') return filter === 'all';
+src/sim/market_query.ts:197:  if (filter === 'weapon') return item.kind === 'weapon' && item.slot === 'mainhand';
+src/sim/market_query.ts:199:    return (item.kind === 'armor' || item.kind === 'held_offhand') && item.slot !== undefined;
+src/sim/market_query.ts:202:      item.kind === 'food' ||
+src/sim/market_query.ts:203:      item.kind === 'drink' ||
+src/sim/market_query.ts:204:      item.kind === 'potion' ||
+src/sim/market_query.ts:205:      item.kind === 'elixir' ||
+src/sim/market_query.ts:206:      item.kind === 'flask' ||
+src/sim/market_query.ts:207:      item.kind === 'scroll'
+src/sim/market_query.ts:209:  if (filter === 'bag') return item.kind === 'bag';
+src/sim/market_query.ts:211:    return !isCosmeticItem(item) && (item.kind === 'junk' || item.kind === 'tool');
+src/sim/market_query.ts:213:  if (filter === 'pattern') return item.kind === 'recipe';
+src/sim/market_query.ts:222:  if (filter === 'other') return item.kind === 'quest' || item.kind === 'mount';
+src/sim/market_query.ts:250:    return (item.kind === 'armor' || item.kind === 'held_offhand') && item.slot === subtype;
+src/sim/market_query.ts:251:  if (query.itemType === 'weapon') return item.kind === 'weapon' && weaponFamily(item) === subtype;
+src/sim/market_query.ts:258:    return item.kind === 'bag' && (item.bagSlots ?? 0) === Number(subtype);
+src/sim/market_query.ts:269:  return item.kind === 'armor' && item.armorType === query.armorClass;
+src/sim/resurrection.ts:148:      a.kind === 'cauterize_fatigue' ||
+src/sim/professions/feast.ts:147:  if (!def || def.kind === 'furnishing' || !('feast' in def) || !def.feast) return false;
+src/sim/professions/feast.ts:444:  if (!dish || dish.kind === 'furnishing') return; // content invariant; pinned in the suite
+src/sim/paladin_devotion.ts:76:  return e.kind === 'player' && e.templateId === 'paladin' ? (e.paladinDevotion ?? null) : null;
+src/sim/paladin_devotion.ts:279:        if (effect.type === 'selfBuff' && effect.kind === 'buff_block') {
+src/sim/paladin_devotion.ts:301:        return effect.type === 'selfBuff' && effect.kind === 'paladin_debt_of_light'
+server/discord.ts:1031:  if (swag.kind === 'cosmetic') {
+server/discord.ts:1216:  if (handoff.kind === 'choose') {
+src/sim/professions/salvage.ts:60:  if (def?.kind === 'furnishing') return false;
+src/sim/professions/salvage.ts:63:    (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&
+src/ui/hud/professions/harvest_preference_view.ts:55:        option.kind === 'all'
+src/ui/hud/professions/harvest_preference_view.ts:70:  if (preference.kind === 'all') {
+server/claudium.ts:282:          (item.kind === 'skin' && isKnownWeaponSkinId(item.itemId)) ||
+server/claudium.ts:283:          (item.kind === 'item' && isStoreMountItemId(item.itemId)) ||
+server/claudium.ts:284:          (item.kind === 'storage' && isKnownStorageSkuId(item.itemId)),
+server/claudium.ts:306:      ownedItems.filter((item) => item.kind === 'skin').map((item) => item.itemId),
+server/claudium.ts:310:      ownedItems.filter((item) => item.kind === 'item').map((item) => item.itemId),
+server/claudium.ts:388:    if (kind === 'storage') {
+server/claudium.ts:447:      (kind === 'skin' && isKnownWeaponSkinId(itemId)) ||
+server/claudium.ts:448:      (kind === 'item' && isStoreMountItemId(itemId));
+server/claudium.ts:474:      if (ownsRequested && kind === 'skin') noteWeaponSkinGrants(accountId, [itemId]);
+server/claudium.ts:475:      else if (ownsRequested && kind === 'item') noteStoreMountGrants(accountId, [itemId]);
+server/clear_item_name.ts:210:  if (target.kind === 'slot') {
+server/clear_item_name.ts:216:  if (target.kind === 'bag') {
+src/sim/material_sources.ts:142:  g.kind === 'character'
+src/sim/material_sources.ts:184:  if (kind === 'character') {
+src/sim/material_sources.ts:190:  if (kind === 'offline' || kind === 'headless') {
+server/woc_market_drift_warn.ts:75:    if (kind === 'pending') {
+server/interest_policy.ts:51:  if (e.kind === 'npc') {
+server/interest_policy.ts:82:  const subjectId = e.kind === 'player' ? e.id : e.ownerId;
+src/ui/hud/professions/gathering_source_painter.ts:62:  if (view.kind === 'unknown') return;
+src/ui/hud/professions/gathering_source_painter.ts:77:  if (view.kind === 'corpse') {
+src/ui/hud/professions/gathering_source_painter.ts:114:  } else if (view.kind === 'node') {
+src/ui/hud/professions/gathering_source_painter.ts:139:  } else if (view.kind === 'farm') {
+server/general_chat_quota.ts:273:    if (cached.kind === 'denied') {
+server/pbe_boost.ts:387:    if (item.kind === 'weapon') {
+server/http/router.ts:154:      .map((segment) => (segment.kind === 'literal' ? segment.value : ':'))
+src/sim/professions/tools.ts:40:  if (item?.kind === 'furnishing') return undefined;
+src/sim/professions/tools.ts:195:    if (item?.kind === 'furnishing') return false;
+src/sim/professions/tools.ts:554:    if (item?.kind === 'furnishing') continue;
+src/sim/professions/tools.ts:602:    TOOL_EFFECTS[effectId as ToolEffectId].kind === 'respawnSpeed'
+src/sim/professions/tools.ts:774:  switch (def.kind) {
+server/http/path_pattern.ts:201:    if (segment.kind === 'literal') {
+server/epic/routes.ts:86:  if (outcome.kind === 'upstream') throw new HttpError(503, 'epic.upstream');
+server/epic/routes.ts:87:  if (outcome.kind === 'invalid' || outcome.kind === 'malformed') {
+server/epic/routes.ts:90:  if (outcome.kind === 'banned') throw new HttpError(403, 'epic.banned');
+src/ui/hud/professions/gathering_goal_view.ts:133:      harvestPreference.kind === 'material' &&
+src/ui/hud/professions/gathering_goal_view.ts:173:    recipe === undefined ? null : resolved.goal?.kind === 'recipe' ? resolved.goal.count : 1;
+server/epic/web_api.ts:75:  if (verdict.kind === 'malformed') return { kind: 'upstream' };
+server/http/registry.ts:276:    .map((segment) => (segment.kind === 'literal' ? segment.value : PARAM_SHAPE_PLACEHOLDER))
+server/http/registry.ts:291:    if (sa.kind === 'literal' && sb.kind === 'literal' && sa.value !== sb.value) return false;
+server/http/context.ts:124:    match.kind === 'matched' ? match.params : (Object.create(null) as Record<string, string>);
+server/http/context.ts:133:    route: match.kind === 'matched' ? match.route.path : undefined,
+src/sim/professions/farmer_npcs.ts:37:  return e.kind === 'npc' && NPCS[e.templateId]?.farmer === true;
+src/sim/professions/sundering.ts:73:  if (def?.kind === 'furnishing') return false;
+src/sim/professions/sundering.ts:77:    SUNDERABLE_GEAR_KINDS.has(def.kind) &&
+server/account_wealth.ts:72:  if (kind === 'market') return { kind, realm: rest };
+server/account_wealth.ts:103:    if (parsed.kind === 'mailPartitionMarker') migratedMailRealms.add(parsed.realm);
+server/account_wealth.ts:104:    if (parsed.kind === 'mail' && parsed.format === 'partition')
+server/account_wealth.ts:131:    if (parsed.kind === 'mailPartitionMarker') continue;
+server/account_wealth.ts:134:    if (parsed.kind === 'mail') {
+server/claudium_proxy.ts:710:      (i.kind === 'cosmetic' || i.kind === 'skin' || i.kind === 'item' || i.kind === 'storage'),
+server/storage_recovery_coordinator.ts:575:      this.nextRateKind = kind === 'scan' ? 'drive' : 'scan';
+server/storage_recovery_coordinator.ts:577:      if (kind === 'scan') this.startScan(entry);
+server/storage_recovery_coordinator.ts:583:    if (kind === 'scan') this.pacedScanQueue.set(entry.characterId, entry);
+server/storage_recovery_coordinator.ts:605:      const queue = kind === 'scan' ? this.pacedScanQueue : this.driveQueue;
+server/storage_recovery_coordinator.ts:608:      const expected: Phase = kind === 'scan' ? 'scan-queued' : 'drive-queued';
+server/storage_recovery_coordinator.ts:841:    const scans = kind === 'drive' ? 0 : this.queuedCount(this.pacedScanQueue, 'scan-queued');
+server/storage_recovery_coordinator.ts:842:    const drives = kind === 'scan' ? 0 : this.queuedCount(this.driveQueue, 'drive-queued');
+server/storage_recovery_coordinator.ts:853:    const queue = kind === 'scan' ? this.pacedScanQueue : this.driveQueue;
+src/sim/professions/perfecting.ts:161:  if (def?.kind === 'furnishing' || def?.masterwrought !== true) return null;
+src/sim/professions/perfecting.ts:229:  if (ITEMS[itemId]?.kind === 'furnishing') return null;
+src/sim/professions/perfecting.ts:355:  if (def?.kind === 'furnishing' || def?.masterwrought !== true) {
+server/character_save_statement.ts:283:  if (fence.kind === 'unleased') throw new Error(UNLEASED_ROUTING_REFUSAL);
+server/character_save_statement.ts:286:    fence.kind === 'nonce'
+server/character_save_statement.ts:294:    fence.kind === 'nonce'
+server/character_save_statement.ts:372:  if (fence.kind === 'unleased') throw new Error(UNLEASED_ROUTING_REFUSAL);
+src/ui/meters_frame.ts:268:    if (gesture.kind === 'move') {
+src/ui/pet_entity.ts:9:  return entity?.kind === 'mob' && entity.ownerId !== null ? entity.ownerId : null;
+src/ui/pet_entity.ts:16:    entity.kind === 'mob' &&
+src/ui/woc_store_view.ts:89:  const serviceRows = new Map(items.filter((i) => i.kind === 'skin').map((i) => [i.itemId, i]));
+src/ui/woc_store_view.ts:153:  const serviceRows = new Map(items.filter((i) => i.kind === 'item').map((i) => [i.itemId, i]));
+src/ui/woc_store_view.ts:316:  const serviceRows = new Map(items.filter((i) => i.kind === 'storage').map((i) => [i.itemId, i]));
+src/ui/hud/professions/feast_tooltip_view.ts:46:  const fed = dishDef && dishDef.kind === 'food' ? dishDef.wellFed : undefined;
+src/ui/daily_rewards_view.ts:31:  if (input.kind === 'loading') return { kind: 'loading' };
+src/ui/daily_rewards_view.ts:32:  if (input.kind === 'error') return { kind: 'error', message: input.message };
+src/ui/stack_size_tooltip_view.ts:27:  if (item.kind === 'mount') return '';
+src/ui/hud/professions/apex_recipe_view.ts:55:    .filter((def) => def?.kind === 'recipe')
+src/ui/hud/professions/apex_recipe_view.ts:65:    .filter((def) => def.kind === 'recipe')
+server/game.ts:1249:  if (e.kind === 'player') {
+server/game.ts:1442:  if (e.kind === 'mob' && e.lootable && lootHasGoneFfa(e.lootFfaTimer)) out.ffa = 1;
+server/game.ts:1443:  if (e.kind === 'mob' && corpseHasDecayed(e.dead, e.corpseTimer)) out.cd = 1; // corpse decayed
+server/game.ts:1461:  if (e.kind === 'player' && e.templateId === 'paladin') {
+server/game.ts:1468:  if (e.kind === 'mob' && !e.dead && e.threat.size > 0) out.thr = threatEntries(e, 8);
+server/game.ts:1472:  if (e.kind === 'mob' && e.lootable && e.loot) {
+server/game.ts:9696:    if (kind === 'ignoreList' || kind === 'blockList') {
+server/game.ts:9698:      if (kind === 'ignoreList') void this.social.ignoreList(actor).catch(logErr);
+server/game.ts:9700:    } else if (kind === 'ignore') {
+server/game.ts:9703:    } else if (kind === 'unignore') {
+server/game.ts:9706:    } else if (kind === 'block') {
+server/game.ts:10041:    if (outcome.kind === 'mute') {
+src/ui/aura_effect.ts:189:  if (a.id === 'temporal_hourglass' && a.kind === 'stasis') {
+src/ui/aura_effect.ts:192:  if (a.id === 'heating_up' && a.kind === 'internal_cd') {
+src/ui/aura_effect.ts:195:  if (a.id === 'convergence_mark' && a.kind === 'internal_cd') {
+src/ui/aura_effect.ts:198:  if (a.id === 'galeheart_weapon' && a.kind === 'imbue') {
+src/ui/aura_effect.ts:208:  if (a.id === 'elemental_trance' && a.kind === 'buff_dr') {
+src/ui/aura_effect.ts:214:  if (a.kind === 'hunter_ferocity') {
+src/ui/aura_effect.ts:221:  if (a.id === 'venom_ritual' && a.kind === 'venom_ritual') {
+src/ui/aura_effect.ts:227:  if (a.id === 'gloam' && a.kind === 'gloam') {
+src/ui/aura_effect.ts:230:  if (a.id === 'redline' && a.kind === 'redline') {
+src/ui/aura_effect.ts:240:  if (a.id === 'veilstrike' && a.kind === 'buff_dmg_done') {
+src/ui/aura_effect.ts:243:  if (a.id === 'veiled_edge' && a.kind === 'veiled_edge') {
+src/ui/aura_effect.ts:246:  if (a.kind === 'dusk_economy') {
+src/ui/aura_effect.ts:249:  if (a.id === 'moontide' && a.kind === 'moontide') {
+src/ui/aura_effect.ts:252:  if (a.id === 'old_blood' && a.kind === 'old_blood') {
+src/ui/aura_effect.ts:258:  if (a.id === 'verdance' && a.kind === 'verdance') {
+src/ui/aura_effect.ts:264:  if (a.kind === 'internal_cd') {
+src/ui/aura_effect.ts:284:  if (a.id === 'bg_carried_flag' && a.kind === 'flag_carried') {
+src/sim/professions/crafting.ts:164:  if (def?.kind === 'furnishing') return null;
+src/sim/professions/crafting.ts:193:  if (def?.kind === 'furnishing') return isSignableMaterialRarity(outputQuality);
+src/sim/professions/crafting.ts:1104:  // battlefieldExperienceTrickle arm (gated on def.kind === 'potion') never
+src/sim/professions/disenchant_reagents.ts:71:  if (def.kind === 'furnishing') return null;
+src/sim/professions/disenchant_reagents.ts:73:  if (def.kind === 'armor') {
+src/sim/professions/disenchant_reagents.ts:76:  if (def.kind === 'weapon') {
+src/ui/bank_view.ts:381:        slots: item?.kind === 'bag' ? (item.bagSlots ?? 0) : 0,
+src/ui/bank_view.ts:479:    if (item.kind === 'quest') continue; // never bank quest items (the taxonomy also excludes them)
+src/sim/professions/perfecting_bonus.ts:23:  return def.kind === 'weapon' && def.hand === 'twohand'
+src/sim/professions/perfecting_bonus.ts:32:  if (def.kind === 'furnishing') return null;
+src/sim/professions/perfecting_bonus.ts:69:    def.kind === 'furnishing' ||
+src/ui/hud/professions/harvest_journal_window.ts:385:    if (view.kind === 'rows') {
+src/ui/hud/professions/harvest_journal_window.ts:411:        view.kind === 'novice'
+src/ui/hud/professions/harvest_journal_window.ts:415:        view.kind === 'novice'
+src/ui/hud/professions/harvest_journal_window.ts:429:      row.timer.kind === 'growing'
+src/ui/hud/professions/harvest_journal_window.ts:433:      row.timer.kind === 'growing'
+src/ui/movable_frame.ts:789:    if (g.kind === 'move') {
+src/ui/movable_frame.ts:797:    } else if (g.kind === 'scale') {
+src/ui/movable_frame.ts:848:    } else if (g.kind === 'dims') {
+src/ui/map_semantic_accessibility_core.ts:722:      semantic.kind === 'rift-return' ? (semantic.rank ?? '') : '',
+src/ui/map_semantic_accessibility_core.ts:723:      semantic.kind === 'delve-reward' && semantic.bountiful,
+src/ui/map_semantic_accessibility_core.ts:986:    const player = model?.markers.find((marker) => marker.kind === 'player');
+src/ui/map_semantic_accessibility_core.ts:1043:      if (marker.kind === 'delve-entrance')
+src/ui/map_semantic_accessibility_core.ts:1045:      else if (marker.kind === 'world-passage')
+src/ui/map_semantic_accessibility_core.ts:1057:          quest.kind === 'ready'
+src/ui/map_semantic_accessibility_core.ts:1059:            : quest.kind === 'repeat'
+src/ui/map_semantic_accessibility_core.ts:1061:              : quest.kind === 'cooldown'
+src/ui/map_semantic_accessibility_core.ts:1113:        ally.kind === 'friend' ? 'friend' : 'guildMember',
+src/ui/map_semantic_accessibility_core.ts:1153:    if (marker.kind === 'delve-entrance')
+src/ui/map_semantic_accessibility_core.ts:1155:    if (marker.kind === 'world-passage')
+src/ui/map_semantic_accessibility_core.ts:1175:    const rank = semantic.kind === 'rift-return' ? (semantic.rank ?? '') : '';
+src/ui/map_semantic_accessibility_core.ts:1176:    const bountiful = semantic.kind === 'delve-reward' && semantic.bountiful;
+src/ui/dungeon_finder_window.ts:156:    if (view.kind === 'loading') {
+src/ui/dungeon_finder_window.ts:748:    if (kind === 'raid') return t('hudChrome.finder.kindRaid');
+src/ui/dungeon_finder_window.ts:749:    if (kind === 'solo') return t('hudChrome.finder.kindSolo');
+src/ui/daily_rewards_window.ts:1132:    if (view.kind === 'loading') {
+src/ui/daily_rewards_window.ts:1136:    if (view.kind === 'error') {
+src/ui/daily_rewards_window.ts:1140:    if (view.kind === 'disabled') {
+src/ui/market_view.ts:233:  if (item.kind === 'quest' || item.noMarketList || item.soulbound)
+src/ui/item_set_tooltip_view.ts:18:    if (item.kind === 'furnishing' || !item.set) continue;
+src/ui/item_set_tooltip_view.ts:63:    if (!worn || worn.kind === 'furnishing') continue;
+src/ui/leaderboard_view.ts:117:  if (input.kind === 'loading') return { kind: 'loading' };
+src/ui/leaderboard_view.ts:118:  if (input.kind === 'error') return { kind: 'error' };
+src/ui/hud/professions/professions_harvest_entry_controller.ts:50:  return [pref.kind, pref.kind === 'material' ? pref.itemId : null];
+src/ui/hud/professions/professions_harvest_entry_controller.ts:60:  if (preference.kind === 'all') return t('hudChrome.harvestPreference.allLabel');
+src/ui/dungeon_map_painter.ts:223:      if (marker.kind === 'player') {
+src/ui/dungeon_map_painter.ts:242:        marker.kind === 'mob' && marker.boss
+src/ui/dungeon_map_painter.ts:244:          : marker.kind === 'party'
+src/ui/dungeon_map_painter.ts:251:      if (marker.kind === 'mob') {
+src/ui/sim_i18n.ts:10554:    ([id, it]) => [it.kind === 'furnishing' ? id : (it.heroicOf ?? id), it.name] as const,
+src/ui/mob_idle_sfx.ts:45:    e.kind === 'mob' &&
+src/sim/professions/corpse_harvest_inspection.ts:125:  return preference.kind === 'material'
+src/ui/bag_filter.ts:98:  if (item.kind === 'furnishing') return category === 'all';
+src/ui/bag_filter.ts:103:      return item.kind === 'weapon';
+src/ui/bag_filter.ts:105:      return item.kind === 'armor' || item.kind === 'held_offhand';
+src/ui/bag_filter.ts:108:        item.kind === 'food' ||
+src/ui/bag_filter.ts:109:        item.kind === 'drink' ||
+src/ui/bag_filter.ts:110:        item.kind === 'potion' ||
+src/ui/bag_filter.ts:111:        item.kind === 'elixir' ||
+src/ui/bag_filter.ts:112:        item.kind === 'flask' ||
+src/ui/bag_filter.ts:113:        item.kind === 'scroll'
+src/ui/bag_filter.ts:118:      return item.kind === 'tool';
+src/ui/bag_filter.ts:120:      return item.kind === 'quest';
+src/ui/bag_filter.ts:122:      return item.kind === 'mount';
+src/ui/market_armor_badge.ts:20:  if (item.kind === 'furnishing') return null;
+src/ui/market_armor_badge.ts:60:  if (item.kind === 'furnishing') return false;
+src/ui/market_armor_badge.ts:85:  if (item.kind === 'furnishing') return false;
+src/ui/market_armor_badge.ts:86:  return item.kind === 'recipe';
+src/ui/unit_frame.ts:209:  if (kind === 'none') return 'none';
+src/ui/unit_frame.ts:210:  if (kind === 'rage') return 'rage';
+src/ui/unit_frame.ts:211:  if (kind === 'energy') return 'energy';
+src/ui/unit_frame.ts:212:  if (kind === 'focus') return 'focus';
+src/ui/ability_damage.ts:210:      if (eff.kind === 'form_fireball') return (eff.value - 1) * 100;
+src/ui/ability_damage.ts:233:  if (a.kind === 'form_fireball') return (a.value - 1) * 100;
+src/sim/professions/harvest_preference.ts:199:  return preference.kind === 'material' ? preference.itemId : undefined;
+src/sim/professions/harvest_preference.ts:233:  if (preference.kind === 'all') return { kind: 'all', chosenComponents: NO_COMPONENTS };
+src/ui/calendar_view.ts:78:      e.rule.kind === 'weekly' ? e.rule.weekday === weekday : e.rule.day === dayOfMonth,
+src/ui/item_compare.ts:63:  if (item.kind === 'furnishing') return [];
+src/ui/item_compare.ts:64:  const equippedPower = equipped.kind === 'furnishing' ? undefined : equipped;
+src/ui/fct_core.ts:220:    ttlMs: event.kind === 'xp' || event.kind === 'rested-xp' ? FCT_XP_TTL_MS : FCT_TTL_MS,
+src/sim/professions/harvest_admission.ts:180:  return preference.kind === 'material'
+src/sim/professions/harvest_admission.ts:226:    (option) => option.kind === 'material',
+src/sim/professions/harvest_admission.ts:230:  if (resolved.kind === 'unavailable') {
+src/ui/combat_sfx.ts:350:  if (target.kind === 'player') {
+src/ui/combat_sfx.ts:355:  if (target.kind === 'mob' && MOBS[target.templateId]?.family === 'undead') return 'impact_bone';
+src/ui/combat_sfx.ts:487:  if (entity.auras.some((aura) => aura.kind === 'form_bear' || aura.kind === 'form_cat')) {
+src/ui/combat_sfx.ts:641:  return entity.kind === 'mob' && entity.templateId === 'nythraxis_scourge_of_thornpeak';
+src/ui/combat_sfx.ts:650:    entity.kind === 'mob' &&
+src/sim/professions/harvest_preference_commands.ts:16:  return preference.kind === 'material'
+src/ui/hud.ts:2576:        subject?.kind === 'player' &&
+src/ui/hud.ts:5926:    if (target.kind === 'player') {
+src/ui/hud.ts:5938:    const isMobEntity = entity.kind === 'mob';
+src/ui/hud.ts:5958:    if (tot.kind === 'player') {
+src/ui/hud.ts:6444:    if (item.kind === 'furnishing') return furnishingItemTooltip(item, instance, this.sim);
+src/ui/hud.ts:6481:    if (item.kind === 'weapon') {
+src/ui/hud.ts:6493:        item.kind === 'weapon' && weaponHand(item) === 'twohand'
+src/ui/hud.ts:6696:    if (item.kind === 'recipe') {
+src/ui/hud.ts:6733:    const lines = weaponProcLines(item.kind === 'weapon' ? item.weaponProcs : undefined);
+src/ui/hud.ts:6876:      dps: weaponDps(wpn?.kind === 'weapon' ? wpn.weapon : undefined, p.attackPower),
+src/ui/hud.ts:9290:      const tfRoleColor = target.kind === 'player' ? specialRoleColor(target.discordRole) : null;
+src/ui/hud.ts:9645:          ent.kind === 'npc' &&
+src/ui/hud.ts:11243:        if ((ev.absorbed ?? 0) > 0 || ev.kind === 'block')
+src/ui/hud.ts:11250:          ev.kind === 'miss' ||
+src/ui/hud.ts:11251:          ev.kind === 'dodge' ||
+src/ui/hud.ts:11252:          ev.kind === 'resist' ||
+src/ui/hud.ts:11253:          ev.kind === 'evade'
+src/ui/hud.ts:11258:        if (ev.kind === 'parry') {
+src/ui/hud.ts:11262:        if (src?.kind === 'mob') this.playAttackerSfx(src);
+src/ui/hud.ts:11265:        if (tgt.kind === 'mob') this.ensureMobEngaged(tgt);
+src/ui/hud.ts:11438:        if (ent.kind === 'mob') {
+src/ui/hud.ts:11442:        } else if (ent.kind === 'player' && ev.entityId !== sim.playerId) {
+src/ui/hud.ts:11471:    if (src.kind === 'mob') {
+src/ui/hud.ts:11573:            ev.kind === 'miss' ||
+src/ui/hud.ts:11574:            ev.kind === 'dodge' ||
+src/ui/hud.ts:11575:            ev.kind === 'parry' ||
+src/ui/hud.ts:11576:            ev.kind === 'resist' ||
+src/ui/hud.ts:11577:            ev.kind === 'evade'
+src/ui/hud.ts:11597:                    ev.kind === 'miss'
+src/ui/hud.ts:11599:                      : ev.kind === 'dodge'
+src/ui/hud.ts:11601:                        : ev.kind === 'parry'
+src/ui/hud.ts:11603:                          : ev.kind === 'evade'
+src/ui/hud.ts:11611:            if (ev.kind === 'dodge' && (isPlayerSource || isPlayerTarget) && this.inFiesta()) {
+src/ui/hud.ts:11617:                ev.kind === 'miss'
+src/ui/hud.ts:11619:                  : ev.kind === 'dodge'
+src/ui/hud.ts:11621:                    : ev.kind === 'parry'
+src/ui/hud.ts:11623:                      : ev.kind === 'evade'
+src/ui/hud.ts:11645:            damageKind: ev.kind === 'block' ? 'block' : 'hit',
+src/ui/hud.ts:11657:            (hitShape.kind === 'damage-done-ability' || hitShape.kind === 'damage-done-auto')
+src/ui/hud.ts:11679:          } else if (hitShape && hitShape.kind === 'damage-taken') {
+src/ui/hud.ts:11696:          } else if (hitShape && hitShape.kind === 'damage-done-block') {
+src/ui/hud.ts:11720:          } else if (hitShape && hitShape.kind === 'damage-taken-block') {
+src/ui/hud.ts:13631:          if (feedback.kind === 'error') {
+src/ui/hud.ts:13644:              feedback.kind === 'progress' ? 'unstuck' : null,
+src/ui/hud.ts:13648:            this.log(text, feedback.kind === 'success' ? HUD_LOG.GOOD : HUD_LOG.NOTICE);
+src/ui/hud.ts:14049:      if (banner.kind === 'rankUp') {
+src/ui/hud.ts:14079:      } else if (banner.kind === 'illuminate') {
+src/ui/hud.ts:14384:      if (seg.kind === 'text') {
+src/ui/hud.ts:14388:      if (seg.kind === 'item') {
+src/ui/hud.ts:14441:        if (s.kind === 'text') return s.value;
+src/ui/hud.ts:14442:        if (s.kind === 'item') {
+src/ui/hud.ts:14809:        if (seg.kind === 'item') this.appendChatItemLink(div, seg.itemId);
+src/ui/hud.ts:14810:        else if (seg.kind === 'quest')
+src/ui/hud.ts:16377:        e.kind === 'npc' &&
+src/ui/hud.ts:16397:      return !!item && item.kind === 'food' && !!item.foodHp && s.count > 0;
+src/ui/hud.ts:17241:      if (action.kind === 'none') return;
+src/ui/hud.ts:17246:      if (action.kind === 'tab') {
+src/ui/hud.ts:17730:    if (t && t.kind === 'player' && t.id !== this.sim.playerId) {
+src/ui/hud.ts:17736:      t.kind === 'mob' &&
+src/ui/hud.ts:17756:      this.sim.accountFlair(name)?.links ?? (ent?.kind === 'player' ? ent.streamerLinks : undefined)
+src/ui/hud.ts:17771:      this.sim.accountFlair(name)?.ai ?? (ent?.kind === 'player' ? ent.aiAccount === true : false)
+src/ui/hud.ts:17842:    const entCls = ent && ent.kind === 'player' ? (ent.templateId as PlayerClass) : null;
+src/ui/hud.ts:18170:    const entCls = ent && ent.kind === 'player' ? (ent.templateId as PlayerClass) : null;
+src/ui/hud.ts:18209:    if (pid !== null && this.sim.entities.get(pid)?.kind === 'player') {
+src/ui/hud.ts:18245:      if (e.kind === 'player' && e.name.toLowerCase() === wanted) return e.id;
+src/ui/minimap_markers.ts:405:        if (e.kind === 'player' && !partyPids?.has(e.id) && !bgEnemyPids?.has(e.id)) {
+src/ui/minimap_markers.ts:411:        } else if (e.kind === 'npc') {
+src/ui/minimap_markers.ts:436:            if (kind === 'active') continue;
+src/ui/minimap_markers.ts:463:        } else if (e.kind === 'object') {
+src/ui/minimap_markers.ts:470:            if (semantic.kind === 'dungeon') {
+src/ui/minimap_markers.ts:515:          e.kind === 'mob' &&
+src/ui/minimap_markers.ts:521:        } else if (e.kind === 'mob' && e.hostile && e.lootable) {
+src/ui/guild_bank_window.ts:219:    if (model.kind === 'hidden') return; // raced null: BankWindow falls back next paint
+src/ui/guild_bank_window.ts:247:    if (model.kind === 'unopened') {
+src/ui/guild_bank_window.ts:683:    if (action.kind === 'withdraw') {
+src/ui/guild_bank_window.ts:691:    } else if (action.kind === 'withdrawPartial') {
+src/ui/map_window_view.ts:1015:    if (site.kind === 'delve-entrance') {
+src/ui/map_window_view.ts:1241:    if (d.kind === 'rock') {
+src/ui/map_window_view.ts:1253:        kind: d.kind === 'tree' ? 'tree' : 'oak',
+src/ui/item_instance_tooltip.ts:181:      kind === 'furnishing'
+src/ui/item_instance_tooltip.ts:325:  return kind === 'junk';
+src/ui/item_instance_tooltip.ts:397:      row.kind === 'gatherer'
+src/ui/deeds_leaderboard_view.ts:90:  if (input.kind === 'loading') return { kind: 'loading' };
+src/ui/deeds_leaderboard_view.ts:91:  if (input.kind === 'error') return { kind: 'error' };
+src/ui/woc_market_chrome.ts:284:    wallet.kind === 'linked_disconnected'
+src/ui/woc_market_chrome.ts:286:      : wallet.kind === 'linked_connected'
+src/ui/guild_bank_view.ts:69:    if (item.kind === 'quest') return true;
+src/ui/hud/professions/craft_celebration_text_view.ts:92:  return banner.kind === 'masterwork'
+src/ui/hud/professions/craft_celebration_text_view.ts:100:  return banner.kind === 'masterwork' ? MASTERWORK_SEAL_IMAGE_URL : undefined;
+src/ui/touch_peek.ts:31:    if (kind === 'touch') this.peek();
+src/sim/professions/gathering_goal_actions.ts:27:  if (!goal || goal.kind === 'invalid') return false;
+src/ui/claudium_window.ts:309:    if (target.kind === 'wallet') {
+src/ui/claudium_window.ts:313:    const attribute = target.kind === 'sku' ? 'data-sku' : 'data-rail';
+src/ui/claudium_window.ts:497:    if (kind === 'woc') {
+src/ui/claudium_window.ts:500:    if (kind === 'sol') {
+src/ui/claudium_window.ts:503:    if (kind === 'usdc') {
+src/ui/leaderboard_window.ts:228:    if (view.kind === 'error') {
+src/ui/leaderboard_window.ts:233:    if (view.kind === 'empty') {
+src/ui/leaderboard_window.ts:277:    if (view.kind === 'error') {
+src/ui/leaderboard_window.ts:282:    if (view.kind === 'empty') {
+src/ui/leaderboard_window.ts:324:    if (view.kind === 'error') {
+src/ui/leaderboard_window.ts:331:    if (view.kind === 'empty') {
+src/ui/leaderboard_window.ts:376:    if (view.kind === 'error') {
+src/ui/leaderboard_window.ts:381:    if (view.kind === 'empty') {
+src/ui/leaderboard_window.ts:633:      self.kind === 'account'
+src/ui/perf_overlay_model.ts:492:  if (kind === 'everything') {
+src/ui/perf_overlay_model.ts:497:  if (kind === 'minimal') {
+src/ui/deeds_view.ts:363:    if (earned && def.reward?.kind === 'title') {
+src/ui/deeds_view.ts:368:    if (earned && def.reward?.kind === 'border') {
+src/ui/deeds_view.ts:386:      titleReward: def.reward?.kind === 'title',
+src/ui/deeds_view.ts:387:      borderReward: def.reward?.kind === 'border',
+src/ui/deeds_view.ts:653:    if (def.reward?.kind === 'title') titleHintIds.push(event.deedId);
+src/ui/deeds_view.ts:654:    if (def.reward?.kind === 'border') borderHintIds.push(event.deedId);
+src/ui/woc_market_view.ts:461:    quality: def?.kind === 'furnishing' ? (def.quality ?? 'common') : listing.quality,
+src/sim/professions/enchanting.ts:229:  if (def?.kind === 'furnishing') return false;
+src/sim/professions/enchanting.ts:232:    (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&
+src/sim/professions/enchanting.ts:1291:  if (itemDef.kind === 'furnishing') return false;
+src/ui/vault_window.ts:106:    model.kind === 'pooled'
+src/ui/vault_window.ts:232:    if (model.kind === 'away') return; // the tab is collapsing on this paint
+src/ui/vault_window.ts:238:    if (model.kind === 'locked') {
+src/ui/vault_window.ts:341:      model.kind === 'special' ? bagInstanceGlyphKind(model.instance, item?.kind) : null;
+src/ui/vault_window.ts:343:    const locked = model.kind === 'special' && isItemLocked(model.instance);
+src/ui/vault_window.ts:346:    if (model.kind === 'special') row.dataset.vaultSpecialIndex = String(model.specialRef.index);
+src/ui/vault_window.ts:387:      (model.kind === 'special'
+src/ui/vault_window.ts:403:      model.kind === 'special' ? materialSourcesForDisplay({ ...model, itemId }) : undefined;
+src/ui/vault_window.ts:413:            model.kind === 'special' ? model.instance : undefined,
+src/ui/vault_window.ts:430:      model.kind === 'special'
+src/ui/vault_window.ts:483:    const liveSpecial = model.kind === 'special' ? this.liveSpecialRow(model) : null;
+src/ui/vault_window.ts:484:    if (model.kind === 'special' && !liveSpecial) return;
+src/ui/vault_window.ts:487:    if (action.kind === 'none') return;
+src/ui/vault_window.ts:488:    if (action.kind === 'withdraw') {
+src/ui/vault_window.ts:549:      model.kind === 'special' ? this.liveSpecialRow(model) : null;
+src/ui/vault_window.ts:570:          if (model.kind === 'special') {
+src/ui/bootcamp.ts:1009:  if (kind === 'select') return { type: 'target' };
+src/ui/bootcamp.ts:1010:  if (kind === 'jump') return { type: 'action', action: 'jump' };
+src/ui/bootcamp.ts:1011:  if (kind === 'use') return { type: 'action', action: 'bags' };
+src/ui/bags_view.ts:202:    if (item.kind === 'quest' || item.noMarketList) return 'mailAttachBlocked';
+src/ui/bags_view.ts:207:    if (item.kind === 'quest') return 'marketSellBlockedQuest';
+src/ui/bags_view.ts:227:    if (item.kind === 'quest') return 'guildBankDepositBlockedQuest';
+src/ui/bags_view.ts:234:    if (item.kind === 'quest') return 'bankDepositBlockedQuest';
+src/ui/bags_view.ts:240:    if (item.kind === 'bag' && mode.bankSocketable && !instance && craftedRecipeId === undefined) {
+src/ui/bags_view.ts:260:  if (mode.petFeed) return item.kind === 'food' ? 'petFeed' : 'petFeedBlocked';
+src/ui/bags_view.ts:261:  if (item.kind === 'furnishing') return 'none';
+src/ui/bags_view.ts:264:  if (item.kind === 'quest') return item.use ? 'use' : 'discardQuest';
+src/ui/bags_view.ts:265:  if (item.kind === 'bag') return 'equipBag';
+src/ui/bags_view.ts:458:  if (item?.kind === 'furnishing') return null;
+src/ui/bags_view.ts:479:    return item.kind === 'quest' || item.noMarketList || isTransferLockedInstance(instance)
+src/ui/bags_view.ts:484:    return item.kind === 'quest' || item.noMarketList || isTransferLockedInstance(instance)
+src/ui/bags_view.ts:489:    return item.kind === 'quest' || item.noVendorSell
+src/ui/bags_view.ts:498:    return item.kind === 'quest' ||
+src/ui/bags_view.ts:506:    if (item.kind === 'quest') return 'hudChrome.bank.cannotDeposit';
+src/ui/bags_view.ts:510:    if (item.kind === 'bag' && mode.bankSocketable && !instance && craftedRecipeId === undefined) {
+src/ui/bags_view.ts:527:  if (item.kind === 'furnishing') return '';
+src/ui/bags_view.ts:528:  if (item.kind === 'quest') return 'itemUi.tooltip.clickDestroy';
+src/ui/bags_view.ts:529:  if (item.kind === 'mount') return 'hudChrome.mounts.clickManage';
+src/ui/bags_view.ts:531:    item.kind === 'weapon' ||
+src/ui/bags_view.ts:532:    item.kind === 'armor' ||
+src/ui/bags_view.ts:533:    item.kind === 'held_offhand' ||
+src/ui/bags_view.ts:534:    item.kind === 'bag'
+src/ui/bags_view.ts:537:  if (item.kind === 'food' || item.kind === 'drink') return 'itemUi.tooltip.clickConsume';
+src/ui/bags_view.ts:543:    item.kind === 'potion' ||
+src/ui/bags_view.ts:544:    item.kind === 'elixir' ||
+src/ui/bags_view.ts:545:    item.kind === 'flask' ||
+src/ui/bags_view.ts:546:    item.kind === 'scroll'
+src/ui/bags_view.ts:572:  if (item.kind === 'recipe' || item.use) return 'itemUi.tooltip.clickUse';
+src/ui/bags_view.ts:679:    if (item?.kind === 'quest') quest.push(slot);
+src/ui/bags_window.ts:957:      if (row.kind === 'section') {
+src/ui/bags_window.ts:1283:          if (target.kind === 'equip') {
+src/ui/bags_window.ts:1292:          } else if (target.kind === 'bagCell')
+src/ui/bags_window.ts:1294:          else if (target.kind === 'actionSlot') this.deps.dropOnActionSlot(s.itemId, target.slot);
+src/ui/bags_window.ts:1295:          else if (target.kind === 'actionRingSlot')
+src/ui/bags_window.ts:1297:          else if (target.kind === 'world') this.dropOnWorldToDestroy(s.itemId, count, ref);
+src/ui/bags_window.ts:1536:        if (target.kind === 'bagCell') this.dropOnBagCell(index >= 0 ? index : null, target.index);
+src/ui/bags_window.ts:1608:      resolved?.kind === 'held'
+src/ui/talents_window.ts:111:  if (ref.kind === 'text') {
+src/ui/guild_bank_log_window.ts:112:    return kind === 'loading'
+src/ui/guild_bank_log_window.ts:114:      : kind === 'refused'
+src/ui/guild_leaderboard_view.ts:108:  if (input.kind === 'loading') return { kind: 'loading' };
+src/ui/guild_leaderboard_view.ts:109:  if (input.kind === 'error') return { kind: 'error' };
+src/sim/professions/gathering_goal_persist.ts:41:    raw.kind === 'recipe' &&
+src/sim/professions/gathering_goal_persist.ts:49:    raw.kind === 'commission' &&
+src/ui/hud/professions/gathering_goal_painter.ts:136:  return model.goal.kind === 'commission'
+src/ui/dev_command_window.ts:34:    slot: item.kind === 'furnishing' ? undefined : item.slot,
+src/ui/character_progression_view.ts:71:    (id) => DEEDS[id].reward?.kind === 'border' && sim.deedsEarned.has(id),
+src/ui/dev_leaderboard_view.ts:57:  if (input.kind === 'loading') return { kind: 'loading' };
+src/ui/dev_leaderboard_view.ts:58:  if (input.kind === 'error') return { kind: 'error' };
+src/ui/dungeon_map_view.ts:252:    const markerRadius = entity.kind === 'npc' ? NPC_INTEREST_RADIUS : PLAYER_INTEREST_RADIUS;
+src/ui/dungeon_map_view.ts:258:    if (entity.kind === 'object') {
+src/ui/dungeon_map_view.ts:268:    if (entity.kind === 'npc') {
+src/ui/dungeon_map_view.ts:558:      const markerRadius = entity.kind === 'npc' ? NPC_INTEREST_RADIUS : PLAYER_INTEREST_RADIUS;
+src/ui/dungeon_map_view.ts:570:      if (entity.kind === 'object') {
+src/ui/dungeon_map_view.ts:580:      if (entity.kind === 'npc') {
+src/ui/deed_border_view.ts:227:  return reward?.kind === 'border' ? reward.slug : '';
+src/ui/hud/professions/professions_window.ts:330:      simplified.cta.kind === 'raise'
+src/ui/hud/professions/professions_window.ts:332:            simplified.nextUnlock.kind === 'specialized'
+src/ui/hud/professions/professions_window.ts:506:    if (unlock.kind === 'mastered') return t('hudChrome.professions.nextUnlockMastered');
+src/ui/hud/professions/professions_window.ts:507:    if (unlock.kind === 'specialized')
+src/ui/stat_tooltip.ts:481:      const catAgiBonus = buffs.some((b) => b.kind === 'form_cat')
+src/ui/stat_tooltip.ts:499:        if (b.kind === 'debuff_ap' && b.value !== 0) {
+src/ui/ability_tooltip_lines.ts:100:  for (const a of p.auras) if (a.kind === 'buff_spellhaste') frac += a.value;
+src/ui/grant_line_view.ts:101:  if (y.kind === 'specimen') return 'hudChrome.gathering.harvestSpecimenLine';
+src/ui/settings_transfer_core.ts:50:  if (kind === 'frames') return inFrames;
+src/ui/settings_transfer_core.ts:102:    if (!(kind === 'frames' && env.kind === 'settings')) return { ok: false, reason: 'kind' };
+src/ui/bag_quest_mark_view.ts:2:// Quest items are a PURPOSE class (kind === 'quest'), not a quality tier. The
+src/ui/reliquary_cell_art.ts:211:  if (slot.kind === 'item' || slot.kind === 'unknown') {
+src/ui/reliquary_cell_art.ts:214:  if (slot.kind === 'mount') {
+src/ui/reliquary_cell_art.ts:222:  if (slot.kind === 'weapon_skin') {
+src/ui/reliquary_cell_art.ts:227:  if (slot.kind === 'title') {
+src/ui/reliquary_cell_art.ts:235:  if (slot.kind === 'mark') return markArt(slot.id);
+src/ui/reliquary_cell_art.ts:257:  if (art.kind === 'url') return art.url.startsWith(`${ARMORY_SKIN_ART_DIR}/`);
+src/ui/reliquary_cell_art.ts:258:  if (art.kind === 'crest') return !deedCrestHasPaintedArt(art.crestId);
+src/sim/quest_gated_entity.ts:73:  if (entity.kind === 'object') return isQuestGatedGroundObjectHidden(entity, questLog);
+src/ui/wallet_reauth_prompt.ts:116:      plan.kind === 'no_password' ? t('wallet.reauthNoPassword') : t('wallet.reauthHelp');
+src/ui/wallet_reauth_prompt.ts:132:    if (plan.kind === 'no_password') {
+src/ui/item_kind_label.ts:60:  if (kind === 'junk' && itemId !== undefined) {
+src/ui/lastkeep_map_painter.ts:197:          ctx.fillStyle = m.kind === 'exit' ? colors.exit : colors.loot;
+src/ui/tool_effect_tooltip.ts:82:      if (def.kind === 'furnishing') continue;
+src/ui/icon_prewarm.ts:72:    if (ref.kind === 'ability') {
+src/ui/bag_item_context_menu.ts:80:  return def.kind === 'weapon' ||
+src/ui/bag_item_context_menu.ts:81:    def.kind === 'armor' ||
+src/ui/bag_item_context_menu.ts:82:    def.kind === 'held_offhand' ||
+src/ui/bag_item_context_menu.ts:83:    def.kind === 'bag'
+src/ui/bag_item_context_menu.ts:104:  if (def.kind === 'furnishing') return [isItemLocked(instance) ? 'unlock' : 'lock'];
+src/ui/options_window.ts:613:        if (a.kind === 'goto') {
+src/ui/options_window.ts:617:        } else if (a.kind === 'wiki') {
+src/ui/options_window.ts:619:        } else if (a.kind === 'logout') {
+src/ui/options_window.ts:621:        } else if (a.kind === 'unstuck') {
+src/ui/options_window.ts:1585:      kind === 'frames' ? 'hudChrome.transfer.frameLayout' : 'hudChrome.transfer.allSettings',
+src/ui/absorb_bar.ts:34:  for (const a of auras) if (a.kind === 'absorb') n += Math.max(0, a.value);
+src/ui/map_marker_tooltip_adapter.ts:95:    if (hit.kind === 'npc') html = resolvers.npc(hit.marker);
+src/ui/map_marker_tooltip_adapter.ts:96:    else if (hit.kind === 'navigation') html = resolvers.navigation(hit.marker);
+src/ui/map_marker_tooltip_adapter.ts:97:    else if (hit.kind === 'station') html = resolvers.station(hit.marker);
+src/ui/map_marker_tooltip_adapter.ts:98:    else if (hit.kind === 'service') html = resolvers.service(hit.marker);
+src/ui/map_marker_tooltip_adapter.ts:99:    else if (hit.kind === 'farm') html = resolvers.farm(hit.marker);
+src/ui/hud/vendor/warfare_vendor_view.ts:208:    } else if (item.kind === 'weapon') {
+src/ui/talent_icons.ts:143:  if (ref.kind === 'text') return null;
+src/ui/talent_icons.ts:144:  if (ref.kind === 'image') {
+src/ui/talent_icons.ts:155:  if (ref.kind === 'image') return ref.url;
+src/ui/market_name_color.ts:9:// rejected: it also carries the quest-purpose override (kind === 'quest' wins
+src/ui/woc_market_window.ts:793:    if (model.kind === 'unavailable') return header;
+src/ui/woc_market_window.ts:794:    if (model.kind === 'loading') {
+src/ui/woc_market_window.ts:798:    if (model.kind === 'error') {
+src/ui/woc_market_window.ts:801:    if (model.kind === 'disabled') {
+src/ui/woc_market_window.ts:1370:        : pending.kind === 'bond'
+src/ui/woc_market_window.ts:1392:      dueAtMs: pending.kind === 'settlement' ? pending.deadlineAtMs : null,
+src/ui/woc_market_window.ts:1742:    const listing = model.kind === 'ready' ? model.browse.detail?.row.id : undefined;
+src/ui/woc_market_window.ts:2363:      if (pending.kind === 'bond') {
+src/ui/woc_market_window.ts:2423:      if (pending.kind === 'bond') {
+src/ui/material_sources_dialog.ts:162:  if (choice.row.kind === 'gatherer') {
+src/ui/equip_drop_core.ts:102:  if (resolved.kind === 'unpinned')
+src/ui/equip_drop_core.ts:104:  return resolved.kind === 'held' ? resolved.index : null;
+src/ui/equip_drop_core.ts:151:  if (item.kind === 'furnishing') return 'blockedSlot';
+src/ui/equip_drop_core.ts:234:  if (item.kind === 'furnishing') return false;
+src/ui/equip_drop_core.ts:236:    (item.kind === 'weapon' || item.kind === 'armor' || item.kind === 'held_offhand') && !!item.slot
+src/ui/coach_prompt_view.ts:580:  if (kind === 'select') return [];
+src/ui/coach_prompt_view.ts:581:  if (kind === 'kill') {
+src/ui/coach_prompt_view.ts:586:  if (kind === 'jump') {
+src/ui/coach_prompt_view.ts:590:  if (kind === 'use') {
+src/ui/coach_prompt_view.ts:607:  if (mode !== 'touch' || kind === null || kind === 'select' || kind === 'use') return null;
+src/ui/coach_prompt_view.ts:608:  if (kind === 'kill')
+src/ui/coach_prompt_view.ts:610:  if (kind === 'jump') return 'mobile-jump';
+src/ui/woc_balance_chip.ts:28:      state.kind === 'linked_disconnected'
+src/ui/woc_balance_chip.ts:30:        : state.kind === 'connected_unlinked' || state.kind === 'mismatched'
+src/ui/entity_i18n.ts:393:  if (request.kind === 'questObjective' || request.kind === 'zonePoi') {
+src/ui/entity_i18n.ts:416:    request.kind === 'questObjective'
+src/ui/entity_i18n.ts:418:      : request.kind === 'zonePoi'
+src/ui/entity_i18n.ts:422:    request.kind === 'class' || request.kind === 'ability'
+src/ui/entity_i18n.ts:424:      : request.kind === 'itemSet'
+src/ui/entity_i18n.ts:426:        : request.kind === 'item'
+src/ui/reliquary_window.ts:1533:    if (cell.kind === 'weapon_skin') {
+src/ui/reliquary_window.ts:1599:      if (art.kind === 'item') {
+src/ui/reliquary_window.ts:1607:      } else if (art.kind === 'url') {
+src/ui/reliquary_window.ts:1613:    if (cell.kind === 'item' || cell.kind === 'unknown') {
+src/ui/reliquary_window.ts:1638:    if (cell.kind === 'item' || cell.kind === 'unknown') {
+src/ui/reliquary_window.ts:1643:    if (cell.kind === 'mark') {
+src/ui/reliquary_window.ts:1647:    if (cell.kind === 'mount') {
+src/ui/reliquary_window.ts:1651:    if (cell.kind === 'weapon_skin') {
+src/ui/reliquary_window.ts:1655:    if (cell.kind === 'title') return 'epic';
+src/ui/reliquary_window.ts:1738:    if (cell.kind === 'weapon_skin') {
+src/ui/reliquary_window.ts:1753:    if (cell.owned && cell.kind === 'item') {
+src/ui/mailbox_window.ts:413:    if (view.kind === 'no-data') {
+src/ui/mailbox_window.ts:417:    if (view.kind === 'inbox') {
+src/ui/hud/vendor/warfare_vendor_window.ts:61:  if (section.kind === 'set') {
+src/ui/hud/vendor/warfare_vendor_window.ts:64:  return section.kind === 'jewelry'
+src/ui/char_window.ts:298:      const cls = panel.kind === 'tiles' ? 'stat-panel attrs-tiles' : 'stat-panel';
+src/ui/unit_portrait.ts:57:  if (kind === 'npc') return 'status_npc';
+src/ui/vault_view.ts:227:      if (a.row.kind !== b.row.kind) return a.row.kind === 'pooled' ? -1 : 1;
+src/ui/icons.ts:4025:  if (it.kind === 'weapon') {
+src/ui/icons.ts:4042:  if (it.kind === 'armor') {
+src/ui/icons.ts:4073:  if (it.kind === 'food') {
+src/ui/icons.ts:4079:  if (it.kind === 'drink') {
+src/ui/icons.ts:4085:  if (it.kind === 'potion' || it.kind === 'elixir' || it.kind === 'flask') {
+src/ui/icons.ts:4096:    const timedBuff = it.kind === 'elixir' || it.kind === 'flask';
+src/ui/icons.ts:4099:  if (it.kind === 'tool') {
+src/ui/icons.ts:4103:  if (it.kind === 'bag') {
+src/ui/icons.ts:4114:  if (it.kind === 'recipe') return r('parchment', 'leather', ['scroll'], fx);
+src/ui/icons.ts:4120:  if (it.kind === 'scroll') return r('parchment', 'leather', ['scroll'], fx);
+src/ui/icons.ts:4122:  if (it.kind === 'furnishing') return r('wood', 'earthBrown', ['crate'], fx);
+src/ui/icons.ts:4133:  return r(it.kind === 'quest' ? 'parchment' : 'junk', t.pal, [{ p: t.p, pal: t.pal }], fx);
+src/ui/icons.ts:4273:  const baseId = item?.kind === 'furnishing' ? undefined : item?.heroicOf;
+src/ui/icons.ts:5411:  if (kind === 'ability') {
+src/ui/icons.ts:5414:  } else if (kind === 'item') {
+src/ui/icons.ts:5422:  } else if (kind === 'crest') {
+src/ui/icons.ts:5511:  if (kind === 'item') {
+src/ui/icons.ts:5522:  if (kind === 'ability') {
+src/ui/icons.ts:5526:  if (kind === 'aura') {
+src/ui/icons.ts:5536:  if (kind === 'crest') return deedImageUrl(id) ?? crestIconUrl(id);
+src/ui/reliquary_view.ts:100:    if (deeds[deedId]?.reward?.kind === 'border') return { rank: def.rank, deedId };
+src/ui/reliquary_view.ts:183:      return clearSource?.kind === 'dungeon'
+src/ui/reliquary_view.ts:627:    if (owned && relic.kind === 'item') {
+src/ui/reliquary_view.ts:825:          accountScoped: page.relics.some((r) => r.kind === 'weapon_skin'),
+src/ui/reliquary_view.ts:912:      if (relic.kind === 'item') itemIds.add(relic.itemId);
+src/ui/reliquary_view.ts:1125:      if (banner === null || banner.kind === 'unlock' || banner.kind === 'illuminate') {
+src/ui/reliquary_view.ts:1128:    } else if (banner === null || banner.kind === 'unlock') {
+src/ui/item_name_color.ts:4:// Quest items are a PURPOSE class (kind === 'quest'), not a quality tier.
+src/ui/item_name_color.ts:29: * - kind === 'quest' -> quest gold (purpose class wins over quality)
+src/ui/item_name_color.ts:37:  if (item.kind === 'furnishing') return qualityNameColor(item.quality);
+src/ui/item_name_color.ts:38:  if (item.kind === 'quest') return QUEST_ITEM_NAME_COLOR;
+src/ui/minimap_painter.ts:886:  if (kind === 'cooldown') return;
+src/ui/entity_display_core.ts:130:  if (entity.kind === 'mob') {
+src/ui/entity_display_core.ts:135:  if (entity.kind === 'npc') return tEntity({ kind: 'npc', id: entity.templateId, field: 'name' });
+src/ui/entity_display_core.ts:136:  if (entity.kind === 'object') {
+src/ui/deed_i18n.ts:235:    if (def.reward?.kind === 'title') {
+src/ui/swing_timer.ts:155:  if (!target || target.dead || target.kind === 'object' || !target.autoAttack) return HIDDEN;
+src/ui/map_window_painter.ts:304:  if (kind === 'cooldown') return;
+src/ui/map_window_painter.ts:398:  if (marker.kind === 'delve-entrance') {
+src/ui/map_window_painter.ts:410:  if (marker.kind === 'world-passage') {
+src/ui/map_window_painter.ts:679:      } else if (service.kind === 'mailbox') {
+src/ui/map_window_painter.ts:831:        marker.kind === 'delve-entrance'
+src/ui/map_window_painter.ts:833:          : marker.kind === 'world-passage'
+src/ui/map_window_painter.ts:838:      if (marker.kind === 'rift-entrance') {
+src/ui/map_window_painter.ts:876:      const cooldown = npc.kind === 'cooldown';
+src/ui/map_window_painter.ts:891:          : npc.kind === 'repeat'
+src/ui/map_window_painter.ts:937:        const friend = ally.kind === 'friend';
+src/ui/map_window_painter.ts:1095:        d.kind === 'rock' ? colors.rock : d.kind === 'tree' ? colors.tree : colors.oak;
+src/ui/map_window_painter.ts:1105:        b.kind === 'armoury'
+src/ui/map_window_painter.ts:1107:          : b.kind === 'chapel'
+src/ui/map_window_painter.ts:1109:            : b.kind === 'inn'
+src/ui/hud/strip_gesture_controller.ts:310:    if (this.press(true, 'outside').kind === 'dismiss') {
+src/ui/hud/strip_gesture_controller.ts:366:    if (press.kind === 'open') {
+src/ui/hud/strip_gesture_controller.ts:370:    if (press.kind === 'dismiss') {
+src/ui/hud/strip_gesture_controller.ts:536:    if (outcome.kind === 'pick') this.deps.onPick(outcome.index, 'gesture');
+src/ui/hud/strip_gesture_controller.ts:537:    else if (outcome.kind === 'default') this.deps.onDefault?.();
+src/ui/hud/strip_gesture_controller.ts:540:    else if (outcome.kind === 'open') this.openSticky();
+src/sim/sim.ts:2262:        const isPlayerFall = source === null && ability === 'Falling' && target.kind === 'player';
+src/sim/sim.ts:3196:          meta.bags[i] = id && ITEMS[id]?.kind === 'bag' ? id : null;
+src/sim/sim.ts:3994:      if (entity.kind === 'mob' && entity.tappedById === pid) {
+src/sim/sim.ts:6047:    if (source.kind === 'player') {
+src/sim/sim.ts:6122:    for (const a of e.auras) if (a.kind === 'cost_tax' && a.value > pct) pct = a.value;
+src/sim/sim.ts:6241:      if (e.kind === 'mob') {
+src/sim/sim.ts:6254:      } else if (e.kind === 'npc') {
+src/sim/sim.ts:6256:      } else if (e.kind === 'object') {
+src/sim/sim.ts:6465:    return e.auras.find((a) => a.id === 'fear_incap' && a.kind === 'incapacitate');
+src/sim/sim.ts:6469:    if (!aura || e.auras.some((a) => a.kind === 'root') || hasUnbreakableMovementLock(e, aura))
+src/sim/sim.ts:6477:    if (e.kind === 'player') {
+src/sim/sim.ts:6494:    return kind === 'stun' || kind === 'root' || kind === 'incapacitate' || kind === 'polymorph';
+src/sim/sim.ts:6499:      kind === 'silence' ||
+src/sim/sim.ts:6500:      kind === 'blind' ||
+src/sim/sim.ts:6501:      kind === 'disarm' ||
+src/sim/sim.ts:6502:      kind === 'slow' ||
+src/sim/sim.ts:6503:      kind === 'lockout' ||
+src/sim/sim.ts:6504:      kind === 'tongues'
+src/sim/sim.ts:6509:      (existing) => existing.id === 'ice_block' && existing.kind === 'stasis',
+src/sim/sim.ts:6529:    const meta = e.kind === 'player' ? this.players.get(e.id) : undefined;
+src/sim/sim.ts:6556:      if (e.kind !== 'player' && a.kind === 'buff_armor') armor += a.value;
+src/sim/sim.ts:6559:      else if (e.kind !== 'player' && a.kind === 'buff_armor_pct')
+src/sim/sim.ts:6562:      if (a.kind === 'corrode') armor -= a.value * (a.stacks ?? 1);
+src/sim/sim.ts:6563:      else if (a.kind === 'sunder')
+src/sim/sim.ts:6565:      else if (a.kind === 'faerie_fire')
+src/sim/sim.ts:6569:      else if (a.kind === 'melting_acid') reductionPct = Math.max(reductionPct, a.value);
+src/sim/sim.ts:6579:        if (a.kind === 'buff_ap') attackPower += a.value;
+src/sim/sim.ts:6580:        else if (a.kind === 'debuff_ap') attackPower -= a.value;
+src/sim/sim.ts:6583:        else if (a.kind === 'buff_ap_pct') attackPower += (base * a.value) / 100;
+src/sim/sim.ts:6643:      if (a.kind === 'attackspeed' || a.kind === 'sanguine') slow *= a.value;
+src/sim/sim.ts:6644:      if (a.kind === 'buff_haste') haste += a.value - 1;
+src/sim/sim.ts:6979:    if (effect.orbCdr && zoneStruck > 0 && source.kind === 'player') {
+src/sim/sim.ts:7099:    if (removed.kind === 'stealth') {
+src/sim/sim.ts:7100:      e.stealthed = e.auras.some((a) => a.kind === 'stealth');
+src/sim/sim.ts:7186:    if (target.kind === 'npc' && isRejectedFriendlyNpcAura(aura)) return;
+src/sim/sim.ts:7188:    if (aura.kind === 'slow' && target.auras.some((active) => active.kind === 'slow_immunity')) {
+src/sim/sim.ts:7207:      target.kind === 'mob' &&
+src/sim/sim.ts:7219:      target.kind === 'mob' &&
+src/sim/sim.ts:7221:      aura.kind === 'slow' &&
+src/sim/sim.ts:7265:    if (aura.kind === 'stealth') target.stealthed = true; // keep the cache live without waiting for updateAuras
+src/sim/sim.ts:7277:    if (aura.kind === 'hot') {
+src/sim/sim.ts:7298:    if (target.kind === 'player') {
+src/sim/sim.ts:7455:    const idx = e.auras.findIndex((a) => a.kind === 'stealth');
+src/sim/sim.ts:7732:    const aAttacker = a.kind === 'player' || (a.kind === 'mob' && a.ownerId !== null);
+src/sim/sim.ts:7734:      b.kind === 'mob' &&
+src/sim/sim.ts:7745:      a.kind === 'mob' &&
+src/sim/sim.ts:7748:      b.kind === 'player' &&
+src/sim/sim.ts:7889:    if (target.kind === 'player' && target.devNoAggro) return false;
+src/sim/sim.ts:7898:    if (target.kind === 'player' && MOBS[mob.templateId]?.boss) {
+src/sim/sim.ts:7907:    const playerPull = target.kind === 'player' || target.ownerId !== null;
+src/sim/sim.ts:7976:    const dodgeChance = target.kind === 'player' ? target.dodgeChance : 0.05;
+src/sim/sim.ts:8036:      const targetMeta = target.kind === 'player' ? this.players.get(target.id) : undefined;
+src/sim/sim.ts:8364:      (def?.kind === 'weapon' || def?.kind === 'armor' || def?.kind === 'held_offhand')
+src/sim/sim.ts:9109:    if (def.kind === 'weapon') {
+src/sim/sim.ts:9119:      const cur = worn?.kind === 'furnishing' ? null : worn;
+src/sim/sim.ts:9204:    if (e.kind === 'npc') return true;
+src/sim/sim.ts:9205:    return e.kind === 'mob' && !e.hostile && !e.dead && e.questIds.length > 0;
+src/sim/sim.ts:9399:    if (e.kind === 'player') return e;
+src/sim/sim.ts:9400:    if (e.kind === 'mob' && e.ownerId !== null) {
+src/sim/sim.ts:9402:      return owner?.kind === 'player' ? owner : null;
+src/sim/sim.ts:9408:    if (target.kind === 'mob') {
+src/sim/sim.ts:9415:        return !!owner && owner.kind === 'player' && this.isHostileTo(attacker, owner);
+src/sim/sim.ts:9419:    if (target.kind === 'player') {
+src/sim/sim.ts:9467:    if (target.kind === 'player') return !this.isHostileTo(caster, target);
+src/sim/sim.ts:9469:    if (target.kind === 'mob' && yumiMod.isYumiCat(target))
+src/sim/sim.ts:9473:    if (target.kind === 'mob' && target.friendlyPracticeTarget) return true;
+src/sim/sim.ts:9478:    if (target.kind === 'mob' && escortMod.isActiveEscortee(this.ctx, target)) {
+src/sim/sim.ts:9481:    if (target.kind === 'mob' && target.ownerId !== null) {
+src/sim/sim.ts:9483:      return !!owner && owner.kind === 'player' && !this.isHostileTo(caster, owner);
+src/sim/sim.ts:9838:    if (statsDirty && target.kind === 'player') {
+src/sim/sim.ts:11069:    const mover = e.kind === 'player' ? moverHeight(e) : undefined;
+src/sim/sim.ts:11090:    const mover = e.kind === 'player' ? moverHeight(e) : undefined;
+src/ui/target_of_target.ts:18:  return target.kind === 'player' ? target.targetId : target.aggroTargetId;
+src/ui/quest_item_tooltip_view.ts:4:// treatment is a PURPOSE class (kind === 'quest'), not a quality tier, so the
+src/ui/bank_window.ts:719:    if (model.kind === 'away') {
+src/ui/bank_window.ts:802:    const slotKeys = model.kind === 'guild' ? guildBankSlotFocusKeys(model.slots) : [];
+src/ui/bank_window.ts:1293:    if (action.kind === 'withdraw') {
+src/ui/bank_window.ts:1298:    } else if (action.kind === 'withdrawPartial') {
+src/ui/bank_window.ts:1318:      if (cell.kind === 'filled') {
+src/ui/bank_window.ts:1374:      } else if (cell.kind === 'empty') {
+src/ui/bank_window.ts:1690:    return model.kind === 'bank' ? model.buy : null;
+src/ui/hud/woc_trade/woc_trade_controller.ts:404:      if (step.kind === 'settle') {
+src/ui/hud/woc_trade/woc_trade_controller.ts:412:      if (step.kind === 'closed') {
+src/ui/hud/woc_trade/woc_trade_controller.ts:416:      if (step.kind === 'keep') {
+src/ui/reliquary_labels.ts:66:  if (kind === 'item' || kind === 'unknown') {
+src/ui/reliquary_labels.ts:70:  if (kind === 'mark') {
+src/ui/reliquary_labels.ts:79:  if (kind === 'mount') {
+src/ui/reliquary_labels.ts:85:  if (kind === 'weapon_skin') {
+src/ui/reliquary_labels.ts:89:  if (kind === 'title') {
+src/ui/hud/chat/chat_geometry_controller.ts:420:    if (gesture.kind === 'move') {
+src/ui/hud/chat/chat_geometry_controller.ts:431:    } else if (gesture.kind === 'edge') {
+src/ui/market_window.ts:646:        if (action.kind === 'none') return;
+src/ui/market_window.ts:649:        if (action.kind === 'tab') {
+src/ui/market_window.ts:706:    if (view.kind === 'no-data') {
+src/ui/market_window.ts:710:    if (view.kind === 'browse') {
+src/ui/market_window.ts:714:    if (view.kind === 'sell') {
+src/ui/market_window.ts:1230:    if (kind === 'bagCapacity') return t('itemUi.market.filterBagSize');
+src/ui/market_window.ts:1231:    if (kind === 'armorSlot') return t('itemUi.market.filterArmorSlot');
+src/ui/market_window.ts:1252:    if (kind === 'bagCapacity') {
+src/ui/market_window.ts:1267:        kind === 'armorSlot' ? 'itemUi.market.filterArmorAll' : 'itemUi.market.filterWeaponAll',
+src/ui/market_window.ts:1269:    if (kind === 'armorSlot') return this.deps.slotName(filter as ItemSlot);
+src/sim/world.ts:4181:    const dPerp = Math.abs((edge.kind === 'h' ? z : x) - edge.at);
+src/sim/world.ts:4191:      const along = edge.kind === 'h' ? x : z;
+src/sim/world.ts:4202:        (edge.kind === 'v' && edge.lo >= 540 && edge.hi <= 900) ||
+src/sim/world.ts:4203:        (edge.kind === 'h' && edge.at === 540);
+src/sim/world.ts:4221:        dPerpEdge = Math.abs((edge.kind === 'h' ? z : x) - (edge.at + wob));
+src/sim/world.ts:4225:        edge.kind === 'h'
+src/sim/world.ts:4256:      const peaksHeight = edge.kind === 'h' && edge.at === 540 ? 27 : 34;
+src/sim/world.ts:4268:      const columnRow = edge.kind === 'h' && (edge.lo >= STRIP_MAX_X || edge.hi <= STRIP_MIN_X);
+src/sim/world.ts:4269:      const northern = (edge.kind === 'h' ? edge.at >= HOLLOW_ZMAX : true) || columnRow;
+src/sim/world.ts:4712:    if (Math.abs((edge.kind === 'h' ? z : x) - edge.at) >= sigma * 4) continue;
+src/sim/world.ts:4713:    const along = edge.kind === 'h' ? x : z;
+src/ui/store_mount_card_view.ts:44:  const mountKey = def?.kind === 'mount' ? def.mount : undefined;
+src/sim/mob/boss_mechanics.ts:369:      if (pl.kind === 'player' && !pl.dead && d2 < bestD) {
+src/sim/mob/boss_mechanics.ts:427:    if (victim && !victim.dead && victim.kind === 'player') {
+src/sim/mob/dragonkin_brood.ts:303:        if (victim && !victim.dead && victim.kind === 'player') {
+src/sim/mob/dragonkin_brood.ts:329:        (a) => a.kind === 'stun' && a.sourceId !== undefined && a.sourceId !== e.id,
+src/sim/mob/dragonkin_brood.ts:333:        if (src && !src.dead && src.kind === 'player') {
+src/ui/hud/player_card/player_card_data.ts:45:  const dps = weaponDps(weapon?.kind === 'weapon' ? weapon.weapon : undefined, player.attackPower);
+src/ui/hud/battleground/battleground_proposal_popup.ts:159:    const isBackfill = view.kind === 'backfill';
+src/ui/meters.ts:186:    const ownerId = src?.kind === 'mob' ? (src.ownerId ?? null) : null;
+src/ui/meters.ts:207:    return entity?.kind === 'mob' && entity.ownerId !== null && partyPids.has(entity.ownerId);
+src/ui/meters.ts:256:    if (ev.type === 'damage' && sourceInParty && ev.kind === 'hit' && ev.amount > 0) {
+src/ui/meters.ts:258:      if (target && target.kind === 'mob') {
+src/ui/meters.ts:305:        e.kind === 'mob' &&
+src/ui/meters.ts:1002:      if (e.kind === 'mob' && e.ownerId !== null && pids.has(e.ownerId)) pids.add(e.id);
+src/ui/hud/battleground/battleground_map_painter.ts:425:    drawBgAtlasMarks(bctx, proj, (mark) => mark.kind === 'crown' && !onField(mark));
+src/ui/hud/quest/quest_dialog_controller.ts:323:      if (kind === 'ready' || kind === 'available' || kind === 'repeat') {
+src/ui/hud/quest/quest_dialog_controller.ts:444:        kind === 'ready'
+src/ui/hud/quest/quest_dialog_controller.ts:446:          : kind === 'repeat'
+src/ui/hud/quest/quest_dialog_controller.ts:451:        kind === 'ready'
+src/ui/hud/quest/quest_dialog_controller.ts:453:          : kind === 'repeat'
+src/sim/mob/move_toward.ts:121:    e.kind === 'player'
+src/ui/hud/map/map_marker_tooltip_content.ts:82:      marker.kind === 'mailbox' ? 'worldContent.mailboxName' : 'worldContent.noticeboardName';
+src/ui/auras_view.ts:419:        if (ownFirst && a.kind === 'temporal_echo' && !deps.isOwn(a)) return;
+src/sim/mob/egg_hatchling.ts:17:  const ownerId = killer.kind === 'player' ? killer.id : killer.ownerId;
+src/ui/arena_window.ts:251:    if (view.kind === 'offline') {
+src/ui/arena_window.ts:292:    if (view.kind === 'offline') {
+src/ui/arena_window.ts:430:    if (action.kind === 'in-match') {
+src/ui/arena_window.ts:438:    if (action.kind === 'queued') {
+src/ui/arena_window.ts:544:    if (section.kind === 'members') {
+src/ui/arena_window.ts:561:    if (section.kind === 'warn') {
+src/ui/arena_window.ts:568:    if (action.kind === 'in-match') {
+src/ui/arena_window.ts:577:    if (action.kind === 'queued') {
+src/sim/obs.ts:118:        if (wantMana && def.kind === 'drink') {
+src/sim/obs.ts:122:        if (wantHp && def.kind === 'food') {
+src/sim/obs.ts:218:        (aura) => aura.sourceId === p.id && aura.kind === 'affliction_eye',
+src/sim/obs.ts:304:      e.kind === 'mob' &&
+src/sim/obs.ts:312:    if (e.kind === 'object' && e.lootable && d2 < bestObjectD2) {
+src/sim/obs.ts:320:      e.kind === 'npc' || (e.kind === 'mob' && !e.hostile && !e.dead && e.questIds.length > 0);
+src/ui/item_instance_glyph_mark.ts:51:  if (kind === 'furnishing' && glyph === 'generic') return 'itemUi.bags.itemAria';
+src/ui/item_instance_glyph_mark.ts:87:  if (kind === 'masterwork') {
+src/ui/item_instance_glyph_mark.ts:90:  if (kind === 'generic') {
+src/ui/social_window.ts:702:        item.kind === 'header'
+src/ui/social_window.ts:1142:    if (kind === 'friend') {
+src/ui/social_window.ts:1146:    } else if (kind === 'ignore') {
+src/ui/social_window.ts:1151:    } else if (kind === 'block') {
+src/ui/hud/loot/corpse_harvest_window.ts:113:  if (preference.kind === 'all') return t('hudChrome.harvestPreference.allLabel');
+src/ui/hud/loot/corpse_harvest_window.ts:122:  if (view.kind === 'checking') return t('hudChrome.corpseHarvest.checkingStatus');
+src/ui/hud/loot/corpse_harvest_window.ts:123:  if (view.kind === 'unavailable') return t('hudChrome.corpseHarvest.statusUnavailable');
+src/ui/hud/loot/corpse_harvest_window.ts:145:  if (view.preference?.kind === 'material' && view.tierBonus > 0) {
+src/ui/hud/loot/corpse_harvest_window.ts:151:  return view.preference?.kind === 'all'
+src/ui/hud/loot/corpse_harvest_view.ts:68:    if (option.kind === 'material') ids.push(option.itemId);
+src/ui/hud/loot/corpse_harvest_view.ts:80:  return status.kind === 'settled' && status.info !== null
+src/ui/hud/loot/corpse_harvest_view.ts:97:  if (status.kind === 'checking') {
+src/ui/hud/loot/corpse_harvest_view.ts:152:  if (status.kind === 'checking') return `checking|${tags}`;
+src/ui/hud/loot/corpse_harvest_view.ts:158:      : info.preference.kind === 'all'
+src/ui/hud/delve/lockpick_panel.ts:119:    if (c.kind === 'gate') gateCols.add(c.col);
+src/ui/hud/delve/lockpick_panel.ts:120:    if (c.kind === 'seat') seatCol = c.col;
+src/sim/mob/quest_gated_aggro.ts:25:  const targetPid = target.kind === 'player' ? target.id : target.ownerId;
+src/sim/mob/quest_gated_aggro.ts:36:  const aPlayerDriven = a.kind === 'player' || a.ownerId !== null;
+src/sim/mob/quest_gated_aggro.ts:37:  const bPlayerDriven = b.kind === 'player' || b.ownerId !== null;
+src/sim/mob/quest_gated_aggro.ts:40:    a.kind === 'mob' &&
+src/sim/mob/quest_gated_aggro.ts:47:    b.kind === 'mob' &&
+src/ui/hud/loot/loot_window_controller.ts:380:      status.kind === 'settled' &&
+src/ui/hud/delve/delve_map_painter.ts:238:    if (e.kind === 'object') {
+src/ui/hud/delve/delve_map_painter.ts:242:        (classified.kind === 'delve-passage' ||
+src/ui/hud/delve/delve_map_painter.ts:243:          classified.kind === 'delve-surface' ||
+src/ui/hud/delve/delve_map_painter.ts:244:          classified.kind === 'delve-reward')
+src/ui/hud/delve/delve_map_painter.ts:248:    } else if (!(e.kind === 'mob' && e.hostile && !e.dead)) {
+src/ui/hud/delve/delve_map_painter.ts:382:      if (prim.kind === 'polygon' && prim.isOutline && prim.points.length) {
+src/ui/hud/delve/delve_map_painter.ts:393:      if ((prim.kind === 'circle' || prim.kind === 'rect') && prim.clipToOutline && outlinePath) {
+src/ui/hud/delve/delve_map_painter.ts:396:      if (prim.kind === 'circle') {
+src/ui/hud/delve/delve_map_painter.ts:408:      } else if (prim.kind === 'polygon') {
+src/ui/hud/delve/delve_map_painter.ts:423:      } else if (prim.kind === 'rect') {
+src/ui/hud/delve/delve_map_painter.ts:431:      } else if (prim.kind === 'text') {
+src/ui/hud/delve/delve_map_painter.ts:589:        semantic.kind === 'delve-passage' && semantic.state === 'sealed'
+src/ui/hud/delve/delve_map_painter.ts:592:      if (semantic.kind === 'delve-surface') {
+src/sim/player_motion.ts:216:    isVeilboundMarchActive(e) || e.auras.some((aura) => aura.kind === 'slow_immunity');
+src/sim/player_motion.ts:218:    if ((!slowImmune && a.kind === 'slow') || a.kind === 'stealth') slow = Math.min(slow, a.value);
+src/sim/player_motion.ts:220:    if (a.kind === 'buff_speed' || a.kind === 'form_travel' || a.kind === 'form_fireball') {
+src/sim/player_motion.ts:224:    if (a.kind === 'enrage') speed = Math.max(speed, ENRAGE_MOVE_MULT);
+src/sim/player_motion.ts:239:  for (const a of e.auras) if (a.kind === 'buff_jump') m = Math.max(m, a.value);
+src/sim/player_motion.ts:375:          p.auras.some((a) => a.kind === 'processional_grace'));
+src/sim/dev_kit.ts:197:  // blockValue lives on shields specifically. kind === 'armor' is not enough to
+src/sim/dev_kit.ts:207:  return item.kind === 'weapon' && weaponHand(item) === 'twohand';
+src/sim/dev_kit.ts:309:    (item) => item.kind === 'bag' && !isMaterialsOnlyBag(item),
+src/sim/dev_kit.ts:406:        pool.filter((item) => item.kind === 'held_offhand' && canEquipItem(cls, item)),
+src/sim/dev_kit.ts:422:      pool.filter((item) => item.kind === 'held_offhand' && canEquipItem(cls, item)),
+src/ui/hud/delve/delve_tracker_controller.ts:136:    if (run.objective.kind === 'kill_boss') {
+src/sim/mounts_training.ts:83:    if (e.kind === 'npc' && e.templateId === STABLEMASTER_NPC_ID) return e;
+src/sim/bag_pools.ts:54:  return def?.kind === 'bag' && def.materialsOnly === true;
+src/sim/bag_pools.ts:61:  return def?.kind === 'bag' ? (def.bagSlots ?? 0) : 0;
+src/sim/mob/targeting.ts:187:    if (e.kind === 'player') candidates.push(e);
+src/ui/hud/delve/delve_map.ts:205:      pr.kind === 'rect' && pr.role === 'island';
+src/ui/hud/delve/delve_map.ts:211:      if (prim.kind === 'polygon') {
+src/ui/hud/delve/delve_map.ts:224:      } else if (prim.kind === 'circle') {
+src/sim/rift/progression.ts:456:  if (ITEMS[itemId]?.kind === 'furnishing') return null;
+src/sim/mob/mob_swing.ts:13:// `mob.hostile` / `target.kind === 'player'` guards short-circuit BEFORE their proc's
+src/sim/mob/mob_swing.ts:48:    a.kind === 'hot' ||
+src/sim/mob/mob_swing.ts:49:    a.kind === 'absorb' ||
+src/sim/mob/mob_swing.ts:50:    a.kind === 'imbue' ||
+src/sim/mob/mob_swing.ts:53:    a.kind === 'resource_sap'
+src/sim/mob/mob_swing.ts:348:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:402:  if (cv && mob.hostile && target.kind === 'player' && !target.dead && ctx.rng.chance(cv.chance)) {
+src/sim/mob/mob_swing.ts:462:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:510:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:532:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:558:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:603:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:684:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:710:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:735:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:801:  if (demo && !mob.dead && target.kind === 'player' && ctx.rng.chance(demo.chance ?? 1)) {
+src/sim/mob/mob_swing.ts:824:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:862:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:892:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:935:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:959:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:982:    target.kind === 'player' &&
+src/sim/mob/mob_swing.ts:1081:  const existing = target.auras.find((a) => a.id === id && a.kind === 'dot');
+src/sim/mob/mob_swing.ts:1118:  const existing = target.auras.find((a) => a.kind === 'corrode');
+src/sim/rift/runs.ts:308:  inst.pylonTotal = floor.puzzle.kind === 'rune_pylons' ? floor.puzzle.pylonCount : 0;
+src/sim/rift/runs.ts:309:  inst.puzzleSolved = floor.puzzle.kind === 'none';
+src/sim/rift/runs.ts:1041:      if (floor.puzzle.kind === 'ice_slide' && !inst.puzzleSolved) {
+src/sim/rift/runs.ts:1042:        const goal = floor.objects.find((o) => o.kind === 'ice_goal');
+src/sim/rift/runs.ts:1093:      if (floor.puzzle.kind === 'sequence' && !inst.puzzleSolved) {
+src/sim/rift/runs.ts:1322:  const chest = floor.objects.find((o) => o.kind === 'chest');
+src/sim/rift/runs.ts:1835:    if (floor.puzzle.kind === 'boulder_push' && !inst.puzzleSolved && inst.boulderPads.length) {
+src/sim/rift/runs.ts:1891:        floor.puzzle.kind === 'rune_pylons'
+src/sim/combat/hunter_packlord.ts:193:  if (hunter.auras.some((aura) => aura.kind === 'hunter_frenzy')) {
+src/sim/combat/hunter_packlord.ts:307:  return owner?.auras.some((aura) => aura.kind === 'hunter_frenzy') ? 1.35 : 1;
+src/sim/combat/hunter_packlord.ts:311:  if (!hunter.auras.some((aura) => aura.kind === 'hunter_frenzy')) return;
+src/sim/soulwell.ts:33:    entity.kind === 'object' &&
+src/sim/soulwell.ts:152:    actor?.kind === 'player' &&
+src/sim/targeting.ts:86:    if (e.kind === 'mob' && e.lootable) {
+src/sim/targeting.ts:169:    if (target.kind === 'mob' && target.ownerId !== null) {
+src/sim/targeting.ts:171:      return !!owner && owner.kind === 'player' && this.isEnemyTargetCandidate(attacker, owner);
+src/sim/rift/rift_gen.ts:512:  if (puzzle.kind === 'rune_pylons') {
+src/sim/rift/rift_gen.ts:528:  } else if (puzzle.kind === 'ice_slide' && iceZone) {
+src/sim/rift/rift_gen.ts:536:  } else if (puzzle.kind === 'boulder_push') {
+src/sim/rift/rift_gen.ts:549:  } else if (puzzle.kind === 'sequence') {
+src/sim/rift/rift_gen.ts:842:  const iceZone = puzzle.kind === 'ice_slide' ? iceZoneFor(geo) : null;
+src/sim/rift/rift_gen.ts:859:    puzzle.kind === 'none' &&
+src/sim/combat/shaman_talents.ts:301:    (aura) => aura.id === 'lightning_shield' && aura.kind === 'thorns',
+src/sim/combat/shaman_talents.ts:377:      if (aura.kind === 'root' || aura.kind === 'slow') removeAuraAt(ctx, player, index);
+src/sim/combat/mass_resurrection.ts:22:    return member?.kind === 'player' && (member.dead || member.ghost);
+src/sim/border_edges.ts:84:  BORDER_EDGES.filter((e) => e.kind === 'h' && e.sealed).map((e) => ({
+src/sim/combat/destruction.ts:56:    if (aura.kind === 'destruction_ruin') {
+src/sim/combat/destruction.ts:69:    if (aura.kind === 'desolation') return true;
+src/sim/combat/destruction.ts:130:        aura.kind === 'dot' &&
+src/sim/combat/destruction.ts:194:    (aura) => aura.id === 'immolate' && aura.kind === 'dot' && aura.sourceId === player.id,
+src/sim/combat/paladin_solar_reprisal.ts:54:  const meta: PlayerMeta | undefined = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+src/sim/combat/paladin_solar_reprisal.ts:127:  const meta: PlayerMeta | undefined = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+src/ui/hud/guild_board/guild_board_window.ts:163:    if (view.kind === 'error') {
+src/ui/hud/guild_board/guild_board_window.ts:168:    if (view.kind === 'empty') {
+src/ui/hud/guild_board/guild_board_window.ts:340:      view.kind === 'loaded'
+src/ui/hud/guild_board/guild_board_window.ts:345:    if (view.kind === 'error') {
+src/ui/hud/guild_board/guild_board_window.ts:347:    } else if (view.kind === 'empty' || view.kind === 'loading') {
+src/sim/party_frame_info.ts:103:    if (aura.kind === 'absorb') total += Math.max(0, aura.value);
+src/sim/party_frame_info.ts:113:      entity.kind === 'mob' &&
+src/sim/entity.ts:336:    if (!item || item.kind === 'furnishing') continue;
+src/sim/entity.ts:412:    if (a.kind === 'buff_ap') bonusAp += a.value;
+src/sim/entity.ts:416:    else if (a.kind === 'debuff_ap') bonusAp -= a.value;
+src/sim/entity.ts:417:    else if (a.kind === 'buff_armor') flatAuraArmor += a.value;
+src/sim/entity.ts:418:    else if (a.kind === 'buff_int') s.int += a.value;
+src/sim/entity.ts:419:    else if (a.kind === 'buff_str') s.str += a.value;
+src/sim/entity.ts:420:    else if (a.kind === 'buff_agi') s.agi += a.value;
+src/sim/entity.ts:421:    else if (a.kind === 'buff_spi') s.spi += a.value;
+src/sim/entity.ts:422:    else if (a.kind === 'buff_sta') s.sta += a.value;
+src/sim/entity.ts:423:    else if (a.kind === 'buff_allstats') {
+src/sim/entity.ts:429:    } else if (a.kind === 'buff_spellpower') bonusSp += a.value;
+src/sim/entity.ts:430:    else if (a.kind === 'buff_crit' || a.kind === 'buff_reckless' || a.kind === 'bloodbath')
+src/sim/entity.ts:432:    else if (a.kind === 'die_by_sword') bonusDodge += a.value;
+src/sim/entity.ts:433:    else if (a.kind === 'enrage') bonusHaste += ENRAGE_HASTE_PCT;
+src/sim/entity.ts:434:    else if (a.kind === 'buff_maxhp_pct') maxHpPctAura += a.value;
+src/sim/entity.ts:435:    else if (a.kind === 'buff_allstats_pct') {
+src/sim/entity.ts:446:    } else if (a.kind === 'buff_dodge') bonusDodge += a.value;
+src/sim/entity.ts:447:    else if (a.kind === 'buff_scale') scaleMul *= a.value;
+src/sim/entity.ts:449:    else if (a.kind === 'form_metamorph') scaleMul *= 1.35;
+src/sim/entity.ts:452:    else if (a.kind === 'buff_stats_pct') allStatsPct += a.value / 100;
+src/sim/entity.ts:453:    else if (a.kind === 'buff_int_pct') intPct += a.value / 100;
+src/sim/entity.ts:454:    else if (a.kind === 'buff_sta_pct') staPct += a.value / 100;
+src/sim/entity.ts:455:    else if (a.kind === 'buff_armor_pct') buffArmorPct += a.value / 100;
+src/sim/entity.ts:456:    else if (a.kind === 'buff_ap_pct') buffApPct += a.value / 100;
+src/sim/entity.ts:459:    else if (a.kind === 'buff_avatar') scaleMul *= AVATAR_SCALE;
+src/sim/entity.ts:460:    else if (a.kind === 'form_bear') bearForm = true;
+src/sim/entity.ts:461:    else if (a.kind === 'form_cat') catForm = true;
+src/sim/entity.ts:467:    else if (a.kind === 'form_moonkin') {
+src/sim/entity.ts:567:    offhand?.kind === 'weapon' &&
+src/sim/entity.ts:581:    ((mainhand?.kind === 'weapon' &&
+src/sim/entity.ts:584:      (offhand?.kind === 'weapon' && offhand.hand === 'twohand'));
+src/sim/entity.ts:600:    (ITEMS[equipment.offhand]?.kind === 'weapon' ||
+src/sim/entity.ts:601:      ITEMS[equipment.offhand]?.kind === 'held_offhand' ||
+src/sim/entity.ts:687:    (e.auras.some((a) => a.kind === 'berserker_stance') ? BERSERKER_CRIT_CHANCE : 0);
+src/sim/entity.ts:719:  if (e.kind === 'player') e.scale = scaleMul;
+src/sim/combat/cc.ts:56:      a.kind === 'stun' ||
+src/sim/combat/cc.ts:57:      a.kind === 'stasis' ||
+src/sim/combat/cc.ts:58:      a.kind === 'incapacitate' ||
+src/sim/combat/cc.ts:59:      a.kind === 'polymorph',
+src/sim/combat/cc.ts:64:  return e.auras.some((a) => a.kind === 'stasis');
+src/sim/combat/cc.ts:112:  return isStunned(e) || (!isVeilboundMarchActive(e) && e.auras.some((a) => a.kind === 'root'));
+src/sim/combat/cc.ts:116:  return isRooted(e) || e.auras.some((a) => a.kind === 'slow');
+src/sim/combat/cc.ts:122:  return e.auras.some((a) => a.kind === 'silence');
+src/sim/combat/cc.ts:129:  for (const a of e.auras) if (a.kind === 'blind' && a.value > bonus) bonus = a.value;
+src/sim/combat/cc.ts:136:  return e.auras.some((a) => a.kind === 'disarm');
+src/sim/combat/cc.ts:142:  return e.auras.some((a) => a.kind === 'lockout' && a.school === school);
+src/sim/combat/cc.ts:150:  for (const a of e.auras) if (a.kind === 'tongues') m = Math.max(m, a.value);
+src/sim/combat/druid_engines.ts:172:  return player.auras.some((aura) => aura.kind === 'form_moonkin');
+src/sim/combat/druid_engines.ts:258:  const meta = player.kind === 'player' ? ctx.players.get(player.id) : undefined;
+src/sim/combat/druid_engines.ts:273:  const meta = player.kind === 'player' ? ctx.players.get(player.id) : undefined;
+src/sim/combat/druid_engines.ts:362:  const meta = player.kind === 'player' ? ctx.players.get(player.id) : undefined;
+src/ui/hud/guild_board/guild_roster_view.ts:43:  if (input.kind === 'loading') return { kind: 'loading', guild: input.guild };
+src/ui/hud/guild_board/guild_roster_view.ts:44:  if (input.kind === 'error') return { kind: 'error', guild: input.guild };
+src/sim/combat/sure_crit.ts:5:  return entity.auras.some((aura) => aura.kind === 'sure_crit');
+src/sim/combat/sure_crit.ts:9:  const index = entity.auras.findIndex((aura) => aura.kind === 'sure_crit');
+src/sim/combat/necromancy.ts:44:    entity.kind === 'mob' &&
+src/sim/combat/necromancy.ts:55:  return entity.auras.find((aura) => aura.kind === 'soul_fragments')?.stacks ?? 0;
+src/sim/combat/necromancy.ts:59:  const existing = owner.auras.find((aura) => aura.kind === 'soul_fragments');
+src/sim/combat/necromancy.ts:93:  const aura = owner.auras.find((candidate) => candidate.kind === 'soul_fragments');
+src/sim/combat/necromancy.ts:105:  return owner.auras.filter((aura) => aura.kind === 'necromancy_death_echo');
+src/sim/combat/necromancy.ts:220:  if (landedDamage <= 0 || !owner.auras.some((aura) => aura.kind === 'form_lich')) {
+src/sim/combat/necromancy.ts:270:      entity.kind === 'mob' &&
+src/sim/combat/necromancy.ts:397:  const lichForm = owner.auras.find((aura) => aura.kind === 'form_lich');
+src/sim/combat/necromancy.ts:460:    if (target.kind === 'mob') ctx.applyTaunt(undead, target);
+src/sim/combat/necromancy.ts:606:    source.kind === 'player'
+src/sim/combat/necromancy.ts:645:        candidate.kind === 'necromancy_ossuary_mark' &&
+src/sim/combat/necromancy.ts:835:      aura.kind === 'necromancy_ossuary_mark' &&
+src/sim/combat/necromancy.ts:856:      aura.kind === 'necromancy_harvest_mark' &&
+src/sim/combat/spell_combat.ts:9:    if (aura.kind === 'buff_spellcrit') bonus += aura.value;
+src/sim/combat/spell_combat.ts:10:    else if (aura.kind === 'sacred_form') bonus += aura.value2 ?? 0.05;
+src/sim/combat/spell_combat.ts:18:    if (aura.kind === 'buff_spelldmg') bonus += aura.value;
+src/sim/combat/spell_combat.ts:21:    else if (aura.kind === 'form_moonkin') bonus += 0.2;
+src/sim/combat/spell_combat.ts:34:    if (aura.kind === 'buff_spellhaste') bonus += aura.value;
+src/sim/combat/spell_combat.ts:40:  return p.auras.some((aura) => aura.kind === 'cast_shield');
+src/sim/mail/post_office.ts:259:      if (m.kind === 'player' && now >= m.expiresAt && hasEscrow) {
+src/sim/mail/post_office.ts:322:      if (box && box.kind === 'object' && dist2d(e.pos, box.pos) <= MAIL_RANGE) return true;
+src/sim/mail/post_office.ts:927:      ? opts.kind === 'player'
+src/sim/mail/post_office.ts:1009:      if (m.kind === 'player' && m.senderKey === undefined && m.senderName === oldName) {
+src/sim/mail/post_office.ts:1095:        m.kind === 'player' &&
+src/sim/mail/post_office.ts:1112:      if (m.kind === 'player' && escrowed && !m.returned && !owns(homeKey)) {
+src/sim/mail/post_office.ts:1260:      const kind: MailKind = m.kind === 'player' || m.kind === 'npc' ? m.kind : 'system';
+src/sim/mail/post_office.ts:1269:        if (kind === 'player' && ITEMS[item.itemId]?.soulbound) returnedItems.push(item);
+src/sim/mail/post_office.ts:1306:          : kind === 'player' &&
+src/sim/combat/paladin_aegis.ts:24:    .filter((ally) => ally.kind === 'player' && ctx.hasLineOfSight(caster, ally));
+src/sim/combat/area_echo.ts:23:  return entity.auras.some((aura) => aura.kind === 'aoe_echo');
+src/sim/combat/area_echo.ts:27:  return entity.auras.some((aura) => aura.kind === 'sweeping_strikes');
+src/sim/combat/area_echo.ts:99:  const index = entity.auras.findIndex((aura) => aura.kind === 'aoe_echo');
+src/sim/mob/locomotion.ts:490:    const polymorphAura = mob.auras.find((a) => a.kind === 'polymorph');
+src/sim/mob/locomotion.ts:563:        if (e.auras.some((a) => a.kind === 'stealth'))
+src/sim/mob/locomotion.ts:917:  if (kind === 'stomp') {
+src/sim/combat/warrior_hit_table.ts:34:    (total, aura) => total + (aura.kind === 'buff_block' ? aura.value : 0),
+src/sim/combat/hunter_shared.ts:86:  const aura = hunter?.auras.find((candidate) => candidate.kind === 'hunter_ferocity');
+src/sim/combat/hunter_shared.ts:127:        effect.type === 'selfBuff' && effect.kind === 'shield_wall'
+src/sim/combat/hunter_shared.ts:318:    if (aura.kind === 'pet_damage_pct') multiplier += pctValue(aura.value);
+src/sim/combat/hunter_shared.ts:324:    if (owner?.auras.some((aura) => aura.kind === 'hunter_frenzy')) multiplier *= 1.25;
+src/sim/combat/auras.ts:112:      if (aura.kind === 'resource_sap') {
+src/sim/combat/auras.ts:132:    for (const a of p.auras) if (a.kind === 'buff_energyregen') regen *= 1 + a.value;
+src/sim/combat/auras.ts:200:      const wellFed = c.kind === 'food' ? c.wellFed : undefined;
+src/sim/combat/auras.ts:277:    e.stealthed = e.auras.some((a) => a.kind === 'stealth');
+src/sim/combat/auras.ts:283:  if (e.kind === 'player') {
+src/sim/combat/auras.ts:316:    if (a.kind === 'thorns') tickThornsCooldown(a);
+src/sim/combat/auras.ts:321:        if (a.kind === 'pyre_guardian') {
+src/sim/combat/auras.ts:323:        } else if (a.id === 'temporal_hourglass' && a.kind === 'stasis') {
+src/sim/combat/auras.ts:325:        } else if (a.id === 'sacrilegious_march' && a.kind === 'buff_speed') {
+src/sim/combat/auras.ts:327:        } else if (a.kind === 'affliction_eye') {
+src/sim/combat/auras.ts:329:        } else if (a.kind === 'dot') {
+src/sim/combat/auras.ts:335:              if (targetAura.kind === 'bleed_vuln') bleedAmp += pctValue(targetAura.value);
+src/sim/combat/auras.ts:418:        } else if (a.kind === 'hot' && !tickMendingCurrent(ctx, e, a)) {
+src/sim/combat/auras.ts:443:        } else if (a.kind === 'buff_mana_grace' && e.resourceType === 'mana') {
+src/sim/combat/auras.ts:445:        } else if (a.kind === 'polymorph') {
+src/sim/combat/auras.ts:452:      if (a.id === OSSUARY_MARK_ABILITY_ID && a.kind === 'necromancy_ossuary_mark') {
+src/sim/combat/auras.ts:480:      if (a.kind === 'hot') {
+src/sim/combat/auras.ts:482:        if (source && !source.dead && source.kind === 'player') {
+src/sim/combat/auras.ts:491:        a.kind === 'debuff_ap' ||
+src/sim/combat/auras.ts:492:        a.kind === 'die_by_sword' ||
+src/sim/combat/auras.ts:493:        a.kind === 'enrage' ||
+src/sim/combat/auras.ts:494:        a.kind === 'bloodbath' ||
+src/sim/combat/auras.ts:495:        a.kind === 'berserker_stance'
+src/sim/combat/auras.ts:500:  if (statsDirty && e.kind === 'player') {
+src/sim/combat/auras.ts:505:  e.stealthed = e.auras.some((a) => a.kind === 'stealth');
+src/sim/pet/pet_selection.ts:11:    entity.kind === 'mob' &&
+src/sim/pet/pet_selection.ts:28:    entity.kind === 'mob' &&
+src/sim/combat/stealth_focus.ts:76:    if (entity.kind === 'mob') {
+src/sim/combat/hunter_fieldcraft.ts:141:  const bloodtrail = hunter.auras.some((aura) => aura.kind === 'hunter_bloodtrail');
+src/sim/combat/hunter_fieldcraft.ts:284:  if (hunter.auras.some((aura) => aura.kind === 'hunter_bloodtrail'))
+src/sim/combat/hunter_fieldcraft.ts:307:  const empowered = hunter.auras.some((aura) => aura.kind === 'hunter_bloodtrail');
+src/sim/combat/warlock_utility.ts:9:      aura.id === UMBRAL_ANCHOR_ID && aura.kind === 'warlock_anchor' && aura.sourceId === entity.id,
+src/sim/combat/thorns_charge.ts:58:    if (a.kind === 'thorns' && consumeThornsCharge(a)) {
+src/sim/combat/thorns_charge.ts:74:      if (defender.kind === 'player') {
+src/sim/combat/thorns_charge.ts:83:    if (a.kind === 'thorns' && thornsDepleted(a)) {
+src/sim/mob/social_aggro.ts:31:      m.kind === 'mob' &&
+src/sim/mob/social_aggro.ts:73:      m.kind === 'mob' &&
+src/sim/combat/effect_dispatch.ts:266:  return ability.effects.some((e) => e.type === 'selfBuff' && e.kind === 'stealth');
+src/sim/combat/effect_dispatch.ts:374:        a.kind === 'hot' &&
+src/sim/combat/effect_dispatch.ts:388:    if (target !== caster && ctx.isHostileTo(caster, target) && a.kind === 'dot') {
+src/sim/combat/effect_dispatch.ts:509:    const sf = p.auras.findIndex((a) => a.kind === 'form_shadow');
+src/sim/combat/effect_dispatch.ts:625:          const chargeIndex = p.auras.findIndex((aura) => aura.kind === 'overpower_charge');
+src/sim/combat/effect_dispatch.ts:640:          p.auras.some((aura) => aura.kind === 'enrage') &&
+src/sim/combat/effect_dispatch.ts:829:              aura.kind === 'dot' &&
+src/sim/combat/effect_dispatch.ts:955:          const echoIdx = p.auras.findIndex((a) => a.kind === 'power_echo');
+src/sim/combat/effect_dispatch.ts:1368:          const echoIdx = p.auras.findIndex((a) => a.kind === 'power_echo');
+src/sim/combat/effect_dispatch.ts:1461:        if (p.auras.some((a) => a.kind === 'form_cat')) {
+src/sim/combat/effect_dispatch.ts:1472:        } else if (p.auras.some((a) => a.kind === 'form_bear') && p.resourceType === 'rage') {
+src/sim/combat/effect_dispatch.ts:1480:          (aura) => aura.kind === 'hot' && aura.id === ability.id && aura.sourceId === p.id,
+src/sim/combat/effect_dispatch.ts:1517:          (effect) => effect.type === 'selfBuff' && effect.kind === 'stasis',
+src/sim/combat/effect_dispatch.ts:1551:          if (a.kind === 'imbue' && a.id !== ability.id) {
+src/sim/combat/effect_dispatch.ts:1578:        if (p.kind === 'player' && target.kind === 'player' && !ctx.isHostileTo(p, target)) break;
+src/sim/combat/effect_dispatch.ts:1635:          if (aura.kind === 'stealth') {
+src/sim/combat/effect_dispatch.ts:1636:            target.stealthed = target.auras.some((entry) => entry.kind === 'stealth');
+src/sim/combat/effect_dispatch.ts:1644:        if (dispelled > 0 && target.kind === 'player') {
+src/sim/combat/effect_dispatch.ts:1728:          if (enteredCombat && hostile.kind === 'mob' && hostile.hostile) {
+src/sim/combat/effect_dispatch.ts:1865:            tickInterval: eff.kind === 'buff_mana_grace' ? 5 : undefined,
+src/sim/combat/effect_dispatch.ts:1866:            tickTimer: eff.kind === 'buff_mana_grace' ? 5 : undefined,
+src/sim/combat/effect_dispatch.ts:2036:          (aura) => aura.kind === 'dot' && aura.id === eff.dot && aura.sourceId === p.id,
+src/sim/combat/effect_dispatch.ts:2103:        const alreadySlowed = target.auras.some((aura) => aura.kind === 'slow');
+src/sim/combat/effect_dispatch.ts:2416:          const boss = m.kind === 'mob' && MOBS[m.templateId]?.boss === true;
+src/sim/combat/effect_dispatch.ts:2937:          if (enteredCombat && m.kind === 'mob' && m.hostile)
+src/sim/combat/effect_dispatch.ts:2968:          if (enteredCombat && m.kind === 'mob' && m.hostile)
+src/sim/combat/effect_dispatch.ts:3102:          if (mE.kind === 'player') {
+src/sim/combat/effect_dispatch.ts:3486:              aura.kind === 'silence' ||
+src/sim/combat/effect_dispatch.ts:3487:              aura.kind === 'blind' ||
+src/sim/combat/effect_dispatch.ts:3488:              aura.kind === 'disarm' ||
+src/sim/combat/effect_dispatch.ts:3489:              aura.kind === 'slow')
+src/sim/combat/effect_dispatch.ts:3554:          eff.kind === 'defensive_stance' ||
+src/sim/combat/effect_dispatch.ts:3555:          eff.kind === 'stealth' ||
+src/sim/combat/effect_dispatch.ts:3562:            if (eff.kind === 'stealth') p.stealthed = false; // toggled back out of stealth
+src/sim/combat/effect_dispatch.ts:3580:        if (eff.kind === 'stasis' || isTravelFormAuraKind(eff.kind)) {
+src/sim/combat/effect_dispatch.ts:3616:        if (eff.kind === 'overpower_charge') {
+src/sim/combat/effect_dispatch.ts:3617:          const existing = p.auras.find((aura) => aura.kind === 'overpower_charge');
+src/sim/combat/effect_dispatch.ts:3654:          stacks: eff.kind === 'overpower_charge' ? 1 : undefined,
+src/sim/combat/effect_dispatch.ts:3662:        if (eff.kind === 'form_lich') {
+src/sim/combat/effect_dispatch.ts:3680:          eff.kind === 'stealth' && dropsCombatOnStealth(ability)
+src/sim/combat/effect_dispatch.ts:3688:        if (eff.kind === 'stealth' && p.kind === 'player' && p.stealthed) {
+src/sim/combat/effect_dispatch.ts:3819:          if (member.kind === 'player') {
+src/sim/combat/effect_dispatch.ts:4077:        const existing = target.auras.find((a) => a.kind === 'sunder');
+src/sim/combat/effect_dispatch.ts:4146:          if (hostile.kind === 'mob' && !hostile.dead) ctx.applyTaunt(p, hostile);
+src/sim/combat/tank_crit_immunity.ts:45:    return target.auras.some((a) => a.kind === 'form_bear');
+src/sim/combat/equip_procs.ts:65:      (eff) => eff.kind === 'dot' || eff.kind === 'attackSlow',
+src/sim/combat/chronomancy.ts:72:  if (aura.kind === 'temporal_echo') return 1;
+src/sim/combat/chronomancy.ts:88:      if (a.kind === 'temporal_echo' && a.sourceId === mageId) {
+src/sim/combat/chronomancy.ts:107:      if (a.kind === 'temporal_echo' && a.sourceId === mageId && !a.echoGroup) {
+src/sim/combat/chronomancy.ts:195:      if (a.kind === 'temporal_echo' && a.sourceId === source.id) {
+src/sim/combat/chronomancy.ts:265:  const existing = ally.auras.find((a) => a.kind === 'temporal_echo' && a.sourceId === caster.id);
+src/sim/threat.ts:45:    if (a.kind === 'defensive_stance') mod *= DEFENSIVE_STANCE_THREAT_MULT;
+src/sim/threat.ts:46:    else if (a.kind === 'form_bear') mod *= BEAR_FORM_THREAT_MULT;
+src/sim/threat.ts:47:    else if (a.kind === 'form_cat') mod *= CAT_FORM_THREAT_MULT;
+src/sim/threat.ts:48:    else if (a.kind === 'righteous_fury' && school === 'holy') mod *= RIGHTEOUS_FURY_THREAT_MULT;
+src/sim/threat.ts:49:    else if (a.kind === 'buff_threat') mod *= a.value;
+src/sim/threat.ts:50:    else if (a.kind === 'sacred_form') mod *= a.value3 ?? 0.5;
+src/sim/threat.ts:70:  return target.auras.some((a) => a.id === 'vanish' && a.kind === 'stealth');
+src/sim/threat.ts:78:  if (!target.auras.some((a) => a.kind === 'stealth')) return true;
+src/sim/threat.ts:90:  return !target.auras.some((a) => a.kind === 'stealth');
+src/sim/combat/casting_lifecycle.ts:250:        e.kind === 'defensive_stance' ||
+src/sim/combat/casting_lifecycle.ts:251:        e.kind === 'stealth' ||
+src/sim/combat/casting_lifecycle.ts:252:        e.kind === 'stasis' ||
+src/sim/combat/casting_lifecycle.ts:258:  return ability.effects.some((effect) => effect.type === 'selfBuff' && effect.kind === 'stasis');
+src/sim/combat/casting_lifecycle.ts:895:  if (!p.auras.some((a) => a.kind === 'stealth')) return null;
+src/sim/combat/casting_lifecycle.ts:1264:    !p.auras.some((a) => a.kind === 'stealth')
+src/sim/combat/casting_lifecycle.ts:1449:      !(ability.id === 'execute' && p.auras.some((aura) => aura.kind === 'sudden_death')) &&
+src/sim/combat/casting_lifecycle.ts:1483:        if (target.kind === 'mob') {
+src/sim/combat/casting_lifecycle.ts:1829:    if (p.kind === 'player' && ability.school !== 'physical')
+src/sim/combat/casting_lifecycle.ts:1831:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id, target);
+src/sim/combat/casting_lifecycle.ts:2020:  const idx = p.auras.findIndex((a) => a.kind === 'overload');
+src/sim/combat/casting_lifecycle.ts:2218:      } else if (eff.type === 'selfBuff' && eff.kind === 'buff_spellpower') {
+src/sim/combat/casting_lifecycle.ts:2219:        const existing = p.auras.find((a) => a.id === res.def.id && a.kind === 'buff_spellpower');
+src/sim/combat/casting_lifecycle.ts:2496:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id);
+src/sim/combat/casting_lifecycle.ts:2509:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id);
+src/sim/combat/casting_lifecycle.ts:2542:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id, pet);
+src/sim/combat/casting_lifecycle.ts:2771:    if (p.kind === 'player' && ability.school !== 'physical')
+src/sim/combat/casting_lifecycle.ts:2773:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id, target);
+src/sim/combat/casting_lifecycle.ts:2862:    if (p.kind === 'player' && isSpell) ctx.applySetProcs(p, target, 'spellCast');
+src/sim/combat/casting_lifecycle.ts:2863:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id, target);
+src/sim/combat/casting_lifecycle.ts:2918:  if (p.kind === 'player' && ability.school !== 'physical' && !togglingOff)
+src/sim/combat/casting_lifecycle.ts:2920:  if (p.kind === 'player' && !togglingOff) onCastCompleted(ctx, p, ability.id, target);
+src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:306:    if (tap.kind === 'place') this.deps.placeAbility(tap.abilityId, tap.slot);
+src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:307:    else if (tap.kind === 'swap') this.deps.swapSlots(tap.from, tap.to);
+src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:308:    else if (tap.kind === 'clear') this.deps.clearSlot(tap.slot);
+src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:313:    if (tap.kind === 'place' || tap.kind === 'swap' || tap.kind === 'clear') {
+src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:360:    if (this.selection.kind === 'ability') {
+src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:364:    if (this.selection.kind === 'slot')
+src/sim/fen_willows.ts:44:  }).filter((d) => d.kind === 'rock');
+src/sim/fen_willows.ts:114:  }).filter((d) => d.kind === 'rock');
+src/sim/combat/natures_fury.ts:22:  if (!p.auras.some((aura) => aura.kind === 'form_moonkin')) return;
+src/sim/combat/crafted_collection_effects.ts:68:    source.kind === 'player' &&
+src/sim/combat/crafted_collection_effects.ts:111:    source.kind === 'player'
+src/sim/combat/crafted_collection_effects.ts:116:  return owner?.kind === 'player' && !owner.dead && owner.inCombat && owner.craftedCollectionId
+src/sim/combat/crafted_collection_effects.ts:123:  if (source.kind === 'player') return 1;
+src/sim/combat/crafted_collection_effects.ts:201:      !(source.kind === 'mob' && source.ownerId === null && ctx.isHostileTo(target, source)))
+src/sim/combat/dot_mutation.ts:12:    (aura) => aura.kind === 'dot' && aura.id === dotId && aura.sourceId === sourceId,
+src/sim/combat/paladin_dawns_wrath.ts:27:  const meta: PlayerMeta | undefined = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+src/sim/combat/paladin_dawns_wrath.ts:47:  const meta: PlayerMeta | undefined = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+src/sim/combat/hunter_coldsight.ts:29:  const inWindow = hunter.auras.some((aura) => aura.kind === 'hunter_cold_focus');
+src/sim/combat/hunter_coldsight.ts:81:  const windowAura = hunter.auras.find((aura) => aura.kind === 'hunter_cold_focus');
+src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:138:  if (selection.kind === 'clear') {
+src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:145:  if (selection.kind === 'ability') {
+src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:153:  if (selection.kind === 'slot') {
+src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:173:  return selection.kind === 'clear' ? BAR_EDITOR_IDLE : BAR_EDITOR_CLEAR_ARMED;
+src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:178:  return selection.kind === 'clear';
+src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:184:  return selection.kind === 'slot' ? selection.slot : -1;
+src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:218:  if (selection.kind === 'ability') {
+src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:221:  if (selection.kind === 'slot') {
+src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:224:  if (selection.kind === 'clear') return deps.t('hudChrome.barEditor.clearArmed');
+src/sim/combat/stealth.ts:39:    if (e.kind === 'mob') {
+src/sim/combat/stealth.ts:55:      e.kind === 'player' &&
+src/sim/pet/pet_commands.ts:106:  if (aura.kind === 'buff_sta') return aura.value * 10;
+src/sim/pet/pet_commands.ts:107:  if (aura.kind === 'buff_allstats') return aura.value * 10;
+src/sim/pet/pet_commands.ts:117:  if (target.kind === 'player') return;
+src/sim/pet/pet_commands.ts:124:  if (aura.kind === 'buff_sta_pct' || aura.kind === 'buff_stats_pct') {
+src/sim/pet/pet_commands.ts:140:  if (target.kind === 'player') return;
+src/sim/pet/pet_commands.ts:653:    if (target.kind === 'mob' && target.hostile && questGateBlocksAggro(ctx.players, target, pet)) {
+src/sim/pet/pet_commands.ts:658:    if (target.kind === 'mob' && target.hostile) addThreat(target, pet.id, 1);
+src/sim/pet/pet_commands.ts:750:  if (target.kind === 'mob' && target.hostile) addThreat(target, pet.id, 1);
+src/sim/combat/empower_next.ts:54:  return e.auras.find((aura) => aura.kind === 'ice_floes' && matches(aura, abilityId));
+src/sim/combat/empower_next.ts:66:    auras.find((aura) => aura.kind === 'next_cast_cheap' && matches(aura, abilityId))?.value ?? null
+src/sim/combat/empower_next.ts:94:      (aura.kind === 'next_cast_free' || aura.kind === 'next_execute_free') &&
+src/sim/combat/empower_next.ts:99:    if (aura.kind === 'battle_trance' && BATTLE_TRANCE_ABILITIES.has(abilityId)) return true;
+src/sim/combat/empower_next.ts:100:    if (aura.kind === 'revenge_free' && REVENGE_FREE_ABILITIES.has(abilityId)) return true;
+src/sim/combat/empower_next.ts:101:    if (aura.kind === 'sudden_death' && abilityId === 'execute') return true;
+src/sim/combat/empower_next.ts:143:      aura.kind === 'next_cast_instant' &&
+src/sim/guild_bank_material.ts:538:  if (move.kind === 'legacy') {
+src/sim/guild_bank_material.ts:581:  if (move.kind === 'legacy') {
+src/sim/combat/player_attack_reach.ts:16:    target.kind === 'mob' &&
+src/sim/combat/haste_burst.ts:49:    if (p.exhaust && target.auras.some((a) => a.kind === 'sated')) continue;
+src/sim/reliquary.ts:334:  if (!source || source.kind === 'none') return undefined;
+src/sim/reliquary.ts:335:  if (source.kind === 'delve') {
+src/sim/reliquary.ts:350:  if (source.kind === 'deed_stat') {
+src/sim/reliquary.ts:413:    if (ITEMS[itemId]?.kind === 'mount') {
+src/sim/reliquary.ts:610:    id = def.kind === 'furnishing' ? undefined : def.heroicOf;
+src/sim/reliquary.ts:983:      if (relic.kind === 'item') {
+src/sim/reliquary.ts:987:      } else if (relic.kind === 'mark') {
+src/sim/reliquary.ts:991:      } else if (relic.kind === 'mount') {
+src/sim/reliquary.ts:995:      } else if (relic.kind === 'weapon_skin') {
+src/sim/reliquary.ts:999:      } else if (relic.kind === 'title') {
+src/sim/reliquary.ts:1072:  return (kind === 'item' ? index.items : index.marks).includes(id);
+src/sim/combat/forms.ts:8:  return kind === 'form_bear' || kind === 'form_cat' || kind === 'form_travel';
+src/sim/combat/forms.ts:12:  return isResourceShiftFormAuraKind(kind) || kind === 'form_fireball';
+src/sim/combat/forms.ts:16:  return kind === 'form_travel' || kind === 'form_fireball';
+src/sim/combat/rogue_talents.ts:32:      a.kind === 'stealth' ||
+src/sim/combat/rogue_talents.ts:33:      (a.id === DUSK_ECONOMY_AURA_ID && a.kind === 'dusk_economy') ||
+src/sim/combat/paladin_beacon.ts:32:  const meta = paladin.kind === 'player' ? ctx.players.get(paladin.id) : undefined;
+src/sim/combat/paladin_beacon.ts:53:    (candidate) => candidate.kind === 'beacon_of_light' && candidate.sourceId === paladinId,
+src/sim/combat/paladin_beacon.ts:82:        (aura) => aura.kind === 'beacon_of_light' && aura.sourceId === source.id,
+src/sim/combat/damage.ts:215:    source?.kind === 'mob' &&
+src/sim/combat/damage.ts:217:    target.kind === 'player' &&
+src/sim/combat/damage.ts:248:  if (target.auras.some((a) => a.kind === 'stasis')) return 0;
+src/sim/combat/damage.ts:258:  if (target.kind === 'mob' && target.aiState === 'evade' && target.ownerId === null) {
+src/sim/combat/damage.ts:287:  if (!resolvedHpLoss && source?.devGod && source.kind === 'player' && ctx.devCommands)
+src/sim/combat/damage.ts:292:  if (source?.oneShot && source.kind === 'player' && target.kind === 'mob' && ctx.devCommands) {
+src/sim/combat/damage.ts:300:  if (!alreadyFinal && source?.kind === 'player' && source.id !== target.id && amount > 0) {
+src/sim/combat/damage.ts:305:    if (twoHandPct > 0 && mainhand?.kind === 'weapon' && weaponHand(mainhand) === 'twohand') {
+src/sim/combat/damage.ts:315:    source.auras.some((a) => a.kind === 'defensive_stance')
+src/sim/combat/damage.ts:323:    target.auras.some((a) => a.kind === 'defensive_stance')
+src/sim/combat/damage.ts:332:    for (const a of target.auras) if (a.kind === 'shield_wall') ward = Math.max(ward, a.value);
+src/sim/combat/damage.ts:341:    for (const a of target.auras) if (a.kind === 'expose') exposeMult += a.value;
+src/sim/combat/damage.ts:352:      if (a.kind === 'spellvuln') amp += a.value;
+src/sim/combat/damage.ts:362:    for (const a of target.auras) if (a.kind === 'vulnerability') vuln += a.value;
+src/sim/combat/damage.ts:371:      if (aura.kind === 'vuln_source' && aura.sourceId === source.id) {
+src/sim/combat/damage.ts:392:        aura.kind === 'buff_dmg_done' ||
+src/sim/combat/damage.ts:393:        aura.kind === 'bloodbath' ||
+src/sim/combat/damage.ts:394:        aura.kind === 'buff_avatar' ||
+src/sim/combat/damage.ts:395:        aura.kind === 'enrage'
+src/sim/combat/damage.ts:398:      } else if (aura.kind === 'sanguine') {
+src/sim/combat/damage.ts:424:      if (aura.kind === 'buff_dr') {
+src/sim/combat/damage.ts:426:      } else if (aura.kind === 'die_by_sword') reduction += aura.value;
+src/sim/combat/damage.ts:434:      if (aura.kind === 'buff_dr_phys') reduction += aura.value;
+src/sim/combat/damage.ts:447:    target.kind === 'player' &&
+src/sim/combat/damage.ts:448:    target.auras.some((aura) => aura.id === 'demon_skin' && aura.kind === 'buff_armor')
+src/sim/combat/damage.ts:461:    const form = source.auras.find((a) => a.kind === 'form_shadow');
+src/sim/combat/damage.ts:474:    target.kind === 'player' &&
+src/sim/combat/damage.ts:475:    target.auras.some((a) => a.kind === 'absorb' && PERSONAL_BARRIER_IDS.includes(a.id))
+src/sim/combat/damage.ts:505:    source.auras.some((aura) => aura.kind === 'battle_stance')
+src/sim/combat/damage.ts:522:    source?.kind === 'player' &&
+src/sim/combat/damage.ts:523:    target.kind === 'player' &&
+src/sim/combat/damage.ts:535:    target.auras.some((aura) => aura.kind === 'defensive_stance')
+src/sim/combat/damage.ts:567:        if (target.kind === 'player') grantAbilityDevotion(target, DEBT_OF_LIGHT_DEVOTION);
+src/sim/combat/damage.ts:598:          shielder.kind === 'player' &&
+src/sim/combat/damage.ts:608:  if (!resolvedHpLoss && target.kind === 'player' && amount > 0) {
+src/sim/combat/damage.ts:680:    source?.kind === 'mob' && source.ownerId === null
+src/sim/combat/damage.ts:685:    target.kind === 'player' &&
+src/sim/combat/damage.ts:691:    const wardIdx = target.auras.findIndex((a) => a.kind === 'guardian_ward');
+src/sim/combat/damage.ts:711:  const duel = target.kind === 'player' ? ctx.duels.get(target.id) : undefined;
+src/sim/combat/damage.ts:763:  const match = target.kind === 'player' ? ctx.arenaMatches.get(target.id) : undefined;
+src/sim/combat/damage.ts:894:  if (target.kind === 'player' && amount >= target.hp && !target.dead) {
+src/sim/combat/damage.ts:922:  if (target.kind === 'mob') {
+src/sim/combat/damage.ts:950:  if (target.kind === 'player') recordDamageTaken(target, preHp - target.hp, ctx.tickCount);
+src/sim/combat/damage.ts:983:    if (target.kind === 'mob' && DAMAGE_IDLE_DESPAWN_MOB_IDS.has(target.templateId)) {
+src/sim/combat/damage.ts:1066:    target.kind === 'mob' &&
+src/sim/combat/damage.ts:1068:    (source.kind === 'player' || source.ownerId !== null)
+src/sim/combat/damage.ts:1085:    target.kind === 'mob' &&
+src/sim/combat/damage.ts:1090:    const sourcePid = source.kind === 'player' ? source.id : source.ownerId;
+src/sim/combat/damage.ts:1114:    const contributorId = source.kind === 'player' ? source.id : source.ownerId;
+src/sim/combat/damage.ts:1127:  if (source && amount > 0 && target.kind === 'player' && !target.dead) {
+src/sim/combat/damage.ts:1131:  if (source && source.kind === 'player' && source.id !== target.id) {
+src/sim/combat/damage.ts:1162:  if (target.kind === 'player') {
+src/sim/combat/damage.ts:1192:      (kind === 'hit' || kind === 'block')
+src/sim/combat/damage.ts:1206:        kind === 'hit' &&
+src/sim/combat/damage.ts:1217:  if (kind === 'hit' && amount > 0 && !target.dead && target.hp > 0) {
+src/sim/combat/damage.ts:1245:    const fmatch = target.kind === 'player' ? ctx.arenaMatches.get(target.id) : undefined;
+src/sim/combat/damage.ts:1270:  const fromPlayer = source.kind === 'player' || source.ownerId !== null;
+src/sim/combat/damage.ts:1349:  if (e.kind === 'player') {
+src/sim/combat/damage.ts:1417:  if (e.kind === 'mob' && MOBS[e.templateId]?.broodEgg) e.broodCracked = true;
+src/sim/combat/damage.ts:1419:  if (e.kind === 'mob') emitIgnivarRaidNarrativeOnDeath(ctx, e);
+src/sim/combat/damage.ts:1436:  if (e.kind === 'mob') ctx.clearEntityMarker(e.id);
+src/sim/combat/damage.ts:1444:  if (e.kind === 'player') deedsMod.onPlayerDeathForDeeds(ctx, e);
+src/sim/combat/damage.ts:1456:  if (e.kind === 'player') {
+src/sim/combat/damage.ts:1516:      if (m.kind === 'mob' && !m.dead && m.aggroTargetId === e.id && m.aiState !== 'dead') {
+src/sim/combat/damage.ts:1540:  if (e.kind === 'mob') {
+src/sim/combat/damage.ts:1634:    const killerPid = killer?.kind === 'player' ? killer.id : (killer?.ownerId ?? null);
+src/sim/combat/damage.ts:1716:          const existing = creditEntity.auras.find((aura) => aura.kind === 'bloodbath');
+src/sim/combat/temporal_hourglass.ts:24:  return entity.auras.some((aura) => aura.id === TEMPORAL_HOURGLASS_ID && aura.kind === 'stasis');
+src/sim/combat/temporal_hourglass.ts:30:    (candidate) => candidate.id === TEMPORAL_HOURGLASS_ID && candidate.kind === 'stasis',
+src/sim/combat/temporal_hourglass.ts:97:  return target.auras.some((aura) => aura.id === TEMPORAL_HOURGLASS_ID && aura.kind === 'stasis');
+src/sim/combat/temporal_hourglass.ts:106:      target.kind === 'player' &&
+src/sim/combat/temporal_hourglass.ts:136:    (aura) => aura.id === TEMPORAL_HOURGLASS_ID && aura.kind === 'incapacitate',
+src/sim/combat/temporal_hourglass.ts:274:          candidate.kind === 'player' &&
+src/sim/pet/pet_ai.ts:172:        target.kind === 'mob' &&
+src/sim/pet/pet_ai.ts:455:  for (const a of pet.auras) if (a.kind === 'pet_spellhaste') bonus += a.value;
+src/sim/pet/pet_ai.ts:633:      m.kind === 'mob' && (m.aggroTargetId === owner.id || m.aggroTargetId === pet.id);
+src/sim/pet/pet_ai.ts:645:        (m.kind === 'mob' && m.threat.has(owner.id)) ||
+src/sim/pet/pet_ai.ts:646:        (m.kind === 'player' && owner.inCombat));
+src/sim/pet/pet_ai.ts:660:  return target.kind === 'mob' && questGateBlocksAggro(ctx.players, target, pet);
+src/sim/combat/auto_attack.ts:170:    t.kind === 'mob' &&
+src/sim/combat/auto_attack.ts:343:  if (!player.auras.some((aura) => aura.kind === 'berserker_stance')) return 0;
+src/sim/combat/auto_attack.ts:408:  if (!ranged.wand && attacker.kind === 'player') {
+src/sim/combat/auto_attack.ts:459:    if (crit && atk.kind === 'player') ctx.applySetProcs(atk, tgt, 'weaponCrit');
+src/sim/combat/auto_attack.ts:513:    : target.kind === 'player'
+src/sim/combat/auto_attack.ts:544:    if (attacker.kind === 'player') attacker.overpowerUntil = ctx.time + 5;
+src/sim/combat/auto_attack.ts:589:  for (const a of attacker.auras) if (a.kind === 'imbue') imbueBonus += a.value;
+src/sim/combat/auto_attack.ts:616:    const targetMeta = target.kind === 'player' ? ctx.players.get(target.id) : undefined;
+src/sim/combat/auto_attack.ts:660:  if (crit && attacker.kind === 'player') ctx.applySetProcs(attacker, target, 'weaponCrit');
+src/sim/combat/auto_attack.ts:664:  if (attacker.kind === 'player') {
+src/sim/combat/heal.ts:48:    if (a.kind === 'mortal_wound') mult *= 1 - a.value;
+src/sim/combat/heal.ts:60:    if (a.kind === 'hex') mult *= 1 - a.value;
+src/sim/combat/heal.ts:82:    target.auras = target.auras.filter((a) => !(a.kind === 'heal_absorb' && a.value <= 0));
+src/sim/combat/heal.ts:91:    if (a.kind === 'critvuln' && a.value > bonus) bonus = a.value;
+src/sim/combat/heal.ts:127:  for (const aura of source.auras) if (aura.kind === 'buff_heal_done') healDone += aura.value;
+src/sim/combat/heal.ts:170:  if (healed > 0 && target.kind === 'player') ctx.bgOnPlayerHealed(target, source);
+src/sim/combat/heal.ts:172:  if (crit && source.kind === 'player') onSpellCrit(ctx, source, abilityId, target);
+src/sim/combat/paladin_sun_verdict.ts:26:    if (aura.kind === 'sun_verdict' && aura.sourceId === sourceId) return true;
+src/sim/combat/paladin_sun_verdict.ts:34:    aura.kind === 'sun_verdict' &&
+src/sim/combat/resurrection_offer.ts:50:  return caster?.kind === 'player' &&
+src/sim/combat/fire_mage.ts:112:  if (p.auras.some((a) => a.kind === 'combustion')) return true;
+src/sim/combat/fire_mage.ts:179:  if (!p.auras.some((a) => a.kind === 'combustion')) {
+src/sim/combat/fire_mage.ts:258:  if (target.auras.some((a) => a.kind === 'cauterize_fatigue')) return null;
+src/ui/hud/action_bar/action_bar_painter.ts:112:      this.writers.toggleClass(el.btn, CLASS_EMPTY, s.kind === 'empty');
+src/ui/hud/action_bar/action_bar_painter.ts:113:      this.writers.toggleClass(el.btn, CLASS_ABILITY, s.kind === 'ability');
+src/ui/hud/action_bar/action_bar_painter.ts:134:        s.kind === 'attack' ? (s.queued ? 'true' : 'false') : s.aiming ? 'true' : null,
+src/sim/combat/quest_damage_gate.ts:22:  const attackerPid = source.kind === 'player' ? source.id : source.ownerId;
+src/sim/combat/affliction.ts:54:  const meta = entity.kind === 'player' ? ctx.players.get(entity.id) : undefined;
+src/sim/combat/affliction.ts:59:  return player.auras.find((aura) => aura.kind === 'affliction_doom');
+src/sim/combat/affliction.ts:96:  const index = warlock.auras.findIndex((aura) => aura.kind === 'affliction_doom');
+src/sim/combat/affliction.ts:109:      (aura.kind === 'affliction_eye' || aura.kind === 'affliction_eye_secondary'),
+src/sim/combat/affliction.ts:114:  const eyeMult = eye.kind === 'affliction_eye_secondary' ? 0.5 : 1;
+src/sim/combat/affliction.ts:116:    eye.kind === 'affliction_eye' &&
+src/sim/combat/affliction.ts:117:    warlock.auras.some((aura) => aura.kind === 'affliction_judgment')
+src/sim/combat/affliction.ts:127:    (aura) => aura.kind === 'affliction_fate_threads' && aura.sourceId === warlock.id,
+src/sim/combat/affliction.ts:134:      entity.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlockId)
+src/sim/combat/affliction.ts:180:  return entity.auras.some((aura) => aura.kind === 'affliction_possession' && aura.remaining > 0);
+src/sim/combat/affliction.ts:189:    auras.some((aura) => aura.kind === 'affliction_possession')
+src/sim/combat/affliction.ts:296:    !target.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlock.id)
+src/sim/combat/affliction.ts:318:    (aura) => aura.kind === 'affliction_litany' && aura.sourceId === warlock.id,
+src/sim/combat/affliction.ts:374:    (aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlock.id,
+src/sim/combat/affliction.ts:377:    (aura) => aura.kind === 'affliction_eye_secondary' && aura.sourceId === warlock.id,
+src/sim/combat/affliction.ts:381:      (aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlock.id,
+src/sim/combat/affliction.ts:469:      candidate.kind === 'affliction_accomplice' &&
+src/sim/combat/affliction.ts:514:  const linked = target.kind === 'player' && target.id !== warlock.id ? target : warlock;
+src/sim/combat/affliction.ts:517:      (aura) => aura.kind === 'affliction_accomplice' && aura.sourceId === warlock.id,
+src/sim/combat/affliction.ts:625:  const aura = target.auras.find((candidate) => candidate.kind === 'affliction_vicarious');
+src/sim/combat/affliction.ts:731:    (aura) => aura.kind === 'affliction_judgment' && aura.remaining > 0,
+src/sim/combat/affliction.ts:763:    target.kind === 'mob' &&
+src/sim/combat/affliction.ts:767:  if (doom >= 100 && (target.kind === 'player' || MOBS[target.templateId]?.boss)) {
+src/sim/combat/affliction.ts:850:          (aura.kind === 'affliction_eye' || aura.kind === 'affliction_eye_secondary'),
+src/sim/combat/affliction.ts:881:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlock.id)
+src/sim/combat/affliction.ts:906:    (aura) => aura.kind === 'affliction_consume_threads' && aura.sourceId === warlock.id,
+src/sim/combat/affliction.ts:913:    (aura) => aura.kind === 'affliction_consume_threads' && aura.sourceId === warlock.id,
+src/sim/combat/affliction.ts:964:    !target?.auras.some((aura) => aura.sourceId === player.id && aura.kind === 'affliction_eye')
+src/sim/combat/affliction.ts:970:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === player.id)
+src/sim/combat/affliction.ts:976:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === player.id)
+src/sim/combat/affliction.ts:982:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === player.id)
+src/sim/combat/affliction.ts:988:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === player.id)
+src/sim/combat/affliction.ts:996:  if (aura.kind === 'affliction_accomplice' && aura.icd && aura.icd > 0) {
+src/sim/combat/affliction.ts:999:  if (aura.kind === 'affliction_litany' && aura.icd && aura.icd > 0) {
+src/sim/combat/affliction.ts:1049:  const targetCanTrigger = target.auras.some((aura) => aura.kind === 'affliction_vicarious');
+src/sim/combat/affliction.ts:1091:    if (aura.kind === 'affliction_violence' && (aura.charges ?? 0) <= 0) {
+src/ui/hud/action_bar/player_stealthed.ts:23:      a.kind === 'stealth' ||
+src/sim/combat/frost_mage.ts:76:    if (a.kind === 'fingers_of_frost' && abilityId === 'ice_lance') return true;
+src/sim/combat/frost_mage.ts:77:    if (a.kind === 'brain_freeze' && abilityId === 'flurry') return true;
+src/sim/combat/frost_mage.ts:86:  const icicles = auras.find((a) => a.kind === 'icicles');
+src/sim/combat/frost_mage.ts:96:  return abilityId === 'flurry' && p.auras.some((a) => a.kind === 'brain_freeze');
+src/sim/combat/frost_mage.ts:111:  const existing = p.auras.find((a) => a.kind === 'fingers_of_frost');
+src/sim/combat/frost_mage.ts:137:  if (p.auras.some((a) => a.kind === 'brain_freeze')) return; // wasted proc
+src/sim/combat/frost_mage.ts:156:  const existing = p.auras.find((a) => a.kind === 'icicles');
+src/sim/combat/frost_mage.ts:240:  const idx = p.auras.findIndex((a) => a.kind === 'fingers_of_frost');
+src/sim/combat/frost_mage.ts:254:  const idx = target.auras.findIndex((a) => a.kind === 'winters_chill');
+src/sim/combat/frost_mage.ts:375:  const idx = p.auras.findIndex((a) => a.kind === 'brain_freeze');
+src/sim/combat/warlock_talents.ts:86:    (effect) => effect.type === 'selfBuff' && effect.kind === 'buff_armor',
+src/sim/combat/paladin_control.ts:58:  if (target.kind === 'player') ctx.playerGrid.update(target);
+src/sim/combat/paladin_support.ts:55:    if (conflicts.length > 0 && entity.kind === 'player') ctx.recalcPlayer(entity);
+src/sim/combat/paladin_support.ts:76:    if (removed && entity.kind === 'player') ctx.recalcPlayer(entity);
+src/sim/combat/paladin_support.ts:83:    if (aura.kind === 'buff_mana_grace') reduction += aura.value2 ?? 0.03;
+src/sim/combat/paladin_support.ts:91:    if (aura.kind === 'buff_healing_done') bonus += aura.value;
+src/sim/combat/paladin_support.ts:92:    else if (aura.kind === 'sacred_form') bonus += aura.value;
+src/sim/bags.ts:90:  if (def.kind === 'furnishing') return 1;
+src/sim/bags.ts:92:  return UNSTACKED_KINDS.has(def.kind) ? 1 : DEFAULT_STACK;
+src/sim/consuming.ts:61:  return kind === 'food'
+src/sim/combat/paladin_veilbound_march.ts:20:    (aura.kind === 'root' || aura.kind === 'slow') &&
+src/sim/combat/paladin_veilbound_march.ts:151:  if (target.kind === 'player') ctx.playerGrid.update(target);
+src/sim/combat/spell_resist.ts:73:  const mobAttacker = caster.kind === 'mob' && caster.hostile && caster.ownerId === null;
+src/sim/combat/spell_resist.ts:74:  const playerSide = target.kind === 'player' || target.ownerId !== null;
+src/sim/item_budget.ts:157:  if (item.kind === 'furnishing') return undefined;
+src/sim/item_budget.ts:158:  return item.kind === 'held_offhand' && item.occupiesHand === false
+src/sim/combat/priest/vespers.ts:54:    (aura) => aura.id === 'shadow_word_pain' && aura.kind === 'dot' && aura.sourceId === priestId,
+src/sim/combat/priest/vespers.ts:146:  const existing = priest.auras.find((aura) => aura.kind === 'gloomtithe');
+src/sim/combat/priest/vespers.ts:168:  return priest.auras.find((aura) => aura.kind === 'gloomtithe')?.stacks ?? 0;
+src/sim/combat/priest/vespers.ts:202:  const index = priest.auras.findIndex((aura) => aura.kind === 'gloomtithe');
+src/sim/combat/priest/vespers.ts:237:  if (source.kind === 'player') return source;
+src/sim/combat/priest/presentation.ts:46:    else if (aura.id === 'shadow_word_pain' && aura.kind === 'dot') out.dirge = true;
+src/sim/combat/priest/presentation.ts:48:    else if (aura.id === GLOOMTITHE_AURA_ID || aura.kind === 'gloomtithe') {
+src/sim/combat/priest/presentation.ts:67:      (aura.id === GLOOMTITHE_AURA_ID || aura.kind === 'gloomtithe') &&
+src/sim/delves/drowned_litany_boss.ts:131:    if (p && !p.dead && p.kind === 'player') out.push(p);
+src/sim/combat/paladin_talents.ts:68:      aura.kind === 'absorb' &&
+src/sim/combat/paladin_talents.ts:133:  if (outcome.kind === 'healing') {
+src/sim/ember_lilies.ts:103:  }).filter((d) => d.kind === 'rock');
+src/sim/dev_commands.ts:80:      if (entity.kind === 'player' && entity.targetId === id) entity.targetId = null;
+src/sim/dev_commands.ts:651:      const wantSetPiece = kind === 'infernal' || kind === 'citadel';
+src/sim/dev_commands.ts:936:      ((targeted.kind === 'player' && targeted.id !== pid) ||
+src/sim/combat/priest/talents.ts:138:    (aura) => aura.id === 'inner_focus' && aura.kind === 'cast_shield',
+src/sim/delves/drowned_litany_rooms.ts:22:  return kind === 'pressure_plate' || isLitanyPuzzleKind(kind);
+src/sim/delves/drowned_litany_rooms.ts:217:  if (state.kind === 'bell_rope') onBellRopePulled(ctx, run);
+src/sim/delves/drowned_litany_rooms.ts:372:      if (state.kind === 'bell_rope') continue;
+src/sim/combat/rogue_engines.ts:25:  const meta = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+src/sim/combat/rogue_engines.ts:303:  if (p.auras.some((aura) => aura.kind === 'stealth')) return;
+src/sim/combat/rogue_engines.ts:346:  if (p.auras.some((aura) => aura.kind === 'stealth')) return null;
+src/sim/delves/drowned_litany_rite.ts:315:  if (state.kind === 'drowned_reliquary') {
+src/sim/combat/form_swing.ts:55:  for (const a of e.auras) if (a.kind === 'form_cat') return true;
+src/sim/bank.ts:422:    if (b && b.kind === 'npc' && dist2d(e.pos, b.pos) <= BANKER_RANGE) return true;
+src/sim/bank.ts:434:    if (b && b.kind === 'npc' && dist2d(p.pos, b.pos) <= BANKER_RANGE) return b.templateId;
+src/sim/bank.ts:900:    socketBags[i] = typeof id === 'string' && ITEMS[id]?.kind === 'bag' ? id : null;
+src/sim/delves/runs.ts:269:    if (state.kind === 'locked_door') {
+src/sim/delves/runs.ts:287:      state.kind === 'reward_chest' ||
+src/sim/delves/runs.ts:288:      state.kind === 'locked_chest' ||
+src/sim/delves/runs.ts:289:      state.kind === 'drowned_reliquary'
+src/sim/delves/runs.ts:292:    else if (state.kind === 'cracked_grave') solidR = DELVE_GRAVE_SOLID_R;
+src/sim/delves/runs.ts:293:    else if (state.kind === 'destructible_wall') solidR = obj.hp > 0 ? DELVE_WALL_SOLID_R : 0;
+src/sim/delves/runs.ts:1045:  const doors = spawned.filter((s) => s.kind === 'locked_door');
+src/sim/delves/runs.ts:1074:  const maxHp = kind === 'destructible_wall' ? 80 : 1;
+src/sim/delves/runs.ts:1079:  obj.lootable = kind === 'cracked_grave' || kind === 'destructible_wall' || kind === 'module_exit';
+src/sim/delves/runs.ts:1148:    if (run.objectState[id]?.kind === 'module_exit') return ctx.entities.get(id) ?? null;
+src/sim/delves/runs.ts:1537:  if (state.kind === 'cracked_grave') {
+src/sim/delves/runs.ts:1552:  if (state.kind === 'locked_door') {
+src/sim/delves/runs.ts:1563:  if (state.kind === 'destructible_wall') {
+src/sim/delves/runs.ts:1567:  if (state.kind === 'bell_rope') {
+src/sim/delves/runs.ts:1578:  if (state.kind === 'module_exit') {
+src/sim/delves/runs.ts:1605:  if (state.kind === 'drowned_reliquary' && !state.looted && delveHasLiveMobs(ctx, run)) {
+src/sim/delves/runs.ts:1611:  if (state.kind === 'locked_chest') {
+src/sim/delves/runs.ts:1651:  if (state.kind === 'reward_chest') {
+src/sim/delves/runs.ts:1676:  if (state.kind === 'surface_exit') {
+src/sim/delves/runs.ts:1714:  if (state.kind === 'drowned_reliquary') {
+src/sim/material_gatherer.ts:177:  if (identity === undefined || identity.kind === 'character') return undefined;
+src/sim/material_gatherer.ts:202:  return identity.kind === 'character'
+src/sim/unstuck.ts:215:    p.auras.some((aura) => aura.id === 'fear_incap' && aura.kind === 'incapacitate')
+src/sim/unstuck.ts:412:  if (pending.area.kind === 'battleground' && bgCarryingFlag(ctx, p.id)) return 'state_changed';
+src/sim/unstuck.ts:510:    pending.area.kind === 'battleground' ? completeBattlegroundUnstuck(ctx, meta, p) : null;
+src/sim/corpse_interaction.ts:19:    mob.kind === 'mob' &&
+src/sim/mounts.ts:62:      if (def.kind === 'mount') mountItemIds.set(def.mount, def.id);
+src/sim/mounts.ts:90:    if (def?.kind === 'mount') owned.add(def.mount);
+src/sim/materials_vault.ts:651:      if (outcome.kind === 'refused') return;
+src/sim/materials_vault.ts:652:      if (outcome.kind === 'full') {
+src/ui/hud/action_bar/consumable_strip_gesture_controller.ts:60:  return outcome.kind === 'use' ? { kind: 'pick', index: outcome.index } : { kind: 'cancel' };
+src/sim/item_storage_rules.ts:5:  if (kind === 'furnishing') return true;
+src/sim/types.ts:925:  return !!e && e.kind === 'player' && e.skinCatalog === 'mech';
+src/sim/types.ts:4930:  // cached `auras.some(a => a.kind === 'stealth')`, refreshed in updateAuras.
+src/sim/types.ts:8652:    if (aura.kind === 'buff_rage_gen') mult += aura.value;
+src/sim/types.ts:8653:    else if (aura.kind === 'buff_reckless') mult += RECKLESSNESS_RAGE_GEN;
+src/sim/types.ts:8654:    else if (aura.kind === 'battle_stance') mult += STANCE_RAGE_GEN;
+src/sim/types.ts:8660:  return e.auras.some((aura) => aura.kind === 'berserker_stance') ? BERSERKER_CRIT_DAMAGE : 0;
+src/sim/types.ts:8716:  const mobAttacker = attacker.kind === 'mob' && attacker.hostile && attacker.ownerId === null;
+src/sim/types.ts:8717:  const playerSide = target.kind === 'player' || target.ownerId !== null;
+src/sim/types.ts:8762:  const mobAttacker = attacker.kind === 'mob' && attacker.hostile && attacker.ownerId === null;
+src/sim/types.ts:8763:  const playerSide = target.kind === 'player' || target.ownerId !== null;
+src/sim/types.ts:9019:  // Lockpick chest gating (kind === 'locked_chest'). attemptAvailable is granted
+src/sim/types.ts:9029:  // Drowned Reliquary loot (kind === 'drowned_reliquary'): each party member rolls
+src/sim/social/dungeon_finder.ts:528:      { raid: activity.kind === 'raid' },
+src/sim/social/dungeon_finder.ts:761:      { raid: activity.kind === 'raid' },
+src/sim/social/yumi.ts:60:  return e.kind === 'mob' && e.templateId === YUMI_TEMPLATE_ID;
+src/sim/colliders.ts:232:  if (s.kind === 'cone' || c.type === 'circle') {
+src/sim/colliders.ts:390:    if (b.kind === 'chapel' && b.assetId === undefined) {
+src/sim/colliders.ts:1653:  if (d.kind === 'rock') {
+src/sim/material_derivation.ts:110:  return readonlySetView([...sources].filter((id) => tables.items[id]?.kind === 'junk'));
+src/sim/dev/bis_gear.ts:30:  if (item.kind === 'weapon' && item.weapon) {
+src/sim/dev/bis_gear.ts:53:      (item.kind === 'armor' || item.kind === 'weapon') &&
+src/sim/dev/bis_gear.ts:69:        (item) => item.kind === 'weapon' && item.weapon?.dagger === true,
+src/sim/social/chat_readouts.ts:319:      a.kind === 'battle_stance' ||
+src/sim/social/chat_readouts.ts:320:      a.kind === 'berserker_stance' ||
+src/sim/social/chat_readouts.ts:321:      a.kind === 'defensive_stance' ||
+src/sim/social/chat_readouts.ts:322:      a.kind === 'stealth',
+src/sim/social/chat_readouts.ts:325:  if (form.kind === 'stealth') return 'You are stealthed.';
+src/sim/social/chat_readouts.ts:390:  const kind = t.kind === 'player' ? 'player' : t.ownerId !== null ? 'pet' : 'mob';
+src/sim/social/chat_readouts.ts:542:  if (e.kind === 'player') return `${e.name} (player, ${yd})`;
+src/sim/social/chat_readouts.ts:543:  const kind = e.kind === 'mob' && e.ownerId !== null ? 'pet' : e.kind;
+src/sim/social/chat_readouts.ts:553:    if (e.id === self.id || e.kind === 'object' || e.hp <= 0) continue;
+src/sim/social/chat_readouts.ts:638:    const verb = c.kind === 'food' ? 'eating' : 'drinking';
+src/sim/set_bonus_mods.ts:39:    if (item?.kind === 'furnishing') continue;
+src/sim/dev/cascade_playtest.ts:70:    const echo = t.auras.find((a) => a.kind === 'temporal_echo' && a.sourceId === caster.id);
+src/sim/vendor_buy_stack.ts:97:  if (def.kind === 'furnishing') return forcedByFlags;
+src/sim/vendor_buy_stack.ts:98:  return def.kind === 'mount' || forcedByFlags;
+src/sim/quest_targets.ts:511:      if (kind === 'none' || kind === 'active') continue;
+src/sim/guild_bank.ts:870:    if (move.value !== null && move.value.kind === 'exact') {
+src/sim/social/chat.ts:450:    if (res.kind === 'error') {
+src/sim/market.ts:357:      if (m && m.kind === 'npc' && dist2d(e.pos, m.pos) <= MARKET_RANGE) return true;
+src/sim/social/battleground.ts:1710:  const attackerId = source.kind === 'player' ? source.id : (source.ownerId ?? -1);
+src/sim/social/battleground.ts:1738:  const healerId = source.kind === 'player' ? source.id : (source.ownerId ?? -1);
+src/sim/social/battleground.ts:1767:    killer?.kind === 'player'
+src/sim/encounters/quest_summon.ts:29:      e.kind === 'mob' &&
+src/sim/encounters/quest_summon.ts:52:  if (owner && owner.kind === 'player' && !owner.dead) ctx.aggroMob(mob, owner, false);
+src/sim/encounters/varkhul.ts:2121:    if (blocker?.kind === 'player' && !blocker.dead) {
+src/sim/encounters/varkhul.ts:2789:      if (player?.kind === 'player' && meta) resetLongCooldownsForRaidWipe(player, meta.known);
+src/sim/item_level.ts:354:  if (item.kind === 'furnishing') return false;
+src/sim/item_level.ts:356:    !!item.slot && (item.kind === 'armor' || item.kind === 'weapon' || item.kind === 'held_offhand')
+src/sim/item_level.ts:393:  return item.kind === 'weapon' && item.hand === 'twohand'
+src/sim/item_level.ts:400:  if (item.kind === 'furnishing') return 0;
+src/sim/item_level.ts:410:  if (item.kind === 'furnishing') return 0;
+src/sim/instances/card_master.ts:14:      e.kind === 'npc' &&
+src/sim/instances/crucible_vendor.ts:24:      e.kind === 'npc' &&
+src/sim/deeds.ts:597:  const pid = ent ? (ent.kind === 'player' ? ent.id : ent.ownerId) : entityId;
+src/sim/deeds.ts:748:    id = def.kind === 'furnishing' ? undefined : def.heroicOf;
+src/sim/deeds.ts:798:  if (def.reward?.kind === 'title' && isHorizonsTitleDeed(deedId)) {
+src/sim/deeds.ts:1275:    if (ent && ent.kind === 'mob' && !ent.dead && ent.templateId === THUNZHARR_ID) {
+src/sim/deeds.ts:1531:  if (source.kind === 'player' && source.id !== target.id) {
+src/sim/deeds.ts:1534:      if (target.kind === 'mob' && MOBS[target.templateId]?.dummy === true) {
+src/sim/deeds.ts:1540:        if (crit && kind === 'hit' && amount > 0) bumpDeedStat(ctx, meta, 'crits', 1);
+src/sim/deeds.ts:1544:  if (target.kind === 'mob' && PARTICIPANT_TRACKED.has(target.templateId) && amount > 0) {
+src/sim/deeds.ts:1545:    const pid = source.kind === 'player' ? source.id : source.ownerId;
+src/sim/deeds.ts:1769:  const killerPid = killer ? (killer.kind === 'player' ? killer.id : killer.ownerId) : null;
+src/sim/equipment_rules.ts:53:  return item?.kind === 'armor' && item.slot === 'offhand' && item.shield === true;
+src/sim/equipment_rules.ts:64:  if (item.kind === 'furnishing') return null;
+src/sim/equipment_rules.ts:80:  if (item.kind === 'furnishing') return false;
+src/sim/equipment_rules.ts:83:  if (item.kind === 'weapon' && slot === 'offhand') return weaponHand(item) !== 'mainhand';
+src/sim/equipment_rules.ts:109:  if (item.kind === 'furnishing') return false;
+src/sim/equipment_rules.ts:304:  if (item.kind === 'furnishing' || !item.masterwrought) return null;
+src/sim/equipment_rules.ts:311:    if (!def || def.kind === 'furnishing' || !def.masterwrought) continue;
+src/sim/equipment_rules.ts:356:    const titanPair = item.kind === 'weapon' && canDualWieldTwoHand(cls, spec);
+src/sim/equipment_rules.ts:357:    if (mainhand?.kind === 'weapon' && weaponHand(mainhand) === 'twohand' && !titanPair) {
+src/sim/equipment_rules.ts:362:  if (slot === 'mainhand' && item.kind === 'weapon' && weaponHand(item) === 'twohand') {
+src/sim/equipment_rules.ts:365:    const titanPair = offhand?.kind === 'weapon' && canDualWieldTwoHand(cls, spec);
+src/sim/equipment_rules.ts:419:  if (item.kind === 'furnishing') return false;
+src/sim/equipment_rules.ts:425:  if (item.kind === 'held_offhand') {
+src/sim/equipment_rules.ts:433:  if (cls === 'rogue' && item.kind === 'weapon' && weaponHand(item) === 'twohand') {
+src/sim/equipment_rules.ts:451:  if (item.kind === 'armor') {
+src/sim/instances/heroic_vendor.ts:23:      e.kind === 'npc' &&
+src/ui/hud/action_bar/action_bar_controller.ts:349:    if (item?.kind === 'furnishing') return false;
+src/ui/hud/action_bar/action_bar_controller.ts:351:      item?.kind === 'food' ||
+src/ui/hud/action_bar/action_bar_controller.ts:352:      item?.kind === 'drink' ||
+src/ui/hud/action_bar/action_bar_controller.ts:353:      item?.kind === 'potion' ||
+src/ui/hud/action_bar/action_bar_controller.ts:354:      item?.kind === 'mount' ||
+src/sim/encounters/nythraxis.ts:171:      e.kind === 'mob' &&
+src/sim/encounters/nythraxis.ts:183:  return kind === 'slow' || ctx.isControlAura(kind);
+src/sim/encounters/nythraxis.ts:188:    target.kind === 'mob' &&
+src/sim/encounters/nythraxis.ts:199:    target.kind === 'mob' &&
+src/sim/encounters/nythraxis.ts:220:  return target && !target.dead && target.kind === 'player' ? target : null;
+src/sim/encounters/nythraxis.ts:316:    if (player?.kind === 'player' && meta) resetLongCooldownsForRaidWipe(player, meta.known);
+src/sim/encounters/nythraxis.ts:359:    const next = top && !top.dead && top.kind === 'player' ? top : room[0];
+src/sim/encounters/nythraxis.ts:572:      (e.kind === 'player' ||
+src/sim/encounters/nythraxis.ts:573:        (e.kind === 'mob' && (isNythraxisRaidAddTemplate(e.templateId) || e.ownerId !== null))) &&
+src/sim/encounters/nythraxis.ts:809:    if (victim && !victim.dead && victim.kind === 'player') {
+src/sim/encounters/nythraxis.ts:883:    if (victim && !victim.dead && victim.kind === 'player') {
+src/sim/encounters/nythraxis.ts:962:          aura.kind === 'stun' &&
+src/sim/encounters/nythraxis.ts:972:    const ghostDisplay = e.kind === 'player' && e.dead && e.ghost ? [e.hp, e.resource] : null;
+src/sim/encounters/nythraxis.ts:1123:    .filter((e): e is Entity => !!e && e.kind === 'player' && !e.dead);
+src/sim/encounters/nythraxis.ts:1367:      e.kind === 'object' &&
+src/sim/encounters/nythraxis.ts:1387:      e.kind === 'mob' &&
+src/sim/encounters/nythraxis.ts:1604:    (e) => e.kind === 'mob' && e.templateId === templateId && !e.dead && dist2d(e.pos, pos) < 10,
+src/sim/encounters/ignivar.ts:1620:      if (player?.kind === 'player' && meta) resetLongCooldownsForRaidWipe(player, meta.known);
+src/sim/interaction.ts:391:      if (e.kind === 'npc' && e.templateId === SPIRIT_HEALER_NPC_ID && d2 < bestHealerD2) {
+src/sim/interaction.ts:408:      if (target.kind === 'mob' && target.lootable) {
+src/sim/interaction.ts:416:      if (target.kind === 'object' && target.lootable) {
+src/sim/interaction.ts:454:      if (target.kind === 'npc' && ctx.bankerIds.includes(target.id)) {
+src/sim/interaction.ts:477:      e.kind === 'mob' &&
+src/sim/interaction.ts:486:      e.kind === 'object' &&
+src/ui/hud/warlock/doom_meter_view.ts:28:    (aura) => aura.sourceId === sourceId && aura.kind === 'affliction_fate_threads',
+src/ui/hud/warlock/doom_meter_view.ts:41:  const aura = input.auras.find((candidate) => candidate.kind === 'affliction_doom');
+src/ui/hud/action_bar/radial_gesture_controller.ts:332:    if (this.press(true, 'outside').kind === 'dismiss') {
+src/ui/hud/action_bar/radial_gesture_controller.ts:396:    if (press.kind === 'open') {
+src/ui/hud/action_bar/radial_gesture_controller.ts:402:    if (press.kind === 'dismiss') {
+src/ui/hud/action_bar/radial_gesture_controller.ts:411:    if (press.kind === 'gesture') {
+src/ui/hud/action_bar/radial_gesture_controller.ts:419:      if (outcome.kind === 'cast') this.deps.cast(buttonIndex, outcome.direction);
+src/ui/hud/action_bar/radial_gesture_controller.ts:420:      else if (outcome.kind === 'open') this.openSticky(buttonIndex);
+src/ui/hud/action_bar/radial_gesture_controller.ts:592:    if (outcome.kind === 'cast') this.deps.cast(buttonIndex, outcome.direction);
+src/ui/hud/action_bar/radial_gesture_controller.ts:596:    else if (outcome.kind === 'open') {
+src/ui/hud/action_bar/radial_gesture_controller.ts:599:    } else if (outcome.kind === 'cancel') this.deps.onCancel();
+src/ui/hud/action_bar/action_bar_view.ts:388:    if (aura.kind === 'internal_cd' && aura.empowerAbilities?.includes(abilityId)) {
+src/ui/hud/action_bar/action_bar_view.ts:428:        if (aura.kind === 'soul_fragments') {
+src/ui/hud/action_bar/action_bar_view.ts:526:          const potionCd = item.kind === 'potion' ? player.potionCdRemaining : 0;
+src/ui/hud/action_bar/action_bar_view.ts:670:            (aura) => aura.sourceId === player.id && aura.kind === 'affliction_eye',
+src/ui/hud/rift/rift_map_core.ts:504:    semantic?.kind === 'rift-descent' ||
+src/ui/hud/rift/rift_map_core.ts:505:    semantic?.kind === 'rift-return' ||
+src/ui/hud/rift/rift_map_core.ts:506:    semantic?.kind === 'rift-reward' ||
+src/ui/hud/rift/rift_map_core.ts:507:    semantic?.kind === 'rift-mechanic'
+src/ui/hud/rift/rift_map_core.ts:690:        if (entity.kind === 'object') {
+src/ui/hud/rift/rift_map_core.ts:694:          !(entity.kind === 'mob' && entity.hostile && (!entity.dead || entity.lootable))
+src/ui/hud/rift/rift_map_painter.ts:198:  if (semantic.kind === 'rift-descent') {
+src/ui/hud/rift/rift_map_painter.ts:208:  if (semantic.kind === 'rift-return') {
+src/ui/hud/rift/rift_map_painter.ts:219:  if (semantic.kind === 'rift-reward') {

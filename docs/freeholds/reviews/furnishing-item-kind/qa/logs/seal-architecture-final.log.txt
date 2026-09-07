@@ -1,0 +1,13 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+(node:67845) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  3 passed (3)
+      Tests  167 passed (167)
+   Start at  06:01:19
+   Duration  3.62s (transform 1.99s, setup 582ms, import 3.32s, tests 2.02s, environment 0ms)

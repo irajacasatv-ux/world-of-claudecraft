@@ -1,0 +1,1005 @@
+{
+  "gameUrl": "http://127.0.0.1:5189",
+  "expectFixed": false,
+  "browserPath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "variants": [
+    {
+      "variant": {
+        "key": "desktop",
+        "width": 1600,
+        "height": 900,
+        "mobile": false
+      },
+      "injected": {
+        "furnishing": {
+          "id": "probe_furnishing_qa_late_ui",
+          "name": "Screenshot Test Furnishing",
+          "kind": "furnishing",
+          "quality": "rare",
+          "sellValue": 25,
+          "masterwrought": true,
+          "set": "probe_furnishing_visual_set",
+          "furnishing": {
+            "footprint": {
+              "width": 2,
+              "depth": 3
+            },
+            "r": 0,
+            "decorCost": 7,
+            "surface": "floor"
+          }
+        },
+        "gearId": "duskforged_warblade",
+        "gearName": "Duskforged Warblade",
+        "badCopy": {
+          "name": "Forged Furnishing Name",
+          "signer": "Testmaker",
+          "rolled": {
+            "quality": "legendary",
+            "stats": {
+              "str": 999
+            },
+            "masterwork": true
+          },
+          "enchant": "enchant_chest_stamina",
+          "perfected": true
+        },
+        "gearCopy": {
+          "name": "Control Blade",
+          "rolled": {
+            "quality": "legendary"
+          }
+        },
+        "source": "In-memory malformed inventory, loaded ledger and SDK read fixtures; actual client painters"
+      },
+      "captures": [
+        {
+          "name": "exchange-browse",
+          "furnishing": {
+            "text": "",
+            "iconClass": "wm-icon item-icon q-legendary",
+            "accessibleName": "View the listing for Screenshot Test Furnishing",
+            "name": "Screenshot Test Furnishing"
+          },
+          "controlLegendary": true,
+          "target": {
+            "bounds": {
+              "x": 102,
+              "y": 343.25,
+              "width": 183.109375,
+              "height": 40,
+              "top": 343.25,
+              "right": 285.109375,
+              "bottom": 383.25,
+              "left": 102
+            },
+            "text": "Screenshot Test Furnishing"
+          },
+          "bounds": {
+            "scrolling": [],
+            "x": 80,
+            "y": 90,
+            "right": 1520,
+            "bottom": 831,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "desktop-exchange-browse.png",
+            "desktop-exchange-browse-detail.png"
+          ]
+        },
+        {
+          "name": "exchange-sell",
+          "furnishing": {
+            "text": "Screenshot Test Furnishing",
+            "iconClass": "wm-combo-icon item-icon q-legendary",
+            "accessibleName": null
+          },
+          "controlLegendary": true,
+          "target": {
+            "bounds": {
+              "x": 95,
+              "y": 349,
+              "width": 518,
+              "height": 40,
+              "top": 349,
+              "right": 613,
+              "bottom": 389,
+              "left": 95
+            },
+            "text": "Screenshot Test Furnishing"
+          },
+          "bounds": {
+            "scrolling": [],
+            "x": 80,
+            "y": 90,
+            "right": 1520,
+            "bottom": 831,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "desktop-exchange-sell.png",
+            "desktop-exchange-sell-detail.png"
+          ]
+        },
+        {
+          "name": "exchange-furnishing-card",
+          "lines": [
+            "Screenshot Test Furnishing",
+            "Rare Furnishing",
+            "Footprint: 2 by 3 cells.",
+            "Decor cost: 7.",
+            "Placed on the floor.",
+            "Made by Testmaker.",
+            "Sell price: 25c"
+          ],
+          "text": "Screenshot Test FurnishingRare FurnishingFootprint: 2 by 3 cells.Decor cost: 7.Placed on the floor.Made by Testmaker.Sell price: 25c",
+          "events": [
+            {
+              "type": "mouseenter",
+              "trusted": true,
+              "pointerType": null
+            }
+          ],
+          "html": "<div class=\"tt-title\" style=\"color:#0070dd\">Screenshot Test Furnishing</div><div class=\"tt-sub\">Rare Furnishing</div><div class=\"tt-desc\">Footprint: 2 by 3 cells.</div><div class=\"tt-desc\">Decor cost: 7.</div><div class=\"tt-desc\">Placed on the floor.</div><div class=\"tt-desc\">Made by Testmaker.</div><div class=\"tt-sub\">Sell price: 25c</div>",
+          "bounds": {
+            "scrolling": [],
+            "x": 131,
+            "y": 201,
+            "right": 356.421875,
+            "bottom": 359.25,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "desktop-exchange-furnishing-card.png",
+            "desktop-exchange-furnishing-card-detail.png"
+          ]
+        },
+        {
+          "name": "market-collect",
+          "names": [
+            "Forged Furnishing Name",
+            "Control Blade"
+          ],
+          "buyers": [
+            "Sold to Buyer",
+            "Sold to Buyer"
+          ],
+          "displayedText": "The World Market the Merchant's exchangeBrowseSellCollect (1)Earnings and returned goods the Merchant is holding for you.Sale proceeds28silver50copperForged Furnishing NameSold to Buyer9silver50copperControl BladeSold to Buyer19silver0copperCollect All",
+          "target": {
+            "bounds": {
+              "x": 34,
+              "y": 245.671875,
+              "width": 742,
+              "height": 49,
+              "top": 245.671875,
+              "right": 776,
+              "bottom": 294.671875,
+              "left": 34
+            },
+            "text": "Forged Furnishing NameSold to Buyer9silver50copper"
+          },
+          "bounds": {
+            "scrolling": [],
+            "x": 8,
+            "y": 90,
+            "right": 792,
+            "bottom": 730,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [
+              ".perf-nudge-dismiss"
+            ],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 2,
+            "noticeAttempts": [
+              {
+                "attempt": 1,
+                "dismissedThroughButton": [],
+                "visibleBeforeScreenshot": false,
+                "rejected": [
+                  "desktop-market-collect-rejected-1-full.png"
+                ],
+                "reason": "notice appeared during full screenshot"
+              }
+            ]
+          },
+          "screenshots": [
+            "desktop-market-collect.png",
+            "desktop-market-collect-detail.png"
+          ]
+        },
+        {
+          "name": "paperdoll-cap",
+          "value": "2 / 2",
+          "furnishingChip": true,
+          "controlChip": true,
+          "chestName": "Screenshot Test Furnishing",
+          "target": {
+            "bounds": {
+              "x": 618.59375,
+              "y": 561,
+              "width": 20.375,
+              "height": 16,
+              "top": 561,
+              "right": 638.96875,
+              "bottom": 577,
+              "left": 618.59375
+            },
+            "text": "2 / 2"
+          },
+          "bounds": {
+            "scrolling": [],
+            "x": 430,
+            "y": 90,
+            "right": 1170,
+            "bottom": 831,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "desktop-paperdoll-cap.png",
+            "desktop-paperdoll-cap-detail.png"
+          ]
+        },
+        {
+          "name": "paperdoll-chest",
+          "value": "2 / 2",
+          "furnishingChip": true,
+          "controlChip": true,
+          "chestName": "Screenshot Test Furnishing",
+          "target": {
+            "bounds": {
+              "x": 444,
+              "y": 380,
+              "width": 183,
+              "height": 44,
+              "top": 380,
+              "right": 627,
+              "bottom": 424,
+              "left": 444
+            },
+            "text": "Chest Screenshot Test Furnishing"
+          },
+          "bounds": {
+            "scrolling": [],
+            "x": 430,
+            "y": 90,
+            "right": 1170,
+            "bottom": 831,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "desktop-paperdoll-chest.png",
+            "desktop-paperdoll-chest-detail.png"
+          ]
+        },
+        {
+          "name": "paperdoll-furnishing-card",
+          "lines": [
+            "Screenshot Test Furnishing",
+            "Rare Furnishing",
+            "Footprint: 2 by 3 cells.",
+            "Decor cost: 7.",
+            "Placed on the floor.",
+            "Made by Testmaker.",
+            "Sell price: 25c",
+            "Occupies a Masterwrought slot (2 of 2 in use).",
+            "Click ×, right-click, or drag to bags to unequip"
+          ],
+          "text": "Screenshot Test FurnishingRare FurnishingFootprint: 2 by 3 cells.Decor cost: 7.Placed on the floor.Made by Testmaker.Sell price: 25cOccupies a Masterwrought slot (2 of 2 in use).Click ×, right-click, or drag to bags to unequip",
+          "events": [
+            {
+              "type": "mouseenter",
+              "trusted": true,
+              "pointerType": null
+            },
+            {
+              "type": "mouseenter",
+              "trusted": true,
+              "pointerType": null
+            }
+          ],
+          "html": "<div class=\"tt-title\" style=\"color:#0070dd\">Screenshot Test Furnishing</div><div class=\"tt-sub\">Rare Furnishing</div><div class=\"tt-desc\">Footprint: 2 by 3 cells.</div><div class=\"tt-desc\">Decor cost: 7.</div><div class=\"tt-desc\">Placed on the floor.</div><div class=\"tt-desc\">Made by Testmaker.</div><div class=\"tt-sub\">Sell price: 25c</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Occupies a Masterwrought slot (2 of 2 in use).</div><div class=\"tt-sub\">Click ×, right-click, or drag to bags to unequip</div>",
+          "bounds": {
+            "scrolling": [],
+            "x": 480,
+            "y": 201,
+            "right": 705.421875,
+            "bottom": 392.25,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "desktop-paperdoll-furnishing-card.png",
+            "desktop-paperdoll-furnishing-card-detail.png"
+          ]
+        },
+        {
+          "name": "paperdoll-control-card",
+          "lines": [
+            "Duskforged Warblade",
+            "Epic Weapon",
+            "Sword",
+            "Main Hand",
+            "Unique-Equipped: Masterwrought (2)",
+            "All 2 of your Masterwrought slots are in use.",
+            "30 - 50 Damage Speed 2.5",
+            "(16.0 damage per second)",
+            "+13 Strength",
+            "+9 Stamina",
+            "+50 Hit Rating",
+            "Classes: Warrior, Paladin, Shaman",
+            "Requires Level 20",
+            "Sell price: 3s 20c",
+            "Occupies a Masterwrought slot (2 of 2 in use).",
+            "Click ×, right-click, or drag to bags to unequip"
+          ],
+          "text": "Duskforged WarbladeEpic WeaponSwordMain HandUnique-Equipped: Masterwrought (2)All 2 of your Masterwrought slots are in use.30 - 50 Damage Speed 2.5(16.0 damage per second)+13 Strength+9 Stamina+50 Hit RatingClasses: Warrior, Paladin, ShamanRequires Level 20Sell price: 3s 20cOccupies a Masterwrought slot (2 of 2 in use).Click ×, right-click, or drag to bags to unequip",
+          "events": [
+            {
+              "type": "mouseenter",
+              "trusted": true,
+              "pointerType": null
+            },
+            {
+              "type": "mouseenter",
+              "trusted": true,
+              "pointerType": null
+            }
+          ],
+          "html": "<div class=\"tt-title\" style=\"color:#a335ee\">Duskforged Warblade</div><div class=\"tt-sub\">Epic Weapon</div><div class=\"tt-sub tt-weapon-type\">Sword</div><div class=\"tt-sub\">Main Hand</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Unique-Equipped: Masterwrought (2)</div><div class=\"tt-sub\" style=\"color:var(--gold)\">All 2 of your Masterwrought slots are in use.</div><div class=\"tt-stat\">30 - 50 Damage Speed 2.5</div><div class=\"tt-stat\">(16.0 damage per second)</div><div class=\"tt-green\">+13 Strength</div><div class=\"tt-green\">+9 Stamina</div><div class=\"tt-green\">+50 Hit Rating</div><div class=\"tt-sub\">Classes: Warrior, Paladin, Shaman</div><div class=\"tt-red\">Requires Level 20</div><div class=\"tt-sub\">Sell price: 3s 20c</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Occupies a Masterwrought slot (2 of 2 in use).</div><div class=\"tt-sub\">Click ×, right-click, or drag to bags to unequip</div>",
+          "bounds": {
+            "scrolling": [],
+            "x": 480,
+            "y": 159,
+            "right": 694.828125,
+            "bottom": 451.25,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "desktop-paperdoll-control-card.png",
+            "desktop-paperdoll-control-card-detail.png"
+          ]
+        }
+      ],
+      "readCalls": [
+        {
+          "method": "status",
+          "args": []
+        },
+        {
+          "method": "browse",
+          "args": [
+            {
+              "page": 0,
+              "quality": null,
+              "format": null,
+              "category": null,
+              "subcategory": null,
+              "itemIds": null,
+              "sort": "ending"
+            }
+          ]
+        },
+        {
+          "method": "me",
+          "args": []
+        },
+        {
+          "method": "browse",
+          "args": [
+            {
+              "page": 0,
+              "quality": null,
+              "format": null,
+              "category": null,
+              "subcategory": null,
+              "itemIds": null,
+              "sort": "ending"
+            }
+          ]
+        },
+        {
+          "method": "me",
+          "args": []
+        }
+      ]
+    },
+    {
+      "variant": {
+        "key": "mobile-landscape",
+        "width": 844,
+        "height": 390,
+        "mobile": true
+      },
+      "injected": {
+        "furnishing": {
+          "id": "probe_furnishing_qa_late_ui",
+          "name": "Screenshot Test Furnishing",
+          "kind": "furnishing",
+          "quality": "rare",
+          "sellValue": 25,
+          "masterwrought": true,
+          "set": "probe_furnishing_visual_set",
+          "furnishing": {
+            "footprint": {
+              "width": 2,
+              "depth": 3
+            },
+            "r": 0,
+            "decorCost": 7,
+            "surface": "floor"
+          }
+        },
+        "gearId": "duskforged_warblade",
+        "gearName": "Duskforged Warblade",
+        "badCopy": {
+          "name": "Forged Furnishing Name",
+          "signer": "Testmaker",
+          "rolled": {
+            "quality": "legendary",
+            "stats": {
+              "str": 999
+            },
+            "masterwork": true
+          },
+          "enchant": "enchant_chest_stamina",
+          "perfected": true
+        },
+        "gearCopy": {
+          "name": "Control Blade",
+          "rolled": {
+            "quality": "legendary"
+          }
+        },
+        "source": "In-memory malformed inventory, loaded ledger and SDK read fixtures; actual client painters"
+      },
+      "captures": [
+        {
+          "name": "exchange-browse",
+          "furnishing": {
+            "text": "",
+            "iconClass": "wm-icon item-icon q-legendary",
+            "accessibleName": "View the listing for Screenshot Test Furnishing",
+            "name": "Screenshot Test Furnishing"
+          },
+          "controlLegendary": true,
+          "target": {
+            "bounds": {
+              "x": 32,
+              "y": 272.25,
+              "width": 183.109375,
+              "height": 40,
+              "top": 272.25,
+              "right": 215.109375,
+              "bottom": 312.25,
+              "left": 32
+            },
+            "text": "Screenshot Test Furnishing"
+          },
+          "bounds": {
+            "scrolling": [
+              {
+                "tag": "DIV",
+                "className": "wm-body window-fill",
+                "scrollTop": 111,
+                "scrollLeft": 0
+              }
+            ],
+            "x": 10,
+            "y": 10,
+            "right": 834,
+            "bottom": 380,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "mobile-landscape-exchange-browse.png",
+            "mobile-landscape-exchange-browse-detail.png"
+          ]
+        },
+        {
+          "name": "exchange-sell",
+          "furnishing": {
+            "text": "Screenshot Test Furnishing",
+            "iconClass": "wm-combo-icon item-icon q-legendary",
+            "accessibleName": null
+          },
+          "controlLegendary": true,
+          "target": {
+            "bounds": {
+              "x": 25,
+              "y": 268,
+              "width": 518,
+              "height": 44,
+              "top": 268,
+              "right": 543,
+              "bottom": 312,
+              "left": 25
+            },
+            "text": "Screenshot Test Furnishing"
+          },
+          "bounds": {
+            "scrolling": [
+              {
+                "tag": "DIV",
+                "className": "wm-body window-fill",
+                "scrollTop": 63,
+                "scrollLeft": 0
+              }
+            ],
+            "x": 10,
+            "y": 10,
+            "right": 834,
+            "bottom": 380,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "mobile-landscape-exchange-sell.png",
+            "mobile-landscape-exchange-sell-detail.png"
+          ]
+        },
+        {
+          "name": "exchange-furnishing-card",
+          "lines": [
+            "Screenshot Test Furnishing",
+            "Rare Furnishing",
+            "Footprint: 2 by 3 cells.",
+            "Decor cost: 7.",
+            "Placed on the floor.",
+            "Made by Testmaker.",
+            "Sell price: 25c"
+          ],
+          "text": "Screenshot Test FurnishingRare FurnishingFootprint: 2 by 3 cells.Decor cost: 7.Placed on the floor.Made by Testmaker.Sell price: 25c",
+          "events": [
+            {
+              "type": "pointerdown",
+              "trusted": true,
+              "pointerType": "touch"
+            }
+          ],
+          "html": "<div class=\"tt-title\" style=\"color:#0070dd\">Screenshot Test Furnishing</div><div class=\"tt-sub\">Rare Furnishing</div><div class=\"tt-desc\">Footprint: 2 by 3 cells.</div><div class=\"tt-desc\">Decor cost: 7.</div><div class=\"tt-desc\">Placed on the floor.</div><div class=\"tt-desc\">Made by Testmaker.</div><div class=\"tt-sub\">Sell price: 25c</div>",
+          "bounds": {
+            "scrolling": [],
+            "x": 61,
+            "y": 122,
+            "right": 286.421875,
+            "bottom": 280.25,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "mobile-landscape-exchange-furnishing-card.png",
+            "mobile-landscape-exchange-furnishing-card-detail.png"
+          ]
+        },
+        {
+          "name": "market-collect",
+          "names": [
+            "Forged Furnishing Name",
+            "Control Blade"
+          ],
+          "buyers": [
+            "Sold to Buyer",
+            "Sold to Buyer"
+          ],
+          "displayedText": "The World Market the Merchant's exchangeBrowseSellCollect (1)Earnings and returned goods the Merchant is holding for you.Sale proceeds28silver50copperForged Furnishing NameSold to Buyer9silver50copperControl BladeSold to Buyer19silver0copperCollect All",
+          "target": {
+            "bounds": {
+              "x": 36,
+              "y": 184.671875,
+              "width": 371,
+              "height": 49,
+              "top": 184.671875,
+              "right": 407,
+              "bottom": 233.671875,
+              "left": 36
+            },
+            "text": "Forged Furnishing NameSold to Buyer9silver50copper"
+          },
+          "bounds": {
+            "scrolling": [],
+            "x": 10,
+            "y": 10,
+            "right": 422,
+            "bottom": 318,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "mobile-landscape-market-collect.png",
+            "mobile-landscape-market-collect-detail.png"
+          ]
+        },
+        {
+          "name": "paperdoll-cap",
+          "value": "2 / 2",
+          "furnishingChip": true,
+          "controlChip": true,
+          "chestName": "Screenshot Test Furnishing",
+          "target": {
+            "bounds": {
+              "x": 186.59375,
+              "y": 372,
+              "width": 20.375,
+              "height": 16,
+              "top": 372,
+              "right": 206.96875,
+              "bottom": 388,
+              "left": 186.59375
+            },
+            "text": "2 / 2"
+          },
+          "bounds": {
+            "scrolling": [],
+            "x": 0,
+            "y": 0,
+            "right": 844,
+            "bottom": 390,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "mobile-landscape-paperdoll-cap.png",
+            "mobile-landscape-paperdoll-cap-detail.png"
+          ]
+        },
+        {
+          "name": "paperdoll-chest",
+          "value": "2 / 2",
+          "furnishingChip": true,
+          "controlChip": true,
+          "chestName": "Screenshot Test Furnishing",
+          "target": {
+            "bounds": {
+              "x": 14,
+              "y": 227,
+              "width": 279,
+              "height": 38,
+              "top": 227,
+              "right": 293,
+              "bottom": 265,
+              "left": 14
+            },
+            "text": "Chest Screenshot Test Furnishing"
+          },
+          "bounds": {
+            "scrolling": [],
+            "x": 0,
+            "y": 0,
+            "right": 844,
+            "bottom": 390,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "mobile-landscape-paperdoll-chest.png",
+            "mobile-landscape-paperdoll-chest-detail.png"
+          ]
+        },
+        {
+          "name": "paperdoll-furnishing-card",
+          "lines": [
+            "Screenshot Test Furnishing",
+            "Rare Furnishing",
+            "Footprint: 2 by 3 cells.",
+            "Decor cost: 7.",
+            "Placed on the floor.",
+            "Made by Testmaker.",
+            "Sell price: 25c",
+            "Occupies a Masterwrought slot (2 of 2 in use).",
+            "Click ×, right-click, or drag to bags to unequip"
+          ],
+          "text": "Screenshot Test FurnishingRare FurnishingFootprint: 2 by 3 cells.Decor cost: 7.Placed on the floor.Made by Testmaker.Sell price: 25cOccupies a Masterwrought slot (2 of 2 in use).Click ×, right-click, or drag to bags to unequip",
+          "events": [
+            {
+              "type": "pointerdown",
+              "trusted": true,
+              "pointerType": "touch"
+            }
+          ],
+          "html": "<div class=\"tt-title\" style=\"color:#0070dd\">Screenshot Test Furnishing</div><div class=\"tt-sub\">Rare Furnishing</div><div class=\"tt-desc\">Footprint: 2 by 3 cells.</div><div class=\"tt-desc\">Decor cost: 7.</div><div class=\"tt-desc\">Placed on the floor.</div><div class=\"tt-desc\">Made by Testmaker.</div><div class=\"tt-sub\">Sell price: 25c</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Occupies a Masterwrought slot (2 of 2 in use).</div><div class=\"tt-sub\">Click ×, right-click, or drag to bags to unequip</div>",
+          "bounds": {
+            "scrolling": [],
+            "x": 50,
+            "y": 45,
+            "right": 275.421875,
+            "bottom": 236.25,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "mobile-landscape-paperdoll-furnishing-card.png",
+            "mobile-landscape-paperdoll-furnishing-card-detail.png"
+          ]
+        },
+        {
+          "name": "paperdoll-control-card",
+          "lines": [
+            "Duskforged Warblade",
+            "Epic Weapon",
+            "Sword",
+            "Main Hand",
+            "Unique-Equipped: Masterwrought (2)",
+            "All 2 of your Masterwrought slots are in use.",
+            "30 - 50 Damage Speed 2.5",
+            "(16.0 damage per second)",
+            "+13 Strength",
+            "+9 Stamina",
+            "+50 Hit Rating",
+            "Classes: Warrior, Paladin, Shaman",
+            "Requires Level 20",
+            "Sell price: 3s 20c",
+            "Occupies a Masterwrought slot (2 of 2 in use).",
+            "Click ×, right-click, or drag to bags to unequip"
+          ],
+          "text": "Duskforged WarbladeEpic WeaponSwordMain HandUnique-Equipped: Masterwrought (2)All 2 of your Masterwrought slots are in use.30 - 50 Damage Speed 2.5(16.0 damage per second)+13 Strength+9 Stamina+50 Hit RatingClasses: Warrior, Paladin, ShamanRequires Level 20Sell price: 3s 20cOccupies a Masterwrought slot (2 of 2 in use).Click ×, right-click, or drag to bags to unequip",
+          "events": [
+            {
+              "type": "pointerdown",
+              "trusted": true,
+              "pointerType": "touch"
+            }
+          ],
+          "html": "<div class=\"tt-title\" style=\"color:#a335ee\">Duskforged Warblade</div><div class=\"tt-sub\">Epic Weapon</div><div class=\"tt-sub tt-weapon-type\">Sword</div><div class=\"tt-sub\">Main Hand</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Unique-Equipped: Masterwrought (2)</div><div class=\"tt-sub\" style=\"color:var(--gold)\">All 2 of your Masterwrought slots are in use.</div><div class=\"tt-stat\">30 - 50 Damage Speed 2.5</div><div class=\"tt-stat\">(16.0 damage per second)</div><div class=\"tt-green\">+13 Strength</div><div class=\"tt-green\">+9 Stamina</div><div class=\"tt-green\">+50 Hit Rating</div><div class=\"tt-sub\">Classes: Warrior, Paladin, Shaman</div><div class=\"tt-red\">Requires Level 20</div><div class=\"tt-sub\">Sell price: 3s 20c</div><div class=\"tt-sub\" style=\"color:var(--gold)\">Occupies a Masterwrought slot (2 of 2 in use).</div><div class=\"tt-sub\">Click ×, right-click, or drag to bags to unequip</div>",
+          "bounds": {
+            "scrolling": [],
+            "x": 50,
+            "y": 8,
+            "right": 264.828125,
+            "bottom": 300.25,
+            "unclipped": true
+          },
+          "captureNotices": {
+            "dismissedThroughButton": [],
+            "visibleBeforeScreenshot": false,
+            "acceptedAttempt": 1,
+            "noticeAttempts": []
+          },
+          "screenshots": [
+            "mobile-landscape-paperdoll-control-card.png",
+            "mobile-landscape-paperdoll-control-card-detail.png"
+          ]
+        }
+      ],
+      "readCalls": [
+        {
+          "method": "status",
+          "args": []
+        },
+        {
+          "method": "browse",
+          "args": [
+            {
+              "page": 0,
+              "quality": null,
+              "format": null,
+              "category": null,
+              "subcategory": null,
+              "itemIds": null,
+              "sort": "ending"
+            }
+          ]
+        },
+        {
+          "method": "me",
+          "args": []
+        },
+        {
+          "method": "browse",
+          "args": [
+            {
+              "page": 0,
+              "quality": null,
+              "format": null,
+              "category": null,
+              "subcategory": null,
+              "itemIds": null,
+              "sort": "ending"
+            }
+          ]
+        },
+        {
+          "method": "me",
+          "args": []
+        }
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "variant": "desktop",
+      "status": 502,
+      "path": "/api/site-presence"
+    },
+    {
+      "variant": "desktop",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "desktop",
+      "status": 502,
+      "path": "/api/project-stats"
+    },
+    {
+      "variant": "desktop",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "desktop",
+      "message": "character visual unavailable, skipping view (npc_modular_walking_staff): Error: character asset not preloaded: models/weapons/brasscrown_walking_staff.glb"
+    },
+    {
+      "variant": "desktop",
+      "message": "character visual unavailable, skipping view (mob_training_dummy): Error: character asset not preloaded: models/creatures/training_dummy.glb"
+    },
+    {
+      "variant": "desktop",
+      "status": 502,
+      "path": "/api/site-presence"
+    },
+    {
+      "variant": "desktop",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "desktop",
+      "status": 502,
+      "path": "/api/site-presence"
+    },
+    {
+      "variant": "desktop",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "mobile-landscape",
+      "status": 502,
+      "path": "/api/site-presence"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "mobile-landscape",
+      "status": 502,
+      "path": "/api/project-stats"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (skel_minion): Error: character asset not preloaded: models/chars/enemies/skeleton_minion.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (mob_wolf): Error: character asset not preloaded: models/creatures/wolf_basic.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (mob_grix): Error: character asset not preloaded: models/creatures/grix.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (skel_boss): Error: character asset not preloaded: models/chars/enemies/skeleton_mage.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (mob_murloc): Error: character asset not preloaded: models/creatures/frog.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (greyjaw): Error: character asset not preloaded: models/creatures/greyjaw.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (skel_mage): Error: character asset not preloaded: models/chars/enemies/skeleton_mage.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (mob_kobold_digger): Error: character asset not preloaded: models/creatures/kobold.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (mob_spider): Error: character asset not preloaded: models/creatures/spider.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (mob_boar): Error: character asset not preloaded: models/creatures/wild_boar.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "character visual unavailable, skipping view (npc_modular_walking_staff): Error: character asset not preloaded: models/weapons/brasscrown_walking_staff.glb"
+    },
+    {
+      "variant": "mobile-landscape",
+      "status": 502,
+      "path": "/api/site-presence"
+    },
+    {
+      "variant": "mobile-landscape",
+      "message": "Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+    }
+  ],
+  "failures": []
+}

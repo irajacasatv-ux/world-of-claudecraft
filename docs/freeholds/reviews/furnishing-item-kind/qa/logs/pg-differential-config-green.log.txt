@@ -1,0 +1,35 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+stdout | tests/server/client_perf_summary_sql.test.ts > clientPerfSummary differential vs the seven-statement spec (pg-gated)
+[material-source] writer capability guard applied; writers without the capability are refused, material_source_journal is live
+
+stdout | tests/server/client_perf_summary_sql.test.ts
+db pool: DB_POOL_MAX_CLIENTS=10 DB_POOL_CONNECT_TIMEOUT_MS=5000
+
+ ❯ tests/server/client_perf_summary_sql.test.ts (5 tests | 2 skipped) 1154ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/server/client_perf_summary_sql.test.ts > clientPerfSummary differential vs the seven-statement spec (pg-gated)
+error: deadlock detected
+ ❯ node_modules/pg-pool/index.js:45:11
+ ❯ seed tests/server/client_perf_summary_sql.test.ts:466:3
+    464| async function seed(): Promise<void> {
+    465|   await cleanupRows();
+    466|   await pool.query(
+       |   ^
+    467|     `INSERT INTO client_perf_reports
+    468|        (session_id, graphics_preset, gfx_tier, gl_renderer_bucket, bro…
+ ❯ tests/server/client_perf_summary_sql.test.ts:511:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  9 passed | 2 skipped (11)
+   Start at  05:37:02
+   Duration  2.35s (transform 1.14s, setup 297ms, import 1.83s, tests 2.38s, environment 0ms)

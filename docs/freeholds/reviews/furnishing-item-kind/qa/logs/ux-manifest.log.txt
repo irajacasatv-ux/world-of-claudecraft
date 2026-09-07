@@ -1,0 +1,4 @@
+PASS: 557 unique approved rows from 10 key tables, byte-identical to /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/ux-key-manifest.json
+PASS: all four owner-02 keys, all 8 owner-30a keys, all 19 owner-41a keys
+SHA-256: 8da260fedf599722ebe3224fdbbce1c6f6bce2c7337ae585b6ea63fc0cc996eb
+Reconstruction: /tmp/freeholds-02-audit/ux-key-manifest.reconstructed.json

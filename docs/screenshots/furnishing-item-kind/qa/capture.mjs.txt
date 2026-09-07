@@ -1,0 +1,276 @@
+// Visual evidence only, adapted from freeholds-02-desktop-hover-capture.mjs.
+// Real market Collect rows preserve the copy payload that Browse intentionally projects.
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import puppeteer from 'puppeteer-core';
+import { BROWSER_PATH } from '../scripts/browser_path.mjs';
+import { dismissEntryOverlays, enterOfflineGame } from '../scripts/enter_offline_game.mjs';
+import { suppressGpuNotice } from '../scripts/lib/gpu_notice_suppress.mjs';
+import { resolveEntryTimeouts } from '../scripts/lib/pr_shot_entry_opts.mjs';
+
+const gameUrl = process.env.GAME_URL ?? 'http://127.0.0.1:5187';
+const output = process.env.SHOTS_DIR ?? '/tmp/freeholds-02-audit/final-tooltip';
+const expectFixed = process.env.QA_EXPECT_FIXED !== '0';
+const { navTimeoutMs, selectorTimeoutMs } = resolveEntryTimeouts(process.env);
+const rowSelector = '#market-window .mkt-collect:has(.mkt-collect-name)';
+const variants = [
+  { key: 'desktop', width: 1600, height: 900, mobile: false },
+  { key: 'mobile-landscape', width: 844, height: 390, mobile: true },
+].filter((variant) => !process.env.SHOT_VARIANT || process.env.SHOT_VARIANT === variant.key);
+assert.ok(variants.length > 0, 'Unknown SHOT_VARIANT');
+const report = { gameUrl, expectFixed, browserPath: BROWSER_PATH, variants: [], diagnostics: [], failures: [] };
+fs.mkdirSync(output, { recursive: true });
+const browser = await puppeteer.launch({
+  executablePath: BROWSER_PATH,
+  headless: 'new',
+  args: ['--window-size=1600,900', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+  defaultViewport: { width: 1600, height: 900 },
+});
+
+async function fixture(page) {
+  return page.evaluate(async () => {
+    const item = {
+      id: 'probe_furnishing_qa_tooltip', name: 'Screenshot Test Furnishing',
+      kind: 'furnishing', quality: 'rare', sellValue: 25, soulbound: true,
+      furnishing: { footprint: { width: 2, depth: 3 }, r: 0, decorCost: 7, surface: 'floor' },
+    };
+    const dataUrls = new Set(performance.getEntriesByType('resource').map((entry) => entry.name)
+      .filter((url) => new URL(url).pathname === '/src/sim/data.ts'));
+    dataUrls.add('/src/sim/data.ts');
+    for (const url of dataUrls) (await import(url)).ITEMS[item.id] = item;
+    const { NPCS } = await import('/src/sim/data.ts');
+    const { itemImageUrl, itemIconRecipe, isUnknownIconRecipe } = await import('/src/ui/icons.ts');
+    const { sim, hud } = window.__game;
+    const merchant = [...sim.entities.values()].find((entity) => NPCS[entity.templateId]?.market);
+    if (!merchant) throw new Error('Actual Merchant absent');
+    hud.closeMarket();
+    Object.assign(sim.player.pos, merchant.pos);
+    sim.player.prevPos = { ...sim.player.pos };
+    sim.rebucket(sim.player);
+    const meta = sim.meta(sim.playerId);
+    const untilMs = Math.floor(sim.time * 1000) + 5_400_000;
+    const instance = {
+      signer: '<Maker & Co>', locked: true,
+      partyTrade: { untilMs, eligible: [meta.name] },
+      name: 'Forged Power Name', perfected: true, perfecting: 2,
+      enchant: 'enchant_chest_stamina',
+      rolled: { quality: 'legendary', stats: { str: 999, sta: 777 }, masterwork: true },
+      rift: {
+        sourceEventId: 'tooltip_visual_probe', tier: 'A', power: 10,
+        upgradeLevel: 2, maxUpgradeLevel: 6, baseStats: { str: 999 },
+        gemSlots: 2, gems: ['probe_gem'],
+      },
+    };
+    const sellerKey = String(meta.characterId ?? meta.entityId);
+    // In-memory view fixture only: no list, trade, purchase or collection command is issued.
+    const collection = sim.market.collectionFor(sellerKey);
+    collection.items.push({ itemId: item.id, count: 1, instance, craftedRecipeId: 'test_furnishing_recipe' });
+    const imageUrl = itemImageUrl(item.id);
+    const recipe = itemIconRecipe(item.id);
+    if (imageUrl !== null || isUnknownIconRecipe(recipe)) throw new Error('Furnishing fallback absent');
+    const remainingMs = sim.partyTradeMsRemaining(untilMs);
+    if (remainingMs < 3_600_000 || remainingMs > 5_400_000) throw new Error('Invalid live custody deadline');
+    window.__qaTooltipFixture = { item, instance, sellerKey, untilMs };
+    return { item, instance, sellerKey, untilMs, remainingMs, imageUrl, recipe, merchant: merchant.templateId };
+  });
+}
+
+async function capture(page, variant) {
+  console.log(`PROGRESS ${variant.key}: creating the Collect fixture`);
+  const injected = await fixture(page);
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  await page.waitForFunction(() => {
+    const loading = document.querySelector('#loading-screen');
+    return !loading || getComputedStyle(loading).display === 'none' || getComputedStyle(loading).visibility === 'hidden';
+  }, { timeout: 180000 });
+  await dismissEntryOverlays(page);
+  console.log(`PROGRESS ${variant.key}: relocation ready, opening Market`);
+  await page.evaluate(() => {
+    window.__game.hud.openMarket();
+    const bags = document.querySelector('#bags');
+    if (bags) bags.style.display = 'none';
+  });
+  const tabSelector = '#market-window [data-tab="collect"]';
+  await page.waitForSelector(tabSelector, { visible: true, timeout: 15000 });
+  if (variant.mobile) await page.tap(tabSelector);
+  else await page.click(tabSelector);
+  await page.waitForSelector(rowSelector, { visible: true, timeout: 15000 });
+  console.log(`PROGRESS ${variant.key}: Collect row is visible`);
+  const headerPoint = await page.evaluate(() => {
+    const header = document.querySelector('#market-window .panel-title');
+    const bounds = header.getBoundingClientRect();
+    return { x: bounds.x + Math.min(150, bounds.width / 2), y: bounds.y + bounds.height / 2 };
+  });
+  if (variant.mobile) await page.touchscreen.tap(headerPoint.x, headerPoint.y);
+  else await page.mouse.click(headerPoint.x, headerPoint.y);
+  await page.waitForFunction(() => {
+    const tooltip = document.querySelector('#tooltip');
+    return !tooltip || getComputedStyle(tooltip).display === 'none';
+  }, { timeout: 5000 });
+  console.log(`PROGRESS ${variant.key}: native header press dismissed any existing tooltip`);
+  const row = await page.evaluate(({ selector, fixed }) => {
+    const element = document.querySelector(selector);
+    const rect = element.getBoundingClientRect();
+    const point = { x: rect.x + 48, y: rect.y + rect.height / 2 };
+    if (!element.contains(document.elementFromPoint(point.x, point.y))) throw new Error('Collect row is occluded');
+    const name = element.querySelector('.mkt-collect-name').textContent.trim();
+    const expectedName = fixed ? 'Screenshot Test Furnishing' : 'Forged Power Name';
+    if (name !== expectedName) throw new Error(`Unexpected cell name: ${name}, expected ${expectedName}`);
+    const icon = element.querySelector('img');
+    if (!icon?.complete || !icon.naturalWidth || !icon.src.startsWith('data:')) throw new Error('Procedural icon did not decode');
+    const expectedRarity = fixed ? 'rare' : 'legendary';
+    if (!icon.classList.contains(`q-${expectedRarity}`)) throw new Error(`Unexpected cell icon rarity: ${icon.className}`);
+    const accessibleText = element.getAttribute('aria-label') ?? element.textContent.trim();
+    if (accessibleText !== expectedName) throw new Error(`Cell accessible text differs: ${accessibleText}`);
+    window.__qaTooltipNativeEvents = [];
+    // The market may rebuild this row before the press. Observe the real event
+    // route at document capture so replacing a node cannot erase the evidence.
+    for (const eventName of ['pointerdown', 'mouseenter']) document.addEventListener(eventName, (event) => {
+      const matching = event.composedPath().find((node) => node instanceof Element && node.matches(selector));
+      if (!matching) return;
+      window.__qaTooltipNativeEvents.push({ event: event.type, trusted: event.isTrusted, pointerType: event.pointerType ?? null });
+    }, { capture: true });
+    const markup = element.cloneNode(true);
+    for (const image of markup.querySelectorAll('img')) image.setAttribute('src', '[omitted procedural data URL]');
+    return { point, name, accessibleText, iconClass: icon.className, bounds: rect.toJSON(), html: markup.innerHTML, iconSize: [icon.naturalWidth, icon.naturalHeight], hiddenBeforeNative: true };
+  }, { selector: rowSelector, fixed: expectFixed });
+  let touching = false;
+  try {
+    console.log(`PROGRESS ${variant.key}: starting native ${variant.mobile ? 'touch hold' : 'mouse hover'}`);
+    if (variant.mobile) {
+      await page.touchscreen.touchStart(row.point.x, row.point.y);
+      touching = true;
+    } else {
+      await page.mouse.move(0, 0);
+      await page.mouse.move(row.point.x, row.point.y);
+    }
+    await page.waitForFunction((mobile) => window.__qaTooltipNativeEvents.some((event) =>
+      event.trusted && (mobile
+        ? event.event === 'pointerdown' && event.pointerType === 'touch'
+        : event.event === 'mouseenter')),
+    { timeout: 5000 }, variant.mobile);
+    await page.waitForFunction(() => {
+      const tooltip = document.querySelector('#tooltip');
+      return tooltip && getComputedStyle(tooltip).display !== 'none'
+        && tooltip.textContent.includes('Made by <Maker & Co>.');
+    }, { timeout: 10000 });
+    console.log(`PROGRESS ${variant.key}: native tooltip visible, asserting complete card`);
+    const card = await page.evaluate(({ mobile, fixed }) => {
+      const tooltip = document.querySelector('#tooltip');
+      const text = tooltip.textContent;
+      const expected = [
+        'Screenshot Test Furnishing', 'Rare Furnishing', 'Soulbound',
+        'You may trade this item to players who shared its drop for the next 1 hour.',
+        'Locked', 'Footprint: 2 by 3 cells.', 'Decor cost: 7.',
+        'Placed on the floor.', 'Made by <Maker & Co>.',
+      ];
+      const lines = [...tooltip.children].map((element) => element.textContent.trim());
+      if (fixed) {
+        if (JSON.stringify(lines) !== JSON.stringify(expected)) throw new Error(`Card inventory differs: ${JSON.stringify(lines)}`);
+        if (/Equipping|Equip:|Use:|Strength|Stamina|Armor|Power|Rating|Masterwork|Perfect|Rift|Legendary|Enchanted|damage|Forged/.test(text)) {
+          throw new Error(`Power, progression or equip claim escaped: ${text}`);
+        }
+      } else {
+        for (const claim of [
+          'Forged Power Name', 'Legendary Furnishing', 'Masterwork',
+          'Equipping it ends the trade window.', 'Footprint: 2 by 3 cells.',
+          'Decor cost: 7.', 'Placed on the floor.', 'Made by <Maker & Co>.', 'Locked',
+        ]) if (!text.includes(claim)) throw new Error(`Expected baseline defect/fact absent: ${claim}; ${text}`);
+      }
+      if (tooltip.querySelector('maker') || !tooltip.innerHTML.includes('&lt;Maker &amp; Co&gt;')) throw new Error('Maker markup interpreted');
+      const bounds = tooltip.getBoundingClientRect();
+      const clipped = bounds.width <= 0 || bounds.height <= 0 || bounds.x < 0 || bounds.y < 0
+        || bounds.right > innerWidth + 1 || bounds.bottom > innerHeight + 1
+        || tooltip.scrollHeight > tooltip.clientHeight + 1 || tooltip.scrollWidth > tooltip.clientWidth + 1;
+      if (fixed && clipped) {
+        throw new Error(`Full tooltip is clipped: ${JSON.stringify(bounds.toJSON())}`);
+      }
+      for (const line of tooltip.children) {
+        const box = line.getBoundingClientRect();
+        if (fixed && (box.left < bounds.left || box.right > bounds.right + 1 || box.top < bounds.top || box.bottom > bounds.bottom + 1)) {
+          throw new Error(`Card line clipped: ${line.textContent}`);
+        }
+      }
+      const events = window.__qaTooltipNativeEvents;
+      if (!events.some((event) => event.trusted && (mobile
+        ? event.event === 'pointerdown' && event.pointerType === 'touch'
+        : event.event === 'mouseenter'))) throw new Error(`Native gesture absent: ${JSON.stringify(events)}`);
+      const remainingMs = window.__game.sim.partyTradeMsRemaining(window.__qaTooltipFixture.untilMs);
+      if (remainingMs < 3_600_000 || remainingMs > 5_400_000) throw new Error('Displayed hour contradicts live deadline');
+      return { lines, bounds: bounds.toJSON(), html: tooltip.innerHTML, remainingMs, events, clipped, viewport: { width: innerWidth, height: innerHeight } };
+    }, { mobile: variant.mobile, fixed: expectFixed });
+    const filename = `${variant.key}.png`;
+    const detailFilename = `${variant.key}-card.png`;
+    await page.screenshot({ path: `${output}/${filename}` });
+    const detailBounds = {
+      x: Math.max(0, card.bounds.x), y: Math.max(0, card.bounds.y),
+      right: Math.min(card.viewport.width, card.bounds.right),
+      bottom: Math.min(card.viewport.height, card.bounds.bottom),
+    };
+    await page.screenshot({ path: `${output}/${detailFilename}`, clip: {
+      x: detailBounds.x, y: detailBounds.y,
+      width: detailBounds.right - detailBounds.x, height: detailBounds.bottom - detailBounds.y,
+    } });
+    const result = { variant, gesture: variant.mobile ? 'native touch long press' : 'native mouse hover', injected, row, card, screenshots: [filename, detailFilename] };
+    report.variants.push(result);
+    console.log(`PASS ${variant.key}: ${JSON.stringify(result)}`);
+  } finally {
+    if (touching) await page.touchscreen.touchEnd();
+  }
+}
+
+try {
+  for (const variant of variants) {
+    console.log(`PROGRESS ${variant.key}: beginning ${expectFixed ? 'fixed' : 'baseline'} capture at ${gameUrl}`);
+    const page = await browser.newPage();
+    page.on('response', (response) => {
+      if (response.status() >= 400) report.diagnostics.push({ variant: variant.key, type: 'http', status: response.status(), path: new URL(response.url()).pathname });
+    });
+    page.on('pageerror', (error) => {
+      report.diagnostics.push({ variant: variant.key, type: 'pageerror', message: error.message });
+      report.failures.push(`${variant.key} pageerror: ${error.message}`);
+    });
+    page.on('console', (message) => {
+      if (message.type() === 'error') report.diagnostics.push({ variant: variant.key, type: 'console', message: message.text() });
+    });
+    try {
+      if (variant.mobile) await page.emulate({
+        viewport: { width: variant.width, height: variant.height, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+      });
+      await suppressGpuNotice(page);
+      await page.evaluateOnNewDocument(() => {
+        localStorage.removeItem('woc_entry_probe');
+        const settings = JSON.parse(localStorage.getItem('woc_settings') || '{}');
+        settings.graphicsPreset = 1;
+        settings.graphicsDefaultApplied = true;
+        localStorage.setItem('woc_settings', JSON.stringify(settings));
+      });
+      console.log(`PROGRESS ${variant.key}: navigating to client`);
+      await page.goto(gameUrl, { waitUntil: 'networkidle0', timeout: navTimeoutMs });
+      console.log(`PROGRESS ${variant.key}: client loaded, entering offline world`);
+      if (variant.mobile) await page.evaluate(() => document.body.classList.add('mobile-touch'));
+      const entered = await enterOfflineGame(page, {
+        charName: 'Testmaker', charClass: 'warrior', settleMs: 3000,
+        selectorTimeoutMs, gameBootTimeoutMs: 180000,
+      });
+      assert.equal(entered, true, 'Offline entry never booted a world');
+      console.log(`PROGRESS ${variant.key}: offline world booted`);
+      await capture(page, variant);
+    } catch (error) {
+      report.failures.push(`${variant.key}: ${error.stack ?? error.message}`);
+      await page.screenshot({ path: `${output}/${variant.key}-failure.png` }).catch(() => {});
+      console.error(`FAIL ${variant.key}: ${error.message}`);
+    } finally {
+      await page.close();
+    }
+  }
+} finally {
+  await browser.close();
+  fs.writeFileSync(`${output}/manifest.json`, `${JSON.stringify(report, null, 2)}\n`);
+}
+console.log(`Captured ${report.variants.length} of ${variants.length} variants; diagnostics ${report.diagnostics.length}; failures ${report.failures.length}`);
+console.log(`Evidence manifest: ${output}/manifest.json`);
+// Browser cleanup and evidence writes have completed; report the asserted result
+// even if the browser driver retains an idle timer after disconnecting.
+process.exit(report.variants.length === variants.length && report.failures.length === 0 ? 0 : 1);

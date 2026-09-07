@@ -1,0 +1,557 @@
+{
+  "base": "041fd790cec0ea52c3e2285dcac7c3a49f30e7b0",
+  "revision": "d38663539433cbcd30642ea47d7663c5c52c59c0",
+  "tree": "29d8ef9b5dc37e81592c259ac4ff9d8e1778af6d",
+  "files": [
+    {
+      "path": "docs/screenshots/eastbrook-vale-rebuild/polish/metadata/after-desktop-ultra.json",
+      "sha256": "0a95cb7dfd9d672d12c0941f763b0ab3f479a88451ee914247b13818dad659da",
+      "bytes": 1035391
+    },
+    {
+      "path": "docs/screenshots/eastbrook-vale-rebuild/polish/metadata/after-mobile-low.json",
+      "sha256": "c10793000aaf276f09222e605bb75c3c64858231ebd5bca0289018408879abba",
+      "bytes": 1016747
+    },
+    {
+      "path": "docs/screenshots/eastbrook-vale-rebuild/polish/performance/after-desktop-ultra-town.json",
+      "sha256": "e5b9fe148f2e712c067bfe1086afda9be77ab31cc7fc5a3fc16dec981cc19737",
+      "bytes": 342959
+    },
+    {
+      "path": "docs/screenshots/eastbrook-vale-rebuild/polish/performance/after-mobile-low-town.json",
+      "sha256": "b93754f941b84d942b627c94b52597683c283ea44c1c4f0fb403284fa28b1fd9",
+      "bytes": 341963
+    },
+    {
+      "path": "server/woc_market.ts",
+      "sha256": "ff6c433c69f95956d2a87bcfb3a424d847a70ab8043416fda770c26a6cc6087c",
+      "bytes": 192599
+    },
+    {
+      "path": "server/woc_market_routes.ts",
+      "sha256": "bbe66542f5987b282380aea24af49e74cb777dd15b4c1209ba0e5b4e293b740d",
+      "bytes": 64626
+    },
+    {
+      "path": "server/woc_market_stepup.ts",
+      "sha256": "056d0a22933e95feec111d590f75aa280dc17e2ad8f4760ec3cb9b1f90fbed9e",
+      "bytes": 14316
+    },
+    {
+      "path": "src/render/characters/manifest.ts",
+      "sha256": "d849fede9e65b1156c96e5dd10a1f3132ac2b8daa07e6795f8f9d9a9b39d9131",
+      "bytes": 173221
+    },
+    {
+      "path": "src/render/legendary_regalia_core.ts",
+      "sha256": "deda0d260452fc0dd9eb0b31e4598fd6c26b30c1225d7466a1b56e4e2d0a12a2",
+      "bytes": 8396
+    },
+    {
+      "path": "src/render/renderer.ts",
+      "sha256": "4663541d35af2332b51d42ddb9afe6b82b775879294bb6cd6b08c8c53eaa78d9",
+      "bytes": 606070
+    },
+    {
+      "path": "src/sim/bags.ts",
+      "sha256": "9e645b5396a68a4afbc1d3773c9f021b04ae92f80a954b47e4c7e89d4058e27a",
+      "bytes": 35647
+    },
+    {
+      "path": "src/sim/deeds.ts",
+      "sha256": "8ce78ab49e21745a2a3129d639b61e888029cbdc0e26c08d801f4f6e92fb38bd",
+      "bytes": 100820
+    },
+    {
+      "path": "src/sim/entity.ts",
+      "sha256": "6666efa965afad04a087e0a72925e04c9a7d28d737b7b0f8539844afaaf67496",
+      "bytes": 36927
+    },
+    {
+      "path": "src/sim/equipment_rules.ts",
+      "sha256": "2675309c53d68520ab7dcc95b7269b165260d6339b7660a7ba80f0b0299addd6",
+      "bytes": 22299
+    },
+    {
+      "path": "src/sim/market.ts",
+      "sha256": "7d415869bac5b52bae73408957f40b72b3b169ee75417b67b321356020cebead",
+      "bytes": 62684
+    },
+    {
+      "path": "src/sim/professions/enchanting.ts",
+      "sha256": "aa704795dc7ab3679105429d72e0c843371afec13fc9543afcf9b5d71624aac6",
+      "bytes": 84706
+    },
+    {
+      "path": "src/sim/professions/feast.ts",
+      "sha256": "6c52da46c90024d62d483831432983e957986cb52039d5e9231fdfe1115c89e9",
+      "bytes": 25236
+    },
+    {
+      "path": "src/sim/professions/perfecting_bonus.ts",
+      "sha256": "42b3b78e3b98c79d5a42be5c803112f2f6cecf9e76ef70a0a4e4b8f9b22727fc",
+      "bytes": 2875
+    },
+    {
+      "path": "src/sim/professions/perfecting_swap.ts",
+      "sha256": "6d2f933fb1103f142a584e82b855788d759d22fbeb37563f6369b88a08033a0e",
+      "bytes": 9249
+    },
+    {
+      "path": "src/sim/reliquary.ts",
+      "sha256": "d70712b6c9ba21976fd6b7854cbef062459d529dd195ce47a58c7d7f4e0aee3f",
+      "bytes": 74554
+    },
+    {
+      "path": "src/sim/rift/progression.ts",
+      "sha256": "4a0a20c0154a64b591a6726766bad796443f3c9e17dac5e36393e554487d23fc",
+      "bytes": 24480
+    },
+    {
+      "path": "src/sim/set_bonus_mods.ts",
+      "sha256": "e08de84102b10be74563ae63d5d7f0aaebd70991502a88059513ad67ce923c5c",
+      "bytes": 3141
+    },
+    {
+      "path": "src/sim/sim.ts",
+      "sha256": "cbd65cb1f3d9a35bae3f23ecec9ba6c92f65fcd8cf22c84ea87c1d409bd53913",
+      "bytes": 536601
+    },
+    {
+      "path": "src/ui/bag_instance_glyph_view.ts",
+      "sha256": "4125d9fa40dd63ff280a600766363f10019e1794a0bd5ec6b5d39ab094b7a8fa",
+      "bytes": 2437
+    },
+    {
+      "path": "src/ui/bags_view.ts",
+      "sha256": "553d92e4987cdb74dfa070115e991f1e65da1343cbf60c82cfc882b74adef7cb",
+      "bytes": 41012
+    },
+    {
+      "path": "src/ui/bags_window.ts",
+      "sha256": "25fa23fa848dcf3e39af77efdd0c9ee30aa569804c199becddb76c5038b8f415",
+      "bytes": 122610
+    },
+    {
+      "path": "src/ui/char_window.ts",
+      "sha256": "124034e2bdb5fa88c06ada54f87eed0e23b177600db17a3d258bc1ecd7f8dc25",
+      "bytes": 37853
+    },
+    {
+      "path": "src/ui/dev_command_window.ts",
+      "sha256": "139872e64a7275fa79e7086d291ff95c54d1d8029cb2bfaa07e5ca2223dbec0c",
+      "bytes": 20684
+    },
+    {
+      "path": "src/ui/entity_i18n.ts",
+      "sha256": "a6b9b3702aa68ee8b190b814c9a38354a37351a990d8a0a6ca319c4310016f8f",
+      "bytes": 29678
+    },
+    {
+      "path": "src/ui/guild_bank_window.ts",
+      "sha256": "667b7829e065968d6f638ee5ee70faf7b9bf3722e130676291bb994623eb6e5d",
+      "bytes": 45030
+    },
+    {
+      "path": "src/ui/hud.ts",
+      "sha256": "0073ece69e370287341ab56f1b8d7c4b5153504ba5ef667515dd00c1f6dc8813",
+      "bytes": 859267
+    },
+    {
+      "path": "src/ui/hud/housing/CLAUDE.md",
+      "sha256": "c904cd6fcb017ebc5d6a4030976251c49d689b607d49cb1e146cd27797012aa4",
+      "bytes": 1297
+    },
+    {
+      "path": "src/ui/hud/housing/furnishing_tooltip.ts",
+      "sha256": "4a811b071e66d2629991ee0cc9c14e8e57ce1c66ded238a492c24124b5bd3b9c",
+      "bytes": 2246
+    },
+    {
+      "path": "src/ui/hud/player_card/player_card_data.ts",
+      "sha256": "ed159e3d84514dfea5910151c45f75031832043ae44b4409eb5f49c5d643bba5",
+      "bytes": 4539
+    },
+    {
+      "path": "src/ui/hud/professions/enchant_apply_view.ts",
+      "sha256": "39a254dce38a9016bbea2a1b63939655f40f9148e4ff6b0566983d98d84fe31a",
+      "bytes": 47280
+    },
+    {
+      "path": "src/ui/i18n.catalog/hud_chrome.ts",
+      "sha256": "63589892e15c67a40ec1e3a44196b8653c89f8fc0b7ae242718149e9c87e77c7",
+      "bytes": 427651
+    },
+    {
+      "path": "src/ui/i18n.catalog/translation_keys.generated.ts",
+      "sha256": "968c0856698c7cef0a5ef8f358909f10132e62c0f65c0d30ac15ceb429335403",
+      "bytes": 519818
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/cs_CZ.ts",
+      "sha256": "ce1267b994fb9bb018c81b206c932cc79a48d78b00f3d72d36161bec2424aec4",
+      "bytes": 1380797
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/da_DK.ts",
+      "sha256": "aaba7ada81007c58c4cea1480f313ce4e21d0c0685f3db34bfc9750389fdbe3a",
+      "bytes": 1338703
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/de_DE.ts",
+      "sha256": "9da10495caf44d0ec2fb9b628b8f7b16df58ca89202c85d088217e180843a1f2",
+      "bytes": 1427354
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/en.ts",
+      "sha256": "9c260a4a2e0dffeec6ffd0ed5d5f890aa96f988c30df0c4b089a103b567f7cf7",
+      "bytes": 1293792
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/en_CA.ts",
+      "sha256": "c1f6e5ef7fb35705f9d0ef3a1c49d9b3986c5824dbe57bd7ffd0a8e4d5eb0c90",
+      "bytes": 1293805
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/en_XA.ts",
+      "sha256": "e186032ee340fce92f806367c559eb4891e82b956da95ff97ba6b044d954da1c",
+      "bytes": 1986601
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/es.ts",
+      "sha256": "8a5bcb56eef9e82c01c9210212d2bb13f7e5f8438a41da7ce2be6b06ad02252d",
+      "bytes": 1408477
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/es_ES.ts",
+      "sha256": "b3857dc03839c7a7a063d4871f9d7bd3c3f0262d2f878ade4aaab170785b51ea",
+      "bytes": 1408958
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/fr_CA.ts",
+      "sha256": "fa8a5a60c0f11cc763efe6901599a41dd3d7afa7f04ecf04adc3f7f42ec1e177",
+      "bytes": 1462562
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/fr_FR.ts",
+      "sha256": "dccc7efef6b0bbebb0e57a4d1d1ccccabce07e41aba724ee1d91290ad7a33838",
+      "bytes": 1462604
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/id_ID.ts",
+      "sha256": "c39a22cb8ec5d5d4dd7f1bf5a12e64a368a08e10d0a4a5fbe44513fb70941863",
+      "bytes": 1406668
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/it_IT.ts",
+      "sha256": "0ea6c41923d80416f2434810293b52a32367eed8e4a65bea25679b0d0b84cc3d",
+      "bytes": 1409962
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/ja_JP.ts",
+      "sha256": "87103691719d8ea2ea76ac702711f5e6ad5322e2645d4055411182a0e8bb8f63",
+      "bytes": 1547832
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/ko_KR.ts",
+      "sha256": "ec652b4e050bad009e0fee0aabf5bbee50260fff51d040bb1a6a4c9c5c7647f3",
+      "bytes": 1479497
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/nl_NL.ts",
+      "sha256": "3a0cec435e898c6d8b69f95e4dc28685e8eaee563ecb34fbe8f27a8659f4de28",
+      "bytes": 1379655
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/pending.ts",
+      "sha256": "dbe389a7e2d5e6e18e008df81baf9cbeb3f3a6747300bd4957b5a33224f37505",
+      "bytes": 626091
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/pl_PL.ts",
+      "sha256": "24b40e047e2b8adf7dbc33f55083023daa334bf604ed3eea65bfd046c2d628b5",
+      "bytes": 1405659
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/pt_BR.ts",
+      "sha256": "192b2abbb408be831646be1e3cb8e079966476e945989a55828bd206a25699fb",
+      "bytes": 1386742
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/ru_RU.ts",
+      "sha256": "619ce46690ac26952956b16a09352b7ea84d951d933c55e5dfd7c83ed15794b6",
+      "bytes": 2013083
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/sv_SE.ts",
+      "sha256": "424b49cd08429c397925ecd2789da0199e45cfca8481b1426ab67ae177d6fd26",
+      "bytes": 1353978
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/tr_TR.ts",
+      "sha256": "d098b57fc96318c522038bf620219b5d0f24ba96c4cdf949107d6e5b20275b9f",
+      "bytes": 1400210
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/vi_VN.ts",
+      "sha256": "4759c1380030563112a353446fc02e37f8fa19033cb9383b209d0146e115122f",
+      "bytes": 1625482
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/zh_CN.ts",
+      "sha256": "4cf9a5f8bc979f15c7c791fa49a6bb9320925d94718a5642c7591f0b7a9886e0",
+      "bytes": 1228963
+    },
+    {
+      "path": "src/ui/i18n.resolved.generated/zh_TW.ts",
+      "sha256": "7ea0c6c212c50a3f972e2cbab0c81e6b8a6fd171cc058951f65157f506ab740f",
+      "bytes": 1229076
+    },
+    {
+      "path": "src/ui/icons.ts",
+      "sha256": "28452dd68d4482cd44c61d473e5591a0697c276c57ad2e2da701d41e263458d0",
+      "bytes": 199944
+    },
+    {
+      "path": "src/ui/item_compare.ts",
+      "sha256": "dda5b891a63e0fae7c99f38cc1aad53d7799ccd7367dd2b9bfbe2a8367809427",
+      "bytes": 4042
+    },
+    {
+      "path": "src/ui/item_instance_glyph_mark.ts",
+      "sha256": "57da2c6458e1a2632792968566bbc89b11facb30a1bd07241c9c674bdea9ad06",
+      "bytes": 5542
+    },
+    {
+      "path": "src/ui/item_instance_tooltip.ts",
+      "sha256": "154c97a785bd5ea1a434230d6741061e5ebf3054e5f176884d86a2146e35f96e",
+      "bytes": 24041
+    },
+    {
+      "path": "src/ui/item_instance_view.ts",
+      "sha256": "7d50870d65eb1704e0d33d367bcbcf317435302782ff34693330864fe76430aa",
+      "bytes": 982
+    },
+    {
+      "path": "src/ui/item_set_tooltip_view.ts",
+      "sha256": "28b98aac18215a824d4ad52cbd8e1de58d8c7247fd468f211f93e97c357092c6",
+      "bytes": 3467
+    },
+    {
+      "path": "src/ui/market_view.ts",
+      "sha256": "f9dcc788e4adeaa0331de134d71e56d25822e27d1767111f438ffccb750e81ea",
+      "bytes": 17142
+    },
+    {
+      "path": "src/ui/masterwrought_cap_view.ts",
+      "sha256": "dc30f577b1d665f827c06f8ccc7df76b5919242641ec8fbddaa114dd088df715",
+      "bytes": 4741
+    },
+    {
+      "path": "src/ui/personal_bank_item_cell.ts",
+      "sha256": "55b4d2005dd264793c00449d70c02fddfa5389e0f9a924ffa3340d7722dc7e86",
+      "bytes": 4840
+    },
+    {
+      "path": "src/ui/sim_i18n.ts",
+      "sha256": "2991e65620a06589487972f1e494bf773aa97c078e8388c8a9362688aba1f672",
+      "bytes": 886139
+    },
+    {
+      "path": "src/ui/tool_effect_tooltip.ts",
+      "sha256": "dd1c458e08f968086db05b3df877378352bb94b72bbd744091dbbe5f68700a8d",
+      "bytes": 7347
+    },
+    {
+      "path": "src/ui/vault_window.ts",
+      "sha256": "561fce41eab4785d54d3dac8fc896a6de6b2678c9f7bec9793ecf098be4c39ef",
+      "bytes": 36507
+    },
+    {
+      "path": "src/ui/woc_market_view.ts",
+      "sha256": "458380fbaf7d9c66150982a8af4596cb368a517eab9222b57bef42493096cebb",
+      "bytes": 24239
+    },
+    {
+      "path": "src/ui/worn_item_cell_view.ts",
+      "sha256": "d14a91e0ae6bd97f57cdf1ccdac29ad1b9c219b6559eacacbb54b6107d295d35",
+      "bytes": 2453
+    },
+    {
+      "path": "tests/architecture.test.ts",
+      "sha256": "aee9c911f1a2676bf55c394ea0984aca4092528acfd01ffa85d9eae6b89b3df6",
+      "bytes": 145794
+    },
+    {
+      "path": "tests/bags_window_instance_marker.test.ts",
+      "sha256": "118d137a7acd0df26e268394415aa31c945360e446a4d9156e16e973271acbf4",
+      "bytes": 38616
+    },
+    {
+      "path": "tests/bank_window_instance_marker.test.ts",
+      "sha256": "028f58b2af6c56b984e9dd3c2c5581b1f28e88fd6a3d4032992f6547bed940ea",
+      "bytes": 17753
+    },
+    {
+      "path": "tests/eastbrook_polish_artifact_integrity.test.ts",
+      "sha256": "26c2197a8dc2eddec010d81666ccdef98b59571defb3b9f2aaa113de5137384d",
+      "bytes": 139829
+    },
+    {
+      "path": "tests/eastbrook_polish_capture_contract.test.ts",
+      "sha256": "8aa0d003b375d3c5d429d8ec860327ec3c19ec06775efc7efefeca5b6f02735d",
+      "bytes": 85101
+    },
+    {
+      "path": "tests/furnishing_asset_identity.test.ts",
+      "sha256": "3c793a454dffd7e400daf52d13dd49cc1f4585493f904fcb664416e5e5509c3b",
+      "bytes": 2523
+    },
+    {
+      "path": "tests/furnishing_auto_equip.test.ts",
+      "sha256": "9cc4b060ed00fa04fd84cdc9269e13f79bf5790f46068769c3dd009831e8b0b5",
+      "bytes": 5695
+    },
+    {
+      "path": "tests/furnishing_commerce_parity.test.ts",
+      "sha256": "29dba88928499146022881b5f4c15561fa99f5d83a8ceea4b5104272226eeb35",
+      "bytes": 18336
+    },
+    {
+      "path": "tests/furnishing_consumer_parity.test.ts",
+      "sha256": "887be11cabe0c9ecff4b40ec575e1e528d463cf12a9cde78bfd95f77b7ba33a5",
+      "bytes": 29362
+    },
+    {
+      "path": "tests/furnishing_dev_picker.test.ts",
+      "sha256": "343536081de7b8dfdfdcbaed92ce3c2f39fc328f852eed86a0fc1291e5655114",
+      "bytes": 3384
+    },
+    {
+      "path": "tests/furnishing_discovery.test.ts",
+      "sha256": "621a559314121979b310e303d522f41ed842f5152a968cdf8fbcc41d683abe47",
+      "bytes": 6044
+    },
+    {
+      "path": "tests/furnishing_enchant_picker.test.ts",
+      "sha256": "7e82dd172eec96621e49ee554dd5fbf25677d17a86268538011771e9e0ccefbd",
+      "bytes": 5793
+    },
+    {
+      "path": "tests/furnishing_equipment_power.test.ts",
+      "sha256": "de365ad4897f4a8c8138bd4191e8c07499af4c31c08a910ad223566a586be3bc",
+      "bytes": 13701
+    },
+    {
+      "path": "tests/furnishing_event_identity.test.ts",
+      "sha256": "dd68de3d0d1410a6cd8e5eda1c02e68333c626cb0aa2a5344c5c337791ef5f78",
+      "bytes": 1237
+    },
+    {
+      "path": "tests/furnishing_exchange_identity.test.ts",
+      "sha256": "ec4c8e04ae84abee8bd5ac3892ea059bbfe498307282e09afad92773a99868d2",
+      "bytes": 12757
+    },
+    {
+      "path": "tests/furnishing_feast_admission.test.ts",
+      "sha256": "31888a877475479eca687deb81a957bfae5fd70e180cdb2646994c864d017160",
+      "bytes": 6179
+    },
+    {
+      "path": "tests/furnishing_feast_parity.test.ts",
+      "sha256": "19cde7870c03bc00f210b2b66040809e8c4d4c4ee1b9812bc2330dd6eeca1c45",
+      "bytes": 9946
+    },
+    {
+      "path": "tests/furnishing_item_kind.test.ts",
+      "sha256": "39149f7dd3210be67c226c95eb3bfbed994125c7b853a596551962db6c293906",
+      "bytes": 69314
+    },
+    {
+      "path": "tests/furnishing_market_identity.test.ts",
+      "sha256": "da4dc0bd4d2e5b5ee02f9b52b564a5aacf648c521d64506a320abbc18d80214d",
+      "bytes": 7656
+    },
+    {
+      "path": "tests/furnishing_material_source_journal.test.ts",
+      "sha256": "80880958cef36ddd54a96aa776f98b5dfac77cc91d4f4ad4a1bcbaffcea09adc",
+      "bytes": 4339
+    },
+    {
+      "path": "tests/furnishing_perfecting_collection.test.ts",
+      "sha256": "981466df22eac592b42cb636a6e4fd3809b88a3f5c88614b34179d8603fcd5bd",
+      "bytes": 5089
+    },
+    {
+      "path": "tests/furnishing_persistence.test.ts",
+      "sha256": "bcf2affe94bd9271b6121c8bc9d4c3263b1779d10e67e02b8648813704159cb4",
+      "bytes": 9590
+    },
+    {
+      "path": "tests/furnishing_regalia.test.ts",
+      "sha256": "1d6126ca29b65a7cc9f2e7d9b696ee2f599476c1c1cd06c582dd2d2ef7c68f32",
+      "bytes": 4340
+    },
+    {
+      "path": "tests/furnishing_rift_admission.test.ts",
+      "sha256": "13bc9eceec05a67dfd657ab1eae49adb7f1268e9c5d78ca2026feedd45ece6da",
+      "bytes": 9940
+    },
+    {
+      "path": "tests/furnishing_tool_effect_tooltip.test.ts",
+      "sha256": "8ab3960a2efdd240a90b211c6a78698d46dddfe8815f7f1653f8a46acf6e72f2",
+      "bytes": 2246
+    },
+    {
+      "path": "tests/furnishing_tool_parity.test.ts",
+      "sha256": "921a0e75e067dbe7d029c93f0339fb71f1a0df354821680ac0893c16b42e8f06",
+      "bytes": 19038
+    },
+    {
+      "path": "tests/furnishing_tooltip_view.test.ts",
+      "sha256": "007c4809df329495e84a4f42e9b1ad5a2d71ba8308f4945572a9e0da77265b3e",
+      "bytes": 27685
+    },
+    {
+      "path": "tests/furnishing_worn_presentation.test.ts",
+      "sha256": "1cdaf38374b46e606b73d321627017fa89dadd2ce6fbd4cb7555ec896f884149",
+      "bytes": 10727
+    },
+    {
+      "path": "tests/guild_bank_window_instance_marker.test.ts",
+      "sha256": "5864a8ace61584a8a69446146165b25e426e9c108aa2851628005b1ce70f6837",
+      "bytes": 14499
+    },
+    {
+      "path": "tests/i18n_completeness.test.ts",
+      "sha256": "69038b588fe0b50f632bf2f45d89939c45a6de5bfc5d045026abc9279ffc8080",
+      "bytes": 31502
+    },
+    {
+      "path": "tests/item_compare.test.ts",
+      "sha256": "c87652e5712adc9592024823936a6972888d00572d3ea39ef9dc0529d7edc941",
+      "bytes": 9892
+    },
+    {
+      "path": "tests/item_instance_view.test.ts",
+      "sha256": "2708c57c0f78d17b1a87c12eca49b6be8cd6560dae7a371887bc3bdd2277734c",
+      "bytes": 5578
+    },
+    {
+      "path": "tests/legendary_regalia.test.ts",
+      "sha256": "7437bfa1bba79cb88eba7703acd9140432ca96b3a62294d764776856e2741c07",
+      "bytes": 29032
+    },
+    {
+      "path": "tests/monolith_budget.test.ts",
+      "sha256": "efc8f4be15bcf56086f854658be0e16ea6f6d51e375c7489c224548f91352e73",
+      "bytes": 141528
+    },
+    {
+      "path": "tests/worn_item_cell_view.test.ts",
+      "sha256": "74939312856922342c33766cce7dc33b6cdfcc4c5794d9b658a4c5bb501bee2d",
+      "bytes": 4557
+    }
+  ]
+}

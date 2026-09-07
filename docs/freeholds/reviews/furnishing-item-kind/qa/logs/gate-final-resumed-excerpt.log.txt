@@ -1,0 +1,64 @@
+Selected verbatim lines from gate-final-resumed.log; omitted lines remain in the full archive.
+
+[gate:select] full gate step list, selective vitest step
+[gate:select] suite: 3869 test files (2682 graph-visible, 316 blind, 871 partial); always-run 1187
+[gate:select] diff base: origin/feature/masterwrought (GATE_SELECT_BASE=origin/feature/masterwrought); 547 changed path(s)
+[gate:select] mode=full (broad/unclassified change (.env.example, tests/fixtures/furnishing_item.ts, tests/helpers/bare_client.ts, ...): running the full suite)
+[gate:select] workers=4
+
+[gate:select] i18n + wiki + sfx artifacts: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run i18n:gen wiki:content sfx:check --ui=stream
+• turbo 2.10.8
+
+   • Running i18n:gen, wiki:content, sfx:check
+[gate:select] i18n freshness: git diff --exit-code -- src/ui/i18n.resolved.generated src/admin/i18n.resolved.generated src/ui/i18n.catalog/translation_keys.generated.ts
+
+[gate:select] sfx manifest regen: node scripts/build_sfx_manifest.mjs
+SFX gain ceilings: 263 custom keys -> scripts/sfx/sfx_gain_ceiling.generated.json
+SFX manifest: 302 clips -> src/game/sfx_manifest.generated.ts
+SFX runtime pack: public/audio/sfx/runtime-pack.json
+[gate:select] media manifest regen: node scripts/build_media_manifest.mjs generate
+generated src/render/assets/manifest.generated.ts (1711 media assets)
+
+[gate:select] manifest trackedness: git ls-files --error-unmatch -- src/game/sfx_manifest.generated.ts src/guide/content.generated.ts src/render/assets/manifest.generated.ts public/audio/sfx/runtime-pack.json scripts/sfx/sfx_gain_ceiling.generated.json
+public/audio/sfx/runtime-pack.json
+scripts/sfx/sfx_gain_ceiling.generated.json
+src/game/sfx_manifest.generated.ts
+[gate:select] manifest freshness: git diff --exit-code -- src/game/sfx_manifest.generated.ts src/guide/content.generated.ts src/render/assets/manifest.generated.ts public/audio/sfx/runtime-pack.json scripts/sfx/sfx_gain_ceiling.generated.json
+
+[gate:select] malware scan: npm run security:gate
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+malware_scan --gate: PASS (8297 files, 437 flags, 0 high after priors).
+
+[gate:select] biome (changed files): npm run ci:changed
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+[gate:select] vitest (full suite, planner fell back): /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/vitest run --maxWorkers=4
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+ Test Files  3868 passed | 1 skipped (3869)
+      Tests  58083 passed | 2 expected fail | 28 skipped (58113)
+   Start at  07:04:48
+   Duration  1362.03s (transform 21.88s, setup 273.39s, import 1065.61s, tests 3838.67s, environment 34.56s)
+
+[gate:select] browser regressions: npm run test:browser
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+ Test Files  42 passed (42)
+      Tests  373 passed (373)
+   Start at  07:27:30
+   Duration  10.74s (transform 0ms, setup 0ms, import 50.46s, tests 46.71s, environment 0ms)
+
+[gate:select] typecheck + env/server/bot builds: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run check:types build:env build:server build:bot --ui=stream
+• turbo 2.10.8
+
+   • Running check:types, build:env, build:server, build:bot
+[gate:select] client build: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run build:bundle --ui=stream
+• turbo 2.10.8
+
+   • Running build:bundle
+[gate:select] PASS: all 12 steps green (vitest workers: 4)

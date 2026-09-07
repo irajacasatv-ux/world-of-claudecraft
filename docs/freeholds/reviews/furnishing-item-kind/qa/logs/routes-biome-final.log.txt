@@ -1,0 +1,116 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+tests/furnishing_commerce_parity.test.ts:196:20 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    194 │       });
+    195 │       const entry = host(mode);
+  > 196 │       const meta = entry.sim.meta(entry.pid)!;
+        │                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    197 │       meta.craftSkills.weaponcrafting = 100;
+    198 │       meta.archetype.activeArchetype = 'weaponcrafting';
+
+
+tests/furnishing_commerce_parity.test.ts:253:18 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    251 │     ITEMS[ID] = { ...FURNISHING, teachesRiding: true } as unknown as ItemDef;
+    252 │     const entry = host(mode);
+  > 253 │     const meta = entry.sim.meta(entry.pid)!;
+        │                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    254 │     const marla = [...entry.sim.entities.values()].find(
+    255 │       (entity) => entity.templateId === 'stablemaster_marla',
+
+
+tests/furnishing_commerce_parity.test.ts:312:41 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    310 │     );
+    311 │     for (const itemId of [ID, GEAR.id]) {
+  > 312 │       const bagBefore = structuredClone(entry.sim.meta(entry.pid)!.inventory);
+        │                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    313 │       entry.world.marketList(itemId, 1, 100);
+    314 │       expect(entry.sim.countItem(itemId, entry.pid)).toBe(0);
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+    310 310 │       );
+    311 311 │       for (const itemId of [ID, GEAR.id]) {
+    312     │ - ······const·bagBefore·=·structuredClone(entry.sim.meta(entry.pid)!.inventory);
+        312 │ + ······const·bagBefore·=·structuredClone(entry.sim.meta(entry.pid)?.inventory);
+    313 313 │         entry.world.marketList(itemId, 1, 100);
+    314 314 │         expect(entry.sim.countItem(itemId, entry.pid)).toBe(0);
+
+
+tests/furnishing_commerce_parity.test.ts:329:14 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    327 │       expect(entry.sim.countItem(itemId, entry.pid)).toBe(1);
+    328 │       expect(entry.sim.marketListings.some((row) => row.id === listing.id)).toBe(false);
+  > 329 │       expect(entry.sim.meta(entry.pid)!.inventory).toEqual(expect.arrayContaining(bagBefore));
+        │              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    330 │       entry.sync();
+    331 │       expect(entry.world.inventory).toEqual(entry.sim.meta(entry.pid)!.inventory);
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+    327 327 │         expect(entry.sim.countItem(itemId, entry.pid)).toBe(1);
+    328 328 │         expect(entry.sim.marketListings.some((row) => row.id === listing.id)).toBe(false);
+    329     │ - ······expect(entry.sim.meta(entry.pid)!.inventory).toEqual(expect.arrayContaining(bagBefore));
+        329 │ + ······expect(entry.sim.meta(entry.pid)?.inventory).toEqual(expect.arrayContaining(bagBefore));
+    330 330 │         entry.sync();
+    331 331 │         expect(entry.world.inventory).toEqual(entry.sim.meta(entry.pid)!.inventory);
+
+
+tests/furnishing_commerce_parity.test.ts:331:45 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    329 │       expect(entry.sim.meta(entry.pid)!.inventory).toEqual(expect.arrayContaining(bagBefore));
+    330 │       entry.sync();
+  > 331 │       expect(entry.world.inventory).toEqual(entry.sim.meta(entry.pid)!.inventory);
+        │                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    332 │       expect(entry.world.marketInfo?.listings.some((row) => row.id === listing.id)).toBe(false);
+    333 │       expect(entry.world.copper).toBe(10_000);
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+    329 329 │         expect(entry.sim.meta(entry.pid)!.inventory).toEqual(expect.arrayContaining(bagBefore));
+    330 330 │         entry.sync();
+    331     │ - ······expect(entry.world.inventory).toEqual(entry.sim.meta(entry.pid)!.inventory);
+        331 │ + ······expect(entry.world.inventory).toEqual(entry.sim.meta(entry.pid)?.inventory);
+    332 332 │         expect(entry.world.marketInfo?.listings.some((row) => row.id === listing.id)).toBe(false);
+    333 333 │         expect(entry.world.copper).toBe(10_000);
+
+
+tests/furnishing_commerce_parity.test.ts:354:22 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    352 │       const receiver = remote.join(9202, 'Commerce Recipient');
+    353 │       atEntity(remote.sim, receiver.pid, remote.pid);
+  > 354 │       const sender = remote.sim.meta(remote.pid)!;
+        │                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    355 │       const recipient = remote.sim.meta(receiver.pid)!;
+    356 │       const payload: ItemInstancePayload = {
+
+
+tests/furnishing_commerce_parity.test.ts:355:25 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    353 │       atEntity(remote.sim, receiver.pid, remote.pid);
+    354 │       const sender = remote.sim.meta(remote.pid)!;
+  > 355 │       const recipient = remote.sim.meta(receiver.pid)!;
+        │                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    356 │       const payload: ItemInstancePayload = {
+    357 │         signer: 'Commerce Maker',
+
+
+Checked 4 files in 40ms. No fixes applied.
+Found 7 warnings.

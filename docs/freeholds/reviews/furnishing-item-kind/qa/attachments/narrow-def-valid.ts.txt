@@ -1,0 +1,4 @@
+import type { ItemDef } from '/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/types';
+import { FURNISHING } from '/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/tests/fixtures/furnishing_item';
+const valid: ItemDef = { ...FURNISHING, furnishing: { footprint: { width: 1, depth: 1 }, r: 0, decorCost: 0, surface: 'floor' } };
+void valid;

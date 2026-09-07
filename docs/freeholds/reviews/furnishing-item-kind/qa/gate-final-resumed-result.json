@@ -1,0 +1,16 @@
+{
+  "command": ["node", "scripts/gate_select.mjs"],
+  "gateEnv": {
+    "DATABASE_URL": "postgres://freeholds_qa:local_qa_only@127.0.0.1:55432/freeholds_qa",
+    "TEST_DATABASE_URL": "postgres://freeholds_qa:local_qa_only@127.0.0.1:55432/freeholds_qa",
+    "WOCC_PG_DIFFERENTIAL": "0",
+    "GATE_SELECT_BASE": "origin/feature/masterwrought",
+    "GATE_MAX_WORKERS": "4"
+  },
+  "sourceRevision": "d38663539433cbcd30642ea47d7663c5c52c59c0",
+  "sourceTree": "29d8ef9b5dc37e81592c259ac4ff9d8e1778af6d",
+  "startedAt": "2026-09-07T13:04:35.325Z",
+  "finishedAt": "2026-09-07T13:27:57.885Z",
+  "exitCode": 0,
+  "signal": null
+}

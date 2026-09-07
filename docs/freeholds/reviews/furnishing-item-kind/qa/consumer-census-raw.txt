@@ -1,0 +1,1483 @@
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/account_wealth.ts:72:  if (kind === 'market') return { kind, realm: rest };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/account_wealth.ts:103:    if (parsed.kind === 'mailPartitionMarker') migratedMailRealms.add(parsed.realm);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/account_wealth.ts:104:    if (parsed.kind === 'mail' && parsed.format === 'partition')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/account_wealth.ts:131:    if (parsed.kind === 'mailPartitionMarker') continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/account_wealth.ts:134:    if (parsed.kind === 'mail') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/admin_market_metrics.ts:52:      .filter((def) => def.kind === 'recipe')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/character_sheet.ts:131:  return reward?.kind === 'title' ? reward.text : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/character_sheet.ts:256:  if (entry.kind === 'mark') return RELIQUARY_MARK_ENGLISH.get(entry.id) ?? null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:282:          (item.kind === 'skin' && isKnownWeaponSkinId(item.itemId)) ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:283:          (item.kind === 'item' && isStoreMountItemId(item.itemId)) ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:284:          (item.kind === 'storage' && isKnownStorageSkuId(item.itemId)),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:306:      ownedItems.filter((item) => item.kind === 'skin').map((item) => item.itemId),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:310:      ownedItems.filter((item) => item.kind === 'item').map((item) => item.itemId),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:388:    if (kind === 'storage') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:447:      (kind === 'skin' && isKnownWeaponSkinId(itemId)) ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:448:      (kind === 'item' && isStoreMountItemId(itemId));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:474:      if (ownsRequested && kind === 'skin') noteWeaponSkinGrants(accountId, [itemId]);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium.ts:475:      else if (ownsRequested && kind === 'item') noteStoreMountGrants(accountId, [itemId]);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/claudium_proxy.ts:710:      (i.kind === 'cosmetic' || i.kind === 'skin' || i.kind === 'item' || i.kind === 'storage'),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/clear_item_name.ts:210:  if (target.kind === 'slot') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/clear_item_name.ts:216:  if (target.kind === 'bag') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/deeds_records.ts:97:  if (def.reward?.kind === 'border') return { deedName: def.name };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/deeds_records.ts:98:  if (def.reward?.kind === 'title') return { deedName: def.name, deedTitle: def.reward.text };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/desktop_wallet_handoff.ts:398:      if (result.kind === 'link') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/desktop_wallet_handoff.ts:417:      if (entry.action.kind === 'stepup') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/discord.ts:1031:  if (swag.kind === 'cosmetic') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/discord.ts:1216:  if (handoff.kind === 'choose') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/epic/routes.ts:86:  if (outcome.kind === 'upstream') throw new HttpError(503, 'epic.upstream');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/epic/routes.ts:87:  if (outcome.kind === 'invalid' || outcome.kind === 'malformed') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/epic/routes.ts:90:  if (outcome.kind === 'banned') throw new HttpError(403, 'epic.banned');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/epic/web_api.ts:75:  if (verdict.kind === 'malformed') return { kind: 'upstream' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:1236:  if (e.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:1427:  if (e.kind === 'mob' && e.lootable && lootHasGoneFfa(e.lootFfaTimer)) out.ffa = 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:1428:  if (e.kind === 'mob' && corpseHasDecayed(e.dead, e.corpseTimer)) out.cd = 1; // corpse decayed
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:1446:  if (e.kind === 'player' && e.templateId === 'paladin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:1453:  if (e.kind === 'mob' && !e.dead && e.threat.size > 0) out.thr = threatEntries(e, 8);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:1457:  if (e.kind === 'mob' && e.lootable && e.loot) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:9705:    if (kind === 'ignoreList' || kind === 'blockList') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:9707:      if (kind === 'ignoreList') void this.social.ignoreList(actor).catch(logErr);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:9709:    } else if (kind === 'ignore') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:9712:    } else if (kind === 'unignore') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:9715:    } else if (kind === 'block') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/game.ts:10050:    if (outcome.kind === 'mute') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/general_chat_quota.ts:273:    if (cached.kind === 'denied') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/guild_bank_lazy_loader.ts:208:    if (kind === 'permanent') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/guild_bank_lazy_loader.ts:215:      if (kind === 'busy') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/guild_bank_lazy_loader.ts:220:    if (kind === 'busy') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/http/context.ts:124:    match.kind === 'matched' ? match.params : (Object.create(null) as Record<string, string>);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/http/context.ts:133:    route: match.kind === 'matched' ? match.route.path : undefined,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/http/path_pattern.ts:201:    if (segment.kind === 'literal') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/http/registry.ts:276:    .map((segment) => (segment.kind === 'literal' ? segment.value : PARAM_SHAPE_PLACEHOLDER))
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/http/registry.ts:291:    if (sa.kind === 'literal' && sb.kind === 'literal' && sa.value !== sb.value) return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/http/router.ts:154:      .map((segment) => (segment.kind === 'literal' ? segment.value : ':'))
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/interest_policy.ts:51:  if (e.kind === 'npc') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/interest_policy.ts:82:  const subjectId = e.kind === 'player' ? e.id : e.ownerId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/moderation_service.ts:73:  return kind === 'spectate' || kind === 'unspectate' ? 'moderation.spectate' : 'moderation.act';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/pbe_boost.ts:387:    if (item.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/snapshot_timer_wire.ts:217:      aura.kind === 'stasis' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/steam/routes.ts:65:  if (outcome.kind === 'upstream') throw new HttpError(503, 'steam.upstream');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/steam/routes.ts:66:  if (outcome.kind === 'invalid' || outcome.kind === 'malformed') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/steam/routes.ts:69:  if (outcome.kind === 'banned') throw new HttpError(403, 'steam.banned');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/steam/web_api.ts:42:  if (verdict.kind === 'malformed') return { kind: 'upstream' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/storage_recovery_coordinator.ts:575:      this.nextRateKind = kind === 'scan' ? 'drive' : 'scan';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/storage_recovery_coordinator.ts:577:      if (kind === 'scan') this.startScan(entry);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/storage_recovery_coordinator.ts:583:    if (kind === 'scan') this.pacedScanQueue.set(entry.characterId, entry);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/storage_recovery_coordinator.ts:605:      const queue = kind === 'scan' ? this.pacedScanQueue : this.driveQueue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/storage_recovery_coordinator.ts:608:      const expected: Phase = kind === 'scan' ? 'scan-queued' : 'drive-queued';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/storage_recovery_coordinator.ts:841:    const scans = kind === 'drive' ? 0 : this.queuedCount(this.pacedScanQueue, 'scan-queued');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/storage_recovery_coordinator.ts:842:    const drives = kind === 'scan' ? 0 : this.queuedCount(this.driveQueue, 'drive-queued');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/storage_recovery_coordinator.ts:853:    const queue = kind === 'scan' ? this.pacedScanQueue : this.driveQueue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:127:    if (body.kind === 'link') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:140:      (body.kind === 'transaction'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:142:        : body.kind === 'stepup' && /^[0-9a-f]{32}$/.test(nonce));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:160:      body.kind === 'transaction'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:190:    if (action.kind === 'transaction') return json(res, 200, action);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:191:    if (action.kind === 'stepup') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:227:  if (!isSolanaAddress(address) || !signature || (body.kind === 'link' && !nonce)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:234:  if (body.kind === 'link') result = { kind: 'link', address, signature, nonce };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:235:  else if (body.kind === 'transaction') result = { kind: 'transaction', address, signature };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/wallet.ts:236:  else if (body.kind === 'stepup') result = { kind: 'stepup', address, signature };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/woc_market_drift_warn.ts:75:    if (kind === 'pending') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bag_pools.ts:54:  return def?.kind === 'bag' && def.materialsOnly === true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bag_pools.ts:61:  return def?.kind === 'bag' ? (def.bagSlots ?? 0) : 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bags.ts:79:  if (def.kind === 'furnishing') return 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bags.ts:81:  return UNSTACKED_KINDS.has(def.kind) ? 1 : DEFAULT_STACK;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bank.ts:400:    if (b && b.kind === 'npc' && dist2d(e.pos, b.pos) <= BANKER_RANGE) return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bank.ts:412:    if (b && b.kind === 'npc' && dist2d(p.pos, b.pos) <= BANKER_RANGE) return b.templateId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bank.ts:842:    socketBags[i] = typeof id === 'string' && ITEMS[id]?.kind === 'bag' ? id : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/border_edges.ts:84:  BORDER_EDGES.filter((e) => e.kind === 'h' && e.sealed).map((e) => ({
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/broker_custody.ts:47:    if (def?.kind === 'mount' && r.e.mountKey === def.mount && !mountOwned(r.meta, def.mount)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/colliders.ts:232:  if (s.kind === 'cone' || c.type === 'circle') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/colliders.ts:390:    if (b.kind === 'chapel' && b.assetId === undefined) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/colliders.ts:1653:  if (d.kind === 'rock') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:54:  const meta = entity.kind === 'player' ? ctx.players.get(entity.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:59:  return player.auras.find((aura) => aura.kind === 'affliction_doom');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:96:  const index = warlock.auras.findIndex((aura) => aura.kind === 'affliction_doom');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:109:      (aura.kind === 'affliction_eye' || aura.kind === 'affliction_eye_secondary'),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:114:  const eyeMult = eye.kind === 'affliction_eye_secondary' ? 0.5 : 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:116:    eye.kind === 'affliction_eye' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:117:    warlock.auras.some((aura) => aura.kind === 'affliction_judgment')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:127:    (aura) => aura.kind === 'affliction_fate_threads' && aura.sourceId === warlock.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:134:      entity.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlockId)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:180:  return entity.auras.some((aura) => aura.kind === 'affliction_possession' && aura.remaining > 0);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:189:    auras.some((aura) => aura.kind === 'affliction_possession')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:296:    !target.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlock.id)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:318:    (aura) => aura.kind === 'affliction_litany' && aura.sourceId === warlock.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:374:    (aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlock.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:377:    (aura) => aura.kind === 'affliction_eye_secondary' && aura.sourceId === warlock.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:381:      (aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlock.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:469:      candidate.kind === 'affliction_accomplice' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:514:  const linked = target.kind === 'player' && target.id !== warlock.id ? target : warlock;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:517:      (aura) => aura.kind === 'affliction_accomplice' && aura.sourceId === warlock.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:625:  const aura = target.auras.find((candidate) => candidate.kind === 'affliction_vicarious');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:731:    (aura) => aura.kind === 'affliction_judgment' && aura.remaining > 0,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:763:    target.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:767:  if (doom >= 100 && (target.kind === 'player' || MOBS[target.templateId]?.boss)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:850:          (aura.kind === 'affliction_eye' || aura.kind === 'affliction_eye_secondary'),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:881:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === warlock.id)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:906:    (aura) => aura.kind === 'affliction_consume_threads' && aura.sourceId === warlock.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:913:    (aura) => aura.kind === 'affliction_consume_threads' && aura.sourceId === warlock.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:964:    !target?.auras.some((aura) => aura.sourceId === player.id && aura.kind === 'affliction_eye')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:970:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === player.id)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:976:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === player.id)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:982:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === player.id)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:988:    !target?.auras.some((aura) => aura.kind === 'affliction_eye' && aura.sourceId === player.id)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:996:  if (aura.kind === 'affliction_accomplice' && aura.icd && aura.icd > 0) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:999:  if (aura.kind === 'affliction_litany' && aura.icd && aura.icd > 0) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:1049:  const targetCanTrigger = target.auras.some((aura) => aura.kind === 'affliction_vicarious');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/affliction.ts:1091:    if (aura.kind === 'affliction_violence' && (aura.charges ?? 0) <= 0) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/area_echo.ts:23:  return entity.auras.some((aura) => aura.kind === 'aoe_echo');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/area_echo.ts:27:  return entity.auras.some((aura) => aura.kind === 'sweeping_strikes');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/area_echo.ts:99:  const index = entity.auras.findIndex((aura) => aura.kind === 'aoe_echo');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:108:      if (aura.kind === 'resource_sap') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:128:    for (const a of p.auras) if (a.kind === 'buff_energyregen') regen *= 1 + a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:196:      const wellFed = c.kind === 'food' ? c.wellFed : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:272:    e.stealthed = e.auras.some((a) => a.kind === 'stealth');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:278:  if (e.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:311:    if (a.kind === 'thorns') tickThornsCooldown(a);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:316:        if (a.kind === 'pyre_guardian') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:318:        } else if (a.id === 'temporal_hourglass' && a.kind === 'stasis') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:320:        } else if (a.id === 'sacrilegious_march' && a.kind === 'buff_speed') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:322:        } else if (a.kind === 'affliction_eye') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:324:        } else if (a.kind === 'dot') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:330:              if (targetAura.kind === 'bleed_vuln') bleedAmp += pctValue(targetAura.value);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:412:        } else if (a.kind === 'hot' && !tickMendingCurrent(ctx, e, a)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:435:        } else if (a.kind === 'buff_mana_grace' && e.resourceType === 'mana') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:437:        } else if (a.kind === 'polymorph') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:444:      if (a.id === OSSUARY_MARK_ABILITY_ID && a.kind === 'necromancy_ossuary_mark') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:472:      if (a.kind === 'hot') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:474:        if (source && !source.dead && source.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:483:        a.kind === 'debuff_ap' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:484:        a.kind === 'die_by_sword' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:485:        a.kind === 'enrage' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:486:        a.kind === 'bloodbath' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:487:        a.kind === 'berserker_stance'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:492:  if (statsDirty && e.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:497:  e.stealthed = e.auras.some((a) => a.kind === 'stealth');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:170:    t.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:343:  if (!player.auras.some((aura) => aura.kind === 'berserker_stance')) return 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:408:  if (!ranged.wand && attacker.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:459:    if (crit && atk.kind === 'player') ctx.applySetProcs(atk, tgt, 'weaponCrit');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:513:    : target.kind === 'player'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:544:    if (attacker.kind === 'player') attacker.overpowerUntil = ctx.time + 5;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:589:  for (const a of attacker.auras) if (a.kind === 'imbue') imbueBonus += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:616:    const targetMeta = target.kind === 'player' ? ctx.players.get(target.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:660:  if (crit && attacker.kind === 'player') ctx.applySetProcs(attacker, target, 'weaponCrit');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auto_attack.ts:664:  if (attacker.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:243:        e.kind === 'defensive_stance' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:244:        e.kind === 'stealth' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:245:        e.kind === 'stasis' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:251:  return ability.effects.some((effect) => effect.type === 'selfBuff' && effect.kind === 'stasis');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:870:  if (!p.auras.some((a) => a.kind === 'stealth')) return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:1239:    !p.auras.some((a) => a.kind === 'stealth')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:1424:      !(ability.id === 'execute' && p.auras.some((aura) => aura.kind === 'sudden_death')) &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:1458:        if (target.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:1804:    if (p.kind === 'player' && ability.school !== 'physical')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:1806:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id, target);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:1995:  const idx = p.auras.findIndex((a) => a.kind === 'overload');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2193:      } else if (eff.type === 'selfBuff' && eff.kind === 'buff_spellpower') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2194:        const existing = p.auras.find((a) => a.id === res.def.id && a.kind === 'buff_spellpower');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2470:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2483:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2516:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id, pet);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2745:    if (p.kind === 'player' && ability.school !== 'physical')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2747:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id, target);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2836:    if (p.kind === 'player' && isSpell) ctx.applySetProcs(p, target, 'spellCast');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2837:    if (p.kind === 'player') onCastCompleted(ctx, p, ability.id, target);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2892:  if (p.kind === 'player' && ability.school !== 'physical' && !togglingOff)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/casting_lifecycle.ts:2894:  if (p.kind === 'player' && !togglingOff) onCastCompleted(ctx, p, ability.id, target);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:56:      a.kind === 'stun' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:57:      a.kind === 'stasis' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:58:      a.kind === 'incapacitate' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:59:      a.kind === 'polymorph',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:64:  return e.auras.some((a) => a.kind === 'stasis');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:112:  return isStunned(e) || (!isVeilboundMarchActive(e) && e.auras.some((a) => a.kind === 'root'));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:116:  return isRooted(e) || e.auras.some((a) => a.kind === 'slow');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:122:  return e.auras.some((a) => a.kind === 'silence');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:129:  for (const a of e.auras) if (a.kind === 'blind' && a.value > bonus) bonus = a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:136:  return e.auras.some((a) => a.kind === 'disarm');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:142:  return e.auras.some((a) => a.kind === 'lockout' && a.school === school);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/cc.ts:150:  for (const a of e.auras) if (a.kind === 'tongues') m = Math.max(m, a.value);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/chronomancy.ts:71:  if (aura.kind === 'temporal_echo') return 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/chronomancy.ts:87:      if (a.kind === 'temporal_echo' && a.sourceId === mageId) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/chronomancy.ts:106:      if (a.kind === 'temporal_echo' && a.sourceId === mageId && !a.echoGroup) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/chronomancy.ts:194:      if (a.kind === 'temporal_echo' && a.sourceId === source.id) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/chronomancy.ts:264:  const existing = ally.auras.find((a) => a.kind === 'temporal_echo' && a.sourceId === caster.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:205:    source?.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:207:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:238:  if (target.auras.some((a) => a.kind === 'stasis')) return 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:248:  if (target.kind === 'mob' && target.aiState === 'evade' && target.ownerId === null) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:277:  if (!resolvedHpLoss && source?.devGod && source.kind === 'player' && ctx.devCommands)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:282:  if (source?.oneShot && source.kind === 'player' && target.kind === 'mob' && ctx.devCommands) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:290:  if (!alreadyFinal && source?.kind === 'player' && source.id !== target.id && amount > 0) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:295:    if (twoHandPct > 0 && mainhand?.kind === 'weapon' && weaponHand(mainhand) === 'twohand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:305:    source.auras.some((a) => a.kind === 'defensive_stance')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:313:    target.auras.some((a) => a.kind === 'defensive_stance')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:322:    for (const a of target.auras) if (a.kind === 'shield_wall') ward = Math.max(ward, a.value);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:331:    for (const a of target.auras) if (a.kind === 'expose') exposeMult += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:342:      if (a.kind === 'spellvuln') amp += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:352:    for (const a of target.auras) if (a.kind === 'vulnerability') vuln += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:361:      if (aura.kind === 'vuln_source' && aura.sourceId === source.id) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:381:        aura.kind === 'buff_dmg_done' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:382:        aura.kind === 'bloodbath' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:383:        aura.kind === 'buff_avatar' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:384:        aura.kind === 'enrage'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:387:      } else if (aura.kind === 'sanguine') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:412:      if (aura.kind === 'buff_dr') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:414:      } else if (aura.kind === 'die_by_sword') reduction += aura.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:422:      if (aura.kind === 'buff_dr_phys') reduction += aura.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:435:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:436:    target.auras.some((aura) => aura.id === 'demon_skin' && aura.kind === 'buff_armor')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:449:    const form = source.auras.find((a) => a.kind === 'form_shadow');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:462:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:463:    target.auras.some((a) => a.kind === 'absorb' && PERSONAL_BARRIER_IDS.includes(a.id))
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:493:    source.auras.some((aura) => aura.kind === 'battle_stance')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:510:    source?.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:511:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:523:    target.auras.some((aura) => aura.kind === 'defensive_stance')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:555:        if (target.kind === 'player') grantAbilityDevotion(target, DEBT_OF_LIGHT_DEVOTION);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:582:        if (shielder && !shielder.dead && shielder.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:590:  if (!resolvedHpLoss && target.kind === 'player' && amount > 0) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:662:    source?.kind === 'mob' && source.ownerId === null
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:667:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:673:    const wardIdx = target.auras.findIndex((a) => a.kind === 'guardian_ward');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:693:  const duel = target.kind === 'player' ? ctx.duels.get(target.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:745:  const match = target.kind === 'player' ? ctx.arenaMatches.get(target.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:876:  if (target.kind === 'player' && amount >= target.hp && !target.dead) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:904:  if (target.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:930:  if (target.kind === 'player') recordDamageTaken(target, preHp - target.hp, ctx.tickCount);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:963:    if (target.kind === 'mob' && DAMAGE_IDLE_DESPAWN_MOB_IDS.has(target.templateId)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1045:    target.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1047:    (source.kind === 'player' || source.ownerId !== null)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1064:    target.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1069:    const sourcePid = source.kind === 'player' ? source.id : source.ownerId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1093:    const contributorId = source.kind === 'player' ? source.id : source.ownerId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1106:  if (source && amount > 0 && target.kind === 'player' && !target.dead) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1110:  if (source && source.kind === 'player' && source.id !== target.id) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1141:  if (target.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1171:      (kind === 'hit' || kind === 'block')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1185:        kind === 'hit' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1196:  if (kind === 'hit' && amount > 0 && !target.dead && target.hp > 0) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1224:    const fmatch = target.kind === 'player' ? ctx.arenaMatches.get(target.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1249:  const fromPlayer = source.kind === 'player' || source.ownerId !== null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1328:  if (e.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1391:  if (e.kind === 'mob' && MOBS[e.templateId]?.broodEgg) e.broodCracked = true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1393:  if (e.kind === 'mob') emitIgnivarRaidNarrativeOnDeath(ctx, e);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1410:  if (e.kind === 'mob') ctx.clearEntityMarker(e.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1418:  if (e.kind === 'player') deedsMod.onPlayerDeathForDeeds(ctx, e);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1430:  if (e.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1490:      if (m.kind === 'mob' && !m.dead && m.aggroTargetId === e.id && m.aiState !== 'dead') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1514:  if (e.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1608:    const killerPid = killer?.kind === 'player' ? killer.id : (killer?.ownerId ?? null);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:1690:          const existing = creditEntity.auras.find((aura) => aura.kind === 'bloodbath');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/destruction.ts:56:    if (aura.kind === 'destruction_ruin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/destruction.ts:69:    if (aura.kind === 'desolation') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/destruction.ts:130:        aura.kind === 'dot' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/destruction.ts:194:    (aura) => aura.id === 'immolate' && aura.kind === 'dot' && aura.sourceId === player.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/dot_mutation.ts:12:    (aura) => aura.kind === 'dot' && aura.id === dotId && aura.sourceId === sourceId,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/druid_engines.ts:172:  return player.auras.some((aura) => aura.kind === 'form_moonkin');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/druid_engines.ts:258:  const meta = player.kind === 'player' ? ctx.players.get(player.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/druid_engines.ts:273:  const meta = player.kind === 'player' ? ctx.players.get(player.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/druid_engines.ts:362:  const meta = player.kind === 'player' ? ctx.players.get(player.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:266:  return ability.effects.some((e) => e.type === 'selfBuff' && e.kind === 'stealth');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:374:        a.kind === 'hot' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:388:    if (target !== caster && ctx.isHostileTo(caster, target) && a.kind === 'dot') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:509:    const sf = p.auras.findIndex((a) => a.kind === 'form_shadow');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:625:          const chargeIndex = p.auras.findIndex((aura) => aura.kind === 'overpower_charge');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:640:          p.auras.some((aura) => aura.kind === 'enrage') &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:829:              aura.kind === 'dot' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:955:          const echoIdx = p.auras.findIndex((a) => a.kind === 'power_echo');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1368:          const echoIdx = p.auras.findIndex((a) => a.kind === 'power_echo');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1461:        if (p.auras.some((a) => a.kind === 'form_cat')) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1472:        } else if (p.auras.some((a) => a.kind === 'form_bear') && p.resourceType === 'rage') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1480:          (aura) => aura.kind === 'hot' && aura.id === ability.id && aura.sourceId === p.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1517:          (effect) => effect.type === 'selfBuff' && effect.kind === 'stasis',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1551:          if (a.kind === 'imbue' && a.id !== ability.id) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1578:        if (p.kind === 'player' && target.kind === 'player' && !ctx.isHostileTo(p, target)) break;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1635:          if (aura.kind === 'stealth') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1636:            target.stealthed = target.auras.some((entry) => entry.kind === 'stealth');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1644:        if (dispelled > 0 && target.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1728:          if (enteredCombat && hostile.kind === 'mob' && hostile.hostile) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1865:            tickInterval: eff.kind === 'buff_mana_grace' ? 5 : undefined,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:1866:            tickTimer: eff.kind === 'buff_mana_grace' ? 5 : undefined,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:2036:          (aura) => aura.kind === 'dot' && aura.id === eff.dot && aura.sourceId === p.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:2103:        const alreadySlowed = target.auras.some((aura) => aura.kind === 'slow');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:2416:          const boss = m.kind === 'mob' && MOBS[m.templateId]?.boss === true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:2937:          if (enteredCombat && m.kind === 'mob' && m.hostile)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:2968:          if (enteredCombat && m.kind === 'mob' && m.hostile)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3102:          if (mE.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3486:              aura.kind === 'silence' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3487:              aura.kind === 'blind' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3488:              aura.kind === 'disarm' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3489:              aura.kind === 'slow')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3554:          eff.kind === 'defensive_stance' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3555:          eff.kind === 'stealth' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3562:            if (eff.kind === 'stealth') p.stealthed = false; // toggled back out of stealth
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3580:        if (eff.kind === 'stasis' || isTravelFormAuraKind(eff.kind)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3616:        if (eff.kind === 'overpower_charge') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3617:          const existing = p.auras.find((aura) => aura.kind === 'overpower_charge');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3654:          stacks: eff.kind === 'overpower_charge' ? 1 : undefined,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3662:        if (eff.kind === 'form_lich') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3680:          eff.kind === 'stealth' && dropsCombatOnStealth(ability)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3688:        if (eff.kind === 'stealth' && p.kind === 'player' && p.stealthed) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:3819:          if (member.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:4077:        const existing = target.auras.find((a) => a.kind === 'sunder');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/effect_dispatch.ts:4146:          if (hostile.kind === 'mob' && !hostile.dead) ctx.applyTaunt(p, hostile);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/empower_next.ts:54:  return e.auras.find((aura) => aura.kind === 'ice_floes' && matches(aura, abilityId));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/empower_next.ts:66:    auras.find((aura) => aura.kind === 'next_cast_cheap' && matches(aura, abilityId))?.value ?? null
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/empower_next.ts:94:      (aura.kind === 'next_cast_free' || aura.kind === 'next_execute_free') &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/empower_next.ts:99:    if (aura.kind === 'battle_trance' && BATTLE_TRANCE_ABILITIES.has(abilityId)) return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/empower_next.ts:100:    if (aura.kind === 'revenge_free' && REVENGE_FREE_ABILITIES.has(abilityId)) return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/empower_next.ts:101:    if (aura.kind === 'sudden_death' && abilityId === 'execute') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/empower_next.ts:143:      aura.kind === 'next_cast_instant' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/equip_procs.ts:63:      (eff) => eff.kind === 'dot' || eff.kind === 'attackSlow',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/fire_mage.ts:112:  if (p.auras.some((a) => a.kind === 'combustion')) return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/fire_mage.ts:179:  if (!p.auras.some((a) => a.kind === 'combustion')) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/fire_mage.ts:258:  if (target.auras.some((a) => a.kind === 'cauterize_fatigue')) return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/form_swing.ts:55:  for (const a of e.auras) if (a.kind === 'form_cat') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/forms.ts:8:  return kind === 'form_bear' || kind === 'form_cat' || kind === 'form_travel';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/forms.ts:12:  return isResourceShiftFormAuraKind(kind) || kind === 'form_fireball';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/forms.ts:16:  return kind === 'form_travel' || kind === 'form_fireball';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:76:    if (a.kind === 'fingers_of_frost' && abilityId === 'ice_lance') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:77:    if (a.kind === 'brain_freeze' && abilityId === 'flurry') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:86:  const icicles = auras.find((a) => a.kind === 'icicles');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:96:  return abilityId === 'flurry' && p.auras.some((a) => a.kind === 'brain_freeze');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:111:  const existing = p.auras.find((a) => a.kind === 'fingers_of_frost');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:137:  if (p.auras.some((a) => a.kind === 'brain_freeze')) return; // wasted proc
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:156:  const existing = p.auras.find((a) => a.kind === 'icicles');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:240:  const idx = p.auras.findIndex((a) => a.kind === 'fingers_of_frost');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:254:  const idx = target.auras.findIndex((a) => a.kind === 'winters_chill');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/frost_mage.ts:375:  const idx = p.auras.findIndex((a) => a.kind === 'brain_freeze');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/haste_burst.ts:49:    if (p.exhaust && target.auras.some((a) => a.kind === 'sated')) continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/heal.ts:47:    if (a.kind === 'mortal_wound') mult *= 1 - a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/heal.ts:59:    if (a.kind === 'hex') mult *= 1 - a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/heal.ts:81:    target.auras = target.auras.filter((a) => !(a.kind === 'heal_absorb' && a.value <= 0));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/heal.ts:90:    if (a.kind === 'critvuln' && a.value > bonus) bonus = a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/heal.ts:126:  for (const aura of source.auras) if (aura.kind === 'buff_heal_done') healDone += aura.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/heal.ts:166:  if (healed > 0 && target.kind === 'player') ctx.bgOnPlayerHealed(target, source);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/heal.ts:168:  if (crit && source.kind === 'player') onSpellCrit(ctx, source, abilityId, target);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_coldsight.ts:29:  const inWindow = hunter.auras.some((aura) => aura.kind === 'hunter_cold_focus');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_coldsight.ts:81:  const windowAura = hunter.auras.find((aura) => aura.kind === 'hunter_cold_focus');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_fieldcraft.ts:141:  const bloodtrail = hunter.auras.some((aura) => aura.kind === 'hunter_bloodtrail');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_fieldcraft.ts:284:  if (hunter.auras.some((aura) => aura.kind === 'hunter_bloodtrail'))
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_fieldcraft.ts:307:  const empowered = hunter.auras.some((aura) => aura.kind === 'hunter_bloodtrail');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_packlord.ts:193:  if (hunter.auras.some((aura) => aura.kind === 'hunter_frenzy')) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_packlord.ts:307:  return owner?.auras.some((aura) => aura.kind === 'hunter_frenzy') ? 1.35 : 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_packlord.ts:311:  if (!hunter.auras.some((aura) => aura.kind === 'hunter_frenzy')) return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_shared.ts:85:  const aura = hunter?.auras.find((candidate) => candidate.kind === 'hunter_ferocity');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_shared.ts:126:        effect.type === 'selfBuff' && effect.kind === 'shield_wall'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_shared.ts:317:    if (aura.kind === 'pet_damage_pct') multiplier += pctValue(aura.value);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/hunter_shared.ts:323:    if (owner?.auras.some((aura) => aura.kind === 'hunter_frenzy')) multiplier *= 1.25;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/mass_resurrection.ts:22:    return member?.kind === 'player' && (member.dead || member.ghost);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/natures_fury.ts:22:  if (!p.auras.some((aura) => aura.kind === 'form_moonkin')) return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:44:    entity.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:55:  return entity.auras.find((aura) => aura.kind === 'soul_fragments')?.stacks ?? 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:59:  const existing = owner.auras.find((aura) => aura.kind === 'soul_fragments');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:93:  const aura = owner.auras.find((candidate) => candidate.kind === 'soul_fragments');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:105:  return owner.auras.filter((aura) => aura.kind === 'necromancy_death_echo');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:220:  if (landedDamage <= 0 || !owner.auras.some((aura) => aura.kind === 'form_lich')) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:270:      entity.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:397:  const lichForm = owner.auras.find((aura) => aura.kind === 'form_lich');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:460:    if (target.kind === 'mob') ctx.applyTaunt(undead, target);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:606:    source.kind === 'player'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:645:        candidate.kind === 'necromancy_ossuary_mark' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:835:      aura.kind === 'necromancy_ossuary_mark' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/necromancy.ts:856:      aura.kind === 'necromancy_harvest_mark' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_aegis.ts:24:    .filter((ally) => ally.kind === 'player' && ctx.hasLineOfSight(caster, ally));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_beacon.ts:32:  const meta = paladin.kind === 'player' ? ctx.players.get(paladin.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_beacon.ts:53:    (candidate) => candidate.kind === 'beacon_of_light' && candidate.sourceId === paladinId,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_beacon.ts:82:        (aura) => aura.kind === 'beacon_of_light' && aura.sourceId === source.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_control.ts:58:  if (target.kind === 'player') ctx.playerGrid.update(target);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_dawns_wrath.ts:27:  const meta: PlayerMeta | undefined = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_dawns_wrath.ts:47:  const meta: PlayerMeta | undefined = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_solar_reprisal.ts:54:  const meta: PlayerMeta | undefined = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_solar_reprisal.ts:127:  const meta: PlayerMeta | undefined = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_sun_verdict.ts:26:    if (aura.kind === 'sun_verdict' && aura.sourceId === sourceId) return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_sun_verdict.ts:34:    aura.kind === 'sun_verdict' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_support.ts:55:    if (conflicts.length > 0 && entity.kind === 'player') ctx.recalcPlayer(entity);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_support.ts:76:    if (removed && entity.kind === 'player') ctx.recalcPlayer(entity);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_support.ts:83:    if (aura.kind === 'buff_mana_grace') reduction += aura.value2 ?? 0.03;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_support.ts:91:    if (aura.kind === 'buff_healing_done') bonus += aura.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_support.ts:92:    else if (aura.kind === 'sacred_form') bonus += aura.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_talents.ts:68:      aura.kind === 'absorb' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_talents.ts:133:  if (outcome.kind === 'healing') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_veilbound_march.ts:20:    (aura.kind === 'root' || aura.kind === 'slow') &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/paladin_veilbound_march.ts:151:  if (target.kind === 'player') ctx.playerGrid.update(target);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/player_attack_reach.ts:16:    target.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/priest/presentation.ts:46:    else if (aura.id === 'shadow_word_pain' && aura.kind === 'dot') out.dirge = true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/priest/presentation.ts:48:    else if (aura.id === GLOOMTITHE_AURA_ID || aura.kind === 'gloomtithe') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/priest/presentation.ts:67:      (aura.id === GLOOMTITHE_AURA_ID || aura.kind === 'gloomtithe') &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/priest/talents.ts:138:    (aura) => aura.id === 'inner_focus' && aura.kind === 'cast_shield',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/priest/vespers.ts:54:    (aura) => aura.id === 'shadow_word_pain' && aura.kind === 'dot' && aura.sourceId === priestId,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/priest/vespers.ts:146:  const existing = priest.auras.find((aura) => aura.kind === 'gloomtithe');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/priest/vespers.ts:168:  return priest.auras.find((aura) => aura.kind === 'gloomtithe')?.stacks ?? 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/priest/vespers.ts:202:  const index = priest.auras.findIndex((aura) => aura.kind === 'gloomtithe');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/priest/vespers.ts:237:  if (source.kind === 'player') return source;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/quest_damage_gate.ts:22:  const attackerPid = source.kind === 'player' ? source.id : source.ownerId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/resurrection_offer.ts:50:  return caster?.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/rogue_engines.ts:25:  const meta = p.kind === 'player' ? ctx.players.get(p.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/rogue_engines.ts:303:  if (p.auras.some((aura) => aura.kind === 'stealth')) return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/rogue_engines.ts:346:  if (p.auras.some((aura) => aura.kind === 'stealth')) return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/rogue_talents.ts:32:      a.kind === 'stealth' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/rogue_talents.ts:33:      (a.id === DUSK_ECONOMY_AURA_ID && a.kind === 'dusk_economy') ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/shaman_talents.ts:301:    (aura) => aura.id === 'lightning_shield' && aura.kind === 'thorns',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/shaman_talents.ts:377:      if (aura.kind === 'root' || aura.kind === 'slow') removeAuraAt(ctx, player, index);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/spell_combat.ts:9:    if (aura.kind === 'buff_spellcrit') bonus += aura.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/spell_combat.ts:10:    else if (aura.kind === 'sacred_form') bonus += aura.value2 ?? 0.05;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/spell_combat.ts:18:    if (aura.kind === 'buff_spelldmg') bonus += aura.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/spell_combat.ts:21:    else if (aura.kind === 'form_moonkin') bonus += 0.2;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/spell_combat.ts:34:    if (aura.kind === 'buff_spellhaste') bonus += aura.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/spell_combat.ts:40:  return p.auras.some((aura) => aura.kind === 'cast_shield');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/spell_resist.ts:73:  const mobAttacker = caster.kind === 'mob' && caster.hostile && caster.ownerId === null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/spell_resist.ts:74:  const playerSide = target.kind === 'player' || target.ownerId !== null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/stealth.ts:39:    if (e.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/stealth.ts:55:      e.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/stealth_focus.ts:76:    if (entity.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/sure_crit.ts:5:  return entity.auras.some((aura) => aura.kind === 'sure_crit');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/sure_crit.ts:9:  const index = entity.auras.findIndex((aura) => aura.kind === 'sure_crit');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/tank_crit_immunity.ts:45:    return target.auras.some((a) => a.kind === 'form_bear');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/temporal_hourglass.ts:23:  return entity.auras.some((aura) => aura.id === TEMPORAL_HOURGLASS_ID && aura.kind === 'stasis');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/temporal_hourglass.ts:29:    (candidate) => candidate.id === TEMPORAL_HOURGLASS_ID && candidate.kind === 'stasis',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/temporal_hourglass.ts:95:  return target.auras.some((aura) => aura.id === TEMPORAL_HOURGLASS_ID && aura.kind === 'stasis');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/temporal_hourglass.ts:104:      target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/temporal_hourglass.ts:134:    (aura) => aura.id === TEMPORAL_HOURGLASS_ID && aura.kind === 'incapacitate',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/temporal_hourglass.ts:272:          candidate.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/thorns_charge.ts:58:    if (a.kind === 'thorns' && consumeThornsCharge(a)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/thorns_charge.ts:74:      if (defender.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/thorns_charge.ts:83:    if (a.kind === 'thorns' && thornsDepleted(a)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/warlock_talents.ts:86:    (effect) => effect.type === 'selfBuff' && effect.kind === 'buff_armor',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/warlock_utility.ts:9:      aura.id === UMBRAL_ANCHOR_ID && aura.kind === 'warlock_anchor' && aura.sourceId === entity.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/warrior_hit_table.ts:34:    (total, aura) => total + (aura.kind === 'buff_block' ? aura.value : 0),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/consuming.ts:61:  return kind === 'food'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/corpse_interaction.ts:19:    mob.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dead_target.ts:14:  if (e.kind === 'mob' && e.ownerId !== viewerId && corpseHasDecayed(e.dead, e.corpseTimer)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dead_target.ts:18:  if (e.kind === 'player') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dead_target.ts:20:  return e.kind === 'mob' && e.ownerId === viewerId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/deeds.ts:589:  const pid = ent ? (ent.kind === 'player' ? ent.id : ent.ownerId) : entityId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/deeds.ts:788:  if (def.reward?.kind === 'title' && isHorizonsTitleDeed(deedId)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/deeds.ts:1265:    if (ent && ent.kind === 'mob' && !ent.dead && ent.templateId === THUNZHARR_ID) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/deeds.ts:1521:  if (source.kind === 'player' && source.id !== target.id) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/deeds.ts:1524:      if (target.kind === 'mob' && MOBS[target.templateId]?.dummy === true) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/deeds.ts:1530:        if (crit && kind === 'hit' && amount > 0) bumpDeedStat(ctx, meta, 'crits', 1);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/deeds.ts:1534:  if (target.kind === 'mob' && PARTICIPANT_TRACKED.has(target.templateId) && amount > 0) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/deeds.ts:1535:    const pid = source.kind === 'player' ? source.id : source.ownerId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/deeds.ts:1759:  const killerPid = killer ? (killer.kind === 'player' ? killer.id : killer.ownerId) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/drowned_litany_boss.ts:131:    if (p && !p.dead && p.kind === 'player') out.push(p);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/drowned_litany_rite.ts:315:  if (state.kind === 'drowned_reliquary') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/drowned_litany_rooms.ts:22:  return kind === 'pressure_plate' || isLitanyPuzzleKind(kind);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/drowned_litany_rooms.ts:217:  if (state.kind === 'bell_rope') onBellRopePulled(ctx, run);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/drowned_litany_rooms.ts:372:      if (state.kind === 'bell_rope') continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:269:    if (state.kind === 'locked_door') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:287:      state.kind === 'reward_chest' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:288:      state.kind === 'locked_chest' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:289:      state.kind === 'drowned_reliquary'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:292:    else if (state.kind === 'cracked_grave') solidR = DELVE_GRAVE_SOLID_R;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:293:    else if (state.kind === 'destructible_wall') solidR = obj.hp > 0 ? DELVE_WALL_SOLID_R : 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1045:  const doors = spawned.filter((s) => s.kind === 'locked_door');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1074:  const maxHp = kind === 'destructible_wall' ? 80 : 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1079:  obj.lootable = kind === 'cracked_grave' || kind === 'destructible_wall' || kind === 'module_exit';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1148:    if (run.objectState[id]?.kind === 'module_exit') return ctx.entities.get(id) ?? null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1537:  if (state.kind === 'cracked_grave') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1552:  if (state.kind === 'locked_door') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1563:  if (state.kind === 'destructible_wall') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1567:  if (state.kind === 'bell_rope') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1578:  if (state.kind === 'module_exit') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1605:  if (state.kind === 'drowned_reliquary' && !state.looted && delveHasLiveMobs(ctx, run)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1611:  if (state.kind === 'locked_chest') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1651:  if (state.kind === 'reward_chest') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1676:  if (state.kind === 'surface_exit') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/delves/runs.ts:1714:  if (state.kind === 'drowned_reliquary') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev/bis_gear.ts:29:  if (item.kind === 'weapon' && item.weapon) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev/bis_gear.ts:49:    (item) => item.quality === 'epic' && (item.kind === 'armor' || item.kind === 'weapon'),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev/bis_gear.ts:64:        (item) => item.kind === 'weapon' && item.weapon?.dagger === true,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev/cascade_playtest.ts:70:    const echo = t.auras.find((a) => a.kind === 'temporal_echo' && a.sourceId === caster.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_commands.ts:80:      if (entity.kind === 'player' && entity.targetId === id) entity.targetId = null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_commands.ts:651:      const wantSetPiece = kind === 'infernal' || kind === 'citadel';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_commands.ts:936:      ((targeted.kind === 'player' && targeted.id !== pid) ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:197:  // blockValue lives on shields specifically. kind === 'armor' is not enough to
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:207:  return item.kind === 'weapon' && weaponHand(item) === 'twohand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:309:    (item) => item.kind === 'bag' && !isMaterialsOnlyBag(item),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:406:        pool.filter((item) => item.kind === 'held_offhand' && canEquipItem(cls, item)),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:422:      pool.filter((item) => item.kind === 'held_offhand' && canEquipItem(cls, item)),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/ember_lilies.ts:103:  }).filter((d) => d.kind === 'rock');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/ignivar.ts:1620:      if (player?.kind === 'player' && meta) resetLongCooldownsForRaidWipe(player, meta.known);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:171:      e.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:183:  return kind === 'slow' || ctx.isControlAura(kind);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:188:    target.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:199:    target.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:220:  return target && !target.dead && target.kind === 'player' ? target : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:316:    if (player?.kind === 'player' && meta) resetLongCooldownsForRaidWipe(player, meta.known);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:359:    const next = top && !top.dead && top.kind === 'player' ? top : room[0];
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:572:      (e.kind === 'player' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:573:        (e.kind === 'mob' && (isNythraxisRaidAddTemplate(e.templateId) || e.ownerId !== null))) &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:809:    if (victim && !victim.dead && victim.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:883:    if (victim && !victim.dead && victim.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:962:          aura.kind === 'stun' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:972:    const ghostDisplay = e.kind === 'player' && e.dead && e.ghost ? [e.hp, e.resource] : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:1123:    .filter((e): e is Entity => !!e && e.kind === 'player' && !e.dead);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:1367:      e.kind === 'object' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:1387:      e.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/nythraxis.ts:1604:    (e) => e.kind === 'mob' && e.templateId === templateId && !e.dead && dist2d(e.pos, pos) < 10,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/quest_summon.ts:29:      e.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/quest_summon.ts:52:  if (owner && owner.kind === 'player' && !owner.dead) ctx.aggroMob(mob, owner, false);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/varkhul.ts:2121:    if (blocker?.kind === 'player' && !blocker.dead) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/encounters/varkhul.ts:2789:      if (player?.kind === 'player' && meta) resetLongCooldownsForRaidWipe(player, meta.known);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:405:    if (a.kind === 'buff_ap') bonusAp += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:409:    else if (a.kind === 'debuff_ap') bonusAp -= a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:410:    else if (a.kind === 'buff_armor') flatAuraArmor += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:411:    else if (a.kind === 'buff_int') s.int += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:412:    else if (a.kind === 'buff_agi') s.agi += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:413:    else if (a.kind === 'buff_spi') s.spi += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:414:    else if (a.kind === 'buff_sta') s.sta += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:415:    else if (a.kind === 'buff_allstats') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:421:    } else if (a.kind === 'buff_spellpower') bonusSp += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:422:    else if (a.kind === 'buff_crit' || a.kind === 'buff_reckless' || a.kind === 'bloodbath')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:424:    else if (a.kind === 'die_by_sword') bonusDodge += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:425:    else if (a.kind === 'enrage') bonusHaste += ENRAGE_HASTE_PCT;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:426:    else if (a.kind === 'buff_maxhp_pct') maxHpPctAura += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:427:    else if (a.kind === 'buff_allstats_pct') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:438:    } else if (a.kind === 'buff_dodge') bonusDodge += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:439:    else if (a.kind === 'buff_scale') scaleMul *= a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:441:    else if (a.kind === 'form_metamorph') scaleMul *= 1.35;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:444:    else if (a.kind === 'buff_stats_pct') allStatsPct += a.value / 100;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:445:    else if (a.kind === 'buff_int_pct') intPct += a.value / 100;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:446:    else if (a.kind === 'buff_sta_pct') staPct += a.value / 100;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:447:    else if (a.kind === 'buff_armor_pct') buffArmorPct += a.value / 100;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:448:    else if (a.kind === 'buff_ap_pct') buffApPct += a.value / 100;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:451:    else if (a.kind === 'buff_avatar') scaleMul *= AVATAR_SCALE;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:452:    else if (a.kind === 'form_bear') bearForm = true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:453:    else if (a.kind === 'form_cat') catForm = true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:459:    else if (a.kind === 'form_moonkin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:556:    offhand?.kind === 'weapon' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:570:    ((mainhand?.kind === 'weapon' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:573:      (offhand?.kind === 'weapon' && offhand.hand === 'twohand'));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:590:    (ITEMS[equipment.offhand]?.kind === 'weapon' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:591:      ITEMS[equipment.offhand]?.kind === 'held_offhand' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:677:    (e.auras.some((a) => a.kind === 'berserker_stance') ? BERSERKER_CRIT_CHANCE : 0);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:709:  if (e.kind === 'player') e.scale = scaleMul;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity_roster.ts:155:  if (e.kind === 'player') ctx.playerGrid.insert(e);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity_roster.ts:168:  if (e.kind === 'player' && e.templateId === 'paladin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity_roster.ts:179:  if (e.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity_roster.ts:184:  if (e.kind === 'player') ctx.playerGrid.remove(e);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity_roster.ts:202:  if (e.kind === 'player') ctx.playerGrid.update(e);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity_roster.ts:226:      e.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:53:  return item?.kind === 'armor' && item.slot === 'offhand' && item.shield === true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:64:  if (item.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:80:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:83:  if (item.kind === 'weapon' && slot === 'offhand') return weaponHand(item) !== 'mainhand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:345:    const titanPair = item.kind === 'weapon' && canDualWieldTwoHand(cls, spec);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:346:    if (mainhand?.kind === 'weapon' && weaponHand(mainhand) === 'twohand' && !titanPair) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:351:  if (slot === 'mainhand' && item.kind === 'weapon' && weaponHand(item) === 'twohand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:354:    const titanPair = offhand?.kind === 'weapon' && canDualWieldTwoHand(cls, spec);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:408:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:414:  if (item.kind === 'held_offhand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:422:  if (cls === 'rogue' && item.kind === 'weapon' && weaponHand(item) === 'twohand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:440:  if (item.kind === 'armor') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:70:  if (def.kind === 'furnishing') return 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:71:  if (def.kind === 'mount') return 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:88:  if (def.kind === 'furnishing') return 'other';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:89:  if (def.kind === 'mount') return 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:91:  if (def.kind === 'weapon') return 'weapon';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:94:  if (def.kind === 'armor' || def.kind === 'held_offhand') return 'armor';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:165:  if (def.kind === 'quest') return 'quest_item';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/fen_willows.ts:44:  }).filter((d) => d.kind === 'rock');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/fen_willows.ts:114:  }).filter((d) => d.kind === 'rock');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/instances/card_master.ts:14:      e.kind === 'npc' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/instances/crucible_vendor.ts:24:      e.kind === 'npc' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/instances/heroic_vendor.ts:23:      e.kind === 'npc' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/interaction.ts:909:      if (e.kind === 'npc' && e.templateId === SPIRIT_HEALER_NPC_ID && d2 < bestHealerD2) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/interaction.ts:926:      if (target.kind === 'mob' && target.lootable) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/interaction.ts:934:      if (target.kind === 'object' && target.lootable) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/interaction.ts:972:      if (target.kind === 'npc' && ctx.bankerIds.includes(target.id)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/interaction.ts:995:      e.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/interaction.ts:1004:      e.kind === 'object' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_budget.ts:157:  if (item.kind === 'furnishing') return undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_budget.ts:158:  return item.kind === 'held_offhand' && item.occupiesHand === false
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:351:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:353:    !!item.slot && (item.kind === 'armor' || item.kind === 'weapon' || item.kind === 'held_offhand')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:377:  return item.kind === 'weapon' && item.hand === 'twohand'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:384:  if (item.kind === 'furnishing') return 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:394:  if (item.kind === 'furnishing') return 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_storage_rules.ts:5:  if (kind === 'furnishing') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:182:      mainhand?.kind === 'weapon' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:198:    mainhand?.kind === 'weapon' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:488:  if (def?.kind === 'furnishing') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:778:  if (def?.kind === 'furnishing') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:912:  if (def.kind === 'food' || def.kind === 'drink') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:925:    const slot = def.kind === 'food' ? 'eating' : 'drinking';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:929:        def.kind === 'food' ? 'You are already eating.' : 'You are already drinking.',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:954:      text: def.kind === 'food' ? 'You sit down to eat.' : 'You sit down to drink.',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:958:  } else if (def.kind === 'potion') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1025:  } else if (def.kind === 'elixir' || def.kind === 'scroll' || def.kind === 'flask') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1043:    const isFlask = def.kind === 'flask';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1114:    if (def.kind === 'scroll') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1129:  } else if (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1134:  } else if (def.kind === 'bag') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1136:  } else if (def.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1142:  } else if (def.kind === 'recipe') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1240:  if (def.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1334:      e.kind === 'npc' && e.vendorItems.length > 0 && dist2d(p.pos, e.pos) <= INTERACT_RANGE + 2,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1406:  if (def.kind === 'quest') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mail/post_office.ts:254:      if (m.kind === 'player' && now >= m.expiresAt && hasEscrow) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mail/post_office.ts:317:      if (box && box.kind === 'object' && dist2d(e.pos, box.pos) <= MAIL_RANGE) return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mail/post_office.ts:887:      ? opts.kind === 'player'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mail/post_office.ts:969:      if (m.kind === 'player' && m.senderKey === undefined && m.senderName === oldName) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mail/post_office.ts:1054:        m.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mail/post_office.ts:1071:      if (m.kind === 'player' && escrowed && !m.returned && !owns(homeKey)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mail/post_office.ts:1216:      const kind: MailKind = m.kind === 'player' || m.kind === 'npc' ? m.kind : 'system';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mail/post_office.ts:1225:        if (kind === 'player' && ITEMS[item.itemId]?.soulbound) returnedItems.push(item);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mail/post_office.ts:1262:          : kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market.ts:345:      if (m && m.kind === 'npc' && dist2d(e.pos, m.pos) <= MARKET_RANGE) return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:61:    ...[...new Set(items.filter((item) => item.kind === 'bag').map((item) => item.bagSlots ?? 0))]
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:194:  if (filter === 'furnishing') return item.kind === 'furnishing';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:195:  if (item.kind === 'furnishing') return filter === 'all';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:197:  if (filter === 'weapon') return item.kind === 'weapon' && item.slot === 'mainhand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:199:    return (item.kind === 'armor' || item.kind === 'held_offhand') && item.slot !== undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:202:      item.kind === 'food' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:203:      item.kind === 'drink' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:204:      item.kind === 'potion' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:205:      item.kind === 'elixir' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:206:      item.kind === 'flask' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:207:      item.kind === 'scroll'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:209:  if (filter === 'bag') return item.kind === 'bag';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:211:    return !isCosmeticItem(item) && (item.kind === 'junk' || item.kind === 'tool');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:213:  if (filter === 'pattern') return item.kind === 'recipe';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:222:  if (filter === 'other') return item.kind === 'quest' || item.kind === 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:250:    return (item.kind === 'armor' || item.kind === 'held_offhand') && item.slot === subtype;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:251:  if (query.itemType === 'weapon') return item.kind === 'weapon' && weaponFamily(item) === subtype;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:258:    return item.kind === 'bag' && (item.bagSlots ?? 0) === Number(subtype);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:269:  return item.kind === 'armor' && item.armorType === query.armorClass;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/material_derivation.ts:110:  return readonlySetView([...sources].filter((id) => tables.items[id]?.kind === 'junk'));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/boss_mechanics.ts:369:      if (pl.kind === 'player' && !pl.dead && d2 < bestD) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/boss_mechanics.ts:427:    if (victim && !victim.dead && victim.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/dragonkin_brood.ts:303:        if (victim && !victim.dead && victim.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/dragonkin_brood.ts:329:        (a) => a.kind === 'stun' && a.sourceId !== undefined && a.sourceId !== e.id,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/dragonkin_brood.ts:333:        if (src && !src.dead && src.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/egg_hatchling.ts:17:  const ownerId = killer.kind === 'player' ? killer.id : killer.ownerId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/locomotion.ts:490:    const polymorphAura = mob.auras.find((a) => a.kind === 'polymorph');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/locomotion.ts:563:        if (e.auras.some((a) => a.kind === 'stealth'))
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/locomotion.ts:917:  if (kind === 'stomp') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:13:// `mob.hostile` / `target.kind === 'player'` guards short-circuit BEFORE their proc's
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:48:    a.kind === 'hot' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:49:    a.kind === 'absorb' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:50:    a.kind === 'imbue' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:53:    a.kind === 'resource_sap'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:348:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:402:  if (cv && mob.hostile && target.kind === 'player' && !target.dead && ctx.rng.chance(cv.chance)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:462:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:510:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:532:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:558:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:603:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:684:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:710:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:735:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:801:  if (demo && !mob.dead && target.kind === 'player' && ctx.rng.chance(demo.chance ?? 1)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:824:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:862:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:892:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:935:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:959:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:982:    target.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:1081:  const existing = target.auras.find((a) => a.id === id && a.kind === 'dot');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/mob_swing.ts:1118:  const existing = target.auras.find((a) => a.kind === 'corrode');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/move_toward.ts:121:    e.kind === 'player'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/quest_gated_aggro.ts:25:  const targetPid = target.kind === 'player' ? target.id : target.ownerId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/quest_gated_aggro.ts:36:  const aPlayerDriven = a.kind === 'player' || a.ownerId !== null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/quest_gated_aggro.ts:37:  const bPlayerDriven = b.kind === 'player' || b.ownerId !== null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/quest_gated_aggro.ts:40:    a.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/quest_gated_aggro.ts:47:    b.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/social_aggro.ts:31:      m.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/social_aggro.ts:73:      m.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mob/targeting.ts:187:    if (e.kind === 'player') candidates.push(e);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mounts.ts:62:      if (def.kind === 'mount') mountItemIds.set(def.mount, def.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mounts.ts:90:    if (def?.kind === 'mount') owned.add(def.mount);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mounts_training.ts:83:    if (e.kind === 'npc' && e.templateId === STABLEMASTER_NPC_ID) return e;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/obs.ts:118:        if (wantMana && def.kind === 'drink') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/obs.ts:122:        if (wantHp && def.kind === 'food') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/obs.ts:218:        (aura) => aura.sourceId === p.id && aura.kind === 'affliction_eye',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/obs.ts:304:      e.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/obs.ts:312:    if (e.kind === 'object' && e.lootable && d2 < bestObjectD2) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/obs.ts:320:      e.kind === 'npc' || (e.kind === 'mob' && !e.hostile && !e.dead && e.questIds.length > 0);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/paladin_devotion.ts:76:  return e.kind === 'player' && e.templateId === 'paladin' ? (e.paladinDevotion ?? null) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/paladin_devotion.ts:279:        if (effect.type === 'selfBuff' && effect.kind === 'buff_block') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/paladin_devotion.ts:301:        return effect.type === 'selfBuff' && effect.kind === 'paladin_debt_of_light'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/party_frame_info.ts:103:    if (aura.kind === 'absorb') total += Math.max(0, aura.value);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/party_frame_info.ts:113:      entity.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_ai.ts:172:        target.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_ai.ts:455:  for (const a of pet.auras) if (a.kind === 'pet_spellhaste') bonus += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_ai.ts:633:      m.kind === 'mob' && (m.aggroTargetId === owner.id || m.aggroTargetId === pet.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_ai.ts:645:        (m.kind === 'mob' && m.threat.has(owner.id)) ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_ai.ts:646:        (m.kind === 'player' && owner.inCombat));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_ai.ts:660:  return target.kind === 'mob' && questGateBlocksAggro(ctx.players, target, pet);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_commands.ts:106:  if (aura.kind === 'buff_sta') return aura.value * 10;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_commands.ts:107:  if (aura.kind === 'buff_allstats') return aura.value * 10;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_commands.ts:117:  if (target.kind === 'player') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_commands.ts:124:  if (aura.kind === 'buff_sta_pct' || aura.kind === 'buff_stats_pct') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_commands.ts:140:  if (target.kind === 'player') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_commands.ts:653:    if (target.kind === 'mob' && target.hostile && questGateBlocksAggro(ctx.players, target, pet)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_commands.ts:658:    if (target.kind === 'mob' && target.hostile) addThreat(target, pet.id, 1);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_commands.ts:750:  if (target.kind === 'mob' && target.hostile) addThreat(target, pet.id, 1);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_selection.ts:11:    entity.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_selection.ts:28:    entity.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/player_motion.ts:216:    isVeilboundMarchActive(e) || e.auras.some((aura) => aura.kind === 'slow_immunity');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/player_motion.ts:218:    if ((!slowImmune && a.kind === 'slow') || a.kind === 'stealth') slow = Math.min(slow, a.value);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/player_motion.ts:220:    if (a.kind === 'buff_speed' || a.kind === 'form_travel' || a.kind === 'form_fireball') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/player_motion.ts:224:    if (a.kind === 'enrage') speed = Math.max(speed, ENRAGE_MOVE_MULT);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/player_motion.ts:239:  for (const a of e.auras) if (a.kind === 'buff_jump') m = Math.max(m, a.value);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/player_motion.ts:375:          p.auras.some((a) => a.kind === 'processional_grace'));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/commission.ts:51:  if (kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/commission.ts:52:  return kind === 'weapon' || kind === 'armor' || kind === 'held_offhand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/crafting.ts:168:  if (def?.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/crafting.ts:197:  if (def?.kind === 'furnishing') return isSignableMaterialRarity(outputQuality);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/crafting.ts:1175:  // battlefieldExperienceTrickle arm (gated on def.kind === 'potion') never
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/disenchant_reagents.ts:71:  if (def.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/disenchant_reagents.ts:73:  if (def.kind === 'armor') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/disenchant_reagents.ts:76:  if (def.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/enchanting.ts:225:  if (def?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/enchanting.ts:228:    (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/enchanting.ts:1285:  if (itemDef.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/farmer_npcs.ts:37:  return e.kind === 'npc' && NPCS[e.templateId]?.farmer === true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/fishing.ts:710:  const isGreyFishingJunk = ITEMS[caught]?.kind === 'junk' && !isRawCookingCatch(caught);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:170:  if (def?.kind === 'furnishing' || def?.masterwrought !== true) return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:188:  return def.kind === 'weapon' && def.hand === 'twohand'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:211:  if (def.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:284:  if (ITEMS[itemId]?.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:411:  if (def?.kind === 'furnishing' || def?.masterwrought !== true) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/salvage.ts:60:  if (def?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/salvage.ts:63:    (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/sundering.ts:73:  if (def?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/sundering.ts:77:    SUNDERABLE_GEAR_KINDS.has(def.kind) &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/tools.ts:40:  if (item?.kind === 'furnishing') return undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/tools.ts:195:    if (item?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/tools.ts:554:    if (item?.kind === 'furnishing') continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/tools.ts:602:    TOOL_EFFECTS[effectId as ToolEffectId].kind === 'respawnSpeed'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/tools.ts:774:  switch (def.kind) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/quest_gated_entity.ts:73:  if (entity.kind === 'object') return isQuestGatedGroundObjectHidden(entity, questLog);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/quest_targets.ts:511:      if (kind === 'none' || kind === 'active') continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:326:  if (!source || source.kind === 'none') return undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:327:  if (source.kind === 'delve') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:342:  if (source.kind === 'deed_stat') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:405:    if (ITEMS[itemId]?.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:975:      if (relic.kind === 'item') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:979:      } else if (relic.kind === 'mark') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:983:      } else if (relic.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:987:      } else if (relic.kind === 'weapon_skin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:991:      } else if (relic.kind === 'title') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:1064:  return (kind === 'item' ? index.items : index.marks).includes(id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/resurrection.ts:148:      a.kind === 'cauterize_fatigue' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/rift_gen.ts:512:  if (puzzle.kind === 'rune_pylons') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/rift_gen.ts:528:  } else if (puzzle.kind === 'ice_slide' && iceZone) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/rift_gen.ts:536:  } else if (puzzle.kind === 'boulder_push') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/rift_gen.ts:549:  } else if (puzzle.kind === 'sequence') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/rift_gen.ts:842:  const iceZone = puzzle.kind === 'ice_slide' ? iceZoneFor(geo) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/rift_gen.ts:859:    puzzle.kind === 'none' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/runs.ts:308:  inst.pylonTotal = floor.puzzle.kind === 'rune_pylons' ? floor.puzzle.pylonCount : 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/runs.ts:309:  inst.puzzleSolved = floor.puzzle.kind === 'none';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/runs.ts:1041:      if (floor.puzzle.kind === 'ice_slide' && !inst.puzzleSolved) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/runs.ts:1042:        const goal = floor.objects.find((o) => o.kind === 'ice_goal');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/runs.ts:1093:      if (floor.puzzle.kind === 'sequence' && !inst.puzzleSolved) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/runs.ts:1322:  const chest = floor.objects.find((o) => o.kind === 'chest');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/runs.ts:1835:    if (floor.puzzle.kind === 'boulder_push' && !inst.puzzleSolved && inst.boulderPads.length) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/rift/runs.ts:1891:        floor.puzzle.kind === 'rune_pylons'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:2171:        const isPlayerFall = source === null && ability === 'Falling' && target.kind === 'player';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:3068:          meta.bags[i] = id && ITEMS[id]?.kind === 'bag' ? id : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:3841:      if (entity.kind === 'mob' && entity.tappedById === pid) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:5912:    if (source.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:5987:    for (const a of e.auras) if (a.kind === 'cost_tax' && a.value > pct) pct = a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6106:      if (e.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6119:      } else if (e.kind === 'npc') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6121:      } else if (e.kind === 'object') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6330:    return e.auras.find((a) => a.id === 'fear_incap' && a.kind === 'incapacitate');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6334:    if (!aura || e.auras.some((a) => a.kind === 'root') || hasUnbreakableMovementLock(e, aura))
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6342:    if (e.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6359:    return kind === 'stun' || kind === 'root' || kind === 'incapacitate' || kind === 'polymorph';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6364:      kind === 'silence' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6365:      kind === 'blind' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6366:      kind === 'disarm' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6367:      kind === 'slow' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6368:      kind === 'lockout' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6369:      kind === 'tongues'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6374:      (existing) => existing.id === 'ice_block' && existing.kind === 'stasis',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6394:    const meta = e.kind === 'player' ? this.players.get(e.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6421:      if (e.kind !== 'player' && a.kind === 'buff_armor') armor += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6424:      else if (e.kind !== 'player' && a.kind === 'buff_armor_pct')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6427:      if (a.kind === 'corrode') armor -= a.value * (a.stacks ?? 1);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6428:      else if (a.kind === 'sunder')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6430:      else if (a.kind === 'faerie_fire')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6434:      else if (a.kind === 'melting_acid') reductionPct = Math.max(reductionPct, a.value);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6444:        if (a.kind === 'buff_ap') attackPower += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6445:        else if (a.kind === 'debuff_ap') attackPower -= a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6448:        else if (a.kind === 'buff_ap_pct') attackPower += (base * a.value) / 100;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6508:      if (a.kind === 'attackspeed' || a.kind === 'sanguine') slow *= a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6509:      if (a.kind === 'buff_haste') haste += a.value - 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6844:    if (effect.orbCdr && zoneStruck > 0 && source.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6964:    if (removed.kind === 'stealth') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:6965:      e.stealthed = e.auras.some((a) => a.kind === 'stealth');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7051:    if (target.kind === 'npc' && isRejectedFriendlyNpcAura(aura)) return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7053:    if (aura.kind === 'slow' && target.auras.some((active) => active.kind === 'slow_immunity')) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7072:      target.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7084:      target.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7086:      aura.kind === 'slow' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7130:    if (aura.kind === 'stealth') target.stealthed = true; // keep the cache live without waiting for updateAuras
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7142:    if (aura.kind === 'hot') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7163:    if (target.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7320:    const idx = e.auras.findIndex((a) => a.kind === 'stealth');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7597:    const aAttacker = a.kind === 'player' || (a.kind === 'mob' && a.ownerId !== null);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7599:      b.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7610:      a.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7613:      b.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7754:    if (target.kind === 'player' && target.devNoAggro) return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7763:    if (target.kind === 'player' && MOBS[mob.templateId]?.boss) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7772:    const playerPull = target.kind === 'player' || target.ownerId !== null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7841:    const dodgeChance = target.kind === 'player' ? target.dodgeChance : 0.05;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:7901:      const targetMeta = target.kind === 'player' ? this.players.get(target.id) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:8236:      (def?.kind === 'weapon' || def?.kind === 'armor' || def?.kind === 'held_offhand')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9078:    if (def.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9249:    if (e.kind === 'npc') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9250:    return e.kind === 'mob' && !e.hostile && !e.dead && e.questIds.length > 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9444:    if (e.kind === 'player') return e;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9445:    if (e.kind === 'mob' && e.ownerId !== null) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9447:      return owner?.kind === 'player' ? owner : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9453:    if (target.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9460:        return !!owner && owner.kind === 'player' && this.isHostileTo(attacker, owner);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9464:    if (target.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9512:    if (target.kind === 'player') return !this.isHostileTo(caster, target);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9514:    if (target.kind === 'mob' && yumiMod.isYumiCat(target))
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9518:    if (target.kind === 'mob' && target.friendlyPracticeTarget) return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9523:    if (target.kind === 'mob' && escortMod.isActiveEscortee(this.ctx, target)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9526:    if (target.kind === 'mob' && target.ownerId !== null) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9528:      return !!owner && owner.kind === 'player' && !this.isHostileTo(caster, owner);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9883:    if (statsDirty && target.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:11089:    const mover = e.kind === 'player' ? moverHeight(e) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:11110:    const mover = e.kind === 'player' ? moverHeight(e) : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/battleground.ts:1710:  const attackerId = source.kind === 'player' ? source.id : (source.ownerId ?? -1);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/battleground.ts:1738:  const healerId = source.kind === 'player' ? source.id : (source.ownerId ?? -1);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/battleground.ts:1767:    killer?.kind === 'player'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat.ts:450:    if (res.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:319:      a.kind === 'battle_stance' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:320:      a.kind === 'berserker_stance' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:321:      a.kind === 'defensive_stance' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:322:      a.kind === 'stealth',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:325:  if (form.kind === 'stealth') return 'You are stealthed.';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:390:  const kind = t.kind === 'player' ? 'player' : t.ownerId !== null ? 'pet' : 'mob';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:542:  if (e.kind === 'player') return `${e.name} (player, ${yd})`;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:543:  const kind = e.kind === 'mob' && e.ownerId !== null ? 'pet' : e.kind;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:553:    if (e.id === self.id || e.kind === 'object' || e.hp <= 0) continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:638:    const verb = c.kind === 'food' ? 'eating' : 'drinking';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/dungeon_finder.ts:528:      { raid: activity.kind === 'raid' },
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/dungeon_finder.ts:761:      { raid: activity.kind === 'raid' },
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/yumi.ts:60:  return e.kind === 'mob' && e.templateId === YUMI_TEMPLATE_ID;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/soulwell.ts:33:    entity.kind === 'object' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/soulwell.ts:152:    actor?.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/targeting.ts:86:    if (e.kind === 'mob' && e.lootable) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/targeting.ts:169:    if (target.kind === 'mob' && target.ownerId !== null) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/targeting.ts:171:      return !!owner && owner.kind === 'player' && this.isEnemyTargetCandidate(attacker, owner);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/threat.ts:45:    if (a.kind === 'defensive_stance') mod *= DEFENSIVE_STANCE_THREAT_MULT;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/threat.ts:46:    else if (a.kind === 'form_bear') mod *= BEAR_FORM_THREAT_MULT;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/threat.ts:47:    else if (a.kind === 'form_cat') mod *= CAT_FORM_THREAT_MULT;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/threat.ts:48:    else if (a.kind === 'righteous_fury' && school === 'holy') mod *= RIGHTEOUS_FURY_THREAT_MULT;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/threat.ts:49:    else if (a.kind === 'buff_threat') mod *= a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/threat.ts:50:    else if (a.kind === 'sacred_form') mod *= a.value3 ?? 0.5;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/threat.ts:70:  return target.auras.some((a) => a.id === 'vanish' && a.kind === 'stealth');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/threat.ts:78:  if (!target.auras.some((a) => a.kind === 'stealth')) return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/threat.ts:90:  return !target.auras.some((a) => a.kind === 'stealth');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:886:  return !!e && e.kind === 'player' && e.skinCatalog === 'mech';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:4853:  // cached `auras.some(a => a.kind === 'stealth')`, refreshed in updateAuras.
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8531:    if (aura.kind === 'buff_rage_gen') mult += aura.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8532:    else if (aura.kind === 'buff_reckless') mult += RECKLESSNESS_RAGE_GEN;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8533:    else if (aura.kind === 'battle_stance') mult += STANCE_RAGE_GEN;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8539:  return e.auras.some((aura) => aura.kind === 'berserker_stance') ? BERSERKER_CRIT_DAMAGE : 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8595:  const mobAttacker = attacker.kind === 'mob' && attacker.hostile && attacker.ownerId === null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8596:  const playerSide = target.kind === 'player' || target.ownerId !== null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8641:  const mobAttacker = attacker.kind === 'mob' && attacker.hostile && attacker.ownerId === null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8642:  const playerSide = target.kind === 'player' || target.ownerId !== null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8898:  // Lockpick chest gating (kind === 'locked_chest'). attemptAvailable is granted
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/types.ts:8908:  // Drowned Reliquary loot (kind === 'drowned_reliquary'): each party member rolls
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/unstuck.ts:215:    p.auras.some((aura) => aura.id === 'fear_incap' && aura.kind === 'incapacitate')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/unstuck.ts:412:  if (pending.area.kind === 'battleground' && bgCarryingFlag(ctx, p.id)) return 'state_changed';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/unstuck.ts:510:    pending.area.kind === 'battleground' ? completeBattlegroundUnstuck(ctx, meta, p) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/vendor_buy_stack.ts:97:  if (def.kind === 'furnishing') return forcedByFlags;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/vendor_buy_stack.ts:98:  return def.kind === 'mount' || forcedByFlags;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/vendor_stack.ts:25:  if (def.kind === 'furnishing') return 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/vendor_stack.ts:26:  return def.kind === 'food' || def.kind === 'drink' ? VENDOR_STACK_SIZE : 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4181:    const dPerp = Math.abs((edge.kind === 'h' ? z : x) - edge.at);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4191:      const along = edge.kind === 'h' ? x : z;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4202:        (edge.kind === 'v' && edge.lo >= 540 && edge.hi <= 900) ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4203:        (edge.kind === 'h' && edge.at === 540);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4221:        dPerpEdge = Math.abs((edge.kind === 'h' ? z : x) - (edge.at + wob));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4225:        edge.kind === 'h'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4256:      const peaksHeight = edge.kind === 'h' && edge.at === 540 ? 27 : 34;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4268:      const columnRow = edge.kind === 'h' && (edge.lo >= STRIP_MAX_X || edge.hi <= STRIP_MIN_X);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4269:      const northern = (edge.kind === 'h' ? edge.at >= HOLLOW_ZMAX : true) || columnRow;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4712:    if (Math.abs((edge.kind === 'h' ? z : x) - edge.at) >= sigma * 4) continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/world.ts:4713:    const along = edge.kind === 'h' ? x : z;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/ability_damage.ts:210:      if (eff.kind === 'form_fireball') return (eff.value - 1) * 100;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/ability_damage.ts:233:  if (a.kind === 'form_fireball') return (a.value - 1) * 100;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/ability_tooltip_lines.ts:100:  for (const a of p.auras) if (a.kind === 'buff_spellhaste') frac += a.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/absorb_bar.ts:34:  for (const a of auras) if (a.kind === 'absorb') n += Math.max(0, a.value);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/arena_window.ts:251:    if (view.kind === 'offline') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/arena_window.ts:292:    if (view.kind === 'offline') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/arena_window.ts:430:    if (action.kind === 'in-match') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/arena_window.ts:438:    if (action.kind === 'queued') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/arena_window.ts:544:    if (section.kind === 'members') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/arena_window.ts:561:    if (section.kind === 'warn') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/arena_window.ts:568:    if (action.kind === 'in-match') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/arena_window.ts:577:    if (action.kind === 'queued') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:189:  if (a.id === 'temporal_hourglass' && a.kind === 'stasis') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:192:  if (a.id === 'heating_up' && a.kind === 'internal_cd') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:195:  if (a.id === 'convergence_mark' && a.kind === 'internal_cd') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:198:  if (a.id === 'galeheart_weapon' && a.kind === 'imbue') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:208:  if (a.id === 'elemental_trance' && a.kind === 'buff_dr') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:214:  if (a.kind === 'hunter_ferocity') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:221:  if (a.id === 'venom_ritual' && a.kind === 'venom_ritual') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:227:  if (a.id === 'gloam' && a.kind === 'gloam') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:230:  if (a.id === 'redline' && a.kind === 'redline') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:240:  if (a.id === 'veilstrike' && a.kind === 'buff_dmg_done') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:243:  if (a.id === 'veiled_edge' && a.kind === 'veiled_edge') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:246:  if (a.kind === 'dusk_economy') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:249:  if (a.id === 'moontide' && a.kind === 'moontide') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:252:  if (a.id === 'old_blood' && a.kind === 'old_blood') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:258:  if (a.id === 'verdance' && a.kind === 'verdance') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:264:  if (a.kind === 'internal_cd') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/aura_effect.ts:284:  if (a.id === 'bg_carried_flag' && a.kind === 'flag_carried') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/auras_view.ts:419:        if (ownFirst && a.kind === 'temporal_echo' && !deps.isOwn(a)) return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:52:// stack whose def is kind==='quest'. Prefer stack count (how many quest pieces
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:98:  if (item.kind === 'furnishing') return category === 'all';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:103:      return item.kind === 'weapon';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:105:      return item.kind === 'armor' || item.kind === 'held_offhand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:108:        item.kind === 'food' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:109:        item.kind === 'drink' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:110:        item.kind === 'potion' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:111:        item.kind === 'elixir' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:112:        item.kind === 'flask' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:113:        item.kind === 'scroll'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:118:      return item.kind === 'tool';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:120:      return item.kind === 'quest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:122:      return item.kind === 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:69:  return def.kind === 'weapon' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:70:    def.kind === 'armor' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:71:    def.kind === 'held_offhand' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:72:    def.kind === 'bag'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:91:  if (def.kind === 'furnishing') return [isItemLocked(instance) ? 'unlock' : 'lock'];
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_quest_mark_view.ts:2:// Quest items are a PURPOSE class (kind === 'quest'), not a quality tier. The
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:202:    if (item.kind === 'quest' || item.noMarketList) return 'mailAttachBlocked';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:207:    if (item.kind === 'quest') return 'marketSellBlockedQuest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:227:    if (item.kind === 'quest') return 'guildBankDepositBlockedQuest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:234:    if (item.kind === 'quest') return 'bankDepositBlockedQuest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:240:    if (item.kind === 'bag' && mode.bankSocketable && !instance && craftedRecipeId === undefined) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:260:  if (mode.petFeed) return item.kind === 'food' ? 'petFeed' : 'petFeedBlocked';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:261:  if (item.kind === 'furnishing') return 'none';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:264:  if (item.kind === 'quest') return item.use ? 'use' : 'discardQuest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:265:  if (item.kind === 'bag') return 'equipBag';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:458:  if (item?.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:479:    return item.kind === 'quest' || item.noMarketList || isTransferLockedInstance(instance)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:484:    return item.kind === 'quest' || item.noMarketList || isTransferLockedInstance(instance)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:489:    return item.kind === 'quest' || item.noVendorSell
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:498:    return item.kind === 'quest' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:506:    if (item.kind === 'quest') return 'hudChrome.bank.cannotDeposit';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:510:    if (item.kind === 'bag' && mode.bankSocketable && !instance && craftedRecipeId === undefined) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:527:  if (item.kind === 'furnishing') return '';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:528:  if (item.kind === 'quest') return 'itemUi.tooltip.clickDestroy';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:529:  if (item.kind === 'mount') return 'hudChrome.mounts.clickManage';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:531:    item.kind === 'weapon' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:532:    item.kind === 'armor' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:533:    item.kind === 'held_offhand' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:534:    item.kind === 'bag'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:537:  if (item.kind === 'food' || item.kind === 'drink') return 'itemUi.tooltip.clickConsume';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:543:    item.kind === 'potion' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:544:    item.kind === 'elixir' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:545:    item.kind === 'flask' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:546:    item.kind === 'scroll'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:572:  if (item.kind === 'recipe' || item.use) return 'itemUi.tooltip.clickUse';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:676:    if (item?.kind === 'quest') quest.push(slot);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_window.ts:942:      if (row.kind === 'section') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_window.ts:1268:          if (target.kind === 'equip') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_window.ts:1277:          } else if (target.kind === 'bagCell')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_window.ts:1279:          else if (target.kind === 'actionSlot') this.deps.dropOnActionSlot(s.itemId, target.slot);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_window.ts:1280:          else if (target.kind === 'actionRingSlot')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_window.ts:1282:          else if (target.kind === 'world') this.dropOnWorldToDestroy(s.itemId, count, ref);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_window.ts:1506:        if (target.kind === 'bagCell') this.dropOnBagCell(index >= 0 ? index : null, target.index);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_window.ts:1578:      resolved?.kind === 'held'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_view.ts:377:        slots: item?.kind === 'bag' ? (item.bagSlots ?? 0) : 0,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_view.ts:475:    if (item.kind === 'quest') continue; // never bank quest items (the taxonomy also excludes them)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_window.ts:729:    if (model.kind === 'away') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_window.ts:812:    const slotKeys = model.kind === 'guild' ? guildBankSlotFocusKeys(model.slots) : [];
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_window.ts:1371:    if (action.kind === 'withdraw') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_window.ts:1376:    } else if (action.kind === 'withdrawPartial') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_window.ts:1396:      if (cell.kind === 'filled') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_window.ts:1452:      } else if (cell.kind === 'empty') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_window.ts:1768:    return model.kind === 'bank' ? model.buy : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bootcamp.ts:1009:  if (kind === 'select') return { type: 'target' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bootcamp.ts:1010:  if (kind === 'jump') return { type: 'action', action: 'jump' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bootcamp.ts:1011:  if (kind === 'use') return { type: 'action', action: 'bags' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/calendar_view.ts:78:      e.rule.kind === 'weekly' ? e.rule.weekday === weekday : e.rule.day === dayOfMonth,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/char_window.ts:298:      const cls = panel.kind === 'tiles' ? 'stat-panel attrs-tiles' : 'stat-panel';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/character_progression_view.ts:71:    (id) => DEEDS[id].reward?.kind === 'border' && sim.deedsEarned.has(id),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/claudium_window.ts:309:    if (target.kind === 'wallet') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/claudium_window.ts:313:    const attribute = target.kind === 'sku' ? 'data-sku' : 'data-rail';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/claudium_window.ts:497:    if (kind === 'woc') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/claudium_window.ts:500:    if (kind === 'sol') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/claudium_window.ts:503:    if (kind === 'usdc') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/coach_prompt_view.ts:580:  if (kind === 'select') return [];
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/coach_prompt_view.ts:581:  if (kind === 'kill') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/coach_prompt_view.ts:586:  if (kind === 'jump') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/coach_prompt_view.ts:590:  if (kind === 'use') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/coach_prompt_view.ts:607:  if (mode !== 'touch' || kind === null || kind === 'select' || kind === 'use') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/coach_prompt_view.ts:608:  if (kind === 'kill')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/coach_prompt_view.ts:610:  if (kind === 'jump') return 'mobile-jump';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/combat_sfx.ts:350:  if (target.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/combat_sfx.ts:355:  if (target.kind === 'mob' && MOBS[target.templateId]?.family === 'undead') return 'impact_bone';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/combat_sfx.ts:487:  if (entity.auras.some((aura) => aura.kind === 'form_bear' || aura.kind === 'form_cat')) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/combat_sfx.ts:641:  return entity.kind === 'mob' && entity.templateId === 'nythraxis_scourge_of_thornpeak';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/combat_sfx.ts:650:    entity.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/daily_rewards_view.ts:31:  if (input.kind === 'loading') return { kind: 'loading' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/daily_rewards_view.ts:32:  if (input.kind === 'error') return { kind: 'error', message: input.message };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/daily_rewards_window.ts:1132:    if (view.kind === 'loading') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/daily_rewards_window.ts:1136:    if (view.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/daily_rewards_window.ts:1140:    if (view.kind === 'disabled') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deed_border_view.ts:227:  return reward?.kind === 'border' ? reward.slug : '';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deed_i18n.ts:235:    if (def.reward?.kind === 'title') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deeds_leaderboard_view.ts:90:  if (input.kind === 'loading') return { kind: 'loading' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deeds_leaderboard_view.ts:91:  if (input.kind === 'error') return { kind: 'error' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deeds_view.ts:363:    if (earned && def.reward?.kind === 'title') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deeds_view.ts:368:    if (earned && def.reward?.kind === 'border') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deeds_view.ts:386:      titleReward: def.reward?.kind === 'title',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deeds_view.ts:387:      borderReward: def.reward?.kind === 'border',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deeds_view.ts:653:    if (def.reward?.kind === 'title') titleHintIds.push(event.deedId);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/deeds_view.ts:654:    if (def.reward?.kind === 'border') borderHintIds.push(event.deedId);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dev_leaderboard_view.ts:57:  if (input.kind === 'loading') return { kind: 'loading' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dev_leaderboard_view.ts:58:  if (input.kind === 'error') return { kind: 'error' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_finder_window.ts:156:    if (view.kind === 'loading') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_finder_window.ts:748:    if (kind === 'raid') return t('hudChrome.finder.kindRaid');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_finder_window.ts:749:    if (kind === 'solo') return t('hudChrome.finder.kindSolo');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_painter.ts:223:      if (marker.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_painter.ts:242:        marker.kind === 'mob' && marker.boss
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_painter.ts:244:          : marker.kind === 'party'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_painter.ts:251:      if (marker.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_view.ts:252:    const markerRadius = entity.kind === 'npc' ? NPC_INTEREST_RADIUS : PLAYER_INTEREST_RADIUS;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_view.ts:258:    if (entity.kind === 'object') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_view.ts:268:    if (entity.kind === 'npc') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_view.ts:558:      const markerRadius = entity.kind === 'npc' ? NPC_INTEREST_RADIUS : PLAYER_INTEREST_RADIUS;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_view.ts:570:      if (entity.kind === 'object') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/dungeon_map_view.ts:580:      if (entity.kind === 'npc') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/entity_display_core.ts:130:  if (entity.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/entity_display_core.ts:135:  if (entity.kind === 'npc') return tEntity({ kind: 'npc', id: entity.templateId, field: 'name' });
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/entity_display_core.ts:136:  if (entity.kind === 'object') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/entity_i18n.ts:393:  if (request.kind === 'questObjective' || request.kind === 'zonePoi') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/entity_i18n.ts:416:    request.kind === 'questObjective'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/entity_i18n.ts:418:      : request.kind === 'zonePoi'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/entity_i18n.ts:422:    request.kind === 'class' || request.kind === 'ability'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/entity_i18n.ts:424:      : request.kind === 'itemSet'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/entity_i18n.ts:426:        : request.kind === 'item'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/equip_drop_core.ts:102:  if (resolved.kind === 'unpinned')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/equip_drop_core.ts:104:  return resolved.kind === 'held' ? resolved.index : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/equip_drop_core.ts:151:  if (item.kind === 'furnishing') return 'blockedSlot';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/equip_drop_core.ts:234:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/equip_drop_core.ts:236:    (item.kind === 'weapon' || item.kind === 'armor' || item.kind === 'held_offhand') && !!item.slot
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/fct_core.ts:220:    ttlMs: event.kind === 'xp' || event.kind === 'rested-xp' ? FCT_XP_TTL_MS : FCT_TTL_MS,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/grant_line_view.ts:101:  if (y.kind === 'specimen') return 'hudChrome.gathering.harvestSpecimenLine';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_bank_log_window.ts:112:    return kind === 'loading'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_bank_log_window.ts:114:      : kind === 'refused'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_bank_view.ts:68:    if (item.kind === 'quest') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_bank_window.ts:213:    if (model.kind === 'hidden') return; // raced null: BankWindow falls back next paint
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_bank_window.ts:241:    if (model.kind === 'unopened') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_bank_window.ts:652:    if (action.kind === 'withdraw') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_bank_window.ts:660:    } else if (action.kind === 'withdrawPartial') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_leaderboard_view.ts:108:  if (input.kind === 'loading') return { kind: 'loading' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_leaderboard_view.ts:109:  if (input.kind === 'error') return { kind: 'error' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:2555:        subject?.kind === 'player' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:5883:    if (target.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:5895:    const isMobEntity = entity.kind === 'mob';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:5915:    if (tot.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6432:    if (item.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6444:        item.kind === 'weapon' && weaponHand(item) === 'twohand'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6647:    if (item.kind === 'recipe') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6672:    if ((item.kind === 'weapon' || item.kind === 'armor') && req > 1) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6699:    const lines = weaponProcLines(item.kind === 'weapon' ? item.weaponProcs : undefined);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:9248:      const tfRoleColor = target.kind === 'player' ? specialRoleColor(target.discordRole) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:9603:          ent.kind === 'npc' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11196:        if ((ev.absorbed ?? 0) > 0 || ev.kind === 'block')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11203:          ev.kind === 'miss' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11204:          ev.kind === 'dodge' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11205:          ev.kind === 'resist' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11206:          ev.kind === 'evade'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11211:        if (ev.kind === 'parry') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11215:        if (src?.kind === 'mob') this.playAttackerSfx(src);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11218:        if (tgt.kind === 'mob') this.ensureMobEngaged(tgt);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11391:        if (ent.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11395:        } else if (ent.kind === 'player' && ev.entityId !== sim.playerId) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11424:    if (src.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11526:            ev.kind === 'miss' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11527:            ev.kind === 'dodge' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11528:            ev.kind === 'parry' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11529:            ev.kind === 'resist' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11530:            ev.kind === 'evade'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11550:                    ev.kind === 'miss'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11552:                      : ev.kind === 'dodge'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11554:                        : ev.kind === 'parry'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11556:                          : ev.kind === 'evade'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11564:            if (ev.kind === 'dodge' && (isPlayerSource || isPlayerTarget) && this.inFiesta()) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11570:                ev.kind === 'miss'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11572:                  : ev.kind === 'dodge'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11574:                    : ev.kind === 'parry'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11576:                      : ev.kind === 'evade'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11598:            damageKind: ev.kind === 'block' ? 'block' : 'hit',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11610:            (hitShape.kind === 'damage-done-ability' || hitShape.kind === 'damage-done-auto')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11632:          } else if (hitShape && hitShape.kind === 'damage-taken') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11649:          } else if (hitShape && hitShape.kind === 'damage-done-block') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:11673:          } else if (hitShape && hitShape.kind === 'damage-taken-block') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:13694:          if (feedback.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:13707:              feedback.kind === 'progress' ? 'unstuck' : null,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:13711:            this.log(text, feedback.kind === 'success' ? HUD_LOG.GOOD : HUD_LOG.NOTICE);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:14107:      if (banner.kind === 'rankUp') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:14137:      } else if (banner.kind === 'illuminate') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:14442:      if (seg.kind === 'text') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:14446:      if (seg.kind === 'item') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:14499:        if (s.kind === 'text') return s.value;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:14500:        if (s.kind === 'item') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:14867:        if (seg.kind === 'item') this.appendChatItemLink(div, seg.itemId);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:14868:        else if (seg.kind === 'quest')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:16418:        e.kind === 'npc' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:16438:      return !!item && item.kind === 'food' && !!item.foodHp && s.count > 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:17282:      if (action.kind === 'none') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:17287:      if (action.kind === 'tab') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:17771:    if (t && t.kind === 'player' && t.id !== this.sim.playerId) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:17777:      t.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:17797:      this.sim.accountFlair(name)?.links ?? (ent?.kind === 'player' ? ent.streamerLinks : undefined)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:17812:      this.sim.accountFlair(name)?.ai ?? (ent?.kind === 'player' ? ent.aiAccount === true : false)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:17883:    const entCls = ent && ent.kind === 'player' ? (ent.templateId as PlayerClass) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:18211:    const entCls = ent && ent.kind === 'player' ? (ent.templateId as PlayerClass) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:18250:    if (pid !== null && this.sim.entities.get(pid)?.kind === 'player') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:18286:      if (e.kind === 'player' && e.name.toLowerCase() === wanted) return e.id;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:349:    if (item?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:351:      item?.kind === 'food' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:352:      item?.kind === 'drink' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:353:      item?.kind === 'potion' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:354:      item?.kind === 'mount' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_painter.ts:112:      this.writers.toggleClass(el.btn, CLASS_EMPTY, s.kind === 'empty');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_painter.ts:113:      this.writers.toggleClass(el.btn, CLASS_ABILITY, s.kind === 'ability');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_painter.ts:134:        s.kind === 'attack' ? (s.queued ? 'true' : 'false') : s.aiming ? 'true' : null,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_view.ts:388:    if (aura.kind === 'internal_cd' && aura.empowerAbilities?.includes(abilityId)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_view.ts:428:        if (aura.kind === 'soul_fragments') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_view.ts:526:          const potionCd = item.kind === 'potion' ? player.potionCdRemaining : 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_view.ts:670:            (aura) => aura.sourceId === player.id && aura.kind === 'affliction_eye',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:138:  if (selection.kind === 'clear') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:145:  if (selection.kind === 'ability') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:153:  if (selection.kind === 'slot') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:173:  return selection.kind === 'clear' ? BAR_EDITOR_IDLE : BAR_EDITOR_CLEAR_ARMED;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:178:  return selection.kind === 'clear';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:184:  return selection.kind === 'slot' ? selection.slot : -1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:218:  if (selection.kind === 'ability') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:221:  if (selection.kind === 'slot') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_core.ts:224:  if (selection.kind === 'clear') return deps.t('hudChrome.barEditor.clearArmed');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:306:    if (tap.kind === 'place') this.deps.placeAbility(tap.abilityId, tap.slot);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:307:    else if (tap.kind === 'swap') this.deps.swapSlots(tap.from, tap.to);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:308:    else if (tap.kind === 'clear') this.deps.clearSlot(tap.slot);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:313:    if (tap.kind === 'place' || tap.kind === 'swap' || tap.kind === 'clear') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:360:    if (this.selection.kind === 'ability') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/bar_editor/bar_editor_window.ts:364:    if (this.selection.kind === 'slot')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/consumable_strip_gesture_controller.ts:60:  return outcome.kind === 'use' ? { kind: 'pick', index: outcome.index } : { kind: 'cancel' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/player_stealthed.ts:23:      a.kind === 'stealth' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/radial_gesture_controller.ts:332:    if (this.press(true, 'outside').kind === 'dismiss') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/radial_gesture_controller.ts:396:    if (press.kind === 'open') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/radial_gesture_controller.ts:402:    if (press.kind === 'dismiss') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/radial_gesture_controller.ts:411:    if (press.kind === 'gesture') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/radial_gesture_controller.ts:419:      if (outcome.kind === 'cast') this.deps.cast(buttonIndex, outcome.direction);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/radial_gesture_controller.ts:420:      else if (outcome.kind === 'open') this.openSticky(buttonIndex);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/radial_gesture_controller.ts:592:    if (outcome.kind === 'cast') this.deps.cast(buttonIndex, outcome.direction);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/radial_gesture_controller.ts:596:    else if (outcome.kind === 'open') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/radial_gesture_controller.ts:599:    } else if (outcome.kind === 'cancel') this.deps.onCancel();
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/battleground/battleground_map_painter.ts:425:    drawBgAtlasMarks(bctx, proj, (mark) => mark.kind === 'crown' && !onField(mark));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/battleground/battleground_proposal_popup.ts:159:    const isBackfill = view.kind === 'backfill';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/chat/chat_geometry_controller.ts:420:    if (gesture.kind === 'move') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/chat/chat_geometry_controller.ts:431:    } else if (gesture.kind === 'edge') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map.ts:205:      pr.kind === 'rect' && pr.role === 'island';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map.ts:211:      if (prim.kind === 'polygon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map.ts:224:      } else if (prim.kind === 'circle') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:238:    if (e.kind === 'object') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:242:        (classified.kind === 'delve-passage' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:243:          classified.kind === 'delve-surface' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:244:          classified.kind === 'delve-reward')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:248:    } else if (!(e.kind === 'mob' && e.hostile && !e.dead)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:382:      if (prim.kind === 'polygon' && prim.isOutline && prim.points.length) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:393:      if ((prim.kind === 'circle' || prim.kind === 'rect') && prim.clipToOutline && outlinePath) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:396:      if (prim.kind === 'circle') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:408:      } else if (prim.kind === 'polygon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:423:      } else if (prim.kind === 'rect') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:431:      } else if (prim.kind === 'text') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:589:        semantic.kind === 'delve-passage' && semantic.state === 'sealed'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_map_painter.ts:592:      if (semantic.kind === 'delve-surface') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/delve_tracker_controller.ts:136:    if (run.objective.kind === 'kill_boss') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/lockpick_panel.ts:119:    if (c.kind === 'gate') gateCols.add(c.col);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/delve/lockpick_panel.ts:120:    if (c.kind === 'seat') seatCol = c.col;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/guild_board/guild_board_window.ts:163:    if (view.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/guild_board/guild_board_window.ts:168:    if (view.kind === 'empty') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/guild_board/guild_board_window.ts:340:      view.kind === 'loaded'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/guild_board/guild_board_window.ts:345:    if (view.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/guild_board/guild_board_window.ts:347:    } else if (view.kind === 'empty' || view.kind === 'loading') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/guild_board/guild_roster_view.ts:43:  if (input.kind === 'loading') return { kind: 'loading', guild: input.guild };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/guild_board/guild_roster_view.ts:44:  if (input.kind === 'error') return { kind: 'error', guild: input.guild };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/map/map_marker_tooltip_content.ts:82:      marker.kind === 'mailbox' ? 'worldContent.mailboxName' : 'worldContent.noticeboardName';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/apex_recipe_view.ts:54:    .filter((def) => def?.kind === 'recipe')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/apex_recipe_view.ts:64:    .filter((def) => def.kind === 'recipe')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/craft_celebration_text_view.ts:92:  return banner.kind === 'masterwork'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/craft_celebration_text_view.ts:100:  return banner.kind === 'masterwork' ? MASTERWORK_SEAL_IMAGE_URL : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/feast_tooltip_view.ts:46:  const fed = dishDef && dishDef.kind === 'food' ? dishDef.wellFed : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/harvest_journal_window.ts:385:    if (view.kind === 'rows') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/harvest_journal_window.ts:411:        view.kind === 'novice'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/harvest_journal_window.ts:415:        view.kind === 'novice'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/harvest_journal_window.ts:429:      row.timer.kind === 'growing'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/harvest_journal_window.ts:433:      row.timer.kind === 'growing'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/professions_window.ts:332:      simplified.cta.kind === 'raise'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/professions_window.ts:334:            simplified.nextUnlock.kind === 'specialized'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/professions_window.ts:508:    if (unlock.kind === 'mastered') return t('hudChrome.professions.nextUnlockMastered');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/professions_window.ts:509:    if (unlock.kind === 'specialized')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/quest/quest_dialog_controller.ts:323:      if (kind === 'ready' || kind === 'available' || kind === 'repeat') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/quest/quest_dialog_controller.ts:444:        kind === 'ready'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/quest/quest_dialog_controller.ts:446:          : kind === 'repeat'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/quest/quest_dialog_controller.ts:451:        kind === 'ready'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/quest/quest_dialog_controller.ts:453:          : kind === 'repeat'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/rift/rift_map_core.ts:504:    semantic?.kind === 'rift-descent' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/rift/rift_map_core.ts:505:    semantic?.kind === 'rift-return' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/rift/rift_map_core.ts:506:    semantic?.kind === 'rift-reward' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/rift/rift_map_core.ts:507:    semantic?.kind === 'rift-mechanic'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/rift/rift_map_core.ts:690:        if (entity.kind === 'object') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/rift/rift_map_core.ts:694:          !(entity.kind === 'mob' && entity.hostile && (!entity.dead || entity.lootable))
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/rift/rift_map_painter.ts:198:  if (semantic.kind === 'rift-descent') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/rift/rift_map_painter.ts:208:  if (semantic.kind === 'rift-return') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/rift/rift_map_painter.ts:219:  if (semantic.kind === 'rift-reward') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/strip_gesture_controller.ts:310:    if (this.press(true, 'outside').kind === 'dismiss') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/strip_gesture_controller.ts:366:    if (press.kind === 'open') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/strip_gesture_controller.ts:370:    if (press.kind === 'dismiss') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/strip_gesture_controller.ts:536:    if (outcome.kind === 'pick') this.deps.onPick(outcome.index, 'gesture');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/strip_gesture_controller.ts:537:    else if (outcome.kind === 'default') this.deps.onDefault?.();
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/strip_gesture_controller.ts:540:    else if (outcome.kind === 'open') this.openSticky();
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/vendor/warfare_vendor_view.ts:208:    } else if (item.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/vendor/warfare_vendor_window.ts:61:  if (section.kind === 'set') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/vendor/warfare_vendor_window.ts:64:  return section.kind === 'jewelry'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/warlock/doom_meter_view.ts:28:    (aura) => aura.sourceId === sourceId && aura.kind === 'affliction_fate_threads',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/warlock/doom_meter_view.ts:41:  const aura = input.auras.find((candidate) => candidate.kind === 'affliction_doom');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/woc_trade/woc_trade_controller.ts:386:      if (step.kind === 'settle') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/woc_trade/woc_trade_controller.ts:394:      if (step.kind === 'closed') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/woc_trade/woc_trade_controller.ts:398:      if (step.kind === 'keep') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icon_prewarm.ts:72:    if (ref.kind === 'ability') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4025:  if (it.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4042:  if (it.kind === 'armor') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4073:  if (it.kind === 'food') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4079:  if (it.kind === 'drink') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4085:  if (it.kind === 'potion' || it.kind === 'elixir' || it.kind === 'flask') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4096:    const timedBuff = it.kind === 'elixir' || it.kind === 'flask';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4099:  if (it.kind === 'tool') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4103:  if (it.kind === 'bag') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4114:  if (it.kind === 'recipe') return r('parchment', 'leather', ['scroll'], fx);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4120:  if (it.kind === 'scroll') return r('parchment', 'leather', ['scroll'], fx);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4122:  if (it.kind === 'furnishing') return r('wood', 'earthBrown', ['crate'], fx);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4133:  return r(it.kind === 'quest' ? 'parchment' : 'junk', t.pal, [{ p: t.p, pal: t.pal }], fx);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:5409:  if (kind === 'ability') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:5412:  } else if (kind === 'item') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:5420:  } else if (kind === 'crest') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:5509:  if (kind === 'item') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:5520:  if (kind === 'ability') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:5524:  if (kind === 'aura') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:5534:  if (kind === 'crest') return deedImageUrl(id) ?? crestIconUrl(id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_instance_glyph_mark.ts:78:  if (kind === 'masterwork') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_instance_glyph_mark.ts:81:  if (kind === 'generic') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_instance_tooltip.ts:309:  return kind === 'junk';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_kind_label.ts:60:  if (kind === 'junk' && itemId !== undefined) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_name_color.ts:4:// Quest items are a PURPOSE class (kind === 'quest'), not a quality tier.
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_name_color.ts:29: * - kind === 'quest' -> quest gold (purpose class wins over quality)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_name_color.ts:37:  if (item.kind === 'furnishing') return qualityNameColor(item.quality);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_name_color.ts:38:  if (item.kind === 'quest') return QUEST_ITEM_NAME_COLOR;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/lastkeep_map_painter.ts:197:          ctx.fillStyle = m.kind === 'exit' ? colors.exit : colors.loot;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_view.ts:117:  if (input.kind === 'loading') return { kind: 'loading' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_view.ts:118:  if (input.kind === 'error') return { kind: 'error' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_window.ts:228:    if (view.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_window.ts:233:    if (view.kind === 'empty') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_window.ts:277:    if (view.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_window.ts:282:    if (view.kind === 'empty') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_window.ts:324:    if (view.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_window.ts:331:    if (view.kind === 'empty') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_window.ts:376:    if (view.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_window.ts:381:    if (view.kind === 'empty') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/leaderboard_window.ts:633:      self.kind === 'account'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/mailbox_window.ts:384:    if (view.kind === 'no-data') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/mailbox_window.ts:388:    if (view.kind === 'inbox') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_marker_tooltip_adapter.ts:95:    if (hit.kind === 'npc') html = resolvers.npc(hit.marker);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_marker_tooltip_adapter.ts:96:    else if (hit.kind === 'navigation') html = resolvers.navigation(hit.marker);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_marker_tooltip_adapter.ts:97:    else if (hit.kind === 'station') html = resolvers.station(hit.marker);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_marker_tooltip_adapter.ts:98:    else if (hit.kind === 'service') html = resolvers.service(hit.marker);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_marker_tooltip_adapter.ts:99:    else if (hit.kind === 'farm') html = resolvers.farm(hit.marker);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:722:      semantic.kind === 'rift-return' ? (semantic.rank ?? '') : '',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:723:      semantic.kind === 'delve-reward' && semantic.bountiful,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:986:    const player = model?.markers.find((marker) => marker.kind === 'player');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1043:      if (marker.kind === 'delve-entrance')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1045:      else if (marker.kind === 'world-passage')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1057:          quest.kind === 'ready'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1059:            : quest.kind === 'repeat'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1061:              : quest.kind === 'cooldown'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1113:        ally.kind === 'friend' ? 'friend' : 'guildMember',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1153:    if (marker.kind === 'delve-entrance')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1155:    if (marker.kind === 'world-passage')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1175:    const rank = semantic.kind === 'rift-return' ? (semantic.rank ?? '') : '';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_semantic_accessibility_core.ts:1176:    const bountiful = semantic.kind === 'delve-reward' && semantic.bountiful;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:304:  if (kind === 'cooldown') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:398:  if (marker.kind === 'delve-entrance') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:410:  if (marker.kind === 'world-passage') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:679:      } else if (service.kind === 'mailbox') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:831:        marker.kind === 'delve-entrance'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:833:          : marker.kind === 'world-passage'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:838:      if (marker.kind === 'rift-entrance') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:876:      const cooldown = npc.kind === 'cooldown';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:891:          : npc.kind === 'repeat'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:937:        const friend = ally.kind === 'friend';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:1095:        d.kind === 'rock' ? colors.rock : d.kind === 'tree' ? colors.tree : colors.oak;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:1105:        b.kind === 'armoury'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:1107:          : b.kind === 'chapel'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_painter.ts:1109:            : b.kind === 'inn'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_view.ts:1015:    if (site.kind === 'delve-entrance') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_view.ts:1241:    if (d.kind === 'rock') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/map_window_view.ts:1253:        kind: d.kind === 'tree' ? 'tree' : 'oak',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_armor_badge.ts:20:  if (item.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_armor_badge.ts:60:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_armor_badge.ts:85:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_armor_badge.ts:86:  return item.kind === 'recipe';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_name_color.ts:9:// rejected: it also carries the quest-purpose override (kind === 'quest' wins
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_view.ts:233:  if (item.kind === 'quest' || item.noMarketList || item.soulbound)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:638:        if (action.kind === 'none') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:641:        if (action.kind === 'tab') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:698:    if (view.kind === 'no-data') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:702:    if (view.kind === 'browse') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:706:    if (view.kind === 'sell') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:1206:    if (kind === 'bagCapacity') return t('itemUi.market.filterBagSize');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:1207:    if (kind === 'armorSlot') return t('itemUi.market.filterArmorSlot');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:1228:    if (kind === 'bagCapacity') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:1243:        kind === 'armorSlot' ? 'itemUi.market.filterArmorAll' : 'itemUi.market.filterWeaponAll',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_window.ts:1245:    if (kind === 'armorSlot') return this.deps.slotName(filter as ItemSlot);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/meters.ts:186:    const ownerId = src?.kind === 'mob' ? (src.ownerId ?? null) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/meters.ts:207:    return entity?.kind === 'mob' && entity.ownerId !== null && partyPids.has(entity.ownerId);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/meters.ts:256:    if (ev.type === 'damage' && sourceInParty && ev.kind === 'hit' && ev.amount > 0) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/meters.ts:258:      if (target && target.kind === 'mob') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/meters.ts:305:        e.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/meters.ts:1002:      if (e.kind === 'mob' && e.ownerId !== null && pids.has(e.ownerId)) pids.add(e.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/meters_frame.ts:268:    if (gesture.kind === 'move') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/minimap_markers.ts:405:        if (e.kind === 'player' && !partyPids?.has(e.id) && !bgEnemyPids?.has(e.id)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/minimap_markers.ts:411:        } else if (e.kind === 'npc') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/minimap_markers.ts:436:            if (kind === 'active') continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/minimap_markers.ts:463:        } else if (e.kind === 'object') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/minimap_markers.ts:470:            if (semantic.kind === 'dungeon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/minimap_markers.ts:515:          e.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/minimap_markers.ts:521:        } else if (e.kind === 'mob' && e.hostile && e.lootable) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/minimap_painter.ts:886:  if (kind === 'cooldown') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/mob_idle_sfx.ts:45:    e.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/movable_frame.ts:789:    if (g.kind === 'move') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/movable_frame.ts:797:    } else if (g.kind === 'scale') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/movable_frame.ts:848:    } else if (g.kind === 'dims') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/options_window.ts:613:        if (a.kind === 'goto') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/options_window.ts:617:        } else if (a.kind === 'wiki') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/options_window.ts:619:        } else if (a.kind === 'logout') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/options_window.ts:621:        } else if (a.kind === 'unstuck') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/options_window.ts:1585:      kind === 'frames' ? 'hudChrome.transfer.frameLayout' : 'hudChrome.transfer.allSettings',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/perf_overlay_model.ts:492:  if (kind === 'everything') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/perf_overlay_model.ts:497:  if (kind === 'minimal') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/pet_entity.ts:9:  return entity?.kind === 'mob' && entity.ownerId !== null ? entity.ownerId : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/pet_entity.ts:16:    entity.kind === 'mob' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/quest_item_tooltip_view.ts:4:// treatment is a PURPOSE class (kind === 'quest'), not a quality tier, so the
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_cell_art.ts:211:  if (slot.kind === 'item' || slot.kind === 'unknown') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_cell_art.ts:214:  if (slot.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_cell_art.ts:222:  if (slot.kind === 'weapon_skin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_cell_art.ts:227:  if (slot.kind === 'title') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_cell_art.ts:235:  if (slot.kind === 'mark') return markArt(slot.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_cell_art.ts:257:  if (art.kind === 'url') return art.url.startsWith(`${ARMORY_SKIN_ART_DIR}/`);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_cell_art.ts:258:  if (art.kind === 'crest') return !deedCrestHasPaintedArt(art.crestId);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_labels.ts:66:  if (kind === 'item' || kind === 'unknown') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_labels.ts:70:  if (kind === 'mark') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_labels.ts:79:  if (kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_labels.ts:85:  if (kind === 'weapon_skin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_labels.ts:89:  if (kind === 'title') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_view.ts:100:    if (deeds[deedId]?.reward?.kind === 'border') return { rank: def.rank, deedId };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_view.ts:183:      return clearSource?.kind === 'dungeon'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_view.ts:627:    if (owned && relic.kind === 'item') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_view.ts:825:          accountScoped: page.relics.some((r) => r.kind === 'weapon_skin'),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_view.ts:912:      if (relic.kind === 'item') itemIds.add(relic.itemId);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_view.ts:1125:      if (banner === null || banner.kind === 'unlock' || banner.kind === 'illuminate') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_view.ts:1128:    } else if (banner === null || banner.kind === 'unlock') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1533:    if (cell.kind === 'weapon_skin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1599:      if (art.kind === 'item') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1607:      } else if (art.kind === 'url') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1613:    if (cell.kind === 'item' || cell.kind === 'unknown') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1638:    if (cell.kind === 'item' || cell.kind === 'unknown') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1643:    if (cell.kind === 'mark') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1647:    if (cell.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1651:    if (cell.kind === 'weapon_skin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1655:    if (cell.kind === 'title') return 'epic';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1738:    if (cell.kind === 'weapon_skin') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1753:    if (cell.owned && cell.kind === 'item') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/settings_transfer_core.ts:50:  if (kind === 'frames') return inFrames;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/settings_transfer_core.ts:102:    if (!(kind === 'frames' && env.kind === 'settings')) return { ok: false, reason: 'kind' };
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/social_window.ts:702:        item.kind === 'header'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/social_window.ts:1142:    if (kind === 'friend') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/social_window.ts:1146:    } else if (kind === 'ignore') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/social_window.ts:1151:    } else if (kind === 'block') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/stack_size_tooltip_view.ts:27:  if (item.kind === 'mount') return '';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/stat_tooltip.ts:481:      const catAgiBonus = buffs.some((b) => b.kind === 'form_cat')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/stat_tooltip.ts:499:        if (b.kind === 'debuff_ap' && b.value !== 0) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/store_mount_card_view.ts:44:  const mountKey = def?.kind === 'mount' ? def.mount : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/swing_timer.ts:155:  if (!target || target.dead || target.kind === 'object' || !target.autoAttack) return HIDDEN;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:10747:    if (effect.kind === 'buff_ap') values.attackPower = formatNumber(effect.value, lang);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:10748:    if (effect.kind === 'buff_spellpower') values.spellPower = formatNumber(effect.value, lang);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11014:      if (effect.kind === 'shield_wall') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11018:        effect.kind === 'buff_haste' || effect.kind === 'buff_speed'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11266:    if (request.kind === 'talentMastery') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11271:    if (request.kind === 'talentSpec') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11279:    if (request.kind === 'talentChoice') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11288:  if (request.kind === 'talentMastery') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11298:  if (request.kind === 'talentSpec') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11309:  if (request.kind === 'talentChoice') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11388:  if (entry.kind === 'talentSpec' || entry.kind === 'talentMastery') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_i18n.ts:11390:      (candidate) => candidate.id === (entry.kind === 'talentSpec' ? entry.id : entry.specId),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_icons.ts:143:  if (ref.kind === 'text') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_icons.ts:144:  if (ref.kind === 'image') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talent_icons.ts:155:  if (ref.kind === 'image') return ref.url;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/talents_window.ts:111:  if (ref.kind === 'text') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/target_of_target.ts:18:  return target.kind === 'player' ? target.targetId : target.aggroTargetId;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/touch_peek.ts:31:    if (kind === 'touch') this.peek();
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/unit_frame.ts:209:  if (kind === 'none') return 'none';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/unit_frame.ts:210:  if (kind === 'rage') return 'rage';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/unit_frame.ts:211:  if (kind === 'energy') return 'energy';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/unit_frame.ts:212:  if (kind === 'focus') return 'focus';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/unit_portrait.ts:57:  if (kind === 'npc') return 'status_npc';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_view.ts:220:      if (a.row.kind !== b.row.kind) return a.row.kind === 'pooled' ? -1 : 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:98:    model.kind === 'pooled'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:219:    if (model.kind === 'away') return; // the tab is collapsing on this paint
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:225:    if (model.kind === 'locked') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:327:    const glyphKind = model.kind === 'special' ? bagInstanceGlyphKind(model.instance) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:329:    const locked = model.kind === 'special' && isItemLocked(model.instance);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:332:    if (model.kind === 'special') row.dataset.vaultSpecialIndex = String(model.specialRef.index);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:373:      (model.kind === 'special'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:390:        ? this.deps.itemTooltip(item, model.kind === 'special' ? model.instance : undefined)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:443:    const liveSpecial = model.kind === 'special' ? this.liveSpecialRow(model) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:444:    if (model.kind === 'special' && !liveSpecial) return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:447:    if (action.kind === 'none') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:448:    if (action.kind === 'withdraw') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:509:      model.kind === 'special' ? this.liveSpecialRow(model) : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/vault_window.ts:530:          if (model.kind === 'special') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/wallet_reauth_prompt.ts:116:      plan.kind === 'no_password' ? t('wallet.reauthNoPassword') : t('wallet.reauthHelp');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/wallet_reauth_prompt.ts:132:    if (plan.kind === 'no_password') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_balance_chip.ts:28:      state.kind === 'linked_disconnected'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_balance_chip.ts:30:        : state.kind === 'connected_unlinked' || state.kind === 'mismatched'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_chrome.ts:284:    wallet.kind === 'linked_disconnected'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_chrome.ts:286:      : wallet.kind === 'linked_connected'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_window.ts:793:    if (model.kind === 'unavailable') return header;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_window.ts:794:    if (model.kind === 'loading') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_window.ts:798:    if (model.kind === 'error') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_window.ts:801:    if (model.kind === 'disabled') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_window.ts:1370:        : pending.kind === 'bond'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_window.ts:1392:      dueAtMs: pending.kind === 'settlement' ? pending.deadlineAtMs : null,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_window.ts:1742:    const listing = model.kind === 'ready' ? model.browse.detail?.row.id : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_window.ts:2363:      if (pending.kind === 'bond') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_market_window.ts:2423:      if (pending.kind === 'bond') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_store_view.ts:89:  const serviceRows = new Map(items.filter((i) => i.kind === 'skin').map((i) => [i.itemId, i]));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_store_view.ts:153:  const serviceRows = new Map(items.filter((i) => i.kind === 'item').map((i) => [i.itemId, i]));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/woc_store_view.ts:316:  const serviceRows = new Map(items.filter((i) => i.kind === 'storage').map((i) => [i.itemId, i]));

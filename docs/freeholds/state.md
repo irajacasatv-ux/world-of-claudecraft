@@ -34,13 +34,20 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
-Phase 02 (`phase-02-furnishing-item-kind.md`): IMPLEMENTATION COMPLETE LOCALLY on 2026-09-06.
-Scoped validation, the shared gate, all required reviews, fresh fix review and the
-post-commit check passed. Three scoped implementation commits follow the dependency
-merge; see `progress.md` row "02 Furnishing item kind" and its validation report.
-NEXT = `phase-02-qa.md` in a FRESH session. Its paired QA has not started.
-The dependency sync merged the fresh PR #3872 head `82dd05db72` through merge commit
-`16f2aeed`; the PR remains OPEN, so the dependency block above still applies.
+Phase 02 (`phase-02-furnishing-item-kind.md`): COMPLETE INCLUDING QA, verdict PASS
+locally on 2026-09-07. All 40 distinct findings have independently
+reviewed repairs and evidence at `d386635394`. The fresh reviewer read all 110
+changed files and all four repair commits, with source PASS and zero open
+source/test findings. The final shared gate completed with actual exit 0 and all
+12 steps green; standalone i18n generation/status and source freshness passed.
+Final verdict documentation and the completion checklist were independently
+reviewed with PASS. The actual post-commit check at verdict commit `c881543258`
+passed with exit 0 and clean status. It will run again after the evidence-only
+amendment; see `progress.md` row "02 QA" and
+`furnishing-item-kind-qa-validation.md`.
+NEXT = `phase-03-content-tiers-and-basics.md`.
+The QA dependency sync merged PR #3872 head `d3dcdaa4af` through merge commit
+`041fd790ce`; the PR remains OPEN, so the dependency block above still applies.
 Phase 01 remains COMPLETE INCLUDING QA, verdict PASS (`c946091c07..2e247df270`). Its QA
 round's own detail is in `progress.md` row "01 QA"; do NOT re-run that audit or re-raise
 its judged findings. R01-R46 and D73-D75 are approved;
@@ -1261,7 +1268,7 @@ replaces the marker with its actual outputs.
 | Phase | New files | IWorld members | SimEvents | Wire keys and commands | Endpoints | Tables | i18n keys |
 |---|---|---|---|---|---|---|---|
 | 01 | `src/world_api/housing.ts`, `src/sim/freehold/{types,state,commands,index}.ts` + `CLAUDE.md`, `src/net/freehold_snapshot_wire.ts`, `server/freehold_config.ts`, `server/freehold_wire.ts`, `server/freehold_routes.ts`; extractions `src/sim/mob/move_toward.ts`, `server/live_location.ts`, `src/net/blank_entity.ts`, `src/game/seo_metadata.ts`; tests `freehold_module`, `freehold_snapshot_wire`, `freehold_command_chain_online`, `move_toward`, `seo_metadata`, `server/freehold_wire`, `server/freehold_routes` | `myFreehold`, `freeholdLayout` (data, null); `housingNowMs`, `freeholdEnter`, `freeholdLeave`, `placeFurnishing`, `moveFurnishing`, `removeFurnishing`, `undoPlacement`, `redoPlacement`, `payLedger`, `setVisitPolicy`, `setFreeholdBuildPresence` (dark no-ops); SimContext `ctx.freeholds` (live map) and `ctx.freeholdsEnabled` (read-only); `SimConfig.freeholdsEnabled` | none | `freehold_enter`, `freehold_leave`, `place_furnishing`, `move_furnishing`, `remove_furnishing`, `undo_placement`, `redo_placement`, `pay_ledger`, `set_visit_policy`, `set_freehold_build_presence` (refused pre-switch while `FREEHOLDS_ENABLED !== '1'`; `freehold_enter` jail-blocked); self keys: none (empty allowlist) | GET `/api/freehold` (bearer read guard behind the dedicated tier-1-only `HOUSING_READ_POLICY` IP limiter, 60/min, no tier-2 write; `freehold.disabled` 503 while dark, `{ enabled: true, freehold: null }` lit) | none | `apiError.freehold.invalid_input` (generated, reserved), `apiError.freehold.disabled` (English plus the five M16 non-Latin fills); metrics `woc_freehold_refused_total`; env `FREEHOLDS_ENABLED` (strict `'1'`, default off, `.env.example` + `DEPLOY.md` + `turbo.json`) |
-| 02 | `src/sim/item_storage_rules.ts`; `src/ui/hud/housing/{index.ts,CLAUDE.md,furnishing_tooltip_view.ts,furnishing_tooltip.ts}`; extraction `src/ui/mount_tooltip_view.ts`; fixture `tests/fixtures/furnishing_item.ts`; tests `tests/furnishing_item_kind.test.ts`, `tests/furnishing_tooltip_view.test.ts`, `tests/mount_tooltip_view.test.ts` | none | none | ItemKind `furnishing` and `FurnishingItemDef`; no new command or snapshot key | none | none | English only: `itemUi.kind.furnishing`, `itemUi.market.filterTypeFurnishing`, `hudChrome.housing.furnishing.footprint`, `hudChrome.housing.furnishing.decorCost`, `hudChrome.housing.furnishing.surfaceFloor`, `hudChrome.housing.furnishing.maker` |
+| 02 | `src/sim/item_storage_rules.ts`; `src/ui/hud/housing/{index.ts,CLAUDE.md,furnishing_tooltip_view.ts,furnishing_tooltip.ts}`; extraction `src/ui/mount_tooltip_view.ts`; QA shared projection `src/ui/item_instance_view.ts`; fixture `tests/fixtures/furnishing_item.ts`; original furnishing and mount tooltip tests plus 22 QA suites, including actual consumer/tool/commerce/feast host parity, loaded power, custody/journal restart, identity and presentation | none | none | ItemKind `furnishing` and `FurnishingItemDef`; no new command or snapshot key | none | none | English only: `itemUi.kind.furnishing`, `itemUi.market.filterTypeFurnishing`, `hudChrome.housing.furnishing.footprint`, `hudChrome.housing.furnishing.decorCost`, `hudChrome.housing.furnishing.surfaceFloor`, `hudChrome.housing.furnishing.maker`; generic custody leaf `hudChrome.itemTooltip.partyTradeWindowCustody` |
 | 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
 | 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
 | 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
@@ -1280,8 +1287,26 @@ existing owner-02 rows; no inventory count changed. No shipped furnishing ID or 
 was added. Scoped validation and `node scripts/gate_select.mjs` passed. The required COVERAGE
 reviews, fresh fix-round review and final browser evidence all passed;
 post-commit `npm run ci:changed` passed with exit 0. Three scoped commits are local,
-with final evidence in `progress.md`; paired `phase-02-qa.md` is next. The named release
-and handoff gates below remain unsigned.
+with original evidence in `progress.md`.
+
+02 QA notes: four repair commits end at `d386635394`; all 40 findings have
+independently reviewed repairs and evidence. The shared item-instance projection
+retains authored furnishing identity and real custody while excluding equipment
+power. Existing enchant, Rift, feast, discovery, Exchange, WorldMarket and regalia
+seams gained positive kind admission; no stored field, wire command, table or
+endpoint was added. Existing regalia cache logic moved into its pure core;
+`hud.ts` and `renderer.ts` ceilings are now 18663 and 12988. The final census has
+zero MISSED sites. D25 remains the mount policy rule, ordinary bags remain
+All-only and no source-absent footprint or cost is invented. The generic custody
+key was regenerated through the owning pipeline; its exemption requires exact
+key AND pending status. No furnishing locale overlay or asset was authored.
+The renderer provenance remint changed only current hashes, preserving frozen
+captures and asset bytes. Required scoped, host, PostgreSQL and visual reruns
+passed. The complete shared gate also passed all 12 steps with actual exit 0;
+standalone i18n generation/status and the repeated 110-file source seal passed.
+The final verdict documentation, checklist and post-verdict-commit check are
+recorded through the QA validation handoff. The named release and handoff gates
+below remain unsigned.
 
 ## Tracked release and handoff gates
 

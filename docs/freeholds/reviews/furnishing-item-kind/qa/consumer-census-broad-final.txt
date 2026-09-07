@@ -1,0 +1,353 @@
+src/sim/professions/fishing.ts:721:  const isGreyFishingJunk = ITEMS[caught]?.kind === 'junk' && !isRawCookingCatch(caught);
+src/sim/professions/perfecting_swap.ts:94:  if (!def || def.kind === 'furnishing' || !recipeForResultItem(copy.itemId)) return false;
+src/ui/talent_i18n.ts:10885:  switch (response.kind) {
+server/woc_market.ts:1715:            def?.kind === 'furnishing'
+src/sim/professions/feast.ts:111:    def.kind !== 'furnishing' && 'feast' in def && def.feast ? [def.feast.templateId] : [],
+src/sim/professions/feast.ts:147:  if (!def || def.kind === 'furnishing' || !('feast' in def) || !def.feast) return false;
+src/sim/professions/feast.ts:250:  const info = def && def.kind !== 'furnishing' && 'feast' in def ? def.feast : undefined;
+src/sim/professions/feast.ts:444:  if (!dish || dish.kind === 'furnishing') return; // content invariant; pinned in the suite
+src/sim/vendor_stack.ts:25:  if (def.kind === 'furnishing') return 1;
+src/sim/vendor_stack.ts:26:  return def.kind === 'food' || def.kind === 'drink' ? VENDOR_STACK_SIZE : 1;
+src/sim/professions/salvage.ts:60:  if (def?.kind === 'furnishing') return false;
+src/sim/professions/salvage.ts:63:    (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&
+src/sim/items.ts:182:  if (def.kind !== 'weapon') return resolveEquipSlot(def, meta.equipment);
+src/sim/items.ts:191:      mainhand?.kind === 'weapon' &&
+src/sim/items.ts:207:    mainhand?.kind === 'weapon' &&
+src/sim/items.ts:525:  if (def?.kind === 'furnishing') return;
+src/sim/items.ts:526:  if (!def?.slot || (def.kind !== 'weapon' && def.kind !== 'armor' && def.kind !== 'held_offhand'))
+src/sim/items.ts:817:  if (def?.kind === 'furnishing') return;
+src/sim/items.ts:962:  if (def.kind === 'food' || def.kind === 'drink') {
+src/sim/items.ts:975:    const slot = def.kind === 'food' ? 'eating' : 'drinking';
+src/sim/items.ts:979:        def.kind === 'food' ? 'You are already eating.' : 'You are already drinking.',
+src/sim/items.ts:1004:      text: def.kind === 'food' ? 'You sit down to eat.' : 'You sit down to drink.',
+src/sim/items.ts:1008:  } else if (def.kind === 'potion') {
+src/sim/items.ts:1075:  } else if (def.kind === 'elixir' || def.kind === 'scroll' || def.kind === 'flask') {
+src/sim/items.ts:1093:    const isFlask = def.kind === 'flask';
+src/sim/items.ts:1164:    if (def.kind === 'scroll') {
+src/sim/items.ts:1179:  } else if (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') {
+src/sim/items.ts:1184:  } else if (def.kind === 'bag') {
+src/sim/items.ts:1186:  } else if (def.kind === 'mount') {
+src/sim/items.ts:1192:  } else if (def.kind === 'recipe') {
+src/sim/items.ts:1282:  if (def.kind !== 'furnishing' && def.teachesRiding) {
+src/sim/items.ts:1290:  if (def.kind === 'mount') {
+src/sim/items.ts:1339:    bulk && hasCopperPrice && !hasHonorPrice && def.kind !== 'mount' && !def.soulbound;
+src/sim/items.ts:1469:  if (def.kind === 'quest') {
+src/sim/items.ts:1627:    def.kind !== 'quest' &&
+src/sim/market_query.ts:61:    ...[...new Set(items.filter((item) => item.kind === 'bag').map((item) => item.bagSlots ?? 0))]
+src/sim/market_query.ts:194:  if (filter === 'furnishing') return item.kind === 'furnishing';
+src/sim/market_query.ts:195:  if (item.kind === 'furnishing') return filter === 'all';
+src/sim/market_query.ts:197:  if (filter === 'weapon') return item.kind === 'weapon' && item.slot === 'mainhand';
+src/sim/market_query.ts:199:    return (item.kind === 'armor' || item.kind === 'held_offhand') && item.slot !== undefined;
+src/sim/market_query.ts:202:      item.kind === 'food' ||
+src/sim/market_query.ts:203:      item.kind === 'drink' ||
+src/sim/market_query.ts:204:      item.kind === 'potion' ||
+src/sim/market_query.ts:205:      item.kind === 'elixir' ||
+src/sim/market_query.ts:206:      item.kind === 'flask' ||
+src/sim/market_query.ts:207:      item.kind === 'scroll'
+src/sim/market_query.ts:209:  if (filter === 'bag') return item.kind === 'bag';
+src/sim/market_query.ts:211:    return !isCosmeticItem(item) && (item.kind === 'junk' || item.kind === 'tool');
+src/sim/market_query.ts:213:  if (filter === 'pattern') return item.kind === 'recipe';
+src/sim/market_query.ts:222:  if (filter === 'other') return item.kind === 'quest' || item.kind === 'mount';
+src/sim/market_query.ts:250:    return (item.kind === 'armor' || item.kind === 'held_offhand') && item.slot === subtype;
+src/sim/market_query.ts:251:  if (query.itemType === 'weapon') return item.kind === 'weapon' && weaponFamily(item) === subtype;
+src/sim/market_query.ts:258:    return item.kind === 'bag' && (item.bagSlots ?? 0) === Number(subtype);
+src/sim/market_query.ts:269:  return item.kind === 'armor' && item.armorType === query.armorClass;
+src/sim/exchange_eligibility.ts:70:  if (def.kind === 'furnishing') return 'mount';
+src/sim/exchange_eligibility.ts:71:  if (def.kind === 'mount') return 'mount';
+src/sim/exchange_eligibility.ts:88:  if (def.kind === 'furnishing') return 'other';
+src/sim/exchange_eligibility.ts:89:  if (def.kind === 'mount') return 'mount';
+src/sim/exchange_eligibility.ts:91:  if (def.kind === 'weapon') return 'weapon';
+src/sim/exchange_eligibility.ts:94:  if (def.kind === 'armor' || def.kind === 'held_offhand') return 'armor';
+src/sim/exchange_eligibility.ts:165:  if (def.kind === 'quest') return 'quest_item';
+src/sim/professions/tools.ts:40:  if (item?.kind === 'furnishing') return undefined;
+src/sim/professions/tools.ts:195:    if (item?.kind === 'furnishing') return false;
+src/sim/professions/tools.ts:554:    if (item?.kind === 'furnishing') continue;
+src/sim/professions/tools.ts:774:  switch (def.kind) {
+server/moderation_service.ts:122:    if (!actor.adminPermissions.has(requiredCommandPermission(command.kind))) {
+server/moderation_service.ts:126:    switch (command.kind) {
+src/sim/quests/quest_commands.ts:285:    if (!def || def.kind !== 'quest' || def.questId !== quest.id) continue;
+src/sim/broker_custody.ts:47:    if (def?.kind === 'mount' && r.e.mountKey === def.mount && !mountOwned(r.meta, def.mount)) {
+src/ui/stack_size_tooltip_view.ts:27:  if (item.kind === 'mount') return '';
+src/sim/professions/sundering.ts:73:  if (def?.kind === 'furnishing') return false;
+src/sim/professions/sundering.ts:77:    SUNDERABLE_GEAR_KINDS.has(def.kind) &&
+src/sim/professions/perfecting.ts:161:  if (def?.kind === 'furnishing' || def?.masterwrought !== true) return null;
+src/sim/professions/perfecting.ts:229:  if (ITEMS[itemId]?.kind === 'furnishing') return null;
+src/sim/professions/perfecting.ts:355:  if (def?.kind === 'furnishing' || def?.masterwrought !== true) {
+src/ui/hud/professions/gathering_goal_view.ts:173:    recipe === undefined ? null : resolved.goal?.kind === 'recipe' ? resolved.goal.count : 1;
+server/woc_market_routes.ts:395:    quality: def?.kind === 'furnishing' ? (def.quality ?? 'common') : row.quality,
+server/woc_market_stepup.ts:197:  if (ITEMS[itemId]?.kind === 'furnishing') {
+server/admin_market_metrics.ts:52:      .filter((def) => def.kind === 'recipe')
+src/sim/professions/crafting.ts:164:  if (def?.kind === 'furnishing') return null;
+src/sim/professions/crafting.ts:193:  if (def?.kind === 'furnishing') return isSignableMaterialRarity(outputQuality);
+src/sim/professions/crafting.ts:194:  return isSignableMaterialRarity(outputQuality) && def?.kind !== 'bag';
+src/sim/professions/crafting.ts:1069:    def?.kind !== 'furnishing' &&
+src/sim/professions/crafting.ts:1104:  // battlefieldExperienceTrickle arm (gated on def.kind === 'potion') never
+server/movement_override_epoch.ts:74:  target.crowdControlled = entity.auras.some((aura) => OVERRIDE_CC_KINDS.has(aura.kind));
+src/sim/professions/disenchant_reagents.ts:71:  if (def.kind === 'furnishing') return null;
+src/sim/professions/disenchant_reagents.ts:73:  if (def.kind === 'armor') {
+src/sim/professions/disenchant_reagents.ts:76:  if (def.kind === 'weapon') {
+src/ui/hud/professions/recipe_pattern_tooltip_view.ts:119:  if (item.kind !== 'recipe') return null;
+src/ui/aura_effect.ts:287:  switch (a.kind) {
+server/clear_item_name.ts:182:  switch (target.kind) {
+server/clear_item_name.ts:216:  if (target.kind === 'bag') {
+src/sim/professions/perfecting_bonus.ts:23:  return def.kind === 'weapon' && def.hand === 'twohand'
+src/sim/professions/perfecting_bonus.ts:32:  if (def.kind === 'furnishing') return null;
+src/sim/professions/perfecting_bonus.ts:69:    def.kind === 'furnishing' ||
+src/ui/hud/professions/feast_tooltip_view.ts:46:  const fed = dishDef && dishDef.kind === 'food' ? dishDef.wellFed : undefined;
+src/ui/hud/professions/apex_recipe_view.ts:55:    .filter((def) => def?.kind === 'recipe')
+src/ui/hud/professions/apex_recipe_view.ts:65:    .filter((def) => def.kind === 'recipe')
+src/ui/mount_tooltip_view.ts:9:  if (item.kind !== 'mount') return '';
+server/pbe_boost.ts:330:  if (item.kind !== 'weapon' && item.kind !== 'armor' && item.kind !== 'held_offhand') {
+server/pbe_boost.ts:387:    if (item.kind === 'weapon') {
+server/pbe_boost.ts:642:    if (item.kind !== 'bag') continue;
+server/store_mount_grants.ts:33:      if (def?.kind !== 'mount' || !def.mount || owned.has(def.mount)) continue;
+server/character_save_statement.ts:145:  switch (fence.kind) {
+src/ui/bank_view.ts:381:        slots: item?.kind === 'bag' ? (item.bagSlots ?? 0) : 0,
+src/ui/bank_view.ts:479:    if (item.kind === 'quest') continue; // never bank quest items (the taxonomy also excludes them)
+src/ui/map_semantic_accessibility_core.ts:94:  switch (semantic.kind) {
+src/ui/map_semantic_accessibility_core.ts:233:  switch (semantic.kind) {
+src/ui/map_semantic_accessibility_core.ts:475:  switch (semantic.kind) {
+src/ui/map_semantic_accessibility_core.ts:990:      switch (marker.kind) {
+src/ui/map_marker_icon_art.ts:497:  switch (semantic.kind) {
+src/ui/item_set_tooltip_view.ts:18:    if (item.kind === 'furnishing' || !item.set) continue;
+src/ui/item_set_tooltip_view.ts:63:    if (!worn || worn.kind === 'furnishing') continue;
+src/ui/market_view.ts:233:  if (item.kind === 'quest' || item.noMarketList || item.soulbound)
+src/ui/market_view.ts:296:      ...(item.kind !== 'furnishing' && sale.itemName ? { itemName: sale.itemName } : {}),
+src/ui/sim_i18n.ts:10554:    ([id, it]) => [it.kind === 'furnishing' ? id : (it.heroicOf ?? id), it.name] as const,
+src/ui/bag_filter.ts:60:    if (item?.kind !== 'quest') continue;
+src/ui/bag_filter.ts:98:  if (item.kind === 'furnishing') return category === 'all';
+src/ui/bag_filter.ts:103:      return item.kind === 'weapon';
+src/ui/bag_filter.ts:105:      return item.kind === 'armor' || item.kind === 'held_offhand';
+src/ui/bag_filter.ts:108:        item.kind === 'food' ||
+src/ui/bag_filter.ts:109:        item.kind === 'drink' ||
+src/ui/bag_filter.ts:110:        item.kind === 'potion' ||
+src/ui/bag_filter.ts:111:        item.kind === 'elixir' ||
+src/ui/bag_filter.ts:112:        item.kind === 'flask' ||
+src/ui/bag_filter.ts:113:        item.kind === 'scroll'
+src/ui/bag_filter.ts:118:      return item.kind === 'tool';
+src/ui/bag_filter.ts:120:      return item.kind === 'quest';
+src/ui/bag_filter.ts:122:      return item.kind === 'mount';
+src/ui/dungeon_map_painter.ts:269:    switch (marker.kind) {
+src/sim/professions/enchanting.ts:229:  if (def?.kind === 'furnishing') return false;
+src/sim/professions/enchanting.ts:232:    (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&
+src/sim/professions/enchanting.ts:1291:  if (itemDef.kind === 'furnishing') return false;
+src/ui/market_armor_badge.ts:20:  if (item.kind === 'furnishing') return null;
+src/ui/market_armor_badge.ts:60:  if (item.kind === 'furnishing') return false;
+src/ui/market_armor_badge.ts:85:  if (item.kind === 'furnishing') return false;
+src/ui/market_armor_badge.ts:86:  return item.kind === 'recipe';
+src/ui/guild_bank_view.ts:69:    if (item.kind === 'quest') return true;
+src/ui/item_compare.ts:63:  if (item.kind === 'furnishing') return [];
+src/ui/item_compare.ts:64:  const equippedPower = equipped.kind === 'furnishing' ? undefined : equipped;
+src/ui/deeds_view.ts:151:  switch (trigger.kind) {
+src/ui/hud.ts:6444:    if (item.kind === 'furnishing') return furnishingItemTooltip(item, instance, this.sim);
+src/ui/hud.ts:6481:    if (item.kind === 'weapon') {
+src/ui/hud.ts:6493:        item.kind === 'weapon' && weaponHand(item) === 'twohand'
+src/ui/hud.ts:6696:    if (item.kind === 'recipe') {
+src/ui/hud.ts:6733:    const lines = weaponProcLines(item.kind === 'weapon' ? item.weaponProcs : undefined);
+src/ui/hud.ts:6759:    switch (e.kind) {
+src/ui/hud.ts:6876:      dps: weaponDps(wpn?.kind === 'weapon' ? wpn.weapon : undefined, p.attackPower),
+src/ui/hud.ts:6896:    if (item.kind !== 'quest') return null;
+src/ui/hud.ts:13876:    switch (plan.kind) {
+src/ui/hud.ts:14810:        else if (seg.kind === 'quest')
+src/ui/hud.ts:16397:      return !!item && item.kind === 'food' && !!item.foodHp && s.count > 0;
+src/ui/hud.ts:17251:      switch (action.kind) {
+src/sim/professions/gathering_goal_persist.ts:41:    raw.kind === 'recipe' &&
+src/ui/hud/professions/elixir_tooltip_view.ts:69:  if (item.kind !== 'flask') return desc(text);
+src/ui/bags_view.ts:202:    if (item.kind === 'quest' || item.noMarketList) return 'mailAttachBlocked';
+src/ui/bags_view.ts:207:    if (item.kind === 'quest') return 'marketSellBlockedQuest';
+src/ui/bags_view.ts:227:    if (item.kind === 'quest') return 'guildBankDepositBlockedQuest';
+src/ui/bags_view.ts:234:    if (item.kind === 'quest') return 'bankDepositBlockedQuest';
+src/ui/bags_view.ts:240:    if (item.kind === 'bag' && mode.bankSocketable && !instance && craftedRecipeId === undefined) {
+src/ui/bags_view.ts:260:  if (mode.petFeed) return item.kind === 'food' ? 'petFeed' : 'petFeedBlocked';
+src/ui/bags_view.ts:261:  if (item.kind === 'furnishing') return 'none';
+src/ui/bags_view.ts:264:  if (item.kind === 'quest') return item.use ? 'use' : 'discardQuest';
+src/ui/bags_view.ts:265:  if (item.kind === 'bag') return 'equipBag';
+src/ui/bags_view.ts:458:  if (item?.kind === 'furnishing') return null;
+src/ui/bags_view.ts:459:  if (item?.kind !== 'bag') return null;
+src/ui/bags_view.ts:479:    return item.kind === 'quest' || item.noMarketList || isTransferLockedInstance(instance)
+src/ui/bags_view.ts:484:    return item.kind === 'quest' || item.noMarketList || isTransferLockedInstance(instance)
+src/ui/bags_view.ts:489:    return item.kind === 'quest' || item.noVendorSell
+src/ui/bags_view.ts:498:    return item.kind === 'quest' ||
+src/ui/bags_view.ts:506:    if (item.kind === 'quest') return 'hudChrome.bank.cannotDeposit';
+src/ui/bags_view.ts:510:    if (item.kind === 'bag' && mode.bankSocketable && !instance && craftedRecipeId === undefined) {
+src/ui/bags_view.ts:527:  if (item.kind === 'furnishing') return '';
+src/ui/bags_view.ts:528:  if (item.kind === 'quest') return 'itemUi.tooltip.clickDestroy';
+src/ui/bags_view.ts:529:  if (item.kind === 'mount') return 'hudChrome.mounts.clickManage';
+src/ui/bags_view.ts:531:    item.kind === 'weapon' ||
+src/ui/bags_view.ts:532:    item.kind === 'armor' ||
+src/ui/bags_view.ts:533:    item.kind === 'held_offhand' ||
+src/ui/bags_view.ts:534:    item.kind === 'bag'
+src/ui/bags_view.ts:537:  if (item.kind === 'food' || item.kind === 'drink') return 'itemUi.tooltip.clickConsume';
+src/ui/bags_view.ts:543:    item.kind === 'potion' ||
+src/ui/bags_view.ts:544:    item.kind === 'elixir' ||
+src/ui/bags_view.ts:545:    item.kind === 'flask' ||
+src/ui/bags_view.ts:546:    item.kind === 'scroll'
+src/ui/bags_view.ts:572:  if (item.kind === 'recipe' || item.use) return 'itemUi.tooltip.clickUse';
+src/ui/bags_view.ts:679:    if (item?.kind === 'quest') quest.push(slot);
+src/ui/item_instance_tooltip.ts:443:  if ((item.kind !== 'weapon' && item.kind !== 'armor') || req <= 1) return '';
+src/ui/woc_market_view.ts:461:    quality: def?.kind === 'furnishing' ? (def.quality ?? 'common') : listing.quality,
+src/ui/bags_window.ts:1910:    if (item.kind !== 'quest' || !item.questId) return null;
+src/ui/hud/professions/wellfed_tooltip_view.ts:27:  if (item.kind !== 'food') return '';
+src/ui/guild_bank_log_window.ts:169:    switch (row.kind) {
+src/ui/lastkeep_map_painter.ts:194:      switch (m.kind) {
+src/ui/bag_quest_tracker_highlight_view.ts:21:  if (item.kind !== 'quest') return null;
+src/ui/hud/professions/gathering_source_view.ts:99:  switch (info.kind) {
+src/ui/reliquary_cell_art.ts:214:  if (slot.kind === 'mount') {
+src/ui/dev_command_window.ts:34:    slot: item.kind === 'furnishing' ? undefined : item.slot,
+src/ui/dev_command_window.ts:38:    heroic: item.kind !== 'furnishing' && item.heroicOf !== undefined,
+src/sim/sim.ts:3196:          meta.bags[i] = id && ITEMS[id]?.kind === 'bag' ? id : null;
+src/sim/sim.ts:8364:      (def?.kind === 'weapon' || def?.kind === 'armor' || def?.kind === 'held_offhand')
+src/sim/sim.ts:9109:    if (def.kind === 'weapon') {
+src/sim/sim.ts:9112:      if (next && (cur?.kind !== 'weapon' || next.min + next.max > cur.weapon.min + cur.weapon.max))
+src/sim/sim.ts:9119:      const cur = worn?.kind === 'furnishing' ? null : worn;
+src/ui/bag_item_context_menu.ts:80:  return def.kind === 'weapon' ||
+src/ui/bag_item_context_menu.ts:81:    def.kind === 'armor' ||
+src/ui/bag_item_context_menu.ts:82:    def.kind === 'held_offhand' ||
+src/ui/bag_item_context_menu.ts:83:    def.kind === 'bag'
+src/ui/bag_item_context_menu.ts:104:  if (def.kind === 'furnishing') return [isItemLocked(instance) ? 'unlock' : 'lock'];
+src/ui/bag_item_context_menu.ts:147:  if (def.kind !== 'furnishing') {
+src/ui/bag_quest_mark_view.ts:73:  if (item.kind !== 'quest') return null;
+src/ui/tool_effect_tooltip.ts:82:      if (def.kind === 'furnishing') continue;
+src/ui/minimap_painter.ts:483:  switch (semantic.kind) {
+src/ui/minimap_painter.ts:1343:      switch (m.kind) {
+src/ui/icons.ts:4025:  if (it.kind === 'weapon') {
+src/ui/icons.ts:4042:  if (it.kind === 'armor') {
+src/ui/icons.ts:4073:  if (it.kind === 'food') {
+src/ui/icons.ts:4079:  if (it.kind === 'drink') {
+src/ui/icons.ts:4085:  if (it.kind === 'potion' || it.kind === 'elixir' || it.kind === 'flask') {
+src/ui/icons.ts:4096:    const timedBuff = it.kind === 'elixir' || it.kind === 'flask';
+src/ui/icons.ts:4099:  if (it.kind === 'tool') {
+src/ui/icons.ts:4103:  if (it.kind === 'bag') {
+src/ui/icons.ts:4114:  if (it.kind === 'recipe') return r('parchment', 'leather', ['scroll'], fx);
+src/ui/icons.ts:4120:  if (it.kind === 'scroll') return r('parchment', 'leather', ['scroll'], fx);
+src/ui/icons.ts:4122:  if (it.kind === 'furnishing') return r('wood', 'earthBrown', ['crate'], fx);
+src/ui/icons.ts:4133:  return r(it.kind === 'quest' ? 'parchment' : 'junk', t.pal, [{ p: t.p, pal: t.pal }], fx);
+src/ui/icons.ts:4273:  const baseId = item?.kind === 'furnishing' ? undefined : item?.heroicOf;
+src/ui/icons.ts:5342:  if (item.kind !== 'weapon') ITEM_IMAGE_IDS.add(item.id);
+src/ui/equip_drop_core.ts:151:  if (item.kind === 'furnishing') return 'blockedSlot';
+src/ui/equip_drop_core.ts:154:  if (item.kind !== 'weapon' && item.kind !== 'armor' && item.kind !== 'held_offhand')
+src/ui/equip_drop_core.ts:234:  if (item.kind === 'furnishing') return false;
+src/ui/equip_drop_core.ts:236:    (item.kind === 'weapon' || item.kind === 'armor' || item.kind === 'held_offhand') && !!item.slot
+src/ui/entity_i18n.ts:261:  switch (request.kind) {
+src/ui/entity_i18n.ts:346:  switch (request.kind) {
+src/ui/entity_i18n.ts:478:  if (item.heroicOf && item.kind !== 'furnishing') {
+src/ui/entity_i18n.ts:599:    if (item.heroicOf && item.kind !== 'furnishing') continue;
+src/ui/hud/vendor/warfare_vendor_view.ts:208:    } else if (item.kind === 'weapon') {
+src/ui/reliquary_view.ts:583:  switch (relic.kind) {
+src/ui/reliquary_window.ts:1647:    if (cell.kind === 'mount') {
+src/ui/woc_market_window.ts:1600:    switch (action.kind) {
+src/ui/woc_market_window.ts:1979:    switch (n.kind) {
+src/ui/hud/vendor/vendor_view.ts:172:      item.kind !== 'mount' &&
+src/ui/item_name_color.ts:37:  if (item.kind === 'furnishing') return qualityNameColor(item.quality);
+src/ui/item_name_color.ts:38:  if (item.kind === 'quest') return QUEST_ITEM_NAME_COLOR;
+src/ui/map_marker_semantics_core.ts:154:  switch (semantic.kind) {
+src/ui/char_window.ts:477:    const isMasterwrought = item?.kind !== 'furnishing' && item?.masterwrought === true;
+src/ui/aura_overlay_view.ts:88:  switch (response.kind) {
+src/ui/weapon_proc_view.ts:34:  switch (effect.kind) {
+src/ui/reliquary_labels.ts:215:  switch (plan.kind) {
+src/ui/auras_view.ts:434:          (TOGGLE_KINDS.has(a.kind) || TOGGLE_IDS.has(a.id) || isPersistentEngineAura(a.id)) &&
+src/ui/perf_overlay.ts:307:  switch (v.kind) {
+src/ui/store_mount_card_view.ts:44:  const mountKey = def?.kind === 'mount' ? def.mount : undefined;
+src/ui/quest_item_tooltip_view.ts:110:  if (input.kind !== 'quest') return null;
+src/ui/stat_tooltip_view.ts:53:  switch (e.kind) {
+src/ui/stat_tooltip_view.ts:117:  switch (source.kind) {
+src/ui/stat_tooltip_view.ts:176:    const cls = GAIN_KINDS.has(e.kind) ? 'tt-green' : 'tt-stat';
+src/ui/masterwrought_cap_view.ts:31:    if (item?.kind !== 'furnishing' && item?.masterwrought === true) slots.push(slot);
+src/ui/market_window.ts:657:        switch (action.kind) {
+src/sim/obs.ts:118:        if (wantMana && def.kind === 'drink') {
+src/sim/obs.ts:122:        if (wantHp && def.kind === 'food') {
+src/ui/hud/housing/furnishing_tooltip_view.ts:18:  if (item.kind !== 'furnishing') return [];
+src/ui/hud/loot/loot_window_controller.ts:727:    switch (focus.kind) {
+src/sim/bag_pools.ts:54:  return def?.kind === 'bag' && def.materialsOnly === true;
+src/sim/bag_pools.ts:61:  return def?.kind === 'bag' ? (def.bagSlots ?? 0) : 0;
+src/ui/hud/rift/rift_map_painter.ts:161:  switch (primitive.kind) {
+src/sim/item_level.ts:354:  if (item.kind === 'furnishing') return false;
+src/sim/item_level.ts:356:    !!item.slot && (item.kind === 'armor' || item.kind === 'weapon' || item.kind === 'held_offhand')
+src/sim/item_level.ts:393:  return item.kind === 'weapon' && item.hand === 'twohand'
+src/sim/item_level.ts:400:  if (item.kind === 'furnishing') return 0;
+src/sim/item_level.ts:410:  if (item.kind === 'furnishing') return 0;
+src/ui/hud/action_bar/action_bar_controller.ts:115:      (id) => ITEMS[id]?.kind !== 'furnishing',
+src/ui/hud/action_bar/action_bar_controller.ts:126:      (id) => ITEMS[id]?.kind !== 'furnishing',
+src/ui/hud/action_bar/action_bar_controller.ts:143:      (id) => ITEMS[id]?.kind !== 'furnishing',
+src/ui/hud/action_bar/action_bar_controller.ts:349:    if (item?.kind === 'furnishing') return false;
+src/ui/hud/action_bar/action_bar_controller.ts:351:      item?.kind === 'food' ||
+src/ui/hud/action_bar/action_bar_controller.ts:352:      item?.kind === 'drink' ||
+src/ui/hud/action_bar/action_bar_controller.ts:353:      item?.kind === 'potion' ||
+src/ui/hud/action_bar/action_bar_controller.ts:354:      item?.kind === 'mount' ||
+src/sim/equipment_rules.ts:47:  if (item.kind !== 'armor') return null;
+src/sim/equipment_rules.ts:53:  return item?.kind === 'armor' && item.slot === 'offhand' && item.shield === true;
+src/sim/equipment_rules.ts:64:  if (item.kind === 'furnishing') return null;
+src/sim/equipment_rules.ts:80:  if (item.kind === 'furnishing') return false;
+src/sim/equipment_rules.ts:83:  if (item.kind === 'weapon' && slot === 'offhand') return weaponHand(item) !== 'mainhand';
+src/sim/equipment_rules.ts:109:  if (item.kind === 'furnishing') return false;
+src/sim/equipment_rules.ts:304:  if (item.kind === 'furnishing' || !item.masterwrought) return null;
+src/sim/equipment_rules.ts:311:    if (!def || def.kind === 'furnishing' || !def.masterwrought) continue;
+src/sim/equipment_rules.ts:332:  return item.kind !== 'held_offhand' || item.occupiesHand !== false;
+src/sim/equipment_rules.ts:356:    const titanPair = item.kind === 'weapon' && canDualWieldTwoHand(cls, spec);
+src/sim/equipment_rules.ts:357:    if (mainhand?.kind === 'weapon' && weaponHand(mainhand) === 'twohand' && !titanPair) {
+src/sim/equipment_rules.ts:362:  if (slot === 'mainhand' && item.kind === 'weapon' && weaponHand(item) === 'twohand') {
+src/sim/equipment_rules.ts:365:    const titanPair = offhand?.kind === 'weapon' && canDualWieldTwoHand(cls, spec);
+src/sim/equipment_rules.ts:384:  if (item.kind !== 'weapon' || !item.requiredClass) return null;
+src/sim/equipment_rules.ts:419:  if (item.kind === 'furnishing') return false;
+src/sim/equipment_rules.ts:425:  if (item.kind === 'held_offhand') {
+src/sim/equipment_rules.ts:433:  if (cls === 'rogue' && item.kind === 'weapon' && weaponHand(item) === 'twohand') {
+src/sim/equipment_rules.ts:451:  if (item.kind === 'armor') {
+src/sim/equipment_rules.ts:455:  if (item.kind !== 'weapon') return item.slot === slot;
+src/sim/reliquary.ts:413:    if (ITEMS[itemId]?.kind === 'mount') {
+src/sim/reliquary.ts:610:    id = def.kind === 'furnishing' ? undefined : def.heroicOf;
+src/sim/reliquary.ts:908:  switch (relic.kind) {
+src/sim/reliquary.ts:991:      } else if (relic.kind === 'mount') {
+src/sim/rift/progression.ts:456:  if (ITEMS[itemId]?.kind === 'furnishing') return null;
+src/sim/combat/cc.ts:42:      MOVEMENT_LOCK_AURA_KINDS.has(aura.kind) &&
+src/sim/entity.ts:336:    if (!item || item.kind === 'furnishing') continue;
+src/sim/entity.ts:556:    equipment.mainhand && ITEMS[equipment.mainhand]?.kind !== 'furnishing'
+src/sim/entity.ts:567:    offhand?.kind === 'weapon' &&
+src/sim/entity.ts:581:    ((mainhand?.kind === 'weapon' &&
+src/sim/entity.ts:584:      (offhand?.kind === 'weapon' && offhand.hand === 'twohand'));
+src/sim/entity.ts:600:    (ITEMS[equipment.offhand]?.kind === 'weapon' ||
+src/sim/entity.ts:601:      ITEMS[equipment.offhand]?.kind === 'held_offhand' ||
+src/ui/hud/player_card/player_card_data.ts:45:  const dps = weaponDps(weapon?.kind === 'weapon' ? weapon.weapon : undefined, player.attackPower);
+src/ui/hud/action_bar/action_bar_view.ts:526:          const potionCd = item.kind === 'potion' ? player.potionCdRemaining : 0;
+src/sim/set_bonus_mods.ts:39:    if (item?.kind === 'furnishing') continue;
+src/sim/pet/pet_commands.ts:767:  if (item?.kind !== 'food' || !item.foodHp) {
+src/sim/combat/talent_procs.ts:61:  switch (response.kind) {
+src/sim/combat/auras.ts:101:  return FRIENDLY_NPC_REJECTED_AURA_KINDS.has(aura.kind);
+src/sim/combat/auras.ts:200:      const wellFed = c.kind === 'food' ? c.wellFed : undefined;
+src/sim/bank.ts:900:    socketBags[i] = typeof id === 'string' && ITEMS[id]?.kind === 'bag' ? id : null;
+src/sim/combat/equip_procs.ts:48:  if (item?.kind !== 'weapon') return;
+src/sim/combat/equip_procs.ts:104:  switch (eff.kind) {
+src/sim/combat/frost_mage.ts:314:      MOVEMENT_LOCK_AURA_KINDS.has(aura.kind) && ctx.players.get(aura.sourceId)?.cls === 'mage',
+src/sim/dev_kit.ts:134:  if (item.kind !== 'weapon' && item.kind !== 'armor' && item.kind !== 'held_offhand') return false;
+src/sim/dev_kit.ts:207:  return item.kind === 'weapon' && weaponHand(item) === 'twohand';
+src/sim/dev_kit.ts:309:    (item) => item.kind === 'bag' && !isMaterialsOnlyBag(item),
+src/sim/dev_kit.ts:406:        pool.filter((item) => item.kind === 'held_offhand' && canEquipItem(cls, item)),
+src/sim/dev_kit.ts:422:      pool.filter((item) => item.kind === 'held_offhand' && canEquipItem(cls, item)),
+src/sim/bags.ts:90:  if (def.kind === 'furnishing') return 1;
+src/sim/bags.ts:92:  return UNSTACKED_KINDS.has(def.kind) ? 1 : DEFAULT_STACK;
+src/sim/bags.ts:648:  if (def?.kind !== 'bag') return;
+src/sim/combat/form_swing.ts:112:  for (const a of e.auras) if (WANDLESS_FORMS.has(a.kind)) return false;
+src/sim/mounts.ts:62:      if (def.kind === 'mount') mountItemIds.set(def.mount, def.id);
+src/sim/mounts.ts:90:    if (def?.kind === 'mount') owned.add(def.mount);
+src/sim/mounts.ts:177:    if (FORM_AURA_KINDS.has(aura.kind) || aura.id === 'ghost_wolf') {
+src/sim/item_budget.ts:157:  if (item.kind === 'furnishing') return undefined;
+src/sim/item_budget.ts:158:  return item.kind === 'held_offhand' && item.occupiesHand === false
+src/sim/combat/affliction.ts:169:        (!OWNED_AFFLICTION_KINDS.has(aura.kind) && aura.id !== POSSESSED_SENTENCE_ECHO_ID)
+src/sim/combat/affliction.ts:1047:    AFFLICTION_SOURCE_DAMAGE_KINDS.has(aura.kind),
+src/sim/combat/damage.ts:305:    if (twoHandPct > 0 && mainhand?.kind === 'weapon' && weaponHand(mainhand) === 'twohand') {
+src/sim/rift/runs.ts:390:    switch (obj.kind) {
+src/sim/aura_classify.ts:159:  if (PARTY_FRAME_EXCLUDED_KINDS.has(aura.kind)) return false;
+src/sim/aura_classify.ts:168:    PARTY_FRAME_HELPFUL_KINDS.has(aura.kind) ||
+src/sim/market.ts:858:        ...(def.kind !== 'furnishing' && listing.instance?.name
+src/sim/social/chat_readouts.ts:638:    const verb = c.kind === 'food' ? 'eating' : 'drinking';
+src/sim/material_derivation.ts:110:  return readonlySetView([...sources].filter((id) => tables.items[id]?.kind === 'junk'));
+src/sim/vendor_buy_stack.ts:97:  if (def.kind === 'furnishing') return forcedByFlags;
+src/sim/vendor_buy_stack.ts:98:  return def.kind === 'mount' || forcedByFlags;
+src/sim/dev/bis_gear.ts:30:  if (item.kind === 'weapon' && item.weapon) {
+src/sim/dev/bis_gear.ts:53:      (item.kind === 'armor' || item.kind === 'weapon') &&
+src/sim/dev/bis_gear.ts:69:        (item) => item.kind === 'weapon' && item.weapon?.dagger === true,
+src/sim/dev/bis_gear.ts:78:        (item) => item.kind !== 'weapon' || item.hand !== 'twohand',
+src/sim/deeds.ts:744:      (id === itemId && def.kind !== 'furnishing' ? rolledQuality : undefined) ?? def.quality;
+src/sim/deeds.ts:748:    id = def.kind === 'furnishing' ? undefined : def.heroicOf;
+src/sim/deeds.ts:926:  switch (trigger.kind) {
+src/sim/deeds.ts:1105:  switch (trigger.kind) {
+src/sim/bank_sockets.ts:106:  if (def?.kind !== 'bag') return;

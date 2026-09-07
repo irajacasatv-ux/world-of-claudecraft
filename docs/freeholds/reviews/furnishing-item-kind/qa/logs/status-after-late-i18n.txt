@@ -1,0 +1,31 @@
+ M server/woc_market.ts
+ M server/woc_market_routes.ts
+ M server/woc_market_stepup.ts
+ M src/render/characters/manifest.ts
+ M src/sim/deeds.ts
+ M src/sim/market.ts
+ M src/sim/professions/enchanting.ts
+ M src/sim/professions/feast.ts
+ M src/sim/reliquary.ts
+ M src/sim/rift/progression.ts
+ M src/sim/sim.ts
+ M src/ui/char_window.ts
+ M src/ui/entity_i18n.ts
+ M src/ui/hud/professions/enchant_apply_view.ts
+ M src/ui/icons.ts
+ M src/ui/item_set_tooltip_view.ts
+ M src/ui/market_view.ts
+ M src/ui/masterwrought_cap_view.ts
+ M src/ui/woc_market_view.ts
+?? docs/freeholds/furnishing-item-kind-qa-validation.md
+?? docs/freeholds/reviews/furnishing-item-kind/qa/
+?? docs/screenshots/furnishing-item-kind/qa/
+?? tests/furnishing_asset_identity.test.ts
+?? tests/furnishing_auto_equip.test.ts
+?? tests/furnishing_discovery.test.ts
+?? tests/furnishing_enchant_picker.test.ts
+?? tests/furnishing_exchange_identity.test.ts
+?? tests/furnishing_feast_admission.test.ts
+?? tests/furnishing_market_identity.test.ts
+?? tests/furnishing_rift_admission.test.ts
+?? tests/furnishing_worn_presentation.test.ts

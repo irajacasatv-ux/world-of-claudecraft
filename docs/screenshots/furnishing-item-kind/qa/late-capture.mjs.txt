@@ -1,0 +1,383 @@
+// Matched browser evidence through the real Exchange, Market and paperdoll painters.
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import puppeteer from 'puppeteer-core';
+import { BROWSER_PATH } from '../scripts/browser_path.mjs';
+import { dismissEntryOverlays, enterOfflineGame } from '../scripts/enter_offline_game.mjs';
+import { suppressGpuNotice } from '../scripts/lib/gpu_notice_suppress.mjs';
+import { dismissPerfNudge } from '../scripts/lib/perf_nudge_dismiss.mjs';
+import { resolveEntryTimeouts } from '../scripts/lib/pr_shot_entry_opts.mjs';
+
+const gameUrl = process.env.GAME_URL ?? 'http://127.0.0.1:5189';
+assert.ok(['127.0.0.1', 'localhost', '[::1]'].includes(new URL(gameUrl).hostname), 'Use a local frozen archive');
+const output = process.env.SHOTS_DIR ?? '/tmp/freeholds-02-audit/late-ui';
+const expectFixed = process.env.QA_EXPECT_FIXED !== '0';
+const { navTimeoutMs, selectorTimeoutMs } = resolveEntryTimeouts(process.env);
+const variants = [
+  { key: 'desktop', width: 1600, height: 900, mobile: false },
+  { key: 'mobile-landscape', width: 844, height: 390, mobile: true },
+].filter((variant) => !process.env.SHOT_VARIANT || process.env.SHOT_VARIANT === variant.key);
+assert.ok(variants.length, 'Unknown SHOT_VARIANT');
+const report = { gameUrl, expectFixed, browserPath: BROWSER_PATH, variants: [], diagnostics: [], failures: [] };
+fs.mkdirSync(output, { recursive: true });
+const browser = await puppeteer.launch({
+  executablePath: BROWSER_PATH, headless: 'new',
+  args: ['--window-size=1600,900', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+  defaultViewport: { width: 1600, height: 900 },
+});
+const settle = (ms = 350) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fixture(page) {
+  return page.evaluate(async () => {
+    const furnishing = {
+      id: 'probe_furnishing_qa_late_ui', name: 'Screenshot Test Furnishing',
+      kind: 'furnishing', quality: 'rare', sellValue: 25, masterwrought: true,
+      set: 'probe_furnishing_visual_set',
+      furnishing: { footprint: { width: 2, depth: 3 }, r: 0, decorCost: 7, surface: 'floor' },
+    };
+    const dataUrls = new Set(performance.getEntriesByType('resource').map((entry) => entry.name)
+      .filter((url) => new URL(url).pathname === '/src/sim/data.ts'));
+    dataUrls.add('/src/sim/data.ts');
+    for (const url of dataUrls) {
+      const data = await import(url);
+      data.ITEMS[furnishing.id] = furnishing;
+      data.ITEM_SETS[furnishing.set] = { id: furnishing.set, name: 'Screenshot Test Set',
+        bonuses: [{ pieces: 2, effect: { str: 999 }, text: 'Increases Strength by 999.' }] };
+    }
+    const { ITEMS, NPCS } = await import('/src/sim/data.ts');
+    const { t } = await import('/src/ui/i18n.ts');
+    const gear = ITEMS.duskforged_warblade;
+    if (gear?.kind !== 'weapon' || gear.masterwrought !== true) throw new Error('Real Masterwrought control missing');
+    const { sim, hud } = window.__game;
+    const meta = sim.meta(sim.playerId);
+    const merchant = [...sim.entities.values()].find((entity) => NPCS[entity.templateId]?.market);
+    if (!merchant) throw new Error('Actual Merchant missing');
+    Object.assign(sim.player.pos, merchant.pos);
+    sim.player.prevPos = { ...sim.player.pos };
+    sim.rebucket(sim.player);
+    const badCopy = {
+      name: 'Forged Furnishing Name', signer: 'Testmaker',
+      rolled: { quality: 'legendary', stats: { str: 999 }, masterwork: true },
+      enchant: 'enchant_chest_stamina', perfected: true,
+    };
+    const gearCopy = { name: 'Control Blade', rolled: { quality: 'legendary' } };
+    meta.inventory.splice(0, meta.inventory.length,
+      { itemId: furnishing.id, count: 1, instance: structuredClone(badCopy) },
+      { itemId: gear.id, count: 1, instance: structuredClone(gearCopy) });
+    for (const key of Object.keys(meta.equipment)) delete meta.equipment[key];
+    for (const key of Object.keys(sim.equipmentInstances)) delete sim.equipmentInstances[key];
+    meta.equipment.chest = furnishing.id;
+    meta.equipment.mainhand = gear.id;
+    sim.equipmentInstances.chest = structuredClone(badCopy);
+    const sellerKey = String(meta.characterId ?? meta.entityId);
+    sim.market.marketCollections.set(sellerKey, {
+      copper: 2850, items: [], sales: { entries: [
+        { itemId: furnishing.id, itemName: badCopy.name, count: 1, price: 1000, proceeds: 950, buyerName: 'Buyer' },
+        { itemId: gear.id, itemName: gearCopy.name, count: 1, price: 2000, proceeds: 1900, buyerName: 'Buyer' },
+      ], omitted: 0 },
+    });
+    const nowMs = Date.now();
+    const rows = [furnishing.id, gear.id].map((itemId, index) => ({
+      id: index + 1, itemId, item: { itemId, count: 1, instance: index === 0 ? badCopy : gearCopy },
+      quality: 'legendary', format: 'auction', sellerName: 'Seller', mine: false,
+      startCents: 5000, hasReserve: false, reserveMet: null, buyNowCents: null,
+      offerNext: false, status: 'active', resolution: null, currentBidCents: null,
+      minNextBidCents: 5000, minNextBidBondCents: 500, buyNowLocked: false,
+      endsAtMs: nowMs + 3600000, createdAtMs: nowMs,
+    }));
+    const status = { ok: true, enabled: true, price: { available: true, healthy: true, tokensPerUsd: 100, asOfMs: nowMs },
+      maxActiveListings: 12, durationsHours: [12, 24], minPriceCents: 25, maxPriceCents: 100000,
+      allowMounts: true, allowMechChromas: true, qualityFloor: 'epic', settlementWindowSeconds: 600 };
+    const activity = { listings: rows, bids: [], settlements: [], strikes: null,
+      termsAcceptedAtMs: nowMs, walletLinked: true };
+    const readCalls = [];
+    const reads = {
+      status: () => status, browse: () => ({ ok: true, listings: rows, hasMore: false }),
+      me: () => ({ ok: true, activity }),
+      detail: (id) => ({ ok: true, listing: rows.find((row) => row.id === id), estimate: { available: false, usdCents: 5000, amount: null, asOfMs: null } }),
+      history: () => ({ ok: true, sales: [] }),
+      estimate: () => ({ available: false, usdCents: 5000, amount: null, asOfMs: null }),
+    };
+    const client = new Proxy({}, { get: (_target, key) => {
+      if (!(key in reads)) return () => { throw new Error(`Unexpected Exchange operation: ${String(key)}`); };
+      return async (...args) => { readCalls.push({ method: key, args }); return structuredClone(reads[key](...args)); };
+    } });
+    const neverSign = async () => { throw new Error('Wallet signing is forbidden in visual fixtures'); };
+    hud.attachWocMarket({ client, characterId: () => 701, walletLinked: () => true,
+      signMessageBase58: neverSign, signAndSendTransactionBase64: neverSign });
+    window.__qaLateUi = { furnishing, gearId: gear.id, gearName: gear.name, badCopy, gearCopy,
+      readCalls, rows, capUsed1: t('hudChrome.masterwrought.tooltipWorn', { used: '1', cap: '2' }),
+      capUsed2: t('hudChrome.masterwrought.tooltipWorn', { used: '2', cap: '2' }) };
+    return { furnishing, gearId: gear.id, gearName: gear.name, badCopy, gearCopy,
+      source: 'In-memory malformed inventory, loaded ledger and SDK read fixtures; actual client painters' };
+  });
+}
+
+async function press(page, variant, selector) {
+  await page.waitForSelector(selector, { visible: true, timeout: 15000 });
+  await page.$eval(selector, (element) => element.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
+  if (variant.mobile) await page.tap(selector);
+  else await page.click(selector);
+  await settle();
+}
+async function visibleTarget(page, selector) {
+  await page.$eval(selector, (element) => element.scrollIntoView({
+    block: 'nearest', inline: 'nearest', behavior: 'instant',
+  }));
+  await settle();
+  return page.$eval(selector, (element) => {
+    const box = element.getBoundingClientRect();
+    const x = box.left + box.width / 2;
+    const y = box.top + box.height / 2;
+    if (box.width <= 0 || box.height <= 0 || box.left < 0 || box.top < 0
+      || box.right > innerWidth + 1 || box.bottom > innerHeight + 1
+      || !element.contains(document.elementFromPoint(x, y))) throw new Error(`Changed target not fully visible: ${element.outerHTML.slice(0, 200)}`);
+    return { bounds: box.toJSON(), text: element.textContent.trim() };
+  });
+}
+async function captureNoticesAbsent(page) {
+  return page.evaluate(() => {
+    return ['#gpu-notice', '#perf-nudge'].every((selector) => {
+      const notice = document.querySelector(selector);
+      if (!notice) return true;
+      const style = getComputedStyle(notice);
+      const box = notice.getBoundingClientRect();
+      return style.display === 'none' || style.visibility === 'hidden' || box.width === 0 || box.height === 0;
+    });
+  });
+}
+async function dismissLateCaptureNotices(page) {
+  // Match the screenshot target pipeline's live dismiss button path. The
+  // entry helper seeds future documents; a late preview boot can rearm this
+  // notice in the current document. The performance nudge carries similar
+  // software-rendering copy and can arrive later, so dismiss both here.
+  const dismissedPerfNudge = await dismissPerfNudge(page);
+  const clicked = await page.evaluate(() => {
+    const clicked = [];
+    for (const selector of ['.gpu-notice-dismiss']) {
+      const dismiss = document.querySelector(selector);
+      if (dismiss && !dismiss.closest('#gpu-notice')?.hidden) {
+        dismiss.click(); clicked.push(selector);
+      }
+    }
+    return clicked;
+  });
+  if (dismissedPerfNudge) clicked.push('.perf-nudge-dismiss');
+  await settle(80);
+  assert.equal(await captureNoticesAbsent(page), true, 'GPU or performance notice still covers the capture');
+  return { dismissedThroughButton: clicked, visibleBeforeScreenshot: false };
+}
+async function shot(page, variant, name, selector, result) {
+  const files = [`${variant.key}-${name}.png`, `${variant.key}-${name}-detail.png`];
+  const noticeAttempts = [];
+  // The perf nudge's first live-frame check can land inside screenshot capture.
+  // Its real dismiss button ends that session's notice. Keep rejected pixels
+  // and repeat only this known notice race, never a failed content assertion.
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const captureNotices = await dismissLateCaptureNotices(page);
+    const full = await page.screenshot();
+    if (!(await captureNoticesAbsent(page))) {
+      const rejected = `${variant.key}-${name}-rejected-${attempt}-full.png`;
+      fs.writeFileSync(`${output}/${rejected}`, full);
+      noticeAttempts.push({ attempt, ...captureNotices,
+        rejected: [rejected], reason: 'notice appeared during full screenshot' });
+      continue;
+    }
+    const bounds = await page.$eval(selector, (element) => {
+      const box = element.getBoundingClientRect();
+      const scrolling = [...element.querySelectorAll('*')].filter((node) => node.scrollTop || node.scrollLeft).map((node) => ({ tag: node.tagName, className: node.className, scrollTop: node.scrollTop, scrollLeft: node.scrollLeft }));
+      return { scrolling, x: Math.max(0, box.left), y: Math.max(0, box.top),
+        right: Math.min(innerWidth, box.right), bottom: Math.min(innerHeight, box.bottom),
+        unclipped: box.left >= 0 && box.top >= 0 && box.right <= innerWidth + 1 && box.bottom <= innerHeight + 1 };
+    });
+    assert.ok(bounds.right > bounds.x && bounds.bottom > bounds.y, `Visible capture region missing: ${name}`);
+    if (expectFixed && selector === '#tooltip' && name !== 'paperdoll-control-card') assert.equal(bounds.unclipped, true, `Fixed tooltip clipped: ${name}`);
+    const detail = await page.screenshot({ clip: { x: bounds.x, y: bounds.y,
+      width: bounds.right - bounds.x, height: bounds.bottom - bounds.y } });
+    if (!(await captureNoticesAbsent(page))) {
+      const rejected = [`${variant.key}-${name}-rejected-${attempt}-full.png`,
+        `${variant.key}-${name}-rejected-${attempt}-detail.png`];
+      fs.writeFileSync(`${output}/${rejected[0]}`, full);
+      fs.writeFileSync(`${output}/${rejected[1]}`, detail);
+      noticeAttempts.push({ attempt, ...captureNotices,
+        rejected, reason: 'notice appeared during detail screenshot' });
+      continue;
+    }
+    fs.writeFileSync(`${output}/${files[0]}`, full);
+    fs.writeFileSync(`${output}/${files[1]}`, detail);
+    if (page.__qaTouchHeld) {
+      await page.touchscreen.touchEnd();
+      page.__qaTouchHeld = false;
+    }
+    return { name, ...result, bounds, captureNotices: { ...captureNotices,
+      acceptedAttempt: attempt, noticeAttempts }, screenshots: files };
+  }
+  report.diagnostics.push({ variant: variant.key, name, noticeAttempts });
+  assert.fail(`GPU or performance notice interrupted all capture attempts: ${name}`);
+}
+async function hoverCard(page, variant, selector, expected, forbidden = []) {
+  await page.evaluate(() => window.__game.hud.hideTooltip());
+  await page.$eval(selector, (element) => element.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
+  await settle();
+  const point = await page.evaluate((selector) => {
+    const element = document.querySelector(selector);
+    const box = element.getBoundingClientRect();
+    const x = box.left + Math.min(22, box.width / 2);
+    const y = box.top + box.height / 2;
+    if (!element.contains(document.elementFromPoint(x, y))) throw new Error(`Hover target occluded: ${selector}`);
+    window.__qaLateNativeEvents = [];
+    for (const type of ['pointerdown', 'mouseenter']) document.addEventListener(type, (event) => {
+      if (event.composedPath().some((node) => node instanceof Element && node.matches(selector))) {
+        window.__qaLateNativeEvents.push({ type: event.type, trusted: event.isTrusted, pointerType: event.pointerType ?? null });
+      }
+    }, { capture: true });
+    return { x, y };
+  }, selector);
+  if (variant.mobile) {
+    await page.touchscreen.touchStart(point.x, point.y);
+    page.__qaTouchHeld = true;
+  }
+  else { await page.mouse.move(0, 0); await page.mouse.move(point.x, point.y); }
+  try {
+    await page.waitForFunction(({ expected, mobile }) => {
+      const tooltip = document.querySelector('#tooltip');
+      return tooltip && getComputedStyle(tooltip).display !== 'none'
+        && expected.every((word) => tooltip.textContent.includes(word))
+        && window.__qaLateNativeEvents.some((event) => event.trusted && (mobile
+          ? event.type === 'pointerdown' && event.pointerType === 'touch' : event.type === 'mouseenter'));
+    }, { timeout: 10000 }, { expected, mobile: variant.mobile });
+    const card = await page.evaluate((forbidden) => {
+      const element = document.querySelector('#tooltip');
+      const text = element.textContent;
+      for (const word of forbidden) if (text.includes(word)) throw new Error(`Forbidden tooltip claim: ${word}`);
+      return { lines: [...element.children].map((node) => node.textContent.trim()), text,
+        events: window.__qaLateNativeEvents, html: element.innerHTML };
+    }, forbidden);
+    return card;
+  } catch (error) {
+    if (page.__qaTouchHeld) {
+      await page.touchscreen.touchEnd();
+      page.__qaTouchHeld = false;
+    }
+    throw error;
+  }
+}
+
+async function capture(page, variant) {
+  const injected = await fixture(page);
+  await settle(3000);
+  await page.waitForFunction(() => {
+    const loading = document.querySelector('#loading-screen');
+    return !loading || getComputedStyle(loading).display === 'none' || getComputedStyle(loading).visibility === 'hidden';
+  }, { timeout: 180000 });
+  await dismissEntryOverlays(page);
+  const captures = [];
+  await page.evaluate(() => window.__game.hud.toggleWocMarket());
+  await page.waitForSelector('#woc-market-window [data-tt-key="browse:1"]', { visible: true, timeout: 15000 });
+  const rarity = async (selector) => page.$eval(selector, (element, fixed) => {
+    const icon = element.matches('img') ? element : element.querySelector('img');
+    if (!icon?.complete || !icon.naturalWidth) throw new Error('Item icon not decoded');
+    const expected = fixed ? 'q-rare' : 'q-legendary';
+    if (!icon.classList.contains(expected)) throw new Error(`Wrong furnishing rarity ${icon.className}, expected ${expected}`);
+    return { text: element.textContent.trim(), iconClass: icon.className, accessibleName: element.getAttribute('aria-label') };
+  }, expectFixed);
+  const browse = await rarity('#woc-market-window img[data-tt-key="browse:1"]');
+  browse.name = await page.$eval('#woc-market-window .wm-name[data-tt-key="browse:1"]', (element) => element.textContent.trim());
+  browse.accessibleName = await page.$eval('#woc-market-window [data-focus-key="wm-row-1"]', (element) => element.getAttribute('aria-label'));
+  assert.equal(browse.name, 'Screenshot Test Furnishing');
+  assert.ok(browse.accessibleName.includes('Screenshot Test Furnishing'), 'Exchange row accessible name is false');
+  const controlBrowse = await page.$eval('#woc-market-window img[data-tt-key="browse:2"]', (icon) => icon.classList.contains('q-legendary'));
+  assert.equal(controlBrowse, true, 'Eligible Exchange control loses its rolled tier');
+  captures.push(await shot(page, variant, 'exchange-browse', '#woc-market-window', { furnishing: browse, controlLegendary: true, target: await visibleTarget(page, '#woc-market-window [data-focus-key="wm-row-1"]') }));
+  await press(page, variant, '#woc-market-window [data-tab="sell"]');
+  await press(page, variant, '#woc-market-window [data-field="sell-search"]');
+  await page.waitForSelector('#woc-market-window [data-sell-index="0"]', { visible: true, timeout: 10000 });
+  const sell = await rarity('#woc-market-window [data-sell-index="0"]');
+  const controlSell = await page.$eval('#woc-market-window [data-sell-index="1"] img', (icon) => icon.classList.contains('q-legendary'));
+  assert.equal(controlSell, true, 'Eligible Sell control loses its rolled tier');
+  captures.push(await shot(page, variant, 'exchange-sell', '#woc-market-window', { furnishing: sell, controlLegendary: true, target: await visibleTarget(page, '#woc-market-window [data-sell-index="0"]') }));
+  const exchangeCard = await hoverCard(page, variant, '#woc-market-window [data-sell-index="0"] img',
+    ['Screenshot Test Furnishing', 'Rare Furnishing', 'Footprint: 2 by 3 cells.'], ['Forged Furnishing Name', 'Legendary Furnishing']);
+  captures.push(await shot(page, variant, 'exchange-furnishing-card', '#tooltip', exchangeCard));
+
+  await page.evaluate(() => { window.__game.hud.wocMarketWindow.close(); window.__game.hud.openMarket(); const bags = document.querySelector('#bags'); if (bags) bags.style.display = 'none'; });
+  await press(page, variant, '#market-window [data-tab="collect"]');
+  const ledger = await page.evaluate((fixed) => {
+    const names = [...document.querySelectorAll('#market-window .mkt-sale-name > span:first-child')].map((node) => node.textContent.trim());
+    const expected = [fixed ? 'Screenshot Test Furnishing' : 'Forged Furnishing Name', 'Control Blade'];
+    if (JSON.stringify(names) !== JSON.stringify(expected)) throw new Error(`Wrong Collect names: ${JSON.stringify(names)}`);
+    const buyers = [...document.querySelectorAll('#market-window .mkt-sale-buyer')].map((node) => node.textContent.trim());
+    if (buyers.length !== 2 || buyers.some((name) => !name.includes('Buyer'))) throw new Error('Collect buyer control missing');
+    return { names, buyers, displayedText: document.querySelector('#market-window').textContent };
+  }, expectFixed);
+  ledger.target = await visibleTarget(page, '#market-window .mkt-sale');
+  captures.push(await shot(page, variant, 'market-collect', '#market-window', ledger));
+
+  await page.evaluate(() => { window.__game.hud.closeMarket(); window.__game.hud.toggleChar(); const bags = document.querySelector('#bags'); if (bags) bags.style.display = 'none'; window.__game.hud.syncCharBagsPairing(); });
+  await page.waitForSelector('#char-window .char-mw-slots-value', { visible: true, timeout: 15000 });
+  const paperdoll = await page.evaluate((fixed) => {
+    const value = document.querySelector('#char-window .char-mw-slots-value').textContent.trim();
+    if (value !== (fixed ? '1 / 2' : '2 / 2')) throw new Error(`Wrong Masterwrought cap: ${value}`);
+    const chest = document.querySelector('#equip-slot-chest');
+    const gear = document.querySelector('#equip-slot-mainhand');
+    if (Boolean(chest.querySelector('.equip-mw-chip')) !== !fixed) throw new Error('Furnishing chip mismatch');
+    if (!gear.querySelector('.equip-mw-chip')) throw new Error('Eligible Masterwrought control chip missing');
+    if (chest.querySelector('.slot-item').textContent.trim() !== 'Screenshot Test Furnishing') throw new Error('Furnishing authored worn name changed');
+    if (!chest.querySelector('img.q-rare')) throw new Error('Furnishing authored worn rarity missing');
+    return { value, furnishingChip: !fixed, controlChip: true, chestName: chest.querySelector('.slot-item').textContent.trim() };
+  }, expectFixed);
+  await page.$eval('#char-window .char-mw-slots-value', (element) => element.scrollIntoView({ block: 'nearest' }));
+  captures.push(await shot(page, variant, 'paperdoll-cap', '#char-window', { ...paperdoll, target: await visibleTarget(page, '#char-window .char-mw-slots-value') }));
+  await page.$eval('#equip-slot-chest', (element) => element.scrollIntoView({ block: 'nearest' }));
+  captures.push(await shot(page, variant, 'paperdoll-chest', '#char-window', { ...paperdoll, target: await visibleTarget(page, '#equip-slot-chest') }));
+  const capText = await page.evaluate((fixed) => fixed ? window.__qaLateUi.capUsed1 : window.__qaLateUi.capUsed2, expectFixed);
+  const chestCard = await hoverCard(page, variant, '#equip-slot-chest',
+    ['Screenshot Test Furnishing', 'Made by Testmaker.', ...(expectFixed ? [] : [capText])],
+    expectFixed ? ['Masterwrought', 'Strength', 'Legendary', 'Forged Furnishing Name'] : []);
+  captures.push(await shot(page, variant, 'paperdoll-furnishing-card', '#tooltip', chestCard));
+  const controlCard = await hoverCard(page, variant, '#equip-slot-mainhand', [capText]);
+  captures.push(await shot(page, variant, 'paperdoll-control-card', '#tooltip', controlCard));
+  const readCalls = await page.evaluate(() => window.__qaLateUi.readCalls);
+  assert.ok(readCalls.some((call) => call.method === 'status') && readCalls.some((call) => call.method === 'browse'), 'Actual Exchange read flow was not exercised');
+  return { variant, injected, captures, readCalls };
+}
+
+try {
+  for (const variant of variants) {
+    console.log(`PROGRESS ${variant.key}: opening ${expectFixed ? 'fixed' : 'baseline'} archive`);
+    const page = await browser.newPage();
+    page.on('pageerror', (error) => { report.failures.push(`${variant.key} pageerror: ${error.message}`); });
+    page.on('response', (response) => { if (response.status() >= 400) report.diagnostics.push({ variant: variant.key, status: response.status(), path: new URL(response.url()).pathname }); });
+    page.on('console', (message) => { if (message.type() === 'error') report.diagnostics.push({ variant: variant.key, message: message.text() }); });
+    try {
+      if (variant.mobile) await page.emulate({
+        viewport: { width: variant.width, height: variant.height, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+      });
+      await suppressGpuNotice(page);
+      await page.evaluateOnNewDocument(() => {
+        localStorage.removeItem('woc_entry_probe');
+        const settings = JSON.parse(localStorage.getItem('woc_settings') || '{}');
+        settings.graphicsPreset = 1; settings.graphicsDefaultApplied = true;
+        localStorage.setItem('woc_settings', JSON.stringify(settings));
+      });
+      await page.goto(gameUrl, { waitUntil: 'networkidle0', timeout: navTimeoutMs });
+      if (variant.mobile) await page.evaluate(() => document.body.classList.add('mobile-touch'));
+      const entered = await enterOfflineGame(page, { charName: 'Testmaker', charClass: 'warrior', settleMs: 3000,
+        selectorTimeoutMs, gameBootTimeoutMs: 180000 });
+      assert.equal(entered, true, 'Offline entry failed');
+      const result = await capture(page, variant);
+      report.variants.push(result);
+      console.log(`PASS ${variant.key}: ${result.captures.length} actual-window captures`);
+    } catch (error) {
+      report.failures.push(`${variant.key}: ${error.stack ?? error.message}`);
+      await page.screenshot({ path: `${output}/${variant.key}-failure.png` }).catch(() => {});
+      console.error(`FAIL ${variant.key}: ${error.message}`);
+    } finally { await page.close(); }
+  }
+} finally {
+  await browser.close();
+  fs.writeFileSync(`${output}/manifest.json`, `${JSON.stringify(report, null, 2)}\n`);
+}
+console.log(`Captured ${report.variants.length}/${variants.length}; failures ${report.failures.length}. Manifest: ${output}/manifest.json`);
+process.exit(report.variants.length === variants.length && report.failures.length === 0 ? 0 : 1);

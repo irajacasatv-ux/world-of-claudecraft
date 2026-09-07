@@ -1,0 +1,61 @@
+from hashlib import sha256
+import json
+from pathlib import Path
+
+
+root = Path('docs/freeholds/reviews/furnishing-item-kind/qa')
+backup = Path('tmp/freeholds-02-audit/original-archived-logs')
+backup.mkdir(parents=True, exist_ok=True)
+
+
+def normalized(data):
+    lines = [line.rstrip(b' \t\r\v\f') for line in data.split(b'\n')]
+    while lines and lines[-1] == b'':
+        lines.pop()
+    return b'\n'.join(lines) + (b'\n' if lines else b'')
+
+
+def digest(data):
+    return sha256(data).hexdigest()
+
+
+records = []
+for path in sorted((root / 'logs').glob('*.log.txt')):
+    current = path.read_bytes()
+    original = backup / path.name
+    if original.exists():
+        before = original.read_bytes()
+        assert current in (before, normalized(before)), f'Backup collision: {path}'
+    else:
+        before = current
+        original.write_bytes(before)
+    after = normalized(before)
+    assert normalized(after) == after, f'Non-idempotent normalization: {path}'
+    before_content = b''.join(before.split())
+    after_content = b''.join(after.split())
+    assert before_content == after_content, f'Non-whitespace content changed: {path}'
+    if after != current:
+        path.write_bytes(after)
+    assert path.read_bytes() == after, f'Write verification failed: {path}'
+    records.append({
+        'path': str(path),
+        'original': str(original),
+        'changed': before != after,
+        'originalBytes': len(before),
+        'normalizedBytes': len(after),
+        'originalSha256': digest(before),
+        'normalizedSha256': digest(after),
+        'nonWhitespaceSha256': digest(before_content),
+    })
+
+result = {
+    'command': 'python3 tmp/freeholds-02-audit/normalize-archive-logs.py',
+    'scope': str(root / 'logs' / '*.log.txt'),
+    'rule': 'Remove trailing ASCII whitespace per line and empty EOF lines; preserve one final LF for nonempty output.',
+    'filesVerified': len(records),
+    'filesChanged': sum(record['changed'] for record in records),
+    'nonWhitespaceEqual': True,
+    'records': records,
+}
+(root / 'log-normalization-result.json').write_text(json.dumps(result, indent=2) + '\n')
+print(f"Verified {result['filesVerified']} archived logs; normalized {result['filesChanged']}; non-whitespace content unchanged in every file.")

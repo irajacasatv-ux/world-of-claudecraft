@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { readFileSync, writeFileSync } from 'node:fs';
+
+const base = '041fd790cec0ea52c3e2285dcac7c3a49f30e7b0';
+const revision = 'd38663539433cbcd30642ea47d7663c5c52c59c0';
+const paths = execFileSync('git', ['diff', '--name-only', base, revision], { encoding: 'utf8' })
+  .trim().split('\n');
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const files = paths.map((path) => {
+  const committed = execFileSync('git', ['show', `${revision}:${path}`], { maxBuffer: 16 * 1024 * 1024 });
+  const current = readFileSync(path);
+  assert.equal(hash(current), hash(committed), `Reviewed file changed: ${path}`);
+  return { path, sha256: hash(current), bytes: current.length };
+});
+const tree = execFileSync('git', ['rev-parse', `${revision}^{tree}`], { encoding: 'utf8' }).trim();
+writeFileSync('tmp/freeholds-02-audit/reviewed-source-seal.json', `${JSON.stringify({
+  base, revision, tree, files,
+}, null, 2)}\n`);
+console.log(`Verified ${files.length} reviewed files against committed ${revision}.`);

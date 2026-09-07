@@ -1,0 +1,285 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+server/woc_market_routes.ts:105:15 lint/suspicious/noUndeclaredEnvVars ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! The environment variable WOC_MARKET_CONFIRMING_REVIEW_HOURS is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
+
+    103 │  *  clamped with a one-time operator warning (dev channel). */
+    104 │ function confirmingReviewMsFromEnv(): number {
+  > 105 │   const raw = process.env.WOC_MARKET_CONFIRMING_REVIEW_HOURS;
+        │               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    106 │   const hours = raw !== undefined && raw.trim() !== '' ? Number(raw) : Number.NaN;
+    107 │   const safe =
+
+
+server/woc_market_routes.ts:122:21 lint/suspicious/noUndeclaredEnvVars ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! The environment variable WOC_MARKET_EXCLUDED_ITEM_IDS is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
+
+    121 │ export function wocMarketConfig(): WocMarketConfig {
+  > 122 │   const excluded = (process.env.WOC_MARKET_EXCLUDED_ITEM_IDS ?? '')
+        │                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    123 │     .split(',')
+    124 │     .map((s) => s.trim())
+
+
+server/woc_market_routes.ts:127:14 lint/suspicious/noUndeclaredEnvVars ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! The environment variable WOC_MARKET_ENABLED is not listed as a dependency in turbo.json. Add this environment variable a task's 'env'/'passThroughEnv', or to 'globalEnv', 'globalPassThroughEnv', in your turbo.json(c) configuration to ensure correct caching behavior in Turborepo.
+
+    125 │     .filter((s) => s !== '');
+    126 │   return {
+  > 127 │     enabled: process.env.WOC_MARKET_ENABLED === '1',
+        │              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    128 │     realm: REALM,
+    129 │     policy:
+
+
+tests/furnishing_auto_equip.test.ts:102:16 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    100 │     world: EMPTY_TEST_WORLD,
+    101 │   });
+  > 102 │   const meta = sim.meta(sim.playerId)!;
+        │                ^^^^^^^^^^^^^^^^^^^^^^^
+    103 │   meta.inventory.splice(0);
+    104 │   meta.equipment = { [slot]: itemId };
+
+
+tests/furnishing_discovery.test.ts:54:19 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    52 │     const sim = world();
+    53 │     const pid = sim.addPlayer('warrior', 'Finder');
+  > 54 │     const state = sim.serializeCharacter(pid)!;
+       │                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    55 │     state.inventory = [{ itemId: FURNISHING.id, count: 1, instance: COPY }];
+    56 │     state.deedStats = {
+
+
+tests/furnishing_discovery.test.ts:62:22 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    60 │     const loaded = world();
+    61 │     const restoredPid = loaded.addPlayer('warrior', 'Veteran', { state });
+  > 62 │     const restored = loaded.meta(restoredPid)!;
+       │                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+    63 │     expect(restored.deedStats.itemsDiscovered.has(FURNISHING.id)).toBe(true);
+    64 │     expect(restored.deedStats.itemsDiscovered.has(BASE_ID)).toBe(true);
+
+
+tests/furnishing_discovery.test.ts:77:20 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    75 │       const sim = world();
+    76 │       const pid = sim.addPlayer('warrior', 'Finder');
+  > 77 │       const meta = sim.meta(pid)!;
+       │                    ^^^^^^^^^^^^^^
+    78 │       sim.addItemInstance(itemId, COPY, pid);
+    79 │       expect(meta.inventory.find((slot) => slot.itemId === itemId)?.instance).toEqual(COPY);
+
+
+tests/furnishing_discovery.test.ts:102:24 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    100 │       const loaded = world();
+    101 │       const loadedPid = loaded.addPlayer('warrior', 'Finder', { state: saved });
+  > 102 │       const restored = loaded.meta(loadedPid)!;
+        │                        ^^^^^^^^^^^^^^^^^^^^^^^
+    103 │       expect([...restored.deedStats.itemsDiscovered].sort()).toEqual(discoveries.sort());
+    104 │       expect(restored.reliquary.counts[itemId === FURNISHING.id ? FURNISHING.id : BASE_ID]).toBe(2);
+
+
+tests/furnishing_discovery.test.ts:118:21 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    116 │       const sim = world();
+    117 │       const pid = sim.addPlayer('warrior', 'Finder');
+  > 118 │       const state = sim.serializeCharacter(pid)!;
+        │                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    119 │       state.deedStats = { itemsDiscovered: [] };
+    120 │       state.inventory = [];
+
+
+tests/furnishing_discovery.test.ts:125:51 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    123 │       const slot = { itemId: FURNISHING.id, count: 1, instance: COPY };
+    124 │       if (container === 'inventory') state.inventory = [slot];
+  > 125 │       if (container === 'bank') state.bank = { ...state.bank!, inventory: [slot] };
+        │                                                   ^^^^^^^^^^^
+    126 │       if (container === 'equipment') {
+    127 │         state.equipment = { mainhand: FURNISHING.id };
+
+
+tests/furnishing_discovery.test.ts:134:20 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    132 │         state: JSON.parse(JSON.stringify(state)) as CharacterState,
+    133 │       });
+  > 134 │       const meta = loaded.meta(loadedPid)!;
+        │                    ^^^^^^^^^^^^^^^^^^^^^^^
+    135 │       expect(meta.deedStats.itemsDiscovered.has(FURNISHING.id)).toBe(true);
+    136 │       expect(meta.deedStats.itemsDiscovered.has(BASE_ID)).toBe(false);
+
+
+tests/furnishing_exchange_identity.test.ts:173:27 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    171 │   const persisted = await h.db.listingById('Claudemoon', out.listing.id);
+    172 │   expect(persisted).not.toBeNull();
+  > 173 │   return { ...h, listing: persisted! };
+        │                           ^^^^^^^^^^
+    174 │ }
+    175 │ function listingView(itemId: string): WocListingView {
+
+
+tests/furnishing_exchange_identity.test.ts:287:12 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    285 │     if (view.kind !== 'ready') throw new Error('missing ready market');
+    286 │     expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+  > 287 │     expect(view.browse.detail!.row.quality).toBe('rare');
+        │            ^^^^^^^^^^^^^^^^^^^
+    288 │     expect(view.activity!.listings.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    289 │     expect(view.browse.rows[0].instance).toBe(rows[0].item.instance);
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+    285 285 │       if (view.kind !== 'ready') throw new Error('missing ready market');
+    286 286 │       expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    287     │ - ····expect(view.browse.detail!.row.quality).toBe('rare');
+        287 │ + ····expect(view.browse.detail?.row.quality).toBe('rare');
+    288 288 │       expect(view.activity!.listings.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    289 289 │       expect(view.browse.rows[0].instance).toBe(rows[0].item.instance);
+
+
+tests/furnishing_exchange_identity.test.ts:288:12 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    286 │     expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    287 │     expect(view.browse.detail!.row.quality).toBe('rare');
+  > 288 │     expect(view.activity!.listings.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+        │            ^^^^^^^^^^^^^^
+    289 │     expect(view.browse.rows[0].instance).toBe(rows[0].item.instance);
+    290 │     expect(rows).toEqual(before);
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+    286 286 │       expect(view.browse.rows.map((row) => row.quality)).toEqual(['rare', 'legendary']);
+    287 287 │       expect(view.browse.detail!.row.quality).toBe('rare');
+    288     │ - ····expect(view.activity!.listings.map((row)·=>·row.quality)).toEqual(['rare',·'legendary']);
+        288 │ + ····expect(view.activity?.listings.map((row)·=>·row.quality)).toEqual(['rare',·'legendary']);
+    289 289 │       expect(view.browse.rows[0].instance).toBe(rows[0].item.instance);
+    290 290 │       expect(rows).toEqual(before);
+
+
+tests/furnishing_exchange_identity.test.ts:336:11 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    334 │       account: { accountId: 7, scope: 'read' },
+    335 │     });
+  > 336 │     await route!.handler(ctx);
+        │           ^^^^^^
+    337 │     const response = ctx.res as unknown as FakeRes;
+    338 │     expect(response.statusCode).toBe(200);
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+    334 334 │         account: { accountId: 7, scope: 'read' },
+    335 335 │       });
+    336     │ - ····await·route!.handler(ctx);
+        336 │ + ····await·route?.handler(ctx);
+    337 337 │       const response = ctx.res as unknown as FakeRes;
+    338 338 │       expect(response.statusCode).toBe(200);
+
+
+tests/furnishing_exchange_identity.test.ts:357:7 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    355 │       'rift-forged',
+    356 │       'customized',
+  > 357 │       COPY.name!,
+        │       ^^^^^^^^^^
+    358 │     ])
+    359 │       expect(text).not.toContain(word);
+
+
+tests/furnishing_feast_admission.test.ts:125:20 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    123 │     (selection) => {
+    124 │       const sim = world();
+  > 125 │       const meta = sim.meta(sim.playerId)!;
+        │                    ^^^^^^^^^^^^^^^^^^^^^^^
+    126 │       const named = selection === 'named slot';
+    127 │       expect(sim.countItem(FURNISHING.id)).toBe(1);
+
+
+tests/furnishing_feast_admission.test.ts:154:18 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    152 │   it('refuses a furnishing dish before consuming a serving and accepts the food control', () => {
+    153 │     const sim = world();
+  > 154 │     const meta = sim.meta(sim.playerId)!;
+        │                  ^^^^^^^^^^^^^^^^^^^^^^^
+    155 │     placeFeastAction(sim.ctx, sim.player, meta, 1, FIXTURE.feastId);
+    156 │     const [[id, feast]] = [...sim.ctx.feasts];
+
+
+tests/furnishing_market_identity.test.ts:49:3 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    47 │   const pid = sim.addPlayer('warrior', 'Seller', { characterId: 701 });
+    48 │   atMerchant(sim, pid);
+  > 49 │   sim.meta(pid)!.inventory.splice(0);
+       │   ^^^^^^^^^^^^^^
+    50 │   sim.meta(pid)!.copper = 0;
+    51 │   return pid;
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+     47  47 │     const pid = sim.addPlayer('warrior', 'Seller', { characterId: 701 });
+     48  48 │     atMerchant(sim, pid);
+     49     │ - ··sim.meta(pid)!.inventory.splice(0);
+         49 │ + ··sim.meta(pid)?.inventory.splice(0);
+     50  50 │     sim.meta(pid)!.copper = 0;
+     51  51 │     return pid;
+
+
+tests/furnishing_market_identity.test.ts:50:3 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Forbidden non-null assertion.
+
+    48 │   atMerchant(sim, pid);
+    49 │   sim.meta(pid)!.inventory.splice(0);
+  > 50 │   sim.meta(pid)!.copper = 0;
+       │   ^^^^^^^^^^^^^^
+    51 │   return pid;
+    52 │ }
+
+
+Skipped 27 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --write --unsafe
+
+The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.
+Diagnostics not shown: 30.
+Checked 39 files in 609ms. Fixed 6 files.
+Found 50 warnings.

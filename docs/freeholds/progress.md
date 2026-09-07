@@ -1,7 +1,8 @@
 # Freeholds and Guildhalls: progress
 
-Foundation implementation and QA are complete locally. Furnishing item-kind implementation
-is complete locally with passing validation and fresh review; its paired QA is next. Product
+Foundation and furnishing item-kind implementation and QA are complete locally.
+The furnishing audit verdict is PASS, with all 40 findings resolved and independently
+reviewed, the complete shared gate green and final evidence recorded below. Product
 settlement and external sign-off remain distinct from implementation and QA completion.
 
 ## Status
@@ -9,14 +10,14 @@ settlement and external sign-off remain distinct from implementation and QA comp
 There are 56 bounded work items and 56 paired QA rows; their actual status is recorded
 below. The 44 original numeric items retain their IDs and twelve suffixed pairs are
 inserted into the chain. The next handoff is
-[phase-02-qa.md](phase-02-qa.md).
+[phase-03-content-tiers-and-basics.md](phase-03-content-tiers-and-basics.md).
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
 | 01 Foundation | Complete (QA PASS), local | 2026-09-06 | 2026-09-06 | Six reviewers (cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist): 0 blocking, 11 should-fix, ~25 nits, ALL applied; fresh review of the fix round PASS; gates unsigned (see notes) |
 | 01 QA | PASS | 2026-09-06 | 2026-09-06 | Twelve auditors and reviewers (six bespoke audits plus the six required reviewers: cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist). About 156 raw findings, deduplicated to 51 distinct: 1 blocking (self-inflicted, a glossary keyPattern registered ahead of its keys, caught by two reviewers and fixed), 0 blocking in the original 01 implementation. ALL resolved: 37 by a code, test or doc change; 14 recorded as reviewed-with-no-change-warranted, each with its reason. Fresh fix-round review VERDICT PASS at 4361ed5989 (zero blocking; it confirmed zero pre-existing assertions were weakened or removed, all four removed expect lines being equal-or-stronger replacements), and its three remaining findings were applied after it: the twelve-of-thirteen delegate correction, the vacuous descriptor arm replaced by a mutation-proven source pin, and the blank_entity scrape taught to follow Entity's heritage clause. Tip 2e247df270. Gates unsigned, see notes |
-| 02 Furnishing item kind | Complete, local | 2026-09-06 | 2026-09-06 | Typecheck, 447 scoped tests, gate_select, all required reviews, fresh fix review and post-commit ci:changed PASS; paired QA next (see notes) |
-| 02 QA | Not started | | | |
+| 02 Furnishing item kind | Complete, local | 2026-09-06 | 2026-09-06 | Original implementation validation PASS; paired QA repairs and current evidence are recorded in row 02 QA and the notes below |
+| 02 QA | PASS, local | 2026-09-07 | 2026-09-07 | 40 findings found and 40 resolved, zero deferred. Fresh entire-fix review PASS at d386635394 across 110 changed files and all four repair commits; final documentation and checklist PASS with both wording nits resolved. Final shared gate exit 0, all 12 steps green; 58,083 Vitest and 373 browser tests passed; standalone i18n/status PASS. Post-commit ci:changed actual exit 0 at c881543258 with clean status; the same check follows the evidence-only amendment. See furnishing-item-kind-qa-validation.md |
 | 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Not started | | | |
 | 03 QA | Not started | | | |
 | 04 Content: crafted furnishings and quartermaster patterns | Not started | | | |
@@ -249,7 +250,7 @@ ceiling from 18716 to 18703. The complete new English leaf inventory is:
 | `hudChrome.housing.furnishing.surfaceFloor` | Placed on the floor. |
 | `hudChrome.housing.furnishing.maker` | Made by {maker}. |
 
-Completion evidence:
+Original implementation completion evidence:
 - Scoped validation: PASS; typecheck exit 0, 447 scoped tests, 253 neighboring tests,
   and 76 localization tests passed (3 existing release-tier skips). Exact commands and
   evidence are in [furnishing-item-kind-validation.md](furnishing-item-kind-validation.md).
@@ -264,7 +265,44 @@ Completion evidence:
 - Three scoped commits: item gates `83f847e6cb`, UI `b98007b01e`, and the final synthetic
   consumer test/evidence commit. `npm run ci:changed` after the last commit: PASS, exit 0.
   The final evidence amendment is followed by the same post-commit check.
-- Paired `phase-02-qa.md`: next in a fresh session, not yet started.
+- The paired audit has since run; its current record follows.
+
+QA verdict PASS (2026-09-07, source sealed locally, branch not pushed): 40 distinct
+findings were found and all 40 have independently reviewed repairs and evidence. The
+fresh reviewer read all 110 changed files across `ce0e25ec85`, `ff738f61a1`,
+`a82e71f4cd` and `d386635394`, with source PASS and zero open source/test findings.
+The required cross-platform, architecture, frontend and coverage reports are
+archived with the [QA validation record](furnishing-item-kind-qa-validation.md).
+The complete consumer census has 353 classified sites, 92 touched, 261 untouched
+by design and zero MISSED. The coverage report maps 47 acceptance claims to
+decisive checks that ran.
+
+The fixes also cover loaded and forged power metadata, real host routes, custody
+restart, complete tooltips, Exchange and WorldMarket identity, discovery, Rift,
+feast, worn presentation and regalia caching. The final route matrix passed 24
+tests, the resumed required matrix passed 764 tests, and the serial PostgreSQL
+differential matrix passed all 11 tests without skips. Both late browser commands
+passed with native mouse/touch evidence for all eight surfaces in two viewports.
+The owning provenance remint and its 30-test integrity matrix passed without
+generating an asset or changing frozen screenshot pixels.
+
+The four approved housing keys and two labels above are unchanged. The sole
+additional English leaf is generic custody text,
+`hudChrome.itemTooltip.partyTradeWindowCustody`; its exception requires both the
+exact key and generated pending status. No locale overlay changed in the
+furnishing implementation or QA repair ranges. The final shared gate completed
+with exit 0 and all 12 steps green: 3,868 Vitest files and 58,083 tests passed,
+plus all 42 browser files and 373 tests. The two expected failures, 28 skipped
+tests and one skipped file are disclosed in the validation record, with separate
+serial proof for all 11 differential cases. Standalone i18n generation, its
+immediate status, explicit output-root freshness and repeated source seal passed.
+Fresh review of the final verdict substitutions and the finishing checklist both
+returned PASS, with zero open findings. The actual post-commit check at verdict
+commit `c881543258` passed with exit 0 and clean status. The earlier one-error
+JSON formatting result remains archived as a failure; its whitespace-only repair
+was reviewed within Q37. Fresh and checklist review of this evidence-only amendment passed; the
+coordinator repeats the same check after the true last commit, reporting
+the actual exit without another repository edit.
 
 Named unsigned release gates remain economy catalog/authorization/settlement; counsel,
 Terms and storefront model; optional deed territories and irreversible authority;

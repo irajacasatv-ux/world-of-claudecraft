@@ -1,0 +1,35 @@
+import { spawn, execFileSync } from 'node:child_process';
+import { closeSync, openSync, writeFileSync } from 'node:fs';
+
+const output = 'tmp/freeholds-02-audit';
+const command = ['node', 'scripts/gate_select.mjs'];
+const sourceRevision = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+const sourceTree = execFileSync('git', ['rev-parse', 'HEAD^{tree}'], { encoding: 'utf8' }).trim();
+const gateEnv = {
+  DATABASE_URL: 'postgres://freeholds_qa:local_qa_only@127.0.0.1:55432/freeholds_qa',
+  TEST_DATABASE_URL: 'postgres://freeholds_qa:local_qa_only@127.0.0.1:55432/freeholds_qa',
+  WOCC_PG_DIFFERENTIAL: '0',
+  GATE_SELECT_BASE: 'origin/feature/masterwrought',
+  GATE_MAX_WORKERS: '4',
+};
+const startedAt = new Date().toISOString();
+const fd = openSync(`${output}/gate-final-resumed.log`, 'w');
+const child = spawn(command[0], command.slice(1), {
+  env: { ...process.env, ...gateEnv },
+  stdio: ['ignore', fd, fd],
+});
+child.on('error', (error) => {
+  writeFileSync(`${output}/gate-final-resumed-result.json`, JSON.stringify({
+    command, gateEnv, sourceRevision, sourceTree, startedAt, error: error.message,
+  }, null, 2));
+  process.exitCode = 1;
+});
+child.on('close', (exitCode, signal) => {
+  closeSync(fd);
+  writeFileSync(`${output}/gate-final-resumed-result.json`, `${JSON.stringify({
+    command, gateEnv, sourceRevision, sourceTree, startedAt,
+    finishedAt: new Date().toISOString(), exitCode, signal,
+  }, null, 2)}\n`);
+  console.log(`Final gate exit ${exitCode}; signal ${signal ?? 'none'}.`);
+  process.exitCode = exitCode ?? 1;
+});

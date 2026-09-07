@@ -1,0 +1,17 @@
+docs/screenshots/eastbrook-vale-rebuild/polish/metadata/after-desktop-ultra.json: swept 24 provenance block(s)
+docs/screenshots/eastbrook-vale-rebuild/polish/metadata/after-mobile-low.json: swept 24 provenance block(s)
+docs/screenshots/eastbrook-vale-rebuild/polish/performance/after-desktop-ultra-town.json: swept 1 provenance block(s)
+docs/screenshots/eastbrook-vale-rebuild/polish/performance/after-mobile-low-town.json: swept 1 provenance block(s)
+composite fingerprint (pin in eastbrook_polish_capture_contract.test.ts,
+PINNED_POLISH_COMPOSITE_FINGERPRINT):
+  4d905dd48ae3d9280e087da37ace5864e82d0e42f70cc2192ab3b24ebd87ab63
+metadata authority sha256 (pin in eastbrook_polish_artifact_integrity.test.ts,
+ACCEPTED_POLISH_V2_METADATA_SHA256, recomputed from the swept file):
+  0a95cb7dfd9d672d12c0941f763b0ab3f479a88451ee914247b13818dad659da
+second-order performance digest (pin in eastbrook_polish_artifact_integrity.test.ts):
+  0c70f0ebaf8e24fbaee8522c858ca798f2ad71a929b4514b1ba11385e80efc59
+do NOT touch ACCEPTED_POLISH_V2_TOWN_SOURCE_FINGERPRINT in that same test:
+it is the FROZEN identity of the tree the captures were taken against, and
+it moves only if the captures themselves are retaken.
+every fingerprinted input matches HEAD: this mint reproduces on any checkout
+of the committed tree.

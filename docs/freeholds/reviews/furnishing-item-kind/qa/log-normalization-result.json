@@ -1,0 +1,490 @@
+{
+  "command": "python3 tmp/freeholds-02-audit/normalize-archive-logs.py",
+  "scope": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/*.log.txt",
+  "rule": "Remove trailing ASCII whitespace per line and empty EOF lines; preserve one final LF for nonempty output.",
+  "filesVerified": 48,
+  "filesChanged": 28,
+  "nonWhitespaceEqual": true,
+  "records": [
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/cell-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/cell-final.log.txt",
+      "changed": true,
+      "originalBytes": 1838,
+      "normalizedBytes": 1837,
+      "originalSha256": "c997c382e49127a6d9630f5fcab32e3125bbfd0fcd1313585543bbe3cd12cb31",
+      "normalizedSha256": "08eb74f7e10e5b89565358c4117bfac44d64bce05772186bcefbe258bc8bf289",
+      "nonWhitespaceSha256": "d5b150943e48204853048f31c65b4f11212df36a5689581e52f137b6d14cf260"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/ci-verdict-corrected.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/ci-verdict-corrected.log.txt",
+      "changed": false,
+      "originalBytes": 911537,
+      "normalizedBytes": 911537,
+      "originalSha256": "beac5911a00c253b32544ae94ecf293541218505bcab3bb0f62980b3bcaa16f8",
+      "normalizedSha256": "beac5911a00c253b32544ae94ecf293541218505bcab3bb0f62980b3bcaa16f8",
+      "nonWhitespaceSha256": "6df724f84cf310be7bbb17b4b23f68ec3c6e9bed47b047cb862a1a5e98e4e614"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/ci-verdict-first.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/ci-verdict-first.log.txt",
+      "changed": false,
+      "originalBytes": 915853,
+      "normalizedBytes": 915853,
+      "originalSha256": "63196acee6013dfcb7640a8dd369aa9eb7daed7cdad09c4e058bce245ed3aedb",
+      "normalizedSha256": "63196acee6013dfcb7640a8dd369aa9eb7daed7cdad09c4e058bce245ed3aedb",
+      "nonWhitespaceSha256": "01a4501a90d5ed3b01b9d9a8207970306b893b4684d4f6ec7b96e67e01f6421e"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/comment-biome.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/comment-biome.log.txt",
+      "changed": false,
+      "originalBytes": 527,
+      "normalizedBytes": 527,
+      "originalSha256": "77124b1eeec9fb2cff45582e05074717c94d2aa1adf6ece44ca9e3e7e37b4986",
+      "normalizedSha256": "77124b1eeec9fb2cff45582e05074717c94d2aa1adf6ece44ca9e3e7e37b4986",
+      "nonWhitespaceSha256": "b3198ba7979e7d4f1945993cdf99a4567fbea5a3b55185bf02c9d442bc3fb76b"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/consumer-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/consumer-final.log.txt",
+      "changed": true,
+      "originalBytes": 1107,
+      "normalizedBytes": 1106,
+      "originalSha256": "4fd0e4ca0bc559265ab7afff35e09dbe0cfd2a8e81087410374f622e40286736",
+      "normalizedSha256": "b3a04281904069821820d1bdc18a424b24c59160470a618148f47194b7818a01",
+      "nonWhitespaceSha256": "424b2c3d94a9373556400be8c5679de369b0a5420ef2b3bdf13604ad25c01091"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/display-green.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/display-green.log.txt",
+      "changed": true,
+      "originalBytes": 1107,
+      "normalizedBytes": 1106,
+      "originalSha256": "7f6d1b83ccc56a7bb16fe02ea92657d52adc776ada2da958d68ac68fe438da80",
+      "normalizedSha256": "1541108b6d9ae58537b0d4a8f374ff7d4ba69e5ff0ba666ba0cf1abee3b44bc9",
+      "nonWhitespaceSha256": "a5258e3b139aeac8e6a65573acad763d7a4b03c6f875450cd4390c938e0f30f4"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/eastbrook-biome.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/eastbrook-biome.log.txt",
+      "changed": false,
+      "originalBytes": 528,
+      "normalizedBytes": 528,
+      "originalSha256": "80819dadc13b91350459a940ac78c78f3aa72741e2f49b2da84679e6aeaad3fe",
+      "normalizedSha256": "80819dadc13b91350459a940ac78c78f3aa72741e2f49b2da84679e6aeaad3fe",
+      "nonWhitespaceSha256": "0159a36143f391f9a5093f5035626b22302992a1440c5b195ef99b60434d033f"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/eastbrook-delta-check.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/eastbrook-delta-check.log.txt",
+      "changed": false,
+      "originalBytes": 544,
+      "normalizedBytes": 544,
+      "originalSha256": "bc23a63e4e2e81c743ff66df2f64a8d02c3487b963a0e8c6681912ca984325f0",
+      "normalizedSha256": "bc23a63e4e2e81c743ff66df2f64a8d02c3487b963a0e8c6681912ca984325f0",
+      "nonWhitespaceSha256": "c9a7b84f240bab4195f4acbbeea2950d2916a4da996b8372b6743c795d146774"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/eastbrook-provenance-check.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/eastbrook-provenance-check.log.txt",
+      "changed": true,
+      "originalBytes": 2513,
+      "normalizedBytes": 2512,
+      "originalSha256": "9bb210bdc2be88eba88f42b021f54997114d4fa1f40e76fd0f1c2be797fe0a94",
+      "normalizedSha256": "055b3622b83e25cca0b3a4584da90352b1d5893150f94816efc5884025aceb8f",
+      "nonWhitespaceSha256": "9e0b391682c79602b3b6929a5ea2e63abe5eca8a79635731c34437df96be9864"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/eastbrook-provenance-green.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/eastbrook-provenance-green.log.txt",
+      "changed": true,
+      "originalBytes": 741,
+      "normalizedBytes": 740,
+      "originalSha256": "5f892af15087927de5f43fb39187195975e1e964060f0dfa3a03bd4662264b91",
+      "normalizedSha256": "b035ae6a21667f2f0009768625119b24b41572c8719784399dc7e115d8507f37",
+      "nonWhitespaceSha256": "35106c366225251b857d15b2a5656eeea13958ce02500308ef0ed28ad5069a2b"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/eastbrook-remint.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/eastbrook-remint.log.txt",
+      "changed": false,
+      "originalBytes": 1302,
+      "normalizedBytes": 1302,
+      "originalSha256": "6d11c42439b043668268ef5ce827fb23378a94b82dd4cc5131fda5ba859cb00d",
+      "normalizedSha256": "6d11c42439b043668268ef5ce827fb23378a94b82dd4cc5131fda5ba859cb00d",
+      "nonWhitespaceSha256": "d82c685ea8f8f20d610fde8392abc9d4e8d730520b64fce65b0a4c9267c3126a"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/feast-parity-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/feast-parity-final.log.txt",
+      "changed": true,
+      "originalBytes": 1107,
+      "normalizedBytes": 1106,
+      "originalSha256": "37dc565f1eec8835c3785154d0af4eec44c689cd9786f8f8bb9e0e62716a9486",
+      "normalizedSha256": "347cb76cdd5d8d137f504d129a813f4894c681d526e71d7c01d565ec36c9b423",
+      "nonWhitespaceSha256": "4b88d8bd6e2cdf5b11c04044049b426fdd47f97d4f30b6f8cfb279d11ed46f8a"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/furnishing-expanded.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/furnishing-expanded.log.txt",
+      "changed": true,
+      "originalBytes": 1103,
+      "normalizedBytes": 1102,
+      "originalSha256": "b61b2df68bae53b4c0ce67d4c08aa66da724057f6b4c62f7f80674a68e24a146",
+      "normalizedSha256": "63309219755538c6eff83c422aea935f5b3ce45fb49b9cf39d7a5bde019fa673",
+      "nonWhitespaceSha256": "214505b6000c068836ecab088acf51738a52cf983dcb8bfd05f69d609c64cecf"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/gate-final-resumed-excerpt.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/gate-final-resumed-excerpt.log.txt",
+      "changed": false,
+      "originalBytes": 4905,
+      "normalizedBytes": 4905,
+      "originalSha256": "5bf8d51b874a40172177b49cdee357fded32173d39ccf43746ba9636bb484ad7",
+      "normalizedSha256": "5bf8d51b874a40172177b49cdee357fded32173d39ccf43746ba9636bb484ad7",
+      "nonWhitespaceSha256": "595d02a9c534334e26f880aa5b2134b50f8c157610ec5049ee56baf33017a107"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/gate-final-resumed.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/gate-final-resumed.log.txt",
+      "changed": true,
+      "originalBytes": 1285076,
+      "normalizedBytes": 1284999,
+      "originalSha256": "6e6696eccad611239ce0de0bf6627894153bc6ea07bfb7ad169dd1c7337cce47",
+      "normalizedSha256": "4ff799e9059ba3f1dd39e1e5c2bc289f7a4dd82ec289285458813f7bd73a9f97",
+      "nonWhitespaceSha256": "a4dfa63f58a4c62cfa2db05d21a130b32879071542a7d0d2ad51721a24edbd9b"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/gate-first-failure-excerpt.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/gate-first-failure-excerpt.log.txt",
+      "changed": false,
+      "originalBytes": 2236,
+      "normalizedBytes": 2236,
+      "originalSha256": "080f6a849623678dbc2321fee7dd1c5466365cdd992601fa18cbaedacd098e2e",
+      "normalizedSha256": "080f6a849623678dbc2321fee7dd1c5466365cdd992601fa18cbaedacd098e2e",
+      "nonWhitespaceSha256": "61423405dda13dd0421b1d3e995432c60341d96f7082293fc44597a7a2bc98bc"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/i18n-final-resumed.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/i18n-final-resumed.log.txt",
+      "changed": false,
+      "originalBytes": 3940,
+      "normalizedBytes": 3940,
+      "originalSha256": "c483e15d2f773d2868caef7d170b083fa75fdaed3e97712de723e311004c32a6",
+      "normalizedSha256": "c483e15d2f773d2868caef7d170b083fa75fdaed3e97712de723e311004c32a6",
+      "nonWhitespaceSha256": "545273e87f86f42b5b335437f8390e54c0c47f0822014fd67db47724cd1bc4e6"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/i18n-late-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/i18n-late-final.log.txt",
+      "changed": false,
+      "originalBytes": 3940,
+      "normalizedBytes": 3940,
+      "originalSha256": "d59b2934a7c270501cbcb2967217474f7c8a14966c2e3bd700b71153546395cd",
+      "normalizedSha256": "d59b2934a7c270501cbcb2967217474f7c8a14966c2e3bd700b71153546395cd",
+      "nonWhitespaceSha256": "b37d5390b043290c4eb2d72ad1aead4b6374cf92d6c0ee303265e28bb374d1be"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/i18n-storage-neighbors.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/i18n-storage-neighbors.log.txt",
+      "changed": true,
+      "originalBytes": 1118,
+      "normalizedBytes": 1117,
+      "originalSha256": "c8d808979ba66a69c6da64ee47dee01c00b2780175c281c376ff8b363d9a646d",
+      "normalizedSha256": "d8bf848129966f6e9968ae8867c4e4113e803b5d256f3d9f69e619bdd48744cb",
+      "nonWhitespaceSha256": "ecc81838aa4916067a93db96922abd1fff75134d52f89f1a76da4183fe564889"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/late-event-auth-green.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/late-event-auth-green.log.txt",
+      "changed": true,
+      "originalBytes": 1105,
+      "normalizedBytes": 1104,
+      "originalSha256": "23f8eade3626d205bc931d0a43dda73796f064952446b8d072fecaa1a15d4f16",
+      "normalizedSha256": "8d110ab95590fbc6641ca3499909fa394f9c393a81b4452ab6e65b4bf9116673",
+      "nonWhitespaceSha256": "9c507958b660f675f153aeb12f6302e2688a8ccdc8c2a98b5d0ae6a78023ea0a"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/late-explicit-biome-fixed.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/late-explicit-biome-fixed.log.txt",
+      "changed": true,
+      "originalBytes": 14568,
+      "normalizedBytes": 14472,
+      "originalSha256": "257af5029a8a68a29aa069a1f498f41b328608be5a4ec736a0b8103f5a0f0a58",
+      "normalizedSha256": "c05704edea2b5704e9eabfa7e660939678748415120390a32e6452f392970f46",
+      "nonWhitespaceSha256": "7944150118f10662f89de5d2ab1b212c8a204a4ed6fee61f92602ea6a708e3d4"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/late-explicit-biome.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/late-explicit-biome.log.txt",
+      "changed": true,
+      "originalBytes": 17608,
+      "normalizedBytes": 17473,
+      "originalSha256": "dde85f7da7864cb2ca17df5978aa7ab62d0293868e35e05c568c83035bc50cb9",
+      "normalizedSha256": "57ec98022168ea18b0aabdeae1f009e7c710f25d792398169a4ff4f316fe9a35",
+      "nonWhitespaceSha256": "cc668c57fd886043a9b2bd3364a373a986238753f743ebb5b573e70e120dd211"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/late-final-tests.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/late-final-tests.log.txt",
+      "changed": true,
+      "originalBytes": 1472,
+      "normalizedBytes": 1471,
+      "originalSha256": "9f925ddc59b0a0b4e7963020322c4c6467dc1deaa9dd0a34d2d9051d7b5cc67e",
+      "normalizedSha256": "0f467295714b2d9c8ab794628916c7b33097f2acdc5950dfec08ff8ca6380036",
+      "nonWhitespaceSha256": "f5e828dc5691032c97fbb7d187ddf8c2565fb1f3b093a6c25c8e8bcb497399b4"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/late-neighbors.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/late-neighbors.log.txt",
+      "changed": true,
+      "originalBytes": 1110,
+      "normalizedBytes": 1109,
+      "originalSha256": "730472b0658b25d11c00d5256b8947367a6541cc44742014975b94a8a4effb3c",
+      "normalizedSha256": "2d2240d66a519b31d3dc04fc79983c189b3a59fa5bc364555d5fb35ac586c2c3",
+      "nonWhitespaceSha256": "7340dd81d4371504ee5f1e0f09d91cd82cc2a57e8b046edeaccc9c13193fb9b7"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/late-power-green.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/late-power-green.log.txt",
+      "changed": true,
+      "originalBytes": 743,
+      "normalizedBytes": 742,
+      "originalSha256": "0e1ce1f167a6efd0c813ab7fc2883990d5a0b4902247fdb2b1aca50cea256786",
+      "normalizedSha256": "caccebd98e703e8246490a2d35a6f75b48fa7119f015662be850cf58cb83b10d",
+      "nonWhitespaceSha256": "6c34e1e69b0a9a6ff64f1677189c1cd14e13248d1c0806c88e48d7cebe2b0ae5"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/merge-pg.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/merge-pg.log.txt",
+      "changed": true,
+      "originalBytes": 6010,
+      "normalizedBytes": 6009,
+      "originalSha256": "992107fe38c90f6051f052ec4db6427334ec96fab67bb2385520ceed385a835c",
+      "normalizedSha256": "c8e55eb5593d9374ea84633370a41af47f660290aff9600a974a263110e6fd31",
+      "nonWhitespaceSha256": "52b0272a5c613981731c1ea7bd9341c7703fcb62bbf557fe34d070204bc85aaf"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/narrow-def-tsc.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/narrow-def-tsc.log.txt",
+      "changed": false,
+      "originalBytes": 1315,
+      "normalizedBytes": 1315,
+      "originalSha256": "30643875a8c9e6e479f7e02dd2470e9ba57f37d3782ea39151d81b321a3ab440",
+      "normalizedSha256": "30643875a8c9e6e479f7e02dd2470e9ba57f37d3782ea39151d81b321a3ab440",
+      "nonWhitespaceSha256": "16b8e76c25fc5fa0200893a2d8d23869b727c1bda8cbbd4711e9fc2a2cd0577e"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/narrow-def-valid.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/narrow-def-valid.log.txt",
+      "changed": false,
+      "originalBytes": 485,
+      "normalizedBytes": 485,
+      "originalSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "normalizedSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "nonWhitespaceSha256": "7346556ab7c45b68cadd5748bc9ad2379f71e2cd8e3d4e45cbc208b480dbba87"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/persistence-green.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/persistence-green.log.txt",
+      "changed": true,
+      "originalBytes": 741,
+      "normalizedBytes": 740,
+      "originalSha256": "fb3d7af864dd5091b618b015674b4d91566dc2ade0884ad328b4e737d9b93d9f",
+      "normalizedSha256": "e4a7e4cd9e0e4855e997e32d2ae3ba087fb83a01bce379ae39574f1685c36650",
+      "nonWhitespaceSha256": "91f414a13576240be9deba35c56456e02675fadf9cb1fca93bdbee630564a85f"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/pg-differential-config-green.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/pg-differential-config-green.log.txt",
+      "changed": true,
+      "originalBytes": 1915,
+      "normalizedBytes": 1914,
+      "originalSha256": "627fa7023d99e091e48447df73a3a07387f688c9e413bb684e402c925fe01a22",
+      "normalizedSha256": "139ef67e03d18a2cad15f0c63f5fe7830c3e5beb01b4c58099d2c26f21c8a740",
+      "nonWhitespaceSha256": "0910d0b99e2155379cb435e0cf20206abb8a13aa90b3ff451b49fd2cbfc8a807"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/pg-differential-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/pg-differential-final.log.txt",
+      "changed": true,
+      "originalBytes": 741,
+      "normalizedBytes": 740,
+      "originalSha256": "d27618b86fd5d88ddc7f266c5f355888f19b2dfa708033bd8b436c8666aaaa09",
+      "normalizedSha256": "e48f56b5eaf168eb5f5739ee2aba04e260e0332c46633f4f46270ec20a048e0e",
+      "nonWhitespaceSha256": "bfa7938e3a25c473ff327cb3024ae83d90f5c5b0fcda392589a1bf37afb007a0"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/pg-differential-serial-green.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/pg-differential-serial-green.log.txt",
+      "changed": true,
+      "originalBytes": 741,
+      "normalizedBytes": 740,
+      "originalSha256": "5cec4808f42bad558eada26a836b1d6d21fd2bb16014a226c693f7bd6a5f8abd",
+      "normalizedSha256": "7278745a6e71367275b801cf7c762e67cd9186b4832fd0a0ccd99c190e7b827d",
+      "nonWhitespaceSha256": "239bbc5e04e6e666caf34f520ab493513e3f24de770449203137e14649f18eac"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/presentation-resumed.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/presentation-resumed.log.txt",
+      "changed": true,
+      "originalBytes": 1105,
+      "normalizedBytes": 1104,
+      "originalSha256": "96170a213e9f35a21b9d3d72b1da860033d3f74f3eb4a625b3c1a0805bff713a",
+      "normalizedSha256": "be231d834d77c6e62ff1ac3dfe76d48fc939bbb06e231c4c8de1ccc301b82067",
+      "nonWhitespaceSha256": "0a18837beb8b766b0f914e56dfdbef8f33f1ecf0d2741b716cbdcc63246da540"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/qa-i18n-first.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/qa-i18n-first.log.txt",
+      "changed": false,
+      "originalBytes": 3940,
+      "normalizedBytes": 3940,
+      "originalSha256": "9247d20f0362c3788f25b2fa99f6221ed8cd1c454576ff9d79b88808d7e3cff3",
+      "normalizedSha256": "9247d20f0362c3788f25b2fa99f6221ed8cd1c454576ff9d79b88808d7e3cff3",
+      "nonWhitespaceSha256": "6fd0d003e79c8a3ae8fac0c73f02a13c2f70016f87ddea0dca3d2b6cac9c2092"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/required-resumed.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/required-resumed.log.txt",
+      "changed": true,
+      "originalBytes": 1672,
+      "normalizedBytes": 1671,
+      "originalSha256": "50298e6344a45ff4db9dfa19a622bdd577709e322658b94e86047f8231ec85a4",
+      "normalizedSha256": "ca413cdad5f6ab0ad4ff6448281b40cc697dbb2c68e98cac7a2601126f29fa1f",
+      "nonWhitespaceSha256": "7df8b46cba94c0f3f7065d2f283bd67a602bc93a9d1fb9ab6d8523a511c2f325"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/required-scoped-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/required-scoped-final.log.txt",
+      "changed": true,
+      "originalBytes": 1476,
+      "normalizedBytes": 1475,
+      "originalSha256": "01e0a5e2561bdd1f08a4ee7bfb054ff829f0e901b9804fd7c0e43b77a434e270",
+      "normalizedSha256": "5bcf7eec09420cba7850f91b25eb621fc58451199555874b3fb562263af9bb2f",
+      "nonWhitespaceSha256": "fce06e909277ba90e029ddaa023d178ea224f4fe070cab3c9149b08b03cfcf8b"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/required-scoped-late-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/required-scoped-late-final.log.txt",
+      "changed": true,
+      "originalBytes": 1475,
+      "normalizedBytes": 1474,
+      "originalSha256": "409d3d07c76987acb56363124575131a274111a7bac1a441dd28f04bea5dc709",
+      "normalizedSha256": "3cdd9339218802c38a54e3838fe167a5bafbf03dcf3070a4c83e80c3a47af6e5",
+      "nonWhitespaceSha256": "b8c7768e1d9586c4fa513822abf70c84e1a93b147329a73a3f9a15033ac85698"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/reviewed-source-seal.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/reviewed-source-seal.log.txt",
+      "changed": false,
+      "originalBytes": 88,
+      "normalizedBytes": 88,
+      "originalSha256": "b8a1fa2671f66bdc422ec5abc70cf73b0db19c197093c716a587d7b48febba33",
+      "normalizedSha256": "b8a1fa2671f66bdc422ec5abc70cf73b0db19c197093c716a587d7b48febba33",
+      "nonWhitespaceSha256": "59f30bf9aa71ffe384544cced338a6c5e191befbf2776dd50eb7d2e47d5e8928"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/routes-biome-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/routes-biome-final.log.txt",
+      "changed": true,
+      "originalBytes": 6620,
+      "normalizedBytes": 6580,
+      "originalSha256": "b8fe190900cefc283ee96fbbc5ef9ebe5084471a0605179475f598980033d826",
+      "normalizedSha256": "c31c7f74cdf5b7d142db5a2b214173e5109fe2ba526233d565fe143ed4380ab3",
+      "nonWhitespaceSha256": "b41bad35546d000d5c6e4cf7026b855270753ad648e33d552c05226a71c833a1"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/routes-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/routes-final.log.txt",
+      "changed": true,
+      "originalBytes": 741,
+      "normalizedBytes": 740,
+      "originalSha256": "dbf65054d0d185965a0c72bc2d1299a37b32f4076c04bcde954e46f830bd6085",
+      "normalizedSha256": "28985dd8ad821457a9ce6c913daef3e7fe605c96fdd9eea736dd8af2530a1715",
+      "nonWhitespaceSha256": "4e8c91990b101abcdac7b0ba7a4d4dbb4dcbb01c5badc1def1246c7aa3cb33af"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/routes-first.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/routes-first.log.txt",
+      "changed": true,
+      "originalBytes": 8569,
+      "normalizedBytes": 8568,
+      "originalSha256": "c56b8305adcf171162955f44b46dc1ab9c5cace14828658ba35bb67b5b5d8aac",
+      "normalizedSha256": "3dae452d1720c1181ac6c156aba32e9f4f417a8ca0fcc4b613e13829b395db7c",
+      "nonWhitespaceSha256": "7eadee8c591b8f73e7761aab8cd9bed6d8cede983033021d39d49cbfc2866e10"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/seal-architecture-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/seal-architecture-final.log.txt",
+      "changed": true,
+      "originalBytes": 925,
+      "normalizedBytes": 924,
+      "originalSha256": "08b9e443dbce9beffa89fcde0678d5dd3e88cb39d435a8148f68d4abff4011b3",
+      "normalizedSha256": "de6f117b64cc9bd348da5f6a65bb55a9f68d18b8806c437993b107dba7feb63a",
+      "nonWhitespaceSha256": "8754b971dd246703923f6af73f33a0321cd53d02ee9077923944106625d57c4b"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/tsc-final-resumed.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/tsc-final-resumed.log.txt",
+      "changed": false,
+      "originalBytes": 485,
+      "normalizedBytes": 485,
+      "originalSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "normalizedSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "nonWhitespaceSha256": "7346556ab7c45b68cadd5748bc9ad2379f71e2cd8e3d4e45cbc208b480dbba87"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/tsc-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/tsc-final.log.txt",
+      "changed": false,
+      "originalBytes": 485,
+      "normalizedBytes": 485,
+      "originalSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "normalizedSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "nonWhitespaceSha256": "7346556ab7c45b68cadd5748bc9ad2379f71e2cd8e3d4e45cbc208b480dbba87"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/tsc-late-repaired.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/tsc-late-repaired.log.txt",
+      "changed": false,
+      "originalBytes": 485,
+      "normalizedBytes": 485,
+      "originalSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "normalizedSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "nonWhitespaceSha256": "7346556ab7c45b68cadd5748bc9ad2379f71e2cd8e3d4e45cbc208b480dbba87"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/tsc-routes-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/tsc-routes-final.log.txt",
+      "changed": false,
+      "originalBytes": 485,
+      "normalizedBytes": 485,
+      "originalSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "normalizedSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "nonWhitespaceSha256": "7346556ab7c45b68cadd5748bc9ad2379f71e2cd8e3d4e45cbc208b480dbba87"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/tsc-sealed-final.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/tsc-sealed-final.log.txt",
+      "changed": false,
+      "originalBytes": 485,
+      "normalizedBytes": 485,
+      "originalSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "normalizedSha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+      "nonWhitespaceSha256": "7346556ab7c45b68cadd5748bc9ad2379f71e2cd8e3d4e45cbc208b480dbba87"
+    },
+    {
+      "path": "docs/freeholds/reviews/furnishing-item-kind/qa/logs/ux-manifest.log.txt",
+      "original": "tmp/freeholds-02-audit/original-archived-logs/ux-manifest.log.txt",
+      "changed": false,
+      "originalBytes": 396,
+      "normalizedBytes": 396,
+      "originalSha256": "2f63ee2bdd0aa3280bea95e1c185fc96dd1c0ec3b21314411b2ba78c6fd2f9f1",
+      "normalizedSha256": "2f63ee2bdd0aa3280bea95e1c185fc96dd1c0ec3b21314411b2ba78c6fd2f9f1",
+      "nonWhitespaceSha256": "85621c7135a4a6aeb662798f9ad866f8271df149ba7cf33066aec415b957471c"
+    }
+  ]
+}

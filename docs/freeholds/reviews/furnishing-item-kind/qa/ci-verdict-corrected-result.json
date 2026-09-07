@@ -1,0 +1,12 @@
+{
+  "command": "GATE_SELECT_BASE=origin/feature/masterwrought npm run ci:changed",
+  "revision": "c881543258aac22448fe707813b4d25d0339e23a",
+  "startedAt": {
+    "current_time": "2026-09-07 13:41:19 UTC"
+  },
+  "finishedAt": {
+    "current_time": "2026-09-07 13:41:20 UTC"
+  },
+  "exitCode": 0,
+  "log": "ci-verdict-corrected.log"
+}

@@ -1,0 +1,273 @@
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/admin_market_metrics.ts:52:      .filter((def) => def.kind === 'recipe')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/clear_item_name.ts:216:  if (target.kind === 'bag') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/pbe_boost.ts:330:  if (item.kind !== 'weapon' && item.kind !== 'armor' && item.kind !== 'held_offhand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/pbe_boost.ts:387:    if (item.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/pbe_boost.ts:642:    if (item.kind !== 'bag') continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:server/store_mount_grants.ts:33:      if (def?.kind !== 'mount' || !def.mount || owned.has(def.mount)) continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bag_pools.ts:54:  return def?.kind === 'bag' && def.materialsOnly === true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bag_pools.ts:61:  return def?.kind === 'bag' ? (def.bagSlots ?? 0) : 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bags.ts:79:  if (def.kind === 'furnishing') return 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bags.ts:81:  return UNSTACKED_KINDS.has(def.kind) ? 1 : DEFAULT_STACK;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bags.ts:445:  if (def?.kind !== 'bag') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bank.ts:842:    socketBags[i] = typeof id === 'string' && ITEMS[id]?.kind === 'bag' ? id : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/bank_sockets.ts:106:  if (def?.kind !== 'bag') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/broker_custody.ts:47:    if (def?.kind === 'mount' && r.e.mountKey === def.mount && !mountOwned(r.meta, def.mount)) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/auras.ts:196:      const wellFed = c.kind === 'food' ? c.wellFed : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/damage.ts:295:    if (twoHandPct > 0 && mainhand?.kind === 'weapon' && weaponHand(mainhand) === 'twohand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/combat/equip_procs.ts:48:  if (item?.kind !== 'weapon' || !item.weaponProcs) return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/consuming.ts:61:  return kind === 'food'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev/bis_gear.ts:29:  if (item.kind === 'weapon' && item.weapon) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev/bis_gear.ts:49:    (item) => item.quality === 'epic' && (item.kind === 'armor' || item.kind === 'weapon'),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev/bis_gear.ts:64:        (item) => item.kind === 'weapon' && item.weapon?.dagger === true,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev/bis_gear.ts:73:        (item) => item.kind !== 'weapon' || item.hand !== 'twohand',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:134:  if (item.kind !== 'weapon' && item.kind !== 'armor' && item.kind !== 'held_offhand') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:197:  // blockValue lives on shields specifically. kind === 'armor' is not enough to
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:207:  return item.kind === 'weapon' && weaponHand(item) === 'twohand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:309:    (item) => item.kind === 'bag' && !isMaterialsOnlyBag(item),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:406:        pool.filter((item) => item.kind === 'held_offhand' && canEquipItem(cls, item)),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/dev_kit.ts:422:      pool.filter((item) => item.kind === 'held_offhand' && canEquipItem(cls, item)),
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:556:    offhand?.kind === 'weapon' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:570:    ((mainhand?.kind === 'weapon' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:573:      (offhand?.kind === 'weapon' && offhand.hand === 'twohand'));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:590:    (ITEMS[equipment.offhand]?.kind === 'weapon' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/entity.ts:591:      ITEMS[equipment.offhand]?.kind === 'held_offhand' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:47:  if (item.kind !== 'armor') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:53:  return item?.kind === 'armor' && item.slot === 'offhand' && item.shield === true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:64:  if (item.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:80:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:83:  if (item.kind === 'weapon' && slot === 'offhand') return weaponHand(item) !== 'mainhand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:321:  return item.kind !== 'held_offhand' || item.occupiesHand !== false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:345:    const titanPair = item.kind === 'weapon' && canDualWieldTwoHand(cls, spec);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:346:    if (mainhand?.kind === 'weapon' && weaponHand(mainhand) === 'twohand' && !titanPair) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:351:  if (slot === 'mainhand' && item.kind === 'weapon' && weaponHand(item) === 'twohand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:354:    const titanPair = offhand?.kind === 'weapon' && canDualWieldTwoHand(cls, spec);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:373:  if (item.kind !== 'weapon' || !item.requiredClass) return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:408:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:414:  if (item.kind === 'held_offhand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:422:  if (cls === 'rogue' && item.kind === 'weapon' && weaponHand(item) === 'twohand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:440:  if (item.kind === 'armor') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/equipment_rules.ts:444:  if (item.kind !== 'weapon') return item.slot === slot;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:70:  if (def.kind === 'furnishing') return 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:71:  if (def.kind === 'mount') return 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:88:  if (def.kind === 'furnishing') return 'other';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:89:  if (def.kind === 'mount') return 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:91:  if (def.kind === 'weapon') return 'weapon';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:94:  if (def.kind === 'armor' || def.kind === 'held_offhand') return 'armor';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/exchange_eligibility.ts:165:  if (def.kind === 'quest') return 'quest_item';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_budget.ts:157:  if (item.kind === 'furnishing') return undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_budget.ts:158:  return item.kind === 'held_offhand' && item.occupiesHand === false
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:351:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:353:    !!item.slot && (item.kind === 'armor' || item.kind === 'weapon' || item.kind === 'held_offhand')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:377:  return item.kind === 'weapon' && item.hand === 'twohand'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:384:  if (item.kind === 'furnishing') return 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_level.ts:394:  if (item.kind === 'furnishing') return 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_storage_rules.ts:5:  if (kind === 'furnishing') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/item_storage_rules.ts:6:  return kind !== 'quest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:173:  if (def.kind !== 'weapon') return resolveEquipSlot(def, meta.equipment);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:182:      mainhand?.kind === 'weapon' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:198:    mainhand?.kind === 'weapon' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:488:  if (def?.kind === 'furnishing') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:489:  if (!def?.slot || (def.kind !== 'weapon' && def.kind !== 'armor' && def.kind !== 'held_offhand'))
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:778:  if (def?.kind === 'furnishing') return;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:912:  if (def.kind === 'food' || def.kind === 'drink') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:925:    const slot = def.kind === 'food' ? 'eating' : 'drinking';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:929:        def.kind === 'food' ? 'You are already eating.' : 'You are already drinking.',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:954:      text: def.kind === 'food' ? 'You sit down to eat.' : 'You sit down to drink.',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:958:  } else if (def.kind === 'potion') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1025:  } else if (def.kind === 'elixir' || def.kind === 'scroll' || def.kind === 'flask') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1043:    const isFlask = def.kind === 'flask';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1114:    if (def.kind === 'scroll') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1129:  } else if (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1134:  } else if (def.kind === 'bag') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1136:  } else if (def.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1142:  } else if (def.kind === 'recipe') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1232:  if (def.kind !== 'furnishing' && def.teachesRiding) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1240:  if (def.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1289:    bulk && hasCopperPrice && !hasHonorPrice && def.kind !== 'mount' && !def.soulbound;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1406:  if (def.kind === 'quest') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/items.ts:1564:    def.kind !== 'quest' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:61:    ...[...new Set(items.filter((item) => item.kind === 'bag').map((item) => item.bagSlots ?? 0))]
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:194:  if (filter === 'furnishing') return item.kind === 'furnishing';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:195:  if (item.kind === 'furnishing') return filter === 'all';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:197:  if (filter === 'weapon') return item.kind === 'weapon' && item.slot === 'mainhand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:199:    return (item.kind === 'armor' || item.kind === 'held_offhand') && item.slot !== undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:202:      item.kind === 'food' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:203:      item.kind === 'drink' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:204:      item.kind === 'potion' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:205:      item.kind === 'elixir' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:206:      item.kind === 'flask' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:207:      item.kind === 'scroll'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:209:  if (filter === 'bag') return item.kind === 'bag';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:211:    return !isCosmeticItem(item) && (item.kind === 'junk' || item.kind === 'tool');
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:213:  if (filter === 'pattern') return item.kind === 'recipe';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:222:  if (filter === 'other') return item.kind === 'quest' || item.kind === 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:250:    return (item.kind === 'armor' || item.kind === 'held_offhand') && item.slot === subtype;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:251:  if (query.itemType === 'weapon') return item.kind === 'weapon' && weaponFamily(item) === subtype;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:258:    return item.kind === 'bag' && (item.bagSlots ?? 0) === Number(subtype);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/market_query.ts:269:  return item.kind === 'armor' && item.armorType === query.armorClass;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/material_derivation.ts:110:  return readonlySetView([...sources].filter((id) => tables.items[id]?.kind === 'junk'));
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mounts.ts:62:      if (def.kind === 'mount') mountItemIds.set(def.mount, def.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/mounts.ts:90:    if (def?.kind === 'mount') owned.add(def.mount);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/obs.ts:118:        if (wantMana && def.kind === 'drink') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/obs.ts:122:        if (wantHp && def.kind === 'food') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/pet/pet_commands.ts:767:  if (item?.kind !== 'food' || !item.foodHp) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/commission.ts:51:  if (kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/commission.ts:52:  return kind === 'weapon' || kind === 'armor' || kind === 'held_offhand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/crafting.ts:168:  if (def?.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/crafting.ts:197:  if (def?.kind === 'furnishing') return isSignableMaterialRarity(outputQuality);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/crafting.ts:198:  return isSignableMaterialRarity(outputQuality) && def?.kind !== 'bag';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/crafting.ts:1140:    def?.kind !== 'furnishing' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/crafting.ts:1175:  // battlefieldExperienceTrickle arm (gated on def.kind === 'potion') never
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/disenchant_reagents.ts:71:  if (def.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/disenchant_reagents.ts:73:  if (def.kind === 'armor') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/disenchant_reagents.ts:76:  if (def.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/enchanting.ts:225:  if (def?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/enchanting.ts:228:    (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/enchanting.ts:1285:  if (itemDef.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/fishing.ts:710:  const isGreyFishingJunk = ITEMS[caught]?.kind === 'junk' && !isRawCookingCatch(caught);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:170:  if (def?.kind === 'furnishing' || def?.masterwrought !== true) return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:188:  return def.kind === 'weapon' && def.hand === 'twohand'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:211:  if (def.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:284:  if (ITEMS[itemId]?.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/perfecting.ts:411:  if (def?.kind === 'furnishing' || def?.masterwrought !== true) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/salvage.ts:60:  if (def?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/salvage.ts:63:    (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/sundering.ts:73:  if (def?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/sundering.ts:77:    SUNDERABLE_GEAR_KINDS.has(def.kind) &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/tools.ts:40:  if (item?.kind === 'furnishing') return undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/tools.ts:195:    if (item?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/tools.ts:554:    if (item?.kind === 'furnishing') continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/professions/tools.ts:774:  switch (def.kind) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/quests/quest_commands.ts:284:    if (!def || def.kind !== 'quest' || def.questId !== quest.id) continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:405:    if (ITEMS[itemId]?.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/reliquary.ts:983:      } else if (relic.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:3068:          meta.bags[i] = id && ITEMS[id]?.kind === 'bag' ? id : null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:8236:      (def?.kind === 'weapon' || def?.kind === 'armor' || def?.kind === 'held_offhand')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/sim.ts:9078:    if (def.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/social/chat_readouts.ts:638:    const verb = c.kind === 'food' ? 'eating' : 'drinking';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/vendor_buy_stack.ts:97:  if (def.kind === 'furnishing') return forcedByFlags;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/vendor_buy_stack.ts:98:  return def.kind === 'mount' || forcedByFlags;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/vendor_stack.ts:25:  if (def.kind === 'furnishing') return 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/sim/vendor_stack.ts:26:  return def.kind === 'food' || def.kind === 'drink' ? VENDOR_STACK_SIZE : 1;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:52:// stack whose def is kind==='quest'. Prefer stack count (how many quest pieces
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:60:    if (item?.kind !== 'quest') continue;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:98:  if (item.kind === 'furnishing') return category === 'all';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:103:      return item.kind === 'weapon';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:105:      return item.kind === 'armor' || item.kind === 'held_offhand';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:108:        item.kind === 'food' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:109:        item.kind === 'drink' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:110:        item.kind === 'potion' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:111:        item.kind === 'elixir' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:112:        item.kind === 'flask' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:113:        item.kind === 'scroll'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:118:      return item.kind === 'tool';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:120:      return item.kind === 'quest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_filter.ts:122:      return item.kind === 'mount';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:69:  return def.kind === 'weapon' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:70:    def.kind === 'armor' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:71:    def.kind === 'held_offhand' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:72:    def.kind === 'bag'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:91:  if (def.kind === 'furnishing') return [isItemLocked(instance) ? 'unlock' : 'lock'];
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_item_context_menu.ts:120:  if (def.kind !== 'furnishing') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_quest_mark_view.ts:2:// Quest items are a PURPOSE class (kind === 'quest'), not a quality tier. The
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_quest_mark_view.ts:73:  if (item.kind !== 'quest') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bag_quest_tracker_highlight_view.ts:21:  if (item.kind !== 'quest') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:202:    if (item.kind === 'quest' || item.noMarketList) return 'mailAttachBlocked';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:207:    if (item.kind === 'quest') return 'marketSellBlockedQuest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:227:    if (item.kind === 'quest') return 'guildBankDepositBlockedQuest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:234:    if (item.kind === 'quest') return 'bankDepositBlockedQuest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:240:    if (item.kind === 'bag' && mode.bankSocketable && !instance && craftedRecipeId === undefined) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:260:  if (mode.petFeed) return item.kind === 'food' ? 'petFeed' : 'petFeedBlocked';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:261:  if (item.kind === 'furnishing') return 'none';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:264:  if (item.kind === 'quest') return item.use ? 'use' : 'discardQuest';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:265:  if (item.kind === 'bag') return 'equipBag';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:458:  if (item?.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:459:  if (item?.kind !== 'bag') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:479:    return item.kind === 'quest' || item.noMarketList || isTransferLockedInstance(instance)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:484:    return item.kind === 'quest' || item.noMarketList || isTransferLockedInstance(instance)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:489:    return item.kind === 'quest' || item.noVendorSell
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:498:    return item.kind === 'quest' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:506:    if (item.kind === 'quest') return 'hudChrome.bank.cannotDeposit';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:510:    if (item.kind === 'bag' && mode.bankSocketable && !instance && craftedRecipeId === undefined) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:527:  if (item.kind === 'furnishing') return '';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:528:  if (item.kind === 'quest') return 'itemUi.tooltip.clickDestroy';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:529:  if (item.kind === 'mount') return 'hudChrome.mounts.clickManage';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:531:    item.kind === 'weapon' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:532:    item.kind === 'armor' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:533:    item.kind === 'held_offhand' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:534:    item.kind === 'bag'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:537:  if (item.kind === 'food' || item.kind === 'drink') return 'itemUi.tooltip.clickConsume';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:543:    item.kind === 'potion' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:544:    item.kind === 'elixir' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:545:    item.kind === 'flask' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:546:    item.kind === 'scroll'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:572:  if (item.kind === 'recipe' || item.use) return 'itemUi.tooltip.clickUse';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_view.ts:676:    if (item?.kind === 'quest') quest.push(slot);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bags_window.ts:1869:    if (item.kind !== 'quest' || !item.questId) return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_view.ts:377:        slots: item?.kind === 'bag' ? (item.bagSlots ?? 0) : 0,
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/bank_view.ts:475:    if (item.kind === 'quest') continue; // never bank quest items (the taxonomy also excludes them)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/equip_drop_core.ts:151:  if (item.kind === 'furnishing') return 'blockedSlot';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/equip_drop_core.ts:154:  if (item.kind !== 'weapon' && item.kind !== 'armor' && item.kind !== 'held_offhand')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/equip_drop_core.ts:234:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/equip_drop_core.ts:236:    (item.kind === 'weapon' || item.kind === 'armor' || item.kind === 'held_offhand') && !!item.slot
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/guild_bank_view.ts:68:    if (item.kind === 'quest') return true;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6432:    if (item.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6444:        item.kind === 'weapon' && weaponHand(item) === 'twohand'
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6647:    if (item.kind === 'recipe') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6672:    if ((item.kind === 'weapon' || item.kind === 'armor') && req > 1) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6678:    if (item.kind !== 'furnishing') html += instanceMakersMarkLine(instance, item);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6699:    const lines = weaponProcLines(item.kind === 'weapon' ? item.weaponProcs : undefined);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:6862:    if (item.kind !== 'quest') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:14868:        else if (seg.kind === 'quest')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud.ts:16438:      return !!item && item.kind === 'food' && !!item.foodHp && s.count > 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:115:      (id) => ITEMS[id]?.kind !== 'furnishing',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:126:      (id) => ITEMS[id]?.kind !== 'furnishing',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:143:      (id) => ITEMS[id]?.kind !== 'furnishing',
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:349:    if (item?.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:351:      item?.kind === 'food' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:352:      item?.kind === 'drink' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:353:      item?.kind === 'potion' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_controller.ts:354:      item?.kind === 'mount' ||
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/action_bar/action_bar_view.ts:526:          const potionCd = item.kind === 'potion' ? player.potionCdRemaining : 0;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/housing/furnishing_tooltip_view.ts:18:  if (item.kind !== 'furnishing') return [];
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/apex_recipe_view.ts:54:    .filter((def) => def?.kind === 'recipe')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/apex_recipe_view.ts:64:    .filter((def) => def.kind === 'recipe')
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/elixir_tooltip_view.ts:69:  if (item.kind !== 'flask') return desc(text);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/feast_tooltip_view.ts:46:  const fed = dishDef && dishDef.kind === 'food' ? dishDef.wellFed : undefined;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/recipe_pattern_tooltip_view.ts:112:  if (item.kind !== 'recipe') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/professions/wellfed_tooltip_view.ts:27:  if (item.kind !== 'food') return '';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/vendor/vendor_view.ts:172:      item.kind !== 'mount' &&
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/hud/vendor/warfare_vendor_view.ts:208:    } else if (item.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4025:  if (it.kind === 'weapon') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4042:  if (it.kind === 'armor') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4073:  if (it.kind === 'food') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4079:  if (it.kind === 'drink') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4085:  if (it.kind === 'potion' || it.kind === 'elixir' || it.kind === 'flask') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4096:    const timedBuff = it.kind === 'elixir' || it.kind === 'flask';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4099:  if (it.kind === 'tool') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4103:  if (it.kind === 'bag') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4114:  if (it.kind === 'recipe') return r('parchment', 'leather', ['scroll'], fx);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4120:  if (it.kind === 'scroll') return r('parchment', 'leather', ['scroll'], fx);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4122:  if (it.kind === 'furnishing') return r('wood', 'earthBrown', ['crate'], fx);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:4133:  return r(it.kind === 'quest' ? 'parchment' : 'junk', t.pal, [{ p: t.p, pal: t.pal }], fx);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/icons.ts:5342:  if (item.kind !== 'weapon') ITEM_IMAGE_IDS.add(item.id);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_instance_tooltip.ts:309:  return kind === 'junk';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_kind_label.ts:60:  if (kind === 'junk' && itemId !== undefined) {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_name_color.ts:4:// Quest items are a PURPOSE class (kind === 'quest'), not a quality tier.
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_name_color.ts:29: * - kind === 'quest' -> quest gold (purpose class wins over quality)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_name_color.ts:37:  if (item.kind === 'furnishing') return qualityNameColor(item.quality);
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/item_name_color.ts:38:  if (item.kind === 'quest') return QUEST_ITEM_NAME_COLOR;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_armor_badge.ts:20:  if (item.kind === 'furnishing') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_armor_badge.ts:60:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_armor_badge.ts:85:  if (item.kind === 'furnishing') return false;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_armor_badge.ts:86:  return item.kind === 'recipe';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_name_color.ts:9:// rejected: it also carries the quest-purpose override (kind === 'quest' wins
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/market_view.ts:233:  if (item.kind === 'quest' || item.noMarketList || item.soulbound)
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/mount_tooltip_view.ts:9:  if (item.kind !== 'mount') return '';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/quest_item_tooltip_view.ts:4:// treatment is a PURPOSE class (kind === 'quest'), not a quality tier, so the
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/quest_item_tooltip_view.ts:110:  if (input.kind !== 'quest') return null;
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_cell_art.ts:214:  if (slot.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_labels.ts:79:  if (kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/reliquary_window.ts:1647:    if (cell.kind === 'mount') {
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/stack_size_tooltip_view.ts:27:  if (item.kind === 'mount') return '';
+c47e2cb24519be7df37e8664b9d2d61756e2ce4a:src/ui/store_mount_card_view.ts:44:  const mountKey = def?.kind === 'mount' ? def.mount : undefined;

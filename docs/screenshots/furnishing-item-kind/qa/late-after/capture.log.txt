@@ -1,0 +1,5 @@
+PROGRESS desktop: opening fixed archive
+PASS desktop: 8 actual-window captures
+PROGRESS mobile-landscape: opening fixed archive
+PASS mobile-landscape: 8 actual-window captures
+Captured 2/2; failures 0. Manifest: tmp/freeholds-02-audit/late-ui-after-retry/manifest.json

@@ -1,0 +1,14 @@
+{
+  "extends": "/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/@types"
+    ]
+  },
+  "include": [
+    "narrow-def-negative.ts"
+  ]
+}

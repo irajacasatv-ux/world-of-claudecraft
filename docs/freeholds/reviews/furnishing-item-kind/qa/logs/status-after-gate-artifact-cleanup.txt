@@ -1,0 +1,5 @@
+ M docs/freeholds/progress.md
+ M docs/freeholds/state.md
+?? docs/freeholds/furnishing-item-kind-qa-validation.md
+?? docs/freeholds/reviews/furnishing-item-kind/qa/
+?? docs/screenshots/furnishing-item-kind/qa/

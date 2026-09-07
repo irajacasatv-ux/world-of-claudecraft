@@ -1,0 +1,4 @@
+docs/screenshots/eastbrook-vale-rebuild/polish/metadata/after-desktop-ultra.json: 48 changed fields, only composite and renderer leaf
+docs/screenshots/eastbrook-vale-rebuild/polish/metadata/after-mobile-low.json: 48 changed fields, only composite and renderer leaf
+docs/screenshots/eastbrook-vale-rebuild/polish/performance/after-desktop-ultra-town.json: 2 changed fields, only composite and renderer leaf
+docs/screenshots/eastbrook-vale-rebuild/polish/performance/after-mobile-low-town.json: 2 changed fields, only composite and renderer leaf

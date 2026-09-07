@@ -1,0 +1,187 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+stdout | tests/furnishing_commerce_parity.test.ts > furnishing two-client direct trade > transfers signer and armed=false custody through both offers and confirms
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stdout | tests/furnishing_commerce_parity.test.ts > furnishing two-client direct trade > transfers signer and armed=true custody through both offers and confirms
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stdout | tests/furnishing_commerce_parity.test.ts
+[capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
+
+ ❯ tests/furnishing_commerce_parity.test.ts (10 tests | 2 failed) 1601ms
+     × transfers signer and armed=false custody through both offers and confirms 30ms
+     × transfers signer and armed=true custody through both offers and confirms 28ms
+stdout | tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > refuses a furnishing recharge tool and completes the eligible recharge for exactly two dust
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stdout | tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > refuses a furnishing at a real ore node and admits the same harvest with an eligible pick
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stdout | tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > keeps a furnishing at bare-hands corpse yield and unlocks the premium specimen with a real tool
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stdout | tests/furnishing_tool_parity.test.ts
+[capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
+
+ ❯ tests/furnishing_tool_parity.test.ts (12 tests | 6 failed) 3015ms
+     × refuses a furnishing recharge tool and completes the eligible recharge for exactly two dust 237ms
+     × refuses a furnishing at a real ore node and admits the same harvest with an eligible pick 159ms
+     × keeps a furnishing at bare-hands corpse yield and unlocks the premium specimen with a real tool 26ms
+     × refuses a furnishing recharge tool and completes the eligible recharge for exactly two dust 164ms
+     × refuses a furnishing at a real ore node and admits the same harvest with an eligible pick 167ms
+     × keeps a furnishing at bare-hands corpse yield and unlocks the premium specimen with a real tool 32ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/furnishing_commerce_parity.test.ts > furnishing two-client direct trade > transfers signer and armed=false custody through both offers and confirms
+ FAIL  tests/furnishing_commerce_parity.test.ts > furnishing two-client direct trade > transfers signer and armed=true custody through both offers and confirms
+AssertionError: expected { items: [ { …(3) } ], copper: 11 } to deeply equal { items: [ { …(2) } ], copper: 11 }
+
+- Expected
++ Received
+
+@@ -2,8 +2,14 @@
+    "copper": 11,
+    "items": [
+      {
+        "count": 2,
+        "itemId": "bone_fragments",
++       "materialSources": [
++         {
++           "count": 2,
++           "source": {},
++         },
++       ],
+      },
+    ],
+  }
+
+ ❯ tests/furnishing_commerce_parity.test.ts:380:53
+    378|         expect(remote.client.tradeInfo?.myOffer).toEqual({ items: offe…
+    379|         expect(receiver.client.tradeInfo?.theirOffer).toEqual({ items:…
+    380|         expect(remote.client.tradeInfo?.theirOffer).toEqual({
+       |                                                     ^
+    381|           items: [{ itemId: 'bone_fragments', count: 2 }],
+    382|           copper: 11,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries offline > refuses a furnishing recharge tool and completes the eligible recharge for exactly two dust
+ FAIL  tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > refuses a furnishing recharge tool and completes the eligible recharge for exactly two dust
+AssertionError: expected [ { …(3) }, { …(2) }, { …(3) } ] to deeply equal [ { …(3) }, { …(2) }, { …(2) } ]
+
+- Expected
++ Received
+
+@@ -11,7 +11,13 @@
+      "itemId": "test_furnishing_tool_control",
+    },
+    {
+      "count": 1,
+      "itemId": "arcane_dust",
++     "materialSources": [
++       {
++         "count": 1,
++         "source": {},
++       },
++     ],
+    },
+  ]
+
+ ❯ tests/furnishing_tool_parity.test.ts:325:31
+    323|     expect(slot.maxDurability).toBe(20);
+    324|     expect(h.sim.countItem('arcane_dust', h.pid)).toBe(1);
+    325|     expect(h.world.inventory).toEqual([furnished, tool, { itemId: 'arc…
+       |                               ^
+    326|     expect(h.world.toolEffectSlots).toEqual([
+    327|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries offline > refuses a furnishing at a real ore node and admits the same harvest with an eligible pick
+AssertionError: expected [ { type: 'castStart', …(4) } ] to deep equally contain { type: 'castStart', …(3) }
+
+- Expected:
+{
+  "ability": "gathering",
+  "entityId": 998,
+  "time": 2.5,
+  "type": "castStart",
+}
+
++ Received:
+[
+  {
+    "ability": "gathering",
+    "entityId": 998,
+    "gatherNodeType": "ore",
+    "time": 2.5,
+    "type": "castStart",
+  },
+]
+
+ ❯ tests/furnishing_tool_parity.test.ts:374:35
+    372|     expect(h.player.gatherCastNodeId).toBe('ore_eastbrook_1');
+    373|     expect(h.world.inventory).toEqual([furnished, tool]);
+    374|     expect(h.world.drainEvents()).toContainEqual({
+       |                                   ^
+    375|       type: 'castStart',
+    376|       entityId: h.pid,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries offline > keeps a furnishing at bare-hands corpse yield and unlocks the premium specimen with a real tool
+ FAIL  tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > keeps a furnishing at bare-hands corpse yield and unlocks the premium specimen with a real tool
+AssertionError: expected "next" to be called 2 times, but got 4 times
+ ❯ tests/furnishing_tool_parity.test.ts:459:21
+    457|       expect(h.sim.countItem('field_kit', h.pid)).toBe(1);
+    458|       expect(mob.harvestClaimedBy).toBe(h.pid);
+    459|       expect(draws).toHaveBeenCalledTimes(2);
+       |                     ^
+    460|       expect(h.sim.countItem('rough_hide', h.pid)).toBeGreaterThan(0);
+    461|       const events = h.world.drainEvents();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tests/furnishing_tool_parity.test.ts > furnishing tool command boundaries online > refuses a furnishing at a real ore node and admits the same harvest with an eligible pick
+AssertionError: expected [ { type: 'castStart', …(4) } ] to deep equally contain { type: 'castStart', …(3) }
+
+- Expected:
+{
+  "ability": "gathering",
+  "entityId": 1002,
+  "time": 2.5,
+  "type": "castStart",
+}
+
++ Received:
+[
+  {
+    "ability": "gathering",
+    "entityId": 1002,
+    "gatherNodeType": "ore",
+    "time": 2.5,
+    "type": "castStart",
+  },
+]
+
+ ❯ tests/furnishing_tool_parity.test.ts:374:35
+    372|     expect(h.player.gatherCastNodeId).toBe('ore_eastbrook_1');
+    373|     expect(h.world.inventory).toEqual([furnished, tool]);
+    374|     expect(h.world.drainEvents()).toContainEqual({
+       |                                   ^
+    375|       type: 'castStart',
+    376|       entityId: h.pid,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  8 failed | 14 passed (22)
+   Start at  07:02:34
+   Duration  4.81s (transform 1.84s, setup 690ms, import 2.72s, tests 4.62s, environment 0ms)

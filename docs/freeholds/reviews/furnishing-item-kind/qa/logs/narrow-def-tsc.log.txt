@@ -1,0 +1,7 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+../../../../../../tmp/freeholds-02-audit/narrow-def-negative.ts(3,7): error TS2322: Type '{ id: string; name: string; priceHonor?: number; sellValue: number; buyValue?: number; questId?: string; noVendorSell?: boolean; noDiscard?: boolean; noMarketList?: boolean; soulbound?: boolean; ... 33 more ...; use: { ...; }; }' is not assignable to type 'ItemDef'.
+  Types of property 'use' are incompatible.
+    Type '{ type: "fishing"; }' is not assignable to type 'undefined'.
+../../../../../../tmp/freeholds-02-audit/narrow-def-negative.ts(4,45): error TS2741: Property 'r' is missing in type '{ footprint: { width: number; depth: number; }; decorCost: number; surface: "floor"; }' but required in type '{ footprint: { width: number; depth: number; }; r: number; decorCost: number; surface: "floor"; plinth?: boolean | undefined; }'.
