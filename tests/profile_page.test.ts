@@ -167,12 +167,10 @@ describe('profile page Reliquary pair + Curator rank lines', () => {
   it('pins the interpolated total to the live-catalog literal', () => {
     // catalogTotal comes from the same catalogCharacterCompletion the page
     // calls, so the pair assertions below would follow a drifted derivation;
-    // the literal anchors them. Literal: update when catalog content lands.
-    // The professions parent has 367 character relics. Eleven collections add
-    // three distinct armor discoveries each; their manuals are not relic slots.
-    // Forgebreaker remains in its separate stacked quest contribution.
-    // The Homesteader title adds one slot; Hearth adds eight vendor and ten crafted furnishing slots.
-    expect(catalogTotal).toBe(419);
+    // the literal anchors them. The catalog includes the Crucible crafts,
+    // the Homesteader title, eight vendor and ten crafted furnishings,
+    // seven Bramblehide items, and seven Nythraxis gap-fill drops.
+    expect(catalogTotal).toBe(433);
   });
 
   it('renders the owned/total pair and the English rank name for a ranked character', async () => {

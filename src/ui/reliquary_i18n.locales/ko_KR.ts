@@ -208,4 +208,8 @@ export const table: ReliquaryLocaleTable = {
     name: '첫 보금자리 공예',
     desc: '각 제작 기술의 가구를 하나씩 모읍니다. 훈련교관은 제작법 일곱 가지를 가르치며, 영웅 병참장교는 영웅의 징표로 태엽 램프 설계도, 도표 이젤 기법서, 보석 스탠드등 도안을 판매합니다. 모든 가구는 장식용입니다.',
   },
+  conquerors_set_bramblehide: {
+    name: '루츠의 가시덤불가죽',
+    desc: '브램블하이드 가죽 세트 전체.',
+  },
 };

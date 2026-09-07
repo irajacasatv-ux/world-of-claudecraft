@@ -784,4 +784,8 @@ export const table: DeedLocaleTable = {
     name: '屋主',
     desc: '为当前角色获得第一间小屋。',
   },
+  col_set_bramblehide: {
+    name: '鲁茨的荆棘皮甲',
+    desc: '发现鲁茨的荆棘皮甲的每一个部件。',
+  },
 };

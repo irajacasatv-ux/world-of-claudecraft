@@ -167,4 +167,8 @@ export const table: ReliquaryLocaleTable = {
     desc: 'Alleen heroïsch verkrijgbare schilden en wapens van Varkhul, Forgefather of the Last Flame.',
   },
   hearth_first_crafts: { name: 'Eerste werken voor thuis' },
+  conquerors_set_bramblehide: {
+    name: "Roots' Doornhuid",
+    desc: 'De volledige Bramblehide-leerfamilie.',
+  },
 };

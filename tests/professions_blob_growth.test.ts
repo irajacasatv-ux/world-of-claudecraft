@@ -2194,9 +2194,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(craftedDelta).toEqual({ knownRecipes: 324, deedStats: 355, reliquary: 576 });
     const beforeCraftedBytes = Buffer.byteLength(JSON.stringify(beforeCrafted), 'utf8');
-    expect(beforeCraftedBytes).toBe(210203);
+    expect(beforeCraftedBytes).toBe(211751);
     expect(bytes - beforeCraftedBytes).toBe(1255);
-    expect(bytes).toBe(211458);
+    expect(bytes).toBe(213006);
     const fixtureBaseline = {
       equipment: 273,
       equipmentInstance: 1593,
@@ -2282,7 +2282,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     ).toBe(444);
     const beforeFurnishingsBytes = Buffer.byteLength(JSON.stringify(withoutFurnishings), 'utf8');
     expect(beforeCraftedBytes - beforeFurnishingsBytes).toBe(632);
-    expect(beforeFurnishingsBytes).toBe(209571);
+    expect(beforeFurnishingsBytes).toBe(211119);
     const withoutFurnishingsAndFieldKit: CharacterState = {
       ...withoutFurnishings,
       deedStats: {
@@ -2296,7 +2296,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       JSON.stringify(withoutFurnishingsAndFieldKit),
       'utf8',
     );
-    expect(beforeHomesteaderBytes).toBe(209559);
+    expect(beforeHomesteaderBytes).toBe(211107);
     const withoutHomesteaderDeeds: CharacterState = {
       ...withoutFurnishingsAndFieldKit,
       deeds: { ...withoutFurnishingsAndFieldKit.deeds },
@@ -2315,19 +2315,69 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     }
     const historicalBytes = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
     expect(beforeHomesteaderBytes - historicalBytes).toBe(85);
-    expect(counterfactualBytes).toBe(210191);
-    expect(beforeCraftedBytes).toBe(210203);
+    expect(counterfactualBytes).toBe(211739);
+    expect(beforeCraftedBytes).toBe(211751);
 
     // The one-time hammer recipe/proof content adds against the pre-hammer,
     // field-kit-excluded fixture (156144): the Crucible fixture-repair deltas
     // above, plus 183 bytes of existing quest/deed/Reliquary catalog entries
-    // the hammer recipe references. Remove field_kit and the two later
-    // Homesteader deed entries so their bytes retain separate attribution.
-    // MEASURED after the real merge settle (hammer content plus field_kit
-    // together): the equation and every forgeBaseline delta below hold
-    // exactly as recorded on the pre-field-kit tree.
+    // the hammer recipe references, plus the release's Bramblehide/Nythgap
+    // rows. Isolate the release content only after removing both Hearth
+    // cohorts, field_kit and the two Homesteader deeds, so every branch's
+    // bytes retain independent attribution.
+    const BRAMBLEHIDE_NORMAL_ITEM_IDS = [
+      'bramblehide_cinch',
+      'bramblehide_crown',
+      'bramblehide_grips',
+      'bramblehide_harness',
+      'bramblehide_legguards',
+      'bramblehide_mantle',
+      'bramblehide_treads',
+      'courtiers_bonefang',
+      'gravecourt_hewer',
+      'stormhymn_chain_grips',
+      'stormhymn_chain_treads',
+      'thornpeak_moonhide_cowl',
+      'thornpeak_wardblade',
+      'votive_ward_of_the_deathless_court',
+    ] as const;
+    /** Byte attribution only: remove the Bramblehide/Nythgap release content
+     * (the one deed, its itemsDiscovered ids, its reliquary firstFind rows,
+     * and its Reliquary page) without changing any other payload. Mirrors
+     * `withoutCrucibleContent` above; the two never overlap in item id. */
+    function withoutBramblehideContent(state: CharacterState): CharacterState {
+      const copy = JSON.parse(JSON.stringify(state)) as CharacterState;
+      const discoveredIds = new Set([
+        ...BRAMBLEHIDE_NORMAL_ITEM_IDS,
+        ...BRAMBLEHIDE_NORMAL_ITEM_IDS.map((id) => `heroic_${id}`),
+      ]);
+      if (copy.deeds) delete copy.deeds['col_set_bramblehide'];
+      if (copy.deedStats?.itemsDiscovered)
+        copy.deedStats.itemsDiscovered = copy.deedStats.itemsDiscovered.filter(
+          (id) => !discoveredIds.has(id),
+        );
+      if (copy.reliquary) {
+        for (const id of BRAMBLEHIDE_NORMAL_ITEM_IDS) delete copy.reliquary.firstFind?.[id];
+        copy.reliquary.illuminatedPages = copy.reliquary.illuminatedPages?.filter(
+          (id) => id !== 'conquerors_set_bramblehide',
+        );
+      }
+      return copy;
+    }
+    const preReleaseCounterfactual = withoutBramblehideContent(withoutHomesteaderDeeds);
+    // Release contribution: one deed, normal and heroic discovery ids,
+    // fourteen firstFind rows and the Bramblehide illuminated page. The
+    // packet content has already been isolated, so none enters this delta.
+    const bramblehideDelta = Object.fromEntries(
+      (['deeds', 'deedStats', 'reliquary'] as const).map((key) => [
+        key,
+        fieldBytes(withoutHomesteaderDeeds, key) - fieldBytes(preReleaseCounterfactual, key),
+      ]),
+    );
+    expect(bramblehideDelta).toEqual({ deeds: 35, deedStats: 742, reliquary: 771 });
+    expect(Object.values(bramblehideDelta).reduce((sum, value) => sum + value, 0)).toBe(1548);
     expect(historicalBytes - 156144).toBe(
-      Object.values(fixtureDelta).reduce((sum, value) => sum + value, 0) + 183,
+      Object.values(fixtureDelta).reduce((sum, value) => sum + value, 0) + 183 + 1548,
     );
     const forgeBaseline = {
       questsDone: 4606,
@@ -2341,21 +2391,22 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         Object.entries(forgeBaseline).map(([key, previous]) => [
           key,
           Buffer.byteLength(
-            JSON.stringify(withoutHomesteaderDeeds[key as keyof typeof forgeBaseline]),
+            JSON.stringify(preReleaseCounterfactual[key as keyof typeof forgeBaseline]),
             'utf8',
           ) - previous,
         ]),
       ),
     ).toEqual({ questsDone: 50, knownRecipes: 30, deeds: 32, deedStats: 21, reliquary: 80 });
-    // Removing field_kit and the later deeds reproduces the baseline WITH the
-    // hammer content still applied: 3884 alone measured 209,261 here (hammer
-    // content absent); the hammer content adds its own +213 on top
-    // (composed, not inferred: 3885 alone recorded that same +213 against
-    // its pre-field-kit tree). MEASURED after the real merge settle: 209,474.
+    // Removing both packet cohorts, Homesteader, field_kit and the
+    // Bramblehide/Nythgap release rows reproduces the historical baseline.
+    expect(
+      Buffer.byteLength(JSON.stringify(preReleaseCounterfactual), 'utf8'),
+      'both branch additions removed, preserves the recorded Crucible+hammer baseline',
+    ).toBe(209474);
     expect(
       historicalBytes,
-      'later entries removed, must reproduce the recorded Crucible+hammer baseline',
-    ).toBe(209474);
+      'packet additions and field_kit removed, retains the Bramblehide release content',
+    ).toBe(211022);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
@@ -2380,28 +2431,23 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(metadataDelta).toEqual({ perfectingBonus: 11880, perfectingBound: 5934 });
     // Combined fixture (Crucible baseline + hammer recipe/proof content +
-    // field_kit, Homesteader deeds and furnishings), measured: 210,203 bytes.
-    // Composed from both parents' own bands (3885 alone, hammer without
-    // field_kit, held 209,094..209,475, width 381; field_kit adds exactly
-    // +12 wherever it lands, proven above via counterfactualBytes), shifted
-    // by that same +12 and the independently pinned +85 from the two new
-    // deeds and +632 from furnishings without widening: 209,823..210,204.
-    // Crafted cohort adds exactly 1,255 bytes; shift the 381-byte band without widening.
-    expect(bytes, reMint).toBeGreaterThan(211078);
-    expect(bytes, reMint).toBeLessThan(211459);
+    // field_kit, both Hearth cohorts, Homesteader and Bramblehide/Nythgap),
+    // composed measurement: 213,006 bytes. The release contributes 1,548
+    // independently isolated bytes and the crafted cohort contributes 1,255.
+    // Keep the tracking band exactly 381 bytes wide (measurement minus 380
+    // to measurement plus one); the warning threshold remains unchanged.
+    expect(bytes, reMint).toBeGreaterThan(212626);
+    expect(bytes, reMint).toBeLessThan(213007);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was
     // minted against (historical: that is the figure the threshold's own 32-KiB
     // step was derived from, not this arm's measurement). The previous
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
-    // after the real merge settle: this combined fixture (hammer content plus
-    // field_kit, Homesteader deeds and all furnishings) is 211,458 bytes, 17,918 bytes below the
-    // threshold. Pin the measured relation: a lower threshold or further
-    // content growth crossing it requires re-measuring and reviewing both
-    // sides together, never silently widening this test's narrow tracking
-    // band or the warn threshold itself. This remains a warning only; the
-    // save-path tests prove oversized saves stay whole.
+    // the combined fixture is 213,006 bytes, 16,370 below the threshold.
+    // A content change must be attributed and the narrow band re-measured,
+    // never widened. This is warning-only; save-path tests prove oversized
+    // saves stay whole.
     expect(bytes).toBeLessThan(CHARACTER_BLOB_WARN_BYTES);
   });
 });

@@ -28,6 +28,11 @@ import { GameServer } from '../server/game';
 import { RIFT_ESSENCE_ITEM_ID, RIFT_GEM_IDS } from '../src/sim/content/rift/items';
 import { BUILTIN_WORLD, ITEMS } from '../src/sim/data';
 import {
+  RIFT_GEM_RATING,
+  riftBandItemLevel,
+  riftBandPrimaryStats,
+} from '../src/sim/rift/band_ladder';
+import {
   createRiftGearInstance,
   type RiftForgeAction,
   type RiftForgeResult,
@@ -37,12 +42,13 @@ import type { SimEvent } from '../src/sim/types';
 import type { IWorld } from '../src/world_api';
 import { FURNISHING } from './fixtures/furnishing_item';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from './helpers/bare_client';
+import { moveToRiftForge } from './helpers/rift_forge';
 
 const ID = FURNISHING.id;
 const GEM_ID = RIFT_GEM_IDS[0];
 type Target = { slotIndex: number } | undefined;
 type ForgeWorld = {
-  [K in 'upgradeRiftItem' | 'enchantRiftItem' | 'socketRiftGem']: (
+  [K in 'upgradeRiftItem' | 'socketRiftGem']: (
     ...args: Parameters<IWorld[K]>
   ) => unknown;
 };
@@ -57,18 +63,7 @@ const ACTIONS = [
     result: { upgradeLevel: 1, essenceSpent: 2 },
     essence: 18,
     gems: 2,
-    stats: { str: 5, sta: 2 },
-  },
-  {
-    action: 'enchant',
-    command: 'rift_enchant_item',
-    fields: { stat: 'critRating' },
-    invoke: (world: ForgeWorld, itemId: string, target: Target) =>
-      world.enchantRiftItem(itemId, 'critRating', target),
-    result: { essenceSpent: 4 },
-    essence: 16,
-    gems: 2,
-    stats: { str: 4, sta: 2, critRating: 2 },
+    stats: riftBandPrimaryStats({ primary: 'str', secondary: 'sta' }, riftBandItemLevel('S', 1)),
   },
   {
     action: 'socket',
@@ -79,7 +74,10 @@ const ACTIONS = [
     result: {},
     essence: 20,
     gems: 1,
-    stats: { str: 6, sta: 2 },
+    stats: {
+      ...riftBandPrimaryStats({ primary: 'str', secondary: 'sta' }, riftBandItemLevel('S', 0)),
+      critRating: RIFT_GEM_RATING,
+    },
   },
 ] as const;
 const CASES = ACTIONS.flatMap((row) =>
@@ -97,6 +95,7 @@ afterEach(() => {
 });
 
 function prepare(sim: Sim, pid = sim.playerId) {
+  moveToRiftForge(sim, pid);
   const gear = createRiftGearInstance('furnishing-forge-control', 'S', 'warrior', pid);
   // Inject the malformed live copy deliberately: the save loader already rejects
   // Rift payloads on non-shell ids, but command admission must hold independently.
@@ -147,9 +146,7 @@ function expectControl(sim: Sim, pid: number, itemId: string, row: (typeof ACTIO
   const copy = sim.meta(pid)!.inventory.find((slot) => slot.itemId === itemId)!;
   expect(copy.instance?.rolled).toEqual({ quality: 'epic', stats: row.stats });
   expect(copy.instance?.rift?.upgradeLevel).toBe(row.action === 'upgrade' ? 1 : 0);
-  expect(copy.instance?.rift?.enchant).toEqual(
-    row.action === 'enchant' ? { stat: 'critRating', value: 2 } : undefined,
-  );
+  expect(copy.instance?.rift).not.toHaveProperty('enchant');
   expect(copy.instance?.rift?.gems).toEqual(row.action === 'socket' ? [GEM_ID] : []);
 }
 
@@ -221,7 +218,7 @@ function online() {
     (server as unknown as { routeEvents(events: SimEvent[]): void }).routeEvents(sim.drainEvents());
     broadcast(server);
     for (const frame of socket.sent.slice(received)) {
-      if (frame.t === 'events')
+      if (frame.t === 'events' || frame.t === 'commandOutcome')
         (client as unknown as { onMessage(raw: string): void }).onMessage(JSON.stringify(frame));
     }
     received = socket.sent.length;
@@ -235,29 +232,40 @@ function online() {
 }
 
 describe('furnishing Rift admission through ClientWorld and GameServer', () => {
-  it.each(CASES)('$action refuses a furnishing via $selection and mirrors shell success', (row) => {
+  it.each(CASES)('$action refuses a furnishing via $selection and mirrors shell success', async (row) => {
     const remote = online();
     const { sim, pid, controlId, client, sent, sync } = remote;
     const named = row.selection === 'named slot';
     const before = structuredClone(client.inventory);
     expect(before.find((slot) => slot.itemId === ID)?.count).toBe(1);
-    expect(
-      withoutMutation(sim, pid, () => row.invoke(client, ID, named ? { slotIndex: 0 } : undefined)),
-    ).toBeUndefined();
+    const refusalOutcome = withoutMutation(sim, pid, () =>
+      row.invoke(client, ID, named ? { slotIndex: 0 } : undefined),
+    );
+    expect(refusalOutcome).toBeInstanceOf(Promise);
     expect(sent).toEqual([
-      { t: 'cmd', cmd: row.command, item: ID, ...row.fields, ...(named && { slot: 0 }) },
+      {
+        t: 'cmd',
+        cmd: row.command,
+        item: ID,
+        ...row.fields,
+        ...(named && { slot: 0 }),
+        rid: expect.any(Number),
+      },
     ]);
     expect(client.inventory).toEqual(before);
     sync();
+    expect(await refusalOutcome).toBe(false);
     expect(client.inventory).toEqual(before);
     expect(client.drainEvents()).toEqual([
       { type: 'riftForgeResult', pid, ...refusal(row.action) },
     ]);
 
     const wireRevBefore = sim.meta(pid)!.wireRev;
-    row.invoke(client, controlId, named ? { slotIndex: 1 } : undefined);
+    const controlOutcome = row.invoke(client, controlId, named ? { slotIndex: 1 } : undefined);
+    expect(controlOutcome).toBeInstanceOf(Promise);
     expect(client.inventory).toEqual(before);
     sync();
+    expect(await controlOutcome).toBe(true);
     expectControl(sim, pid, controlId, row);
     expect(sim.meta(pid)!.wireRev).toBeGreaterThan(wireRevBefore);
     expect(client.inventory).toEqual(sim.meta(pid)!.inventory);

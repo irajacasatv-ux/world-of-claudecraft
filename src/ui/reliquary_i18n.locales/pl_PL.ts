@@ -167,4 +167,8 @@ export const table: ReliquaryLocaleTable = {
     desc: 'Tarcze i bronie dostępne wyłącznie heroicznie od Varkhul, Forgefather of the Last Flame.',
   },
   hearth_first_crafts: { name: 'Pierwsze wyroby do domu' },
+  conquerors_set_bramblehide: {
+    name: 'Cierniowa Skóra Rootsa',
+    desc: 'Pełna rodzina skórzana Bramblehide.',
+  },
 };

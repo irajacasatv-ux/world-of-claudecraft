@@ -167,4 +167,8 @@ export const table: ReliquaryLocaleTable = {
     desc: 'Khiên và vũ khí chỉ rơi ở chế độ anh hùng từ Varkhul, Forgefather of the Last Flame.',
   },
   hearth_first_crafts: { name: 'Những món đồ thủ công đầu tiên cho tổ ấm' },
+  conquerors_set_bramblehide: {
+    name: 'Da Gai Của Roots',
+    desc: 'Trọn bộ giáp da Bramblehide.',
+  },
 };

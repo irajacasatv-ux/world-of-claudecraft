@@ -1027,4 +1027,8 @@ export const table: DeedLocaleTable = {
     name: '집주인',
     desc: '이 캐릭터로 첫 오두막을 받으세요.',
   },
+  col_set_bramblehide: {
+    name: '루츠의 가시덤불가죽',
+    desc: '루츠의 가시덤불가죽의 모든 부위를 발견하십시오.',
+  },
 };

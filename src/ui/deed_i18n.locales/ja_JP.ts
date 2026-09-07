@@ -976,4 +976,8 @@ export const table: DeedLocaleTable = {
     name: '家の主',
     desc: 'このキャラクターで初めてコテージを受け取る。',
   },
+  col_set_bramblehide: {
+    name: 'ルーツのブランブルハイド',
+    desc: 'ルーツのブランブルハイドの全部位を発見する。',
+  },
 };

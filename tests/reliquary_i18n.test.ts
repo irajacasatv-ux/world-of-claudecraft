@@ -82,15 +82,15 @@ describe('reliquary_i18n English resolution', () => {
     // later contributes only its name row instead of an empty-string row.
     // This count is the FILL TRIPWIRE: adding a catalog page must be accompanied
     // by a name row in every M16 locale chunk, so a new page cannot quietly
-    // render English to a CJK or Cyrillic reader. The 39 original pages keep
-    // all-locale coverage; the collection, personal hammer, and Hearth pages
-    // and the first crafted furnishings add four.
-    expect(pageCount).toBe(43);
-    expect(descCount).toBe(43);
-    expect(manifest.length).toBe(86);
+    // render English to a CJK or Cyrillic reader. Forty earlier pages
+    // include Bramblehide; Crucible, Forgebreaker and both Hearth pages
+    // add four more.
+    expect(pageCount).toBe(44);
+    expect(descCount).toBe(44);
+    expect(manifest.length).toBe(88);
     expect(manifest.length).toBe(pageCount + descCount);
-    expect(manifest.filter((row) => row.field === 'name').length).toBe(43);
-    expect(manifest.filter((row) => row.field === 'desc').length).toBe(43);
+    expect(manifest.filter((row) => row.field === 'name').length).toBe(44);
+    expect(manifest.filter((row) => row.field === 'desc').length).toBe(44);
     expect(manifest).toContainEqual({
       id: 'hearth_first_crafts',
       field: 'name',
@@ -194,8 +194,9 @@ describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
   it('carries only real catalog page ids, and no empty values', () => {
     for (const lang of tableLocales()) {
       // Vacuity floor: an emptied chunk would satisfy every for-loop in this
-      // suite silently. Preserve all 39 reviewed pages. The new content pages
-      // ship M16 names now; their Latin-language prose follows release fill.
+      // suite silently. Preserve the forty reviewed pages, including
+      // Bramblehide. New content pages carry their M16 names; Latin prose
+      // follows release fill.
       const namesFilled = M16_LOCALES.has(lang);
       // The crafted Hearth page ships its name in every locale; all 39 earlier rows remain.
       expect(
@@ -207,7 +208,7 @@ describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
           (id) => !M16_NEW_PAGES.has(id) && id !== 'hearth_first_crafts',
         ).length,
         `${lang} original row count`,
-      ).toBe(39);
+      ).toBe(40);
       for (const id of M16_NEW_PAGES) {
         expect(Object.hasOwn(tables[lang], id), `${lang}.${id}`).toBe(namesFilled);
       }
@@ -373,11 +374,11 @@ describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
         swept.push(`${lang}.${page.id}`);
       }
     }
-    // Vacuity floor, snug to the real corpus: 19 anchorable pages x 18 locales
-    // since the release fill (5 normal + 5 heroic dungeons, 2 delves, 7 sets;
-    // the world-boss page is mark-anchored and the rest carry no derivable
-    // anchor).
-    expect(swept.length).toBeGreaterThanOrEqual(342);
+    // Vacuity floor, snug to the real corpus: 20 anchorable pages x 18 locales
+    // since the release fill (5 normal + 5 heroic dungeons, 2 delves, 8 sets
+    // now that Roots' Bramblehide joined the set-page family; the world-boss
+    // page is mark-anchored and the rest carry no derivable anchor).
+    expect(swept.length).toBeGreaterThanOrEqual(360);
   });
 
   // RELEASE-TIER ONLY: channel English lives in RELIQUARY_PAGES, outside the

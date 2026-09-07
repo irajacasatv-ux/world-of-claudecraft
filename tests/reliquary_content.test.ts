@@ -374,13 +374,14 @@ const CHEST_FN_BY_DELVE: Record<string, { chest: ChestFn; floor: number }> = {
 describe('Reliquary Conqueror catalog structure', () => {
   it('ships Conquerors, Professions, Horizons, and Hearth', () => {
     // 27 + the four Crucible raid pages (per-boss N+H, the obligations
-    // closeout of docs/prd/ignivar-raid-loot.md).
-    expect(CONQUEROR_PAGES.length).toBe(31);
+    // closeout of docs/prd/ignivar-raid-loot.md) + the Roots' Bramblehide
+    // set page (the eighth epic armor family).
+    expect(CONQUEROR_PAGES.length).toBe(32);
     expect(PROFESSION_PAGES.length).toBe(5);
     expect(HORIZON_PAGES.length).toBe(5);
     expect(HEARTH_PAGES.map((page) => page.id)).toEqual(['hearth_basics', 'hearth_first_crafts']);
     // Literal: update when product adds a page.
-    expect(RELIQUARY_PAGES.length).toBe(43);
+    expect(RELIQUARY_PAGES.length).toBe(44);
     expect(
       RELIQUARY_PAGES.every(
         (p) =>
@@ -455,10 +456,9 @@ describe('Reliquary Conqueror catalog structure', () => {
     // Moving Emberward from Varkhul's normal page to its
     // heroic page in the same release re-slots a relic already catalogued, so
     // it moves neither this pair nor the character pair below.
-    // Eleven Crucible collections add 33 distinct crafted item relics.
-    // Homesteader adds one title; the eight Hearth furnishings add eight
-    // distinct item relics without changing any existing deed record.
-    expect(full).toEqual({ owned: 448, total: 448 });
+    // Crucible crafts, both Hearth cohorts and Homesteader compose with
+    // the seven Bramblehide pieces and seven Nythraxis gap-fill drops.
+    expect(full).toEqual({ owned: 462, total: 462 });
     const character = catalogCharacterCompletion({
       itemsDiscovered: allOwned,
       marks: allOwned,
@@ -478,9 +478,10 @@ describe('Reliquary Conqueror catalog structure', () => {
     // character-scoped too, so it moves this pair by the same one as the
     // overview (only the weapon skins are account-scoped). Lanternback Troll
     // and Chimeglass Tortoise add two more character-scoped slots: 366. The
-    // Cluckwork Mech Bird is another character-scoped mount slot: 367.
-    // The Homesteader title and eight Hearth items are character-scoped.
-    expect(character).toEqual({ owned: 419, total: 419 });
+    // Cluckwork Mech Bird is another character-scoped mount slot. Both
+    // Hearth cohorts, Homesteader, Bramblehide and the gap-fill drops are
+    // character-scoped too.
+    expect(character).toEqual({ owned: 433, total: 433 });
   });
 
   it('pins the final measured catalog shape: total slots and distinct marks', () => {
@@ -523,16 +524,20 @@ describe('Reliquary Conqueror catalog structure', () => {
     // Moving Emberward from Varkhul's normal page to its heroic page in the
     // same release re-slots it and keeps this total fixed. The one-time
     // Forgebreaker quest adds one personal slot beside 33 Crucible crafts,
-    // taking the total to 465. Homesteader adds a title slot, then Hearth
-    // adds eight item slots, for 474.
+    // taking the total to 465. Homesteader and eighteen Hearth items add
+    // nineteen slots. Bramblehide's seven items appear on two pages, and
+    // the seven Nythraxis gap-fill drops each add one slot.
     expect(
       slots,
       `slot total moved; per page: ${RELIQUARY_PAGES.map((p) => `${p.id}=${p.relics.length}`).join(', ')}`,
-    ).toBe(484);
+    ).toBe(505);
     // Distinct mark ids: the 10 shipped before Phase 21, the 19 rare-slain
     // proofs of conquerors_rares_of_the_realm, the two craft masterwork
     // marks (masterwork:jewelcrafting, masterwork:inscription), and the
-    // masterwrought Phase 18 gather_event:golden_harvest field note.
+    // masterwrought Phase 18 gather_event:golden_harvest field note. Neither
+    // branch's new content (Crucible/Forgebreaker items, Roots' Bramblehide
+    // set, the Nythraxis gap-fill drops) is a mark, so this total is
+    // unchanged by the merge.
     expect(
       RELIQUARY_MARK_IDS.size,
       `mark total moved; by namespace: ${[
@@ -788,9 +793,9 @@ describe('Reliquary relic item ids resolve in ITEMS', () => {
     // crafting chain; the release's own chain read 284 = 242 + 42): 285, the
     // sixth figure of the ledger row's "all pinned" claim; the other five are
     // the page/overview/character/slot/mark literals nearby.
-    // 33 Crucible collection items plus the personal Forgebreaker shaping.
-    // The eight Hearth furnishings each introduce one distinct item id.
-    expect(RELIQUARY_ITEM_TO_PAGES.size).toBe(337);
+    // Includes all Crucible crafts, personal Forgebreaker, eighteen Hearth
+    // items, seven Bramblehide pieces and seven Nythraxis gap-fill drops.
+    expect(RELIQUARY_ITEM_TO_PAGES.size).toBe(351);
     for (const [id, pages] of RELIQUARY_ITEM_TO_PAGES) {
       expect(pages.length, `catalogued id ${id} maps to an empty page list`).toBeGreaterThan(0);
     }
@@ -3050,6 +3055,8 @@ const EXPECTED_DISTINCT_SOURCES: Record<string, number> = {
   conquerors_set_nighttalon: 2,
   conquerors_set_soulflame: 2,
   conquerors_set_stormcallers: 2,
+  // Roots' Bramblehide: the whole family drops from the one raid boss.
+  conquerors_set_bramblehide: 1,
   // 8 = activity (masterworkFirst) + the seven gear-capable craft
   // professions (engineering hinted since masterwrought Phase 11o un-pended
   // it; the count read 7 while its mark rode SOURCE_PENDING_RULING

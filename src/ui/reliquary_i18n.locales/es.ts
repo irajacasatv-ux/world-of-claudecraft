@@ -167,4 +167,8 @@ export const table: ReliquaryLocaleTable = {
     desc: 'Escudos y armas exclusivos del modo heroico de Varkhul, Forgefather of the Last Flame.',
   },
   hearth_first_crafts: { name: 'Primeras creaciones para el hogar' },
+  conquerors_set_bramblehide: {
+    name: 'Piel de Zarza de Roots',
+    desc: 'La familia completa de cuero Bramblehide.',
+  },
 };

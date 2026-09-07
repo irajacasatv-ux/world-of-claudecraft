@@ -167,4 +167,8 @@ export const table: ReliquaryLocaleTable = {
     desc: 'Štíty a zbraně dostupné jen hrdinsky od Varkhul, Forgefather of the Last Flame.',
   },
   hearth_first_crafts: { name: 'První výrobky pro domov' },
+  conquerors_set_bramblehide: {
+    name: 'Rootsova ostružinová kůže',
+    desc: 'Úplná kožená rodina Bramblehide.',
+  },
 };

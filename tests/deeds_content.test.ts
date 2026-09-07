@@ -94,7 +94,7 @@ const PREFIX_CATEGORY: Record<string, DeedCategory> = {
 };
 
 describe('audited launch totals (literals: update deliberately with the catalog)', () => {
-  it('ships exactly 301 deeds worth 3535 total Renown', () => {
+  it('ships exactly 302 deeds worth 3535 total Renown', () => {
     // Release base (262 / 3145 after the WARFARE lifetime-honor ladder) plus
     // four Reliquary Curator rank bridges and the five Phase 18 completion
     // ladder deeds (all nine renown 0: catalog prestige never scores the
@@ -153,8 +153,9 @@ describe('audited launch totals (literals: update deliberately with the catalog)
     // reader can act on without seeing the diff. It went stale once already.
     // Forgebreaker's personal, class-restricted quest celebration adds one
     // hidden deed at zero Renown: 299 / 3525, all older content untouched.
-    // The two manual Freehold milestones add five Renown each.
-    expect(DEED_ORDER.length).toBe(301);
+    // The two manual Freehold milestones add five Renown each; the
+    // Bramblehide collection adds one zero-Renown deed independently.
+    expect(DEED_ORDER.length).toBe(302);
     expect(ALL.reduce((sum, d) => sum + d.renown, 0)).toBe(3535);
   });
 
@@ -181,8 +182,10 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       // +4 farming first-harvest chronicles (chr_*_first_harvest).
       chronicle: 53,
       // +4 Reliquary Curator rank bridges and +5 Phase 18 completion ladder
-      // deeds on top of the release collection set, +1 col_golden_harvest.
-      collection: 40,
+      // deeds on top of the release collection set, +1 col_golden_harvest,
+      // +1 the Roots Bramblehide set collection (col_set_bramblehide) the
+      // release side added independently. UNION MERGE: base plus both deltas.
+      collection: 41,
       // Release's Thornhollow battlegrounds plus the WARFARE honor ladder.
       pvp: 35,
       // +2 bank socket ladder deeds (soc_strongbox_outfitter,
@@ -377,6 +380,11 @@ describe('audited launch totals (literals: update deliberately with the catalog)
       'dgn_varkhul',
       'dgn_varkhul_heroic',
       'dgn_varkhul_flawless',
+      // Roots' Bramblehide, the feral druid's Strength leather family off the
+      // Nythraxis raid: the release side's addition, seated ahead of the
+      // branch's Forgebreaker quest deed (the release merge put its own row
+      // first here rather than appending it behind the branch's tail).
+      'col_set_bramblehide',
       'hid_forgebreaker',
       'homesteader_first_furnishing',
       'homesteader_first_cottage',
@@ -970,7 +978,9 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // either side.
   // Forgebreaker's personal quest adds one hidden, zero-Renown tail row.
   // The pre-append proof below preserves every earlier trigger and value.
-  const FROZEN_CATALOG_SHA256 = '105aaca554a4e86af4729b9eb5af8be17884d74e64bd4008b2d918bd90e24cb7';
+  // This sync composes Bramblehide and the two Homesteader milestones.
+  // The independent parent-preservation proofs below guard the re-mint.
+  const FROZEN_CATALOG_SHA256 = 'a14bb473b44d75a31072545c0ea3a2f1c294e46852768b19aa32e35f83ce4ece';
 
   it('every shipped deed keeps its trigger and renown unchanged', () => {
     const canonical = JSON.stringify(
@@ -1003,11 +1013,12 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
   // release's five Crucible raid deeds, and the previous mint is the
   // d1c102c3... literal that merge rotated down here; the proof below
   // reproduces it exactly, so no older row was retro-edited by the merge.
-  // The two Freehold milestones append after Forgebreaker.
-  // Removing them must reproduce the preceding frozen catalogue exactly.
+  // Bramblehide sits before Forgebreaker; both Homesteader milestones sit
+  // after it. Removing all three reproduces the shared pre-merge catalogue.
   const PRE_APPEND_CATALOG_SHA256 =
     'ed5078343bcd897c66006561b7eb5bbeef7c98c0a5597807235ff4e11529e47d';
   const APPENDED_SINCE: readonly string[] = [
+    'col_set_bramblehide',
     'homesteader_first_furnishing',
     'homesteader_first_cottage',
   ];
@@ -1017,13 +1028,13 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
     for (const id of APPENDED_SINCE) {
       expect(DEED_ORDER.includes(id), `${id} is in the live catalog`).toBe(true);
     }
-    // The new milestones sit at the true tail after Forgebreaker.
-    // Pin its two predecessors too: this is an append into a known seat,
-    // never a scattered insert or a retro-edit (the digest below proves it).
-    expect(DEED_ORDER.slice(-2 - APPENDED_SINCE.length)).toEqual([
+    // Pin the relative order of the independently added milestones.
+    expect(DEED_ORDER.slice(-5)).toEqual([
       'dgn_varkhul_flawless',
+      'col_set_bramblehide',
       'hid_forgebreaker',
-      ...APPENDED_SINCE,
+      'homesteader_first_furnishing',
+      'homesteader_first_cottage',
     ]);
     const priorRows = DEED_ORDER.filter((id) => !appended.has(id)).map((id) => {
       const trigger = DEEDS[id].trigger;
@@ -1038,6 +1049,34 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
       PRE_APPEND_CATALOG_SHA256,
     );
     expect(PRE_APPEND_CATALOG_SHA256).not.toBe(FROZEN_CATALOG_SHA256);
+  });
+
+  it.each([
+    {
+      parent: 'Freeholds',
+      appended: ['col_set_bramblehide'],
+      digest: '105aaca554a4e86af4729b9eb5af8be17884d74e64bd4008b2d918bd90e24cb7',
+    },
+    {
+      parent: 'Masterwrought',
+      appended: ['homesteader_first_furnishing', 'homesteader_first_cottage'],
+      digest: 'ec055f18eef91cea2132109bf9554b8e5f95b7321a6f31109422d46372c3f323',
+    },
+  ])('preserves every $parent trigger and Renown value through the merge', ({ appended, digest }) => {
+    const added = new Set(appended);
+    const parentRows = DEED_ORDER.filter((id) => !added.has(id)).map((id) => {
+      const trigger = DEEDS[id].trigger;
+      return [
+        id,
+        trigger.kind === 'meta'
+          ? { ...trigger, deedIds: trigger.deedIds.filter((dep) => !added.has(dep)) }
+          : trigger,
+        DEEDS[id].renown,
+      ];
+    });
+    expect(createHash('sha256').update(JSON.stringify(parentRows), 'utf8').digest('hex')).toBe(
+      digest,
+    );
   });
 });
 
@@ -1237,7 +1276,8 @@ describe('table shape', () => {
     // Phase 13's promotion capstone prog_legendmaker closed it, and the
     // 2026-08-30 sync merge seats the release's Crucible raid block behind
     // that (appended behind the branch's rows; the flawless task is its
-    // final entry).
+    // final entry). The Roots' Bramblehide set collection appends behind the
+    // raid block (whose flawless task was the previous final entry).
     // The one-time Forgebreaker quest's hidden celebration appends after it.
     expect(DEED_ORDER.slice(-2)).toEqual([
       'homesteader_first_furnishing',

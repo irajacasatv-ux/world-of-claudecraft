@@ -3024,6 +3024,20 @@ const ITEM_ENTITY_IDS = [
   'pattern_freehold_clockwork_lamp',
   'pattern_freehold_chart_easel',
   'pattern_freehold_jewel_floor_lamp',
+  'bramblehide_crown',
+  'bramblehide_mantle',
+  'bramblehide_harness',
+  'bramblehide_cinch',
+  'bramblehide_legguards',
+  'bramblehide_grips',
+  'bramblehide_treads',
+  'courtiers_bonefang',
+  'thornpeak_wardblade',
+  'gravecourt_hewer',
+  'votive_ward_of_the_deathless_court',
+  'thornpeak_moonhide_cowl',
+  'stormhymn_chain_grips',
+  'stormhymn_chain_treads',
 ] as const;
 
 type ItemEntityId = (typeof ITEM_ENTITY_IDS)[number];
@@ -3697,6 +3711,20 @@ const APPENDED_ITEM_NAMES: Partial<Record<ItemEntityId, string>> = {
   pattern_freehold_clockwork_lamp: 'Schematic: Clockwork Lamp',
   pattern_freehold_chart_easel: 'Technique: Chart Easel',
   pattern_freehold_jewel_floor_lamp: 'Design: Jewel Floor Lamp',
+  bramblehide_crown: "Roots' Bramblehide Crown",
+  bramblehide_mantle: "Roots' Bramblehide Mantle",
+  bramblehide_harness: "Roots' Bramblehide Harness",
+  bramblehide_cinch: "Roots' Bramblehide Cinch",
+  bramblehide_legguards: "Roots' Bramblehide Legguards",
+  bramblehide_grips: "Roots' Bramblehide Grips",
+  bramblehide_treads: "Roots' Bramblehide Treads",
+  courtiers_bonefang: "Courtier's Bonefang",
+  thornpeak_wardblade: 'Thornpeak Wardblade',
+  gravecourt_hewer: 'Gravecourt Hewer',
+  votive_ward_of_the_deathless_court: 'Votive Ward of the Deathless Court',
+  thornpeak_moonhide_cowl: 'Thornpeak Moonhide Cowl',
+  stormhymn_chain_grips: 'Stormhymn Chain Grips',
+  stormhymn_chain_treads: 'Stormhymn Chain Treads',
 };
 
 function itemTranslations(names: readonly string[]): ItemEntityTranslations {

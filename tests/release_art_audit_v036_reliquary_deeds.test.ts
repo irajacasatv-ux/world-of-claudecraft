@@ -221,9 +221,9 @@ describe('v0.36 release-audit Reliquary deed art', () => {
       // The personal hammer quest ships with the explicit category-crest fallback.
       'hid_forgebreaker',
     ]);
-    // Current arithmetic: 301 live - 11 explicitly pending = 290 painted.
-    expect(DEED_ORDER).toHaveLength(301);
-    expect(DEED_IMAGE_IDS.size).toBe(290);
+    // Combined catalog: 302 live deeds, 11 pending, and 291 painted.
+    expect(DEED_ORDER).toHaveLength(302);
+    expect(DEED_IMAGE_IDS.size).toBe(291);
     expect(DEED_ORDER.filter((id) => !DEED_IMAGE_IDS.has(id))).toEqual([...DEED_ART_PENDING]);
     expect(sorted(DEED_IMAGE_IDS)).toEqual(
       sorted(DEED_ORDER.filter((id) => !DEED_ART_PENDING.has(id))),

@@ -7,10 +7,12 @@
 // hand-rolling either fixture again.
 
 import type { ClientSession, GameServer } from '../../server/game';
+import { ActionBarLayoutUploader } from '../../src/net/action_bar_upload';
 import { EMPTY_MST_CRAFTS } from '../../src/net/crafting_wire';
+import { GuildBankLogMirror } from '../../src/net/guild_bank_log_mirror';
 import { ClientWorld } from '../../src/net/online';
 import { FARM_PATCHES } from '../../src/sim/content/farm_patches';
-import { emptyAllocation } from '../../src/sim/content/talents';
+import { emptyAllocation, emptyModifiers } from '../../src/sim/content/talents';
 import { freshDeedStats } from '../../src/sim/deeds';
 import { recipesForFreeholdAvailability } from '../../src/sim/professions/recipe_visibility';
 import { emptyCraftSkills } from '../../src/sim/professions/wheel';
@@ -89,6 +91,7 @@ export function bareClient(pid: number, overrides: BareClientOverrides = {}): Cl
   c.playtimeSeconds = 0;
   c.unlockedMilestones = [];
   c.talents = emptyAllocation();
+  c.talentMods = emptyModifiers();
   c.talentSpec = null;
   c.talentRole = null;
   c.loadouts = [];
@@ -205,6 +208,10 @@ export function bareClient(pid: number, overrides: BareClientOverrides = {}): Cl
   c.eventQueue = [];
   c.activeFrostRings = [];
   c.activeIgnivarMeteors = [];
+  c.activeNythraxisGraveEruptions = [];
+  c.activeNythraxisGraveFlames = [];
+  c.activeNythraxisGravefires = [];
+  c.activeNythraxisBindingSigils = [];
   c.activeVarkhulForgestormWarnings = [];
   c.activeVarkhulCinderFires = [];
   c.activeVarkhulCinderOrbProjectiles = [];
@@ -241,9 +248,7 @@ export function bareClient(pid: number, overrides: BareClientOverrides = {}): Cl
   // class initializers exactly; guildBankInfo in particular is read through
   // `!== null` gates, where undefined would behave differently.
   c.guildBankInfo = null;
-  c.guildBankLogEntries = [];
-  c.guildBankLogState = 'idle';
-  c.guildBankLogAt = 0;
+  c.guildBankLogMirror = new GuildBankLogMirror();
   c.toolEffectSlots = [];
   c.commissionOrders = [];
   c.socialDirty = false;
@@ -258,9 +263,7 @@ export function bareClient(pid: number, overrides: BareClientOverrides = {}): Cl
   c.cosmeticsChanged = false;
   c.actionBarRestore = undefined;
   c.actionBarRestoreResolved = false;
-  c.actionBarSaveTimer = null;
-  c.actionBarSaveLastJson = null;
-  c.actionBarSavePending = null;
+  c.actionBarUploader = new ActionBarLayoutUploader((command) => c.cmd(command));
   c.profanityDirty = false;
   c.pendingTargetEcho = null;
   // The lazy WorldInteractionRequests holder (src/net/world_interaction_requests.ts):

@@ -167,4 +167,8 @@ export const table: ReliquaryLocaleTable = {
     desc: 'Boucliers et armes exclusifs au mode héroïque de Varkhul, Forgefather of the Last Flame.',
   },
   hearth_first_crafts: { name: 'Premières créations pour le foyer' },
+  conquerors_set_bramblehide: {
+    name: 'Peau de Ronces de Roots',
+    desc: 'La famille complète de cuir Bramblehide.',
+  },
 };

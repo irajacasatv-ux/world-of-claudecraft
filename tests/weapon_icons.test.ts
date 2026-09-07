@@ -45,10 +45,20 @@ describe('painted weapon inventory icons', () => {
     // 132 with the nine Crucible raid weapons (crucible-raid-weapons-2026-08-28;
     // the Emberflight Longbow was pulled: bows wait for the hunter rework);
     // 133 with the Ignivar legendary maul (varkhul_forgebreaker, rendered in
-    // ignivar-varkhul-drop-renders-2026-08-28), landed by the base merge;
-    // 135 on the masterwrought branch, which carries both the phase 09 pair
-    // and the release's Crucible plus Ignivar additions.
-    expect(baseWeapons).toHaveLength(135);
+    // ignivar-varkhul-drop-renders-2026-08-28), landed by the base merge:
+    // base 133 for this merge.
+    //
+    // RE-PINNED at this merge of release/v0.42.0 into feature/masterwrought.
+    // BOTH parent pins for the record: ours 135 (the masterwrought phase 09
+    // pair), the release 136 (the three Nythraxis gap-fill one-handers
+    // courtiers_bonefang, thornpeak_wardblade, gravecourt_hewer, rendered in
+    // nythraxis-gap-weapon-renders-2026-09-04 and confirmed present in the
+    // resolved src/sim/content/zone3.ts). Arithmetic (base 133 + ours' delta
+    // +2 + theirs' delta +3 = 138), CONFIRMED by an actual
+    // `npx vitest run tests/weapon_icons.test.ts` run on the merged tree:
+    // this assertion, and the 19-heroic-copy count in the next test, both
+    // pass as-is.
+    expect(baseWeapons).toHaveLength(138);
     expect([...WEAPON_IMAGE_IDS].sort()).toEqual(baseWeapons);
     expect(Object.keys(ITEM_WEAPON_VARIANTS).sort()).toEqual(baseWeapons);
     for (const id of baseWeapons) {
@@ -61,8 +71,9 @@ describe('painted weapon inventory icons', () => {
     const heroics = Object.values(ITEMS).filter(
       (item) => item.kind === 'weapon' && item.heroicOf !== undefined,
     );
-    // 16 with heroic_duskwhisper (aliases the duskwhisper base painting).
-    expect(heroics).toHaveLength(16);
+    // 16 with heroic_duskwhisper (aliases the duskwhisper base painting); 19
+    // with the three Nythraxis gap-fill one-handers' raid-tier variants.
+    expect(heroics).toHaveLength(19);
     for (const heroic of heroics) {
       expect(WEAPON_IMAGE_IDS.has(heroic.id), heroic.id).toBe(false);
       expect(weaponIconUrl(heroic.id), heroic.id).toBe(
@@ -77,7 +88,18 @@ describe('painted weapon inventory icons', () => {
     const weaponBatches = batches.filter((batch) =>
       batch.itemIds.some((id) => Object.hasOwn(ITEM_WEAPON_VARIANTS, id)),
     );
-    expect(weaponBatches).toHaveLength(6);
+    // Seven batches currently own at least one weapon id (confirmed against
+    // public/ui/items/mapping.json's generatedBatches): the historical
+    // campaign (placeholder-art-completion-weapons-2026-08-09), its
+    // replacement (item-art-consistency-2026-08-09), the integration
+    // daggers (integration-dagger-icons-2026-08-10), the Masterwrought
+    // completion wave (masterwrought-art-completion-2026-09-02), the
+    // Crucible raid weapons (crucible-raid-weapons-2026-08-28), the Ignivar
+    // legendary (ignivar-varkhul-drop-renders-2026-08-28), and, landed by
+    // this release-branch merge, the Nythraxis gap-fill one-handers
+    // (nythraxis-gap-weapon-renders-2026-09-04, asserted below as
+    // `gapBatch`).
+    expect(weaponBatches).toHaveLength(7);
     const historicalBatch = weaponBatches.find(
       ({ batchId }) => batchId === 'placeholder-art-completion-weapons-2026-08-09',
     );
@@ -173,6 +195,17 @@ describe('painted weapon inventory icons', () => {
       .filter((id) => Object.hasOwn(ITEM_WEAPON_VARIANTS, id))
       .sort();
     expect(varkhulWeaponIds).toEqual(['varkhul_forgebreaker']);
+    // The Nythraxis gap-fill one-handers ship in-engine renders of their
+    // violet-gem KayKit held models in a dedicated batch
+    // (nythraxis-gap-weapon-renders-2026-09-04).
+    const gapBatch = weaponBatches.find(
+      ({ batchId }) => batchId === 'nythraxis-gap-weapon-renders-2026-09-04',
+    );
+    expect(gapBatch).toBeDefined();
+    const gapWeaponIds = (gapBatch?.itemIds ?? [])
+      .filter((id) => Object.hasOwn(ITEM_WEAPON_VARIANTS, id))
+      .sort();
+    expect(gapWeaponIds).toEqual(['courtiers_bonefang', 'gravecourt_hewer', 'thornpeak_wardblade']);
     expect(historicalBatch?.itemIds).toEqual(
       expected.filter(
         (id) =>
@@ -180,7 +213,8 @@ describe('painted weapon inventory icons', () => {
           !integrationWeaponIds.includes(id) &&
           !masterwroughtWeaponIds.includes(id) &&
           !crucibleWeaponIds.includes(id) &&
-          !varkhulWeaponIds.includes(id),
+          !varkhulWeaponIds.includes(id) &&
+          !gapWeaponIds.includes(id),
       ),
     );
     expect(
@@ -229,7 +263,8 @@ describe('painted weapon inventory icons', () => {
         !integrationWeaponIds.includes(id) &&
         !masterwroughtWeaponIds.includes(id) &&
         !crucibleWeaponIds.includes(id) &&
-        !varkhulWeaponIds.includes(id),
+        !varkhulWeaponIds.includes(id) &&
+        !gapWeaponIds.includes(id),
     );
     expect(chunkA.assets.map(({ id }) => id)).toEqual(campaignExpected.slice(0, 40));
     expect(chunkB.assets.map(({ id }) => id)).toEqual(campaignExpected.slice(40, 80));

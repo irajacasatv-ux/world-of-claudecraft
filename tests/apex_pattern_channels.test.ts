@@ -117,7 +117,7 @@ const FARM_HEROIC_GROUP = FARM_HEROIC_PATTERN_GROUP;
 const SANCTIONED_MOB_LOOT_GROUPS = new Set([RAID_GROUP, FARM_RAID_GROUP]);
 const SANCTIONED_HEROIC_GROUPS = new Set([FARM_HEROIC_GROUP]);
 
-// The 28 shipped pattern ids, derived from the def table (the universe pin in
+// The complete shipped recipe-item set, derived from the def table (the universe pin in
 // apex_pattern_items.test.ts holds this equal to the recipe-derived set). The
 // startsWith arm makes the sweeps catch a STRAY pattern_* id too: one that
 // slipped onto a surface without ever registering a def would otherwise pass

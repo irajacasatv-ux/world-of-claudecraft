@@ -167,4 +167,8 @@ export const table: ReliquaryLocaleTable = {
     desc: "Varkhul, Forgefather of the Last Flame'den yalnızca kahramanca modda düşen kalkanlar ve silahlar.",
   },
   hearth_first_crafts: { name: 'Ev İçin İlk El İşleri' },
+  conquerors_set_bramblehide: {
+    name: "Roots'un Dikenli Postu",
+    desc: 'Eksiksiz Bramblehide deri ailesi.',
+  },
 };

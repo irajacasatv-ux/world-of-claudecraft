@@ -94,6 +94,14 @@ const { items, pendingArtIds } = await loadItems(repoRoot);
 const mapping = JSON.parse(
   await readFile(path.join(repoRoot, 'public/ui/items/mapping.json'), 'utf8'),
 );
+// The art-pending ledger (artPendingIds) reaches the library as-is: pending
+// ids stay in the live counts and are excluded only from the missing-file
+// sweep (scripts/lib/item_art_audit.mjs, whose bytes are the tracked verdict's
+// renderer fingerprint). A staged wave whose generated heroic ARMOR variants
+// lack their own WebPs trips the library's weapon-only alias assertion; the
+// wave that next needs staging teaches the alias accounting about
+// artPendingIds there, rather than pre-filtering the item set here, so the
+// live counts keep one meaning.
 const build = await buildItemArtAudit({
   repoRoot,
   itemDirectory: 'public/ui/items',
@@ -102,38 +110,15 @@ const build = await buildItemArtAudit({
   items,
   mapping,
   pendingArtIds: [...pendingArtIds].sort(),
+  // Measured after combining Freeholds with the current crafting dependency.
+  // Reproduce with node scripts/item_art_audit.mjs --verify-only.
   expected: {
-    // Masterwrought's completion wave adds 81 newly painted identities and
-    // replaces 84 interim project-owned placeholders. The replacements do
-    // not grow the catalog; the new identities take the shipping census from
-    // 1,128 to 1,209 after the three v0.42 mount reins join the reviewed base.
-    // The gathering Field Kit adds one more painted identity (1,209 to 1,210).
-    // Crucible professions adds 33 armor pieces, 11 patterns, and one formula,
-    // bringing the current shipping census to 1,255 without replacing old art.
-    // The Forgebreaker quest's forgefathers_ember proof item (painted in the
-    // same Crucible professions batch) adds one more painted identity, to 1,256.
-    // The Freehold vendor adds eight separately accepted paintings, to 1,264.
-    // Ten crafted furnishings and three patterns add thirteen paintings, to 1,277.
-    catalogCount: 1277,
-    // The art-subject universe is every live definition minus the explicit
-    // pending-art ledger. Masterwrought cleared that ledger at 1,224 live
-    // definitions; the Field Kit raises it to 1,225; Crucible professions
-    // raises it to 1,270 (33 armor pieces, 11 patterns, one formula), all
-    // painted; the Forgebreaker quest's forgefathers_ember proof item raises
-    // it to 1,271, also painted. Eight furnishings take the live count to 1,279.
-    // Sixteen Heroic weapons intentionally alias
-    // base paintings; the implicit backpack is the one non-definition catalog id.
-    // The crafted set adds thirteen live definitions, to 1,292.
-    liveItemCount: 1292,
+    catalogCount: 1302,
+    liveItemCount: 1320,
     pendingArtCount: 0,
-    generatedHeroicDefinitions: 64,
-    heroicDefinitionsWithOwnWebp: 48,
-    heroicWeaponArtAliases: 16,
-    // Masterwrought's 81 additions kept the existing 25 kind groups at 30 pages.
-    // The 11 Crucible boots raise armor-feet from 77 to 88, crossing its
-    // 80-record boundary: now 31 pages, eight modes each. forgefathers_ember
-    // joins the existing 'quest' group without crossing a page boundary.
-    // Eight furnishings add one new kind group and one page, with eight modes.
+    generatedHeroicDefinitions: 78,
+    heroicDefinitionsWithOwnWebp: 59,
+    heroicWeaponArtAliases: 19,
     sheetPageCount: 32,
     groupCount: 26,
   },

@@ -167,4 +167,8 @@ export const table: ReliquaryLocaleTable = {
     desc: 'Sköldar och vapen enbart från heroiskt läge, från Varkhul, Forgefather of the Last Flame.',
   },
   hearth_first_crafts: { name: 'De första sakerna till hemmet' },
+  conquerors_set_bramblehide: {
+    name: "Roots' Törnehud",
+    desc: 'Hela Bramblehide-familjen i läder.',
+  },
 };

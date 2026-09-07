@@ -167,4 +167,8 @@ export const table: ReliquaryLocaleTable = {
     desc: 'Perisai dan senjata khusus mode heroik dari Varkhul, Forgefather of the Last Flame.',
   },
   hearth_first_crafts: { name: 'Karya Pertama untuk Rumah' },
+  conquerors_set_bramblehide: {
+    name: 'Kulit Semak Duri Roots',
+    desc: 'Keluarga kulit Bramblehide yang lengkap.',
+  },
 };
