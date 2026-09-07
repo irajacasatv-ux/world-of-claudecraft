@@ -13,8 +13,8 @@ the chain. The current next implementation is
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
-| 01 Foundation | Implemented locally, awaiting 01 QA | 2026-09-06 | | Six reviewers (cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist): 0 blocking, 11 should-fix, ~25 nits, ALL applied; fresh review of the fix round PASS; gates unsigned (see notes) |
-| 01 QA | Not started | | | |
+| 01 Foundation | Complete (QA PASS), local | 2026-09-06 | 2026-09-06 | Six reviewers (cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist): 0 blocking, 11 should-fix, ~25 nits, ALL applied; fresh review of the fix round PASS; gates unsigned (see notes) |
+| 01 QA | PASS | 2026-09-06 | 2026-09-06 | Twelve auditors and reviewers (six bespoke audits plus the six required reviewers: cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist). About 156 raw findings, deduplicated to 51 distinct: 1 blocking (self-inflicted, a glossary keyPattern registered ahead of its keys, caught by two reviewers and fixed), 0 blocking in the original 01 implementation. ALL resolved: 37 by a code, test or doc change; 14 recorded as reviewed-with-no-change-warranted, each with its reason. Fresh fix-round review PASS (qa-checklist re-gated the fix delta: READY to commit). Gates unsigned, see notes |
 | 02 Furnishing item kind | Not started | | | |
 | 02 QA | Not started | | | |
 | 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Not started | | | |
@@ -189,7 +189,30 @@ and handoff gates" stays unsigned (01 supplied the strict live FREEHOLDS_ENABLED
 its dark route/command/catalog proof; the forbidden-submodel absence and the management
 flow approval remain open); the four other gate rows are untouched by 01. Deferred to the
 release fill: the housing term family (Freehold, Steward's Ledger, Hearth Key) joins
-`scripts/i18n_glossary.json` when the UI keys land.
+`scripts/i18n_glossary.json` when the UI keys land. The `housingSystem` category landed in the
+01 QA instead, locking the five coined non-Latin renderings before a later surface could
+re-coin one, with a drift guard in `tests/i18n_completeness.test.ts`; only the
+`hudChrome.housing.` keyPattern waits for the first HUD key, because the completeness guard
+requires every shipped pattern to match a live key.
+
+QA round (2026-09-06, verdict PASS, still local). Twelve auditors and reviewers. The one
+blocking find was introduced BY the QA fix round, not by 01: a glossary keyPattern registered
+ahead of its keys reddened `tests/i18n_completeness.test.ts`, caught independently by
+cross-platform-sync and qa-checklist and fixed in `14fcb59abe`. Worth carrying forward: a
+scoped 43-file run reported green while that suite was red, because it reads the glossary
+through `fs`, outside the module graph, so `vitest related` can never select it; the
+always-run floor is what catches that class. Substantive QA changes beyond comment and doc
+repairs: `FreeholdPlotId` is branded so `plotId: state.ownerKey` is a compile error rather
+than prose; `serializeFreehold` neutralizes the ephemeral `isDecorating` at the persistence
+boundary; the two descriptors became real module delegates; the two extracted modules
+`server/live_location.ts` and `src/net/blank_entity.ts` gained the suites they shipped
+without; and several pins that could not fail were replaced (only `friends` reached the
+visit-policy guard, the RL exclusion derived its forbidden list from the module it guarded,
+and deleting the decode call site, the delegates or the seo call was invisible). Evidence:
+`npx tsc --noEmit` clean; 92 files / 2319 tests green including `tests/parity` and every i18n
+suite; `npm run ci:changed` exit 0; `npm run build` exit 0 with no generated-artifact drift;
+the four monolith ceilings still equal their files exactly. Not run locally: `test:browser`,
+the malware scan and SFX conformance, which ride CI once the branch is pushed.
 
 #### 02 Furnishing item kind
 
