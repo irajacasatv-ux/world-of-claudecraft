@@ -7,7 +7,8 @@ description: "Turn a reference image into a shipping World of ClaudeCraft GLB th
 
 This is the Codex-side pointer for the shared asset pipeline. The canonical operating
 procedure is the Claude skill at `.claude/skills/image-to-glb/SKILL.md`; the deep runbook
-is `docs/image-to-glb-asset-workflow.md`. Follow those two documents exactly; do not
+is `docs/image-to-glb-asset-workflow.md`. Preserve their asset acceptance gates and repository invariants; apply `AGENTS.md` for
+Codex runtime behavior and the user's explicit scope for authorized steps. Do not
 improvise an alternative pipeline.
 
 Quick orientation:
@@ -22,5 +23,5 @@ Quick orientation:
    `public/models/props/` -> media manifest -> parsed-GLB contract test -> render adapter
    module -> matched desktop/mobile in-game evidence -> `npm run gate`.
 4. Respect the source-fingerprint contract: any change to a fingerprinted input (including
-   `package-lock.json`) means re-exporting the affected asset families and re-pinning the
+   `pnpm-lock.yaml`) means re-exporting the affected asset families and re-pinning the
    sha256 and fingerprint literals in tests, docs, and capture evidence JSONs.

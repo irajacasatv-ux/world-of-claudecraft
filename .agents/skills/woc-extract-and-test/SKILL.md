@@ -58,6 +58,7 @@ npx tsc --noEmit
 
 Run domain guards for architecture, localization, persistence, parity, or security when
 applicable. Re-run `woc_database_performance` on the finished diff when its database triggers
-match. Before declaring the implementation ready, run `npm run gate`.
+match. Before declaring the implementation ready, run `node scripts/gate_select.mjs`
+per `docs/qa-gate.md`; `npm run gate` remains the deeper option.
 
 Report the selected seam, behavior covered, commands run, and remaining manual checks.

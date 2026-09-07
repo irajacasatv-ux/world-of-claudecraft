@@ -36,7 +36,8 @@ Use history to understand intent, but judge the final tree.
 
 Run targeted checks only as needed. For authorized remediation, add or update focused
 regression tests before changing the merge result, then run relevant changed-file checks
-and `npm run gate`. Never edit, commit, push, or rewrite history in audit-only mode.
+and `node scripts/gate_select.mjs` per `docs/qa-gate.md`; `npm run gate` remains the deeper
+option. Never edit, commit, push, or rewrite history in audit-only mode.
 
 Report parent roles, overlap inventory, verified regressions, stale plans, checks,
 recommended fixes in dependency order, and one verdict: `CLEAN`, `CLEAN WITH FOLLOW-UP`,

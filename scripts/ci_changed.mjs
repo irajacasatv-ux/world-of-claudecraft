@@ -51,7 +51,7 @@ try {
 
 console.log(`[ci:changed] --since=${since}`);
 
-const result = spawnSync('npx', buildBiomeArgs(since), { stdio: 'inherit', shell });
+const result = spawnSync('npx', buildBiomeArgs(since), { stdio: 'inherit', shell, cwd: REPO_ROOT });
 
 if (result.error !== undefined) {
   console.error(`[ci:changed] failed to spawn biome: ${result.error.message}`);

@@ -112,9 +112,35 @@ describe('isCodePath', () => {
     }
   });
 
+  it.each([
+    'AGENTS.md',
+    'AGENTS.override.md',
+    'CLAUDE.md',
+    'docs/CLAUDE.md',
+    'docs/program/AGENTS.override.md',
+    'nested/AGENTS.md',
+    '.codex/config.toml',
+    '.codex/hooks.json',
+    '.codex/hooks/ensure-hooks.sh',
+    '.codex/agents/reviewer.toml',
+    'nested/.codex/config.toml',
+    '.agents/skills/task/SKILL.md',
+    '.agents/skills/task/references/deep/check.md',
+    '.agents/skills/task/agents/openai.yaml',
+    '.claude/hooks/qa-stop.sh',
+    '.claude/agents/reviewer.md',
+    '.githooks/pre-push',
+    'docs/codex.md',
+  ])('runs CI for active agent surface %s, including rename removal', (filename) => {
+    expect(isCodePath(filename)).toBe(true);
+    expect(classifyPrFiles([{ filename }]).code).toBe(true);
+    expect(
+      classifyPrFiles([{ filename: 'docs/archive.md', previous_filename: filename }]).code,
+    ).toBe(true);
+  });
+
   it('leaves documentation surfaces classifiable as non-code', () => {
     expect(isCodePath('README.md')).toBe(false);
-    expect(isCodePath('CLAUDE.md')).toBe(false);
     expect(isCodePath('docs/prd/some-spec.md')).toBe(false);
     expect(isCodePath('docs/screenshots/before.png')).toBe(false);
     expect(isCodePath('CREDITS.md')).toBe(false);

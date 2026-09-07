@@ -67,7 +67,8 @@ For Codex, use the corresponding registered read-only role when one exists; a ha
 name difference never removes a concern. Where docs/qa-gate.md marks a role not yet
 mirrored (server-hot-path-reviewer, render-performance-reviewer,
 content-obligations-reviewer, gate-integrity-reviewer), the Codex session runs the
-matching .claude/agents/<name>.md prompt verbatim as a read-only sub-agent and records
+matching .claude/agents/<name>.md review criteria through a read-only sub-agent, excluding
+Claude frontmatter, runtime/team APIs and duplicated command execution, and records
 that fallback in its report; the mirrored woc_* roles under .codex/agents/ serve the rest.
 Reviewers inspect the parent's deterministic command evidence instead of rerunning the
 full gate. Finish every delegated task before reporting completion. The Phase summary

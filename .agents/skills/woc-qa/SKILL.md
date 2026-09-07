@@ -13,7 +13,8 @@ Coordinate one evidence-backed QA pass for the requested change.
 2. Read each relevant local `CLAUDE.md` before inspecting or editing that area.
 3. Run `git status --short` and preserve unrelated work.
 4. Establish the diff once. Prefer the working tree when changes are uncommitted;
-   otherwise use the user-provided base or active release base. Never assume `main`.
+   otherwise use the user-provided base or active release base. Include staged and untracked
+   paths, and carry that exact scope through review and validation. Never assume `main`.
 5. Treat `review`, `check`, and `audit` as read-only. Treat `fix findings`, `make
    ready`, or implementation requests as permission for scoped remediation.
 6. Do not commit, push, post comments, or create pull requests unless explicitly asked.
@@ -25,6 +26,9 @@ restating or replacing it.
 
 The coordinating agent owns build, test, lint, generation, and scanner commands.
 Specialist agents inspect code and shared command output without rerunning the full gate.
+Reuse passing checks unless a new change, failure, or unresolved concern warrants repetition.
+Explicitly format/check newly added metadata; `ci:changed` can omit untracked files even
+after staging. If commits are authorized, run `npm run ci:changed` after the actual last commit.
 
 During iteration, run the smallest relevant set:
 
@@ -34,11 +38,10 @@ During iteration, run the smallest relevant set:
 4. `npm run ci:changed`.
 5. `npx tsc --noEmit`.
 
-Before declaring implementation work ready, run:
-
-```sh
-npm run gate
-```
+Before declaring implementation work ready, run `node scripts/gate_select.mjs`, the
+canonical merge bar in `docs/qa-gate.md`. `npm run gate` is the deeper option; the
+selective planner falls back when it cannot prove coverage. Do not run both on an
+unchanged tree merely to satisfy duplicate workflow prose.
 
 If a command cannot run, report the exact blocker and continue with every safe check
 that remains.
@@ -61,9 +64,18 @@ references. Use only the agents relevant to the diff:
 - `woc_release_malware` for releases, dependencies, install behavior, AI instructions,
   or suspicious executable content.
 
-Run independent reviewers in parallel when capacity permits. Verify consequential
-findings against the actual diff and surrounding code. Reject speculative, inherited,
-duplicate, or out-of-scope findings. In review-only mode, do not edit files.
+The concern table in `docs/qa-gate.md` also requires content obligations, server hot paths,
+GPU preparation, and gate/CI selection review when those surfaces change. If a concern has
+no registered Codex role, give a bounded read-only subagent the matching `.claude/agents/`
+review criteria. Exclude Claude model frontmatter, runtime/team APIs, and instructions to
+rerun coordinator-owned commands. Record the fallback and provide the same shared evidence.
+
+Run independent reviewers in parallel when capacity permits. Require COVERAGE, including
+nits and uncertain findings, and a nonempty claim list for every in-scope behavior review. Verify consequential
+findings against the actual diff and surrounding code. Explain rejected speculative,
+duplicate, or out-of-scope findings; judge inherited defects against the requested scope.
+For authorized remediation, resolve in-scope findings and have a fresh reviewer inspect
+the entire fix round and final evidence before completion. In review-only mode, do not edit files.
 
 ## Report
 

@@ -164,6 +164,10 @@ const PR_GATE_STEP_GATE_RE_SEGMENT = `${escapeRe(PR_GATE_STEP_GATE_LINE)}\n`;
 // the pin is behavioral (through scripts/lib/ci_change_classify.mjs) because
 // the rules no longer live in the workflow text at all.
 const CODE_PATH_SAMPLES = [
+  ['AGENTS.md', 'AGENTS.md'],
+  ['CLAUDE.md', 'CLAUDE.md'],
+  ['.codex/*', '.codex/hooks.json'],
+  ['.agents/*', '.agents/skills/task/SKILL.md'],
   ['src/*', 'src/sim/sim.ts'],
   ['server/*', 'server/game.ts'],
   ['tests/*', 'tests/sim.test.ts'],
@@ -215,7 +219,6 @@ const CODE_PATH_SAMPLES = [
 // silently pays the full 8-shard tier again.
 const NON_CODE_SAMPLES = [
   'README.md',
-  'CLAUDE.md',
   'docs/prd/some-spec.md',
   'docs/screenshots/before.png',
   '.github/PULL_REQUEST_TEMPLATE.md',
@@ -291,7 +294,7 @@ function screenshotSparseBlocks(source: string): string[] {
     let closerAt = end + 1;
     while (closerAt < lines.length && lines[closerAt].trim() === '') closerAt++;
     const closer = lines[closerAt];
-    if (closer !== undefined && closer.trim().startsWith('sparse-checkout-cone-mode:')) {
+    if (closer?.trim().startsWith('sparse-checkout-cone-mode:')) {
       block += `\n${closer}`;
     }
     if (SCREENSHOT_EXCLUSION_RE.test(block)) blocks.push(block);
@@ -326,6 +329,7 @@ describe('CI workflow parity', () => {
       '            /docs/screenshots/eastbrook-vale-rebuild/',
       '            /docs/screenshots/far-foliage-impostors/',
       '            /docs/screenshots/fenbridge-rebuild/',
+      '            /docs/screenshots/furnishing-item-kind/',
       '            /docs/screenshots/guild-bank-tab/',
       '            /docs/screenshots/guild-pledge-board/',
       '            /docs/screenshots/guild-social-v1/',

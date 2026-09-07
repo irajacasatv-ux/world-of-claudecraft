@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/ensure-hooks.sh\"",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.codex/hooks/ensure-hooks.sh\"",
             "timeout": 15,
             "statusMessage": "Enabling the shared pre-push gate"
           }

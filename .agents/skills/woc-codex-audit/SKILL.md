@@ -6,8 +6,9 @@ description: "Audit World of ClaudeCraft Codex support for current conventions, 
 # Codex Architecture Audit
 
 Evaluate whether Codex receives concise, safe, current, and scalable operating context
-without altering the Claude Code architecture. An audit request is read-only. Apply fixes
-only when the user explicitly requests implementation.
+without altering the Claude Code architecture. An audit-only request is read-only. An
+explicit audit-and-fix request authorizes repository-local remediation: carry it through
+validation and fresh review without stopping at a report or reconfirming that authorization.
 
 ## Preserve boundaries
 
@@ -57,3 +58,19 @@ reliability defect, or `P2` drift and maintainability. Include evidence, impact,
 smallest change. Also report active surfaces, intentional Claude-only items, redundancy,
 missing verification, implementation order, and one verdict: `CURRENT`, `NEEDS
 MAINTENANCE`, or `NEEDS REDESIGN`.
+
+## Complete an authorized fix round
+
+Keep a findings ledger with severity, exact evidence, consequence, correction, and verification.
+Cover effective global, project, skill, plugin, and harness layers; inspect personal state
+read-only and redact secrets. Separate active instructions from historical and Claude-only files.
+Request independent COVERAGE reviews, including nits and uncertain findings, then verify them.
+Resolve every in-scope finding or explain its disposition; an inherited defect can still be
+in scope for a whole-tree audit. Keep outside-scope recommendations separate.
+
+Use focused regression tests for behavior changes and existing checks for prose corrections.
+Follow `$woc-qa` and `docs/qa-gate.md`, record the comparison base and actual exit codes, and
+have a fresh reviewer inspect the complete fix round and evidence. Do not repeat broad checks
+without new changes, failures, or unresolved concerns. Inspection proves instruction corrections,
+not measured model performance. Commit only when authorized, with explicit paths; keep fixes and
+the final verdict separately reviewable. Do not report `CURRENT` with unresolved in-scope findings.

@@ -33,7 +33,7 @@ STEP 0 - PRE-FLIGHT:
   merge it, and delete the dependency block from state.md. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/.
-- Memory scan: MEMORY.md and entries on content pins (deeds and reliquary count re-pins,
+- Codex memory scan: state.md "Gotchas" and entries on content pins (deeds and reliquary count re-pins,
   the authored-art normalization pin trap, item art provenance), test-pin traps, the
   provisioner firewall, i18n name fills (M16), the wiki freshness gate.
 

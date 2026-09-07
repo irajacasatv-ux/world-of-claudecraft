@@ -944,9 +944,11 @@ describe('always-run set over the real suite', () => {
         visibility: classifyTestSource(readFileSync(path.join(REPO_ROOT, file), 'utf8')),
       })),
     );
-    // These four assert over content they never import. If any drops out of the
+    // These guards assert over content they never import. If any drops out of the
     // set, `vitest related` would stop selecting it and the gate would go quiet.
     expect(alwaysRun).toContain('tests/architecture.test.ts');
+    expect(alwaysRun).toContain('tests/codex_setup.test.ts');
+    expect(alwaysRun).toContain('tests/malware_scan.test.ts');
     expect(alwaysRun).toContain('tests/localization_fixes.test.ts');
     expect(alwaysRun).toContain('tests/ci_workflow.test.ts');
     expect(alwaysRun).toContain('tests/guide.test.ts');

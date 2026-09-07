@@ -1,3 +1,5 @@
+import { isAgentToolingPath } from './agent_surface_paths.mjs';
+
 // Pure classification + fail-closed decision logic for the ci.yml `changes`
 // job ("Classify changes"). The job used to answer "does this PR touch
 // the code path set" with a full-history checkout plus `git diff`, which cost
@@ -88,7 +90,7 @@ export const PR_FILES_CAP = 3000;
  */
 export function isCodePath(path) {
   if (typeof path !== 'string' || path === '') return true;
-  if (CODE_PATH_EXACT.includes(path)) return true;
+  if (isAgentToolingPath(path) || CODE_PATH_EXACT.includes(path)) return true;
   return CODE_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 

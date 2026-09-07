@@ -28,18 +28,20 @@ overlays and `docs/i18n/*.ru_RU.md` are excluded, matching the pre-push copy sca
 takes milliseconds and never runs TypeScript, Vitest, Biome, browser work, or an agent.
 `.claude/settings.json` and `.codex/hooks.json` share the Claude implementation; the
 Codex adapter (`.codex/hooks/qa-stop.sh`) delegates to it, then re-scans TOML and
-`.mts`/`.cts` module files (the shared filter now covers those itself, so the adapter's
-extra pass is a harmless belt). A companion `PreToolUse` hook
+`.mts`/`.cts` module files. The shared intake includes those extensions, but its
+debugger and out-of-tree focused-test predicates do not; the Codex pass remains required. A companion `PreToolUse` hook
 (`.claude/hooks/deny-generated-edit.sh`) blocks direct agent edits to generated
 artifacts (`*.generated.ts`, the `i18n.resolved.generated/` bundles) at the tool-call
-boundary.
+boundary in Claude Code. The repository Codex hooks register no `PreToolUse` guard;
+Codex must still preserve generated-file ownership.
 
 ### Deterministic floor
 
 `.githooks/pre-push` runs the heavier fast checks at the push boundary: TypeScript,
 determinism and purity guards, i18n matcher guards, Biome on changed files, and copy
 checks over the push diff. The shared `.claude/hooks/ensure-hooks.sh` idempotently points
-`core.hooksPath` at `.githooks`; both agent runtimes call it at session start.
+`core.hooksPath` at `.githooks`. Codex calls it through `.codex/hooks/ensure-hooks.sh`,
+which resolves the worktree root and preserves an existing effective hook-path owner.
 
 `git push --no-verify` remains an emergency bypass, not a substitute for reporting and
 fixing a red gate.
@@ -195,7 +197,9 @@ changes we understand; everything else gets the old bar. Failing toward *more* t
 is the only safe direction, which is also why
 an unresolvable diff base or a failing `git diff` is a hard stop rather than an empty
 changed set. The diff is taken against the BRANCH base, not just the dirty working tree:
-`GATE_SELECT_BASE` overrides it, otherwise the tracking branch is used.
+`GATE_SELECT_BASE` overrides it; otherwise `resolveSelectBase` selects the newest
+resolvable `origin/release/*`, then `origin/main`, then `origin/HEAD`. It never selects
+the feature branch's own upstream as a comparison base.
 
 **Reading a shadow run.** It reports two numbers. *Escapes* (a file the full suite
 failed that selection skipped) is the strict signal, but it is empty on any green
@@ -633,6 +637,9 @@ themselves are read when a hook fires, so review script edits like any other exe
 change. The scripts are small, local, and non-networked; CI and the release malware
 audit remain the enforcement layer.
 
-To disable the clone's pre-push floor, use `git config --unset core.hooksPath`. Claude
-Code can additionally use its local hook setting. Codex hook trust is managed with
-`/hooks`.
+Before changing Git hook ownership, inspect
+`git config --show-origin --show-scope --get core.hooksPath` and deliberately adjust
+the owning configuration scope. Removing a local key can expose another effective
+owner or let SessionStart reinstall the shared hooks. Command-scope overrides require
+changing the launch arguments or environment. Runtime hook controls are separate:
+Claude Code has its local hook setting, and Codex hook trust is managed with `/hooks`.

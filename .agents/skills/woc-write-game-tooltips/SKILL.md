@@ -5,7 +5,9 @@ description: "Write or audit World of ClaudeCraft spell, talent, aura, item, and
 
 # Write game tooltips
 
-Write tooltips from the live mechanic, not from existing prose.
+Write tooltips from the live mechanic, not from existing prose. A clarity review or
+audit is read-only unless authoring or fixes are authorized. Apply the rewrite and
+test-change steps below only to authorized changes; use existing coverage for prose-only edits.
 
 ## Workflow
 
@@ -14,7 +16,7 @@ Write tooltips from the live mechanic, not from existing prose.
 3. Record the target, result, timing, values, scaling stat, triggers, caps, and consumption rules.
 4. Rewrite the authoritative English source in short, direct sentences.
 5. Use live resolved values when rank, gear, talents, or specialization can change a number.
-6. Add or update a focused test that compares the tooltip with the combat result.
+6. For changed behavior, add or update a focused test comparing the tooltip with the combat result.
 7. Run the relevant mechanic, tooltip, i18n, and type checks.
 
 ## Rules
@@ -27,5 +29,6 @@ Write tooltips from the live mechanic, not from existing prose.
 - Do not repeat metadata without a clear reason.
 - Edit English sources first. Do not hand-edit locale overlays or generated i18n output.
 
-Stop and record a mismatch when the code and intended design disagree. Do not make the tooltip
-promise unfinished behavior.
+Record a mismatch when code and intended design disagree. Do not make a tooltip promise
+unfinished behavior or change mechanics outside the authorized scope. Continue independent
+authorized work while reporting the unresolved claim.

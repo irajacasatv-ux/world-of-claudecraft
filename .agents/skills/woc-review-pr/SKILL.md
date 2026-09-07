@@ -10,8 +10,10 @@ Perform a read-only, evidence-backed review of the requested pull request.
 ## Hold the authorization boundary
 
 A request to review, inspect, check, or assess authorizes reading and drafting only. Do
-not run `gh pr review`, post a comment, approve, request changes, push, edit the branch,
-or otherwise write to GitHub unless the user explicitly asks to submit the review.
+not submit feedback (`gh pr review`, comments, approval, or requested changes) unless
+explicitly authorized. Permission to submit feedback does not authorize branch edits,
+commits, or pushes. Implement scoped fixes only when requested, and obtain separate
+authorization for any commit, push, or other remote mutation not already authorized.
 
 ## Establish scope
 

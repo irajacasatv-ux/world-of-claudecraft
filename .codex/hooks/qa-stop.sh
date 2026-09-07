@@ -21,7 +21,7 @@ cd "$root" 2>/dev/null || exit 0
 command -v perl >/dev/null 2>&1 || exit 0
 
 stream=$(
-  git diff -U0 --no-color -- '*.toml' '*.mts' '*.cts' 2>/dev/null
+  git diff HEAD -U0 --no-color -- '*.toml' '*.mts' '*.cts' 2>/dev/null
   git ls-files --others --exclude-standard 2>/dev/null \
     | grep -Ei '\.(toml|mts|cts)$' \
     | while IFS= read -r file; do

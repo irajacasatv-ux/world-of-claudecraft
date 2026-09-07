@@ -63,6 +63,7 @@ export const SELECTION_PIPELINE_FILES = Object.freeze([
   'scripts/detect_code_changes.mjs',
   'scripts/ci_shard_test.mjs',
   'scripts/lib/ci_change_classify.mjs',
+  'scripts/lib/agent_surface_paths.mjs',
   'scripts/lib/ci_test_select.mjs',
   'scripts/lib/ci_shard_plan.mjs',
   'scripts/lib/ci_leg_runner.mjs',

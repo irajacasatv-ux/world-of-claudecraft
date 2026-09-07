@@ -1332,6 +1332,16 @@ preservation still precedes any separately authorized cleanup. No push/PR or leg
 message is performed in this documentation session.
 
 ## Gotchas (read before the matching phase)
+
+- Codex instruction audit (2026-09-07): follow `AGENTS.md` for runtime authority and
+  `docs/codex.md` for effective loading. Read this worktree's skills explicitly if the
+  desktop task still advertises another checkout. Use these Gotchas instead of Claude
+  personal memory, and reuse only concern criteria from Claude fallback reviewers.
+  Preserve staged `.mts`/`.cts` checks and effective Git hook ownership when changing
+  adapters. Instruction/skill/hook-only diffs must reach CI security and tests. The
+  selective gate is the completion bar; explicitly format new metadata and run
+  `npm run ci:changed` after the actual last authorized commit. This audit does not
+  start content implementation or change the completed furnishing QA verdict.
 - `src/sim/sim.ts`, `server/game.ts`, and `src/net/online.ts` sit at ZERO monolith slack on
   the packet base (their `tests/monolith_budget.test.ts` pins equal their line counts
   there: 12006, 10336 and 5861), and `origin/release/v0.42.0` re-pinned them at 12465,

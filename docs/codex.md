@@ -1,145 +1,158 @@
-<!-- docs/ - operator guidance for repository Codex support. -->
+<!-- docs/ - living operator guidance for repository Codex support. -->
 
 # Codex in World of ClaudeCraft
 
-The checked-in Codex layer makes a root-launched session productive without copying or
-changing the Claude Code architecture. Root and local `CLAUDE.md` files own repository
-truth. `AGENTS.md`, `.codex/`, and `.agents/` add only Codex discovery, orchestration,
-permissions, and workflow guidance.
+Root and local `CLAUDE.md` files own repository facts, architecture, invariants and QA.
+`AGENTS.md`, `.codex/`, and `.agents/` add Codex discovery and runtime guidance.
+Claude-specific models, memory, slash commands and agent APIs do not apply to Codex.
 
 ## Start a session
 
-1. Start from the requested release branch. Use an isolated worktree when another
-   session may share the checkout.
-2. Launch Codex at the worktree root and trust the project only after reviewing
-   `AGENTS.md`, `.codex/config.toml`, and `.codex/hooks.json`.
-3. Restart Codex after pulling changes to project instructions, agents, skills, or hooks.
-   Codex builds its instruction chain at session start.
-4. Use `/hooks` to review and trust changed project hooks.
-5. Run `$woc-qa` before calling implementation work complete.
+1. Follow the root default release/worktree workflow unless the user explicitly selects
+   an existing worktree or another workflow. Verify branch, HEAD and status before edits.
+2. Launch Codex at the intended worktree root. Review its instructions, configuration,
+   hook registrations and referenced scripts before trusting the project.
+3. Restart after instruction/configuration changes to rebuild the startup context.
+   Read relevant local `CLAUDE.md` files explicitly before entering their areas.
+4. Where available, use `/hooks` to review changed hook definitions. Project trust alone
+   does not approve them; do not bypass hook trust to make setup appear complete.
+5. Use `$woc-qa` before calling implementation complete.
 
-`project_doc_fallback_filenames = ["CLAUDE.md"]` makes a local `CLAUDE.md` discoverable
-when Codex starts inside a nested directory. A session launched at the root does not
-dynamically load local instructions when it later opens a nested file, so `AGENTS.md`
-also requires an explicit local read.
+## What loads and when
 
-## Models stay selectable
+Codex selects the first nonempty global `AGENTS.override.md` or `AGENTS.md` under
+`CODEX_HOME` (normally `~/.codex`). It then walks from project root to startup CWD,
+selecting at most one file per directory: `AGENTS.override.md`, `AGENTS.md`, then
+configured fallback names. Later directory guidance has precedence. Here the fallback
+is `CLAUDE.md`; root `AGENTS.md` wins discovery, so root `CLAUDE.md` still needs its
+explicit read. Opening a nested source later does not rebuild the startup chain.
+See [instruction discovery](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
 
-The repository does not pin a model or reasoning effort. The active user or session
-selection flows into custom agents, so new models do not require an architecture edit.
-Use `/model` to select for the task.
+Configuration resolves from CLI/session overrides through trusted project layers,
+selected profile, user config, system config, then defaults. A closer project layer
+wins; an untrusted project omits its config, hooks and rules. The live harness can
+supply additional settings and instructions. Repository files cannot override system,
+developer or user authority. See [configuration precedence](https://learn.chatgpt.com/docs/config-file/config-basic#configuration-precedence).
 
-Current public model guidance is:
+Skill descriptions and metadata are available before the full `SKILL.md` is read.
+Repository `.agents/skills` discovery follows startup CWD toward the repository root;
+personal, system and plugin sources may also contribute. Skill-directory symlinks are
+followed, and duplicate names are not merged. Inspect the exact available path before
+assuming a project skill replaced a personal copy. An already-running desktop task may
+still expose skills from its original checkout after shell commands change directory.
+Read the intended worktree copy explicitly and restart there for future sessions.
+See [skill discovery and metadata](https://learn.chatgpt.com/docs/build-skills).
 
-| Model | Best fit |
-|---|---|
-| `gpt-5.6-sol` | Ambiguous architecture, security, research, and high-value implementation |
-| `gpt-5.6-terra` | Balanced everyday engineering |
-| `gpt-5.6-luna` | Clear, repeatable, latency-sensitive work |
+## Models and harness controls
 
-The public name is Terra. `terrace` is not a documented model name. Names and availability
-can change, so verify them on the [official Codex models page](https://learn.chatgpt.com/docs/models).
-Correctness, tests, and review requirements never change with model selection.
+The repository pins no model, reasoning effort, provider or session permissions.
+Inherit the active selection in subagents. Use the current
+[model documentation](https://learn.chatgpt.com/docs/models) and the actual client's
+supported controls when a task requires a selection change. API request parameters,
+including those in the [GPT-6 Astra guide](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-6-astra),
+are not automatically Codex configuration keys. Correctness and review depth remain
+constant across model choices.
+
+The project retains the documented `agents.max_threads` compatibility alias. Its
+`max_depth` applies to V1 delegation and is ignored by V2; a desktop harness may impose
+its own concurrency or nesting limits. These are defaults, not a promise that every
+harness honors them. See [subagent settings](https://learn.chatgpt.com/docs/agent-configuration/subagents#global-settings)
+and the [configuration schema](https://learn.chatgpt.com/docs/config-schema.json).
+
+Custom reviewers request `sandbox_mode = "read-only"` and explicitly prohibit edits.
+Verify live permissions: a harness can reapply parent overrides, so the TOML alone does
+not prove filesystem enforcement. Approval policy and sandbox access are separate;
+`never` suppresses approval prompts without granting access. See
+[agent permissions](https://learn.chatgpt.com/docs/agent-approvals-security).
 
 ## Checked-in surfaces
 
-| Surface | Purpose |
+| Surface | Ownership and purpose |
 |---|---|
-| `AGENTS.md` | Thin Codex bootstrap, safety boundaries, routing, and completion contract |
-| `.codex/config.toml` | Canonical-doc fallback, instruction budget, and bounded parallelism |
-| `.codex/hooks.json` | Fast session and stop hooks that reuse shared project scripts |
-| `.codex/agents/*.toml` | Narrow read-only reviewers that inherit the active model |
-| `.agents/skills/*/SKILL.md` | Repeatable project workflows with precise triggers |
-| `docs/codex.md` | Operator setup and maintenance guidance |
+| `AGENTS.md` | Codex bootstrap, authority, routing and completion |
+| `.codex/config.toml` | Canonical-doc fallback, instruction budget and delegation defaults |
+| `.codex/hooks.json`, `.codex/hooks/*.sh` | Codex lifecycle adapters over shared local scripts |
+| `.codex/agents/*.toml` | Read-only reviewer criteria with inherited model/effort |
+| `.agents/skills/*/SKILL.md`, `agents/openai.yaml` | Workflow bodies, discovery and invocation policy |
+| `docs/codex.md` | Living setup and maintenance runbook |
+| `docs/qa-gate.md`, `scripts/lib/agent_surface_paths.mjs` | Shared QA and instruction-path classification |
+| `tests/codex_setup.test.ts`, `tests/codex_hooks.test.ts` | Setup policy and actual hook behavior |
 
-Personal profiles, auth, provider settings, caches, sessions, and worktrees stay ignored.
-The project config deliberately does not set model, effort, sandbox, approval policy,
-network access, provider, or credentials.
+Personal credentials, profiles, sessions, caches and parked worktrees stay outside the
+tracked Codex surface. Never copy credentials or unredacted personal configuration into a report.
+The repository adds no plugin; repository skill discovery already serves this project.
 
-## Skills
+## Skills and reviewers
 
-- `$woc-qa` coordinates checks once and dispatches matching reviewers.
+- `$woc-qa` coordinates required checks, concern coverage and fresh review.
 - `$woc-extract-and-test` implements behavior through a focused tested seam.
-- `$woc-feature-plan` creates model-neutral vertical slices for large work.
-- `$woc-review-pr` reviews and drafts by default; posting needs explicit authorization.
-- `$woc-file-issue` creates an issue only after an explicit request to file it.
-- `$woc-image-to-glb` builds a shipping GLB asset from a reference image through the repo export, optimize, and fingerprint pipeline.
-- `$woc-release-merge-audit` finds semantic damage after release integration.
-- `$woc-release-malware-audit` combines the deterministic scanner with contextual triage.
-- `$woc-codex-audit` checks this architecture against current official guidance.
+- `$woc-feature-plan` creates implementation-ready vertical slices.
+- `$woc-review-pr` reviews and drafts; submitting feedback needs authorization.
+- `$woc-file-issue` drafts and files only when creation is explicitly requested.
+- `$woc-write-game-tooltips` writes or audits English tooltips against live mechanics.
+- `$woc-image-to-glb` follows the shared asset acceptance and export pipeline.
+- `$woc-release-merge-audit` inspects semantic damage after integration.
+- `$woc-release-malware-audit` combines scanning with contextual triage.
+- `$woc-codex-audit` audits this system; an explicit audit-and-fix request includes remediation.
 
-Skills contain workflow decisions and sequencing, not facts that a targeted search can
-recover. High-impact planning and GitHub issue creation disable implicit invocation.
+Planning and issue creation disable implicit invocation. Other skills have precise triggers;
+invocation policy is a selection control, not permission for writes. Honor authorization
+already given, complete independent work when a question blocks one step, and keep actual
+external-write and audit-only boundaries. Reuse canonical contracts without copying Claude
+runtime directives. Freeholds records Codex lessons in `docs/freeholds/state.md` "Gotchas".
 
-## Specialist agents
+Registered roles cover sim architecture, host parity, persistence, database performance,
+security, test coverage, frontend, release malware and official documentation. The main
+agent owns integration and deterministic execution. Reviewers consume the assigned scope
+and evidence. An unresolved diff is a failed dispatch, not a clean review.
 
-The read-only roles are `woc_sim_architecture`, `woc_cross_platform`,
-`woc_persistence`, `woc_database_performance`, `woc_security`, `woc_test_coverage`,
-`woc_frontend`, `woc_release_malware`, and `woc_docs_researcher`. The main agent owns
-edits, integration, and deterministic commands. Review agents inspect the assigned
-proposal or established diff and shared results so the same gate is not rerun by every
-specialist.
-`$woc-extract-and-test` invokes the database reviewer before database-backed implementation
-and again on the finished diff; `$woc-feature-plan`, `$woc-review-pr`, and `$woc-qa` route the
-same risks during design, review, and contribution QA.
-Routing includes database driver/dependency upgrades and PostgreSQL engine,
-resource/configuration, or topology changes because timeout, pool, lock, and planner behavior can
-change without an application SQL diff.
+Use every matching concern in `docs/qa-gate.md`. When its Codex column has no role, give a
+bounded read-only subagent the corresponding Claude review criteria, excluding model
+frontmatter, Claude tool/runtime instructions and duplicate test execution. Record the
+fallback. Give overlapping implementation paths one owner and finish delegated work before
+reporting completion.
 
-The documentation researcher has only the official OpenAI Developer Docs MCP configured.
-It is optional and holds no credential. Add broader MCP servers only for a demonstrated
-workflow, with narrow tools and environment-backed authentication. See the
-[official MCP guide](https://learn.chatgpt.com/docs/extend/mcp).
+`woc_database_performance` runs before database-affecting implementation decisions and
+again on the finished diff, including driver/dependency and PostgreSQL engine, resource,
+configuration and topology changes. The documentation role adds an optional credential-free
+OpenAI Docs MCP; it does not remove inherited MCP servers. Use only relevant read-only tools.
 
-## Hooks and QA
+## Hooks, CI and validation
 
-Codex and Claude Code reuse the same fast hook scripts without changing `.claude/**`:
+Hook sources accumulate across active global, project and enabled-plugin layers. Definitions
+need their own trust review; changed definitions may be skipped pending approval. Commands run
+from session CWD. See [hooks](https://learn.chatgpt.com/docs/hooks).
 
-- `SessionStart` runs `.claude/hooks/ensure-hooks.sh` to enable `.githooks/pre-push`.
-- `Stop` runs `.codex/hooks/qa-stop.sh`, which delegates to the shared Claude script and
-  adds untracked Codex TOML and declaration files to the same copy checks.
+- `SessionStart` resolves the worktree root through `.codex/hooks/ensure-hooks.sh`, respects
+  an existing effective `core.hooksPath`, then delegates setup to the unchanged shared helper.
+- `Stop` delegates to `.claude/hooks/qa-stop.sh` and adds module-extension predicates the
+  shared script lacks. It scans staged, unstaged and untracked additions. A clean result is
+  silent; a blocking result is JSON; the loop guard prevents repeated Stop blocking.
 
-Hooks are an edit-loop aid, not a security boundary or completion gate. The canonical QA
-layers and commands are in `docs/qa-gate.md`; the full local gate is `npm run gate`.
+Hooks aid the edit loop. They do not enforce all tool writes or replace the QA gate. Claude's
+`PreToolUse` generated-file guard is not registered in the repository Codex hook file; Codex
+must still obey generated-file ownership. No hook execution is claimed merely from file presence.
 
-## Parallel work and worktrees
+CI classifies agent instructions, runtime directories and shared Git hooks as code so they
+reach tests, malware checks and builds. The malware scanner covers instruction Markdown,
+executable agent/config TOML and extensionless Git hooks; canonical instructions and nested
+agent tooling under docs remain scanned while ordinary docs fixtures stay excluded. These checks supplement review;
+signature scanning is not complete detection of malicious behavior.
 
-Use native subagents for bounded exploration, logs, tests, and independent review. Keep
-one implementation owner for overlapping paths and let the main agent integrate every
-result. The checked-in maximum is six threads with one delegation level, which permits
-useful breadth without recursive coordination sprawl.
+Run focused tests while iterating and the canonical `node scripts/gate_select.mjs` before
+readiness; `npm run gate` remains the deeper option. Reuse passing evidence unless a change,
+failure or unresolved concern warrants repetition. Record the exact comparison base and exit
+codes. Explicitly format/check new metadata, which `ci:changed` may omit while untracked even
+after staging. After authorized commits, run `npm run ci:changed` after the actual last commit.
 
-When sessions overlap, create a worktree outside the shared checkout from the requested
-release branch. Never infer permission to commit, push, post, or modify another session's
-work.
+## Maintenance and history
 
-## Pull request automation
+Run `$woc-codex-audit` when the support layer changes. Keep a durable report in `docs/architecture/`
+with inventory, sources, findings/dispositions, validation and fresh-review evidence. One-off
+reports are historical snapshots; this file is the living runbook. Do not infer measured model
+performance from instruction inspection.
 
-The repository has no CI-side Codex review workflow. The former `pr-ai.yml` Codex
-review assist was retired in 2026-08 (maintainer decision): its checks never gated
-merges, and interactive review (`$woc-review-pr` here, `/review-pr` in Claude Code)
-covers the same ground on demand. Do not reintroduce a CI reviewer without a fresh
-security design; the old three-trust-zone layout lives in git history if needed.
-
-## Maintenance
-
-Run `$woc-codex-audit` when Codex surfaces change or on a periodic read-only schedule.
-It should compare configuration with the published schema and official docs, then report
-drift before changing anything. A plugin is intentionally absent because repository
-skills auto-discover; package this as a plugin only when it must install across projects.
-Experimental command rules and managed `requirements.toml` are also absent until a real
-policy need justifies them.
-
-Useful validation:
-
-```sh
-npx vitest run tests/codex_setup.test.ts tests/malware_scan.test.ts
-npx tsc --noEmit
-npm run gate
-```
-
-Primary references: [AGENTS.md discovery](https://learn.chatgpt.com/docs/agent-configuration/agents-md),
-[skills](https://learn.chatgpt.com/docs/build-skills),
-[custom agents](https://learn.chatgpt.com/docs/agent-configuration/subagents),
-[hooks](https://learn.chatgpt.com/docs/hooks), and
-[configuration](https://learn.chatgpt.com/docs/config-file/config-reference).
+The CI-side Codex reviewer was retired in 2026-08 by maintainer decision. Keep it retired;
+interactive `$woc-review-pr` serves on-demand review. A future CI reviewer requires a separately
+authorized security design. Historical model-specific experiments and gameplay Codex fixtures
+retain their provenance. They do not select the coding agent's model.

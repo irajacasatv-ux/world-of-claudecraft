@@ -31,7 +31,7 @@ describe('Codex project configuration', () => {
     expect(config).not.toMatch(/^\s*(sandbox_mode|approval_policy|network_access)\s*=/m);
   });
 
-  it('uses only short shared lifecycle hooks backed by tracked scripts', () => {
+  it('uses only short shared lifecycle hooks backed by repository scripts', () => {
     const parsed = JSON.parse(read('.codex/hooks.json')) as HookConfig;
     expect(Object.keys(parsed.hooks).sort()).toEqual(['SessionStart', 'Stop']);
     const handlers = Object.values(parsed.hooks).flatMap((groups) =>
@@ -44,80 +44,46 @@ describe('Codex project configuration', () => {
       expect(handler.command).not.toMatch(/danger|sudo|curl|wget/i);
       const script = handler.command.match(/\.(claude|codex)\/hooks\/([\w.-]+\.sh)/);
       if (!script)
-        throw new Error(`Hook command does not reference a tracked script: ${handler.command}`);
+        throw new Error(`Hook command does not reference a repository script: ${handler.command}`);
       expect(fs.existsSync(path.join(root, `.${script[1]}/hooks`, script[2]))).toBe(true);
     }
   });
 
-  it('extends the stop gate to tracked and untracked Codex file types', () => {
-    const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'woc-codex-hook-'));
+  it('keeps shared Codex paths visible and private state ignored through Git', () => {
+    const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'woc-codex-ignore-'));
     try {
-      fs.mkdirSync(path.join(fixture, '.claude/hooks'), { recursive: true });
-      fs.mkdirSync(path.join(fixture, '.codex/hooks'), { recursive: true });
-      fs.mkdirSync(path.join(fixture, '.codex/agents'), { recursive: true });
-      fs.mkdirSync(path.join(fixture, 'src'), { recursive: true });
-      fs.copyFileSync(
-        path.join(root, '.claude/hooks/qa-stop.sh'),
-        path.join(fixture, '.claude/hooks/qa-stop.sh'),
-      );
-      fs.copyFileSync(
-        path.join(root, '.codex/hooks/qa-stop.sh'),
-        path.join(fixture, '.codex/hooks/qa-stop.sh'),
-      );
-      spawnSync('git', ['init', '--quiet', fixture], { encoding: 'utf8' });
-      const agent = path.join(fixture, '.codex/agents/new.toml');
-      fs.writeFileSync(agent, 'name = "clean"\n');
-
-      const run = (active: boolean) =>
-        spawnSync('bash', [path.join(fixture, '.codex/hooks/qa-stop.sh')], {
-          cwd: fixture,
-          input: JSON.stringify({ stop_hook_active: active }),
-          encoding: 'utf8',
-        });
-      expect(run(false).stdout).toBe('');
-
-      fs.writeFileSync(agent, `name = "bad ${String.fromCodePoint(0x2014)} copy"\n`);
-      const blocked = run(false);
-      expect(blocked.status).toBe(0);
-      expect(JSON.parse(blocked.stdout)).toMatchObject({ decision: 'block' });
-
-      fs.writeFileSync(agent, 'name = "clean"\n');
-      fs.writeFileSync(path.join(fixture, 'src/helper.mts'), 'export const clean = true;\n');
-      expect(spawnSync('git', ['add', '.'], { cwd: fixture, encoding: 'utf8' }).status).toBe(0);
-      expect(
+      fs.copyFileSync(path.join(root, '.gitignore'), path.join(fixture, '.gitignore'));
+      expect(spawnSync('git', ['init', '--quiet', fixture]).status).toBe(0);
+      const check = (file: string) =>
         spawnSync(
           'git',
-          [
-            '-c',
-            'user.name=Codex Fixture',
-            '-c',
-            'user.email=codex-fixture@example.invalid',
-            'commit',
-            '--quiet',
-            '-m',
-            'fixture',
-          ],
-          { cwd: fixture, encoding: 'utf8' },
-        ).status,
-      ).toBe(0);
-      fs.appendFileSync(path.join(fixture, 'src/helper.mts'), 'debugger;\n');
-      const trackedBlocked = run(false);
-      expect(trackedBlocked.status).toBe(0);
-      expect(JSON.parse(trackedBlocked.stdout).reason).toContain('leftover debugger');
-      expect(run(true).stdout).toBe('');
+          ['-c', 'core.excludesFile=', 'check-ignore', '--no-index', '--quiet', file],
+          { cwd: fixture },
+        );
+      for (const file of [
+        '.codex/config.toml',
+        '.codex/hooks.json',
+        '.codex/agents/review.toml',
+        '.codex/hooks/qa-stop.sh',
+        '.codex/hooks/ensure-hooks.sh',
+        '.agents/skills/task/SKILL.md',
+      ]) {
+        fs.mkdirSync(path.dirname(path.join(fixture, file)), { recursive: true });
+        fs.writeFileSync(path.join(fixture, file), 'fixture');
+        expect(check(file).status, file).toBe(1);
+      }
+      for (const file of [
+        '.codex/auth.json',
+        '.codex/config.local.toml',
+        '.codex/cache/state.json',
+        '.codex/sessions/one.jsonl',
+        '.codex/worktrees/task/AGENTS.md',
+      ]) {
+        expect(check(file).status, file).toBe(0);
+      }
     } finally {
       fs.rmSync(fixture, { recursive: true, force: true });
     }
-  });
-
-  it('tracks shared Codex files while leaving local state ignored', () => {
-    const ignore = read('.gitignore');
-    expect(ignore).toContain('.codex/*');
-    expect(ignore).toContain('!.codex/config.toml');
-    expect(ignore).toContain('!.codex/hooks.json');
-    expect(ignore).toContain('!.codex/agents/*.toml');
-    expect(ignore).toContain('!.codex/hooks/*.sh');
-    expect(ignore).not.toMatch(/^\.codex\/$/m);
   });
 });
 
@@ -257,21 +223,31 @@ describe('Codex skills', () => {
       expect(metadata, skill).toMatch(/allow_implicit_invocation: (true|false)/);
     }
 
-    expect(read('.agents/skills/woc-extract-and-test/agents/openai.yaml')).toContain(
-      'allow_implicit_invocation: true',
-    );
-    expect(read('.agents/skills/woc-qa/agents/openai.yaml')).toContain(
-      'allow_implicit_invocation: true',
-    );
-    expect(read('.agents/skills/woc-feature-plan/agents/openai.yaml')).toContain(
-      'allow_implicit_invocation: false',
-    );
+    const policies: Record<string, boolean> = {
+      'woc-codex-audit': true,
+      'woc-extract-and-test': true,
+      'woc-feature-plan': false,
+      'woc-file-issue': false,
+      'woc-image-to-glb': true,
+      'woc-qa': true,
+      'woc-release-malware-audit': true,
+      'woc-release-merge-audit': true,
+      'woc-review-pr': true,
+      'woc-write-game-tooltips': true,
+    };
+    expect(Object.keys(policies).sort()).toEqual(skills);
+    for (const [skill, implicit] of Object.entries(policies)) {
+      const metadata = read(`.agents/skills/${skill}/agents/openai.yaml`);
+      expect(metadata.match(/allow_implicit_invocation: (true|false)/)?.[1], skill).toBe(
+        String(implicit),
+      );
+    }
   });
 });
 
 describe('retired CI reviewer stays retired', () => {
   // The Codex CI review workflow was removed 2026-08 (maintainer decision;
-  // docs/codex.md, "Pull request automation"). Reintroducing a CI reviewer
+  // docs/codex.md, "Maintenance and history"). Reintroducing a CI reviewer
   // needs a fresh security design, so the absence is pinned the decisive way:
   // a scan of the whole workflow directory, not a hardcoded filename that a
   // renamed workflow would evade.
