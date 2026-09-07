@@ -1,0 +1,1763 @@
+{
+  "version": "freehold-development-geometry-v1",
+  "status": "proposal_pending_owner_acceptance",
+  "productionEnabled": false,
+  "approval": null,
+  "reproduction": "node scripts/freeholds/geometry_measure.mjs",
+  "toolVersions": {
+    "@gltf-transform/core": "4.4.1",
+    "@gltf-transform/extensions": "4.4.1",
+    "meshoptimizer": "1.0.1",
+    "three": "0.185.1"
+  },
+  "inputs": [
+    {
+      "path": "docs/freeholds/content-trial-2026-09-07/geometry-proposal.json",
+      "bytes": 5388,
+      "sha256": "28172584aad1b4a7d2bc5090e4be377bff32170d735ae4bc8a0f867af7f273bb"
+    },
+    {
+      "path": "scripts/freeholds/geometry_measure.mjs",
+      "bytes": 10209,
+      "sha256": "6aca9159815c1537c9a282aaf7ea95e6c936c6cbbc09fe7265a8762302f24834"
+    },
+    {
+      "path": "scripts/freeholds/geometry_core.mjs",
+      "bytes": 4411,
+      "sha256": "9525a397bbf3c0df64d01963a160ae4a563fdafa35baa3e98c063570ecd54615"
+    },
+    {
+      "path": "src/render/props.ts",
+      "bytes": 135556,
+      "sha256": "ee1689bb0613d3a0c8dc49b9273a6e5b09fb1fd2660f142aa496987ce5fe0f65"
+    },
+    {
+      "path": "src/render/lastkeep_dressing.ts",
+      "bytes": 27476,
+      "sha256": "de3f98d16dfe521e51d090c0a66aa90c86488dc9bcf65ee9f79afc9667b2cef5"
+    },
+    {
+      "path": "src/render/rift_decor.ts",
+      "bytes": 9093,
+      "sha256": "ebdf851444eea5b1ed93ec824bdd159006a68150f1793a8c387728bcda848472"
+    },
+    {
+      "path": "scripts/assets/specs/dungeon.json",
+      "bytes": 14149,
+      "sha256": "39de5efe5d568f9c246fbef606cb204af835948955b7430bc16684a8a27590a4"
+    },
+    {
+      "path": "scripts/assets/specs/drakelands_castle.json",
+      "bytes": 12006,
+      "sha256": "a54146d2912c62fdb4c934a6bc6e3d8f7513856c655e5d6a678fa5792b4a284e"
+    },
+    {
+      "path": "scripts/assets/specs/asset_bits.json",
+      "bytes": 855,
+      "sha256": "fb07e6ffe1143593b050f59ea627a15c054cc4b71945cf10880fe03620688b7a"
+    },
+    {
+      "path": "scripts/assets/battleground/dressing.mjs",
+      "bytes": 40028,
+      "sha256": "0c397101ba7ebe53aef822aa3bfeaaf65485cb40c18a5fafe49dd545d7e97475"
+    },
+    {
+      "path": "CREDITS.md",
+      "bytes": 79911,
+      "sha256": "59978dfafc326da033d765ce10a84a32641704261b195781ec991fb023705891"
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "bytes": 361124,
+      "sha256": "a26e452e853824b4b9a1e2b6f62374c5a5b3f3d5224b128bf9d57df4b79b19fa"
+    }
+  ],
+  "gridProposal": {
+    "referenceAsset": "public/models/dungeon/floor_tile_small.glb",
+    "referenceAxis": 0,
+    "proposedSubdivisions": 4,
+    "reason": "Four cells across an existing floor tile give a trial half-unit lattice. This subdivision is an owner choice, not an approved Freehold room grid.",
+    "measuredPitch": 0.5,
+    "reference": {
+      "source": {
+        "path": "public/models/dungeon/floor_tile_small.glb",
+        "bytes": 28040,
+        "sha256": "02a3d76515b27ae064c012a04eb8375da672da45ad48770c0522b0108bfeef85"
+      },
+      "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture attribution; retained GLB is the measurement source",
+      "defaultScene": "Scene",
+      "animationsPresent": [],
+      "state": "static default pose, no animation playback",
+      "nodeTransformedBounds": {
+        "min": [
+          -1,
+          -0.09995346150822329,
+          -1
+        ],
+        "max": [
+          1,
+          0.04995345703787493,
+          1
+        ],
+        "size": [
+          2,
+          0.14990691854609822,
+          2
+        ]
+      },
+      "primitives": [
+        {
+          "node": "floor_tile_small",
+          "mesh": "Cube.15992",
+          "primitive": 0,
+          "worldMatrix": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            -0.02500000223517418,
+            0,
+            1
+          ],
+          "rawAccessorBounds": {
+            "min": [
+              -1,
+              -0.07495345927304911,
+              -1
+            ],
+            "max": [
+              1,
+              0.07495345927304911,
+              1
+            ],
+            "size": [
+              2,
+              0.14990691854609822,
+              2
+            ]
+          },
+          "nodeTransformedBounds": {
+            "min": [
+              -1,
+              -0.09995346150822329,
+              -1
+            ],
+            "max": [
+              1,
+              0.04995345703787493,
+              1
+            ],
+            "size": [
+              2,
+              0.14990691854609822,
+              2
+            ]
+          },
+          "triangles": 66,
+          "vertices": 104,
+          "positionComponentType": 5122,
+          "positionNormalized": true,
+          "material": "texture"
+        }
+      ],
+      "metrics": {
+        "triangles": 66,
+        "primitives": 1,
+        "materials": 1,
+        "decodedGeometryBytes": 1748,
+        "encodedTextureBytes": 24520
+      },
+      "textures": [
+        {
+          "name": "dungeon_texture",
+          "mimeType": "image/ktx2",
+          "size": [
+            512,
+            512
+          ],
+          "encodedBytes": 24520,
+          "sha256": "14bd176a3ad34fa25575eba61aa8b3b5aca481d4008df6cdfa95221d004edc6c"
+        }
+      ],
+      "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+    }
+  },
+  "decorProposal": {
+    "referenceItem": "freehold_spindle_chair",
+    "method": "One chair-equivalent unit; ceil the largest triangle, primitive, material or decoded-geometry-byte ratio, with a minimum of one. This comparative method is proposed tuning, not measured GPU frame time."
+  },
+  "fixtureBoundary": "Open development lattice and per-object containment only. No approved room polygon, protected doorway/arrival corridor, maximum legal room packing, final GLB reconciliation or LOW-device proof is claimed.",
+  "rows": [
+    {
+      "id": "freehold_timber_bed",
+      "fixtureId": "geometry-v1:freehold_timber_bed",
+      "mapping": {
+        "id": "freehold_timber_bed",
+        "asset": "public/models/dungeon/bed_b_single.glb",
+        "propKey": "kcasBedSingle",
+        "scale": 1.15,
+        "scaleSource": "src/render/lastkeep_dressing.ts",
+        "scaleWitness": "add('kcasBedSingle', 'guest_west', -21.9, 87.3, 0, 1.15);",
+        "identity": "Single timber bed with visible headboard and bedding; temporary KayKit silhouette, not the final quilt/carving design."
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/bed_b_single.glb",
+          "bytes": 45236,
+          "sha256": "f6bf2a03818e67675f74906694cdb0ee0df88e3bf15248aff2663bbe132d3fc8"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture attribution; retained GLB is the measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -1.0000421423465582,
+            -0.00012054641717185177,
+            -1.5
+          ],
+          "max": [
+            1.0000799316913458,
+            1.5001083424038981,
+            1.5
+          ],
+          "size": [
+            2.000122074037904,
+            1.50022888882107,
+            3
+          ]
+        },
+        "primitives": [
+          {
+            "node": "bed_B_single",
+            "mesh": "bed_B_single",
+            "primitive": 0,
+            "worldMatrix": [
+              1.5,
+              0,
+              0,
+              0,
+              0,
+              1.5,
+              0,
+              0,
+              0,
+              0,
+              1.5,
+              0,
+              0.000018894672393798828,
+              0.7499938979933631,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.6667073580126347,
+                -0.50007629627369,
+                -1
+              ],
+              "max": [
+                0.6667073580126347,
+                0.50007629627369,
+                1
+              ],
+              "size": [
+                1.3334147160252694,
+                1.00015259254738,
+                2
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -1.0000421423465582,
+                -0.00012054641717185177,
+                -1.5
+              ],
+              "max": [
+                1.0000799316913458,
+                1.5001083424038981,
+                1.5
+              ],
+              "size": [
+                2.000122074037904,
+                1.50022888882107,
+                3
+              ]
+            },
+            "triangles": 1108,
+            "vertices": 1524,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "texture"
+          }
+        ],
+        "metrics": {
+          "triangles": 1108,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 26460,
+          "encodedTextureBytes": 27841
+        },
+        "textures": [
+          {
+            "name": "dungeon_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27841,
+            "sha256": "4d20faa5711dd532e39fa0cf25778afca7b0cffd5ad05deb4ff5f9d6625af84a"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          -0.000018894672393798828,
+          0.00012054641717185177,
+          0
+        ],
+        "scale": [
+          1.15,
+          1.15,
+          1.15
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -1.1500701925717947,
+            0,
+            -1.7249999999999999
+          ],
+          "max": [
+            1.1500701925717947,
+            1.7252632221442303,
+            1.7249999999999999
+          ],
+          "size": [
+            2.3001403851435893,
+            1.7252632221442303,
+            3.4499999999999997
+          ]
+        },
+        "intendedWorldHeight": 1.7252632221442303,
+        "measuredVertexRadius": 2.057367646536693,
+        "conservativeBoxRadius": 2.0732309200477705,
+        "footprint": {
+          "width": 5,
+          "depth": 7
+        },
+        "r": 2.5,
+        "collisionClass": "solid",
+        "circleSlack": 0.4426323534633072,
+        "envelopeSlack": [
+          0.19985961485641068,
+          0.050000000000000266
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 7,
+            "depth": 5
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 3.7687074829931975,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 3.1719012227283625
+        },
+        "decorCost": 4
+      }
+    },
+    {
+      "id": "freehold_round_table",
+      "fixtureId": "geometry-v1:freehold_round_table",
+      "mapping": {
+        "id": "freehold_round_table",
+        "asset": "public/models/dungeon/table_round_medium.glb",
+        "propKey": "kcasTableRoundMedium",
+        "scale": 1.25,
+        "scaleSource": "src/render/lastkeep_dressing.ts",
+        "scaleWitness": "add('kcasTableRoundMedium', 'royal_chamber', -31, 72.5, 0.2, 1.25);",
+        "identity": "Round wooden table with a readable raised tabletop and support; temporary existing table."
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/table_round_medium.glb",
+          "bytes": 37276,
+          "sha256": "f538fa2d74c5ad9db9b944556643da72f0a0a585d15182d56dbf3585f8e2cc73"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture attribution; retained GLB is the measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.9616322266385012,
+            0.000018061422714044095,
+            -0.9935299754142761
+          ],
+          "max": [
+            0.9616322266385012,
+            1.0000064213324655,
+            0.9935299754142761
+          ],
+          "size": [
+            1.9232644532770025,
+            0.9999883599097514,
+            1.9870599508285522
+          ]
+        },
+        "primitives": [
+          {
+            "node": "table_round_medium",
+            "mesh": "table_round_medium",
+            "primitive": 0,
+            "worldMatrix": [
+              0.9935299754142761,
+              0,
+              0,
+              0,
+              0,
+              0.9935299754142761,
+              0,
+              0,
+              0,
+              0,
+              0.9935299754142761,
+              0,
+              0,
+              0.5000122413775898,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.967894528031251,
+                -0.5032502212591937,
+                -1
+              ],
+              "max": [
+                0.967894528031251,
+                0.5032502212591937,
+                1
+              ],
+              "size": [
+                1.935789056062502,
+                1.0065004425183874,
+                2
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.9616322266385012,
+                0.000018061422714044095,
+                -0.9935299754142761
+              ],
+              "max": [
+                0.9616322266385012,
+                1.0000064213324655,
+                0.9935299754142761
+              ],
+              "size": [
+                1.9232644532770025,
+                0.9999883599097514,
+                1.9870599508285522
+              ]
+            },
+            "triangles": 506,
+            "vertices": 664,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "texture"
+          }
+        ],
+        "metrics": {
+          "triangles": 506,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 11668,
+          "encodedTextureBytes": 27841
+        },
+        "textures": [
+          {
+            "name": "dungeon_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27841,
+            "sha256": "4d20faa5711dd532e39fa0cf25778afca7b0cffd5ad05deb4ff5f9d6625af84a"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          -0.000018061422714044095,
+          0
+        ],
+        "scale": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -1.2020402832981265,
+            0,
+            -1.2419124692678452
+          ],
+          "max": [
+            1.2020402832981265,
+            1.2499854498871894,
+            1.2419124692678452
+          ],
+          "size": [
+            2.404080566596253,
+            1.2499854498871894,
+            2.4838249385356903
+          ]
+        },
+        "intendedWorldHeight": 1.2499854498871894,
+        "measuredVertexRadius": 1.250034100648245,
+        "conservativeBoxRadius": 1.7283655354103762,
+        "footprint": {
+          "width": 5,
+          "depth": 5
+        },
+        "r": 1.5,
+        "collisionClass": "solid",
+        "circleSlack": 0.24996589935175506,
+        "envelopeSlack": [
+          0.09591943340374698,
+          0.016175061464309692
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 5,
+            "depth": 5
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 1.7210884353741496,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 1.3987053464397028
+        },
+        "decorCost": 2
+      }
+    },
+    {
+      "id": "freehold_spindle_chair",
+      "fixtureId": "geometry-v1:freehold_spindle_chair",
+      "mapping": {
+        "id": "freehold_spindle_chair",
+        "asset": "public/models/dungeon/chair.glb",
+        "propKey": "kcasChair",
+        "scale": 1.3,
+        "scaleSource": "src/render/lastkeep_dressing.ts",
+        "scaleWitness": "add('kcasChair', 'guest_east', 9.6, 85.5, 2.5, 1.3);",
+        "identity": "Narrow upright backed wooden chair, distinct from the backless stool; temporary existing chair."
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/chair.glb",
+          "bytes": 35564,
+          "sha256": "e69174fcb023d1a4198eb7e6c8f85c6ba0f13bd8cd74fb3901243522e97ae444"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture attribution; retained GLB is the measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.37372929857641496,
+            2.9802318834981634e-8,
+            -0.37502149747282304
+          ],
+          "max": [
+            0.37631554411321916,
+            1.2265056371688843,
+            0.3750233452168111
+          ],
+          "size": [
+            0.7500448426896341,
+            1.2265056073665654,
+            0.7500448426896341
+          ]
+        },
+        "primitives": [
+          {
+            "node": "chair",
+            "mesh": "chair",
+            "primitive": 0,
+            "worldMatrix": [
+              0.6132528036832827,
+              0,
+              0,
+              0,
+              0,
+              0.6132528036832827,
+              0,
+              0,
+              0,
+              0,
+              0.6132528036832827,
+              0,
+              0.0012931227684020996,
+              0.6132528334856016,
+              9.238719940185547e-7,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.6115298928800318,
+                -1,
+                -0.6115298928800318
+              ],
+              "max": [
+                0.6115298928800318,
+                1,
+                0.6115298928800318
+              ],
+              "size": [
+                1.2230597857600636,
+                2,
+                1.2230597857600636
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.37372929857641496,
+                2.9802318834981634e-8,
+                -0.37502149747282304
+              ],
+              "max": [
+                0.37631554411321916,
+                1.2265056371688843,
+                0.3750233452168111
+              ],
+              "size": [
+                0.7500448426896341,
+                1.2265056073665654,
+                0.7500448426896341
+              ]
+            },
+            "triangles": 294,
+            "vertices": 506,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "texture"
+          }
+        ],
+        "metrics": {
+          "triangles": 294,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 8342,
+          "encodedTextureBytes": 27841
+        },
+        "textures": [
+          {
+            "name": "dungeon_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27841,
+            "sha256": "4d20faa5711dd532e39fa0cf25778afca7b0cffd5ad05deb4ff5f9d6625af84a"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          -0.0012931227684020996,
+          -2.9802318834981634e-8,
+          -9.238719940185547e-7
+        ],
+        "scale": [
+          1.3,
+          1.3,
+          1.3
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.48752914774826217,
+            0,
+            -0.48752914774826217
+          ],
+          "max": [
+            0.48752914774826217,
+            1.5944572895765352,
+            0.48752914774826217
+          ],
+          "size": [
+            0.9750582954965243,
+            1.5944572895765352,
+            0.9750582954965243
+          ]
+        },
+        "intendedWorldHeight": 1.5944572895765352,
+        "measuredVertexRadius": 0.672419332660102,
+        "conservativeBoxRadius": 0.6894703327977889,
+        "footprint": {
+          "width": 2,
+          "depth": 2
+        },
+        "r": 1,
+        "collisionClass": "solid",
+        "circleSlack": 0.327580667339898,
+        "envelopeSlack": [
+          0.02494170450347566,
+          0.02494170450347566
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 1,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 1
+        },
+        "decorCost": 1
+      }
+    },
+    {
+      "id": "freehold_low_stool",
+      "fixtureId": "geometry-v1:freehold_low_stool",
+      "mapping": {
+        "id": "freehold_low_stool",
+        "asset": "public/models/dungeon/stool_round.glb",
+        "propKey": "kcasStoolRound",
+        "scale": 1.2,
+        "scaleSource": "src/render/lastkeep_dressing.ts",
+        "scaleWitness": "add('kcasStoolRound', 'guest_west', -20.5, 84.2, 0.4, 1.2);",
+        "identity": "Low round backless stool; final three-leg detailing remains with the art owner."
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/stool_round.glb",
+          "bytes": 34652,
+          "sha256": "dee35142402c3cc2de412eb646e248e980fc84f5299f8790eb22f3f31f5dbf61"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture attribution; retained GLB is the measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.3750152587890625,
+            -0.000015269189451827536,
+            -0.3750007599592209
+          ],
+          "max": [
+            0.3749847710132599,
+            0.5000152691894518,
+            0.3749992698431015
+          ],
+          "size": [
+            0.7500000298023224,
+            0.5000305383789037,
+            0.7500000298023224
+          ]
+        },
+        "primitives": [
+          {
+            "node": "stool_round",
+            "mesh": "stool_round",
+            "primitive": 0,
+            "worldMatrix": [
+              0.3750000149011612,
+              0,
+              0,
+              0,
+              0,
+              0.3750000149011612,
+              0,
+              0,
+              0,
+              0,
+              0.3750000149011612,
+              0,
+              -0.000015243887901306152,
+              0.25,
+              -7.450580596923828e-7,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -1,
+                -0.6667073580126347,
+                -1
+              ],
+              "max": [
+                1,
+                0.6667073580126347,
+                1
+              ],
+              "size": [
+                2,
+                1.3334147160252694,
+                2
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.3750152587890625,
+                -0.000015269189451827536,
+                -0.3750007599592209
+              ],
+              "max": [
+                0.3749847710132599,
+                0.5000152691894518,
+                0.3749992698431015
+              ],
+              "size": [
+                0.7500000298023224,
+                0.5000305383789037,
+                0.7500000298023224
+              ]
+            },
+            "triangles": 268,
+            "vertices": 401,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "texture"
+          }
+        ],
+        "metrics": {
+          "triangles": 268,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 6821,
+          "encodedTextureBytes": 27841
+        },
+        "textures": [
+          {
+            "name": "dungeon_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27841,
+            "sha256": "4d20faa5711dd532e39fa0cf25778afca7b0cffd5ad05deb4ff5f9d6625af84a"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0.000015243887901306152,
+          0.000015269189451827536,
+          7.450580596923828e-7
+        ],
+        "scale": [
+          1.2,
+          1.2,
+          1.2
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.45000001788139343,
+            0,
+            -0.45000001788139343
+          ],
+          "max": [
+            0.45000001788139343,
+            0.6000366460546843,
+            0.45000001788139343
+          ],
+          "size": [
+            0.9000000357627869,
+            0.6000366460546843,
+            0.9000000357627869
+          ]
+        },
+        "intendedWorldHeight": 0.6000366460546843,
+        "measuredVertexRadius": 0.4764098678824026,
+        "conservativeBoxRadius": 0.6363961283560019,
+        "footprint": {
+          "width": 2,
+          "depth": 2
+        },
+        "r": 0.5,
+        "collisionClass": "solid",
+        "circleSlack": 0.023590132117597418,
+        "envelopeSlack": [
+          0.09999996423721313,
+          0.09999996423721313
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 0.9115646258503401,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 0.8176696235914649
+        },
+        "decorCost": 1
+      }
+    },
+    {
+      "id": "freehold_woven_rug",
+      "fixtureId": "geometry-v1:freehold_woven_rug",
+      "mapping": {
+        "id": "freehold_woven_rug",
+        "source": "src/render/rift_decor.ts",
+        "sourceFunction": "buildRug",
+        "scale": [
+          0.25,
+          1,
+          0.15384615384615385
+        ],
+        "underlay": true,
+        "floorLift": 0.02,
+        "scaleSource": null,
+        "scaleWitness": null,
+        "identity": "Existing project-authored flat rug recipe, transformed to an ordinary 2 by 4 room rug spanning one by two existing floor tiles. The selected tile span and nonuniform transform require owner acceptance. Plain red plane has no finished weave or border; the existing 0.02 anti-z-fighting lift is retained."
+      },
+      "measurement": {
+        "source": {
+          "path": "src/render/rift_decor.ts",
+          "bytes": 9093,
+          "sha256": "ebdf851444eea5b1ed93ec824bdd159006a68150f1793a8c387728bcda848472"
+        },
+        "sourceFunction": "buildRug",
+        "sourceFunctionSha256": "ea95a5f4a867496179626d82ad868a2ae12b017df6f43375d502b4ca55fb2ae4",
+        "license": "World of ClaudeCraft project source, root MIT code license",
+        "method": "Instantiate the exact guarded PlaneGeometry recipe, then measure its rotated Float32 vertices and existing Y offset. No shipping model exists for this recipe.",
+        "rawAccessorBounds": {
+          "min": [
+            -4,
+            -13,
+            0
+          ],
+          "max": [
+            4,
+            13,
+            0
+          ],
+          "size": [
+            8,
+            26,
+            0
+          ]
+        },
+        "nodeTransformedBounds": {
+          "min": [
+            -4,
+            0.019999999999999206,
+            -13
+          ],
+          "max": [
+            4,
+            0.020000000000000795,
+            13
+          ],
+          "size": [
+            8,
+            1.5890067039947553e-15,
+            26
+          ]
+        },
+        "sourceRotationX": -1.5707963267948966,
+        "sourceTranslation": [
+          0,
+          0.02,
+          0
+        ],
+        "metrics": {
+          "triangles": 2,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 140,
+          "encodedTextureBytes": 0
+        },
+        "textures": [],
+        "residencyBoundary": "Geometry array bytes measured. The existing transparent material may add overdraw; no GPU frame-time equivalence is claimed."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          -0.019999999999999206,
+          0
+        ],
+        "scale": [
+          0.25,
+          1,
+          0.15384615384615385
+        ],
+        "postScaleTranslation": [
+          0,
+          0.02,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -1,
+            0.02,
+            -2
+          ],
+          "max": [
+            1,
+            0.02000000000000159,
+            2
+          ],
+          "size": [
+            2,
+            1.5890067039947553e-15,
+            4
+          ]
+        },
+        "intendedWorldHeight": 1.5890067039947553e-15,
+        "measuredVertexRadius": 2.23606797749979,
+        "conservativeBoxRadius": 2.23606797749979,
+        "footprint": {
+          "width": 4,
+          "depth": 8
+        },
+        "r": 0,
+        "collisionClass": "walk_through_underlay",
+        "circleSlack": null,
+        "envelopeSlack": [
+          0,
+          0
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 8,
+            "depth": 4
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 0.006802721088435374,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 0.016782546152001917
+        },
+        "decorCost": 1
+      }
+    },
+    {
+      "id": "freehold_brass_lantern",
+      "fixtureId": "geometry-v1:freehold_brass_lantern",
+      "mapping": {
+        "id": "freehold_brass_lantern",
+        "asset": "public/models/dungeon/lantern_standing.glb",
+        "propKey": null,
+        "scale": 1,
+        "scaleSource": "scripts/assets/battleground/dressing.mjs",
+        "scaleWitness": "assetId: 'dungeon/lantern_standing',\n      x: r4(room.x + 5.6),\n      z: r4(room.z),\n      rotY: 0,\n      scale: 1.5,",
+        "scaleDerivation": {
+          "existingPlacementScale": 1.5,
+          "proposedMultiplier": 0.6666666666666666,
+          "reason": "An existing gatehouse uses this lantern at scale 1.5. The proposed development furnishing uses two thirds of that placement scale, restoring authored GLB unit scale for a low household cage lantern. This multiplier requires owner acceptance."
+        },
+        "identity": "Standing cage lantern at its authored GLB scale, smaller than the existing gatehouse placement. No point light or emitted gameplay effect is implied; final brass finish remains with the art owner."
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/lantern_standing.glb",
+          "bytes": 34196,
+          "sha256": "bd3aaea19a21580e7d04ebee72fc9723380da8c8f23a5514a31122e570b3c890"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture attribution; retained GLB is the measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.3199926108293772,
+            -2.9802322387695312e-8,
+            -0.3199926108293772
+          ],
+          "max": [
+            0.3199926108293772,
+            0.9251917004585266,
+            0.3199926108293772
+          ],
+          "size": [
+            0.6399852216587544,
+            0.925191730260849,
+            0.6399852216587544
+          ]
+        },
+        "primitives": [
+          {
+            "node": "lantern_standing",
+            "mesh": "Cube.134",
+            "primitive": 0,
+            "worldMatrix": [
+              0.4625958651304245,
+              0,
+              0,
+              0,
+              0,
+              0.4625958651304245,
+              0,
+              0,
+              0,
+              0,
+              0.4625958651304245,
+              0,
+              0,
+              0.4625958353281021,
+              0,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -0.6917325357829524,
+                -1,
+                -0.6917325357829524
+              ],
+              "max": [
+                0.6917325357829524,
+                1,
+                0.6917325357829524
+              ],
+              "size": [
+                1.3834650715659047,
+                2,
+                1.3834650715659047
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.3199926108293772,
+                -2.9802322387695312e-8,
+                -0.3199926108293772
+              ],
+              "max": [
+                0.3199926108293772,
+                0.9251917004585266,
+                0.3199926108293772
+              ],
+              "size": [
+                0.6399852216587544,
+                0.925191730260849,
+                0.6399852216587544
+              ]
+            },
+            "triangles": 264,
+            "vertices": 338,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "HalloweenBits"
+          }
+        ],
+        "metrics": {
+          "triangles": 264,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 5978,
+          "encodedTextureBytes": 27828
+        },
+        "textures": [
+          {
+            "name": "halloweenbits_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27828,
+            "sha256": "796cdd66192b236146d1db3d80d12e3aa44086bacbef3caaeca17713487961ce"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          2.9802322387695312e-8,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -0.3199926108293772,
+            0,
+            -0.3199926108293772
+          ],
+          "max": [
+            0.3199926108293772,
+            0.925191730260849,
+            0.3199926108293772
+          ],
+          "size": [
+            0.6399852216587544,
+            0.925191730260849,
+            0.6399852216587544
+          ]
+        },
+        "intendedWorldHeight": 0.925191730260849,
+        "measuredVertexRadius": 0.45253789009408096,
+        "conservativeBoxRadius": 0.45253789009408096,
+        "footprint": {
+          "width": 2,
+          "depth": 2
+        },
+        "r": 0.5,
+        "collisionClass": "solid",
+        "circleSlack": 0.04746210990591904,
+        "envelopeSlack": [
+          0.3600147783412456,
+          0.3600147783412456
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 2,
+            "depth": 2
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 0.8979591836734694,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 0.7166147206904819
+        },
+        "decorCost": 1
+      }
+    },
+    {
+      "id": "freehold_storage_chest",
+      "fixtureId": "geometry-v1:freehold_storage_chest",
+      "mapping": {
+        "id": "freehold_storage_chest",
+        "asset": "public/models/dungeon/chest.glb",
+        "propKey": "kcasChest",
+        "scale": 1.2,
+        "scaleSource": "src/render/lastkeep_dressing.ts",
+        "scaleWitness": "add('kcasChest', 'guest_east', 22, 80, 0, 1.2);",
+        "identity": "Closed wooden chest with lid and clasp; only its inert bind-pose geometry is referenced, never existing reward or bank interaction."
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/dungeon/chest.glb",
+          "bytes": 41900,
+          "sha256": "3883d220e77bfc7d40e5821b1e2cdadc27b206b5a7430d58ee1303643c8f1ace"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture attribution; retained GLB is the measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -0.8500000238418579,
+            -0.00003377152659994609,
+            -0.6999893254084966
+          ],
+          "max": [
+            0.8500000238418579,
+            1.300048407461313,
+            0.7457915312095067
+          ],
+          "size": [
+            1.7000000476837158,
+            1.300082178987913,
+            1.4457808566180033
+          ]
+        },
+        "primitives": [
+          {
+            "node": "chest_lid",
+            "mesh": "Cube.11163",
+            "primitive": 0,
+            "worldMatrix": [
+              0.8500000238418579,
+              0,
+              0,
+              0,
+              0,
+              0.8500000238418579,
+              0,
+              0,
+              0,
+              0,
+              0.8500000238418579,
+              0,
+              0,
+              0.8174988776445389,
+              0.022901102900505066,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -1,
+                -0.5677053132724997,
+                -0.8504593035676138
+              ],
+              "max": [
+                1,
+                0.5677053132724997,
+                0.8504593035676138
+              ],
+              "size": [
+                2,
+                1.1354106265449995,
+                1.7009186071352276
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.8500000238418579,
+                0.3349493478277647,
+                -0.6999893254084966
+              ],
+              "max": [
+                0.8500000238418579,
+                1.300048407461313,
+                0.7457915312095067
+              ],
+              "size": [
+                1.7000000476837158,
+                0.9650990596335483,
+                1.4457808566180033
+              ]
+            },
+            "triangles": 462,
+            "vertices": 724,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "texture"
+          },
+          {
+            "node": "",
+            "mesh": "Cube.11164",
+            "primitive": 0,
+            "worldMatrix": [
+              0.800000011920929,
+              0,
+              0,
+              0,
+              0,
+              0.800000011920929,
+              0,
+              0,
+              0,
+              0,
+              0.800000011920929,
+              0,
+              0,
+              0.29999980330467224,
+              0.022901087999343872,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -1,
+                -0.3750419629505295,
+                -0.7786797692800683
+              ],
+              "max": [
+                1,
+                0.3750419629505295,
+                0.7786797692800683
+              ],
+              "size": [
+                2,
+                0.750083925901059,
+                1.5573595385601366
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -0.800000011920929,
+                -0.00003377152659994609,
+                -0.600042736707297
+              ],
+              "max": [
+                0.800000011920929,
+                0.6000333781359444,
+                0.6458449127059848
+              ],
+              "size": [
+                1.600000023841858,
+                0.6000671496625443,
+                1.2458876494132818
+              ]
+            },
+            "triangles": 266,
+            "vertices": 480,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "texture"
+          }
+        ],
+        "metrics": {
+          "triangles": 728,
+          "primitives": 2,
+          "materials": 1,
+          "decodedGeometryBytes": 20020,
+          "encodedTextureBytes": 24520
+        },
+        "textures": [
+          {
+            "name": "dungeon_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 24520,
+            "sha256": "14bd176a3ad34fa25575eba61aa8b3b5aca481d4008df6cdfa95221d004edc6c"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          0.00003377152659994609,
+          -0.022901102900505066
+        ],
+        "scale": [
+          1.2,
+          1.2,
+          1.2
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -1.0200000286102295,
+            0,
+            -0.8674685139708019
+          ],
+          "max": [
+            1.0200000286102295,
+            1.5600986147854954,
+            0.8674685139708019
+          ],
+          "size": [
+            2.040000057220459,
+            1.5600986147854954,
+            1.7349370279416039
+          ]
+        },
+        "intendedWorldHeight": 1.5600986147854954,
+        "measuredVertexRadius": 1.2645946269057853,
+        "conservativeBoxRadius": 1.3389927860506121,
+        "footprint": {
+          "width": 5,
+          "depth": 4
+        },
+        "r": 1.5,
+        "collisionClass": "solid",
+        "circleSlack": 0.23540537309421472,
+        "envelopeSlack": [
+          0.4599999427795409,
+          0.26506297205839613
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 4,
+            "depth": 5
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 2.4761904761904763,
+          "primitives": 2,
+          "materials": 1,
+          "decodedGeometryBytes": 2.399904099736274
+        },
+        "decorCost": 3
+      }
+    },
+    {
+      "id": "freehold_open_bookshelf",
+      "fixtureId": "geometry-v1:freehold_open_bookshelf",
+      "mapping": {
+        "id": "freehold_open_bookshelf",
+        "asset": "public/models/biome/kcas_bookcase.glb",
+        "propKey": "kcasBookcase",
+        "scale": 0.7,
+        "scaleDerivation": {
+          "existingPlacementScale": 1.4,
+          "proposedMultiplier": 0.5,
+          "reason": "The existing hall/library scale measures 5.6 units wide and 4.20 units high. The proposed half-size adaptation keeps the same readable bookcase geometry at 2.8 units wide and 2.10 units high for development household use. This new multiplier requires owner acceptance."
+        },
+        "scaleSource": "src/render/lastkeep_dressing.ts",
+        "scaleWitness": "add('kcasBookcase', 'library', 25.65, 63.5, HALF, 1.4);",
+        "identity": "Existing freestanding bookcase with books and shelf divisions, explicitly adapted to half its existing library placement scale. Its proportions and comparative decor cost remain proposed development values, not approval of final furniture size."
+      },
+      "measurement": {
+        "source": {
+          "path": "public/models/biome/kcas_bookcase.glb",
+          "bytes": 66396,
+          "sha256": "195c23e42038f4caa5c143dccaccf5c2fada9255274e76ccac25395435fedec6"
+        },
+        "license": "Kay Lousberg (KayKit), existing CREDITS.md CC0 dungeon/furniture attribution; retained GLB is the measurement source",
+        "defaultScene": "Scene",
+        "animationsPresent": [],
+        "state": "static default pose, no animation playback",
+        "nodeTransformedBounds": {
+          "min": [
+            -2,
+            0.00007629627368999081,
+            -0.25995201643059646
+          ],
+          "max": [
+            2,
+            2.99992370372631,
+            0.28938115413735305
+          ],
+          "size": [
+            4,
+            2.99984740745262,
+            0.5493331705679495
+          ]
+        },
+        "primitives": [
+          {
+            "node": "bookcase_double_decoratedA",
+            "mesh": "bookcase_double_decoratedA",
+            "primitive": 0,
+            "worldMatrix": [
+              2,
+              0,
+              0,
+              0,
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              2,
+              0,
+              0,
+              1.5,
+              0.014714568853378296,
+              1
+            ],
+            "rawAccessorBounds": {
+              "min": [
+                -1,
+                -0.749961851863155,
+                -0.13733329264198738
+              ],
+              "max": [
+                1,
+                0.749961851863155,
+                0.13733329264198738
+              ],
+              "size": [
+                2,
+                1.49992370372631,
+                0.27466658528397475
+              ]
+            },
+            "nodeTransformedBounds": {
+              "min": [
+                -2,
+                0.00007629627368999081,
+                -0.25995201643059646
+              ],
+              "max": [
+                2,
+                2.99992370372631,
+                0.28938115413735305
+              ],
+              "size": [
+                4,
+                2.99984740745262,
+                0.5493331705679495
+              ]
+            },
+            "triangles": 2212,
+            "vertices": 3928,
+            "positionComponentType": 5122,
+            "positionNormalized": true,
+            "material": "texture"
+          }
+        ],
+        "metrics": {
+          "triangles": 2212,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 64336,
+          "encodedTextureBytes": 27841
+        },
+        "textures": [
+          {
+            "name": "dungeon_texture",
+            "mimeType": "image/ktx2",
+            "size": [
+              512,
+              512
+            ],
+            "encodedBytes": 27841,
+            "sha256": "4d20faa5711dd532e39fa0cf25778afca7b0cffd5ad05deb4ff5f9d6625af84a"
+          }
+        ],
+        "residencyBoundary": "Decoded accessor bytes and encoded embedded texture bytes are measured. GPU transcode format, mip residency, renderer material splitting and frame cost are not measured by this offline tool."
+      },
+      "proposal": {
+        "translationBeforeScale": [
+          0,
+          -0.00007629627368999081,
+          -0.014714568853378296
+        ],
+        "scale": [
+          0.7,
+          0.7,
+          0.7
+        ],
+        "postScaleTranslation": [
+          0,
+          0,
+          0
+        ],
+        "yaw": 0,
+        "bounds": {
+          "min": [
+            -1.4,
+            0,
+            -0.19226660969878231
+          ],
+          "max": [
+            1.4,
+            2.099893185216834,
+            0.19226660969878231
+          ],
+          "size": [
+            2.8,
+            2.099893185216834,
+            0.38453321939756463
+          ]
+        },
+        "intendedWorldHeight": 2.099893185216834,
+        "measuredVertexRadius": 1.4122043423467079,
+        "conservativeBoxRadius": 1.4131406332014742,
+        "footprint": {
+          "width": 6,
+          "depth": 1
+        },
+        "r": 1.5,
+        "collisionClass": "solid",
+        "circleSlack": 0.08779565765329211,
+        "envelopeSlack": [
+          0.20000000000000018,
+          0.11546678060243537
+        ],
+        "fixtures": {
+          "finitePositiveFootprint": true,
+          "vertexEnvelopeContained": true,
+          "solidVertexRadiusContained": true,
+          "quarterTurnSwapsFootprint": {
+            "width": 1,
+            "depth": 6
+          }
+        }
+      },
+      "proposedDecor": {
+        "components": {
+          "triangles": 7.523809523809524,
+          "primitives": 1,
+          "materials": 1,
+          "decodedGeometryBytes": 7.712299208822825
+        },
+        "decorCost": 8
+      }
+    }
+  ]
+}

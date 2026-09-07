@@ -1,0 +1,102 @@
+{
+  "version": "freehold-development-geometry-v1",
+  "status": "proposal_pending_owner_acceptance",
+  "productionEnabled": false,
+  "approval": null,
+  "grid": {
+    "referenceAsset": "public/models/dungeon/floor_tile_small.glb",
+    "referenceAxis": 0,
+    "proposedSubdivisions": 4,
+    "reason": "Four cells across an existing floor tile give a trial half-unit lattice. This subdivision is an owner choice, not an approved Freehold room grid."
+  },
+  "decor": {
+    "referenceItem": "freehold_spindle_chair",
+    "method": "One chair-equivalent unit; ceil the largest triangle, primitive, material or decoded-geometry-byte ratio, with a minimum of one. This comparative method is proposed tuning, not measured GPU frame time."
+  },
+  "items": [
+    {
+      "id": "freehold_timber_bed",
+      "asset": "public/models/dungeon/bed_b_single.glb",
+      "propKey": "kcasBedSingle",
+      "scale": 1.15,
+      "scaleSource": "src/render/lastkeep_dressing.ts",
+      "scaleWitness": "add('kcasBedSingle', 'guest_west', -21.9, 87.3, 0, 1.15);",
+      "identity": "Single timber bed with visible headboard and bedding; temporary KayKit silhouette, not the final quilt/carving design."
+    },
+    {
+      "id": "freehold_round_table",
+      "asset": "public/models/dungeon/table_round_medium.glb",
+      "propKey": "kcasTableRoundMedium",
+      "scale": 1.25,
+      "scaleSource": "src/render/lastkeep_dressing.ts",
+      "scaleWitness": "add('kcasTableRoundMedium', 'royal_chamber', -31, 72.5, 0.2, 1.25);",
+      "identity": "Round wooden table with a readable raised tabletop and support; temporary existing table."
+    },
+    {
+      "id": "freehold_spindle_chair",
+      "asset": "public/models/dungeon/chair.glb",
+      "propKey": "kcasChair",
+      "scale": 1.3,
+      "scaleSource": "src/render/lastkeep_dressing.ts",
+      "scaleWitness": "add('kcasChair', 'guest_east', 9.6, 85.5, 2.5, 1.3);",
+      "identity": "Narrow upright backed wooden chair, distinct from the backless stool; temporary existing chair."
+    },
+    {
+      "id": "freehold_low_stool",
+      "asset": "public/models/dungeon/stool_round.glb",
+      "propKey": "kcasStoolRound",
+      "scale": 1.2,
+      "scaleSource": "src/render/lastkeep_dressing.ts",
+      "scaleWitness": "add('kcasStoolRound', 'guest_west', -20.5, 84.2, 0.4, 1.2);",
+      "identity": "Low round backless stool; final three-leg detailing remains with the art owner."
+    },
+    {
+      "id": "freehold_woven_rug",
+      "source": "src/render/rift_decor.ts",
+      "sourceFunction": "buildRug",
+      "scale": [0.25, 1, 0.15384615384615385],
+      "underlay": true,
+      "floorLift": 0.02,
+      "scaleSource": null,
+      "scaleWitness": null,
+      "identity": "Existing project-authored flat rug recipe, transformed to an ordinary 2 by 4 room rug spanning one by two existing floor tiles. The selected tile span and nonuniform transform require owner acceptance. Plain red plane has no finished weave or border; the existing 0.02 anti-z-fighting lift is retained."
+    },
+    {
+      "id": "freehold_brass_lantern",
+      "asset": "public/models/dungeon/lantern_standing.glb",
+      "propKey": null,
+      "scale": 1,
+      "scaleSource": "scripts/assets/battleground/dressing.mjs",
+      "scaleWitness": "assetId: 'dungeon/lantern_standing',\n      x: r4(room.x + 5.6),\n      z: r4(room.z),\n      rotY: 0,\n      scale: 1.5,",
+      "scaleDerivation": {
+        "existingPlacementScale": 1.5,
+        "proposedMultiplier": 0.6666666666666666,
+        "reason": "An existing gatehouse uses this lantern at scale 1.5. The proposed development furnishing uses two thirds of that placement scale, restoring authored GLB unit scale for a low household cage lantern. This multiplier requires owner acceptance."
+      },
+      "identity": "Standing cage lantern at its authored GLB scale, smaller than the existing gatehouse placement. No point light or emitted gameplay effect is implied; final brass finish remains with the art owner."
+    },
+    {
+      "id": "freehold_storage_chest",
+      "asset": "public/models/dungeon/chest.glb",
+      "propKey": "kcasChest",
+      "scale": 1.2,
+      "scaleSource": "src/render/lastkeep_dressing.ts",
+      "scaleWitness": "add('kcasChest', 'guest_east', 22, 80, 0, 1.2);",
+      "identity": "Closed wooden chest with lid and clasp; only its inert bind-pose geometry is referenced, never existing reward or bank interaction."
+    },
+    {
+      "id": "freehold_open_bookshelf",
+      "asset": "public/models/biome/kcas_bookcase.glb",
+      "propKey": "kcasBookcase",
+      "scale": 0.7,
+      "scaleDerivation": {
+        "existingPlacementScale": 1.4,
+        "proposedMultiplier": 0.5,
+        "reason": "The existing hall/library scale measures 5.6 units wide and 4.20 units high. The proposed half-size adaptation keeps the same readable bookcase geometry at 2.8 units wide and 2.10 units high for development household use. This new multiplier requires owner acceptance."
+      },
+      "scaleSource": "src/render/lastkeep_dressing.ts",
+      "scaleWitness": "add('kcasBookcase', 'library', 25.65, 63.5, HALF, 1.4);",
+      "identity": "Existing freestanding bookcase with books and shelf divisions, explicitly adapted to half its existing library placement scale. Its proportions and comparative decor cost remain proposed development values, not approval of final furniture size."
+    }
+  ]
+}

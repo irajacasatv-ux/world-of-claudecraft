@@ -112,6 +112,17 @@
           }
         }
       }
+    },
+    {
+      "includes": [
+        "docs/freeholds/content-trial-2026-09-07/economy-measurements.json",
+        "docs/freeholds/content-trial-2026-09-07/geometry-measurements.json",
+        "docs/freeholds/content-trial-2026-09-07/geometry-revalidation.json",
+        "docs/freeholds/content-trial-2026-09-07/revalidation/economy-measurements.json"
+      ],
+      "formatter": {
+        "enabled": false
+      }
     }
   ]
 }
