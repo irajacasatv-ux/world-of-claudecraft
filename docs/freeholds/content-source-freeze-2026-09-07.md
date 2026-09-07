@@ -180,9 +180,14 @@ The coordinator's [staged art provenance](content-art-2026-09-07/staged-art.json
 [size review](content-art-2026-09-07/size-review.webp) record that work independently
 and explicitly retain pending runtime item admission.
 
-## Required producers and approval fields
+## Final production artifacts and approval fields
 
-| Artifact | Concrete producer output still required | Owner and approval |
+These rows describe the final production artifacts, including shipping-model and
+maximum-layout evidence owned by later work. For the content acceptance inputs
+that can be produced now, use the measured trial sequence in
+[the completion checklist](content-completion-checklist-2026-09-07.md).
+
+| Artifact | Final production evidence still required | Owner and approval |
 |---|---|---|
 | CAL-VENDOR-A | All eight literal buy/sell copper values and qualities; actual comparator rows; acquisition-burden evidence; derivation and any rounding; economy invariant fixtures | CONTENT produces; Fernando approval identity/day and the approved version/content hash remain UNSIGNED |
 | MEASURE-SPACE | Approved model source per ID; raw/shipping bounds; normalization transform and intended world height; grid pitch and footprint conversion; solid radius or the declared underlay class; clearance and legal-placement fixtures | ART/CORE produces; actual geometry approval artifact and version/content hash remain UNSIGNED |
@@ -199,16 +204,18 @@ The current `src/sim/types.ts::FurnishingItemDef` requires `sellValue`,
 `furnishing.footprint.width`, `furnishing.footprint.depth`, `furnishing.r`,
 `furnishing.decorCost` and `furnishing.surface`. It forbids power/use/stack fields.
 Although `buyValue` and `quality` are optional in `BaseItemDef`, the manifest and
-CAL-VENDOR-A require approved explicit vendor values; optional typing is not numeric
-approval. `src/sim/items.ts::buyItem` requires a live merchant stocking the item and
+CAL-VENDOR-A require approved explicit vendor values for production; optional typing
+is not numeric approval. `src/sim/items.ts::buyItem` requires a live merchant stocking the item and
 a valid price before ordinary copper acquisition succeeds.
 
 No complete vendor furnishing definition can be built from the known fields above.
 Consequently this source freeze adds no partial or cast `FurnishingItemDef`, merges
 no furnishing into `src/sim/data.ts::ITEMS`, and adds no furnisher NPC, stock or spawn
 predicate. Acquiring the planned furnishings stays unavailable for both values of
-`freeholdsEnabled` until valid signed rows exist. The ordinary D85 dark-host rule
-will still be required when activation is implemented; setting the feature flag
+`freeholdsEnabled` at this checkpoint because complete admissible trial rows do
+not exist. Complete measured trials can follow the disabled-development contract
+clarified below; production activation still requires the applicable approvals.
+The ordinary D85 dark-host rule remains required, and setting the feature flag
 does not approve missing numeric sources.
 
 The already approved Inn Room/Cottage capacity targets and a price-free Charter
@@ -222,3 +229,20 @@ Before adding the runtime furnishing rows, recheck every artifact above against 
 eight IDs, preserve the exact approved underlay rule, and test ordinary purchase,
 sell and custody behavior along with D85 off/on spawning. The coordinator owns the
 shared same-change content, localization, art, catalog and final QA obligations.
+
+## Content acceptance clarification
+
+The absent measurements recorded here block authoring complete trial records
+today. Final production signatures are a separate gate: the numeric workbook's
+opening contract permits measured, visibly identified TUNING fixtures while
+disabled, and `state.md::D32` assigns trial bills to CONTENT before later UPKEEP
+validation and ECONOMY QA calibration. Registered, measured development stand-ins
+are permitted by `state.md::D13` and the content/art contracts before final GLBs.
+
+Once complete traceable trial rows and the necessary mapped measurements exist,
+content can be authored and tested under those disabled-development rules. Update
+the current absence guard to positive trial-record and production-gating proofs
+at that time. Do not require the later four-week report or final production
+signatures merely to obtain content QA PASS. See
+[the completion checklist](content-completion-checklist-2026-09-07.md) for the
+producer sequence and the separation from activation gates.

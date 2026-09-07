@@ -2,8 +2,14 @@
 
 Foundation and furnishing item-kind implementation and QA are complete locally.
 The furnishing audit verdict is PASS, with all 40 findings resolved and independently
-reviewed, the complete shared gate green and final evidence recorded below. Product
-settlement and external sign-off remain distinct from implementation and QA completion.
+reviewed, the complete shared gate green and final evidence recorded below. Content
+work 03 is PARTIAL/BLOCKED as of 2026-09-07: approved tables, deed rewards and Hearth
+consumer support are authored locally, while unsigned numeric/geometry artifacts
+block the operational Ledger and furnishing catalog. Scoped validation and the six
+required reviews have finished. The shared gate passed all 12 steps, and fresh
+whole-fix review passed the implemented scope with no open findings or nits.
+Product settlement and external sign-off remain distinct from implementation
+and QA completion.
 
 ## Status
 
@@ -18,8 +24,8 @@ inserted into the chain. The next handoff is
 | 01 QA | PASS | 2026-09-06 | 2026-09-06 | Twelve auditors and reviewers (six bespoke audits plus the six required reviewers: cross-platform-sync, architecture, privacy-security, server-hot-path, test-coverage, qa-checklist). About 156 raw findings, deduplicated to 51 distinct: 1 blocking (self-inflicted, a glossary keyPattern registered ahead of its keys, caught by two reviewers and fixed), 0 blocking in the original 01 implementation. ALL resolved: 37 by a code, test or doc change; 14 recorded as reviewed-with-no-change-warranted, each with its reason. Fresh fix-round review VERDICT PASS at 4361ed5989 (zero blocking; it confirmed zero pre-existing assertions were weakened or removed, all four removed expect lines being equal-or-stronger replacements), and its three remaining findings were applied after it: the twelve-of-thirteen delegate correction, the vacuous descriptor arm replaced by a mutation-proven source pin, and the blank_entity scrape taught to follow Entity's heritage clause. Tip 2e247df270. Gates unsigned, see notes |
 | 02 Furnishing item kind | Complete, local | 2026-09-06 | 2026-09-06 | Original implementation validation PASS; paired QA repairs and current evidence are recorded in row 02 QA and the notes below |
 | 02 QA | PASS, local | 2026-09-07 | 2026-09-07 | 40 findings found and 40 resolved, zero deferred. Fresh entire-fix review PASS at d386635394 across 110 changed files and all four repair commits; final documentation and checklist PASS with both wording nits resolved. Final shared gate exit 0, all 12 steps green; 58,083 Vitest and 373 browser tests passed; standalone i18n/status PASS. Post-commit ci:changed actual exit 0 at c881543258 with clean status; the same check follows the evidence-only amendment. See furnishing-item-kind-qa-validation.md |
-| 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Not started | | | |
-| 03 QA | Not started | | | |
+| 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | PARTIAL/BLOCKED, local | 2026-09-07 | | Frozen approved tiers/Charter/eligible IDs, explicit pending Ledger schedule, manual Homesteader deeds/rewards and hidden empty Hearth support are committed locally. CAL-LEDGER-A, CAL-VENDOR-A, CAL-DECOR-A/B and MEASURE-SPACE remain unsigned; no operational bill, furnishing item, furnisher or Hearth item page. See 03 notes, content-validation-2026-09-07.md and content-completion-checklist-2026-09-07.md. No push. |
+| 03 QA | PARTIAL/BLOCKED, local | 2026-09-07 | | Scoped checks and six required COVERAGE reviews finished; repairable findings addressed. Visual evidence accepted; shared gate PASS (57665 unit and 373 browser tests), fresh whole-fix review PASS with no open findings or nits. Missing approved content still prevents overall PASS. See content-validation-2026-09-07.md. |
 | 04 Content: crafted furnishings and quartermaster patterns | Not started | | | |
 | 04 QA | Not started | | | |
 | 05 Instance claim | Not started | | | |
@@ -328,6 +334,74 @@ Deliverables (at most five):
 4. The Homesteader opener and the NEW Hearth shelf across its complete consumer census.
 5. Literal content/firewall/economy/source-freeze tests and the approved manifest
    evidence.
+
+03 implementation checkpoint, 2026-09-07, PARTIAL/BLOCKED:
+
+- `src/sim/content/freehold/{tiers.ts,charters.ts,ledger_schedule.ts,index.ts}` and
+  local `CLAUDE.md` publish the frozen approved Inn Room/Cottage targets, price-free
+  `freehold_charter_cottage`, and eighteen eligible material alternatives. The
+  `FREEHOLD_LEDGER_SCHEDULE` record is explicitly
+  `{ status: 'pending_approval', calibrationId: 'CAL-LEDGER-A', schedule: null }`.
+  Eligibility is not a complete realm-week schedule; no operational units, cycle,
+  selected bill rows or invented trial numbers were added. Literal and protected-input
+  coverage lives in `tests/freehold_content.test.ts` and the extended
+  `tests/provisioner_firewall.test.ts`.
+- `homesteader_first_furnishing` and `homesteader_first_cottage` append at the actual
+  tail of `DEEDS`/`DEED_ORDER`. Both are manual progression deeds with 5 renown under
+  the existing routine-milestone rule. Homesteader grants the Homesteader title;
+  Householder grants the `householder` border with a shared rendered home motif.
+  English copy and five non-Latin name/description/title fills are authored. No
+  raise site is added: first placement and confirmed Cottage grant still own them
+  in 08 and 15. Both painted deed crests were produced locally with Codex and the
+  canonical converter; [accepted-art evidence](content-art-2026-09-07/deeds.accepted-art.json)
+  records their provenance. These are deed assets, not new furnishing item IDs.
+- Hearth is declared across the shelf type, navigation/order/labels, guide generator
+  and consumer census, with `hudChrome.reliquary.navHearth` and
+  `guide.reliquaryPage.shelf.hearth`, five non-Latin fills and glossary coverage.
+  Empty shelves remain hidden; opening empty Hearth returns to Overview.
+  No Hearth page is published: `hearth_basics` remains deferred until its eight
+  real item definitions and vendor source resolve. There is no new global page cap.
+  Homesteader instead joins the existing `horizons_titles` page through the normal
+  title/deed-source path. Current measured Reliquary pins are 466 raw slots,
+  430 full-completion slots and 401 character-completion slots across 41 unchanged
+  pages; `tests/reliquary_content.test.ts` owns these pins.
+- Eight furnishing icon candidates are prepared in ignored staging, with
+  [staged-art provenance](content-art-2026-09-07/staged-art.json) and a
+  [size-review sheet](content-art-2026-09-07/size-review.webp). They are not registered
+  shipping item art. No furnishing was added to `ITEMS`, no furnisher to `NPCS` or
+  world spawns, and no stock, world-entity name or item-name locale row was added.
+  The exact eight planned IDs and every missing numeric field are recorded in the
+  [source freeze](content-source-freeze-2026-09-07.md); planned IDs are not shipped IDs.
+- Wiki and i18n outputs are regenerated by the coordinator. Typecheck and all
+  requested scoped suites pass, including 666 tests in the exact twelve-file command.
+  Six required COVERAGE reviews, instruction/art safety and pre/final database
+  growth reviews returned; repairable findings are addressed. Visual evidence is retained and accepted, and the shared gate passed all 12 steps.
+  Fresh whole-fix review passed with no open findings or nits; all evidence is in the
+  [validation record](content-validation-2026-09-07.md). The user subsequently
+  authorized incremental commits of completed work: `1d583786f6` holds gate
+  import-order repairs, `add3b7b2d9` the approved tables and `93710767dd` the deeds,
+  Hearth consumers and their same-change obligations. This documentation
+  checkpoint retains the reviewed evidence and
+  [completion checklist](content-completion-checklist-2026-09-07.md). The final
+  post-commit `npm run ci:changed` result is reported in task completion. No push.
+
+Named production blockers remain explicit:
+
+| Gate | Producer and owner | Missing evidence before activation |
+|---|---|---|
+| CAL-LEDGER-A | 03 CONTENT with 13 UPKEEP and 20 ECONOMY QA; Fernando/economy service approve | Exact selected week/tier lines and units, cycle/version, allocation/valuation/tolerance, rounding, all-cycle fixtures, immutable prepay and measured four-week report; the later twelve-week extension also requires the signed version and calendar-authority acceptance |
+| CAL-VENDOR-A | 03 CONTENT; Fernando approves | All eight buy/sell copper values and qualities, comparator/acquisition-burden derivation and economy fixtures |
+| CAL-DECOR-A/B | CONTENT with ART; Fernando approves | Positive integer decor costs, measured shipping model/render costs and maximum legal layout LOW evidence |
+| MEASURE-SPACE | ART/CORE room and model producers | Approved model/room transforms, grid, footprints, solid radii, clearance and legal-placement fixtures; the rug's explicit `r: 0` alone cannot complete its item definition |
+
+The source-freeze artifact links the actual approval proof for existing tier targets,
+source hashes, numeric readiness rows and concrete producers. Image generation does
+not authorize any missing number. Continue now by producing the admissible measured
+trial packet and mapped stand-in evidence in
+[the completion checklist](content-completion-checklist-2026-09-07.md), then finish
+the missing content and its acceptance proofs. The table above lists production
+activation gates; final signatures and later calibration reports alone do not
+prevent 03 QA PASS. Keep 03 QA uncompleted until its actual content criteria pass.
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.

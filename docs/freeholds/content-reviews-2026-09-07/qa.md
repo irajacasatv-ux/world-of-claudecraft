@@ -1,0 +1,78 @@
+# Freehold content finishing QA review
+
+Verdict: **NOT READY for the full requested content deliverable.** The reviewed bounded implementation correctly remains PARTIAL/BLOCKED. This is not a recommendation to invent numeric values, cast partial item definitions, or publish a fabricated schedule. Final shared validation and the fresh fix review still need to be attached before the bounded work can receive a clean code-quality verdict.
+
+## Scope and authority
+
+- Worktree: `/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds`.
+- Base: `3fa4965a3c186982aafd44b3ec9b9d9851ace52d`, branch `feature/freeholds`.
+- Scope: `git diff HEAD` plus newly added/untracked content, tests, source/name/art evidence and image assets. The working census grew from the supplied inventory to 83 paths when the coordinator repaired four inherited PG-suite import-order errors. Those four changes were inspected: they move only an existing runtime import relative to erased type imports, and change no query, fixture, authority or database behavior.
+- Review criteria: repository root and applicable directory instructions, `.agents/skills/woc-qa/SKILL.md`, `docs/qa-gate.md`, and the substantive QA categories from `.claude/agents/qa-checklist.md`. Claude runtime/frontmatter, delegated command execution and remote operations were excluded.
+- No tracked edits, staging, commits, tests, generation, builds or scanner reruns were performed by this reviewer. Coordinator logs were inspected as shared evidence. The two review contact sheets were viewed directly.
+
+## Findings and nits to close
+
+### QA-1, P2, finishing review obligation: new instruction file needs the conditional instruction/malware review
+
+Evidence: `src/sim/content/freehold/CLAUDE.md:1` is a newly authored instruction file. `.agents/skills/woc-qa/SKILL.md:64` names `woc_release_malware` for AI-instruction changes. The supplied six-role minimum roster does not itself cover that extra role.
+
+The file is short and appropriately scoped: it directs immutable catalogs and refuses unsigned numeric activation; it contains no suspicious delegation, secret collection, external command, network target or authority override. Nevertheless, complete the bounded conditional instruction review and record its evidence before closing QA. Reuse the already passing coordinator malware scan; do not repeat the full gate merely for this review. This is a missing review obligation, not a claim that malicious content was found.
+
+### QA-2, P3, instruction wording: the schedule property is null, not absent
+
+Evidence: `src/sim/content/freehold/CLAUDE.md:14` says `FREEHOLD_LEDGER_SCHEDULE.schedule` "is absent". The API intentionally contains `schedule: null` at `src/sim/content/freehold/ledger_schedule.ts:120`, and the literal shape is pinned by `tests/freehold_content.test.ts:160`.
+
+Use "is null" in the new local instruction so the next implementation owner does not read this as an optional/missing property contract. The runtime shape itself is correct.
+
+## Nonempty behavior coverage claims
+
+| Claim | Verdict and evidence |
+|---|---|
+| Approved tier values and frozen save identities | PASS. `src/sim/content/freehold/tiers.ts:14` carries exactly Inn Room `(1,20,3,0,false)` and Cottage `(1,60,4,1,true)`. Exported rows/array are frozen, the lookup serves the shared row, and the private-set facade exposes no mutator. `tests/freehold_content.test.ts:17` pins values, unknown/inherited IDs, reference identity and attempted mutation. |
+| Charter has no prices or copy | PASS. `src/sim/content/freehold/charters.ts:9` has exactly `freehold_charter_cottage` with `id` and `tier`, and the guard uses own-property lookup. `tests/freehold_content.test.ts:73` pins the complete shape and rejects inherited IDs and price/copy fields. |
+| Eligibility inventory and grade order | PASS for eligibility only. `src/sim/content/freehold/ledger_schedule.ts:13` has 18 alternatives in the approved family/source order, with real base/fine twins and plain hide/cloth/fish IDs. `tests/freehold_content.test.ts:109` pins every row by literal; nested grade arrays are frozen. |
+| No unsigned operational bill | PASS. `ledger_schedule.ts:117` exposes `pending_approval`, CAL-LEDGER-A and null. It supplies no quantities, cycle, content version, owner-dependent function, clock, RNG or stack-size-derived defaults. This deliberately does not pass the user's operational schedule acceptance. |
+| Protected inputs remain excluded | PASS for all current eligibility positions. `tests/provisioner_firewall.test.ts:127` retains existing provisioner exclusions and checks every alternative and allowed grade. Injection tests exercise all positions plus gear outputs. No approved cycle exists to sweep; claiming all-week bill coverage would be false. |
+| No incomplete furnishing is runtime enabled | PASS. `tests/freehold_content.test.ts:182` literally refuses all eight planned item IDs, any NPC stock referencing them and `NPCS.freehold_furnisher`. The actual diff adds no furnishing definition, item merge, NPC, stock, buy/sell/quality value, collision geometry or spawn helper. |
+| Homesteader append and cosmetic/manual behavior | PASS. `src/sim/content/deeds.ts:3300` appends both records at the true tail, gives 5 Renown each under the recorded routine-milestone derivation, and uses existing manual triggers. `tests/freehold_deed_records.test.ts:18` pins full records and tests inert automatic evaluation, idempotent character-scoped manual grants and unchanged stats. Source search finds no new production raise site. |
+| Reward completion and identity inventories | PASS for the bounded catalog change. `src/sim/content/reliquary.ts:458` adds only the title-bearing deed to the existing Horizons title page. Literal old-catalog digest reproduction in `tests/deeds_content.test.ts:1009` protects every prior trigger/renown row. Counts move to 301 deeds/3535 Renown, 47 titles/5 borders and Reliquary 466 raw/430 full/401 character slots across 41 unchanged pages. These are measured snapshot pins, not a page cap. |
+| Householder heraldry uses existing shared presentation | PASS. `src/ui/deed_border_view.ts:64` adds a frozen home motif and `:204` supplies its canonical palette. Existing DOM/canvas consumers receive the same primitives; updated accent/nameplate tests cover the new identity. No new renderer, material, light, GL context, tick path or coordinator method was added. |
+| Empty Hearth remains hidden | PASS. `src/ui/reliquary_view.ts:65` derives visible navigation from authored pages, `:771` uses that set for Overview cards, and `src/ui/reliquary_window.ts:268` routes an unavailable deep link to Overview and focuses that destination. Synthetic tests cover declaration versus published inventory. There is no real `hearth_basics` page, source hint, item name or discovery entry. |
+| Authored Hearth consumer readiness | PASS for exercised generic seams, with finishing coverage review still pending. `tests/reliquary_hearth_shelf.test.ts` drives shelf totals, page selection, localized search, recent/source plans, pinning, completion and pruning through existing generic consumers. `tests/guide_reliquary_hearth.test.ts` checks hidden-empty and synthetic authored wiki shelves. Positive real-catalog/real-window admission cannot be accepted until signed item and vendor rows exist. |
+| i18n and spoiler boundaries | PASS by diff inspection and shared suites. Two English Hearth keys have matching five non-Latin fills and glossary registration; deed names/criteria/title use the established deed channel and five locale rows. Other locales remain honestly pending under contributor policy. Wiki output includes public deed identity/rewards and the existing title slot, but no trigger, criteria, hidden-source or furnishing acquisition leak. |
+| Generated output ownership | PASS by inspected diff and coordinator generation/freshness evidence. Changes to generated guide types/data and localized slices match the authored changes; no generated artifact introduces unrelated content. |
+| Shipping deed art and staged item art are distinguished | PASS. `docs/freeholds/content-art-2026-09-07/deeds.accepted-art.json:3` records Codex generator, text-only prompts, source/master/shipping paths and hashes, transparent framing and canonical converter evidence. `tests/deed_icons.test.ts:12` independently pins shipping bytes and decoded bounds. CREDITS attribution is present. `staged-art.json:9` explicitly denies runtime item admission. The contact sheets show complete distinct painted objects/crests with readable small-size silhouettes. Runtime acceptance is a separate pending item. |
+| Documentation and memory do not claim full completion | PASS. `docs/freeholds/state.md:37`, its 03 ledger/notes, `docs/freeholds/progress.md:25` and the source freeze consistently say PARTIAL/BLOCKED, distinguish planned IDs from runtime records, name all unsigned gates and say no 03 commit/push. `state.md:1410` adds useful next-session Gotchas. Pending verification text must be replaced by exact final evidence at the checkpoint close while preserving NOT READY for full acceptance. |
+| Source hashes and approval identity are honest | PASS for historical evidence. The stored state hash at source-freeze line 17 exactly reproduces `git show HEAD:docs/freeholds/state.md`; its current hash changes because this task adds status/memory prose. The other five recorded source hashes match current files. The record explicitly describes historical inspected bytes and says a hash is not approval. Current task edits did not change the source tier targets or ruling literals. No owner signature/date or measured calibration was invented. |
+| Repository behavior and scope remain bounded | PASS. New content is behind its own barrel/local instruction; no monolith grows, no dependency or package changes, no farm beds/recipes/stations change, no server authority/wire/RL/persistence field changes. The four gate-repair test imports add no database concern. |
+
+## Exact unresolved acceptance gates
+
+1. **CAL-LEDGER-A**, source-freeze `:54`: CONTENT/UPKEEP, then ECONOMY QA, Fernando and economy service must supply/approve actual selected week/tier lines, integer units, cycle/version/hash, allocation/valuation/tolerance, rounding and all-cycle fixtures, immutable prepay and the measured four-week report. The later twelve-week extension also needs its signed version and calendar-authority acceptance. Candidate IDs are not this artifact.
+2. **CAL-VENDOR-A**, source-freeze `:187`: CONTENT must produce all eight buy/sell copper values and qualities, actual comparator/acquisition-burden derivation, rounding and economy fixtures for Fernando's identified artifact/version approval.
+3. **CAL-DECOR-A/B**, source-freeze `:189`: CONTENT/ART must produce positive integer costs, shipping model costs/residency and legal maximum-layout LOW measurements with derivation and Fernando approval.
+4. **MEASURE-SPACE**, source-freeze `:188`: ART/CORE must provide approved room/model sources/transforms, grid/footprint conversion, collision/clearance/legal-placement evidence. The rug's explicit `r: 0` is valid but does not complete its other required fields.
+5. Consequently, exactly eight furnishing ItemDefs, item merge/golden/art mapping/names, the furnisher and world-entity name, eight-id stock, D85 off/on spawn proof, and the actual `hearth_basics` page remain deferred. These are unfulfilled user acceptance criteria, correctly blocked by the higher-priority explicit no-invented-number instruction.
+6. The manual deed actions remain unearnable until their assigned later placement and Cottage-grant implementations land. The added title slot contributes to the existing catalog denominator; do not describe the overall game feature or all collection actions as releasable/earnable at this checkpoint.
+
+## Shared command and visual evidence inspected
+
+- Coordinator `npx tsc --noEmit`: reported exit 0; `/tmp/freehold-tsc.log` has only npm configuration warnings.
+- Requested 12-file content suite: `/tmp/freehold-scoped.log` records 664 passed and two stale deed pins failed. The repaired deed file rerun at `/tmp/freehold-deeds-rerun.log` records 53 passed. A final full/fresh run must supersede the initial failure and any subsequent review-test changes.
+- Guide: `/tmp/freehold-guide.log`, 2 files and 151 tests passed after wiki generation.
+- i18n: `/tmp/freehold-i18n-tests.log`, 2 files, 68 passed, 3 existing skips after i18n generation.
+- UI/art: `/tmp/freehold-ui-art.log`, 10 files, 509 passed, 1 existing skip.
+- Explicit new-file formatting: `/tmp/freehold-newfiles-format.log`, checked 10 files with no format errors or fixes. Two new test non-null-assertion warnings remain; warnings are permitted by the canonical Biome contract and do not by themselves fail the gate. The earlier `/tmp/freehold-parent-format.log` is a fix pass, not proof of a final clean unchanged check.
+- `node scripts/gate_select.mjs`: `/tmp/freehold-gate-final.log` selects the release integration base, honestly falls back to full tests for the cumulative branch diff, regenerates artifacts and passes freshness. Shared malware scan PASS: 8,315 files, 441 flagged and 0 high after priors. Changed-file Biome passed after four import-order repairs. Full Vitest was still running at this review checkpoint; browser tests, final types/builds and actual final exit code remain VERIFY.
+- The first `/tmp/freehold-runtime-capture.log` captured five desktop states but failed with execution-context-destroyed at the mobile transition. This is not a mobile pass. Coordinator is repairing/rerunning capture. Final before/after desktop/mobile evidence must be inspected and preserved under the required screenshot evidence path before declaring visual acceptance; JSON art metadata still correctly says runtime screenshots pending.
+- This reviewer ran only git diff/status, targeted reads/searches and source hash checks. No coordinator-owned command was duplicated.
+
+## Final close requirements
+
+- Resolve QA-1 and QA-2 and all other reviewers' findings, including their test improvements; a fresh reviewer must inspect the whole fix round.
+- Attach the actual final gate outcome and final visual evidence, including limitations/skips, to the local handoff. Do not turn an in-progress or failed capture into PASS.
+- Update the intentionally provisional validation/review prose and art runtime metadata only after the evidence exists. Preserve 03 PARTIAL/BLOCKED and the unsigned gate identities even if every bounded code/test check is green.
+- Do not execute the four requested completion commits or describe the commit cadence as fulfilled while the required deliverables and approval gates remain unresolved. Post-commit `npm run ci:changed` is deferred because no 03 completion commit should yet exist. No push or PR merge is authorized.
+- The final response must include status, files, exact validation outcomes, reviewer verdicts, deferred deliverables and the full paired-audit path `/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-03-qa.md`, while state correctly retains the incomplete implementation handoff.
+
+Adversarial close: no guessed numeric fallback, partial ItemDef cast, orphan item art mapping, vendor stock leak, false new Hearth completion page, missing declared shelf label, widened trigger union, production deed raise site, monolith growth or new database path was found. The decisive gaps are unsigned source artifacts/full deliverables, finishing shared evidence and the two small review/instruction obligations above.
