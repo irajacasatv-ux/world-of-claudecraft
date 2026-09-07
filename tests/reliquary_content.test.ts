@@ -378,9 +378,9 @@ describe('Reliquary Conqueror catalog structure', () => {
     expect(CONQUEROR_PAGES.length).toBe(31);
     expect(PROFESSION_PAGES.length).toBe(5);
     expect(HORIZON_PAGES.length).toBe(5);
-    expect(HEARTH_PAGES.map((page) => page.id)).toEqual(['hearth_basics']);
+    expect(HEARTH_PAGES.map((page) => page.id)).toEqual(['hearth_basics', 'hearth_first_crafts']);
     // Literal: update when product adds a page.
-    expect(RELIQUARY_PAGES.length).toBe(42);
+    expect(RELIQUARY_PAGES.length).toBe(43);
     expect(
       RELIQUARY_PAGES.every(
         (p) =>
@@ -458,7 +458,7 @@ describe('Reliquary Conqueror catalog structure', () => {
     // Eleven Crucible collections add 33 distinct crafted item relics.
     // Homesteader adds one title; the eight Hearth furnishings add eight
     // distinct item relics without changing any existing deed record.
-    expect(full).toEqual({ owned: 438, total: 438 });
+    expect(full).toEqual({ owned: 448, total: 448 });
     const character = catalogCharacterCompletion({
       itemsDiscovered: allOwned,
       marks: allOwned,
@@ -480,7 +480,7 @@ describe('Reliquary Conqueror catalog structure', () => {
     // and Chimeglass Tortoise add two more character-scoped slots: 366. The
     // Cluckwork Mech Bird is another character-scoped mount slot: 367.
     // The Homesteader title and eight Hearth items are character-scoped.
-    expect(character).toEqual({ owned: 409, total: 409 });
+    expect(character).toEqual({ owned: 419, total: 419 });
   });
 
   it('pins the final measured catalog shape: total slots and distinct marks', () => {
@@ -528,7 +528,7 @@ describe('Reliquary Conqueror catalog structure', () => {
     expect(
       slots,
       `slot total moved; per page: ${RELIQUARY_PAGES.map((p) => `${p.id}=${p.relics.length}`).join(', ')}`,
-    ).toBe(474);
+    ).toBe(484);
     // Distinct mark ids: the 10 shipped before Phase 21, the 19 rare-slain
     // proofs of conquerors_rares_of_the_realm, the two craft masterwork
     // marks (masterwork:jewelcrafting, masterwork:inscription), and the
@@ -790,7 +790,7 @@ describe('Reliquary relic item ids resolve in ITEMS', () => {
     // the page/overview/character/slot/mark literals nearby.
     // 33 Crucible collection items plus the personal Forgebreaker shaping.
     // The eight Hearth furnishings each introduce one distinct item id.
-    expect(RELIQUARY_ITEM_TO_PAGES.size).toBe(327);
+    expect(RELIQUARY_ITEM_TO_PAGES.size).toBe(337);
     for (const [id, pages] of RELIQUARY_ITEM_TO_PAGES) {
       expect(pages.length, `catalogued id ${id} maps to an empty page list`).toBeGreaterThan(0);
     }
@@ -3066,6 +3066,7 @@ const EXPECTED_DISTINCT_SOURCES: Record<string, number> = {
   professions_crucible: 3,
   professions_forgebreaker: 1,
   hearth_basics: 1,
+  hearth_first_crafts: 10,
   // 11 = the four heroic bosses + the raid + Marla + rift A/B/S + the two
   // pending-ruling absences resolve to nothing, plus the storefront carrying
   // the Mech Bird (the 'store' door the Armory skins already opened).
@@ -3557,6 +3558,16 @@ describe('Reliquary source hints resolve against live content', () => {
       'crucible_tank_mail_chest',
       'crucible_tank_mail_feet',
       'crucible_tank_mail_waist',
+      'freehold_chart_easel',
+      'freehold_clockwork_lamp',
+      'freehold_glass_floor_lamp',
+      'freehold_glow_lantern',
+      'freehold_hide_armchair',
+      'freehold_iron_brazier',
+      'freehold_jewel_floor_lamp',
+      'freehold_patchwork_rug',
+      'freehold_set_supper_table',
+      'freehold_weapon_rack',
       'gravewyrm_bone_quiver',
       'gravewyrm_gauntlets',
       'stormreel_fishing_rod',

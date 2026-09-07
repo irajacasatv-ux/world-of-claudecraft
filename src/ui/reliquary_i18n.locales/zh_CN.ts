@@ -203,4 +203,8 @@ export const table: ReliquaryLocaleTable = {
     name: '炉边基础家具',
     desc: '伊斯特布鲁克的自由领地家具商出售的简朴家具。',
   },
+  hearth_first_crafts: {
+    name: '炉边初作',
+    desc: '每门工艺各有一件家具。训练师教授七种配方；英雄军需官以英雄印记出售发条灯结构图、图表画架技法和宝石落地灯设计图。所有家具仅供装饰。',
+  },
 };

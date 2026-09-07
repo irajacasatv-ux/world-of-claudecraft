@@ -807,8 +807,8 @@ describe('Masterwrought art completion evidence', () => {
     expect(duplicateValues(currentOwnerIds)).toEqual([]);
     // 1,209 (Masterwrought completion) + 46 (Crucible professions, including
     // the Forgebreaker quest's forgefathers_ember proof item) + 1 (Field Kit)
-    // + 8 (Freehold furnishings).
-    expect(currentOwnerIds).toHaveLength(1264);
+    // + 8 (vendor furnishings) + 13 (crafted furnishings and their documents).
+    expect(currentOwnerIds).toHaveLength(1277);
     for (const id of datedIds) {
       expect(currentOwnerIds.includes(id), `${id} still has a current mapping owner`).toBe(true);
     }
@@ -837,6 +837,27 @@ describe('Masterwrought art completion evidence', () => {
       'freehold_woven_rug',
     ]);
     expect(value.targetSets.items.filter((id) => freeholdIds.has(id))).toEqual([]);
+    const craftedBatches = mapping.generatedBatches.filter(
+      ({ batchId: id }) => id === 'freehold-crafted-2026-09-07',
+    );
+    expect(craftedBatches).toHaveLength(1);
+    const craftedIds = new Set(craftedBatches[0].itemIds);
+    expect(sorted(craftedIds)).toEqual([
+      'freehold_chart_easel',
+      'freehold_clockwork_lamp',
+      'freehold_glass_floor_lamp',
+      'freehold_glow_lantern',
+      'freehold_hide_armchair',
+      'freehold_iron_brazier',
+      'freehold_jewel_floor_lamp',
+      'freehold_patchwork_rug',
+      'freehold_set_supper_table',
+      'freehold_weapon_rack',
+      'pattern_freehold_chart_easel',
+      'pattern_freehold_clockwork_lamp',
+      'pattern_freehold_jewel_floor_lamp',
+    ]);
+    expect(value.targetSets.items.filter((id) => craftedIds.has(id))).toEqual([]);
 
     // Derive the original 1,209-item completion set by excluding the exact ids of
     // the one Crucible professions mapping batch (46 ids, forgefathers_ember
@@ -849,7 +870,8 @@ describe('Masterwrought art completion evidence', () => {
     // of the live mapping so the underlying 1,209-item completion union equation
     // below stays isolated to exactly the same set as completionDatedIds above.
     const completionOwnerIds = currentOwnerIds.filter(
-      (id) => !crucibleIds.has(id) && id !== 'field_kit' && !freeholdIds.has(id),
+      (id) =>
+        !crucibleIds.has(id) && id !== 'field_kit' && !freeholdIds.has(id) && !craftedIds.has(id),
     );
     expect(completionOwnerIds).toHaveLength(1209);
     expect(sorted(completionOwnerIds)).toEqual(completionDatedIds);

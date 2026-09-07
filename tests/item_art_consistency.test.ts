@@ -29,6 +29,22 @@ const FREEHOLD_ITEM_IDS = [
   'freehold_storage_chest',
   'freehold_open_bookshelf',
 ];
+const CRAFTED_BATCH_ID = 'freehold-crafted-2026-09-07';
+const CRAFTED_ITEM_IDS = [
+  'freehold_weapon_rack',
+  'freehold_iron_brazier',
+  'freehold_patchwork_rug',
+  'freehold_hide_armchair',
+  'freehold_clockwork_lamp',
+  'freehold_glass_floor_lamp',
+  'freehold_chart_easel',
+  'freehold_jewel_floor_lamp',
+  'freehold_set_supper_table',
+  'freehold_glow_lantern',
+  'pattern_freehold_clockwork_lamp',
+  'pattern_freehold_chart_easel',
+  'pattern_freehold_jewel_floor_lamp',
+];
 const LICENSE = 'World of ClaudeCraft project-generated art, project asset, rights reserved';
 
 type ReportPin = {
@@ -805,8 +821,8 @@ describe('item-art consistency accepted-art provenance', () => {
       heroicDefinitionsWithOwnWebp: 48,
       heroicWeaponArtAliases: 16,
     });
-    // The current definitions additionally include eight Freehold furnishings.
-    expect(Object.keys(ITEMS)).toHaveLength(1279);
+    // Current definitions add the Field Kit, eight vendor furnishings and thirteen crafted-content items.
+    expect(Object.keys(ITEMS)).toHaveLength(1292);
     expect(Object.values(verdict.auditScope.groups).reduce((sum, count) => sum + count, 0)).toBe(
       1255,
     );
@@ -907,7 +923,7 @@ describe('item-art consistency accepted-art provenance', () => {
     expect(shippingCatalogDigest.digest('hex')).toBe(verdict.evidence.shippingCatalogSha256);
   });
 
-  it('extends the dated catalog with the Field Kit and eight Freehold owners', () => {
+  it('extends the dated catalog with the Field Kit, eight vendor furnishings and thirteen crafted-content icons', () => {
     const mapping = readJson<ItemMapping>('public/ui/items/mapping.json');
     const currentOwnerIds = [
       ...mapping.entries.map(({ itemId }) => itemId),
@@ -918,10 +934,11 @@ describe('item-art consistency accepted-art provenance', () => {
       .map((name) => name.slice(0, -'.webp'.length));
     expect(sorted(currentOwnerIds)).toEqual(sorted(shippingIds));
     // 1,255 dated (including the Forgebreaker quest's forgefathers_ember proof
-    // item, already recorded in the dated verdict) + one Field Kit + eight furnishings.
-    expect(new Set(currentOwnerIds).size).toBe(1264);
-    expect(shippingIds).toHaveLength(1264);
-    expect(Object.keys(ITEMS)).toHaveLength(1279);
+    // item, already recorded in the dated verdict) + one Field Kit + eight vendor
+    // furnishings + thirteen crafted-content icons.
+    expect(new Set(currentOwnerIds).size).toBe(1277);
+    expect(shippingIds).toHaveLength(1277);
+    expect(Object.keys(ITEMS)).toHaveLength(1292);
 
     const datedVerdict = readJson<FinalAuditVerdict>(CURRENT_VERDICT_PATH);
     const oldPassIds = sorted(datedVerdict.visualVerdict.passIds);
@@ -933,7 +950,7 @@ describe('item-art consistency accepted-art provenance', () => {
     expect(oldPassIds).toContain('forgefathers_ember');
     expect(oldPassIds).not.toContain('field_kit');
     expect(oldPassIds.filter((id) => FREEHOLD_ITEM_IDS.includes(id))).toEqual([]);
-    expect(sorted([...oldPassIds, 'field_kit', ...FREEHOLD_ITEM_IDS])).toEqual(
+    expect(sorted([...oldPassIds, 'field_kit', ...FREEHOLD_ITEM_IDS, ...CRAFTED_ITEM_IDS])).toEqual(
       sorted(currentOwnerIds),
     );
 
@@ -1087,7 +1104,7 @@ describe('item-art consistency accepted-art provenance', () => {
     // one generated batch. The surviving ordinary-art cohort stays explicit.
     expect(mapping.entries).toHaveLength(43);
     expect(mapping.entries.every(({ license }) => Boolean(license))).toBe(true);
-    expect(mapping.generatedBatches).toHaveLength(28);
+    expect(mapping.generatedBatches).toHaveLength(29);
     const batch = mapping.generatedBatches.find(({ batchId }) => batchId === BATCH_ID);
     expect(batch).toBeDefined();
     expect(batch).toMatchObject({
@@ -1142,13 +1159,21 @@ describe('item-art consistency accepted-art provenance', () => {
       ({ batchId }) => batchId === FREEHOLD_BATCH_ID,
     );
     expect(freeholdBatch?.itemIds).toEqual(FREEHOLD_ITEM_IDS);
+    const craftedBatch = mapping.generatedBatches.find(
+      ({ batchId }) => batchId === CRAFTED_BATCH_ID,
+    );
+    expect(craftedBatch?.itemIds).toEqual(CRAFTED_ITEM_IDS);
+    expect(craftedBatch?.provenanceRecord).toBe(
+      'docs/freeholds/crafted-content-art-2026-09-07/items.accepted-art.json',
+    );
     const priorGeneratedIds = mapping.generatedBatches
       .filter(
         ({ batchId }) =>
           batchId !== BATCH_ID &&
           batchId !== CURRENT_BATCH_ID &&
           batchId !== CRUCIBLE_BATCH_ID &&
-          batchId !== FREEHOLD_BATCH_ID,
+          batchId !== FREEHOLD_BATCH_ID &&
+          batchId !== CRAFTED_BATCH_ID,
       )
       .flatMap(({ itemIds }) => itemIds);
     // 727 was the prior baseline before the Field Kit batch (one additional owner)
@@ -1158,8 +1183,8 @@ describe('item-art consistency accepted-art provenance', () => {
       ...mapping.entries.map(({ itemId }) => itemId),
       ...mapping.generatedBatches.flatMap(({ itemIds }) => itemIds),
     ];
-    expect(allCurrentOwnerIds).toHaveLength(1264);
-    expect(new Set(allCurrentOwnerIds).size).toBe(1264);
+    expect(allCurrentOwnerIds).toHaveLength(1277);
+    expect(new Set(allCurrentOwnerIds).size).toBe(1277);
     expect({
       entries: mapping.entries.length,
       priorGenerated: priorGeneratedIds.length,
@@ -1167,6 +1192,7 @@ describe('item-art consistency accepted-art provenance', () => {
       masterwroughtCompletion: completionBatch?.itemIds.length,
       crucibleProfessions: crucibleBatch?.itemIds.length,
       freeholdFurnishings: freeholdBatch?.itemIds.length,
+      craftedContent: craftedBatch?.itemIds.length,
     }).toEqual({
       entries: 43,
       priorGenerated: 728,
@@ -1174,6 +1200,7 @@ describe('item-art consistency accepted-art provenance', () => {
       masterwroughtCompletion: 165,
       crucibleProfessions: 46,
       freeholdFurnishings: 8,
+      craftedContent: 13,
     });
     const historicalVerdict = readJson<FinalAuditVerdict>(
       `${evidenceDir}/final-item-art-audit-verdict.json`,
@@ -1202,6 +1229,7 @@ describe('item-art consistency accepted-art provenance', () => {
         ...datedMasterwroughtVerdict.visualVerdict.passIds,
         'field_kit',
         ...FREEHOLD_ITEM_IDS,
+        ...CRAFTED_ITEM_IDS,
       ]),
       'the dated catalog plus the Field Kit and furnishings is the full current catalog',
     ).toEqual(sorted(allCurrentOwnerIds));
@@ -1329,9 +1357,9 @@ describe('item-art consistency accepted-art provenance', () => {
     for (const id of ownerIds) ownerCountById.set(id, (ownerCountById.get(id) ?? 0) + 1);
 
     const violations: string[] = [];
-    if (ownerIds.length !== 1264)
-      violations.push(`mapping owner count: ${ownerIds.length} != 1264`);
-    if (fileIds.length !== 1264) violations.push(`shipping WebP count: ${fileIds.length} != 1264`);
+    if (ownerIds.length !== 1277)
+      violations.push(`mapping owner count: ${ownerIds.length} != 1277`);
+    if (fileIds.length !== 1277) violations.push(`shipping WebP count: ${fileIds.length} != 1277`);
     for (const id of ids) {
       const ownerCount = ownerCountById.get(id) ?? 0;
       if (ownerCount !== 1) violations.push(`${id}: current owner count ${ownerCount} != 1`);

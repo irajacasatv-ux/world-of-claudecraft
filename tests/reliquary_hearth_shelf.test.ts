@@ -42,7 +42,27 @@ describe('authored Hearth shelf', () => {
       'horizons',
       'hearth',
     ]);
-    expect(RELIQUARY_PAGES.at(-1)).toBe(HEARTH);
+    expect(RELIQUARY_PAGES.slice(-2).map((page) => page.id)).toEqual([
+      'hearth_basics',
+      'hearth_first_crafts',
+    ]);
+    expect(RELIQUARY_PAGES.at(-2)).toBe(HEARTH);
+    expect(
+      RELIQUARY_PAGES_BY_ID.hearth_first_crafts.relics.map((relic) =>
+        relic.kind === 'item' ? relic.itemId : relic.kind,
+      ),
+    ).toEqual([
+      'freehold_weapon_rack',
+      'freehold_iron_brazier',
+      'freehold_patchwork_rug',
+      'freehold_hide_armchair',
+      'freehold_clockwork_lamp',
+      'freehold_glass_floor_lamp',
+      'freehold_chart_easel',
+      'freehold_jewel_floor_lamp',
+      'freehold_set_supper_table',
+      'freehold_glow_lantern',
+    ]);
     expect(reliquaryVisibleNav([])).toEqual(['overview']);
     expect(reliquaryVisibleNav([HEARTH])).toEqual(['overview', 'hearth']);
   });
@@ -87,11 +107,11 @@ describe('authored Hearth shelf', () => {
     expect(model.shelfCards.at(-1)).toEqual({
       shelf: 'hearth',
       owned: 0,
-      total: 8,
+      total: 18,
       recentId: null,
       recentKind: null,
     });
-    expect(model.shelves.at(-1)).toEqual({ id: 'hearth', owned: 0, total: 8 });
+    expect(model.shelves.at(-1)).toEqual({ id: 'hearth', owned: 0, total: 18 });
   });
 
   it('carries Hearth ownership, localized search, recent jumps, and source plans through the existing view', () => {

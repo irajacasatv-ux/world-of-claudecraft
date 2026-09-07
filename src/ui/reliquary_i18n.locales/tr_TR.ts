@@ -166,4 +166,5 @@ export const table: ReliquaryLocaleTable = {
     name: 'Kahramanca: The Inner Crucible',
     desc: "Varkhul, Forgefather of the Last Flame'den yalnızca kahramanca modda düşen kalkanlar ve silahlar.",
   },
+  hearth_first_crafts: { name: 'Ev İçin İlk El İşleri' },
 };

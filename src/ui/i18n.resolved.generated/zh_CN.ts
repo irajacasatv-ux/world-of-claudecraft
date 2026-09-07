@@ -6583,7 +6583,7 @@ export const zh_CN: EnTranslations = {
       "retiredNote": "这些圣物已无法再获得。此页致敬仍持有它们的老兵，不计入达成或策展人等级。",
       "personalNote": "每个角色只能持有自己的一件。此页不计入达成或策展人等级。",
       "catalogHeading": "页面目录",
-      "catalogBody": "每一页已编写的圣物库页面及其圣物名称。此列表仅含防剧透名称：请在游戏中打开圣物库查看你的进度、通关次数与剪影。",
+      "catalogBody": "此处列出圣物库的各页及其圣物名称。炉边初作收录每门工艺的一件家具：七种配方由训练师教授，发条灯、图表画架和宝石落地灯的图纸由英雄军需官以英雄印记出售。家具仅供装饰，图纸不计为圣物。请在游戏中查看个人进度、通关次数和剪影。",
       "spoilerNote": "个人首次发现记录、通关次数以及已有/未有状态保留在游戏客户端。维基从不发布玩家收藏。",
       "shelfHeading": "{label}（{count}）",
       "shelf": {
@@ -6860,7 +6860,7 @@ export const zh_CN: EnTranslations = {
           "materialsHeading": "成袋的矿石",
           "materialsBody": "没有哪个行业吃矿更快：ironlink hauberk一件就要五块铁矿，每件osmiumscale要三到四块锇矿外加一块铭钢锭，认真的甲匠要么自己挖遍Mirefen Marsh和Thornpeak Heights，要么花钱请人。铜矿从矿坑旁的铜矿脉出发供给第一档。\n\n金属之外还有软料：粗皮从狼和野猪尸体上剥取，碎骨与亚麻碎布来自日常猎杀，几乎每个配方都要一罐Smithing Flux（锻造坊20铜）。急用时Darva柜台就卖锇矿。",
           "ladderHeading": "在Darva的锻炉学艺",
-          "ladderBody": "两件野外普通件（Eastbrook Chainmail Vest与Warded Leggings）人人都会、随处可做。训练师梯子是Eastbrook锻造坊的三档九个配方：铜档技能0免费，ironlink档25技能每个25银，osmiumscale档50技能每个1金，各档在你达到其门槛的那一刻即可学习。\n\n梯子之外有两件特例：Boundstone Helm是铁匠组合配方，由训练师传授，无需工位，但只有武器锻造与护甲锻造双技能25的调谐铁匠才能制作；Kilnscale Mantle无需任何训练师，人人都会，但要技能75且绑定锻造坊，是本行业的三层压轴。",
+          "ladderBody": "两件野外普通件（Eastbrook Chainmail Vest与Warded Leggings）人人都会、随处可做。装备制作进阶是Eastbrook锻造坊的三档九个配方：铜档技能0免费，ironlink档25技能每个25银，osmiumscale档50技能每个1金，各档在你达到其门槛的那一刻即可学习。\n\n梯子之外有两件特例：Boundstone Helm是铁匠组合配方，由训练师传授，无需工位，但只有武器锻造与护甲锻造双技能25的调谐铁匠才能制作；Kilnscale Mantle无需任何训练师，人人都会，但要技能75且绑定锻造坊，是本行业的三层压轴。",
           "routeHeading": "杰作与通往125之路",
           "routeBody": "ironlink档及以上都掷杰作；只有护甲值的铜档普通件不会触发，因为杰作是对属性的提升，而它们没有属性。铁算一级材料，铭钢算二级。\n\n路线照常三档：铜到25，ironlink到50，osmiumscale到75，每档一开即学。护甲锻造的运气在于75之后：Kilnscale Mantle是三层配方，到99全速、之后半速，最后五十点约75次而非其他行业没有压轴配方时所需的150次。每件要七块锇矿五份Smithing Flux，先在Thornpeak和锻造坊柜台备货再开跑。\n\nDarva的订单每30分钟收八块铜矿，换来铜钱与经验，是消化低级矿的好去处。功业之书在技能50记下Hammer and Plate，125等着Grandmaster Armorcrafting。"
         },
@@ -15084,6 +15084,45 @@ export const zh_CN: EnTranslations = {
       },
       "freehold_open_bookshelf": {
         "name": "开放式书架"
+      },
+      "freehold_weapon_rack": {
+        "name": "武器架"
+      },
+      "freehold_iron_brazier": {
+        "name": "铁制火盆"
+      },
+      "freehold_patchwork_rug": {
+        "name": "拼布地毯"
+      },
+      "freehold_hide_armchair": {
+        "name": "兽皮扶手椅"
+      },
+      "freehold_clockwork_lamp": {
+        "name": "发条灯"
+      },
+      "freehold_glass_floor_lamp": {
+        "name": "玻璃落地灯"
+      },
+      "freehold_chart_easel": {
+        "name": "图表画架"
+      },
+      "freehold_jewel_floor_lamp": {
+        "name": "宝石落地灯"
+      },
+      "freehold_set_supper_table": {
+        "name": "摆好的晚餐桌"
+      },
+      "freehold_glow_lantern": {
+        "name": "微光灯笼"
+      },
+      "pattern_freehold_clockwork_lamp": {
+        "name": "结构图：发条灯"
+      },
+      "pattern_freehold_chart_easel": {
+        "name": "技法：图表画架"
+      },
+      "pattern_freehold_jewel_floor_lamp": {
+        "name": "设计图：宝石落地灯"
       },
       "conjured_water4": {
         "name": "魔法泉水"

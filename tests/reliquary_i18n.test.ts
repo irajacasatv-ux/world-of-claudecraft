@@ -84,13 +84,18 @@ describe('reliquary_i18n English resolution', () => {
     // by a name row in every M16 locale chunk, so a new page cannot quietly
     // render English to a CJK or Cyrillic reader. The 39 original pages keep
     // all-locale coverage; the collection, personal hammer, and Hearth pages
-    // add three.
-    expect(pageCount).toBe(42);
-    expect(descCount).toBe(42);
-    expect(manifest.length).toBe(84);
+    // and the first crafted furnishings add four.
+    expect(pageCount).toBe(43);
+    expect(descCount).toBe(43);
+    expect(manifest.length).toBe(86);
     expect(manifest.length).toBe(pageCount + descCount);
-    expect(manifest.filter((row) => row.field === 'name').length).toBe(42);
-    expect(manifest.filter((row) => row.field === 'desc').length).toBe(42);
+    expect(manifest.filter((row) => row.field === 'name').length).toBe(43);
+    expect(manifest.filter((row) => row.field === 'desc').length).toBe(43);
+    expect(manifest).toContainEqual({
+      id: 'hearth_first_crafts',
+      field: 'name',
+      source: 'First Hearth Crafts',
+    });
     expect(manifest).toContainEqual({
       id: 'hearth_basics',
       field: 'name',
@@ -192,8 +197,15 @@ describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
       // suite silently. Preserve all 39 reviewed pages. The new content pages
       // ship M16 names now; their Latin-language prose follows release fill.
       const namesFilled = M16_LOCALES.has(lang);
+      // The crafted Hearth page ships its name in every locale; all 39 earlier rows remain.
       expect(
-        Object.keys(tables[lang]).filter((id) => !M16_NEW_PAGES.has(id)).length,
+        tables[lang].hearth_first_crafts?.name?.trim().length,
+        `${lang} crafted Hearth name`,
+      ).toBeGreaterThan(0);
+      expect(
+        Object.keys(tables[lang]).filter(
+          (id) => !M16_NEW_PAGES.has(id) && id !== 'hearth_first_crafts',
+        ).length,
         `${lang} original row count`,
       ).toBe(39);
       for (const id of M16_NEW_PAGES) {

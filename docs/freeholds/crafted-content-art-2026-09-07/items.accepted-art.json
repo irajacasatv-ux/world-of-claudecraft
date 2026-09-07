@@ -1,0 +1,402 @@
+{
+  "schemaVersion": 1,
+  "batchId": "freehold-crafted-2026-09-07",
+  "executionHarness": "Codex",
+  "generator": "OpenAI built-in image generation",
+  "owner": "World of ClaudeCraft",
+  "license": "World of ClaudeCraft project-generated art, project asset, rights reserved",
+  "styleContract": "woc-item-icon-v1",
+  "contracts": {
+    "item": {
+      "width": 128,
+      "height": 128,
+      "maxBytes": 15360,
+      "alpha": "opaque"
+    }
+  },
+  "sourceEvidence": {
+    "path": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json",
+    "sha256": "c9e46f0c5752513c11a0245800c02df872c57292a033eeabc4d940a5fc86875f",
+    "bytes": 70685
+  },
+  "targetSets": {
+    "items": [
+      "freehold_weapon_rack",
+      "freehold_iron_brazier",
+      "freehold_patchwork_rug",
+      "freehold_hide_armchair",
+      "freehold_clockwork_lamp",
+      "freehold_glass_floor_lamp",
+      "freehold_chart_easel",
+      "freehold_jewel_floor_lamp",
+      "freehold_set_supper_table",
+      "freehold_glow_lantern",
+      "pattern_freehold_clockwork_lamp",
+      "pattern_freehold_chart_easel",
+      "pattern_freehold_jewel_floor_lamp"
+    ]
+  },
+  "processing": {
+    "method": "Canonical assets:items conversion from individually reviewed normalized masters.",
+    "converter": "scripts/convert_item_icons_webp.mjs"
+  },
+  "review": {
+    "reviewer": "Codex art implementation agent",
+    "sizesInspected": [
+      "original",
+      512,
+      128,
+      40,
+      28,
+      22,
+      "28-grayscale",
+      "64-circle"
+    ],
+    "sheets": [
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/master-review-1.webp",
+        "sha256": "95af9da2595b7f9bfbb767d6f53875a1e9b01ebb22d816ec006ab359f4775878",
+        "bytes": 282206
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/master-review-2.webp",
+        "sha256": "2d42e99b49f1c6dfdf8ed834360fd017cc674cf42fd9ce3d497ed2aa5b982265",
+        "bytes": 295390
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/master-review-3.webp",
+        "sha256": "0b8cf105e9aa74a1e6b93402f87d4ce62bf683c7e1f135862909002e79cb910e",
+        "bytes": 345490
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/master-review-4.webp",
+        "sha256": "d685cdf70888cf9b6b432e09ada35f2ae76deba167096a10e491c0667245e74c",
+        "bytes": 99548
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/shipping-size-review.webp",
+        "sha256": "36be256b2e057ce90f19db61379db194c36b21a86a60df02803a8550a69c6d8a",
+        "bytes": 358652
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/rug-framing-final.webp",
+        "sha256": "2dcb2910d802ed1e9dd51f803745d62f4ad00386d783c6b721d8b93736c89d8b",
+        "bytes": 344058
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/shipping-size-review-final.webp",
+        "sha256": "01d9900dae36138d937943195e0d522b7b23f7930e63418e72f8b4752702277d",
+        "bytes": 364938
+      }
+    ],
+    "verdict": "Individually inspected complete subjects, tactile materials, house lighting, opaque painted grounds, legible small silhouettes and wordless pattern illustrations. Corrected rug padding and three diagram identities after independent review. Final rug framing supersedes the earlier rug rows; the final shipping sheet reflects all current shipping bytes.",
+    "runtime": {
+      "status": "accepted",
+      "reviewer": "Codex frontend specialist and coordinator",
+      "manifest": {
+        "path": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/manifest.json",
+        "sha256": "09ab384da4112f60b75cf8ebff986451dad6fda709fef158dda160713c653832",
+        "bytes": 143845
+      },
+      "captureCount": 42,
+      "scope": "Sixteen desktop game captures, twenty-two touch landscape/portrait captures, two guide catalog captures and two guide catalog-prose captures. Every retained capture visually inspected. All thirteen icons appear in bags/bank, three actual Quartermaster purchases and unsent mail pattern parcels are visible, trainer affordable/skill-locked/no-copper sample states are clear, and six Hearth locales render correctly.",
+      "limitations": [
+        "Software-rendered browser emulation, not physical-device or hardware LOW profiling.",
+        "Ten furnishing outputs directly granted for presentation only; actual trainer/pattern/craft behavior is covered by simulation tests.",
+        "No placement or final GLB acceptance.",
+        "Furnishings and recipe patterns are both ineligible for equipment and action slots.",
+        "Portrait game viewport displays the existing rotate-device curtain; portrait guide remains usable.",
+        "Unsent mail preview covers three longest pattern names.",
+        "Browser fixture calls actual Options language hook; earlier mislabeled English captures are superseded."
+      ]
+    }
+  },
+  "assets": [
+    {
+      "id": "freehold_weapon_rack",
+      "name": "Weapon Rack",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_weapon_rack.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_weapon_rack.webp",
+        "sha256": "4100e8d04eba0cf59fe7914a030cb8e90a2c491dd05a6a4c20be3dbbbab45fa0",
+        "bytes": 1952,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "4100e8d04eba0cf59fe7914a030cb8e90a2c491dd05a6a4c20be3dbbbab45fa0",
+      "acceptedBytes": 1952,
+      "originalSha256": "e19a2018df3b588d1b40d732befa36c3b1c621cd2716218f959615fea6371a84",
+      "masterSha256": "464b5b1aa89641101295e3e0ade630b3abefc48d612877bbf8898b1b98106a33",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_weapon_rack"
+    },
+    {
+      "id": "freehold_iron_brazier",
+      "name": "Iron Brazier",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_iron_brazier.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_iron_brazier.webp",
+        "sha256": "588991eacf16699540a8a7b7d537811c0efbc8498aecadbb0ba196e7d274a908",
+        "bytes": 2136,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "588991eacf16699540a8a7b7d537811c0efbc8498aecadbb0ba196e7d274a908",
+      "acceptedBytes": 2136,
+      "originalSha256": "162be470b87718038adcf69c469fdcd53eb431aaf5f1416810e6635adc954b7c",
+      "masterSha256": "4a7f4c2d0bc887b882437c5470fb2fdee8317a71f72bd2224b4d2739ef4a98a7",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_iron_brazier"
+    },
+    {
+      "id": "freehold_patchwork_rug",
+      "name": "Patchwork Rug",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_patchwork_rug.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_patchwork_rug.webp",
+        "sha256": "b36a7ad324b28563f965658da66c6a043fa2a4ab614e0c960e0fd5a9b17912fb",
+        "bytes": 2376,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "b36a7ad324b28563f965658da66c6a043fa2a4ab614e0c960e0fd5a9b17912fb",
+      "acceptedBytes": 2376,
+      "originalSha256": "7b4ccb567eb649b24aba72e455e509efd10eda6c9f56f0e0e72282013f8ec07f",
+      "masterSha256": "8a9b473da0639d06fd10ba7ba1399c648ca3d3dcf4f3aa3ee2cd365eb9cf0083",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_patchwork_rug"
+    },
+    {
+      "id": "freehold_hide_armchair",
+      "name": "Hide Armchair",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_hide_armchair.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_hide_armchair.webp",
+        "sha256": "4af1b3f00918f3a3fa1bae7b55acfcff4b462f83f8846f460be5669b2e7656cb",
+        "bytes": 2452,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "4af1b3f00918f3a3fa1bae7b55acfcff4b462f83f8846f460be5669b2e7656cb",
+      "acceptedBytes": 2452,
+      "originalSha256": "db0f7108fdd66de26d1a7b384959caaf3a1e618bd2d8958a071ca6bc7ff2ed5d",
+      "masterSha256": "c81a343c179342fe1750a123a322afdb93c5c1939e1e123ccbd557d35d1f0d5a",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_hide_armchair"
+    },
+    {
+      "id": "freehold_clockwork_lamp",
+      "name": "Clockwork Lamp",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_clockwork_lamp.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_clockwork_lamp.webp",
+        "sha256": "dd2d98ea43cde46b91d4811224ab9245e82866b2116b0b11e289d2d2fc391eb5",
+        "bytes": 2848,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "dd2d98ea43cde46b91d4811224ab9245e82866b2116b0b11e289d2d2fc391eb5",
+      "acceptedBytes": 2848,
+      "originalSha256": "e4f584259e54f20a1ee554feed1efdcf53ef68836e020927e05abffe33bc410d",
+      "masterSha256": "f648c7c219cd84fe6629afbaa6593775e62a60ff6c224fc2b95ba03e87b4f425",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_clockwork_lamp"
+    },
+    {
+      "id": "freehold_glass_floor_lamp",
+      "name": "Glass Floor Lamp",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_glass_floor_lamp.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_glass_floor_lamp.webp",
+        "sha256": "e0bb0cca4dc4d288c682296d4a9b5f69f650a91ec759718ec09836c4a567833f",
+        "bytes": 2346,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "e0bb0cca4dc4d288c682296d4a9b5f69f650a91ec759718ec09836c4a567833f",
+      "acceptedBytes": 2346,
+      "originalSha256": "cf3608acc13e092416b0b108a2faa98546e6288bd04186c05f595fa388b073ff",
+      "masterSha256": "cbcc71627d821f6e38302df339018fa9f679277a11dddcbc082a501972711e03",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_glass_floor_lamp"
+    },
+    {
+      "id": "freehold_chart_easel",
+      "name": "Chart Easel",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_chart_easel.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_chart_easel.webp",
+        "sha256": "cd6f9d874d978ac4956aa7c2ab33105b111c87355a267d4815682331a94a8fca",
+        "bytes": 2214,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "cd6f9d874d978ac4956aa7c2ab33105b111c87355a267d4815682331a94a8fca",
+      "acceptedBytes": 2214,
+      "originalSha256": "cf529054393cebbcd61379f06a5b292e4d7ffe2e4f600355f15c49238d5fd00e",
+      "masterSha256": "df0e2099cdefe8c957b0fa452a8b72e048e92617a02bbd1a686c0d5444622a87",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_chart_easel"
+    },
+    {
+      "id": "freehold_jewel_floor_lamp",
+      "name": "Jewel Floor Lamp",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_jewel_floor_lamp.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_jewel_floor_lamp.webp",
+        "sha256": "305a20209d377d21a38d63551ca1f498242bc26aa0107ef3ca9f4603aba4b6c2",
+        "bytes": 2348,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "305a20209d377d21a38d63551ca1f498242bc26aa0107ef3ca9f4603aba4b6c2",
+      "acceptedBytes": 2348,
+      "originalSha256": "f32a57c6a4008634ec0644067c2273cf97fe209b2e77d77a336253ae046c6877",
+      "masterSha256": "0703ffa18c92912089ae61210e806d73ece6b728c365c741f9f579f326626c4f",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_jewel_floor_lamp"
+    },
+    {
+      "id": "freehold_set_supper_table",
+      "name": "Set Supper Table",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_set_supper_table.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_set_supper_table.webp",
+        "sha256": "7f3babb7318edb07f906beba5e985ad2da762ee20f7f803b79b5ac5323f26a83",
+        "bytes": 2502,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "7f3babb7318edb07f906beba5e985ad2da762ee20f7f803b79b5ac5323f26a83",
+      "acceptedBytes": 2502,
+      "originalSha256": "091a186cf6e8e708550963a44b55ba0d0a834c6066459fad908995a3b5709069",
+      "masterSha256": "2194fcdf5b77125c0adf54ea47e25a4e1a0189ea450e36f2f6e7c455ebf72735",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_set_supper_table"
+    },
+    {
+      "id": "freehold_glow_lantern",
+      "name": "Glow Lantern",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_glow_lantern.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_glow_lantern.webp",
+        "sha256": "ebe6e74fcaa4f380103160613add077fa712484f2f6ab1a4e4904def5aa25755",
+        "bytes": 2576,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "ebe6e74fcaa4f380103160613add077fa712484f2f6ab1a4e4904def5aa25755",
+      "acceptedBytes": 2576,
+      "originalSha256": "bf34c911a9314319210eb451c615b6049031e02bd6fd0a89d39b99ba101afbb3",
+      "masterSha256": "d8f6c144b557803de44614722e13d02190c6ac6076e78986f6c89d9d07ea4bbe",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:freehold_glow_lantern"
+    },
+    {
+      "id": "pattern_freehold_clockwork_lamp",
+      "name": "Schematic: Clockwork Lamp",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+      "shipping": {
+        "path": "public/ui/items/pattern_freehold_clockwork_lamp.webp",
+        "sha256": "9a6525792b3f241d0dffe0f9a7df96862cc4aff94c01145265cd29bde3d1f3b9",
+        "bytes": 2794,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "9a6525792b3f241d0dffe0f9a7df96862cc4aff94c01145265cd29bde3d1f3b9",
+      "acceptedBytes": 2794,
+      "originalSha256": "d53441d1bc2897b3c62778b98df69285e593ec2a9827736cb7b9d97354543dad",
+      "masterSha256": "110a1218964f1d99a0c1d911fe58d8c39c2e9fef71a61b2b8c7cf3e11ff873bf",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:pattern_freehold_clockwork_lamp"
+    },
+    {
+      "id": "pattern_freehold_chart_easel",
+      "name": "Technique: Chart Easel",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/pattern_freehold_chart_easel.webp",
+      "shipping": {
+        "path": "public/ui/items/pattern_freehold_chart_easel.webp",
+        "sha256": "15d323c951e3d2bf1cf1ac49f6528a7d397e10d03edeba2fec00353ddf1bba32",
+        "bytes": 3276,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "15d323c951e3d2bf1cf1ac49f6528a7d397e10d03edeba2fec00353ddf1bba32",
+      "acceptedBytes": 3276,
+      "originalSha256": "6143772c6f26ad16fa75454fb4237f0af3d72739cd1013f8c9984e0cb2f6f2cd",
+      "masterSha256": "82fa0b3f473f88d0def5ce62a1566c3175dbce3e200448dc7d1d7da42dd5d10d",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:pattern_freehold_chart_easel"
+    },
+    {
+      "id": "pattern_freehold_jewel_floor_lamp",
+      "name": "Design: Jewel Floor Lamp",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+      "shipping": {
+        "path": "public/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+        "sha256": "70ea954748a94d7670536d1eff78d7d757621006e115876d98d2ea63ab3932e4",
+        "bytes": 3336,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "acceptedSha256": "70ea954748a94d7670536d1eff78d7d757621006e115876d98d2ea63ab3932e4",
+      "acceptedBytes": 3336,
+      "originalSha256": "0190c0499271c1c73016e98640522069675b076597dff83b47a558f88531a6e2",
+      "masterSha256": "9cbe52957ec87a05370e2eec93124abf1f20a6aea58753feee7ad12c89102f7e",
+      "sourceRecord": "docs/freeholds/crafted-content-art-2026-09-07/staged-art-v2.json#assets:pattern_freehold_jewel_floor_lamp"
+    }
+  ]
+}

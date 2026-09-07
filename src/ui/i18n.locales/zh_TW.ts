@@ -6313,7 +6313,7 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'guide.reliquaryPage.personalNote': '每個角色只能持有自己的一件。此頁不計入達成或策展人等級。',
   'guide.reliquaryPage.catalogHeading': '頁面目錄',
   'guide.reliquaryPage.catalogBody':
-    '每一頁已編寫的聖物庫頁面及其聖物名稱。此列表僅含防劇透名稱：請在遊戲中開啟聖物庫查看你的進度、通關次數與剪影。',
+    '此處列出聖物庫的各頁及其聖物名稱。爐邊初作收錄每門工藝的一件家具：七種配方由訓練師教授，發條燈、圖表畫架和寶石立燈的圖紙由英雄軍需官以英雄印記出售。家具僅供裝飾，圖紙不計為聖物。請在遊戲中查看個人進度、通關次數和剪影。',
   'guide.reliquaryPage.spoilerNote':
     '個人首次發現紀錄、通關次數以及已有/未有狀態保留在遊戲用戶端。維基從不發佈玩家收藏。',
   'guide.reliquaryPage.shelfHeading': '{label}（{count}）',
@@ -12315,7 +12315,7 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
     '沒有哪個行業吃礦更快：ironlink hauberk一件就要五塊鐵礦，每件osmiumscale要三到四塊鋨礦外加一塊銘鋼錠，認真的甲匠要麼自己挖遍Mirefen Marsh和Thornpeak Heights，要麼花錢請人。金屬之外還有軟料：粗皮、碎骨與亞麻碎布，幾乎每個配方都要一罐Smithing Flux（鍛造坊20銅）。急用時Darva櫃檯就賣鋨礦。',
   'guide.profPages.craftProse.armorcrafting.ladderHeading': '在Darva的鍛爐學藝',
   'guide.profPages.craftProse.armorcrafting.ladderBody':
-    '兩件野外普通件（Eastbrook Chainmail Vest與Warded Leggings）人人都會、隨處可做。訓練師梯子是Eastbrook鍛造坊的三檔九個配方：銅檔技能0免費，ironlink檔25技能每個25銀，osmiumscale檔50技能每個1金。梯子之外有兩件特例：Boundstone Helm是鐵匠組合配方（需調諧且雙技能25，不佔工位）；Kilnscale Mantle無需老師，但要技能75且綁定鍛造坊，是本行業的三層壓軸。',
+    '兩件野外普通件（Eastbrook Chainmail Vest與Warded Leggings）人人都會、隨處可做。裝備製作進階是Eastbrook鍛造坊的三檔九個配方：銅檔技能0免費，ironlink檔25技能每個25銀，osmiumscale檔50技能每個1金。梯子之外有兩件特例：Boundstone Helm是鐵匠組合配方（需調諧且雙技能25，不佔工位）；Kilnscale Mantle無需老師，但要技能75且綁定鍛造坊，是本行業的三層壓軸。',
   'guide.profPages.craftProse.armorcrafting.routeHeading': '傑作與通往125之路',
   'guide.profPages.craftProse.armorcrafting.routeBody':
     'ironlink檔及以上都擲傑作；只有護甲值的銅檔普通件不會觸發。鐵算一級材料，銘鋼算二級。路線照常：銅到25，ironlink到50，osmiumscale到75。75之後的運氣在於Kilnscale Mantle：三層配方，到99全速、之後半速，最後五十點約75次而非150次；每件要七塊鋨礦五份Smithing Flux，先在Thornpeak和鍛造坊櫃檯備貨。Darva的訂單每30分鐘收八塊銅礦。技能50記下Hammer and Plate，125等著Grandmaster Armorcrafting。',
@@ -15215,4 +15215,17 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'entities.npcs.freehold_furnisher.name': '自由領地家具商',
   'entities.npcs.freehold_furnisher.title': '家居用品',
   'entities.npcs.freehold_furnisher.greeting': '結實的椅子，溫暖的提燈，還有放書的地方。來看看吧。',
+  'entities.items.freehold_weapon_rack.name': '武器架',
+  'entities.items.freehold_iron_brazier.name': '鐵製火盆',
+  'entities.items.freehold_patchwork_rug.name': '拼布地毯',
+  'entities.items.freehold_hide_armchair.name': '獸皮扶手椅',
+  'entities.items.freehold_clockwork_lamp.name': '發條燈',
+  'entities.items.freehold_glass_floor_lamp.name': '玻璃立燈',
+  'entities.items.freehold_chart_easel.name': '圖表畫架',
+  'entities.items.freehold_jewel_floor_lamp.name': '寶石立燈',
+  'entities.items.freehold_set_supper_table.name': '擺好的晚餐桌',
+  'entities.items.freehold_glow_lantern.name': '微光燈籠',
+  'entities.items.pattern_freehold_clockwork_lamp.name': '結構圖：發條燈',
+  'entities.items.pattern_freehold_chart_easel.name': '技法：圖表畫架',
+  'entities.items.pattern_freehold_jewel_floor_lamp.name': '設計圖：寶石立燈',
 };

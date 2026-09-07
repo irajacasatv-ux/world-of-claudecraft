@@ -1,0 +1,4269 @@
+{
+  "fixture": "Stock offline development world. Ten output items directly granted for art inspection; skills set to50 and copper70000 for trainer previews. Exactly48 Marks granted, three patterns purchased through real Quartermaster buttons. No placement, production activation, hardware LOW or GLB approval claimed.",
+  "executionHarness": "Codex",
+  "command": "node tmp/freehold-crafted-runtime.mjs",
+  "captures": [
+    {
+      "variant": "desktop",
+      "name": "quartermaster-patterns",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-quartermaster-patterns.png",
+      "sha256": "dc288375a05ff4a1a78594386b0df9419d6c0f8b3c58bde4765803b31e15cec0",
+      "text": "Quartermaster Vex: Goods\nHeroic Marks: 48\nSeal of the Nine Oaths\n12 Marks\nNiela's Coldlight Band\n12 Marks\nSutil's Gambit\n12 Marks\nOath of the Round Table\n12 Marks\nZyzz's Deathless Signet\n12 Marks\nThe Architect's Cornerstone\n12 Marks\nYumi's Keepsake Locket\n16 Marks\nZense Meridian\n16 Marks\nSwiftfang Talisman\n16 Marks\nMedallion of Endless Profit\n16 Marks\nWyrmfall Core\n12 Marks\nRecipe: Ironhusk Flask\n12 Marks\nRecipe: Warboar Flask\n12 Marks\nRecipe: Runewater Flask\n12 Marks\nRecipe: Stonepot Stew\n12 Marks\nRecipe: Warspice Skewers\n12 Marks\nRecipe: Sageleaf Chowder\n12 Marks\nRecipe: Grand Cauldron\n16 Marks\nRecipe: The Laden Hearth\n16 Marks\nRecipe: Peppered Deepbarb Catfish\n12 Marks\nRecipe: Roast Hollowgill Sturgeon\n12 Marks\nRecipe: Stonepot Feast\n16 Marks\nRecipe: Warspice Feast\n16 Marks\nRecipe: Sageleaf Feast\n16 Marks\nSchematic: Clockreel Fishing Rod\n16 Marks\nRecipe: Highwatch Gourd Soup\n12 Marks\nRecipe: Highwatch Barley Porridge\n12 Marks\nRecipe: Evergarden Sunmelon Tart\n12 Marks\nRecipe: Evergarden Harvest Platter\n12 Marks\nRecipe: Evergarden Braised Greens\n12 Marks\nRecipe: Harvest Feast\n12 Marks\nHighland Barley Seed\n12 Marks\nFrost Gourd Seed\n12 Marks\nThornpeak Cabbage Seed\n12 Marks\nFrost Lentils Seed\n12 Marks\nGilded Sunmelon Seed\n12 Marks\nEvergarden Greens Seed\n12 Marks\nGilded Yam Seed\n12 Marks\nEvergarden Pumpkin Seed\n12 Marks\nSchematic: Clockwork Lamp\n16 Marks\nTechnique: Chart Easel\n16 Marks\nDesign: Jewel Floor Lamp\n16 Marks",
+      "rect": {
+        "x": 428,
+        "y": 90,
+        "width": 744,
+        "height": 741,
+        "top": 90,
+        "right": 1172,
+        "bottom": 831,
+        "left": 428
+      },
+      "scrollWidth": 740,
+      "clientWidth": 740,
+      "images": [
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/seal_of_the_nine_oaths.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/nielas_coldlight_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sutils_gambit.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/oath_of_the_round_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/zyzzs_deathless_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/architects_cornerstone.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/yumis_keepsake_locket.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/zense_meridian.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/swiftfang_talisman.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/medallion_of_endless_profit.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/wyrmfall_core.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_ironhusk_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warboar_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_runewater_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_stonepot_stew.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warspice_skewers.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_sageleaf_chowder.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_grand_cauldron.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_laden_hearth.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_peppered_deepbarb_catfish.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_roast_hollowgill_sturgeon.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_stonepot_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warspice_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_sageleaf_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_clockreel_fishing_rod.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_highwatch_gourd_soup.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_highwatch_barley_porridge.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_sunmelon_tart.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_harvest_platter.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_braised_greens.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_harvest_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/highland_barley_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/frost_gourd_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thornpeak_cabbage_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/frost_lentils_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gilded_sunmelon_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/evergarden_greens_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gilded_yam_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/evergarden_pumpkin_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "quartermaster-after-purchase",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-quartermaster-after-purchase.png",
+      "sha256": "41ad957f595a81c5aab0bf76142057df9b0157754e6bee5fb13074ecf99133ca",
+      "text": "Quartermaster Vex: Goods\nHeroic Marks: 0\nSeal of the Nine Oaths\n12 Marks\nNiela's Coldlight Band\n12 Marks\nSutil's Gambit\n12 Marks\nOath of the Round Table\n12 Marks\nZyzz's Deathless Signet\n12 Marks\nThe Architect's Cornerstone\n12 Marks\nYumi's Keepsake Locket\n16 Marks\nZense Meridian\n16 Marks\nSwiftfang Talisman\n16 Marks\nMedallion of Endless Profit\n16 Marks\nWyrmfall Core\n12 Marks\nRecipe: Ironhusk Flask\n12 Marks\nRecipe: Warboar Flask\n12 Marks\nRecipe: Runewater Flask\n12 Marks\nRecipe: Stonepot Stew\n12 Marks\nRecipe: Warspice Skewers\n12 Marks\nRecipe: Sageleaf Chowder\n12 Marks\nRecipe: Grand Cauldron\n16 Marks\nRecipe: The Laden Hearth\n16 Marks\nRecipe: Peppered Deepbarb Catfish\n12 Marks\nRecipe: Roast Hollowgill Sturgeon\n12 Marks\nRecipe: Stonepot Feast\n16 Marks\nRecipe: Warspice Feast\n16 Marks\nRecipe: Sageleaf Feast\n16 Marks\nSchematic: Clockreel Fishing Rod\n16 Marks\nRecipe: Highwatch Gourd Soup\n12 Marks\nRecipe: Highwatch Barley Porridge\n12 Marks\nRecipe: Evergarden Sunmelon Tart\n12 Marks\nRecipe: Evergarden Harvest Platter\n12 Marks\nRecipe: Evergarden Braised Greens\n12 Marks\nRecipe: Harvest Feast\n12 Marks\nHighland Barley Seed\n12 Marks\nFrost Gourd Seed\n12 Marks\nThornpeak Cabbage Seed\n12 Marks\nFrost Lentils Seed\n12 Marks\nGilded Sunmelon Seed\n12 Marks\nEvergarden Greens Seed\n12 Marks\nGilded Yam Seed\n12 Marks\nEvergarden Pumpkin Seed\n12 Marks\nSchematic: Clockwork Lamp\n16 Marks\nTechnique: Chart Easel\n16 Marks\nDesign: Jewel Floor Lamp\n16 Marks",
+      "rect": {
+        "x": 428,
+        "y": 90,
+        "width": 744,
+        "height": 741,
+        "top": 90,
+        "right": 1172,
+        "bottom": 831,
+        "left": 428
+      },
+      "scrollWidth": 740,
+      "clientWidth": 740,
+      "images": [
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/seal_of_the_nine_oaths.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/nielas_coldlight_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sutils_gambit.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/oath_of_the_round_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/zyzzs_deathless_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/architects_cornerstone.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/yumis_keepsake_locket.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/zense_meridian.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/swiftfang_talisman.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/medallion_of_endless_profit.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/wyrmfall_core.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_ironhusk_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warboar_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_runewater_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_stonepot_stew.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warspice_skewers.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_sageleaf_chowder.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_grand_cauldron.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_laden_hearth.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_peppered_deepbarb_catfish.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_roast_hollowgill_sturgeon.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_stonepot_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warspice_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_sageleaf_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_clockreel_fishing_rod.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_highwatch_gourd_soup.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_highwatch_barley_porridge.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_sunmelon_tart.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_harvest_platter.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_braised_greens.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_harvest_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/highland_barley_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/frost_gourd_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thornpeak_cabbage_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/frost_lentils_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gilded_sunmelon_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/evergarden_greens_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gilded_yam_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/evergarden_pumpkin_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "bags-thirteen-icons",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-bags-thirteen-icons.png",
+      "sha256": "8bdc68c7437ffa5f779e38181bee148ce5811cac4274f1baddfdc975801b2729",
+      "text": "Bags\n13/16\nAll\nWeapons\nArmor\nConsumables\nMaterials\nTools\nQuest\nMounts\nRecent\nQuality\nName\nSort\nLink wallet\n7\ngold\n0\nsilver\n0\ncopper",
+      "rect": {
+        "x": 1173,
+        "y": 473,
+        "width": 310,
+        "height": 421,
+        "top": 473,
+        "right": 1483,
+        "bottom": 894,
+        "left": 1173
+      },
+      "scrollWidth": 306,
+      "clientWidth": 306,
+      "images": [
+        {
+          "src": "/ui/items/backpack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "furnishing-tooltip",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-furnishing-tooltip.png",
+      "sha256": "80567cae84cd22e956c94815fd5ed9febb34a43f0c4f2af6bd99c3f45eeb40cb",
+      "text": "Jewel Floor Lamp\nRare Furnishing\nFootprint: 2 by 2 cells.\nDecor cost: 4.\nPlaced on the floor.\nSell price: 39c\nDrag out into the world to destroy\nShift-click to link this item in chat.",
+      "rect": {
+        "x": 1271,
+        "y": 593,
+        "width": 167.125,
+        "height": 170,
+        "top": 593,
+        "right": 1438.125,
+        "bottom": 763,
+        "left": 1271
+      },
+      "scrollWidth": 163,
+      "clientWidth": 163,
+      "images": [],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "pattern-tooltip",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-pattern-tooltip.png",
+      "sha256": "f7ce416251a16f1f77f8cd8d576b346338ebc67c6cb4087939ec5850bd396d5c",
+      "text": "Design: Jewel Floor Lamp\nRare Pattern\nUse: Teaches you how to craft Jewel Floor Lamp.\nRequires Jewelcrafting 50\nSell price: 1s\nClick to use\nDrag out into the world to destroy\nShift-click to link this item in chat.",
+      "rect": {
+        "x": 1224,
+        "y": 649,
+        "width": 233.234375,
+        "height": 160.5,
+        "top": 649,
+        "right": 1457.234375,
+        "bottom": 809.5,
+        "left": 1224
+      },
+      "scrollWidth": 229,
+      "clientWidth": 229,
+      "images": [],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "bank-thirteen-icons",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-bank-thirteen-icons.png",
+      "sha256": "bcace186ff7045c679276ee530c0adc9534f91a973ade69a48da4dc429bb10e3",
+      "text": "Bank The Gilded Strongbox\nPersonal\nVault\nAll\nWeapons\nArmor\nConsumables\nMaterials\nTools\nQuest\nMounts\nRecent\nQuality\nName\nDeposit all materials\nSends every crafting material (anything whose tooltip reads Material or Fine Material) from your bags to the bank in one trip. Everything else stays in your bags, gathering tools, quest items, consumables, and gray items included.\n13 of 24 slots\nBuy 6 slots\n5\nsilver\n0\ncopper",
+      "rect": {
+        "x": 372,
+        "y": 90,
+        "width": 420,
+        "height": 493,
+        "top": 90,
+        "right": 792,
+        "bottom": 583,
+        "left": 372
+      },
+      "scrollWidth": 416,
+      "clientWidth": 416,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "mail-pattern-parcels",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-mail-pattern-parcels.png",
+      "sha256": "fd5dedfc20a19767865f56e2bcf9c8e844cafa473441e8ba58e672a290048211",
+      "text": "Mailbox The Ravenpost\nInbox (1)\nSend\nTO\nSUBJECT\nMESSAGE\nATTACH COIN\nPARCELS\nSchematic: Clockwork Lamp\nTechnique: Chart Easel\nDesign: Jewel Floor Lamp\nPostage: 30c. The raven flies for about 45s.\nSend letter",
+      "rect": {
+        "x": 598,
+        "y": 118,
+        "width": 460,
+        "height": 560,
+        "top": 118,
+        "right": 1058,
+        "bottom": 678,
+        "left": 598
+      },
+      "scrollWidth": 456,
+      "clientWidth": 456,
+      "images": [
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "trainer-affordable",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-trainer-affordable.png",
+      "sha256": "c54028db5abcb529e3f134b9f08e7e7433574034d05270834390c69ceb3e804d",
+      "text": "Training: Forgemistress Darva\nArmorcrafting\nCoppermail Gauntlets\nAvailable\nFree\nCoppermail Sabatons\nAvailable\nFree\nEastbrook Chainmail Vest\nKnown\nEastbrook Warded Leggings\nKnown\nRiveted Copper Girdle\nAvailable\nFree\nBoundstone Helm\nAvailable\n25s\nIronlink Hauberk\nAvailable\n25s\nIronlink Legguards\nAvailable\n25s\nIronlink Spaulders\nAvailable\n25s\nIron Brazier\nAvailable\n1g 0s\nOsmiumscale Cuirass\nAvailable\n1g 0s\nOsmiumscale Greathelm\nAvailable\n1g 0s\nOsmiumscale Leggings\nAvailable\n1g 0s\nForgefold Plating\nTaught at Armorcrafting 75\nLocked\n4g 0s\nKilnscale Mantle\nKnown\nJewelcrafting\nCoiled Copper Torc\nAvailable\nFree\nHammered Copper Band\nAvailable\nFree\nPolished Copper Loop\nAvailable\nFree\nEtched Iron Loop\nAvailable\n25s\nIron Link Choker\nAvailable\n25s\nRiveted Iron Signet\nAvailable\n25s\nBurnished Osmium Amulet\nAvailable\n1g 0s\nGleaming Osmium Loop\nAvailable\n1g 0s\nWeighted Osmium Band\nAvailable\n1g 0s\nPrismglass Setting\nTaught at Jewelcrafting 75\nLocked\n4g 0s\nWeaponcrafting\nCopper Bearded Axe\nAvailable\nFree\nCopper Flanged Mace\nAvailable\nFree\nEastbrook Arming Sword\nKnown\nIronbark Boar Spear\nAvailable\nFree\nGravewyrm Gauntlets\nAvailable\n25s\nIronedge Longsword\nAvailable\n25s\nIronshod Maul\nAvailable\n25s\nWhetted Iron Dirk\nAvailable\n25s\nGlyphsteel War Axe\nAvailable\n1g 0s\nHighpine Battle Staff\nAvailable\n1g 0s\nFenshadow Maul\nAvailable\n1g 0s\nWeapon Rack\nAvailable\n1g 0s\nOsmium Warblade\nAvailable\n1g 0s\nDuskforged Billet\nTaught at Weaponcrafting 75\nLocked\n4g 0s",
+      "rect": {
+        "x": 600,
+        "y": 90,
+        "width": 400,
+        "height": 741,
+        "top": 90,
+        "right": 1000,
+        "bottom": 831,
+        "left": 600
+      },
+      "scrollWidth": 396,
+      "clientWidth": 396,
+      "images": [
+        {
+          "src": "/ui/items/coppermail_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coppermail_sabatons.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_chain_vest.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_warded_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_copper_girdle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/boundstone_helm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_hauberk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_legguards.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_spaulders.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_cuirass.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_greathelm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/forgefold_plating.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sootscale_mantle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coiled_copper_torc.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/hammered_copper_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/polished_copper_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/etched_iron_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/iron_link_choker.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_iron_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/burnished_thorium_amulet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gleaming_thorium_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/weighted_thorium_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/prismglass_setting.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_bearded_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_flanged_mace.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_arming_sword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironbark_boar_spear.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gravewyrm_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironedge_longsword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironshod_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/whetted_iron_dirk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/arcanite_war_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/elderwood_battle_staff.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/fenshadow_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thorium_warblade.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/duskforged_billet.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "trainer-locked",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-trainer-locked.png",
+      "sha256": "5aacc6a6858e3d86a8508d895d7cee2f7f8b7c78082ea053709583ce4a779c61",
+      "text": "Training: Forgemistress Darva\nArmorcrafting\nCoppermail Gauntlets\nAvailable\nFree\nCoppermail Sabatons\nAvailable\nFree\nEastbrook Chainmail Vest\nKnown\nEastbrook Warded Leggings\nKnown\nRiveted Copper Girdle\nAvailable\nFree\nBoundstone Helm\nAvailable\n25s\nIronlink Hauberk\nAvailable\n25s\nIronlink Legguards\nAvailable\n25s\nIronlink Spaulders\nAvailable\n25s\nIron Brazier\nTaught at Armorcrafting 50\nLocked\n1g 0s\nOsmiumscale Cuirass\nTaught at Armorcrafting 50\nLocked\n1g 0s\nOsmiumscale Greathelm\nTaught at Armorcrafting 50\nLocked\n1g 0s\nOsmiumscale Leggings\nTaught at Armorcrafting 50\nLocked\n1g 0s\nForgefold Plating\nTaught at Armorcrafting 75\nLocked\n4g 0s\nKilnscale Mantle\nKnown\nJewelcrafting\nCoiled Copper Torc\nAvailable\nFree\nHammered Copper Band\nAvailable\nFree\nPolished Copper Loop\nAvailable\nFree\nEtched Iron Loop\nAvailable\n25s\nIron Link Choker\nAvailable\n25s\nRiveted Iron Signet\nAvailable\n25s\nBurnished Osmium Amulet\nAvailable\n1g 0s\nGleaming Osmium Loop\nAvailable\n1g 0s\nWeighted Osmium Band\nAvailable\n1g 0s\nPrismglass Setting\nTaught at Jewelcrafting 75\nLocked\n4g 0s\nWeaponcrafting\nCopper Bearded Axe\nAvailable\nFree\nCopper Flanged Mace\nAvailable\nFree\nEastbrook Arming Sword\nKnown\nIronbark Boar Spear\nAvailable\nFree\nGravewyrm Gauntlets\nAvailable\n25s\nIronedge Longsword\nAvailable\n25s\nIronshod Maul\nAvailable\n25s\nWhetted Iron Dirk\nAvailable\n25s\nGlyphsteel War Axe\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nHighpine Battle Staff\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nFenshadow Maul\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nWeapon Rack\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nOsmium Warblade\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nDuskforged Billet\nTaught at Weaponcrafting 75\nLocked\n4g 0s",
+      "rect": {
+        "x": 600,
+        "y": 90,
+        "width": 400,
+        "height": 741,
+        "top": 90,
+        "right": 1000,
+        "bottom": 831,
+        "left": 600
+      },
+      "scrollWidth": 396,
+      "clientWidth": 396,
+      "images": [
+        {
+          "src": "/ui/items/coppermail_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coppermail_sabatons.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_chain_vest.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_warded_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_copper_girdle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/boundstone_helm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_hauberk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_legguards.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_spaulders.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_cuirass.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_greathelm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/forgefold_plating.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sootscale_mantle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coiled_copper_torc.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/hammered_copper_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/polished_copper_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/etched_iron_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/iron_link_choker.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_iron_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/burnished_thorium_amulet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gleaming_thorium_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/weighted_thorium_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/prismglass_setting.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_bearded_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_flanged_mace.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_arming_sword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironbark_boar_spear.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gravewyrm_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironedge_longsword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironshod_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/whetted_iron_dirk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/arcanite_war_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/elderwood_battle_staff.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/fenshadow_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thorium_warblade.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/duskforged_billet.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "trainer-no-copper",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-trainer-no-copper.png",
+      "sha256": "6bda7cc174eee409b0673031be409c8fc4cc3cefc0df493da19f62fed80983a8",
+      "text": "Training: Forgemistress Darva\nArmorcrafting\nCoppermail Gauntlets\nAvailable\nFree\nCoppermail Sabatons\nAvailable\nFree\nEastbrook Chainmail Vest\nKnown\nEastbrook Warded Leggings\nKnown\nRiveted Copper Girdle\nAvailable\nFree\nBoundstone Helm\nAvailable\n25s\nIronlink Hauberk\nAvailable\n25s\nIronlink Legguards\nAvailable\n25s\nIronlink Spaulders\nAvailable\n25s\nIron Brazier\nAvailable\n1g 0s\nOsmiumscale Cuirass\nAvailable\n1g 0s\nOsmiumscale Greathelm\nAvailable\n1g 0s\nOsmiumscale Leggings\nAvailable\n1g 0s\nForgefold Plating\nTaught at Armorcrafting 75\nLocked\n4g 0s\nKilnscale Mantle\nKnown\nJewelcrafting\nCoiled Copper Torc\nAvailable\nFree\nHammered Copper Band\nAvailable\nFree\nPolished Copper Loop\nAvailable\nFree\nEtched Iron Loop\nAvailable\n25s\nIron Link Choker\nAvailable\n25s\nRiveted Iron Signet\nAvailable\n25s\nBurnished Osmium Amulet\nAvailable\n1g 0s\nGleaming Osmium Loop\nAvailable\n1g 0s\nWeighted Osmium Band\nAvailable\n1g 0s\nPrismglass Setting\nTaught at Jewelcrafting 75\nLocked\n4g 0s\nWeaponcrafting\nCopper Bearded Axe\nAvailable\nFree\nCopper Flanged Mace\nAvailable\nFree\nEastbrook Arming Sword\nKnown\nIronbark Boar Spear\nAvailable\nFree\nGravewyrm Gauntlets\nAvailable\n25s\nIronedge Longsword\nAvailable\n25s\nIronshod Maul\nAvailable\n25s\nWhetted Iron Dirk\nAvailable\n25s\nGlyphsteel War Axe\nAvailable\n1g 0s\nHighpine Battle Staff\nAvailable\n1g 0s\nFenshadow Maul\nAvailable\n1g 0s\nWeapon Rack\nAvailable\n1g 0s\nOsmium Warblade\nAvailable\n1g 0s\nDuskforged Billet\nTaught at Weaponcrafting 75\nLocked\n4g 0s",
+      "rect": {
+        "x": 600,
+        "y": 90,
+        "width": 400,
+        "height": 741,
+        "top": 90,
+        "right": 1000,
+        "bottom": 831,
+        "left": 600
+      },
+      "scrollWidth": 396,
+      "clientWidth": 396,
+      "images": [
+        {
+          "src": "/ui/items/coppermail_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coppermail_sabatons.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_chain_vest.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_warded_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_copper_girdle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/boundstone_helm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_hauberk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_legguards.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_spaulders.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_cuirass.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_greathelm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/forgefold_plating.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sootscale_mantle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coiled_copper_torc.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/hammered_copper_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/polished_copper_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/etched_iron_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/iron_link_choker.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_iron_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/burnished_thorium_amulet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gleaming_thorium_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/weighted_thorium_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/prismglass_setting.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_bearded_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_flanged_mace.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_arming_sword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironbark_boar_spear.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gravewyrm_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironedge_longsword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironshod_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/whetted_iron_dirk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/arcanite_war_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/elderwood_battle_staff.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/fenshadow_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thorium_warblade.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/duskforged_billet.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-en",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-hearth-en.png",
+      "sha256": "8e9a136feeecdec11239db224dbdaad2579a7a836c646e4330320e7d2c469d82",
+      "text": "The Reliquary\n11/448 relics\nSpoilskeeper\n2%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n1/87\nHearth\n10/18\nBack to shelf\nFirst Hearth Crafts\nIlluminated\n\nA furnishing from each craft. Trainers teach seven recipes; the Heroic Quartermaster sells the Clockwork Lamp schematic, Chart Easel technique, and Jewel Floor Lamp design for Heroic Marks. All furnishings are ornamental.\n\n10/10\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 440,
+        "y": 90,
+        "width": 720,
+        "height": 434.890625,
+        "top": 90,
+        "right": 1160,
+        "bottom": 524.890625,
+        "left": 440
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-zh_CN",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-hearth-zh_CN.png",
+      "sha256": "590c3f583f0aba0e2522df992b8fac1971365b5933f4b0ea9ebd9b43fb9f524b",
+      "text": "圣物库\n11/448 件圣物\n战利品保管者\n2%\n界面追踪器\n总览\n征服者\n0/313\n专业\n0/58\n远景\n1/87\n炉边\n10/18\n返回书架\n炉边初作\n已点亮\n\n每门工艺各有一件家具。训练师教授七种配方；英雄军需官以英雄印记出售发条灯结构图、图表画架技法和宝石落地灯设计图。所有家具仅供装饰。\n\n10/10\n全部\n已收录\n尚未获得\n使用方向键在圣物之间移动，Home 键和 End 键跳到首尾。",
+      "rect": {
+        "x": 440,
+        "y": 90,
+        "width": 720,
+        "height": 422.09375,
+        "top": 90,
+        "right": 1160,
+        "bottom": 512.09375,
+        "left": 440
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-zh_TW",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-hearth-zh_TW.png",
+      "sha256": "43fd8be3b7af3b7440c8c09b3706fc2aa8fa17e21820d692da60c667672b2b76",
+      "text": "聖物庫\n11/448 件聖物\n戰利品保管者\n2%\n介面追蹤器\n總覽\n征服者\n0/313\n專業\n0/58\n遠景\n1/87\n爐邊\n10/18\n返回書架\n爐邊初作\n已點亮\n\n每門工藝各有一件家具。訓練師教授七種配方；英雄軍需官以英雄印記出售發條燈結構圖、圖表畫架技法和寶石立燈設計圖。所有家具僅供裝飾。\n\n10/10\n全部\n已收錄\n尚未獲得\n使用方向鍵在聖物之間移動，Home 鍵和 End 鍵跳到首尾。",
+      "rect": {
+        "x": 440,
+        "y": 90,
+        "width": 720,
+        "height": 422.09375,
+        "top": 90,
+        "right": 1160,
+        "bottom": 512.09375,
+        "left": 440
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-ja_JP",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-hearth-ja_JP.png",
+      "sha256": "6e16345ccb4ac25196c7c5383f733a7a750094868ce3aac19c26634bc9399834",
+      "text": "聖遺物庫\n聖遺物 11/448\n戦利品の守り手\n2%\nHUDトラッカー\n概要\n征服者\n0/313\n専門技能\n0/58\n地平\n1/87\n炉辺\n10/18\n棚に戻る\n初めての炉辺の手仕事\n照耀済み\n\n各製作技能で作る家具を一つずつ収録。訓練師が七つのレシピを教え、英雄の補給官が英雄の印と引き換えに、ぜんまい仕掛けのランプの設計図、図表の画架の技法書、宝石の床置きランプの図案を販売します。家具はすべて装飾用です。\n\n10/10\nすべて\n収蔵済み\n未発見\n矢印キーで聖遺物を移動、Home キーと End キーで先頭と末尾に移動します。",
+      "rect": {
+        "x": 440,
+        "y": 90,
+        "width": 720,
+        "height": 443.890625,
+        "top": 90,
+        "right": 1160,
+        "bottom": 533.890625,
+        "left": 440
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-ko_KR",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-hearth-ko_KR.png",
+      "sha256": "bb790159a9aa0439f11e6b1b9d67e0f962060e9cb276e4dd7f440d218116d59e",
+      "text": "성물고\n성물 11/448\n전리품 수호자\n2%\nHUD 추적기\n개요\n정복자\n0/313\n전문 기술\n0/58\n지평\n1/87\n보금자리\n10/18\n선반으로 돌아가기\n첫 보금자리 공예\n조명됨\n\n각 제작 기술의 가구를 하나씩 모읍니다. 훈련교관은 제작법 일곱 가지를 가르치며, 영웅 병참장교는 영웅의 징표로 태엽 램프 설계도, 도표 이젤 기법서, 보석 스탠드등 도안을 판매합니다. 모든 가구는 장식용입니다.\n\n10/10\n전체\n수록됨\n아직 없음\n방향키로 성물 사이를 이동하고, Home 키와 End 키로 처음과 끝으로 이동합니다.",
+      "rect": {
+        "x": 440,
+        "y": 90,
+        "width": 720,
+        "height": 418.09375,
+        "top": 90,
+        "right": 1160,
+        "bottom": 508.09375,
+        "left": 440
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "desktop",
+      "name": "hearth-ru_RU",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/desktop-hearth-ru_RU.png",
+      "sha256": "366b65b9facd03ecaf1a511053d86bf7e620e5e86d54f98070620c7a291ed6b3",
+      "text": "Реликварий\n11/448 реликвий\nХранитель трофеев\n2 %\nСписок на экране\nОбзор\nЗавоеватели\n0/313\nПрофессии\n0/58\nГоризонты\n1/87\nОчаг\n10/18\nНазад к полке\nПервые поделки для дома\nОзарено\n\nПо одному предмету мебели от каждого ремесла. Наставники обучают семи рецептам; героический интендант продаёт схему заводной лампы, технику мольберта с чертежом и эскиз самоцветного торшера за героические знаки. Вся мебель служит украшением.\n\n10/10\nВсе\nКаталогизированы\nНе найдены\nИспользуйте стрелки для перехода между реликвиями, Home и End для перехода к началу и концу.",
+      "rect": {
+        "x": 440,
+        "y": 90,
+        "width": 720,
+        "height": 434.890625,
+        "top": 90,
+        "right": 1160,
+        "bottom": 524.890625,
+        "left": 440
+      },
+      "scrollWidth": 716,
+      "clientWidth": 716,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "desktop-v6"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "quartermaster-patterns",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-quartermaster-patterns.png",
+      "sha256": "07bbf205bca9f3b2331c5bd00a9e39d3f6ed8451f9001ff1bc30f6622182df88",
+      "text": "Quartermaster Vex: Goods\nHeroic Marks: 48\nSeal of the Nine Oaths\n12 Marks\nNiela's Coldlight Band\n12 Marks\nSutil's Gambit\n12 Marks\nOath of the Round Table\n12 Marks\nZyzz's Deathless Signet\n12 Marks\nThe Architect's Cornerstone\n12 Marks\nYumi's Keepsake Locket\n16 Marks\nZense Meridian\n16 Marks\nSwiftfang Talisman\n16 Marks\nMedallion of Endless Profit\n16 Marks\nWyrmfall Core\n12 Marks\nRecipe: Ironhusk Flask\n12 Marks\nRecipe: Warboar Flask\n12 Marks\nRecipe: Runewater Flask\n12 Marks\nRecipe: Stonepot Stew\n12 Marks\nRecipe: Warspice Skewers\n12 Marks\nRecipe: Sageleaf Chowder\n12 Marks\nRecipe: Grand Cauldron\n16 Marks\nRecipe: The Laden Hearth\n16 Marks\nRecipe: Peppered Deepbarb Catfish\n12 Marks\nRecipe: Roast Hollowgill Sturgeon\n12 Marks\nRecipe: Stonepot Feast\n16 Marks\nRecipe: Warspice Feast\n16 Marks\nRecipe: Sageleaf Feast\n16 Marks\nSchematic: Clockreel Fishing Rod\n16 Marks\nRecipe: Highwatch Gourd Soup\n12 Marks\nRecipe: Highwatch Barley Porridge\n12 Marks\nRecipe: Evergarden Sunmelon Tart\n12 Marks\nRecipe: Evergarden Harvest Platter\n12 Marks\nRecipe: Evergarden Braised Greens\n12 Marks\nRecipe: Harvest Feast\n12 Marks\nHighland Barley Seed\n12 Marks\nFrost Gourd Seed\n12 Marks\nThornpeak Cabbage Seed\n12 Marks\nFrost Lentils Seed\n12 Marks\nGilded Sunmelon Seed\n12 Marks\nEvergarden Greens Seed\n12 Marks\nGilded Yam Seed\n12 Marks\nEvergarden Pumpkin Seed\n12 Marks\nSchematic: Clockwork Lamp\n16 Marks\nTechnique: Chart Easel\n16 Marks\nDesign: Jewel Floor Lamp\n16 Marks",
+      "rect": {
+        "x": 101.28125,
+        "y": 12,
+        "width": 641.4375,
+        "height": 368,
+        "top": 12,
+        "right": 742.71875,
+        "bottom": 380,
+        "left": 101.28125
+      },
+      "scrollWidth": 637,
+      "clientWidth": 637,
+      "images": [
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/seal_of_the_nine_oaths.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/nielas_coldlight_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sutils_gambit.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/oath_of_the_round_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/zyzzs_deathless_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/architects_cornerstone.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/yumis_keepsake_locket.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/zense_meridian.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/swiftfang_talisman.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/medallion_of_endless_profit.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/wyrmfall_core.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_ironhusk_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warboar_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_runewater_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_stonepot_stew.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warspice_skewers.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_sageleaf_chowder.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_grand_cauldron.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_laden_hearth.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_peppered_deepbarb_catfish.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_roast_hollowgill_sturgeon.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_stonepot_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warspice_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_sageleaf_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_clockreel_fishing_rod.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_highwatch_gourd_soup.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_highwatch_barley_porridge.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_sunmelon_tart.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_harvest_platter.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_braised_greens.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_harvest_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/highland_barley_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/frost_gourd_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thornpeak_cabbage_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/frost_lentils_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gilded_sunmelon_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/evergarden_greens_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gilded_yam_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/evergarden_pumpkin_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "quartermaster-after-purchase",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-quartermaster-after-purchase.png",
+      "sha256": "7a1cfe3596ee7e173ef8d98adfaff1c5dce3bc4627e600013637a005434c9d0b",
+      "text": "Quartermaster Vex: Goods\nHeroic Marks: 0\nSeal of the Nine Oaths\n12 Marks\nNiela's Coldlight Band\n12 Marks\nSutil's Gambit\n12 Marks\nOath of the Round Table\n12 Marks\nZyzz's Deathless Signet\n12 Marks\nThe Architect's Cornerstone\n12 Marks\nYumi's Keepsake Locket\n16 Marks\nZense Meridian\n16 Marks\nSwiftfang Talisman\n16 Marks\nMedallion of Endless Profit\n16 Marks\nWyrmfall Core\n12 Marks\nRecipe: Ironhusk Flask\n12 Marks\nRecipe: Warboar Flask\n12 Marks\nRecipe: Runewater Flask\n12 Marks\nRecipe: Stonepot Stew\n12 Marks\nRecipe: Warspice Skewers\n12 Marks\nRecipe: Sageleaf Chowder\n12 Marks\nRecipe: Grand Cauldron\n16 Marks\nRecipe: The Laden Hearth\n16 Marks\nRecipe: Peppered Deepbarb Catfish\n12 Marks\nRecipe: Roast Hollowgill Sturgeon\n12 Marks\nRecipe: Stonepot Feast\n16 Marks\nRecipe: Warspice Feast\n16 Marks\nRecipe: Sageleaf Feast\n16 Marks\nSchematic: Clockreel Fishing Rod\n16 Marks\nRecipe: Highwatch Gourd Soup\n12 Marks\nRecipe: Highwatch Barley Porridge\n12 Marks\nRecipe: Evergarden Sunmelon Tart\n12 Marks\nRecipe: Evergarden Harvest Platter\n12 Marks\nRecipe: Evergarden Braised Greens\n12 Marks\nRecipe: Harvest Feast\n12 Marks\nHighland Barley Seed\n12 Marks\nFrost Gourd Seed\n12 Marks\nThornpeak Cabbage Seed\n12 Marks\nFrost Lentils Seed\n12 Marks\nGilded Sunmelon Seed\n12 Marks\nEvergarden Greens Seed\n12 Marks\nGilded Yam Seed\n12 Marks\nEvergarden Pumpkin Seed\n12 Marks\nSchematic: Clockwork Lamp\n16 Marks\nTechnique: Chart Easel\n16 Marks\nDesign: Jewel Floor Lamp\n16 Marks",
+      "rect": {
+        "x": 101.28125,
+        "y": 12,
+        "width": 641.4375,
+        "height": 368,
+        "top": 12,
+        "right": 742.71875,
+        "bottom": 380,
+        "left": 101.28125
+      },
+      "scrollWidth": 637,
+      "clientWidth": 637,
+      "images": [
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/seal_of_the_nine_oaths.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/nielas_coldlight_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sutils_gambit.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/oath_of_the_round_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/zyzzs_deathless_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/architects_cornerstone.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/yumis_keepsake_locket.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/zense_meridian.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/swiftfang_talisman.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/medallion_of_endless_profit.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/wyrmfall_core.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_ironhusk_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warboar_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_runewater_flask.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_stonepot_stew.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warspice_skewers.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_sageleaf_chowder.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_grand_cauldron.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_laden_hearth.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_peppered_deepbarb_catfish.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_roast_hollowgill_sturgeon.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_stonepot_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_warspice_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_sageleaf_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_clockreel_fishing_rod.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_highwatch_gourd_soup.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_highwatch_barley_porridge.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_sunmelon_tart.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_harvest_platter.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_evergarden_braised_greens.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_harvest_feast.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/highland_barley_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/frost_gourd_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thornpeak_cabbage_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/frost_lentils_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gilded_sunmelon_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/evergarden_greens_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gilded_yam_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/evergarden_pumpkin_seed.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/heroic_mark.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "bags-thirteen-icons",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-bags-thirteen-icons.png",
+      "sha256": "8b9074be7bdd279db8a6b84abe6be52210db1d318a584852bf45ea14a4189fee",
+      "text": "Bags\n13/16\nAll\nWeapons\nArmor\nConsumables\nMaterials\nTools\nQuest\nMounts\nRecent\nQuality\nName\nSort\nLink wallet\n7\ngold\n0\nsilver\n0\ncopper",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/backpack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "bank-thirteen-icons",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-bank-thirteen-icons.png",
+      "sha256": "67ff63f9289ea84d74659db06cc592aecdbc12a3221df99562cb3daacb668792",
+      "text": "Bank The Gilded Strongbox\nPersonal\nVault\nAll\nWeapons\nArmor\nConsumables\nMaterials\nTools\nQuest\nMounts\nRecent\nQuality\nName\nDeposit all materials\nSends every crafting material (anything whose tooltip reads Material or Fine Material) from your bags to the bank in one trip. Everything else stays in your bags, gathering tools, quest items, consumables, and gray items included.\n13 of 24 slots\nBuy 6 slots\n5\nsilver\n0\ncopper",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 412,
+        "height": 308,
+        "top": 10,
+        "right": 422,
+        "bottom": 318,
+        "left": 10
+      },
+      "scrollWidth": 409,
+      "clientWidth": 409,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "bank-lower-icons",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-bank-lower-icons.png",
+      "sha256": "3c8242b3d903d2b8f52b13eba5dc0e0bf48dcf422d1e47889ee4ce8604e730d8",
+      "text": "Bank The Gilded Strongbox\nPersonal\nVault\nAll\nWeapons\nArmor\nConsumables\nMaterials\nTools\nQuest\nMounts\nRecent\nQuality\nName\nDeposit all materials\nSends every crafting material (anything whose tooltip reads Material or Fine Material) from your bags to the bank in one trip. Everything else stays in your bags, gathering tools, quest items, consumables, and gray items included.\n13 of 24 slots\nBuy 6 slots\n5\nsilver\n0\ncopper",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 412,
+        "height": 308,
+        "top": 10,
+        "right": 422,
+        "bottom": 318,
+        "left": 10
+      },
+      "scrollWidth": 409,
+      "clientWidth": 409,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "mail-pattern-parcels",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-mail-pattern-parcels.png",
+      "sha256": "e36fd241abac5c951529e838c5a91fcf3f51257a4c430e02be80e442a7e7afe0",
+      "text": "Mailbox The Ravenpost\nInbox (1)\nSend\nTO\nSUBJECT\nMESSAGE\nATTACH COIN\nPARCELS\nSchematic: Clockwork Lamp\nTechnique: Chart Easel\nDesign: Jewel Floor Lamp\nPostage: 30c. The raven flies for about 45s.\nSend letter",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/pattern_freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "trainer-affordable",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-trainer-affordable.png",
+      "sha256": "d4e6372ab9bdd92ced0aacd6c6ef88051227a1dc3512bc2fe3986ba036483a32",
+      "text": "Training: Forgemistress Darva\nArmorcrafting\nCoppermail Gauntlets\nAvailable\nFree\nCoppermail Sabatons\nAvailable\nFree\nEastbrook Chainmail Vest\nKnown\nEastbrook Warded Leggings\nKnown\nRiveted Copper Girdle\nAvailable\nFree\nBoundstone Helm\nAvailable\n25s\nIronlink Hauberk\nAvailable\n25s\nIronlink Legguards\nAvailable\n25s\nIronlink Spaulders\nAvailable\n25s\nIron Brazier\nAvailable\n1g 0s\nOsmiumscale Cuirass\nAvailable\n1g 0s\nOsmiumscale Greathelm\nAvailable\n1g 0s\nOsmiumscale Leggings\nAvailable\n1g 0s\nForgefold Plating\nTaught at Armorcrafting 75\nLocked\n4g 0s\nKilnscale Mantle\nKnown\nJewelcrafting\nCoiled Copper Torc\nAvailable\nFree\nHammered Copper Band\nAvailable\nFree\nPolished Copper Loop\nAvailable\nFree\nEtched Iron Loop\nAvailable\n25s\nIron Link Choker\nAvailable\n25s\nRiveted Iron Signet\nAvailable\n25s\nBurnished Osmium Amulet\nAvailable\n1g 0s\nGleaming Osmium Loop\nAvailable\n1g 0s\nWeighted Osmium Band\nAvailable\n1g 0s\nPrismglass Setting\nTaught at Jewelcrafting 75\nLocked\n4g 0s\nWeaponcrafting\nCopper Bearded Axe\nAvailable\nFree\nCopper Flanged Mace\nAvailable\nFree\nEastbrook Arming Sword\nKnown\nIronbark Boar Spear\nAvailable\nFree\nGravewyrm Gauntlets\nAvailable\n25s\nIronedge Longsword\nAvailable\n25s\nIronshod Maul\nAvailable\n25s\nWhetted Iron Dirk\nAvailable\n25s\nGlyphsteel War Axe\nAvailable\n1g 0s\nHighpine Battle Staff\nAvailable\n1g 0s\nFenshadow Maul\nAvailable\n1g 0s\nWeapon Rack\nAvailable\n1g 0s\nOsmium Warblade\nAvailable\n1g 0s\nDuskforged Billet\nTaught at Weaponcrafting 75\nLocked\n4g 0s",
+      "rect": {
+        "x": 101.28125,
+        "y": 12,
+        "width": 641.4375,
+        "height": 350,
+        "top": 12,
+        "right": 742.71875,
+        "bottom": 362,
+        "left": 101.28125
+      },
+      "scrollWidth": 637,
+      "clientWidth": 637,
+      "images": [
+        {
+          "src": "/ui/items/coppermail_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coppermail_sabatons.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_chain_vest.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_warded_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_copper_girdle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/boundstone_helm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_hauberk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_legguards.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_spaulders.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_cuirass.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_greathelm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/forgefold_plating.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sootscale_mantle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coiled_copper_torc.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/hammered_copper_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/polished_copper_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/etched_iron_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/iron_link_choker.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_iron_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/burnished_thorium_amulet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gleaming_thorium_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/weighted_thorium_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/prismglass_setting.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_bearded_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_flanged_mace.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_arming_sword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironbark_boar_spear.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gravewyrm_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironedge_longsword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironshod_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/whetted_iron_dirk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/arcanite_war_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/elderwood_battle_staff.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/fenshadow_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thorium_warblade.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/duskforged_billet.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "trainer-locked",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-trainer-locked.png",
+      "sha256": "37b13e7ce91bc6a6a74f0acbb2cf61816a10fece5f086910b1fad469e28f2585",
+      "text": "Training: Forgemistress Darva\nArmorcrafting\nCoppermail Gauntlets\nAvailable\nFree\nCoppermail Sabatons\nAvailable\nFree\nEastbrook Chainmail Vest\nKnown\nEastbrook Warded Leggings\nKnown\nRiveted Copper Girdle\nAvailable\nFree\nBoundstone Helm\nAvailable\n25s\nIronlink Hauberk\nAvailable\n25s\nIronlink Legguards\nAvailable\n25s\nIronlink Spaulders\nAvailable\n25s\nIron Brazier\nTaught at Armorcrafting 50\nLocked\n1g 0s\nOsmiumscale Cuirass\nTaught at Armorcrafting 50\nLocked\n1g 0s\nOsmiumscale Greathelm\nTaught at Armorcrafting 50\nLocked\n1g 0s\nOsmiumscale Leggings\nTaught at Armorcrafting 50\nLocked\n1g 0s\nForgefold Plating\nTaught at Armorcrafting 75\nLocked\n4g 0s\nKilnscale Mantle\nKnown\nJewelcrafting\nCoiled Copper Torc\nAvailable\nFree\nHammered Copper Band\nAvailable\nFree\nPolished Copper Loop\nAvailable\nFree\nEtched Iron Loop\nAvailable\n25s\nIron Link Choker\nAvailable\n25s\nRiveted Iron Signet\nAvailable\n25s\nBurnished Osmium Amulet\nAvailable\n1g 0s\nGleaming Osmium Loop\nAvailable\n1g 0s\nWeighted Osmium Band\nAvailable\n1g 0s\nPrismglass Setting\nTaught at Jewelcrafting 75\nLocked\n4g 0s\nWeaponcrafting\nCopper Bearded Axe\nAvailable\nFree\nCopper Flanged Mace\nAvailable\nFree\nEastbrook Arming Sword\nKnown\nIronbark Boar Spear\nAvailable\nFree\nGravewyrm Gauntlets\nAvailable\n25s\nIronedge Longsword\nAvailable\n25s\nIronshod Maul\nAvailable\n25s\nWhetted Iron Dirk\nAvailable\n25s\nGlyphsteel War Axe\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nHighpine Battle Staff\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nFenshadow Maul\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nWeapon Rack\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nOsmium Warblade\nTaught at Weaponcrafting 50\nLocked\n1g 0s\nDuskforged Billet\nTaught at Weaponcrafting 75\nLocked\n4g 0s",
+      "rect": {
+        "x": 101.28125,
+        "y": 12,
+        "width": 641.4375,
+        "height": 350,
+        "top": 12,
+        "right": 742.71875,
+        "bottom": 362,
+        "left": 101.28125
+      },
+      "scrollWidth": 637,
+      "clientWidth": 637,
+      "images": [
+        {
+          "src": "/ui/items/coppermail_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coppermail_sabatons.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_chain_vest.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_warded_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_copper_girdle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/boundstone_helm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_hauberk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_legguards.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_spaulders.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_cuirass.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_greathelm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/forgefold_plating.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sootscale_mantle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coiled_copper_torc.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/hammered_copper_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/polished_copper_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/etched_iron_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/iron_link_choker.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_iron_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/burnished_thorium_amulet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gleaming_thorium_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/weighted_thorium_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/prismglass_setting.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_bearded_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_flanged_mace.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_arming_sword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironbark_boar_spear.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gravewyrm_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironedge_longsword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironshod_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/whetted_iron_dirk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/arcanite_war_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/elderwood_battle_staff.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/fenshadow_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thorium_warblade.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/duskforged_billet.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "trainer-no-copper",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-trainer-no-copper.png",
+      "sha256": "c52f9794f802d8063a6c995c7d7544d5758621eff52f16be2e14c4932b9af214",
+      "text": "Training: Forgemistress Darva\nArmorcrafting\nCoppermail Gauntlets\nAvailable\nFree\nCoppermail Sabatons\nAvailable\nFree\nEastbrook Chainmail Vest\nKnown\nEastbrook Warded Leggings\nKnown\nRiveted Copper Girdle\nAvailable\nFree\nBoundstone Helm\nAvailable\n25s\nIronlink Hauberk\nAvailable\n25s\nIronlink Legguards\nAvailable\n25s\nIronlink Spaulders\nAvailable\n25s\nIron Brazier\nAvailable\n1g 0s\nOsmiumscale Cuirass\nAvailable\n1g 0s\nOsmiumscale Greathelm\nAvailable\n1g 0s\nOsmiumscale Leggings\nAvailable\n1g 0s\nForgefold Plating\nTaught at Armorcrafting 75\nLocked\n4g 0s\nKilnscale Mantle\nKnown\nJewelcrafting\nCoiled Copper Torc\nAvailable\nFree\nHammered Copper Band\nAvailable\nFree\nPolished Copper Loop\nAvailable\nFree\nEtched Iron Loop\nAvailable\n25s\nIron Link Choker\nAvailable\n25s\nRiveted Iron Signet\nAvailable\n25s\nBurnished Osmium Amulet\nAvailable\n1g 0s\nGleaming Osmium Loop\nAvailable\n1g 0s\nWeighted Osmium Band\nAvailable\n1g 0s\nPrismglass Setting\nTaught at Jewelcrafting 75\nLocked\n4g 0s\nWeaponcrafting\nCopper Bearded Axe\nAvailable\nFree\nCopper Flanged Mace\nAvailable\nFree\nEastbrook Arming Sword\nKnown\nIronbark Boar Spear\nAvailable\nFree\nGravewyrm Gauntlets\nAvailable\n25s\nIronedge Longsword\nAvailable\n25s\nIronshod Maul\nAvailable\n25s\nWhetted Iron Dirk\nAvailable\n25s\nGlyphsteel War Axe\nAvailable\n1g 0s\nHighpine Battle Staff\nAvailable\n1g 0s\nFenshadow Maul\nAvailable\n1g 0s\nWeapon Rack\nAvailable\n1g 0s\nOsmium Warblade\nAvailable\n1g 0s\nDuskforged Billet\nTaught at Weaponcrafting 75\nLocked\n4g 0s",
+      "rect": {
+        "x": 101.28125,
+        "y": 12,
+        "width": 641.4375,
+        "height": 350,
+        "top": 12,
+        "right": 742.71875,
+        "bottom": 362,
+        "left": 101.28125
+      },
+      "scrollWidth": 637,
+      "clientWidth": 637,
+      "images": [
+        {
+          "src": "/ui/items/coppermail_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coppermail_sabatons.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_chain_vest.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_warded_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_copper_girdle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/boundstone_helm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_hauberk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_legguards.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironlink_spaulders.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_cuirass.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_greathelm.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thoriumscale_leggings.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/forgefold_plating.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/sootscale_mantle.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/coiled_copper_torc.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/hammered_copper_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/polished_copper_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/etched_iron_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/iron_link_choker.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/riveted_iron_signet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/burnished_thorium_amulet.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gleaming_thorium_loop.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/weighted_thorium_band.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/prismglass_setting.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_bearded_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/copper_flanged_mace.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/eastbrook_arming_sword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironbark_boar_spear.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/gravewyrm_gauntlets.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironedge_longsword.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/ironshod_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/whetted_iron_dirk.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/arcanite_war_axe.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/elderwood_battle_staff.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/fenshadow_maul.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/thorium_warblade.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/duskforged_billet.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-en",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-en.png",
+      "sha256": "39788469c39ba88c240d6514b8adf640196efea3495f664d78602619f49fb23e",
+      "text": "The Reliquary\n11/448 relics\nSpoilskeeper\n2%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n1/87\nHearth\n10/18\nBack to shelf\nFirst Hearth Crafts\nIlluminated\n\nA furnishing from each craft. Trainers teach seven recipes; the Heroic Quartermaster sells the Clockwork Lamp schematic, Chart Easel technique, and Jewel Floor Lamp design for Heroic Marks. All furnishings are ornamental.\n\n10/10\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-lower-en",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-lower-en.png",
+      "sha256": "db65e9de3e4d1f39f9e3463c6bd1446a62059e7a1e2e7543e754c58c8c6860fd",
+      "text": "The Reliquary\n11/448 relics\nSpoilskeeper\n2%\nHUD tracker\nOverview\nConquerors\n0/313\nProfessions\n0/58\nHorizons\n1/87\nHearth\n10/18\nBack to shelf\nFirst Hearth Crafts\nIlluminated\n\nA furnishing from each craft. Trainers teach seven recipes; the Heroic Quartermaster sells the Clockwork Lamp schematic, Chart Easel technique, and Jewel Floor Lamp design for Heroic Marks. All furnishings are ornamental.\n\n10/10\nAll\nCatalogued\nMissing\nUse the arrow keys to move between relics, Home and End for the ends.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-zh_CN",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-zh_CN.png",
+      "sha256": "f440baaa15eab7507d68b03c7c68866b5b4fe54b2df4cec39c6847f64ac41cfb",
+      "text": "圣物库\n11/448 件圣物\n战利品保管者\n2%\n界面追踪器\n总览\n征服者\n0/313\n专业\n0/58\n远景\n1/87\n炉边\n10/18\n返回书架\n炉边初作\n已点亮\n\n每门工艺各有一件家具。训练师教授七种配方；英雄军需官以英雄印记出售发条灯结构图、图表画架技法和宝石落地灯设计图。所有家具仅供装饰。\n\n10/10\n全部\n已收录\n尚未获得\n使用方向键在圣物之间移动，Home 键和 End 键跳到首尾。",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-lower-zh_CN",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-lower-zh_CN.png",
+      "sha256": "0f4e05edac2024dd8cd8ebc8cf6b6d43a55a8b9a5f469de4c5cd2fe460ce0b6d",
+      "text": "圣物库\n11/448 件圣物\n战利品保管者\n2%\n界面追踪器\n总览\n征服者\n0/313\n专业\n0/58\n远景\n1/87\n炉边\n10/18\n返回书架\n炉边初作\n已点亮\n\n每门工艺各有一件家具。训练师教授七种配方；英雄军需官以英雄印记出售发条灯结构图、图表画架技法和宝石落地灯设计图。所有家具仅供装饰。\n\n10/10\n全部\n已收录\n尚未获得\n使用方向键在圣物之间移动，Home 键和 End 键跳到首尾。",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-zh_TW",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-zh_TW.png",
+      "sha256": "c402be34706acc476690b6791ae336e71b5055b8c58833c3191cf402cbd97f7f",
+      "text": "聖物庫\n11/448 件聖物\n戰利品保管者\n2%\n介面追蹤器\n總覽\n征服者\n0/313\n專業\n0/58\n遠景\n1/87\n爐邊\n10/18\n返回書架\n爐邊初作\n已點亮\n\n每門工藝各有一件家具。訓練師教授七種配方；英雄軍需官以英雄印記出售發條燈結構圖、圖表畫架技法和寶石立燈設計圖。所有家具僅供裝飾。\n\n10/10\n全部\n已收錄\n尚未獲得\n使用方向鍵在聖物之間移動，Home 鍵和 End 鍵跳到首尾。",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-lower-zh_TW",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-lower-zh_TW.png",
+      "sha256": "fbe3e97cadddcd0308d6f39ffb3eb210d36a8fe522b34787890e875bf64709aa",
+      "text": "聖物庫\n11/448 件聖物\n戰利品保管者\n2%\n介面追蹤器\n總覽\n征服者\n0/313\n專業\n0/58\n遠景\n1/87\n爐邊\n10/18\n返回書架\n爐邊初作\n已點亮\n\n每門工藝各有一件家具。訓練師教授七種配方；英雄軍需官以英雄印記出售發條燈結構圖、圖表畫架技法和寶石立燈設計圖。所有家具僅供裝飾。\n\n10/10\n全部\n已收錄\n尚未獲得\n使用方向鍵在聖物之間移動，Home 鍵和 End 鍵跳到首尾。",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-ja_JP",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-ja_JP.png",
+      "sha256": "b7189a5475da5c994b8fa3f898956bd2c1a1e4c67af1f9c8f441783ab5c3d74f",
+      "text": "聖遺物庫\n聖遺物 11/448\n戦利品の守り手\n2%\nHUDトラッカー\n概要\n征服者\n0/313\n専門技能\n0/58\n地平\n1/87\n炉辺\n10/18\n棚に戻る\n初めての炉辺の手仕事\n照耀済み\n\n各製作技能で作る家具を一つずつ収録。訓練師が七つのレシピを教え、英雄の補給官が英雄の印と引き換えに、ぜんまい仕掛けのランプの設計図、図表の画架の技法書、宝石の床置きランプの図案を販売します。家具はすべて装飾用です。\n\n10/10\nすべて\n収蔵済み\n未発見\n矢印キーで聖遺物を移動、Home キーと End キーで先頭と末尾に移動します。",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-lower-ja_JP",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-lower-ja_JP.png",
+      "sha256": "329f4fcaed88832180929a0514e2e27c9b142f1bce4f93d8b346443db6ed9f9f",
+      "text": "聖遺物庫\n聖遺物 11/448\n戦利品の守り手\n2%\nHUDトラッカー\n概要\n征服者\n0/313\n専門技能\n0/58\n地平\n1/87\n炉辺\n10/18\n棚に戻る\n初めての炉辺の手仕事\n照耀済み\n\n各製作技能で作る家具を一つずつ収録。訓練師が七つのレシピを教え、英雄の補給官が英雄の印と引き換えに、ぜんまい仕掛けのランプの設計図、図表の画架の技法書、宝石の床置きランプの図案を販売します。家具はすべて装飾用です。\n\n10/10\nすべて\n収蔵済み\n未発見\n矢印キーで聖遺物を移動、Home キーと End キーで先頭と末尾に移動します。",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-ko_KR",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-ko_KR.png",
+      "sha256": "9ae3a3f01ef8dfb0934b6e569a78c51da567ac1aa0d276b8a70df2153b0b8485",
+      "text": "성물고\n성물 11/448\n전리품 수호자\n2%\nHUD 추적기\n개요\n정복자\n0/313\n전문 기술\n0/58\n지평\n1/87\n보금자리\n10/18\n선반으로 돌아가기\n첫 보금자리 공예\n조명됨\n\n각 제작 기술의 가구를 하나씩 모읍니다. 훈련교관은 제작법 일곱 가지를 가르치며, 영웅 병참장교는 영웅의 징표로 태엽 램프 설계도, 도표 이젤 기법서, 보석 스탠드등 도안을 판매합니다. 모든 가구는 장식용입니다.\n\n10/10\n전체\n수록됨\n아직 없음\n방향키로 성물 사이를 이동하고, Home 키와 End 키로 처음과 끝으로 이동합니다.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-lower-ko_KR",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-lower-ko_KR.png",
+      "sha256": "97f329f73b0fac7acfcab0d6c2b79c381b58855fc23248d82cf2f74f7caccb22",
+      "text": "성물고\n성물 11/448\n전리품 수호자\n2%\nHUD 추적기\n개요\n정복자\n0/313\n전문 기술\n0/58\n지평\n1/87\n보금자리\n10/18\n선반으로 돌아가기\n첫 보금자리 공예\n조명됨\n\n각 제작 기술의 가구를 하나씩 모읍니다. 훈련교관은 제작법 일곱 가지를 가르치며, 영웅 병참장교는 영웅의 징표로 태엽 램프 설계도, 도표 이젤 기법서, 보석 스탠드등 도안을 판매합니다. 모든 가구는 장식용입니다.\n\n10/10\n전체\n수록됨\n아직 없음\n방향키로 성물 사이를 이동하고, Home 키와 End 키로 처음과 끝으로 이동합니다.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-ru_RU",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-ru_RU.png",
+      "sha256": "91e33b51386c4011aa236996019e56215858f96c2ccbc60dc4daa7e32936bc5e",
+      "text": "Реликварий\n11/448 реликвий\nХранитель трофеев\n2 %\nСписок на экране\nОбзор\nЗавоеватели\n0/313\nПрофессии\n0/58\nГоризонты\n1/87\nОчаг\n10/18\nНазад к полке\nПервые поделки для дома\nОзарено\n\nПо одному предмету мебели от каждого ремесла. Наставники обучают семи рецептам; героический интендант продаёт схему заводной лампы, технику мольберта с чертежом и эскиз самоцветного торшера за героические знаки. Вся мебель служит украшением.\n\n10/10\nВсе\nКаталогизированы\nНе найдены\nИспользуйте стрелки для перехода между реликвиями, Home и End для перехода к началу и концу.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "hearth-lower-ru_RU",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-hearth-lower-ru_RU.png",
+      "sha256": "03b000e7222cffa1553fbda5b6a5928f29e46b646fc92a1510fa5b29f2a1134e",
+      "text": "Реликварий\n11/448 реликвий\nХранитель трофеев\n2 %\nСписок на экране\nОбзор\nЗавоеватели\n0/313\nПрофессии\n0/58\nГоризонты\n1/87\nОчаг\n10/18\nНазад к полке\nПервые поделки для дома\nОзарено\n\nПо одному предмету мебели от каждого ремесла. Наставники обучают семи рецептам; героический интендант продаёт схему заводной лампы, технику мольберта с чертежом и эскиз самоцветного торшера за героические знаки. Вся мебель служит украшением.\n\n10/10\nВсе\nКаталогизированы\nНе найдены\nИспользуйте стрелки для перехода между реликвиями, Home и End для перехода к началу и концу.",
+      "rect": {
+        "x": 10,
+        "y": 10,
+        "width": 824,
+        "height": 370,
+        "top": 10,
+        "right": 834,
+        "bottom": 380,
+        "left": 10
+      },
+      "scrollWidth": 820,
+      "clientWidth": 820,
+      "images": [
+        {
+          "src": "/ui/items/freehold_weapon_rack.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_iron_brazier.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_patchwork_rug.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_hide_armchair.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_clockwork_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glass_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_chart_easel.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_jewel_floor_lamp.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_set_supper_table.webp",
+          "loaded": true
+        },
+        {
+          "src": "/ui/items/freehold_glow_lantern.webp",
+          "loaded": true
+        }
+      ],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "mobile-landscape",
+      "name": "portrait-orientation",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/mobile-landscape-portrait-orientation.png",
+      "sha256": "2048ccec9ec045d518053c77dc8dbf83b54c15bbcfb22fc97b225c4da563e963",
+      "text": "↻\nПоверните в альбомный режим\nДля лучшего мобильного опыта играйте в полноэкранном альбомном режиме.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844,
+        "top": 0,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "images": [],
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "guide-desktop",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/guide-desktop.png",
+      "sha256": "d6daeee001fbd8d2ca12df55befc62c0a068808d0031572d740a51c00a19df2e",
+      "text": "First Hearth Crafts (10)\n\nWeapon Rack, Iron Brazier, Patchwork Rug, Hide Armchair, Clockwork Lamp, Glass Floor Lamp, Chart Easel, Jewel Floor Lamp, Set Supper Table, Glow Lantern",
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "variant": "guide-mobile",
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/guide-mobile.png",
+      "sha256": "c5c905c6695b8d2ff5e4f5400f0e282881aaf442aa79efe5e8822525ce09b4cd",
+      "text": "First Hearth Crafts (10)\n\nWeapon Rack, Iron Brazier, Patchwork Rug, Hide Armchair, Clockwork Lamp, Glass Floor Lamp, Chart Easel, Jewel Floor Lamp, Set Supper Table, Glow Lantern",
+      "sourceRun": "mobile-and-guide-v9"
+    },
+    {
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/catalog-prose-1440.png",
+      "sha256": "d893216aeaaf5d5174b31d34b3eb88a0c7e464f88d9718f611f04090363dce61",
+      "width": 1440,
+      "text": "Every authored Reliquary page and the relic names it holds. First Hearth Crafts collects one furnishing from each craft: trainers teach seven recipes, while the Heroic Quartermaster sells the Clockwork Lamp schematic, Chart Easel technique, and Jewel Floor Lamp design for Heroic Marks. Furnishings are ornamental; patterns are not relics. Open The Reliquary in game for personal progress, clear counts, and silhouettes.",
+      "variant": "guide-prose",
+      "name": "catalog-prose-1440",
+      "sourceRun": "guide-prose"
+    },
+    {
+      "file": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/catalog-prose-390.png",
+      "sha256": "62df07f0b5486446370b197834c130371b4e151153db413673857acd56242409",
+      "width": 390,
+      "text": "Every authored Reliquary page and the relic names it holds. First Hearth Crafts collects one furnishing from each craft: trainers teach seven recipes, while the Heroic Quartermaster sells the Clockwork Lamp schematic, Chart Easel technique, and Jewel Floor Lamp design for Heroic Marks. Furnishings are ornamental; patterns are not relics. Open The Reliquary in game for personal progress, clear counts, and silhouettes.",
+      "variant": "guide-prose",
+      "name": "catalog-prose-390",
+      "sourceRun": "guide-prose"
+    }
+  ],
+  "checks": [
+    {
+      "variant": "desktop",
+      "purchase": {
+        "enabled": true,
+        "marks": 0,
+        "patterns": [
+          [
+            "pattern_freehold_clockwork_lamp",
+            1
+          ],
+          [
+            "pattern_freehold_chart_easel",
+            1
+          ],
+          [
+            "pattern_freehold_jewel_floor_lamp",
+            1
+          ]
+        ],
+        "focus": null
+      }
+    },
+    {
+      "variant": "mobile-landscape",
+      "purchase": {
+        "enabled": true,
+        "marks": 0,
+        "patterns": [
+          [
+            "pattern_freehold_clockwork_lamp",
+            1
+          ],
+          [
+            "pattern_freehold_chart_easel",
+            1
+          ],
+          [
+            "pattern_freehold_jewel_floor_lamp",
+            1
+          ]
+        ],
+        "focus": null
+      }
+    }
+  ],
+  "errors": [],
+  "server": "Temporary Vite config inherits project config, disables HMR/watch only to avoid filesystem-mutating tests reloading captures; no product configuration change.",
+  "reproduction": {
+    "instructions": "Copy the three capture scripts and vite.config.mjs into tmp/, preserving their names. From repository root start npx vite --config tmp/vite.config.mjs; run node tmp/capture.mjs for the original desktop fixture, node tmp/capture-mobile.mjs for corrected mobile and guide captures, then node tmp/capture-guide-prose.mjs for guide prose. Only the desktop captures from the original run are accepted. The final mobile script uses the canonical performance-nudge dismissal and asserts both notices hidden. All scripts inherit project app configuration; the temporary Vite config disables HMR/watch only to prevent filesystem-mutating tests reloading evidence.",
+    "files": [
+      {
+        "path": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/capture.mjs",
+        "sha256": "94dc560172549b41c97063dc02b68c87c424cd3d2f42e53c1ffca0e5bb62ae08",
+        "bytes": 11194
+      },
+      {
+        "path": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/capture-mobile.mjs",
+        "sha256": "86856f5263fab8d1045be56773395562c8869fed4a1257139dd6508ca5ee2b23",
+        "bytes": 12306
+      },
+      {
+        "path": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/capture-guide-prose.mjs",
+        "sha256": "7a9bb6bf5ef248923223a698fbe6f64a541a624f483f0f13c8c4decb69a86044",
+        "bytes": 1168
+      },
+      {
+        "path": "docs/screenshots/freehold-crafted-content-2026-09-07/runtime/vite.config.mjs",
+        "sha256": "efe7c972dc217292b798b416e711785b2dbe9254eeaaacb8fcc1f42570bc7dcf",
+        "bytes": 173
+      }
+    ]
+  },
+  "limitations": [
+    "Software-rendered browser emulation, not physical-device or hardware LOW profiling.",
+    "Ten furnishing outputs directly granted for presentation only; actual trainer/pattern/craft behavior is covered by simulation tests.",
+    "No placement or final GLB acceptance.",
+    "Furnishings and recipe patterns are both ineligible for equipment and action slots.",
+    "Portrait game viewport displays the existing rotate-device curtain; portrait guide remains usable.",
+    "Unsent mail preview covers three longest pattern names.",
+    "Browser fixture calls actual Options language hook; earlier mislabeled English captures are superseded."
+  ],
+  "review": {
+    "status": "accepted",
+    "reviewer": "Codex frontend specialist and coordinator",
+    "captureCount": 42,
+    "scope": "Sixteen desktop game captures, twenty-two touch landscape/portrait captures, two guide catalog captures and two guide catalog-prose captures. Every retained capture visually inspected. All thirteen icons appear in bags/bank, three actual Quartermaster purchases and unsent mail pattern parcels are visible, trainer affordable/skill-locked/no-copper sample states are clear, and six Hearth locales render correctly.",
+    "superseded": "Earlier attempts and v6 mobile captures were rejected; their renders are not selected in this final manifest."
+  }
+}

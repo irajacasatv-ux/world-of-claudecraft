@@ -1,0 +1,878 @@
+{
+  "schemaVersion": 1,
+  "batchId": "freehold-crafted-2026-09-07",
+  "generator": "OpenAI built-in image generation",
+  "executionHarness": "Codex",
+  "owner": "World of ClaudeCraft",
+  "license": "World of ClaudeCraft project-generated art, project asset, rights reserved",
+  "styleContract": "woc-item-icon-v1",
+  "status": "Final individual icon paintings and canonical conversion evidence; runtime capture acceptance is recorded separately.",
+  "references": [
+    {
+      "path": "public/ui/items/eastbrook_buckler.webp",
+      "sha256": "2c4d58c9050f1fdfd88b4e3aacbeeb90e4b859709145bee38be3db380685e156",
+      "bytes": 3286,
+      "role": "Agent-viewed style anchor before text-only generation and visual comparison; no image pixels supplied in initial generation."
+    },
+    {
+      "path": "public/ui/items/linen_pouch.webp",
+      "sha256": "b526923bf6aa8e9c06395c80fcb97f3bdbe87e0f1f5a55eee4217f7389b08937",
+      "bytes": 3534,
+      "role": "Agent-viewed style anchor before text-only generation and visual comparison; no image pixels supplied in initial generation."
+    },
+    {
+      "path": "public/ui/items/firebottle.webp",
+      "sha256": "c3965ddb8daa75ba1b8eb5adb75845ac3220e2eb2af0f5db3ad8d28cebd7b122",
+      "bytes": 2636,
+      "role": "Agent-viewed style anchor before text-only generation and visual comparison; no image pixels supplied in initial generation."
+    },
+    {
+      "path": "public/ui/items/freehold_spindle_chair.webp",
+      "sha256": "b4f80bdfb3d0a45898e1f4df8dce2256b7777e49f8f89d1c1094d78ce59468ca",
+      "bytes": 2356,
+      "role": "Agent-viewed style anchor before text-only generation and visual comparison; no image pixels supplied in initial generation."
+    },
+    {
+      "path": "public/ui/items/freehold_woven_rug.webp",
+      "sha256": "af2b3c7ca1f3c09c2c39663746ab1815b8ce99276c3e55903629e1b99c8412db",
+      "bytes": 3952,
+      "role": "Agent-viewed style anchor before text-only generation and visual comparison; no image pixels supplied in initial generation."
+    },
+    {
+      "path": "public/ui/items/anglers_feast_platter.webp",
+      "sha256": "0ea8b9e92b170e277ab08a7c00daa73d641cb8803b2b8290de251a9a68f5a644",
+      "bytes": 6194,
+      "role": "Agent-viewed style anchor before text-only generation and visual comparison; no image pixels supplied in initial generation."
+    }
+  ],
+  "processing": [
+    "Thirteen separate text-only built-in generation calls, one per distinct item. No sheet generation and no CLI fallback.",
+    "Four targeted built-in edits using explicit edit-target and identity-only references; original attempts retained.",
+    "Original generated PNG bytes retained in ignored staging.",
+    "Sharp rotate; exact512x512 fit fill Lanczos3; sRGB; PNG compression9 adaptiveFiltering true. No artistic alterations by processing.",
+    "npm run assets:items: first13 then corrected4 sources. Canonical quality82; fully opaque128px WebPs; no size fallback required."
+  ],
+  "converter": {
+    "path": "scripts/convert_item_icons_webp.mjs",
+    "sha256": "3bcdf476b8727e50ffe82f0d452963baef104e5f4ea90d9d7813d145cff89ebb",
+    "bytes": 14713,
+    "commands": [
+      {
+        "command": "npm run assets:items",
+        "converted": 13,
+        "exitCode": 0
+      },
+      {
+        "command": "npm run assets:items",
+        "converted": 4,
+        "exitCode": 0
+      }
+    ]
+  },
+  "review": {
+    "reviewer": "Codex art implementation agent",
+    "sizesInspected": [
+      "original",
+      512,
+      128,
+      40,
+      28,
+      22,
+      "28-grayscale",
+      "64-circle"
+    ],
+    "sheets": [
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/master-review-1.webp",
+        "sha256": "95af9da2595b7f9bfbb767d6f53875a1e9b01ebb22d816ec006ab359f4775878",
+        "bytes": 282206
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/master-review-2.webp",
+        "sha256": "2d42e99b49f1c6dfdf8ed834360fd017cc674cf42fd9ce3d497ed2aa5b982265",
+        "bytes": 295390
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/master-review-3.webp",
+        "sha256": "0b8cf105e9aa74a1e6b93402f87d4ce62bf683c7e1f135862909002e79cb910e",
+        "bytes": 345490
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/master-review-4.webp",
+        "sha256": "d685cdf70888cf9b6b432e09ada35f2ae76deba167096a10e491c0667245e74c",
+        "bytes": 99548
+      },
+      {
+        "path": "docs/freeholds/crafted-content-art-2026-09-07/shipping-size-review.webp",
+        "sha256": "36be256b2e057ce90f19db61379db194c36b21a86a60df02803a8550a69c6d8a",
+        "bytes": 358652
+      }
+    ],
+    "verdict": "Individually inspected complete subjects, tactile materials, house lighting, opaque painted grounds, legible small silhouettes and wordless pattern illustrations. Corrected rug padding and three diagram identities after independent review.",
+    "runtime": {
+      "status": "pending coordinator runtime inspection",
+      "scope": "Actual game bag, bank, vendor, tooltip, mail/action-slot and guide captures on desktop/mobile; final GLBs are outside this icon batch."
+    }
+  },
+  "assets": [
+    {
+      "id": "freehold_weapon_rack",
+      "name": "Weapon Rack",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Weapon Rack (freehold_weapon_rack).\nSubject and identity: One EMPTY freestanding dark elderwood weapon rack, two sturdy uprights, broad pegged crossbar with clearly empty brackets, reinforced dull silver iron corner bands and splayed stable timber feet. Warm worn grain, strong joinery, no weapons, shields, armor or separate items. The empty support silhouette is the entire subject.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-6186e9e0-1972-4e13-89be-1b1d1664728f.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_weapon_rack.png",
+        "sha256": "e19a2018df3b588d1b40d732befa36c3b1c621cd2716218f959615fea6371a84",
+        "bytes": 2097178,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_weapon_rack.png",
+        "sha256": "464b5b1aa89641101295e3e0ade630b3abefc48d612877bbf8898b1b98106a33",
+        "bytes": 345849,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_weapon_rack.webp",
+        "sha256": "4100e8d04eba0cf59fe7914a030cb8e90a2c491dd05a6a4c20be3dbbbab45fa0",
+        "bytes": 1952,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 0,
+      "iterations": []
+    },
+    {
+      "id": "freehold_iron_brazier",
+      "name": "Iron Brazier",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Iron Brazier (freehold_iron_brazier).\nSubject and identity: One raised broad hammered iron bowl on a short substantial central pedestal with four stable feet, rolled rim and large readable rivets. Empty dark bowl interior, subtle heat-patina, no flame, smoke or tools. A complete ornamental freestanding brazier, not cookware.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-bee93684-5417-479b-94b0-e6934500b654.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_iron_brazier.png",
+        "sha256": "162be470b87718038adcf69c469fdcd53eb431aaf5f1416810e6635adc954b7c",
+        "bytes": 2248587,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_iron_brazier.png",
+        "sha256": "4a7f4c2d0bc887b882437c5470fb2fdee8317a71f72bd2224b4d2739ef4a98a7",
+        "bytes": 365586,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_iron_brazier.webp",
+        "sha256": "588991eacf16699540a8a7b7d537811c0efbc8498aecadbb0ba196e7d274a908",
+        "bytes": 2136,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 0,
+      "iterations": []
+    },
+    {
+      "id": "freehold_patchwork_rug",
+      "name": "Patchwork Rug",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Patchwork Rug (freehold_patchwork_rug).\nSubject and identity: One broad flat rectangular patchwork floor rug shown from a restrained elevated angle, large clearly sewn alternating rust-red, faded teal, ochre and cream cloth panels, thick visible handmade cream stitches and bound border. Soft woven cloth, slight uneven handmade edges, no heraldic motifs or script, no other objects. Show all corners with safe padding.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-1030298f-e478-496b-ba9e-25dee491e5c8.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_patchwork_rug.png",
+        "sha256": "3c108ca0886e749af6b0307996e19a43bfaf37d6082aeda977e1303b0e2f5770",
+        "bytes": 2223473,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_patchwork_rug.png",
+        "sha256": "3f2905fd7429e11c0f712df2ad7cf1b2232087e83db1dcb508726bf35e4ae697",
+        "bytes": 351670,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_patchwork_rug.webp",
+        "sha256": "21da3e73dfd76f551d4074d646ddb0150a6c3d068cb02481d3d2ad7e910505a7",
+        "bytes": 1584,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 1,
+      "iterations": [
+        {
+          "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Patchwork Rug (freehold_patchwork_rug).\nSubject and identity: One broad flat rectangular patchwork floor rug shown from a restrained elevated angle, large clearly sewn alternating rust-red, faded teal, ochre and cream cloth panels, thick visible handmade cream stitches and bound border. Soft woven cloth, slight uneven handmade edges, no heraldic motifs or script, no other objects. Show all corners with safe padding.",
+          "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-5316577c-12d6-4cbb-b235-48e141eb47d3.png",
+          "original": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/freehold_patchwork_rug-originals.png",
+            "sha256": "9c417b015dceda1a128dbce58c9553282df3c2bece614938b89f53cff2bd6481",
+            "bytes": 2784957,
+            "width": 1254,
+            "height": 1254,
+            "format": "png",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "master": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/freehold_patchwork_rug-masters.png",
+            "sha256": "49f3787b7cfb569bcc8805b301bda0248e41c1456bae054cc6310bd84784fad4",
+            "bytes": 456794,
+            "width": 512,
+            "height": 512,
+            "format": "png",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "shipping": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/freehold_patchwork_rug.webp",
+            "sha256": "08e89107aa42878d53c3319c385854d2506102d1c62411f8577961ff9b14436f",
+            "bytes": 3046,
+            "width": 128,
+            "height": 128,
+            "format": "webp",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "decision": "Superseded to retain rug corners within a circular crop."
+        },
+        {
+          "prompt": "Use case: precise-object-edit. Image1 is the edit target, the Patchwork Rug item painting. Preserve its exact cloth colors, broad sewn panel construction, handmade stitching, opaque dark painted vignette, warm top-left lighting and premium classic fantasy MMO painted style. Change only composition: make the entire rug smaller, centered, occupying approximately72 percent of square width, with generous dark painted ground extended seamlessly on all four sides. Keep every corner safe inside a centered circular crop and improve 22px readability. No frame, writing, transparency or other objects. Keep square image.",
+          "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-1030298f-e478-496b-ba9e-25dee491e5c8.png",
+          "references": [
+            {
+              "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/freehold_patchwork_rug-masters.png",
+              "sha256": "49f3787b7cfb569bcc8805b301bda0248e41c1456bae054cc6310bd84784fad4",
+              "bytes": 456794,
+              "role": "Edit target; preserve document/painting outside the requested correction."
+            }
+          ],
+          "decision": "Reviewed corrected source and normalized master, then converted through assets:items."
+        }
+      ]
+    },
+    {
+      "id": "freehold_hide_armchair",
+      "name": "Hide Armchair",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Hide Armchair (freehold_hide_armchair).\nSubject and identity: One low comfortable freestanding armchair with substantial dark timber arms and four thick legs, warm chestnut hide sling seat and broad hide back, bold cream edge stitching and softly worn leather grain. Clearly an armchair with two arms, not a dining chair. No upholstery buttons, fur, sitter or loose objects.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-e2a72a8d-f283-4248-92c3-7f11312aaa12.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_hide_armchair.png",
+        "sha256": "db0f7108fdd66de26d1a7b384959caaf3a1e618bd2d8958a071ca6bc7ff2ed5d",
+        "bytes": 2126947,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_hide_armchair.png",
+        "sha256": "c81a343c179342fe1750a123a322afdb93c5c1939e1e123ccbd557d35d1f0d5a",
+        "bytes": 353826,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_hide_armchair.webp",
+        "sha256": "4af1b3f00918f3a3fa1bae7b55acfcff4b462f83f8846f460be5669b2e7656cb",
+        "bytes": 2452,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 0,
+      "iterations": []
+    },
+    {
+      "id": "freehold_clockwork_lamp",
+      "name": "Clockwork Lamp",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Clockwork Lamp (freehold_clockwork_lamp).\nSubject and identity: One low freestanding brass clockwork lamp with a broad weighted circular foot, short thick column, sheltered honey-amber light chamber, visible large winding key and a single legible brass gear at its side. Rounded engineered body, broad plates and rivets, contained glow. No clocks, numerals, dangling cable or text. Entire base and roof visible.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-f01b1afb-9aa5-424d-b964-f2361ad106d4.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_clockwork_lamp.png",
+        "sha256": "e4f584259e54f20a1ee554feed1efdcf53ef68836e020927e05abffe33bc410d",
+        "bytes": 2150723,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_clockwork_lamp.png",
+        "sha256": "f648c7c219cd84fe6629afbaa6593775e62a60ff6c224fc2b95ba03e87b4f425",
+        "bytes": 370201,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_clockwork_lamp.webp",
+        "sha256": "dd2d98ea43cde46b91d4811224ab9245e82866b2116b0b11e289d2d2fc391eb5",
+        "bytes": 2848,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 0,
+      "iterations": []
+    },
+    {
+      "id": "freehold_glass_floor_lamp",
+      "name": "Glass Floor Lamp",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Glass Floor Lamp (freehold_glass_floor_lamp).\nSubject and identity: One freestanding alchemical floor lamp: large bulbous amber glass vessel held inside a protective dark iron frame with broad sturdy floor feet and short supporting stem. Crisp glass rim and tiny specular accent, restrained golden internal light, broad curved vessel shape distinguishes it from angular lanterns. No potion label, flame, smoke, tabletop, hanging chain or ceiling mount.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-dff52514-85f9-40d1-851c-6cf17e50ccb3.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_glass_floor_lamp.png",
+        "sha256": "cf3608acc13e092416b0b108a2faa98546e6288bd04186c05f595fa388b073ff",
+        "bytes": 1977977,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_glass_floor_lamp.png",
+        "sha256": "cbcc71627d821f6e38302df339018fa9f679277a11dddcbc082a501972711e03",
+        "bytes": 334694,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_glass_floor_lamp.webp",
+        "sha256": "e0bb0cca4dc4d288c682296d4a9b5f69f650a91ec759718ec09836c4a567833f",
+        "bytes": 2346,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 0,
+      "iterations": []
+    },
+    {
+      "id": "freehold_chart_easel",
+      "name": "Chart Easel",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Chart Easel (freehold_chart_easel).\nSubject and identity: One freestanding dark wooden three-legged easel supporting a wide cream parchment chart with curled top corners. The parchment displays only three broad abstract muted contour shapes with no labels, lettering, symbols or identifiable real/game geography. Thick readable easel supports and bottom ledge, complete stable feet visible. One furniture object, no pens or desk.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-afeb90ab-394f-46aa-9f7b-c86b605f6f73.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_chart_easel.png",
+        "sha256": "cf529054393cebbcd61379f06a5b292e4d7ffe2e4f600355f15c49238d5fd00e",
+        "bytes": 2076118,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_chart_easel.png",
+        "sha256": "df0e2099cdefe8c957b0fa452a8b72e048e92617a02bbd1a686c0d5444622a87",
+        "bytes": 353980,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_chart_easel.webp",
+        "sha256": "cd6f9d874d978ac4956aa7c2ab33105b111c87355a267d4815682331a94a8fca",
+        "bytes": 2214,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 0,
+      "iterations": []
+    },
+    {
+      "id": "freehold_jewel_floor_lamp",
+      "name": "Jewel Floor Lamp",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Jewel Floor Lamp (freehold_jewel_floor_lamp).\nSubject and identity: One elegant floor-supported lamp with a large faceted pale aquamarine jewel in a thick antique silver claw setting, atop a substantial short dark metal post and broad flared foot. Gem has clear angular facets and restrained cool interior light. Strong clean silhouette, visible floor base, no hanging mount, chandelier, chain or loose gems.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-e583d5b4-38fb-4bb0-bae0-f7539c56c27c.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_jewel_floor_lamp.png",
+        "sha256": "f32a57c6a4008634ec0644067c2273cf97fe209b2e77d77a336253ae046c6877",
+        "bytes": 2028692,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_jewel_floor_lamp.png",
+        "sha256": "0703ffa18c92912089ae61210e806d73ece6b728c365c741f9f579f326626c4f",
+        "bytes": 349187,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_jewel_floor_lamp.webp",
+        "sha256": "305a20209d377d21a38d63551ca1f498242bc26aa0107ef3ca9f4603aba4b6c2",
+        "bytes": 2348,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 0,
+      "iterations": []
+    },
+    {
+      "id": "freehold_set_supper_table",
+      "name": "Set Supper Table",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Set Supper Table (freehold_set_supper_table).\nSubject and identity: One complete sturdy square dark timber supper table with four visible substantial legs and a draped cream tablecloth, set with two simple earthenware plates, two small cups and a compact central closed casserole dish. The table and inert place settings together form one furnishing. No feast spread, loose food, chairs, diners, room, text or steam. Complete silhouette including legs clearly visible.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-8a2b34a2-910f-423e-b938-04debe0defca.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_set_supper_table.png",
+        "sha256": "091a186cf6e8e708550963a44b55ba0d0a834c6066459fad908995a3b5709069",
+        "bytes": 2140353,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_set_supper_table.png",
+        "sha256": "2194fcdf5b77125c0adf54ea47e25a4e1a0189ea450e36f2f6e7c455ebf72735",
+        "bytes": 358264,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_set_supper_table.webp",
+        "sha256": "7f3babb7318edb07f906beba5e985ad2da762ee20f7f803b79b5ac5323f26a83",
+        "bytes": 2502,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 0,
+      "iterations": []
+    },
+    {
+      "id": "freehold_glow_lantern",
+      "name": "Glow Lantern",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Glow Lantern (freehold_glow_lantern).\nSubject and identity: One low freestanding lantern with a substantial dark bronze open cage, four thick curved ribs, broad square stable foot and low pointed metal roof. A single softly glowing pale violet orb is safely cradled inside, restrained glow leaves all ribs legible. Distinct squat square cage, no glass bottle, gear, candle, hanging chain, handle for carrying or runes.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-6186da6f-ed33-4398-8b56-34cb254f9397.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/freehold_glow_lantern.png",
+        "sha256": "bf34c911a9314319210eb451c615b6049031e02bd6fd0a89d39b99ba101afbb3",
+        "bytes": 1994313,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_glow_lantern.png",
+        "sha256": "d8f6c144b557803de44614722e13d02190c6ac6076e78986f6c89d9d07ea4bbe",
+        "bytes": 347116,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/freehold_glow_lantern.webp",
+        "sha256": "ebe6e74fcaa4f380103160613add077fa712484f2f6ab1a4e4904def5aa25755",
+        "bytes": 2576,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 0,
+      "iterations": []
+    },
+    {
+      "id": "pattern_freehold_clockwork_lamp",
+      "name": "Schematic: Clockwork Lamp",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Schematic: Clockwork Lamp (pattern_freehold_clockwork_lamp).\nSubject and identity: One compact partly unfurled thick ochre parchment schematic with rolled lower edge, secured by a plain brass gear-shaped wax seal. Its central area contains ONE bold wordless painted diagram of a squat clockwork lamp with rounded base and winding key. No incidental drafting lines, symbols, arrows, pseudo-writing or text. Parchment is the primary inventory object; no actual lamp beside it.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-2058ff78-d74a-45b6-82d0-9958e4f76f7f.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/pattern_freehold_clockwork_lamp.png",
+        "sha256": "d53441d1bc2897b3c62778b98df69285e593ec2a9827736cb7b9d97354543dad",
+        "bytes": 2446511,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/pattern_freehold_clockwork_lamp.png",
+        "sha256": "110a1218964f1d99a0c1d911fe58d8c39c2e9fef71a61b2b8c7cf3e11ff873bf",
+        "bytes": 398021,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/pattern_freehold_clockwork_lamp.webp",
+        "sha256": "9a6525792b3f241d0dffe0f9a7df96862cc4aff94c01145265cd29bde3d1f3b9",
+        "bytes": 2794,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 1,
+      "iterations": [
+        {
+          "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Schematic: Clockwork Lamp (pattern_freehold_clockwork_lamp).\nSubject and identity: One compact partly unfurled thick ochre parchment schematic with rolled lower edge, secured by a plain brass gear-shaped wax seal. Its central area contains ONE bold wordless painted diagram of a squat clockwork lamp with rounded base and winding key. No incidental drafting lines, symbols, arrows, pseudo-writing or text. Parchment is the primary inventory object; no actual lamp beside it.",
+          "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-6fbd9c50-aae7-45b4-9f98-1fbd9bf175c1.png",
+          "original": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_clockwork_lamp-originals.png",
+            "sha256": "58f6fc56185fcdc92fd34128237be5b288ca53ab4624b27e1e95ad4b6aed636e",
+            "bytes": 2178147,
+            "width": 1254,
+            "height": 1254,
+            "format": "png",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "master": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_clockwork_lamp-masters.png",
+            "sha256": "da0a74710b8d2aebb83fa3c4230bec90cc88302a076144b5efcc65df29f5641d",
+            "bytes": 369866,
+            "width": 512,
+            "height": 512,
+            "format": "png",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "shipping": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_clockwork_lamp.webp",
+            "sha256": "732c9a76616cf4f377f8c906399b19d4b40edda94ac69052a841ee141b6a04dc",
+            "bytes": 2976,
+            "width": 128,
+            "height": 128,
+            "format": "webp",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "decision": "Superseded to match the exact output construction in the diagram."
+        },
+        {
+          "prompt": "Use case: precise-object-edit. Image1 is the edit target, the parchment Schematic: Clockwork Lamp icon. Image2 is an identity-only reference for the EXACT lamp depicted in the schematic, not an object to add beside it. Preserve the parchment form, rolled edge and brass gear seal, painted style, lighting, background and generous padding. Replace only the central illustration by a simplified wordless painted technical illustration faithfully matching Image2: broad tiered round base, short cylindrical column, large winding key on the viewer-left and single gear on viewer-right, cylindrical honeycomb amber chamber, broad tiered roof. Keep those relative proportions and the key position. The diagram remains ink-and-wash on the parchment, not a physical lamp sitting on it. No text, numbers, runes, pseudo-writing, arrows, border, frame, watermarks or transparency.",
+          "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-2058ff78-d74a-45b6-82d0-9958e4f76f7f.png",
+          "references": [
+            {
+              "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_clockwork_lamp-masters.png",
+              "sha256": "da0a74710b8d2aebb83fa3c4230bec90cc88302a076144b5efcc65df29f5641d",
+              "bytes": 369866,
+              "role": "Edit target; preserve document/painting outside the requested correction."
+            },
+            {
+              "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_clockwork_lamp.png",
+              "sha256": "f648c7c219cd84fe6629afbaa6593775e62a60ff6c224fc2b95ba03e87b4f425",
+              "bytes": 370201,
+              "role": "Identity-only reference for the depicted craft output; not an additional physical subject."
+            }
+          ],
+          "decision": "Reviewed corrected source and normalized master, then converted through assets:items."
+        }
+      ]
+    },
+    {
+      "id": "pattern_freehold_chart_easel",
+      "name": "Technique: Chart Easel",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Technique: Chart Easel (pattern_freehold_chart_easel).\nSubject and identity: One folded ivory parchment technique folio with one corner rolled back, tied by a muted teal ribbon. Its central page contains ONE bold wordless painted diagram of a three-legged wooden chart easel with plain sheet. Thick tactile paper and subtle ink wash, no lettering, glyphs, arrows, pseudo-writing or map labels. Folio is the primary inventory object, no actual easel beside it.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-7a59645e-3431-4c3c-bfdc-f303434bcaf2.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/pattern_freehold_chart_easel.png",
+        "sha256": "6143772c6f26ad16fa75454fb4237f0af3d72739cd1013f8c9984e0cb2f6f2cd",
+        "bytes": 2324036,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/pattern_freehold_chart_easel.png",
+        "sha256": "82fa0b3f473f88d0def5ce62a1566c3175dbce3e200448dc7d1d7da42dd5d10d",
+        "bytes": 432039,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/pattern_freehold_chart_easel.webp",
+        "sha256": "15d323c951e3d2bf1cf1ac49f6528a7d397e10d03edeba2fec00353ddf1bba32",
+        "bytes": 3276,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 1,
+      "iterations": [
+        {
+          "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Technique: Chart Easel (pattern_freehold_chart_easel).\nSubject and identity: One folded ivory parchment technique folio with one corner rolled back, tied by a muted teal ribbon. Its central page contains ONE bold wordless painted diagram of a three-legged wooden chart easel with plain sheet. Thick tactile paper and subtle ink wash, no lettering, glyphs, arrows, pseudo-writing or map labels. Folio is the primary inventory object, no actual easel beside it.",
+          "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-ab7f3b6b-1de0-432f-ac1c-9857be5b448a.png",
+          "original": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_chart_easel-originals.png",
+            "sha256": "e8ae54dc847b2c51a12ac50dffb6b2bd06e4fbe02e2daae99771c5ec31766600",
+            "bytes": 2474869,
+            "width": 1254,
+            "height": 1254,
+            "format": "png",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "master": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_chart_easel-masters.png",
+            "sha256": "4d4ac3a882dbb9b0b62dc404b6fc9026573acae38e7a246b4e0e8cb18b8eb4ca",
+            "bytes": 422126,
+            "width": 512,
+            "height": 512,
+            "format": "png",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "shipping": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_chart_easel.webp",
+            "sha256": "f648c3680a5fbe4611df808f2e53f60a3873b47a6596b69e3e10056cd1fd95d3",
+            "bytes": 3074,
+            "width": 128,
+            "height": 128,
+            "format": "webp",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "decision": "Superseded to match the exact output construction in the diagram."
+        },
+        {
+          "prompt": "Use case: precise-object-edit. Image1 is the edit target, the ivory parchment Technique: Chart Easel folio with teal ribbon. Image2 is an identity-only reference for the EXACT easel depicted in the technique. Preserve the ivory folio shape, curled corner, teal ribbon, painted style, lighting, background and padding. Replace only its central illustration with a simplified wordless ink-and-wash drawing faithfully matching Image2: thick dark timber easel supports with the same visible support count and lower horizontal ledge, central top clamp and broad parchment bearing three plain abstract muted contour shapes. Keep the same proportions and support construction as Image2. Do not add a real easel beside or on top of the folio. No text, numbers, runes, pseudo-writing, arrows, watermark, frame or transparency.",
+          "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-7a59645e-3431-4c3c-bfdc-f303434bcaf2.png",
+          "references": [
+            {
+              "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_chart_easel-masters.png",
+              "sha256": "4d4ac3a882dbb9b0b62dc404b6fc9026573acae38e7a246b4e0e8cb18b8eb4ca",
+              "bytes": 422126,
+              "role": "Edit target; preserve document/painting outside the requested correction."
+            },
+            {
+              "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_chart_easel.png",
+              "sha256": "df0e2099cdefe8c957b0fa452a8b72e048e92617a02bbd1a686c0d5444622a87",
+              "bytes": 353980,
+              "role": "Identity-only reference for the depicted craft output; not an additional physical subject."
+            }
+          ],
+          "decision": "Reviewed corrected source and normalized master, then converted through assets:items."
+        }
+      ]
+    },
+    {
+      "id": "pattern_freehold_jewel_floor_lamp",
+      "name": "Design: Jewel Floor Lamp",
+      "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Design: Jewel Floor Lamp (pattern_freehold_jewel_floor_lamp).\nSubject and identity: One small dark blue bound design folio with a cream parchment cover inset, antique silver corner fittings and a single small aquamarine clasp. Inset contains ONE bold wordless painted diagram of a faceted jewel lamp on its broad floor base. Tactile leather and paper, no lettering, glyphs, arrows or pseudo-writing. The book is the primary object; no actual lamp beside it.",
+      "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-0dfc5735-5aa6-488a-846a-29ed0aed3d3e.png",
+      "original": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/originals/pattern_freehold_jewel_floor_lamp.png",
+        "sha256": "0190c0499271c1c73016e98640522069675b076597dff83b47a558f88531a6e2",
+        "bytes": 2578524,
+        "width": 1254,
+        "height": 1254,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "master": {
+        "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/pattern_freehold_jewel_floor_lamp.png",
+        "sha256": "9cbe52957ec87a05370e2eec93124abf1f20a6aea58753feee7ad12c89102f7e",
+        "bytes": 426178,
+        "width": 512,
+        "height": 512,
+        "format": "png",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "shipping": {
+        "path": "public/ui/items/pattern_freehold_jewel_floor_lamp.webp",
+        "sha256": "70ea954748a94d7670536d1eff78d7d757621006e115876d98d2ea63ab3932e4",
+        "bytes": 3336,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "retryCount": 1,
+      "iterations": [
+        {
+          "prompt": "Use case: stylized-concept. Asset type: one opaque square fantasy MMORPG inventory item icon for World of ClaudeCraft, contract woc-item-icon-v1. Premium hand-painted classic dark-fantasy MMO inventory painting with tactile materials, crisp focal edges and softer peripheral brushwork. Complete single centered subject, readable three-quarter view unless stated otherwise, subject fill 68 to 76 percent, safe generous padding on all four sides. Warm top-left key light, cool deep bottom-right shadow. Fully opaque dark charcoal and umber atmospheric painted vignette with subtle contact shadow; subject brighter than the perimeter. Readable at 22px and in a circular crop. Avoid plastic gloss, black crushed details, photographic rendering, raw 3D thumbnail, flat vector, cel shading, sketch outlines. No text, pseudo-writing, labels, letters, numbers, UI chrome, border, rarity frame, watermark, transparency, checkerboard, collage, crop, people, hands, mannequins, environment or room. Square 1024x1024. Style references inspected by the art agent: eastbrook_buckler for metal/wood and top-left lighting, linen_pouch for tactile construction, firebottle for contained glass glow; no reference image pixels supplied; never copy their unrelated subjects.\nPrimary request: paint Design: Jewel Floor Lamp (pattern_freehold_jewel_floor_lamp).\nSubject and identity: One small dark blue bound design folio with a cream parchment cover inset, antique silver corner fittings and a single small aquamarine clasp. Inset contains ONE bold wordless painted diagram of a faceted jewel lamp on its broad floor base. Tactile leather and paper, no lettering, glyphs, arrows or pseudo-writing. The book is the primary object; no actual lamp beside it.",
+          "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-7311b5e8-fc27-45a9-b8f7-2dcfb8e14970.png",
+          "original": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_jewel_floor_lamp-originals.png",
+            "sha256": "b655ccc3d671aace817346c2fffad6e4737195fa4019f8e2ddf4693bccad1f27",
+            "bytes": 2411393,
+            "width": 1254,
+            "height": 1254,
+            "format": "png",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "master": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_jewel_floor_lamp-masters.png",
+            "sha256": "7966f168000ee0cc0890cf57ea271298fcf32741e4ceb2c2781c7af019e05764",
+            "bytes": 421441,
+            "width": 512,
+            "height": 512,
+            "format": "png",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "shipping": {
+            "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_jewel_floor_lamp.webp",
+            "sha256": "f16fbb94ce6dcce817e5506f65147d32f7e112c7954ee1a4368275f69d7d4ca0",
+            "bytes": 3192,
+            "width": 128,
+            "height": 128,
+            "format": "webp",
+            "colourspace": "srgb",
+            "minAlpha": 255,
+            "maxAlpha": 255
+          },
+          "decision": "Superseded to match the exact output construction in the diagram."
+        },
+        {
+          "prompt": "Use case: precise-object-edit. Image1 is the edit target, the dark-blue bound Design: Jewel Floor Lamp folio with silver corners and aquamarine clasp. Image2 is an identity-only reference for the EXACT lamp depicted in the design. Preserve the folio, silver corners and clasp, cream inset, painted style, lighting, background and padding. Replace only its central illustration with a simplified wordless ink-and-wash drawing faithfully matching Image2: large UNCAPPPED pointed pale aquamarine faceted jewel held by upward antique silver claws at its lower sides, NO ROOF OR TOP CAGE, a short thick dark metal pedestal and broad flared foot. Use the same head-to-post-to-foot proportions as Image2, emphasizing its broad jewel. Diagram lies flat on the folio, not a physical lamp. No text, numbers, runes, pseudo-writing, arrows, extra frame, watermark or transparency.",
+          "generatorOutput": "/Users/fernando/.codex/generated_images/01a07da4-3173-76b3-89c1-6b734635be81/exec-0dfc5735-5aa6-488a-846a-29ed0aed3d3e.png",
+          "references": [
+            {
+              "path": "tmp/imagegen/freehold-crafted-2026-09-07/first-pass/pattern_freehold_jewel_floor_lamp-masters.png",
+              "sha256": "7966f168000ee0cc0890cf57ea271298fcf32741e4ceb2c2781c7af019e05764",
+              "bytes": 421441,
+              "role": "Edit target; preserve document/painting outside the requested correction."
+            },
+            {
+              "path": "tmp/imagegen/freehold-crafted-2026-09-07/masters/freehold_jewel_floor_lamp.png",
+              "sha256": "0703ffa18c92912089ae61210e806d73ece6b728c365c741f9f579f326626c4f",
+              "bytes": 349187,
+              "role": "Identity-only reference for the depicted craft output; not an additional physical subject."
+            }
+          ],
+          "decision": "Reviewed corrected source and normalized master, then converted through assets:items."
+        }
+      ]
+    }
+  ]
+}

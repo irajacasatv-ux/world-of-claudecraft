@@ -166,4 +166,5 @@ export const table: ReliquaryLocaleTable = {
     name: 'Heroisch: The Inner Crucible',
     desc: 'Nur heroisch erhältliche Schilde und Waffen von Varkhul, Forgefather of the Last Flame.',
   },
+  hearth_first_crafts: { name: 'Erste Werke fürs Heim' },
 };

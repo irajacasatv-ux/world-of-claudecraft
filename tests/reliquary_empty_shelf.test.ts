@@ -96,10 +96,12 @@ describe('ReliquaryWindow unavailable shelf admission', () => {
       const original = await vi.importActual<typeof import('../src/sim/content/reliquary')>(
         '../src/sim/content/reliquary',
       );
-      expect(original.RELIQUARY_PAGES.some((page) => page.id === 'hearth_basics')).toBe(true);
+      expect(
+        original.RELIQUARY_PAGES.filter((page) => page.shelf === 'hearth').map((page) => page.id),
+      ).toEqual(['hearth_basics', 'hearth_first_crafts']);
       expect(Object.isFrozen(original.RELIQUARY_PAGES)).toBe(true);
       expect(RELIQUARY_PAGES.some((page) => page.shelf === 'hearth')).toBe(false);
-      expect(RELIQUARY_PAGES).toHaveLength(original.RELIQUARY_PAGES.length - 1);
+      expect(RELIQUARY_PAGES).toHaveLength(original.RELIQUARY_PAGES.length - 2);
       const { window, root } = makeWindow();
       if (alreadyOpen) {
         window.open('conquerors');
@@ -112,6 +114,7 @@ describe('ReliquaryWindow unavailable shelf admission', () => {
 
       expect(root.querySelector('[data-nav="hearth"]')).toBeNull();
       expect(root.querySelector('[data-page="hearth_basics"]')).toBeNull();
+      expect(root.querySelector('[data-page="hearth_first_crafts"]')).toBeNull();
       const overview = root.querySelector<HTMLElement>('.reliquary-rail [data-nav="overview"]');
       expect(overview).not.toBeNull();
       expect(overview?.getAttribute('aria-pressed')).toBe('true');

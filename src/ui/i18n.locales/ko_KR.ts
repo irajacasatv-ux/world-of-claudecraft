@@ -6508,7 +6508,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
     '각 캐릭터는 자신의 것만 가질 수 있습니다. 이 페이지는 달성이나 큐레이터 등급에 들어가지 않습니다.',
   'guide.reliquaryPage.catalogHeading': '페이지 목록',
   'guide.reliquaryPage.catalogBody':
-    '작성된 모든 성물고 페이지와 그 성유물 이름입니다. 스포일러 안전 이름만 있으며, 진행도·클리어 수·실루엣은 게임 속 성물고에서 확인하세요.',
+    '성물고의 각 페이지와 수록된 성유물 이름입니다. 첫 보금자리 공예에는 각 제작 기술의 가구가 하나씩 있습니다. 제작법 일곱 가지는 훈련교관에게 배우고, 태엽 램프, 도표 이젤, 보석 스탠드등의 도안은 영웅 병참장교에게 영웅의 징표로 구매합니다. 가구는 장식용이며 도안은 성유물로 세지 않습니다. 개인 진행도, 클리어 수, 실루엣은 게임에서 확인하세요.',
   'guide.reliquaryPage.spoilerNote':
     '개인 첫 발견 기록, 클리어 수, 보유/미보유 상태는 게임 클라이언트에 남습니다. 위키는 플레이어 수집을 공개하지 않습니다.',
   'guide.reliquaryPage.shelfHeading': '{label} ({count})',
@@ -12866,7 +12866,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
     '광석을 이보다 빨리 먹는 기술은 없다. ironlink hauberk 한 벌에 철 광석 다섯, osmiumscale 한 점마다 오스뮴 서너 개에 문양강철 주괴 하나. 진지한 갑옷 장인은 Mirefen Marsh와 Thornpeak Heights를 직접 캐거나 캐는 이에게 돈을 낸다. 구리는 첫 단 몫으로 Copper Dig 옆 광맥에서 나온다. 금속 둘레엔 부드러운 재료들, 거친 가죽과 뼛조각, 아마 조각이 있고 거의 모든 제조법에 Smithing Flux(대장간 20동) 한 병이 든다. 급하면 Darva가 오스뮴을 판다.',
   'guide.profPages.craftProse.armorcrafting.ladderHeading': 'Darva의 용광로에서 배우기',
   'guide.profPages.craftProse.armorcrafting.ladderBody':
-    '야외 일반품 두 벌(Eastbrook Chainmail Vest와 Warded Leggings)은 처음부터 어디서든 만든다. 수련 사다리는 Eastbrook 대장간의 세 단 아홉 제조법이다. 구리 단은 기술 0에 무료, ironlink 단은 기술 25에 각 25은, osmiumscale 단은 기술 50에 각 1금. 사다리 밖에 특례가 둘 있다. Boundstone Helm은 대장장이 합작 제조법(조율 필수, 두 기술 25, 작업대 불필요)이고, 가마비늘 망토는 스승이 필요 없어 모두가 알지만 기술 75에 대장간 전용, 이 기술의 3단 마무리다.',
+    '야외 일반품 두 벌(Eastbrook Chainmail Vest와 Warded Leggings)은 처음부터 어디서든 만든다. 장비 제작 단계는 Eastbrook 대장간의 세 단 아홉 제조법이다. 구리 단은 기술 0에 무료, ironlink 단은 기술 25에 각 25은, osmiumscale 단은 기술 50에 각 1금. 사다리 밖에 특례가 둘 있다. Boundstone Helm은 대장장이 합작 제조법(조율 필수, 두 기술 25, 작업대 불필요)이고, 가마비늘 망토는 스승이 필요 없어 모두가 알지만 기술 75에 대장간 전용, 이 기술의 3단 마무리다.',
   'guide.profPages.craftProse.armorcrafting.routeHeading': '걸작, 그리고 125까지의 길',
   'guide.profPages.craftProse.armorcrafting.routeBody':
     'ironlink 단 이상은 모두 걸작을 굴린다. 방어도뿐인 구리 단 일반품은 발동하지 않는다. 철은 재료 1단계, 문양강철은 2단계. 경로는 정석 세 단, 구리로 25, ironlink로 50, osmiumscale로 75. 75 이후의 행운은 가마비늘 망토다. 3단 제조법이라 99까지 전속, 이후 절반이니 마지막 50점이 150회가 아니라 약 75회로 끝난다. 한 벌에 오스뮴 7개와 Smithing Flux 5개, Thornpeak과 대장간 계산대에서 미리 쟁여 두자. Darva의 주문은 30분마다 구리 광석 8개. 기술 50에 Hammer and Plate, 125에 Grandmaster Armorcrafting이 기다린다.',
@@ -15548,4 +15548,17 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'entities.npcs.freehold_furnisher.title': '가정용품',
   'entities.npcs.freehold_furnisher.greeting':
     '튼튼한 의자, 따뜻한 랜턴, 책을 놓을 자리까지. 한번 둘러보세요.',
+  'entities.items.freehold_weapon_rack.name': '무기 거치대',
+  'entities.items.freehold_iron_brazier.name': '철제 화로',
+  'entities.items.freehold_patchwork_rug.name': '조각천 깔개',
+  'entities.items.freehold_hide_armchair.name': '가죽 안락의자',
+  'entities.items.freehold_clockwork_lamp.name': '태엽 램프',
+  'entities.items.freehold_glass_floor_lamp.name': '유리 스탠드등',
+  'entities.items.freehold_chart_easel.name': '도표 이젤',
+  'entities.items.freehold_jewel_floor_lamp.name': '보석 스탠드등',
+  'entities.items.freehold_set_supper_table.name': '차려진 저녁 식탁',
+  'entities.items.freehold_glow_lantern.name': '은은한 빛의 등불',
+  'entities.items.pattern_freehold_clockwork_lamp.name': '설계도: 태엽 램프',
+  'entities.items.pattern_freehold_chart_easel.name': '기법서: 도표 이젤',
+  'entities.items.pattern_freehold_jewel_floor_lamp.name': '도안: 보석 스탠드등',
 };

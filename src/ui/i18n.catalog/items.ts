@@ -3011,6 +3011,19 @@ const ITEM_ENTITY_IDS = [
   'freehold_brass_lantern',
   'freehold_storage_chest',
   'freehold_open_bookshelf',
+  'freehold_weapon_rack',
+  'freehold_iron_brazier',
+  'freehold_patchwork_rug',
+  'freehold_hide_armchair',
+  'freehold_clockwork_lamp',
+  'freehold_glass_floor_lamp',
+  'freehold_chart_easel',
+  'freehold_jewel_floor_lamp',
+  'freehold_set_supper_table',
+  'freehold_glow_lantern',
+  'pattern_freehold_clockwork_lamp',
+  'pattern_freehold_chart_easel',
+  'pattern_freehold_jewel_floor_lamp',
 ] as const;
 
 type ItemEntityId = (typeof ITEM_ENTITY_IDS)[number];
@@ -3671,6 +3684,19 @@ const APPENDED_ITEM_NAMES: Partial<Record<ItemEntityId, string>> = {
   freehold_brass_lantern: 'Brass Lantern',
   freehold_storage_chest: 'Storage Chest',
   freehold_open_bookshelf: 'Open Bookshelf',
+  freehold_weapon_rack: 'Weapon Rack',
+  freehold_iron_brazier: 'Iron Brazier',
+  freehold_patchwork_rug: 'Patchwork Rug',
+  freehold_hide_armchair: 'Hide Armchair',
+  freehold_clockwork_lamp: 'Clockwork Lamp',
+  freehold_glass_floor_lamp: 'Glass Floor Lamp',
+  freehold_chart_easel: 'Chart Easel',
+  freehold_jewel_floor_lamp: 'Jewel Floor Lamp',
+  freehold_set_supper_table: 'Set Supper Table',
+  freehold_glow_lantern: 'Glow Lantern',
+  pattern_freehold_clockwork_lamp: 'Schematic: Clockwork Lamp',
+  pattern_freehold_chart_easel: 'Technique: Chart Easel',
+  pattern_freehold_jewel_floor_lamp: 'Design: Jewel Floor Lamp',
 };
 
 function itemTranslations(names: readonly string[]): ItemEntityTranslations {

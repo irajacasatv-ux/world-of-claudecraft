@@ -6648,7 +6648,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
     'Каждый персонаж может держать только свою. Страница не считается в завершении и ранге хранителя.',
   'guide.reliquaryPage.catalogHeading': 'Каталог страниц',
   'guide.reliquaryPage.catalogBody':
-    'Каждая страница Реликвария и имена реликвий на ней. Только безопасные для спойлеров имена: свой прогресс, счётчики зачисток и силуэты смотрите в игровом Реликварии.',
+    'Здесь перечислены страницы Реликвария и названия реликвий. Первые поделки для дома включают по предмету мебели от каждого ремесла: семи рецептам обучают наставники, а чертежи заводной лампы, мольберта с чертежом и самоцветного торшера продаёт героический интендант за героические знаки. Мебель служит украшением, а чертежи не считаются реликвиями. Личный прогресс, счётчики зачисток и силуэты смотрите в игре.',
   'guide.reliquaryPage.spoilerNote':
     'Личная история первых находок, счётчики зачисток и состояние «есть/нет» остаются в клиенте. Вики не публикует коллекции игроков.',
   'guide.reliquaryPage.shelfHeading': '{label} ({count})',
@@ -13060,7 +13060,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
     'Ни одно ремесло не ест руду быстрее. Один только ironlink hauberk берет пять iron ore, а каждая osmiumscale вещь хочет три-четыре osmium плюс слиток глифостали, так что серьезный armorcrafter добывает в Mirefen Marsh и Thornpeak Heights или платит тому, кто добывает. Copper кормит первую ступень, прямо с жил у Copper Dig.\n\nВокруг металла идут мягкие части: rough hide, снятая с туш волков и вепрей, bone fragments и linen scraps с обычной охоты, и банка Smithing Flux (20 меди у горна) почти в каждом рецепте. Darva продает osmium ore через прилавок для нетерпеливых.',
   'guide.profPages.craftProse.armorcrafting.ladderHeading': 'Обучение у горна Darva',
   'guide.profPages.craftProse.armorcrafting.ladderBody':
-    'Два полевых обычка, Eastbrook Chainmail Vest и Warded Leggings, известны с начала и куются где угодно. Лестница тренера, это девять рецептов в трех ступенях у горна Eastbrook: медная ступень бесплатна на 0 навыке, ступень ironlink стоит 25 серебра за рецепт на 25 навыке, а ступень osmiumscale стоит 1 золото каждый на 50 навыке, и каждая ступень доступна к обучению, как только ваш разряд ее достигает.\n\nЗа лестницей сидят два особых. Boundstone Helm, это комбинированный рецепт Smith, учится у тренера, не требует станка и работается только настроенным Smith с обоими ремеслами на 25 навыке. Мантии печной чешуи не нужен учитель вовсе: ее знают все, но на 75 навыке и привязанная к forge, она венчает 3-й уровень ремесла.',
+    'Два полевых обычка, Eastbrook Chainmail Vest и Warded Leggings, известны с начала и куются где угодно. Лестница изготовления снаряжения, это девять рецептов в трех ступенях у горна Eastbrook: медная ступень бесплатна на 0 навыке, ступень ironlink стоит 25 серебра за рецепт на 25 навыке, а ступень osmiumscale стоит 1 золото каждый на 50 навыке, и каждая ступень доступна к обучению, как только ваш разряд ее достигает.\n\nЗа лестницей сидят два особых. Boundstone Helm, это комбинированный рецепт Smith, учится у тренера, не требует станка и работается только настроенным Smith с обоими ремеслами на 25 навыке. Мантии печной чешуи не нужен учитель вовсе: ее знают все, но на 75 навыке и привязанная к forge, она венчает 3-й уровень ремесла.',
   'guide.profPages.craftProse.armorcrafting.routeHeading': 'Шедевры и рабочий путь к 125',
   'guide.profPages.craftProse.armorcrafting.routeBody':
     'От ступени ironlink и выше каждое изделие катит шанс шедевра; медные обычки, что только для брони, сработать не могут, ведь шедевр улучшает характеристики, а их у них нет. Iron считается материалом 1-го уровня для срабатывания, а глифосталь, 2-го.\n\nПодъем, это стандартная трехступенчатая поездка: copper до 25, ironlink до 50, osmiumscale до 75, обучая каждую ступень в день ее открытия. Где Armorcrafting везет, так это на отрезке после 75: Мантия печной чешуи, это рецепт 3-го уровня, так что он платит полную отдачу до 99 и половину после, а значит последние пятьдесят очков берут около 75 изделий вместо 150, что нужны ремеслу без венца. Каждая мантия стоит семь osmium ore и пять Smithing Flux, так что запаситесь в Thornpeak и у прилавка forge перед забегом.\n\nРабочий заказ Darva покупает восемь copper ore каждые 30 минут за монеты и опыт, приятный сток для низкой руды, из которой вы вырастаете. Книга деяний отмечает Hammer and Plate на 50 навыке, а Grandmaster Armorcrafting ждет на пределе в 125.',
@@ -15769,4 +15769,17 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.npcs.freehold_furnisher.title': 'Товары для дома',
   'entities.npcs.freehold_furnisher.greeting':
     'Крепкий стул, тёплый фонарь, место для книг. Присмотритесь.',
+  'entities.items.freehold_weapon_rack.name': 'Стойка для оружия',
+  'entities.items.freehold_iron_brazier.name': 'Железная жаровня',
+  'entities.items.freehold_patchwork_rug.name': 'Лоскутный ковёр',
+  'entities.items.freehold_hide_armchair.name': 'Кресло из шкур',
+  'entities.items.freehold_clockwork_lamp.name': 'Заводная лампа',
+  'entities.items.freehold_glass_floor_lamp.name': 'Стеклянный торшер',
+  'entities.items.freehold_chart_easel.name': 'Мольберт с чертежом',
+  'entities.items.freehold_jewel_floor_lamp.name': 'Самоцветный торшер',
+  'entities.items.freehold_set_supper_table.name': 'Накрытый обеденный стол',
+  'entities.items.freehold_glow_lantern.name': 'Мерцающий фонарь',
+  'entities.items.pattern_freehold_clockwork_lamp.name': 'Схема: Заводная лампа',
+  'entities.items.pattern_freehold_chart_easel.name': 'Техника: Мольберт с чертежом',
+  'entities.items.pattern_freehold_jewel_floor_lamp.name': 'Эскиз: Самоцветный торшер',
 };

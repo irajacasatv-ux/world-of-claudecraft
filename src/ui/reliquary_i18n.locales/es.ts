@@ -166,4 +166,5 @@ export const table: ReliquaryLocaleTable = {
     name: 'Heroico: The Inner Crucible',
     desc: 'Escudos y armas exclusivos del modo heroico de Varkhul, Forgefather of the Last Flame.',
   },
+  hearth_first_crafts: { name: 'Primeras creaciones para el hogar' },
 };

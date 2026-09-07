@@ -113,7 +113,8 @@ const build = await buildItemArtAudit({
     // The Forgebreaker quest's forgefathers_ember proof item (painted in the
     // same Crucible professions batch) adds one more painted identity, to 1,256.
     // The Freehold vendor adds eight separately accepted paintings, to 1,264.
-    catalogCount: 1264,
+    // Ten crafted furnishings and three patterns add thirteen paintings, to 1,277.
+    catalogCount: 1277,
     // The art-subject universe is every live definition minus the explicit
     // pending-art ledger. Masterwrought cleared that ledger at 1,224 live
     // definitions; the Field Kit raises it to 1,225; Crucible professions
@@ -122,7 +123,8 @@ const build = await buildItemArtAudit({
     // it to 1,271, also painted. Eight furnishings take the live count to 1,279.
     // Sixteen Heroic weapons intentionally alias
     // base paintings; the implicit backpack is the one non-definition catalog id.
-    liveItemCount: 1279,
+    // The crafted set adds thirteen live definitions, to 1,292.
+    liveItemCount: 1292,
     pendingArtCount: 0,
     generatedHeroicDefinitions: 64,
     heroicDefinitionsWithOwnWebp: 48,

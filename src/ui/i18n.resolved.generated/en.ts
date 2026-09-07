@@ -6583,7 +6583,7 @@ export const en: EnTranslations = {
       "retiredNote": "These relics can no longer be won. The page honors the veterans who keep them and does not count toward completion or Curator rank.",
       "personalNote": "Each character can only ever hold their own. The page does not count toward completion or Curator rank.",
       "catalogHeading": "Catalog of pages",
-      "catalogBody": "Every authored Reliquary page and the relic names it holds. This list is spoiler-safe names only: open The Reliquary in game to see your own progress, clear counts, and silhouettes.",
+      "catalogBody": "Every authored Reliquary page and the relic names it holds. First Hearth Crafts collects one furnishing from each craft: trainers teach seven recipes, while the Heroic Quartermaster sells the Clockwork Lamp schematic, Chart Easel technique, and Jewel Floor Lamp design for Heroic Marks. Furnishings are ornamental; patterns are not relics. Open The Reliquary in game for personal progress, clear counts, and silhouettes.",
       "spoilerNote": "Personal first-find history, clear numbers, and missing-versus-owned state stay in the game client. The wiki never publishes a player collection.",
       "shelfHeading": "{label} ({count})",
       "shelf": {
@@ -6860,7 +6860,7 @@ export const en: EnTranslations = {
           "materialsHeading": "Ore by the sackful",
           "materialsBody": "No craft eats ore faster. The ironlink hauberk alone takes five iron ore, and every osmiumscale piece wants three or four osmium plus a glyphsteel bar, so a serious armorcrafter mines Mirefen Marsh and Thornpeak Heights or pays someone who does. Copper feeds the first rung, straight from the veins by the Copper Dig.\n\nAround the metal go the soft parts: rough hide harvested off wolf and boar corpses, bone fragments off the restless dead (or salvaged out of common gear), and Smithing Flux jars (20 copper each at the forge) in nearly every recipe. No counter sells osmium: the impatient buy it off other players or mine it themselves, on Thornpeak or the starter veins of ten of the eleven younger zones (the Farshore alone digs iron).",
           "ladderHeading": "Learning at Darva's forge",
-          "ladderBody": "Two field commons, the Eastbrook Chainmail Vest and the Warded Leggings, are known from the start and craft anywhere. The trainer ladder is nine recipes in three rungs at the Eastbrook forge: the copper rung is free at skill 0, the ironlink rung costs 25 silver a recipe at skill 25, and the osmiumscale rung costs 1 gold each at skill 50, with each rung teachable the moment your tier reaches it.\n\nBeyond the ladder sit two specials. The Boundstone Helm is one of the two Smith combination recipes (the Gravewyrm Gauntlets are its sibling on the weaponcrafting side), trainer-taught, station-free, and workable only by an attuned Smith with both crafts at skill 25. The Kilnscale Mantle needs no teacher at all: everyone knows it from the start, and nothing but the forge and the materials gates working it. Its listed skill of 75 is about gain, not permission: with Armorcrafting as a major it pays full skill gain from the very first hammer stroke to 99, so a Smith with osmium to spare can lean on it early. Below a major's ceiling the tier 3 recipe teaches nothing, so an undeclared or hobby armorcrafter works it for the piece, not the points.",
+          "ladderBody": "Two field commons, the Eastbrook Chainmail Vest and the Warded Leggings, are known from the start and craft anywhere. The equipment ladder is nine recipes in three rungs at the Eastbrook forge: the copper rung is free at skill 0, the ironlink rung costs 25 silver a recipe at skill 25, and the osmiumscale rung costs 1 gold each at skill 50, with each rung teachable the moment your tier reaches it.\n\nBeyond the ladder sit two specials. The Boundstone Helm is one of the two Smith combination recipes (the Gravewyrm Gauntlets are its sibling on the weaponcrafting side), trainer-taught, station-free, and workable only by an attuned Smith with both crafts at skill 25. The Kilnscale Mantle needs no teacher at all: everyone knows it from the start, and nothing but the forge and the materials gates working it. Its listed skill of 75 is about gain, not permission: with Armorcrafting as a major it pays full skill gain from the very first hammer stroke to 99, so a Smith with osmium to spare can lean on it early. Below a major's ceiling the tier 3 recipe teaches nothing, so an undeclared or hobby armorcrafter works it for the piece, not the points.",
           "routeHeading": "Masterworks, and a working route to 125",
           "routeBody": "From the ironlink rung up, every craft rolls the masterwork chance; the armor-only copper commons cannot proc, since a masterwork improves stats and they carry none. Iron counts as a tier 1 material for the proc and glyphsteel as tier 2.\n\nThe climb is the standard three-rung ride: copper to 25, ironlink to 50, osmiumscale to 75, training each rung the day it opens. Where Armorcrafting gets lucky is the stretch after 75: the Kilnscale Mantle is a tier 3 recipe, so it pays full gain to 99 and half after, which means the last fifty points take about 75 crafts instead of the 150 a craft without a capstone needs. Each mantle costs seven osmium ore and five Smithing Flux, so stock up in Thornpeak and at the forge counter before you start the run.\n\nDarva's work order buys eight copper ore every 30 minutes for coin and XP, a nice sink for the low-tier ore you outgrow. The Book of Deeds marks Hammer and Plate at skill 50, and Grandmaster Armorcrafting waits at the 125 cap."
         },
@@ -15084,6 +15084,45 @@ export const en: EnTranslations = {
       },
       "freehold_open_bookshelf": {
         "name": "Open Bookshelf"
+      },
+      "freehold_weapon_rack": {
+        "name": "Weapon Rack"
+      },
+      "freehold_iron_brazier": {
+        "name": "Iron Brazier"
+      },
+      "freehold_patchwork_rug": {
+        "name": "Patchwork Rug"
+      },
+      "freehold_hide_armchair": {
+        "name": "Hide Armchair"
+      },
+      "freehold_clockwork_lamp": {
+        "name": "Clockwork Lamp"
+      },
+      "freehold_glass_floor_lamp": {
+        "name": "Glass Floor Lamp"
+      },
+      "freehold_chart_easel": {
+        "name": "Chart Easel"
+      },
+      "freehold_jewel_floor_lamp": {
+        "name": "Jewel Floor Lamp"
+      },
+      "freehold_set_supper_table": {
+        "name": "Set Supper Table"
+      },
+      "freehold_glow_lantern": {
+        "name": "Glow Lantern"
+      },
+      "pattern_freehold_clockwork_lamp": {
+        "name": "Schematic: Clockwork Lamp"
+      },
+      "pattern_freehold_chart_easel": {
+        "name": "Technique: Chart Easel"
+      },
+      "pattern_freehold_jewel_floor_lamp": {
+        "name": "Design: Jewel Floor Lamp"
       },
       "conjured_water4": {
         "name": "Conjured Springwater"

@@ -166,4 +166,5 @@ export const table: ReliquaryLocaleTable = {
     name: 'Hrdinský: The Inner Crucible',
     desc: 'Štíty a zbraně dostupné jen hrdinsky od Varkhul, Forgefather of the Last Flame.',
   },
+  hearth_first_crafts: { name: 'První výrobky pro domov' },
 };

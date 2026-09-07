@@ -166,4 +166,5 @@ export const table: ReliquaryLocaleTable = {
     name: 'Heroiczny: The Inner Crucible',
     desc: 'Tarcze i bronie dostępne wyłącznie heroicznie od Varkhul, Forgefather of the Last Flame.',
   },
+  hearth_first_crafts: { name: 'Pierwsze wyroby do domu' },
 };

@@ -142,6 +142,12 @@ describe('ReliquaryWindow with the real Hearth catalog', () => {
       t('hudChrome.reliquary.navHearth'),
     );
     expect(root.querySelector('.reliquary-page-title')).toBeNull();
+    must(root, '[data-page="hearth_first_crafts"]').click();
+    expect(must(root, '.reliquary-page-title').textContent).toBe('First Hearth Crafts');
+    expect(root.querySelectorAll('[data-cell-id]')).toHaveLength(10);
+    expect(must(root, '[data-cell-id="freehold_weapon_rack"]')).toBeDefined();
+    expect(must(root, '[data-cell-id="freehold_glow_lantern"]')).toBeDefined();
+    must(root, '[data-back]').click();
 
     window.open('overview');
     const card = must(root, '.reliquary-shelf-card[data-nav="hearth"]');
@@ -149,7 +155,7 @@ describe('ReliquaryWindow with the real Hearth catalog', () => {
       t('hudChrome.reliquary.shelfOpenAria', {
         name: t('hudChrome.reliquary.navHearth'),
         owned: fmt(1),
-        total: fmt(8),
+        total: fmt(18),
       }),
     );
     expect(must(card, '.reliquary-shelf-card-name').textContent).toBe(

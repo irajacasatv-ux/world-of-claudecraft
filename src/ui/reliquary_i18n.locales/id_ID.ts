@@ -166,4 +166,5 @@ export const table: ReliquaryLocaleTable = {
     name: 'Heroik: The Inner Crucible',
     desc: 'Perisai dan senjata khusus mode heroik dari Varkhul, Forgefather of the Last Flame.',
   },
+  hearth_first_crafts: { name: 'Karya Pertama untuk Rumah' },
 };

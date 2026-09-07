@@ -6660,6 +6660,34 @@
       ],
       "styleReference": "woc-item-icon-v1; existing painted item catalog, with exact viewed references in staged-art.json",
       "provenanceRecord": "docs/freeholds/content-art-2026-09-07/items.accepted-art.json"
+    },
+    {
+      "batchId": "freehold-crafted-2026-09-07",
+      "source": "OpenAI built-in image generation executed by Codex",
+      "owner": "World of ClaudeCraft",
+      "license": "World of ClaudeCraft project-generated art, project asset, rights reserved",
+      "styleContract": {
+        "id": "woc-item-icon-v1",
+        "document": "docs/design/item-icon-art-style.md"
+      },
+      "commonPrompt": "Thirteen individual painted inventory icons; exact prompts in retained provenance inputs.",
+      "itemIds": [
+        "freehold_weapon_rack",
+        "freehold_iron_brazier",
+        "freehold_patchwork_rug",
+        "freehold_hide_armchair",
+        "freehold_clockwork_lamp",
+        "freehold_glass_floor_lamp",
+        "freehold_chart_easel",
+        "freehold_jewel_floor_lamp",
+        "freehold_set_supper_table",
+        "freehold_glow_lantern",
+        "pattern_freehold_clockwork_lamp",
+        "pattern_freehold_chart_easel",
+        "pattern_freehold_jewel_floor_lamp"
+      ],
+      "styleReference": "woc-item-icon-v1; existing painted item catalog, exact viewed references in staged-art.json",
+      "provenanceRecord": "docs/freeholds/crafted-content-art-2026-09-07/items.accepted-art.json"
     }
   ]
 }

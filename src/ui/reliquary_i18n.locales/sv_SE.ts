@@ -166,4 +166,5 @@ export const table: ReliquaryLocaleTable = {
     name: 'Heroisk: The Inner Crucible',
     desc: 'Sköldar och vapen enbart från heroiskt läge, från Varkhul, Forgefather of the Last Flame.',
   },
+  hearth_first_crafts: { name: 'De första sakerna till hemmet' },
 };

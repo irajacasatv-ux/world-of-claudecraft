@@ -1845,6 +1845,25 @@ export const RELIQUARY_PAGES: readonly ReliquaryPageDef[] = freezePageTable([
       'freehold_open_bookshelf',
     ),
   },
+  {
+    id: 'hearth_first_crafts',
+    shelf: 'hearth',
+    name: 'First Hearth Crafts',
+    desc: 'A furnishing from each craft. Trainers teach seven recipes; the Heroic Quartermaster sells the Clockwork Lamp schematic, Chart Easel technique, and Jewel Floor Lamp design for Heroic Marks. All furnishings are ornamental.',
+    clearSource: { kind: 'none' },
+    relics: items(
+      ['freehold_weapon_rack', fromProfession('weaponcrafting')],
+      ['freehold_iron_brazier', fromProfession('armorcrafting')],
+      ['freehold_patchwork_rug', fromProfession('tailoring')],
+      ['freehold_hide_armchair', fromProfession('leatherworking')],
+      ['freehold_clockwork_lamp', fromProfession('engineering')],
+      ['freehold_glass_floor_lamp', fromProfession('alchemy')],
+      ['freehold_chart_easel', fromProfession('inscription')],
+      ['freehold_jewel_floor_lamp', fromProfession('jewelcrafting')],
+      ['freehold_set_supper_table', fromProfession('cooking')],
+      ['freehold_glow_lantern', fromProfession('enchanting')],
+    ),
+  },
 ]);
 
 /** Append-only page order (table order). */

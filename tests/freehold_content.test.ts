@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   FREEHOLD_CHARTERS,
+  FREEHOLD_CRAFTED_FURNISHING_IDS,
   FREEHOLD_FURNISHER,
   FREEHOLD_FURNISHING_IDS,
   FREEHOLD_FURNISHINGS,
@@ -9,9 +10,11 @@ import {
   FREEHOLD_LEDGER_SCHEDULE,
   FREEHOLD_TIER_IDS,
   FREEHOLD_TIERS,
+  FURNISHING_RECIPES,
   freeholdTierById,
   isKnownFreeholdCharterId,
 } from '../src/sim/content/freehold';
+import { RELIQUARY_PAGES_BY_ID, reliquaryRelicSource } from '../src/sim/content/reliquary';
 import { ITEMS, NPCS } from '../src/sim/data';
 
 const SOURCE_FREEZE = 'docs/freeholds/content-source-freeze-2026-09-07.md';
@@ -212,7 +215,7 @@ describe('Freehold content source freeze', () => {
     ] as const;
     const ids = rows.map(([id]) => id);
     expect(FREEHOLD_FURNISHING_IDS).toEqual(ids);
-    expect(Object.keys(FREEHOLD_FURNISHINGS)).toEqual(ids);
+    expect(Object.keys(FREEHOLD_FURNISHINGS)).toEqual([...ids, ...FREEHOLD_CRAFTED_FURNISHING_IDS]);
     for (const [id, name, width, depth, r, decorCost] of rows) {
       expect(FREEHOLD_FURNISHINGS[id]).toEqual({
         id,
@@ -236,7 +239,133 @@ describe('Freehold content source freeze', () => {
     expect(FREEHOLD_FURNISHER.questIds).toEqual([]);
   });
 
+  it('pins the accepted crafted footprints, radii, costs, resale and rare presentation literally', () => {
+    const rows = [
+      ['freehold_weapon_rack', 3, 2, 1, 1, 58],
+      ['freehold_iron_brazier', 2, 2, 0.5, 7, 64],
+      ['freehold_patchwork_rug', 4, 8, 0, 1, 43],
+      ['freehold_hide_armchair', 2, 2, 1, 1, 26],
+      ['freehold_clockwork_lamp', 2, 2, 1, 1, 9],
+      ['freehold_glass_floor_lamp', 2, 2, 1, 1, 53],
+      ['freehold_chart_easel', 2, 3, 1, 8, 60],
+      ['freehold_jewel_floor_lamp', 2, 2, 0.5, 4, 39],
+      ['freehold_set_supper_table', 5, 5, 2, 5, 54],
+      ['freehold_glow_lantern', 2, 2, 0.5, 1, 60],
+    ] as const;
+    expect(FREEHOLD_CRAFTED_FURNISHING_IDS).toEqual(rows.map(([id]) => id));
+    expect(FREEHOLD_CRAFTED_FURNISHING_IDS).toHaveLength(10);
+    expect(Object.keys(FREEHOLD_FURNISHINGS)).toHaveLength(18);
+    expect(Object.values(ITEMS).filter((item) => item.kind === 'furnishing')).toHaveLength(18);
+    for (const [id, width, depth, r, decorCost, sellValue] of rows) {
+      expect(ITEMS[id]).toBe(FREEHOLD_FURNISHINGS[id]);
+      expect(ITEMS[id]).toMatchObject({
+        id,
+        kind: 'furnishing',
+        quality: 'rare',
+        sellValue,
+        furnishing: { footprint: { width, depth }, r, decorCost, surface: 'floor' },
+      });
+      expect(Object.keys(ITEMS[id]).sort(), id).toEqual([
+        'furnishing',
+        'id',
+        'kind',
+        'name',
+        'quality',
+        'sellValue',
+      ]);
+      expect(
+        Object.values(NPCS).filter((npc) => npc.vendorItems?.includes(id)),
+        id,
+      ).toEqual([]);
+    }
+  });
+
+  it('keeps every furnishing power-neutral with finite positive placement costs and walk-through rugs', () => {
+    for (const item of Object.values(FREEHOLD_FURNISHINGS)) {
+      expect(Object.keys(item.furnishing).sort(), item.id).toEqual([
+        'decorCost',
+        'footprint',
+        'r',
+        'surface',
+      ]);
+      for (const key of [
+        'armorType',
+        'slot',
+        'weapon',
+        'stats',
+        'spellPower',
+        'healPower',
+        'critRating',
+        'hasteRating',
+        'hitRating',
+        'pvpOffenseRating',
+        'pvpDefenseRating',
+        'use',
+        'feast',
+        'stackSize',
+        'foodHp',
+        'drinkMana',
+        'potionHp',
+        'potionMana',
+        'elixir',
+        'wellFed',
+        'charges',
+        'bind',
+        'noMarketList',
+      ])
+        expect(Reflect.has(item, key), `${item.id}.${key}`).toBe(false);
+      for (const value of [
+        item.furnishing.footprint.width,
+        item.furnishing.footprint.depth,
+        item.furnishing.decorCost,
+      ]) {
+        expect(Number.isSafeInteger(value), item.id).toBe(true);
+        expect(value, item.id).toBeGreaterThan(0);
+      }
+      expect(Number.isFinite(item.furnishing.r), item.id).toBe(true);
+      expect(item.furnishing.r, item.id).toBeGreaterThanOrEqual(0);
+      expect(item.furnishing.r === 0, item.id).toBe(
+        item.id === 'freehold_woven_rug' || item.id === 'freehold_patchwork_rug',
+      );
+    }
+  });
+
+  it('pins skill 50 and gold-sink budget 20 on each one-piece crafted furnishing recipe', () => {
+    expect(FURNISHING_RECIPES).toHaveLength(10);
+    expect(FURNISHING_RECIPES.map((recipe) => recipe.resultItemId)).toEqual(
+      FREEHOLD_CRAFTED_FURNISHING_IDS,
+    );
+    for (const recipe of FURNISHING_RECIPES) {
+      expect(recipe.skillReq, recipe.id).toBe(50);
+      expect(recipe.itemLevelBudget, recipe.id).toBe(20);
+      expect(recipe.level, recipe.id).toBe(15);
+      expect(recipe.resultCount, recipe.id).toBe(1);
+    }
+  });
+
+  it('catalogues the ten crafted outputs on one Hearth page with their actual profession sources', () => {
+    const page = RELIQUARY_PAGES_BY_ID.hearth_first_crafts;
+    expect(page.shelf).toBe('hearth');
+    expect(page.relics.map((relic) => relic.kind === 'item' && relic.itemId)).toEqual(
+      FREEHOLD_CRAFTED_FURNISHING_IDS,
+    );
+    expect(page.relics).toHaveLength(10);
+    expect(page.relics.map((relic) => reliquaryRelicSource(page, relic))).toEqual([
+      [{ sourceKind: 'profession', sourceId: 'weaponcrafting' }],
+      [{ sourceKind: 'profession', sourceId: 'armorcrafting' }],
+      [{ sourceKind: 'profession', sourceId: 'tailoring' }],
+      [{ sourceKind: 'profession', sourceId: 'leatherworking' }],
+      [{ sourceKind: 'profession', sourceId: 'engineering' }],
+      [{ sourceKind: 'profession', sourceId: 'alchemy' }],
+      [{ sourceKind: 'profession', sourceId: 'inscription' }],
+      [{ sourceKind: 'profession', sourceId: 'jewelcrafting' }],
+      [{ sourceKind: 'profession', sourceId: 'cooking' }],
+      [{ sourceKind: 'profession', sourceId: 'enchanting' }],
+    ]);
+  });
+
   it('freezes every furnishing row, nested placement field and furnisher stock at runtime', () => {
+    expect(Object.isFrozen(FREEHOLD_CRAFTED_FURNISHING_IDS)).toBe(true);
     expect(Object.isFrozen(FREEHOLD_FURNISHING_IDS)).toBe(true);
     expect(Object.isFrozen(FREEHOLD_FURNISHINGS)).toBe(true);
     for (const item of Object.values(FREEHOLD_FURNISHINGS)) {

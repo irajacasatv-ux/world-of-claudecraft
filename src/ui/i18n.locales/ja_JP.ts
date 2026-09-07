@@ -6527,7 +6527,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
     '各キャラクターは自分のものしか持てません。このページは達成やキュレーターランクには数えません。',
   'guide.reliquaryPage.catalogHeading': 'ページ一覧',
   'guide.reliquaryPage.catalogBody':
-    '著された聖遺物庫の全ページと、そこに載る聖遺物の名前。防ネタバレの名前だけです。自分の進捗、クリア数、シルエットはゲーム内の聖遺物庫で確認してください。',
+    '聖遺物庫の各ページと、そこに収録された聖遺物の名前です。初めての炉辺の手仕事には、各製作技能の家具を一つずつ収録しています。七つのレシピは訓練師から学び、ぜんまい仕掛けのランプ、図表の画架、宝石の床置きランプの図面は英雄の補給官から英雄の印で購入します。家具は装飾用で、図面は聖遺物に数えません。自分の進捗、クリア数、シルエットはゲーム内で確認してください。',
   'guide.reliquaryPage.spoilerNote':
     '個人の初発見履歴、クリア数、所持／未所持の状態はゲームクライアントに残ります。ウィキはプレイヤーのコレクションを公開しません。',
   'guide.reliquaryPage.shelfHeading': '{label}（{count}）',
@@ -12881,7 +12881,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
     'これほど鉱石を食う職はありません。ironlink hauberk一着で鉄鉱石5個、osmiumscaleは各piece3から4個のオスミウムにグリフ鋼の延べ棒1本。本気の防具職人はMirefen MarshとThornpeak Heightsを自ら掘るか、誰かに払います。銅は最初の段の分で、Copper Dig脇の鉱脈から。金属の周りには柔らかい素材、粗皮、骨片、リネンの端切れ、そしてほぼ全レシピにSmithing Flux（鍛冶場で20銅）。急ぎならDarvaがオスミウムを店売りしています。',
   'guide.profPages.craftProse.armorcrafting.ladderHeading': 'Darvaの炉で学ぶ',
   'guide.profPages.craftProse.armorcrafting.ladderBody':
-    '野外コモン二着（Eastbrook Chainmail VestとWarded Leggings）は最初から誰でもどこでも。訓練の梯子はEastbrook鍛冶場の三段九レシピで、銅段はスキル0無料、ironlink段はスキル25で各25銀、osmiumscale段はスキル50で各1金。梯子の外に二つの特例。Boundstone Helmは鍛冶師の合作レシピ（要調律、両スキル25、作業場不要）。窯鱗のマントは師匠不要で全員が知っていますが、スキル75かつ鍛冶場限定、この職の第3段の締めくくりです。',
+    '野外コモン二着（Eastbrook Chainmail VestとWarded Leggings）は最初から誰でもどこでも。装備製作の段階はEastbrook鍛冶場の三段九レシピで、銅段はスキル0無料、ironlink段はスキル25で各25銀、osmiumscale段はスキル50で各1金。梯子の外に二つの特例。Boundstone Helmは鍛冶師の合作レシピ（要調律、両スキル25、作業場不要）。窯鱗のマントは師匠不要で全員が知っていますが、スキル75かつ鍛冶場限定、この職の第3段の締めくくりです。',
   'guide.profPages.craftProse.armorcrafting.routeHeading': '傑作と、125への道のり',
   'guide.profPages.craftProse.armorcrafting.routeBody':
     'ironlink段以上はすべて傑作の抽選があります。防御力しかない銅段コモンは発動しません。鉄は素材段階1、グリフ鋼は段階2。道は定番の三段、銅で25、ironlinkで50、osmiumscaleで75。75以降の幸運は窯鱗のマントです。第3段レシピなので99まで全速、以降半減。最後の50ポイントが150回ではなくおよそ75回で済みます。1着にオスミウム7個とSmithing Flux 5個、Thornpeakと鍛冶場カウンターで買いだめを。Darvaの依頼は30分ごとに銅鉱石8個。スキル50でHammer and Plate、125でGrandmaster Armorcraftingです。',
@@ -15535,4 +15535,17 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'entities.npcs.freehold_furnisher.title': '家庭用品',
   'entities.npcs.freehold_furnisher.greeting':
     '丈夫な椅子に、暖かなランタン。本を置く場所もありますよ。どうぞご覧ください。',
+  'entities.items.freehold_weapon_rack.name': '武器立て',
+  'entities.items.freehold_iron_brazier.name': '鉄の火鉢',
+  'entities.items.freehold_patchwork_rug.name': 'つぎはぎの敷物',
+  'entities.items.freehold_hide_armchair.name': '革張りの肘掛け椅子',
+  'entities.items.freehold_clockwork_lamp.name': 'ぜんまい仕掛けのランプ',
+  'entities.items.freehold_glass_floor_lamp.name': 'ガラスの床置きランプ',
+  'entities.items.freehold_chart_easel.name': '図表の画架',
+  'entities.items.freehold_jewel_floor_lamp.name': '宝石の床置きランプ',
+  'entities.items.freehold_set_supper_table.name': '配膳済みの夕食卓',
+  'entities.items.freehold_glow_lantern.name': '淡光のランタン',
+  'entities.items.pattern_freehold_clockwork_lamp.name': '設計図：ぜんまい仕掛けのランプ',
+  'entities.items.pattern_freehold_chart_easel.name': '技法書：図表の画架',
+  'entities.items.pattern_freehold_jewel_floor_lamp.name': '図案：宝石の床置きランプ',
 };

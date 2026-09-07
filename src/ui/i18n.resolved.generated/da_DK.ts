@@ -15085,6 +15085,45 @@ export const da_DK: EnTranslations = {
       "freehold_open_bookshelf": {
         "name": "Open Bookshelf"
       },
+      "freehold_weapon_rack": {
+        "name": "Weapon Rack"
+      },
+      "freehold_iron_brazier": {
+        "name": "Iron Brazier"
+      },
+      "freehold_patchwork_rug": {
+        "name": "Patchwork Rug"
+      },
+      "freehold_hide_armchair": {
+        "name": "Hide Armchair"
+      },
+      "freehold_clockwork_lamp": {
+        "name": "Clockwork Lamp"
+      },
+      "freehold_glass_floor_lamp": {
+        "name": "Glass Floor Lamp"
+      },
+      "freehold_chart_easel": {
+        "name": "Chart Easel"
+      },
+      "freehold_jewel_floor_lamp": {
+        "name": "Jewel Floor Lamp"
+      },
+      "freehold_set_supper_table": {
+        "name": "Set Supper Table"
+      },
+      "freehold_glow_lantern": {
+        "name": "Glow Lantern"
+      },
+      "pattern_freehold_clockwork_lamp": {
+        "name": "Schematic: Clockwork Lamp"
+      },
+      "pattern_freehold_chart_easel": {
+        "name": "Technique: Chart Easel"
+      },
+      "pattern_freehold_jewel_floor_lamp": {
+        "name": "Design: Jewel Floor Lamp"
+      },
       "conjured_water4": {
         "name": "Fremmanet kildevand"
       },

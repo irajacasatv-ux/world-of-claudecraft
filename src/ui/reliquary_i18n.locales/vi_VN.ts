@@ -166,4 +166,5 @@ export const table: ReliquaryLocaleTable = {
     name: 'Anh Hùng: The Inner Crucible',
     desc: 'Khiên và vũ khí chỉ rơi ở chế độ anh hùng từ Varkhul, Forgefather of the Last Flame.',
   },
+  hearth_first_crafts: { name: 'Những món đồ thủ công đầu tiên cho tổ ấm' },
 };
