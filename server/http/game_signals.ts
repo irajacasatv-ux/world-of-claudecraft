@@ -261,6 +261,10 @@ export interface GameMetricsCounters {
    * is probing dark housing; once the UI ships it is also the signal that a
    * realm forgot the flag. The counter is deliberately label-free (nothing
    * per-player, per-account, or per-token) so a prober cannot drive cardinality.
+   * It UNDER-COUNTS one case by design: the jailed-command check runs ahead of
+   * the housing refusal, so a jailed session probing freehold_enter is refused
+   * by the jail arm and books nothing here (pinned in
+   * tests/server/freehold_wire.test.ts).
    */
   freeholdRefused(): void;
   /** One player chat message routed to other players (any channel). */

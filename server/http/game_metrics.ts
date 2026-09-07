@@ -876,7 +876,7 @@ export function registerGameStateMetrics(
 
   const freeholdRefusals = new Counter({
     name: WOC_FREEHOLD_REFUSED_TOTAL,
-    help: 'Total Freeholds wire commands refused while the realm is dark; the stock client sends none until the housing UI ships, so a non-zero rate means a modified client is probing, or a realm forgot FREEHOLDS_ENABLED.',
+    help: 'Total Freeholds wire commands refused while the realm is dark; the stock client sends none until the housing UI ships, so a non-zero rate means a modified client is probing, or a realm forgot FREEHOLDS_ENABLED. Under-counts by design: the jail check answers first, so a jailed session probing freehold_enter is refused without booking this counter.',
     registers: [registry],
   });
 

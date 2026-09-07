@@ -1559,9 +1559,9 @@ export class ClientWorld extends ReconWireState implements IWorld {
   // frame so the server can bind presence to the transition it acknowledged;
   // null until the descriptor wire supplies one.
   freeholdTransitionId: string | null = null;
-  // Monotonic per-session sequence for set_freehold_build_presence, so a
-  // reordered presence frame is dropped server-side. Never reset by a
-  // snapshot; a reconnect window is later work's.
+  // Per-session counter for set_freehold_build_presence, RESERVED for C03: no
+  // server-side ordering or drop logic exists yet, and it is advisory and
+  // monotonic-WITH-GAPS, never a dense count (src/sim/freehold/CLAUDE.md).
   private buildPresenceSeq = 0;
   // The housing clock base on the farmNowMs shape: Date.now is the base the
   // live server writes housing timestamps in (ctx.lockoutNowMs). Read fresh

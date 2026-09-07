@@ -764,6 +764,11 @@ For off-box safety, sync the directory to S3 occasionally:
   wire commands (upgrade/enchant/socket), whose client UI has not shipped.
   Enable it only on PTR or internal playtest realms
   (`server/rift_forge_gate.ts`).
+- `woc_freehold_refused_total` counts housing wire commands refused while a
+  realm is dark. The stock client sends none until the housing UI ships, so any
+  sustained rate means either a modified client probing dark housing or, once
+  the UI ships, a realm that forgot `FREEHOLDS_ENABLED`. It is label-free, and
+  it under-counts jailed sessions (the jail check answers first).
 - `FREEHOLDS_ENABLED` defaults off, is read live as the strict '1', and
   production never enables it before the release gates in
   docs/freeholds/state.md "Tracked release and handoff gates" are signed

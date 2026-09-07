@@ -3,8 +3,9 @@
 // the shared bearer read guard, moderation-gated and scope-enforced) and then
 // adapted to the FREEHOLDS_ENABLED gate.
 //
-// Rung: AUTHENTICATED (bearer required). Auth runs FIRST (the generated
-// middleware order), so an unauthenticated caller gets the pipeline's auth
+// Rung: AUTHENTICATED (bearer required). Auth runs ahead of the FLAG CHECK,
+// and behind the housing IP limiter this route mounts first (the onion order
+// below), so an unauthenticated caller gets the pipeline's auth
 // refusal whether or not the realm is lit; a bearer caller on a dark realm
 // then gets the stable freehold.disabled 503 through the pipeline's error
 // path (the steam.disabled precedent, server/steam/routes.ts). The public
@@ -31,6 +32,12 @@
 // and it is TIER-1 ONLY (the WOC_MARKET_READ_POLICY opt-out), so an allowed
 // request pays no pg rate_limits UPSERT: a bound mounted to make a dark realm
 // cheaper must never add a database write the unmetered route did not pay.
+// The cost of the ip-before-auth order, stated plainly: the bucket is keyed on
+// the IP alone, so unauthenticated probes that only ever 401 still spend it,
+// and one prober can exhaust the window for every account behind that IP. That
+// is the accepted trade while the route returns nothing but a status flag; a
+// later housing endpoint that returns something worth denying (15, 30a) must
+// re-decide the key class rather than copy this mount order.
 
 import { accountAndScopeForToken, moderationStatusForAccount } from './db';
 import { freeholdsEnabled } from './freehold_config';

@@ -9,10 +9,12 @@
 //
 // The allowlist is EMPTY on purpose: no housing key crosses the wire yet, so
 // every mirror stays at its null default. The strict-decode rule still holds
-// from the start: an unknown self-key OBJECT is ignored (later, rejected with
-// the mirror retained), never a reason to reject the whole frame, so a server
-// that starts publishing a housing key ahead of this client leaves the rest
-// of the snapshot intact.
+// from the start, in two distinct halves: an UNADMITTED self key is never read
+// at all (the walk iterates the allowlist, not the frame), and once a key IS
+// admitted, a malformed value is rejected by its decoder and the last good
+// mirror is retained. Neither half is ever a reason to reject the whole frame,
+// so a server that starts publishing a housing key ahead of this client leaves
+// the rest of the snapshot intact.
 //
 // applyWithDecoders is the walk itself, exported ONLY as the test seam: with
 // the production allowlist empty nothing can reach the loop through

@@ -76,7 +76,13 @@ function isFiniteNumber(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v);
 }
 
-/** An id or sequence: a safe integer, never a float or a numeric string. */
+/** An id or sequence: a safe integer, never a float or a numeric string.
+ *  RANGE IS NOT CHECKED HERE and must not be assumed downstream: zero and
+ *  negative integers pass, so a slot, a placement id and a buildPresenceSeq all
+ *  reach the stub unbounded below. This is the TYPE boundary only; the owning
+ *  later work (08 for the slot and placement ids, C03 for the sequence) does
+ *  the range and monotonicity checks against real state, in the sim, where the
+ *  offline host enforces them too. */
 function isSafeInteger(v: unknown): v is number {
   return typeof v === 'number' && Number.isSafeInteger(v);
 }

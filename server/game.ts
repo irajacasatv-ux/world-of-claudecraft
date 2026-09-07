@@ -1163,7 +1163,7 @@ export interface AdminLiveAura {
   permanent?: boolean;
 }
 
-export type { AdminLiveLocation } from './live_location';
+export type { AdminLiveLocation };
 
 export interface AdminLivePlayer {
   pid: number;

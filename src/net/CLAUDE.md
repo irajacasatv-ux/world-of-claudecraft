@@ -44,7 +44,19 @@ tested sibling module here, never as more methods on `online.ts`. Exemplars
   `gbanklog` frame; the renderable-op vocabulary is a CLOSED allowlist deliberately
   restated on this side of the wire, so server-internal diagnostic ops could never render
   as guild history even from a regressed server), `account_cosmetics_wire.ts`
-  (`self.cosmetics`; malformed input yields all-empty defaults, never a throw).
+  (`self.cosmetics`; malformed input yields all-empty defaults, never a throw),
+  `freehold_snapshot_wire.ts` (the housing self keys; THE only decode home for
+  them, allowlist and decoder table bound both ways so a decoder cannot be
+  added without admitting its key. The allowlist is empty until the housing
+  descriptor's producer lands, and the walk is exported as a test seam because
+  an empty allowlist is otherwise undrivable).
+- `blank_entity.ts`: the neutral-default `Entity` the mirror starts from for an
+  id a snapshot has not fully described yet. Not a decode sibling: a pure
+  factory with no ClientWorld state, extracted from `online.ts` to pay for the
+  housing mirrors under the monolith ratchet. Its defaults are load-bearing
+  (a dropped field reads as `undefined` in a bar or a sentence rather than
+  throwing), so `tests/blank_entity.test.ts` holds them to the `Entity`
+  interface scraped off the AST.
 - `net_pipeline_stats.ts`: always-on snapshot-pipeline counters (parse/apply timing,
   approx bytes, raw inter-arrival gap). Clock-injected (it never reads `performance.now`
   itself) and deliberately bucket-agnostic: `src/net` never imports `src/game`;
