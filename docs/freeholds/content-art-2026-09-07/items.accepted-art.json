@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "batchId": "freehold-vendor-basics-2026-09-07",
+  "executionHarness": "Codex",
+  "generator": "OpenAI built-in image generation",
+  "owner": "World of ClaudeCraft",
+  "license": "World of ClaudeCraft project-generated art, project asset, rights reserved",
+  "styleContract": "woc-item-icon-v1",
+  "sourceEvidence": {
+    "path": "docs/freeholds/content-art-2026-09-07/staged-art.json",
+    "sha256": "ab5775303392caef317616fce02e2fa63bcca6f3d20545ebe7faaf2de1b6c63d",
+    "bytes": 29769,
+    "contract": "Exact individual prompts, original generation outputs, normalized masters and canonical converter evidence are retained in this immutable source record."
+  },
+  "targetSets": {
+    "items": [
+      "freehold_timber_bed",
+      "freehold_round_table",
+      "freehold_spindle_chair",
+      "freehold_low_stool",
+      "freehold_woven_rug",
+      "freehold_brass_lantern",
+      "freehold_storage_chest",
+      "freehold_open_bookshelf"
+    ]
+  },
+  "processing": {
+    "method": "Byte-identical promotion of the eight canonical converter outputs already reviewed in the staged provenance record. No source regeneration or re-encoding.",
+    "converter": "scripts/convert_item_icons_webp.mjs"
+  },
+  "review": {
+    "reviewer": "Codex coordinator",
+    "sizesInspected": [512, 128, 40, 28, 22, "28-grayscale", "64-circle"],
+    "sheet": {
+      "path": "docs/freeholds/content-art-2026-09-07/size-review.webp",
+      "sha256": "a9c606589ffb8d0c5efb76a25274c3be068cdb022e9a072c4bf697ee24e671fa",
+      "bytes": 65006
+    },
+    "verdict": "Accepted painted silhouettes, materials, complete object framing and opaque backgrounds at the recorded inventory sizes.",
+    "runtime": {
+      "status": "accepted",
+      "reviewer": "Codex coordinator with independent frontend visual review",
+      "manifests": [
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/manifest.json",
+          "sha256": "1d7857764ffb02058fee3c8a2bf783b968b05601400295e054cfcd6bac85c0b5",
+          "bytes": 37802
+        },
+        {
+          "path": "docs/screenshots/freehold-content-2026-09-07/trial-runtime/supplement/manifest.json",
+          "sha256": "57ae6fd6b262dab45ba16c6ffc767926ff1cf00c0fe6dbffaacd6af84e615d3b",
+          "bytes": 13928
+        }
+      ],
+      "verdict": "Actual vendor inventory, eight purchased and illuminated Hearth relics, missing-source tooltip, six desktop/mobile locale states and Guide views inspected. Supplemental mobile grid shows all eight painted icons below the ordinary scroll fold with the software-render performance notice dismissed through its button. Original captures and supplement remain distinct receipts.",
+      "scope": "Icon readability and existing UI flows only. This is software-rendered desktop/mobile emulation, not physical LOW-device, GPU timing, final furnishing GLB or legal room-layout acceptance."
+    }
+  },
+  "productionActivation": "This record accepts icon artwork only; trial content and production activation retain their own evidence and approval gates.",
+  "assets": [
+    {
+      "id": "freehold_timber_bed",
+      "name": "Timber Bed",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_timber_bed.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_timber_bed.webp",
+        "sha256": "91afbb705212784a0a489c27950ffdfec9bd102c2b3b4450f2f93e7108052487",
+        "bytes": 2302,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "originalSha256": "93ec9b1d16c01000be6428d0e46a0d939faaf61b9732d9b7509c097c50e93e48",
+      "masterSha256": "fd4a1fa6b765a0e9e10eeda674e91b6619456ea0ef233d38f6b70b60ef186530",
+      "sourceRecord": "docs/freeholds/content-art-2026-09-07/staged-art.json#assets:freehold_timber_bed"
+    },
+    {
+      "id": "freehold_round_table",
+      "name": "Round Table",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_round_table.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_round_table.webp",
+        "sha256": "def32f5a936310c04a6b535538ef86c2a5be7887188fb762f57b3340c492f038",
+        "bytes": 2380,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "originalSha256": "05d300db0c0bd0c69a2f7ccc8876df86bfec1629efa048fd4065f7cb8bfc7a51",
+      "masterSha256": "ecb5e94933bcd8b23f1aa965f421ccfbbf6390391eb4872c1e407c428e9c6501",
+      "sourceRecord": "docs/freeholds/content-art-2026-09-07/staged-art.json#assets:freehold_round_table"
+    },
+    {
+      "id": "freehold_spindle_chair",
+      "name": "Spindle Chair",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_spindle_chair.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_spindle_chair.webp",
+        "sha256": "b4f80bdfb3d0a45898e1f4df8dce2256b7777e49f8f89d1c1094d78ce59468ca",
+        "bytes": 2356,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "originalSha256": "7ad7da94248c7882016bbd61e153d9531492d62d73ff1ebed46f707d36cf4167",
+      "masterSha256": "7c7cb5b17d0b25528eb8935462425bab75fa3135aa30fe0e62985c8b87524221",
+      "sourceRecord": "docs/freeholds/content-art-2026-09-07/staged-art.json#assets:freehold_spindle_chair"
+    },
+    {
+      "id": "freehold_low_stool",
+      "name": "Low Stool",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_low_stool.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_low_stool.webp",
+        "sha256": "624759c6060b2b1eff30fdeef7ddb4bad55c3e5787c495a583c2e4b0baf0806b",
+        "bytes": 1750,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "originalSha256": "f4f6ffc085bf12130a0457a7c92c093d95047c8552569672f2341f27e158cb1a",
+      "masterSha256": "e710805df7005c670dca83182cdc468c6b943a8882324c34002f00bbafde2dfb",
+      "sourceRecord": "docs/freeholds/content-art-2026-09-07/staged-art.json#assets:freehold_low_stool"
+    },
+    {
+      "id": "freehold_woven_rug",
+      "name": "Woven Rug",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_woven_rug.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_woven_rug.webp",
+        "sha256": "af2b3c7ca1f3c09c2c39663746ab1815b8ce99276c3e55903629e1b99c8412db",
+        "bytes": 3952,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "originalSha256": "c5b6af33e2d125740f2931231b7bb725d94f580a6f290d2d5bab0c711feee52c",
+      "masterSha256": "1ede14aefe23c979d429587a22587c90e2fce0b8862078bb2c518759e7b81140",
+      "sourceRecord": "docs/freeholds/content-art-2026-09-07/staged-art.json#assets:freehold_woven_rug"
+    },
+    {
+      "id": "freehold_brass_lantern",
+      "name": "Brass Lantern",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_brass_lantern.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_brass_lantern.webp",
+        "sha256": "b2f6dc49f9cf68b6f125395b6d8a1c64f6d23623b3f4c12368a7582f8a36faf5",
+        "bytes": 2346,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "originalSha256": "e4ed07478c162b914b1e10feb019814af33f96f3be4385ead0271775daaaffe8",
+      "masterSha256": "1a107bc7b05dcd943d57d62f482416f53355d2de53a8d3692467ef7c64957e05",
+      "sourceRecord": "docs/freeholds/content-art-2026-09-07/staged-art.json#assets:freehold_brass_lantern"
+    },
+    {
+      "id": "freehold_storage_chest",
+      "name": "Storage Chest",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_storage_chest.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_storage_chest.webp",
+        "sha256": "4362f9f0492d4c2575b9fb0cc9f57eea4ac0d5a4387abfe4508c94b2504654a1",
+        "bytes": 2154,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "originalSha256": "7d9ebaf3e98690b5a47d07852627ae58fd33d8bc7b773f34f88deafb8434a47c",
+      "masterSha256": "9c2167086386ca6a424b761d1be32817003f16e6a2d1738706621e87da4d7c5f",
+      "sourceRecord": "docs/freeholds/content-art-2026-09-07/staged-art.json#assets:freehold_storage_chest"
+    },
+    {
+      "id": "freehold_open_bookshelf",
+      "name": "Open Bookshelf",
+      "kind": "item",
+      "runtimeUrl": "/ui/items/freehold_open_bookshelf.webp",
+      "shipping": {
+        "path": "public/ui/items/freehold_open_bookshelf.webp",
+        "sha256": "70181eb0c4bc065f6a079e54697e2e8e3cd051e12bf1c4a3d9cb6ab2febd7531",
+        "bytes": 2292,
+        "width": 128,
+        "height": 128,
+        "format": "webp",
+        "colourspace": "srgb",
+        "minAlpha": 255,
+        "maxAlpha": 255
+      },
+      "originalSha256": "888fdedd9ac15fc55790d61200699b6a89698356fa4d125766d70604c78d42fc",
+      "masterSha256": "ccc9db70c354e54fbc59aad204167dd064e4d25d948398407a18cd33816a4e9c",
+      "sourceRecord": "docs/freeholds/content-art-2026-09-07/staged-art.json#assets:freehold_open_bookshelf"
+    }
+  ]
+}

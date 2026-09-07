@@ -49,7 +49,7 @@ by hand; change the sim content or the generator, then regenerate.
 **Catalog parity pins:** guide pages derived from live sim catalogs are pinned against
 those catalogs in `tests/guide.test.ts`: `GUIDE_RELIQUARY` must emit exactly the live
 `RELIQUARY_PAGES` ids in catalog order (the Reliquary page renders its
-conquerors/professions/horizons shelves from it), and `GUIDE_PROF_PAGES` derives from
+conquerors/professions/horizons/hearth shelves from it), and `GUIDE_PROF_PAGES` derives from
 the generated craft/gathering lists. Adding, removing, or reordering entries in such a
 sim catalog is a same-change `npm run wiki:content` regen obligation beyond the generic
 freshness gate.

@@ -6633,7 +6633,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'guide.nav.deeds': 'Книга деяний',
   'guide.nav.reliquary': 'Реликварий',
   'guide.reliquaryPage.intro':
-    'Реликварий: музей уникальных трофеев из вашего каталога: добыча из подземелий, трофеи профессий, скакуны, облики оружия и титулы. Он относится к Книге деяний как зал трофеев к книге достижений.',
+    'Реликварий: музей уникальных трофеев из вашего каталога: добыча из подземелий, трофеи профессий, скакуны, облики оружия, титулы и мебель. Он относится к Книге деяний как зал трофеев к книге достижений.',
   'guide.reliquaryPage.howHeading': 'Как устроена коллекция',
   'guide.reliquaryPage.howBody':
     'Откройте Реликварий в игре (по умолчанию Shift+X). На каждой полке страницы уникальных реликвий. Силуэт заполняется, когда персонаж впервые получает предмет; страница озаряется, когда заполнены все её реликвии. Некоторые страницы помечены «Выведено» или «Личное»: они вне зачёта и не мешают завершению полки или каталога. Новые находки показывают тост и обновляют открытое окно. Прогресс по персонажу, кроме обликов оружия: это косметика аккаунта.',
@@ -15756,4 +15756,17 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemMenu.combine': 'Объединить стопки материалов',
   'hudChrome.reliquary.navHearth': 'Очаг',
   'guide.reliquaryPage.shelf.hearth': 'Очаг',
+  // Freehold household goods and the Eastbrook furnisher.
+  'entities.items.freehold_timber_bed.name': 'Деревянная кровать',
+  'entities.items.freehold_round_table.name': 'Круглый стол',
+  'entities.items.freehold_spindle_chair.name': 'Стул с точёными прутьями',
+  'entities.items.freehold_low_stool.name': 'Низкий табурет',
+  'entities.items.freehold_woven_rug.name': 'Тканый ковёр',
+  'entities.items.freehold_brass_lantern.name': 'Латунный фонарь',
+  'entities.items.freehold_storage_chest.name': 'Сундук для вещей',
+  'entities.items.freehold_open_bookshelf.name': 'Открытый книжный шкаф',
+  'entities.npcs.freehold_furnisher.name': 'Мебельщица фригольда',
+  'entities.npcs.freehold_furnisher.title': 'Товары для дома',
+  'entities.npcs.freehold_furnisher.greeting':
+    'Крепкий стул, тёплый фонарь, место для книг. Присмотритесь.',
 };

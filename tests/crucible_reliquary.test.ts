@@ -13,9 +13,10 @@ describe('Crucible crafted Reliquary page', () => {
   it('appends only the thirty-three crafted relics with their actual profession sources', () => {
     const page = RELIQUARY_PAGES_BY_ID.professions_crucible;
     expect(page).toBeDefined();
-    expect(RELIQUARY_PAGES.slice(-2).map((entry) => entry.id)).toEqual([
+    expect(RELIQUARY_PAGES.slice(-3).map((entry) => entry.id)).toEqual([
       'professions_crucible',
       'professions_forgebreaker',
+      'hearth_basics',
     ]);
     expect(page.shelf).toBe('professions');
     expect(page.clearSource).toEqual({ kind: 'none' });

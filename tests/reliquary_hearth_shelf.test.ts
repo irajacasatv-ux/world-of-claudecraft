@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { RELIQUARY_PAGES, type ReliquaryPageDef } from '../src/sim/content/reliquary';
+import {
+  RELIQUARY_PAGES,
+  RELIQUARY_PAGES_BY_ID,
+  reliquaryRelicSource,
+} from '../src/sim/content/reliquary';
+import { ITEMS, NPCS } from '../src/sim/data';
 import { pageCompletion } from '../src/sim/reliquary';
 import {
   buildReliquaryTrackerViewInto,
@@ -14,20 +19,19 @@ import {
   reliquaryVisibleNav,
 } from '../src/ui/reliquary_view';
 
-// Existing item ids exercise the shelf seam without authoring unfinished furnishings.
-const HEARTH: ReliquaryPageDef = {
-  id: 'hearth_fixture',
-  shelf: 'hearth',
-  name: 'Synthetic Hearth Page',
-  clearSource: { kind: 'none' },
-  sourceDefault: { sourceKind: 'vendor', sourceId: 'farmer_jessica' },
-  relics: [
-    { kind: 'item', itemId: 'field_kit' },
-    { kind: 'item', itemId: 'linen_pouch' },
-  ],
-};
+const HEARTH = RELIQUARY_PAGES_BY_ID.hearth_basics;
+const ITEM_IDS = [
+  'freehold_timber_bed',
+  'freehold_round_table',
+  'freehold_spindle_chair',
+  'freehold_low_stool',
+  'freehold_woven_rug',
+  'freehold_brass_lantern',
+  'freehold_storage_chest',
+  'freehold_open_bookshelf',
+];
 
-describe('prepared Hearth shelf support', () => {
+describe('authored Hearth shelf', () => {
   it('declares Hearth last while keeping unauthored shelves out of player navigation', () => {
     expect(RELIQUARY_NAV).toEqual(['overview', 'conquerors', 'professions', 'horizons', 'hearth']);
     expect(RELIQUARY_SHELF_ORDER).toEqual(['conquerors', 'professions', 'horizons', 'hearth']);
@@ -36,15 +40,38 @@ describe('prepared Hearth shelf support', () => {
       'conquerors',
       'professions',
       'horizons',
+      'hearth',
     ]);
-    expect(RELIQUARY_PAGES.some((page) => page.id === 'hearth_basics')).toBe(false);
+    expect(RELIQUARY_PAGES.at(-1)).toBe(HEARTH);
     expect(reliquaryVisibleNav([])).toEqual(['overview']);
     expect(reliquaryVisibleNav([HEARTH])).toEqual(['overview', 'hearth']);
   });
 
+  it('pins the real furniture inventory and each vendor route without patterns or trophies', () => {
+    expect(HEARTH).toMatchObject({
+      id: 'hearth_basics',
+      shelf: 'hearth',
+      name: 'Hearth Basics',
+      clearSource: { kind: 'none' },
+      sourceDefault: { sourceKind: 'vendor', sourceId: 'freehold_furnisher' },
+    });
+    expect(HEARTH.relics).toEqual(ITEM_IDS.map((itemId) => ({ kind: 'item', itemId })));
+    expect(HEARTH.excludeFromCompletion).toBeUndefined();
+    expect(Object.isFrozen(HEARTH)).toBe(true);
+    expect(Object.isFrozen(HEARTH.relics)).toBe(true);
+    for (const [index, relic] of HEARTH.relics.entries()) {
+      const itemId = ITEM_IDS[index];
+      expect(ITEMS[itemId]?.kind, itemId).toBe('furnishing');
+      expect(NPCS.freehold_furnisher.vendorItems, itemId).toContain(itemId);
+      expect(reliquaryRelicSource(HEARTH, relic)).toEqual([
+        { sourceKind: 'vendor', sourceId: 'freehold_furnisher' },
+      ]);
+    }
+  });
+
   it('adds an authored Hearth card and rail total without depending on discoveries', () => {
     const model = buildReliquaryView({
-      pages: [...RELIQUARY_PAGES, HEARTH],
+      pages: RELIQUARY_PAGES,
       itemsDiscovered: new Set(),
       marks: new Set(),
       recent: [],
@@ -60,47 +87,48 @@ describe('prepared Hearth shelf support', () => {
     expect(model.shelfCards.at(-1)).toEqual({
       shelf: 'hearth',
       owned: 0,
-      total: 2,
+      total: 8,
       recentId: null,
       recentKind: null,
     });
-    expect(model.shelves.at(-1)).toEqual({ id: 'hearth', owned: 0, total: 2 });
+    expect(model.shelves.at(-1)).toEqual({ id: 'hearth', owned: 0, total: 8 });
   });
 
   it('carries Hearth ownership, localized search, recent jumps, and source plans through the existing view', () => {
     const model = buildReliquaryView({
       pages: [HEARTH],
-      itemsDiscovered: new Set(['field_kit']),
+      itemsDiscovered: new Set(['freehold_timber_bed']),
       marks: new Set(),
-      recent: ['field_kit'],
+      recent: ['freehold_timber_bed'],
       nav: 'hearth',
       pageId: HEARTH.id,
       search: 'translated name',
       pageSearchText: () => '',
-      relicSearchText: (_kind, id) => (id === 'field_kit' ? 'translated name' : 'other name'),
+      relicSearchText: (_kind, id) =>
+        id === 'freehold_timber_bed' ? 'translated name' : 'other name',
     });
-    expect(model.shelfPages.map((page) => page.pageId)).toEqual(['hearth_fixture']);
-    expect(model.activePage).toMatchObject({ pageId: 'hearth_fixture', owned: 1, total: 2 });
+    expect(model.shelfPages.map((page) => page.pageId)).toEqual(['hearth_basics']);
+    expect(model.activePage).toMatchObject({ pageId: 'hearth_basics', owned: 1, total: 8 });
     expect(model.pageDetail?.cells).toEqual([
       {
-        id: 'field_kit',
+        id: 'freehold_timber_bed',
         kind: 'item',
         index: 0,
         owned: true,
-        sourcePlans: [{ kind: 'vendor', npcId: 'farmer_jessica' }],
+        sourcePlans: [{ kind: 'vendor', npcId: 'freehold_furnisher' }],
       },
     ]);
-    expect(model.recent[0]).toMatchObject({ id: 'field_kit', pageId: 'hearth_fixture' });
+    expect(model.recent[0]).toMatchObject({ id: 'freehold_timber_bed', pageId: 'hearth_basics' });
     expect(model.shelfCards[0]).toMatchObject({
       shelf: 'hearth',
       owned: 1,
-      total: 2,
-      recentId: 'field_kit',
+      total: 8,
+      recentId: 'freehold_timber_bed',
     });
   });
 
   it('uses the existing page pin, completion, and prune rules for an authored Hearth page', () => {
-    const itemsDiscovered = new Set(['field_kit']);
+    const itemsDiscovered = new Set(['freehold_timber_bed']);
     const completion = (id: string) =>
       id === HEARTH.id ? pageCompletion(HEARTH, { itemsDiscovered }) : null;
     const pinned = toggleReliquaryPin(new Set(), HEARTH.id).pinned;
@@ -114,11 +142,11 @@ describe('prepared Hearth shelf support', () => {
       enabled: true,
     });
     expect(out.count).toBe(1);
-    expect(out.lines[0]).toMatchObject({ pageId: 'hearth_fixture', owned: 1, total: 2 });
+    expect(out.lines[0]).toMatchObject({ pageId: 'hearth_basics', owned: 1, total: 8 });
     expect(pruneReliquaryPins(pinned, completion)).toEqual({ pinned, changed: false });
-    itemsDiscovered.add('linen_pouch');
-    expect(completion(HEARTH.id)).toEqual({ owned: 2, total: 2, complete: true });
+    for (const id of ITEM_IDS) itemsDiscovered.add(id);
+    expect(completion(HEARTH.id)).toEqual({ owned: 8, total: 8, complete: true });
     expect([...pruneReliquaryPins(pinned, completion).pinned]).toEqual([]);
-    expect(completion('hearth_basics')).toBeNull();
+    expect(completion('unknown_hearth_page')).toBeNull();
   });
 });

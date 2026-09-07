@@ -74,11 +74,20 @@ describe('NPC voice prompt catalog', () => {
 });
 
 describe('NPC voice line coverage', () => {
-  it('resolves every speakable line to a declared voice', () => {
+  it('resolves every speakable line except the exact pre-shipping furnisher deferral', () => {
+    // Fernando deferred this greeting on 2026-09-07. Remove this exception when
+    // docs/freeholds/content-trial-2026-09-07/furnisher-voice.md is completed.
     const unvoiced = allLines()
       .filter((l) => !promptIds.has(l.voiceNpc))
-      .map((l) => `${l.source} -> no voice "${l.voiceNpc}"`);
-    expect(unvoiced).toEqual([]);
+      .map(({ key, text, voiceNpc, source }) => ({ key, text, voiceNpc, source }));
+    expect(unvoiced).toEqual([
+      {
+        key: 'greeting__freehold_furnisher',
+        text: 'A sturdy chair, a warm lantern, a place for your books. Have a look.',
+        voiceNpc: 'freehold_furnisher',
+        source: 'NPCS.freehold_furnisher.greeting',
+      },
+    ]);
   });
 
   it('never lets two different lines claim the same clip file', () => {

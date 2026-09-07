@@ -3003,6 +3003,14 @@ const ITEM_ENTITY_IDS = [
   // The Field Kit: appended at the END under the append-only contract,
   // behind the prior masterwrought appends; resolves BY KEY.
   'field_kit',
+  'freehold_timber_bed',
+  'freehold_round_table',
+  'freehold_spindle_chair',
+  'freehold_low_stool',
+  'freehold_woven_rug',
+  'freehold_brass_lantern',
+  'freehold_storage_chest',
+  'freehold_open_bookshelf',
 ] as const;
 
 type ItemEntityId = (typeof ITEM_ENTITY_IDS)[number];
@@ -3655,6 +3663,14 @@ const APPENDED_ITEM_NAMES: Partial<Record<ItemEntityId, string>> = {
   pattern_crucible_healer_cloth: "Pattern: Crucible Healer's Cloth",
   formula_lastflame_zeal: "Formula: Last Flame's Zeal",
   field_kit: 'Field Kit',
+  freehold_timber_bed: 'Timber Bed',
+  freehold_round_table: 'Round Table',
+  freehold_spindle_chair: 'Spindle Chair',
+  freehold_low_stool: 'Low Stool',
+  freehold_woven_rug: 'Woven Rug',
+  freehold_brass_lantern: 'Brass Lantern',
+  freehold_storage_chest: 'Storage Chest',
+  freehold_open_bookshelf: 'Open Bookshelf',
 };
 
 function itemTranslations(names: readonly string[]): ItemEntityTranslations {

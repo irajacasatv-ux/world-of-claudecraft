@@ -6512,7 +6512,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'guide.nav.deeds': '功績の書',
   'guide.nav.reliquary': '聖遺物庫',
   'guide.reliquaryPage.intro':
-    '聖遺物庫は、カタログに載せたユニークな戦利品の博物館です。ダンジョンの追撃装備、職業のトロフィー、マウント、武器スキン、称号。功績の書に対して、トロフィー室と実績帳のような関係です。',
+    '聖遺物庫は、カタログに載せたユニークな戦利品の博物館です。ダンジョンの追撃装備、職業のトロフィー、マウント、武器スキン、称号、家具。功績の書に対して、トロフィー室と実績帳のような関係です。',
   'guide.reliquaryPage.howHeading': 'コレクションの仕組み',
   'guide.reliquaryPage.howBody':
     'ゲーム内で聖遺物庫を開きます（既定は Shift+X）。各棚にユニークな聖遺物のページがあります。キャラクターが初めてその品を得るとシルエットが埋まり、ページ上のすべてが埋まると点灯します。「絶版」や「専用」と表示される一部のページは達成の対象外で、棚や全体の完成を妨げることはありません。ライブの発見はトーストと開いているウィンドウの更新になります。進捗はキャラクター単位で、武器スキンだけはアカウントの見た目です。',
@@ -15522,4 +15522,17 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemMenu.combine': '素材スタックを結合',
   'hudChrome.reliquary.navHearth': '炉辺',
   'guide.reliquaryPage.shelf.hearth': '炉辺',
+  // Freehold household goods and the Eastbrook furnisher.
+  'entities.items.freehold_timber_bed.name': '木組みのベッド',
+  'entities.items.freehold_round_table.name': '丸テーブル',
+  'entities.items.freehold_spindle_chair.name': '縦桟の椅子',
+  'entities.items.freehold_low_stool.name': '低いスツール',
+  'entities.items.freehold_woven_rug.name': '織りの敷物',
+  'entities.items.freehold_brass_lantern.name': '真鍮のランタン',
+  'entities.items.freehold_storage_chest.name': '収納箱',
+  'entities.items.freehold_open_bookshelf.name': '扉のない本棚',
+  'entities.npcs.freehold_furnisher.name': 'フリーホールドの家具商',
+  'entities.npcs.freehold_furnisher.title': '家庭用品',
+  'entities.npcs.freehold_furnisher.greeting':
+    '丈夫な椅子に、暖かなランタン。本を置く場所もありますよ。どうぞご覧ください。',
 };

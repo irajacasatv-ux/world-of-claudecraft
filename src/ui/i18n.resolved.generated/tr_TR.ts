@@ -15061,6 +15061,30 @@ export const tr_TR: EnTranslations = {
       "field_kit": {
         "name": "Field Kit"
       },
+      "freehold_timber_bed": {
+        "name": "Timber Bed"
+      },
+      "freehold_round_table": {
+        "name": "Round Table"
+      },
+      "freehold_spindle_chair": {
+        "name": "Spindle Chair"
+      },
+      "freehold_low_stool": {
+        "name": "Low Stool"
+      },
+      "freehold_woven_rug": {
+        "name": "Woven Rug"
+      },
+      "freehold_brass_lantern": {
+        "name": "Brass Lantern"
+      },
+      "freehold_storage_chest": {
+        "name": "Storage Chest"
+      },
+      "freehold_open_bookshelf": {
+        "name": "Open Bookshelf"
+      },
       "conjured_water4": {
         "name": "Sihirle Yaratılmış Kaynak Suyu"
       },
@@ -17107,6 +17131,11 @@ export const tr_TR: EnTranslations = {
         "name": "Gelgit Bekçisi Nel",
         "title": "Kumsalın Bekçisi",
         "greeting": "Gelgit alır, gelgit öder, {playerName}. İkisinin de hesabını tutarım: yürüyücülerin enkazlardan çaldığını, ve dürüst ellerin bu yoldan yukarı taşıdığını."
+      },
+      "freehold_furnisher": {
+        "name": "Freehold Furnisher",
+        "title": "Household Goods",
+        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
       },
       "tidewatcher_ondrel": {
         "name": "Ondrel Vane",

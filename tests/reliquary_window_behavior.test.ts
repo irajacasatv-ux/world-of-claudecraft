@@ -2257,28 +2257,14 @@ describe('ReliquaryWindow: the recent-find strip jumps to the relic', () => {
 });
 
 describe('ReliquaryWindow: the Overview shelf cards', () => {
-  it('keeps the prepared Hearth shelf absent until its first catalog page exists', () => {
-    expect(RELIQUARY_PAGES.some((page) => page.shelf === 'hearth')).toBe(false);
-    const rig = makeWindow(baseState(), { nav: 'hearth' });
-    expect(rig.el.querySelector('[data-nav="hearth"]')).toBeNull();
-    expect(must(rig.el, '.reliquary-rail [data-nav="overview"]').getAttribute('aria-pressed')).toBe(
-      'true',
-    );
-    expect(shelfCards(rig.el).map((card) => card.dataset.nav)).toEqual([
-      'conquerors',
-      'professions',
-      'horizons',
-    ]);
-    expect((document.activeElement as HTMLElement | null)?.dataset.focusKey).toBe('nav:overview');
-  });
-
-  it('renders exactly three cards, in the rail order, each one a shelf jump', () => {
+  it('renders exactly four cards, in the rail order, each one a shelf jump', () => {
     const rig = makeWindow(baseState(), { nav: 'overview' });
     const cards = shelfCards(rig.el);
     expect(cards.map((card) => card.dataset.nav)).toEqual([
       'conquerors',
       'professions',
       'horizons',
+      'hearth',
     ]);
     // Same order the rail lists, minus the virtual Overview entry: a player
     // reading the cards and then the rail sees one catalog, not two.
@@ -2286,7 +2272,7 @@ describe('ReliquaryWindow: the Overview shelf cards', () => {
       [...rig.el.querySelectorAll<HTMLElement>('.reliquary-rail [data-nav]')].map(
         (node) => node.dataset.nav,
       ),
-    ).toEqual(['overview', 'conquerors', 'professions', 'horizons']);
+    ).toEqual(['overview', 'conquerors', 'professions', 'horizons', 'hearth']);
   });
 
   it('opens that shelf on a click', () => {

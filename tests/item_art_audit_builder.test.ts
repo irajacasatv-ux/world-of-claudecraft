@@ -834,28 +834,27 @@ describe('item-art audit builder', () => {
     ) as Record<string, unknown>;
     expect(verified).toMatchObject({
       catalogPath: 'tmp/imagegen/item-art-consistency/final-audit/catalog.json',
-      // Measured by an actual `--verify-only` run over the merged tree, including
-      // the Forgebreaker quest's forgefathers_ember art in the Crucible batch;
-      // receipt: /tmp/professions-merge-pr3885-art-verify.json.
-      catalogSha256: '6dfe10fcbc5806a4296760a362d6c36d1c8a5823b6795ec696fc47bb8aed366d',
-      catalogBytes: 684325,
+      // Measured by an actual `--verify-only` run with the eight Freehold furnishings;
+      // receipt: /tmp/freehold-art-verify.json. The dated visual verdict stays sealed.
+      catalogSha256: '6b9435d5feb3fbdac671d4af3a39197c1f1bb93f12cee73f008fd4acf1b9bf5d',
+      catalogBytes: 689307,
       rendererFingerprint: '41f5404c4d6d9643c8f03b9d88a8546e44564cc03a1baabdd4a72cb9258a2da7',
       // 1,209 (Masterwrought) + 1 (Field Kit) + 45 (Crucible professions) + 1
-      // (the Forgebreaker quest's forgefathers_ember proof item) = 1,256.
-      catalogCount: 1256,
+      // (the Forgebreaker quest's forgefathers_ember proof item) + 8 furnishings.
+      catalogCount: 1264,
       // 1,224 (Masterwrought) + 1 (Field Kit) + 45 (Crucible professions) + 1
-      // (forgefathers_ember) = 1,271.
-      liveItemCount: 1271,
+      // (forgefathers_ember) + 8 furnishings = 1,279.
+      liveItemCount: 1279,
       generatedHeroicDefinitions: 64,
       heroicDefinitionsWithOwnWebp: 48,
       heroicWeaponArtAliases: 16,
-      groupCount: 25,
-      sheetPageCount: 31,
-      sheetCount: 248,
-      sheetModeCounts: Object.fromEntries(ITEM_ART_AUDIT_MODES.map((mode) => [mode, 31])),
+      groupCount: 26,
+      sheetPageCount: 32,
+      sheetCount: 256,
+      sheetModeCounts: Object.fromEntries(ITEM_ART_AUDIT_MODES.map((mode) => [mode, 32])),
       sheetSetSha256: null,
       // Same `--verify-only` receipt as the catalogSha256 note above.
-      shippingCatalogSha256: '56570a72b0538ce4b9632583f614baa07c4c962f2cf8c53364a9bf4b25f03fd7',
+      shippingCatalogSha256: 'af54a5675c5254de434a17eae49bf84b832cb572f94b4a9d1ff8e104491ed18a',
       machineChecksPassed: true,
       verdict: null,
     });

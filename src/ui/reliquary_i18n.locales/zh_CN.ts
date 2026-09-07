@@ -199,4 +199,8 @@ export const table: ReliquaryLocaleTable = {
     name: '碎炉者',
     desc: '末泉的声音从锻炉中解放，寄宿在你亲手打造的战锤中。',
   },
+  hearth_basics: {
+    name: '炉边基础家具',
+    desc: '伊斯特布鲁克的自由领地家具商出售的简朴家具。',
+  },
 };

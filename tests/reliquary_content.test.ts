@@ -109,6 +109,7 @@ import { DEED_STAT_KEYS, type ItemDef, type PlayerClass } from '../src/sim/types
 const CONQUEROR_PAGES = RELIQUARY_PAGES.filter((p) => p.shelf === 'conquerors');
 const PROFESSION_PAGES = RELIQUARY_PAGES.filter((p) => p.shelf === 'professions');
 const HORIZON_PAGES = RELIQUARY_PAGES.filter((p) => p.shelf === 'horizons');
+const HEARTH_PAGES = RELIQUARY_PAGES.filter((p) => p.shelf === 'hearth');
 
 function itemRelicIds(page: ReliquaryPageDef): string[] {
   return page.relics.filter((r) => r.kind === 'item').map((r) => r.itemId);
@@ -371,14 +372,15 @@ const CHEST_FN_BY_DELVE: Record<string, { chest: ChestFn; floor: number }> = {
 };
 
 describe('Reliquary Conqueror catalog structure', () => {
-  it('ships Conquerors + Professions + Horizons (full three-shelf product)', () => {
+  it('ships Conquerors, Professions, Horizons, and Hearth', () => {
     // 27 + the four Crucible raid pages (per-boss N+H, the obligations
     // closeout of docs/prd/ignivar-raid-loot.md).
     expect(CONQUEROR_PAGES.length).toBe(31);
     expect(PROFESSION_PAGES.length).toBe(5);
     expect(HORIZON_PAGES.length).toBe(5);
+    expect(HEARTH_PAGES.map((page) => page.id)).toEqual(['hearth_basics']);
     // Literal: update when product adds a page.
-    expect(RELIQUARY_PAGES.length).toBe(41);
+    expect(RELIQUARY_PAGES.length).toBe(42);
     expect(
       RELIQUARY_PAGES.every(
         (p) =>
@@ -454,7 +456,9 @@ describe('Reliquary Conqueror catalog structure', () => {
     // heroic page in the same release re-slots a relic already catalogued, so
     // it moves neither this pair nor the character pair below.
     // Eleven Crucible collections add 33 distinct crafted item relics.
-    expect(full).toEqual({ owned: 430, total: 430 });
+    // Homesteader adds one title; the eight Hearth furnishings add eight
+    // distinct item relics without changing any existing deed record.
+    expect(full).toEqual({ owned: 438, total: 438 });
     const character = catalogCharacterCompletion({
       itemsDiscovered: allOwned,
       marks: allOwned,
@@ -475,7 +479,8 @@ describe('Reliquary Conqueror catalog structure', () => {
     // overview (only the weapon skins are account-scoped). Lanternback Troll
     // and Chimeglass Tortoise add two more character-scoped slots: 366. The
     // Cluckwork Mech Bird is another character-scoped mount slot: 367.
-    expect(character).toEqual({ owned: 401, total: 401 });
+    // The Homesteader title and eight Hearth items are character-scoped.
+    expect(character).toEqual({ owned: 409, total: 409 });
   });
 
   it('pins the final measured catalog shape: total slots and distinct marks', () => {
@@ -518,11 +523,12 @@ describe('Reliquary Conqueror catalog structure', () => {
     // Moving Emberward from Varkhul's normal page to its heroic page in the
     // same release re-slots it and keeps this total fixed. The one-time
     // Forgebreaker quest adds one personal slot beside 33 Crucible crafts,
-    // taking the total to 465.
+    // taking the total to 465. Homesteader adds a title slot, then Hearth
+    // adds eight item slots, for 474.
     expect(
       slots,
       `slot total moved; per page: ${RELIQUARY_PAGES.map((p) => `${p.id}=${p.relics.length}`).join(', ')}`,
-    ).toBe(466);
+    ).toBe(474);
     // Distinct mark ids: the 10 shipped before Phase 21, the 19 rare-slain
     // proofs of conquerors_rares_of_the_realm, the two craft masterwork
     // marks (masterwork:jewelcrafting, masterwork:inscription), and the
@@ -639,7 +645,7 @@ describe('Reliquary relic item ids resolve in ITEMS', () => {
     expect(missing).toEqual([]);
   });
 
-  it('no copper vendor and no disenchant yield stocks a catalogued relic', () => {
+  it('only the reviewed Hearth stock allows copper-vended relics, with no disenchant yields', () => {
     // Two unflagged world-source grant paths whose SAFETY is a content fact,
     // not a code property. buyItem (src/sim/items.ts) counts every purchase,
     // sanctioned for CURRENCY vendors (delve Marks, heroic marks, WARFARE
@@ -649,10 +655,10 @@ describe('Reliquary relic item ids resolve in ITEMS', () => {
     // price classification) are therefore exempt: the Warfare pages catalog
     // the two honor quartermasters' whole stock, and honor is never
     // gold-buyable. Disenchant yields (materials plus typed secondaries) also
-    // count, a self-loop only if a yield id were ever catalogued. Both swept
-    // sets are empty of relics today; this reds the day a content edit
-    // changes either, forcing the classification decision instead of silently
-    // inheriting "counts".
+    // count, a self-loop only if a yield id were ever catalogued. Hearth
+    // deliberately collects the eight household furnishings sold for gold.
+    // That exact NPC/item pair list is the only copper-vendor exception;
+    // every other catalogued purchase and every disenchant yield still fails.
     // Takes the PRICE PAIR rather than an id, so the classifier can be driven
     // with a synthetic row no live item has to exhibit.
     const honorOnly = (price: { buyValue?: number; priceHonor?: number }): boolean => {
@@ -664,7 +670,20 @@ describe('Reliquary relic item ids resolve in ITEMS', () => {
       buyValue: ITEMS[itemId]?.buyValue,
       priceHonor: ITEMS[itemId]?.priceHonor,
     });
+    const hearthStock = [
+      'freehold_timber_bed',
+      'freehold_round_table',
+      'freehold_spindle_chair',
+      'freehold_low_stool',
+      'freehold_woven_rug',
+      'freehold_brass_lantern',
+      'freehold_storage_chest',
+      'freehold_open_bookshelf',
+    ];
+    const reviewedHearthSale = (npcId: string, itemId: string): boolean =>
+      npcId === 'freehold_furnisher' && hearthStock.includes(itemId);
     const vendorOffenders: string[] = [];
+    const hearthExempt: string[] = [];
     let honorExempt = 0;
     for (const [npcId, npc] of Object.entries(NPCS)) {
       for (const itemId of npc.vendorItems ?? []) {
@@ -673,11 +692,36 @@ describe('Reliquary relic item ids resolve in ITEMS', () => {
           honorExempt += 1;
           continue;
         }
+        if (reviewedHearthSale(npcId, itemId)) {
+          hearthExempt.push(itemId);
+          continue;
+        }
         vendorOffenders.push(`${npcId}:${itemId}`);
       }
     }
     expect(vendorOffenders).toEqual([]);
-    // The exemption's own premises: it really covers the two Warfare counters
+    // Pin both the exception's exact consumption and its authored premises.
+    // A removed, duplicate, uncatalogued, or honor-priced row cannot hide in
+    // the exception, and a future furnishing gets no automatic exemption.
+    expect(hearthExempt).toEqual(hearthStock);
+    expect(NPCS.freehold_furnisher.vendorItems).toEqual(hearthStock);
+    const hearth = RELIQUARY_PAGES_BY_ID.hearth_basics;
+    expect(hearth.relics).toEqual(hearthStock.map((itemId) => ({ kind: 'item', itemId })));
+    expect(hearth.sourceDefault).toEqual({
+      sourceKind: 'vendor',
+      sourceId: 'freehold_furnisher',
+    });
+    for (const itemId of hearthStock) {
+      expect(ITEMS[itemId].kind, itemId).toBe('furnishing');
+      expect(ITEMS[itemId].buyValue, itemId).toBeGreaterThan(0);
+      expect(ITEMS[itemId].priceHonor, itemId).toBeUndefined();
+      expect(reviewedHearthSale('freehold_furnisher', itemId), itemId).toBe(true);
+      expect(reviewedHearthSale('trader_wilkes', itemId), itemId).toBe(false);
+    }
+    expect(reviewedHearthSale('freehold_furnisher', 'cryptbone_helm')).toBe(false);
+    expect(reviewedHearthSale('freehold_furnisher', 'freehold_new_furnishing')).toBe(false);
+    expect(reviewedHearthSale('freehold_furnisher', '__proto__')).toBe(false);
+    // The honor exemption's own premises: it covers the two Warfare counters
     // (47 stock ids on both NPCS rows) and nothing rides it that could also
     // be bought for copper (a dual-priced row would fall back into the sweep
     // above by construction; this pins the classifier's copper half live).
@@ -745,7 +789,8 @@ describe('Reliquary relic item ids resolve in ITEMS', () => {
     // sixth figure of the ledger row's "all pinned" claim; the other five are
     // the page/overview/character/slot/mark literals nearby.
     // 33 Crucible collection items plus the personal Forgebreaker shaping.
-    expect(RELIQUARY_ITEM_TO_PAGES.size).toBe(319);
+    // The eight Hearth furnishings each introduce one distinct item id.
+    expect(RELIQUARY_ITEM_TO_PAGES.size).toBe(327);
     for (const [id, pages] of RELIQUARY_ITEM_TO_PAGES) {
       expect(pages.length, `catalogued id ${id} maps to an empty page list`).toBeGreaterThan(0);
     }
@@ -3020,6 +3065,7 @@ const EXPECTED_DISTINCT_SOURCES: Record<string, number> = {
   professions_specimens: 7,
   professions_crucible: 3,
   professions_forgebreaker: 1,
+  hearth_basics: 1,
   // 11 = the four heroic bosses + the raid + Marla + rift A/B/S + the two
   // pending-ruling absences resolve to nothing, plus the storefront carrying
   // the Mech Bird (the 'store' door the Armory skins already opened).
@@ -4557,11 +4603,10 @@ describe('Reliquary source hint coverage', () => {
       if (inherited === 0) offenders.push(`${page.id} defaults but every relic owns a hint`);
     }
     expect(offenders).toEqual([]);
-    // All fifteen defaults are live today (nine boss pages, the storefront
-    // on the skins page, the four Crucible raid pages, and Forgebreaker's
-    // one Weaponcrafting door); update
-    // deliberately with the authoring.
-    expect(defaults).toBe(15);
+    // Sixteen defaults are live: nine boss pages, the skins storefront,
+    // four Crucible raid pages, Forgebreaker's Weaponcrafting door, and
+    // the Hearth furnisher. Update deliberately with the authoring.
+    expect(defaults).toBe(16);
   });
 });
 

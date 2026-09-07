@@ -1827,6 +1827,24 @@ export const RELIQUARY_PAGES: readonly ReliquaryPageDef[] = freezePageTable([
     sourceDefault: fromProfession('weaponcrafting'),
     relics: items('varkhul_forgebreaker'),
   },
+  {
+    id: 'hearth_basics',
+    shelf: 'hearth',
+    name: 'Hearth Basics',
+    desc: 'Simple furnishings sold by the Freehold Furnisher in Eastbrook.',
+    clearSource: { kind: 'none' },
+    sourceDefault: fromVendor('freehold_furnisher'),
+    relics: items(
+      'freehold_timber_bed',
+      'freehold_round_table',
+      'freehold_spindle_chair',
+      'freehold_low_stool',
+      'freehold_woven_rug',
+      'freehold_brass_lantern',
+      'freehold_storage_chest',
+      'freehold_open_bookshelf',
+    ),
+  },
 ]);
 
 /** Append-only page order (table order). */

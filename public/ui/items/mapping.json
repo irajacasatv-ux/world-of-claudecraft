@@ -6637,6 +6637,29 @@
       "itemIds": [
         "field_kit"
       ]
+    },
+    {
+      "batchId": "freehold-vendor-basics-2026-09-07",
+      "source": "OpenAI built-in image generation executed by Codex",
+      "owner": "World of ClaudeCraft",
+      "license": "World of ClaudeCraft project-generated art, project asset, rights reserved",
+      "styleContract": {
+        "id": "woc-item-icon-v1",
+        "document": "docs/design/item-icon-art-style.md"
+      },
+      "commonPrompt": "Eight individual painted inventory icons; exact prompts in retained provenance inputs.",
+      "itemIds": [
+        "freehold_timber_bed",
+        "freehold_round_table",
+        "freehold_spindle_chair",
+        "freehold_low_stool",
+        "freehold_woven_rug",
+        "freehold_brass_lantern",
+        "freehold_storage_chest",
+        "freehold_open_bookshelf"
+      ],
+      "styleReference": "woc-item-icon-v1; existing painted item catalog, with exact viewed references in staged-art.json",
+      "provenanceRecord": "docs/freeholds/content-art-2026-09-07/items.accepted-art.json"
     }
   ]
 }

@@ -15061,6 +15061,30 @@ export const fr_CA: EnTranslations = {
       "field_kit": {
         "name": "Field Kit"
       },
+      "freehold_timber_bed": {
+        "name": "Timber Bed"
+      },
+      "freehold_round_table": {
+        "name": "Round Table"
+      },
+      "freehold_spindle_chair": {
+        "name": "Spindle Chair"
+      },
+      "freehold_low_stool": {
+        "name": "Low Stool"
+      },
+      "freehold_woven_rug": {
+        "name": "Woven Rug"
+      },
+      "freehold_brass_lantern": {
+        "name": "Brass Lantern"
+      },
+      "freehold_storage_chest": {
+        "name": "Storage Chest"
+      },
+      "freehold_open_bookshelf": {
+        "name": "Open Bookshelf"
+      },
       "conjured_water4": {
         "name": "Eau de source conjurée"
       },
@@ -17107,6 +17131,11 @@ export const fr_CA: EnTranslations = {
         "name": "Gardienne de la marée Nel",
         "title": "Gardienne de la Grève",
         "greeting": "La marée prend et la marée paie, {playerName}. Je tiens le compte des deux : ce que les coureurs arrachent aux épaves, et ce que des mains honnêtes rapportent en remontant ce chemin."
+      },
+      "freehold_furnisher": {
+        "name": "Freehold Furnisher",
+        "title": "Household Goods",
+        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
       },
       "tidewatcher_ondrel": {
         "name": "Ondrel Vane",

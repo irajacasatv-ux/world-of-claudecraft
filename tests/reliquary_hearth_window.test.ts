@@ -6,31 +6,9 @@ import { catalogRelicCompletion, pageCompletion } from '../src/sim/reliquary';
 import { tEntity } from '../src/ui/entity_i18n';
 import { esc } from '../src/ui/esc';
 import { ensureLocaleLoaded, formatNumber, setLanguage, t } from '../src/ui/i18n';
-import { reliquaryPageName } from '../src/ui/reliquary_i18n';
+import { ensureReliquaryLocalesLoaded, reliquaryPageName } from '../src/ui/reliquary_i18n';
 import { reliquaryRelicDisplayName } from '../src/ui/reliquary_labels';
 import { ReliquaryWindow, type ReliquaryWindowDeps } from '../src/ui/reliquary_window';
-
-// Append a test-only page through module injection; the frozen shipping catalog
-// and its item/vendor definitions are never mutated or replaced.
-vi.mock('../src/sim/content/reliquary', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../src/sim/content/reliquary')>();
-  const page: (typeof actual.RELIQUARY_PAGES)[number] = {
-    id: 'hearth_fixture',
-    shelf: 'hearth',
-    name: 'Synthetic Hearth Page',
-    clearSource: { kind: 'none' },
-    sourceDefault: { sourceKind: 'vendor', sourceId: 'farmer_jessica' },
-    relics: [
-      { kind: 'item', itemId: 'field_kit' },
-      { kind: 'item', itemId: 'linen_pouch' },
-    ],
-  };
-  return {
-    ...actual,
-    RELIQUARY_PAGES: Object.freeze([...actual.RELIQUARY_PAGES, page]),
-    RELIQUARY_PAGES_BY_ID: Object.freeze({ ...actual.RELIQUARY_PAGES_BY_ID, [page.id]: page }),
-  };
-});
 
 // happy-dom has no canvas compositor. Preserve real art classification and
 // every other icon export; only the procedural raster output is substituted.
@@ -39,7 +17,7 @@ vi.mock('../src/ui/icons', async (importOriginal) => ({
   iconDataUrl: (kind: string, id: string) => `data:,${kind}:${id}`,
 }));
 
-const PAGE = 'hearth_fixture';
+const PAGE = 'hearth_basics';
 const windows: ReliquaryWindow[] = [];
 const must = (root: HTMLElement, selector: string): HTMLElement => {
   const node = root.querySelector<HTMLElement>(selector);
@@ -49,14 +27,14 @@ const must = (root: HTMLElement, selector: string): HTMLElement => {
 const fmt = (value: number) => formatNumber(value, { maximumFractionDigits: 0 });
 const vendorSource = () =>
   t('hudChrome.reliquary.sourceVendor', {
-    vendor: tEntity({ kind: 'npc', id: 'farmer_jessica', field: 'name' }),
+    vendor: tEntity({ kind: 'npc', id: 'freehold_furnisher', field: 'name' }),
   });
 
 function makeWindow() {
   const root = document.createElement('div');
   const opener = document.createElement('button');
   document.body.append(opener, root);
-  const itemsDiscovered = new Set(['field_kit']);
+  const itemsDiscovered = new Set(['freehold_timber_bed']);
   const ownership = {
     itemsDiscovered,
     marks: new Set<string>(),
@@ -120,7 +98,29 @@ afterEach(() => {
   setLanguage('en');
 });
 
-describe('ReliquaryWindow with an authored Hearth fixture', () => {
+describe('ReliquaryWindow with the real Hearth catalog', () => {
+  it('keeps an empty catalog on Overview and preserves its remaining rail focus', () => {
+    const { window, root } = makeWindow();
+    window.open('overview');
+    must(root, '.reliquary-rail [data-nav="overview"]').focus();
+    window.render(
+      {
+        pages: [],
+        itemsDiscovered: new Set(),
+        marks: new Set(),
+        recent: [],
+        nav: 'overview',
+        pageId: null,
+      },
+      'empty-catalog',
+    );
+    expect(root.querySelector('[data-nav="hearth"]')).toBeNull();
+    const overview = must(root, '.reliquary-rail [data-nav="overview"]');
+    expect(overview.getAttribute('aria-pressed')).toBe('true');
+    expect(document.activeElement).toBe(overview);
+    expect(root.querySelector('.reliquary-shelf-card')).toBeNull();
+  });
+
   it('opens Hearth, follows its page and back route, and routes its Overview card with keyboard focus', () => {
     const { window, root } = makeWindow();
     window.open('hearth');
@@ -149,7 +149,7 @@ describe('ReliquaryWindow with an authored Hearth fixture', () => {
       t('hudChrome.reliquary.shelfOpenAria', {
         name: t('hudChrome.reliquary.navHearth'),
         owned: fmt(1),
-        total: fmt(2),
+        total: fmt(8),
       }),
     );
     expect(must(card, '.reliquary-shelf-card-name').textContent).toBe(
@@ -165,18 +165,18 @@ describe('ReliquaryWindow with an authored Hearth fixture', () => {
   it('shows vendor hunting directions on missing cells in both tooltip and aria, and omits them once owned', () => {
     const { window, root, tooltips } = makeWindow();
     window.openWithPage(PAGE);
-    const owned = must(root, '[data-cell-id="field_kit"]');
-    const missing = must(root, '[data-cell-id="linen_pouch"]');
+    const owned = must(root, '[data-cell-id="freehold_timber_bed"]');
+    const missing = must(root, '[data-cell-id="freehold_round_table"]');
     expect(owned.dataset.cellOwned).toBe('1');
     expect(missing.dataset.cellOwned).toBe('0');
     expect(missing.dataset.cellSource).toBe('1');
     const source = vendorSource();
-    expect(source).toContain(tEntity({ kind: 'npc', id: 'farmer_jessica', field: 'name' }));
+    expect(source).toContain(tEntity({ kind: 'npc', id: 'freehold_furnisher', field: 'name' }));
     expect(tooltips.has(missing)).toBe(true);
     expect(tooltips.get(missing)?.()).toContain(esc(source));
     expect(missing.getAttribute('aria-label')).toBe(
       t('hudChrome.reliquary.cellMissingSourceAria', {
-        name: reliquaryRelicDisplayName('item', 'linen_pouch'),
+        name: reliquaryRelicDisplayName('item', 'freehold_round_table'),
         source,
       }),
     );
@@ -185,7 +185,7 @@ describe('ReliquaryWindow with an authored Hearth fixture', () => {
     expect(owned.hasAttribute('data-cell-source')).toBe(false);
     expect(owned.getAttribute('aria-label')).toBe(
       t('hudChrome.reliquary.cellOwnedAria', {
-        name: reliquaryRelicDisplayName('item', 'field_kit'),
+        name: reliquaryRelicDisplayName('item', 'freehold_timber_bed'),
       }),
     );
   });
@@ -194,7 +194,7 @@ describe('ReliquaryWindow with an authored Hearth fixture', () => {
     const { window, root, tooltips } = makeWindow();
     window.open('hearth');
     const english = must(root, '.reliquary-page-list').getAttribute('aria-label');
-    await ensureLocaleLoaded('ja_JP');
+    await Promise.all([ensureLocaleLoaded('ja_JP'), ensureReliquaryLocalesLoaded('ja_JP')]);
     setLanguage('ja_JP');
     // render() is the public method the HUD language fan-out invokes.
     window.render();
@@ -203,7 +203,10 @@ describe('ReliquaryWindow with an authored Hearth fixture', () => {
     expect(must(root, '.reliquary-page-list').getAttribute('aria-label')).toBe(translated);
     expect(must(root, '.reliquary-rail [data-nav="hearth"]').textContent).toContain(translated);
     must(root, `[data-page="${PAGE}"]`).click();
-    const missing = must(root, '[data-cell-id="linen_pouch"]');
+    expect(must(root, '.reliquary-page-title').textContent).toBe('炉辺の基本家具');
+    const missing = must(root, '[data-cell-id="freehold_round_table"]');
+    expect(reliquaryRelicDisplayName('item', 'freehold_round_table')).toBe('丸テーブル');
+    expect(vendorSource()).toContain('フリーホールドの家具商');
     expect(tooltips.get(missing)?.()).toContain(esc(vendorSource()));
     expect(missing.getAttribute('aria-label')).toContain(vendorSource());
     must(root, '[data-back]').click();

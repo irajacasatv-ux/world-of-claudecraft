@@ -6299,7 +6299,7 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'guide.nav.deeds': '功績之書',
   'guide.nav.reliquary': '聖物庫',
   'guide.reliquaryPage.intro':
-    '聖物庫是你已收錄的獨特戰利品博物館：地城追逐裝備、專業獎盃、坐騎、武器外觀與頭銜。它與功績之書的關係，就像獎盃廳與成就簿的關係。',
+    '聖物庫是你已收錄的獨特戰利品博物館：地城追逐裝備、專業獎盃、坐騎、武器外觀、頭銜與家具。它與功績之書的關係，就像獎盃廳與成就簿的關係。',
   'guide.reliquaryPage.howHeading': '收藏如何運作',
   'guide.reliquaryPage.howBody':
     '在遊戲中開啟聖物庫（預設 Shift+X）。每個架上有多頁獨特聖物。角色首次獲得該件時填滿剪影；一頁上的聖物全部填滿時點亮該頁。少數頁面標註「絕版」或「專屬」：它們不計入達成，不會阻礙書架或全庫的完成。即時發現會跳出提示並重新整理已開啟的視窗；進度按角色計算，武器外觀除外（帳號外觀）。',
@@ -15203,4 +15203,16 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemMenu.combine': '合併素材堆疊',
   'hudChrome.reliquary.navHearth': '爐邊',
   'guide.reliquaryPage.shelf.hearth': '爐邊',
+  // Freehold household goods and the Eastbrook furnisher.
+  'entities.items.freehold_timber_bed.name': '木架床',
+  'entities.items.freehold_round_table.name': '圓桌',
+  'entities.items.freehold_spindle_chair.name': '木桿靠背椅',
+  'entities.items.freehold_low_stool.name': '矮凳',
+  'entities.items.freehold_woven_rug.name': '編織地毯',
+  'entities.items.freehold_brass_lantern.name': '黃銅提燈',
+  'entities.items.freehold_storage_chest.name': '儲物箱',
+  'entities.items.freehold_open_bookshelf.name': '開放式書架',
+  'entities.npcs.freehold_furnisher.name': '自由領地家具商',
+  'entities.npcs.freehold_furnisher.title': '家居用品',
+  'entities.npcs.freehold_furnisher.greeting': '結實的椅子，溫暖的提燈，還有放書的地方。來看看吧。',
 };

@@ -806,8 +806,9 @@ describe('Masterwrought art completion evidence', () => {
     ];
     expect(duplicateValues(currentOwnerIds)).toEqual([]);
     // 1,209 (Masterwrought completion) + 46 (Crucible professions, including
-    // the Forgebreaker quest's forgefathers_ember proof item) + 1 (Field Kit).
-    expect(currentOwnerIds).toHaveLength(1256);
+    // the Forgebreaker quest's forgefathers_ember proof item) + 1 (Field Kit)
+    // + 8 (Freehold furnishings).
+    expect(currentOwnerIds).toHaveLength(1264);
     for (const id of datedIds) {
       expect(currentOwnerIds.includes(id), `${id} still has a current mapping owner`).toBe(true);
     }
@@ -820,6 +821,22 @@ describe('Masterwrought art completion evidence', () => {
     expect(crucibleIds.size).toBe(46);
     expect(value.targetSets.items.filter((id) => crucibleIds.has(id))).toEqual([]);
     expect(value.targetSets.items.includes('field_kit')).toBe(false);
+    const freeholdBatches = mapping.generatedBatches.filter(
+      ({ batchId: id }) => id === 'freehold-vendor-basics-2026-09-07',
+    );
+    expect(freeholdBatches).toHaveLength(1);
+    const freeholdIds = new Set(freeholdBatches[0].itemIds);
+    expect(sorted(freeholdIds)).toEqual([
+      'freehold_brass_lantern',
+      'freehold_low_stool',
+      'freehold_open_bookshelf',
+      'freehold_round_table',
+      'freehold_spindle_chair',
+      'freehold_storage_chest',
+      'freehold_timber_bed',
+      'freehold_woven_rug',
+    ]);
+    expect(value.targetSets.items.filter((id) => freeholdIds.has(id))).toEqual([]);
 
     // Derive the original 1,209-item completion set by excluding the exact ids of
     // the one Crucible professions mapping batch (46 ids, forgefathers_ember
@@ -828,11 +845,11 @@ describe('Masterwrought art completion evidence', () => {
     const completionDatedIds = datedIds.filter((id) => !crucibleIds.has(id));
     expect(completionDatedIds).toHaveLength(1209);
 
-    // Strip both later additive waves (Crucible professions, the Field Kit) back out
+    // Strip later additive waves (Crucible professions, Field Kit, furnishings) back out
     // of the live mapping so the underlying 1,209-item completion union equation
     // below stays isolated to exactly the same set as completionDatedIds above.
     const completionOwnerIds = currentOwnerIds.filter(
-      (id) => !crucibleIds.has(id) && id !== 'field_kit',
+      (id) => !crucibleIds.has(id) && id !== 'field_kit' && !freeholdIds.has(id),
     );
     expect(completionOwnerIds).toHaveLength(1209);
     expect(sorted(completionOwnerIds)).toEqual(completionDatedIds);

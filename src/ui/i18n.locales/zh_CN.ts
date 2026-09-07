@@ -6297,7 +6297,7 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'guide.nav.deeds': '功绩之书',
   'guide.nav.reliquary': '圣物库',
   'guide.reliquaryPage.intro':
-    '圣物库是你已收录的独特战利品博物馆：地下城追逐装备、专业奖杯、坐骑、武器外观与头衔。它与功绩之书的关系，就像奖杯厅与成就簿的关系。',
+    '圣物库是你已收录的独特战利品博物馆：地下城追逐装备、专业奖杯、坐骑、武器外观、头衔与家具。它与功绩之书的关系，就像奖杯厅与成就簿的关系。',
   'guide.reliquaryPage.howHeading': '收藏如何运作',
   'guide.reliquaryPage.howBody':
     '在游戏中打开圣物库（默认 Shift+X）。每个架上有多页独特圣物。角色首次获得该件时填满剪影；一页上的圣物全部填满时点亮该页。少数页面标注“绝版”或“专属”：它们不计入达成，不会阻碍书架或全库的完成。实时发现会弹出提示并刷新已打开的窗口；进度按角色计算，武器外观除外（账号外观）。',
@@ -15197,4 +15197,16 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemMenu.combine': '合并素材堆叠',
   'hudChrome.reliquary.navHearth': '炉边',
   'guide.reliquaryPage.shelf.hearth': '炉边',
+  // Freehold household goods and the Eastbrook furnisher.
+  'entities.items.freehold_timber_bed.name': '木架床',
+  'entities.items.freehold_round_table.name': '圆桌',
+  'entities.items.freehold_spindle_chair.name': '木杆靠背椅',
+  'entities.items.freehold_low_stool.name': '矮凳',
+  'entities.items.freehold_woven_rug.name': '编织地毯',
+  'entities.items.freehold_brass_lantern.name': '黄铜提灯',
+  'entities.items.freehold_storage_chest.name': '储物箱',
+  'entities.items.freehold_open_bookshelf.name': '开放式书架',
+  'entities.npcs.freehold_furnisher.name': '自由领地家具商',
+  'entities.npcs.freehold_furnisher.title': '家居用品',
+  'entities.npcs.freehold_furnisher.greeting': '结实的椅子，温暖的提灯，还有放书的地方。来看看吧。',
 };

@@ -200,4 +200,8 @@ export const table: ReliquaryLocaleTable = {
     name: '화로파괴자',
     desc: '대장간에서 풀려나 직접 만든 망치에 깃든 마지막 샘의 목소리.',
   },
+  hearth_basics: {
+    name: '아늑한 집의 기본 가구',
+    desc: '이스트브룩의 자유 영지 가구상이 판매하는 소박한 가구입니다.',
+  },
 };

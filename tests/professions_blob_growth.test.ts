@@ -2201,9 +2201,53 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     };
     const counterfactualBytes = Buffer.byteLength(JSON.stringify(withoutFieldKit), 'utf8');
     expect(bytes - counterfactualBytes, 'field_kit contributes exactly one array entry').toBe(12);
+    const furnishingIds = [
+      'freehold_timber_bed',
+      'freehold_round_table',
+      'freehold_spindle_chair',
+      'freehold_low_stool',
+      'freehold_woven_rug',
+      'freehold_brass_lantern',
+      'freehold_storage_chest',
+      'freehold_open_bookshelf',
+    ];
+    const withoutFurnishings = JSON.parse(JSON.stringify(s2)) as CharacterState;
+    for (const id of furnishingIds) {
+      expect(s2.deedStats?.itemsDiscovered).toContain(id);
+      expect(s2.reliquary?.firstFind?.[id]).toEqual({ clears: 999, count: 999_999 });
+      delete withoutFurnishings.reliquary?.firstFind?.[id];
+    }
+    if (withoutFurnishings.deedStats) {
+      withoutFurnishings.deedStats.itemsDiscovered =
+        withoutFurnishings.deedStats.itemsDiscovered?.filter((id) => !furnishingIds.includes(id));
+    }
+    expect(s2.reliquary?.illuminatedPages).toContain('hearth_basics');
+    if (withoutFurnishings.reliquary) {
+      withoutFurnishings.reliquary.illuminatedPages =
+        withoutFurnishings.reliquary.illuminatedPages?.filter((id) => id !== 'hearth_basics');
+    }
+    expect(fieldBytes(s2, 'deedStats') - fieldBytes(withoutFurnishings, 'deedStats')).toBe(188);
+    expect(fieldBytes(s2, 'reliquary') - fieldBytes(withoutFurnishings, 'reliquary')).toBe(444);
+    const beforeFurnishingsBytes = Buffer.byteLength(JSON.stringify(withoutFurnishings), 'utf8');
+    expect(bytes - beforeFurnishingsBytes).toBe(632);
+    expect(beforeFurnishingsBytes).toBe(209571);
+    const withoutFurnishingsAndFieldKit: CharacterState = {
+      ...withoutFurnishings,
+      deedStats: {
+        ...withoutFurnishings.deedStats,
+        itemsDiscovered: (withoutFurnishings.deedStats?.itemsDiscovered ?? []).filter(
+          (id) => id !== 'field_kit',
+        ),
+      },
+    };
+    const beforeHomesteaderBytes = Buffer.byteLength(
+      JSON.stringify(withoutFurnishingsAndFieldKit),
+      'utf8',
+    );
+    expect(beforeHomesteaderBytes).toBe(209559);
     const withoutHomesteaderDeeds: CharacterState = {
-      ...withoutFieldKit,
-      deeds: { ...withoutFieldKit.deeds },
+      ...withoutFurnishingsAndFieldKit,
+      deeds: { ...withoutFurnishingsAndFieldKit.deeds },
     };
     const homesteaderBytes = [
       ['homesteader_first_furnishing', 44],
@@ -2218,9 +2262,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       );
     }
     const historicalBytes = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
-    expect(counterfactualBytes - historicalBytes).toBe(85);
-    expect(counterfactualBytes).toBe(209559);
-    expect(bytes).toBe(209571);
+    expect(beforeHomesteaderBytes - historicalBytes).toBe(85);
+    expect(counterfactualBytes).toBe(210191);
+    expect(bytes).toBe(210203);
 
     // The one-time hammer recipe/proof content adds against the pre-hammer,
     // field-kit-excluded fixture (156144): the Crucible fixture-repair deltas
@@ -2284,14 +2328,14 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(metadataDelta).toEqual({ perfectingBonus: 11880, perfectingBound: 5934 });
     // Combined fixture (Crucible baseline + hammer recipe/proof content +
-    // field_kit and Homesteader deeds), measured: 209,571 bytes.
+    // field_kit, Homesteader deeds and furnishings), measured: 210,203 bytes.
     // Composed from both parents' own bands (3885 alone, hammer without
     // field_kit, held 209,094..209,475, width 381; field_kit adds exactly
     // +12 wherever it lands, proven above via counterfactualBytes), shifted
     // by that same +12 and the independently pinned +85 from the two new
-    // deeds without widening: 209,191..209,572.
-    expect(bytes, reMint).toBeGreaterThan(209191);
-    expect(bytes, reMint).toBeLessThan(209572);
+    // deeds and +632 from furnishings without widening: 209,823..210,204.
+    expect(bytes, reMint).toBeGreaterThan(209823);
+    expect(bytes, reMint).toBeLessThan(210204);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was
@@ -2299,7 +2343,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // step was derived from, not this arm's measurement). The previous
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
     // after the real merge settle: this combined fixture (hammer content plus
-    // field_kit and Homesteader deeds) is 209,571 bytes, 19,805 bytes below the
+    // field_kit, Homesteader deeds and furnishings) is 210,203 bytes, 19,173 bytes below the
     // threshold. Pin the measured relation: a lower threshold or further
     // content growth crossing it requires re-measuring and reviewing both
     // sides together, never silently widening this test's narrow tracking

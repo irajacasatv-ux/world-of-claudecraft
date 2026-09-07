@@ -15061,6 +15061,30 @@ export const vi_VN: EnTranslations = {
       "field_kit": {
         "name": "Field Kit"
       },
+      "freehold_timber_bed": {
+        "name": "Timber Bed"
+      },
+      "freehold_round_table": {
+        "name": "Round Table"
+      },
+      "freehold_spindle_chair": {
+        "name": "Spindle Chair"
+      },
+      "freehold_low_stool": {
+        "name": "Low Stool"
+      },
+      "freehold_woven_rug": {
+        "name": "Woven Rug"
+      },
+      "freehold_brass_lantern": {
+        "name": "Brass Lantern"
+      },
+      "freehold_storage_chest": {
+        "name": "Storage Chest"
+      },
+      "freehold_open_bookshelf": {
+        "name": "Open Bookshelf"
+      },
       "conjured_water4": {
         "name": "Nước Suối Được Tạo Phép"
       },
@@ -17107,6 +17131,11 @@ export const vi_VN: EnTranslations = {
         "name": "Vệ Triều Nel",
         "title": "Người Giữ Bờ Cát",
         "greeting": "Thủy triều lấy đi và thủy triều trả lại, {playerName}. Ta ghi sổ cả hai: những gì lũ kẻ bò cắp đi từ xác tàu, và những gì đôi tay lương thiện mang trở lên theo con đường này."
+      },
+      "freehold_furnisher": {
+        "name": "Freehold Furnisher",
+        "title": "Household Goods",
+        "greeting": "A sturdy chair, a warm lantern, a place for your books. Have a look."
       },
       "tidewatcher_ondrel": {
         "name": "Ondrel Vane",

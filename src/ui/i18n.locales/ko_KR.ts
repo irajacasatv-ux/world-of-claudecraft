@@ -6493,7 +6493,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'guide.nav.deeds': '업적의 서',
   'guide.nav.reliquary': '성물고',
   'guide.reliquaryPage.intro':
-    '성물고는 목록에 올린 고유 전리품의 박물관입니다. 던전 추격 장비, 전문 기술 트로피, 탈것, 무기 스킨, 칭호. 공적 책과의 관계는 트로피 홀과 업적 책과 같습니다.',
+    '성물고는 목록에 올린 고유 전리품의 박물관입니다. 던전 추격 장비, 전문 기술 트로피, 탈것, 무기 스킨, 칭호, 가구. 공적 책과의 관계는 트로피 홀과 업적 책과 같습니다.',
   'guide.reliquaryPage.howHeading': '수집 작동 방식',
   'guide.reliquaryPage.howBody':
     "게임에서 성물고를 엽니다(기본 Shift+X). 각 선반에 고유 성유물 페이지가 있습니다. 캐릭터가 그 조각을 처음 얻으면 실루엣이 채워지고, 페이지의 모든 성유물이 채워지면 페이지가 밝혀집니다. '단종' 또는 '전용'으로 표시된 일부 페이지는 달성 대상에서 제외되어 선반이나 전체 완성을 막지 않습니다. 실시간 발견은 알림과 열린 창 새로고침으로 이어집니다. 진행도는 캐릭터 단위이며 무기 스킨만 계정 장식입니다.",
@@ -15535,4 +15535,17 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.itemMenu.combine': '재료 묶음 합치기',
   'hudChrome.reliquary.navHearth': '보금자리',
   'guide.reliquaryPage.shelf.hearth': '보금자리',
+  // Freehold household goods and the Eastbrook furnisher.
+  'entities.items.freehold_timber_bed.name': '목재 침대',
+  'entities.items.freehold_round_table.name': '원형 탁자',
+  'entities.items.freehold_spindle_chair.name': '살대 등받이 의자',
+  'entities.items.freehold_low_stool.name': '낮은 걸상',
+  'entities.items.freehold_woven_rug.name': '직조 깔개',
+  'entities.items.freehold_brass_lantern.name': '황동 랜턴',
+  'entities.items.freehold_storage_chest.name': '수납 상자',
+  'entities.items.freehold_open_bookshelf.name': '개방형 책장',
+  'entities.npcs.freehold_furnisher.name': '자유 영지 가구상',
+  'entities.npcs.freehold_furnisher.title': '가정용품',
+  'entities.npcs.freehold_furnisher.greeting':
+    '튼튼한 의자, 따뜻한 랜턴, 책을 놓을 자리까지. 한번 둘러보세요.',
 };

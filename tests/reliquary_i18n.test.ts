@@ -44,10 +44,14 @@ import {
 import type { ReliquaryViewInput } from '../src/ui/reliquary_view';
 import { ReliquaryWindow, type ReliquaryWindowDeps } from '../src/ui/reliquary_window';
 
-// These two new personal/profession pages ship their five M16 name fills at
+// These new content pages ship their five M16 name fills at
 // PR tier. All prior page names remain translated in every locale; the full
 // release-tier manifest below still requires every new name and description.
-const NEW_PROFESSION_PAGES = new Set(['professions_crucible', 'professions_forgebreaker']);
+const M16_NEW_PAGES = new Set([
+  'professions_crucible',
+  'professions_forgebreaker',
+  'hearth_basics',
+]);
 const M16_LOCALES = new Set(['zh_CN', 'zh_TW', 'ja_JP', 'ko_KR', 'ru_RU']);
 
 describe('reliquary_i18n English resolution', () => {
@@ -79,12 +83,19 @@ describe('reliquary_i18n English resolution', () => {
     // This count is the FILL TRIPWIRE: adding a catalog page must be accompanied
     // by a name row in every M16 locale chunk, so a new page cannot quietly
     // render English to a CJK or Cyrillic reader. The 39 original pages keep
-    // all-locale coverage; the collection and personal hammer pages add two.
-    expect(pageCount).toBe(41);
-    expect(descCount).toBe(41);
+    // all-locale coverage; the collection, personal hammer, and Hearth pages
+    // add three.
+    expect(pageCount).toBe(42);
+    expect(descCount).toBe(42);
+    expect(manifest.length).toBe(84);
     expect(manifest.length).toBe(pageCount + descCount);
-    expect(manifest.filter((row) => row.field === 'name').length).toBe(41);
-    expect(manifest.filter((row) => row.field === 'desc').length).toBe(41);
+    expect(manifest.filter((row) => row.field === 'name').length).toBe(42);
+    expect(manifest.filter((row) => row.field === 'desc').length).toBe(42);
+    expect(manifest).toContainEqual({
+      id: 'hearth_basics',
+      field: 'name',
+      source: 'Hearth Basics',
+    });
     expect(manifest).toContainEqual({
       id: 'professions_forgebreaker',
       field: 'name',
@@ -178,14 +189,14 @@ describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
   it('carries only real catalog page ids, and no empty values', () => {
     for (const lang of tableLocales()) {
       // Vacuity floor: an emptied chunk would satisfy every for-loop in this
-      // suite silently. Preserve all 39 reviewed pages. The two new pages
+      // suite silently. Preserve all 39 reviewed pages. The new content pages
       // ship M16 names now; their Latin-language prose follows release fill.
       const namesFilled = M16_LOCALES.has(lang);
       expect(
-        Object.keys(tables[lang]).filter((id) => !NEW_PROFESSION_PAGES.has(id)).length,
+        Object.keys(tables[lang]).filter((id) => !M16_NEW_PAGES.has(id)).length,
         `${lang} original row count`,
       ).toBe(39);
-      for (const id of NEW_PROFESSION_PAGES) {
+      for (const id of M16_NEW_PAGES) {
         expect(Object.hasOwn(tables[lang], id), `${lang}.${id}`).toBe(namesFilled);
       }
       for (const [id, entry] of Object.entries(tables[lang])) {
@@ -286,7 +297,7 @@ describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
         const value = table[row.id]?.name;
         // Existing 39-page translations remain mandatory in every locale.
         // New content fills M16 now; these pages' Latin names use English until release fill.
-        if (NEW_PROFESSION_PAGES.has(row.id) && !M16_LOCALES.has(lang)) {
+        if (M16_NEW_PAGES.has(row.id) && !M16_LOCALES.has(lang)) {
           expect(value).toBeUndefined();
           continue;
         }

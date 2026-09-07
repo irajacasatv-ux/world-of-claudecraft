@@ -6573,7 +6573,7 @@ export const ko_KR: EnTranslations = {
       "platformBody": "데스크톱 앱에서 Steam이나 Epic Games 계정을 연동하면, 여러분이 얻은 업적이 그 계정의 도전 과제로 함께 기록됩니다. 언제나 게임 세계가 기준입니다. 업적은 이곳에서 얻어 캐릭터에 새겨지고, 도전 과제는 그 뒤를 따라옵니다. 모든 업적에 짝이 되는 도전 과제가 있는 것은 아니며, 바로 도착하지 않더라도 다음에 접속할 때 따라잡습니다. 연동은 어디까지나 연동일 뿐, 로그인 수단이 되지는 않습니다."
     },
     "reliquaryPage": {
-      "intro": "성물고는 목록에 올린 고유 전리품의 박물관입니다. 던전 추격 장비, 전문 기술 트로피, 탈것, 무기 스킨, 칭호. 공적 책과의 관계는 트로피 홀과 업적 책과 같습니다.",
+      "intro": "성물고는 목록에 올린 고유 전리품의 박물관입니다. 던전 추격 장비, 전문 기술 트로피, 탈것, 무기 스킨, 칭호, 가구. 공적 책과의 관계는 트로피 홀과 업적 책과 같습니다.",
       "howHeading": "수집 작동 방식",
       "howBody": "게임에서 성물고를 엽니다(기본 Shift+X). 각 선반에 고유 성유물 페이지가 있습니다. 캐릭터가 그 조각을 처음 얻으면 실루엣이 채워지고, 페이지의 모든 성유물이 채워지면 페이지가 밝혀집니다. '단종' 또는 '전용'으로 표시된 일부 페이지는 달성 대상에서 제외되어 선반이나 전체 완성을 막지 않습니다. 실시간 발견은 알림과 열린 창 새로고침으로 이어집니다. 진행도는 캐릭터 단위이며 무기 스킨만 계정 장식입니다.",
       "ranksHeading": "큐레이터 등급",
@@ -15061,6 +15061,30 @@ export const ko_KR: EnTranslations = {
       "field_kit": {
         "name": "야외 도구 키트"
       },
+      "freehold_timber_bed": {
+        "name": "목재 침대"
+      },
+      "freehold_round_table": {
+        "name": "원형 탁자"
+      },
+      "freehold_spindle_chair": {
+        "name": "살대 등받이 의자"
+      },
+      "freehold_low_stool": {
+        "name": "낮은 걸상"
+      },
+      "freehold_woven_rug": {
+        "name": "직조 깔개"
+      },
+      "freehold_brass_lantern": {
+        "name": "황동 랜턴"
+      },
+      "freehold_storage_chest": {
+        "name": "수납 상자"
+      },
+      "freehold_open_bookshelf": {
+        "name": "개방형 책장"
+      },
       "conjured_water4": {
         "name": "창조된 샘물"
       },
@@ -17107,6 +17131,11 @@ export const ko_KR: EnTranslations = {
         "name": "조수지기 넬",
         "title": "바닷가의 파수꾼",
         "greeting": "조수는 앗아 가고, 조수는 값을 치릅니다, {playerName}. 나는 그 양쪽 장부를 다 맡고 있죠. 종종게들이 난파선에서 집어 가는 것과, 정직한 손이 이 길로 날라 오는 것을요."
+      },
+      "freehold_furnisher": {
+        "name": "자유 영지 가구상",
+        "title": "가정용품",
+        "greeting": "튼튼한 의자, 따뜻한 랜턴, 책을 놓을 자리까지. 한번 둘러보세요."
       },
       "tidewatcher_ondrel": {
         "name": "온드렐 베인",

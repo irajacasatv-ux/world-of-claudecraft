@@ -358,6 +358,7 @@ const NPC_IDS = [
   'overseer_pell',
   'drillmaster_rook',
   'tidewarden_nel',
+  'freehold_furnisher',
 ] as const;
 
 const QUEST_IDS = [

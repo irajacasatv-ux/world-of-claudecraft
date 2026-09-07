@@ -7811,6 +7811,45 @@ export const GUIDE_RELIQUARY: GuideReliquaryPage[] = [
         "name": "Forgebreaker, Engine of Varkhul"
       }
     ]
+  },
+  {
+    "id": "hearth_basics",
+    "shelf": "hearth",
+    "name": "Hearth Basics",
+    "relics": [
+      {
+        "kind": "item",
+        "name": "Timber Bed"
+      },
+      {
+        "kind": "item",
+        "name": "Round Table"
+      },
+      {
+        "kind": "item",
+        "name": "Spindle Chair"
+      },
+      {
+        "kind": "item",
+        "name": "Low Stool"
+      },
+      {
+        "kind": "item",
+        "name": "Woven Rug"
+      },
+      {
+        "kind": "item",
+        "name": "Brass Lantern"
+      },
+      {
+        "kind": "item",
+        "name": "Storage Chest"
+      },
+      {
+        "kind": "item",
+        "name": "Open Bookshelf"
+      }
+    ]
   }
 ];
 

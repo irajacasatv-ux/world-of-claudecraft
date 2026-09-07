@@ -2680,9 +2680,10 @@ describe('Reliquary catalog index memo', () => {
     expect(first).not.toBe(RELIQUARY_PAGES);
     expect(Object.isFrozen(first)).toBe(true);
     // A hand-carried literal, not the production filter restated (which would
-    // prove nothing): 41 pages minus the vault, riftbound and personal
+    // prove nothing): 42 pages minus the vault, riftbound and personal
     // Forgebreaker flags. Crucible crafts remain part of completion.
-    expect(first?.length).toBe(38);
+    expect(first?.length).toBe(39);
+    expect(first?.filter((page) => page.id === 'hearth_basics')).toHaveLength(1);
     expect(first?.some((p) => p.excludeFromCompletion !== undefined)).toBe(false);
 
     // An UNFLAGGED synthetic table answers the caller's own array by identity:

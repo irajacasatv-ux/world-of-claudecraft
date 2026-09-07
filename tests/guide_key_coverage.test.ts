@@ -90,11 +90,6 @@ const LIVE_OFF_SWEEP_KEYS: string[] = [
   // branch with a synthetic seat so the copy stays exercised.
   'guide.professions.comingSoon',
 
-  // The Hearth heading is consumed by reliquaryCatalogSections, but its
-  // furnishing page awaits approved content. guide_reliquary_hearth.test.ts
-  // renders a synthetic page through that real consumer and pins the heading.
-  'guide.reliquaryPage.shelf.hearth',
-
   // Event handlers: only reached after a click or keystroke.
   'guide.chooser.results', // class-chooser filter count (src/guide/pages/classes.ts)
   'guide.nav.closeMenu', // mobile menu toggle's open-state label (src/guide/chrome.ts)

@@ -6573,7 +6573,7 @@ export const zh_CN: EnTranslations = {
       "platformBody": "如果你在桌面客户端中关联了 Steam 或 Epic Games 账号，你所获得的功绩会向外同步为该账号上的成就。游戏世界始终是准绳：功绩在这里挣得，记录在你的角色身上，成就随后跟上。并非每一项功绩都有对应的成就；若某个成就没有立刻到账，它会在你下次登录时补上。关联永远只是关联，绝不是一种登录方式。"
     },
     "reliquaryPage": {
-      "intro": "圣物库是你已收录的独特战利品博物馆：地下城追逐装备、专业奖杯、坐骑、武器外观与头衔。它与功绩之书的关系，就像奖杯厅与成就簿的关系。",
+      "intro": "圣物库是你已收录的独特战利品博物馆：地下城追逐装备、专业奖杯、坐骑、武器外观、头衔与家具。它与功绩之书的关系，就像奖杯厅与成就簿的关系。",
       "howHeading": "收藏如何运作",
       "howBody": "在游戏中打开圣物库（默认 Shift+X）。每个架上有多页独特圣物。角色首次获得该件时填满剪影；一页上的圣物全部填满时点亮该页。少数页面标注“绝版”或“专属”：它们不计入达成，不会阻碍书架或全库的完成。实时发现会弹出提示并刷新已打开的窗口；进度按角色计算，武器外观除外（账号外观）。",
       "ranksHeading": "策展人等级",
@@ -15061,6 +15061,30 @@ export const zh_CN: EnTranslations = {
       "field_kit": {
         "name": "野外工具包"
       },
+      "freehold_timber_bed": {
+        "name": "木架床"
+      },
+      "freehold_round_table": {
+        "name": "圆桌"
+      },
+      "freehold_spindle_chair": {
+        "name": "木杆靠背椅"
+      },
+      "freehold_low_stool": {
+        "name": "矮凳"
+      },
+      "freehold_woven_rug": {
+        "name": "编织地毯"
+      },
+      "freehold_brass_lantern": {
+        "name": "黄铜提灯"
+      },
+      "freehold_storage_chest": {
+        "name": "储物箱"
+      },
+      "freehold_open_bookshelf": {
+        "name": "开放式书架"
+      },
       "conjured_water4": {
         "name": "魔法泉水"
       },
@@ -17107,6 +17131,11 @@ export const zh_CN: EnTranslations = {
         "name": "守潮人奈尔",
         "title": "海滩的看守",
         "greeting": "潮水会拿走，潮水也会偿还，{playerName}。这两笔账都由我来记：掠蟹从残骸里夹走的，和诚实的双手沿这条路扛上来的。"
+      },
+      "freehold_furnisher": {
+        "name": "自由领地家具商",
+        "title": "家居用品",
+        "greeting": "结实的椅子，温暖的提灯，还有放书的地方。来看看吧。"
       },
       "tidewatcher_ondrel": {
         "name": "翁德雷尔·凡恩",

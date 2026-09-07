@@ -18,6 +18,17 @@ const CURRENT_BATCH_ID = 'masterwrought-art-completion-2026-09-02';
 const FIELD_KIT_EVIDENCE_DIR = 'docs/achievements/intentional-gathering-field-kit-2026-09-06';
 const FIELD_KIT_BATCH_ID = 'intentional-gathering-field-kit-2026-09-06';
 const CRUCIBLE_BATCH_ID = 'crucible-professions-2026-09-05';
+const FREEHOLD_BATCH_ID = 'freehold-vendor-basics-2026-09-07';
+const FREEHOLD_ITEM_IDS = [
+  'freehold_timber_bed',
+  'freehold_round_table',
+  'freehold_spindle_chair',
+  'freehold_low_stool',
+  'freehold_woven_rug',
+  'freehold_brass_lantern',
+  'freehold_storage_chest',
+  'freehold_open_bookshelf',
+];
 const LICENSE = 'World of ClaudeCraft project-generated art, project asset, rights reserved';
 
 type ReportPin = {
@@ -775,8 +786,8 @@ describe('item-art consistency accepted-art provenance', () => {
     );
     const verdict = readJson<FinalAuditVerdict>(CURRENT_VERDICT_PATH);
     const mapping = readJson<ItemMapping>('public/ui/items/mapping.json');
-    // This verdict is a dated, frozen snapshot (1209 files / 1224 defs): additive art
-    // (the Field Kit) has landed since, so the live mapping and live ITEMS have grown
+    // This verdict is a dated, frozen snapshot (1255 files / 1270 defs): additive art
+    // (the Field Kit and furnishings) has landed since, so the live mapping and ITEMS grew
     // past it. The checks below bind the verdict to its own recorded passIds, not to
     // a fresh read of the complete current catalog.
     const datedIds = sorted(verdict.visualVerdict.passIds);
@@ -794,9 +805,8 @@ describe('item-art consistency accepted-art provenance', () => {
       heroicDefinitionsWithOwnWebp: 48,
       heroicWeaponArtAliases: 16,
     });
-    // Live count as of this merge: 1,270 (Masterwrought + Field Kit + Crucible
-    // professions) plus the Forgebreaker quest's forgefathers_ember proof item.
-    expect(Object.keys(ITEMS)).toHaveLength(1271);
+    // The current definitions additionally include eight Freehold furnishings.
+    expect(Object.keys(ITEMS)).toHaveLength(1279);
     expect(Object.values(verdict.auditScope.groups).reduce((sum, count) => sum + count, 0)).toBe(
       1255,
     );
@@ -805,7 +815,7 @@ describe('item-art consistency accepted-art provenance', () => {
     // recorded as two incremental reviews (1,209 Masterwrought base + 45
     // Crucible collection pieces + 1 forgefathers_ember Forgebreaker quest
     // proof item = 1,255); the Field Kit lands after it and is checked
-    // separately below as the one remaining additive owner.
+    // separately below alongside the eight later Freehold owners.
     expect(datedIds).toHaveLength(1255);
     expect(new Set(datedIds).size).toBe(1255);
     for (const id of datedIds) {
@@ -897,7 +907,7 @@ describe('item-art consistency accepted-art provenance', () => {
     expect(shippingCatalogDigest.digest('hex')).toBe(verdict.evidence.shippingCatalogSha256);
   });
 
-  it('extends the dated catalog with the Field Kit as one additive current owner', () => {
+  it('extends the dated catalog with the Field Kit and eight Freehold owners', () => {
     const mapping = readJson<ItemMapping>('public/ui/items/mapping.json');
     const currentOwnerIds = [
       ...mapping.entries.map(({ itemId }) => itemId),
@@ -908,22 +918,24 @@ describe('item-art consistency accepted-art provenance', () => {
       .map((name) => name.slice(0, -'.webp'.length));
     expect(sorted(currentOwnerIds)).toEqual(sorted(shippingIds));
     // 1,255 dated (including the Forgebreaker quest's forgefathers_ember proof
-    // item, already recorded in the dated verdict) + the Field Kit = 1,256.
-    expect(new Set(currentOwnerIds).size).toBe(1256);
-    expect(shippingIds).toHaveLength(1256);
-    expect(Object.keys(ITEMS)).toHaveLength(1271);
+    // item, already recorded in the dated verdict) + one Field Kit + eight furnishings.
+    expect(new Set(currentOwnerIds).size).toBe(1264);
+    expect(shippingIds).toHaveLength(1264);
+    expect(Object.keys(ITEMS)).toHaveLength(1279);
 
     const datedVerdict = readJson<FinalAuditVerdict>(CURRENT_VERDICT_PATH);
     const oldPassIds = sorted(datedVerdict.visualVerdict.passIds);
     // The dated verdict already carries the Crucible professions additions,
     // recorded as two incremental reviews (1,209 Masterwrought base + 45
     // Crucible collection pieces + 1 forgefathers_ember Forgebreaker quest
-    // proof item = 1,255); the Field Kit is the one owner still additive
-    // beyond it.
+    // proof item = 1,255); the Field Kit and furnishings are later additive owners.
     expect(oldPassIds).toHaveLength(1255);
     expect(oldPassIds).toContain('forgefathers_ember');
     expect(oldPassIds).not.toContain('field_kit');
-    expect(sorted([...oldPassIds, 'field_kit'])).toEqual(sorted(currentOwnerIds));
+    expect(oldPassIds.filter((id) => FREEHOLD_ITEM_IDS.includes(id))).toEqual([]);
+    expect(sorted([...oldPassIds, 'field_kit', ...FREEHOLD_ITEM_IDS])).toEqual(
+      sorted(currentOwnerIds),
+    );
 
     const fieldKitManifest = readJson<{
       targetSets: { items: string[] };
@@ -942,8 +954,8 @@ describe('item-art consistency accepted-art provenance', () => {
     expect(sha256(shippingBytes)).toBe(asset.acceptedSha256);
     // Only the review modes this record actually names: this batch was not put
     // through the full identity-display-name-and-id sheet review, and there is
-    // no fresh global visual verdict over the current 1256-icon catalog (the
-    // dated 1,255-item verdict, forgefathers_ember included, plus 1 Field Kit).
+    // no fresh global visual verdict over the current catalog. The eight furnishing
+    // images have their own acceptance record, pinned by freehold_art_admission.test.ts.
     expect(fieldKitManifest.review.sizesInspected).toEqual([
       512,
       128,
@@ -1075,7 +1087,7 @@ describe('item-art consistency accepted-art provenance', () => {
     // one generated batch. The surviving ordinary-art cohort stays explicit.
     expect(mapping.entries).toHaveLength(43);
     expect(mapping.entries.every(({ license }) => Boolean(license))).toBe(true);
-    expect(mapping.generatedBatches).toHaveLength(27);
+    expect(mapping.generatedBatches).toHaveLength(28);
     const batch = mapping.generatedBatches.find(({ batchId }) => batchId === BATCH_ID);
     expect(batch).toBeDefined();
     expect(batch).toMatchObject({
@@ -1126,10 +1138,17 @@ describe('item-art consistency accepted-art provenance', () => {
     expect(crucibleBatch?.provenanceRecord).toBe(
       'docs/achievements/crucible-professions-2026-09-05/generation-report.json',
     );
+    const freeholdBatch = mapping.generatedBatches.find(
+      ({ batchId }) => batchId === FREEHOLD_BATCH_ID,
+    );
+    expect(freeholdBatch?.itemIds).toEqual(FREEHOLD_ITEM_IDS);
     const priorGeneratedIds = mapping.generatedBatches
       .filter(
         ({ batchId }) =>
-          batchId !== BATCH_ID && batchId !== CURRENT_BATCH_ID && batchId !== CRUCIBLE_BATCH_ID,
+          batchId !== BATCH_ID &&
+          batchId !== CURRENT_BATCH_ID &&
+          batchId !== CRUCIBLE_BATCH_ID &&
+          batchId !== FREEHOLD_BATCH_ID,
       )
       .flatMap(({ itemIds }) => itemIds);
     // 727 was the prior baseline before the Field Kit batch (one additional owner)
@@ -1139,20 +1158,22 @@ describe('item-art consistency accepted-art provenance', () => {
       ...mapping.entries.map(({ itemId }) => itemId),
       ...mapping.generatedBatches.flatMap(({ itemIds }) => itemIds),
     ];
-    expect(allCurrentOwnerIds).toHaveLength(1256);
-    expect(new Set(allCurrentOwnerIds).size).toBe(1256);
+    expect(allCurrentOwnerIds).toHaveLength(1264);
+    expect(new Set(allCurrentOwnerIds).size).toBe(1264);
     expect({
       entries: mapping.entries.length,
       priorGenerated: priorGeneratedIds.length,
       historicalAudit: batch?.itemIds.length,
       masterwroughtCompletion: completionBatch?.itemIds.length,
       crucibleProfessions: crucibleBatch?.itemIds.length,
+      freeholdFurnishings: freeholdBatch?.itemIds.length,
     }).toEqual({
       entries: 43,
       priorGenerated: 728,
       historicalAudit: 274,
       masterwroughtCompletion: 165,
       crucibleProfessions: 46,
+      freeholdFurnishings: 8,
     });
     const historicalVerdict = readJson<FinalAuditVerdict>(
       `${evidenceDir}/final-item-art-audit-verdict.json`,
@@ -1165,8 +1186,8 @@ describe('item-art consistency accepted-art provenance', () => {
     expect(supersededHistoricalIds).toHaveLength(84);
     // Bound against the dated Masterwrought verdict's own passIds (1209 base plus
     // the full 46-id Crucible batch, forgefathers_ember included: both incremental
-    // reviews are already baked into that same dated file), plus the one owner
-    // still additive beyond it, the Field Kit.
+    // reviews are already baked into that same dated file), plus the Field Kit
+    // and the eight furnishings still additive beyond it.
     const datedMasterwroughtVerdict = readJson<FinalAuditVerdict>(CURRENT_VERDICT_PATH);
     expect(
       sorted([
@@ -1177,8 +1198,12 @@ describe('item-art consistency accepted-art provenance', () => {
       'historical carry-forward plus completion and Crucible waves is the dated Masterwrought catalog',
     ).toEqual(sorted(datedMasterwroughtVerdict.visualVerdict.passIds));
     expect(
-      sorted([...datedMasterwroughtVerdict.visualVerdict.passIds, 'field_kit']),
-      'the dated catalog plus the Field Kit is the full current catalog',
+      sorted([
+        ...datedMasterwroughtVerdict.visualVerdict.passIds,
+        'field_kit',
+        ...FREEHOLD_ITEM_IDS,
+      ]),
+      'the dated catalog plus the Field Kit and furnishings is the full current catalog',
     ).toEqual(sorted(allCurrentOwnerIds));
     expect(batch?.provenanceRecords).toEqual([
       `${evidenceDir}/accepted-art.json`,
@@ -1304,9 +1329,9 @@ describe('item-art consistency accepted-art provenance', () => {
     for (const id of ownerIds) ownerCountById.set(id, (ownerCountById.get(id) ?? 0) + 1);
 
     const violations: string[] = [];
-    if (ownerIds.length !== 1256)
-      violations.push(`mapping owner count: ${ownerIds.length} != 1256`);
-    if (fileIds.length !== 1256) violations.push(`shipping WebP count: ${fileIds.length} != 1256`);
+    if (ownerIds.length !== 1264)
+      violations.push(`mapping owner count: ${ownerIds.length} != 1264`);
+    if (fileIds.length !== 1264) violations.push(`shipping WebP count: ${fileIds.length} != 1264`);
     for (const id of ids) {
       const ownerCount = ownerCountById.get(id) ?? 0;
       if (ownerCount !== 1) violations.push(`${id}: current owner count ${ownerCount} != 1`);
