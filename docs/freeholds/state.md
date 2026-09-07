@@ -36,7 +36,7 @@ Only what the next session needs. Update at the end of every phase and QA.
 ## Current phase
 Phase 01 (`phase-01-foundation.md`): COMPLETE INCLUDING QA on 2026-09-06, verdict PASS, still
 LOCAL. Four code commits plus the ledger, then a seven-commit QA fix round
-(`c946091c07..f4084fd6dc`). NEXT = `phase-02-furnishing-item-kind.md` in a FRESH session.
+(`c946091c07..2e247df270`). NEXT = `phase-02-furnishing-item-kind.md` in a FRESH session.
 The QA round's own detail is in `progress.md` row "01 QA"; do NOT re-run the 01 audit or
 re-raise its judged findings. R01-R46 and D73-D75 are approved;
 D76-D93 (settlement round 2, R47-R64) were approved by Fernando on 2026-09-06 with the words
