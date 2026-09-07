@@ -112,7 +112,19 @@ function applyFiveManBossVariantRating(variant: ItemDef, base: ItemDef): void {
   variant[key] = base.weapon ? FIVE_MAN_WEAPON_RATING : FIVE_MAN_ARMOR_RATING;
 }
 
-function makeHeroicVariant(base: ItemDef, sourceLevel = HEROIC_VARIANT_SOURCE_LEVEL): ItemDef {
+type HeroicVariantBase = Extract<ItemDef, { kind: 'armor' | 'weapon' | 'held_offhand' }>;
+
+function isHeroicVariantBase(def: ItemDef): def is HeroicVariantBase {
+  if (def.kind === 'furnishing') return false;
+  return (
+    !!def.slot && (def.kind === 'armor' || def.kind === 'weapon' || def.kind === 'held_offhand')
+  );
+}
+
+function makeHeroicVariant(
+  base: HeroicVariantBase,
+  sourceLevel = HEROIC_VARIANT_SOURCE_LEVEL,
+): ItemDef {
   const quality = base.quality ?? 'common';
   const targetLevel = sourceLevel + (QUALITY_ILVL_BONUS[quality] ?? 0);
   const isTwoHand = base.kind === 'weapon' && base.hand === 'twohand';
@@ -199,7 +211,7 @@ export function buildHeroicVariants(
   items: Record<string, ItemDef>,
   mobs: Record<string, MobTemplate>,
 ): Record<string, ItemDef> {
-  const eligible = new Set<string>();
+  const eligible = new Map<string, HeroicVariantBase>();
   for (const mob of Object.values(mobs)) {
     if (!HEROIC_ELIGIBLE_MOBS.has(mob.id)) continue;
     for (const entry of mob.loot ?? []) {
@@ -210,12 +222,8 @@ export function buildHeroicVariants(
       if (def.quality !== 'epic' && def.quality !== 'rare' && def.quality !== 'legendary') continue;
       // Equippable combat gear only: armor (incl. shields), weapons, and held
       // offhands, so every raid-boss normal drop has a heroic-claim upgrade.
-      if (
-        !def.slot ||
-        (def.kind !== 'armor' && def.kind !== 'weapon' && def.kind !== 'held_offhand')
-      )
-        continue;
-      eligible.add(id);
+      if (!isHeroicVariantBase(def)) continue;
+      eligible.set(id, def);
     }
   }
   // The heroic Nythraxis raid boss's own set pieces and legendaries upgrade to
@@ -239,13 +247,13 @@ export function buildHeroicVariants(
     }
   }
   const out: Record<string, ItemDef> = {};
-  for (const id of eligible) {
+  for (const [id, base] of eligible) {
     const sourceLevel = raidBases.has(id)
       ? NYTHRAXIS_RAID_LOOT_SOURCE_LEVEL
       : fiveManBossVariantIds.has(heroicVariantId(id))
         ? HEROIC_LOOT_SOURCE_LEVEL
         : HEROIC_VARIANT_SOURCE_LEVEL;
-    out[heroicVariantId(id)] = makeHeroicVariant(items[id], sourceLevel);
+    out[heroicVariantId(id)] = makeHeroicVariant(base, sourceLevel);
   }
   return out;
 }

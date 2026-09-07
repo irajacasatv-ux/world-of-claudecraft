@@ -485,6 +485,7 @@ export function equipItem(
   if (!r) return;
   const { meta, e: p } = r;
   const def = ITEMS[itemId];
+  if (def?.kind === 'furnishing') return;
   if (!def?.slot || (def.kind !== 'weapon' && def.kind !== 'armor' && def.kind !== 'held_offhand'))
     return;
   if (ctx.countItem(itemId, meta.entityId) <= 0) return;
@@ -774,6 +775,7 @@ export function useItem(
   if (!r) return;
   const { meta, e: p } = r;
   const def = ITEMS[itemId];
+  if (def?.kind === 'furnishing') return;
   // Every consumable use branch (food/drink, potion, and the shared
   // elixir/scroll arm) consumes one unit, so the selection is honored here
   // once instead of at each arm. Returns the consumed
@@ -1227,7 +1229,7 @@ export function buyItem(
   // Riding Training (the stablemaster's service entry): buying it delegates to
   // learnRiding, which owns every gate (already trained, level 20, the 80g fee,
   // trainer identity, range) and never puts an item in the bags.
-  if (def.teachesRiding) {
+  if (def.kind !== 'furnishing' && def.teachesRiding) {
     learnRiding(ctx, npcId, pid);
     return;
   }

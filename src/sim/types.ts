@@ -968,7 +968,8 @@ export type ItemKind =
   | 'scroll'
   | 'bag'
   | 'mount'
-  | 'recipe';
+  | 'recipe'
+  | 'furnishing';
 // The aura kinds a timed FLAT STAT buff may carry. Narrower than AuraKind on
 // purpose: this payload's whole contract is "a flat stat buff for a while", and
 // its consumers act on that. The grant sites apply the kind as a plain stat aura
@@ -1093,7 +1094,7 @@ interface BaseItemDef {
   // unrestricted bag omits this and feeds the general pool.
   materialsOnly?: boolean;
   // Max copies per inventory slot. When omitted the default is derived from
-  // `kind` (weapon/armor/bag/tool: 1, everything else: 20); see stackSizeOf.
+  // `kind` through stackSizeOf; furnishings always occupy one slot per copy.
   stackSize?: number;
   requiredClass?: PlayerClass[];
   // Minimum character level needed to equip this piece. When omitted, the level
@@ -1312,7 +1313,15 @@ export interface HeldOffhandItemDef extends BaseItemDef {
 export interface OtherItemDef extends BaseItemDef {
   kind: Exclude<
     ItemKind,
-    'armor' | 'weapon' | 'held_offhand' | 'mount' | 'recipe' | 'scroll' | 'flask' | 'food'
+    | 'armor'
+    | 'weapon'
+    | 'held_offhand'
+    | 'mount'
+    | 'recipe'
+    | 'scroll'
+    | 'flask'
+    | 'food'
+    | 'furnishing'
   >;
   armorType?: never;
   // The shared feast (farming, D16): a placeable item whose use spawns a
@@ -1349,6 +1358,44 @@ export interface OtherItemDef extends BaseItemDef {
     dishItemId: string;
     templateId: string;
   };
+}
+
+// Furnishings carry authored placement data without item-use or power effects.
+export interface FurnishingItemDef extends BaseItemDef {
+  kind: 'furnishing';
+  furnishing: {
+    footprint: { width: number; depth: number };
+    /** Collision radius; zero makes the furnishing walk-through. */
+    r: number;
+    decorCost: number;
+    surface: 'floor';
+    plinth?: boolean;
+  };
+  armorType?: never;
+  slot?: never;
+  weapon?: never;
+  stats?: never;
+  spellPower?: never;
+  healPower?: never;
+  critRating?: never;
+  hasteRating?: never;
+  hitRating?: never;
+  pvpOffenseRating?: never;
+  pvpDefenseRating?: never;
+  use?: never;
+  feast?: never;
+  stackSize?: never;
+  foodHp?: never;
+  drinkMana?: never;
+  potionHp?: never;
+  potionHpPctMax?: never;
+  potionMana?: never;
+  elixir?: never;
+  bagSlots?: never;
+  materialsOnly?: never;
+  teachesRiding?: never;
+  set?: never;
+  masterwrought?: never;
 }
 
 // FOOD. Its own kind-scoped def for exactly one reason: `wellFed` lives HERE
@@ -1486,6 +1533,7 @@ export type ItemDef =
   | HeldOffhandItemDef
   | OtherItemDef
   | MountItemDef
+  | FurnishingItemDef
   | RecipeItemDef
   | ScrollItemDef
   | FlaskItemDef

@@ -348,6 +348,7 @@ export function itemFromRaid(itemId: string): boolean {
 // quest objects, cosmetics) can exist in the item model, but should not get an
 // item-level readout or stat budget.
 export function isItemLevelEligible(item: ItemDef): boolean {
+  if (item.kind === 'furnishing') return false;
   return (
     !!item.slot && (item.kind === 'armor' || item.kind === 'weapon' || item.kind === 'held_offhand')
   );
@@ -380,6 +381,7 @@ export function expectedStatBudget(item: ItemDef): number | undefined {
 
 // The sum of an item's primary stats (its realized stat budget).
 export function primaryStatSum(item: ItemDef): number {
+  if (item.kind === 'furnishing') return 0;
   if (!item.stats) return 0;
   let sum = 0;
   for (const k of PRIMARY_STATS) sum += item.stats[k] ?? 0;
@@ -389,6 +391,7 @@ export function primaryStatSum(item: ItemDef): number {
 // A single comparable power number: primary stats + armor (converted) + weapon DPS
 // (converted). Rounded to one decimal for stable display/sorting.
 export function itemScore(item: ItemDef): number {
+  if (item.kind === 'furnishing') return 0;
   let score = primaryStatSum(item);
   if (item.stats?.armor) score += item.stats.armor / ARMOR_PER_POINT;
   if (item.weapon) {

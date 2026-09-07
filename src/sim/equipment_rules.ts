@@ -61,6 +61,7 @@ export function resolveEquipSlot(
   item: ItemDef,
   equipment: Partial<Record<EquipSlot, string>>,
 ): EquipSlot | null {
+  if (item.kind === 'furnishing') return null;
   if (!item.slot) return null;
   if (item.slot !== 'ring') return item.slot;
   if (!equipment.ring1) return 'ring1';
@@ -76,6 +77,7 @@ export function resolveEquipSlot(
 // (consumables, materials) accept nothing. This is the ONE structural rule the
 // equip path and HUD drop target share, so their validation cannot disagree.
 export function slotAcceptsItem(item: ItemDef, slot: EquipSlot): boolean {
+  if (item.kind === 'furnishing') return false;
   if (!item.slot) return false;
   if (item.slot === 'ring') return slot === 'ring1' || slot === 'ring2';
   if (item.kind === 'weapon' && slot === 'offhand') return weaponHand(item) !== 'mainhand';
@@ -403,6 +405,7 @@ export function weaponHand(item: WeaponItemDef): WeaponItemDef['hand'] {
 }
 
 export function canEquipItem(cls: PlayerClass, item: ItemDef): boolean {
+  if (item.kind === 'furnishing') return false;
   if (isShieldItem(item)) {
     return !item.requiredClass || item.requiredClass.includes(cls);
   }

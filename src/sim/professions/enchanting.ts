@@ -222,6 +222,7 @@ export function consumeEnchantedVictim(
  *  quality and requiredClass), so a copy the player's class cannot wield is
  *  never stuck with no way to recover value from it. */
 export function isDisenchantable(def: ItemDef | undefined): boolean {
+  if (def?.kind === 'furnishing') return false;
   return (
     !!def &&
     (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&
@@ -1280,6 +1281,11 @@ function resolveReplaceEnchantBagged(
   return enchantSuccess(itemId, enchantId, vaultDraws);
 }
 
+function enchantTargetsItem(itemDef: ItemDef, enchant: EnchantDef): boolean {
+  if (itemDef.kind === 'furnishing') return false;
+  return itemDef.slot === enchant.itemSlot;
+}
+
 /** Resolve one apply-enchant attempt against a HELD (bagged, not currently
  *  equipped) eligible copy of `itemId`: a plain fungible copy, or an
  *  instanced copy that has NOT itself been enchanted yet (crafted rare+ gear;
@@ -1372,7 +1378,7 @@ export function resolveApplyEnchant(
   // The slot-kind gate is shared by both arms: an item declares its slot KIND
   // ('ring' for either finger, 'mainhand' for a one-hand weapon worn in either
   // hand), which is what an enchant's itemSlot names.
-  if (itemDef.slot !== enchant.itemSlot) {
+  if (!enchantTargetsItem(itemDef, enchant)) {
     return { ok: false, itemId, enchantId, reason: 'wrong_slot' };
   }
   if (
@@ -1526,7 +1532,7 @@ export function evaluateApplyEnchantAdmission(
   ) {
     return { ok: false, itemId, enchantId, reason: 'not_perfected' };
   }
-  if (itemDef.slot !== enchant.itemSlot) {
+  if (!enchantTargetsItem(itemDef, enchant)) {
     return { ok: false, itemId, enchantId, reason: 'wrong_slot' };
   }
   if (

@@ -154,6 +154,7 @@ export function primaryStatBudget(
 // for the live item, makeHeroicVariant for a generated upgrade) route through this
 // so a quiver can never be priced two different ways.
 export function slotStatMultForItem(item: ItemDef): number | undefined {
+  if (item.kind === 'furnishing') return undefined;
   return item.kind === 'held_offhand' && item.occupiesHand === false
     ? WORN_OFFHAND_STAT_MULT
     : undefined;

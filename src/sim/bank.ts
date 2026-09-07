@@ -27,6 +27,7 @@ import {
   warnDroppedInstanceKeys,
 } from './item_instance_load';
 import { isMergeableInstancePayload } from './item_instance_merge';
+import { isStorableItemKind } from './item_storage_rules';
 import { isMaterialItemId } from './material_ids';
 import { sanitizeRiftGearInstance } from './rift/progression';
 import type { SimContext } from './sim_context';
@@ -434,7 +435,8 @@ export function bankDeposit(
   }
   if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= meta.inventory.length) return;
   const slot = meta.inventory[slotIndex];
-  if (ITEMS[slot.itemId]?.kind === 'quest') {
+  const def = ITEMS[slot.itemId];
+  if (def && !isStorableItemKind(def.kind)) {
     ctx.error(meta.entityId, 'You cannot store quest items in the bank.');
     return;
   }

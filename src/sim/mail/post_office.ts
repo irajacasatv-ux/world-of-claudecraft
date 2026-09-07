@@ -36,6 +36,7 @@ import {
   removeMatchingInstance,
   sanitizeEscrowSlot,
 } from '../item_instance_transfer';
+import { isStorableItemKind } from '../item_storage_rules';
 import { removeVendorSellUnits } from '../items';
 import { WYRMFALL_CORE_ITEM_ID } from '../professions/masterwrought_materials';
 import type { PlayerMeta } from '../sim';
@@ -472,7 +473,7 @@ export class PostOffice {
         this.result(meta.entityId, 'noMailSoulbound');
         return;
       }
-      if (def.kind === 'quest' || def.noMarketList) {
+      if (!isStorableItemKind(def.kind) || def.noMarketList) {
         this.result(meta.entityId, 'noMailQuestItems');
         return;
       }

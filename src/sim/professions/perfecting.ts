@@ -166,7 +166,8 @@ export interface PerfectingInfoView {
  *  module eval), and the more correct table under test fixtures, which grow
  *  the content array the snapshot never sees. */
 function apexRecipeFor(itemId: string): ProfessionRecipeRecord | null {
-  if (ITEMS[itemId]?.masterwrought !== true) return null;
+  const def = ITEMS[itemId];
+  if (def?.kind === 'furnishing' || def?.masterwrought !== true) return null;
   return recipeForResultItem(itemId) ?? null;
 }
 
@@ -207,6 +208,7 @@ export function perfectedBonusStats(
   def: ItemDef,
   recipe: Pick<ProfessionRecipeRecord, 'level'>,
 ): Partial<CoreStats> | null {
+  if (def.kind === 'furnishing') return null;
   if (!def.slot || !def.stats) return null;
   // Primary stats only, the masterworkBonusStats filter: armor would double.
   const profile: Partial<CoreStats> = {};
@@ -279,6 +281,7 @@ export function perfectingInfoFrom(inputs: PerfectingInfoInputs): PerfectingInfo
     payload = slot?.instance;
   }
   if (!itemId) return null;
+  if (ITEMS[itemId]?.kind === 'furnishing') return null;
   const craftId = craftForApexItem(itemId);
   const perfected = payload?.perfected === true;
   const promoted = payload?.rolled?.quality === 'legendary';
@@ -405,7 +408,7 @@ function resolvePerfectingHead(
     return null;
   }
   const def = ITEMS[itemId];
-  if (def?.masterwrought !== true) {
+  if (def?.kind === 'furnishing' || def?.masterwrought !== true) {
     ctx.error(meta.entityId, 'Only Masterwrought items can be perfected.');
     return null;
   }

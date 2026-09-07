@@ -68,6 +68,7 @@ export const TIMBER_WEAPON_TYPES: ReadonlySet<string> = new Set([
  *  unclassified weapon falling back to resonant_steel. Pure: no rng, no side
  *  effects. */
 export function typedSecondaryFor(def: ItemDef): string | null {
+  if (def.kind === 'furnishing') return null;
   if (def.quality !== 'rare' && def.quality !== 'epic' && def.quality !== 'legendary') return null;
   if (def.kind === 'armor') {
     return def.armorType ? (ARMOR_SECONDARY_BY_TYPE[def.armorType] ?? null) : null;

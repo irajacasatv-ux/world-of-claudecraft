@@ -93,9 +93,9 @@ export function sanitizeBuyCount(count: number | undefined): number | null {
 export function vendorCountForced(def: ItemDef): boolean {
   const honor = def.priceHonor;
   const honorPriced = honor !== undefined && Number.isFinite(honor) && Math.floor(honor) > 0;
-  return (
-    def.kind === 'mount' || def.teachesRiding === true || def.soulbound === true || honorPriced
-  );
+  const forcedByFlags = def.teachesRiding === true || def.soulbound === true || honorPriced;
+  if (def.kind === 'furnishing') return forcedByFlags;
+  return def.kind === 'mount' || forcedByFlags;
 }
 
 /** Atomic totals for a count-N purchase, all three products verified to stay

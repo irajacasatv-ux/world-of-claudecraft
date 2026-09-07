@@ -22,5 +22,6 @@ export const VENDOR_STACK_SIZE = 5;
  * unit per purchase.
  */
 export function vendorStackSize(def: ItemDef): number {
+  if (def.kind === 'furnishing') return 1;
   return def.kind === 'food' || def.kind === 'drink' ? VENDOR_STACK_SIZE : 1;
 }

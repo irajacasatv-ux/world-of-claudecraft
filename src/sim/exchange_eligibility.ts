@@ -27,8 +27,8 @@
 // inherit the trade-window exception is an open design call).
 //
 // The split of responsibility matters and is deliberate: this module owns the
-// CONTENT TAXONOMY (a mount is a mount because src/sim/content says so) and the
-// locks that are true of a category regardless of configuration. It owns NO
+// eligibility category grouping and the locks that hold regardless of
+// configuration. Browse identity is classified separately. It owns NO
 // policy. Whether a category trades at all, what the price floor is, and which
 // ids an operator has excluded stay on the server, which is the only layer
 // entitled to decide them.
@@ -64,6 +64,10 @@ export type ExchangeItemCategory = 'mount' | 'mech_chroma' | 'equipment' | 'othe
  * the equipment quality floor.
  */
 export function exchangeItemCategory(def: ItemDef): ExchangeItemCategory {
+  // Furnishings share the mount eligibility bucket: every rarity and the same
+  // def-level soulbound tolerance, with all existing per-copy locks intact.
+  // This bucket grants no riding identity; Browse keeps furnishings in other.
+  if (def.kind === 'furnishing') return 'mount';
   if (def.kind === 'mount') return 'mount';
   if (def.use?.type === 'mechChroma') return 'mech_chroma';
   if (def.slot !== undefined) return 'equipment';
@@ -81,6 +85,7 @@ export function exchangeItemCategory(def: ItemDef): ExchangeItemCategory {
 export type ExchangeBrowseCategory = 'weapon' | 'armor' | 'mount' | 'chroma' | 'other';
 
 export function exchangeBrowseCategory(def: ItemDef): ExchangeBrowseCategory {
+  if (def.kind === 'furnishing') return 'other';
   if (def.kind === 'mount') return 'mount';
   if (def.use?.type === 'mechChroma') return 'chroma';
   if (def.kind === 'weapon') return 'weapon';

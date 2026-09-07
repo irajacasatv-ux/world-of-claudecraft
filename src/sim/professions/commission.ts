@@ -48,6 +48,7 @@ import { isAtAnyStation } from './stations';
  *  as a kind-level predicate so presentation code holding only a kind (the
  *  tooltip module) shares the ONE rule. */
 export function isCommissionEligibleKind(kind: ItemDef['kind'] | undefined): boolean {
+  if (kind === 'furnishing') return false;
   return kind === 'weapon' || kind === 'armor' || kind === 'held_offhand';
 }
 

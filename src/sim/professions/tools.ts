@@ -37,6 +37,7 @@ export function gatherToolTier(
   item: ItemDef | undefined,
   professionId: GatheringProfessionId,
 ): number | undefined {
+  if (item?.kind === 'furnishing') return undefined;
   if (!item?.use || !isGatherToolUse(item.use)) return undefined;
   if (item.use.professionId !== professionId) return undefined;
   return item.use.tier;
@@ -190,7 +191,9 @@ export function hasFishingImplement(
   items: Readonly<Record<string, ItemDef>>,
 ): boolean {
   return inventory.some((slot) => {
-    const use = items[slot.itemId]?.use;
+    const item = items[slot.itemId];
+    if (item?.kind === 'furnishing') return false;
+    const use = item?.use;
     return (
       !!use &&
       (use.type === 'fishing' || (use.type === 'gatherTool' && use.professionId === 'fishing'))
@@ -547,7 +550,9 @@ function charmIndexToConsume(
   let signed = -1;
   for (let index = 0; index < inventory.length; index++) {
     const entry = inventory[index];
-    const use = items[entry.itemId]?.use;
+    const item = items[entry.itemId];
+    if (item?.kind === 'furnishing') continue;
+    const use = item?.use;
     if (!use || use.type !== 'toolEffect' || use.effectId !== effectId) continue;
     const signer = entry.instance?.signer;
     if (signer !== undefined && slotterName !== undefined && signer === slotterName) return index;

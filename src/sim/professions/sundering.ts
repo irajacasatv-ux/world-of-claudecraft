@@ -70,6 +70,7 @@ const SUNDERABLE_GEAR_KINDS: ReadonlySet<ItemDef['kind']> = new Set([
   'held_offhand',
 ]);
 export function isSunderable(def: ItemDef | undefined): boolean {
+  if (def?.kind === 'furnishing') return false;
   return (
     !!def &&
     def.quality === 'epic' &&

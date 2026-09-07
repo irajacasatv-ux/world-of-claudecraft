@@ -26,6 +26,7 @@ import {
   removeMatchingInstance,
   sanitizeEscrowSlot,
 } from './item_instance_transfer';
+import { isStorableItemKind } from './item_storage_rules';
 import { removeVendorSellUnits } from './items';
 import { collapseToLowestPerItem } from './market_collapse';
 import { planListingIds, playerListingIdFloor } from './market_listing_ids';
@@ -533,7 +534,7 @@ export class Market {
     }
     const def = ITEMS[itemId];
     if (!def) return;
-    if (def.kind === 'quest') {
+    if (!isStorableItemKind(def.kind)) {
       this.ctx.error(meta.entityId, 'The Merchant will not broker quest items.');
       return;
     }
@@ -689,7 +690,7 @@ export class Market {
     }
     const def = ITEMS[itemId];
     if (!def) return;
-    if (def.kind === 'quest') {
+    if (!isStorableItemKind(def.kind)) {
       this.ctx.error(meta.entityId, 'The Merchant will not broker quest items.');
       return;
     }

@@ -34,6 +34,7 @@ import {
   warnDroppedInstanceKeys,
 } from './item_instance_load';
 import { isTransferLockedInstance, publicInstanceView } from './item_instance_transfer';
+import { isStorableItemKind } from './item_storage_rules';
 import type { PlayerMeta } from './sim';
 import type { SimContext } from './sim_context';
 import { cloneInvSlot, type InvSlot } from './types';
@@ -863,7 +864,7 @@ export function guildBankPipeRefusal(
   dir: 'deposit' | 'withdraw' = 'deposit',
 ): string | null {
   const def = ITEMS[slot.itemId];
-  const quest = def?.kind === 'quest';
+  const quest = !!def && !isStorableItemKind(def.kind);
   const refused =
     quest || !!def?.soulbound || !!def?.noMarketList || isTransferLockedInstance(slot.instance);
   if (!refused) return null;

@@ -57,6 +57,7 @@ export { SALVAGE_MATERIAL_BY_QUALITY } from './salvage_materials';
  *  from it. Ineligible items (consumables, quest items, poor-quality junk,
  *  unknown ids) are never salvageable. */
 export function isSalvageable(def: ItemDef | undefined): boolean {
+  if (def?.kind === 'furnishing') return false;
   return (
     !!def &&
     (def.kind === 'weapon' || def.kind === 'armor' || def.kind === 'held_offhand') &&

@@ -165,6 +165,7 @@ export function craftBonusStatsFor(
   def: ItemDef | undefined,
   recipe: ProfessionRecipeRecord,
 ): ReturnType<typeof masterworkBonusStats> {
+  if (def?.kind === 'furnishing') return null;
   if (!def || def.masterwrought) return null;
   return masterworkBonusStats({
     level: recipe.level,
@@ -193,6 +194,7 @@ export function mintsSignerPayload(
   def: ItemDef | undefined,
   outputQuality: MaterialRarity,
 ): boolean {
+  if (def?.kind === 'furnishing') return isSignableMaterialRarity(outputQuality);
   return isSignableMaterialRarity(outputQuality) && def?.kind !== 'bag';
 }
 
@@ -1135,6 +1137,7 @@ export function resolveCraftForRecipe(
   const perfectingHeadStart =
     !!meta &&
     procRoll < procChance &&
+    def?.kind !== 'furnishing' &&
     !!def?.masterwrought &&
     bumped !== null &&
     bumped.tier <= ceilingTier;
