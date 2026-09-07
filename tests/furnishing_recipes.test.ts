@@ -99,6 +99,31 @@ describe('crafted furnishing recipe content', () => {
     }
   });
 
+  it.each([
+    {
+      path: 'geometry-measurements.json',
+      sha256: 'c340590e9b89415432f7c0712dacfea273486d3cc42b20900f1ae0004336a8c8',
+      bytes: 75312,
+    },
+    {
+      path: 'geometry-proposal.json',
+      sha256: 'd944116ea84fedc226635cb74fa5c6dadccca531622439f8b47e84e2d2e6825f',
+      bytes: 8417,
+    },
+    {
+      path: 'economy-measurements.json',
+      sha256: '8e7a10f6b5f1e073c1652fe4819a0c16a8f44071e1f8b1649c2d70afa4f8e64e',
+      bytes: 1925504,
+    },
+  ])('rehashes the formatter-exempt calibration source $path', (expected) => {
+    const root = 'docs/freeholds/crafted-content-trial-2026-09-07/';
+    const calibration = JSON.parse(readFileSync(`${root}calibration.json`, 'utf8'));
+    expect(calibration.sealedEvidence).toContainEqual(expected);
+    const bytes = readFileSync(`${root}${expected.path}`);
+    expect(bytes.byteLength).toBe(expected.bytes);
+    expect(createHash('sha256').update(bytes).digest('hex')).toBe(expected.sha256);
+  });
+
   it('keeps recipe and stand-in collections deeply immutable', () => {
     expect(Object.isFrozen(FURNISHING_RECIPES)).toBe(true);
     expect(Object.isFrozen(FREEHOLD_CRAFTED_FURNISHING_IDS)).toBe(true);

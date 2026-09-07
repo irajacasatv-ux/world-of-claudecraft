@@ -1062,22 +1062,25 @@ describe('frozen trigger + renown catalog (design rule 9: never retro-edit a tri
       appended: ['homesteader_first_furnishing', 'homesteader_first_cottage'],
       digest: 'ec055f18eef91cea2132109bf9554b8e5f95b7321a6f31109422d46372c3f323',
     },
-  ])('preserves every $parent trigger and Renown value through the merge', ({ appended, digest }) => {
-    const added = new Set(appended);
-    const parentRows = DEED_ORDER.filter((id) => !added.has(id)).map((id) => {
-      const trigger = DEEDS[id].trigger;
-      return [
-        id,
-        trigger.kind === 'meta'
-          ? { ...trigger, deedIds: trigger.deedIds.filter((dep) => !added.has(dep)) }
-          : trigger,
-        DEEDS[id].renown,
-      ];
-    });
-    expect(createHash('sha256').update(JSON.stringify(parentRows), 'utf8').digest('hex')).toBe(
-      digest,
-    );
-  });
+  ])(
+    'preserves every $parent trigger and Renown value through the merge',
+    ({ appended, digest }) => {
+      const added = new Set(appended);
+      const parentRows = DEED_ORDER.filter((id) => !added.has(id)).map((id) => {
+        const trigger = DEEDS[id].trigger;
+        return [
+          id,
+          trigger.kind === 'meta'
+            ? { ...trigger, deedIds: trigger.deedIds.filter((dep) => !added.has(dep)) }
+            : trigger,
+          DEEDS[id].renown,
+        ];
+      });
+      expect(createHash('sha256').update(JSON.stringify(parentRows), 'utf8').digest('hex')).toBe(
+        digest,
+      );
+    },
+  );
 });
 
 describe('retro fallback proof sets stay anchored to the real tables', () => {

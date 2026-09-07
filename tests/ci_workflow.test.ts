@@ -471,7 +471,7 @@ describe('CI workflow parity', () => {
         const match = line.match(/^docs\/screenshots\/([A-Za-z0-9._-]+)\//);
         if (match) indexDirs.add(match[1]);
       }
-      // The integrated catalog has 306 tracked screenshot subtrees (2026-09-07).
+      // Snapshot ea3b62fad1 has 306 tracked screenshot subtrees (2026-09-07).
       // Keep this floor near that measured count so truncated discovery cannot
       // silently satisfy the exact reference/cone coupling below.
       expect(indexDirs.size).toBeGreaterThanOrEqual(306);
@@ -528,9 +528,9 @@ describe('CI workflow parity', () => {
         `unexpected tracked paths are missing from the screenshot-reference corpus: ${missing.join(', ')}`,
       ).toEqual([]);
       const corpus = corpusCandidates.filter((file) => existsSync(join(repoRoot, file)));
-      // The integrated index contains 9,402 reference-bearing files (2026-09-07).
+      // Snapshot ea3b62fad1 has 9,404 reference-bearing files (2026-09-07).
       // An emptied or truncated enumeration must not green the coupling.
-      expect(corpus.length).toBeGreaterThanOrEqual(9_402);
+      expect(corpus.length).toBeGreaterThanOrEqual(9_404);
       for (const file of corpus) {
         const source = readFileSync(join(repoRoot, file), 'utf8');
         for (const match of source.matchAll(/docs\/screenshots\/([A-Za-z0-9._-]+)/g)) {

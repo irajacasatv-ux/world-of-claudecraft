@@ -48,9 +48,7 @@ const ID = FURNISHING.id;
 const GEM_ID = RIFT_GEM_IDS[0];
 type Target = { slotIndex: number } | undefined;
 type ForgeWorld = {
-  [K in 'upgradeRiftItem' | 'socketRiftGem']: (
-    ...args: Parameters<IWorld[K]>
-  ) => unknown;
+  [K in 'upgradeRiftItem' | 'socketRiftGem']: (...args: Parameters<IWorld[K]>) => unknown;
 };
 
 const ACTIONS = [
@@ -232,53 +230,56 @@ function online() {
 }
 
 describe('furnishing Rift admission through ClientWorld and GameServer', () => {
-  it.each(CASES)('$action refuses a furnishing via $selection and mirrors shell success', async (row) => {
-    const remote = online();
-    const { sim, pid, controlId, client, sent, sync } = remote;
-    const named = row.selection === 'named slot';
-    const before = structuredClone(client.inventory);
-    expect(before.find((slot) => slot.itemId === ID)?.count).toBe(1);
-    const refusalOutcome = withoutMutation(sim, pid, () =>
-      row.invoke(client, ID, named ? { slotIndex: 0 } : undefined),
-    );
-    expect(refusalOutcome).toBeInstanceOf(Promise);
-    expect(sent).toEqual([
-      {
-        t: 'cmd',
-        cmd: row.command,
-        item: ID,
-        ...row.fields,
-        ...(named && { slot: 0 }),
-        rid: expect.any(Number),
-      },
-    ]);
-    expect(client.inventory).toEqual(before);
-    sync();
-    expect(await refusalOutcome).toBe(false);
-    expect(client.inventory).toEqual(before);
-    expect(client.drainEvents()).toEqual([
-      { type: 'riftForgeResult', pid, ...refusal(row.action) },
-    ]);
+  it.each(CASES)(
+    '$action refuses a furnishing via $selection and mirrors shell success',
+    async (row) => {
+      const remote = online();
+      const { sim, pid, controlId, client, sent, sync } = remote;
+      const named = row.selection === 'named slot';
+      const before = structuredClone(client.inventory);
+      expect(before.find((slot) => slot.itemId === ID)?.count).toBe(1);
+      const refusalOutcome = withoutMutation(sim, pid, () =>
+        row.invoke(client, ID, named ? { slotIndex: 0 } : undefined),
+      );
+      expect(refusalOutcome).toBeInstanceOf(Promise);
+      expect(sent).toEqual([
+        {
+          t: 'cmd',
+          cmd: row.command,
+          item: ID,
+          ...row.fields,
+          ...(named && { slot: 0 }),
+          rid: expect.any(Number),
+        },
+      ]);
+      expect(client.inventory).toEqual(before);
+      sync();
+      expect(await refusalOutcome).toBe(false);
+      expect(client.inventory).toEqual(before);
+      expect(client.drainEvents()).toEqual([
+        { type: 'riftForgeResult', pid, ...refusal(row.action) },
+      ]);
 
-    const wireRevBefore = sim.meta(pid)!.wireRev;
-    const controlOutcome = row.invoke(client, controlId, named ? { slotIndex: 1 } : undefined);
-    expect(controlOutcome).toBeInstanceOf(Promise);
-    expect(client.inventory).toEqual(before);
-    sync();
-    expect(await controlOutcome).toBe(true);
-    expectControl(sim, pid, controlId, row);
-    expect(sim.meta(pid)!.wireRev).toBeGreaterThan(wireRevBefore);
-    expect(client.inventory).toEqual(sim.meta(pid)!.inventory);
-    expect(client.inventory.find((slot) => slot.itemId === ID)).toEqual(before[0]);
-    expect(client.drainEvents().filter((event) => event.type === 'riftForgeResult')).toEqual([
-      {
-        type: 'riftForgeResult',
-        pid,
-        ok: true,
-        action: row.action,
-        itemId: controlId,
-        ...row.result,
-      },
-    ]);
-  });
+      const wireRevBefore = sim.meta(pid)!.wireRev;
+      const controlOutcome = row.invoke(client, controlId, named ? { slotIndex: 1 } : undefined);
+      expect(controlOutcome).toBeInstanceOf(Promise);
+      expect(client.inventory).toEqual(before);
+      sync();
+      expect(await controlOutcome).toBe(true);
+      expectControl(sim, pid, controlId, row);
+      expect(sim.meta(pid)!.wireRev).toBeGreaterThan(wireRevBefore);
+      expect(client.inventory).toEqual(sim.meta(pid)!.inventory);
+      expect(client.inventory.find((slot) => slot.itemId === ID)).toEqual(before[0]);
+      expect(client.drainEvents().filter((event) => event.type === 'riftForgeResult')).toEqual([
+        {
+          type: 'riftForgeResult',
+          pid,
+          ok: true,
+          action: row.action,
+          itemId: controlId,
+          ...row.result,
+        },
+      ]);
+    },
+  );
 });
