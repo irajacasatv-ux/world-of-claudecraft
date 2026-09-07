@@ -165,7 +165,10 @@ describe('headless environment protocol validation', () => {
       'plot',
       'decorat',
     ]) {
-      expect(ACTIONS.filter((a) => a.includes(stem)), `RL action matching '${stem}'`).toEqual([]);
+      expect(
+        ACTIONS.filter((a) => a.includes(stem)),
+        `RL action matching '${stem}'`,
+      ).toEqual([]);
     }
     // The anchor above holds: 13 fixed actions plus the ability slots, nothing else.
     const abilitySlots = ACTIONS.filter((a) => a.startsWith('ability_')).length;

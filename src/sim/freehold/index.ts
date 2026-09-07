@@ -17,7 +17,6 @@ export {
   setVisitPolicy,
   undoPlacement,
 } from './commands';
-export { asFreeholdPlotId } from './types';
 export {
   defaultFreeholdState,
   evictFreehold,
@@ -41,3 +40,4 @@ export type {
   FreeholdView,
   FreeholdVisitPolicy,
 } from './types';
+export { asFreeholdPlotId } from './types';

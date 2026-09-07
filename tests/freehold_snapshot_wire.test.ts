@@ -16,8 +16,8 @@ import {
   type FreeholdSelfMirrors,
 } from '../src/net/freehold_snapshot_wire';
 import type { ClientWorld } from '../src/net/online';
-import { asFreeholdPlotId } from '../src/sim/freehold/types';
 import type { FreeholdLayoutView, FreeholdView } from '../src/sim/freehold/types';
+import { asFreeholdPlotId } from '../src/sim/freehold/types';
 import { COMMAND_FACETS, COMMAND_NAMES } from '../src/world_api';
 import { bareClient } from './helpers/bare_client';
 

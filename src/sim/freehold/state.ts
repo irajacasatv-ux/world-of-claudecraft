@@ -6,12 +6,7 @@
 // draws no rng and reads no clock.
 
 import type { SimContext } from '../sim_context';
-import type {
-  FreeholdLayoutView,
-  FreeholdPlotId,
-  FreeholdState,
-  FreeholdView,
-} from './types';
+import type { FreeholdLayoutView, FreeholdPlotId, FreeholdState, FreeholdView } from './types';
 
 /** Every account's default record: the free tier-0 Inn Room with nothing
  *  placed, full condition, unstamped day counters, no prepaid weeks, closed to
