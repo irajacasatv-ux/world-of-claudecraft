@@ -261,6 +261,31 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
     expect(typeof forged).toBe('string');
   });
 
+  it('cross-pins the plot-id charset the wire will accept, for whoever generates one', () => {
+    // The coupling that is invisible from either side alone: the client echoes
+    // myFreehold.plotId back on every build-presence frame, and the server
+    // admits 1..64 chars of [A-Za-z0-9_:-] there. So the id GENERATOR at 05/07
+    // is constrained by a rule written in server/freehold_wire.ts, and a plot
+    // id containing a dot or base64 padding would make that frame refuse
+    // forever with no diagnostic. Pin the charset here, against a fresh literal
+    // and a source read, so widening one side without the other reds.
+    const wireSrc = readFileSync(join(__dirname, '..', 'server', 'freehold_wire.ts'), 'utf8');
+    expect(wireSrc).toContain('const OPAQUE_ID_MAX_LEN = 64;');
+    expect(wireSrc).toContain('const OPAQUE_ID_RE = /^[A-Za-z0-9_:-]+$/;');
+    // The shapes a generator might reasonably reach for, judged against that
+    // rule, so the failure mode is concrete rather than a regex staring match.
+    const admits = (id: string) => id.length > 0 && id.length <= 64 && /^[A-Za-z0-9_:-]+$/.test(id);
+    expect(admits('plot-7')).toBe(true);
+    expect(admits('acct:12:plot:3')).toBe(true);
+    expect(admits('a'.repeat(64))).toBe(true);
+    expect(admits('a'.repeat(65)), 'over the wire bound').toBe(false);
+    expect(admits(''), 'empty').toBe(false);
+    expect(admits('plot.7'), 'a dot is NOT admitted').toBe(false);
+    expect(admits('plot/7'), 'a slash is NOT admitted').toBe(false);
+    expect(admits('cGxvdA=='), 'base64 padding is NOT admitted').toBe(false);
+    expect(admits('plot 7'), 'a space is NOT admitted').toBe(false);
+  });
+
   it('strips ephemeral build presence from the snapshot and nothing else (C03)', () => {
     // Presence is a live per-session fact and must never reach SQL or JSON, so
     // the persistence boundary neutralizes it rather than trusting 07 to

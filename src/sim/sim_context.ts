@@ -393,6 +393,10 @@ export interface SimContextPrimitives {
   // arrival, the offline world inserts one record, the env whatever it seeds).
   // Any sim code that iterates this map must therefore sort by owner key
   // first; relying on Map order would fork the three hosts on one seed.
+  // RETENTION IS OWED BY THE FIRST LOADER: whoever calls loadFreehold (05/07)
+  // pairs it with evictFreehold at account or character unload IN THE SAME
+  // change, and registers the table's prune in server/retention_sweep.ts with
+  // the DDL. This map grows per owner and nothing sweeps it otherwise.
   readonly freeholds: Map<string, FreeholdState>;
 }
 

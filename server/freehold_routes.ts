@@ -32,6 +32,15 @@
 // and it is TIER-1 ONLY (the WOC_MARKET_READ_POLICY opt-out), so an allowed
 // request pays no pg rate_limits UPSERT: a bound mounted to make a dark realm
 // cheaper must never add a database write the unmetered route did not pay.
+// What the limiter does NOT do is remove those two guard reads on an ALLOWED
+// request. The existing cache for exactly that pair,
+// server/woc_auth_guard_cache.ts, is deliberately marketplace-scoped with a
+// wiring pin, so this route correctly does not use it and the per-request cost
+// is ACCEPTED rather than mitigated. That is fine while the answer is a
+// constant flag. The next housing endpoint with a real body (15, 30a) must
+// re-take the decision: either widen the guard cache past its marketplace
+// scope along with its bust-coverage pin, or use the keyed bounded per-account
+// shape of server/discord_status_cache.ts.
 // The cost of the ip-before-auth order, stated plainly: the bucket is keyed on
 // the IP alone, so unauthenticated probes that only ever 401 still spend it,
 // and one prober can exhaust the window for every account behind that IP. That

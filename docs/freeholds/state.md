@@ -1358,6 +1358,49 @@ message is performed in this documentation session.
   (t) `moveToward`'s doc comment lost an em dash during the otherwise verbatim move (the
   repo forbids em dashes and a Stop hook blocks them), so a future auditor diffing the two
   bodies will find one comment line that is not byte-identical. Everything executable is.
+
+Parity findings the reviewers raised that are LATENT today and owed by a named later phase:
+- THE DARK REFUSAL IS INVISIBLE ONLINE. All ten ClientWorld senders use `this.cmd({...})`,
+  which attaches no `rid`, and `sendCommandOutcome` returns immediately without one, so the
+  server's refusal sends the client nothing and it cannot tell refused from accepted. There
+  is also no WS counterpart to the REST `freehold.disabled`. Symmetric with offline today
+  (both are silent no-ops), so nothing is broken while dark; the moment the UI ships (11) a
+  realm that forgot `FREEHOLDS_ENABLED=1` gives a dead button with zero feedback. 11 either
+  sends these through `cmdWithOutcome` or gates its senders on a server-advertised
+  capability, which gotcha (i) already requires for a different reason.
+- WHEN THE DESCRIPTORS LIGHT UP (05/08a) THEY MUST RETURN VALUE COPIES, never a live
+  reference into `ctx.freeholds.get(k).layout`. The online mirror hands out freshly decoded
+  objects, so a consumer that mutated the offline live array would fork the two hosts while
+  every test stayed green. `cloneFreeholdState` in `state.ts` is the tool.
+- THE OFFLINE PATH VALIDATES NOTHING. The server re-guards every payload field before the
+  sim; the sim bodies only resolve the caller. Both are no-ops today, so there is no live
+  divergence, but 08 must not implement the bodies trusting the server guards or the offline
+  world will accept a NaN coordinate the server rejects. Stated in the `commands.ts` header.
+
+Hot-path findings REVIEWED AND DELIBERATELY NOT CODED in 01, recorded so the next phase
+inherits the reasoning rather than re-deriving it:
+- `moveToward` now reads the seed through `ctx.cfg.seed` twelve times, several inside the
+  seven-entry slide fan, where it previously read `this.cfg.seed` directly. Hoisting a
+  `const seed` would be one safe line, and it was NOT taken: the byte-clean move is the
+  load-bearing property here (two reviewers verified the body diffs empty, and the whole
+  extraction's safety argument rests on that), while the perf claim is explicitly unmeasured
+  and V8 very likely inlines the trivial getter. The first phase that touches the mover for
+  its own reasons should hoist it then, and re-measure rather than assume.
+- `recordSlidingWindowAttempt` (`server/ratelimit.ts`) appends EVERY attempt including
+  refused ones with no per-key cap, so one flooding IP grows its array unbounded and each
+  call is O(N) to filter and spread. Pre-existing shared machinery every tier-1 policy
+  already rides; 01 only mounts a new anonymous-reachable entry point on it. Out of scope
+  as this branch's regression (the repo's rule on pre-existing whole-tree debt), but the
+  cheap fix is to stop appending once the in-window count is already past the limit, since
+  the verdict cannot change after that.
+- The per-command-frame gate chain now runs two independent dark-feature predicates
+  (`refusedRiftForgeCommand`, `refusedFreeholdCommand`) plus about seven other set lookups.
+  All O(1) and dwarfed by the frame's `JSON.parse`, so nothing to do now; at a THIRD dark
+  feature the seam is one `Map<string, () => boolean>` lookup rather than N sequential calls.
+- When 05 lights `myFreehold`, the status route's body stops being a constant and becomes a
+  per-account read. It must NOT become an inline `pool.query` in the handler: the seam is the
+  keyed bounded per-account shape of `server/discord_status_cache.ts`, and if any moderation
+  action can change what the descriptor shows, the bust wire lands in the same change.
 - `OtherItemDef.kind` is an `Exclude` list: add `'furnishing'` to it or the new kind
   silently becomes a generic usable (Phase 02).
 - `tests/market_filters.test.ts` fails on any `ItemKind` without a browse bucket.

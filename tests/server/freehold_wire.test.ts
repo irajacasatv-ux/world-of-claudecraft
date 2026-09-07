@@ -77,7 +77,12 @@ import {
   refusedFreeholdCommand,
 } from '../../server/freehold_wire';
 import { GameServer } from '../../server/game';
-import { heavySelfMarkOnAccept, heavySelfMarkOnReceipt } from '../../server/heavy_self';
+import {
+  HEAVY_SELF_ARM_MARKED_CMDS,
+  HEAVY_SELF_CMDS,
+  heavySelfMarkOnAccept,
+  heavySelfMarkOnReceipt,
+} from '../../server/heavy_self';
 import { noopGameMetricsCounters, setGameMetricsCounters } from '../../server/http/game_signals';
 import { refusedRiftForgeCommand } from '../../server/rift_forge_gate';
 import { buildRealmSimConfig } from '../../server/sim_boot_config';
@@ -489,6 +494,24 @@ describe('freeholds wire: dark realm dispatch', () => {
     // is therefore unreachable today and its true branch has no test. It is
     // deliberate forward scaffolding for the first arm-marked housing member.
     expect(heavySelfMarkOnAccept('set_freehold_build_presence')).toBe(false);
+  });
+
+  it('a housing command in HEAVY_SELF_CMDS must also be arm-marked, or refusals start marking', () => {
+    // The arm's whole guarantee is that a frame refused by the wire guards buys
+    // no re-serialize, and that holds ONLY while every housing member marks on
+    // ACCEPT rather than on RECEIPT. heavySelfMarkOnAccept is true just for a
+    // member of BOTH sets, so adding a housing token to HEAVY_SELF_CMDS while
+    // forgetting HEAVY_SELF_ARM_MARKED_CMDS silently moves the mark to the
+    // pre-switch receipt line, ahead of the type guards. Housing is the only
+    // dispatch case whose guards live in a sibling module, which is exactly what
+    // makes that omission easy; this arm is vacuous today and becomes real the
+    // moment the first housing member joins either set.
+    const heavy = FREEHOLD_WIRE_COMMANDS.filter((c) => HEAVY_SELF_CMDS.has(c));
+    const armMarked = FREEHOLD_WIRE_COMMANDS.filter((c) => HEAVY_SELF_ARM_MARKED_CMDS.has(c));
+    expect(heavy.filter((c) => !armMarked.includes(c))).toEqual([]);
+    // The control that keeps the above honest once it stops being empty: the
+    // two sets are real and reachable from here.
+    expect(HEAVY_SELF_CMDS.has('inv_sort')).toBe(true);
   });
 
   it('the heavy-self dirty flag IS observable through this harness (a receipt-marked member sets it)', () => {

@@ -20,7 +20,17 @@ export type FreeholdPlotId = string & { readonly [freeholdPlotIdBrand]: true };
 
 /** Build an opaque plot identity from a raw string (a database row, a fixture,
  *  a generated id). THE ONLY constructor: callers pass a value that is already
- *  a public identity, never an owner or account key. */
+ *  a public identity, never an owner or account key.
+ *
+ *  CONSTRAINT ON WHOEVER GENERATES THESE (05/07): the id has to survive the
+ *  wire, and server/freehold_wire.ts admits 1 to 64 characters of
+ *  [A-Za-z0-9_:-] only. A generated id containing a dot, a slash, or base64
+ *  padding would make every set_freehold_build_presence frame refuse at the
+ *  type boundary with no diagnostic, because the client echoes the plot id back
+ *  on that frame. This constructor does not enforce the charset (it takes ids
+ *  from trusted sources, including a database row written before any rule
+ *  existed), so the generator owes the check; the charset is cross-pinned in
+ *  tests/freehold_module.test.ts so the two cannot drift apart silently. */
 export function asFreeholdPlotId(raw: string): FreeholdPlotId {
   return raw as FreeholdPlotId;
 }
