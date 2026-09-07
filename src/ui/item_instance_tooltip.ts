@@ -4,7 +4,7 @@
 // Composition order in the tooltip: the badge line (the masterwork seal) right
 // under the soulbound line, baked bonus stat lines after the def's own stats,
 // the maker's mark near the bottom. Copy rule: the seal never claims a
-// quality-rank upgrade (deeds quality marks credit the DEF quality), so the
+// quality-rank upgrade (discovery resolves quality separately), so the
 // seal keeps its own gold line instead of recoloring the title. The enchanted
 // state is NOT a badge of its own: it is attributed inline on the bonus stat
 // lines it actually caused (instanceBonusStatLines), which is the fact a player
@@ -86,8 +86,8 @@ export function wornTooltipInstance(
   return worn;
 }
 
-/** The tooltip's EFFECTIVE quality for a copy (Masterwrought phase 13): the
- *  copy's own rolled quality wins over its def's (the equipment_rules.ts
+/** The tooltip's effective quality: furnishing retains its authored quality;
+ *  other copies' rolled quality wins over the def's (the equipment_rules.ts
  *  precedence the equip caps already read), narrowed back to the def's
  *  quality when the rolled string is not a known tier, so the label lookup
  *  stays total against a hostile or future-tier wire string (the
