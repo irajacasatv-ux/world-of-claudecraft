@@ -20297,6 +20297,16 @@ export const ja_JP: EnTranslations = {
         "enterText": "花の香り漂うドーンホールド城の暖かな広間へ足を踏み入れた。",
         "leaveText": "日差しあふれる庭園の芝生へと戻った。"
       },
+      "freehold_inn_room": {
+        "name": "宿屋の部屋",
+        "enterText": "宿屋の階段を上り、借りている部屋へ入った。",
+        "leaveText": "部屋に鍵をかけ、波止場へ戻った。"
+      },
+      "freehold_cottage": {
+        "name": "コテージ",
+        "enterText": "庭の門を押し開け、自分のコテージへ入った。",
+        "leaveText": "コテージの門に掛け金を下ろし、波止場へ戻った。"
+      },
       "drowned_temple": {
         "name": "溺れし神殿",
         "enterText": "月の門をくぐり抜けると——大気は冷たい水と蒼白の光に変わり、歌声が頭上で閉ざされていく。",

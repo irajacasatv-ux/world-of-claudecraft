@@ -15819,4 +15819,10 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.realmBuilder.pastEmpty': '아직 명단에 이름이 없습니다.',
   'hudChrome.realmBuilder.close': '닫기',
   'worldContent.realmBuilderMonumentName': '왕국 건설자 기념비',
+  'entities.dungeons.freehold_inn_room.name': '여관 객실',
+  'entities.dungeons.freehold_inn_room.enterText': '여관 계단을 올라 빌린 방으로 들어갑니다.',
+  'entities.dungeons.freehold_inn_room.leaveText': '방문을 잠그고 다시 부두로 나옵니다.',
+  'entities.dungeons.freehold_cottage.name': '오두막',
+  'entities.dungeons.freehold_cottage.enterText': '정원 문을 밀어 열고 자신의 오두막으로 들어갑니다.',
+  'entities.dungeons.freehold_cottage.leaveText': '오두막 문의 빗장을 걸고 다시 부두로 돌아갑니다.',
 };

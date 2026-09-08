@@ -164,7 +164,15 @@ function buildPoints(): HeightPoint[] {
     const edit = BUILTIN_WORLD.terrainEdits?.[i];
     if (edit) addStencil(`terrain edit ${i}`, edit.x, edit.z, edit.radius);
   }
-  for (const dungeon of DUNGEON_LIST) {
+  // Every point's seed is assigned by its POSITION in this list (`add` above),
+  // so a room inserted into any of the three DUNGEON_LIST loops re-seeds every
+  // later point and the whole fixture after it. The owner-keyed freehold rooms
+  // (DungeonDef.claimKey 'owner') joined DUNGEON_LIST after the corpus was
+  // minted, so the three loops walk the rooms that predate them and the rooms'
+  // own points are appended at the very end, as a pure extension.
+  const mintedDungeons = DUNGEON_LIST.filter((d) => d.claimKey !== 'owner');
+  const ownerRooms = DUNGEON_LIST.filter((d) => d.claimKey === 'owner');
+  for (const dungeon of mintedDungeons) {
     addStencil(`dungeon door ${dungeon.id}`, dungeon.doorPos.x, dungeon.doorPos.z, 8);
   }
 
@@ -264,7 +272,7 @@ function buildPoints(): HeightPoint[] {
     YUMI_MAZE_X,
     YUMI_BAND_X_MAX,
   ]);
-  for (const dungeon of DUNGEON_LIST) {
+  for (const dungeon of mintedDungeons) {
     const x = instanceOrigin(dungeon.index, 0).x;
     instanceXs.add(x - 300);
     instanceXs.add(x);
@@ -287,7 +295,7 @@ function buildPoints(): HeightPoint[] {
   }
 
   const localOffsets = [-240, -24 * Math.SQRT2, 0, 24 * Math.SQRT2, 240];
-  for (const dungeon of DUNGEON_LIST) {
+  const addSlotPads = (dungeon: (typeof DUNGEON_LIST)[number]): void => {
     for (const slot of [0, 1, 12, INSTANCE_SLOT_COUNT - 1]) {
       const origin = instanceOrigin(dungeon.index, slot);
       for (const dx of localOffsets) {
@@ -295,7 +303,8 @@ function buildPoints(): HeightPoint[] {
           add(`dungeon ${dungeon.id} slot ${slot}`, origin.x + dx, origin.z + dz);
       }
     }
-  }
+  };
+  for (const dungeon of mintedDungeons) addSlotPads(dungeon);
   for (let slot = 0; slot < ARENA_SLOT_COUNT; slot++) {
     const origin = arenaOrigin(slot);
     addStencil(`arena slot ${slot}`, origin.x, origin.z, 80);
@@ -316,6 +325,31 @@ function buildPoints(): HeightPoint[] {
     const origin = yumiMazeOrigin(slot);
     addStencil(`Yumi maze slot ${slot}`, origin.x, origin.z, 100);
   }
+
+  // The owner-keyed rooms' points, in the same three shapes the older rooms
+  // got above (door stencil, routing columns, slot pads), appended AFTER every
+  // other block so every pre-existing point keeps its index and its seed: the
+  // fixture minted before these rooms existed is a byte-identical prefix of
+  // the one minted after them. A routing column an older room already
+  // contributed is not repeated.
+  for (const dungeon of ownerRooms) {
+    addStencil(`dungeon door ${dungeon.id}`, dungeon.doorPos.x, dungeon.doorPos.z, 8);
+  }
+  const ownerRoomXs = new Set<number>();
+  for (const dungeon of ownerRooms) {
+    const x = instanceOrigin(dungeon.index, 0).x;
+    for (const column of [x - 300, x, x + 300]) {
+      if (!instanceXs.has(column)) ownerRoomXs.add(column);
+    }
+  }
+  for (const x of [...ownerRoomXs].sort((a, b) => a - b)) {
+    for (const z of instanceZs) {
+      add('instance x routing west', x - Math.SQRT2 / 13, z);
+      add('instance x routing exact', x, z);
+      add('instance x routing east', x + Math.PI / 17, z);
+    }
+  }
+  for (const dungeon of ownerRooms) addSlotPads(dungeon);
 
   return points;
 }
@@ -342,11 +376,12 @@ describe('terrain height bit identity', () => {
   // half-ULP each by IEEE 754, and glibc and Apple's libm land on different sides
   // for a handful of inputs. The natural-relief field chains those calls (domain
   // warp feeding eroded fbm), so two independent half-ULP roundings can compound:
-  // the corpus has exactly one such point (dense overworld atlas x=-234 z=864
-  // seed=1337, Apple libm vs glibc, 2 ULPs). Accept a TWO-ULP gap for finite,
-  // non-zero results only; three-ULP drift, any signed-zero change, and any
-  // non-finite mismatch still fail, so a real regression in the height field
-  // cannot hide behind this.
+  // the corpus minted before the freehold rooms has exactly one such point (dense
+  // overworld atlas x=-234 z=864 seed=1337, Apple libm vs glibc, 2 ULPs), and the
+  // rooms' tail appended after it (minted on Apple libm like the rest) is held to
+  // the same bound. Accept a TWO-ULP gap for finite, non-zero results only;
+  // three-ULP drift, any signed-zero change, and any non-finite mismatch still
+  // fail, so a real regression in the height field cannot hide behind this.
   const ulpView = new DataView(new ArrayBuffer(8));
   function orderedBits(value: number): bigint {
     ulpView.setFloat64(0, value);

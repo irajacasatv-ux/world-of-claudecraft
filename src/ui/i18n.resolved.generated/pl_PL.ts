@@ -20297,6 +20297,16 @@ export const pl_PL: EnTranslations = {
         "enterText": "Wchodzisz do ciepłych, pachnących kwiatami sal zamku Dawnhold.",
         "leaveText": "Wymykasz się z powrotem na skąpany w słońcu ogrodowy trawnik."
       },
+      "freehold_inn_room": {
+        "name": "Inn Room",
+        "enterText": "You climb the inn stairs and let yourself into your rented room.",
+        "leaveText": "You lock the room behind you and step back out onto the quay."
+      },
+      "freehold_cottage": {
+        "name": "Cottage",
+        "enterText": "You push open the garden gate and step into your own cottage.",
+        "leaveText": "You latch the cottage gate behind you and return to the quay."
+      },
       "drowned_temple": {
         "name": "Zatopiona Świątynia",
         "enterText": "Przechodzisz przez księżycową bramę - powietrze zmienia się w zimną wodę i blade światło, a śpiew zamyka się nad twoją głową.",

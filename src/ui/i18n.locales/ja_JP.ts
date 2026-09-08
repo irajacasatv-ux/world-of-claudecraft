@@ -15807,4 +15807,10 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.realmBuilder.pastEmpty': 'まだ名前が刻まれていません。',
   'hudChrome.realmBuilder.close': '閉じる',
   'worldContent.realmBuilderMonumentName': '王国建設者の記念碑',
+  'entities.dungeons.freehold_inn_room.name': '宿屋の部屋',
+  'entities.dungeons.freehold_inn_room.enterText': '宿屋の階段を上り、借りている部屋へ入った。',
+  'entities.dungeons.freehold_inn_room.leaveText': '部屋に鍵をかけ、波止場へ戻った。',
+  'entities.dungeons.freehold_cottage.name': 'コテージ',
+  'entities.dungeons.freehold_cottage.enterText': '庭の門を押し開け、自分のコテージへ入った。',
+  'entities.dungeons.freehold_cottage.leaveText': 'コテージの門に掛け金を下ろし、波止場へ戻った。',
 };

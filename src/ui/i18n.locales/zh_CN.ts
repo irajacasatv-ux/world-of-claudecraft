@@ -15480,4 +15480,10 @@ export const zh_CN: Partial<Record<TranslationKey, string>> = {
   'hudChrome.realmBuilder.pastEmpty': '荣誉榜上还没有名字。',
   'hudChrome.realmBuilder.close': '关闭',
   'worldContent.realmBuilderMonumentName': '王国建造者纪念碑',
+  'entities.dungeons.freehold_inn_room.name': '客栈客房',
+  'entities.dungeons.freehold_inn_room.enterText': '你登上客栈的楼梯，走进自己租下的房间。',
+  'entities.dungeons.freehold_inn_room.leaveText': '你锁上房门，回到码头上。',
+  'entities.dungeons.freehold_cottage.name': '小屋',
+  'entities.dungeons.freehold_cottage.enterText': '你推开花园的院门，走进自己的小屋。',
+  'entities.dungeons.freehold_cottage.leaveText': '你扣上小屋的院门，回到码头上。',
 };

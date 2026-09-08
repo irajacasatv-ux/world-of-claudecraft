@@ -715,6 +715,11 @@ describe('dungeon instance placement and targetability', () => {
         isBlocked(SEED, p.pos.x, p.pos.z, 0.5),
         `${dungeon.id} entry spawned in geometry`,
       ).toBe(false);
+      // Owner-keyed freehold rooms place no encounter by design (no spawns, no
+      // objects; tests/freehold_dungeon_defs.test.ts pins the empty tables), so
+      // only the encounter-count expectation below is gated on the key: the
+      // entry assertions above ran for them like every other room.
+      if (dungeon.claimKey === 'owner') continue;
 
       const mobs = [...sim.entities.values()].filter(
         (e) => e.kind === 'mob' && e.spawnPos.x > DUNGEON_X_THRESHOLD,

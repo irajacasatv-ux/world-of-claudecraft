@@ -20297,6 +20297,16 @@ export const da_DK: EnTranslations = {
         "enterText": "Du træder ind i Dawnhold Slots varme, blomsterduftende sale.",
         "leaveText": "Du smutter ud igen på havens solbeskinnede græsplæne."
       },
+      "freehold_inn_room": {
+        "name": "Inn Room",
+        "enterText": "You climb the inn stairs and let yourself into your rented room.",
+        "leaveText": "You lock the room behind you and step back out onto the quay."
+      },
+      "freehold_cottage": {
+        "name": "Cottage",
+        "enterText": "You push open the garden gate and step into your own cottage.",
+        "leaveText": "You latch the cottage gate behind you and return to the quay."
+      },
       "drowned_temple": {
         "name": "Det Druknede Tempel",
         "enterText": "Du træder gennem måneporten, luften bliver til koldt vand og blegt lys, og sangen lukker sig over dit hoved.",

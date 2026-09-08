@@ -187,9 +187,15 @@ export function combatReadout(e: Entity): string {
 // Readout for "/dungeons": lists every group instance in entrance order with
 // the overworld zone its door sits in and its suggested party size. Reads
 // only the static DUNGEON_LIST (already entrance-sorted by index) and the
-// door zone via zoneAt — no new fields.
+// door zone via zoneAt, no new fields. Owner-keyed rooms (the freehold
+// records, `claimKey: 'owner'`) are private housing, not a group instance
+// anyone can walk to, so they never appear in this player-visible list.
+// Deliberately NOT memoized: zoneAt reads the ACTIVE world content, which the
+// editor play-test path swaps at runtime, so a cached string would report the
+// first world's zone names forever. The walk is 14 static rows behind the
+// chat lane's per-session rate limit, so rebuilding per call costs nothing.
 export function dungeonsReadout(): string {
-  const parts = DUNGEON_LIST.map(
+  const parts = DUNGEON_LIST.filter((d) => d.claimKey !== 'owner').map(
     (d) => `${d.name} (${zoneAt(d.doorPos.x, d.doorPos.z).name}, ${d.suggestedPlayers} players)`,
   );
   return `Dungeons (${parts.length}): ${parts.join(', ')}.`;

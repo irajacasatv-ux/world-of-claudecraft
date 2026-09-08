@@ -20297,6 +20297,16 @@ export const sv_SE: EnTranslations = {
         "enterText": "Du kliver in i de varma, blomsterdoftande salarna i Dawnholds slott.",
         "leaveText": "Du kliver ut igen på trädgårdens solbelysta gräsmatta."
       },
+      "freehold_inn_room": {
+        "name": "Inn Room",
+        "enterText": "You climb the inn stairs and let yourself into your rented room.",
+        "leaveText": "You lock the room behind you and step back out onto the quay."
+      },
+      "freehold_cottage": {
+        "name": "Cottage",
+        "enterText": "You push open the garden gate and step into your own cottage.",
+        "leaveText": "You latch the cottage gate behind you and return to the quay."
+      },
       "drowned_temple": {
         "name": "Det dränkta templet",
         "enterText": "Du kliver genom månporten, luften förvandlas till kallt vatten och blekt ljus, och sången sluter sig över ditt huvud.",

@@ -20297,6 +20297,16 @@ export const it_IT: EnTranslations = {
         "enterText": "Metti piede nelle sale calde e profumate di fiori del Castello Dawnhold.",
         "leaveText": "Esci di nuovo sul prato soleggiato del giardino."
       },
+      "freehold_inn_room": {
+        "name": "Inn Room",
+        "enterText": "You climb the inn stairs and let yourself into your rented room.",
+        "leaveText": "You lock the room behind you and step back out onto the quay."
+      },
+      "freehold_cottage": {
+        "name": "Cottage",
+        "enterText": "You push open the garden gate and step into your own cottage.",
+        "leaveText": "You latch the cottage gate behind you and return to the quay."
+      },
       "drowned_temple": {
         "name": "Il Tempio Annegato",
         "enterText": "Attraversi il cancello lunare — l'aria si fa acqua gelida e luce pallida, e il canto si richiude sopra la tua testa.",

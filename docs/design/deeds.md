@@ -208,6 +208,15 @@ completionist trap that drags veterans back through the tutorial. If the
 island ever gains real conquerable content (a rare, a delve), that content
 authors deeds like any other.
 
+A second class of non-conquerable dungeon record: **the owner-claimed housing
+rooms** (`freehold_inn_room`, `freehold_cottage`, `DungeonDef.claimKey: 'owner'`,
+`src/sim/content/freehold/dungeons.ts`). They ride the dungeon slot pool but
+hold no spawns, no bosses and no loot, so no clear, kill or visit can ever be
+recorded for them and no deed is owed by the record itself. Housing deeds are
+authored by the housing slices that add conquerable or collectible housing
+content (the guild first-kill trophies and the tier ladder), never by the room
+records.
+
 ## Deliberately deferred (do not "fix" these by shipping them)
 
 - **Account-level deeds** (`prog_three_paths`, `prog_ninefold`, and the

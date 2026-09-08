@@ -20297,6 +20297,16 @@ export const cs_CZ: EnTranslations = {
         "enterText": "Vstupuješ do teplých, květinami provoněných síní zámku Dawnhold.",
         "leaveText": "Vyklouzneš zpátky na sluncem zalitý zahradní trávník."
       },
+      "freehold_inn_room": {
+        "name": "Inn Room",
+        "enterText": "You climb the inn stairs and let yourself into your rented room.",
+        "leaveText": "You lock the room behind you and step back out onto the quay."
+      },
+      "freehold_cottage": {
+        "name": "Cottage",
+        "enterText": "You push open the garden gate and step into your own cottage.",
+        "leaveText": "You latch the cottage gate behind you and return to the quay."
+      },
       "drowned_temple": {
         "name": "Utopený chrám",
         "enterText": "Projdeš měsíční bránou: vzduch se mění ve studenou vodu a bledé světlo a zpěv se nad tebou zavírá.",

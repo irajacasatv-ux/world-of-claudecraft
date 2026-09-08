@@ -1,4 +1,9 @@
 export { FREEHOLD_CHARTERS, type FreeholdCharterDef, isKnownFreeholdCharterId } from './charters';
+export {
+  FREEHOLD_COTTAGE_DUNGEON_ID,
+  FREEHOLD_DUNGEON_DEFS,
+  FREEHOLD_INN_ROOM_DUNGEON_ID,
+} from './dungeons';
 export { FURNISHING_PATTERN_ITEMS } from './furnishing_patterns';
 export { FURNISHING_RECIPES } from './furnishing_recipes';
 export {

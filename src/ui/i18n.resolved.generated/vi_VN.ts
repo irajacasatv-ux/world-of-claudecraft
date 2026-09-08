@@ -20297,6 +20297,16 @@ export const vi_VN: EnTranslations = {
         "enterText": "Bạn bước vào những sảnh đường ấm áp, thơm ngát hương hoa của Lâu Đài Dawnhold.",
         "leaveText": "Bạn lách ra ngoài, trở lại bãi cỏ vườn ngập nắng."
       },
+      "freehold_inn_room": {
+        "name": "Inn Room",
+        "enterText": "You climb the inn stairs and let yourself into your rented room.",
+        "leaveText": "You lock the room behind you and step back out onto the quay."
+      },
+      "freehold_cottage": {
+        "name": "Cottage",
+        "enterText": "You push open the garden gate and step into your own cottage.",
+        "leaveText": "You latch the cottage gate behind you and return to the quay."
+      },
       "drowned_temple": {
         "name": "Ngôi Đền Chết Chìm",
         "enterText": "Bạn bước qua nguyệt môn, không khí biến thành nước lạnh và ánh sáng nhợt nhạt, và tiếng hát khép lại trên đầu bạn.",

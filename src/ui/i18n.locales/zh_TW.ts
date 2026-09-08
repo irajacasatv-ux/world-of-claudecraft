@@ -15487,4 +15487,10 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'hudChrome.realmBuilder.pastEmpty': '榮譽榜上還沒有名字。',
   'hudChrome.realmBuilder.close': '關閉',
   'worldContent.realmBuilderMonumentName': '王國建造者紀念碑',
+  'entities.dungeons.freehold_inn_room.name': '客棧客房',
+  'entities.dungeons.freehold_inn_room.enterText': '你登上客棧的樓梯，走進自己租下的房間。',
+  'entities.dungeons.freehold_inn_room.leaveText': '你鎖上房門，回到碼頭上。',
+  'entities.dungeons.freehold_cottage.name': '小屋',
+  'entities.dungeons.freehold_cottage.enterText': '你推開花園的院門，走進自己的小屋。',
+  'entities.dungeons.freehold_cottage.leaveText': '你扣上小屋的院門，回到碼頭上。',
 };

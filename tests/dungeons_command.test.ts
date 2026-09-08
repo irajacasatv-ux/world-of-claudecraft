@@ -12,12 +12,17 @@ function errorTexts(events: SimEvent[]): string[] {
 }
 
 describe('/dungeons command', () => {
-  it('lists every dungeon with its door zone and suggested party size', () => {
+  it('lists every group dungeon with its door zone and suggested party size', () => {
     const sim = makeWorld();
     const a = sim.addPlayer('warrior', 'Aleph');
     sim.tick();
 
-    const parts = DUNGEON_LIST.map(
+    // Owner-keyed rooms (the two freehold records) are private housing and
+    // never appear in the readout; the expectation is built from the static
+    // registry minus that key, so a room leaking back in changes the count
+    // AND the body.
+    const listed = DUNGEON_LIST.filter((d) => d.claimKey !== 'owner');
+    const parts = listed.map(
       (d) => `${d.name} (${zoneAt(d.doorPos.x, d.doorPos.z).name}, ${d.suggestedPlayers} players)`,
     );
     const expected = `Dungeons (${parts.length}): ${parts.join(', ')}.`;
@@ -27,6 +32,17 @@ describe('/dungeons command', () => {
     // feature), then the reset usage line.
     const texts = errorTexts(sim.tick());
     expect(texts[texts.length - 3]).toBe(expected);
+    // The filter is load-bearing: both freehold rooms are registered
+    // dungeons, and the readout drops exactly those two (16 defs, 14 listed).
+    expect(DUNGEON_LIST.map((d) => d.id)).toEqual(
+      expect.arrayContaining(['freehold_inn_room', 'freehold_cottage']),
+    );
+    expect(DUNGEON_LIST).toHaveLength(16);
+    expect(texts[texts.length - 3]).toMatch(/^Dungeons \(14\): /);
+    expect(texts[texts.length - 3]).not.toContain('Inn Room');
+    expect(texts[texts.length - 3]).not.toContain('Cottage');
+    expect(texts[texts.length - 3]).toContain('Hollow Crypt (');
+    expect(texts[texts.length - 3]).toContain('Dawnhold Castle (');
     expect(texts[texts.length - 2]).toBe(
       'Dungeon difficulty: Normal. Use /dungeon heroic to change it.',
     );

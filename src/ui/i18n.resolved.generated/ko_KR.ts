@@ -20297,6 +20297,16 @@ export const ko_KR: EnTranslations = {
         "enterText": "꽃향기 가득한 던홀드 성의 따뜻한 홀 안으로 들어섭니다.",
         "leaveText": "햇살 가득한 정원 잔디밭으로 다시 나옵니다."
       },
+      "freehold_inn_room": {
+        "name": "여관 객실",
+        "enterText": "여관 계단을 올라 빌린 방으로 들어갑니다.",
+        "leaveText": "방문을 잠그고 다시 부두로 나옵니다."
+      },
+      "freehold_cottage": {
+        "name": "오두막",
+        "enterText": "정원 문을 밀어 열고 자신의 오두막으로 들어갑니다.",
+        "leaveText": "오두막 문의 빗장을 걸고 다시 부두로 돌아갑니다."
+      },
       "drowned_temple": {
         "name": "익사한 신전",
         "enterText": "당신은 달의 관문을 지나갑니다 — 공기가 차가운 물과 창백한 빛으로 변하고, 노랫소리가 당신의 머리 위로 닫혀 옵니다.",

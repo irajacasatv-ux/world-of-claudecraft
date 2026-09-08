@@ -4061,6 +4061,9 @@ export interface DungeonDef {
   overworldDoor?: boolean; // false for rooms only reached by internal instance doors
   /** False for development-only rooms that must stay out of the public Guide. */
   guideVisible?: boolean;
+  /** Which key claims a slot: 'party' (the default, instanceKeyFor) or 'owner'
+   *  (the host-stamped freehold owner key, src/sim/freehold/). Append-only. */
+  claimKey?: 'party' | 'owner';
   entry: { x: number; z: number }; // player arrival point (instance-local)
   exitOffset: { x: number; z: number }; // exit portal (instance-local)
   // Where a second exit portal opens when the final boss dies (instance-local).

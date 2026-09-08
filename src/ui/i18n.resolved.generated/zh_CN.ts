@@ -20297,6 +20297,16 @@ export const zh_CN: EnTranslations = {
         "enterText": "你走进晨曦堡温暖而花香四溢的厅堂。",
         "leaveText": "你回到阳光洒落的花园草坪上。"
       },
+      "freehold_inn_room": {
+        "name": "客栈客房",
+        "enterText": "你登上客栈的楼梯，走进自己租下的房间。",
+        "leaveText": "你锁上房门，回到码头上。"
+      },
+      "freehold_cottage": {
+        "name": "小屋",
+        "enterText": "你推开花园的院门，走进自己的小屋。",
+        "leaveText": "你扣上小屋的院门，回到码头上。"
+      },
       "drowned_temple": {
         "name": "溺亡神殿",
         "enterText": "你踏过那道月门——空气化作冰冷的水与苍白的光，歌声在你头顶合拢。",

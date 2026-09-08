@@ -625,6 +625,8 @@ const DUNGEON_IDS = [
   'wildheart_basin',
   'the_last_keep',
   'dawnhold_castle',
+  'freehold_inn_room',
+  'freehold_cottage',
 ] as const;
 const DELVE_IDS = ['collapsed_reliquary', 'drowned_litany'] as const;
 // Ravenpost authored letters (src/sim/content/letters.ts): the welcome letter

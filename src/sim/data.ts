@@ -5,6 +5,7 @@
 // and owns the world-layout constants.
 
 import {
+  FREEHOLD_DUNGEON_DEFS,
   FREEHOLD_FURNISHER,
   FREEHOLD_FURNISHINGS,
   FURNISHING_PATTERN_ITEMS,
@@ -1063,6 +1064,7 @@ export const DUNGEONS: Record<string, DungeonDef> = {
   ...DUNGEON_DEFS,
   ...TEMPLE_DUNGEON_DEFS,
   ...WILDHEART_DUNGEON_DEFS,
+  ...FREEHOLD_DUNGEON_DEFS,
 };
 
 export const DUNGEON_LIST: DungeonDef[] = Object.values(DUNGEONS).sort((a, b) => a.index - b.index);

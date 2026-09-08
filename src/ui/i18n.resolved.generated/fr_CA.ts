@@ -20297,6 +20297,16 @@ export const fr_CA: EnTranslations = {
         "enterText": "Vous pénétrez dans les salles chaudes et parfumées de fleurs du Château Dawnhold.",
         "leaveText": "Vous ressortez sur la pelouse ensoleillée du jardin."
       },
+      "freehold_inn_room": {
+        "name": "Inn Room",
+        "enterText": "You climb the inn stairs and let yourself into your rented room.",
+        "leaveText": "You lock the room behind you and step back out onto the quay."
+      },
+      "freehold_cottage": {
+        "name": "Cottage",
+        "enterText": "You push open the garden gate and step into your own cottage.",
+        "leaveText": "You latch the cottage gate behind you and return to the quay."
+      },
       "drowned_temple": {
         "name": "Le Temple noyé",
         "enterText": "Tu franchis la porte de lune — l'air se mue en eau froide et en lumière blafarde, et le chant se referme au-dessus de ta tête.",

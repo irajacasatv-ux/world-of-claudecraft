@@ -2159,6 +2159,55 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // 156,144; the six fixture-repair deltas below sum to 53,117 exactly.
     // Most growth is previously omitted stored progress and promotion, not a
     // per-swap ledger or solely the two new fields.
+    // RE-MEASURED after the two owner-keyed freehold rooms joined DUNGEONS
+    // (src/sim/content/freehold/dungeons.ts, `freehold_inn_room` and
+    // `freehold_cottage`): 213,220 bytes, exactly +214 over the 213,006 the
+    // crafted-cohort close measured. Every dungeon id reaches this fixture
+    // three ways (a raidLockouts key, two dungeonClears keys, a heroicDaily
+    // mark), so the two ids cost `"freehold_inn_room":<13-digit ms>,` and
+    // `"freehold_cottage":<13-digit ms>,` in raidLockouts (34 + 33 = 67),
+    // `"<id>":999,` plus `"<id>:heroic":999,` in deedStats.dungeonClears
+    // (24 + 31 + 23 + 30 = 108) and `"<id>",` in heroicDaily.marked
+    // (20 + 19 = 39). Predicted from the id literals BEFORE the confirming
+    // run and MEASURED below by stripping exactly those entries from the
+    // settled state (the field_kit isolation shape), drift zero. The rooms
+    // are stripped FIRST so every older attribution below keeps its recorded
+    // figure; only the composed measurement and its band move.
+    const FREEHOLD_ROOM_IDS = ['freehold_inn_room', 'freehold_cottage'] as const;
+    const withoutFreeholdRooms = structuredClone(s2);
+    for (const id of FREEHOLD_ROOM_IDS) {
+      expect(s2.raidLockouts?.[id]).toBe(CEILING_EPOCH_MS + SEVEN_DAYS_MS);
+      expect(s2.deedStats?.dungeonClears?.[id]).toBe(999);
+      expect(s2.deedStats?.dungeonClears?.[`${id}:heroic`]).toBe(999);
+      expect(s2.heroicDaily?.marked).toContain(id);
+      delete withoutFreeholdRooms.raidLockouts?.[id];
+      delete withoutFreeholdRooms.deedStats?.dungeonClears?.[id];
+      delete withoutFreeholdRooms.deedStats?.dungeonClears?.[`${id}:heroic`];
+    }
+    if (withoutFreeholdRooms.heroicDaily) {
+      withoutFreeholdRooms.heroicDaily.marked = withoutFreeholdRooms.heroicDaily.marked.filter(
+        (id) => !(FREEHOLD_ROOM_IDS as readonly string[]).includes(id),
+      );
+    }
+    const freeholdRoomsDelta = Object.fromEntries(
+      (['raidLockouts', 'deedStats', 'heroicDaily'] as const).map((key) => [
+        key,
+        fieldBytes(s2, key) - fieldBytes(withoutFreeholdRooms, key),
+      ]),
+    );
+    expect(freeholdRoomsDelta).toEqual({ raidLockouts: 67, deedStats: 108, heroicDaily: 39 });
+    const withoutFreeholdRoomsBytes = Buffer.byteLength(
+      JSON.stringify(withoutFreeholdRooms),
+      'utf8',
+    );
+    expect(bytes - withoutFreeholdRoomsBytes).toBe(214);
+    // The three per-field deltas account for the whole-blob delta exactly.
+    expect(
+      freeholdRoomsDelta.raidLockouts +
+        freeholdRoomsDelta.deedStats +
+        freeholdRoomsDelta.heroicDaily,
+    ).toBe(bytes - withoutFreeholdRoomsBytes);
+    expect(withoutFreeholdRoomsBytes).toBe(213006);
     // Isolate the accepted crafted cohort before checking older catalog baselines.
     const craftedRecipeIds = FURNISHING_RECIPES.map((recipe) => recipe.id);
     const craftedItemIds = [
@@ -2167,7 +2216,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     ];
     expect(craftedRecipeIds).toHaveLength(10);
     expect(craftedItemIds).toHaveLength(13);
-    const beforeCrafted = structuredClone(s2);
+    const beforeCrafted = structuredClone(withoutFreeholdRooms);
     beforeCrafted.knownRecipes = beforeCrafted.knownRecipes?.filter(
       (id) => !craftedRecipeIds.includes(id),
     );
@@ -2189,14 +2238,14 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     const craftedDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
         key,
-        fieldBytes(s2, key) - fieldBytes(beforeCrafted, key),
+        fieldBytes(withoutFreeholdRooms, key) - fieldBytes(beforeCrafted, key),
       ]),
     );
     expect(craftedDelta).toEqual({ knownRecipes: 324, deedStats: 355, reliquary: 576 });
     const beforeCraftedBytes = Buffer.byteLength(JSON.stringify(beforeCrafted), 'utf8');
     expect(beforeCraftedBytes).toBe(211751);
-    expect(bytes - beforeCraftedBytes).toBe(1255);
-    expect(bytes).toBe(213006);
+    expect(withoutFreeholdRoomsBytes - beforeCraftedBytes).toBe(1255);
+    expect(bytes).toBe(213220);
     const fixtureBaseline = {
       equipment: 273,
       equipmentInstance: 1593,
@@ -2431,20 +2480,21 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(metadataDelta).toEqual({ perfectingBonus: 11880, perfectingBound: 5934 });
     // Combined fixture (Crucible baseline + hammer recipe/proof content +
-    // field_kit, both Hearth cohorts, Homesteader and Bramblehide/Nythgap),
-    // composed measurement: 213,006 bytes. The release contributes 1,548
-    // independently isolated bytes and the crafted cohort contributes 1,255.
+    // field_kit, both Hearth cohorts, Homesteader, Bramblehide/Nythgap and
+    // the two owner-keyed freehold rooms), composed measurement: 213,220
+    // bytes. The release contributes 1,548 independently isolated bytes, the
+    // crafted cohort 1,255 and the freehold rooms 214 (isolated above).
     // Keep the tracking band exactly 381 bytes wide (measurement minus 380
     // to measurement plus one); the warning threshold remains unchanged.
-    expect(bytes, reMint).toBeGreaterThan(212626);
-    expect(bytes, reMint).toBeLessThan(213007);
+    expect(bytes, reMint).toBeGreaterThan(212840);
+    expect(bytes, reMint).toBeLessThan(213221);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was
     // minted against (historical: that is the figure the threshold's own 32-KiB
     // step was derived from, not this arm's measurement). The previous
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
-    // the combined fixture is 213,006 bytes, 16,370 below the threshold.
+    // the combined fixture is 213,220 bytes, 16,156 below the threshold.
     // A content change must be attributed and the narrow band re-measured,
     // never widened. This is warning-only; save-path tests prove oversized
     // saves stay whole.
