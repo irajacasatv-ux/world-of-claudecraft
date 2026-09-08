@@ -34,6 +34,7 @@ import type { Sim } from '../src/sim/sim';
 import type { CommandName } from '../src/world_api';
 import { freeholdsEnabled } from './freehold_config';
 import type { ClientSession } from './game';
+import { heavySelfMarkOnAccept } from './heavy_self';
 
 /** The ten housing wire tokens, pinned to the shared command vocabulary. */
 export const FREEHOLD_WIRE_COMMANDS = [
@@ -162,11 +163,10 @@ function isOpaqueIdOrNull(v: unknown): v is string | null {
  *  field is re-guarded here exactly as dispatchMessage guards its own cases:
  *  a TYPE boundary only, never a laundered or defaulted value. Returns
  *  whether the frame REACHED the sim (its guards passed and a sim method was
- *  invoked): the dispatch's heavy-self mark for any arm-marked housing member
- *  rides this answer (server/heavy_self.ts HEAVY_SELF_ARM_MARKED_CMDS), so a
- *  frame refused HERE never buys a heavy self re-serialize. The sim's own
- *  verdict is not visible here and is not claimed: true means invoked, never
- *  accepted. freehold_enter and freehold_leave are LIVE (the sim claims and
+ *  invoked), never whether it was accepted. Gate entry marks heavy self only
+ *  when its inventory grant changes the acting player's wireRev; invocation,
+ *  refused entry, an existing key, or full bags never force a re-serialize.
+ *  freehold_enter and freehold_leave are LIVE (the sim claims and
  *  leaves the owner-keyed room, and a sim-side refusal rides the text-free
  *  freeholdDenied event); the other eight Sim methods are still dark no-ops
  *  (their bodies land in later work), so those accepted frames change
@@ -179,13 +179,15 @@ export function dispatchFreeholdCommand(
   msg: Record<string, unknown>,
   pid: number,
 ): boolean {
-  // C03 binds the authenticated socket to build presence later; the parameter
-  // is fixed from the start so that change touches no call site.
-  void session;
   switch (command) {
-    case 'freehold_enter':
+    case 'freehold_enter': {
+      const meta = sim.meta(pid);
+      const beforeWireRev = meta?.wireRev;
       sim.freeholdEnter(pid);
+      if (meta && meta.wireRev !== beforeWireRev && heavySelfMarkOnAccept(command))
+        session.selfHeavyDirty = true;
       return true;
+    }
     case 'freehold_leave':
       sim.freeholdLeave(pid);
       return true;

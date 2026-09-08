@@ -1200,6 +1200,18 @@ describe('isHotbarItemId: gathering implements are placeable (#2343)', () => {
   });
 });
 
+describe('Hearth Key action-slot eligibility', () => {
+  it('admits the permanent travel key while refusing forged and unusable item ids', () => {
+    const { controller } = makeHarness('warrior', [], bar());
+    expect(controller.isHotbarItemId('hearth_key')).toBe(true);
+    expect(controller.isAssignableAction({ type: 'item', id: 'hearth_key' })).toBe(true);
+    for (const id of ['forged_hearth_key', 'copper_ore', 'freehold_timber_bed']) {
+      expect(controller.isHotbarItemId(id), id).toBe(false);
+      expect(controller.isAssignableAction({ type: 'item', id }), id).toBe(false);
+    }
+  });
+});
+
 describe('isHotbarItemId: reins are placeable now that mounts are items', () => {
   // The mounts-as-items pivot made every reins item usable through the same
   // useItem dispatch a potion rides (src/sim/items.ts, kind 'mount' ->

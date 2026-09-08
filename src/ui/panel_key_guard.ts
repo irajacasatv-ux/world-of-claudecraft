@@ -3,7 +3,7 @@
 // The delve board, lockpick panel, map window, and the bank + bags cluster are
 // non-modal overlays, so canUseGameKeys() stays true over them and the global
 // jump (Space) / chat (Enter) binds would otherwise hijack those keys on a
-// focused panel button (the map's Quests toggle, a bank grid cell, and each
+// focused panel button or native select (the map's Quests toggle, a bank grid cell, and each
 // close button included). The shared guard (pointer_blur.ts
 // bindChromeButtonKeyGuard, wired over every root in chrome_focus_wiring.ts)
 // stops propagation on this decision, but NOT the default, so the button's
@@ -41,7 +41,7 @@ export function panelKeyGuardStops(
   key: string,
   code: string,
 ): boolean {
-  if (target?.tagName !== 'BUTTON') return false;
+  if (target?.tagName !== 'BUTTON' && target?.tagName !== 'SELECT') return false;
   const isSpace = key === ' ' || key === 'Spacebar' || code === 'Space';
   if (isSpace) return !target.hasAttribute?.(BAG_ITEM_ROW_ATTR);
   return key === 'Enter';

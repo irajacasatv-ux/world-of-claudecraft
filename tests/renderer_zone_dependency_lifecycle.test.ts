@@ -33,6 +33,7 @@ vi.mock('../src/render/prewarm_policy', async (original) => {
   };
 });
 
+import { buildFreeholdPrewarmGroup } from '../src/render/freehold';
 import { Renderer } from '../src/render/renderer';
 
 function deferred() {
@@ -52,6 +53,7 @@ function harness() {
     {
       shutdownStarted: false,
       lifecycleGeneration: 7,
+      prewarmDependencyController: new AbortController(),
       shutdownTask: null,
       pendingZonePrewarms: new Map(),
       pendingZonePrepares: new Map(),
@@ -96,10 +98,87 @@ function harness() {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
+  vi.useRealTimers();
   hooks.yieldEntries = false;
 });
 
 describe('renderer zone dependency lifetime', () => {
+  it('releases a stalled zone dependency at the existing preparation deadline without publishing', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+    const wait = deferred();
+    hooks.dependencies.mockReturnValue(wait.promise);
+    const renderer = harness();
+    let failed: unknown;
+    const task = renderer.prewarmZoneAt(0, 0).catch((error) => {
+      failed = error;
+    });
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(failed).toBeInstanceOf(Error);
+    expect(String(failed)).toContain('dependency deadline');
+    await task;
+    expect(renderer.pendingZonePrewarms.size).toBe(0);
+    wait.resolve();
+    await Promise.resolve();
+    expect(hooks.mob).not.toHaveBeenCalled();
+    expect(hooks.npc).not.toHaveBeenCalled();
+    expect(renderer.scene.add).not.toHaveBeenCalled();
+    expect(renderer.prewarmedZonePrograms.size).toBe(0);
+  });
+
+  it('settles shutdown and the prewarm while the shared asset fetch never settles', async () => {
+    const wait = deferred();
+    hooks.dependencies.mockReturnValue(wait.promise);
+    const renderer = harness();
+    let failed: unknown;
+    const task = renderer.prewarmZoneAt(0, 0).catch((error) => {
+      failed = error;
+    });
+    let stopped = false;
+    const shutdown = renderer.shutdown().then(() => {
+      stopped = true;
+    });
+    try {
+      await vi.waitFor(() => expect(stopped).toBe(true), { timeout: 100 });
+      expect(String(failed)).toContain('prewarm cancelled');
+      expect(renderer.disposeRendererResources).toHaveBeenCalledOnce();
+    } finally {
+      // Also prove that a retired owner cannot publish when the cache finishes later.
+      wait.resolve();
+      await Promise.all([task, shutdown]);
+    }
+    expect(hooks.mob).not.toHaveBeenCalled();
+    expect(hooks.npc).not.toHaveBeenCalled();
+    expect(renderer.scene.add).not.toHaveBeenCalled();
+    expect(renderer.pooledVisuals.store).not.toHaveBeenCalled();
+  });
+
+  it('releases temporary interior instance handles once on retirement while retaining shared assets', async () => {
+    hooks.bootIds = ['interiors.materials', 'entities.mob-archetypes'];
+    const group = buildFreeholdPrewarmGroup(true);
+    const meshes = group.children as THREE.InstancedMesh[];
+    const instances = meshes.map((mesh) => vi.spyOn(mesh, 'dispose'));
+    const geometries = [...new Set(meshes.map((mesh) => mesh.geometry))].map((geo) =>
+      vi.spyOn(geo, 'dispose'),
+    );
+    const materials = [...new Set(meshes.flatMap((mesh) => mesh.material))].map((material) =>
+      vi.spyOn(material, 'dispose'),
+    );
+    const wait = deferred();
+    hooks.dependencies.mockReturnValue(wait.promise);
+    const renderer = Object.assign(harness(), {
+      ensureDungeons: () => ({ buildPrewarmGroup: async () => group }),
+    });
+    const task = renderer.prewarmInitialScene();
+    const rejection = expect(task).rejects.toThrow('prewarm cancelled');
+    await vi.waitFor(() => expect(hooks.dependencies).toHaveBeenCalled());
+    await renderer.shutdown();
+    wait.resolve();
+    await rejection;
+    await renderer.shutdown();
+    for (const dispose of instances) expect(dispose).toHaveBeenCalledOnce();
+    for (const dispose of [...geometries, ...materials]) expect(dispose).not.toHaveBeenCalled();
+  });
+
   it.each(['entities.mob-archetypes', 'entities.npc-archetypes'])(
     'aborts the real boot manifest after retirement during %s',
     async (id) => {

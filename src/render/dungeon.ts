@@ -30,7 +30,7 @@ import {
   tombSlotRoll,
   type WallStub,
 } from '../sim/dungeon_layout';
-import { polygonContainsPoint, polygonXAtZ } from '../sim/geometry2d';
+import { polygonXAtZ } from '../sim/geometry2d';
 import { authoredLiftAt, doorRampHalf } from '../sim/rift/authored';
 import { ARENA_WATER_NAVE_HALF_X, arenaWaterBands } from './arena_water_band_core';
 import { loadGltf, releaseGltf } from './assets/loader';
@@ -105,8 +105,7 @@ import { cloneMaterialWithHooks } from './material_clone_hooks';
 import { type OccluderFadeMat, occluderFadeMat } from './occluder_fade';
 import type { FireLightSink } from './point_light_budget';
 import { buildInfernalDecor, ensureInfernalDecorAssets } from './rift_decor';
-import { markSharedGeometry, markSharedMaterial, markSharedTexture } from './shared_resource';
-import { radialGlowTexture } from './textures';
+import { markSharedGeometry, markSharedMaterial } from './shared_resource';
 import { addTorchGlowDecal } from './torch_glow_decal';
 import { buildWildheartFieldInterior } from './wildheart_props';
 import { applySurfaceDetail } from './worn_stone';

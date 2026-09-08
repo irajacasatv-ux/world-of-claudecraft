@@ -75,6 +75,7 @@ import {
 } from './ignivar_entry';
 import { ignivarExitRoom, ignivarExitSealed } from './ignivar_exit';
 import { tickIgnivarLavaHazard } from './ignivar_lava_hazard';
+import { resolveOwnerArrival } from './owner_arrival';
 import { occupiedOwnerClaims } from './owner_claim_occupancy';
 import { emitFirstRaidBossRoomWelcome } from './raid_boss_room_welcome';
 
@@ -506,6 +507,14 @@ export function enterDungeon(
   // group's live instance instead of stranding the player in a fresh parallel
   // claim. The selected difficulty applies only when claiming a new instance.
   let inst = ctx.instances.find((i) => i.dungeonId === dungeonId && i.partyKey === key);
+  const ownerArrival =
+    dungeon.claimKey === 'owner'
+      ? resolveOwnerArrival(ctx, dungeon, inst, r.meta.entityId)
+      : undefined;
+  if (ownerArrival === null) {
+    ctx.emit({ type: 'freeholdDenied', pid: r.meta.entityId, reason: 'busy' });
+    return false;
+  }
   let devReplacementSlot: InstanceSlot | undefined;
   let devReplacementEnteredBy: number[] = [];
   // A dev teleport names an exact difficulty and is also the only supported way
@@ -695,7 +704,7 @@ export function enterDungeon(
   const p = r.e;
   // A live gather/fishing session never survives the door (R28 family).
   cancelProfessionSessionOnDisplacement(ctx, p);
-  p.pos = ctx.groundPos(origin.x + dungeon.entry.x, origin.z + dungeon.entry.z);
+  p.pos = ownerArrival ?? ctx.groundPos(origin.x + dungeon.entry.x, origin.z + dungeon.entry.z);
   p.prevPos = { ...p.pos };
   ctx.rebucket(p);
   settleTeleportArrival(p);

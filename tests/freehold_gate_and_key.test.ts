@@ -22,6 +22,7 @@ import {
 import { enterFreehold } from '../src/sim/freehold/instance';
 import { evictFreehold, serializeFreehold, setFreeholdTier } from '../src/sim/freehold/state';
 import { JAIL_VISITOR_POS } from '../src/sim/jail';
+import { riftInstanceAtPos } from '../src/sim/rift/runs';
 import { Sim } from '../src/sim/sim';
 import { bgCarryingFlag, startBgMatch } from '../src/sim/social/battleground';
 import { FISHING_CAST_ID, type SimConfig } from '../src/sim/types';
@@ -170,6 +171,30 @@ describe('Freehold Gate authoritative confirmation', () => {
     sim.freeholdEnter();
     expect(sim.countItem('hearth_key')).toBe(1);
   });
+  it('restores a genuinely missing granted key without changing entitlement or an existing deadline', () => {
+    const { sim, pid, near } = setup();
+    near();
+    sim.freeholdEnter();
+    expect(sim.countItem('hearth_key')).toBe(1);
+    sim.freeholdLeave();
+    sim.useItem('hearth_key');
+    expect(sim.freeholdKeyReadyAtMs.get(`entity:${pid}`)).toBe(3601000);
+    sim.freeholdLeave();
+    const entitlement = structuredClone(sim.freeholds.get(`entity:${pid}`));
+    sim.removeItem('hearth_key', 1);
+    expect(sim.countItem('hearth_key')).toBe(0);
+    near();
+    sim.freeholdEnter();
+    expect(dungeonAt(sim.player.pos.x)?.id).toBe('freehold_inn_room');
+    expect(sim.countItem('hearth_key')).toBe(1);
+    expect(sim.freeholds.get(`entity:${pid}`)).toEqual(entitlement);
+    expect(sim.freeholdKeyReadyAtMs.get(`entity:${pid}`)).toBe(3601000);
+    sim.freeholdLeave();
+    near();
+    sim.freeholdEnter();
+    expect(sim.countItem('hearth_key')).toBe(1);
+    expect(sim.freeholdKeyReadyAtMs.get(`entity:${pid}`)).toBe(3601000);
+  });
   it('permits explicit physical entry and key grant at zero condition', () => {
     const { sim, pid, near } = setup();
     sim.freeholds.get(`entity:${pid}`)!.condition = 0;
@@ -316,6 +341,59 @@ describe('Hearth Key isolated account travel', () => {
     expect(admission).not.toHaveBeenCalled();
     expect(clock).not.toHaveBeenCalled();
   });
+  it('refuses a foreign owner claim of the selected tier before the current-home no-op', () => {
+    const admission = vi.fn(() => true);
+    const clock = vi.fn(() => 1000);
+    const { sim } = setup({ freeholdKeyAdmission: admission, lockoutNowMs: clock });
+    key(sim);
+    const other = sim.addPlayer('warrior', 'OtherOwner', { freeholdOwnerKey: 'account:92' });
+    expect(enterFreehold(sim.ctx, other)).toBe(true);
+    sim.player.pos = { ...sim.entities.get(other)!.pos };
+    const foreignClaimId = sim.ctx.instanceClaimIdAt(sim.player.pos);
+    expect(foreignClaimId).not.toBeNull();
+    expect(sim.instances.find((claim) => claim.exitId === foreignClaimId)).toMatchObject({
+      dungeonId: 'freehold_inn_room',
+      partyKey: 'account:92',
+    });
+    clock.mockClear();
+    refusal(sim, () => sim.useItem('hearth_key'), 'instanced');
+    expect(admission).not.toHaveBeenCalled();
+    expect(clock).not.toHaveBeenCalled();
+  });
+  it('rejects a forged key use without possession before any housing action', () => {
+    const admission = vi.fn(() => true);
+    const { sim } = setup({ freeholdKeyAdmission: admission });
+    expect(sim.countItem('hearth_key')).toBe(0);
+    const before = travelState(sim);
+    const draws = vi.fn();
+    sim.rng.setObserver(draws);
+    sim.useItem('hearth_key');
+    expect(sim.drainEvents()).toEqual([
+      { type: 'error', pid: sim.primaryId, text: "You don't have that item." },
+    ]);
+    expect(travelState(sim)).toEqual(before);
+    expect(admission).not.toHaveBeenCalled();
+    expect(draws).not.toHaveBeenCalled();
+  });
+  it('uses a non-key item through its own effect without any housing transition', () => {
+    const admission = vi.fn(() => true);
+    const { sim } = setup({ freeholdKeyAdmission: admission });
+    sim.addItem('minor_healing_potion', 1);
+    sim.player.hp = sim.player.maxHp - 50;
+    sim.drainEvents();
+    const before = travelState(sim);
+    sim.useItem('minor_healing_potion');
+    expect(sim.player.hp).toBe(sim.player.maxHp);
+    expect(sim.countItem('minor_healing_potion')).toBe(0);
+    const events = sim.drainEvents();
+    expect(events).toContainEqual(
+      expect.objectContaining({ type: 'heal', source: 'potion', amount: 50 }),
+    );
+    expect(events.some((event) => event.type === 'freeholdDenied')).toBe(false);
+    const after = travelState(sim);
+    expect({ ...after, inventory: before.inventory }).toEqual(before);
+    expect(admission).not.toHaveBeenCalled();
+  });
   it('another owned tier is still instanced and an unavailable participant cannot authorize', () => {
     const { sim, pid } = setup({ freeholdKeyAdmission: () => false });
     key(sim);
@@ -445,6 +523,29 @@ describe('Hearth Key isolated account travel', () => {
 });
 
 describe('Public gate and key transition evidence', () => {
+  it.each([
+    [true, true, 'dead'],
+    [true, false, 'dead'],
+    [false, true, 'combat'],
+    [false, false, 'no_freehold'],
+  ] as const)(
+    'preserves dead/combat/ownership precedence for dead=%s combat=%s',
+    (dead, combat, reason) => {
+      for (const surface of ['gate', 'key']) {
+        const { sim, near } = setup();
+        key(sim);
+        near();
+        evictFreehold(sim.ctx, `entity:${sim.primaryId}`);
+        sim.player.dead = dead;
+        sim.player.inCombat = combat;
+        refusal(
+          sim,
+          () => (surface === 'gate' ? sim.freeholdEnter() : sim.useItem('hearth_key')),
+          reason,
+        );
+      }
+    },
+  );
   it.each(['missing ownership', 'disabled host'])(
     '%s returns only a text-free denial on both surfaces',
     (context) => {
@@ -560,6 +661,18 @@ describe('Public gate and key transition evidence', () => {
     expect(sim.ctx.instanceClaimIdAt(sim.player.pos)).not.toBeNull();
     refusal(sim, () => sim.freeholdEnter(), 'instanced');
     refusal(sim, () => sim.useItem('hearth_key'), 'instanced');
+  });
+  it('rejects both travel surfaces inside a real generated rift floor', () => {
+    const { sim } = setup();
+    key(sim);
+    sim.enterRift(9001, 20, sim.primaryId);
+    const run = riftInstanceAtPos(sim.ctx, sim.player.pos);
+    expect(run).not.toBeNull();
+    expect(run!.mobIds.length).toBeGreaterThan(0);
+    expect(run!.partyKey).not.toBeNull();
+    refusal(sim, () => sim.freeholdEnter(), 'instanced');
+    refusal(sim, () => sim.useItem('hearth_key'), 'instanced');
+    expect(riftInstanceAtPos(sim.ctx, sim.player.pos)).toBe(run);
   });
   it('rejects an actual flag carrier even during an overworld position gap', () => {
     const { sim, pid, near } = setup();

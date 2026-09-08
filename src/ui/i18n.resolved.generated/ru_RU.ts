@@ -330,7 +330,7 @@ export const ru_RU: EnTranslations = {
       "common": {
         "close": "Закрыть",
         "cancel": "Отмена",
-        "back": "Назад",
+        "back": "Back",
         "retry": "Повторить",
         "loading": "Загрузка вашего дома...",
         "pending": "Ожидание подтверждения...",
@@ -354,13 +354,13 @@ export const ru_RU: EnTranslations = {
       },
       "gate": {
         "title": "Выбор дома",
-        "own": "Мой дом",
+        "own": "My Home",
         "visit": "В гости к другу",
         "name": "Имя персонажа",
         "namePlaceholder": "Введите имя персонажа",
         "nameRequired": "Введите имя персонажа, которого хотите посетить.",
         "homeChoice": "Выберите свой дом",
-        "lookup": "Найти дом",
+        "lookup": "Find Home",
         "lookupPending": "Поиск дома друга...",
         "lookupChanged": "Найдите дом этого персонажа, прежде чем входить.",
         "result": "Дом персонажа {name}",
@@ -20561,7 +20561,7 @@ export const ru_RU: EnTranslations = {
       },
       "freehold_inn_room": {
         "name": "Комната на постоялом дворе",
-        "enterText": "Вы поднимаетесь по лестнице постоялого двора и входите в свою съёмную комнату.",
+        "enterText": "Вы поднимаетесь по лестнице постоялого двора и входите в свою комнату.",
         "leaveText": "Вы запираете комнату и возвращаетесь на причал."
       },
       "freehold_cottage": {

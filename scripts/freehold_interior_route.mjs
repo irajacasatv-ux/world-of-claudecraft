@@ -9,7 +9,14 @@ async function playerPose(page) {
   return page.evaluate(() => {
     const sim = window.__game.sim;
     const p = sim.player;
-    return { x: p.pos.x, y: p.pos.y, z: p.pos.z, dead: p.dead, tick: sim.tickCount };
+    return {
+      x: p.pos.x,
+      y: p.pos.y,
+      z: p.pos.z,
+      facing: p.facing,
+      dead: p.dead,
+      tick: sim.tickCount,
+    };
   });
 }
 
@@ -29,47 +36,56 @@ async function waitForFreeholdMovementReady(page) {
   );
 }
 
-/** Walk via the real input path. Position is observed, never assigned. */
+/** Keyboard turns are observed through the world, never written through its debug handle. */
+async function turnFreeholdRoute(page, difference) {
+  const key = difference > 0 ? 'a' : 'd';
+  await page.keyboard.down(key);
+  try {
+    await sleep(Math.min(120, Math.max(35, Math.abs(difference) * 250)));
+  } finally {
+    await page.keyboard.up(key);
+  }
+}
+
+function headingDifference(target, facing) {
+  return Math.atan2(Math.sin(target - facing), Math.cos(target - facing));
+}
+
+/** Walk through browser key events. Position and facing are observation-only. */
 export async function walkFreeholdRouteTo(page, x, z, { tolerance = 0.7, timeoutMs = 45000 } = {}) {
   await waitForFreeholdMovementReady(page);
   const started = Date.now();
   let previous = await playerPose(page);
   let stalled = 0;
+  let walking = false;
   try {
     while (Date.now() - started < timeoutMs) {
       const pose = await playerPose(page);
       if (pose.dead) throw new Error('Freehold tour player died during movement');
       const distance = Math.hypot(x - pose.x, z - pose.z);
       if (distance <= tolerance) return pose;
-      if (Math.hypot(pose.x - previous.x, pose.z - previous.z) < 0.03)
+      if (walking && Math.hypot(pose.x - previous.x, pose.z - previous.z) < 0.03)
         stalled += Math.max(0, pose.tick - previous.tick);
       else stalled = 0;
       if (stalled > 60)
         throw new Error(`Freehold tour movement blocked at ${JSON.stringify(pose)}`);
       previous = pose;
-      await page.evaluate(
-        ({ x, z }) => {
-          const g = window.__game;
-          const p = g.sim.player;
-          g.input.setTouchLook(true);
-          g.input.camYaw = Math.atan2(x - p.pos.x, z - p.pos.z);
-          g.input.setTouchMove({
-            forward: true,
-            back: false,
-            strafeLeft: false,
-            strafeRight: false,
-          });
-        },
-        { x, z },
-      );
-      await sleep(Math.min(120, Math.max(30, distance * 80)));
+      const difference = headingDifference(Math.atan2(x - pose.x, z - pose.z), pose.facing);
+      if (Math.abs(difference) > 0.12) {
+        await page.keyboard.up('w');
+        walking = false;
+        await turnFreeholdRoute(page, difference);
+      } else {
+        if (!walking) await page.keyboard.down('w');
+        walking = true;
+        await sleep(Math.min(120, Math.max(30, distance * 80)));
+      }
     }
     throw new Error(`Freehold tour movement timed out toward ${x},${z}`);
   } finally {
-    await page.evaluate(() => {
-      window.__game.input.clearTouchMove();
-      window.__game.input.setTouchLook(false);
-    });
+    await page.keyboard.up('w');
+    await page.keyboard.up('a');
+    await page.keyboard.up('d');
   }
 }
 
@@ -179,19 +195,22 @@ export async function confirmFreeholdGate(page) {
 }
 
 export async function leaveFreeholdThroughExit(page) {
-  await page.evaluate(() => {
-    const g = window.__game;
-    g.input.setTouchLook(true);
-    g.input.camYaw = Math.PI;
-    g.input.setTouchMove({ forward: true, back: false, strafeLeft: false, strafeRight: false });
-  });
+  await waitForFreeholdMovementReady(page);
+  const started = Date.now();
   try {
+    while (true) {
+      const pose = await playerPose(page);
+      const difference = headingDifference(Math.PI, pose.facing);
+      if (Math.abs(difference) <= 0.12) break;
+      if (Date.now() - started > 10000) throw new Error('Freehold tour could not face the exit');
+      await turnFreeholdRoute(page, difference);
+    }
+    await page.keyboard.down('w');
     await page.waitForFunction(() => window.__game.sim.player.pos.x < 10000, { timeout: 10000 });
   } finally {
-    await page.evaluate(() => {
-      window.__game.input.clearTouchMove();
-      window.__game.input.setTouchLook(false);
-    });
+    await page.keyboard.up('w');
+    await page.keyboard.up('a');
+    await page.keyboard.up('d');
   }
 }
 
@@ -239,6 +258,8 @@ async function freeholdSampleBoundary(page) {
       atMs: performance.now(),
       frames: report.frames,
       instrumentationActive: Boolean(report.postRevealLinks),
+      graphicsPreset: JSON.parse(localStorage.getItem('woc_settings') ?? '{}').graphicsPreset,
+      rendererTier: stats.tier,
       calls: stats.calls,
       room: room ? { x: room.position.x, z: room.position.z } : null,
       gpuCounts: { ...stats.gpuPrep.events.counts },
@@ -283,9 +304,11 @@ export async function runFreeholdInteriorRoute(page, hooks = {}) {
   return samples;
 }
 
-/** Missing counters cannot count as a clean reveal. Lifetime counts survive ring eviction. */
+/** Validate raw entry-to-sample evidence before accepting any stored derived values. */
 export function freeholdInteriorPerfFailures(samples) {
   const failures = [];
+  const counter = (value) => Number.isSafeInteger(value) && value >= 0;
+  const finiteRoom = (room) => room && Number.isFinite(room.x) && Number.isFinite(room.z);
   for (const label of ['freehold-inn-room', 'freehold-cottage']) {
     const found = samples.find((sample) => sample.label === label);
     if (!found) {
@@ -294,30 +317,54 @@ export function freeholdInteriorPerfFailures(samples) {
     }
     const begin = found.sampleEvidence?.begin;
     const end = found.sampleEvidence?.end;
+    const arrival = found.arrival;
     if (
       !begin ||
       !end ||
       !begin.instrumentationActive ||
       !end.instrumentationActive ||
-      !Number.isFinite(begin.frames) ||
-      !Number.isFinite(end.frames) ||
+      !counter(begin.frames) ||
+      !counter(end.frames) ||
       end.frames <= begin.frames ||
-      !Number.isFinite(end.calls) ||
+      !counter(begin.calls) ||
+      begin.calls <= 0 ||
+      !counter(end.calls) ||
       end.calls <= 0 ||
+      !Number.isFinite(arrival?.entryAtMs) ||
+      arrival.entryAtMs < 0 ||
       !Number.isFinite(begin.atMs) ||
       !Number.isFinite(end.atMs) ||
+      begin.atMs < arrival.entryAtMs ||
       end.atMs <= begin.atMs ||
-      !begin.room ||
-      !end.room ||
+      !finiteRoom(begin.room) ||
+      !finiteRoom(end.room) ||
       begin.room.x !== end.room.x ||
       begin.room.z !== end.room.z
     )
       failures.push(`${label}: missing rendered room progress`);
+    if (
+      begin?.graphicsPreset !== 1 ||
+      end?.graphicsPreset !== 1 ||
+      begin?.rendererTier !== 'low' ||
+      end?.rendererTier !== 'low'
+    )
+      failures.push(`${label}: effective graphics preset and renderer tier must remain low`);
     for (const kind of GPU_CHECKS) {
-      const value = found.arrival?.gpuDelta?.[kind];
-      if (!Number.isFinite(begin?.gpuCounts?.[kind]) || !Number.isFinite(end?.gpuCounts?.[kind]))
+      const before = arrival?.gpuBefore?.[kind];
+      const first = begin?.gpuCounts?.[kind];
+      const last = end?.gpuCounts?.[kind];
+      const after = arrival?.gpuAfter?.[kind];
+      const storedDelta = arrival?.gpuDelta?.[kind];
+      if (![before, first, last, after, storedDelta].every(counter)) {
         failures.push(`${label}: missing finite ${kind} sample counters`);
-      if (value !== 0) failures.push(`${label}: ${kind} delta ${value}, expected zero`);
+        continue;
+      }
+      if (first < before || last < first)
+        failures.push(`${label}: ${kind} counters decreased after entry`);
+      const delta = last - before;
+      if (after !== last || storedDelta !== delta)
+        failures.push(`${label}: inconsistent stored ${kind} counters`);
+      if (delta !== 0) failures.push(`${label}: ${kind} delta ${delta}, expected zero`);
     }
   }
   return failures;

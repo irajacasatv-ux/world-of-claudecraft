@@ -25,7 +25,7 @@ export const FREEHOLD_DUNGEON_DEFS: Record<string, DungeonDef> = {
     spawns: [],
     interior: 'inn_room',
     suggestedPlayers: 1,
-    enterText: 'You climb the inn stairs and let yourself into your rented room.',
+    enterText: 'You climb the inn stairs and let yourself into your room.',
     leaveText: 'You lock the room behind you and step back out onto the quay.',
   },
   [FREEHOLD_COTTAGE_DUNGEON_ID]: {

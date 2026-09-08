@@ -35,7 +35,7 @@ export function gatePromptHtml(
     }),
   );
   const body = own
-    ? `<label for="gate-home">${esc(t('hudChrome.housing.gate.homeChoice'))}</label><select class="hud-select" id="gate-home" ${FOCUS_KEY_ATTR}="gate-home"><option>${esc(t('hudChrome.housing.gate.own'))}</option></select>${!canEnter ? `<p>${esc(t('hudChrome.housing.common.unavailable'))}</p>` : ''}`
+    ? `<label for="gate-home">${esc(t('hudChrome.housing.gate.homeChoice'))}</label><select class="hud-select" id="gate-home" ${FOCUS_KEY_ATTR}="gate-home"><option>${esc(t('hudChrome.housing.gate.own'))}</option></select>`
     : `<label for="gate-name">${esc(t('hudChrome.housing.gate.name'))}</label><input class="fh-gate-name" id="gate-name" ${FOCUS_KEY_ATTR}="gate-name" value="${esc(draft.name)}" placeholder="${esc(t('hudChrome.housing.gate.namePlaceholder'))}" autocomplete="off" aria-describedby="gate-visit-status"><button type="button" class="btn" ${FOCUS_KEY_ATTR}="gate-lookup" ${!friendAvailable || draft.request || pending ? 'disabled' : ''}>${esc(t(draft.lookupState === 'failed' ? 'hudChrome.housing.common.retry' : 'hudChrome.housing.gate.lookup'))}</button>${authorized ? `<p ${FOCUS_KEY_ATTR}="gate-result" tabindex="0">${esc(lookupStatus)}</p>` : ''}`;
   return {
     lookupStatus,

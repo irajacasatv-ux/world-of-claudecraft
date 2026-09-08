@@ -564,6 +564,7 @@ import {
   runPrewarmCompileSubmission,
   submitPrewarmCompileUnit,
 } from './prewarm_compile_submission_core';
+import { PrewarmInstanceLifecycle } from './prewarm_instance_lifecycle';
 import {
   boundedPrewarmVisibility,
   runBackgroundPrewarm,
@@ -811,7 +812,11 @@ import { buildWorldAmbientSources, footstepSurfaceAt } from './world_audio';
 import { surfaceDetailPrewarmTextures } from './worn_stone';
 import { buildYumiMaze, type YumiMazeView } from './yumi_maze';
 import { YumiTeamMarkers } from './yumi_team_markers';
-import { prepareZoneCharacterDependencies } from './zone_character_dependencies';
+import {
+  assertPrewarmGeneration,
+  awaitPrewarmOwnerTask,
+  prepareBoundedZoneCharacterDependencies,
+} from './zone_character_dependency_wait';
 import { zonesEligibleForEviction } from './zone_eviction_core';
 import {
   type FeatureFootprint,
@@ -824,6 +829,7 @@ import {
   type ZonePrewarmStats,
   type ZoneStreamingStats,
 } from './zone_prepare_stats';
+import { finalizeZonePrewarm } from './zone_prewarm_finalize';
 import {
   buildEntityPrewarmGroup,
   buildNpcPrewarmGroup,
@@ -2026,6 +2032,7 @@ export class Renderer {
   private shutdownStarted = false;
   private shutdownTask: Promise<RecycledRendererContext> | null = null;
   private lifecycleGeneration = 0;
+  private readonly prewarmDependencyController = new AbortController();
   private resizeTimers: number[] = [];
   private devProbeTimer: ReturnType<typeof setTimeout> | null = null;
   private devProbeBindings: {
@@ -3197,6 +3204,7 @@ export class Renderer {
     if (this.shutdownStarted) return;
     this.shutdownStarted = true;
     this.lifecycleGeneration++;
+    this.prewarmDependencyController.abort();
     this.onZonePrepared = null;
     this.audioSink = null;
     this.visibleZonePrepareQueue = [];
@@ -3782,11 +3790,6 @@ export class Renderer {
   /** Stage wall-times of the most recent prewarmZoneAt, for perf tooling. */
   lastZonePrewarmStats: ZonePrewarmStats | null = null;
 
-  private assertPrewarmGeneration(generation: number): void {
-    if (this.shutdownStarted || generation !== this.lifecycleGeneration)
-      throw new Error('Renderer prewarm cancelled after shutdown');
-  }
-
   async prewarmZoneAt(x: number, z: number, opts?: { background?: boolean }): Promise<void> {
     if (this.shutdownStarted) return;
     const zoneId = this.zoneIdAt(x, z);
@@ -3796,9 +3799,9 @@ export class Renderer {
     const generation = this.lifecycleGeneration;
     const task = (async () => {
       const zone = zoneAt(x, z);
-      await prepareZoneCharacterDependencies(this.zonePrewarmHost(), zone);
-      this.assertPrewarmGeneration(generation);
       const deadline = performance.now() + 5000;
+      await prepareBoundedZoneCharacterDependencies(this, zone, deadline);
+      assertPrewarmGeneration(this, generation);
       const t0 = performance.now();
       const mobPrewarm = buildEntityPrewarmGroup(this.zonePrewarmHost(), zone);
       const npcPrewarm = buildNpcPrewarmGroup(this.zonePrewarmHost(), zone, deadline);
@@ -3900,25 +3903,11 @@ export class Renderer {
             await this.compilePrewarmColorPrograms(this.scene, false);
           }
         }
-        this.assertPrewarmGeneration(generation);
+        assertPrewarmGeneration(this, generation);
         this.prewarmedZonePrograms.add(zoneId);
       } finally {
-        mobGroup.removeFromParent();
-        npcGroup.removeFromParent();
-        // Only publish visuals to the live pool after the warm pass. Background
-        // gameplay can otherwise take one out of its T-pose grid while the
-        // prewarm awaits idle compile slots, leaving its shadow variant cold.
-        const retired = this.shutdownStarted || generation !== this.lifecycleGeneration;
-        for (const item of [...mobPrewarm.pooled, ...npcPrewarm.pooled])
-          if (retired) item.visual.dispose();
-          else this.pooledVisuals.store(item.key, item.visual);
-        if (!retired)
-          this.lastZonePrewarmStats = {
-            zoneId,
-            buildMs: Math.round(tBuild - t0),
-            compileMs: Math.round(tCompile - tBuild),
-            passMs: Math.round(performance.now() - tCompile),
-          };
+        const timing = { started: t0, built: tBuild, compiled: tCompile };
+        finalizeZonePrewarm(this, generation, [mobPrewarm, npcPrewarm], zoneId, timing);
       }
     })().finally(() => this.pendingZonePrewarms.delete(zoneId));
     this.pendingZonePrewarms.set(zoneId, task);
@@ -5536,11 +5525,13 @@ export class Renderer {
       : null;
     const zoneMobTemplateIds = this.templateIdsInZone(activeZone, 'mob');
     const zoneNpcTemplateIds = this.templateIdsInZone(activeZone, 'npc');
+    let zoneCharacterDependenciesReady = false;
     let createdViews = 0;
     let candidateViews = 0;
     let mandatoryLandmarkIds: number[] = [];
     let doorPrewarmGroup: THREE.Group | null = null;
     let interiorPrewarmGroup: THREE.Group | null = null;
+    const interiorPrewarmInstances = new PrewarmInstanceLifecycle();
     let entityPrewarmGroup: THREE.Group | null = null;
     let npcPrewarmGroup: THREE.Group | null = null;
     let entityPrewarmPool: { key: string; visual: CharacterVisual }[] = [];
@@ -5895,11 +5886,11 @@ export class Renderer {
         }
         await entry.run();
       } catch (err) {
-        this.assertPrewarmGeneration(generation);
+        assertPrewarmGeneration(this, generation);
         status = 'failed';
         console.warn(`Renderer prewarm entry failed: ${entry.id}`, err);
       }
-      this.assertPrewarmGeneration(generation);
+      assertPrewarmGeneration(this, generation);
       // Deadline-limited work with planned units remaining reports 'partial',
       // never 'completed'.
       const progress = entry.progress?.() ?? null;
@@ -6166,6 +6157,8 @@ export class Renderer {
         required: false,
         run: async () => {
           interiorPrewarmGroup = await this.ensureDungeons().buildPrewarmGroup();
+          interiorPrewarmInstances.track(interiorPrewarmGroup);
+          assertPrewarmGeneration(this, generation);
           this.scene.add(interiorPrewarmGroup);
         },
         detail: () => `objects=${interiorPrewarmGroup?.children.length ?? 0}`,
@@ -6202,8 +6195,9 @@ export class Renderer {
         priority: 35,
         required: true,
         run: async () => {
-          await prepareZoneCharacterDependencies(this.zonePrewarmHost(), activeZone);
-          this.assertPrewarmGeneration(generation);
+          await prepareBoundedZoneCharacterDependencies(this, activeZone, buildDeadline);
+          assertPrewarmGeneration(this, generation);
+          zoneCharacterDependenciesReady = true;
           const built = buildEntityPrewarmGroup(this.zonePrewarmHost(), activeZone);
           entityPrewarmGroup = built.group;
           entityPrewarmPool = built.pooled;
@@ -6218,8 +6212,9 @@ export class Renderer {
         priority: 36,
         required: true,
         run: async () => {
-          await prepareZoneCharacterDependencies(this.zonePrewarmHost(), activeZone);
-          this.assertPrewarmGeneration(generation);
+          await prepareBoundedZoneCharacterDependencies(this, activeZone, buildDeadline);
+          assertPrewarmGeneration(this, generation);
+          zoneCharacterDependenciesReady = true;
           const built = buildNpcPrewarmGroup(this.zonePrewarmHost(), activeZone, buildDeadline);
           npcPrewarmGroup = built.group;
           npcPrewarmPool = built.pooled;
@@ -6970,9 +6965,9 @@ export class Renderer {
         if (policy.yieldBetweenEntries) {
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
-        this.assertPrewarmGeneration(generation);
+        assertPrewarmGeneration(this, generation);
         await runEntry(entry);
-        this.assertPrewarmGeneration(generation);
+        assertPrewarmGeneration(this, generation);
         // Without parallel compile, link group-by-group per entry (the monolith is
         // skipped). With it, these passes are counterproductive and the async
         // compile entry links off-thread instead (prewarm_policy.ts).
@@ -6981,6 +6976,9 @@ export class Renderer {
           renderPasses++;
         }
       }
+    } catch (error) {
+      void interiorPrewarmInstances.disposeAfter(submittedCompileUnits);
+      throw error;
     } finally {
       cleanupPrewarmArtifacts({ clearVfx: true, publishPools: !deferPoolPublication });
     }
@@ -7013,6 +7011,7 @@ export class Renderer {
     // settling off-thread. droppedEntries.length alone stranded the withheld
     // pools in that case: the finally block above never publishes them when
     // deferPoolPublication is set, so this is the only remaining place that can.
+    let resumeTask: Promise<unknown> | undefined;
     if (droppedEntries.length > 0 || deferPoolPublication) {
       // Fire-and-forget: world-entry timing does not depend on this. Every
       // retained item is an explicit small unit, never a whole entry rerun.
@@ -7026,9 +7025,9 @@ export class Renderer {
       if (dropped.length > 0) {
         console.info(`[entry-guard] prewarm resume scheduled: dropped=[${dropped}]`);
       }
-      void settlePrewarmBeforePublish(
+      resumeTask = settlePrewarmBeforePublish(
         async () => {
-          await options.resumeAfterFirstPaint;
+          await awaitPrewarmOwnerTask(options.resumeAfterFirstPaint, this);
           // If 'programs.compile' itself was deferred past the hard deadline,
           // its early-submitted units may still be settling off-thread; wait
           // them out before the resume lane (and pool publication) proceeds,
@@ -7076,6 +7075,7 @@ export class Renderer {
           console.warn('Renderer prewarm resume failed', err);
         });
     }
+    void interiorPrewarmInstances.disposeAfter(submittedCompileUnits, resumeTask);
 
     // Sky uploads deferred behind a slow prefetch (or a deadline-dropped sky
     // entry) join the world once their data arrives, on the same off-critical
@@ -7174,7 +7174,7 @@ export class Renderer {
       prewarmPacing: pacing.receipt(compileBatchRoots, hardMaxMs),
     };
     this.lastPrewarmStats = stats;
-    this.prewarmedZonePrograms.add(activeZone.id);
+    if (zoneCharacterDependenciesReady) this.prewarmedZonePrograms.add(activeZone.id);
     // Dev-channel diagnostic (pairs with main.ts's "[entry-guard] scene built"): one
     // line naming where the entry-time main-thread budget went, for isolating
     // world-entry process kills on real devices.

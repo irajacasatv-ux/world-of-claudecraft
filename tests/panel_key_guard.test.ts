@@ -25,11 +25,19 @@ describe('panelKeyGuardStops', () => {
     expect(panelKeyGuardStops(el('button', true), 'Spacebar', 'Spacebar')).toBe(false);
   });
 
+  it('protects native select activation from chat and jump while leaving arrows alone', () => {
+    const select = el('select');
+    expect(panelKeyGuardStops(select, 'Enter', 'Enter')).toBe(true);
+    expect(panelKeyGuardStops(select, ' ', 'Space')).toBe(true);
+    expect(panelKeyGuardStops(select, 'ArrowDown', 'ArrowDown')).toBe(false);
+    expect(panelKeyGuardStops(select, 'Escape', 'Escape')).toBe(false);
+  });
+
   it('still swallows Enter on a bag item row, which activates it', () => {
     expect(panelKeyGuardStops(el('button', true), 'Enter', 'Enter')).toBe(true);
   });
 
-  it('ignores anything that is not a button', () => {
+  it('ignores targets outside buttons and native selects', () => {
     expect(panelKeyGuardStops(el('div'), ' ', 'Space')).toBe(false);
     expect(panelKeyGuardStops(el('input'), 'Enter', 'Enter')).toBe(false);
   });

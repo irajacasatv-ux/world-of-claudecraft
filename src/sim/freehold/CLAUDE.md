@@ -84,6 +84,12 @@ carries an opaque plot id only.
   identity as well as the command ACK field. It is a teleport/pose observation,
   never a fresh-arrival presentation directive: reconnect or a repeated snapshot
   cannot authorize welcome, sound or first-tier camera from this number alone.
+- Owner-room entry resolves `instances/owner_arrival.ts` before any claim or
+  teleport mutation. Empty rooms retain the authored entry and facing; occupied
+  rooms use deterministic body-safe candidates in the protected approach ahead
+  of the entry, checked against static geometry and current local player bodies.
+  A full approach emits one `busy` denial without changing claims, occupants or
+  key deadlines. Ordinary dungeon arrivals retain their existing behavior.
 - Owner-room reaping uses `instances/owner_claim_occupancy.ts`: index owner claims
   once and resolve each roster position to one candidate using the same exact
   containment predicate. Keep ordinary dungeon and widened raid footprints on

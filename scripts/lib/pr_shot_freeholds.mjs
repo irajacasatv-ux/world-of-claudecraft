@@ -51,7 +51,15 @@ export const freeholdReviewTargets = [
   key,
   label: `Freehold ${scene}`,
   scene,
-  when: ['ui/hud/housing/', 'freehold/', 'render/freehold_', 'game/nearby_interaction'],
+  when: [
+    'ui/hud/housing/',
+    'freehold/',
+    'render/freehold_',
+    'game/nearby_interaction',
+    'render/dungeon_interior_resolver_core.ts',
+    'render/dungeon_variant_core.ts',
+    'render/ground_object.ts',
+  ],
   variants,
   async capture(page, variant) {
     if (process.env.PR_SHOTS_FREEHOLD_BASELINE === '1') {

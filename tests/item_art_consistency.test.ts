@@ -867,6 +867,7 @@ describe('item-art consistency accepted-art provenance', () => {
     // furnishings and thirteen crafted-content definitions = 1,320. The OSSBrain
     // PR #3781 reconcile's two disjoint reins item definitions
     // (reins_goblin_rocket_sled, reins_rallycart_rxt) add two more: 1,322.
+    // The independent Hearth Key addition brings the live count to 1,323.
     expect(Object.keys(ITEMS)).toHaveLength(1323);
     expect(Object.values(verdict.auditScope.groups).reduce((sum, count) => sum + count, 0)).toBe(
       1255,
@@ -1217,7 +1218,8 @@ describe('item-art consistency accepted-art provenance', () => {
     // (nythraxis-gap-weapon-renders-2026-09-04, roots-bramblehide-icons-2026-09-07) = 29,
     // plus two Freeholds batches = 31. OSSBrain PR #3781 reconcile adds its own 2
     // disjoint batches (goblin-rocket-sled-icon-2026-08-12,
-    // rallycart-rxt-icon-2026-08-20) = 33.
+    // rallycart-rxt-icon-2026-08-20) = 33. The independent Hearth Key batch
+    // (freehold-hearth-key-2026-09-08) brings the total to 34.
     expect(mapping.generatedBatches).toHaveLength(34);
     const batch = mapping.generatedBatches.find(({ batchId }) => batchId === BATCH_ID);
     expect(batch).toBeDefined();
@@ -1514,8 +1516,8 @@ describe('item-art consistency accepted-art provenance', () => {
     const violations: string[] = [];
     // Matches the mapping-owner sum above: 43 entries + 755 prior-generated
     // batch ids + 274 historical-audit batch ids + 165 Masterwrought-completion
-    // batch ids + 46 Crucible-professions + 8 vendor + 13 crafted ids + 2 OSSBrain
-    // reins ids = 1305.
+    // batch ids + 46 Crucible-professions + 8 vendor + 13 crafted ids + 1 Hearth
+    // Key id = 1305. The 755 prior-generated ids already include the OSSBrain reins.
     if (ownerIds.length !== 1305)
       violations.push(`mapping owner count: ${ownerIds.length} != 1305`);
     if (fileIds.length !== 1305) violations.push(`shipping WebP count: ${fileIds.length} != 1305`);

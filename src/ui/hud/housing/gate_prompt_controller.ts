@@ -13,6 +13,7 @@ import {
   restoreFirstEnabled,
 } from '../../focus_restore';
 import { t } from '../../i18n';
+import { bindChromeButtonKeyGuard, bindPointerBlur } from '../../pointer_blur';
 import { focusActiveTab, wireTabStrip } from '../../tab_strip_painter';
 import { gatePromptHtml } from './gate_prompt_painter';
 import {
@@ -62,7 +63,11 @@ export class FreeholdGatePrompt {
   private opener: HTMLElement | null = null;
   private generation = 0;
   private pending: GateEntryRequest | null = null;
-  private statusKey: ReturnType<typeof freeholdDeniedLineKey> | null = null;
+  private statusKey:
+    | ReturnType<typeof freeholdDeniedLineKey>
+    | 'hudChrome.housing.common.unavailable'
+    | null = null;
+  private boundRoot: HTMLElement | null = null;
   private retryFocus = false;
   private visible = false;
   constructor(private readonly deps: FreeholdGateDeps) {}
@@ -79,6 +84,12 @@ export class FreeholdGatePrompt {
       this.visible = true;
       const root = this.deps.root();
       markDialogRoot(root, { labelledBy: 'freehold-gate-title' });
+      // This root is created after the HUD's boot-time chrome wiring.
+      if (this.boundRoot !== root) {
+        bindChromeButtonKeyGuard(root);
+        bindPointerBlur(root);
+        this.boundRoot = root;
+      }
       root.style.display = 'flex';
       this.deps.onVisibilityChange();
     }
@@ -160,10 +171,10 @@ export class FreeholdGatePrompt {
       !this.visible ||
       generation !== this.generation ||
       this.pending ||
-      (this.draft.tab === 'visit' && (!this.deps.friend || !gateVisitAuthorized(this.draft))) ||
-      !this.canEnter()
+      (this.draft.tab === 'visit' && (!this.deps.friend || !gateVisitAuthorized(this.draft)))
     )
       return;
+    if (!this.refreshEligibility()) return;
     const world = this.deps.world();
     this.retryFocus = focusedWithin(this.deps.root()) !== null;
     this.statusKey = null;
@@ -181,10 +192,10 @@ export class FreeholdGatePrompt {
       !this.visible ||
       generation !== this.generation ||
       this.pending ||
-      this.draft.tab !== 'visit' ||
-      !this.canEnter()
+      this.draft.tab !== 'visit'
     )
       return;
+    if (!this.refreshEligibility()) return;
     this.statusKey = null;
     const request = beginGateLookup(this.draft);
     if (!request) {
@@ -208,6 +219,12 @@ export class FreeholdGatePrompt {
         this.draft.tab === 'visit' ? (result ? 'gate-result' : 'gate-lookup') : null,
       );
   }
+  private refreshEligibility(): boolean {
+    if (this.canEnter()) return true;
+    this.statusKey = 'hudChrome.housing.common.unavailable';
+    this.paint();
+    return false;
+  }
   private paint(opening = false, retry = false, completedFocus: string | null = null): void {
     if (!this.visible) return;
     const root = this.deps.root();
@@ -224,12 +241,8 @@ export class FreeholdGatePrompt {
       status = root.querySelector('.fh-gate-status')!;
       actions = root.querySelector('.fh-gate-actions')!;
     }
-    const markup = gatePromptHtml(
-      this.draft,
-      this.canEnter(),
-      this.pending !== null,
-      !!this.deps.friend,
-    );
+    const canEnter = this.canEnter();
+    const markup = gatePromptHtml(this.draft, canEnter, this.pending !== null, !!this.deps.friend);
     content.innerHTML = markup.content;
     actions.innerHTML = markup.actions;
     root.setAttribute('aria-busy', this.pending || this.draft.request ? 'true' : 'false');
@@ -237,9 +250,11 @@ export class FreeholdGatePrompt {
       ? t('hudChrome.housing.gate.loading')
       : this.statusKey
         ? t(this.statusKey)
-        : this.draft.tab === 'visit'
-          ? markup.lookupStatus
-          : '';
+        : !canEnter
+          ? t('hudChrome.housing.common.unavailable')
+          : this.draft.tab === 'visit'
+            ? markup.lookupStatus
+            : '';
     // Clear refusal text at retry, so the same refusal changes this persistent live region again.
     wireTabStrip(root, 'fh-gate-tab', (id, focusFollow) => {
       if (generation !== this.generation || !this.visible) return;
@@ -279,7 +294,14 @@ export class FreeholdGatePrompt {
     });
     name?.addEventListener('compositionend', edit);
     name?.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' && !event.isComposing) {
+      if (generation !== this.generation || !this.visible || event.isComposing) return;
+      // Input leaves text fields alone, so route Escape to the same cancel
+      // lifecycle as the Close control while preserving IME cancellation.
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        this.close();
+      } else if (event.key === 'Enter') {
         event.preventDefault();
         void this.lookup(generation);
       }

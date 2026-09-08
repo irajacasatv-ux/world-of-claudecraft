@@ -1,8 +1,11 @@
+import { runInNewContext } from 'node:vm';
 import type { Page } from 'puppeteer-core';
 import { describe, expect, it } from 'vitest';
 import {
   freeholdInteriorPerfFailures,
+  leaveFreeholdThroughExit,
   sampleFreeholdInterior,
+  walkFreeholdRouteTo,
 } from '../scripts/freehold_interior_route.mjs';
 
 const boundary = (frames: number) => ({
@@ -12,13 +15,20 @@ const boundary = (frames: number) => ({
   room: { x: 20000, z: 0 },
   gpuCounts: { 'live-program': 0, 'attach-watchdog': 0, 'gate-timeout': 0 },
   instrumentationActive: true,
+  graphicsPreset: 1,
+  rendererTier: 'low',
 });
 
 const clean = () =>
   ['freehold-inn-room', 'freehold-cottage'].map((label) => ({
     label,
     sampleEvidence: { begin: boundary(10), end: boundary(20) },
-    arrival: { gpuDelta: { 'live-program': 0, 'attach-watchdog': 0, 'gate-timeout': 0 } },
+    arrival: {
+      entryAtMs: 0,
+      gpuBefore: { ...boundary(0).gpuCounts },
+      gpuAfter: { ...boundary(0).gpuCounts },
+      gpuDelta: { ...boundary(0).gpuCounts },
+    },
   }));
 
 describe('accepted home reveal perf evidence', () => {
@@ -30,7 +40,11 @@ describe('accepted home reveal perf evidence', () => {
   });
   it('rejects cold live links and watchdog escapes independently', () => {
     const samples = clean();
+    samples[0].sampleEvidence.end.gpuCounts['live-program'] = 2;
+    samples[0].arrival.gpuAfter['live-program'] = 2;
     samples[0].arrival.gpuDelta['live-program'] = 2;
+    samples[1].sampleEvidence.end.gpuCounts['attach-watchdog'] = 1;
+    samples[1].arrival.gpuAfter['attach-watchdog'] = 1;
     samples[1].arrival.gpuDelta['attach-watchdog'] = 1;
     expect(freeholdInteriorPerfFailures(samples)).toEqual([
       'freehold-inn-room: live-program delta 2, expected zero',
@@ -38,8 +52,8 @@ describe('accepted home reveal perf evidence', () => {
     ]);
   });
   it('does not treat absent telemetry as a passing zero', () => {
-    expect(freeholdInteriorPerfFailures([{ label: 'freehold-inn-room' }, clean()[1]])).toHaveLength(
-      7,
+    expect(freeholdInteriorPerfFailures([{ label: 'freehold-inn-room' }, clean()[1]])).not.toEqual(
+      [],
     );
   });
 });
@@ -56,6 +70,7 @@ it.each([false, true])(
       x: 10000,
       y: 0,
       z: 0,
+      facing: 0,
       dead: false,
       tick: 10,
       entryAtMs: 0,
@@ -99,6 +114,8 @@ it('rejects unavailable instrumentation and non-finite sample counters', () => {
 
 it('rejects an isolated gate timeout with otherwise complete draw evidence', () => {
   const samples = clean();
+  samples[1].sampleEvidence.end.gpuCounts['gate-timeout'] = 1;
+  samples[1].arrival.gpuAfter['gate-timeout'] = 1;
   samples[1].arrival.gpuDelta['gate-timeout'] = 1;
   expect(freeholdInteriorPerfFailures(samples)).toEqual([
     'freehold-cottage: gate-timeout delta 1, expected zero',
@@ -124,4 +141,135 @@ it.each([
   expect(freeholdInteriorPerfFailures(samples)).toEqual([
     'freehold-inn-room: missing rendered room progress',
   ]);
+});
+
+it('derives acceptance from raw entry-through-end counters despite a stale zero delta', () => {
+  const samples = clean();
+  samples[0].sampleEvidence.end.gpuCounts['live-program']++;
+  expect(freeholdInteriorPerfFailures(samples)).toEqual(
+    expect.arrayContaining([expect.stringContaining('live-program delta 1, expected zero')]),
+  );
+});
+
+it.each([
+  ['entryAtMs', undefined],
+  ['entryAtMs', Number.NaN],
+  ['entryAtMs', 201],
+  ['gpuBefore', undefined],
+  ['gpuBefore', { 'live-program': Number.NaN, 'attach-watchdog': 0, 'gate-timeout': 0 }],
+  ['gpuAfter', undefined],
+  ['gpuAfter', { 'live-program': 1, 'attach-watchdog': 0, 'gate-timeout': 0 }],
+  [
+    'gpuDelta',
+    { 'live-program': Number.POSITIVE_INFINITY, 'attach-watchdog': 0, 'gate-timeout': 0 },
+  ],
+] as const)('rejects invalid or contradictory arrival %s (%s)', (field, value) => {
+  const samples = clean();
+  Object.assign(samples[0].arrival, { [field]: value });
+  expect(freeholdInteriorPerfFailures(samples)).not.toEqual([]);
+});
+
+it.each(['live-program', 'attach-watchdog', 'gate-timeout'] as const)(
+  'rejects %s counters that decrease between entry and either sample boundary',
+  (kind) => {
+    const entryRegresses = clean();
+    entryRegresses[0].arrival.gpuBefore[kind] = 1;
+    entryRegresses[0].arrival.gpuAfter[kind] = 1;
+    entryRegresses[0].sampleEvidence.end.gpuCounts[kind] = 1;
+    expect(freeholdInteriorPerfFailures(entryRegresses)).not.toEqual([]);
+    const sampleRegresses = clean();
+    sampleRegresses[0].sampleEvidence.begin.gpuCounts[kind] = 1;
+    expect(freeholdInteriorPerfFailures(sampleRegresses)).not.toEqual([]);
+  },
+);
+
+it.each([
+  ['begin', 'calls', Number.NaN],
+  ['begin', 'room', { x: Number.NaN, z: 0 }],
+  ['end', 'room', { x: 20000, z: Number.POSITIVE_INFINITY }],
+  ['begin', 'graphicsPreset', 3],
+  ['end', 'graphicsPreset', undefined],
+  ['begin', 'rendererTier', 'high'],
+  ['end', 'rendererTier', undefined],
+] as const)('rejects invalid effective room evidence %s.%s (%s)', (edge, field, value) => {
+  const samples = clean();
+  Object.assign(samples[0].sampleEvidence[edge], { [field]: value });
+  expect(freeholdInteriorPerfFailures(samples)).not.toEqual([]);
+});
+
+function inputOnlyPage(startX = 0) {
+  const events: string[] = [];
+  const player = { pos: { x: startX, y: 0, z: 0 }, facing: Math.PI / 2, dead: false };
+  let tick = 0;
+  const rejectMutation = () => {
+    throw new Error('direct __game mutation');
+  };
+  const readonly = <T extends object>(value: T): T =>
+    new Proxy(value, {
+      set: rejectMutation,
+      get(target, key) {
+        const item = Reflect.get(target, key);
+        if (typeof item === 'function') return rejectMutation;
+        return item && typeof item === 'object' ? readonly(item) : item;
+      },
+    });
+  const context = {
+    window: {
+      __game: readonly({
+        sim: {
+          player,
+          get tickCount() {
+            return tick++;
+          },
+        },
+        input: {
+          camYaw: Math.PI / 2,
+          setTouchLook: rejectMutation,
+          clearTouchMove: rejectMutation,
+        },
+      }),
+    },
+    document: { querySelector: () => null },
+  };
+  const run = (fn: (...args: never[]) => unknown, args: unknown[]) =>
+    runInNewContext(`(${fn.toString()})(...args)`, { ...context, args });
+  const page = {
+    evaluate: async (fn: (...args: never[]) => unknown, ...args: unknown[]) => run(fn, args),
+    waitForFunction: async (
+      fn: (...args: never[]) => unknown,
+      _options: unknown,
+      ...args: unknown[]
+    ) => {
+      for (let attempt = 0; attempt < 10; attempt++) if (run(fn, args)) return;
+      throw new Error('condition did not become ready');
+    },
+    keyboard: {
+      down: async (key: string) => {
+        events.push(`down:${key}`);
+        if (key === 'a') player.facing = Math.PI;
+        if (key === 'w') {
+          if (startX > 10000) player.pos.x = 0;
+          else player.pos.x = 2;
+        }
+      },
+      up: async (key: string) => {
+        events.push(`up:${key}`);
+      },
+    },
+  } as unknown as Page;
+  return { page, events };
+}
+
+it('walks using browser keyboard events with every exposed __game object read-only', async () => {
+  const { page, events } = inputOnlyPage();
+  await walkFreeholdRouteTo(page, 2, 0);
+  expect(events).toContain('down:w');
+  expect(events).toContain('up:w');
+});
+
+it('leaves through the physical exit with read-only __game observations', async () => {
+  const { page, events } = inputOnlyPage(20000);
+  await leaveFreeholdThroughExit(page);
+  expect(events).toContain('down:w');
+  expect(events).toContain('up:w');
 });

@@ -1360,9 +1360,9 @@ const ACCEPTED_POLISH_V2_METADATA_PATH = path.join(REPO_ROOT, POLISH_SEAL_PATH);
 // PR3946: remint the renderer leaf after restoring school-aware resurrection VFX.
 // Existing captures, performance measurements and capture identity are unchanged.
 const ACCEPTED_POLISH_V2_METADATA_SHA256 =
-  '02081df705ef6a5127d044805006939a56e62a8c639f750078bbe27c66cc5ba1';
+  'c6a83437cf9cf9647697c2c0ec689a8cba2db76614b0ee7d6baa589b5f865832';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
-  'ab648a325fe24cb703a8872feaa036582f8d6d29efd792037239cb6ad0df5ed9';
+  '7958c5f743cce34eae10b2d500abe6d606b48a04d047e09f7833c9f235ecd324';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2719,7 +2719,7 @@ describe('Eastbrook polish performance and contact evidence', () => {
       //
       // OSSBrain integration: this digest was recomputed LAST from the
       // canonical re-sealed evidence files. Capture pixels and scores did not change.
-    ).toBe('684be79cf0947c6669339976161ab23189b82e5506b6aaff8374ed67b3adcd9d');
+    ).toBe('add548dabe65ba8dd2955cd662f259e55804eba0fdc674c34184d6c9ea91a993');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {

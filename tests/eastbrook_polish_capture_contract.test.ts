@@ -666,7 +666,7 @@ interface AttributionTargetFixture {
 // PR3946: remint the renderer leaf after restoring school-aware resurrection VFX.
 // Existing captures, performance measurements and capture identity are unchanged.
 const PINNED_POLISH_COMPOSITE_FINGERPRINT =
-  'ab648a325fe24cb703a8872feaa036582f8d6d29efd792037239cb6ad0df5ed9';
+  '7958c5f743cce34eae10b2d500abe6d606b48a04d047e09f7833c9f235ecd324';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [

@@ -1148,3 +1148,33 @@ describe('furnishing manual capture locale isolation', () => {
     }
   });
 });
+
+describe('Freehold producer screenshot selection', () => {
+  it.each([
+    'src/render/dungeon_interior_resolver_core.ts',
+    'src/render/dungeon_variant_core.ts',
+    'src/render/ground_object.ts',
+  ])('selects all three scenes and nine view variants for isolated %s changes', (path) => {
+    const plan = classifyDiff([path]);
+    const targets = plan.specific.filter((target: { key: string }) =>
+      ['freehold-gate', 'freehold-inn', 'freehold-cottage'].includes(target.key),
+    );
+    expect(targets.map((target: { key: string }) => target.key)).toEqual([
+      'freehold-gate',
+      'freehold-inn',
+      'freehold-cottage',
+    ]);
+    for (const target of targets) {
+      expect(
+        target.variants.map((variant: { key: string; viewport: object }) => ({
+          key: variant.key,
+          viewport: variant.viewport,
+        })),
+      ).toEqual([
+        { key: 'desktop', viewport: { width: 1600, height: 900 } },
+        { key: 'compact', viewport: { width: 874, height: 402 } },
+        { key: 'tablet', viewport: { width: 1180, height: 820 } },
+      ]);
+    }
+  });
+});

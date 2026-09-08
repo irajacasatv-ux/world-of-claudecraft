@@ -330,7 +330,7 @@ export const ko_KR: EnTranslations = {
       "common": {
         "close": "닫기",
         "cancel": "취소",
-        "back": "뒤로",
+        "back": "Back",
         "retry": "다시 시도",
         "loading": "집을 불러오는 중...",
         "pending": "확인을 기다리는 중...",
@@ -354,13 +354,13 @@ export const ko_KR: EnTranslations = {
       },
       "gate": {
         "title": "집 선택",
-        "own": "내 집",
+        "own": "My Home",
         "visit": "친구 방문",
         "name": "캐릭터 이름",
         "namePlaceholder": "캐릭터 이름 입력",
         "nameRequired": "방문할 캐릭터의 이름을 입력하세요.",
         "homeChoice": "내 집 선택",
-        "lookup": "집 찾기",
+        "lookup": "Find Home",
         "lookupPending": "친구의 집을 찾는 중...",
         "lookupChanged": "들어가기 전에 이 캐릭터의 집을 찾으세요.",
         "result": "{name}의 집",
@@ -20561,7 +20561,7 @@ export const ko_KR: EnTranslations = {
       },
       "freehold_inn_room": {
         "name": "여관 객실",
-        "enterText": "여관 계단을 올라 빌린 방으로 들어갑니다.",
+        "enterText": "여관 계단을 올라 자신의 방으로 들어갑니다.",
         "leaveText": "방문을 잠그고 다시 부두로 나옵니다."
       },
       "freehold_cottage": {

@@ -14,10 +14,12 @@ import { freeholdKeyFor } from './owner_key';
 export function confirmFreeholdGate(ctx: SimContext, pid: number): boolean {
   const r = ctx.resolve(pid);
   if (!r) return false;
-  if (!ctx.freeholds.has(freeholdKeyFor(ctx, pid)))
-    return denyFreehold(ctx, pid, r.e.dead ? 'dead' : 'no_freehold');
-  if (r.e.dead && !corpseRunRoom(ctx, r.e, freeholdKeyFor(ctx, pid)))
+  const ownerKey = freeholdKeyFor(ctx, pid);
+  const hasRecord = ctx.freeholds.has(ownerKey);
+  if (r.e.dead && (!hasRecord || !corpseRunRoom(ctx, r.e, ownerKey)))
     return denyFreehold(ctx, pid, 'dead');
+  if (r.e.inCombat) return denyFreehold(ctx, pid, 'combat');
+  if (!hasRecord) return denyFreehold(ctx, pid, 'no_freehold');
   const reason = freeholdEntryContextReason(ctx, pid, true);
   if (reason) return denyFreehold(ctx, pid, reason);
   let nearby = false;

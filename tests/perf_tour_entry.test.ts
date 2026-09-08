@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
 import { enterOfflineGame } from '../scripts/enter_offline_game.mjs';
 import { perfTourEntryOptions } from '../scripts/perf_tour_entry_options.mjs';
@@ -119,5 +122,35 @@ describe('shared offline entry helper', () => {
     ).toBe(false);
     expect(state.functionWaits).toEqual([{ timeout: 90_000 }]);
     expect(gameBooted).toBe(false);
+  });
+});
+
+it('pins the requested perf preset before first-run hardware detection', async () => {
+  const script = readFileSync(join(__dirname, '../scripts/perf_tour.mjs'), 'utf8');
+  const start = script.indexOf(
+    '  if (PERF_PRESET) {',
+    script.indexOf('async function runViewport'),
+  );
+  const end = script.indexOf('  const errors = [];', start);
+  expect(start).toBeGreaterThan(0);
+  expect(end).toBeGreaterThan(start);
+  let stored = JSON.stringify({ volume: 0.5, graphicsPreset: 6 });
+  await runInNewContext(`(async () => {${script.slice(start, end)}})()`, {
+    PERF_PRESET: 'low',
+    PRESET_VALUES: { low: 1 },
+    page: {
+      evaluateOnNewDocument: async (fn: (value: number) => void, value: number) => fn(value),
+    },
+    localStorage: {
+      getItem: () => stored,
+      setItem: (_key: string, value: string) => {
+        stored = value;
+      },
+    },
+  });
+  expect(JSON.parse(stored)).toEqual({
+    volume: 0.5,
+    graphicsPreset: 1,
+    graphicsDefaultApplied: true,
   });
 });

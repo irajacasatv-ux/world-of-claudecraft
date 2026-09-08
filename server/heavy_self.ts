@@ -132,7 +132,8 @@ export const HEAVY_SELF_CMDS = new Set<string>([
   // proximity section beside 'bank', so listing it would only buy a redundant
   // heavy re-serialize (the guild bank's gold ops sit out for the same reason).
   // Gate entry can grant the permanent Hearth Key into heavy-gated inventory.
-  // It is arm-marked so dark/jail refusals above dispatch never dirty the cache.
+  // Its arm in freehold_wire.ts also requires a changed inventory wireRev, so
+  // refusals, an existing key and full bags never dirty the cache.
   // Leaving changes only the always-sent entity position.
   'freehold_enter',
   'vault_deposit',
@@ -166,6 +167,8 @@ export const HEAVY_SELF_CMDS = new Set<string>([
 // without a return channel the sim does not have, and the success paths keep
 // their own belt-and-braces freshness (wireRev on every spend, the loot and
 // farmPlanted events) exactly as the entries' own comments record.
+// Freehold gate entry is narrower: its arm also checks wireRev changed on the
+// key grant. Invoking the sim without changing inventory never marks it.
 export const HEAVY_SELF_ARM_MARKED_CMDS = new Set<string>([
   'freehold_enter',
   'perfect_item',

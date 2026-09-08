@@ -490,6 +490,7 @@ export class ActionBarController {
       item?.kind === 'drink' ||
       item?.kind === 'potion' ||
       item?.kind === 'mount' ||
+      item?.use?.type === 'freeholdEnter' ||
       item?.use?.type === 'fishing' ||
       item?.use?.type === 'gatherTool' ||
       item?.use?.type === 'harvestPreference'

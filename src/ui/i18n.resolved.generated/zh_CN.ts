@@ -330,7 +330,7 @@ export const zh_CN: EnTranslations = {
       "common": {
         "close": "关闭",
         "cancel": "取消",
-        "back": "返回",
+        "back": "Back",
         "retry": "重试",
         "loading": "正在加载你的家园...",
         "pending": "正在等待确认...",
@@ -354,13 +354,13 @@ export const zh_CN: EnTranslations = {
       },
       "gate": {
         "title": "选择家园",
-        "own": "我的家园",
+        "own": "My Home",
         "visit": "拜访好友",
         "name": "角色名称",
         "namePlaceholder": "输入角色名称",
         "nameRequired": "请输入要拜访的角色名称。",
         "homeChoice": "选择你的家园",
-        "lookup": "查找家园",
+        "lookup": "Find Home",
         "lookupPending": "正在查找好友的家园...",
         "lookupChanged": "请先找到该角色的家园再进入。",
         "result": "{name}的家园",
@@ -20561,7 +20561,7 @@ export const zh_CN: EnTranslations = {
       },
       "freehold_inn_room": {
         "name": "客栈客房",
-        "enterText": "你登上客栈的楼梯，走进自己租下的房间。",
+        "enterText": "你登上客栈的楼梯，走进自己的房间。",
         "leaveText": "你锁上房门，回到码头上。"
       },
       "freehold_cottage": {

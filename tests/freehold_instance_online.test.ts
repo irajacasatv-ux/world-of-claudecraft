@@ -60,7 +60,8 @@ vi.mock('../server/db', () => ({
 
 import { type ClientSession, GameServer } from '../server/game';
 import { noopGameMetricsCounters, setGameMetricsCounters } from '../server/http/game_signals';
-import { DUNGEONS } from '../src/sim/data';
+import { isBlocked } from '../src/sim/colliders';
+import { DUNGEONS, instanceOrigin } from '../src/sim/data';
 import { setFreeholdTier } from '../src/sim/freehold/state';
 import type { InstanceSlot } from '../src/sim/sim';
 import { INSTANCE_EMPTY_TIMEOUT, type PlayerClass } from '../src/sim/types';
@@ -505,7 +506,7 @@ describe('freehold claim online: the refusals leave the player and the pool unto
     enter(server, s, 21);
 
     expect(fc.sent.slice(sentBefore)).toEqual([
-      { t: 'events', list: [{ type: 'freeholdDenied', pid: s.pid, reason: 'no_freehold' }] },
+      { t: 'events', list: [{ type: 'freeholdDenied', pid: s.pid, reason: 'busy' }] },
       { t: 'commandOutcome', rid: 21, ok: false },
     ]);
     expect(s.selfHeavyDirty).toBe(false);
@@ -685,6 +686,102 @@ describe('freehold claim online: the /dev freehold <tier> server path (D24, D81)
     expectInBand(entityOf(server, s.pid).pos.x, INN_ROOM_BAND);
     expect(claimsFor(server, key)).toHaveLength(1);
   });
+});
+
+describe.each(['inn_room', 'cottage'] as const)('online %s occupied arrival', (tier) => {
+  it.each(['gate', 'key'] as const)(
+    '%s dispatch preserves the first occupant and deterministically separates an alt',
+    (surface) => {
+      function replay() {
+        const server = litServer();
+        // This dependency proves dispatch behavior only, never durable authority.
+        server.sim.cfg.freeholdKeyAdmission = () => true;
+        server.sim.cfg.lockoutNowMs = () => 9000;
+        const a = joinAs(server, fakeWs(), 4811, 481101, 'First', { isGm: true });
+        const b = joinAs(server, fakeWs(), 4811, 481102, 'Second', { isGm: true });
+        setFreeholdTier(server.sim.ctx, 'account:4811', tier);
+        server.sim.addItem('hearth_key', 1, b.pid);
+        const draws = vi.fn();
+        server.sim.rng.setObserver(draws);
+        enter(server, a);
+        const first = entityOf(server, a.pid);
+        const claim = claimFor(server, 'account:4811');
+        const origin = instanceOrigin(DUNGEONS[claim.dungeonId].index, claim.slot);
+        expect(first.pos).toEqual(server.sim.groundPos(origin.x, origin.z - 4));
+        const before = structuredClone(first);
+        if (surface === 'gate') enter(server, b);
+        else send(server, b, { cmd: 'use', item: 'hearth_key', ownerKey: 'account:untrusted' });
+        const second = entityOf(server, b.pid);
+        expect(server.sim.ctx.instanceClaimIdAt(second.pos)).toBe(claim.exitId);
+        expect(
+          Math.hypot(first.pos.x - second.pos.x, first.pos.z - second.pos.z),
+        ).toBeGreaterThanOrEqual(1);
+        expect(Math.abs(second.pos.x - origin.x)).toBeLessThanOrEqual(1);
+        expect(second.pos.z - origin.z).toBeGreaterThanOrEqual(-4);
+        expect(second.pos.z - origin.z).toBeLessThanOrEqual(tier === 'inn_room' ? 5.5 : 9.5);
+        expect(isBlocked(server.sim.cfg.seed, second.pos.x, second.pos.z, 0.5)).toBe(false);
+        expect(second.facing).toBe(0);
+        expect(first).toEqual(before);
+        expect(server.sim.countItem('hearth_key', b.pid)).toBe(1);
+        expect(server.sim.freeholdKeyReadyAtMs.get('account:4811')).toBe(
+          surface === 'key' ? 3609000 : undefined,
+        );
+        expect(draws).not.toHaveBeenCalled();
+        return { pos: second.pos, facing: second.facing, seq: second.dungeonEntrySeq };
+      }
+      expect(replay()).toEqual(replay());
+    },
+  );
+
+  it.each(['gate', 'key'] as const)(
+    '%s dispatch refuses a saturated owned room without moving occupants or spending the key clock',
+    (surface) => {
+      const server = litServer();
+      server.sim.cfg.freeholdKeyAdmission = () => true;
+      server.sim.cfg.lockoutNowMs = () => 9000;
+      const a = joinAs(server, fakeWs(), 4812, 481201, 'First', { isGm: true });
+      const b = joinAs(server, fakeWs(), 4812, 481202, 'Second', { isGm: true });
+      setFreeholdTier(server.sim.ctx, 'account:4812', tier);
+      enter(server, a);
+      server.sim.addItem('hearth_key', 1, b.pid);
+      const claim = claimFor(server, 'account:4812');
+      const origin = instanceOrigin(DUNGEONS[claim.dungeonId].index, claim.slot);
+      for (let x = -1; x <= 1; x++) {
+        for (let z = -5.5; z <= (tier === 'inn_room' ? 5.5 : 9.5); z++) {
+          const id = server.sim.addPlayer('warrior', `Blocker${x}/${z}`);
+          const blocker = entityOf(server, id);
+          blocker.pos = server.sim.groundPos(origin.x + x, origin.z + z);
+          blocker.prevPos = { ...blocker.pos };
+          server.sim.ctx.rebucket(blocker);
+        }
+      }
+      approachGate(server, b);
+      server.sim.freeholdKeyReadyAtMs.set('account:4812', 8999);
+      server.sim.drainEvents();
+      const state = () =>
+        structuredClone({
+          players: [...server.sim.players.keys()].map((pid) => entityOf(server, pid)),
+          inventory: server.sim.meta(b.pid)?.inventory,
+          claims: server.sim.instances,
+          records: [...server.sim.freeholds],
+          clocks: [...server.sim.freeholdKeyReadyAtMs],
+          nextId: server.sim.nextId,
+        });
+      const before = state();
+      const draws = vi.fn();
+      server.sim.rng.setObserver(draws);
+      send(
+        server,
+        b,
+        surface === 'gate' ? { cmd: 'freehold_enter' } : { cmd: 'use', item: 'hearth_key' },
+      );
+      expect(server.sim.drainEvents()).toEqual([
+        { type: 'freeholdDenied', pid: b.pid, reason: 'busy' },
+      ]);
+      expect(state()).toEqual(before);
+      expect(draws).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe('remote-key shared-account clock through real server dispatch', () => {

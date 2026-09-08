@@ -951,11 +951,6 @@ const WALL_CONFIG = {
   maximumSegmentSpan: 6.5,
 } as const;
 
-function wallPoint(x: number, z: number): Point2 {
-  const scale = WALL_CONFIG.radius / Math.hypot(x, z);
-  return { x: x * scale, z: z * scale };
-}
-
 // The harbor town has NO ring wall (site-plan.md section 2: a town grown
 // along streets, open to its quay and beach). Gates and segments are empty
 // on purpose; the machinery stays so the API and its consumers (renderer
@@ -977,12 +972,6 @@ export function wallSegmentMirrored(segment: CircularWallSegment): boolean {
       Math.abs(gate.end.x - segment.start.x) < 1e-8 &&
       Math.abs(gate.end.z - segment.start.z) < 1e-8,
   );
-}
-
-function gateCrossing(id: string): Point2 {
-  const gate = WALL_GATES.find((candidate) => candidate.id === id);
-  if (!gate) throw new Error(`missing Eastbrook wall gate ${id}`);
-  return gate.crossing;
 }
 
 const ROADS = [

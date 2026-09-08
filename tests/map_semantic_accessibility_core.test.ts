@@ -9,6 +9,7 @@ import {
 import type { DelveDrawModel } from '../src/ui/hud/delve/delve_map_painter';
 import type { RiftMapModel } from '../src/ui/hud/rift/rift_map_core';
 import { ensureLocaleLoaded, setLanguage } from '../src/ui/i18n';
+import { showMapMarkerTooltipAt } from '../src/ui/map_marker_tooltip_adapter';
 import type { MapInstanceSemantic } from '../src/ui/map_semantic_accessibility_core';
 import {
   MapSemanticAccessibilityCore,
@@ -651,7 +652,48 @@ it('composes the disclosed Freeholds gate into both map description and pointer 
     'Freeholds gate: north, medium distance.',
   );
   expect(view.navigationText(model.navigation[0])).toBe('Freeholds gate');
+  const paint = vi.fn();
+  const pointerTooltip = () =>
+    showMapMarkerTooltipAt(
+      {
+        ready: true,
+        clientLeft: 0,
+        clientTop: 0,
+        backingPerClientX: 1,
+        backingPerClientY: 1,
+        backingPerCssPx: 1,
+      },
+      280,
+      100,
+      false,
+      model.questAreas,
+      model.npcs,
+      model.gatherNodes,
+      model.stations,
+      model.services,
+      model.navigation,
+      model.farmPatches,
+      [],
+      [],
+      view,
+      {
+        npc: () => '',
+        station: () => '',
+        service: () => '',
+        gather: () => '',
+        farm: () => '',
+        questArea: () => '',
+        navigation: (marker) => view.navigationText(marker),
+        paint,
+      },
+    );
+  // Overworld point markers reach the shared adapter's navigation hit path;
+  // semantics.tooltipAt alone deliberately holds only instance marker hits.
+  expect(pointerTooltip()).toBe(true);
+  expect(paint).toHaveBeenLastCalledWith('Freeholds gate', 280, 100);
   model.navigation.length = 0;
   expect(view.updateOverworld(model, 'Eastbrook Vale', 560)).not.toContain('Freeholds gate');
-  expect(view.tooltipAt(280, 100, 20)).toBe('');
+  paint.mockClear();
+  expect(pointerTooltip()).toBe(false);
+  expect(paint).not.toHaveBeenCalled();
 });

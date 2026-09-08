@@ -1449,7 +1449,8 @@ const MONOLITHS: MonolithRow[] = [
     // 10188, measured. The row never conflicted (the incoming pin still sat at
     // 10291). Exact merged count, zero slack: any further growth reds again.
     // Lowered after extracting travel guards and instance presence; measured after formatting.
-    ceiling: 10002,
+    // Gate inventory marking moved to its sibling; unused imports removed.
+    ceiling: 9983,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1922,7 +1923,8 @@ const MONOLITHS: MonolithRow[] = [
     // the record: ours 2804, the release 2433. Measured on the merged tree,
     // never reconciled by arithmetic. Exact merged count, zero slack.
     // Lowered after extracting interior variant and layout resolution; measured after formatting.
-    ceiling: 2321,
+    // Removed unused imports after the interior review; measured after formatting.
+    ceiling: 2320,
     seam: 'a new src/render/<thing>.ts module (src/render/CLAUDE.md)',
   },
   {

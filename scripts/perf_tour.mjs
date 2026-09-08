@@ -499,6 +499,7 @@ async function runViewport(browser, viewport) {
         const key = 'woc_settings';
         const cur = JSON.parse(localStorage.getItem(key) ?? '{}');
         cur.graphicsPreset = value;
+        cur.graphicsDefaultApplied = true;
         localStorage.setItem(key, JSON.stringify(cur));
       } catch {
         /* storage unavailable */
@@ -609,6 +610,7 @@ const artifact = {
   url: perfUrl(),
   gpuMode: PERF_GPU ? 'real-gpu-headed' : 'swiftshader-headless',
   scenario: PERF_SCENARIO,
+  requestedPreset: PERF_PRESET,
   stepMs: STEP_MS,
   settleMs: SETTLE_MS,
   bootTimeoutMs: BOOT_TIMEOUT_MS,

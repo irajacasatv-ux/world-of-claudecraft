@@ -81,12 +81,14 @@ import {
 import { noopGameMetricsCounters, setGameMetricsCounters } from '../../server/http/game_signals';
 import { refusedRiftForgeCommand } from '../../server/rift_forge_gate';
 import { buildRealmSimConfig } from '../../server/sim_boot_config';
+import { bagCapacity } from '../../src/sim/bags';
 import { ITEMS } from '../../src/sim/data';
+import { isInJailCage } from '../../src/sim/jail';
 import { Sim } from '../../src/sim/sim';
 import { inertVaultConsumptionAdmission } from '../../src/sim/sim_context';
 import { FreeholdGatePrompt } from '../../src/ui/hud/housing/gate_prompt_controller';
 import { COMMAND_FACETS, type CommandName } from '../../src/world_api';
-import { bareClient, fakeWs, joinServer } from '../helpers/bare_client';
+import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from '../helpers/bare_client';
 
 type HousingCommand = (typeof FREEHOLD_WIRE_COMMANDS)[number];
 
@@ -584,11 +586,11 @@ describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
 
       expect(stub).toHaveBeenCalledTimes(1);
       expect(stub.mock.calls[0]).toEqual(STUB[cmd].args(pid));
-      // Gate entry is arm-marked once it reaches the Sim, which may grant a key.
-      // The other housing commands still touch no heavy self field.
+      // This player is away from the gate, so the invoked entry refuses without
+      // changing inventory. Invocation alone must not force heavy serialization.
       expect(fc.sent.filter((m) => m.t === 'commandOutcome' && m.ok === false)).toEqual([]);
       expect(refusals.count()).toBe(0);
-      expect(session.selfHeavyDirty).toBe(cmd === 'freehold_enter');
+      expect(session.selfHeavyDirty).toBe(false);
     },
   );
 
@@ -823,7 +825,7 @@ describe('freeholds wire: a jailed session cannot step through its own door', ()
 
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_enter', rid: 81 }));
     expect(fc.sent).toEqual([
-      { t: 'events', list: [{ type: 'freeholdDenied', pid: session.pid, reason: 'no_freehold' }] },
+      { t: 'events', list: [{ type: 'freeholdDenied', pid: session.pid, reason: 'busy' }] },
       { t: 'commandOutcome', rid: 81, ok: false },
     ]);
 
@@ -1125,19 +1127,228 @@ describe('Freehold Gate and Hearth Key real server dispatch', () => {
     // This participant is deliberately test-only. The stock realm case above
     // remains refused until durable remote-key account authority lands in 07a.
   });
-  it('a jailed crafted key frame cannot reach item dispatch on an enabled realm', () => {
-    vi.stubEnv('FREEHOLDS_ENABLED', '1');
-    const { server, session, pid, fc } = housingSession();
-    session.jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
-    server.sim.addItem('hearth_key', 1, pid);
-    const use = vi.spyOn(server.sim, 'useItem');
-    server.handleMessage(
-      session,
-      JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key', rid: 701 }),
-    );
-    expect(use).not.toHaveBeenCalled();
-    expect(fc.sent).toContainEqual({ t: 'commandOutcome', rid: 701, ok: false });
-  });
+  it.each([{ cmd: 'freehold_enter' }, { cmd: 'use', item: 'hearth_key' }])(
+    'jailed $cmd returns only the personal busy denial and changes no travel state',
+    (frame) => {
+      vi.stubEnv('FREEHOLDS_ENABLED', '1');
+      const { server, session, pid, fc } = housingSession();
+      const other = fakeWs();
+      joinServer(server, other, 7202, 'Observer');
+      // Drive the production jail transition: both the session and Sim entity
+      // are jailed, and the player really occupies the cage.
+      (
+        server as unknown as {
+          jailSession(moderator: typeof session, target: typeof session, minutes: number): void;
+        }
+      ).jailSession(session, session, 10);
+      const player = server.sim.entities.get(pid)!;
+      expect(session.jailed).not.toBeNull();
+      expect(player.jailed).toBe(true);
+      expect(isInJailCage(player.pos)).toBe(true);
+      server.sim.addItem('hearth_key', 1, pid);
+      const ownerKey = freeholdOwnerKeyForAccount(session.accountId);
+      server.sim.freeholdKeyReadyAtMs.set(ownerKey, 9999999);
+      const admission = vi.fn(() => true);
+      server.sim.cfg.freeholdKeyAdmission = admission;
+      const use = vi.spyOn(server.sim, 'useItem');
+      const enter = vi.spyOn(server.sim, 'freeholdEnter');
+      const state = () => ({
+        position: player.pos,
+        entrySeq: player.dungeonEntrySeq,
+        claims: server.sim.instances,
+        plots: [...server.sim.ctx.freeholds],
+        inventory: server.sim.meta(pid)!.inventory,
+        deadlines: [...server.sim.freeholdKeyReadyAtMs],
+        wireRev: server.sim.meta(pid)!.wireRev,
+      });
+      const before = structuredClone(state());
+      session.selfHeavyDirty = false;
+      server.sim.drainEvents();
+      fc.sent.length = 0;
+      other.sent.length = 0;
+      server.handleMessage(
+        session,
+        JSON.stringify({ t: 'cmd', ...frame, ownerKey: 'account:1', pid: 1, rid: 701 }),
+      );
+      expect(fc.sent).toEqual([
+        { t: 'events', list: [{ type: 'freeholdDenied', pid, reason: 'busy' }] },
+        { t: 'commandOutcome', rid: 701, ok: false },
+      ]);
+      expect(other.sent).toEqual([]);
+      expect(server.sim.drainEvents()).toEqual([]);
+      expect(use).not.toHaveBeenCalled();
+      expect(enter).not.toHaveBeenCalled();
+      expect(admission).not.toHaveBeenCalled();
+      expect(state()).toEqual(before);
+      expect(session.selfHeavyDirty).toBe(false);
+    },
+  );
+
+  it.each(['dark realm', 'jailed on lit realm'])(
+    '%s preserves an unrelated item effect despite forged housing fields',
+    (context) => {
+      vi.stubEnv('FREEHOLDS_ENABLED', context === 'dark realm' ? '0' : '1');
+      const { server, session, pid, fc } = housingSession();
+      if (context === 'jailed on lit realm') {
+        (
+          server as unknown as {
+            jailSession(moderator: typeof session, target: typeof session, minutes: number): void;
+          }
+        ).jailSession(session, session, 10);
+      }
+      const player = server.sim.entities.get(pid)!;
+      player.hp = 1;
+      server.sim.addItem('minor_healing_potion', 1, pid);
+      const slot = server.sim
+        .meta(pid)!
+        .inventory.findIndex((item) => item.itemId === 'minor_healing_potion');
+      const before = structuredClone({
+        position: player.pos,
+        claims: server.sim.instances,
+        plots: [...server.sim.ctx.freeholds],
+      });
+      const admission = vi.fn(() => true);
+      server.sim.cfg.freeholdKeyAdmission = admission;
+      const use = vi.spyOn(server.sim, 'useItem');
+      const refusals = recordingRefusalSink();
+      server.sim.drainEvents();
+      fc.sent.length = 0;
+      server.handleMessage(
+        session,
+        JSON.stringify({
+          t: 'cmd',
+          cmd: 'use',
+          item: 'minor_healing_potion',
+          slot,
+          itemId: 'hearth_key',
+          use: { type: 'freeholdEnter' },
+          ownerKey: 'account:1',
+          rid: 702,
+        }),
+      );
+      expect(use).toHaveBeenCalledExactlyOnceWith('minor_healing_potion', pid, slot);
+      expect(player.hp).toBeGreaterThan(1);
+      expect(server.sim.countItem('minor_healing_potion', pid)).toBe(0);
+      expect(server.sim.countItem('hearth_key', pid)).toBe(0);
+      expect({
+        position: player.pos,
+        claims: server.sim.instances,
+        plots: [...server.sim.ctx.freeholds],
+      }).toEqual(before);
+      expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
+      expect(admission).not.toHaveBeenCalled();
+      expect(refusals.count()).toBe(0);
+      expect(server.sim.drainEvents().filter((event) => event.type === 'freeholdDenied')).toEqual(
+        [],
+      );
+      expect(fc.sent).toEqual([]);
+    },
+  );
+
+  it.each(['no key', 'wrong selected item'])(
+    'a forged key use with %s cannot authorize travel or consume another item',
+    (inventory) => {
+      vi.stubEnv('FREEHOLDS_ENABLED', '1');
+      const { server, session, pid } = housingSession();
+      server.sim.addItem('minor_healing_potion', 1, pid);
+      if (inventory === 'wrong selected item') server.sim.addItem('hearth_key', 1, pid);
+      const meta = server.sim.meta(pid)!;
+      const slot =
+        inventory === 'wrong selected item'
+          ? meta.inventory.findIndex((item) => item.itemId === 'minor_healing_potion')
+          : undefined;
+      const admission = vi.fn(() => true);
+      server.sim.cfg.freeholdKeyAdmission = admission;
+      const player = server.sim.entities.get(pid)!;
+      const state = () => ({
+        position: player.pos,
+        entrySeq: player.dungeonEntrySeq,
+        inventory: meta.inventory,
+        claims: server.sim.instances,
+        plots: [...server.sim.ctx.freeholds],
+        deadlines: [...server.sim.freeholdKeyReadyAtMs],
+      });
+      const before = structuredClone(state());
+      const use = vi.spyOn(server.sim, 'useItem');
+      server.handleMessage(
+        session,
+        JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key', slot, accountId: 1 }),
+      );
+      expect(use).toHaveBeenCalledExactlyOnceWith('hearth_key', pid, slot);
+      expect(admission).not.toHaveBeenCalled();
+      expect(state()).toEqual(before);
+    },
+  );
+});
+
+describe('Freehold Gate inventory change drives heavy self snapshots', () => {
+  it.each(['refusal', 'existing key', 'full bags', 'new key'])(
+    '%s refreshes heavy self only for a newly granted key',
+    (outcome) => {
+      vi.stubEnv('FREEHOLDS_ENABLED', '1');
+      vi.stubEnv('SELF_SNAPSHOT_FULL', '0');
+      const { server, session, pid, fc } = housingSession();
+      const player = server.sim.entities.get(pid)!;
+      const meta = server.sim.meta(pid)!;
+      const gate = [...server.sim.entities.values()].find((e) => e.templateId === 'freehold_gate')!;
+      if (outcome !== 'refusal') player.pos = { ...gate.pos };
+      if (outcome === 'existing key') server.sim.addItem('hearth_key', 1, pid);
+      if (outcome === 'full bags') {
+        meta.inventory.splice(
+          0,
+          meta.inventory.length,
+          ...Array.from({ length: bagCapacity(meta.bags) }, () => ({
+            itemId: 'masters_field_forge',
+            count: 1,
+          })),
+        );
+        expect(server.sim.canAddItem('hearth_key', 1, pid)).toBe(false);
+      }
+      // The heavy block invokes this projection even when delta serialization
+      // drops identical bytes. Observe work as well as the resulting payload.
+      const heavyProjection = vi.spyOn(server.sim, 'ownedMountsFor');
+      server.sim.tickCount = 40 - (pid % 40) + 1;
+      broadcast(server);
+      expect(heavyProjection).toHaveBeenCalledExactlyOnceWith(pid);
+      expect(lastSnap(fc.sent).self.inv).toEqual(meta.inventory);
+      expect(session.selfHeavyDirty).toBe(false);
+      const beforeInventory = structuredClone(meta.inventory);
+      const beforePosition = { ...player.pos };
+      heavyProjection.mockClear();
+      server.sim.drainEvents();
+      fc.sent.length = 0;
+      server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_enter' }));
+      const events = server.sim.drainEvents();
+      (
+        server as unknown as {
+          routeEvents(events: ReturnType<Sim['drainEvents']>): void;
+        }
+      ).routeEvents(events);
+      broadcast(server);
+      expect(heavyProjection).toHaveBeenCalledTimes(outcome === 'new key' ? 1 : 0);
+      if (outcome === 'new key') {
+        expect(lastSnap(fc.sent).self.inv).toEqual(meta.inventory);
+        expect(lastSnap(fc.sent).self.inv).toContainEqual({ itemId: 'hearth_key', count: 1 });
+      } else {
+        expect(lastSnap(fc.sent).self.inv).toBeUndefined();
+        expect(meta.inventory).toEqual(beforeInventory);
+      }
+      if (outcome === 'refusal') {
+        expect(player.pos).toEqual(beforePosition);
+        expect(events).toEqual([{ type: 'freeholdDenied', pid, reason: 'busy' }]);
+      } else {
+        const claim = server.sim.instances.find(
+          (instance) => instance.exitId === server.sim.ctx.instanceClaimIdAt(player.pos),
+        );
+        expect(claim?.partyKey).toBe(freeholdOwnerKeyForAccount(session.accountId));
+        expect(player.pos).not.toEqual(beforePosition);
+      }
+      heavyProjection.mockClear();
+      broadcast(server);
+      expect(heavyProjection).not.toHaveBeenCalled();
+      expect(lastSnap(fc.sent).self.inv).toBeUndefined();
+    },
+  );
 });
 
 it('silently sheds a live gate command and recovers only after a fresh user confirmation', () => {

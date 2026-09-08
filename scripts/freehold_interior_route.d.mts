@@ -4,6 +4,7 @@ export interface FreeholdTourPose {
   x: number;
   y: number;
   z: number;
+  facing: number;
   dead: boolean;
   tick: number;
 }
@@ -15,6 +16,8 @@ export interface FreeholdTourArrival extends FreeholdTourPose {
 }
 export interface FreeholdSampleBoundary {
   instrumentationActive: boolean;
+  graphicsPreset: number;
+  rendererTier: string;
   atMs: number;
   frames: number;
   calls: number;
@@ -24,7 +27,12 @@ export interface FreeholdSampleBoundary {
 export interface FreeholdPerfSample {
   sampleEvidence?: { begin: FreeholdSampleBoundary; end: FreeholdSampleBoundary };
   label: string;
-  arrival?: { gpuDelta?: Record<string, number> };
+  arrival?: {
+    entryAtMs?: number;
+    gpuBefore?: Record<string, number>;
+    gpuAfter?: Record<string, number>;
+    gpuDelta?: Record<string, number>;
+  };
 }
 export function walkFreeholdRouteTo(
   page: Page,

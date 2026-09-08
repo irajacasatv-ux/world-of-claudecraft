@@ -477,7 +477,7 @@ describe('resumeDroppedPrewarmEntries', () => {
   it('releases deferred compile, texture and sky work only after first paint', () => {
     const renderer = readFileSync(new URL('../src/render/renderer.ts', import.meta.url), 'utf8');
     const main = readFileSync(new URL('../src/main.ts', import.meta.url), 'utf8');
-    const resumeStart = renderer.indexOf('void settlePrewarmBeforePublish(');
+    const resumeStart = renderer.indexOf('resumeTask = settlePrewarmBeforePublish(');
     const resumeEnd = renderer.indexOf(
       '// Sky uploads deferred behind a slow prefetch',
       resumeStart,
@@ -494,7 +494,9 @@ describe('resumeDroppedPrewarmEntries', () => {
     );
     expect(firstPaintAt).toBeGreaterThan(prewarmAt);
     expect(releaseAt).toBeGreaterThan(firstPaintAt);
-    expect(resumeBlock).toContain('await options.resumeAfterFirstPaint;');
+    expect(resumeBlock).toContain(
+      'await awaitPrewarmOwnerTask(options.resumeAfterFirstPaint, this);',
+    );
     expect(skyBlock).toContain('await options.resumeAfterFirstPaint;');
   });
 
@@ -566,7 +568,7 @@ describe('resumeDroppedPrewarmEntries', () => {
     const runSlice = compileEntry.slice(runStart, runEnd);
     expect(runSlice).toContain('Promise.race([');
     expect(runSlice).not.toContain('performance.now() >= gpuSubmitDeadline');
-    expect(source).toContain('void settlePrewarmBeforePublish(');
+    expect(source).toContain('resumeTask = settlePrewarmBeforePublish(');
     expect(source).toContain('resumeDroppedPrewarmEntries(resume, {');
     // releaseTail: a resume unit's wall time is its off-thread links; without
     // the tail release each unit occupied the whole serial queue for seconds

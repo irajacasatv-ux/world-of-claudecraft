@@ -330,7 +330,7 @@ export const ja_JP: EnTranslations = {
       "common": {
         "close": "閉じる",
         "cancel": "キャンセル",
-        "back": "戻る",
+        "back": "Back",
         "retry": "再試行",
         "loading": "自宅を読み込み中...",
         "pending": "確認を待っています...",
@@ -354,13 +354,13 @@ export const ja_JP: EnTranslations = {
       },
       "gate": {
         "title": "家を選ぶ",
-        "own": "自宅",
+        "own": "My Home",
         "visit": "フレンドを訪問",
         "name": "キャラクター名",
         "namePlaceholder": "キャラクター名を入力",
         "nameRequired": "訪問するキャラクターの名前を入力してください。",
         "homeChoice": "自分の家を選ぶ",
-        "lookup": "家を探す",
+        "lookup": "Find Home",
         "lookupPending": "フレンドの家を探しています...",
         "lookupChanged": "入る前に、このキャラクターの家を探してください。",
         "result": "{name}の家",
@@ -20561,7 +20561,7 @@ export const ja_JP: EnTranslations = {
       },
       "freehold_inn_room": {
         "name": "宿屋の部屋",
-        "enterText": "宿屋の階段を上り、借りている部屋へ入った。",
+        "enterText": "宿屋の階段を上り、自分の部屋へ入った。",
         "leaveText": "部屋に鍵をかけ、波止場へ戻った。"
       },
       "freehold_cottage": {

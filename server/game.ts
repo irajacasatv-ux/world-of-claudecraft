@@ -14,19 +14,9 @@ import { wireParkedMana } from '../src/sim/combat/form_auto_unshift';
 import { rewindHealAmount } from '../src/sim/combat/rewind';
 import { DEEDS } from '../src/sim/content/deeds';
 import { isFinderListingTag, isFinderRole } from '../src/sim/content/dungeon_finder';
-import { isMountSkinId } from '../src/sim/content/mount_skins';
 import { RELIQUARY_PAGES_BY_ID } from '../src/sim/content/reliquary';
 import { MECH_CHROMAS } from '../src/sim/content/skins';
-import { isWeaponSkinType, WEAPON_SKINS } from '../src/sim/content/weapon_skins';
-import {
-  DELVES,
-  DUNGEON_X_THRESHOLD,
-  DUNGEONS,
-  ITEMS,
-  isBgPos,
-  MOBS,
-  zoneAt,
-} from '../src/sim/data';
+import { DELVES, DUNGEON_X_THRESHOLD, ITEMS, isBgPos, MOBS, zoneAt } from '../src/sim/data';
 import { devTierIndexForMergedPrs } from '../src/sim/dev_tier';
 import { parseRelayCommand } from '../src/sim/discord_relay';
 import type { GuildBankOpDelta } from '../src/sim/guild_bank';
@@ -193,8 +183,6 @@ import {
   closePlaySession,
   GUILD_BANK_ROW_MAX_BYTES,
   grantAccountMechChroma,
-  grantAccountMountSkins,
-  grantAccountWeaponSkins,
   heartbeatCharacterLeases,
   insertChatLogs,
   loadAccountFlair,
@@ -203,7 +191,6 @@ import {
   loadMailState,
   loadMarketState,
   loadRiftState,
-  markAccountQuestComplete,
   openPlaySession,
   pool,
   releaseCharacterLease,
@@ -212,7 +199,6 @@ import {
   saveCharacterState,
   saveMarketState,
   saveRiftState,
-  setAccountWeaponSkinLoadout,
   touchCharacterLogin,
   walletForAccount,
 } from './db';
@@ -6131,10 +6117,10 @@ export class GameServer {
     // straight back, ruining the match for everyone else in it.
     if (session.jailed && refusedJailedTravelCommand(msg)) {
       if (msg.cmd === 'unstuck') this.sendUnstuckBlocked(session, 'jailed');
-      else if (msg.cmd === 'freehold_enter')
+      else if (msg.cmd === 'freehold_enter' || (msg.cmd === 'use' && msg.item === 'hearth_key'))
         this.send(session, {
           t: 'events',
-          list: [{ type: 'freeholdDenied', pid: session.pid, reason: 'no_freehold' }],
+          list: [{ type: 'freeholdDenied', pid: session.pid, reason: 'busy' }],
         });
       else this.sendChatNotice(session, 'You cannot do that while jailed.');
       this.sendCommandOutcome(session, msg, false);
@@ -6672,13 +6658,8 @@ export class GameServer {
         // The housing command bodies live whole in server/freehold_wire.ts. The
         // labels stay HERE: the command-schema suite scans this switch for the
         // dispatch universe. The dark-realm refusal sits above the switch.
-        // Arm-marked heavy-self members mark only when the frame reached the sim.
-        if (
-          dispatchFreeholdCommand(sim, session, command, msg, pid) &&
-          heavySelfMarkOnAccept(command)
-        ) {
-          session.selfHeavyDirty = true;
-        }
+        // The sibling marks heavy self only when gate entry grants inventory.
+        dispatchFreeholdCommand(sim, session, command, msg, pid);
         break;
       case 'sell_all_junk':
         sim.sellAllJunk(pid);

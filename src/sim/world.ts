@@ -38,7 +38,7 @@ import {
 } from './ember_lava_layout';
 import { GALE_DECK_FREEBOARD, galeDeckSurface } from './gale_harbor';
 import { KEEP_SITE, keepSitePadWeight } from './keep_site';
-import { reachDeckClear, reachDeckSurface } from './reach_decks';
+import { reachDeckClear } from './reach_decks';
 import { fbm2, hash2, noise2 } from './rng';
 import {
   CALM_SKIRT_MAX_WIDTH,

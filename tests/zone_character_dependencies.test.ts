@@ -53,7 +53,7 @@ describe('zone character dependency barrier', () => {
     );
     expect(
       src.match(
-        /await prepareZoneCharacterDependencies\(this.zonePrewarmHost\(\), (?:zone|activeZone)\)/g,
+        /await prepareBoundedZoneCharacterDependencies\(this, (?:zone|activeZone), (?:buildDeadline|deadline)\)/g,
       ),
     ).toHaveLength(3);
     for (const builder of ['buildEntityPrewarmGroup', 'buildNpcPrewarmGroup']) {
@@ -61,7 +61,7 @@ describe('zone character dependency barrier', () => {
       expect(calls).toHaveLength(1);
       const before = src.slice(Math.max(0, calls[0].index - 220), calls[0].index);
       expect(before).toMatch(
-        /await prepareZoneCharacterDependencies[\s\S]*this\.assertPrewarmGeneration\(generation\);/,
+        /await prepareBoundedZoneCharacterDependencies[\s\S]*assertPrewarmGeneration\(this, generation\);/,
       );
     }
   });

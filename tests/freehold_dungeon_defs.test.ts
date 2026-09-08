@@ -36,7 +36,7 @@ const NON_LATIN: SupportedLanguage[] = ['zh_CN', 'zh_TW', 'ja_JP', 'ko_KR', 'ru_
 const ENGLISH = {
   freehold_inn_room: {
     name: 'Inn Room',
-    enterText: 'You climb the inn stairs and let yourself into your rented room.',
+    enterText: 'You climb the inn stairs and let yourself into your room.',
     leaveText: 'You lock the room behind you and step back out onto the quay.',
   },
   freehold_cottage: {
