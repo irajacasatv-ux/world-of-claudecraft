@@ -21,6 +21,7 @@ import { DUNGEON_X_THRESHOLD, DUNGEONS, dungeonAt, instanceOrigin, MOBS, NPCS } 
 import { clearIgnivarEncounterAuras } from '../encounters/ignivar';
 import { clearVarkhulEncounterAuras } from '../encounters/varkhul';
 import { createGroundObject, createMob, createNpc } from '../entity';
+import { freeholdKeyFor } from '../freehold/owner_key';
 import { updateIgnivarForgeLift } from '../ignivar_forge_lift';
 import {
   IGNIVAR_RAID_ARENA_ID,
@@ -386,7 +387,10 @@ export function enterDungeon(
   const party = ctx.partyOf(r.meta.entityId);
   const raidAllowed = RAID_ALLOWED_DUNGEON_IDS.has(dungeonId);
   const raidRequired = RAID_REQUIRED_DUNGEON_IDS.has(dungeonId);
-  if (party?.raid && !raidAllowed) {
+  // An owner-keyed room (a freehold, DungeonDef.claimKey 'owner') ignores party
+  // membership entirely: the raid arm and the undersized-party notice below are
+  // party facts, and the claim key is the owner's, not the group's.
+  if (dungeon.claimKey !== 'owner' && party?.raid && !raidAllowed) {
     ctx.error(r.meta.entityId, 'Raid groups cannot enter standard dungeons.');
     return false;
   }
@@ -410,7 +414,10 @@ export function enterDungeon(
       return false;
     }
   }
-  const key = instanceKeyFor(ctx, r.meta.entityId);
+  const key =
+    dungeon.claimKey === 'owner'
+      ? freeholdKeyFor(ctx, r.meta.entityId)
+      : instanceKeyFor(ctx, r.meta.entityId);
   // The Ignivar door rules (modeled on the Rift door, deliberately broader:
   // the rift bars only dead entrants): NO entrant from OUTSIDE the raid,
   // living or ghost, may zone in while any of the group's rooms still has a
@@ -670,7 +677,7 @@ export function enterDungeon(
       pid: r.meta.entityId,
     });
   }
-  if (!party || party.members.length < dungeon.suggestedPlayers) {
+  if (dungeon.claimKey !== 'owner' && (!party || party.members.length < dungeon.suggestedPlayers)) {
     ctx.emit({
       type: 'log',
       text: `${dungeon.name} is meant for a full party of ${dungeon.suggestedPlayers}. Tread carefully.`,
@@ -699,6 +706,11 @@ export function enterDungeon(
   emitFirstRaidBossRoomWelcome(ctx, inst, r.meta.entityId);
   inst.enteredBy.add(r.meta.entityId);
   for (const devBotId of devReplacementEnteredBy) inst.enteredBy.add(devBotId);
+  // An owner-keyed room only: the owner has arrived in the room of its CURRENT
+  // tier, so any other owner-keyed room still claimed under the same key is the
+  // room of a tier it has left (a grant moved it up while the old claim was
+  // live). Free those now, unless a player still stands inside one.
+  if (dungeon.claimKey === 'owner') freeVacantOwnerClaims(ctx, key, dungeonId);
   // Stepping inside removes you from any arena queue: a match must never form for
   // a player standing in an instance and teleport them back inside fully restored
   // (issue #1600). No-op if they were not queued; notifies any 2v2 teammate.
@@ -1116,6 +1128,36 @@ export function freeInstance(ctx: SimContext, inst: InstanceSlot): void {
   inst.combatExitMemory = new Map();
 }
 
+// The tier-change rule for owner-keyed rooms (a freehold, DungeonDef.claimKey
+// 'owner'): after an owner claims or rejoins the room of its current tier,
+// every OTHER owner-keyed room claimed under the same owner key is stale (the
+// tier it was claimed for is no longer the owner's) and is freed at once, so
+// a grant does not leave the old room's slot to the empty-slot reaper's
+// timeout. A stale room with a player still inside it (a sibling character of
+// the same account) is left alone: it frees the way any claim does, once it
+// empties. Party- and solo-keyed claims are never touched: the claimKey check
+// is the guard, not the key string, so a host stamp that ever collided with a
+// party/solo key still could not free a dungeon claim (see resetDungeonInstances).
+function freeVacantOwnerClaims(ctx: SimContext, ownerKey: string, keepDungeonId: string): void {
+  for (const inst of ctx.instances) {
+    if (
+      inst.partyKey !== ownerKey ||
+      inst.dungeonId === keepDungeonId ||
+      DUNGEONS[inst.dungeonId]?.claimKey !== 'owner'
+    )
+      continue;
+    let occupied = false;
+    for (const meta of ctx.players.values()) {
+      const e = ctx.entities.get(meta.entityId);
+      if (e && instanceClaimContains(inst, e.pos)) {
+        occupied = true;
+        break;
+      }
+    }
+    if (!occupied) freeInstance(ctx, inst);
+  }
+}
+
 // Explicit classic-style reset for the caller's standard dungeon claims. Durable
 // character keys keep relogs attached to the same run; this is the deliberate,
 // server-authoritative way to abandon that run before selecting another difficulty.
@@ -1131,8 +1173,14 @@ export function resetDungeonInstances(ctx: SimContext, pid?: number): void {
   }
 
   const key = instanceKeyFor(ctx, r.meta.entityId);
+  // Owner-keyed rooms (freeholds) are never Reset All targets: their claim key
+  // is an owner key this party/solo key can never equal today, and the explicit
+  // skip keeps a live house safe should a host stamp ever collide with one.
   const owned = ctx.instances.filter(
-    (inst) => inst.partyKey === key && !RAID_ALLOWED_DUNGEON_IDS.has(inst.dungeonId),
+    (inst) =>
+      inst.partyKey === key &&
+      !RAID_ALLOWED_DUNGEON_IDS.has(inst.dungeonId) &&
+      DUNGEONS[inst.dungeonId]?.claimKey !== 'owner',
   );
   if (owned.length === 0) {
     ctx.error(r.meta.entityId, 'You have no instances to reset.');

@@ -968,7 +968,11 @@ const MONOLITHS: MonolithRow[] = [
     // reductions. Newline counts: shared base 11983, Freeholds 11940,
     // incoming 11919, combined 11876. The measured merged size exactly
     // composes both reductions and sits below both parents. Zero headroom.
-    ceiling: 11876,
+    // Freeholds 05 (the owner-keyed claim): effectiveArmor and
+    // effectiveAttackPower moved whole to src/sim/combat/effective_stats.ts
+    // (Sim keeps the two seam-bound delegates), paying for the host owner
+    // stamp on PlayerMeta and the freehold join/leave hooks. Exact count.
+    ceiling: 11857,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {

@@ -1,10 +1,13 @@
 // Dark-host pins for src/sim/freehold/ and the IWorldHousing members on Sim.
-// Housing commands remain inert while the host flag controls the furnisher.
-// These assertions cover null descriptors, one shared clock base, ten stubs
-// that neither mutate, emit nor draw on each host configuration, a record
-// lifecycle that is a pure value round-trip, and
-// a source scan that keeps the sim core and its three sibling housing modules
-// free of store vocabulary and the sim core free of wall clocks.
+// The eight not-yet-lit housing commands remain inert while the host flag
+// controls the furnisher; the two lit ones (enter and leave) refuse text-free
+// on a dark host. These assertions cover null descriptors, one shared clock
+// base, eight stubs that neither mutate, emit nor draw on each host
+// configuration, the dark-host refusal of the lit pair, a record lifecycle
+// that is a pure value round-trip on a lit host and two inserters that insert
+// nothing on a dark one, and a source scan that keeps the sim core and its
+// three sibling housing modules free of store vocabulary and the sim core
+// free of wall clocks.
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -12,6 +15,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   asFreeholdPlotId,
   defaultFreeholdState,
+  ensureFreeholdRecord,
   evictFreehold,
   type FreeholdState,
   loadFreehold,
@@ -43,11 +47,15 @@ function snapshot(sim: Sim, pid: number) {
   };
 }
 
-// The ten command stubs, each invoked the way the server does (explicit pid)
-// and the way the offline IWorld caller does (no pid, the primaryId default).
-const STUBS: ReadonlyArray<[string, (sim: Sim, pid?: number) => void]> = [
+// The two LIT commands (the owner-keyed claim in src/sim/freehold/instance.ts)
+// and the eight command stubs, each invoked the way the server does (explicit
+// pid) and the way the offline IWorld caller does (no pid, the primaryId
+// default).
+const LIT: ReadonlyArray<[string, (sim: Sim, pid?: number) => void]> = [
   ['freeholdEnter', (sim, pid) => sim.freeholdEnter(pid)],
   ['freeholdLeave', (sim, pid) => sim.freeholdLeave(pid)],
+];
+const STUBS: ReadonlyArray<[string, (sim: Sim, pid?: number) => void]> = [
   ['placeFurnishing', (sim, pid) => sim.placeFurnishing(0, 1, 2, 3, 0.5, pid)],
   ['moveFurnishing', (sim, pid) => sim.moveFurnishing(7, 1, 2, 3, 0.5, pid)],
   ['removeFurnishing', (sim, pid) => sim.removeFurnishing(7, pid)],
@@ -80,7 +88,7 @@ describe('IWorldHousing on the offline Sim (dark)', () => {
     for (const name of ['myFreehold', 'freeholdLayout']) {
       expect(typeof Object.getOwnPropertyDescriptor(Sim.prototype, name)?.get).toBe('function');
     }
-    for (const name of ['housingNowMs', ...STUBS.map(([n]) => n)]) {
+    for (const name of ['housingNowMs', ...LIT.map(([n]) => n), ...STUBS.map(([n]) => n)]) {
       expect(typeof Object.getOwnPropertyDescriptor(Sim.prototype, name)?.value).toBe('function');
     }
   });
@@ -94,7 +102,7 @@ describe('IWorldHousing on the offline Sim (dark)', () => {
     // the ctor, so the spy takes.)
     const sim = makeSim();
     const pid = sim.primaryId;
-    for (const [name, call] of STUBS) {
+    for (const [name, call] of [...LIT, ...STUBS]) {
       const resolve = vi.spyOn(sim.ctx, 'resolve');
       call(sim, pid);
       expect(resolve, `${name} with an explicit pid`).toHaveBeenCalledTimes(1);
@@ -165,6 +173,41 @@ describe('IWorldHousing on the offline Sim (dark)', () => {
     }
   });
 
+  it('the lit pair on a DARK host: enter refuses text-free, leave is a silent no-op, nothing changes', () => {
+    const sim = makeSim();
+    const pid = sim.primaryId;
+    let draws = 0;
+    sim.rng.setObserver(() => {
+      draws++;
+    });
+    sim.drainEvents();
+    try {
+      const before = snapshot(sim, pid);
+      // No record is seeded on a dark host, so every entry answers no_freehold
+      // (the flag ruling in src/sim/freehold/commands.ts): one id-carrying,
+      // pid-scoped event per call, never a log or error line.
+      sim.freeholdEnter(pid);
+      sim.freeholdEnter();
+      sim.freeholdEnter(999_999); // an unknown pid resolves to nobody and is ignored
+      expect(sim.drainEvents()).toEqual([
+        { type: 'freeholdDenied', pid, reason: 'no_freehold' },
+        { type: 'freeholdDenied', pid, reason: 'no_freehold' },
+      ]);
+      expect(snapshot(sim, pid)).toEqual(before);
+      // Leaving while not inside any freehold is a silent no-op.
+      sim.freeholdLeave(pid);
+      sim.freeholdLeave();
+      sim.freeholdLeave(999_999);
+      expect(sim.drainEvents()).toEqual([]);
+      expect(snapshot(sim, pid)).toEqual(before);
+      expect(draws).toBe(0);
+      sim.rng.next();
+      expect(draws).toBe(1); // the observer is wired to THIS sim's stream
+    } finally {
+      sim.rng.setObserver(null);
+    }
+  });
+
   it('the Sim-owned record map is the ctx live view and stays empty across ticks', () => {
     const sim = makeSim();
     expect(sim.ctx.freeholds).toBe(sim.freeholds);
@@ -202,9 +245,12 @@ describe('IWorldHousing on the offline Sim (dark)', () => {
 });
 
 describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
-  const fakeCtx = () => {
+  // A LIT fake host: the two record inserters honor ctx.freeholdsEnabled (the
+  // flag ruling), so the round-trip cases below run lit and the dark arm at
+  // the end of this block runs on its own dark host.
+  const fakeCtx = (freeholdsEnabled = true) => {
     const freeholds = new Map<string, FreeholdState>();
-    return { ctx: { freeholds } as unknown as SimContext, freeholds };
+    return { ctx: { freeholds, freeholdsEnabled } as unknown as SimContext, freeholds };
   };
 
   it('defaultFreeholdState is the free tier-0 Inn Room, exactly', () => {
@@ -364,6 +410,25 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
     evictFreehold(ctx, 'acct:never'); // evicting nothing is a no-op, never a throw
     expect(freeholds.size).toBe(1);
   });
+
+  it('inserts nothing on a DARK host: loadFreehold is a no-op and ensureFreeholdRecord answers null', () => {
+    // The flag ruling made mechanical: the inserters, not their callers, honor
+    // ctx.freeholdsEnabled, so a persistence loader that runs on a dark realm
+    // cannot seed it. Each inserter gets its own arm.
+    const dark = fakeCtx(false);
+    expect(dark.ctx.freeholdsEnabled).toBe(false);
+    loadFreehold(dark.ctx, 'acct:1', defaultFreeholdState('acct:1', asFreeholdPlotId('plot-1')));
+    expect(dark.freeholds.size).toBe(0);
+    expect(serializeFreehold(dark.ctx, 'acct:1')).toBeNull();
+    expect(ensureFreeholdRecord(dark.ctx, 'acct:1')).toBeNull();
+    expect(dark.freeholds.size).toBe(0);
+    // Positive control on the same shapes, lit: both insert.
+    const lit = fakeCtx(true);
+    loadFreehold(lit.ctx, 'acct:1', defaultFreeholdState('acct:1', asFreeholdPlotId('plot-1')));
+    expect(lit.freeholds.has('acct:1')).toBe(true);
+    expect(ensureFreeholdRecord(lit.ctx, 'acct:2')?.ownerKey).toBe('acct:2');
+    expect(lit.freeholds.size).toBe(2);
+  });
 });
 
 describe('src/sim/freehold/ source scan', () => {
@@ -373,6 +438,8 @@ describe('src/sim/freehold/ source scan', () => {
   // helper).
   const codeOnly = (src: string): string =>
     src.replace(/^[ \t]*\/\*[\s\S]*?\*\/[ \t]*$/gm, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+  // A plain directory listing, not the shared .ts walker: this scan reads
+  // CLAUDE.md prose as well as the sources, which tsFilesUnder excludes.
   const files = readdirSync(dir).sort();
 
   it('covers the whole directory', () => {
@@ -380,7 +447,10 @@ describe('src/sim/freehold/ source scan', () => {
       'CLAUDE.md',
       'commands.ts',
       'crafted_availability.ts',
+      'dev_grant.ts',
       'index.ts',
+      'instance.ts',
+      'owner_key.ts',
       'should_spawn_npc.ts',
       'state.ts',
       'types.ts',

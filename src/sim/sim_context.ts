@@ -335,6 +335,10 @@ export interface SimContextPrimitives {
   // parity traces default off; the stock offline world and the headless env opt
   // in; the realm maps it from its env. Read-only, exactly the resolved Sim.cfg field.
   readonly freeholdsEnabled: boolean;
+  // The development grant permission (SimConfig.freeholdDevGrantEnabled, D81):
+  // read-only, exactly the resolved Sim.cfg field; false on every host that does
+  // not set it, so the grant arm in freehold/dev_grant.ts refuses by default.
+  readonly freeholdDevGrantEnabled: boolean;
   readonly marketListings: MarketListing[];
   // Bank system: the live array of every `banker: true` NPC id, seeded by
   // the Sim ctor NPC loop. bank.ts reads it to gate deposit/withdraw/buy-slots on
@@ -387,18 +391,22 @@ export interface SimContextPrimitives {
   readonly commissionOrderBoard: CommissionOrder[];
   nextCommissionOrderId: number;
   // Freehold records: owner key -> live FreeholdState (freehold/state.ts owns
-  // the ONE load path, the snapshot and the evict; the server feeds it per
-  // realm in 07). Sim-owned Map mutated in place, never reassigned, so a live
-  // read-only view like guildBanks. Empty on every host until 05.
-  // DETERMINISM: a Map iterates in INSERTION order, and once 07 feeds this the
-  // insertion order is host-dependent (the server inserts per account login
-  // arrival, the offline world inserts one record, the env whatever it seeds).
-  // Any sim code that iterates this map must therefore sort by owner key
-  // first; relying on Map order would fork the three hosts on one seed.
-  // RETENTION IS OWED BY THE FIRST LOADER: whoever calls loadFreehold (05/07)
-  // pairs it with evictFreehold at account or character unload IN THE SAME
-  // change, and registers the table's prune in server/retention_sweep.ts with
-  // the DDL. This map grows per owner and nothing sweeps it otherwise.
+  // the ONE load path, the seed, the snapshot and the evict; the server feeds
+  // it per realm in 07). Sim-owned Map mutated in place, never reassigned, so a
+  // live read-only view like guildBanks. Seeded at addPlayer on a LIT host
+  // (every joining owner's default Inn Room record, evicted when the last
+  // same-key session leaves); empty on a dark host, where the inserters insert
+  // nothing. Persistence is later work.
+  // DETERMINISM: a Map iterates in INSERTION order, and the insertion order is
+  // host-dependent (the server inserts per account login arrival, the offline
+  // world inserts one record, the env whatever it seeds). Any sim code that
+  // iterates this map must therefore sort by owner key first; relying on Map
+  // order would fork the three hosts on one seed.
+  // RETENTION: the join seed pairs with releaseFreeholdOnLeave today. A
+  // persistence loader (07) pairs its loadFreehold with evictFreehold at
+  // account or character unload IN THE SAME change, and registers the table's
+  // prune in server/retention_sweep.ts with the DDL. This map grows per owner
+  // and nothing sweeps it otherwise.
   readonly freeholds: Map<string, FreeholdState>;
 }
 
@@ -846,10 +854,12 @@ export interface SimContextCallbacks {
   onBossDeath(mob: Entity): void;
 
   // M3 mob on-hit affix cascade (mob/mob_swing): two stat helpers the cascade
-  // reaches back for. Both STAY on Sim. `effectiveArmor` is the cleave-splash armor
-  // read; `recalcPlayer` rebakes a player victim's derived stats after Devour Magic
-  // strips a beneficial aura (wraps the Sim players-map lookup + recalcPlayerStats so
-  // the module never touches the map directly).
+  // reaches back for. `effectiveArmor` is the cleave-splash armor read: its body
+  // lives in src/sim/combat/effective_stats.ts and Sim keeps the thin delegate this
+  // seam binds (ten foreign modules reach it here). `recalcPlayer` stays on Sim: it
+  // rebakes a player victim's derived stats after Devour Magic strips a beneficial
+  // aura (wraps the Sim players-map lookup + recalcPlayerStats so the module never
+  // touches the map directly).
   effectiveArmor(e: Entity): number;
   recalcPlayer(target: Entity): void;
   // I2a delve run lifecycle (delves/runs.ts). The reach-in callbacks delveRunForMob/
@@ -953,13 +963,16 @@ export interface SimContextCallbacks {
   completeRechargeCast(p: Entity, meta: PlayerMeta): void;
   applyDemonHealTick(owner: Entity): void;
 
-  // C4b effect dispatch (src/sim/combat/effect_dispatch.ts) consumes these; all stay
-  // on Sim. `awardCombo` is the combo-point award the weaponStrike/directDamage/
+  // C4b effect dispatch (src/sim/combat/effect_dispatch.ts) consumes these.
+  // `awardCombo` (on Sim) is the combo-point award the weaponStrike/directDamage/
   // incapacitate cases gate on the `comboAwarded` latch; `meleeSwing` is the shared
-  // physical-swing entry (also a C4a weaponStrike path); `effectiveAttackPower` is the
-  // attack-power stat read the damage formulas use (`effectiveArmor` is the M3 decl
-  // above, shared, not re-declared here); `hasLineOfSight` gates the AoE cases;
-  // `findChargePath` builds the warrior/druid charge route.
+  // physical-swing entry (also a C4a weaponStrike path): its body lives in
+  // src/sim/combat/auto_attack.ts and Sim keeps the thin delegate; `effectiveAttackPower`
+  // is the attack-power stat read the damage formulas use: its body lives in
+  // src/sim/combat/effective_stats.ts and Sim keeps the thin delegate (`effectiveArmor`
+  // is the M3 decl above, shared, not re-declared here); `hasLineOfSight` and
+  // `findChargePath` (both on Sim) gate the AoE cases and build the warrior/druid
+  // charge route.
   // `runEffects` itself is the C4b boundary: it flips points-at to effect_dispatch
   // (the moved switch), reached only via the cast lifecycle's applyAbility/applyChannelTick.
   awardCombo(p: Entity, target: Entity, points: number): void;
@@ -1469,6 +1482,9 @@ export function createSimContext(host: SimContextHost): SimContext {
     },
     get freeholdsEnabled() {
       return host.freeholdsEnabled;
+    },
+    get freeholdDevGrantEnabled() {
+      return host.freeholdDevGrantEnabled;
     },
     get marketListings() {
       return host.marketListings;

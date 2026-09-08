@@ -139,11 +139,17 @@ describe('authored furnisher construction and world geometry', () => {
     expect(geometry()).toEqual(authored);
   });
 
-  it('records that the existing golden parity scenarios cover the default dark arm', () => {
+  it('records that the golden parity scenarios cover the default dark arm, with ONE lit build', () => {
     const source = readFileSync(new URL('./parity/scenarios.ts', import.meta.url), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1');
     expect(source.match(/new\s+Sim\s*\(/g)?.length).toBeGreaterThan(50);
-    expect(source).not.toMatch(/\bfreeholdsEnabled\b/);
+    // Every other scenario boots dark; freehold_claim is the ONE lit build, and its literal sits inside that scenario object.
+    const start = source.indexOf("name: 'freehold_claim'");
+    expect(start).toBeGreaterThanOrEqual(0);
+    const nextName = source.indexOf("name: '", start + 1);
+    const end = nextName === -1 ? source.length : nextName;
+    expect(source.slice(start, end).match(/\bfreeholdsEnabled: true\b/g)).toHaveLength(1);
+    expect(source.slice(0, start) + source.slice(end)).not.toMatch(/\bfreeholdsEnabled\b/);
   });
 });

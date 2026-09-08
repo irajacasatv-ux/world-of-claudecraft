@@ -6,8 +6,8 @@
 //   2. The real `Sim.ctx`: every stub delegates to the still-on-Sim method of the
 //      same name, and the seam leaves same-seed-same-world determinism intact.
 
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { createDeedRuntime } from '../src/sim/deeds';
 import { asFreeholdPlotId, defaultFreeholdState } from '../src/sim/freehold';
@@ -18,6 +18,8 @@ import { createSimContext, type SimContextHost } from '../src/sim/sim_context';
 import { SpatialGrid } from '../src/sim/spatial';
 import { DEFAULT_STORAGE_PRICES } from '../src/sim/storage_prices';
 import type { Entity, SimEvent } from '../src/sim/types';
+import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
+import { tsFilesUnder } from './helpers/ts_files_under';
 
 // Every cross-system callback on the seam. The list IS the contract: each must be a
 // faithful pass-through to its host (and, on a real Sim, to the method of the same
@@ -353,6 +355,7 @@ function makeFakeHost() {
     devCommands: false,
     compulsoryTutorial: false,
     freeholdsEnabled: false,
+    freeholdDevGrantEnabled: false,
     marketListings: [],
     commissionOrderBoard: [],
     nextCommissionOrderId: 1,
@@ -666,23 +669,16 @@ describe('createSimContext (isolated, fake host)', () => {
     const simDir = join(__dirname, '..', 'src', 'sim');
     const codeOnly = (src: string): string =>
       src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
-    const walk = (dir: string): string[] =>
-      readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-        const full = join(dir, entry.name);
-        if (entry.isDirectory()) return walk(full);
-        return entry.name.endsWith('.ts') ? [full] : [];
-      });
-    const files = walk(simDir);
+    const files = tsFilesUnder(simDir);
     // Anti-vacuity floor: the walk saw the real tree, including sim.ts itself.
     expect(files.length).toBeGreaterThan(100);
-    expect(files.some((f) => f.endsWith(`${sep}sim.ts`))).toBe(true);
+    expect(files.some((f) => f.file === 'sim.ts')).toBe(true);
 
     const hits: string[] = [];
-    for (const file of files) {
-      const code = codeOnly(readFileSync(file, 'utf8'));
+    for (const { file, full } of files) {
+      const code = codeOnly(readFileSync(full, 'utf8'));
       for (const line of code.split('\n')) {
-        if (/\bcfg\.freeholdsEnabled\b/.test(line))
-          hits.push(`${relative(simDir, file)}: ${line.trim()}`);
+        if (/\bcfg\.freeholdsEnabled\b/.test(line)) hits.push(`${file}: ${line.trim()}`);
       }
     }
     // Exactly two sanctioned sites: the ctor default that resolves the optional
@@ -702,6 +698,44 @@ describe('createSimContext (isolated, fake host)', () => {
     // reads through rather than snapshotting at construction.
     (host as { freeholdsEnabled: boolean }).freeholdsEnabled = true;
     expect(ctx.freeholdsEnabled).toBe(true);
+  });
+
+  it('is the ONLY read of cfg.freeholdDevGrantEnabled anywhere in src/sim (the mirror source pin)', () => {
+    // The development grant permission (D81) has the exact two-site shape of
+    // freeholdsEnabled above: the ctor default and the ctx getter. A third hit
+    // would be a direct read bypassing the primitive (dev_grant.ts must read
+    // ctx.freeholdDevGrantEnabled, never the cfg).
+    const simDir = join(__dirname, '..', 'src', 'sim');
+    const codeOnly = (src: string): string =>
+      src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+    const files = tsFilesUnder(simDir);
+    expect(files.length).toBeGreaterThan(100);
+    expect(files.some((f) => f.file === 'sim.ts')).toBe(true);
+    const hits: string[] = [];
+    for (const { file, full } of files) {
+      const code = codeOnly(readFileSync(full, 'utf8'));
+      for (const line of code.split('\n')) {
+        if (/\bcfg\.freeholdDevGrantEnabled\b/.test(line)) hits.push(`${file}: ${line.trim()}`);
+      }
+    }
+    expect(hits.sort()).toEqual([
+      'sim.ts: freeholdDevGrantEnabled: cfg.freeholdDevGrantEnabled ?? false,',
+      'sim.ts: return sim.cfg.freeholdDevGrantEnabled;',
+    ]);
+  });
+
+  it('the two flag source pins walk src/sim through the shared walker only', () => {
+    // tests/CLAUDE.md, Coverage & guards: a guard that scans a directory of
+    // sources never hand-rolls its own directory read.
+    expectScansOnlyThroughSharedWalkers(import.meta.url, ['ts_files_under']);
+  });
+
+  it('reads freeholdDevGrantEnabled through to the host (the freeholdsEnabled shape)', () => {
+    const { host } = makeFakeHost();
+    const ctx = createSimContext(host);
+    expect(ctx.freeholdDevGrantEnabled).toBe(false);
+    (host as { freeholdDevGrantEnabled: boolean }).freeholdDevGrantEnabled = true;
+    expect(ctx.freeholdDevGrantEnabled).toBe(true);
   });
 
   it('passes every callback through to the host by identity (no rewrapping)', () => {
@@ -779,7 +813,25 @@ describe('Sim.ctx (real seam delegation)', () => {
     });
     expect(live.ctx.freeholdsEnabled).toBe(true);
     expect(live.freeholds).not.toBe(sim.freeholds);
-    expect(live.freeholds.size).toBe(0);
+    // A lit host seeds the primary player's default Inn Room record at
+    // addPlayer under the offline entity key (freehold/state.ts
+    // seedFreeholdOnJoin); the dark sim above stayed empty.
+    expect([...live.freeholds.keys()]).toEqual([`entity:${live.primaryId}`]);
+    expect(live.freeholds.get(`entity:${live.primaryId}`)?.tier).toBe('inn_room');
+  });
+
+  it('exposes freeholdDevGrantEnabled as the ctor opt-in, off by default', () => {
+    const sim = makeSim();
+    expect(sim.ctx.freeholdDevGrantEnabled).toBe(false);
+    const granting = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: true,
+      freeholdDevGrantEnabled: true,
+    });
+    expect(granting.ctx.freeholdDevGrantEnabled).toBe(true);
+    // The two flags are independent: the grant permission never lights housing.
+    expect(granting.ctx.freeholdsEnabled).toBe(false);
   });
 
   it('emit delegates to the Sim event queue', () => {

@@ -7900,6 +7900,22 @@ export type SimEvent = { pid?: number } & (
   // snapshot), so this exists only to drive the placer's cue and toast.
   // `feastId` is the spawned entity id.
   | { type: 'farmFeastPlaced'; pid: number; feastId: number }
+  // Housing entry refusal (src/sim/freehold/instance.ts): personal and text-free
+  // (D10), the farmDenied model. The reason ids are APPEND-ONLY and never
+  // reordered; later housing work appends its own ids at the END of this list.
+  | {
+      type: 'freeholdDenied';
+      pid: number;
+      reason:
+        | 'no_freehold'
+        | 'locked'
+        | 'cooldown'
+        | 'visitors_full'
+        | 'not_friend'
+        | 'dead'
+        | 'combat'
+        | 'busy';
+    }
 );
 
 export interface MoveInput {
@@ -8268,6 +8284,11 @@ export interface SimConfig {
   // reaches a player). Default OFF so deterministic tests and parity traces
   // keep a housing-free world unless a host opts in.
   freeholdsEnabled?: boolean;
+  // The development grant permission (D81): together with devCommands it
+  // authorizes `/dev freehold <tier>` (src/sim/freehold/dev_grant.ts). Never
+  // persisted. The realm maps it from ALLOW_DEV_COMMANDS, the offline host from
+  // the dev-only loopback bridge; every other host leaves it false.
+  freeholdDevGrantEnabled?: boolean;
   // Host-computed next raid-reset instant for a given lockout "now" (epoch ms). The
   // authoritative server uses its realm-local 3 AM daily reset; offline/headless omit
   // this and fall back to a flat 24h day. Keeps the time zone out of the sim core.

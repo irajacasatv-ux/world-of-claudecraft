@@ -111,9 +111,17 @@ describe('samplePlayerMeta', () => {
   });
 
   it('excludes every session / presentation / derived field', () => {
-    const sample = samplePlayerMeta(freshMeta()) as Record<string, unknown>;
-    for (const excluded of META_EXCLUDE) {
-      expect(Object.keys(sample)).not.toContain(excluded);
+    // A host-stamped meta too, so the freeholdOwnerKey exclusion is exercised
+    // where the key is actually present (offline it is absent anyway).
+    const stampedSim = new Sim({ seed: 5, playerClass: 'warrior', autoEquip: true });
+    const stampedPid = stampedSim.addPlayer('mage', 'Stamped', { freeholdOwnerKey: 'account:1' });
+    const stampedMeta = stampedSim.players.get(stampedPid)!;
+    expect(stampedMeta.freeholdOwnerKey).toBe('account:1');
+    for (const meta of [freshMeta(), stampedMeta]) {
+      const sample = samplePlayerMeta(meta) as Record<string, unknown>;
+      for (const excluded of META_EXCLUDE) {
+        expect(Object.keys(sample)).not.toContain(excluded);
+      }
     }
   });
 
@@ -238,6 +246,9 @@ describe('exclude lists are pinned and real (anti-loosening guard)', () => {
       'farmWitheredAnnounced',
       'fiestaMods',
       'fiestaSpecial',
+      // Host-stamped freehold owner key (an authorization/identity input like
+      // guildMembership), absent offline; justified in trace.ts.
+      'freeholdOwnerKey',
       'guildMembership',
       'joinedAt',
       'known',
@@ -272,11 +283,20 @@ describe('exclude lists are pinned and real (anti-loosening guard)', () => {
       'castRadiantResonance', // set only while Dawn's Embrace has reserved the proc
     ]);
     const optionalMeta = new Set(['characterId', 'lastWhisperFrom']);
+    // freeholdOwnerKey exists only once the host stamps it (addPlayer's
+    // freeholdOwnerKey opt), so it is proven on a STAMPED meta rather than
+    // exempted: a rename of the field would still fail here.
+    const stampedPid = sim.addPlayer('mage', 'Stamped', { freeholdOwnerKey: 'account:1' });
+    const stamped = sim.players.get(stampedPid)! as unknown as Record<string, unknown>;
+    expect('freeholdOwnerKey' in stamped).toBe(true);
+    expect('freeholdOwnerKey' in meta).toBe(false);
     for (const k of ENTITY_EXCLUDE) {
       if (!optionalEntity.has(k)) expect(k in entity, `Entity.${k} missing (renamed?)`).toBe(true);
     }
     for (const k of META_EXCLUDE) {
-      if (!optionalMeta.has(k)) expect(k in meta, `PlayerMeta.${k} missing (renamed?)`).toBe(true);
+      if (optionalMeta.has(k)) continue;
+      const home = k === 'freeholdOwnerKey' ? stamped : meta;
+      expect(k in home, `PlayerMeta.${k} missing (renamed?)`).toBe(true);
     }
   });
 });

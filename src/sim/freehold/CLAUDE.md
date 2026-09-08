@@ -1,9 +1,76 @@
 # src/sim/freehold - Freeholds and Guildhalls (player housing)
 
 Host-agnostic housing state and commands: the live freehold record, its load,
-snapshot and evict lifecycle, and the command bodies the `IWorldHousing` facet
-delegates into. The record is keyed by an OWNER key (D16) that never reaches
-the wire; the public descriptor carries an opaque plot id only.
+snapshot and evict lifecycle, the owner-keyed claim on the dungeon slot pool,
+and the command bodies the `IWorldHousing` facet delegates into. The record is
+keyed by an OWNER key (D16) that never reaches the wire; the public descriptor
+carries an opaque plot id only.
+
+- `owner_key.ts` owns the OWNER KEY (D15): `freeholdOwnerKeyOfMeta` (the host
+  stamp `meta.freeholdOwnerKey`, `account:<id>` online, else the `entity:<pid>`
+  fallback resolved AT READ TIME) and `freeholdKeyFor(ctx, pid)` over the live
+  roster. A LEAF with type-only imports, and deliberately so:
+  `instances/dungeons.ts` resolves an owner claim's key from here, never from
+  `instance.ts`, so the dungeon module's import graph never pulls this
+  directory's runtime modules in.
+- `instance.ts` owns the claim: `enterFreehold` (dead including a ghost, in
+  combat, no record, then a full pool answer `dead` / `combat` /
+  `no_freehold` / `busy` as exactly one text-free `freeholdDenied` each, with
+  nothing moved, claimed or drawn; `busy` is decided HERE, before the dungeon
+  module is asked, so its English "instances are busy" error can never fire
+  for a freehold), `leaveFreehold` (false and silent unless the caller stands
+  inside a live owner claim), `freeholdDefForTier` (the tier-to-room map,
+  exhaustive over the tier union; the four later tiers alias the Cottage
+  until their rooms land) and `freeholdDescriptorFor` (a VALUE COPY with no
+  owner key in it). It reaches the dungeon machinery ONLY through the seam
+  (`ctx.enterDungeon` / `ctx.leaveDungeon` / `ctx.instanceClaimIdAt`) and
+  reads the rooms from `content/freehold`, never from `instances/dungeons.ts`
+  or `data.ts`. That is the seam rule itself (a system module talks to another
+  system through `SimContext`, not by import), and the import graph makes it a
+  near-cycle besides: `instances/heroic_vendor.ts` and three `professions/`
+  modules import this directory's barrel, so a freehold -> `instances/dungeons`
+  edge would sit one import away from a loop through the barrel (the
+  `pvp/index.ts` rule).
+- THE TIER-CHANGE RULE lives in `instances/dungeons.ts`, not here: once an
+  owner has arrived in the room of its current tier, `enterDungeon` frees every
+  other owner-keyed room still claimed under the same owner key unless a
+  player stands inside it (pinned in `tests/freehold_instance.test.ts`). The
+  guard is the room's `claimKey`, never the key string, so party and solo
+  claims are untouched.
+- THE LIGHTING RULING: 05 adds no proximity, cast or cooldown gate (an
+  out-of-combat player anywhere could enter and leave to the Eastbrook quay),
+  so `FREEHOLDS_ENABLED` stays dark on the realm until the interiors slice
+  lands the Eastbrook gate proximity confirm and the Hearth Key context
+  refusals.
+- `dev_grant.ts` owns `/dev freehold <tier>` (D24/D81): `devGrantFreeholdTier`
+  needs BOTH `ctx.devCommands` AND `ctx.freeholdDevGrantEnabled` (else
+  `unauthorized`, nothing written), validates the tier through the content
+  tier table (`bad_tier` for an unknown id and for a not-yet-authored tier
+  alike) and writes through the one tier writer. `dev_commands.ts` keeps only
+  the thin chat arm and its `[dev]` dev-channel text.
+- THE ONE-WRITER RULES: `state.ts` is the only file that writes
+  `ctx.freeholds` (`loadFreehold`, `ensureFreeholdRecord`, `evictFreehold` and
+  the join/leave hooks over them) or a record's `tier` (`setFreeholdTier`,
+  pinned by a source scan in `tests/freehold_dev_grant.test.ts`), and
+  `applyFreeholdOwnerStamp` there is the only writer of the host owner stamp
+  on `PlayerMeta` (called once, from `addPlayer`, through
+  `seedFreeholdOnJoin`). Every later grant, upgrade or load goes through
+  those, never through a second assignment site.
+- THE FLAG RULING (recorded in `commands.ts`): the server dispatch gate is the
+  ONE gate; no command body re-checks `ctx.freeholdsEnabled`. The sim honors
+  the flag in one place, the two record INSERTERS in `state.ts`
+  (`loadFreehold`, `ensureFreeholdRecord`): both insert nothing on a dark
+  host, so neither the `addPlayer` seed today nor a persistence loader later
+  can seed a dark realm, every dark enter answers `no_freehold`, and there is
+  no second gate to drift. `seedFreeholdOnJoin` still applies the host stamp
+  on a dark host, so a later lit read sees the right key.
+- RETENTION: `seedFreeholdOnJoin` is the first record inserter, and
+  `releaseFreeholdOnLeave` (from `removePlayer`, while the leaver is still on
+  the roster) is its paired evict: the record goes ONLY when no other live
+  player shares the owner key (two characters of one account share one
+  record; the last session out evicts). The roster walk there is a pure
+  existence check, so its iteration order cannot matter; the Map iteration
+  rule below still binds anything that walks `ctx.freeholds` itself.
 
 - `types.ts` owns the shared shapes (`FreeholdState`, the public
   `FreeholdView` and `FreeholdLayoutView`, the tier and visit-policy unions).
@@ -37,11 +104,13 @@ the wire; the public descriptor carries an opaque plot id only.
   `ctx.resolve(pid)` the way `professions/enchanting.ts`,
   `professions/gathering.ts` and `mounts_training.ts` do (not
   `professions/farming.ts`: its Sim delegate resolves the caller first) and
-  then returns; the numbered later work named on each body puts the real
-  decision there, re-validating the payload shape in the module so the
-  offline host enforces what the server guard enforces. None may mutate
-  state, emit an event or draw rng until its owner lands it, so a host that
-  runs them is indistinguishable from one that does not.
+  then returns. `freeholdEnter` and `freeholdLeave` are LIT and delegate
+  whole to `instance.ts`; for the eight others the numbered later work named
+  on each body puts the real decision there, re-validating the payload shape
+  in the module so the offline host enforces what the server guard enforces.
+  None of those eight may mutate state, emit an event or draw rng until its
+  owner lands it, so a host that runs them is indistinguishable from one that
+  does not.
 - `Sim` keeps thin same-named delegates for the facet (the `IWorldHousing`
   members right after the farming block in `sim.ts`). TWELVE of the thirteen
   delegate into this directory, the two descriptors included, so lighting those
@@ -75,7 +144,8 @@ the wire; the public descriptor carries an opaque plot id only.
 - Golden parity traces cover the dark arm, pinned by the source boundary in
   `tests/freehold_npc_spawn.test.ts`. That suite pins the unchanged dark
   construction fingerprint, full geometry, and deterministic lit construction;
-  `tests/freehold_module.test.ts` proves inert commands on each configuration.
+  `tests/freehold_module.test.ts` proves inert commands on each configuration
+  and the dark-host inserters.
 - No store, ledger-service or ownership-service vocabulary anywhere in this
   directory: the sim is a game core, and everything that sells or transfers a
   plot stays outside `src/sim/`.
@@ -99,6 +169,11 @@ the wire; the public descriptor carries an opaque plot id only.
   and the decision record it cites).
 - Cover changes in `tests/freehold_module.test.ts` (the dark-host pins: null
   descriptors, the shared clock base, every stub mutation-free and draw-free,
-  the record round-trip, the vocabulary and purity source scan) and
-  `tests/sim_context.test.ts` (the `freeholds` live view and the
-  `freeholdsEnabled` read-through).
+  the lit pair's text-free dark refusal, the record round-trip, the vocabulary
+  and purity source scan), `tests/freehold_instance.test.ts` (the claim, the
+  refusals, the reap, the relog, the busy pool, determinism),
+  `tests/freehold_offline_default.test.ts` (the default record, the dark host,
+  the save, the paired evict), `tests/freehold_dev_grant.test.ts` (the
+  permission matrix, the chat arm, the one tier writer), the `freehold_claim`
+  parity scenario, and `tests/sim_context.test.ts` (the `freeholds` live view
+  and the `freeholdsEnabled` / `freeholdDevGrantEnabled` read-throughs).

@@ -18,14 +18,35 @@ export {
   undoPlacement,
 } from './commands';
 export { isFreeholdCraftAvailable } from './crafted_availability';
+export {
+  devGrantFreeholdTier,
+  type FreeholdDevGrantOutcome,
+  type FreeholdDevGrantResult,
+} from './dev_grant';
+export {
+  enterFreehold,
+  type FreeholdClaimDescriptor,
+  freeholdDefForTier,
+  freeholdDescriptorFor,
+  leaveFreehold,
+} from './instance';
+export { type FreeholdOwnerStampSlice, freeholdKeyFor, freeholdOwnerKeyOfMeta } from './owner_key';
 export { shouldSpawnSurfaceNpc } from './should_spawn_npc';
+// applyFreeholdOwnerStamp stays OFF the barrel: seedFreeholdOnJoin is its one
+// caller and the direct tests import state.ts, so no consumer outside the
+// directory gets a second way to write the host owner stamp.
 export {
   defaultFreeholdState,
+  ensureFreeholdRecord,
   evictFreehold,
   freeholdLayoutView,
   loadFreehold,
   myFreeholdView,
+  PENDING_FREEHOLD_PLOT_ID,
+  releaseFreeholdOnLeave,
+  seedFreeholdOnJoin,
   serializeFreehold,
+  setFreeholdTier,
 } from './state';
 // Three of the type re-exports below have no importer ANYWHERE yet and are
 // RESERVED, not dead: FreeholdLayoutRow lands consumers at 07/08a, FreeholdTier

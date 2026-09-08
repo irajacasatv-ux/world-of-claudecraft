@@ -286,6 +286,19 @@ export const META_EXCLUDE: ReadonlySet<string> = new Set([
   // state the stamp gates (Sim.guildBanks, player copper/inventory) is fully
   // sampled, so a gate misfire would surface THERE.
   'guildMembership',
+  // Host-stamped freehold owner key (`account:<id>` online), the identity the
+  // owner claim and the housing record key on: an AUTHORIZATION/IDENTITY
+  // INPUT from the host exactly like bankBonusSources and guildMembership,
+  // never persisted, never sim-mutated, and ABSENT offline, where the claim
+  // resolves the `entity:<pid>` fallback at read time (freehold/owner_key.ts).
+  // What IS still pinned: the claim itself. The freehold_claim scenario
+  // stamps two players with one key; its golden pins the entry pose inside
+  // the room's band and the entity stream (the tracked exit entity and its
+  // despawn at the reap), and tests/parity/coverage_c.test.ts pins the shared
+  // slot from rec.notes (notes are not serialized into the golden), so a
+  // key-resolution regression surfaces there rather than hiding behind this
+  // row.
+  'freeholdOwnerKey',
   'known', // derived from class/level/talents
   'talentMods', // derived from talents (recomputed)
   'fiestaMods', // derived from talentMods + augments

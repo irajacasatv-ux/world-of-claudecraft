@@ -154,7 +154,7 @@ plausibly covers means the table needs a new row in the same change.
 | `mob/rift_escape_window.ts` | the rift boss escape-window seam: `riftEscapeWindowActive` (is a telegraph in flight), the stomp/aoePulse windup constants + `resetRiftMechanicWindups`, and `impairedZoneFuseMult` (impairment-scaled death-zone fuses); consumed by the `mob/locomotion.ts` drivers, the anti-kite snare hold, and the `mob/mob_swing.ts` control-proc suppression; draws NO rng |
 | `professions/` | gathering/crafting/enchanting/salvage/archetypes; `train_recipe.ts` owns the trainer command body over `SimContext`, while `training.ts` retains the pure validator and `recipe_visibility.ts` projects the host-visible catalog; governed by its own `CLAUDE.md` (hooks `drainGatheringGrants` into the per-player tick) |
 | `pvp/` | WARFARE honor currency + combat-rating rules (`honor.ts` behind the seam; pure rating math in `power.ts`; the Highwatch quartermaster spawn); governed by its own `CLAUDE.md` |
-| `freehold/` | Freeholds and Guildhalls housing: the live `ctx.freeholds` record map and its load/snapshot/evict lifecycle (`state.ts`, the guild-bank idiom), the shared shapes (`types.ts`), the content-only crafted availability predicate (`crafted_availability.ts`) and one command body per housing wire command (`commands.ts`, each resolving the caller and deciding nothing until its numbered owner lands); governed by its own `CLAUDE.md` |
+| `freehold/` | Freeholds and Guildhalls housing: the live `ctx.freeholds` record map and its load/seed/snapshot/evict lifecycle plus the ONE tier writer (`state.ts`, the guild-bank idiom; every owner's default tier-0 Inn Room record is seeded at `addPlayer` on a lit host and evicted when the last same-key session leaves), the owner key (`owner_key.ts`, a leaf: the host stamp `account:<id>` or the `entity:<pid>` fallback), the owner-keyed claim on the dungeon slot pool (`instance.ts`: enter/leave through the seam's `enterDungeon`/`leaveDungeon`, every refusal one text-free `freeholdDenied`, `busy` decided before the dungeon module runs), the `/dev freehold <tier>` grant behind two permissions (`dev_grant.ts`), the shared shapes (`types.ts`), the content-only crafted availability predicate (`crafted_availability.ts`) and one command body per housing wire command (`commands.ts`: enter and leave lit, the rest deciding nothing until their numbered owner lands); governed by its own `CLAUDE.md` |
 
 ### Pure leaves (no `SimContext`; a Vitest imports them directly)
 A leaf is any `src/sim` file with no `sim_context` import; `threat.ts`/`spatial.ts`/
@@ -269,21 +269,23 @@ foreign hot paths, reachable via `SimContext`):
 - `applyTaunt`: player ability/effect, pet, and pet-attack paths.
 - `meleeSwing`: body lives in `combat/auto_attack.ts`; `Sim` keeps the thin delegate
   because both the auto-attack driver and the `castAbility` weaponStrike path use it.
+- `effectiveArmor` / `effectiveAttackPower`: bodies live in `combat/effective_stats.ts`;
+  `Sim` keeps the thin delegates because the seam binds them by identity and ten foreign
+  modules (auto-attack, casting, effect dispatch, the hunter and necromancy kits, the
+  Nythraxis encounter, mob swings, pet AI) reach them through it, the `meleeSwing` shape.
 - `moveToward` / `fleeMoveSpeed`: shared movement entries used by mob/pet/companion/NPC
   (`moveToward`'s body lives in `mob/move_toward.ts`; `Sim` keeps the thin delegate for
   its internal callers, the `meleeSwing` shape).
 
 If you ever find a `SimContext` member with zero consumers, that is dead scaffolding:
 remove the declaration AND its binding in the same change, then re-run the parity gate.
-Standing exception, the housing record scaffolding until 05/07:
-`ctx.freeholds` (the owner-keyed record map) lands consumer-free by design and
-keeps its binding, and so do the four
-`src/sim/freehold/state.ts` lifecycle helpers behind them (`defaultFreeholdState`,
-`loadFreehold`, `serializeFreehold`, `evictFreehold`), which are called by tests only
-today. The furnisher already reads `ctx.freeholdsEnabled` through surface NPC
-construction; the Eastbrook gate prompt (06) will also read the flag. The claim
-(05) and persistence (07) drive the map and its helpers. Deleting any
-of them under the rule above would remove the load path 05/07 are built on.
+Standing exception, the housing persistence scaffolding until 07: two
+`src/sim/freehold/state.ts` helpers, `loadFreehold` (the ONE load path) and
+`serializeFreehold` (the persistence snapshot), are called by tests only today. The
+rest of that file is live: the join seed and the leave evict drive `ctx.freeholds`
+from `addPlayer`/`removePlayer`, the claim reads it, and the dev grant writes the
+tier. Persistence (07) is built on the two remaining helpers; deleting either under
+the rule above would remove the load path it is built on.
 
 ## Determinism as it bites here
 - Randomness: `this.rng` only; `time`/`tickCount` are sim-clock fields advanced by `tick()`, use them, not wall-clock. The banned-API list is enforced mechanically by `tests/architecture.test.ts`.

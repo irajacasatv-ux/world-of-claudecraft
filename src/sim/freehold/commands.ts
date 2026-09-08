@@ -1,43 +1,47 @@
 // The housing command bodies behind the SimContext seam: one exported function
 // per wire command, shaped `(ctx, pid, ...args)`. Each resolves the caller
-// in-module through `ctx.resolve(pid)`, the professions/enchanting.ts,
+// in-module through `ctx.resolve(pid)` (the enter and leave bodies do so in
+// instance.ts, which they delegate to whole), the professions/enchanting.ts,
 // professions/gathering.ts and mounts_training.ts shape (not the farming
 // actions: their Sim delegate resolves the caller before calling them), and
 // then returns. The module takes a CONCRETE pid while the Sim delegate resolves
 // the default: the server passes the session pid and the module never guesses
-// a caller. Today the resolve is only a guard; the real bodies bind the
-// resolved player (`const r = ctx.resolve(pid); if (!r) return;` and then read
-// `r.e` and `r.meta`). The real bodies must also re-validate the payload shape
-// HERE (integer slot and placement ids, finite coordinates, the visit-policy
-// enum), so the offline host enforces exactly what server/freehold_wire.ts
-// enforces on the wire. This change registers the commands on every host; the
-// numbered later work named on each body puts the real decision here. Nothing
-// below mutates state, emits an event or draws rng, so a host running these is
+// a caller. For the eight still-inert bodies the resolve is only a guard; the
+// real bodies bind the resolved player (`const r = ctx.resolve(pid); if (!r)
+// return;` and then read `r.e` and `r.meta`) and must re-validate the payload
+// shape HERE (integer slot and placement ids, finite coordinates, the
+// visit-policy enum), so the offline host enforces exactly what
+// server/freehold_wire.ts enforces on the wire. The numbered later work named
+// on each inert body puts the real decision here; none of those eight mutates
+// state, emits an event or draws rng, so a host running them is
 // indistinguishable from one without them.
 //
-// THE FLAG IS NOT RE-CHECKED HERE, and the first real body owes that decision.
-// Today `server/game.ts`'s pre-switch `refusedFreeholdCommand` is the only
-// server-side enforcement of the dark-realm rule ON THE COMMAND WIRE (the REST
-// status read gates itself in server/freehold_routes.ts). `ctx.freeholdsEnabled`
-// reaches the sim (D85) and gates surface NPC construction, but these command
-// bodies do not read it. The dispatch gate becomes a single point of failure
-// the moment a body does something. Whoever lands the first real body
-// either opens it with a `ctx.freeholdsEnabled` early return (defense in depth,
-// and the offline host then honors its own opt-in the way it honors the payload
-// rules above) or records the explicit ruling that the dispatch gate is the one
-// gate. Do not leave that unstated.
+// THE FLAG RULING, recorded with the first real bodies (enter and leave): the
+// server dispatch gate is the ONE gate. `server/game.ts`'s pre-switch
+// `refusedFreeholdCommand` enforces the dark-realm rule on the command wire
+// (the REST status read gates itself in server/freehold_routes.ts), and no
+// command body here re-checks `ctx.freeholdsEnabled`. The sim honors the flag
+// in one place only: the two record inserters in state.ts (loadFreehold and
+// ensureFreeholdRecord, which the addPlayer seed rides) insert nothing on a
+// dark host, so a dark host holds no record and every enter answers the
+// text-free `no_freehold` refusal with nothing moved, claimed or drawn. That
+// is what keeps the offline host's own opt-in honored without a second gate
+// whose drift the dispatch gate could hide, and it is why enterFreehold has no
+// flag early return of its own. A later body that needs the flag reads it
+// through the same primitive and says so here.
 
 import type { SimContext } from '../sim_context';
+import { enterFreehold, leaveFreehold } from './instance';
 import type { FreeholdVisitPolicy } from './types';
 
-/** Enter the caller's own freehold. 05 implements the claim and entry. */
+/** Enter the caller's own freehold: the owner-keyed claim in instance.ts. */
 export function freeholdEnter(ctx: SimContext, pid: number): void {
-  if (!ctx.resolve(pid)) return;
+  enterFreehold(ctx, pid);
 }
 
-/** Leave the freehold the caller stands in. 05 implements the exit. */
+/** Leave the freehold the caller stands in: the owner-claim exit in instance.ts. */
 export function freeholdLeave(ctx: SimContext, pid: number): void {
-  if (!ctx.resolve(pid)) return;
+  leaveFreehold(ctx, pid);
 }
 
 /** Place the furnishing in bag slot `slot` at a position and heading. 08

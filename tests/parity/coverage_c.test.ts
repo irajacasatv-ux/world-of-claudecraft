@@ -15,9 +15,10 @@ import {
   HEROIC_MARK_ITEM_ID,
   NYTHRAXIS_HEROIC_COPPER,
 } from '../../src/sim/content/dungeon_difficulty';
+import { FREEHOLD_INN_ROOM_DUNGEON_ID } from '../../src/sim/content/freehold';
 import { HEROIC_BOSS_LOOT } from '../../src/sim/content/heroic_loot';
 import { heroicVariantId } from '../../src/sim/content/heroic_variants';
-import { ITEMS, MOBS } from '../../src/sim/data';
+import { DUNGEONS, ITEMS, MOBS } from '../../src/sim/data';
 import { countRawInSlots, countUnlockedInSlots } from '../../src/sim/item_lock';
 import { RIFT_IMPAIRED_FUSE_CAP } from '../../src/sim/mob/rift_escape_window';
 import {
@@ -1912,5 +1913,44 @@ describe('coverage: each scenario fires its subsystem', { timeout: 90_000 }, () 
     // ...and the stamina family it replaced is gone entirely, so the strip
     // shed the aura rather than leaving a stale second one behind.
     expect((p.auras as any[]).filter((a) => a.kind === 'buff_sta')).toEqual([]);
+  });
+  it('freehold_claim: two characters of one account share the owner claim, leave, and the empty claim reaps', () => {
+    const scenario = SCENARIOS.find((s) => s.name === 'freehold_claim');
+    if (!scenario) throw new Error('no scenario freehold_claim');
+    const { rec, trace } = record(scenario);
+    const inn = DUNGEONS[FREEHOLD_INN_ROOM_DUNGEON_ID];
+    // The default record was seeded at addPlayer under the shared stamp.
+    expect(rec.notes.record).toBe('inn_room');
+    // ONE claim for both characters: the second enter rejoined the first's slot.
+    expect(rec.notes.claimed).toBe(1);
+    expect(typeof rec.notes.slotA).toBe('number');
+    expect(rec.notes.slotA).toBe(rec.notes.slotB);
+    // Both entered and both left through the real door: the def's lines, twice each.
+    // inn.enterText / inn.leaveText are the def's own literals, pinned verbatim in
+    // tests/freehold_dungeon_defs.test.ts, so these compare against the real lines.
+    const logs = rec.allEvents.filter((ev) => ev.type === 'log');
+    expect(logs.filter((ev) => ev.text === inn.enterText)).toHaveLength(2);
+    expect(logs.filter((ev) => ev.text === inn.leaveText)).toHaveLength(2);
+    expect(rec.allEvents.filter((ev) => ev.type === 'freeholdDenied')).toEqual([]);
+    // The reap at the boundary: no Inn Room slot stays claimed and the tracked
+    // exit entity is gone from the world.
+    const sim = rec.sim;
+    expect(
+      sim.instances.filter(
+        (i) => i.dungeonId === FREEHOLD_INN_ROOM_DUNGEON_ID && i.partyKey !== null,
+      ),
+    ).toEqual([]);
+    expect(
+      entities(rec).some((e) => e.templateId === 'dungeon_exit' && e.dungeonId === inn.id),
+    ).toBe(false);
+    // The claim frame draws no rng: an owner claim spawns nothing (spawns: []),
+    // and the one tick that follows it on the slim world draws nothing either.
+    const frame = (label: string) => {
+      const found = trace.frames.find((fr) => fr.label === label);
+      if (!found) throw new Error(`no frame ${label}`);
+      return found;
+    };
+    expect(frame('entered').rng.draws - frame('seeded').rng.draws).toBe(0);
+    expect(frame('shared').rng.draws - frame('entered').rng.draws).toBe(0);
   });
 });

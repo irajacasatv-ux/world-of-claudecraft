@@ -17,6 +17,7 @@ import { moverHeight, resolvePosition } from './colliders';
 import { isRooted, isStunned } from './combat/cc';
 import {
   bgOriginAt,
+  DUNGEONS,
   INSTANCE_X_BASE,
   isArenaPos,
   isBgPos,
@@ -26,6 +27,7 @@ import {
   zoneAt,
 } from './data';
 import { delveModuleZOffset } from './delves/runs';
+import { freeholdKeyFor } from './freehold/owner_key';
 import { PLAYER_BODY_RADIUS } from './pathfind';
 import { riftInstanceAtPos } from './rift/runs';
 import type { PlayerMeta } from './sim';
@@ -151,8 +153,17 @@ export function unstuckLocationAt(ctx: SimContext, pid: number, pos: Vec3): Loca
 
   const claimId = ctx.instanceClaimIdAt(pos);
   if (claimId !== null) {
+    // A freehold room (DungeonDef.claimKey 'owner') is claimed by the owner
+    // key, not the party/solo key, so the claim match resolves the key the
+    // same way enterDungeon did; otherwise Unstuck inside one's own room
+    // answers invalid_area.
     const instance = ctx.instances.find(
-      (candidate) => candidate.exitId === claimId && candidate.partyKey === ctx.instanceKeyFor(pid),
+      (candidate) =>
+        candidate.exitId === claimId &&
+        candidate.partyKey ===
+          (DUNGEONS[candidate.dungeonId]?.claimKey === 'owner'
+            ? freeholdKeyFor(ctx, pid)
+            : ctx.instanceKeyFor(pid)),
     );
     if (!instance) return null;
     return located(

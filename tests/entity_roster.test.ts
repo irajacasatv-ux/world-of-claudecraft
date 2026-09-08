@@ -269,6 +269,7 @@ function makeCtx() {
     devCommands: false,
     compulsoryTutorial: false,
     freeholdsEnabled: false,
+    freeholdDevGrantEnabled: false,
     marketListings: [],
     commissionOrderBoard: [],
     nextCommissionOrderId: 1,

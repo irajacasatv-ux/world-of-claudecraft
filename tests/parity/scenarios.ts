@@ -23,8 +23,10 @@
 
 import { supportHeightAt } from '../../src/sim/colliders';
 import { CORPSE_DURATION } from '../../src/sim/combat/damage';
+import { FREEHOLD_INN_ROOM_DUNGEON_ID } from '../../src/sim/content/freehold';
 import {
   arenaOrigin,
+  BUILTIN_WORLD,
   DELVES,
   DUNGEON_X_THRESHOLD,
   LAKE,
@@ -80,6 +82,7 @@ import {
   type Entity,
   FISHING_CAST_ID,
   IGNIVAR_BOSS_ID,
+  INSTANCE_EMPTY_TIMEOUT,
   MAX_LEVEL,
   NYTHRAXIS_ADD_ID,
   NYTHRAXIS_BOSS_ID,
@@ -3165,6 +3168,74 @@ function dungeonInstances(): Scenario {
       // Reset-when-empty: nobody inside, jump the empty timer past INSTANCE_EMPTY_TIMEOUT
       // (300s) so a single updateInstances cycle (% 20) runs freeInstance.
       inst.emptyFor = 100000;
+      rec.tick(20);
+      rec.snapshot('reset');
+    },
+  };
+}
+
+// The owner-keyed freehold claim (Freeholds 05): the first scenario built on a
+// boot flag (freeholdsEnabled). Two players stamped with ONE account key each
+// hold the same default Inn Room record; the first freeholdEnter claims a
+// vacant slot of the Inn Room band (claimInstance over `spawns: []`, so zero
+// rng.int draws, only the exit entity's nextId), the second rejoins the SAME
+// claim under the shared owner key (no re-claim), both leave through
+// freeholdLeave (leaveDungeon -> the gate door drop), and the empty claim
+// reaps on the shared timeout (updateInstances -> freeInstance).
+function freeholdClaim(): Scenario {
+  return {
+    name: 'freehold_claim',
+    coverage: [
+      'addPlayer freeholdOwnerKey stamp -> seedFreeholdOnJoin default record (freehold/state.ts)',
+      'freeholdEnter -> enterFreehold -> enterDungeon owner key claim, zero rng draws',
+      'two characters of one account share ONE claim (second enter claims nothing new)',
+      'freeholdLeave -> leaveFreehold -> leaveDungeon door drop',
+      'updateInstances empty-reset -> freeInstance despawns the exit + partyKey null',
+    ],
+    sampleEvery: 5,
+    // The slim world the unit suites use (camps, ambient npcs and ground
+    // objects stripped): the claim rides DUNGEON_LIST, not WorldContent, and a
+    // lit full world would also seat the furnisher NPC, churning this golden on
+    // every unrelated spawn change.
+    build: () =>
+      new Sim({
+        seed: 1032,
+        playerClass: 'warrior',
+        noPlayer: true,
+        freeholdsEnabled: true,
+        world: { ...BUILTIN_WORLD, camps: [], npcs: {}, groundObjects: [] },
+      }),
+    drive(rec: Recorder) {
+      const sim = rec.sim;
+      const a = sim.addPlayer('warrior', 'Aaa', { freeholdOwnerKey: 'account:7' });
+      const b = sim.addPlayer('mage', 'Bbb', { freeholdOwnerKey: 'account:7' });
+      const ea = requireEntity(sim, a, 'parity scenario freehold owner A');
+      const eb = requireEntity(sim, b, 'parity scenario freehold owner B');
+      rec.notes.record = sim.freeholds.get('account:7')?.tier ?? null;
+      rec.snapshot('seeded');
+      sim.freeholdEnter(a);
+      rec.tick(1);
+      const inst = requireValue(
+        sim.instances.find(
+          (i) => i.dungeonId === FREEHOLD_INN_ROOM_DUNGEON_ID && i.partyKey === 'account:7',
+        ),
+        'parity scenario freehold claim',
+      );
+      if (inst.exitId != null) rec.track(inst.exitId);
+      rec.notes.slotA = sim.instanceSlotAt(ea.pos);
+      rec.snapshot('entered');
+      sim.freeholdEnter(b);
+      rec.tick(1);
+      rec.notes.slotB = sim.instanceSlotAt(eb.pos);
+      rec.notes.claimed = sim.instances.filter((i) => i.partyKey !== null).length;
+      rec.snapshot('shared');
+      sim.freeholdLeave(a);
+      sim.freeholdLeave(b);
+      rec.tick(1);
+      rec.snapshot('left');
+      // Reset-when-empty at the exact boundary: one second short of the shared
+      // timeout, so the next updateInstances cycle (% 20) is the one that reaps.
+      inst.emptyFor = INSTANCE_EMPTY_TIMEOUT - 1;
       rec.tick(20);
       rec.snapshot('reset');
     },
@@ -7716,4 +7787,7 @@ export const SCENARIOS: Scenario[] = [
   // between shards.
   heroicFiveManClear(),
   flaskConsumables(),
+  // Freeholds 05, appended on the same tiling rule: the owner-keyed claim,
+  // the first scenario that boots a Sim with a housing flag set.
+  freeholdClaim(),
 ];

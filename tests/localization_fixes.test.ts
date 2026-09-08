@@ -1408,6 +1408,25 @@ describe('S3: every sim.ts emit is recognized (drift guard)', () => {
     // above, resolved by the sim_i18n log.bossUnleashes RULE). Scanned so any FUTURE literal
     // emit added to this module lands under the drift guard from day one.
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/mob/dragonkin_brood.ts'), 'utf8'),
+    // Housing (src/sim/freehold/) and the effective-stat bodies: no free-text
+    // emit today. enterFreehold/leaveFreehold refuse through the structured
+    // freeholdDenied event and the room's enter/leave lines are the dungeon
+    // module's (DungeonDef enterText/leaveText, matched by the sim_i18n EXACT
+    // map); dev_grant.ts emits nothing (its `[dev]` text lives in
+    // dev_commands.ts, dev-channel); the rest are pure. Scanned so a first
+    // literal added to any of them lands inside the gate, per this file's
+    // new-sim-module convention.
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/instance.ts'), 'utf8'),
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/owner_key.ts'), 'utf8'),
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/dev_grant.ts'), 'utf8'),
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/state.ts'), 'utf8'),
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/commands.ts'), 'utf8'),
+    fs.readFileSync(
+      path.resolve(process.cwd(), 'src/sim/freehold/crafted_availability.ts'),
+      'utf8',
+    ),
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/should_spawn_npc.ts'), 'utf8'),
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/combat/effective_stats.ts'), 'utf8'),
     socialSrc,
     // Whole-directory sweep (the phase 18 whole-branch review): EVERY
     // src/sim/professions module is scanned, the same directory-glob treatment
