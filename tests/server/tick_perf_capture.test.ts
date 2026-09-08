@@ -22,9 +22,11 @@ import {
   SIM_LAP_PHASES,
   SIM_MOB_ZONE_PHASES,
 } from '../../server/game';
+import type { InstanceScanTickStats } from '../../server/instance_scan_tick_stats';
 import type { PerfCaptureResult as AdminPerfCaptureResult } from '../../src/admin/types';
 import { DUNGEON_X_THRESHOLD, MOBS, ZONES } from '../../src/sim/data';
 import { createMob } from '../../src/sim/entity';
+import { enterFreehold } from '../../src/sim/freehold/instance';
 import { Sim } from '../../src/sim/sim';
 import type { Entity, MobFamily } from '../../src/sim/types';
 import { terrainHeight } from '../../src/sim/world';
@@ -49,6 +51,24 @@ type MobScanCaptureFields =
   | 'aggroVisitsMaxPerTick'
   | 'threatVisitsTotal'
   | 'threatVisitsMaxPerTick';
+type InstanceScanCaptureFields =
+  | 'claimedSlotVisitsTotal'
+  | 'claimedSlotVisitsMaxPerTick'
+  | 'ownerRosterVisitsTotal'
+  | 'ownerClaimTestsTotal';
+type _AdminMirrorCarriesInstanceScanFields = AssertTrue<
+  Pick<ServerPerfCaptureResult, InstanceScanCaptureFields> extends Pick<
+    AdminPerfCaptureResult,
+    InstanceScanCaptureFields
+  >
+    ? Pick<AdminPerfCaptureResult, InstanceScanCaptureFields> extends Pick<
+        ServerPerfCaptureResult,
+        InstanceScanCaptureFields
+      >
+      ? true
+      : false
+    : false
+>;
 type MovementTimelineCaptureFields =
   | 'movementConsumedTotal'
   | 'movementStarvedTotal'
@@ -155,6 +175,12 @@ describe('tick perf capture lifecycle', () => {
     expect(status.last!.aggroVisitsMaxPerTick).toBe(0);
     expect(status.last!.threatVisitsTotal).toBe(0);
     expect(status.last!.threatVisitsMaxPerTick).toBe(0);
+    expect(status.last).toMatchObject({
+      claimedSlotVisitsTotal: 0,
+      claimedSlotVisitsMaxPerTick: 0,
+      ownerRosterVisitsTotal: 0,
+      ownerClaimTestsTotal: 0,
+    });
     expect(status.last).toMatchObject({
       movementConsumedTotal: 0,
       movementStarvedTotal: 0,
@@ -288,6 +314,8 @@ describe('tick perf capture lifecycle', () => {
     sim.addPlayer('warrior', 'PerfProbe'); // exercise the per-player lap phases too
     for (let i = 0; i < 5; i++) sim.tick();
 
+    expect(emitted.has('unstuck')).toBe(true);
+    expect(emitted.has('updateInstances')).toBe(true);
     expect(emitted.size).toBeGreaterThan(0);
     const registered = new Set(SIM_LAP_PHASES);
     for (const phase of emitted) {
@@ -295,7 +323,7 @@ describe('tick perf capture lifecycle', () => {
     }
   });
 
-  it('registers the 32 base lap names first, then the 13 mob-family buckets', () => {
+  it('registers the 35 base lap names first, then the 13 mob-family buckets', () => {
     // Literal pins: the registry is built by mapping the base names plus the buckets
     // through `sim.${n}`, so comparing these literals against the derived array proves
     // the mapping, not a constant against itself.
@@ -322,6 +350,8 @@ describe('tick perf capture lifecycle', () => {
       'sim.arena',
       'sim.trades',
       'sim.lootRolls',
+      'sim.unstuck',
+      'sim.updateInstances',
       'sim.instances',
       'sim.delves',
       'sim.valecup',
@@ -349,12 +379,12 @@ describe('tick perf capture lifecycle', () => {
       'sim.mob.update|reptile',
       'sim.mob.update|other',
     ];
-    expect(base).toHaveLength(33);
+    expect(base).toHaveLength(35);
     expect(buckets).toHaveLength(13);
     // Base names are byte-identical and first; the buckets are appended after and
     // nothing else, so every registered name still reaches the TickProfiler ctor.
-    expect(SIM_LAP_PHASES.slice(0, 33)).toEqual(base);
-    expect(SIM_LAP_PHASES.slice(33)).toEqual(buckets);
+    expect(SIM_LAP_PHASES.slice(0, 35)).toEqual(base);
+    expect(SIM_LAP_PHASES.slice(35)).toEqual(buckets);
     // Each bucket is registered (present in the set the ctor pre-registers).
     const registered = new Set(SIM_LAP_PHASES);
     for (const name of buckets) {
@@ -557,6 +587,12 @@ describe('tick perf capture lifecycle', () => {
     );
     const sim = (server as unknown as { sim: Sim }).sim;
     const seed = (sim as unknown as { cfg: { seed: number } }).cfg.seed;
+    // One real owner claim exercises the once-per-second instance scan and the
+    // server loop's capture fold; no local fold call substitutes for that wire.
+    sim.cfg.freeholdsEnabled = true;
+    const homeOwner = sim.addPlayer('warrior', 'HomeScanTarget');
+    expect(enterFreehold(sim.ctx, homeOwner)).toBe(true);
+
     // One DEAD player 10 units from an idle wolf, far outside the world's camps
     // (the FAR-clear pin in tests/mob_scan_counters.test.ts covers this spot). A
     // dead player still counts as a grid visit (the increment precedes the dead
@@ -592,6 +628,11 @@ describe('tick perf capture lifecycle', () => {
           const stats = (server as unknown as { mobScanTickStats: { aggroVisitsTotal: number } })
             .mobScanTickStats;
           expect(stats.aggroVisitsTotal).toBeGreaterThanOrEqual(3);
+          const instances = (server as unknown as { instanceScanTickStats: InstanceScanTickStats })
+            .instanceScanTickStats;
+          expect(instances.claimedSlotVisitsTotal).toBeGreaterThanOrEqual(1);
+          expect(instances.ownerRosterVisitsTotal).toBeGreaterThanOrEqual(1);
+          expect(instances.ownerClaimTestsTotal).toBeGreaterThanOrEqual(1);
         },
         { timeout: 10_000, interval: 25 },
       );
@@ -611,6 +652,10 @@ describe('tick perf capture lifecycle', () => {
     // Nothing entered combat, so the threat side stays exactly zero.
     expect(first!.threatVisitsTotal).toBe(0);
     expect(first!.threatVisitsMaxPerTick).toBe(0);
+    expect(first!.claimedSlotVisitsTotal).toBeGreaterThanOrEqual(1);
+    expect(first!.claimedSlotVisitsMaxPerTick).toBe(1);
+    expect(first!.ownerRosterVisitsTotal).toBeGreaterThanOrEqual(1);
+    expect(first!.ownerClaimTestsTotal).toBeGreaterThanOrEqual(1);
     expect(first!.movementConsumedTotal).toBeGreaterThanOrEqual(1);
     expect(first!.movementStarvedTotal).toBeGreaterThanOrEqual(1);
     expect(first!.movementExtrapolatedTotal).toBeGreaterThanOrEqual(1);
@@ -627,6 +672,12 @@ describe('tick perf capture lifecycle', () => {
     expect(second!.aggroVisitsMaxPerTick).toBe(0);
     expect(second!.threatVisitsTotal).toBe(0);
     expect(second!.threatVisitsMaxPerTick).toBe(0);
+    expect(second).toMatchObject({
+      claimedSlotVisitsTotal: 0,
+      claimedSlotVisitsMaxPerTick: 0,
+      ownerRosterVisitsTotal: 0,
+      ownerClaimTestsTotal: 0,
+    });
     expect(second).toMatchObject({
       movementConsumedTotal: 0,
       movementStarvedTotal: 0,
@@ -654,6 +705,11 @@ describe('tick perf capture lifecycle', () => {
       ).mobScanTickStats;
       stats.lastAggroScanVisits = 12;
       stats.lastThreatEntryVisits = 7;
+      const instances = (server as unknown as { instanceScanTickStats: InstanceScanTickStats })
+        .instanceScanTickStats;
+      instances.lastClaimedSlotVisits = 11;
+      instances.lastOwnerRosterVisits = 17;
+      instances.lastOwnerClaimTests = 19;
       const movementStats = (
         server as unknown as {
           movementTimelineTickStats: {
@@ -683,6 +739,10 @@ describe('tick perf capture lifecycle', () => {
       expect(perfLine).toBeDefined();
       expect(perfLine).toContain('aggroVisits=12');
       expect(perfLine).toContain('threatVisits=7');
+      expect(perfLine).toContain(`freeholdRecords=${server.sim.freeholds.size}`);
+      expect(perfLine).toContain('claimedSlotVisits=11');
+      expect(perfLine).toContain('ownerRosterVisits=17');
+      expect(perfLine).toContain('ownerClaimTests=19');
       expect(perfLine).toContain('moveConsumed=1');
       expect(perfLine).toContain('moveStarved=2');
       expect(perfLine).toContain('moveExtrapolated=3');

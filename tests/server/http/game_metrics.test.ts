@@ -107,6 +107,7 @@ function stubSource(overrides: Partial<GameStateSource> = {}): GameStateSource {
     accountsOnline: () => 2,
     wsConnections: () => 5,
     simEntities: () => 42,
+    freeholdRecords: () => 6,
     simTickHz: () => 20,
     savePendingKeys: () => 6,
     escrowGateInFlight: () => 2,
@@ -269,6 +270,8 @@ describe('registerGameStateMetrics: gauges read the source at scrape time', () =
     expect(sampleValue(text, /^woc_accounts_online (\d+)$/m)).toBe('2');
     expect(sampleValue(text, /^woc_ws_connections (\d+)$/m)).toBe('5');
     expect(sampleValue(text, /^woc_sim_entities (\d+)$/m)).toBe('42');
+    expect(text).toContain('# TYPE woc_freehold_records gauge');
+    expect(sampleValue(text, /^woc_freehold_records (\d+)$/m)).toBe('6');
     expect(sampleValue(text, /^woc_sim_tick_hz (\d+)$/m)).toBe('20');
     // The character-save FIFO gauge (the escrow write-path rider): the stub
     // returns 6, and a live read at scrape time is what the no-drift test

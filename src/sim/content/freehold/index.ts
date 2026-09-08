@@ -14,6 +14,7 @@ export {
   FREEHOLD_FURNISHING_IDS,
   FREEHOLD_FURNISHINGS,
 } from './furnishings';
+export { FREEHOLD_ITEMS } from './items';
 export {
   COTTAGE_DECOR,
   COTTAGE_DOORS,

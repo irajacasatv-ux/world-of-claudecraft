@@ -24,6 +24,12 @@ export {
   type FreeholdDevGrantResult,
 } from './dev_grant';
 export {
+  FREEHOLD_GATE_INTERACT_RANGE,
+  FREEHOLD_GATE_TEMPLATE_ID,
+  HEARTH_KEY_COOLDOWN_MS,
+  HEARTH_KEY_ITEM_ID,
+} from './gate_rules';
+export {
   enterFreehold,
   type FreeholdClaimDescriptor,
   freeholdDefForTier,

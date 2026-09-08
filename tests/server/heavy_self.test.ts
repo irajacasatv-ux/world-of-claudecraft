@@ -38,6 +38,8 @@ const EXPECTED_CMDS = [
   'discard',
   'equip',
   'equip_bag',
+  // Accepted home entry can grant the key; denied entry leaves heavy state clean.
+  'freehold_enter',
   'guild_bank_deposit',
   'guild_bank_withdraw',
   'harvestCorpse',

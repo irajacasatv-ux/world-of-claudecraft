@@ -47,6 +47,7 @@ import {
   weaponHand,
 } from './equipment_rules';
 import { formatMoney } from './format_money';
+import { useHearthKey } from './freehold/hearth_key';
 import { useBrinyLure } from './interactions/crab_summon';
 import { throwFirebottleAtNearestHut } from './interactions/firebottle_hut';
 import { moveStackToCell } from './inventory_order';
@@ -892,6 +893,10 @@ export function useItem(
   // picks a preference itself, draws no rng: text-free, pid-scoped event only.
   if (def.use?.type === 'harvestPreference') {
     ctx.emit({ type: 'harvestPreferenceOpen', pid: meta.entityId });
+    return;
+  }
+  if (def.use?.type === 'freeholdEnter') {
+    useHearthKey(ctx, meta.entityId);
     return;
   }
   // The Master's Field Forge (Masterwrought phase 09): places a party-shared

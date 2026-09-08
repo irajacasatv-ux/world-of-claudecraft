@@ -59,6 +59,7 @@ talk only to the **`SimContext` seam** (`sim_context.ts`).
 - `format_money.ts`: the sim's plain-English money formatter (`"3g 5s"` fragments for loot/quest/vendor/market emit text). A leaf module so `sim.ts`, `market.ts`, and `loot/loot_roll.ts` share it without a value-cycle. NOT the i18n `formatMoney` (see Player-facing text).
 - `world_seed.ts`: `WORLD_SEED`, the one shipped world seed. Every host that builds THE world and every suite asserting its geometry imports it; never re-declare the literal.
 - `surface_npc_bootstrap.ts`: authored surface NPC construction over a narrow `SimContext` view, with the coordinator's safe-position resolver injected. Preserves definition insertion order and service-anchor registration before `market.seed`; admission comes from `freehold/should_spawn_npc.ts`.
+- `world_object_bootstrap.ts`: authored ground objects, mailboxes, the opt-in Freehold Gate, and dungeon entrances/slot construction over a narrow live seam, preserving construction order and IDs without RNG.
 - `reserved_surface_npc_bootstrap.ts`: post-roster FURY, Warfare and Crucible quartermaster construction through `SimContext`, with the coordinator's safe-position resolver injected. Keeps reserved ids and fixed spawn order without drawing rng or advancing `nextId`; the Crucible vendor uses the authored landing deck instead of the generic safe-position path.
 - `obs.ts`: RL surface: `ACTIONS`/`applyAction`/`encodeObs`/`obsSize`. Consumed by `headless/` + `python/` (see those dirs).
 

@@ -61,17 +61,42 @@ carries an opaque plot id only.
   guard is the room's `claimKey`, never the key string, so party and solo
   claims are untouched. A ghost's corpse run sweeps nothing (the sweep is
   gated on a living arrival), so the current tier's vacant claim survives it.
-- THE LIGHTING RULING: the claim slice adds no proximity, cast, cooldown or
-  position-context gate (an out-of-combat player anywhere, including inside
-  another dungeon claim, a delve, a rift, a battleground, an arena, a duel
-  or a jail visit, could enter and leave to the Eastbrook quay, and an enter
-  from inside another instance runs none of that instance's detach
-  bookkeeping), so `FREEHOLDS_ENABLED` stays dark on the realm until the
-  interiors slice lands the Eastbrook gate proximity confirm (also the
-  position-context guard, in the SIM on both hosts: the gate stands on open
-  overworld ground), the Hearth Key context refusals and the enter cooldown
-  that bounds the interest-set churn each cross-band teleport costs every
-  nearby viewer. The offline host is lit today, single-player only.
+- `gate.ts` owns explicit physical confirmation: a live nearby `freehold_gate`
+  is required and no tick or proximity trigger enters a house. The shared
+  `gate_rules.ts` radius is used by the sim and the client. Successful entry
+  grants an absent Hearth Key if it fits; full bags keep the accepted entry
+  and retry on the next accepted gate entry. Physical entry never reads or
+  spends the remote-key clock. Only the owner's released bound corpse may
+  use the physical corpse-run exception.
+- `hearth_key.ts` owns the permanent item's remote action. Ownership comes
+  from the live record, never the held tool. `entry_context.ts` checks dead,
+  combat, authoritative match membership, instance regions and jail visits.
+  The selected live owner claim is a silent no-op before clock/admission.
+  The isolated clock is a Sim-owned `freeholdKeyReadyAtMs` account map, read
+  against `lockoutNowMs` only on commands and updated only after successful
+  remote entry. It is outside the serialized plot and retained until that
+  isolated Sim is discarded, so leaving or changing tier cannot reset it.
+  The realm's `freeholdKeyAdmission` participant refuses until 07a supplies
+  durable account authority; an isolated ready value never authorizes it.
+  This participant is not another feature flag and does not block physical
+  entry on an explicitly enabled realm.
+- The online entity's `dungeonEntrySeq` must mirror the accepted self-wire entry
+  identity as well as the command ACK field. It is a teleport/pose observation,
+  never a fresh-arrival presentation directive: reconnect or a repeated snapshot
+  cannot authorize welcome, sound or first-tier camera from this number alone.
+- Owner-room reaping uses `instances/owner_claim_occupancy.ts`: index owner claims
+  once and resolve each roster position to one candidate using the same exact
+  containment predicate. Keep ordinary dungeon and widened raid footprints on
+  their established paths. `instanceScanCounters` are observability only, reset
+  even on non-sweep ticks; no RNG or clock enters their accounting. The server's
+  freehold-record gauge reads `ctx.freeholds.size` directly, not a map walk.
+  Record counts and public `freehold` presence labels must never include owner
+  keys or become gameplay authority. The account Hearth's future private mirror
+  belongs to account state, never transferable plot state or its descriptor.
+- THE LIGHTING RULING: the realm remains dark by default. The shared slot
+  capacity and empty hold, physical-entry broadcast cost, durable ownership
+  and remote-key authority remain unsigned deployment prerequisites. The
+  key cooldown does not bound repeated physical gate entry.
 - `dev_grant.ts` owns `/dev freehold <tier>` (D24/D81): `devGrantFreeholdTier`
   needs BOTH `ctx.devCommands` AND `ctx.freeholdDevGrantEnabled` (else
   `unauthorized`, nothing written), validates the tier through the content
@@ -142,8 +167,8 @@ carries an opaque plot id only.
   `ctx.resolve(pid)` the way `professions/enchanting.ts`,
   `professions/gathering.ts` and `mounts_training.ts` do (not
   `professions/farming.ts`: its Sim delegate resolves the caller first) and
-  then returns. `freeholdEnter` and `freeholdLeave` are LIT and delegate
-  whole to `instance.ts`; for the eight others the numbered later work named
+  then returns. `freeholdEnter` confirms through `gate.ts` and `freeholdLeave` delegates
+  to `instance.ts`; for the eight others the numbered later work named
   on each body puts the real decision there, re-validating the payload shape
   in the module so the offline host enforces what the server guard enforces.
   None of those eight may mutate state, emit an event or draw rng until its
@@ -190,7 +215,8 @@ carries an opaque plot id only.
 - Import the directory's public API through `src/sim/freehold/index.ts`
   (explicit re-export lists, never `export *`). A module that ever needs a
   runtime import from a package that imports this barrel stays out of the list
-  and is imported by path, exactly as `pvp/index.ts` documents; none does yet.
+  and is imported by path, exactly as `pvp/index.ts` documents; the item dispatcher imports `hearth_key.ts` directly because its context
+  predicates reach existing simulation systems.
   ONE STANDING EXCEPTION, and it is the majority of the importers: a consumer
   that wants nothing but TYPES imports `./types` (or `.../freehold/types`)
   directly rather than the barrel. `src/sim/sim_context.ts` does, to keep the

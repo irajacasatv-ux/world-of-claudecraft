@@ -304,6 +304,7 @@ describe('the Interact action reaches the escort run (tryNearbyInteraction)', ()
       },
     };
     const hud = {
+      openFreeholdGate: () => {},
       openMailbox: () => {},
       openQuestDialog: (id: number) => calls.push(`quest:${id}`),
       openDelveBoard: () => {},
@@ -425,6 +426,7 @@ describe('a right-click reaches the escort run (handlePickedEntity)', () => {
       openLoot: vi.fn(),
       openQuestDialog: vi.fn(),
       openDelveBoard: vi.fn(),
+      openFreeholdGate: () => {},
       openMailbox: vi.fn(),
       showError: vi.fn(),
       closeContextMenu: vi.fn(),

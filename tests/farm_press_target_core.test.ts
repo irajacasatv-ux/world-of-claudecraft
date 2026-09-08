@@ -173,6 +173,7 @@ describe('the claim is the dispatcher own order, not a second copy of it', () =>
       consumeFeast: (feastId: number) => calls.push(`consumeFeast:${feastId}`),
     };
     const hud = {
+      openFreeholdGate: () => {},
       openMailbox: () => {},
       openQuestDialog: () => {},
       openDelveBoard: () => {},

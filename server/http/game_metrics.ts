@@ -118,6 +118,7 @@ export const WOC_WS_CONNECTIONS = 'woc_ws_connections';
 
 /** Active entities in the authoritative sim (players, mobs, projectiles, ...). */
 export const WOC_SIM_ENTITIES = 'woc_sim_entities';
+export const WOC_FREEHOLD_RECORDS = 'woc_freehold_records';
 
 /** Achieved sim ticks per wall-clock second (target is 20 Hz). */
 export const WOC_SIM_TICK_HZ = 'woc_sim_tick_hz';
@@ -426,6 +427,8 @@ export interface GameStateSource {
   wsConnections(): number;
   /** Active sim entity count. */
   simEntities(): number;
+  /** Live in-memory owner records, read without querying storage. */
+  freeholdRecords(): number;
   /** Achieved sim Hz, or null while the rate meter is still warming up. */
   simTickHz(): number | null;
   /** Character-save FIFO keys with a queued or running write. */
@@ -537,6 +540,15 @@ export function registerGameStateMetrics(
   // Each gauge carries a collect() read at scrape time (registry.metrics()), so it
   // reflects live state with no background sampling. `this` is the gauge instance
   // (prom-client's CollectFunction<Gauge>), so collect() sets its own value.
+  new Gauge({
+    name: WOC_FREEHOLD_RECORDS,
+    help: 'Live in-memory Freehold owner records.',
+    registers: [registry],
+    collect() {
+      this.set(source.freeholdRecords());
+    },
+  });
+
   new Gauge({
     name: WOC_PLAYERS_ONLINE,
     help: 'Live characters online (joined sessions).',

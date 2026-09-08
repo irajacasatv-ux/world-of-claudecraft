@@ -3,6 +3,8 @@
 Data only, exposed through `index.ts`. Housing behavior belongs under
 `src/sim/freehold/` and must not be added to these catalogs.
 
+- `items.ts` owns the permanent soulbound Hearth Key tool; its use action never
+  consumes the item and possession never establishes plot ownership.
 - `tiers.ts` owns frozen persisted tier ids, approved tier targets, and the
   shared-row lookup. Never rename or reuse a tier id. Keep every exported
   collection and nested row immutable at runtime.

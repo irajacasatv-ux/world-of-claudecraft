@@ -348,6 +348,7 @@ describe('client interaction classification', () => {
         opened = id;
       },
       openDelveBoard: () => {},
+      openFreeholdGate: () => {},
       openMailbox: () => {},
       showError: () => {},
       closeContextMenu: () => {},

@@ -997,7 +997,8 @@ export type ItemUse =
   // narrowest named craft-id type the professions content has (there is no
   // craft-id union today; CRAFT_RING types its ids as string), so this
   // documents the domain without changing the checked type.
-  | { type: 'placeMobileStation'; stationCraftId: CraftDef['id'] };
+  | { type: 'placeMobileStation'; stationCraftId: CraftDef['id'] }
+  | { type: 'freeholdEnter' };
 
 // Rarity ranks for the cosmetic skin-select event, ordered low → high. A rolled
 // rank unlocks its own tier and every tier below it (epic unlocks rare+uncommon).
@@ -7980,7 +7981,9 @@ export type SimEvent = { pid?: number } & (
         | 'not_friend'
         | 'dead'
         | 'combat'
-        | 'busy';
+        | 'busy'
+        | 'instanced'
+        | 'match';
     }
 );
 
@@ -8228,6 +8231,7 @@ export interface GraveyardDef {
 
 /** Optional static gameplay anchors supplied by a world definition. */
 export interface WorldServicesDef {
+  freeholdGate?: { x: number; z: number; facing?: number };
   stations?: readonly StationDef[];
   mailboxes?: readonly MailboxDef[];
   noticeboards?: readonly NoticeboardDef[];
@@ -8350,6 +8354,9 @@ export interface SimConfig {
   // reaches a player). Default OFF so deterministic tests and parity traces
   // keep a housing-free world unless a host opts in.
   freeholdsEnabled?: boolean;
+  // Remote-key host input, separate from the housing feature flag. Isolated
+  // hosts admit locally; the realm refuses until durable account authority.
+  freeholdKeyAdmission?: (ownerKey: string, pid: number) => boolean;
   // The development grant permission (D81): together with devCommands it
   // authorizes `/dev freehold <tier>` (src/sim/freehold/dev_grant.ts). Never
   // persisted. The realm maps it from ALLOW_DEV_COMMANDS, the offline host from

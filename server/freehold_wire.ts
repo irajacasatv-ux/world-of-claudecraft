@@ -1,4 +1,4 @@
-// Freeholds wire surface: the ten housing command bodies (freehold_enter,
+// Freeholds wire surface: the Hearth Key item-use guard and ten housing command bodies (freehold_enter,
 // freehold_leave, place_furnishing, move_furnishing, remove_furnishing,
 // undo_placement, redo_placement, pay_ledger, set_visit_policy,
 // set_freehold_build_presence) plus the dispatch-time flag verdict. The case
@@ -52,18 +52,45 @@ export const FREEHOLD_WIRE_COMMANDS = [
 const FREEHOLD_CMD_SET: ReadonlySet<string> = new Set(FREEHOLD_WIRE_COMMANDS);
 
 /**
- * The dispatch-time verdict: true when `cmd` is a housing command and the
- * realm is dark, in which case the caller refuses without touching the sim.
- * A non-housing command (or a non-string) is never refused here and follows
- * the normal dispatch path.
+ * The dispatch-time verdict: true when a scalar command or parsed frame
+ * names housing (including use/hearth_key) and the realm is dark, in which case the caller refuses without touching the sim.
+ * Other item-use frames and unknown commands follow normal dispatch.
  *
  * `env` is optional rather than defaulted so the hot dispatch call pays the
  * `process.env` object load only on housing wire tokens (the `??` sits behind
  * the short-circuit), not on every command frame.
  */
-export function refusedFreeholdCommand(cmd: unknown, env?: NodeJS.ProcessEnv): boolean {
+export function refusedFreeholdCommand(frame: unknown, env?: NodeJS.ProcessEnv): boolean {
+  const msg =
+    typeof frame === 'object' && frame !== null ? (frame as Record<string, unknown>) : null;
+  const cmd = msg ? msg.cmd : frame;
   return (
-    typeof cmd === 'string' && FREEHOLD_CMD_SET.has(cmd) && !freeholdsEnabled(env ?? process.env)
+    typeof cmd === 'string' &&
+    (FREEHOLD_CMD_SET.has(cmd) || (cmd === 'use' && msg?.item === 'hearth_key')) &&
+    !freeholdsEnabled(env ?? process.env)
+  );
+}
+
+const JAILED_BLOCKED_COMMANDS = new Set<string>([
+  'arena_queue',
+  'bg_queue',
+  'enter_dungeon',
+  'enter_crypt',
+  'enter_delve',
+  'duel_req',
+  'duel_accept',
+  'unstuck',
+  'card_queue_join',
+  // A door step into instanced space (the enter_dungeon shape); freehold_leave
+  // stays unlisted because leaving lands the player where jail enforcement re-cages them.
+  'freehold_enter',
+]);
+
+/** The jail precheck recognizes the real item-use wire shape. */
+export function refusedJailedTravelCommand(msg: Record<string, unknown>): boolean {
+  return (
+    typeof msg.cmd === 'string' &&
+    (JAILED_BLOCKED_COMMANDS.has(msg.cmd) || (msg.cmd === 'use' && msg.item === 'hearth_key'))
   );
 }
 

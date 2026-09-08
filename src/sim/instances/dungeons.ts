@@ -75,6 +75,7 @@ import {
 } from './ignivar_entry';
 import { ignivarExitRoom, ignivarExitSealed } from './ignivar_exit';
 import { tickIgnivarLavaHazard } from './ignivar_lava_hazard';
+import { occupiedOwnerClaims } from './owner_claim_occupancy';
 import { emitFirstRaidBossRoomWelcome } from './raid_boss_room_welcome';
 
 const DOOR_TRIGGER_RADIUS = 2.0; // walking this close to a dungeon door teleports you
@@ -228,6 +229,8 @@ export function instanceOriginOf(inst: InstanceSlot): { x: number; z: number } {
 // every claim, unlike the reusable dungeon/slot coordinates, so released
 // corpses can be bound without trusting a stale body in a recycled slot.
 export function instanceClaimIdAt(ctx: SimContext, pos: Vec3): number | null {
+  if (pos.x <= DUNGEON_X_THRESHOLD) return null;
+  if (dungeonAt(pos.x)?.claimKey === 'owner') return claimedInstanceAt(ctx, pos)?.exitId ?? null;
   for (const inst of ctx.instances) {
     if (inst.partyKey === null || inst.exitId === null) continue;
     if (instanceClaimContains(inst, pos)) return inst.exitId;
@@ -1520,25 +1523,32 @@ export function awardHeroicMarks(
 // player's entity outside the claim footprint on purpose. Covered end to end
 // by tests/dungeon_instance_disconnect_reset.test.ts.
 export function updateInstances(ctx: SimContext): void {
+  ctx.instanceScanCounters.claimedSlotVisits = 0;
+  ctx.instanceScanCounters.ownerRosterVisits = 0;
+  ctx.instanceScanCounters.ownerClaimTests = 0;
   if (ctx.tickCount % 20 !== 0) return; // once a second
   updateIgnivarRaidProgression(ctx);
   updateIgnivarForgeLift(ctx);
   tickIgnivarLavaHazard(ctx);
+  const ownerOccupancy = occupiedOwnerClaims(ctx, instanceClaimContains);
   for (const inst of ctx.instances) {
     if (inst.partyKey === null) continue;
-    let occupied = false;
-    for (const meta of ctx.players.values()) {
-      const e = ctx.entities.get(meta.entityId);
-      // instanceClaimContains, not the plain instanceContains box: the
-      // Nythraxis boss arena's authored room is wider than the generic
-      // footprint (see its carve-out above), so the narrower box let this
-      // reaper free a claim while raiders were still legitimately standing
-      // in the wide outer floor.
-      if (e && instanceClaimContains(inst, e.pos)) {
-        occupied = true;
-        break;
+    ctx.instanceScanCounters.claimedSlotVisits++;
+    const ownerRoom = DUNGEONS[inst.dungeonId]?.claimKey === 'owner';
+    let occupied = ownerRoom && ownerOccupancy.has(inst);
+    if (!ownerRoom)
+      for (const meta of ctx.players.values()) {
+        const e = ctx.entities.get(meta.entityId);
+        // instanceClaimContains, not the plain instanceContains box: the
+        // Nythraxis boss arena's authored room is wider than the generic
+        // footprint (see its carve-out above), so the narrower box let this
+        // reaper free a claim while raiders were still legitimately standing
+        // in the wide outer floor.
+        if (e && instanceClaimContains(inst, e.pos)) {
+          occupied = true;
+          break;
+        }
       }
-    }
     if (!occupied && isIgnivarRaidRoom(inst.dungeonId)) {
       const familyClaims = ignivarRaidClaimsForKey(ctx, inst.partyKey);
       occupied = familyClaims.some((claim) =>

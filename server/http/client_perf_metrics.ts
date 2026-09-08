@@ -101,6 +101,7 @@ export type ClientPerfOsFamily = (typeof CLIENT_PERF_OS_FAMILIES)[number];
 export const CLIENT_PERF_SCENE_CLASSES = [
   'overworld',
   'dungeon',
+  'freehold',
   'delve',
   'battleground',
   'arena',
@@ -284,6 +285,7 @@ const INSTANCE_SCENE_TOKENS: readonly ClientPerfSceneClass[] = [
 
 /** Collapse a free-text zone_or_scenario into its fixed scene class. */
 export function classifyClientPerfScene(zoneOrScenario: string): ClientPerfSceneClass {
+  if (zoneOrScenario.startsWith('freehold:')) return 'freehold';
   if (zoneOrScenario.startsWith('dungeon:')) return 'dungeon';
   if (zoneOrScenario.startsWith('delve:')) return 'delve';
   if ((INSTANCE_SCENE_TOKENS as readonly string[]).includes(zoneOrScenario)) {

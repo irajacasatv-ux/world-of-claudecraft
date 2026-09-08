@@ -13,10 +13,11 @@ import {
 } from '../server/heavy_self';
 
 describe('the arm-marked subset', () => {
-  it('is exactly the Perfecting and farming command family', () => {
+  it('is exactly the command family marked after authoritative acceptance', () => {
     expect([...HEAVY_SELF_ARM_MARKED_CMDS].sort()).toEqual(
       [
         'convert_husks',
+        'freehold_enter',
         'harvest_crop',
         'perfect_item',
         'place_feast',
@@ -56,7 +57,7 @@ describe('the two predicates partition the membership', () => {
     }
   });
 
-  it('receipt marking is the pre-Phase-18 set minus the arm-marked five', () => {
+  it('receipt marking excludes the commands marked after acceptance', () => {
     const receiptMarked = [...HEAVY_SELF_CMDS].filter(heavySelfMarkOnReceipt);
     expect(receiptMarked).toHaveLength(HEAVY_SELF_CMDS.size - HEAVY_SELF_ARM_MARKED_CMDS.size);
     expect(receiptMarked).toContain('equip');

@@ -14,6 +14,10 @@ export interface PerfCaptureResult {
   aggroVisitsMaxPerTick: number;
   threatVisitsTotal: number;
   threatVisitsMaxPerTick: number;
+  claimedSlotVisitsTotal: number;
+  claimedSlotVisitsMaxPerTick: number;
+  ownerRosterVisitsTotal: number;
+  ownerClaimTestsTotal: number;
   movementConsumedTotal: number;
   movementStarvedTotal: number;
   movementExtrapolatedTotal: number;

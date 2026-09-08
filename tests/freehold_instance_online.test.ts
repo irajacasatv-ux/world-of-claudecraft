@@ -76,7 +76,6 @@ const COTTAGE_BAND = { min: 119500, max: 120100 } as const;
 // leaveOffset), so { x: -14, z: -96 } on the open quay (standability is pinned
 // in tests/freehold_dungeon_defs.test.ts).
 const GATE_DROP = { x: -14, z: -96 } as const;
-const JAILED_NOTICE = 'You cannot do that while jailed.';
 
 // process.env is safe to flip here because vitest's default forks pool gives
 // each test file its own process and files in one fork run sequentially.
@@ -141,7 +140,16 @@ function send(server: GameServer, session: ClientSession, frame: Record<string, 
   server.handleMessage(session, JSON.stringify({ t: 'cmd', ...frame }));
 }
 
+function approachGate(server: GameServer, session: ClientSession): void {
+  const gate = [...server.sim.entities.values()].find((e) => e.templateId === 'freehold_gate');
+  if (!gate || session.jailed) return;
+  const e = entityOf(server, session.pid);
+  e.pos = { ...gate.pos };
+  e.prevPos = { ...e.pos };
+}
+
 function enter(server: GameServer, session: ClientSession, rid?: number): void {
+  approachGate(server, session);
   send(
     server,
     session,
@@ -480,7 +488,7 @@ describe('freehold claim online: the disconnect-reset model', () => {
 });
 
 describe('freehold claim online: the refusals leave the player and the pool untouched', () => {
-  it('a jailed session is refused with the existing notice: no move, no claim, nothing reaches the sim', () => {
+  it('a jailed session receives exact gate feedback without movement, claims or Sim dispatch', () => {
     const server = litServer();
     const refusals = recordingRefusalSink();
     const fc = fakeWs();
@@ -492,9 +500,15 @@ describe('freehold claim online: the refusals leave the player and the pool unto
     const before = { ...p.pos };
     server.sim.drainEvents();
 
+    const sentBefore = fc.sent.length;
+    s.selfHeavyDirty = false;
     enter(server, s, 21);
 
-    expect(eventTexts(fc)).toContain(JAILED_NOTICE);
+    expect(fc.sent.slice(sentBefore)).toEqual([
+      { t: 'events', list: [{ type: 'freeholdDenied', pid: s.pid, reason: 'no_freehold' }] },
+      { t: 'commandOutcome', rid: 21, ok: false },
+    ]);
+    expect(s.selfHeavyDirty).toBe(false);
     expect(outcomes(fc)).toEqual([{ t: 'commandOutcome', rid: 21, ok: false }]);
     expect(target).not.toHaveBeenCalled();
     expect(p.pos).toEqual(before);
@@ -508,7 +522,7 @@ describe('freehold claim online: the refusals leave the player and the pool unto
     expect(server.sim.ctx.freeholds.get(key)).toMatchObject({ tier: 'inn_room', rev: 0 });
   });
 
-  it('a dark realm refuses freehold_enter at dispatch: counted, no claim, no event, and no record seeded', () => {
+  it('a dark realm refuses freehold_enter at dispatch with requester feedback and no claim or record', () => {
     const server = darkServer();
     const refusals = recordingRefusalSink();
     const fc = fakeWs();
@@ -532,9 +546,16 @@ describe('freehold claim online: the refusals leave the player and the pool unto
     enter(server, s);
 
     expect(target).not.toHaveBeenCalled();
-    // The rid frame is answered ok:false on the ack channel and NOTHING else
-    // goes out: no notice, no event, and the rid-less frame answers nothing.
-    expect(fc.sent.slice(sentBefore)).toEqual([{ t: 'commandOutcome', rid: 31, ok: false }]);
+    // Both frames receive requester-only feedback; only the rid frame gets an ack.
+    const denied = {
+      t: 'events',
+      list: [{ type: 'freeholdDenied', pid: s.pid, reason: 'no_freehold' }],
+    };
+    expect(fc.sent.slice(sentBefore)).toEqual([
+      denied,
+      { t: 'commandOutcome', rid: 31, ok: false },
+      denied,
+    ]);
     expect(refusals.count()).toBe(2);
     expect(p.pos).toEqual(before);
     expect(claimsFor(server, key)).toEqual([]);
@@ -548,6 +569,7 @@ describe('freehold claim online: the refusals leave the player and the pool unto
     const fc = fakeWs();
     const s = joinAs(server, fc, 4601, 460101, 'Ari');
     const key = 'account:4601';
+    approachGate(server, s);
     send(server, s, {
       cmd: 'freehold_enter',
       ownerKey: 'account:999',
@@ -662,5 +684,58 @@ describe('freehold claim online: the /dev freehold <tier> server path (D24, D81)
     expect(inst.dungeonId).toBe('freehold_inn_room');
     expectInBand(entityOf(server, s.pid).pos.x, INN_ROOM_BAND);
     expect(claimsFor(server, key)).toHaveLength(1);
+  });
+});
+
+describe('remote-key shared-account clock through real server dispatch', () => {
+  it('shares physical claim and isolated key deadline across alts while another account stays independent', () => {
+    const server = litServer();
+    // Explicit test participant, never claimed as durable production authority.
+    const participant = vi.fn(() => true);
+    server.sim.cfg.freeholdKeyAdmission = participant;
+    server.sim.cfg.lockoutNowMs = () => 9000;
+    const a = joinAs(server, fakeWs(), 4801, 480101, 'SharedA', { isGm: true });
+    const b = joinAs(server, fakeWs(), 4801, 480102, 'SharedB', { isGm: true });
+    const c = joinAs(server, fakeWs(), 4802, 480201, 'Independent', { isGm: true });
+    enter(server, a);
+    enter(server, b);
+    enter(server, c);
+    const shared = claimFor(server, 'account:4801');
+    expect(server.sim.ctx.instanceClaimIdAt(entityOf(server, a.pid).pos)).toBe(shared.exitId);
+    expect(server.sim.ctx.instanceClaimIdAt(entityOf(server, b.pid).pos)).toBe(shared.exitId);
+    expect(claimFor(server, 'account:4802').exitId).not.toBe(shared.exitId);
+    for (const session of [a, b, c]) {
+      expect(server.sim.countItem('hearth_key', session.pid)).toBe(1);
+      leave(server, session);
+    }
+    server.sim.drainEvents();
+    send(server, a, { cmd: 'use', item: 'hearth_key', ownerKey: 'account:4802' });
+    expect(server.sim.ctx.instanceClaimIdAt(entityOf(server, a.pid).pos)).toBe(shared.exitId);
+    const secondPosition = { ...entityOf(server, b.pid).pos };
+    const before = [...server.sim.freeholdKeyReadyAtMs];
+    server.sim.drainEvents();
+    const draws = vi.fn();
+    server.sim.rng.setObserver(draws);
+    send(server, b, { cmd: 'use', item: 'hearth_key', ownerKey: 'account:4802' });
+    expect(server.sim.drainEvents()).toEqual([
+      { type: 'freeholdDenied', pid: b.pid, reason: 'cooldown' },
+    ]);
+    expect(entityOf(server, b.pid).pos).toEqual(secondPosition);
+    expect([...server.sim.freeholdKeyReadyAtMs]).toEqual(before);
+    expect(draws).not.toHaveBeenCalled();
+    server.sim.rng.setObserver(null);
+    send(server, c, { cmd: 'use', item: 'hearth_key', ownerKey: 'account:4801' });
+    expect(server.sim.ctx.instanceClaimIdAt(entityOf(server, c.pid).pos)).toBe(
+      claimFor(server, 'account:4802').exitId,
+    );
+    expect([...server.sim.freeholdKeyReadyAtMs]).toEqual([
+      ['account:4801', 3609000],
+      ['account:4802', 3609000],
+    ]);
+    expect(participant.mock.calls).toEqual([
+      ['account:4801', a.pid],
+      ['account:4801', b.pid],
+      ['account:4802', c.pid],
+    ]);
   });
 });

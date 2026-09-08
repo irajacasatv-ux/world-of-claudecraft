@@ -106,6 +106,7 @@ function sourceOver(server: GameServer): GameStateSource {
     playersOnline: () => server.clients.size,
     accountsOnline: () => server.liveAccountIds().size,
     wsConnections: () => server.clients.size,
+    freeholdRecords: () => 0,
     simEntities: () => server.sim.entities.size,
     simTickHz: () => server.simTickHz(),
     savePendingKeys: () => server.characterSaveQueues.pendingKeys(),

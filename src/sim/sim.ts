@@ -213,7 +213,6 @@ import {
   delveOrigin,
   dungeonAt,
   getActiveWorldContent,
-  INSTANCE_SLOT_COUNT,
   ITEMS,
   isArenaPos,
   isBgPos,
@@ -722,7 +721,6 @@ import {
   updateInstances as updateInstancesImpl,
 } from './instances/dungeons';
 import { buyHeroicVendorItem as buyHeroicVendorItemImpl } from './instances/heroic_vendor';
-import { freshInstanceSlot } from './instances/instance_slot';
 import { updatePortalTriggers } from './portals';
 import * as questCommands from './quests/quest_commands';
 import {
@@ -762,6 +760,7 @@ import {
   updateRiftTriggers as updateRiftTriggersImpl,
 } from './rift/runs';
 import type { RiftEvent, RiftInstance } from './rift/types';
+import { bootstrapWorldObjects } from './world_object_bootstrap';
 
 // computeQuestState (the pure quest-state fn) moved to quests/quest_commands.ts (W4);
 // re-export it here so ClientWorld's `import { computeQuestState } from '../sim/sim'`
@@ -2114,6 +2113,13 @@ export class Sim {
   // ONE load path, the snapshot and the evict; the server feeds it per realm in
   // 07) and exposed as a live SimContext view. Empty on every host until 05.
   freeholds: Map<string, FreeholdState> = new Map();
+  // Isolated account travel clock: deliberately outside the transferable plot.
+  freeholdKeyReadyAtMs = new Map<string, number>();
+  readonly instanceScanCounters = {
+    claimedSlotVisits: 0,
+    ownerRosterVisits: 0,
+    ownerClaimTests: 0,
+  };
   /** [dev] /dev freezemobs: while true, every mob skips its AI update and
    *  acquires no aggro, so the placer works among live packs without
    *  scattering them. Set via setDevMobsFrozen; never persisted. */
@@ -2222,6 +2228,7 @@ export class Sim {
       riftPortals: cfg.riftPortals ?? false,
       compulsoryTutorial: cfg.compulsoryTutorial ?? false,
       freeholdsEnabled: cfg.freeholdsEnabled ?? false,
+      freeholdKeyAdmission: cfg.freeholdKeyAdmission ?? (() => true),
       freeholdDevGrantEnabled: cfg.freeholdDevGrantEnabled ?? false,
       lockoutNowMs: cfg.lockoutNowMs ?? (() => Math.floor(this.time * 1000)),
       raidResetMs: cfg.raidResetMs ?? ((nowMs: number) => nowMs + DEFAULT_RAID_LOCKOUT_MS),
@@ -2386,63 +2393,7 @@ export class Sim {
       }
     }
 
-    // Ground objects
-    for (const objDef of worldContent.groundObjects) {
-      for (const p of objDef.positions) {
-        const obj = createGroundObject(
-          this.nextId++,
-          objDef.itemId,
-          objDef.name,
-          this.groundPos(p.x, p.z),
-        );
-        this.addEntity(obj);
-      }
-    }
-
-    // Ravenpost mailboxes: one interactable raven pillar per town, spawned at
-    // its exact authored spot (the noticeboard pattern): the pillar is solid
-    // civic furniture with a static collider at this position, so the spawn
-    // must never relocate away from it (findSafePos would, since the collider
-    // sits exactly here). Draws no rng.
-    for (const boxDef of worldContent.services?.mailboxes ?? []) {
-      const box = createGroundObject(
-        this.nextId++,
-        '',
-        'Mailbox',
-        this.groundPos(boxDef.x, boxDef.z),
-      );
-      box.templateId = 'mailbox';
-      box.objectItemId = null;
-      box.lootable = true; // interactable
-      if (boxDef.facing !== undefined) box.facing = boxDef.facing;
-      this.addEntity(box);
-      this.postOffice.mailboxIds.push(box.id);
-    }
-
-    // Dungeon entrances + their private instance slots
-    for (const dungeon of DUNGEON_LIST) {
-      if (dungeon.overworldDoor === false) {
-        for (let i = 0; i < INSTANCE_SLOT_COUNT; i++) {
-          this.instances.push(freshInstanceSlot(dungeon.id, i));
-        }
-        continue;
-      }
-      const doorName = dungeon.id === 'nythraxis_crypt' ? 'Abandoned Crypt' : dungeon.name;
-      const door = createGroundObject(
-        this.nextId++,
-        '',
-        doorName,
-        this.groundPos(dungeon.doorPos.x, dungeon.doorPos.z),
-      );
-      door.templateId = 'dungeon_door';
-      door.dungeonId = dungeon.id;
-      door.objectItemId = null;
-      door.lootable = true; // interactable
-      this.addEntity(door);
-      for (let i = 0; i < INSTANCE_SLOT_COUNT; i++) {
-        this.instances.push(freshInstanceSlot(dungeon.id, i));
-      }
-    }
+    bootstrapWorldObjects(this.ctx, worldContent, this.postOffice.mailboxIds);
 
     // Spirit Healers (the angels): one hovering at every overworld graveyard.
     // Per-instance dungeon/raid healers spawn on claim (instances/dungeons.ts).
@@ -5337,6 +5288,15 @@ export class Sim {
       get compulsoryTutorial() {
         return sim.cfg.compulsoryTutorial;
       },
+      get freeholdKeyAdmission() {
+        return sim.cfg.freeholdKeyAdmission;
+      },
+      get freeholdKeyReadyAtMs() {
+        return sim.freeholdKeyReadyAtMs;
+      },
+      get instanceScanCounters() {
+        return sim.instanceScanCounters;
+      },
       get freeholdsEnabled() {
         return sim.cfg.freeholdsEnabled;
       },
@@ -6262,7 +6222,9 @@ export class Sim {
     // lift/trigger passes. It draws no rng and its swept candidate search cannot
     // change phase ordering for players without an active attempt.
     unstuckMod.updateUnstuck(this.ctx);
+    lap?.('unstuck');
     this.updateInstances();
+    lap?.('updateInstances');
     this.updateRiftInstances();
     advanceRiftRollersImpl(this.ctx); // 20 Hz: smooth rolling-boulder motion
     liftRiftEntitiesImpl(this.ctx); // stand rift mobs/objects on the raised tier

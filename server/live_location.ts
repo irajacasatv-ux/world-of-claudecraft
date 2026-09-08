@@ -15,7 +15,7 @@ import { round2 } from './tick_perf_log';
 const ADMIN_LOCATION_POI_RADIUS = 32;
 
 export interface AdminLiveLocation {
-  kind: 'overworld' | 'dungeon' | 'delve';
+  kind: 'overworld' | 'dungeon' | 'freehold' | 'delve';
   zoneId: string | null;
   zone: string;
   instanceId: string | null;
@@ -33,7 +33,7 @@ export function liveLocationFor(sim: Sim, e: Entity): AdminLiveLocation {
     const dungeon = DUNGEONS[dungeonId];
     const zone = dungeon ? zoneAt(dungeon.doorPos.x, dungeon.doorPos.z) : zoneAt(e.pos.x, e.pos.z);
     return {
-      kind: 'dungeon',
+      kind: dungeon?.claimKey === 'owner' ? 'freehold' : 'dungeon',
       zoneId: zone.id,
       zone: zone.name,
       instanceId: dungeonId,

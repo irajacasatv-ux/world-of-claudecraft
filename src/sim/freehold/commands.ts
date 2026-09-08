@@ -1,7 +1,7 @@
 // The housing command bodies behind the SimContext seam: one exported function
 // per wire command, shaped `(ctx, pid, ...args)`. Each resolves the caller
 // in-module through `ctx.resolve(pid)` (the enter and leave bodies do so in
-// instance.ts, which they delegate to whole), the professions/enchanting.ts,
+// their gate and instance modules), the professions/enchanting.ts,
 // professions/gathering.ts and mounts_training.ts shape (not the farming
 // actions: their Sim delegate resolves the caller before calling them), and
 // then returns. The module takes a CONCRETE pid while the Sim delegate resolves
@@ -31,12 +31,13 @@
 // through the same primitive and says so here.
 
 import type { SimContext } from '../sim_context';
-import { enterFreehold, leaveFreehold } from './instance';
+import { confirmFreeholdGate } from './gate';
+import { leaveFreehold } from './instance';
 import type { FreeholdVisitPolicy } from './types';
 
-/** Enter the caller's own freehold: the owner-keyed claim in instance.ts. */
+/** Confirm entry at the caller's nearby authoritative Freehold Gate. */
 export function freeholdEnter(ctx: SimContext, pid: number): void {
-  enterFreehold(ctx, pid);
+  confirmFreeholdGate(ctx, pid);
 }
 
 /** Leave the freehold the caller stands in: the owner-claim exit in instance.ts. */

@@ -8,26 +8,14 @@
 //    housing tokens refuse while dark, nothing else ever, and the env read
 //    sits BEHIND the token short-circuit (a non-housing frame never touches
 //    the env);
-//  - dark: each of the ten commands refuses BEFORE the sim (the stub is never
-//    invoked), answers ok:false on the commandOutcome ack channel for rid
-//    frames AND stays refused for the rid-less frame shape an attacker
-//    actually sends, books one freeholdRefused metric per attempt, and never
-//    sets the heavy-self dirty flag. Read that last one precisely: no housing
-//    token is a heavy-self member yet, so the per-command flag assertions
-//    cannot fail on their own. What carries the criterion is the SOURCE
-//    ordering pin (the refusal sits above the receipt mark) plus the pinned
-//    premise that both heavy-self sets are housing-free, with a receipt-marked
-//    member (inv_sort) as the control that the flag is observable at all;
-//    a non-housing command through the same wiring is untouched by this
-//    predicate, and an unrecognised token lands in the default arm (proved by
-//    its unknown_command protocol anomaly) with no kick and no housing
-//    refusal (the old-server arm);
-//  - lit: a well-formed frame per token reaches the matching Sim method once
-//    with the guarded args and the session pid, with no refusal count and no
-//    heavy-self mark; a malformed payload per typed field is refused at the
-//    type boundary and invokes nothing; the two payload-free arms
-//    (freehold_enter, freehold_leave) are LIVE and read nothing off the frame,
-//    while the other eight still reach nothing in the sim;
+//  - dark: each housing command and use/hearth_key refuses before the Sim,
+//    returns ok:false when a rid is present, and never marks heavy self dirty;
+//  - lit: well-formed frames reach the matching Sim method with session-owned
+//    identity. Gate entry is arm-marked because it can grant inventory; other
+//    housing commands remain outside the heavy-self set. Malformed fields
+//    refuse before invocation. The real gate/item dispatch tests below prove
+//    accepted own entry and isolated test-participant remote travel separately
+//    from the stock realm's unavailable remote-key authority;
 //  - the owner key: `account:<id>` is minted server-side from the session's
 //    account id at the ONE addPlayer call in game.ts (a source pin), refuses a
 //    malformed id, and is never shaped by a client frame;
@@ -44,6 +32,7 @@
 // Db is mocked so no Postgres runs (the rift_forge_gate idiom).
 
 import { readFileSync } from 'node:fs';
+import { Window } from 'happy-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../server/db', () => ({
@@ -95,8 +84,9 @@ import { buildRealmSimConfig } from '../../server/sim_boot_config';
 import { ITEMS } from '../../src/sim/data';
 import { Sim } from '../../src/sim/sim';
 import { inertVaultConsumptionAdmission } from '../../src/sim/sim_context';
+import { FreeholdGatePrompt } from '../../src/ui/hud/housing/gate_prompt_controller';
 import { COMMAND_FACETS, type CommandName } from '../../src/world_api';
-import { fakeWs, joinServer } from '../helpers/bare_client';
+import { bareClient, fakeWs, joinServer } from '../helpers/bare_client';
 
 type HousingCommand = (typeof FREEHOLD_WIRE_COMMANDS)[number];
 
@@ -491,21 +481,11 @@ describe('freeholds wire: dark realm dispatch', () => {
     expect(fc.sent.filter((m) => m.t === 'commandOutcome' && m.ok === false)).toEqual([]);
   });
 
-  it('no housing token is a heavy-self member, which is WHY the mark assertions above are safe', () => {
-    // Honest statement of what the twenty `selfHeavyDirty` assertions in this
-    // file can and cannot prove. Neither heavy-self set contains a housing
-    // token today, so those assertions cannot fail on their own: what actually
-    // carries the acceptance criterion is the source-ordering pin below (the
-    // refusal sits above the receipt mark) plus this premise. Pinning the
-    // premise means the day a housing command joins either set, THIS arm reds
-    // and forces the vacuous assertions to be rewritten as real ones instead
-    // of silently staying green against a member that now marks.
+  it('only gate entry is heavy-self arm-marked because it may grant the key', () => {
     expect(FREEHOLD_WIRE_COMMANDS.filter((c) => heavySelfMarkOnReceipt(c))).toEqual([]);
-    expect(FREEHOLD_WIRE_COMMANDS.filter((c) => heavySelfMarkOnAccept(c))).toEqual([]);
-    // The corollary, stated so it is not mistaken for coverage: the
-    // `&& heavySelfMarkOnAccept(command)` arm of the game.ts housing case group
-    // is therefore unreachable today and its true branch has no test. It is
-    // deliberate forward scaffolding for the first arm-marked housing member.
+    expect(FREEHOLD_WIRE_COMMANDS.filter((c) => heavySelfMarkOnAccept(c))).toEqual([
+      'freehold_enter',
+    ]);
     expect(heavySelfMarkOnAccept('set_freehold_build_presence')).toBe(false);
   });
 
@@ -530,7 +510,7 @@ describe('freeholds wire: dark realm dispatch', () => {
   it('the heavy-self dirty flag IS observable through this harness (a receipt-marked member sets it)', () => {
     // The "no heavy-self mark" assertions above and in the lit block can only
     // fail if the flag is reachable at all through handleMessage; no housing
-    // token is a HEAVY_SELF_CMDS member today, so this control drives a real
+    // gate token is arm-marked, and this control also drives a real
     // receipt-marked member (inv_sort, server/heavy_self.ts) through the same
     // session and proves the flag flips where the dispatch marks on receipt.
     expect(heavySelfMarkOnReceipt('inv_sort')).toBe(true);
@@ -604,11 +584,11 @@ describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
 
       expect(stub).toHaveBeenCalledTimes(1);
       expect(stub.mock.calls[0]).toEqual(STUB[cmd].args(pid));
-      // No gate refusal: no ok:false ack, no count, and (no housing member
-      // being a heavy-self member) no dirty mark.
+      // Gate entry is arm-marked once it reaches the Sim, which may grant a key.
+      // The other housing commands still touch no heavy self field.
       expect(fc.sent.filter((m) => m.t === 'commandOutcome' && m.ok === false)).toEqual([]);
       expect(refusals.count()).toBe(0);
-      expect(session.selfHeavyDirty).toBe(false);
+      expect(session.selfHeavyDirty).toBe(cmd === 'freehold_enter');
     },
   );
 
@@ -710,6 +690,35 @@ describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
 });
 
 describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freeholdsEnabled (D85)', () => {
+  it.each([undefined, '1'])(
+    'boot flag %s controls actual gate spawn, public entry and key grant',
+    (flag) => {
+      vi.stubEnv('FREEHOLDS_ENABLED', flag);
+      const sim = new Sim(buildRealmSimConfig(undefined, inertVaultConsumptionAdmission));
+      const pid = sim.addPlayer('warrior', 'BootOwner', { freeholdOwnerKey: 'account:9901' });
+      const gate = [...sim.entities.values()].find((e) => e.templateId === 'freehold_gate');
+      expect(Boolean(gate)).toBe(flag === '1');
+      const player = sim.entities.get(pid)!;
+      player.pos = gate ? { ...gate.pos } : sim.groundPos(-14, -92);
+      const before = { ...player.pos };
+      expect(sim.countItem('hearth_key', pid)).toBe(0);
+      sim.drainEvents();
+      sim.freeholdEnter(pid);
+      if (flag === '1') {
+        const id = sim.ctx.instanceClaimIdAt(player.pos);
+        expect(id).not.toBeNull();
+        expect(sim.instances.find((claim) => claim.exitId === id)?.partyKey).toBe('account:9901');
+        expect(sim.countItem('hearth_key', pid)).toBe(1);
+      } else {
+        expect(player.pos).toEqual(before);
+        expect(sim.ctx.instanceClaimIdAt(player.pos)).toBeNull();
+        expect(sim.freeholds.size).toBe(0);
+        expect(sim.countItem('hearth_key', pid)).toBe(0);
+        expect(sim.drainEvents()).toEqual([{ type: 'freeholdDenied', pid, reason: 'no_freehold' }]);
+      }
+      expect(sim.freeholdKeyReadyAtMs.size).toBe(0);
+    },
+  );
   it('snapshots the real furnisher spawn and stock at realm boot', () => {
     const ids = [
       'freehold_timber_bed',
@@ -781,7 +790,7 @@ describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freehold
 describe('freeholds wire: a jailed session cannot step through its own door', () => {
   /** The JAILED_BLOCKED_COMMANDS Set literal, comment-stripped. */
   function jailedSetLiteral(): string {
-    const src = codeOnly(repoFile('server/game.ts'));
+    const src = codeOnly(repoFile('server/freehold_wire.ts'));
     const at = src.indexOf('const JAILED_BLOCKED_COMMANDS = new Set<string>(');
     expect(at, 'the jailed command set').toBeGreaterThanOrEqual(0);
     return balancedCall(src, at + 'const JAILED_BLOCKED_COMMANDS = new Set<string>'.length);
@@ -810,8 +819,13 @@ describe('freeholds wire: a jailed session cannot step through its own door', ()
     session.jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
     const enter = vi.spyOn(server.sim, 'freeholdEnter');
     session.selfHeavyDirty = false;
+    fc.sent.length = 0;
 
     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_enter', rid: 81 }));
+    expect(fc.sent).toEqual([
+      { t: 'events', list: [{ type: 'freeholdDenied', pid: session.pid, reason: 'no_freehold' }] },
+      { t: 'commandOutcome', rid: 81, ok: false },
+    ]);
 
     // Refused, and never reaches the sim: the security property holds.
     expect(enter).not.toHaveBeenCalled();
@@ -875,7 +889,7 @@ describe('freeholds wire: the ops contract and the game.ts shape', () => {
 
   it('every housing token has a case label, and the refusal sits above the heavy-self mark', () => {
     const src = codeOnly(repoFile('server/game.ts'));
-    const refusal = src.indexOf('refusedFreeholdCommand(msg.cmd)');
+    const refusal = src.indexOf('refusedFreeholdCommand(msg)');
     const mark = src.indexOf('heavySelfMarkOnReceipt(msg.cmd)');
     expect(refusal, 'the pre-switch predicate call').toBeGreaterThanOrEqual(0);
     expect(mark, 'the heavy-self receipt mark').toBeGreaterThanOrEqual(0);
@@ -924,7 +938,7 @@ describe('the owner key: minted server-side from the session account (D15)', () 
     expect(call, 'the addPlayer call').toBeGreaterThanOrEqual(0);
     expect(balancedCall(src, call + 'this.sim.addPlayer'.length)).toContain(stamp);
     expect(src.replace(/\s+/g, ' ')).toContain(
-      "import { dispatchFreeholdCommand, freeholdOwnerKeyForAccount, refusedFreeholdCommand, } from './freehold_wire';",
+      "import { dispatchFreeholdCommand, freeholdOwnerKeyForAccount, refusedFreeholdCommand, refusedJailedTravelCommand, } from './freehold_wire';",
     );
     // No other spelling of the stamp exists (a second, differently keyed
     // stamp would let two call sites disagree on the owner).
@@ -999,6 +1013,7 @@ describe('freeholds wire: the two lit arms read nothing off the frame', () => {
     expect(p.pos).toEqual(before);
     expect(server.sim.drainEvents()).toEqual([]);
     expect(draws).toBe(0);
+    p.pos = server.sim.ctx.groundPos(-14, -92);
     // The positive control that the four "nothing" reads above can move: the
     // live enter arm through the same session claims a slot and moves the
     // player into the Inn Room band (instanceOriginX(15) = 119200, +/- 300).
@@ -1008,4 +1023,222 @@ describe('freeholds wire: the two lit arms read nothing off the frame', () => {
     expect(p.pos.x).toBeGreaterThanOrEqual(118900);
     expect(p.pos.x).toBeLessThan(119500);
   });
+});
+
+describe('Freehold Gate and Hearth Key real server dispatch', () => {
+  it.each(['dark boot', 'lit boot then disabled'])(
+    '%s returns exact requester-only denial before gate or item dispatch',
+    (boot) => {
+      vi.stubEnv('FREEHOLDS_ENABLED', boot === 'dark boot' ? '0' : '1');
+      const { server, session, pid, fc } = housingSession();
+      const other = fakeWs();
+      joinServer(server, other, 7202, 'Observer');
+      server.sim.addItem('hearth_key', 1, pid);
+      const use = vi.spyOn(server.sim, 'useItem');
+      const enter = vi.spyOn(server.sim, 'freeholdEnter');
+      expect([...server.sim.entities.values()].some((e) => e.templateId === 'freehold_gate')).toBe(
+        boot !== 'dark boot',
+      );
+      vi.stubEnv('FREEHOLDS_ENABLED', '0');
+      session.selfHeavyDirty = false;
+      fc.sent.length = 0;
+      other.sent.length = 0;
+      server.sim.drainEvents();
+      const before = { ...server.sim.entities.get(pid)!.pos };
+      server.handleMessage(
+        session,
+        JSON.stringify({
+          t: 'cmd',
+          cmd: 'use',
+          item: 'hearth_key',
+          ownerKey: 'account:1',
+          rid: 700,
+        }),
+      );
+      server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_enter' }));
+      const denied = {
+        t: 'events',
+        list: [{ type: 'freeholdDenied', pid, reason: 'no_freehold' }],
+      };
+      expect(fc.sent).toEqual([denied, { t: 'commandOutcome', rid: 700, ok: false }, denied]);
+      expect(other.sent).toEqual([]);
+      expect(server.sim.drainEvents()).toEqual([]);
+      expect(use).not.toHaveBeenCalled();
+      expect(enter).not.toHaveBeenCalled();
+      expect(session.selfHeavyDirty).toBe(false);
+      expect(server.sim.entities.get(pid)!.pos).toEqual(before);
+      expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
+    },
+  );
+  it('enabled physical confirmation enters own room and grants the permanent key', () => {
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    const { server, session, pid } = housingSession();
+    const player = server.sim.entities.get(pid)!;
+    const gate = [...server.sim.entities.values()].find((e) => e.templateId === 'freehold_gate')!;
+    player.pos = { ...gate.pos };
+    session.selfHeavyDirty = false;
+    server.sim.drainEvents();
+    server.handleMessage(
+      session,
+      JSON.stringify({ t: 'cmd', cmd: 'freehold_enter', ownerKey: 'account:1' }),
+    );
+    const claim = server.sim.instances.find(
+      (i) => i.exitId === server.sim.ctx.instanceClaimIdAt(player.pos),
+    );
+    expect(claim?.partyKey).toBe(freeholdOwnerKeyForAccount(session.accountId));
+    expect(server.sim.countItem('hearth_key', pid)).toBe(1);
+    expect(session.selfHeavyDirty).toBe(true);
+    expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_leave' }));
+    server.sim.drainEvents();
+    const before = { ...player.pos };
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key' }));
+    expect(player.pos).toEqual(before);
+    expect(server.sim.drainEvents()).toContainEqual({
+      type: 'freeholdDenied',
+      pid,
+      reason: 'busy',
+    });
+    expect(server.sim.freeholdKeyReadyAtMs.size).toBe(0);
+  });
+  it('an explicitly injected test participant reaches remote entry through real use dispatch', () => {
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    const { server, session, pid } = housingSession();
+    const admission = vi.fn(() => true);
+    server.sim.cfg.freeholdKeyAdmission = admission;
+    server.sim.cfg.lockoutNowMs = () => 5000;
+    server.sim.addItem('hearth_key', 1, pid);
+    server.sim.drainEvents();
+    server.handleMessage(
+      session,
+      JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key', accountId: 1 }),
+    );
+    expect(admission).toHaveBeenCalledExactlyOnceWith(
+      freeholdOwnerKeyForAccount(session.accountId),
+      pid,
+    );
+    expect(server.sim.ctx.instanceClaimIdAt(server.sim.entities.get(pid)!.pos)).not.toBeNull();
+    expect(server.sim.freeholdKeyReadyAtMs.get(freeholdOwnerKeyForAccount(session.accountId))).toBe(
+      3605000,
+    );
+    expect(server.sim.countItem('hearth_key', pid)).toBe(1);
+    // This participant is deliberately test-only. The stock realm case above
+    // remains refused until durable remote-key account authority lands in 07a.
+  });
+  it('a jailed crafted key frame cannot reach item dispatch on an enabled realm', () => {
+    vi.stubEnv('FREEHOLDS_ENABLED', '1');
+    const { server, session, pid, fc } = housingSession();
+    session.jailed = { returnPos: { x: 0, z: 0 }, returnFacing: 0 };
+    server.sim.addItem('hearth_key', 1, pid);
+    const use = vi.spyOn(server.sim, 'useItem');
+    server.handleMessage(
+      session,
+      JSON.stringify({ t: 'cmd', cmd: 'use', item: 'hearth_key', rid: 701 }),
+    );
+    expect(use).not.toHaveBeenCalled();
+    expect(fc.sent).toContainEqual({ t: 'commandOutcome', rid: 701, ok: false });
+  });
+});
+
+it('silently sheds a live gate command and recovers only after a fresh user confirmation', () => {
+  vi.stubEnv('FREEHOLDS_ENABLED', '1');
+  const window = new Window();
+  vi.stubGlobal('document', window.document);
+  vi.stubGlobal('HTMLElement', window.HTMLElement);
+  try {
+    const { server, session, fc, pid } = housingSession();
+    const player = server.sim.entities.get(pid)!;
+    const gate = [...server.sim.entities.values()].find((e) => e.templateId === 'freehold_gate')!;
+    player.pos = { ...gate.pos };
+    server.sim.drainEvents();
+    fc.sent.length = 0;
+    session.selfHeavyDirty = false;
+    const delivered: string[] = [];
+    const client = bareClient(pid, {
+      cfg: { seed: 42, playerClass: 'warrior', freeholdsEnabled: true },
+      ws: {
+        readyState: 1,
+        send: (raw: string) => {
+          delivered.push(raw);
+          server.handleMessage(session, raw);
+        },
+      },
+    });
+    const snapshot = () =>
+      (client as unknown as { applySnapshot(value: unknown): void }).applySnapshot({
+        t: 'snap',
+        tick: 1,
+        time: 1,
+        self: {
+          id: pid,
+          k: 'player',
+          tid: 'warrior',
+          nm: 'Fen',
+          lv: 1,
+          x: player.pos.x,
+          y: player.pos.y,
+          z: player.pos.z,
+          f: 0,
+          hp: 100,
+          mhp: 100,
+          de: player.dungeonEntrySeq ?? 0,
+        },
+        ents: [
+          {
+            id: gate.id,
+            k: 'object',
+            tid: 'freehold_gate',
+            nm: 'Freehold Gate',
+            x: gate.pos.x,
+            y: gate.pos.y,
+            z: gate.pos.z,
+            f: 0,
+            hp: 1,
+            mhp: 1,
+          },
+        ],
+      });
+    snapshot();
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    const prompt = new FreeholdGatePrompt({
+      root: () => root,
+      world: () => client,
+      closeOthers: () => {},
+      captureFocus: () => null,
+      restoreFocus: () => {},
+      onVisibilityChange: () => {},
+    });
+    const enter = () =>
+      root.querySelector<HTMLButtonElement>('[data-focus-key="gate-enter"]')!.click();
+    session.msgLanes.commandTokens = 0;
+    session.msgLanes.lastRefillSec = Number.POSITIVE_INFINITY;
+    const authority = vi.spyOn(server.sim, 'freeholdEnter');
+    const before = { ...player.pos };
+    prompt.open();
+    enter();
+    expect(client.connected).toBe(true);
+    expect(delivered).toHaveLength(1);
+    expect(authority).not.toHaveBeenCalled();
+    expect(fc.sent).toEqual([]);
+    expect(server.sim.drainEvents()).toEqual([]);
+    expect(session.selfHeavyDirty).toBe(false);
+    expect(player.pos).toEqual(before);
+    expect(root.getAttribute('aria-busy')).toBe('true');
+    prompt.close();
+    prompt.open();
+    expect(delivered).toHaveLength(1);
+    expect(root.getAttribute('aria-busy')).toBe('false');
+    session.msgLanes.commandTokens = 1;
+    enter();
+    expect(delivered).toHaveLength(2);
+    expect(authority).toHaveBeenCalledTimes(1);
+    expect(player.pos).not.toEqual(before);
+    snapshot();
+    prompt.reconcile();
+    expect(prompt.isOpen).toBe(false);
+    expect(client.player.pos.x).toBe(player.pos.x);
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });

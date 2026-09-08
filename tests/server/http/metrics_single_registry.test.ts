@@ -29,6 +29,7 @@ function stubSource(): GameStateSource {
     playersOnline: () => 0,
     accountsOnline: () => 0,
     wsConnections: () => 0,
+    freeholdRecords: () => 0,
     simEntities: () => 0,
     simTickHz: () => 20,
     savePendingKeys: () => 0,

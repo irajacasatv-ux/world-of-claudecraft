@@ -35,6 +35,8 @@ describe('client perf scene parity', () => {
     const cases: Array<[x: number, z: number, expected: string]> = [
       [0, 0, 'overworld'],
       [instanceOrigin(DUNGEONS.hollow_crypt.index, 0).x, 0, 'dungeon'],
+      [instanceOrigin(DUNGEONS.freehold_inn_room.index, 0).x, 0, 'freehold'],
+      [instanceOrigin(DUNGEONS.freehold_cottage.index, 0).x, 0, 'freehold'],
       [delveOrigin(0, 0).x, delveOrigin(0, 0).z, 'delve'],
       // The unmapped-slot fallback still carries the delve: prefix.
       [delveOrigin(1, 0).x + 300, 0, 'delve'],

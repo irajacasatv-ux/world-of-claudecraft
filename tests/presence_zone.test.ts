@@ -14,7 +14,7 @@ vi.mock('../server/db', () => ({
 }));
 
 import { GameServer } from '../server/game';
-import { delveOrigin, instanceOrigin } from '../src/sim/data';
+import { DUNGEONS, delveOrigin, instanceOrigin } from '../src/sim/data';
 
 function makeServerWithPlayer(): { server: any; session: any; entity: any } {
   const server: any = new GameServer();
@@ -65,6 +65,34 @@ describe('presenceOf zone resolution', () => {
     expect(presence.zone).toBe('The Collapsed Reliquary');
     expect(presence.status).toBe('dungeon');
   });
+
+  it.each(['freehold_inn_room', 'freehold_cottage'])(
+    'reports %s as a freehold while preserving dead priority and saved spectator position',
+    (id) => {
+      const { server, session, entity } = makeServerWithPlayer();
+      const def = DUNGEONS[id];
+      const origin = instanceOrigin(def.index, 1);
+      entity.dungeonId = null;
+      entity.pos.x = origin.x;
+      entity.pos.z = origin.z;
+      entity.inCombat = true;
+      server.sim.meta(session.pid).away = { mode: 'afk', message: 'brb' };
+      expect(server.presenceOf(session)).toEqual({
+        zone: def.name,
+        status: 'freehold',
+        x: origin.x,
+        z: origin.z,
+      });
+      entity.dead = true;
+      expect(server.presenceOf(session).status).toBe('dead');
+      entity.dead = false;
+      session.spectating = { savedPos: { ...entity.pos } };
+      entity.pos.x = 0;
+      entity.pos.z = 0;
+      expect(server.presenceOf(session).status).toBe('freehold');
+      expect(server.presenceOf(session).zone).toBe(def.name);
+    },
+  );
 
   it('reports "afk" status for an idle player flagged away in afk mode', () => {
     const { server, session } = makeServerWithPlayer();

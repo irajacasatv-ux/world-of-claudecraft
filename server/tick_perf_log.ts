@@ -69,6 +69,10 @@ export interface TickPerfLineInputs {
   threatVisits: number;
   /** The p99 serialized character blob over recent saves, bytes (0 before any save). */
   blobP99Bytes: number;
+  freeholdRecords: number;
+  claimedSlotVisits: number;
+  ownerRosterVisits: number;
+  ownerClaimTests: number;
 }
 
 /** Two-decimal rounding for wire and log numerics. Exported because
@@ -96,7 +100,7 @@ export function formatTickPerfLine(i: TickPerfLineInputs): string {
   return (
     `[perf] online=${i.online} ents=${i.ents} tickHz=${i.tickHz == null ? 'n/a' : round2(i.tickHz)} tickMs=${round2(i.tickMs)}${i.overBudget ? ' OVER' : ''}` +
     ` | p95/max ${printed.map(fmt).join(' ')}` +
-    ` | visits=${i.visits} serializes=${i.serializes} baseSerializes=${i.baseSerializes} serializeMs=${round2(Number(i.serializeNs) / 1e6)} timerVariants=${i.legacySerializes}/${i.stableSerializes} aggroVisits=${i.aggroVisits} threatVisits=${i.threatVisits} blobP99=${i.blobP99Bytes}`
+    ` | visits=${i.visits} serializes=${i.serializes} baseSerializes=${i.baseSerializes} serializeMs=${round2(Number(i.serializeNs) / 1e6)} timerVariants=${i.legacySerializes}/${i.stableSerializes} aggroVisits=${i.aggroVisits} threatVisits=${i.threatVisits} blobP99=${i.blobP99Bytes} freeholdRecords=${i.freeholdRecords} claimedSlotVisits=${i.claimedSlotVisits} ownerRosterVisits=${i.ownerRosterVisits} ownerClaimTests=${i.ownerClaimTests}`
   );
 }
 

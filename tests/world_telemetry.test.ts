@@ -12,6 +12,16 @@ import {
 } from '../src/sim/data';
 
 describe('telemetry zone id', () => {
+  it.each(['freehold_inn_room', 'freehold_cottage'])(
+    'separates %s from raid telemetry across slots',
+    (id) => {
+      for (const slot of [0, 1, 23]) {
+        const origin = instanceOrigin(DUNGEONS[id].index, slot);
+        expect(telemetryZoneId(origin.x, origin.z)).toBe(`freehold:${id}`);
+      }
+    },
+  );
+
   it('reports the overworld zoneAt id by z position', () => {
     expect(telemetryZoneId(0, 0)).toBe('eastbrook_vale');
     expect(telemetryZoneId(-40, 300)).toBe('mirefen_marsh');

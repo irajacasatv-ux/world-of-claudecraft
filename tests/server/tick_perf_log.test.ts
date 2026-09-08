@@ -52,15 +52,19 @@ const INPUTS: TickPerfLineInputs = {
   aggroVisits: 131,
   threatVisits: 0,
   blobP99Bytes: 18_944,
+  freeholdRecords: 6,
+  claimedSlotVisits: 4,
+  ownerRosterVisits: 20,
+  ownerClaimTests: 3,
 };
 
 // The exact string the inline template produced before the extraction (the
 // pre-Phase-18 game.ts maybeLogTickPerf), plus the appended blobP99 token.
 const EXPECTED_LINE =
-  '[perf] online=20 ents=430 tickHz=20.1 tickMs=1.83 | p95/max total=2.82/7.27 tick=1.19/2.74 broadcast=1.44/4.07 bcastSelf=0.47/2.02 bcastGrid=0.59/1.04 events=0.02/0.66 social=0/0.05 | visits=1941 serializes=75 baseSerializes=60 serializeMs=0.13 timerVariants=3/72 aggroVisits=131 threatVisits=0 blobP99=18944';
+  '[perf] online=20 ents=430 tickHz=20.1 tickMs=1.83 | p95/max total=2.82/7.27 tick=1.19/2.74 broadcast=1.44/4.07 bcastSelf=0.47/2.02 bcastGrid=0.59/1.04 events=0.02/0.66 social=0/0.05 | visits=1941 serializes=75 baseSerializes=60 serializeMs=0.13 timerVariants=3/72 aggroVisits=131 threatVisits=0 blobP99=18944 freeholdRecords=6 claimedSlotVisits=4 ownerRosterVisits=20 ownerClaimTests=3';
 
 describe('formatTickPerfLine', () => {
-  it('renders the pre-extraction token set byte for byte, with blobP99 appended last', () => {
+  it('retains the existing tokens and appends bounded room scan measurements', () => {
     expect(formatTickPerfLine(INPUTS)).toBe(EXPECTED_LINE);
   });
 
@@ -104,8 +108,8 @@ describe('formatTickPerfLine', () => {
   });
 
   it('carries the blob p99 as a bare byte count (0 before any save)', () => {
-    expect(formatTickPerfLine({ ...INPUTS, blobP99Bytes: 0 }).endsWith(' blobP99=0')).toBe(true);
-    expect(/\bblobP99=(\d+)$/.exec(formatTickPerfLine(INPUTS))?.[1]).toBe('18944');
+    expect(formatTickPerfLine({ ...INPUTS, blobP99Bytes: 0 }).includes(' blobP99=0 ')).toBe(true);
+    expect(/\bblobP99=(\d+)\b/.exec(formatTickPerfLine(INPUTS))?.[1]).toBe('18944');
   });
 });
 

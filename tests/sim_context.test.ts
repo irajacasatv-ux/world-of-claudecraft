@@ -364,6 +364,9 @@ function makeFakeHost() {
     devCommands: false,
     compulsoryTutorial: false,
     freeholdsEnabled: false,
+    freeholdKeyAdmission: () => true,
+    freeholdKeyReadyAtMs: new Map(),
+    instanceScanCounters: { claimedSlotVisits: 0, ownerRosterVisits: 0, ownerClaimTests: 0 },
     freeholdDevGrantEnabled: false,
     marketListings: [],
     commissionOrderBoard: [],
@@ -657,6 +660,18 @@ describe('createSimContext (isolated, fake host)', () => {
     expect(ctx.guildBanks).toBe(host.guildBanks);
     host.guildBanks.set(3, { treasury: 0, inventory: [], purchasedSlots: 0 });
     expect(ctx.guildBanks.get(3)).toEqual({ treasury: 0, inventory: [], purchasedSlots: 0 });
+  });
+
+  it('keeps isolated key state and instance scan counters as Sim-owned live views', () => {
+    const { host } = makeFakeHost();
+    const ctx = createSimContext(host);
+    expect(ctx.freeholdKeyReadyAtMs).toBe(host.freeholdKeyReadyAtMs);
+    expect(ctx.instanceScanCounters).toBe(host.instanceScanCounters);
+    host.freeholdKeyReadyAtMs.set('account:7', 1234);
+    host.instanceScanCounters.claimedSlotVisits++;
+    expect(ctx.freeholdKeyReadyAtMs.get('account:7')).toBe(1234);
+    expect(ctx.instanceScanCounters.claimedSlotVisits).toBe(1);
+    expect(ctx.freeholdKeyAdmission('account:7', 1)).toBe(true);
   });
 
   it('exposes freeholds as a live shared view (the guildBanks idiom)', () => {

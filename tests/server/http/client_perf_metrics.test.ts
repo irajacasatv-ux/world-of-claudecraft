@@ -102,6 +102,8 @@ describe('classifyClientPerfGpuFamily', () => {
 
 describe('classifyClientPerfScene', () => {
   it('maps prefixes and the fixed instance tokens onto scene classes', () => {
+    expect(classifyClientPerfScene('freehold:freehold_inn_room')).toBe('freehold');
+    expect(classifyClientPerfScene('freehold:freehold_cottage')).toBe('freehold');
     expect(classifyClientPerfScene('dungeon:nythraxis_crypt')).toBe('dungeon');
     expect(classifyClientPerfScene('delve:collapsed_reliquary')).toBe('delve');
     expect(classifyClientPerfScene('battleground')).toBe('battleground');
@@ -151,6 +153,7 @@ describe('vocabulary pins', () => {
     expect([...CLIENT_PERF_SCENE_CLASSES]).toEqual([
       'overworld',
       'dungeon',
+      'freehold',
       'delve',
       'battleground',
       'arena',

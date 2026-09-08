@@ -42,17 +42,11 @@
 // last occupant leaves, and the 24-slot pool depth is the shared pool's; a
 // per-record slot count and a shorter owner hold are named later work.
 //
-// THE LIGHTING RULING: this change adds no proximity, cast, cooldown or
-// position-context gate. An out-of-combat player anywhere in the world,
-// including inside another dungeon claim, a delve, a rift, a battleground,
-// an arena, a duel or a moderator jail visit, could enter its room and leave
-// to the Eastbrook quay (and an enter from inside another instance never runs
-// that instance's detach bookkeeping), so FREEHOLDS_ENABLED stays dark on the
-// realm until the interiors slice lands the Eastbrook gate proximity confirm
-// (which is also the position-context guard: the gate stands on open
-// overworld ground, on BOTH hosts, in the sim) and the Hearth Key context
-// refusals, and the enter cooldown that bounds the interest-set churn each
-// cross-band teleport costs every nearby viewer.
+// Public gate and item surfaces own their distinct admission checks in gate.ts
+// and hearth_key.ts. This shared claim body stays below those checks so the
+// physical corpse run never spends the remote-key cooldown. Production remote
+// key authority and the shared pool capacity/broadcast-cost limits remain
+// deployment prerequisites; the realm stays dark by default.
 //
 // The dungeon machinery is reached ONLY through the SimContext seam
 // (ctx.enterDungeon / ctx.leaveDungeon / ctx.instanceClaimIdAt), never by
@@ -117,7 +111,7 @@ function denyFreehold(ctx: SimContext, pid: number, reason: FreeholdDenyReason):
  *  reads, so a ghost bound to a stranger's room, to a party claim, to a room
  *  the reaper already freed (its exit entity is gone) or to nothing has none.
  *  Any of the caller's owner rooms qualifies, not only the current tier's. */
-function corpseRunRoom(
+export function corpseRunRoom(
   ctx: SimContext,
   e: { ghost: boolean; corpseInstanceId: number | null },
   key: string,

@@ -344,6 +344,13 @@ export interface SimContextPrimitives {
   // parity traces default off; the stock offline world and the headless env opt
   // in; the realm maps it from its env. Read-only, exactly the resolved Sim.cfg field.
   readonly freeholdsEnabled: boolean;
+  readonly freeholdKeyAdmission: (ownerKey: string, pid: number) => boolean;
+  readonly freeholdKeyReadyAtMs: Map<string, number>;
+  readonly instanceScanCounters: {
+    claimedSlotVisits: number;
+    ownerRosterVisits: number;
+    ownerClaimTests: number;
+  };
   // The development grant permission (SimConfig.freeholdDevGrantEnabled, D81):
   // read-only, exactly the resolved Sim.cfg field; false on every host that does
   // not set it, so the grant arm in freehold/dev_grant.ts refuses by default.
@@ -1505,6 +1512,15 @@ export function createSimContext(host: SimContextHost): SimContext {
     },
     get compulsoryTutorial() {
       return host.compulsoryTutorial;
+    },
+    get freeholdKeyAdmission() {
+      return host.freeholdKeyAdmission;
+    },
+    get freeholdKeyReadyAtMs() {
+      return host.freeholdKeyReadyAtMs;
+    },
+    get instanceScanCounters() {
+      return host.instanceScanCounters;
     },
     get freeholdsEnabled() {
       return host.freeholdsEnabled;

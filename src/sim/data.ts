@@ -8,6 +8,7 @@ import {
   FREEHOLD_DUNGEON_DEFS,
   FREEHOLD_FURNISHER,
   FREEHOLD_FURNISHINGS,
+  FREEHOLD_ITEMS,
   FURNISHING_PATTERN_ITEMS,
 } from './content/freehold';
 import { BASE_ITEMS } from './content/items';
@@ -399,6 +400,7 @@ export const ITEMS: Record<string, ItemDef> = mergeItems(
   IGNIVAR_DROP_ITEMS,
   CRUCIBLE_PROFESSION_ITEMS,
   FREEHOLD_FURNISHINGS,
+  FREEHOLD_ITEMS,
 );
 
 export type { AggregatedSetEffect } from './content/item_sets';
@@ -797,6 +799,10 @@ export const BUILTIN_WORLD: WorldContent = {
   props: PROPS,
   playerStart: PLAYER_START,
   services: {
+    freeholdGate: {
+      ...EASTBROOK_LAYOUT.services.freeholdGate.position,
+      facing: EASTBROOK_LAYOUT.services.freeholdGate.facing,
+    },
     stations: STATIONS,
     mailboxes: MAILBOXES,
     noticeboards: NOTICEBOARDS,

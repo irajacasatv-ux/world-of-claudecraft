@@ -27,7 +27,7 @@ const GUILD_CREATION_FEE_GOLD = GUILD_CREATION_FEE_COPPER / 10_000;
 // `realm` is the world/shard the character lives on (stored per character so
 // it survives logout and is ready for future cross-realm play); `zone` and
 // `status` are only meaningful while the character is online.
-export type PresenceStatus = 'online' | 'combat' | 'dungeon' | 'dead' | 'afk';
+export type PresenceStatus = 'online' | 'combat' | 'dungeon' | 'freehold' | 'dead' | 'afk';
 
 export interface Presence {
   zone: string;

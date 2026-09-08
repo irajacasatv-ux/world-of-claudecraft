@@ -49,6 +49,9 @@ export function buildRealmSimConfig(
     // a restart to pick up a flag change. The wire verdict and the status
     // route re-read the env per call; only the Sim half freezes.
     freeholdsEnabled: freeholdsEnabled(process.env),
+    // 07a must supply durable account cooldown authority before remote travel.
+    // A process-local ready timestamp never authorizes a production key.
+    freeholdKeyAdmission: () => false,
     // Distance-cull idle-mob AI (issue #2703): shouldSkipIdleMobTick skips a
     // wild, unbuffed, out-of-combat mob's per-tick aggro scan and wander
     // movement while it sits farther than this from EVERY connected player,

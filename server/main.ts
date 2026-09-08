@@ -3821,6 +3821,7 @@ export async function startServer(): Promise<http.Server> {
     accountsOnline: () => game.liveAccountIds().size,
     wsConnections: () => wss.clients.size,
     simEntities: () => game.sim.entities.size,
+    freeholdRecords: () => game.sim.ctx.freeholds.size,
     simTickHz: () => game.simTickHz(),
     savePendingKeys: () => game.characterSaveQueues.pendingKeys(),
     escrowGateInFlight: () => wocEscrowGate.stats().inFlight,

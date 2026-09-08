@@ -72,6 +72,28 @@ describe('liveLocationFor: branch precedence', () => {
     expect(out.instanceId).toBe(dungeonId);
   });
 
+  it.each(['freehold_inn_room', 'freehold_cottage'])(
+    'reports %s as a freehold from a positional instance lookup without owner metadata',
+    (dungeonId) => {
+      const dungeon = DUNGEONS[dungeonId];
+      const sim = fakeSim({ instance: { dungeonId, slot: 2 } as unknown as InstanceInfo });
+      const out = liveLocationFor(sim, entityAt(0, 0));
+      const zone = zoneAt(dungeon.doorPos.x, dungeon.doorPos.z);
+      expect(out).toEqual({
+        kind: 'freehold',
+        zoneId: zone.id,
+        zone: zone.name,
+        instanceId: dungeonId,
+        instance: dungeon.name,
+        instanceSlot: 2,
+        poiIndex: null,
+        poi: null,
+        poiDistance: null,
+      });
+      expect(liveLocationFor(fakeSim(), entityAt(0, 0, { dungeonId })).kind).toBe('freehold');
+    },
+  );
+
   it('falls back to the raw id and the entity zone for a dungeon with no catalog row', () => {
     const sim = fakeSim({ instance: { dungeonId: 'no_such_dungeon' } as unknown as InstanceInfo });
     const out = liveLocationFor(sim, entityAt(0, 0));

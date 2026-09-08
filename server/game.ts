@@ -22,11 +22,8 @@ import {
   DELVES,
   DUNGEON_X_THRESHOLD,
   DUNGEONS,
-  delveAt,
-  dungeonAt,
   ITEMS,
   isBgPos,
-  isDelvePos,
   MOBS,
   zoneAt,
 } from '../src/sim/data';
@@ -264,6 +261,7 @@ import {
   dispatchFreeholdCommand,
   freeholdOwnerKeyForAccount,
   refusedFreeholdCommand,
+  refusedJailedTravelCommand,
 } from './freehold_wire';
 import { dispatchGatheringGoalCommand } from './gathering_goal_commands';
 import { appendGatheringGoalSelfWire } from './gathering_goal_wire';
@@ -313,6 +311,12 @@ import { guildRosterTransport } from './guild_roster_transport';
 import { HEAVY_SELF_EVENTS, heavySelfMarkOnAccept, heavySelfMarkOnReceipt } from './heavy_self';
 import { type HotbarLayoutState, HotbarLayoutStore, hotbarLayoutState } from './hotbar_layout';
 import { gameMetricsCounters, type WsDropCause } from './http/game_signals';
+import { instancePresenceFor, relayZoneFor } from './instance_presence';
+import {
+  applyInstanceScanTick,
+  createInstanceScanTickStats,
+  resetInstanceScanCapture,
+} from './instance_scan_tick_stats';
 import { buildSharedInterestCandidates } from './interest_candidates';
 import {
   BG_MATCH_DROP_RADIUS,
@@ -582,6 +586,8 @@ export const SIM_LAP_PHASES = [
   'arena',
   'trades',
   'lootRolls',
+  'unstuck',
+  'updateInstances',
   'instances',
   'delves',
   'valecup',
@@ -855,20 +861,7 @@ const LANE_DROP_CAUSE = {
   chat: 'lane_chat',
   name_screen: 'lane_name_screen',
 } as const satisfies Record<MsgLane, WsDropCause>;
-const JAILED_BLOCKED_COMMANDS = new Set<string>([
-  'arena_queue',
-  'bg_queue',
-  'enter_dungeon',
-  'enter_crypt',
-  'enter_delve',
-  'duel_req',
-  'duel_accept',
-  'unstuck',
-  'card_queue_join',
-  // A door step into instanced space (the enter_dungeon shape); freehold_leave
-  // stays unlisted because leaving lands the player where jail enforcement re-cages them.
-  'freehold_enter',
-]);
+
 // How often to re-broadcast online players' $WOC holder-tier flair. Each wallet
 // read is served from the woc_balance.ts cache (CACHE_TTL_MS), which is the real
 // freshness floor; keeping this loop at/under that TTL means a token change shows
@@ -1751,6 +1744,7 @@ export class GameServer {
   // the latest tick's aggro/threat visit counts surfaced on the [perf] heartbeat, plus
   // the four capture-window accumulators frozen into a PerfCaptureResult.
   private readonly mobScanTickStats = createMobScanTickStats();
+  private readonly instanceScanTickStats = createInstanceScanTickStats();
   private readonly movementTimelineTickStats = new MovementInputTimelineTickStats();
   // Ops kill-switch: SELF_SNAPSHOT_FULL=1 re-diffs every heavy self field every
   // tick (pre-optimization behavior), for A/B benchmarking or rollback.
@@ -2268,38 +2262,20 @@ export class GameServer {
     if (announce) this.sendSystemNotice(moderator, 'Returned from jail visitor area.');
   }
 
-  // The instance (dungeon OR delve) an entity is inside, named as its own zone,
-  // or null when the entity is in the overworld (or an arena, which is not a
-  // dungeon). Resolved in order: an explicit dungeonId portal field, then a
-  // delve position, then any other far-off instance-space x as a dungeon. A
-  // failed lookup returns null so callers fall back to the overworld zone
-  // rather than ever surfacing a raw id. `pos` defaults to the entity's live
-  // position but callers pass a spectator's saved position so a spectating
-  // moderator reports where they really are, not the limbo they were parked in.
-  private instanceZoneName(e: Entity, pos: { x: number; z: number } = e.pos): string | null {
-    if (e.dungeonId) return DUNGEONS[e.dungeonId]?.name ?? e.dungeonId;
-    if (isDelvePos(pos.x)) return delveAt(pos.x)?.name ?? null;
-    if (pos.x > DUNGEON_X_THRESHOLD) return dungeonAt(pos.x)?.name ?? null;
-    return null;
-  }
-
-  // Live location + activity of an online character, for friend/guild rosters
-  // and /who. A player inside any instance (dungeon or delve) reports the
-  // instance name and the 'dungeon' status, not the overworld zone the instance
-  // coordinates happen to fall under.
+  // Live location and activity for friend/guild rosters and /who.
   private presenceOf(session: ClientSession): Presence {
     const e = this.sim.entities.get(session.pid);
     if (!e) return { zone: 'Unknown', status: 'online' };
     const pos = session.spectating?.savedPos ?? e.pos;
-    const instanceZone = this.instanceZoneName(e, pos);
+    const instance = instancePresenceFor(e, pos);
     let status: PresenceStatus = 'online';
     if (e.dead) status = 'dead';
-    else if (instanceZone != null) status = 'dungeon';
+    else if (instance) status = instance.status;
     else if (e.inCombat) status = 'combat';
     // AFK is the lowest-priority active state: a dead/instanced/in-combat player
     // reports that first, but an idle /afk player shows 'afk' over plain 'online'.
     else if (this.sim.meta(session.pid)?.away?.mode === 'afk') status = 'afk';
-    const zone = instanceZone ?? zoneAt(pos.x, pos.z).name;
+    const zone = instance?.zone ?? zoneAt(pos.x, pos.z).name;
     return { zone, status, x: pos.x, z: pos.z };
   }
 
@@ -2624,6 +2600,11 @@ export class GameServer {
               this.mobScanTickStats,
               scan.aggroScanPlayerVisits,
               scan.threatEntryVisits,
+              this.perfCaptureDeadlineNs !== null,
+            );
+            applyInstanceScanTick(
+              this.instanceScanTickStats,
+              this.sim.instanceScanCounters,
               this.perfCaptureDeadlineNs !== null,
             );
             this.recordBattlegroundOutcomes();
@@ -3012,11 +2993,7 @@ export class GameServer {
     const { command, message } = parsed;
     const e = this.sim.entities.get(session.pid);
     const cls = e ? e.templateId.charAt(0).toUpperCase() + e.templateId.slice(1) : '';
-    const zone = e
-      ? e.dungeonId
-        ? (DUNGEONS[e.dungeonId]?.name ?? e.dungeonId)
-        : zoneAt(e.pos.x, e.pos.z).name
-      : REALM;
+    const zone = e ? relayZoneFor(e, session.spectating?.savedPos ?? e.pos) : REALM;
     // In-game: a system broadcast everyone sees (variable-routed; S3 guard skips it).
     this.broadcastSystem(`[${command.tag}] ${session.name}: ${message || command.label}`);
     // Out-of-game: hand off to the bot, which posts a rich embed with a Respond button.
@@ -5280,6 +5257,7 @@ export class GameServer {
     this.perfCaptureCatchUpCallbacks = 0;
     this.perfCaptureMaxTicksPerCallback = 0;
     resetMobScanCaptureAccumulators(this.mobScanTickStats);
+    resetInstanceScanCapture(this.instanceScanTickStats);
     this.movementTimelineTickStats.resetCapture();
     this.perfCaptureEndsAtMs = Date.now() + clamped;
     this.perfCaptureDeadlineNs = process.hrtime.bigint() + BigInt(clamped) * 1_000_000n;
@@ -5354,6 +5332,10 @@ export class GameServer {
       aggroVisitsMaxPerTick: this.mobScanTickStats.aggroVisitsMaxPerTick,
       threatVisitsTotal: this.mobScanTickStats.threatVisitsTotal,
       threatVisitsMaxPerTick: this.mobScanTickStats.threatVisitsMaxPerTick,
+      claimedSlotVisitsTotal: this.instanceScanTickStats.claimedSlotVisitsTotal,
+      claimedSlotVisitsMaxPerTick: this.instanceScanTickStats.claimedSlotVisitsMaxPerTick,
+      ownerRosterVisitsTotal: this.instanceScanTickStats.ownerRosterVisitsTotal,
+      ownerClaimTestsTotal: this.instanceScanTickStats.ownerClaimTestsTotal,
       ...this.movementTimelineTickStats.captureTotals(),
       profile: this.tickProfiler.profile(),
     };
@@ -5390,6 +5372,10 @@ export class GameServer {
       aggroVisits: this.mobScanTickStats.lastAggroScanVisits,
       threatVisits: this.mobScanTickStats.lastThreatEntryVisits,
       blobP99Bytes: characterBlobBytesP99(),
+      freeholdRecords: this.sim.ctx.freeholds.size,
+      claimedSlotVisits: this.instanceScanTickStats.lastClaimedSlotVisits,
+      ownerRosterVisits: this.instanceScanTickStats.lastOwnerRosterVisits,
+      ownerClaimTests: this.instanceScanTickStats.lastOwnerClaimTests,
     });
     // The movement-timeline counters are CONCATENATED onto the formatter's line
     // rather than passed as a second console.log argument: they must be part of
@@ -6143,8 +6129,13 @@ export class GameServer {
     // A jailed session cannot enrol in instanced content: a popped match or an
     // instance entry would teleport it out of the cage and the jail enforcement
     // straight back, ruining the match for everyone else in it.
-    if (session.jailed && typeof msg.cmd === 'string' && JAILED_BLOCKED_COMMANDS.has(msg.cmd)) {
+    if (session.jailed && refusedJailedTravelCommand(msg)) {
       if (msg.cmd === 'unstuck') this.sendUnstuckBlocked(session, 'jailed');
+      else if (msg.cmd === 'freehold_enter')
+        this.send(session, {
+          t: 'events',
+          list: [{ type: 'freeholdDenied', pid: session.pid, reason: 'no_freehold' }],
+        });
       else this.sendChatNotice(session, 'You cannot do that while jailed.');
       this.sendCommandOutcome(session, msg, false);
       return;
@@ -6165,11 +6156,15 @@ export class GameServer {
     // rationale in server/freehold_wire.ts), so a crafted frame cannot reach
     // even a no-op stub on a realm that has not lit housing. Refused ABOVE the
     // heavy-self dirty flag below, so a blocked command cannot force a re-diff.
-    if (refusedFreeholdCommand(msg.cmd)) {
+    if (refusedFreeholdCommand(msg)) {
       // Label-free by contract (game_signals.ts): the counter is the ops signal
       // that a modified client probes dark housing (and that a realm forgot
       // the flag once the UI ships).
       gameMetricsCounters().freeholdRefused();
+      this.send(session, {
+        t: 'events',
+        list: [{ type: 'freeholdDenied', pid: session.pid, reason: 'no_freehold' }],
+      });
       this.sendCommandOutcome(session, msg, false);
       return;
     }

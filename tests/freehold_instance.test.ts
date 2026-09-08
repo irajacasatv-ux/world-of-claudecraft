@@ -710,6 +710,7 @@ describe('the Sim facade delegates', () => {
     const sim = makeSim();
     const pid = addOwner(sim, 'Aaa');
     const e = entity(sim, pid);
+    e.pos = sim.ctx.groundPos(INN.doorPos.x, INN.doorPos.z);
     sim.freeholdEnter(pid);
     expect(dungeonAt(e.pos.x)?.id).toBe(FREEHOLD_INN_ROOM_DUNGEON_ID);
     sim.freeholdLeave(pid);

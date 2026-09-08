@@ -36,5 +36,6 @@ export function telemetryZoneId(x: number, z: number): string {
   // reports cannot be correlated with rift play.
   if (isRiftPos(x)) return 'rift';
   const dungeon = dungeonAt(x);
+  if (dungeon?.claimKey === 'owner') return `freehold:${dungeon.id}`;
   return dungeon ? `dungeon:${dungeon.id}` : 'instance';
 }

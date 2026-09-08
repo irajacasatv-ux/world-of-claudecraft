@@ -131,10 +131,10 @@ export const HEAVY_SELF_CMDS = new Set<string>([
   // ALWAYS-SENT base self object, and the vault view rides the ungated
   // proximity section beside 'bank', so listing it would only buy a redundant
   // heavy re-serialize (the guild bank's gold ops sit out for the same reason).
-  // freehold_enter and freehold_leave are absent on the same terms: a claim or
-  // an exit moves the player (the always-sent entity record) and touches no
-  // heavy-gated self field until the housing self key lands with the
-  // descriptor wire; that change adds the rows here, arm-marked.
+  // Gate entry can grant the permanent Hearth Key into heavy-gated inventory.
+  // It is arm-marked so dark/jail refusals above dispatch never dirty the cache.
+  // Leaving changes only the always-sent entity position.
+  'freehold_enter',
   'vault_deposit',
   'vault_withdraw',
   // The batched sweep rewrites the carried inventory like the two above, only
@@ -167,6 +167,7 @@ export const HEAVY_SELF_CMDS = new Set<string>([
 // their own belt-and-braces freshness (wireRev on every spend, the loot and
 // farmPlanted events) exactly as the entries' own comments record.
 export const HEAVY_SELF_ARM_MARKED_CMDS = new Set<string>([
+  'freehold_enter',
   'perfect_item',
   'swap_perfecting_ranks',
   'plant_crop',
