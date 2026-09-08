@@ -990,6 +990,7 @@ export const ko_KR: EnTranslations = {
       "mounts": "탈것",
       "professions": "전문 기술",
       "reliquary": "성물고",
+      "lootExplorer": "전리품 탐색기",
       "nameplates": "이름표",
       "haptics": "진동",
       "hapticsOff": "진동 꺼짐",
@@ -1148,6 +1149,9 @@ export const ko_KR: EnTranslations = {
       "promptAttack": "공격",
       "promptUseAbility": "기술 사용",
       "promptKneel": "무릎 꿇기",
+      "promptAccessInterface": "인터페이스 열기",
+      "promptMoveToTarget": "{target}(으)로 이동",
+      "promptSelectItem": "{item} 선택",
       "promptOpenBags": "가방 열기",
       "promptCharacterSheet": "캐릭터 창 열기",
       "promptLookAround": "오른쪽 버튼을 누른 채 끌어서 둘러보기",
@@ -1261,6 +1265,43 @@ export const ko_KR: EnTranslations = {
       "heroicName": "영웅: {name}",
       "heroicLocked": "영웅 난이도 {name}에 귀속되었습니다."
     },
+    "practiceDps": {
+      "title": "훈련용 허수아비",
+      "liveDps": "{value} DPS",
+      "liveLabel": "This run",
+      "prompt": "허수아비를 공격하여 측정을 시작하세요",
+      "previous": "이전 측정",
+      "runLabel": "Run {index}",
+      "runSummary": "{total} in {time}"
+    },
+    "hubLesson": {
+      "target": "먼저 허수아비를 대상으로 삼으세요.",
+      "openWindow": "{meters}을(를) 여세요.",
+      "openWindowTouch": "{menu} → {more} → {meters}을(를) 여세요.",
+      "openTab": "올바른 탭으로 전환하세요.",
+      "openTabDamage": "피해량 탭으로 전환하세요.",
+      "openTabHealing": "치유 탭으로 전환하세요.",
+      "act": "한 번 명중시켜 측정을 시작하세요.",
+      "actDamage": "허수아비를 공격해 측정을 시작하세요.",
+      "actHealing": "허수아비에게 치유를 걸어 측정을 시작하세요.",
+      "addToBar": "주문서에서 치유 마법을 액션바에 추가한 다음, 허수아비에게 사용하세요.",
+      "readRow": "내 행을 확인한 다음 계속을 누르세요.",
+      "readRowDamage": "합계는 이번 판에서 입힌 전체 피해량이고, DPS는 이번 판의 초당 피해량입니다. 내 행을 지켜본 다음 계속을 누르세요.",
+      "readRowHealing": "합계는 회복시킨 체력이며, 최대 체력을 넘는 치유는 0으로 계산됩니다. HPS는 이번 판의 초당 회복량입니다. 내 행을 확인한 다음 계속을 누르세요.",
+      "findRun": "미터의 화살표를 사용해 연습 기록으로 돌아가세요.",
+      "addAttackToBar": "주문서에서 공격을 액션바에 추가한 다음, 허수아비에게 사용하세요.",
+      "ackContinue": "계속",
+      "viewBreakdown": "내 행에 마우스를 올리거나 포커스하거나 길게 눌러 기술별 내역을 확인하세요.",
+      "endRun": "공격을 끄고 시전을 멈추세요. 5초 동안 명중이 없으면 이번 판이 끝납니다.",
+      "endHealingRun": "5초 동안 치유를 멈춰 이번 판을 끝내면, 이 레슨을 다시 연습할 수 있습니다.",
+      "inspectHistory": "기록 화살표를 사용해 방금 끝난 판을 되돌아보세요.",
+      "compareAgain": "오른쪽 화살표로 현재로 돌아간 다음, 같은 허수아비를 비슷한 시간 동안 공격하세요.",
+      "reviewComparison": "화살표로 합계, DPS, 지속 시간을 첫 판과 비교하세요. 이 판으로 돌아온 다음 완료를 누르세요.",
+      "ackDone": "완료",
+      "replay": "레슨을 마쳤습니다. 자유롭게 연습하거나, 이 설명을 다시 재생하세요.",
+      "replayAction": "다시 연습하기",
+      "replayTarget": "다시 대상으로 삼기"
+    },
     "riftTracker": {
       "title": "균열",
       "floor": "{total}층 중 {current}층",
@@ -1296,6 +1337,8 @@ export const ko_KR: EnTranslations = {
     },
     "meters": {
       "perSecond": "{value}/초",
+      "thousands": "{value}k",
+      "millions": "{value}m",
       "perSecondRow": "{total} ({rate})",
       "minutesSeconds": "{m}분 {s}초",
       "seconds": "{s}초",
@@ -1314,9 +1357,21 @@ export const ko_KR: EnTranslations = {
       "separate": "{meter} 분리",
       "regroup": "{meter} 통합"
     },
+    "auraTracks": {
+      "defensives": "방어 재사용 대기시간",
+      "self": "내 버프",
+      "power": "공격 재사용 대기시간",
+      "utility": "이동 및 은신",
+      "friendly": "아군에게 건 내 버프",
+      "shields": "내 보호막",
+      "row": "{aura} on {unit}",
+      "selfRow": "{aura}",
+      "mode": "on",
+      "overflow": "{count}개 더 표시되지 않음"
+    },
     "targetDots": {
       "title": "대상 디버프",
-      "row": "{aura} on {target}",
+      "row": "{target}의 {aura}",
       "overflow": "{count}개 더 있음, 표시되지 않음"
     },
     "targetAuras": {
@@ -1400,6 +1455,8 @@ export const ko_KR: EnTranslations = {
       "name_shadowjump_toad": "그림자 도약 두꺼비 카마카게",
       "name_stormfeather_griffin": "하늘닿이 폭풍깃",
       "name_thunderstrut_gobbler": "천둥활보 대왕 칠면조",
+      "name_goblin_rocket_sled": "고블린 로켓 썰매",
+      "name_rallycart_rxt": "랠리카트 RXT",
       "name_terrorspark_groundshaker": "대지를 뒤흔드는 드레드스파크",
       "name_drakemaw_raptor": "화산구 랩터",
       "name_mech_bird": "태엽 기계새",
@@ -1413,6 +1470,8 @@ export const ko_KR: EnTranslations = {
       "desc_shadowjump_toad": "어떤 지형이든 번개 같은 그림자 도약으로 누비도록 훈련된 거대한 두꺼비입니다.",
       "desc_stormfeather_griffin": "룬 발톱으로 땅을 누비는 위엄 있는 폭풍 그리핀입니다. 날개는 접혀 있습니다.",
       "desc_thunderstrut_gobbler": "깨어나는 봉우리에서 꼬리깃을 뇌운처럼 펼친 채 활보하며 내려오는, 폭풍이 낳은 거대한 칠면조입니다.",
+      "desc_goblin_rocket_sled": "위험할 정도로 과하게 만들어진 고블린 썰매. 쌍발 로켓과 형편없는 판단력으로 내달린다.",
+      "desc_rallycart_rxt": "작지만 본격적인 랠리 머신. 이동 속도를 높여준다.",
       "desc_terrorspark_groundshaker": "묵직한 궤도와 대구경 포, 겁 없는 조종사를 위한 안장을 갖춘 소형 장갑 기계입니다.",
       "desc_drakemaw_raptor": "화산구 칼데라에서 길들여진 둥지 태생 랩터. 온몸이 힘줄과 질주로 이루어졌으며, 아직도 희미한 재 냄새가 난다.",
       "desc_mech_bird": "수제 태엽 전투 닭. 서보 관절을 튕기며 질주하고, 태엽 열쇠는 지금도 돌아가고 있다.",
@@ -1607,7 +1666,10 @@ export const ko_KR: EnTranslations = {
       "uiScale": "UI 배율",
       "playerFrameScale": "플레이어 프레임 크기",
       "targetFrameScale": "대상 프레임 크기",
+      "playerHealthText": "플레이어 생명력 텍스트",
+      "targetHealthText": "대상 생명력 텍스트",
       "aurasOnPlayerFrame": "버프를 플레이어 프레임에 표시",
+      "auraBarBelowFrame": "버프를 플레이어 프레임 아래에 표시",
       "alwaysShowAllBuffs": "모든 버프를 항상 표시",
       "highContrastBackground": "고대비 배경",
       "startAttackOnAbility": "스킬 사용 시 자동 공격",
@@ -1633,6 +1695,13 @@ export const ko_KR: EnTranslations = {
       "showNameplateDots": "이름표에 내 디버프 표시",
       "nameplateDotScale": "이름표 디버프 아이콘 크기",
       "showTargetDots": "대상 디버프 목록 표시",
+      "showDefensivesTrack": "방어 재사용 대기시간 표시",
+      "showSelfBuffTrack": "내 버프 표시",
+      "showOffensiveTrack": "공격 재사용 대기시간 표시",
+      "showUtilityTrack": "이동 및 은신 표시",
+      "showUtilityModes": "은신 및 이동 형태 포함",
+      "showFriendlyTrack": "아군에게 건 내 버프 표시",
+      "showShieldTrack": "내 보호막 표시",
       "waterRipples": "수면 물결 (물살)",
       "showAttackButton": "공격 버튼 표시",
       "showDailyRewardsChest": "일일 보상 보물상자 표시",
@@ -2648,7 +2717,9 @@ export const ko_KR: EnTranslations = {
       "unequipHint": "클릭하여 이 가방을 해제",
       "poolGeneral": "일반: {total}칸 중 {used}칸",
       "poolMaterials": "재료: {total}칸 중 {used}칸",
-      "capacityPoolsAria": "사용 중인 가방 칸: {total}칸 중 {used}칸. 일반 아이템: {generalTotal}칸 중 {generalUsed}칸. 재료: {materialsTotal}칸 중 {materialsUsed}칸."
+      "capacityPoolsAria": "사용 중인 가방 칸: {total}칸 중 {used}칸. 일반 아이템: {generalTotal}칸 중 {generalUsed}칸. 재료: {materialsTotal}칸 중 {materialsUsed}칸.",
+      "capacityPools": "아이템 {generalUsed}/{generalTotal}, 재료 {materialsUsed}/{materialsTotal}",
+      "emptyMaterialsOnly": "재료 전용"
     },
     "raidConvert": {
       "toPartyDone": "공격대가 파티로 다시 전환되었습니다.",
@@ -2874,7 +2945,7 @@ export const ko_KR: EnTranslations = {
         "raiseFallenName": "망자 소생",
         "raiseFallenSummary": "왕좌 단계 동안 {every}초마다 나이트락시스가 자신의 뒤에서 되살아난 왕실 근위병을 일으킵니다. 그들은 현재 대상에게 돌진해 파괴될 때까지 싸웁니다.",
         "raiseFallenResponse": "보조 방어 담당이 일어나는 웨이브마다 대상을 확보합니다. 공격 담당은 뼈가시 사이사이에 근위병을 처리해 왕좌 단계가 끝나기 전에 웨이브가 쌓이지 않게 합니다.",
-        "soulRendName": "Soul Rend",
+        "soulRendName": "영혼 가르기",
         "soulRendSummary": "나이트락시스가 현재 대상을 제외한 플레이어 {marksNormal}명에게 영혼 가르기 표식을 남깁니다. {fuse}초 후 각 표식은 대상자의 최대 생명력 전체에 해당하는 암흑 피해를 입히며, 이 피해는 그 대상자로부터 {range}야드 이내에 있는 표식 보유자 수만큼 나뉩니다.",
         "soulRendHeroicSummary": "나이트락시스가 현재 대상을 제외한 플레이어 {marksHeroic}명에게 영혼 가르기 표식을 남깁니다. {fuse}초 후 각 표식은 대상자의 최대 생명력의 {damageHeroic}만큼 암흑 피해를 입히며, 이 피해는 그 대상자로부터 {range}야드 이내에 있는 표식 보유자 수만큼 나뉩니다. 표식이 혼자 터지면 치명적입니다.",
         "soulRendResponse": "표식을 받은 모든 플레이어는 {fuse}초의 시간이 끝나기 전에 한 집결 지점으로 달려가 다른 표식 보유자로부터 {range}야드 이내에 섭니다. 치유 담당은 표식이 터지는 동안 그룹의 생명력을 채웁니다.",
@@ -3187,6 +3258,7 @@ export const ko_KR: EnTranslations = {
       "healthPercent": "백분율",
       "healthCurrent": "현재 값",
       "healthCurrentMax": "현재 / 최대",
+      "healthCurrentMaxPercent": "현재 / 최대 (백분율)",
       "sort": "플레이어 정렬",
       "sortGroup": "그룹",
       "sortRole": "역할",
@@ -3229,14 +3301,14 @@ export const ko_KR: EnTranslations = {
         "targetDots": "대상 디버프",
         "questTracker": "퀘스트 추적기",
         "reliquaryTracker": "성물고 추적기",
-        "petBar": "Pet Bar",
+        "petBar": "소환수 바",
         "procOverlay": "주문 발동",
         "procOverlayFrost": "고드름",
         "damageMeter": "피해 측정기",
         "deedTracker": "업적 추적기",
         "delveTracker": "탐굴 추적기",
         "riftTracker": "균열 추적기",
-        "swingBarOffhand": "Off Hand"
+        "swingBarOffhand": "보조 장비"
       },
       "framesMenu": "프레임 설정",
       "framesMenuTitle": "각 프레임을 표시하거나 숨깁니다. 선택을 해제한 프레임은 다시 선택하거나 기본값으로 초기화할 때까지 숨겨진 상태로 유지됩니다.",
@@ -3278,7 +3350,7 @@ export const ko_KR: EnTranslations = {
       "title": "키보드 개요",
       "hint": "사용 중인 키는 범주별로 색이 칠해집니다. 키에 마우스를 올리거나 포커스하면 그 키의 모든 지정을 볼 수 있습니다.",
       "hintInteractive": "사용 중인 키는 범주별로 색이 칠해집니다. 키를 클릭하면 기능을 바꿀 수 있고, 마우스를 올리거나 포커스하면 그 키의 모든 지정을 볼 수 있습니다.",
-      "popOut": "Pop Out",
+      "popOut": "별도 창으로 열기",
       "close": "키보드 개요 닫기",
       "pressKey": "{action}에 지정할 키를 누르세요. Esc 키로 취소합니다.",
       "boundTo": "{action}을(를) {key} 키에 지정했습니다.",
@@ -3297,8 +3369,8 @@ export const ko_KR: EnTranslations = {
       "legendQwerty": "QWERTY",
       "layerNone": "보조키 없음",
       "layerShift": "Shift 키",
-      "layerCtrl": "Ctrl",
-      "layerAlt": "Alt",
+      "layerCtrl": "Ctrl 키",
+      "layerAlt": "Alt 키",
       "keyDetail": "{key}: {bindings}",
       "separator": ", ",
       "bindingLine": "{key}: {action}",
@@ -3413,6 +3485,7 @@ export const ko_KR: EnTranslations = {
       "close": "닫기",
       "keybind": "Discord 패널",
       "disabled": "현재 Discord 연동을 사용할 수 없습니다.",
+      "queuePingsLabel": "전장 또는 투기장 대기열이 잡히면 Discord 다이렉트 메시지로 알려주기 (연결된 Discord 계정 필요)",
       "tiers": {
         "none": "등급 없음",
         "initiate": "입문자",
@@ -3733,6 +3806,8 @@ export const ko_KR: EnTranslations = {
       "depositAllDone": "보관한 재료: {count}.",
       "depositAllFull": "보관한 재료: {count}. 은행이 가득 찼습니다.",
       "depositAllNone": "은행이 가득 참: 아무것도 보관하지 못했습니다.",
+      "depositAllNotable": "보관한 재료: {count}({item} 포함).",
+      "depositAllNotableFull": "보관한 재료: {count}({item} 포함). 은행이 가득 찼습니다.",
       "bonusTitle": "보너스 칸",
       "bonusEarned": "+{count}",
       "bonusStatusEarned": "+{count}",
@@ -3771,6 +3846,8 @@ export const ko_KR: EnTranslations = {
       "vaultDepositAllDone": "보관한 재료: {count}개.",
       "vaultDepositAllFull": "보관한 재료: {count}개. 일부 재료가 한도에 도달했습니다.",
       "vaultDepositAllNone": "보관 한도가 가득 차서 아무것도 보관하지 못했습니다.",
+      "vaultDepositAllNotable": "보관한 재료: {count}개({item} 포함).",
+      "vaultDepositAllNotableFull": "보관한 재료: {count}개({item} 포함). 일부 재료가 한도에 도달했습니다.",
       "vaultWithdrawShort": "가방에는 {count}개 중 {fit}개만 들어갑니다.",
       "vaultDepositHint": "클릭하여 보관소에 보관",
       "vaultCannotDeposit": "보관소에 넣을 수 없습니다",
@@ -4897,6 +4974,7 @@ export const ko_KR: EnTranslations = {
       "sourceProfession": "{profession}(으)로 획득",
       "sourceDeed": "업적 \"{deed}\" 보상",
       "sourceVendor": "{vendor} 판매",
+      "sourceVendorGated": "{vendor} 판매 ({requirement})",
       "sourceBossZone": "{zone}의 {boss}에게서 획득",
       "sourceDelve": "탐굴 \"{delve}\"에서 발견",
       "sourceRift": "{rank} 등급 균열 클리어에서 획득",
@@ -4916,6 +4994,10 @@ export const ko_KR: EnTranslations = {
       "filterAll": "전체",
       "filterOwned": "수록됨",
       "filterMissing": "아직 없음",
+      "filterIlluminated": "조명됨",
+      "filterRemaining": "남음",
+      "filterEmptyPages": "이 필터와 일치하는 페이지가 없습니다.",
+      "filterGroupAriaPages": "조명 여부로 페이지 필터",
       "recentJumpAria": "{name} 페이지 열기",
       "recentEmpty": "아직 발견한 성물이 없습니다. 지금부터 수록하는 성물이 여기에 표시됩니다.",
       "nearlyEmpty": "완성이 가까운 페이지가 여기에 모입니다.",
@@ -5023,6 +5105,7 @@ export const ko_KR: EnTranslations = {
       "summary": "세계 지도. 지역을 선택하면 해당 지도가 열립니다.",
       "toWorld": "세계 지도",
       "toZone": "지역 지도",
+      "toInstance": "인스턴스 지도",
       "toggleAria": "세계 지도와 지역 지도 전환",
       "levels": "레벨 {min}부터 {max}까지"
     },
@@ -5057,6 +5140,7 @@ export const ko_KR: EnTranslations = {
       "walletLinkedConnected": "연결된 지갑 앱이 접속되어 $WOC로 결제할 준비가 되었습니다.",
       "walletUsdBalance": "{amount} USD",
       "walletUsdUnknown": "알 수 없음",
+      "walletCardDismiss": "지갑 카드 숨기기",
       "rateNote": "환율: {time} 기준 1 USD당 약 {tokens} $WOC.",
       "rateNotePaused": "마지막으로 확인된 환율: {time} 기준 1 USD당 약 {tokens} $WOC.",
       "estimateNote": "{usd}는 현재 환율로 약 {tokens} $WOC입니다.",
@@ -5248,6 +5332,43 @@ export const ko_KR: EnTranslations = {
       "listingStatusCancelled": "취소됨",
       "listingStatusSuspended": "정지됨",
       "listingStatusUnsold": "유찰"
+    },
+    "lootExplorer": {
+      "title": "전리품 탐색기",
+      "close": "전리품 탐색기 닫기",
+      "searchPlaceholder": "아이템 검색...",
+      "searchAria": "아이템 검색",
+      "filterCategoryAria": "출처",
+      "filterClassAria": "직업",
+      "filterStatAria": "통계",
+      "filterQualityAria": "품질",
+      "filterAll": "모두",
+      "tabItems": "품목별",
+      "tabEncounters": "출처별",
+      "category": {
+        "raid": "레이드",
+        "dungeon": "던전",
+        "delve": "탐굴",
+        "open_world": "오픈 월드",
+        "rift": "균열",
+        "vendor": "상인",
+        "quest_reward": "퀘스트 보상",
+        "quest_objective": "퀘스트 목표",
+        "ground_object": "월드 오브젝트",
+        "starting_equipment": "초기 장비"
+      },
+      "difficulty": {
+        "normal": "일반",
+        "heroic": "영웅"
+      },
+      "riftRankLabel": "리프트 랭크 {rank}",
+      "source": "{category}: {name}",
+      "sourceWithContext": "{category}: {name} ({context})",
+      "chance": "드롭 확률 {pct}%",
+      "guaranteed": "확정",
+      "gatedByQuest": "퀘스트 진행 중: {quest}",
+      "empty": "이 필터와 일치하는 전리품이 없습니다.",
+      "resultCount": "결과 {count}개"
     }
   },
   "gatherEvent": {
@@ -5347,7 +5468,8 @@ export const ko_KR: EnTranslations = {
       "link_required": "먼저 Discord 계정을 연결하세요.",
       "swag_claimed": "이미 이 보상을 받았습니다.",
       "swag_tier": "이 보상을 받으려면 더 높은 등급에 도달하세요.",
-      "swag_points": "포인트가 부족합니다."
+      "swag_points": "포인트가 부족합니다.",
+      "invalid_input": "입력이 올바르지 않습니다."
     },
     "deeds": {
       "invalid_input": "입력이 올바르지 않습니다."
@@ -5399,6 +5521,11 @@ export const ko_KR: EnTranslations = {
       "reason_required": "사유를 입력해야 합니다.",
       "invalid_duration": "표식 기간은 최소 1초 이상이어야 합니다.",
       "not_marked": "해당 계정에는 표식이 없습니다."
+    },
+    "kick": {
+      "reason_required": "사유를 입력해야 합니다.",
+      "admin_target": "운영자 계정은 추방할 수 없습니다.",
+      "target_offline": "해당 플레이어는 더 이상 이 서버에 접속해 있지 않습니다."
     },
     "woc_market": {
       "invalid_input": "입력이 잘못되었습니다.",
@@ -5838,10 +5965,13 @@ export const ko_KR: EnTranslations = {
       "ifPlayerFrameScale": "내 유닛 프레임의 크기입니다.",
       "ifTargetFrameScale": "대상 프레임의 크기입니다.",
       "ifPartyStyle": "파티 배치 방식입니다. 자동은 파티 인원에 맞춰 따라가고, 클래식은 전통적인 세로 배치이며, 공격대는 모두를 촘촘한 격자에 담습니다.",
+      "ifPlayerHealthText": "자신의 생명력 막대에 무엇을 적을지 정합니다. 표시하지 않음, 백분율, 현재 생명력, 현재와 최대치, 또는 그 둘과 함께 백분율 중에서 고릅니다.",
+      "ifTargetHealthText": "대상과 대상의 대상 생명력 막대에 무엇을 적을지 정하며, 자신의 프레임과 같은 선택지입니다.",
       "ifPartyHealthText": "파티 막대에 무엇을 적을지 정합니다. 표시하지 않음, 백분율, 현재 생명력, 또는 현재와 최대치 중에서 고릅니다.",
       "ifPartySort": "파티원을 나열하는 순서입니다. 파티 순서, 역할, 또는 이름 중에서 고릅니다.",
       "ifPartyShowAuras": "파티 프레임에 강화 효과와 약화 효과를 표시할지 정합니다. 자원 막대, 보호막, 소환수, 그리고 내 파티 목록에 나 자신이 나타날지에 대해서도 같은 방식의 스위치가 마련되어 있습니다.",
       "ifAurasOnPlayerFrame": "내 강화 효과와 약화 효과를 오라 막대뿐 아니라 내 유닛 프레임에도 표시합니다.",
+      "ifAuraBarBelowFrame": "강화 효과 줄을 유닛 프레임 위가 아니라 아래로 옮깁니다. 강화 효과가 플레이어 프레임에 표시되어 있을 때만 적용됩니다.",
       "ifAlwaysShowAllBuffs": "낮음 그래픽 설정에서도 평소의 버프 아이콘 상한을 무시하고 활성화된 모든 버프를 표시합니다.",
       "ifTargetOfTarget": "내 대상이 누구를 노리고 있는지 보여 줍니다. 탱커가 아직 붙잡고 있는지 확인하는 클래식한 방법입니다.",
       "ifPetFrame": "소환수의 프레임을 표시합니다.",
@@ -5849,6 +5979,7 @@ export const ko_KR: EnTranslations = {
       "ifChatOpacity": "채팅 배경이 얼마나 불투명한지 정합니다.",
       "ifCompactChat": "채팅 줄 간격을 좁혀 더 많은 줄이 들어가게 합니다.",
       "ifChatTimestamps": "채팅 줄마다 시각을 붙입니다. 12시간제와 24시간제 중에서 고를 수 있습니다.",
+      "ifFilterProfanity": "채팅의 비속어를 별표로 가립니다. 기본적으로 켜져 있으며, 필터 없이 채팅을 읽고 싶다면 여기서 끌 수 있습니다.",
       "ifStartAttack": "능력을 쓸 때 자동 공격도 함께 시작할지 정합니다. 기본값은 켜짐이며, 대부분의 플레이어가 기대하는 클래식 동작입니다.",
       "ifStopAutoAttack": "대상을 바꿀 때 공격을 멈출지 정합니다. 기본값은 꺼짐이라, 공격이 새 대상으로 그대로 이어집니다.",
       "ifShowAttackButton": "행동 단축바에 공격 버튼을 따로 올립니다.",
@@ -5915,6 +6046,7 @@ export const ko_KR: EnTranslations = {
       "framesMoveBody": "내 프레임과 대상 프레임, 파티 프레임은 모두 옮길 수 있습니다. 각 프레임 모서리에는 작은 이동 버튼이 하나씩 있습니다. 잠금을 풀고 원하는 자리로 끌어다 놓은 다음 다시 잠그면, 잘못 누른 클릭에 프레임이 밀려나지 않습니다. 자리가 마음에 들지 않게 되었다면 옵션의 프레임 위치 초기화로 전부 처음 자리로 되돌릴 수 있습니다.",
       "framesMoveBodyEditFrames": "내 프레임과 대상 프레임, 파티 프레임은 모두 옮길 수 있습니다. 각 프레임 모서리에는 작은 이동 버튼이 하나씩 있습니다. 잠금을 풀고 원하는 자리로 끌어다 놓은 다음 다시 잠그면, 잘못 누른 클릭에 프레임이 밀려나지 않습니다. 인터페이스 옵션의 프레임 탭 맨 위에 있는 프레임 편집은 그 세 프레임과 함께 나머지 인터페이스도 한 번에 풀어 줍니다. 행동 단축바와 시전 바, 공격 속도 바, 경험치 바, 미니맵, 버튼 열, 소환수 프레임, 태세 바, 강화 효과와 약화 효과 줄, 그리고 찜 목록 알림 칩까지, 풀려 있는 동안에는 저마다 이름 칩을 달고 있습니다. 자리가 마음에 들지 않게 되었다면 같은 프레임 탭 맨 아래의 기본값 복원으로 전부 처음 자리로 되돌릴 수 있습니다.",
       "framesGovernedExtra": "\"프레임 편집\"은 그 아래 쌓이는 추적기 무리(추적 중인 퀘스트와 그 목표, 업적 진행도, 성물고 페이지, 지금 들어와 있는 탐굴, 참여 중인 균열, 그리고 추적 중인 제작법이나 의뢰)와 소환수 프레임 옆 소환수 행동 단축바, 주변 적에게 건 약화 효과를 모아 보여주는 \"대상 디버프\" 프레임, 성기사의 \"헌신\" 메달, 흑마법사의 \"고통 자원 막대\", 주문 발동 오버레이, 이도류일 때의 보조 무기 공격 속도 바, 그리고 탭으로 나뉜 피해 측정기 창까지 함께 풀어 주며, 풀려 있는 동안에는 저마다 이름 칩을 달고 있습니다.",
+      "framesGovernedAuraTracks": "\"프레임 편집\"은 같은 인터페이스 옵션의 전투 탭에서 켠 선택형 오라 트랙 여섯 개, 곧 \"내 버프\" 트랙, \"방어 재사용 대기시간\" 트랙, \"내 보호막\" 트랙, \"공격 재사용 대기시간\" 트랙, \"이동 및 은신\" 트랙, \"아군에게 건 내 버프\" 트랙도 함께 풀어 줍니다. 모든 트랙은 기본적으로 꺼져 있으며, 풀려 있는 동안에는 저마다 이름 칩을 달고 있습니다.",
       "barsTitle": "바와 시간 표시, 전투 문자",
       "barsBody": "주문을 시전하거나 정신을 집중할 때마다 화면 한가운데, 행동 단축바 바로 위에 시전 바가 나타나 주문 이름과 남은 시간을 알려 줍니다. 대상도 자기 프레임에 시전 바를 가지므로, 무엇이 날아오는지 보고 답할 수 있습니다.\n\n시전 바 아래에는 가느다란 공격 속도 바가 있어 무기를 휘두르는 사이를 채웁니다. 근접이나 원거리 공격자는 다음 자동 공격이 언제 들어가는지 볼 수 있습니다.\n\n경험치 바는 행동 단축바 아래를 가로질러 화면 전체 폭으로 이어지며 눈금으로 나뉘어 있고, 밝게 표시된 구간이 쌓아 둔 휴식 경험치를 보여 줍니다.\n\n물속으로 헤엄쳐 들어가면 화면 위쪽에 파란 호흡 바가 나타납니다. 머리가 잠겨 있는 동안 줄어들고, 다 떨어져 익사가 시작되면 붉게 깜빡이며, 물 위로 올라오는 순간 빠르게 다시 찹니다. 스페이스로 위로 헤엄치고, 기본값이 Ctrl인 아래로 헤엄치기 키로 더 깊이 내려갑니다.\n\n피해와 치유는 맞은 대상 위로 작은 숫자가 되어 떠오르므로, 글을 읽지 않고도 전투를 읽어 낼 수 있습니다. 채팅창의 전투 탭에는 온전한 기록이 글로 남습니다.",
       "aurasTitle": "강화 효과와 약화 효과",
@@ -5927,6 +6059,7 @@ export const ko_KR: EnTranslations = {
       "mapBody": "M을 누르면 세계 지도가 열립니다. 대륙 전체가 그려지고 그 위에 내 화살표가, 지역과 그 이름이, 주변의 명소가, 이동 차원문이, 그리고 지금까지 찾아낸 채집 노드가 표시됩니다. 파티원도 함께 나타납니다. 탐굴 안에서는 지도가 지금까지 탐험한 방들의 도면으로 바뀝니다.\n\n오른쪽 가장자리 미니맵 아래로는 추적기들이 쌓여, 창을 열지 않고도 지금 하는 일을 눈앞에 붙들어 둡니다. 추적 중인 퀘스트와 그 목표, 업적 진행도, 지금 들어와 있는 탐굴, 참여 중인 균열이 여기에 놓입니다. 화면을 되찾고 싶을 때는 퀘스트 추적기를 접을 수 있습니다.",
       "mapBodyZoneFirst": "M을 누르면 세계 지도가 지금 서 있는 지역에 맞춰 열립니다. 그 위에 내 화살표가, 주변의 명소가, 표식을 단 퀘스트 제공자와 퀘스트 목표가 놓인 구역이, 작업대와 우편함, 게시판, 텃밭이, 던전 입구가, 그리고 그 지역의 모든 채집 노드가 표시됩니다. 노드는 다시 자라는 동안에는 회색으로 흐려지고, 도구가 아직 감당하지 못하는 노드에는 표시가 붙습니다. 파티원도 함께 나타납니다. 지도를 오른쪽 클릭하거나 세계 지도 버튼을 누르면 대륙으로 물러나 모든 지역이 이름과 함께 그려지며, 거기서 지역을 클릭하면 그 지역의 지도가 열립니다. 탐굴이나 던전, 균열, 성채 안으로 들어서면 지도는 지금 서 있는 곳의 도면으로 바뀌고, 쏜할로우 평원 전장은 저만의 전장 지도를 가집니다.\n\n오른쪽 가장자리 미니맵 아래로는 추적기들이 쌓여, 창을 열지 않고도 지금 하는 일을 눈앞에 붙들어 둡니다. 추적 중인 퀘스트와 그 목표, 업적 진행도, 성물고 페이지, 지금 들어와 있는 탐굴, 참여 중인 균열이 여기에 놓입니다. 화면을 되찾고 싶을 때는 퀘스트 추적기를 접을 수 있습니다.",
       "gatheringGoalTrackerBody": "제작 창에서 제작법을, 또는 의뢰 게시판에서 의뢰를 \"추적\"하면 채집 목표 트래커가 이 스택에 추가됩니다. 추적 중인 제작법이나 의뢰의 이름, 목표 수량, 그리고 소지 중이거나 보관 중인 재료로 얼마나 채울 수 있는지를 보여줍니다. \"추적\"은 현재 목표를 대체하고, \"지우기\"는 명시적으로 해제합니다. 둘 다 채집 설정을 바꾸지 않습니다.",
+      "hubPracticeTrackerBody": "Eastbrook 거점 근처에서 그곳의 안내형 연습 레슨을 받으면 연습 트래커가 스택에 추가되어, 연습용 허수아비를 상대로 한 최고 기록을 계속 보여줍니다. 레슨이 진행 중일 때는 옆의 코칭 스트립이 피해량 미터 열기부터 두 번째 실행 비교까지, 현재 단계를 안내해 줍니다.",
       "chatTitle": "채팅창",
       "chatBody": "왼쪽 아래에 있습니다. Enter를 눌러 입력을 시작하고 Enter를 다시 눌러 보냅니다.\n\n탭 두 개는 언제나 자리를 지킵니다. 주위에서 오간 말이 모두 모이는 대화 탭과, 전투가 글로 남는 전투 탭입니다. 더하기 버튼으로 채널마다 탭을 하나씩 더할 수 있습니다. 말하기, 외치기, 파티, 일반, 세계, 파티찾기, 길드, 장교, 그리고 주고받은 귓속말을 한자리에 모아 주는 귓속말 탭입니다. 채널 탭에서 입력하면 명령어를 다시 치지 않아도 그 채널로 전해집니다.\n\n채팅창 전체를 다른 자리로 끌어 옮기고 크기도 조절할 수 있으며, 마지막으로 둔 자리를 기억합니다.",
       "keyWindowsTitle": "키로 여는 창",
@@ -9342,6 +9475,7 @@ export const ko_KR: EnTranslations = {
     "connectingRealm": "월드에 연결하는 중...",
     "assetsFailed": "리소스 불러오기에 실패했습니다. 새로고침해 보세요. {error}",
     "rendererFailed": "렌더러를 시작할 수 없습니다. 새로고침해 보세요. {error}",
+    "rendererContextLost": "3D 렌더러가 그래픽 컨텍스트를 잃어 복구할 수 없습니다. 새로고침해 보세요.",
     "enterTimeout": "세계에 입장할 수 없습니다. 연결 시간이 초과되었습니다. 게임 서버가 실행 중인가요?",
     "connectionLost": "서버와의 연결이 끊어졌습니다.",
     "reconnectingAttempt": "연결이 끊어졌습니다. 다시 연결하는 중...(시도 {attempt}/{maxAttempts}, {seconds}초 후 재시도)",
@@ -9352,6 +9486,7 @@ export const ko_KR: EnTranslations = {
     "realmFull": "이 월드는 현재 포화 상태입니다. 몇 분 후에 다시 시도해 주세요.",
     "tooManyConnections": "사용 중인 네트워크에서 이 월드로 연결이 너무 많습니다. 추가 게임 창을 닫거나 몇 분 후에 다시 시도해 주세요.",
     "messageRateExceeded": "행동을 너무 빠르게 전송하여 연결이 끊어졌습니다. 잠시 기다렸다가 다시 로그인해 주세요.",
+    "kickedByModerator": "운영자가 연결을 끊었습니다: {reason}",
     "tips": {
       "classes": "팁: 9개 클래스는 저마다 플레이 방식이 다릅니다. 정하기 전에 몇 가지를 직접 해보세요.",
       "talents": "팁: 비전투 상태라면 언제든 특성을 초기화할 수 있어, 처음 선택도 절대 돌이킬 수 없는 것이 아닙니다.",
@@ -11188,11 +11323,11 @@ export const ko_KR: EnTranslations = {
       },
       "melting_acid": {
         "name": "용해 산",
-        "description": "대상에게 부식성 독을 끼얹어 {damage}의 자연 피해를 주고 12초 동안 방어도를 5% 감소시킵니다."
+        "description": "30분 동안 무기에 산을 입힙니다. 근접 공격을 할 때마다 대상에게 부식성 산을 튀겨 12초 동안 방어도를 5% 감소시킵니다."
       },
       "nightshade_coating": {
         "name": "가지독 코팅",
-        "description": "대상을 가지독으로 뒤덮어 {damage}의 자연 피해를 주고 12초 동안 받는 치유 효과를 25% 감소시킵니다."
+        "description": "30분 동안 무기에 가지독을 입힙니다. 근접 공격을 할 때마다 대상에게 가지독을 묻혀 12초 동안 받는 치유 효과를 25% 감소시킵니다."
       },
       "expose_armor": {
         "name": "방어구 돌파",
@@ -11208,11 +11343,11 @@ export const ko_KR: EnTranslations = {
       },
       "instant_poison": {
         "name": "독사의 이빨",
-        "description": "30분 동안 무기에 독을 발라 근접 공격마다 8의 추가 자연 피해를 입힙니다."
+        "description": "30분 동안 무기에 독을 발라 근접 공격마다 {damage}의 추가 자연 피해를 입힙니다."
       },
       "deadly_poison": {
         "name": "곪는 독",
-        "description": "30분 동안 무기에 독을 발라 근접 공격마다 14의 추가 자연 피해를 입힙니다."
+        "description": "30분 동안 무기에 독을 바릅니다. 근접 공격마다 대상에게 독 중첩을 하나 추가해 최대 5중첩까지 쌓고, 12초 지속시간을 갱신합니다. 각 중첩은 2초마다 {damage}의 자연 피해를 입힙니다."
       },
       "blind": {
         "name": "흙 뿌리기",
@@ -12311,7 +12446,7 @@ export const ko_KR: EnTranslations = {
       },
       "temporal_echo": {
         "name": "시간의 메아리",
-        "description": "더 건강했던 순간의 메아리로 아군에게 표식을 남겨 즉시 생명력을 {damage} 회복시킵니다. {duration}초 동안 당신이 입힌 비전 피해의 일부가 메아리를 통해 그 아군을 치유합니다."
+        "description": "더 건강했던 순간의 메아리로 아군에게 표식을 남겨 즉시 생명력을 {damage} 회복시킵니다. {duration}초 동안 당신의 다른 단일 대상 비전 피해의 {echoSinglePct}%와 광역 비전 피해의 {echoAreaPct}%가 그 아군을 치유합니다. 에테르 쇄도와 에테르 다트는 대신 자신들이 입힌 피해의 {echoDriverPct}%만큼 그 아군을 치유합니다."
       },
       "temporal_cascade": {
         "name": "시간의 연쇄",
@@ -14002,6 +14137,12 @@ export const ko_KR: EnTranslations = {
       },
       "reins_terrorspark_groundshaker": {
         "name": "드레드스파크 시동 열쇠"
+      },
+      "reins_goblin_rocket_sled": {
+        "name": "고블린 로켓 썰매 시동 열쇠"
+      },
+      "reins_rallycart_rxt": {
+        "name": "랠리카트 RXT 시동 열쇠"
       },
       "reins_lanternback_troll": {
         "name": "점등인의 멍에: 그룸볼"
@@ -16300,6 +16441,12 @@ export const ko_KR: EnTranslations = {
       "heroic_boss_dummy": {
         "name": "영웅 보스 허수아비"
       },
+      "hub_training_dummy": {
+        "name": "훈련용 허수아비"
+      },
+      "hub_healing_dummy": {
+        "name": "치유용 허수아비"
+      },
       "ridge_stalker": {
         "name": "산등성이 추적자"
       },
@@ -17490,6 +17637,11 @@ export const ko_KR: EnTranslations = {
         "name": "자유 영지 가구상",
         "title": "가정용품",
         "greeting": "튼튼한 의자, 따뜻한 랜턴, 책을 놓을 자리까지. 한번 둘러보세요."
+      },
+      "drillmaster_hale": {
+        "name": "교관 헤일",
+        "title": "부두 대련 사범",
+        "greeting": "내 뒤에 있는 허수아비는 되받아치지도, 쓰러지지도 않는다, {className}. 중요한 건 장부다. 네가 저기에 꽂은 일격은 하나도 빠짐없이 피해량 미터가 세어 준다. 저것을 대상으로 삼고 미터를 열어라, 나머지는 내가 알려주마."
       },
       "tidewatcher_ondrel": {
         "name": "온드렐 베인",
@@ -19736,6 +19888,26 @@ export const ko_KR: EnTranslations = {
         "objectives": {
           "0": {
             "label": "난파선 감시자 처치"
+          }
+        }
+      },
+      "q_hub_know_your_numbers": {
+        "title": "네 숫자를 알아라",
+        "text": "잴 수 없는 힘은 키울 수 없는 힘이다, {playerName}. 훈련용 허수아비를 대상으로 삼고 피해량 미터를 열어라. 그다음 열 번 맞혀라, 베기든 주문이든 상관없다. 치는 동안 창을 지켜봐라, 네가 입힌 피해를 세어 준다. 열 번을 채우면 돌아와서 그 숫자를 말해라.",
+        "completion": "열 번을 쳤으니 이제 그 값어치를 알겠지. 새 무기, 새 특성, 새 생각을 얻을 때마다, {playerName}, 이 기둥 앞으로 돌아와서 숫자를 매겨라. 골짜기는 거짓말을 해도 미터는 정직하다.",
+        "objectives": {
+          "0": {
+            "label": "훈련용 허수아비에 일격 명중"
+          }
+        }
+      },
+      "q_hub_healing_numbers": {
+        "title": "치유하는 숫자",
+        "text": "잴 가치가 있는 건 주먹만이 아닙니다, {playerName}. 옆에 있는 치유용 허수아비를 대상으로 삼고, 피해량 미터를 열어 치유 탭으로 전환하세요. 실제로 체력을 회복시키는 치유를 세 번 명중시키세요, 주먹을 셌던 것과 같은 방식으로 창이 세어 줄 겁니다.",
+        "completion": "때린 숫자가 아니라 치유한 숫자지만, 숫자인 건 매한가지입니다, {playerName}. 그 미터를 보지 않는 치유사는 자기 가치를 추측만 하고 있는 겁니다.",
+        "objectives": {
+          "0": {
+            "label": "치유용 허수아비에게 유효한 치유 명중"
           }
         }
       },

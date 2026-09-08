@@ -152,6 +152,7 @@ export const API_CONTENT_TYPE: Readonly<Record<string, ContentTypeClass>> = {
   '/api/reliquary/rarity': PROBLEM_JSON,
   '/api/deeds/broadcasts': PROBLEM_JSON,
   '/api/freehold': PROBLEM_JSON,
+  '/api/discord/queue-pings': PROBLEM_JSON,
   '/api/woc-market/status': PROBLEM_JSON,
   '/api/woc-market/offers': PROBLEM_JSON,
   '/api/woc-market/offers/:id/accept': PROBLEM_JSON,

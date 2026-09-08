@@ -13,7 +13,6 @@
 import type { TranslationKey } from '../i18n.catalog';
 
 export const ru_RU: Partial<Record<TranslationKey, string>> = {
-  // Raid collection guide prose, including the M16 non-Latin fills.
   'guide.professions.endgameBodyRaidCollections':
     'Ковка мастера объединяет вещи с меткой «Уникальный (экипируется): Ковка мастера». Прежняя вершина ремесла по-прежнему использует найденные схемы, промежуточные изделия с суточным ограничением и общие материалы финального этапа. Комплекты Горнила представляют отдельный путь с рейдовыми материалами, а не дополнительные расходы поверх прежней цепочки. Обе группы делят один предел ношения в две вещи, поэтому конкурируют за одни и те же два места в вашей сборке. Готовые вещи свободно продаются, пока доведение до совершенства или заказное изготовление не привяжет конкретный экземпляр.',
   'guide.professions.endgamePatternsBodyCollections':
@@ -3544,10 +3543,10 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
     'Исчезает из виду, входя в Сумеречную завесу даже в бою. Пока вы скрыты, вы двигаетесь на 50% медленнее. Длится до 10 сек.',
   'entities.abilities.instant_poison.name': 'Укус гадюки',
   'entities.abilities.instant_poison.description':
-    'Покрывает ваше оружие ядом на 30 мин, заставляя каждый ваш удар в ближнем бою наносить 8 дополнительных ед. урона от сил природы.',
+    'Покрывает ваше оружие ядом на 30 мин, заставляя каждый ваш удар в ближнем бою наносить {damage} дополнительных ед. урона от сил природы.',
   'entities.abilities.deadly_poison.name': 'Гнойный яд',
   'entities.abilities.deadly_poison.description':
-    'Покрывает ваше оружие ядом на 30 мин, заставляя каждый ваш удар в ближнем бою наносить 14 дополнительных ед. урона от сил природы.',
+    'Покрывает ваше оружие ядом на 30 мин. Каждый ваш удар в ближнем бою добавляет на цель заряд яда, до 5 зарядов, и обновляет время действия 12 сек. Каждый заряд наносит {damage} ед. урона от сил природы раз в 2 сек.',
   'entities.abilities.blind.name': 'Горсть земли',
   'entities.abilities.blind.description':
     'Ослепляет цель, заставляя ее дезориентированно бродить в течение 8 сек. Любой урон прерывает эффект.',
@@ -4190,6 +4189,8 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.mobs.friendly_player_dummy.name': 'Дружественный манекен игрока',
   'entities.mobs.normal_boss_dummy.name': 'Обычный манекен босса',
   'entities.mobs.heroic_boss_dummy.name': 'Героический манекен босса',
+  'entities.mobs.hub_training_dummy.name': 'Тренировочный манекен',
+  'entities.mobs.hub_healing_dummy.name': 'Лечебный манекен',
   'entities.mobs.ridge_stalker.name': 'Хребтовый охотник',
   'entities.mobs.deeprock_kobold.name': 'Глубокоскальный туннельщик',
   'entities.mobs.thornpeak_ogre.name': 'Огр Терновых Пиков',
@@ -5239,6 +5240,9 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.items.makers_ember.name': 'Уголёк мастера',
   'hudChrome.raidLockout.heroicName': 'Героический режим: {name}',
   'hudChrome.raidLockout.heroicLocked': 'Вы закреплены за героическим подземельем: {name}.',
+  'hudChrome.practiceDps.title': 'Тренировочный манекен',
+  'hudChrome.practiceDps.prompt': 'Атакуйте манекен, чтобы начать замер',
+  'hudChrome.practiceDps.previous': 'Предыдущие замеры',
   'hudChrome.riftTracker.title': 'Разлом',
   'hudChrome.riftTracker.floor': 'Этаж {current} из {total}',
   'hudChrome.riftTracker.closesIn': 'Разлом закроется через {time}',
@@ -5691,6 +5695,12 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.quests.q_gc_the_wreck_warden.completion':
     'Берег умолк в тот самый миг, когда он пал, {playerName}. Первая тишина на этом берегу за десять лет моей работы. Команды теперь просто кости — упокоенные кости. Возьми мантию с верхушки клада: живой спине она всегда была впору больше.',
   'entities.quests.q_gc_the_wreck_warden.objectives.0.label': 'Страж Кораблекрушений повержен',
+  'entities.quests.q_hub_know_your_numbers.title': 'Знай свои числа',
+  'entities.quests.q_hub_know_your_numbers.text':
+    'Сила, которую нельзя измерить, это сила, которую нельзя улучшить, {playerName}. Возьми в цель тренировочный манекен, открой счетчики урона и нанеси по нему десять ударов, оружием или заклинаниями, следя за тем, как окно считает нанесенный урон. Когда все десять будут нанесены, возвращайся и назови мне число.',
+  'entities.quests.q_hub_know_your_numbers.completion':
+    'Десять ударов, и теперь ты знаешь, чего они стоят. Всякий раз, как возьмешь новое оружие, новый талант или новую задумку, {playerName}, возвращайся к этому столбу и ставь на них число. Счетчики честны даже тогда, когда долина нет.',
+  'entities.quests.q_hub_know_your_numbers.objectives.0.label': 'Удар нанесен по тренировочному манекену',
   'entities.quests.q_hollow_the_huntsman.title': 'Смотритель стад',
   'entities.quests.q_hollow_the_huntsman.text':
     'Ты, похоже, из тех, кому по плечу не только огоньки, {playerName}. Охотник Дерал держит дозор среди оленьих лугов к востоку отсюда и уже которую неделю спрашивает про умелые руки. Что бы он там ни выслеживал, вслух в деревне он этого не скажет.',
@@ -11538,7 +11548,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
     'Смещает цель на мгновение из настоящего: временная оболочка поглощает {damage} урона в течение 10 сек, после чего линия времени возвращается на место.',
   'entities.abilities.temporal_echo.name': 'Временное эхо',
   'entities.abilities.temporal_echo.description':
-    'Отмечает союзника эхом более здорового мгновения, мгновенно восполняя {damage} здоровья. В течение {duration} сек часть наносимого вами урона от тайной магии возвращается через эхо, исцеляя его.',
+    'Отмечает союзника эхом более здорового мгновения, мгновенно восполняя {damage} здоровья. В течение {duration} сек {echoSinglePct}% прочего вашего урона от тайной магии по одной цели и {echoAreaPct}% урона от тайной магии по области исцеляют его. «Выброс эфира» и «Эфирные дротики» вместо этого исцеляют его на {echoDriverPct}% от наносимого ими урона.',
   'entities.abilities.aspect_of_the_wild.description':
     'Воодушевляет союзников в радиусе 30 м дикой силой, повышая их силу атаки на 45 и скорость атаки на 5% на 5 мин. (талант охотника)',
   'entities.abilities.avenging_wrath.description': 'Расправляет телесные крылья из золотой светлой мощи, получая 10 Преданности и удваивая Преданность, создаваемую вашими способностями, на 15 сек. Также повышает наносимый урон и исцеление на 20%. Жнец рассвета: позволяет применять Молот гнева к любой цели.',
@@ -11848,6 +11858,13 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.options.showTargetOfTarget': 'Показывать цель цели',
   'hudChrome.options.showTargetSwingTimer': 'Показывать таймер замаха цели',
   'hudChrome.options.showPetFrame': 'Показывать вашего питомца',
+  'hudChrome.options.showDefensivesTrack': 'Показывать защитные умения',
+  'hudChrome.options.showSelfBuffTrack': 'Показывать мои эффекты',
+  'hudChrome.options.showOffensiveTrack': 'Показывать атакующие умения',
+  'hudChrome.options.showUtilityTrack': 'Показывать движение и скрытность',
+  'hudChrome.options.showUtilityModes': 'Включать скрытность и формы передвижения',
+  'hudChrome.options.showFriendlyTrack': 'Показывать мои эффекты на союзниках',
+  'hudChrome.options.showShieldTrack': 'Показывать мои щиты',
   'hudChrome.options.stickyTarget': 'Сохранять цель при клике по земле',
   'hudChrome.options.showNameplateDots': 'Показывать мои эффекты на полосах имён',
   'hudChrome.options.nameplateDotScale': 'Размер эффектов на полосах имён',
@@ -13553,6 +13570,13 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.continentMap.toZone': 'Карта региона',
   'hudChrome.enchanting.wornTagIndexed': 'Надето ({slot} {index})',
   'hudChrome.targetAuras.title': 'Ауры цели',
+  'hudChrome.auraTracks.defensives': 'Защитные умения',
+  'hudChrome.auraTracks.self': 'Мои эффекты',
+  'hudChrome.auraTracks.power': 'Атакующие умения',
+  'hudChrome.auraTracks.utility': 'Движение и скрытность',
+  'hudChrome.auraTracks.friendly': 'Мои эффекты на союзниках',
+  'hudChrome.auraTracks.shields': 'Мои щиты',
+  'hudChrome.auraTracks.overflow': 'Ещё {count} не показано',
   'hudChrome.targetAuras.keybindLabel': 'Усиления и ослабления цели',
   'hudChrome.targetAuras.debuffs': 'Ослабления',
   'hudChrome.targetAuras.buffs': 'Усиления',
@@ -15312,6 +15336,10 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.npcs.tidewarden_nel.title': 'Хранительница побережья',
   'entities.npcs.tidewarden_nel.greeting':
     'Прилив берет, и прилив платит, {playerName}. Я веду счет и тому и другому: тому, что крабы таскают с обломков, и тому, что честные руки несут вверх по этой тропе.',
+  'entities.npcs.drillmaster_hale.name': 'Наставник Хейл',
+  'entities.npcs.drillmaster_hale.title': 'Мастер боя на пристани',
+  'entities.npcs.drillmaster_hale.greeting':
+    'Манекен у меня за спиной не отвечает ударом на удар и никогда не падает, {className}. Важен счет: твои счетчики урона запоминают каждый удар, что ты по нему нанесешь. Возьми его в цель и открой счетчики, а остальное я тебе покажу.',
   'entities.quests.q_ps_the_gauntlet.title': 'Пробеги Полосу',
   'entities.quests.q_ps_the_gauntlet.text':
     'Каждая пара ног, которую уважает долина, сперва пробегала эти дорожки, {playerName}. Пройди первую дорожку на запад до флага, развернись на месте, пройди южную дорожку до второго флага, а последнюю дорожку пройди приставным шагом до красного флага. Флаги проходи по порядку: карточка вверху экрана покажет тебе каждую нужную кнопку по ходу дела. Надзиратель Пелл засекает каждый забег с дальнего конца: когда красный флаг останется позади, он будет стоять прямо там, чтобы принять твой забег.',
@@ -15644,10 +15672,10 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'abilityUi.tooltip.anyTarget': 'Вражеская или дружественная цель',
   'entities.abilities.melting_acid.name': 'Плавящая кислота',
   'entities.abilities.melting_acid.description':
-    'Обливает цель едким ядом, нанося {damage} ед. урона от сил природы и снижая её броню на 5% на 12 сек.',
+    'Покрывает ваше оружие на 30 мин. Каждый ваш удар в ближнем бою обрызгивает цель едкой кислотой, снижая её броню на 5% на 12 сек.',
   'entities.abilities.nightshade_coating.name': 'Покрытие паслёном',
   'entities.abilities.nightshade_coating.description':
-    'Покрывает цель паслёном, нанося {damage} ед. урона от сил природы и снижая получаемое ею исцеление на 25% на 12 сек.',
+    'Покрывает ваше оружие на 30 мин. Каждый ваш удар в ближнем бою покрывает цель паслёном, снижая получаемое ею исцеление на 25% на 12 сек.',
   // v0.41 release i18n fill.
   'hudChrome.itemMenu.sell': 'Продать',
   'hudChrome.itemMenu.sellAll': 'Продать все ({count})',
@@ -15967,10 +15995,14 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
     'Вашу рамку, рамку цели и рамки группы можно двигать. У каждой в углу есть маленькая кнопка перемещения: снимите блокировку, перетащите рамку туда, где хотите её видеть, и заблокируйте снова, чтобы случайный клик её не сдвинул. «Редактирование фреймов» в верхней части вкладки «Рамки» раздела «Интерфейс» в настройках разом отпускает весь остальной интерфейс (а с ним и эти три рамки): панели способностей, полосу чтения, полосу замаха, полосу опыта, миникарту, ряд кнопок, рамку питомца, панель стоек, ряды усилений и ослаблений и плашку «Напоминание о списке желаемого», причём на каждой, пока она отпущена, висит ярлычок с её названием. Если они оказались там, где вам не нравится, кнопка «Сбросить настройки» внизу той же вкладки «Рамки» вернёт их все туда, где они были изначально.',
   'guide.interfacePage.framesGovernedExtra':
     '«Редактирование фреймов» также отпускает стопку трекеров под ним (отслеживаемые задания и их цели, ход ваших деяний, ваши страницы Реликвария, вылазка, в которой вы находитесь, любой разлом, в котором вы участвуете, и рецепт или заказ, который вы отслеживаете), панель действий питомца рядом с рамкой питомца, рамку «Эффекты на целях» для ваших ослабляющих эффектов на ближних врагах, медальон «Преданность» паладина, «Шкалу ресурсов Колдовства» чернокнижника, оверлей срабатывания заклинаний, полосу замаха оружия в левой руке для тех, кто дерётся с оружием в каждой руке, и окно счётчика урона с вкладками, и у каждого из них, пока он отпущен, есть ярлычок с его названием.',
+  'guide.interfacePage.framesGovernedAuraTracks':
+    '«Редактирование фреймов» также отпускает шесть необязательных дорожек эффектов, если вы включили их на вкладке «Бой» тех же настроек интерфейса: дорожки «Мои эффекты», «Защитные умения», «Мои щиты», «Атакующие умения», «Движение и скрытность» и «Мои эффекты на союзниках». По умолчанию все они выключены, а пока дорожка отпущена, на ней висит ярлык с её названием.',
   'guide.interfacePage.mapBodyZoneFirst':
     'M открывает карту мира на той зоне, где вы стоите: ваша собственная стрелка на ней, окрестные точки интереса, те, кто выдаёт задания, с их метками и области, где лежат ваши цели, ремесленные станции, почтовые ящики, доски объявлений и грядки, входы в подземелья и каждый узел сбора в зоне, серый, пока он отрастает заново, и помеченный, когда вашим инструментам он ещё не по силам. Ваша группа тоже видна на ней. Щёлкните карту правой кнопкой или нажмите на ней кнопку «Карта мира», и она отступит до континента, где каждая зона вычерчена со своим названием, а клик по зоне открывает карту этой зоны. Ступите в вылазку, подземелье, разлом или замок, и карта переключится на план того места, где вы стоите; а поле боя «Терновая Лощина» получает собственную карту поля.\n\nПо правому краю, под миникартой, стопка трекеров держит ваши текущие дела на виду, ничего не открывая: отслеживаемые задания и их цели, ход ваших деяний, ваши страницы Реликвария, вылазка, в которой вы находитесь, и любой разлом, в котором вы участвуете. Трекер заданий сворачивается, когда экран нужен вам целиком.',
   'guide.interfacePage.gatheringGoalTrackerBody':
     'Трекер цели сбора присоединяется к стопке, как только вы отслеживаете рецепт в окне создания или заказ на доске: он называет рецепт или заказ, который вы отслеживаете, сколько вы собираете, и насколько ваши материалы при себе и на складе приближают вас к цели. "Отследить" заменяет вашу текущую цель, а "Очистить" явно её сбрасывает; ни то, ни другое никогда не меняет вашу настройку сбора.',
+  'guide.interfacePage.hubPracticeTrackerBody':
+    'Рядом с узлом Eastbrook в стопку добавляется трекер тренировок, как только вы начинаете проходить там управляемые тренировочные уроки: он держит на виду ваши лучшие результаты против тренировочных манекенов. Пока урок активен, полоса подсказок рядом с ним проведет вас через текущий шаг урока, от открытия Счетчиков урона до сравнения второго забега.',
   'guide.interfacePage.mobileBodyTwoPages':
     'Сенсорное управление появляется само, а раскладка подгоняется под ваш экран: компактная на маленьком телефоне, обычная на телефоне побольше и просторная на планшете.\n\nСпособности лежат кольцом, а не рядом цифр: кнопка атаки и четыре кнопки действий рядом с ней, плюс переключатель страниц, который перебрасывает кольцо между его {pages} страницами, а вместе они дотягиваются до всех ваших ячеек способностей, всех {slots}, независимо от того, включены ли дополнительные настольные панели. Пятое место на дуге этого кольца отведено расходникам: коснитесь его, чтобы применить то, что там лежит, либо удержите его или смахните внутрь, чтобы открыть ряд, который сам наполняется из того, что вы несёте. Вокруг кольца стоят кнопки, к которым чаще всего тянется рука на сенсорном экране: смена цели, взаимодействие с тем, что перед вами, и прыжок.\n\nУ нижнего края вместо ряда кнопок стоит один элемент «Быстрые действия». Он открывает всё остальное: транспорт, чат, карту, сумки, общение, задания, персонажа, книгу заклинаний, игровое меню и пункт «Еще», в котором лежат остальные ваши окна, среди них «Поиск подземелий», PvP, эмоции и вики. Окна здесь занимают весь экран, а не висят поверх него.\n\nПеремещение рамок существ — дело настольной версии: на сенсорном экране раскладка расставляет их за вас.',
   'guide.interfacePage.winMoreBodyNoValeCup':
@@ -16049,4 +16081,143 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'entities.dungeons.freehold_cottage.name': 'Домик',
   'entities.dungeons.freehold_cottage.enterText': 'Вы толкаете садовую калитку и входите в свой собственный домик.',
   'entities.dungeons.freehold_cottage.leaveText': 'Вы закрываете калитку домика на щеколду и возвращаетесь на причал.',
+  'hudChrome.hubLesson.target': 'Сначала возьми манекен в цель.',
+  'hudChrome.hubLesson.openWindow': 'Открой {meters}.',
+  'hudChrome.hubLesson.openWindowTouch': 'Открой {menu} → {more} → {meters}.',
+  'hudChrome.hubLesson.openTab': 'Переключись на нужную вкладку.',
+  'hudChrome.hubLesson.openTabDamage': 'Переключись на вкладку Урон.',
+  'hudChrome.hubLesson.openTabHealing': 'Переключись на вкладку Лечение.',
+  'hudChrome.hubLesson.act': 'Нанеси удар, чтобы начать замер.',
+  'hudChrome.hubLesson.actDamage': 'Атакуй манекен, чтобы начать замер.',
+  'hudChrome.hubLesson.actHealing': 'Наложи лечение на манекен, чтобы начать замер.',
+  'hudChrome.hubLesson.addToBar':
+    'Добавь лечение на панель действий из книги заклинаний, затем накладывай его на манекен.',
+  'hudChrome.hubLesson.readRow': 'Прочти свою строку, затем нажми Продолжить.',
+  'hudChrome.hubLesson.readRowDamage':
+    'Итог — весь твой урон за этот заход, DPS — урон в секунду за заход. Понаблюдай за своей строкой, затем нажми Продолжить.',
+  'hudChrome.hubLesson.readRowHealing':
+    'Итог считает восстановленное здоровье; лечение сверх полного здоровья не засчитывается. HPS — восстановление здоровья в секунду за заход. Прочти свою строку, затем нажми Продолжить.',
+  'hudChrome.hubLesson.findRun': 'Используй стрелки счетчика, чтобы вернуться к своему заходу.',
+  'hudChrome.hubLesson.addAttackToBar':
+    'Добавь атаку на панель действий из книги заклинаний и используй ее на манекене.',
+  'hudChrome.hubLesson.ackContinue': 'Продолжить',
+  'hudChrome.hubLesson.viewBreakdown':
+    'Наведи курсор, сфокусируйся на строке или удерживай ее, чтобы увидеть разбивку по способностям.',
+  'hudChrome.hubLesson.endRun':
+    'Выключи атаку и прекрати колдовать. Через 5 секунд без попадания этот заход завершится.',
+  'hudChrome.hubLesson.endHealingRun':
+    'Прекрати лечить на 5 секунд, чтобы завершить этот заход, тогда сможешь повторить урок.',
+  'hudChrome.hubLesson.inspectHistory': 'Используй стрелку истории, чтобы просмотреть тот завершенный заход.',
+  'hudChrome.hubLesson.compareAgain':
+    'Вернись к текущему правой стрелкой, затем атакуй тот же манекен примерно столько же времени.',
+  'hudChrome.hubLesson.reviewComparison':
+    'Сравни стрелками итог, DPS и длительность с первым заходом. Вернись к этому заходу и нажми Готово.',
+  'hudChrome.hubLesson.ackDone': 'Готово',
+  'hudChrome.hubLesson.replay': 'Урок пройден. Практикуйся свободно или проиграй эти указания заново.',
+  'hudChrome.hubLesson.replayAction': 'Потренироваться снова',
+  'hudChrome.hubLesson.replayTarget': 'Снова взять его в цель',
+  'entities.quests.q_hub_healing_numbers.title': 'Числа, которые лечат',
+  'entities.quests.q_hub_healing_numbers.text':
+    'Измерить стоит не только удары, {playerName}. Возьми в цель стоящий рядом Лечебный манекен, открой счетчики урона и переключись на вкладку Лечение. Нанеси три исцеления, которые действительно восстанавливают здоровье, и следи, как окно считает их так же, как считало удары.',
+  'entities.quests.q_hub_healing_numbers.completion':
+    'Числа исцеления, а не боли, но все равно числа, {playerName}. Целитель, который никогда не смотрит на эти счетчики, лишь гадает о собственной пользе.',
+  'entities.quests.q_hub_healing_numbers.objectives.0.label': 'Эффективное исцеление нанесено Лечебному манекену',
+  'apiError.discord.invalid_input': 'Недопустимые данные.',
+  'apiError.kick.admin_target': 'Учетные записи операторов нельзя отключить.',
+  'apiError.kick.reason_required': 'Необходимо указать причину.',
+  'apiError.kick.target_offline': 'Этот игрок больше не в сети на этом мире.',
+  'entities.items.reins_goblin_rocket_sled.name': 'Ключ зажигания гоблинских ракетных саней',
+  'entities.items.reins_rallycart_rxt.name': 'Ключ зажигания ралликарта RXT',
+  'guide.settingsPage.ifAuraBarBelowFrame':
+    'Перемещает полосу усилений под рамку персонажа вместо над ней. Действует, только когда усиления отображаются на рамке игрока.',
+  'guide.settingsPage.ifFilterProfanity':
+    'Скрывает нецензурные слова в чате звёздочками. Включено по умолчанию; отключите здесь, если хотите читать чат без фильтра.',
+  'guide.settingsPage.ifPlayerHealthText':
+    'Что пишет ваша полоска здоровья: ничего, проценты, текущее здоровье, текущее и максимальное или оба значения с процентами рядом.',
+  'guide.settingsPage.ifTargetHealthText':
+    'Что пишут полоски здоровья цели и цели цели, с теми же вариантами, что и у вашей рамки.',
+  'hudChrome.bags.capacityPools':
+    'Предметы {generalUsed}/{generalTotal}, материалы {materialsUsed}/{materialsTotal}',
+  'hudChrome.bags.emptyMaterialsOnly': 'Только материалы',
+  'hudChrome.bank.depositAllNotable': 'Материалов положено: {count}, включая {item}.',
+  'hudChrome.bank.depositAllNotableFull':
+    'Материалов положено: {count}, включая {item}. Банк заполнен.',
+  'hudChrome.bank.vaultDepositAllNotable': 'Сложено материалов: {count}, включая {item}.',
+  'hudChrome.bank.vaultDepositAllNotableFull':
+    'Сложено материалов: {count}, включая {item}. Часть пределов заполнена.',
+  'hudChrome.bootcamp.promptAccessInterface': 'Открой интерфейс',
+  'hudChrome.bootcamp.promptMoveToTarget': 'Перейди к: {target}',
+  'hudChrome.bootcamp.promptSelectItem': 'Выбери: {item}',
+  'hudChrome.continentMap.toInstance': 'Карта подземелья',
+  'hudChrome.discord.queuePingsLabel':
+    'Присылать мне личное сообщение в Discord, когда очередь на поле боя или арену сработает (нужен привязанный аккаунт Discord)',
+  'hudChrome.interfaceUnlock.frameNames.petBar': 'Панель питомца',
+  'hudChrome.interfaceUnlock.frameNames.swingBarOffhand': 'Левая рука',
+  'hudChrome.keyboardMap.assignOption': '{category}: {action}',
+  'hudChrome.keyboardMap.bindingLine': '{key}: {action}',
+  'hudChrome.keyboardMap.form60': '60%',
+  'hudChrome.keyboardMap.form75': '75%',
+  'hudChrome.keyboardMap.keyDetail': '{key}: {bindings}',
+  'hudChrome.keyboardMap.layerAlt': 'Клавиша Alt',
+  'hudChrome.keyboardMap.layerCtrl': 'Клавиша Ctrl',
+  'hudChrome.keyboardMap.legendQwerty': 'QWERTY',
+  'hudChrome.keyboardMap.popOut': 'Открыть отдельно',
+  'hudChrome.keyboardMap.separator': ', ',
+  'hudChrome.lootExplorer.category.delve': 'Вылазка',
+  'hudChrome.lootExplorer.category.dungeon': 'Подземелье',
+  'hudChrome.lootExplorer.category.ground_object': 'Мировой объект',
+  'hudChrome.lootExplorer.category.open_world': 'Открытый мир',
+  'hudChrome.lootExplorer.category.quest_objective': 'Цель задания',
+  'hudChrome.lootExplorer.category.quest_reward': 'Награда за задание',
+  'hudChrome.lootExplorer.category.raid': 'Рейд',
+  'hudChrome.lootExplorer.category.rift': 'Рифт',
+  'hudChrome.lootExplorer.category.starting_equipment': 'Начальное снаряжение',
+  'hudChrome.lootExplorer.category.vendor': 'Торговец',
+  'hudChrome.lootExplorer.chance': 'Шанс {pct}%',
+  'hudChrome.lootExplorer.close': 'Закрыть обозреватель добычи',
+  'hudChrome.lootExplorer.difficulty.heroic': 'Героическая',
+  'hudChrome.lootExplorer.difficulty.normal': 'Обычная',
+  'hudChrome.lootExplorer.empty': 'Нет добычи, соответствующей этим фильтрам.',
+  'hudChrome.lootExplorer.filterAll': 'Все',
+  'hudChrome.lootExplorer.filterCategoryAria': 'Источник',
+  'hudChrome.lootExplorer.filterClassAria': 'Класс',
+  'hudChrome.lootExplorer.filterQualityAria': 'Качество',
+  'hudChrome.lootExplorer.filterStatAria': 'Стат',
+  'hudChrome.lootExplorer.gatedByQuest': 'Во время задания: {quest}',
+  'hudChrome.lootExplorer.guaranteed': 'Гарантированно',
+  'hudChrome.lootExplorer.resultCount': 'Результатов: {count}',
+  'hudChrome.lootExplorer.riftRankLabel': 'Ранг Разлома {rank}',
+  'hudChrome.lootExplorer.searchAria': 'Поиск предметов',
+  'hudChrome.lootExplorer.searchPlaceholder': 'Поиск предметов...',
+  'hudChrome.lootExplorer.source': '{category}: {name}',
+  'hudChrome.lootExplorer.sourceWithContext': '{category}: {name} ({context})',
+  'hudChrome.lootExplorer.tabEncounters': 'По источникам',
+  'hudChrome.lootExplorer.tabItems': 'По товару',
+  'hudChrome.lootExplorer.title': 'Обозреватель добычи',
+  'hudChrome.mobile.lootExplorer': 'Обозреватель добычи',
+  'hudChrome.mounts.desc_goblin_rocket_sled':
+    'Опасно переусложнённые гоблинские сани на двух ракетах и полном отсутствии здравого смысла.',
+  'hudChrome.mounts.desc_rallycart_rxt':
+    'Компактная, но самая настоящая раллийная машина, повышающая скорость передвижения.',
+  'hudChrome.mounts.name_goblin_rocket_sled': 'Гоблинские ракетные сани',
+  'hudChrome.mounts.name_rallycart_rxt': 'Ралликарт RXT',
+  'hudChrome.options.auraBarBelowFrame': 'Баффы под рамкой игрока',
+  'hudChrome.options.gpuBackendActiveNameOpenGL': 'OpenGL',
+  'hudChrome.options.gpuBackendActiveNameVulkan': 'Vulkan',
+  'hudChrome.options.playerHealthText': 'Текст здоровья игрока',
+  'hudChrome.options.targetHealthText': 'Текст здоровья цели',
+  'hudChrome.partyFrames.healthCurrentMaxPercent': 'Текущее / максимум (проценты)',
+  'hudChrome.raidBossGuide.nythraxis.soulRendName': 'Разрыв души',
+  'hudChrome.reliquary.filterEmptyPages': 'По этому фильтру страниц нет.',
+  'hudChrome.reliquary.filterGroupAriaPages': 'Фильтр страниц по тому, озарены ли они',
+  'hudChrome.reliquary.filterIlluminated': 'Озарено',
+  'hudChrome.reliquary.filterRemaining': 'Осталось',
+  'hudChrome.reliquary.sourceVendorGated': 'Продаёт {vendor} ({requirement})',
+  'hudChrome.riftForge.currency': '{name}: {count}',
+  'hudChrome.riftForge.gemOption': '{name} ({bonus})',
+  'hudChrome.targetDots.row': '{aura} на {target}',
+  'hudChrome.wocMarket.walletCardDismiss': 'Скрыть карточку кошелька',
+  'loading.kickedByModerator': 'Модератор отключил вас: {reason}',
+  'loading.rendererContextLost':
+    '3D-рендерер потерял графический контекст и не смог восстановиться. Попробуйте обновить страницу.',
 };

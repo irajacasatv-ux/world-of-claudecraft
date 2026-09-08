@@ -112,6 +112,7 @@ const REGISTRY_ONLY_PATHS = new Set<string>([
   '/api/guilds/roster',
   '/api/reliquary/rarity',
   '/api/deeds/broadcasts',
+  '/api/discord/queue-pings',
   '/api/characters/:id/deeds-recent',
   '/api/freehold',
   '/api/characters/:id/appearance-reroll',
@@ -356,6 +357,10 @@ describe('registry completeness: migrated baseline (public reads + auth + charac
     // The Freeholds status read (server/freehold_routes.ts): registry-only like
     // the Steam trio, env-gated dark until FREEHOLDS_ENABLED=1.
     { method: 'GET', path: '/api/freehold' },
+    // The queue-pop Discord DM opt-in toggle (server/discord_queue_pings.ts):
+    // registry-only on the deeds broadcasts shape.
+    { method: 'GET', path: '/api/discord/queue-pings' },
+    { method: 'POST', path: '/api/discord/queue-pings' },
     // The reliquary rarity read (server/reliquary.ts): registry-only on the
     // same terms as the deeds family, and it shares their cache and flight.
     { method: 'GET', path: '/api/reliquary/rarity' },

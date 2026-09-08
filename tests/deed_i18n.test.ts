@@ -85,9 +85,16 @@ describe('deed_i18n English resolution', () => {
     // Crucible raid deeds; the Varkhul flawless task carries a title (the
     // release's own chain read 281 * 2 + 43), so the title count moves to 46.
     // The personal hammer quest adds a name and desc, but no title reward.
-    // The Freehold pair adds two name/desc rows and the Homesteader title;
-    // Bramblehide adds one name/desc row with no title.
-    expect(manifest.length).toBe(302 * 2 + 47);
+    // 300 since THIS release/v0.42.0 merge brought in the Roots' Bramblehide
+    // set collection (col_set_bramblehide, no title reward; the release's own
+    // chain read 282 * 2 + 43), so the title count stays at 46.
+    // Retired Vale Cup and Fiesta deeds keep names but drop 19 descriptions.
+    // 302 since the Freehold pair (homesteader_first_furnishing and
+    // homesteader_first_cottage) adds two name/desc rows and the Homesteader
+    // title, so the title count moves to 47: 302 + 283 + 47 = 632.
+    expect(manifest.filter((row) => row.field === 'name').length).toBe(302);
+    expect(manifest.filter((row) => row.field === 'desc').length).toBe(283);
+    expect(manifest.length).toBe(632);
     expect(manifest.filter((row) => row.field === 'title').length).toBe(47);
     expect(manifest.filter((row) => row.id === 'hid_forgebreaker')).toEqual([
       { id: 'hid_forgebreaker', field: 'name', source: 'A Spring Unchained' },

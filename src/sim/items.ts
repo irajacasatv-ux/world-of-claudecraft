@@ -1781,7 +1781,7 @@ export function buyBackItem(
       unitSources,
     ) >= 1;
   if (!fits) {
-    bagsFullError(ctx, meta.entityId);
+    bagsFullError(ctx, meta.entityId, itemId);
     return;
   }
   meta.copper -= def.sellValue;

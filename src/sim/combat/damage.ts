@@ -23,7 +23,6 @@
 // `src/sim`-pure: no DOM/Three/render/ui/game/net imports, no Math.random/Date.now
 // (enforced by tests/architecture.test.ts).
 
-import { computeTalentModifiers } from '../content/talents';
 import { ABILITIES, DELVES, GROUP_XP_BONUS, ITEMS, MOBS } from '../data';
 import * as deedsMod from '../deeds';
 import { recalcPlayerStats } from '../entity';
@@ -37,6 +36,7 @@ import {
 } from '../instances/dungeons';
 import { applyBossCorpseHold } from '../mob/boss_corpse_hold';
 import { spawnWidowHatchlingOnEggDeath } from '../mob/egg_hatchling';
+import { isEvadingWildMob } from '../mob/evade_immunity';
 import { grantAbilityDevotion } from '../paladin_devotion';
 import { snapshotPetOnOwnerDeath } from '../pet/pet_owner_revive';
 import {
@@ -50,6 +50,7 @@ import { computeCharacterModifiers } from '../set_bonus_mods';
 import type { PlayerMeta } from '../sim';
 import type { DamageResolution, SimContext } from '../sim_context';
 import { addThreat, clearThreat, petCanSeeStealthedTarget } from '../threat';
+import { creditDummyDrill } from '../tutorial/dummy_drill';
 import type { DamageEventKind, Entity } from '../types';
 import {
   berserkerCritDamage,
@@ -256,7 +257,7 @@ export function dealDamage(
   // reflect ticks stay silent so a dotted evader does not spam a word per tick.
   // The early return keeps every downstream effect off: no threat, no combat
   // entry, no stealth break, no tap.
-  if (target.kind === 'mob' && target.aiState === 'evade' && target.ownerId === null) {
+  if (isEvadingWildMob(target)) {
     if (direct && source) {
       ctx.emit({
         type: 'damage',
@@ -973,7 +974,7 @@ export function dealDamage(
   // and non-player sources are filtered inside. The PvP-context early returns
   // above (duel/fiesta/arena) intentionally skip conversion (PRD 13.9 defers PvP
   // tuning to a later phase).
-  chronomancyConvertArcaneDamage(ctx, source, preHp - target.hp, school, aoe);
+  chronomancyConvertArcaneDamage(ctx, source, preHp - target.hp, school, aoe, abilityId);
   doctrineConvertDamage(ctx, source, preHp - target.hp, school, abilityId ?? null);
   vespersEchoDamage(ctx, source, target, preHp - target.hp, abilityId ?? null);
   onAfflictionDamage(ctx, source, target, preHp - target.hp);
@@ -1120,6 +1121,9 @@ export function dealDamage(
   // persisted lifetime damage counters beside the session RewardCounters
   // below, plus encounter participant tracking for the roster tasks.
   if (source) deedsMod.onDamageDealtForDeeds(ctx, source, target, amount, crit, kind);
+  // The hub dummy lesson (tutorial/dummy_drill.ts): one credit per blow that
+  // actually lands on a training dummy. Zero rng.
+  if (source && amount > 0) creditDummyDrill(ctx, source, target);
 
   // Thornhollow Fields assists: remember who softened a player before the blow
   // that finishes them. Only real damage on a live player counts, and the

@@ -92,6 +92,13 @@ const MONOLITHS: MonolithRow[] = [
     // Down 2487 -> 2475 at the desktop-signing round: the WocMarketHooks
     // contract moved to src/ui/woc_market_hooks.ts (wiring, window, and the
     // trade arm all consume it), paying for the signer-reference plumbing.
+    // Held at 2475 through the Browse scroll/filter fix: the scroll-keeper
+    // keying moved to the view core (WocMarketScrollKeys and friends) and the
+    // dropdown-hold heuristic landed as its own module
+    // (src/ui/native_select_hold.ts), together paying exactly for the hold
+    // wiring, the wallet re-arm, and the scroll-after-focus ordering. The
+    // review round (the hold's lazy first-render attach, the no-rung scroll
+    // carve-out) fits inside the same count. Exact count, zero slack.
     ceiling: 2475,
     seam: 'a pure view-core module beside it (src/ui/woc_market_view.ts) that this window renders from',
   },
@@ -421,11 +428,35 @@ const MONOLITHS: MonolithRow[] = [
     // Re-pinned to the exact merged count of the OSSBrain v0.41.0 base
     // merge: both parents had already ratcheted for their own work, so
     // the composite is the honest size. Exact count, zero slack.
-    // The Freeholds dependency sync at 54ce808436 preserves both branches'
-    // reductions. Newline counts: shared base 18677, Freeholds 18652,
-    // incoming 18577, combined 18552. The measured merged size exactly
-    // composes both reductions and sits below both parents. Zero headroom.
-    ceiling: 18552,
+    // RESOLVED for the merge of dca7476e0e (PR #3917,
+    // feature/v042-class-rebalance) into this branch (merge-base 7bc787780f,
+    // base ceiling 18851). Our own arm had re-pinned to 18716 across the
+    // release/v0.42.0 sync (compass-strip and rest-indicator painter
+    // extractions, the commission-order feedback move, and the
+    // professions-merge-crucible integration). The incoming arm lowered its
+    // own copy to 18723 via the on-bar key-binding mode extraction
+    // (action_bar_bind_controller.ts / action_bar_bind_banner.ts) and the
+    // Nythraxis-redo sync trim. Neither parent pin fits the resolved tree:
+    // `wc -l < src/ui/hud.ts` on the reconciled file measures 18577, below
+    // both arms, so the ceiling follows it down. Exact merged count, zero
+    // slack: any further growth reds again.
+    // The aura-tracks release sync (186dd8fe7f) composes its system-text
+    // extraction with the OSSBrain long-press and tooltip modules. The
+    // measured combined count is below both parent pins (18574 / 18489).
+    // RESOLVED for the merge of release/v0.42.0 (tip 723752ea5c, the OSSBrain
+    // integration #3781 and #3918) into feature/hub-training-dummy-dps. Our
+    // own arm had lowered to 18481 (formatLockoutDuration moved out to
+    // src/ui/raid_lockout_format.ts to pay for the hub practice coach's
+    // Meters deps); the incoming arm lowered its copy to 18486. Neither
+    // parent pin fits the resolved tree: `wc -l < src/ui/hud.ts` on the
+    // reconciled file measures 18478, below both arms, so the ceiling
+    // follows it down. Exact merged count, zero slack: any further growth
+    // reds again.
+    // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
+    // integration and the hub practice PRs) into feature/freeholds. Newline
+    // counts: 18577 base, 18550 Freeholds (-27), 18478 incoming (-99); `wc -l` on the reconciled file measures 18452 (the composed 18451 plus one line from the merged import block). Exact merged count, zero slack: any further growth reds
+    // again.
+    ceiling: 18452,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -433,8 +464,11 @@ const MONOLITHS: MonolithRow[] = [
     // import-export round (review request on PR #3926) so the next feature
     // there lands as a sibling module the window composes, not another
     // inline sub-panel. Exact count at the time of joining.
+    // Re-pinned at the second v0.42.0 release-base reconcile after the
+    // release-side import/export panel composed with the batch settings rows.
+    // Measured with wc -l on the merged tree. Exact count, zero headroom.
     file: 'src/ui/options_window.ts',
-    ceiling: 2813,
+    ceiling: 2843,
     seam: 'a pure view model (src/ui/options_view.ts) painted with the shared settings_controls.ts builders; sub-panels as sibling modules',
   },
   {
@@ -800,11 +834,23 @@ const MONOLITHS: MonolithRow[] = [
     // (#3439, carrying the Lanternback Troll of #3399): the rideable-mount
     // lifecycle (build, live swap, teardown, rider seating, carried lamps
     // and glows, the summon/dismount FX) moved to src/render/mount_lifecycle.ts,
-    // The Freeholds dependency sync at 54ce808436 preserves both branches'
-    // reductions. Newline counts: shared base 12989, Freeholds 12988,
-    // incoming 12903, combined 12902. The measured merged size exactly
-    // composes both reductions and sits below both parents. Zero headroom.
-    ceiling: 12902,
+    // RESOLVED for the merge of dca7476e0e (PR #3917,
+    // feature/v042-class-rebalance) into this branch (merge-base 7bc787780f,
+    // base ceiling 13085). Our own arm had re-pinned to 12917 after the PR
+    // 3872 farm compile-gate cleanup, on top of the release/v0.42.0 mount
+    // lifecycle and Realm Builder monument merges. The incoming arm lowered
+    // its own copy to 13073 via the Drakelands map-improvements sync (Last
+    // Keep castle assembly build/attach). Neither parent pin fits the
+    // resolved tree: `wc -l < src/render/renderer.ts` on the reconciled file
+    // measures 12903, below both arms, so the ceiling follows it down. Exact
+    // merged count, zero slack: any further growth reds again.
+    // OSSBrain integration: Fiesta effects moved to render/fiesta_effects.ts.
+    // Measured after formatting; lower the ratchet with the extraction.
+    // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
+    // integration and the hub practice PRs) into feature/freeholds. Newline
+    // counts: 12903 base, 12902 Freeholds (-1), 12879 incoming (-24); combined 12878, measured. Exact merged count, zero slack: any further growth reds
+    // again.
+    ceiling: 12878,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {
@@ -972,7 +1018,11 @@ const MONOLITHS: MonolithRow[] = [
     // effectiveAttackPower moved whole to src/sim/combat/effective_stats.ts
     // (Sim keeps the two seam-bound delegates), paying for the host owner
     // stamp on PlayerMeta and the freehold join/leave hooks. Exact count.
-    ceiling: 11857,
+    // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
+    // integration and the hub practice PRs) into feature/freeholds. Newline
+    // counts: 11919 base, 11857 Freeholds (-62), 11858 incoming (-61); combined 11796, measured. The row never conflicted (the incoming pin still sat at 11923), so the growth would have landed silently on a zero-slack pin. Exact merged count, zero slack: any further growth reds
+    // again.
+    ceiling: 11796,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -1153,18 +1203,32 @@ const MONOLITHS: MonolithRow[] = [
     // extraction pays 2 more under the entry-fade row above. Measured on the
     // merged tree, never reconciled by arithmetic. Exact merged count, zero
     // headroom.
-    // The Freeholds dependency sync at 54ce808436 preserves both branches'
-    // reductions. Newline counts: shared base 11448, Freeholds 11371,
-    // incoming 11385, combined 11308. The measured merged size exactly
-    // composes both reductions and sits below both parents. Zero headroom.
-    // Lowered 11308 -> 11269 at the freeholds instance claim (D81): the
-    // browser Fullscreen API pair (the vendor-prefixed document/element
-    // shapes, currentFullscreenElement, requestBrowserFullscreen and
-    // exitBrowserFullscreen) moved whole to src/game/browser_fullscreen.ts,
-    // paying for the offline dev-grant bootstrap (one awaited call before the
-    // Sim build plus the config field) and its two imports. Measured with
-    // wc -l < src/main.ts after biome. Exact count, zero slack.
-    ceiling: 11269,
+    // RESOLVED for the merge of dca7476e0e (PR #3917,
+    // feature/v042-class-rebalance) into this branch (merge-base 7bc787780f,
+    // base ceiling 11462). Our own arm had re-pinned to 11399 after the
+    // /daynight dev-command and sheathe-toggle extractions, the
+    // trackMetaPixel dedup, and the release/v0.42.0 $WOC contract-box
+    // removal. The incoming arm lowered its own copy to 11448 via the
+    // Drakelands sync's dev-chat-hooks extraction. Neither parent pin fits
+    // the resolved tree: `wc -l < src/main.ts` on the reconciled file
+    // measures 11385, below both arms, so the ceiling follows it down. Exact
+    // merged count, zero slack: any further growth reds again.
+    // OSSBrain integration: mobile preflight detection and copy moved to game/mobile_preflight.ts.
+    // Measured after formatting; lower the ratchet with the extraction.
+    // RESOLVED for the merge of release/v0.42.0 (tip 723752ea5c, the OSSBrain
+    // integration #3781 and #3918) into feature/hub-training-dummy-dps. Our
+    // own arm had lowered to 11382 (normalizeDeleteConfirmation moved out
+    // to src/ui/char_delete_button.ts to pay for the touch More-tray Damage
+    // Meters entry); the incoming arm lowered its copy to 11366. Neither
+    // parent pin fits the resolved tree: `wc -l < src/main.ts` on the
+    // reconciled file measures 11363, below both arms, so the ceiling
+    // follows it down. Exact merged count, zero slack: any further growth
+    // reds again.
+    // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
+    // integration and the hub practice PRs) into feature/freeholds. Newline
+    // counts: 11385 base, 11269 Freeholds (-116), 11363 incoming (-22); combined 11247, measured. Exact merged count, zero slack: any further growth reds
+    // again.
+    ceiling: 11247,
     seam: 'a src/game/ or src/ui/ sibling module; main.ts is a firewall, not a home',
   },
   {
@@ -1371,7 +1435,11 @@ const MONOLITHS: MonolithRow[] = [
     // liteEntityJson moved whole to server/entity_wire_variant.ts, paying for
     // the owner-key join stamp at the addPlayer call and its import. Measured
     // with wc -l < server/game.ts after biome. Exact count, zero slack.
-    ceiling: 10202,
+    // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
+    // integration and the hub practice PRs) into feature/freeholds. Newline
+    // counts: 10290 base, 10202 Freeholds (-88), 10276 incoming (-14); combined 10188, measured. The row never conflicted (the incoming pin still sat at 10291). Exact merged count, zero slack: any further growth reds
+    // again.
+    ceiling: 10188,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1500,11 +1568,24 @@ const MONOLITHS: MonolithRow[] = [
     // Re-pinned to the exact merged count of the OSSBrain v0.41.0 base
     // merge: both parents had already ratcheted for their own work, so
     // the composite is the honest size. Exact count, zero slack.
-    // The Freeholds dependency sync at 54ce808436 preserves both branches'
-    // reductions. Newline counts: shared base 5854, Freeholds 5695,
-    // incoming 5788, combined 5629. The measured merged size exactly
-    // composes both reductions and sits below both parents. Zero headroom.
-    ceiling: 5629,
+    // RESOLVED for the merge of dca7476e0e (PR #3917,
+    // feature/v042-class-rebalance) into this branch (merge-base 7bc787780f,
+    // base ceiling 5856). Our own arm had re-pinned to 5802 across the
+    // release/v0.42.0 syncs (interp_math, action_bar_upload, and
+    // guild_bank_log_mirror extractions) plus the Intentional Gathering
+    // professions_self_mirror move. The incoming arm's own copy landed at
+    // 5842 via the class-balance ability presentation and Nythraxis ground
+    // telegraph extractions. Neither parent pin fits the resolved tree:
+    // `wc -l < src/net/online.ts` on the reconciled file measures 5788,
+    // below both arms, so the ceiling follows it down. Exact merged count,
+    // zero slack: any further growth reds again.
+    // OSSBrain integration: entity flair decoding moved to net/entity_flair_wire.ts.
+    // Measured after formatting; lower the ratchet with the extraction.
+    // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
+    // integration and the hub practice PRs) into feature/freeholds. Newline
+    // counts: 5788 base, 5629 Freeholds (-159), 5765 incoming (-23); combined 5606, measured. Exact merged count, zero slack: any further growth reds
+    // again.
+    ceiling: 5606,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {
@@ -1641,7 +1722,17 @@ const MONOLITHS: MonolithRow[] = [
     // exact `wc -l < server/db.ts` measurement on the resolved tree.
     // RE-CONFIRMED at the final line-budget reconciliation: still 4977,
     // below both parent pins. Exact merged count, zero slack.
-    ceiling: 4977,
+    // LOWERED 4977 -> 4893 at the OSSBrain v0.42.0 integration database
+    // review: the character-lease CRUD (acquireCharacterLease,
+    // releaseCharacterLease, heartbeatCharacterLeases,
+    // releaseAllCharacterLeases, LEASE_TTL_SECONDS, PROCESS_LEASE_HOLDER)
+    // moved whole to server/character_lease_db.ts, the same split as its
+    // character_create_db.ts/character_delete_db.ts siblings; the
+    // character_leases DDL stays in db.ts's core SCHEMA. PROCESS_LEASE_HOLDER
+    // stays imported at the top of db.ts too (the save-family fence sites
+    // reach it directly), unlike createCharacterCapped's pure re-export.
+    // Exact count, zero slack.
+    ceiling: 4893,
     seam: 'a domain <domain>_db.ts module with its own *_SCHEMA (server/CLAUDE.md)',
   },
   {
@@ -1754,7 +1845,9 @@ const MONOLITHS: MonolithRow[] = [
     // other's, and the union composes below both), so the ratchet follows it
     // down: measured 841 (wc -l < src/render/nameplate_canvas.ts). Exact
     // merged count, zero slack: any further growth reds again.
-    ceiling: 841,
+    // OSSBrain integration: canvas drawing primitives moved to nameplate_paint_primitives.ts.
+    // Measured after formatting; lower the ratchet with the extraction.
+    ceiling: 827,
     seam: 'the pure src/render/nameplate_heraldry_core.ts geometry module',
   },
   {

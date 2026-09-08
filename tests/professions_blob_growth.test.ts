@@ -2172,7 +2172,10 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // run and MEASURED below by stripping exactly those entries from the
     // settled state (the field_kit isolation shape), drift zero. The rooms
     // are stripped FIRST so every older attribution below keeps its recorded
-    // figure; only the composed measurement and its band move.
+    // figure; only the composed measurement and its band move. RE-BASED at
+    // the release/v0.42.0 OSSBrain merge: 213,319 over 213,105, the same +214,
+    // with every absolute figure below it up by the release's +99 (the two hub
+    // practice quests and the two dev-mount reins, attributed further down).
     const FREEHOLD_ROOM_IDS = ['freehold_inn_room', 'freehold_cottage'] as const;
     const withoutFreeholdRooms = structuredClone(s2);
     for (const id of FREEHOLD_ROOM_IDS) {
@@ -2207,7 +2210,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         freeholdRoomsDelta.deedStats +
         freeholdRoomsDelta.heroicDaily,
     ).toBe(bytes - withoutFreeholdRoomsBytes);
-    expect(withoutFreeholdRoomsBytes).toBe(213006);
+    expect(withoutFreeholdRoomsBytes).toBe(213105);
     // Isolate the accepted crafted cohort before checking older catalog baselines.
     const craftedRecipeIds = FURNISHING_RECIPES.map((recipe) => recipe.id);
     const craftedItemIds = [
@@ -2243,9 +2246,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(craftedDelta).toEqual({ knownRecipes: 324, deedStats: 355, reliquary: 576 });
     const beforeCraftedBytes = Buffer.byteLength(JSON.stringify(beforeCrafted), 'utf8');
-    expect(beforeCraftedBytes).toBe(211751);
+    expect(beforeCraftedBytes).toBe(211850);
     expect(withoutFreeholdRoomsBytes - beforeCraftedBytes).toBe(1255);
-    expect(bytes).toBe(213220);
+    expect(bytes).toBe(213319);
     const fixtureBaseline = {
       equipment: 273,
       equipmentInstance: 1593,
@@ -2331,7 +2334,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     ).toBe(444);
     const beforeFurnishingsBytes = Buffer.byteLength(JSON.stringify(withoutFurnishings), 'utf8');
     expect(beforeCraftedBytes - beforeFurnishingsBytes).toBe(632);
-    expect(beforeFurnishingsBytes).toBe(211119);
+    expect(beforeFurnishingsBytes).toBe(211218);
     const withoutFurnishingsAndFieldKit: CharacterState = {
       ...withoutFurnishings,
       deedStats: {
@@ -2345,7 +2348,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       JSON.stringify(withoutFurnishingsAndFieldKit),
       'utf8',
     );
-    expect(beforeHomesteaderBytes).toBe(211107);
+    expect(beforeHomesteaderBytes).toBe(211206);
     const withoutHomesteaderDeeds: CharacterState = {
       ...withoutFurnishingsAndFieldKit,
       deeds: { ...withoutFurnishingsAndFieldKit.deeds },
@@ -2364,8 +2367,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     }
     const historicalBytes = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
     expect(beforeHomesteaderBytes - historicalBytes).toBe(85);
-    expect(counterfactualBytes).toBe(211739);
-    expect(beforeCraftedBytes).toBe(211751);
+    expect(counterfactualBytes).toBe(211838);
+    expect(beforeCraftedBytes).toBe(211850);
 
     // The one-time hammer recipe/proof content adds against the pre-hammer,
     // field-kit-excluded fixture (156144): the Crucible fixture-repair deltas
@@ -2413,20 +2416,61 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       }
       return copy;
     }
-    const preReleaseCounterfactual = withoutBramblehideContent(withoutHomesteaderDeeds);
+    // The two goblin_rocket_sled/rallycart_rxt developer-mount reins items
+    // (content/items.ts, content/mounts.ts): dev-grant only, on the same
+    // terms as the other DEVELOPER_MOUNTS reins rows, so they join
+    // deedStats.itemsDiscovered (the closed-world Object.keys(ITEMS) set the
+    // fixture arms) but touch no other field: neither RELIQUARY_MARK_IDS nor
+    // RELIQUARY_ITEM_TO_PAGES gains a row for them, because reliquary.ts adds
+    // them to RELIQUARY_HORIZON_MOUNTS through `mounts(...)`, the {kind:
+    // 'mount'} relic family, which reads live mount ownership rather than
+    // persisted reliquary state (the same reasoning that keeps the DEEDS/
+    // deeds.ts Vale Cup and Fiesta retirement edits in this same merge byte-
+    // neutral: those touch only desc/renown/feat metadata on EXISTING ids,
+    // never deedStats or reliquary). MEASURED directly, isolating the two ids
+    // the same way withoutFieldKit/withoutBramblehideContent do: 49 bytes
+    // exactly, `"reins_rallycart_rxt",` (19 characters, 22 bytes) plus
+    // `"reins_goblin_rocket_sled",` (24 characters, 27 bytes) in the sorted
+    // itemsDiscovered array. Isolated from the packet-free historical state,
+    // so the packet cohorts, Homesteader and field_kit never enter this delta.
+    const DEV_MOUNT_RELEASE_ITEM_IDS = ['reins_rallycart_rxt', 'reins_goblin_rocket_sled'] as const;
+    function withoutDevMountReleaseContent(state: CharacterState): CharacterState {
+      const copy = JSON.parse(JSON.stringify(state)) as CharacterState;
+      if (copy.deedStats?.itemsDiscovered)
+        copy.deedStats.itemsDiscovered = copy.deedStats.itemsDiscovered.filter(
+          (id) => !(DEV_MOUNT_RELEASE_ITEM_IDS as readonly string[]).includes(id),
+        );
+      return copy;
+    }
+    const withoutDevMountRelease = withoutDevMountReleaseContent(withoutHomesteaderDeeds);
+    const devMountReleaseDelta =
+      fieldBytes(withoutHomesteaderDeeds, 'deedStats') -
+      fieldBytes(withoutDevMountRelease, 'deedStats');
+    expect(devMountReleaseDelta).toBe(49);
+    expect(
+      historicalBytes - Buffer.byteLength(JSON.stringify(withoutDevMountRelease), 'utf8'),
+    ).toBe(49);
+    const preReleaseCounterfactual = withoutBramblehideContent(withoutDevMountRelease);
     // Release contribution: one deed, normal and heroic discovery ids,
     // fourteen firstFind rows and the Bramblehide illuminated page. The
-    // packet content has already been isolated, so none enters this delta.
+    // packet content and the two dev-mount ids have already been isolated,
+    // so none enters this delta (or the deedStats term would read 791,
+    // 742 + the 49 already attributed).
     const bramblehideDelta = Object.fromEntries(
       (['deeds', 'deedStats', 'reliquary'] as const).map((key) => [
         key,
-        fieldBytes(withoutHomesteaderDeeds, key) - fieldBytes(preReleaseCounterfactual, key),
+        fieldBytes(withoutDevMountRelease, key) - fieldBytes(preReleaseCounterfactual, key),
       ]),
     );
     expect(bramblehideDelta).toEqual({ deeds: 35, deedStats: 742, reliquary: 771 });
     expect(Object.values(bramblehideDelta).reduce((sum, value) => sum + value, 0)).toBe(1548);
+    // Plus 50 for the two Eastbrook hub practice quests (q_hub_know_your_numbers,
+    // q_hub_healing_numbers) joining questsDone in this maximal fixture: 23 and
+    // 21 characters as `"<id>",` in the sorted array (26 + 24 bytes), plus the
+    // 49-byte dev-mount delta attributed above. MEASURED, not inferred, same as
+    // every other row this equation names.
     expect(historicalBytes - 156144).toBe(
-      Object.values(fixtureDelta).reduce((sum, value) => sum + value, 0) + 183 + 1548,
+      Object.values(fixtureDelta).reduce((sum, value) => sum + value, 0) + 183 + 1548 + 50 + 49,
     );
     const forgeBaseline = {
       questsDone: 4606,
@@ -2445,17 +2489,27 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
           ) - previous,
         ]),
       ),
-    ).toEqual({ questsDone: 50, knownRecipes: 30, deeds: 32, deedStats: 21, reliquary: 80 });
-    // Removing both packet cohorts, Homesteader, field_kit and the
-    // Bramblehide/Nythgap release rows reproduces the historical baseline.
+      // questsDone moved from 50 to 100 against the SAME forgeBaseline reference
+      // point: the +50 hub practice quest delta above, on top of the prior +50
+      // this row already carried.
+    ).toEqual({ questsDone: 100, knownRecipes: 30, deeds: 32, deedStats: 21, reliquary: 80 });
+    // Removing both packet cohorts, Homesteader, field_kit, the two dev-mount
+    // reins and the Bramblehide/Nythgap release rows reproduces the historical
+    // baseline: 209,474 at the crafted-content close, 209,524 once the hub
+    // training dummy and hub healing dummy PRs landed their two guided practice
+    // quests (+50, attributed above; neither dummy nor its NPC touches any
+    // other field this fixture tracks).
     expect(
       Buffer.byteLength(JSON.stringify(preReleaseCounterfactual), 'utf8'),
       'both branch additions removed, preserves the recorded Crucible+hammer baseline',
-    ).toBe(209474);
+    ).toBe(209524);
+    // Packet additions and field_kit removed, retaining the Bramblehide release
+    // content, the hub practice quests and the two dev-mount reins:
+    // 209,524 + 1,548 + 49 = 211,121.
     expect(
       historicalBytes,
       'packet additions and field_kit removed, retains the Bramblehide release content',
-    ).toBe(211022);
+    ).toBe(211121);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
@@ -2484,17 +2538,23 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // the two owner-keyed freehold rooms), composed measurement: 213,220
     // bytes. The release contributes 1,548 independently isolated bytes, the
     // crafted cohort 1,255 and the freehold rooms 214 (isolated above).
-    // Keep the tracking band exactly 381 bytes wide (measurement minus 380
-    // to measurement plus one); the warning threshold remains unchanged.
-    expect(bytes, reMint).toBeGreaterThan(212840);
-    expect(bytes, reMint).toBeLessThan(213221);
+    //
+    // RE-BASED for the merge of the OSSBrain v0.42.0 integration (release tip
+    // 553a5672ed): 213,319 bytes, exactly +50 (the two hub practice quests in
+    // questsDone) plus +49 (the two developer-only mount reins items,
+    // devMountReleaseDelta), each attributed above and each already measured
+    // alone on the release parent (211,133 against its 211,034). Keep the
+    // tracking band exactly 381 bytes wide (measurement minus 380 to
+    // measurement plus one); the warning threshold remains unchanged.
+    expect(bytes, reMint).toBeGreaterThan(212939);
+    expect(bytes, reMint).toBeLessThan(213320);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was
     // minted against (historical: that is the figure the threshold's own 32-KiB
     // step was derived from, not this arm's measurement). The previous
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
-    // the combined fixture is 213,220 bytes, 16,156 below the threshold.
+    // the combined fixture is 213,319 bytes, 16,057 below the threshold.
     // A content change must be attributed and the narrow band re-measured,
     // never widened. This is warning-only; save-path tests prove oversized
     // saves stay whole.

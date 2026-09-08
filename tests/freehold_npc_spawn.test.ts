@@ -47,6 +47,12 @@ describe('authored furnisher construction and world geometry', () => {
     // Riftwright Maelis and the reserved-ID Realm Builder monument and moves
     // Drakelands geometry. The dark merged world must match that baseline.
     // This also detects decoration vetoes moving an existing spawn.
+    // RE-MEASURED at the release/v0.42.0 OSSBrain merge (tip 553a5672ed): the
+    // Eastbrook hub practice trio (Drillmaster Hale and the two training
+    // dummies, content/practice_dummies.ts) spawns three more world entities
+    // after the player, so nextId and entityCount move by exactly three and
+    // the position digest follows; primaryId, the merchant and banker ids and
+    // the rng cursor are unchanged, which is what proves nothing else moved.
     const sim = new Sim({ seed: 1, playerClass: 'warrior' });
     expect({
       nextId: sim.nextId,
@@ -65,12 +71,12 @@ describe('authored furnisher construction and world geometry', () => {
       ),
       rngNext: sim.rng.next(),
     }).toEqual({
-      nextId: 1004,
+      nextId: 1007,
       primaryId: 999,
       merchants: [1, 33],
       bankers: [9, 22, 34, 95],
-      entityCount: 1021,
-      positionHash: '722c2cecf11f6e09cdcea8888a7050a9df9c786cc29ee2d771e516b827af00fe',
+      entityCount: 1024,
+      positionHash: 'f35ecfebc49623b9e237b6cb1f39656ad56011e5aebd8a6159e9a96dde11e400',
       rngNext: 0.30275995447300375,
     });
     expect([...sim.entities.values()].some((e) => e.templateId === 'freehold_furnisher')).toBe(

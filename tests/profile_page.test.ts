@@ -167,10 +167,35 @@ describe('profile page Reliquary pair + Curator rank lines', () => {
   it('pins the interpolated total to the live-catalog literal', () => {
     // catalogTotal comes from the same catalogCharacterCompletion the page
     // calls, so the pair assertions below would follow a drifted derivation;
-    // the literal anchors them. The catalog includes the Crucible crafts,
-    // the Homesteader title, eight vendor and ten crafted furnishings,
-    // seven Bramblehide items, and seven Nythraxis gap-fill drops.
-    expect(catalogTotal).toBe(433);
+    // the literal anchors them. Literal: update when catalog content lands
+    // (311 base + the Bonebound Rickshaw's horizons_mounts slot + the 40
+    // Crucible raid relics and the raid's flawless title; Forgebreaker left
+    // the pages for its crafting chain; then the Lanternback Troll and the
+    // Chimeglass Tortoise's two developer mount slots): 360 base for the
+    // release/v0.42.0 merge into feature/masterwrought.
+    //
+    // RE-PINNED AGAIN at this merge of OSSBrain PR3781 into that same
+    // masterwrought-plus-release tip. Three parent pins for the record: the
+    // 360 base, the masterwrought+release reconciliation 414 (base 360 + the
+    // professions parent's 40-relic delta + the release parent's 14-relic
+    // delta, i.e. the seven Roots' Bramblehide pieces and the seven Nythraxis
+    // gap-fill drops), and OSSBrain's own branch 376 (base 360 + a 16-relic
+    // delta of its own, on top of the SAME 360 base rather than on top of
+    // 414). Arithmetic reconciliation (414 + OSSBrain's delta beyond the
+    // release baseline it branched from, 376 - 374 = 2, giving 416), not a
+    // suite run: confirmed against the real merged src/sim/content/reliquary.ts
+    // with a standalone probe importing catalogCharacterCompletion directly
+    // (tsx, no full compile), since these additions could in principle
+    // collide on a relic id. Re-confirm with
+    // `npx vitest run tests/profile_page.test.ts` once the tree compiles.
+    //
+    // RE-PINNED AGAIN for the merge of that OSSBrain-integrated release tip
+    // (553a5672ed) into feature/freeholds: the release parent measures 416,
+    // the Freeholds parent 433 (its Homesteader title, eight vendor and ten
+    // crafted furnishings on top of the shared 414), and the two deltas are
+    // disjoint relic ids: 416 + 19 = 435, MEASURED on the merged tree with
+    // `npx vitest run tests/profile_page.test.ts`.
+    expect(catalogTotal).toBe(435);
   });
 
   it('renders the owned/total pair and the English rank name for a ranked character', async () => {

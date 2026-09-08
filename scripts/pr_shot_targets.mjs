@@ -363,15 +363,17 @@ async function openMarketBrowse(page) {
   return pollForSize(page, '#market-window');
 }
 
-// Open Esc options -> Interface -> Frames by CLICKING the rendered controls rather
-// than reaching past them, so the shot proves the row is reachable the way a player
-// reaches it. Interface is the 4th main-menu row (buildOptionsMenu; the optional Bug
-// Report row is appended AFTER it, so the index is stable) and Frames the 2nd tab of
-// the Interface panel (INTERFACE_TAB_ORDER; the Edit Frames entry row moved there
-// when the tab was minted). The window is force-hidden first so the
-// toggle is deterministic regardless of prior state, the same trick the bags target uses.
-async function openInterfaceFramesTab(page) {
+// Open Esc options -> Interface -> the given tab by CLICKING the rendered controls
+// rather than reaching past them, so the shot proves the row is reachable the way a
+// player reaches it. Interface is the 4th main-menu row (buildOptionsMenu; the optional
+// Bug Report row is appended AFTER it, so the index is stable) and tabIndex indexes
+// INTERFACE_TAB_ORDER (general, frames, chat, combat). The window is force-hidden first
+// so the toggle is deterministic regardless of prior state, the same trick the bags
+// target uses, and the one-shot tutorial greeting (Ferryman Odo) is dismissed by its
+// own button, the way a player does, so it never sits over the clip.
+async function openInterfaceTab(page, tabIndex) {
   await page.evaluate(() => {
+    document.querySelector('#tutorial-greeting button')?.click();
     const el = document.querySelector('#options-menu');
     if (el) el.style.display = 'none';
     window.__game?.hud?.toggleOptionsMenu?.();
@@ -381,11 +383,18 @@ async function openInterfaceFramesTab(page) {
     document.querySelectorAll('#options-menu .opt-btn')[3]?.click();
   });
   await wait(400);
-  await page.evaluate(() => {
-    document.querySelectorAll('#options-menu .opt-tab')[1]?.click();
-  });
+  await page.evaluate((i) => {
+    document.querySelectorAll('#options-menu .opt-tab')[i]?.click();
+  }, tabIndex);
   return pollForSize(page, '#options-menu');
 }
+
+// Frames is the 2nd tab (the Edit Frames entry row moved there when the tab was
+// minted); Combat the 4th, where the aura-track and Target dots toggles live; Chat
+// the 3rd, where the profanity filter row lives.
+const openInterfaceFramesTab = (page) => openInterfaceTab(page, 1);
+const openInterfaceChatTab = (page) => openInterfaceTab(page, 2);
+const openInterfaceCombatTab = (page) => openInterfaceTab(page, 3);
 
 // Press the real "Unlock interface" button (the first row of the Frames tabpanel,
 // which interfaceUnlockRow appends ahead of the declarative list), then close the
@@ -608,6 +617,15 @@ async function dismissTutorialGreeting(page) {
 async function seedMediumGraphicsPreset(page) {
   await page.evaluateOnNewDocument(
     `try { const s = JSON.parse(localStorage.getItem('woc_settings') ?? '{}') || {}; s.graphicsPreset = 2; s.graphicsDefaultApplied = true; localStorage.setItem('woc_settings', JSON.stringify(s)); } catch {}`,
+  );
+}
+
+/** Persist the "Current / Max (Percent)" health text mode (4) for the player and
+ *  target frames before boot, on top of the lowest graphics preset. */
+async function seedHealthTextPercentMode(page) {
+  await seedLowGraphicsPreset(page);
+  await page.evaluateOnNewDocument(
+    `try { const s = JSON.parse(localStorage.getItem('woc_settings') ?? '{}') || {}; s.playerFrameHealthText = 4; s.targetFrameHealthText = 4; localStorage.setItem('woc_settings', JSON.stringify(s)); } catch {}`,
   );
 }
 
@@ -894,6 +912,150 @@ const dotsOffSeed = async (page) => {
     `try { const k = 'woc_settings'; const s = JSON.parse(localStorage.getItem(k) || '{}'); s.showTargetDots = false; s.showNameplateDots = false; localStorage.setItem(k, JSON.stringify(s)); } catch {}`,
   );
 };
+
+// Hub practice lessons (hub_lesson_controller.ts / hub_lesson_view.ts): shared
+// drivers for the two recipes below. Every one of these is a REAL interaction
+// through the actual control the coach names, never a synthetic completion of
+// its own internal state, which is what these exist to keep honest across two
+// tracks and two device variants.
+
+/** Open the Damage/Healing Meters window the same way the player actually
+ *  would: the real Shift+H keybind on desktop, or the real touch path on
+ *  mobile (there is deliberately no keyboard shortcut on touch) -- the real
+ *  labelled Actions anchor (#mobile-menu-anchor, "Actions" in-game, never
+ *  "Menu": confirmed against an actual touch playtest) -> More (#mobile-more)
+ *  -> Meters (#mobile-meters, the same entry hub_lesson_controller.ts's
+ *  open-window step glows via visibleMobileControl). Each tap is a REAL
+ *  `page.tap()` (genuine touch input, not a page.evaluate() `.click()`), and
+ *  each waits for its target to actually be visible first. */
+async function openHubMetersWindow(page, variant) {
+  if (variant?.key === 'mobile') {
+    const anchorVisible = await pollForSize(page, '#mobile-menu-anchor');
+    if (!anchorVisible) throw new Error('mobile Actions anchor is not visible');
+    await clickOrTap(page, variant, '#mobile-menu-anchor');
+    const stripOpen = await pollForSize(page, '#mobile-more');
+    if (!stripOpen) throw new Error('mobile Actions strip did not open');
+    await clickOrTap(page, variant, '#mobile-more');
+    const moreOpen = await pollForSize(page, '#mobile-meters');
+    if (!moreOpen) throw new Error('mobile More tray did not open');
+    await clickOrTap(page, variant, '#mobile-meters');
+  } else {
+    await page.keyboard.down('Shift');
+    await page.keyboard.press('KeyH');
+    await page.keyboard.up('Shift');
+  }
+  const opened = await pollForSize(page, '#meters-window');
+  if (!opened) {
+    throw new Error(
+      variant?.key === 'mobile'
+        ? 'meters window did not open through Actions -> More -> Meters'
+        : 'meters window did not open through the Shift+H keybind',
+    );
+  }
+}
+
+/** The coach's ack/replay buttons and every meter-window tab/history click in
+ *  these two recipes: a real `page.tap()` on mobile, a real `page.click()` on
+ *  desktop -- never a `page.evaluate()` synthetic `.click()`. Caller waits
+ *  for the target's real visibility first. */
+async function clickOrTap(page, variant, selector) {
+  if (variant?.key === 'mobile') {
+    const el = await page.$(selector);
+    if (!el) throw new Error(`missing touch control: ${selector}`);
+    await el.scrollIntoView();
+    const point = await el.evaluate((node) => {
+      const r = node.getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    });
+    const session = await page.createCDPSession();
+    try {
+      // Queue both edges in order before waiting for renderer acknowledgments.
+      // Slow software GL must not turn a short tap into a 180ms hold.
+      const down = session.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [point],
+      });
+      const up = session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await Promise.all([down, up]);
+    } finally {
+      await session.detach();
+    }
+  } else {
+    await page.click(selector);
+  }
+}
+
+/** The coach's current one-line prompt text, or null while it is not
+ *  rendering at all (`#hub-lesson-coach` empty/hidden). */
+async function hlcLineText(page) {
+  return page.evaluate(
+    () => document.querySelector('#hub-lesson-coach .hlc-line')?.textContent ?? null,
+  );
+}
+
+/** Poll for the coach's explicit acknowledgment button (hub_lesson_view.ts:
+ *  a row merely rendering is never enough, the player has to press Continue/
+ *  Done while it is visible), matched by its real rendered label so the two
+ *  acks in the damage track (read-row's "Continue", review-comparison's
+ *  "Done") are never confused for each other. */
+async function waitForHlcAck(page, expectedText, attempts = 30, intervalMs = 300) {
+  for (let i = 0; i < attempts; i++) {
+    const found = await page.evaluate((text) => {
+      const btn = document.querySelector('#hub-lesson-coach .hlc-ack');
+      return !!btn && btn.textContent === text;
+    }, expectedText);
+    if (found) return true;
+    await wait(intervalMs);
+  }
+  return false;
+}
+
+/** Poll until the coach's line actually changes from `previousText`: the only
+ *  honest proof a real interaction (an ack click, a hover/long-press) moved
+ *  the lesson to its next step, since this recipe cannot read the
+ *  controller's private HubLessonProgress directly. Returns the new text, or
+ *  null on timeout. */
+async function waitForHlcLineChange(page, previousText, attempts = 30, intervalMs = 300) {
+  for (let i = 0; i < attempts; i++) {
+    const now = await hlcLineText(page);
+    if (now !== null && now !== previousText) return now;
+    await wait(intervalMs);
+  }
+  return null;
+}
+
+/** Reveal a meter row's per-ability breakdown through its OWN real
+ *  interaction (src/ui/hud.ts attachTooltip): a real mouse hover on desktop
+ *  (mouseenter), or a real held touch long-press on mobile -- raw CDP
+ *  `Input.dispatchTouchEvent` at the row's actual screen bounds, held past
+ *  TOOLTIP_PEEK_MS (src/ui/touch_peek.ts), never a dispatched synthetic
+ *  PointerEvent (attachTooltip's mobile gate and its touch-only pointerdown
+ *  listener need a real touch input source, which only the CDP protocol
+ *  actually produces). */
+async function triggerRowBreakdown(page, rowSelector, variant) {
+  if (variant?.key === 'mobile') {
+    const box = await page.evaluate((sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }, rowSelector);
+    if (!box) throw new Error(`row not found for the touch long-press: ${rowSelector}`);
+    const cdp = await page.createCDPSession();
+    try {
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [{ x: box.x, y: box.y }],
+      });
+      await wait(1100); // > TOOLTIP_PEEK_MS (950ms): a real held press
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    } finally {
+      await cdp.detach();
+    }
+  } else {
+    await page.hover(rowSelector);
+  }
+}
 
 export const TARGETS = [
   {
@@ -2195,7 +2357,6 @@ export const TARGETS = [
         const x = Math.max(0, Math.min(spot.w - width, spot.x - width / 2));
         const y = Math.max(0, Math.min(spot.h - height, spot.y - height / 2));
         await page.screenshot({
-          // biome-ignore lint/suspicious/noUndeclaredEnvVars: Screenshot-only CLI input is not a Turbo task dependency.
           path: `${process.env.SHOTS_DIR ?? 'pr-shots'}/weapon-vfx-shed-${variant.key}-closeup.png`,
           clip: { x, y, width, height },
         });
@@ -2752,6 +2913,256 @@ export const TARGETS = [
     },
   },
   {
+    key: 'aura-tracks',
+    label: 'Aura tracks: the six bars of the buffs you have out, and their Combat toggles',
+    // Output lands in docs/screenshots/aura-tracks/, the subtree the ci.yml
+    // sparse-checkout cone carries; this entry is what references it.
+    when: ['ui/hud/aura_tracks', 'hud/aura_tracks'],
+    // TWO CLASSES, because between them they cover all three ROW SHAPES and no
+    // single class does. The druid shows the two timer tracks and the MODE row
+    // (Travel Form, a toggle drawn with no countdown); the priest shows the
+    // POINTS row, since an absorb bar drains with damage rather than with the
+    // clock, and the ally row that carries a unit name.
+    //
+    // Offensive Cooldowns is deliberately not staged. It is a plain timer row,
+    // identical in shape to the two the druid already shows, and reaching it
+    // would need a third class for no new information.
+    //
+    // Every spell here is castable in caster form and lands where it is aimed:
+    // an earlier cut reached for Dash and Tigers Fury (cat-form only) and shot
+    // two empty frames, then for Power Infusion, which lands nowhere at all.
+    variants: [
+      // The frames on both layouts (the mobile seat is its own stylesheet rule,
+      // so it is a real second surface rather than a resize), then the options
+      // rows that turn them on, which is where a player meets the feature at all
+      // given every track ships off.
+      { key: 'frames-desktop', shot: 'frames', charClass: 'druid', charName: 'Morphalo' },
+      {
+        key: 'frames-mobile',
+        shot: 'frames',
+        mobile: true,
+        charClass: 'druid',
+        charName: 'Morphalo',
+      },
+      { key: 'shields-desktop', shot: 'frames', charClass: 'priest', charName: 'Elowen' },
+      { key: 'options-desktop', shot: 'options' },
+      { key: 'options-mobile', shot: 'options', mobile: true },
+    ],
+    async capture(page, variant) {
+      // Turn every track on through the SETTINGS STORE the option rows write, not
+      // by poking the frames: what is being shot has to be the state a player can
+      // actually reach, and all six ship off.
+      await page.evaluate(() => {
+        const settings = window.__game?.hud?.optionsHooks?.settings;
+        if (!settings) return;
+        for (const key of [
+          'showDefensivesTrack',
+          'showSelfBuffTrack',
+          'showOffensiveTrack',
+          'showUtilityTrack',
+          'showFriendlyTrack',
+          'showShieldTrack',
+        ]) {
+          // Per-key try/catch so this target can also run against a tree where
+          // these settings do not exist yet, which is what a BEFORE capture is.
+          // Without it the whole recipe throws on the first unknown key and the
+          // before/after pair has to come from two different targets shot under
+          // two different recipes, which is not a comparison.
+          try {
+            settings.set(key, true);
+          } catch {}
+        }
+      });
+      // Clear the two windows the entry flow leaves behind. They are NOT the ids a
+      // reader would guess: the greeter is #tutorial-greeting (there is a
+      // #quest-dialog, and it is a different window that is not up here), and the
+      // tutorial step is .tut-card behind button.tut-skip. dismissEntryOverlays
+      // ran before entry and cannot see either, since the tutorial only advances
+      // to this step once the world is live.
+      //
+      // This runs for BOTH shot kinds, ahead of the options branch: the greeter
+      // sits centre-screen, so it lands squarely across the options panel too,
+      // and an earlier cut cleared it only on the world plates and shipped an
+      // options plate with two of the new rows hidden behind it.
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const cleared = await page.evaluate(() => {
+          document.querySelector('button.tut-skip')?.click();
+          for (const btn of document.querySelectorAll('#tutorial-greeting button')) btn.click();
+          const up = (sel) => {
+            const el = document.querySelector(sel);
+            return !!el && getComputedStyle(el).display !== 'none';
+          };
+          return !up('#tutorial-greeting') && !up('.tut-card');
+        });
+        if (cleared) break;
+        await wait(600);
+      }
+      if (variant.shot === 'options') {
+        await openInterfaceCombatTab(page);
+        return { clip: '#options-menu' };
+      }
+      // The shared entry flow's overlays (the loading veil, the intro cards).
+      await dismissEntryOverlays(page);
+      // MOVE OFF THE BEACH FIRST. The spawn point puts the camera on the Proving
+      // Shore greeter, whose dialog and the first-login deed banner then sit over
+      // the world for the rest of the session; neither can be dismissed by a
+      // style write (the Hud repaints it next frame) or by clicking its confirm.
+      // The practice ground is the answer: it is ~670 units away, has no greeter,
+      // and is where the ally being healed already stands, so one teleport buys a
+      // clean plate AND puts the friendly track's subject in frame. Nudging a few
+      // paces along the beach is NOT enough and puts the camera over open water.
+      await page.evaluate(() => {
+        const sim = window.__game?.sim;
+        const player = sim?.player;
+        if (!sim || !player) return;
+        if (
+          ![...sim.entities.values()].some(
+            (e) => e.friendlyPracticeTarget || e.name === 'Healing Dummy',
+          )
+        ) {
+          sim.spawnHealerPracticeDummy?.();
+        }
+        const dummy = [...sim.entities.values()].find(
+          (e) => e.friendlyPracticeTarget || e.name === 'Healing Dummy',
+        );
+        if (!dummy) return;
+        player.pos.x = dummy.pos.x - 5;
+        player.pos.y = dummy.pos.y;
+        player.pos.z = dummy.pos.z - 3;
+        player.prevPos = { ...player.pos };
+        sim.rebucket?.(player);
+      });
+      // A teleport across the map raises the zone-streaming veil again; let that
+      // transition start, then wait for the world the player would actually see.
+      await wait(1200);
+      await awaitWorldPainted(page);
+      // The teleport can advance the tutorial a step, so sweep once more.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const cleared = await page.evaluate(() => {
+          document.querySelector('button.tut-skip')?.click();
+          for (const btn of document.querySelectorAll('#tutorial-greeting button')) btn.click();
+          const up = (sel) => {
+            const el = document.querySelector(sel);
+            return !!el && getComputedStyle(el).display !== 'none';
+          };
+          return !up('#tutorial-greeting') && !up('.tut-card');
+        });
+        if (cleared) break;
+        await wait(600);
+      }
+      // Cast real abilities rather than injecting auras: a tracker shot whose rows
+      // came from a harness write proves the painter and nothing else, and the
+      // whole claim of this change is that the SIM's auras reach the right track.
+      await page.evaluate(() => {
+        const game = window.__game;
+        const sim = game?.sim;
+        const player = sim?.player;
+        if (!sim || !player) return;
+        sim.setPlayerLevel?.(30, player.id);
+        player.resource = player.maxResource;
+        if (
+          ![...sim.entities.values()].some(
+            (e) => e.friendlyPracticeTarget || e.name === 'Healing Dummy',
+          )
+        ) {
+          sim.spawnHealerPracticeDummy?.();
+        }
+      });
+      await wait(600);
+      // The level bump above grants the ranks; every spell here is learned well
+      // under the cap. The GCD is cleared between casts because the recipe stages
+      // a STATE rather than simulating a rotation, and the resource is topped up
+      // for the same reason.
+      const staged = await page.evaluate((cls) => {
+        const game = window.__game;
+        const sim = game?.sim;
+        const player = sim?.player;
+        if (!sim || !player) return { ok: false, reason: 'offline world is unavailable' };
+        const ally = [...sim.entities.values()].find(
+          (e) => e.friendlyPracticeTarget || e.name === 'Healing Dummy',
+        );
+        const cast = (id) => {
+          player.gcdRemaining = 0;
+          player.resource = player.maxResource;
+          sim.castAbility?.(id, player.id);
+        };
+        if (cls === 'priest') {
+          // The POINTS row, then an ally row. The target is set BEFORE the heal,
+          // not after: a priest heal with no target lands on the priest, which is
+          // how an earlier cut put Renew in the self track and left the friendly
+          // one empty while claiming to have filled it.
+          cast('power_word_shield');
+          if (ally) {
+            sim.targetEntity?.(ally.id, player.id);
+            cast('renew');
+          }
+        } else {
+          // A long-cooldown guard, a self HoT, and a toggle: the two timer tracks
+          // and the MODE row.
+          //
+          // NO ALLY CAST HERE, and that is game behaviour rather than an
+          // oversight: casting drops Travel Form, so a druid cannot hold the
+          // toggle and a heal-on-someone-else in the same frame. The ally row is
+          // the priest's plate to show; this one shows the mode.
+          cast('barkskin');
+          cast('rejuvenation');
+          cast('travel_form');
+        }
+        return { ok: true, allyId: ally?.id ?? 0 };
+      }, variant.charClass);
+      if (!staged.ok) throw new Error(staged.reason);
+      // Prove the rows exist before shooting. An empty track renders as a HIDDEN
+      // frame, so a capture that staged nothing looks exactly like a clean HUD:
+      // without this the rig would happily ship a screenshot as evidence of a
+      // feature that never appeared in it, which is what the first cut did.
+      // Wait for the tracks THIS variant is supposed to fill, by name, not for a
+      // count. A count is satisfied the moment the two fastest casts land, which
+      // is how an earlier plate shipped with the ally heal still on its cast bar
+      // and the toggle absent: two tracks were up, so the rig called it staged.
+      const expected =
+        variant.charClass === 'priest'
+          ? ['#aura-track-shields', '#aura-track-friendly']
+          : ['#aura-track-defensives', '#aura-track-self', '#aura-track-utility'];
+      await page.waitForFunction(
+        (sels) =>
+          sels.every((sel) => {
+            const el = document.querySelector(sel);
+            return el && getComputedStyle(el).display !== 'none';
+          }),
+        { timeout: 25000, polling: 250 },
+        expected,
+      );
+      // CLEAN PLATE, asserted on the selectors that are ACTUALLY up rather than
+      // the ones a reader would guess. Two earlier cuts of this check got it
+      // wrong in both directions and each mistake is worth naming:
+      //   - it first listed #quest-dialog and #banner. Neither is the greeter
+      //     (that is #tutorial-greeting; #quest-dialog is a different window that
+      //     is not up here), so the guard passed on a plate with a dialog parked
+      //     across the middle. A guard naming the wrong element is worse than no
+      //     guard, because it reads as proof.
+      //   - it then added .banner-copy, which is not an overlay at all: it is the
+      //     PERSISTENT subzone label, part of the HUD every player sees. Waiting
+      //     for it to clear timed out forever and shot nothing.
+      // Every selector below was read off the live DOM and watched for 30s.
+      await page.waitForFunction(
+        () =>
+          ['#tutorial-greeting', '.tut-card', '#prompt-stack'].every((sel) => {
+            const el = document.querySelector(sel);
+            if (!el) return true;
+            const st = getComputedStyle(el);
+            return (
+              st.display === 'none' ||
+              st.visibility === 'hidden' ||
+              st.opacity === '0' ||
+              !el.textContent.trim()
+            );
+          }),
+        { timeout: 30000, polling: 300 },
+      );
+      return { clip: '#ui' };
+    },
+  },
+  {
     key: 'interface-unlock-option',
     label: 'Interface options, Frames tab: the Edit Frames entry row',
     when: ['ui/interface_unlock', 'ui/options_window', 'ui/options_view'],
@@ -2762,6 +3173,37 @@ export const TARGETS = [
     async capture(page) {
       await openInterfaceFramesTab(page);
       return { clip: '#options-menu' };
+    },
+  },
+  {
+    key: 'interface-chat-tab',
+    label: 'Interface options, Chat tab: the chat rows (profanity filter lives here)',
+    when: ['ui/options_window', 'ui/options_view'],
+    variants: [{ key: 'desktop' }, { key: 'mobile', mobile: true }],
+    async capture(page) {
+      await openInterfaceChatTab(page);
+      return { clip: '#options-menu' };
+    },
+  },
+  {
+    key: 'keybinds-input-toggles',
+    label: 'Key Bindings panel: the input toggles above the key list',
+    when: ['ui/options_window'],
+    variants: [{ key: 'desktop' }],
+    async capture(page) {
+      await page.evaluate(() => {
+        document.querySelector('#tutorial-greeting button')?.click();
+        const el = document.querySelector('#options-menu');
+        if (el) el.style.display = 'none';
+        window.__game?.hud?.toggleOptionsMenu?.();
+      });
+      await wait(400);
+      await page.evaluate(() => {
+        // Key Bindings is the first row on the main options menu.
+        document.querySelectorAll('#options-menu .opt-btn')[0]?.click();
+      });
+      const open = await pollForSize(page, '#options-menu .kb-cols');
+      return open ? { clip: '#options-menu' } : {};
     },
   },
   {
@@ -2870,6 +3312,63 @@ export const TARGETS = [
       });
       await wait(700);
       return { clip: '#bags' };
+    },
+  },
+  {
+    key: 'bags-materials-pool',
+    label:
+      'Bags with a materials-only satchel: the general pool full, the satchel room marked, and the pool-honest refusal',
+    when: ['sim/bags', 'sim/bag_pools', 'ui/bags_view', 'ui/bags_window'],
+    // Issue #3795: a materials satchel equipped, the general pool filled with
+    // gear and one material stack in the satchel. The counter names both pools
+    // inline, the free squares only a material may take are tinted, and an
+    // unequip that needs a general slot is refused with the pool-honest line
+    // (the base checkout shows the summed counter, plain squares, and "Your
+    // bags are full."). Full-viewport shot so the refusal toast is in frame.
+    variants: [{ key: 'desktop' }, { key: 'mobile', mobile: true }],
+    async capture(page) {
+      await page.evaluate(() => {
+        // The shore greeting (Ferryman Odo) docks over the bag grid: dismiss it
+        // the way a player would, so the squares under it stay in frame.
+        for (const b of document.querySelectorAll('button')) {
+          if (/understood/i.test(b.textContent ?? '')) b.click();
+        }
+        const sim = window.__game?.sim;
+        try {
+          sim?.addItem('burlap_reagent_pouch', 1);
+          sim?.equipBag?.('burlap_reagent_pouch');
+        } catch {}
+        const gear = [
+          'eastbrook_arming_sword',
+          'apprentice_staff',
+          'cryptbone_helm',
+          'worn_sword',
+          'baked_bread',
+          'minor_healing_potion',
+        ];
+        // Fill the GENERAL pool (16 backpack slots) with never-stacking gear
+        // and 1-per-slot consumables; the satchel's 8 squares stay free.
+        for (let i = 0; sim && sim.inventory.length < 16 && i < 64; i++) {
+          try {
+            sim.addItem(gear[i % gear.length], 1);
+          } catch {}
+        }
+        try {
+          sim?.addItem('copper_ore', 5);
+        } catch {}
+        const el = document.querySelector('#bags');
+        if (el) el.style.display = 'none';
+        window.__game?.hud?.toggleBags?.();
+      });
+      await wait(500);
+      // The refusal: a chest unequip needs a general-pool square, and none is free.
+      await page.evaluate(() => {
+        try {
+          window.__game?.sim?.unequipItem?.('chest');
+        } catch {}
+      });
+      await wait(400);
+      return { clip: null };
     },
   },
   {
@@ -3370,6 +3869,87 @@ export const TARGETS = [
       );
       if (geometry !== 'ok') throw new Error(`vault evidence geometry failed: ${geometry}`);
       await wait(700);
+      return {};
+    },
+  },
+  {
+    key: 'vault-deposit-all-notable',
+    label: 'Materials Vault Deposit All: names an epic-or-better material instead of a bare count',
+    when: ['ui/vault_view', 'ui/vault_window'],
+    variants: [{ key: 'desktop', beforeLoad: seedClassicOnLowPreset }],
+    async capture(page) {
+      await page.waitForFunction(() => window.__game?.sim?.player, { timeout: 90000 });
+      await dismissEntryOverlays(page);
+      await page.evaluate(() => {
+        const game = window.__game;
+        const sim = game?.sim;
+        try {
+          // Stand beside the banker first: the vault ops are nearBanker-gated
+          // (the bank-vault target's idiom).
+          for (const e of sim.entities.values()) {
+            if (e.kind === 'npc' && e.templateId === 'bursar_fernando') {
+              const p = sim.entities.get(sim.playerId);
+              p.pos = { ...e.pos };
+              p.prevPos = { ...p.pos };
+              sim.rebucket(p);
+              break;
+            }
+          }
+          const meta = sim.players.get(sim.playerId);
+          meta.copper = 200000;
+          sim.vaultBuyUpgrade(); // rung 0: the 2g unlock
+          // An ordinary common material plus lastflame_core (the epic raid
+          // reagent the reported "items vanished" case turned on): the click
+          // must name the epic one, not fold it into a bare count.
+          sim.addItem('copper_ore', 5);
+          sim.addItem('lastflame_core', 1);
+        } catch {}
+        game?.hud?.openBank?.();
+      });
+      if (!(await pollForSize(page, '#bank-window'))) {
+        throw new Error('bank window did not open');
+      }
+      const tabReady = await pollForSize(page, '#bank-window .bank-tab[data-tab="vault"]');
+      if (!tabReady) throw new Error('vault tab did not render');
+      await page.evaluate(() => {
+        const tab = document.querySelector('#bank-window .bank-tab[data-tab="vault"]');
+        if (tab instanceof HTMLElement) tab.click();
+      });
+      if (!(await pollForSize(page, '#bank-window .vault-pane'))) {
+        throw new Error('vault pane did not render after the tab click');
+      }
+      await awaitWorldPainted(page);
+      await dismissEntryOverlays(page);
+      // The first-spawn greeting is a window, not the tutorial overlay the
+      // shared entry helper owns (the bank-vault target's idiom above). It can
+      // arrive after the banker teleport and cover the pane while every
+      // underlying DOM geometry check still looks healthy, so dismiss it at
+      // the last responsible moment, before the deposit-all click.
+      const dismissedGreeting = await page.evaluate(() => {
+        const greeting = document.getElementById('tutorial-greeting');
+        if (!(greeting instanceof HTMLElement) || getComputedStyle(greeting).display === 'none') {
+          return false;
+        }
+        const close = [...greeting.querySelectorAll('button')].at(-1);
+        close?.click();
+        return true;
+      });
+      if (dismissedGreeting) await wait(400);
+      const depositReady = await pollForSize(page, '#bank-window .vault-deposit-all');
+      if (!depositReady) throw new Error('deposit-all button did not render');
+      await page.evaluate(() => {
+        const btn = document.querySelector('#bank-window .vault-deposit-all');
+        if (btn instanceof HTMLElement) btn.click();
+      });
+      const statusReady = await pollForSize(page, '#bank-window .vault-status');
+      if (!statusReady) throw new Error('deposit-all status line did not render');
+      const text = await page.evaluate(
+        () => document.querySelector('#bank-window .vault-status')?.textContent ?? '',
+      );
+      if (!text.includes('Core of the Last Flame')) {
+        throw new Error(`status line did not name the notable item: ${text}`);
+      }
+      await wait(400);
       return {};
     },
   },
@@ -4383,6 +4963,129 @@ export const TARGETS = [
       await wait(400);
       await page.evaluate(() => window.__game?.hud?.toggleMap?.());
       await wait(600);
+      const open = await page.evaluate(() => {
+        const w = document.querySelector('#map-window');
+        return !!w && getComputedStyle(w).display !== 'none';
+      });
+      return open ? { clip: '#map-window' } : {};
+    },
+  },
+  // The world-map level cycle inside an instance and the party plan from
+  // outside (map_surface_core.ts). Each target is one press further along the
+  // cycle: on a build that predates the cycle the toggle is hidden / inert, so
+  // the BEFORE half of every frame shows the same locked instance plan, which
+  // is exactly the reported bug.
+  ...[
+    {
+      key: 'instance-map-plan',
+      label: 'World map inside a dungeon: the instance plan',
+      presses: 0,
+    },
+    {
+      key: 'instance-map-zone',
+      label: 'World map inside a dungeon: one press, the zone map',
+      presses: 1,
+    },
+    {
+      key: 'instance-map-world',
+      label: 'World map inside a dungeon: two presses, the continent overview',
+      presses: 2,
+    },
+  ].map(({ key, label, presses }) => ({
+    key,
+    label,
+    when: ['map_surface_core', 'interior_map_controller'],
+    variants: [{ key: 'desktop' }, ...(presses === 1 ? [{ key: 'mobile', mobile: true }] : [])],
+    async capture(page) {
+      await page.evaluate(() => window.__game?.sim?.enterDungeon?.('hollow_crypt'));
+      await wait(1500); // let the instance teleport and its zone stream settle
+      await awaitWorldPainted(page);
+      await dismissTutorialGreeting(page);
+      await page.evaluate(() => window.__game?.hud?.toggleMap?.());
+      await wait(600);
+      for (let i = 0; i < presses; i++) {
+        await page.evaluate(() => document.querySelector('#map-level-toggle')?.click());
+        await wait(600);
+      }
+      const open = await page.evaluate(() => {
+        const w = document.querySelector('#map-window');
+        return !!w && getComputedStyle(w).display !== 'none';
+      });
+      return open ? { clip: '#map-window' } : {};
+    },
+  })),
+  {
+    key: 'party-dungeon-map-outside',
+    label: "World map outside: the party member's dungeon plan (two presses from the zone map)",
+    when: ['map_surface_core', 'interior_map_controller'],
+    variants: [{ key: 'desktop' }],
+    // Offline there is no party, so the roster is overridden on the Sim instance
+    // (the getter lives on the prototype) with one member standing in the crypt
+    // instance the player just left: the same IWorld read the online mirror
+    // streams from the server.
+    async capture(page) {
+      await page.evaluate(() => {
+        const sim = window.__game?.sim;
+        if (!sim) return;
+        sim.enterDungeon?.('hollow_crypt');
+        const inside = { x: sim.player.pos.x + 6, z: sim.player.pos.z - 4 };
+        // A raw position write back to the meadow (like the world-map target),
+        // not leaveDungeon: the exit teleport raises the loading curtain again.
+        const p = sim.player;
+        p.pos.x = 65; // Boar Meadow, Eastbrook Vale
+        p.pos.z = 0;
+        Object.defineProperty(sim, 'partyInfo', {
+          configurable: true,
+          get: () => ({
+            leader: p.id,
+            raid: false,
+            master: { enabled: false, looter: 0, threshold: 'uncommon' },
+            members: [
+              {
+                pid: p.id,
+                name: p.name,
+                cls: 'warrior',
+                level: p.level,
+                hp: 100,
+                mhp: 100,
+                res: 0,
+                mres: 0,
+                rtype: null,
+                x: p.pos.x,
+                z: p.pos.z,
+                dead: 0,
+                inCombat: 0,
+                group: 1,
+              },
+              {
+                pid: 9001,
+                name: 'Selene',
+                cls: 'mage',
+                level: 20,
+                hp: 90,
+                mhp: 100,
+                res: 50,
+                mres: 100,
+                rtype: 'mana',
+                x: inside.x,
+                z: inside.z,
+                dead: 0,
+                inCombat: 0,
+                group: 1,
+              },
+            ],
+          }),
+        });
+      });
+      await wait(1500);
+      await awaitWorldPainted(page);
+      await dismissTutorialGreeting(page);
+      await page.evaluate(() => window.__game?.hud?.toggleMap?.());
+      await wait(600);
+      for (let i = 0; i < 2; i++) {
+        await page.evaluate(() => document.querySelector('#map-level-toggle')?.click());
+        await wait(600);
+      }
       const open = await page.evaluate(() => {
         const w = document.querySelector('#map-window');
         return !!w && getComputedStyle(w).display !== 'none';
@@ -6585,6 +7288,47 @@ export const TARGETS = [
     },
   },
   {
+    key: 'reliquary-shelf-filter',
+    label: 'The Reliquary: Conquerors shelf under the Missing chip (illuminated page hidden)',
+    when: ['ui/reliquary_view', 'ui/reliquary_window'],
+    variants: [
+      { key: 'desktop', beforeLoad: seedLowGraphicsPreset },
+      { key: 'mobile', mobile: true, beforeLoad: seedLowGraphicsPreset },
+    ],
+    async capture(page) {
+      await page.evaluate(() => document.getElementById('tutorial-greeting')?.remove());
+      const pageIds = await openReliquaryConquerorsShelf(page);
+      const target = pageIds.includes('conquerors_hollow_crypt')
+        ? 'conquerors_hollow_crypt'
+        : pageIds[0];
+      if (!target) throw new Error('reliquary shelf listed no pages');
+      // Illuminate ONE page by reading its own cells (never a hard-coded relic
+      // list), then return to the shelf and press Missing: the shot is the
+      // shelf with that page gone and the chip row pressed. On a base tree
+      // with no shelf chips the click is a no-op, so the same recipe yields
+      // the honest before shot (full list, illuminated badge showing).
+      await page.evaluate((id) => {
+        document.querySelector(`#reliquary-window [data-page="${id}"]`)?.click();
+      }, target);
+      await wait(250);
+      await page.evaluate(() => {
+        const discovered = window.__game?.sim?.deedStats?.itemsDiscovered;
+        for (const cell of document.querySelectorAll('#reliquary-window .reliquary-cell')) {
+          if (cell.dataset.cellKind === 'item' && cell.dataset.cellId) {
+            discovered?.add(cell.dataset.cellId);
+          }
+        }
+        document.querySelector('#reliquary-window [data-back]')?.click();
+      });
+      await wait(250);
+      await page.evaluate(() => {
+        document.querySelector('#reliquary-window [data-filter="missing"]')?.click();
+      });
+      await wait(300);
+      return { clip: '#reliquary-window' };
+    },
+  },
+  {
     key: 'reliquary-page',
     label: 'The Reliquary: multi-boss page detail with a focused missing cell',
     when: [
@@ -6665,6 +7409,48 @@ export const TARGETS = [
       });
       await wait(300);
       return { clip: '#reliquary-window' };
+    },
+  },
+  {
+    key: 'reliquary-drowned-litany-vendor-gate',
+    label: "The Reliquary: The Drowned Litany names a Marks relic's Heroic-clear gate",
+    when: ['ui/reliquary_view', 'ui/reliquary_labels', 'sim/content/delves/shop'],
+    variants: [
+      { key: 'desktop', beforeLoad: seedLowGraphicsPreset },
+      { key: 'mobile', mobile: true, beforeLoad: seedLowGraphicsPreset },
+    ],
+    async capture(page) {
+      await page.evaluate(() => {
+        document.querySelector('#gpu-notice')?.remove();
+        document.querySelector('.camera-prompt-confirm')?.click();
+        // A fresh offline character may receive Ferryman Odo's one-time
+        // arrival note after entry settles; unrelated to this window and
+        // otherwise sits on top of it.
+        document.querySelector('#tutorial-greeting')?.remove();
+        window.__game?.hud?.openReliquary?.();
+      });
+      const opened = await pollForSize(page, '#reliquary-window');
+      if (!opened) throw new Error('reliquary window did not open');
+      await page.evaluate(() => {
+        const win = document.querySelector('#reliquary-window');
+        win?.querySelector('[data-nav="conquerors"]')?.click();
+        win?.querySelector('[data-page="conquerors_drowned_litany"]')?.click();
+      });
+      await wait(200);
+      await page.evaluate(() => {
+        // The Marks-only signature rare the bug report named: gated behind a
+        // Heroic clear on the real vendor, which the page's source line never
+        // used to say. attachTooltip binds focusin (never pointerenter), so
+        // focus is the sturdier synthetic trigger here.
+        document
+          .querySelector('#reliquary-window [data-cell-id="sister_nhalia_choir_plate"]')
+          ?.focus?.();
+      });
+      await wait(300);
+      // No clip: the cell sits near the grid's right edge, so its tooltip
+      // floats past the window's own bounding box and a window-cropped shot
+      // would truncate the very sentence this target exists to show.
+      return {};
     },
   },
   // ---- Phase 21 catalog-growth surfaces. Each variant seeds the LOW graphics
@@ -7176,6 +7962,117 @@ export const TARGETS = [
     },
   },
   {
+    key: 'deeds-fiesta-feat',
+    label: 'Book of Deeds: Fiesta deeds marked Feat of Strength on PvP and Sport (#3672 report)',
+    // Feat status never moves a deed off its home category shelf
+    // (deedDisplayCategory keys only on `category`, not `feat`; the
+    // col_reliquary_complete precedent stays on Collection), so the seven
+    // pvp_fiesta_* deeds stay on the PvP and Sport tab. The visible change is
+    // the feat ribbon chip plus the updated retirement sentence in the desc.
+    when: ['sim/content/deeds.ts'],
+    variants: [
+      { key: 'desktop', beforeLoad: seedLowGraphicsPreset },
+      { key: 'mobile', mobile: true, beforeLoad: seedLowGraphicsPreset },
+    ],
+    async capture(page) {
+      const opened = await page.evaluate(() => {
+        document.querySelector('#gpu-notice')?.remove();
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.querySelector('.tut-skip')?.click();
+        // The Proving Shore's one-time Ferryman Odo arrival note (the shared
+        // Card Duel modal shell, hudChrome.tutorialGreeting), which otherwise
+        // pops over the freshly opened Book of Deeds.
+        document.querySelector('button.cd-ok[data-close]')?.click();
+        const game = window.__game;
+        if (!game?.hud) return { ok: false, reason: 'offline world is unavailable' };
+        game.hud.openDeeds('pvp');
+        return { ok: true };
+      });
+      if (!opened.ok) return { skip: opened.reason };
+      const ready = await pollForSize(page, '#deeds-window');
+      if (!ready) return { skip: 'the deeds window never became visible' };
+      // The arrival note can render on its own timer after entry, sometimes
+      // landing on top of the already-open Book of Deeds; poll for it across
+      // a short settle window and dismiss it once, rather than assuming a
+      // single early click (before it exists) is enough.
+      for (let i = 0; i < 6; i++) {
+        const dismissed = await page.evaluate(() => {
+          const btn = document.querySelector('button.cd-ok[data-close]');
+          if (!(btn instanceof HTMLElement)) return false;
+          btn.click();
+          return true;
+        });
+        if (dismissed) break;
+        await wait(300);
+      }
+      const scrolled = await page.evaluate(() => {
+        const card = document.querySelector('.deed-card[data-deed="pvp_fiesta_first_bout"]');
+        if (!card) return false;
+        card.scrollIntoView({ block: 'center' });
+        return true;
+      });
+      if (!scrolled) return { skip: 'the pvp_fiesta_first_bout card is not on the PvP tab' };
+      await wait(300);
+      return { clip: '#deeds-window' };
+    },
+  },
+  {
+    key: 'deeds-vale-cup-feat',
+    label: 'Book of Deeds: Vale Cup deeds marked Feat of Strength on Chronicle and PvP and Sport',
+    // Feat status never moves a deed off its home category shelf
+    // (deedDisplayCategory keys only on `category`, not `feat`; the
+    // col_reliquary_complete precedent stays on Collection), so
+    // chr_vale_cup_debut stays on Chronicle and the ten pvp_vcup_* deeds stay
+    // on the PvP and Sport tab. The visible change is the feat ribbon chip
+    // plus the updated retirement sentence in the desc.
+    when: ['sim/content/deeds.ts'],
+    variants: [
+      { key: 'desktop', beforeLoad: seedLowGraphicsPreset },
+      { key: 'mobile', mobile: true, beforeLoad: seedLowGraphicsPreset },
+    ],
+    async capture(page) {
+      const opened = await page.evaluate(() => {
+        document.querySelector('#gpu-notice')?.remove();
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.querySelector('.tut-skip')?.click();
+        // The Proving Shore's one-time Ferryman Odo arrival note (the shared
+        // Card Duel modal shell, hudChrome.tutorialGreeting), which otherwise
+        // pops over the freshly opened Book of Deeds.
+        document.querySelector('button.cd-ok[data-close]')?.click();
+        const game = window.__game;
+        if (!game?.hud) return { ok: false, reason: 'offline world is unavailable' };
+        game.hud.openDeeds('pvp');
+        return { ok: true };
+      });
+      if (!opened.ok) return { skip: opened.reason };
+      const ready = await pollForSize(page, '#deeds-window');
+      if (!ready) return { skip: 'the deeds window never became visible' };
+      // The arrival note can render on its own timer after entry, sometimes
+      // landing on top of the already-open Book of Deeds; poll for it across
+      // a short settle window and dismiss it once, rather than assuming a
+      // single early click (before it exists) is enough.
+      for (let i = 0; i < 6; i++) {
+        const dismissed = await page.evaluate(() => {
+          const btn = document.querySelector('button.cd-ok[data-close]');
+          if (!(btn instanceof HTMLElement)) return false;
+          btn.click();
+          return true;
+        });
+        if (dismissed) break;
+        await wait(300);
+      }
+      const scrolled = await page.evaluate(() => {
+        const card = document.querySelector('.deed-card[data-deed="pvp_vcup_wins_25"]');
+        if (!card) return false;
+        card.scrollIntoView({ block: 'center' });
+        return true;
+      });
+      if (!scrolled) return { skip: 'the pvp_vcup_wins_25 card is not on the PvP tab' };
+      await wait(300);
+      return { clip: '#deeds-window' };
+    },
+  },
+  {
     key: 'inspect-border-cartouche',
     label: 'Inspect Deed Heraldry banner: seal, motif pattern, title, and granting deed',
     when: ['ui/deed_border_view', 'ui/inspect_window', 'ui/inspect_view', 'styles/shell.css'],
@@ -7539,6 +8436,97 @@ export const TARGETS = [
       });
       const open = await pollForSize(page, '#options-menu .set-rows');
       return open ? { clip: '#options-menu' } : {};
+    },
+  },
+  {
+    // Interface > Frames: the Player / Target Health Text choice rows (and the
+    // fifth "Current / Max (Percent)" mode) the unit frames now share with the
+    // party frames.
+    key: 'interface-options-unit-frame-health-text',
+    label: 'Interface options panel: Player / Target Health Text rows',
+    when: ['ui/hud_frames'],
+    variants: [{ key: 'desktop' }],
+    async capture(page) {
+      await page.evaluate(() => {
+        const hud = window.__game?.hud;
+        if (!hud) return;
+        document.getElementById('tutorial-greeting')?.remove();
+        const win = document.querySelector('#options-menu');
+        if (win && getComputedStyle(win).display !== 'none') hud.toggleOptionsMenu();
+        hud.toggleOptionsMenu();
+        // Interface is the fourth button on the main options menu (offline).
+        const buttons = Array.from(document.querySelectorAll('#options-menu .opt-btn'));
+        buttons[3]?.click();
+      });
+      let open = await pollForSize(page, '#options-menu .set-rows');
+      if (!open) return {};
+      // The Frames tab is the second tab of the Interface strip.
+      await page.evaluate(() => {
+        const tabs = Array.from(document.querySelectorAll('#options-menu .opt-tab'));
+        tabs[1]?.click();
+      });
+      open = await pollForSize(page, '[data-focus-key="playerFrameHealthText:0"]');
+      if (!open) return {};
+      await page.evaluate(() => {
+        document.getElementById('tutorial-greeting')?.remove();
+        document
+          .querySelector('[data-focus-key="playerFrameHealthText:0"]')
+          ?.closest('.set-row')
+          ?.scrollIntoView({ block: 'center' });
+      });
+      return { clip: '#options-menu' };
+    },
+  },
+  {
+    // The player and target frames printing the "Current / Max (Percent)" mode
+    // (seeded through the persisted settings), against a living mob.
+    key: 'unit-frame-health-text-percent',
+    label: 'Player and target frames: Current / Max (Percent) health text',
+    when: ['ui/hud_frames'],
+    variants: [
+      { key: 'player-frame', beforeLoad: seedHealthTextPercentMode, clip: '#player-frame' },
+      { key: 'target-frame', beforeLoad: seedHealthTextPercentMode, clip: '#target-frame' },
+    ],
+    async capture(page, variant) {
+      const staged = await page.evaluate(() => {
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.getElementById('tutorial-greeting')?.remove();
+        const game = window.__game;
+        const sim = game?.sim;
+        const player = sim?.player;
+        if (!game || !sim || !player) return { ok: false };
+        const win = document.querySelector('#options-menu');
+        if (win && getComputedStyle(win).display !== 'none') game.hud.toggleOptionsMenu();
+        // Nearest living mob, skipping the practice effigies (the sim refills them
+        // every tick, which would pin the percent at 100%).
+        let mob = null;
+        let best = Infinity;
+        for (const e of sim.entities.values()) {
+          if (e.kind !== 'mob' || e.hp <= 0 || e.id === player.id) continue;
+          if (/dummy|effigy/i.test(e.templateId ?? '')) continue;
+          const d = (e.pos.x - player.pos.x) ** 2 + (e.pos.z - player.pos.z) ** 2;
+          if (d < best) {
+            best = d;
+            mob = e;
+          }
+        }
+        if (!mob) return { ok: false };
+        player.targetId = mob.id;
+        window.__healthTextShotMob = mob;
+        return { ok: true };
+      });
+      if (!staged.ok) return {};
+      await wait(600);
+      // Off-full values so the percent is visibly not 100%, written right before
+      // the shutter (a training effigy refills itself between ticks).
+      await page.evaluate(() => {
+        const player = window.__game?.sim?.player;
+        const mob = window.__healthTextShotMob;
+        if (mob) mob.hp = Math.max(1, Math.round(mob.maxHp * 0.62));
+        if (player) player.hp = Math.max(1, Math.round(player.maxHp * 0.87));
+      });
+      await wait(120);
+      return { clip: variant.clip };
     },
   },
   {
@@ -8372,17 +9360,35 @@ export const TARGETS = [
       'ui/hud/action_bar/ability_requirement_keys',
       'sim/incapacitate_dr',
       'sim/combat/stealth_focus',
+      'sim/combat/auto_attack',
+      // Weapon coats decide the whole rogue-poison tooltip family: what the
+      // coat does per swing, and whether the row asks for a target at all.
+      'sim/combat/poison_coating',
     ],
     variants: [
       // Every variant enters as the class that OWNS the ability: the standalone
       // page enters with variant.charClass, and the default (warrior) knows none
       // of these, which reads as "not known at level 20".
-      // The two utility poisons: new rows, so their BEFORE is "not in the book".
+      // The four rogue poisons. All are weapon coats now (issue #3774 turned the
+      // two utility ones back from 40-energy targeted nukes into coatings), so
+      // the row copy is the only place a player reads what each one does.
       {
         key: 'melting-acid',
         charClass: 'rogue',
         charName: 'Nightsliver',
         abilityId: 'melting_acid',
+      },
+      {
+        key: 'instant-poison',
+        charClass: 'rogue',
+        charName: 'Nightsliver',
+        abilityId: 'instant_poison',
+      },
+      {
+        key: 'deadly-poison',
+        charClass: 'rogue',
+        charName: 'Nightsliver',
+        abilityId: 'deadly_poison',
       },
       {
         key: 'nightshade-coating',
@@ -8392,6 +9398,8 @@ export const TARGETS = [
       },
       // Reworded copy: Sap gained its no-fight clause.
       { key: 'sap', charClass: 'rogue', charName: 'Nightsliver', abilityId: 'sap' },
+      // Reworded copy: Eye Jab now resets the caster's own swing timer.
+      { key: 'eye-jab', charClass: 'rogue', charName: 'Nightsliver', abilityId: 'gouge' },
       // Shadeslip is a row-5 talent grant, so the recipe allocates before it
       // resolves. It carries the new "Enemy or friendly target" requirement line.
       {
@@ -11058,9 +12066,9 @@ export const TARGETS = [
       { key: 'targets-rings-mobile', targets: true, rings: true, drill: 'Ring', mobile: true },
       // The #2415 replace flow: already-enchanted copies list as FLAGGED
       // replace rows (worn and bagged families both, the meta naming the
-      // enchant a confirm would destroy, the same-enchant row disabled), and
-      // accepting one runs the destroy-confirm dialog that names the doomed
-      // enchant, the no-refund ruling, and the reagent cost.
+      // enchant a confirm would destroy), and accepting one runs the
+      // destroy-confirm dialog that names the doomed enchant, the no-refund
+      // ruling, and the reagent cost.
       { key: 'targets-replace', targets: true, replace: true },
       { key: 'targets-replace-mobile', targets: true, replace: true, mobile: true },
       { key: 'replace-confirm', targets: true, replace: true, replaceConfirm: true },
@@ -11074,6 +12082,22 @@ export const TARGETS = [
         replace: true,
         replaceConfirm: true,
         mobile: true,
+      },
+      // QoL re-apply: a copy (worn AND bagged) already carrying the PICKED
+      // enchant. The sim now allows this (a normal replace netting to the
+      // same stats: the accept just burns reagents and trains Enchanting),
+      // so both rows stay enabled, tagged "Already applied" in the plain
+      // meta style rather than the destructive one.
+      { key: 'targets-same-enchant', targets: true, sameEnchant: true },
+      { key: 'targets-same-enchant-mobile', targets: true, sameEnchant: true, mobile: true },
+      // Accepting a same-enchant row still routes through the ONE confirm
+      // family (same dialog, same no-refund line): only the picker row's
+      // tag and enabled state changed, not the confirm step itself.
+      {
+        key: 'same-enchant-confirm',
+        targets: true,
+        sameEnchant: true,
+        replaceConfirm: true,
       },
     ],
     async capture(page, variant) {
@@ -11091,10 +12115,29 @@ export const TARGETS = [
           wantsReplace,
           wantsHeroicPair,
           wantsRings,
+          wantsSameEnchant,
         ) => {
           const game = window.__game;
           const sim = game?.sim;
           if (!game || !sim?.player) return { ok: false, reason: 'offline world unavailable' };
+          if (wantsSameEnchant) {
+            // The QoL re-apply scene: a WORN copy and a BAGGED copy both
+            // already carrying enchant_weapon_might, the same enchant the
+            // drill step targets by default ('Might'), so both families
+            // land on the sim's now-enabled same-enchant row instead of the
+            // old disabled one. Real ids only, never a hand-written payload.
+            sim.addItemInstance('eastbrook_arming_sword', {
+              enchant: 'enchant_weapon_might',
+              rolled: { stats: { str: 2 } },
+            });
+            sim.equipItemToSlot('eastbrook_arming_sword', 'mainhand');
+            sim.addItemInstance('eastbrook_arming_sword', {
+              enchant: 'enchant_weapon_might',
+              rolled: { stats: { str: 2 } },
+            });
+            sim.addItem('arcane_dust', 6);
+            return { ok: true, itemName: 'Chime Dust' };
+          }
           if (wantsHeroicPair) {
             // #2466: a base item and its HEROIC variant, two ids that resolve to
             // ONE display name. Both copies stay PLAIN, which is the worst case:
@@ -11196,6 +12239,7 @@ export const TARGETS = [
         Boolean(variant?.replace),
         Boolean(variant?.heroicPair),
         Boolean(variant?.rings),
+        Boolean(variant?.sameEnchant),
       );
       if (!staged.ok) throw new Error(staged.reason);
       await page.evaluate(() => {
@@ -12844,7 +13888,6 @@ export const TARGETS = [
         });
         if (!r) continue;
         await page.screenshot({
-          // biome-ignore lint/suspicious/noUndeclaredEnvVars: Screenshot-only CLI input is not a Turbo task dependency.
           path: `${process.env.SHOTS_DIR ?? 'pr-shots'}/swing-timer-${variant.key}-t${String(shotIndex).padStart(2, '0')}.png`,
           clip: {
             x: Math.max(0, r.x - pad),
@@ -13679,6 +14722,193 @@ export const TARGETS = [
     },
   },
   {
+    key: 'mailbox-deny-stacking',
+    label:
+      'Mailbox Send tab: a bind-on-trade material names the specific bound reason, and the deny toast stays above the window',
+    when: ['ui/bags_view', 'ui/bags_window', 'styles/hud.css'],
+    // On a base checkout, both denies (the hover hint AND the click toast) read
+    // the same generic "This cannot be mailed." line, and the toast (#error-msg,
+    // no z-index) renders BEHIND the mailbox window, visible only at its edges.
+    // On the fix, the per-copy lock names the specific bound reason and the
+    // toast clears the window (z-index 90).
+    variants: [{ key: 'desktop' }, { key: 'mobile', mobile: true }],
+    async capture(page) {
+      await page.evaluate(() => {
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.querySelector('.tut-skip')?.click();
+        document.querySelector('.gpu-notice-dismiss')?.click();
+        document.querySelector('#gpu-notice')?.remove();
+        // The Proving Shore's proximity-triggered spawn greeting (Ferryman Odo)
+        // is a scoped popup (z-index 95+, always topmost by design): left up,
+        // it would visually cover the very toast this target exists to prove
+        // now clears the window underneath it.
+        document.getElementById('tutorial-greeting')?.remove();
+      });
+      await wait(300);
+      const setup = await page.evaluate(() => {
+        const game = window.__game;
+        const sim = game?.sim;
+        if (!sim?.player) return { ok: false, reason: 'no sim' };
+        document.getElementById('tutorial-greeting')?.remove();
+        // The exact shape a rare+ disenchant grants (professions/enchanting.ts
+        // resolveDisenchant's typed secondary): armed bind-on-trade, never
+        // freely resold or mailed until traded away in person.
+        sim.addItemInstance('resonant_thread', { bindOnTrade: true });
+        game.hud.openMailbox();
+        document.querySelector('.mail-tab[data-tab="send"]')?.click();
+        return { ok: true };
+      });
+      if (!setup.ok) throw new Error(`mailbox setup failed: ${setup.reason}`);
+      if (!(await pollForSize(page, '#mailbox-window'))) {
+        throw new Error('mailbox window did not open');
+      }
+      if (!(await pollForSize(page, '#bags'))) throw new Error('bags window did not open');
+      await wait(300);
+      const clicked = await page.evaluate(() => {
+        document.getElementById('tutorial-greeting')?.remove();
+        const cell = [...document.querySelectorAll('#bags .bag-item:not(.empty)')].find((b) =>
+          (b.getAttribute('aria-label') ?? '').includes('Resonant Thread'),
+        );
+        cell?.click();
+        return !!cell;
+      });
+      if (!clicked) throw new Error('Resonant Thread bag cell not found');
+      await wait(400);
+      return { clip: '#ui' };
+    },
+  },
+  {
+    key: 'vendor-sell-confirm-stacking',
+    label:
+      'Vendor sell-confirm prompt stays above the vendor window once its z-index has climbed past the old fixed 80',
+    when: ['ui/bags_view', 'ui/bags_window', 'styles/hud.css'],
+    // The window-focus band (hud.ts bringWindowToFront) cycles 50-89 across a
+    // real session's window churn; a fixed inline override stands in for that
+    // churn deterministically rather than looping dozens of real window
+    // toggles through an async MutationObserver. 85 sits INSIDE that band, so
+    // it is the honest "this vendor window happens to have focused recently"
+    // case the report described as intermittent.
+    variants: [{ key: 'desktop' }, { key: 'mobile', mobile: true }],
+    async capture(page) {
+      await page.evaluate(() => {
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.querySelector('.tut-skip')?.click();
+        document.querySelector('.gpu-notice-dismiss')?.click();
+        document.querySelector('#gpu-notice')?.remove();
+        // The Proving Shore's proximity-triggered spawn greeting (Ferryman Odo)
+        // is a scoped popup (z-index 95+, always topmost by design): left up,
+        // it would visually cover the very prompt this target exists to prove
+        // now clears the window underneath it.
+        document.getElementById('tutorial-greeting')?.remove();
+      });
+      await wait(300);
+      const setup = await page.evaluate(() => {
+        const game = window.__game;
+        const sim = game?.sim;
+        if (!sim) return { ok: false, reason: 'no sim' };
+        document.getElementById('tutorial-greeting')?.remove();
+        const vendor = [...sim.entities.values()].find(
+          (e) => e.templateId === 'quartermaster_bree',
+        );
+        if (!vendor) return { ok: false, reason: 'no vendor entity' };
+        const p = sim.player;
+        if (!p?.pos) return { ok: false, reason: 'no player' };
+        p.pos.x = vendor.pos.x + 2;
+        p.pos.z = vendor.pos.z;
+        p.prevPos = { ...p.pos };
+        try {
+          sim.addItem('eastbrook_arming_sword', 1);
+        } catch {}
+        const el = document.querySelector('#vendor-window');
+        if (el) el.style.display = 'none';
+        game.hud.openVendor(vendor.id);
+        return { ok: true };
+      });
+      if (!setup.ok) throw new Error(`vendor setup failed: ${setup.reason}`);
+      // The position jump above (to stand next to the vendor) can still be
+      // mid-fade on the entry loading curtain under contention; wait it out
+      // before trusting anything the poll below reports as "visible".
+      await pollForNoLoadingCurtain(page);
+      if (!(await pollForSize(page, '#vendor-window'))) {
+        throw new Error('vendor window did not open');
+      }
+      if (!(await pollForSize(page, '#bags'))) throw new Error('bags window did not open');
+      await wait(300);
+      // Stand in for a session that already cycled window focus past the old
+      // fixed #prompt-stack z-index (80): the vendor window itself is the one
+      // most recently brought to front in the real flow this reproduces.
+      await page.evaluate(() => {
+        document.getElementById('tutorial-greeting')?.remove();
+        const el = document.querySelector('#vendor-window');
+        if (el) el.style.zIndex = '85';
+      });
+      const clicked = await page.evaluate(() => {
+        document.getElementById('tutorial-greeting')?.remove();
+        const cell = [...document.querySelectorAll('#bags .bag-item:not(.empty)')].find((b) =>
+          (b.getAttribute('aria-label') ?? '').includes('Eastbrook Arming Sword'),
+        );
+        cell?.click();
+        return !!cell;
+      });
+      if (!clicked) throw new Error('Eastbrook Arming Sword bag cell not found');
+      // Longer than the other targets' closing wait on purpose: this target's
+      // position jump right after entry can leave the loading curtain's
+      // display:none flip a frame or two behind the DOM under SwiftShader
+      // contention (observed: the curtain's classes were already correctly
+      // cleared by the time of a same-tick diagnostic read, yet the very next
+      // screenshot still painted it), so this settles the paint, not the DOM.
+      await pollForNoLoadingCurtain(page);
+      await wait(900);
+      return { clip: '#ui' };
+    },
+  },
+  {
+    key: 'proc-overlay-behind-window',
+    label:
+      'The proc overlay (Rising Phoenix / soul-fragment bank) paints BEHIND an open window instead of over it',
+    when: ['styles/hud.css'],
+    // #proc-overlay is appended straight to <body> (a SIBLING of #ui, not a
+    // descendant), so on a base checkout its z-index (30) sits ABOVE #ui's (10):
+    // opening a window while a proc/resource meter is showing drew it over the
+    // window content. The fix (z-index 5) puts it behind #ui instead.
+    variants: [{ key: 'desktop' }, { key: 'mobile', mobile: true }],
+    async capture(page) {
+      await page.evaluate(() => {
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.querySelector('.tut-skip')?.click();
+        document.querySelector('.gpu-notice-dismiss')?.click();
+        document.querySelector('#gpu-notice')?.remove();
+        // The Proving Shore's proximity-triggered spawn greeting (Ferryman Odo)
+        // is a scoped popup (z-index 95+, always topmost by design): left up,
+        // it would visually cover the very overlay this target exists to prove
+        // now paints behind the window underneath it.
+        document.getElementById('tutorial-greeting')?.remove();
+      });
+      await wait(300);
+      const setup = await page.evaluate(() => {
+        const game = window.__game;
+        if (!game?.sim?.player) return { ok: false, reason: 'no sim' };
+        document.getElementById('tutorial-greeting')?.remove();
+        const el = document.getElementById('proc-overlay');
+        if (!el) return { ok: false, reason: 'no proc overlay' };
+        // Force the Warlock soul-fragment bank fully lit: a persistent resource
+        // readout (not a transient proc), the clearest demonstration case.
+        el.classList.add('necromancy', 'n5');
+        el.setAttribute('aria-hidden', 'false');
+        // #bags docks permanently in its own bottom-right gap (components.css)
+        // and never overlaps #proc-overlay's centered spot, so the fix would be
+        // invisible against it. The Spellbook is a plain centered .window
+        // (layout.css) tall enough to cover the overlay's position.
+        if (!document.querySelector('#spellbook')?.checkVisibility?.()) game.hud.toggleSpellbook();
+        return { ok: true };
+      });
+      if (!setup.ok) throw new Error(`proc overlay setup failed: ${setup.reason}`);
+      if (!(await pollForSize(page, '#spellbook'))) throw new Error('spellbook did not open');
+      await wait(400);
+      return { clip: '#ui' };
+    },
+  },
+  {
     key: 'ground-aim-placement',
     when: [
       'action_bar/ground_aim',
@@ -13779,6 +15009,596 @@ export const TARGETS = [
         await wait(400);
       }
       await wait(800);
+      return { clip: '#ui' };
+    },
+  },
+  {
+    key: 'hub-sparring-master',
+    label: 'Drillmaster Hale beside the Eastbrook hub dummy, his greeting and quest open',
+    when: ['tutorial/dummy_drill'],
+    variants: [{ key: 'desktop' }, { key: 'mobile', mobile: true }],
+    async capture(page) {
+      await page.evaluate(() => {
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.querySelector('.camera-prompt-backdrop')?.remove();
+        document.querySelector('.tut-skip')?.click();
+        document.querySelector('#gpu-notice')?.remove();
+      });
+      // The loading curtain: observe it rise, then wait for it to lift with
+      // the HUD painted (the entry-flow idiom used by the loading-screen
+      // targets), or the shutter photographs "Entering the world".
+      try {
+        await page.waitForFunction(
+          () => document.querySelector('#loading-screen')?.classList.contains('visible'),
+          { timeout: 10000 },
+        );
+      } catch {
+        // A warm load can finish before this recipe starts.
+      }
+      // The curtain rises more than once (the world load, the "Entering the
+      // world" arrival warmup a beat later, and again for a few seconds after
+      // the teleport below re-prepares the zone), so a single hidden check
+      // can pass in a gap: require it to stay hidden for 3 continuous seconds.
+      const curtainSettled = async () => {
+        let hiddenStreak = 0;
+        for (let i = 0; i < 450 && hiddenStreak < 15; i++) {
+          const settled = await page.evaluate(() => {
+            const loading = document.querySelector('#loading-screen');
+            const ui = document.querySelector('#ui');
+            return (
+              document.body.classList.contains('game-active') &&
+              !!ui &&
+              getComputedStyle(ui).display !== 'none' &&
+              !!loading &&
+              !loading.classList.contains('visible') &&
+              !!window.__game?.sim
+            );
+          });
+          hiddenStreak = settled ? hiddenStreak + 1 : 0;
+          await wait(200);
+        }
+        if (hiddenStreak < 15) throw new Error('loading curtain never settled');
+      };
+      await curtainSettled();
+      // Stand a few yards south of Hale, facing north across him and the
+      // dummy, then open his dialog (the gossip-crafting-shortcut idiom:
+      // window.__game attaches a beat after the entry flow, so retry).
+      let setup = { ok: false, reason: 'staging never ran' };
+      for (let attempt = 0; attempt < 20 && !setup.ok; attempt++) {
+        setup = await page.evaluate(() => {
+          const game = window.__game;
+          const sim = game?.sim;
+          const player = sim?.player;
+          if (!game || !sim || !player) return { ok: false, reason: 'no sim' };
+          const hale = [...sim.entities.values()].find((e) => e.templateId === 'drillmaster_hale');
+          if (!hale) return { ok: false, reason: 'no drillmaster_hale entity' };
+          player.pos.x = hale.pos.x;
+          player.pos.z = hale.pos.z + 3;
+          player.pos.y = hale.pos.y;
+          if (player.prevPos) {
+            player.prevPos.x = player.pos.x;
+            player.prevPos.y = player.pos.y;
+            player.prevPos.z = player.pos.z;
+          }
+          player.facing = 0;
+          game.input.camYaw = 0;
+          sim.rebucket?.(player);
+          player.targetId = hale.id;
+          game.hud.openQuestDialog(hale.id);
+          return { ok: true };
+        });
+        if (!setup.ok) await wait(500);
+      }
+      if (!setup.ok) throw new Error(`sparring master setup failed: ${setup.reason}`);
+      await curtainSettled();
+      const open = await pollForSize(page, '#quest-dialog');
+      if (!open) throw new Error('quest dialog did not open');
+      // The Proving Shore greeting (Ferryman Odo) can land over the scene;
+      // dismiss it so the shot shows Hale's dialog, not the island's.
+      await page.evaluate(() => {
+        for (const button of document.querySelectorAll('button')) {
+          if (/understood/i.test(button.textContent ?? '')) button.click();
+        }
+        document.querySelector('.camera-prompt-backdrop')?.remove();
+        document.querySelector('#gpu-notice')?.remove();
+      });
+      await wait(800);
+      return { clip: '#ui' };
+    },
+  },
+  {
+    key: 'practice-dps-tracker',
+    label: 'Eastbrook hub training dummy with the practice DPS tracker (live run + a previous run)',
+    when: ['ui/hud/practice', 'content/practice_dummies'],
+    // Desktop and the landscape mobile HUD: the strip rides #right-tracker-stack,
+    // which re-seats on the touch layout, so both arms are evidence.
+    variants: [{ key: 'desktop' }, { key: 'mobile', mobile: true }],
+    async capture(page) {
+      const staged = await page.evaluate(() => {
+        document.querySelector('#gpu-notice')?.remove();
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.querySelector('.tut-skip')?.click();
+        const game = window.__game;
+        const sim = game?.sim;
+        const player = sim?.player;
+        if (!game || !sim || !player) return { ok: false, reason: 'offline world is unavailable' };
+        // Prefer the hub's own level-5 damage dummy (content/practice_dummies.ts
+        // HUB_TRAINING_DUMMY_ID) once it exists; fall back to the nearest shared
+        // training_dummy so a capture run before that content lands still finds
+        // the hub's dummy (the Highwatch one is 700 yards north, so nearest is
+        // still the hub's). Read the level off the dummy itself rather than
+        // assuming one: the two templates level differently.
+        let dummy = null;
+        for (const e of sim.entities.values()) {
+          if (e.kind === 'mob' && e.templateId === 'hub_training_dummy' && !e.dead) {
+            dummy = e;
+            break;
+          }
+        }
+        if (!dummy) {
+          let best = Infinity;
+          for (const e of sim.entities.values()) {
+            if (e.kind !== 'mob' || e.templateId !== 'training_dummy' || e.dead) continue;
+            const d = (e.pos.x - player.pos.x) ** 2 + (e.pos.z - player.pos.z) ** 2;
+            if (d < best) {
+              best = d;
+              dummy = e;
+            }
+          }
+        }
+        if (!dummy) return { ok: false, reason: 'no hub training dummy in the offline world' };
+        // Stand two yards south of it, facing north onto the dummy, so both the
+        // post and the tracker are in frame.
+        player.pos.x = dummy.pos.x;
+        player.pos.z = dummy.pos.z - 2.5;
+        player.pos.y = dummy.pos.y;
+        if (player.prevPos) {
+          player.prevPos.x = player.pos.x;
+          player.prevPos.y = player.pos.y;
+          player.prevPos.z = player.pos.z;
+        }
+        player.facing = 0;
+        game.input.camYaw = 0;
+        sim.rebucket?.(player);
+        sim.setPlayerLevel?.(dummy.maxLevel, player.id);
+        player.targetId = dummy.id;
+        player.autoAttack = true;
+        return { ok: true };
+      }, {});
+      if (!staged.ok) throw new Error(staged.reason);
+      // First run: swing for a few seconds, stop, and let the meters close the
+      // segment (their idle window is 5s), so the strip has a "previous run".
+      await wait(6000);
+      await page.evaluate(() => {
+        window.__game.sim.player.autoAttack = false;
+      });
+      await wait(6500);
+      // Second run, live at shutter time.
+      await page.evaluate(() => {
+        const sim = window.__game.sim;
+        sim.player.autoAttack = true;
+      });
+      await wait(4500);
+      await pollForSize(page, '#practice-tracker');
+      // The Proving Shore greeting (Ferryman Odo) lands over the scene during
+      // the wait above; dismiss it so the shot shows the HUD, not the dialog.
+      await page.evaluate(() => {
+        for (const button of document.querySelectorAll('button')) {
+          if (/understood/i.test(button.textContent ?? '')) button.click();
+        }
+      });
+      await wait(400);
+      return { clip: '#ui' };
+    },
+  },
+  {
+    key: 'hub-practice-lessons-damage',
+    label:
+      "Eastbrook hub damage dummy: Drillmaster Hale's guided Damage Meters coaching " +
+      '(row read, ability breakdown, and the finished-run history comparison)',
+    // hub_lesson_controller.ts (mounting #hub-lesson-coach in index.html, Meters-
+    // driven) and the hub's own level-5 dummies both exist now: this recipe drives
+    // the real damage track end to end and requires the coach container to
+    // actually render, never captures an empty shell.
+    when: [
+      'content/practice_dummies',
+      'sim/hub_practice',
+      'sim/tutorial/dummy_drill',
+      'ui/hud/practice',
+    ],
+    variants: [
+      { key: 'desktop', beforeLoad: seedLowGraphicsPreset },
+      { key: 'mobile', mobile: true, beforeLoad: seedLowGraphicsPreset },
+    ],
+    async capture(page, variant) {
+      const staged = await page.evaluate(() => {
+        document.querySelector('#gpu-notice')?.remove();
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.querySelector('.tut-skip')?.click();
+        const game = window.__game;
+        const sim = game?.sim;
+        const player = sim?.player;
+        if (!game || !sim || !player) return { ok: false, reason: 'offline world is unavailable' };
+        sim.setPlayerLevel?.(5, player.id);
+
+        const hale = [...sim.entities.values()].find((e) => e.templateId === 'drillmaster_hale');
+        if (!hale) return { ok: false, reason: 'no drillmaster_hale entity' };
+
+        // Prefer the hub's own level-5 damage dummy (content/practice_dummies.ts
+        // HUB_TRAINING_DUMMY_ID); fall back to the nearest shared training_dummy
+        // so a capture run taken before that content existed (the original PR,
+        // before this image) still finds a target rather than failing outright.
+        let dummy = null;
+        for (const e of sim.entities.values()) {
+          if (e.kind === 'mob' && e.templateId === 'hub_training_dummy' && !e.dead) {
+            dummy = e;
+            break;
+          }
+        }
+        if (!dummy) {
+          let best = Infinity;
+          for (const e of sim.entities.values()) {
+            if (e.kind !== 'mob' || e.templateId !== 'training_dummy' || e.dead) continue;
+            const d = (e.pos.x - hale.pos.x) ** 2 + (e.pos.z - hale.pos.z) ** 2;
+            if (d < best) {
+              best = d;
+              dummy = e;
+            }
+          }
+        }
+        if (!dummy) return { ok: false, reason: 'no hub damage dummy in the offline world' };
+
+        // Stand on Hale so acceptQuest's giver-proximity gate passes, accept
+        // the real quest through the real command (no direct questLog/
+        // questsDone poke), then move to the dummy and target it.
+        player.pos.x = hale.pos.x;
+        player.pos.z = hale.pos.z;
+        player.pos.y = hale.pos.y;
+        if (player.prevPos) {
+          player.prevPos.x = player.pos.x;
+          player.prevPos.y = player.pos.y;
+          player.prevPos.z = player.pos.z;
+        }
+        sim.rebucket?.(player);
+        sim.acceptQuest?.('q_hub_know_your_numbers');
+        if (sim.questState?.('q_hub_know_your_numbers') !== 'active') {
+          return { ok: false, reason: 'q_hub_know_your_numbers did not accept' };
+        }
+
+        player.pos.x = dummy.pos.x;
+        player.pos.z = dummy.pos.z - 2.5;
+        player.pos.y = dummy.pos.y;
+        if (player.prevPos) {
+          player.prevPos.x = player.pos.x;
+          player.prevPos.y = player.pos.y;
+          player.prevPos.z = player.pos.z;
+        }
+        player.facing = 0;
+        game.input.camYaw = 0;
+        sim.rebucket?.(player);
+        sim.targetEntity?.(dummy.id, player.id);
+        return { ok: true };
+      });
+      if (!staged.ok) throw new Error(staged.reason);
+
+      // The teleport above can raise the loading veil again after the shared
+      // entry flow already dismissed it once: a real touch playtest caught
+      // this exact recipe tapping through a still-visible loading curtain.
+      // Wait for it to actually settle before the first click.
+      await awaitVeilSettled(page);
+
+      await openHubMetersWindow(page, variant);
+      // Opening a mobile modal can clear the staged world target. Stage it
+      // again before the real casts; all meter observations still come from play.
+      await page.evaluate(() => {
+        const sim = window.__game.sim;
+        const dummy = [...sim.entities.values()].find((e) => e.templateId === 'hub_training_dummy');
+        sim.targetEntity(dummy.id, sim.player.id);
+      });
+      await page.evaluate(() => {
+        document.querySelector('.mt-tab[data-tab="dmg"]')?.click();
+      });
+      await wait(300);
+
+      // First attempt: swing the real dummy through the real auto-attack flag
+      // (the same idiom practice-dps-tracker above uses).
+      const attacked = await page.evaluate(() => {
+        const player = window.__game?.sim?.player;
+        if (!player) return false;
+        player.autoAttack = true;
+        return true;
+      });
+      if (!attacked) throw new Error('auto-attack command reached no sim');
+      await wait(3500);
+      const rowVisible = await pollForSize(page, '#meters-window .mt-row');
+      if (!rowVisible) throw new Error('no meter row rendered for a landed attack');
+
+      // Read-row: the coach only latches "read" on an explicit ack while the
+      // row is actually visible (hub_lesson_view.ts), never merely because it
+      // rendered, so wait for that real ack control before pressing it.
+      const readRowAcked = await waitForHlcAck(page, 'Continue');
+      if (!readRowAcked) throw new Error('coach never reached the read-row step (no Continue ack)');
+      const beforeBreakdown = await hlcLineText(page);
+      await clickOrTap(page, variant, '#hub-lesson-coach .hlc-ack');
+
+      // View the breakdown through the row's OWN real interaction (a mouse
+      // hover on desktop, a real touch long-press on mobile): never a
+      // dispatched focus/mouseenter event, which attachTooltip's listeners
+      // (src/ui/hud.ts) do not treat as either path at all.
+      await triggerRowBreakdown(page, '#meters-window .mt-row', variant);
+      const tooltipShown = await pollForSize(page, '#tooltip');
+      if (!tooltipShown) throw new Error('tooltip did not appear from the row interaction');
+      const afterBreakdown = await waitForHlcLineChange(page, beforeBreakdown);
+      if (afterBreakdown === null) {
+        throw new Error('coach did not progress past view-breakdown after the row interaction');
+      }
+
+      // Stop and let the encounter close (meters.ts ENCOUNTER_END_SECONDS = 5),
+      // then use the real history "older segment" control to inspect the
+      // finished run: the sequence hub_lesson_view.ts's damage track requires
+      // before it will ask for a second, comparable attempt.
+      await page.evaluate(() => {
+        window.__game.sim.player.autoAttack = false;
+      });
+      await wait(5800);
+      await page.evaluate(() => {
+        document.querySelector('.mt-prev')?.click();
+      });
+      await wait(300);
+
+      // Page back to the live view and land the comparison attempt.
+      await page.evaluate(() => {
+        document.querySelector('.mt-next')?.click();
+      });
+      await wait(300);
+      const attacked2 = await page.evaluate(() => {
+        const player = window.__game?.sim?.player;
+        if (!player) return false;
+        player.autoAttack = true;
+        return true;
+      });
+      if (!attacked2) throw new Error('second auto-attack command reached no sim');
+      await wait(3500);
+      await page.evaluate(() => {
+        window.__game.sim.player.autoAttack = false;
+      });
+      await wait(5800);
+
+      // Real quest credit, not just a rendered row: creditDummyDrill only
+      // advances q_hub_know_your_numbers off an actual landed blow on THIS
+      // dummy, so a positive count is proof the attempts above really landed.
+      const progressed = await page.evaluate(() => {
+        const counts = window.__game?.sim?.questLog?.get('q_hub_know_your_numbers')?.counts;
+        return (counts?.[0] ?? 0) > 0;
+      });
+      if (!progressed) throw new Error('no positive quest credit landed on the training dummy');
+
+      // Review the finished comparison attempt and complete the track: the
+      // coach only shows the replay affordance after an explicit "Done" ack
+      // of that second, comparable run.
+      const compareAcked = await waitForHlcAck(page, 'Done');
+      if (!compareAcked) {
+        throw new Error('coach never reached the review-comparison step (no Done ack)');
+      }
+      await clickOrTap(page, variant, '#hub-lesson-coach .hlc-ack');
+      const replayShown = await pollForSize(page, '#hub-lesson-coach .hlc-replay');
+      if (!replayShown) {
+        throw new Error('coach did not complete the damage track (no replay affordance)');
+      }
+
+      // The Proving Shore greeting can land over the scene during staging;
+      // dismiss it so the shot shows the yard, not the dialog.
+      await page.evaluate(() => {
+        for (const button of document.querySelectorAll('button')) {
+          if (/understood/i.test(button.textContent ?? '')) button.click();
+        }
+        document.querySelector('.camera-prompt-backdrop')?.remove();
+        document.querySelector('#gpu-notice')?.remove();
+      });
+      await wait(500);
+      return { clip: '#ui' };
+    },
+  },
+  {
+    key: 'hub-practice-lessons-healing',
+    label:
+      "Eastbrook hub healing dummy: Drillmaster Hale's guided Healing Meters coaching " +
+      '(effective-heal row read and the ability breakdown)',
+    // Same controller as the damage track above; the healing track has no
+    // end-run/history steps (hub_lesson_view.ts: healing asks for no second,
+    // comparable attempt), so this recipe stops after the row + breakdown.
+    when: [
+      'content/practice_dummies',
+      'sim/hub_practice',
+      'sim/tutorial/hub_healing_lesson',
+      'sim/tutorial/hub_healing_drill',
+      'ui/hud/practice',
+    ],
+    variants: [
+      {
+        key: 'desktop',
+        charClass: 'priest',
+        charName: 'Averil',
+        beforeLoad: seedLowGraphicsPreset,
+      },
+      {
+        key: 'mobile',
+        charClass: 'priest',
+        charName: 'Averil',
+        mobile: true,
+        beforeLoad: seedLowGraphicsPreset,
+      },
+    ],
+    async capture(page, variant) {
+      const staged = await page.evaluate(() => {
+        document.querySelector('#gpu-notice')?.remove();
+        document.querySelector('.camera-prompt-confirm')?.click();
+        document.querySelector('.tut-skip')?.click();
+        const game = window.__game;
+        const sim = game?.sim;
+        const player = sim?.player;
+        if (!game || !sim || !player) return { ok: false, reason: 'offline world is unavailable' };
+        sim.setPlayerLevel?.(5, player.id);
+
+        const hale = [...sim.entities.values()].find((e) => e.templateId === 'drillmaster_hale');
+        if (!hale) return { ok: false, reason: 'no drillmaster_hale entity' };
+        const healingDummy = [...sim.entities.values()].find(
+          (e) => e.kind === 'mob' && e.templateId === 'hub_healing_dummy' && !e.dead,
+        );
+        if (!healingDummy)
+          return { ok: false, reason: 'no hub healing dummy in the offline world' };
+
+        // The healing quest requiresQuest the damage one (practice_dummies.ts):
+        // stage only that PREREQUISITE directly, and only because a fresh
+        // capture character has no realistic way to have already run the
+        // damage lesson in this same session. The healing quest itself goes
+        // through the real sim.acceptQuest path below, so its class/level/
+        // heal-known/proximity gates all actually run (quest_commands.ts,
+        // hub_healing_lesson.ts). Flag for parent: this is the one staged
+        // step in this recipe that is not a real player action.
+        sim.questsDone.add('q_hub_know_your_numbers');
+
+        // Stand on Hale so acceptQuest's giver-proximity gate passes.
+        player.pos.x = hale.pos.x;
+        player.pos.z = hale.pos.z;
+        player.pos.y = hale.pos.y;
+        if (player.prevPos) {
+          player.prevPos.x = player.pos.x;
+          player.prevPos.y = player.pos.y;
+          player.prevPos.z = player.pos.z;
+        }
+        sim.rebucket?.(player);
+        sim.acceptQuest?.('q_hub_healing_numbers');
+        if (sim.questState?.('q_hub_healing_numbers') !== 'active') {
+          return {
+            ok: false,
+            reason: 'q_hub_healing_numbers did not accept (class/level/heal-known gate?)',
+          };
+        }
+
+        player.pos.x = healingDummy.pos.x;
+        player.pos.z = healingDummy.pos.z - 2.5;
+        player.pos.y = healingDummy.pos.y;
+        if (player.prevPos) {
+          player.prevPos.x = player.pos.x;
+          player.prevPos.y = player.pos.y;
+          player.prevPos.z = player.pos.z;
+        }
+        player.facing = 0;
+        game.input.camYaw = 0;
+        sim.rebucket?.(player);
+
+        // Target the healing dummy through the real targeting path, then
+        // resolve THIS character's own live direct-heal binding rather than
+        // assuming an ability id: the same earliest-learned-friendly-heal
+        // rule sim/tutorial/hub_healing_lesson.ts hubHealingAbilityId
+        // applies, read here off the character's actual RESOLVED known
+        // abilities (sim.known's own `effects`, not the unresolved `def.effects`
+        // a lower rank could carry) since that sim module is not reachable
+        // from this Node-side script.
+        sim.targetEntity?.(healingDummy.id, player.id);
+        const heals = (sim.known ?? []).filter(
+          (k) => k.def.targetType === 'friendly' && k.effects?.some((e) => e.type === 'heal'),
+        );
+        if (heals.length === 0)
+          return { ok: false, reason: 'priest knows no direct heal at level 5' };
+        const healAbilityId = heals.reduce((a, b) => (b.def.learnLevel < a.def.learnLevel ? b : a))
+          .def.id;
+        player.resource = player.maxResource;
+
+        return { ok: true, healAbilityId };
+      });
+      if (!staged.ok) throw new Error(staged.reason);
+
+      // The teleport above can raise the loading veil again after the shared
+      // entry flow already dismissed it once: a real touch playtest caught
+      // this exact recipe tapping through a still-visible loading curtain.
+      // Wait for it to actually settle before the first click.
+      await awaitVeilSettled(page);
+
+      await openHubMetersWindow(page, variant);
+      await page.evaluate(() => {
+        const sim = window.__game.sim;
+        const dummy = [...sim.entities.values()].find((e) => e.templateId === 'hub_healing_dummy');
+        sim.targetEntity(dummy.id, sim.player.id);
+      });
+      await page.evaluate(() => {
+        document.querySelector('.mt-tab[data-tab="heal"]')?.click();
+      });
+      await wait(300);
+
+      // Land real heals on the dummy (its own effective-heal credit: tutorial/
+      // hub_healing_drill.ts, three landed), through the real cast command,
+      // polling the GCD/cast state exactly like the other ability-press
+      // recipes in this file rather than a fixed sleep per cast.
+      for (let i = 0; i < 3; i++) {
+        const cast = await page.evaluate((abilityId) => {
+          const sim = window.__game?.sim;
+          const player = sim?.player;
+          if (!sim || !player) return false;
+          sim.castAbility?.(abilityId, player.id);
+          return true;
+        }, staged.healAbilityId);
+        if (!cast) throw new Error('cast command reached no sim');
+        await page.waitForFunction(
+          () => {
+            const p = window.__game?.sim?.player;
+            return !!p && p.gcdRemaining <= 0 && p.castingAbility === null;
+          },
+          { timeout: 15000, polling: 100 },
+        );
+        await wait(200);
+      }
+
+      // Real quest credit, not just a rendered row: creditHubHealingDrill only
+      // advances q_hub_healing_numbers off a genuine EFFECTIVE direct heal, so
+      // a positive count is proof the casts above actually restored health
+      // rather than fully overhealing or missing the dummy.
+      const progressed = await page.evaluate(() => {
+        const counts = window.__game?.sim?.questLog?.get('q_hub_healing_numbers')?.counts;
+        return (counts?.[0] ?? 0) > 0;
+      });
+      if (!progressed) throw new Error('no positive effective-heal credit landed on the dummy');
+
+      const rowVisible = await pollForSize(page, '#meters-window .mt-row');
+      if (!rowVisible) throw new Error('no meter row rendered for an effective heal');
+
+      // Read-row: the coach only latches "read" on an explicit ack while the
+      // row is actually visible (hub_lesson_view.ts), never merely because it
+      // rendered, so wait for that real ack control before pressing it.
+      const readRowAcked = await waitForHlcAck(page, 'Continue');
+      if (!readRowAcked) throw new Error('coach never reached the read-row step (no Continue ack)');
+      const beforeBreakdown = await hlcLineText(page);
+      await clickOrTap(page, variant, '#hub-lesson-coach .hlc-ack');
+
+      // View the breakdown through the row's OWN real interaction (a mouse
+      // hover on desktop, a real touch long-press on mobile): never a
+      // dispatched focus/mouseenter event, which attachTooltip's listeners
+      // (src/ui/hud.ts) do not treat as either path at all. Healing has no
+      // second-attempt round (hub_lesson_view.ts): an actual breakdown view
+      // completes the whole track by itself, straight to the replay step.
+      await triggerRowBreakdown(page, '#meters-window .mt-row', variant);
+      const tooltipShown = await pollForSize(page, '#tooltip');
+      if (!tooltipShown) throw new Error('tooltip did not appear from the row interaction');
+      const afterBreakdown = await waitForHlcLineChange(page, beforeBreakdown);
+      if (afterBreakdown === null) {
+        throw new Error('coach did not progress past view-breakdown after the row interaction');
+      }
+      const replayShown = await pollForSize(page, '#hub-lesson-coach .hlc-replay');
+      if (!replayShown) {
+        throw new Error('coach did not complete the healing track (no replay affordance)');
+      }
+
+      // The Proving Shore greeting can land over the scene during staging;
+      // dismiss it so the shot shows the yard, not the dialog.
+      await page.evaluate(() => {
+        for (const button of document.querySelectorAll('button')) {
+          if (/understood/i.test(button.textContent ?? '')) button.click();
+        }
+        document.querySelector('.camera-prompt-backdrop')?.remove();
+        document.querySelector('#gpu-notice')?.remove();
+      });
+      await wait(500);
       return { clip: '#ui' };
     },
   },
