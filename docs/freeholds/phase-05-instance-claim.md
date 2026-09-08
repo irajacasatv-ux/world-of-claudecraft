@@ -70,16 +70,17 @@ Spawn one Explore agent to read and summarize:
   freehold case labels from Phase 01), server/ws_auth.ts (fresh-join joinMeta assembly
   beside the injected bankBonusForAccount callback), server/main.ts (the
   bankBonusForAccount binding: on the packet base it is a one-liner around
-  computeBankBonus(await bankBonusFactsForAccount(id)); origin/release/v0.42.0 already
-  widens it to a closure that also returns characterCount, so re-verify the current
-  binding at phase start after the merge-forward and copy THAT shape for the
-  freeholdForAccount twin),
+  computeBankBonus(await bankBonusFactsForAccount(id)); the QA's release-merge audit
+  at 553a5672ed found the release did NOT widen it (no characterCount closure exists
+  on that tip), so the freeholdForAccount twin copies the one-liner shape; re-verify
+  at 07's start after its own merge-forward),
   server/db.ts (bankBonusFactsForAccount export), server/bank_entitlements.ts
   (computeBankBonus export), server/freehold_wire.ts (Phase 01), server/heavy_self.ts
   (HEAVY_SELF_CMDS and the vault_buy_upgrade rationale), server/farming_commands.ts (the
   accept-return shape), server/linkdead.ts, server/CLAUDE.md "Hot paths"
 - src/net/online.ts (the freeholdEnter and freeholdLeave one-liners; the dungeonEntrySeq
-  camera read), src/ui/hud.ts localizeSystemText (its DUNGEON_LIST loop matches every
+  camera read), src/ui/system_text_i18n.ts localizeSystemText (extracted from hud.ts by
+  the release's aura-tracks work; its DUNGEON_LIST loop matches every
   DungeonDef.enterText and leaveText by exact bytes and resolves dungeonText from
   src/ui/entity_display_core.ts), the entities.dungeons.<id>.enterText/leaveText catalog
   rows (the dungeons block of src/ui/i18n.catalog/merge.ts; src/ui/sim_i18n.ts carries

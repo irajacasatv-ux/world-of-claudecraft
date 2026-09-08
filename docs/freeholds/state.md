@@ -9,10 +9,19 @@ Only what the next session needs. Update at the end of every phase and QA.
   (`origin/feature/masterwrought` at `0f53c92ff7`, Masterwrought crafting and Farming,
   itself based on `release/v0.42.0`). The packet tip carries three cherry-picked docs
   commits (the proposal, the deck and index, the feature-plan skill refresh) on top.
-- Current sync (2026-09-07): PR #3872 is MERGED at `6111e6d206`. The newest
-  fetched release is `origin/release/v0.42.0`; merge `7f4fe99619` integrated it
-  locally. No `patches/` path changed. Future starts fetch with prune and merge
-  the newest `origin/release/**`, then audit any non-empty merge.
+- Current sync (2026-09-08, the 05 QA): PR #3872 is MERGED at `6111e6d206`. The newest
+  fetched release is `origin/release/v0.42.0` at `553a5672ed` (the OSSBrain integration
+  PR #3781, the hub practice PRs, the raid Reset All rework for issue #3784, the Exchange
+  scroll fix); merge `a461924855` integrated it locally (sixty conflicted paths, every
+  count pin re-measured on the merged tree with its composition beside the literal, the
+  terrain corpus re-minted as the release body plus the packet's tail). `patches/three@0.185.1.patch`,
+  `package.json` and `pnpm-lock.yaml` CHANGED in that merge, so `pnpm install
+  --frozen-lockfile` ran before the gate (a stale `node_modules` fails the patched-bundle
+  pin otherwise). The release-merge audit found no blocker; its three should-fix rows
+  (a false planning premise about `bankBonusForAccount`, stale line-count premises, the
+  dropped shard-weight carries) are applied in the 05 QA. The earlier sync
+  `7f4fe99619` (2026-09-07) is history. Future starts fetch with prune and merge the
+  newest `origin/release/**`, then audit any non-empty merge.
 - Push policy: the branch stays local until Fernando says to push. Pushes go to `origin`,
   never a fork. A PR is opened only by a wave close phase (20, 27, 33, 39 and 44: one PR
   per wave under D12, owned for every wave), after the whole-feature matrix, and only
@@ -1389,7 +1398,7 @@ only and never declares its remaining deliverables or paired QA complete.
 | 02 | `src/sim/item_storage_rules.ts`; `src/ui/hud/housing/{index.ts,CLAUDE.md,furnishing_tooltip_view.ts,furnishing_tooltip.ts}`; extraction `src/ui/mount_tooltip_view.ts`; QA shared projection `src/ui/item_instance_view.ts`; fixture `tests/fixtures/furnishing_item.ts`; original furnishing and mount tooltip tests plus 22 QA suites, including actual consumer/tool/commerce/feast host parity, loaded power, custody/journal restart, identity and presentation | none | none | ItemKind `furnishing` and `FurnishingItemDef`; no new command or snapshot key | none | none | English only: `itemUi.kind.furnishing`, `itemUi.market.filterTypeFurnishing`, `hudChrome.housing.furnishing.footprint`, `hudChrome.housing.furnishing.decorCost`, `hudChrome.housing.furnishing.surfaceFloor`, `hudChrome.housing.furnishing.maker`; generic custody leaf `hudChrome.itemTooltip.partyTradeWindowCustody` |
 | 03 (complete, paired QA PASS) | `src/sim/content/freehold/{tiers,charters,ledger_schedule,ledger_trial,furnishings,index}.ts` plus local guidance; `src/sim/{surface_npc_bootstrap.ts,freehold/should_spawn_npc.ts}`; `scripts/freeholds/` measured economy/geometry producers; focused content, ledger, producer, furnishing, rollback, NPC, terrain, empty-Hearth and browser keyboard suites; accepted trial/art evidence and eight item WebPs | none | none | exactly eight furnishing ItemDefs; NPC freehold_furnisher and gated stock; existing wire shape unchanged | none | none | eight `entities.items.freehold_*.name` leaves; world entity name/title/greeting for freehold_furnisher; Hearth shelf and hearth_basics name/description; Homesteader/Householder labels and rewards; English plus five required non-Latin fills |
 | 04 (complete, paired QA PASS) | `src/sim/content/freehold/{furnishing_recipes,furnishing_patterns}.ts`; `src/sim/freehold/crafted_availability.ts`; `src/sim/professions/{recipe_visibility,train_recipe}.ts`; `src/net/item_copy_anchor_wire.ts`; `server/world_hello.ts`; crafted economy/geometry producers under `scripts/freeholds/`; `tests/{furnishing_recipes,furnishing_pattern_items,furnishing_crafting,freehold_crafted_availability,freehold_crafted_presentation,freehold_crafted_art,recipe_visibility}.test.ts`; accepted calibration evidence and `crafted-content-art-2026-09-07/catalog-verification.json`; current census in `scripts/item_art_audit.mjs`; accepted final runtime evidence; `crafted-qa-reconciled-2026-09-07/` paired QA evidence | existing `cfg` gains optional `freeholdsEnabled`; existing `recipeList` reflects host availability through `ctx.freeholdsEnabled` on Sim | none | `hello.freeholdsEnabled` mirrors host availability; existing commands retained; ten output and three pattern ItemDefs | none | none | thirteen `entities.items.<id>.name` leaves listed below; `hearth_first_crafts` name in all eighteen base Reliquary locale tables and full desc in five non-Latin tables; changed `guide.reliquaryPage.catalogBody` and `guide.profPages.craftProse.armorcrafting.ladderBody`; English plus five M16 item/guide fills |
-| 05 (implementation complete, paired QA pending) | `src/sim/content/freehold/dungeons.ts`; `src/sim/freehold/{owner_key,instance,dev_grant}.ts`; extractions `src/sim/combat/effective_stats.ts` (sim.ts 11876 to 11857), `server/entity_wire_variant.ts` (game.ts 10234 to 10202), `src/game/browser_fullscreen.ts` (main.ts 11308 to 11269); `src/game/freehold_dev_bootstrap.ts`; `scripts/lib/freehold_dev_authorization.{mjs,d.mts}` (the dev-only Vite loopback bridge, admitted in `vite.config.ts` through `freeholdDevAuthorizationEnabled(process.env)` only); tests `freehold_instance`, `freehold_instance_online`, `freehold_offline_default`, `freehold_dev_grant`, `freehold_dev_authorization`, `freehold_dev_bootstrap`, `freehold_dungeon_defs`, `effective_stats`, `browser_fullscreen`, `server/entity_wire_variant`, `server/freehold_dev_grant_boot`; golden `tests/parity/golden/freehold_claim.json`; `tests/fixtures/terrain_height_parity.v1.f64le.gz` re-minted as a byte-prefix extension (owner rooms append last) | none new: `freeholdEnter`/`freeholdLeave` lit on both hosts, `myFreehold`/`freeholdLayout` still null until 08a; `DungeonDef.claimKey?: 'party' \| 'owner'`; `PlayerMeta.freeholdOwnerKey` (host stamp: `account:<id>` online, absent offline and resolved `entity:<pid>` by `freeholdKeyFor`; META_EXCLUDE); `SimConfig`/`SimContext.freeholdDevGrantEnabled` (read-only, nonpersisted, default false); `setFreeholdTier` the ONE tier writer, `ensureFreeholdRecord`/`loadFreehold` insert only on a lit host, `releaseFreeholdOnLeave` evicts at the last same-key session out | `freeholdDenied { pid, reason }`, reasons APPEND-ONLY in this order: `no_freehold`, `locked`, `cooldown`, `visitors_full`, `not_friend`, `dead`, `combat`, `busy` (05 fires no_freehold, dead, combat, busy; locked is 12's amenity lockout; cooldown 06; visitors_full and not_friend 18); no client handler yet (06 adds the toast; old and new clients drop it safely) | dungeon ids `freehold_inn_room` (index 15, origin x 119200) and `freehold_cottage` (index 16, origin x 119800), `spawns: []`, no objects, `overworldDoor: false`, `guideVisible: false`, `suggestedPlayers: 1`, placeholder `interior: 'crypt'` (06 swaps the authored layouts), placeholder doorPos `{ x: -14, z: -96 }` beside the Eastbrook mailbox (leaving lands at -14, -100; 06 authors the final gate spot); `freehold_enter`/`freehold_leave` LIT behind the unchanged dark gate; `freehold_enter` jail-blocked; HEAVY_SELF_CMDS unchanged (decision in `server/heavy_self.ts`: no heavy self field moves until 08a's `fhold` key); a malformed account id is refused by `planJoin` with `not authenticated` | none | none: the record and the grant are in-memory facts (D81); 07 persists the record under the same owner-key identity and the placeholder `plot:unassigned` plotId is replaced by 07's public id | `entities.dungeons.freehold_inn_room.{name,enterText,leaveText}` and `entities.dungeons.freehold_cottage.{...}`: English plus the five non-Latin fills (ja rows use the plain past like the newest rooms), the 16 Latin locales pending; the glossary housing note names both ids as common nouns; `[dev]` grant lines are dev-channel English |
+| 05 (implementation complete, paired QA pending) | `src/sim/content/freehold/dungeons.ts`; `src/sim/freehold/{owner_key,instance,dev_grant}.ts`; extractions `src/sim/combat/effective_stats.ts` (sim.ts 11876 to 11857), `server/entity_wire_variant.ts` (game.ts 10234 to 10202), `src/game/browser_fullscreen.ts` (main.ts 11308 to 11269); `src/game/freehold_dev_bootstrap.ts`; `scripts/lib/freehold_dev_authorization.{mjs,d.mts}` (the dev-only Vite loopback bridge, admitted in `vite.config.ts` through `freeholdDevAuthorizationEnabled(process.env)` only); tests `freehold_instance`, `freehold_instance_online`, `freehold_offline_default`, `freehold_dev_grant`, `freehold_dev_authorization`, `freehold_dev_bootstrap`, `freehold_dungeon_defs`, `effective_stats`, `browser_fullscreen`, `server/entity_wire_variant`, `server/freehold_dev_grant_boot`; golden `tests/parity/golden/freehold_claim.json`; `tests/fixtures/terrain_height_parity.v1.f64le.gz` re-minted as a byte-prefix extension (owner rooms append last) | none new: `freeholdEnter`/`freeholdLeave` lit on both hosts, `myFreehold`/`freeholdLayout` still null until 08a; `DungeonDef.claimKey?: 'party' \| 'owner'`; `PlayerMeta.freeholdOwnerKey` (host stamp: `account:<id>` online, absent offline and resolved `entity:<pid>` by `freeholdKeyFor`; META_EXCLUDE); `SimConfig`/`SimContext.freeholdDevGrantEnabled` (read-only, nonpersisted, default false); `setFreeholdTier` the ONE tier writer, `ensureFreeholdRecord`/`loadFreehold` insert only on a lit host, `releaseFreeholdOnLeave` evicts at the last same-key session out | `freeholdDenied { pid, reason }`, reasons APPEND-ONLY in this order: `no_freehold`, `locked`, `cooldown`, `visitors_full`, `not_friend`, `dead`, `combat`, `busy` (05 fires no_freehold, dead, combat, busy; locked is 12's amenity lockout; cooldown 06; visitors_full and not_friend 18); `dead` has ONE exception, the corpse run (a released ghost whose corpse is bound to its own live claim of the current tier is admitted and resurrects at the entrance; every other dead body refuses); a record whose tier is outside the union answers `no_freehold`, never a throw; a leave from outside any owner room is a silent no-op, not a denial, and any player inside a live owner claim may leave; no client handler yet (06 adds the toast; old and new clients drop it safely; NOTE for 06: a dark REALM refuses above the switch with a `commandOutcome` false and NO event, while a dark OFFLINE world emits `freeholdDenied no_freehold`, so the toast must read the command outcome online, the forge window's existing hook) | dungeon ids `freehold_inn_room` (index 15, origin x 119200) and `freehold_cottage` (index 16, origin x 119800), `spawns: []`, no objects, `overworldDoor: false`, `guideVisible: false`, `suggestedPlayers: 1`, placeholder `interior: 'crypt'` (06 swaps the authored layouts), placeholder doorPos `{ x: -14, z: -92 }` north of the Eastbrook mailbox surround (leaving and the saved-inside rejoin both drop 4 yd south, at -14, -96, on open quay ground: the 05 QA moved the door from z -96, whose drop at z -100 sat inside the mailbox's blocked footprint, and pinned the drop unblocked with zero depenetration on every test seed; 06 authors the final gate spot and re-pins the drop); `freehold_enter`/`freehold_leave` LIT behind the unchanged dark gate; `freehold_enter` jail-blocked; HEAVY_SELF_CMDS unchanged (decision in `server/heavy_self.ts`: no heavy self field moves until 08a's `fhold` key); a malformed account id is refused by `planJoin` with `not authenticated` | none | none: the record and the grant are in-memory facts (D81); 07 persists the record under the same owner-key identity and the placeholder `plot:unassigned` plotId is replaced by 07's public id | `entities.dungeons.freehold_inn_room.{name,enterText,leaveText}` and `entities.dungeons.freehold_cottage.{...}`: English plus the five non-Latin fills (ja rows use the plain past like the newest rooms), the 16 Latin locales pending; the glossary housing note names both ids as common nouns; `[dev]` grant lines are dev-channel English |
 | 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
 | 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
 | 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
@@ -1463,8 +1472,9 @@ retained as its historical snapshot. The final shared gate exited 0 with all twe
   and wiki freshness passed in the shared gate.
 - Original implementation snapshot totals were 43 pages / 484 raw slots / 337
   unique item IDs / 448 full-completion slots / 419 character-completion slots.
-  After release merge `7f4fe99619`, current `tests/reliquary_content.test.ts`
-  pins full completion at 462 and character completion at 433; preserve incoming
+  After release merge `7f4fe99619`, `tests/reliquary_content.test.ts` pinned full
+  completion at 462 and character completion at 433; after `a461924855` (the OSSBrain
+  candidate's two developer mount slots) it pins 464 and 435; preserve incoming
   catalog additions rather than restoring historical totals. Channel
   pins preserve Crucible: 55 teaching items comprise 54 recipe manuals teaching
   76 drop recipes plus one enchant teaching item. There are 43 non-Crucible
@@ -1749,7 +1759,10 @@ message is performed in this documentation session.
 - `src/sim/sim.ts`, `server/game.ts`, and `src/net/online.ts` sit at ZERO monolith slack on
   the packet base (their `tests/monolith_budget.test.ts` pins equal their line counts
   there: 12006, 10336 and 5861), and `origin/release/v0.42.0` re-pinned them at 12465,
-  10587 and 5873 in its drift commits; the phase re-reads the pins from
+  10587 and 5873 in its drift commits (11923, 10291 and 5765 at `553a5672ed`); the
+  `a461924855` merge re-pinned all six budgeted coordinators at their exact merged
+  counts, zero slack (sim.ts 11796, game.ts 10188, online.ts 5606, hud.ts 18452, main.ts
+  11247, renderer.ts 12878). The phase re-reads the pins from
   `tests/monolith_budget.test.ts` at phase start after the merge-forward and never budgets
   against either literal. Every delegate or case label added must be paid for by
   extracting an existing block first, then lower the ceiling. `IWORLD_MEMBERS` probes
@@ -1906,26 +1919,95 @@ inherits the reasoning rather than re-deriving it:
   memory, meet the same rules.)
 
 ### 05 instance claim gotchas (learned 2026-09-08, read before 06, 07, 08a)
-- The lighting ruling: `enterFreehold` has no proximity, cast or cooldown gate, so on a
-  lit realm an out-of-combat player anywhere could enter and leave to the Eastbrook quay
-  (a free hearth and instance escape). FREEHOLDS_ENABLED stays dark until 06 lands the
-  gate proximity confirm and the Hearth Key context refusals (`instanced`, `match`).
-- Pool bounds shared with dungeons for now: 24 slots per room record and the 300 s
-  INSTANCE_EMPTY_TIMEOUT hold, so at most 24 concurrent owners per tier per realm and the
-  25th answers `busy` with nothing moved. The seam for a fix is an append-only
-  `DungeonDef.slotCount` beside `claimKey` plus a shorter owner hold; decide before lighting.
-- Hot-path facts measured at 16 x 24 = 384 slots: `updateInstances` walks every claimed
-  slot against every player once a second and `instanceOriginOf` allocates one `{x, z}`
-  per check (7.3 ns each; 48 vacated rooms x 5000 players = 1.76 ms/s worst case), a
-  pre-existing shape amplified by routine housing claims; `releaseFreeholdOnLeave` walks
-  the roster once per leave only when the leaver holds a record (16.8 us at 5000). Owed
-  by the slice that opens the doors: cache the origin on the slot or invert the walk, and
-  a `ctx.freeholds.size` perf counter. The client perf beacon classifies both rooms as
-  `dungeon` (`src/game/world_telemetry.ts`, `server/http/client_perf_metrics.ts`); a
-  `freehold` scene class is owed before sustained idling in rooms exists (06).
+- The lighting ruling: `enterFreehold` has no proximity, cast, cooldown or position-context
+  gate, so on a lit realm an out-of-combat player anywhere, INCLUDING inside another dungeon
+  claim, a delve, a rift, a battleground, an arena, a duel or a moderator jail visit, could
+  enter and leave to the Eastbrook quay (a free hearth and instance escape; an enter from
+  inside another instance runs none of that instance's detach bookkeeping, no threat scrub,
+  no BG/arena leave). FREEHOLDS_ENABLED stays dark until 06 lands the gate proximity confirm
+  (which is ALSO the position-context guard, in the sim on both hosts: the gate stands on
+  open overworld ground; the 05 QA's security and parity reviews both named this case),
+  the Hearth Key context refusals (`instanced`, `match`, covering rift, delve, BG, arena,
+  duel AND jail visit), and an enter cooldown. The cooldown is a BROADCAST-COST gate as well
+  as a gameplay one: each accepted enter teleports across the band and rotates the viewer's
+  whole interest set (the next snapshot re-sends every quay entity as a full record), and
+  the only bound today is the shared 30/s command lane, so 06 cannot trade it away on
+  gameplay grounds alone. Offline the host is lit (single-player), and `freeholdEnter` is
+  on IWorld, so the console can reach it; no HUD control calls it yet.
+- Pool bounds shared with dungeons for now, BLOCKING before lighting (the 05 QA's hot-path
+  and security reviews both judged it so): 24 slots per room record and the 300 s
+  INSTANCE_EMPTY_TIMEOUT hold, so at most 24 concurrent owners per tier per REALM (a 5000
+  player default cap: about half a percent able to enter their own house at once), the
+  25th answers `busy` with nothing moved (never a waitlist or a loss; the refusal is not
+  sticky, pinned: the pool recovers once a slot reaps), and 24 accounts can hold a tier
+  for five minutes at a time at zero cost. Not tuning: a total capacity failure at realm
+  scale and a cheap griefing lever. The seam for the fix is an append-only
+  `DungeonDef.slotCount` beside `claimKey` plus a per-claimKey empty hold.
+- Hot-path facts measured at 16 x 24 = 384 slots (the 05 QA's hot-path review re-measured
+  the reaper end to end and corrected the implementation-round figure): a dark realm pays
+  about 0.04 us per second for the 48 new slots (`updateInstances` skips unclaimed slots,
+  0.29 us for the whole 384-slot pass). Once claims exist, every claimed-and-vacated slot
+  walks the full roster with no early exit and `instanceOriginOf` allocates one `{x, z}`
+  per check: 48 vacated rooms x 5000 players = 240,000 checks measured at 5.08 ms, all
+  landing in the ONE tick per second where `tickCount % 20 === 0` (about a tenth of the
+  50 ms budget; the earlier 1.76 ms figure priced the 7.3 ns allocation alone, the real
+  check is about 21 ns in that cache-hostile walk). Saturation is the expected steady
+  state for per-account housing claims, not a worst case. Live claims also tax every
+  `instanceClaimIdAt` call realm-wide (+311 ns per call at 48 live claims; per-player
+  per-tick callers in the Ignivar and Varkhul encounters and the miniboss stomp), and the
+  release's widened `inheritDungeonResetLocks` now walks the 48 owner slots per party join
+  (cost only, nothing can match). `releaseFreeholdOnLeave` walks the roster on EVERY leave
+  on a lit realm (every joining player holds a record, so its two guards short-circuit a
+  dark host only): 16 us per leave at 5000, spread across the server leave's own awaits.
+  BOTH halves are now [before lighting], not "the slice that opens the doors": cache the
+  origin on the slot at claim time (a pure function of dungeonId and slot, immutable for
+  the slot's life) or invert the walk, which also removes the `instanceClaimIdAt` tax; and
+  a `ctx.freeholds.size` gauge plus a claimed-slot visit counter on the tick heartbeat
+  (the `server/mob_scan_tick_stats.ts` shape) with `updateInstances` as its own profiler
+  phase, because the 5 ms spike lands on exactly one tick in twenty (5% of samples), so a
+  p95 watcher can miss it entirely and only p99 shows it. The client perf beacon classifies
+  both rooms as `dungeon` (`src/game/world_telemetry.ts`, `server/http/client_perf_metrics.ts`),
+  and three MORE name surfaces report the room by its dungeon name today: `/who` and the
+  friend and guild rosters (`server/game.ts` instanceZoneName, status dungeon), the `!word`
+  Discord relay (same lookup) and the admin live-location readout (`server/live_location.ts`);
+  the admin dungeon label (`src/admin/i18n.ts` dungeonIdLabel) has no `dungeon.<id>` key for
+  either room and falls back to the raw English name like the Ignivar rooms. A `freehold`
+  scene class is owed for the beacon AND those three surfaces (or a `claimKey === 'owner'`
+  key on each), plus the two admin label keys, before sustained idling in rooms exists (06).
 - Tier change rule: after an owner-keyed arrival, `enterDungeon` frees the owner's VACANT
   claims on other owner rooms (`freeVacantOwnerClaims`); a claim a sibling character still
-  stands in rides the reaper. A tier change while inside is therefore safe.
+  stands in, or that still holds a released ghost's corpse bound to it, rides the reaper.
+  A tier change while inside is therefore safe. The key clause is what keeps another
+  owner's vacant room out of reach (pinned by a two-owner negative).
+- The corpse run (05 QA ruling): a player CAN die inside a room (a hostile periodic aura
+  keeps ticking after combat drops and passes the combat check), and the room has no
+  door, so `dead` has one exception on the dungeon idiom: a released ghost whose corpse is
+  bound to its OWN live claim of the record's current tier is admitted and resurrects at
+  the entrance. A fresh corpse, a ghost bound to another claim, a ghost whose room the
+  shared reaper already freed (it counts live bodies only, exactly as for a dungeon) and a
+  ghost with no record refuse `dead`; the Spirit Healer remains the other way back. 06's
+  proximity gate must keep admitting that ghost (it is a corpse run, not an escape).
+- The record lifecycle on the realm rides the server's leave ordering: a linkdead
+  displacement seeds the replacement BEFORE the displaced session's evict runs (`void
+  this.leave(...)` reaches removePlayer after two awaits), and the evict is a no-op only
+  because the sibling scan finds the new session. 07's persistence must not inherit that
+  ordering (a load at join could race a serialize plus evict on the same key). The
+  `entity:<pid>` offline key is stable within one Sim only (a content change that spawns
+  an entity before the player shifts it): 07 never keys a durable row on it. Bots and RL
+  agents (the headless env is lit) each hold an `entity:<pid>` record while they live,
+  evicted with them; the `ctx.freeholds.size` gauge counts them.
+- The dev bridge answers EVERY refusal alike (404, one fixed body): a 403 or a 405 would
+  be an existence oracle for ALLOW_DEV_COMMANDS=1 on a `--host` dev port. The bridge module
+  is NOT excluded from the production image (vite.config.ts imports it at load time and the
+  .dockerignore allowlist admits scripts/lib, pinned by tests/dockerignore_context.test.ts);
+  what is excluded is its ADMISSION (spread only under the exact flag, `apply: 'serve'` plus
+  configureServer: the dev server only, never a build or preview). The client bootstrap
+  ships in the production bundle and is inert there (returns false before any fetch).
+- The community wiki seed (`scripts/mediawiki/build_seed.mjs`, `mediawiki/seed/pages.xml`)
+  now honours `guideVisible` like the guide generator (the 05 QA: it published both rooms,
+  and the Ignivar development rooms before them); `tests/mediawiki_seed_visibility.test.ts`
+  pins the dungeon set. The two Homesteader deeds still have no raise site: 08 (first
+  placement) and 15 (the confirmed Cottage grant) own them, never the dev grant.
 - `/dungeons` readout is deliberately NOT memoized: `zoneAt` reads the ACTIVE world content
   that the editor play-test path swaps at runtime.
 - The terrain-height corpus (`tests/terrain_height_parity.test.ts`) seeds each point by its
@@ -1939,10 +2021,15 @@ inherits the reasoning rather than re-deriving it:
   freehold_inn_room` reaches the rooms directly on any devCommands host, bypassing the
   record and the refusals (dev-only; online it is blocked because no door entity exists).
 - Monoliths after 05 (all at zero slack again): sim.ts 11857, main.ts 11269, game.ts 10202,
-  online.ts 5629. A SimConfig field costs a line in sim.ts (default) and in every host
+  online.ts 5629 at `497bc1d73f`; after the `a461924855` release merge and the 05 QA, sim.ts
+  11796, main.ts 11247, game.ts 10188, online.ts 5606 (hud.ts 18452 and renderer.ts 12878
+  at zero slack too). A SimConfig field costs a line in sim.ts (default) and in every host
   literal that sets it; the realm's is `server/sim_boot_config.ts` (no ceiling).
 - Every refusal inside `enterDungeon` was traced for an owner room: the raid arm and the
   undersized-party notice are key-gated, heroic/lockout/mismatch arms are unreachable
   (`claimDifficultyForDungeon` returns normal), reset locks cannot exist (Reset All skips
   owner rooms), and `busy` is decided before the module runs. A new arm added to
-  `enterDungeon` later must be re-traced for `claimKey === 'owner'`.
+  `enterDungeon` later must be re-traced for `claimKey === 'owner'`: the 05 QA re-traced the
+  release's issue #3784 rework (the widened `conflictingResetLock` and
+  `mismatchedClaimDifficulty` arms and the new normal-difficulty raid lockout arm keyed on
+  the DAILY/WEEKLY room sets) and found none reachable for an owner room.

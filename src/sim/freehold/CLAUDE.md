@@ -9,20 +9,37 @@ carries an opaque plot id only.
 - `owner_key.ts` owns the OWNER KEY (D15): `freeholdOwnerKeyOfMeta` (the host
   stamp `meta.freeholdOwnerKey`, `account:<id>` online, else the `entity:<pid>`
   fallback resolved AT READ TIME) and `freeholdKeyFor(ctx, pid)` over the live
-  roster. A LEAF with type-only imports, and deliberately so:
+  roster. The `entity:<pid>` key is stable within ONE Sim only: the offline
+  pid is minted after the world roster, so any content change that spawns an
+  entity before the player shifts it. The persistence slice must never key a
+  durable row on it (the online key is the account id; an offline durable
+  identity, if one is ever wanted, needs a `character:<id>` arm like
+  `instanceKeyFor`'s `solo:char:<id>`). A LEAF with type-only imports, and
+  deliberately so:
   `instances/dungeons.ts` resolves an owner claim's key from here, never from
   `instance.ts`, so the dungeon module's import graph never pulls this
   directory's runtime modules in.
-- `instance.ts` owns the claim: `enterFreehold` (dead including a ghost, in
-  combat, no record, then a full pool answer `dead` / `combat` /
+- `instance.ts` owns the claim: `enterFreehold` (dead, in combat, no record
+  or an unusable one, then a full pool answer `dead` / `combat` /
   `no_freehold` / `busy` as exactly one text-free `freeholdDenied` each, with
   nothing moved, claimed or drawn; `busy` is decided HERE, before the dungeon
   module is asked, so its English "instances are busy" error can never fire
-  for a freehold), `leaveFreehold` (false and silent unless the caller stands
-  inside a live owner claim), `freeholdDefForTier` (the tier-to-room map,
-  exhaustive over the tier union; the four later tiers alias the Cottage
-  until their rooms land) and `freeholdDescriptorFor` (a VALUE COPY with no
-  owner key in it). It reaches the dungeon machinery ONLY through the seam
+  for a freehold). THE CORPSE RUN is `dead`'s one exception, the dungeon
+  idiom: a released ghost whose corpse is bound (corpseInstanceId) to the
+  caller's OWN live claim of the record's current tier is admitted and
+  resurrects at the entrance; a fresh corpse, a ghost bound elsewhere or to a
+  room the reaper already freed, and a ghost with no record refuse `dead`.
+  A record whose tier is outside the union (a corrupt or forward-version row)
+  answers `no_freehold`, never a throw. `leaveFreehold` is false and silent
+  unless the caller stands inside a live owner claim (a leave from anywhere
+  else is a no-op, not a denial: D10 covers denials of an entry or a
+  mutation), and ANY player inside a live owner claim may leave, not only
+  its owner (the room's exit is the one way out for a sibling, a later guest
+  or a body a dead relog placed there). `freeholdDefForTier` is the
+  tier-to-room map, exhaustive over the tier union (the four later tiers
+  alias the Cottage until their rooms land), and `freeholdDescriptorFor` a
+  VALUE COPY with no owner key in it, exported for the descriptor emit of a
+  later slice and reached by tests only until then. It reaches the dungeon machinery ONLY through the seam
   (`ctx.enterDungeon` / `ctx.leaveDungeon` / `ctx.instanceClaimIdAt`) and
   reads the rooms from `content/freehold`, never from `instances/dungeons.ts`
   or `data.ts`. That is the seam rule itself (a system module talks to another
@@ -37,11 +54,17 @@ carries an opaque plot id only.
   player stands inside it (pinned in `tests/freehold_instance.test.ts`). The
   guard is the room's `claimKey`, never the key string, so party and solo
   claims are untouched.
-- THE LIGHTING RULING: 05 adds no proximity, cast or cooldown gate (an
-  out-of-combat player anywhere could enter and leave to the Eastbrook quay),
-  so `FREEHOLDS_ENABLED` stays dark on the realm until the interiors slice
-  lands the Eastbrook gate proximity confirm and the Hearth Key context
-  refusals.
+- THE LIGHTING RULING: the claim slice adds no proximity, cast, cooldown or
+  position-context gate (an out-of-combat player anywhere, including inside
+  another dungeon claim, a delve, a rift, a battleground, an arena, a duel
+  or a jail visit, could enter and leave to the Eastbrook quay, and an enter
+  from inside another instance runs none of that instance's detach
+  bookkeeping), so `FREEHOLDS_ENABLED` stays dark on the realm until the
+  interiors slice lands the Eastbrook gate proximity confirm (also the
+  position-context guard, in the SIM on both hosts: the gate stands on open
+  overworld ground), the Hearth Key context refusals and the enter cooldown
+  that bounds the interest-set churn each cross-band teleport costs every
+  nearby viewer. The offline host is lit today, single-player only.
 - `dev_grant.ts` owns `/dev freehold <tier>` (D24/D81): `devGrantFreeholdTier`
   needs BOTH `ctx.devCommands` AND `ctx.freeholdDevGrantEnabled` (else
   `unauthorized`, nothing written), validates the tier through the content
@@ -70,7 +93,15 @@ carries an opaque plot id only.
   player shares the owner key (two characters of one account share one
   record; the last session out evicts). The roster walk there is a pure
   existence check, so its iteration order cannot matter; the Map iteration
-  rule below still binds anything that walks `ctx.freeholds` itself.
+  rule below still binds anything that walks `ctx.freeholds` itself. On a lit
+  host every leave walks the roster once (every joining player holds a
+  record, bots and RL agents included, which `ctx.freeholds.size` counts);
+  an owner-key to live-session-count index kept by the same two hooks is the
+  named O(1) shape for the persistence slice, which reshapes both hooks. The
+  server's linkdead displacement seeds the replacement BEFORE the evict of
+  the displaced session runs (its leave awaits twice before removePlayer),
+  and the evict is a no-op only because the sibling scan finds the new
+  session; persistence must not inherit that ordering.
 
 - `types.ts` owns the shared shapes (`FreeholdState`, the public
   `FreeholdView` and `FreeholdLayoutView`, the tier and visit-policy unions).
