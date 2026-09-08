@@ -7,8 +7,8 @@
 // nothing, a full pool answers `busy` before the dungeon module's English busy
 // error can run, the whole drive is seed-deterministic, and a tier change
 // frees the old tier's vacant claim the moment the LIVING owner arrives in the
-// new room (an old room with a player inside or a bound corpse in it, every
-// party-keyed claim, and a ghost's corpse run, are left alone).
+// new room (an old room with a player inside or a bound corpse in it, and every
+// party-keyed claim, are left alone, and a ghost's corpse run sweeps nothing).
 
 import { describe, expect, it } from 'vitest';
 import { isBlocked } from '../src/sim/colliders';
