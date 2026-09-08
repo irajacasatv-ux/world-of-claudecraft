@@ -4,7 +4,9 @@
   "variant": "desktop",
   "baseline": true,
   "noticeResolution": "performance-notice",
-  "dismissedNotices": ["perf-nudge"],
+  "dismissedNotices": [
+    "perf-nudge"
+  ],
   "viewport": {
     "width": 1600,
     "height": 900,
@@ -14,11 +16,18 @@
   "gpuNoticeVisible": false,
   "rendererTier": "low",
   "camera": {
-    "position": [-3.363841844478914, 5.20328179753954, -87.52017944041802],
-    "quaternion": [
-      -0.1289862414524474, 0.5794656355528173, 0.09351385178009994, 0.7992729735544609
+    "position": [
+      -2.9784814855522406,
+      5.207644515622669,
+      -90.90603938546515
     ],
-    "inputYaw": -1.8869881935261559
+    "quaternion": [
+      -0.11287490075534178,
+      0.696709712094024,
+      0.1124346376267177,
+      0.6994378357760486
+    ],
+    "inputYaw": -1.5747043954140993
   },
   "settings": {
     "cameraSpeed": 0.7,
@@ -175,11 +184,11 @@
   },
   "player": {
     "pos": {
-      "x": -14.045300200594886,
-      "y": -0.5741786592439655,
-      "z": -91.01482079293596
+      "x": -14.095482085895824,
+      "y": -0.5709943225993968,
+      "z": -90.9273406026169
     },
-    "facing": -1.8869881935261559,
+    "facing": -1.6553981633974484,
     "entrySeq": 0
   },
   "promptVisible": false,

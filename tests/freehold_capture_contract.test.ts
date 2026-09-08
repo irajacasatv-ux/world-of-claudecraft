@@ -1,6 +1,15 @@
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import {
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { freeholdInteriorPerfFailures } from '../scripts/freehold_interior_route.mjs';
 import { DUNGEONS, instanceOrigin } from '../src/sim/data';
@@ -40,6 +49,17 @@ const sourcePaths = [
   'scripts/pr_screenshots.mjs',
   'scripts/freehold_interior_route.mjs',
   'scripts/perf_tour.mjs',
+  'src/render/zone_character_dependency_wait.ts',
+  'src/render/zone_prewarm_finalize.ts',
+  'src/render/prewarm_instance_lifecycle.ts',
+  'src/sim/instances/owner_arrival.ts',
+  'src/sim/freehold/gate.ts',
+  'src/sim/instances/dungeons.ts',
+  'src/sim/content/freehold/dungeons.ts',
+  'src/sim/world.ts',
+  'src/ui/panel_key_guard.ts',
+  'src/ui/hud/action_bar/action_bar_controller.ts',
+  'scripts/freehold_capture_receipt.mjs',
 ];
 const digest = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -58,6 +78,15 @@ describe('Freehold functional capture evidence', () => {
         JSON.parse(readFileSync(resolve(ROOT, record.formattedFile), 'utf8')),
       );
     }
+    expect(acceptance.sourceIdentity.current.head).toMatch(/^[a-f0-9]{40}$/);
+    expect(Array.isArray(acceptance.sourceIdentity.current.status)).toBe(true);
+    expect(acceptance.sourceIdentity.baselineRuntime.head).toBe(acceptance.baselineCommit);
+    expect(acceptance.baselineHarness.applicationDiff).toEqual([]);
+    expect(acceptance.baselineHarness.applicationUntracked).toEqual([]);
+    for (const side of ['before', 'after']) {
+      const manifest = JSON.parse(readFileSync(resolve(ROOT, `${side}-manifest.raw.json`), 'utf8'));
+      expect(acceptance.diagnosticCounts[side]).toBe(manifest.errors.length);
+    }
   });
   it('retains actual rendered clean interior samples on desktop and mobile', () => {
     const acceptance = JSON.parse(readFileSync(resolve(ROOT, 'acceptance.json'), 'utf8'));
@@ -65,6 +94,7 @@ describe('Freehold functional capture evidence', () => {
     expect(digest(bytes)).toBe(acceptance.performance.sha256);
     const performance = JSON.parse(bytes.toString('utf8'));
     expect(performance.scenario).toBe('bench_freehold_interiors');
+    expect(performance.requestedPreset).toBe('low');
     expect(performance.results.map((result: { viewport: string }) => result.viewport)).toEqual([
       'desktop',
       'mobile',
@@ -143,4 +173,60 @@ describe('Freehold functional capture evidence', () => {
     for (const input of acceptance.sourceInputs)
       expect(digest(readFileSync(input.path)), input.path).toBe(input.sha256);
   });
+});
+
+describe('Freehold capture receipt refusal', () => {
+  it.each(['missing image', 'duplicate image', 'wrong low preset'])(
+    'refuses %s before publishing any evidence',
+    (defect) => {
+      const input = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
+      const output = join(input, 'receipt');
+      try {
+        const names = targets.flatMap((target) =>
+          Object.keys(views).map((view) => `${target}-${view}.png`),
+        );
+        const captured = names.map(
+          (name, index) => `${String(index + 1).padStart(2, '0')}-${name}`,
+        );
+        if (defect === 'missing image') captured.pop();
+        if (defect === 'duplicate image') captured[1] = captured[0];
+        writeFileSync(join(input, 'manifest.json'), JSON.stringify({ captured, errors: [] }));
+        if (defect === 'wrong low preset') {
+          copyFileSync(resolve(ROOT, `before-${names[0]}`), join(input, captured[0]));
+          const sidecar = 'evidence-freehold-gate-desktop.json';
+          const evidence = JSON.parse(readFileSync(resolve(ROOT, `before-${sidecar}`), 'utf8'));
+          evidence.settings.graphicsPreset = 2;
+          writeFileSync(join(input, sidecar), JSON.stringify(evidence));
+        }
+        const result = spawnSync(
+          process.execPath,
+          [
+            'scripts/freehold_capture_receipt.mjs',
+            '--before',
+            input,
+            '--after',
+            input,
+            '--performance',
+            join(input, 'performance.json'),
+            '--output',
+            output,
+            '--baseline-root',
+            '.',
+          ],
+          { encoding: 'utf8' },
+        );
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain(
+          defect === 'missing image'
+            ? 'expected exactly nine producer captures'
+            : defect === 'duplicate image'
+              ? 'expected one producer image'
+              : 'low graphics proof missing',
+        );
+        expect(existsSync(output)).toBe(false);
+      } finally {
+        rmSync(input, { recursive: true, force: true });
+      }
+    },
+  );
 });
