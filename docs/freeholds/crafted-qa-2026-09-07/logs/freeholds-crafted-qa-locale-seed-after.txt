@@ -1,0 +1,5 @@
+PASS dark-desktop: locale=en, preset=1
+PASS lit-desktop: locale=en, preset=1
+PASS dark-mobile: locale=en, preset=1
+PASS lit-mobile: locale=en, preset=1
+PASS dark-forced-colors: locale=en, preset=1

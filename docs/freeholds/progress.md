@@ -1,12 +1,15 @@
 # Freeholds and Guildhalls: progress
 
 Foundation, furnishing item-kind and content 03 implementation and paired QA are
-complete locally. Crafted content 04 development implementation now passes its
-shared gate and implementation reviews, with final icons/provenance and runtime
-evidence accepted. The four original completion commits are `86eb86bbe2`,
-`8bd097d898`, `b3c2452b49` and `3666d89647`; the post-fourth-commit check passed
-with clean status. The separate 04 QA audit is
-in progress after dependency integration `2e24ba8818`; no final QA verdict is recorded.
+complete locally. Crafted content 04 retains its accepted development implementation;
+its separate paired QA verdict is FAIL, local, on 2026-09-07. The audit found 29
+distinct findings: 28 repairs are applied and independently accepted, while F01
+remains open because the explicit profession-path freeze has no owner reconciliation
+with the D85 availability changes. Final command and visual outcomes are recorded in
+[validation.md](crafted-qa-2026-09-07/validation.md), with findings and the fresh
+whole-fix review linked below. Production remains disabled; the failed QA does not
+advance to implementation 05.
+
 Production calibration, activation, final GLBs and room/hardware LOW gates remain
 unsigned; NPC voice remains required before feature shipment.
 
@@ -15,7 +18,7 @@ unsigned; NPC voice remains required before feature shipment.
 There are 56 bounded work items and 56 paired QA rows; their actual status is recorded
 below. The 44 original numeric items retain their IDs and twelve suffixed pairs are
 inserted into the chain. The next handoff is
-[phase-04-qa.md](phase-04-qa.md).
+[phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md).
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
@@ -26,7 +29,7 @@ inserted into the chain. The next handoff is
 | 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Complete (QA PASS), local | 2026-09-07 | 2026-09-07 | Accepted twelve-bill development cycle, eight common 250/60 furnishings, measured geometry, gated freehold_furnisher, manual Homesteader rewards and hearth_basics (eight ordinary item relics). Production remains disabled. See content-trial-2026-09-07/acceptance.md and content-final-validation-2026-09-07.md. No push. |
 | 03 QA | PASS, local | 2026-09-07 | 2026-09-07 | 39 distinct findings found and resolved, zero open. Paired correctness/coverage/hygiene, finishing and conditional reviews PASS, including fresh repairs. Final shared gate exit 0, all 12 steps; 57,726 unit and 376 browser tests passed. Runtime and canonical visual evidence accepted. Four reviewed completion commits; post-source-commit ci:changed exit 0, repeated after the final evidence commit with its result in the task handoff. See content-final-validation-2026-09-07.md. |
 | 04 Content: crafted furnishings and quartermaster patterns | Development implementation complete, local | 2026-09-07 | 2026-09-07 | Accepted development v1, ten recipes/outputs, three 16-Mark patterns, Hearth page, thirteen final icons/provenance and 42 runtime captures. Shared gate exit 0, all 12 steps; implementation QA/fresh review closeout recorded in crafted-content-trial-2026-09-07/implementation-validation.md. Four authorized commits `86eb86bbe2`, `8bd097d898`, `b3c2452b49` and `3666d89647`; post-fourth-commit ci:changed exit 0 (1967 files, existing warnings only), clean status observed. The original completion receipt called for the same check after its documentation-only amendment; no push. Production gates remain unsigned. |
-| 04 QA | In progress | 2026-09-07 | | Original implementation range `49ed3f0933..3666d89647`; dependency `54ce808436` integrated through `2e24ba8818`. Audit and repairs are in progress; no final verdict or shared-gate claim for this candidate. The professions-source freeze question remains unresolved. |
+| 04 QA | FAIL, local | 2026-09-07 | 2026-09-07 | 29 distinct findings, 28 repairs applied and independently accepted, 1 open requirement conflict (F01). Final validation and fresh whole-fix review support repaired source `b379ee462d`, but the explicit no-edits-under-src/sim/professions requirement remains unmet without an owner decision reconciling D85. See [findings](crafted-qa-2026-09-07/findings.md), [validation](crafted-qa-2026-09-07/validation.md) and [fresh whole-fix review](crafted-qa-2026-09-07/reviews/qa-checklist-final.md). Return to 04 implementation; do not advance to 05. |
 | 05 Instance claim | Not started | | | |
 | 05 QA | Not started | | | |
 | 06 Interiors, the Eastbrook gate, the Hearth Key | Not started | | | |
@@ -497,15 +500,64 @@ Development implementation completion notes, 2026-09-07 (original snapshot at `3
   only; working-tree status was clean. This receipt is incorporated by amending
   only the fourth documentation commit, preserving four commits. The parent
   repeats `npm run ci:changed` after the actual final amended commit and records
-  that result in the final handoff. No push. Separate row 04 QA remains Not
-  started at this implementation snapshot. The subsequent audit is now in
-  progress under `phase-04-qa.md`, after integration `2e24ba8818` of dependency
-  `54ce808436`. It has no final verdict yet, and the professions-source freeze
-  question remains unresolved; implementation 05 has not started.
+  that result in the final handoff. No push. At that implementation handoff,
+  paired 04 QA had not started. Its later FAIL verdict and unresolved F01 are
+  recorded in the closeout below; implementation 05 has not started.
 - Final crafted GLBs and remeasurement (`scripts/assets/freehold_crafted/`,
   `export_freehold_crafted.mjs`, `freehold_crafted.json`,
   `tests/freehold_crafted_asset.test.ts`), legal maximum room layouts,
   arrival/navigation and actual LOW performance remain named production gates.
+
+
+Paired 04 QA closeout, 2026-09-07: **FAIL, local**.
+
+- The audit covers original implementation `49ed3f0933..3666d89647`, dependency
+  head `54ce808436` integrated by `2e24ba8818`, and dedicated repair commits
+  `ea3b62fad1`, `47655ffb54`, `1be1aef461`, `85f99f6a32`, `5f4821bec7` and
+  `b379ee462d`. The final verified source is `b379ee462d`.
+- There are 29 distinct findings: 28 repairs applied and independently accepted,
+  with F01 open. The original implementation changed four paths under
+  `src/sim/professions/` to enforce D85 availability and extract the trainer
+  boundary. The explicit QA requirement permits no changes there. Preserved
+  station/tier/training-fee behavior does not satisfy that raw path freeze.
+  Fernando has not supplied the requested reconciliation; no silence-based waiver
+  or PASS is recorded.
+- The final repaired source and merge evidence received the distinct full
+  qa-checklist/whole-fix review in
+  [qa-checklist-final.md](crafted-qa-2026-09-07/reviews/qa-checklist-final.md).
+  That review covers all 80 files in `2e24ba8818..b379ee462d` plus merge evidence,
+  including touch feedback, locale seeds and all five later gate-repair findings.
+  This is a new whole-fix review, distinct from the earlier database-only assessment.
+  All F02 through F29 repairs are accepted; the technical review does not override F01.
+- Shared gate attempt 3 at `b379ee462d` exited 0 with all 12 steps green. It ran
+  all 4,028 unit files: 60,594 tests passed, two expected failures, 27 existing
+  case skips and no skipped suite (935.59 seconds). Shared Chromium passed
+  46 files / 385 tests (11.87 seconds). Typechecks, environment/server/bot/client
+  builds, security, SFX, changed-file checks and artifact generation/freshness
+  passed. Earlier failed gate attempts remain failed evidence.
+- Explicit `npm run wiki:content` and `npm run i18n:gen` both exited 0 after the
+  final gate, and the generated-source diff was clean. The final combined
+  guide/manual presentation sequence captured all 11 frames and exited 0;
+  independent frontend review accepted it within its stated browser-emulation
+  scope. This is distinct from the original 42-capture implementation record.
+  Exact shared/scoped/PostgreSQL/browser/visual results belong to
+  [validation.md](crafted-qa-2026-09-07/validation.md).
+- The ten-recipe, three-pattern and thirteen-item obligation tables are in
+  [content-evidence.md](crafted-qa-2026-09-07/content-evidence.md).
+  [findings.md](crafted-qa-2026-09-07/findings.md) retains every repair and
+  adjudication, including actual mutation controls and preserved timing-measurement
+  provenance. This QA generated no asset.
+- `GATE_SELECT_BASE=54ce808436 npm run ci:changed` exited 0 after the last source
+  commit `b379ee462d`. The coordinator must replay that exact command after the
+  separate verdict/evidence commit as the actual final execution step. That replay
+  has not yet run and is not claimed by the source check or this ledger update.
+- No push, PR merge or production activation occurred. Production numeric,
+  final-model, room/arrival/navigation and hardware LOW gates retain their later
+  owners. These gates are not relabeled as deferred QA defects.
+- Next task: return to the 04 implementation packet to resolve F01 with the owner
+  and apply the authorized outcome, then rerun its paired QA. Implementation 05
+  remains Not started. Full path:
+  `/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-04-content-crafted-and-patterns.md`.
 
 Deliverables (at most five):
 
@@ -517,7 +569,10 @@ Deliverables (at most five):
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
-After phase-04-qa.md: [phase-05-instance-claim.md](phase-05-instance-claim.md).
+Current handoff after 04 QA FAIL:
+[phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md).
+The planned [05 Instance claim](phase-05-instance-claim.md) remains gated by a later
+04 QA PASS; it has not started.
 
 #### 05 Instance claim
 

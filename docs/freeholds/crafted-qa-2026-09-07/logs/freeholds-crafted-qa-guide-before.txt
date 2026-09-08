@@ -1,0 +1,213 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+(node:69104) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ tests/guide_provisioning.test.ts (3 tests | 3 failed) 23ms
+     × classifies every generated cooking output from its live item kind 5ms
+     × renders the actual supper table as ornamental and describes its lack of food or buffs 15ms
+     × renders the furnishing classification for another item without a supper-table special case 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/guide_provisioning.test.ts > provisioning guide furnishing outputs > classifies every generated cooking output from its live item kind
+AssertionError: expected [ { …(3) } ] to deeply equal [ { …(4) } ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "furnishing": true,
+      "itemId": "freehold_set_supper_table",
+      "placeable": false,
+      "station": false,
+    },
+  ]
+
+ ❯ tests/guide_provisioning.test.ts:18:85
+     16|   it('classifies every generated cooking output from its live item kin…
+     17|     const outputs = GUIDE_PROF_PROVISIONING.ladder.flatMap((rung) => r…
+     18|     expect(outputs.filter((output) => ITEMS[output.itemId]?.kind === '…
+       |                                                                                     ^
+     19|       {
+     20|         itemId: 'freehold_set_supper_table',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/guide_provisioning.test.ts > provisioning guide furnishing outputs > renders the actual supper table as ornamental and describes its lack of food or buffs
+AssertionError: expected '\n    <article class="guide-article g…' to contain '<li>Set Supper Table (ornamental furn…'
+
+- Expected
++ Received
+
+- <li>Set Supper Table (ornamental furnishing, not eaten)</li>
++
++     <article class="guide-article guide-prof-page">
++       <p class="guide-section-more"><a href="/wiki/professions">Back to Professions</a></p>
++       <h1>Provisioning: from the field to the raid</h1>
++       <p class="guide-lead">The gathering lines meet in one kitchen, and the ladder above it ends at a table a whole raid eats from.</p>
++       <section class="guide-block" id="prov-suppliers">
++       <h2>Who feeds the kitchen</h2>
++       <p>Cooking takes from nearly every gathering line, and that is deliberate: a cook who also fishes, farms, or skins is never short of something to work with, and a cook who does none of those can buy the lot on the market.</p><p>What each line brings is listed below, and it is read straight off the live recipe list rather than written down here, so it is always what the kitchen actually asks for today.</p>
++       <dl class="guide-class-facts guide-prof-facts"><div class="guide-fact">
++           <dt>Logging</dt>
++           <dd>1 into cooking bills</dd>
++           <dd><ul><li>Ashwood Log</li></ul></dd>
++         </div><div class="guide-fact">
++           <dt>Herbalism</dt>
++           <dd>3 into cooking bills</dd>
++           <dd><ul><li>Goldleaf Herb</li><li>Sheenleaf Herb</li><li>Sunpetal Herb</li></ul></dd>
++         </div><div class="guide-fact">
++           <dt>Fishing</dt>
++           <dd>9 into cooking bills</dd>
++           <dd><ul><li>Raw Bog Eel</li><li>Raw Deepbarb Catfish</li><li>Raw Frostgill Trout</li><li>Raw Hollowgill Sturgeon</li><li>Raw Marsh Pike</li><li>Raw Mirror Trout</li><li>Raw River Perch</li><li>Raw Slatefin Carp</li><li>Raw Stillmere Salmon</li></ul></dd>
++         </div><div class="guide-fact">
++           <dt>Farming</dt>
++           <dd>21 into cooking bills</dd>
++           <dd><ul><li>Bog Beet</li><li>Brook Carrot</li><li>Evergarden Greens</li><li>Evergarden Pumpkin</li><li>Fine Bog Beet</li><li>Fine Brook Carrot</li><li>Fine Evergarden Greens</li><li>Fine Evergarden Pumpkin</li><li>Fine Frost Gourd</li><li>Fine Frost Lentils</li><li>Fine Gilded Sunmelon</li><li>Fine Gilded Yam</li><li>Fine Thornpeak Cabbage</li><li>Frost Gourd</li><li>Frost Lentils</li><li>Gilded Sunmelon</li><li>Gilded Yam</li><li>Highland Barley</li><li>Marsh Rice</li><li>Thornpeak Cabbage</li><li>Vale Wheat</li></ul></dd>
++         </div><div class="guide-fact">
++           <dt>Corpse harvesting</dt>
++           <dd>2 into cooking bills</dd>
++           <dd><ul><li>Game Meat</li><li>Prime Cut</li></ul></dd>
++         </div></dl>
++     </section>
++       <section class="guide-block" id="prov-ladder">
++       <h2>The ladder, rung by rung</h2>
++       <p>Cooking climbs in the usual brackets, and every rung is listed with what it teaches. The early rungs are single dishes you eat from your bags. Higher up the kitchen starts making things for other people: plates that carry a lasting buff, and above those the feasts, which you do not eat at all but set down on the ground for everyone standing near it.</p>
++       <ul class="guide-prof-bands"><li>
++           <strong>Cooking 0</strong>
++           <ul><li>Eastbrook Glazed Carrots</li><li>Eastbrook Root Pottage</li><li>Herbed Marsh Pike</li><li>Hunter&#39;s Game Skewer</li><li>Pan-Seared River Perch</li><li>Salted Jerky</li><li>Vale Hearth Loaf</li></ul>
++         </li><li>
++           <strong>Cooking 25</strong>
++           <ul><li>Ashwood Smoked Eel</li><li>Fenbridge Beet Braise</li><li>Fenbridge Rice Bowl</li><li>Fenbridge Rice Pudding</li><li>Frostgill Chowder</li><li>Goldleaf Game Stew</li></ul>
++         </li><li>
++           <strong>Cooking 50</strong>
++           <ul><li>Angler&#39;s Feast Platter</li><li>Highwatch Barley Bannock</li><li>Marlow&#39;s Grand Roast</li><li>Set Supper Table</li><li>Silvered Carp Supper</li></ul>
++         </li><li>
++           <strong>Cooking 75</strong>
++           <ul><li>Highwatch Barley Porridge</li><li>Highwatch Gourd Soup</li><li>Peppered Deepbarb Catfish</li><li>Seasoned Stock</li></ul>
++         </li><li>
++           <strong>Cooking 100</strong>
++           <ul><li>Evergarden Braised Greens</li><li>Evergarden Harvest Platter</li><li>Evergarden Sunmelon Tart</li><li>Harvest Feast (placed, not eaten)</li><li>Roast Hollowgill Sturgeon</li><li>Sageleaf Chowder</li><li>Stonepot Stew</li><li>Warspice Skewers</li></ul>
++         </li><li>
++           <strong>Cooking 125</strong>
++           <ul><li>Sageleaf Feast (placed, not eaten)</li><li>Stonepot Feast (placed, not eaten)</li><li>The Laden Hearth (field station)</li><li>Warspice Feast (placed, not eaten)</li></ul>
++         </li></ul>
++     </section>
++       <section class="guide-block" id="prov-table">
++         <h2>The table at the top</h2>
++         <p>A feast is set down where you stand and anyone nearby takes one serving each. What a serving gives is exactly the dish that feast is built around, so a feast never has power of its own to learn: it is a way of handing a whole group the plate you already know how to cook.</p><p>The top of the ladder is three feasts rather than one, and picking between them is the only choice there is. They cost the same, ask for the same materials, and take the same skill; each simply serves a different one of the three great plates, so a group takes the one that suits what it is about to do. Only one feast of yours can stand at a time, whichever rung it came from, and it keeps for a few minutes before it is cleared away.</p>
++       </section>
++       <section class="guide-block" id="prov-market">
++         <h2>If you cook none of it</h2>
++         <p>None of this is a wall for anyone who does not cook. Every material on this page is ordinary tradable goods, so a fisher sells catches, a farmer sells crops, and a raider who does neither buys a feast outright from a cook who made a spare. The kitchen is a place the professions meet, never a toll on the ones who skip it.</p>
++       </section>
++       <nav class="guide-related" aria-label="Related">
++     <h2 class="guide-related-h">Related</h2>
++     <ul class="guide-related-list"><li><a href="/wiki/professions">Professions</a></li><li><a href="/wiki/professions/cooking">Cooking</a></li><li><a href="/wiki/professions/economy">Crafting Economy</a></li></ul>
++   </nav>
++     </article>
+
+ ❯ tests/guide_provisioning.test.ts:36:18
+     34|   it('renders the actual supper table as ornamental and describes its …
+     35|     const html = render();
+     36|     expect(html).toContain('<li>Set Supper Table (ornamental furnishin…
+       |                  ^
+     37|     expect(html).not.toContain('<li>Set Supper Table</li>');
+     38|     expect(html).toContain('Furnishings decorate a Freehold and give n…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/guide_provisioning.test.ts > provisioning guide furnishing outputs > renders the furnishing classification for another item without a supper-table special case
+AssertionError: expected '\n    <article class="guide-article g…' to contain '<li>Weapon Rack (ornamental furnishin…'
+
+- Expected
++ Received
+
+- <li>Weapon Rack (ornamental furnishing, not eaten)</li>
++
++     <article class="guide-article guide-prof-page">
++       <p class="guide-section-more"><a href="/wiki/professions">Back to Professions</a></p>
++       <h1>Provisioning: from the field to the raid</h1>
++       <p class="guide-lead">The gathering lines meet in one kitchen, and the ladder above it ends at a table a whole raid eats from.</p>
++       <section class="guide-block" id="prov-suppliers">
++       <h2>Who feeds the kitchen</h2>
++       <p>Cooking takes from nearly every gathering line, and that is deliberate: a cook who also fishes, farms, or skins is never short of something to work with, and a cook who does none of those can buy the lot on the market.</p><p>What each line brings is listed below, and it is read straight off the live recipe list rather than written down here, so it is always what the kitchen actually asks for today.</p>
++       <dl class="guide-class-facts guide-prof-facts"><div class="guide-fact">
++           <dt>Logging</dt>
++           <dd>1 into cooking bills</dd>
++           <dd><ul><li>Ashwood Log</li></ul></dd>
++         </div><div class="guide-fact">
++           <dt>Herbalism</dt>
++           <dd>3 into cooking bills</dd>
++           <dd><ul><li>Goldleaf Herb</li><li>Sheenleaf Herb</li><li>Sunpetal Herb</li></ul></dd>
++         </div><div class="guide-fact">
++           <dt>Fishing</dt>
++           <dd>9 into cooking bills</dd>
++           <dd><ul><li>Raw Bog Eel</li><li>Raw Deepbarb Catfish</li><li>Raw Frostgill Trout</li><li>Raw Hollowgill Sturgeon</li><li>Raw Marsh Pike</li><li>Raw Mirror Trout</li><li>Raw River Perch</li><li>Raw Slatefin Carp</li><li>Raw Stillmere Salmon</li></ul></dd>
++         </div><div class="guide-fact">
++           <dt>Farming</dt>
++           <dd>21 into cooking bills</dd>
++           <dd><ul><li>Bog Beet</li><li>Brook Carrot</li><li>Evergarden Greens</li><li>Evergarden Pumpkin</li><li>Fine Bog Beet</li><li>Fine Brook Carrot</li><li>Fine Evergarden Greens</li><li>Fine Evergarden Pumpkin</li><li>Fine Frost Gourd</li><li>Fine Frost Lentils</li><li>Fine Gilded Sunmelon</li><li>Fine Gilded Yam</li><li>Fine Thornpeak Cabbage</li><li>Frost Gourd</li><li>Frost Lentils</li><li>Gilded Sunmelon</li><li>Gilded Yam</li><li>Highland Barley</li><li>Marsh Rice</li><li>Thornpeak Cabbage</li><li>Vale Wheat</li></ul></dd>
++         </div><div class="guide-fact">
++           <dt>Corpse harvesting</dt>
++           <dd>2 into cooking bills</dd>
++           <dd><ul><li>Game Meat</li><li>Prime Cut</li></ul></dd>
++         </div></dl>
++     </section>
++       <section class="guide-block" id="prov-ladder">
++       <h2>The ladder, rung by rung</h2>
++       <p>Cooking climbs in the usual brackets, and every rung is listed with what it teaches. The early rungs are single dishes you eat from your bags. Higher up the kitchen starts making things for other people: plates that carry a lasting buff, and above those the feasts, which you do not eat at all but set down on the ground for everyone standing near it.</p>
++       <ul class="guide-prof-bands"><li>
++           <strong>Cooking 0</strong>
++           <ul><li>Eastbrook Glazed Carrots</li><li>Eastbrook Root Pottage</li><li>Herbed Marsh Pike</li><li>Hunter&#39;s Game Skewer</li><li>Pan-Seared River Perch</li><li>Salted Jerky</li><li>Vale Hearth Loaf</li><li>Weapon Rack</li></ul>
++         </li><li>
++           <strong>Cooking 25</strong>
++           <ul><li>Ashwood Smoked Eel</li><li>Fenbridge Beet Braise</li><li>Fenbridge Rice Bowl</li><li>Fenbridge Rice Pudding</li><li>Frostgill Chowder</li><li>Goldleaf Game Stew</li></ul>
++         </li><li>
++           <strong>Cooking 50</strong>
++           <ul><li>Angler&#39;s Feast Platter</li><li>Highwatch Barley Bannock</li><li>Marlow&#39;s Grand Roast</li><li>Set Supper Table</li><li>Silvered Carp Supper</li></ul>
++         </li><li>
++           <strong>Cooking 75</strong>
++           <ul><li>Highwatch Barley Porridge</li><li>Highwatch Gourd Soup</li><li>Peppered Deepbarb Catfish</li><li>Seasoned Stock</li></ul>
++         </li><li>
++           <strong>Cooking 100</strong>
++           <ul><li>Evergarden Braised Greens</li><li>Evergarden Harvest Platter</li><li>Evergarden Sunmelon Tart</li><li>Harvest Feast (placed, not eaten)</li><li>Roast Hollowgill Sturgeon</li><li>Sageleaf Chowder</li><li>Stonepot Stew</li><li>Warspice Skewers</li></ul>
++         </li><li>
++           <strong>Cooking 125</strong>
++           <ul><li>Sageleaf Feast (placed, not eaten)</li><li>Stonepot Feast (placed, not eaten)</li><li>The Laden Hearth (field station)</li><li>Warspice Feast (placed, not eaten)</li></ul>
++         </li></ul>
++     </section>
++       <section class="guide-block" id="prov-table">
++         <h2>The table at the top</h2>
++         <p>A feast is set down where you stand and anyone nearby takes one serving each. What a serving gives is exactly the dish that feast is built around, so a feast never has power of its own to learn: it is a way of handing a whole group the plate you already know how to cook.</p><p>The top of the ladder is three feasts rather than one, and picking between them is the only choice there is. They cost the same, ask for the same materials, and take the same skill; each simply serves a different one of the three great plates, so a group takes the one that suits what it is about to do. Only one feast of yours can stand at a time, whichever rung it came from, and it keeps for a few minutes before it is cleared away.</p>
++       </section>
++       <section class="guide-block" id="prov-market">
++         <h2>If you cook none of it</h2>
++         <p>None of this is a wall for anyone who does not cook. Every material on this page is ordinary tradable goods, so a fisher sells catches, a farmer sells crops, and a raider who does neither buys a feast outright from a cook who made a spare. The kitchen is a place the professions meet, never a toll on the ones who skip it.</p>
++       </section>
++       <nav class="guide-related" aria-label="Related">
++     <h2 class="guide-related-h">Related</h2>
++     <ul class="guide-related-list"><li><a href="/wiki/professions">Professions</a></li><li><a href="/wiki/professions/cooking">Cooking</a></li><li><a href="/wiki/professions/economy">Crafting Economy</a></li></ul>
++   </nav>
++     </article>
+
+ ❯ tests/guide_provisioning.test.ts:58:24
+     56|     });
+     57|     try {
+     58|       expect(render()).toContain('<li>Weapon Rack (ornamental furnishi…
+       |                        ^
+     59|     } finally {
+     60|       outputs.length = originalLength;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  16:44:23
+   Duration  1.34s (transform 434ms, setup 143ms, import 1.10s, tests 23ms, environment 0ms)

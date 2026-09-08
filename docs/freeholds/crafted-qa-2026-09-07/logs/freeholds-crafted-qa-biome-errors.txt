@@ -1,0 +1,172 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+tests/deeds_content.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✖ File content differs from formatting output
+
+    1063 1063 │         digest: 'ec055f18eef91cea2132109bf9554b8e5f95b7321a6f31109422d46372c3f323',
+    1064 1064 │       },
+    1065      │ - ··])('preserves·every·$parent·trigger·and·Renown·value·through·the·merge',·({·appended,·digest·})·=>·{
+    1066      │ - ····const·added·=·new·Set(appended);
+    1067      │ - ····const·parentRows·=·DEED_ORDER.filter((id)·=>·!added.has(id)).map((id)·=>·{
+    1068      │ - ······const·trigger·=·DEEDS[id].trigger;
+    1069      │ - ······return·[
+    1070      │ - ········id,
+    1071      │ - ········trigger.kind·===·'meta'
+    1072      │ - ··········?·{·...trigger,·deedIds:·trigger.deedIds.filter((dep)·=>·!added.has(dep))·}
+    1073      │ - ··········:·trigger,
+    1074      │ - ········DEEDS[id].renown,
+    1075      │ - ······];
+    1076      │ - ····});
+    1077      │ - ····expect(createHash('sha256').update(JSON.stringify(parentRows),·'utf8').digest('hex')).toBe(
+    1078      │ - ······digest,
+    1079      │ - ····);
+    1080      │ - ··});
+         1065 │ + ··])(
+         1066 │ + ····'preserves·every·$parent·trigger·and·Renown·value·through·the·merge',
+         1067 │ + ····({·appended,·digest·})·=>·{
+         1068 │ + ······const·added·=·new·Set(appended);
+         1069 │ + ······const·parentRows·=·DEED_ORDER.filter((id)·=>·!added.has(id)).map((id)·=>·{
+         1070 │ + ········const·trigger·=·DEEDS[id].trigger;
+         1071 │ + ········return·[
+         1072 │ + ··········id,
+         1073 │ + ··········trigger.kind·===·'meta'
+         1074 │ + ············?·{·...trigger,·deedIds:·trigger.deedIds.filter((dep)·=>·!added.has(dep))·}
+         1075 │ + ············:·trigger,
+         1076 │ + ··········DEEDS[id].renown,
+         1077 │ + ········];
+         1078 │ + ······});
+         1079 │ + ······expect(createHash('sha256').update(JSON.stringify(parentRows),·'utf8').digest('hex')).toBe(
+         1080 │ + ········digest,
+         1081 │ + ······);
+         1082 │ + ····},
+         1083 │ + ··);
+    1081 1084 │   });
+    1082 1085 │
+
+
+tests/furnishing_rift_admission.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✖ File content differs from formatting output
+
+     49  49 │   type Target = { slotIndex: number } | undefined;
+     50  50 │   type ForgeWorld = {
+     51     │ - ··[K·in·'upgradeRiftItem'·|·'socketRiftGem']:·(
+     52     │ - ····...args:·Parameters<IWorld[K]>
+     53     │ - ··)·=>·unknown;
+         51 │ + ··[K·in·'upgradeRiftItem'·|·'socketRiftGem']:·(...args:·Parameters<IWorld[K]>)·=>·unknown;
+     54  52 │   };
+     55  53 │
+    ······· │
+    233 231 │
+    234 232 │   describe('furnishing Rift admission through ClientWorld and GameServer', () => {
+    235     │ - ··it.each(CASES)('$action·refuses·a·furnishing·via·$selection·and·mirrors·shell·success',·async·(row)·=>·{
+    236     │ - ····const·remote·=·online();
+    237     │ - ····const·{·sim,·pid,·controlId,·client,·sent,·sync·}·=·remote;
+    238     │ - ····const·named·=·row.selection·===·'named·slot';
+    239     │ - ····const·before·=·structuredClone(client.inventory);
+    240     │ - ····expect(before.find((slot)·=>·slot.itemId·===·ID)?.count).toBe(1);
+    241     │ - ····const·refusalOutcome·=·withoutMutation(sim,·pid,·()·=>
+    242     │ - ······row.invoke(client,·ID,·named·?·{·slotIndex:·0·}·:·undefined),
+    243     │ - ····);
+    244     │ - ····expect(refusalOutcome).toBeInstanceOf(Promise);
+    245     │ - ····expect(sent).toEqual([
+    246     │ - ······{
+    247     │ - ········t:·'cmd',
+    248     │ - ········cmd:·row.command,
+    249     │ - ········item:·ID,
+    250     │ - ········...row.fields,
+    251     │ - ········...(named·&&·{·slot:·0·}),
+    252     │ - ········rid:·expect.any(Number),
+    253     │ - ······},
+    254     │ - ····]);
+    255     │ - ····expect(client.inventory).toEqual(before);
+    256     │ - ····sync();
+    257     │ - ····expect(await·refusalOutcome).toBe(false);
+    258     │ - ····expect(client.inventory).toEqual(before);
+    259     │ - ····expect(client.drainEvents()).toEqual([
+    260     │ - ······{·type:·'riftForgeResult',·pid,·...refusal(row.action)·},
+    261     │ - ····]);
+        233 │ + ··it.each(CASES)(
+        234 │ + ····'$action·refuses·a·furnishing·via·$selection·and·mirrors·shell·success',
+        235 │ + ····async·(row)·=>·{
+        236 │ + ······const·remote·=·online();
+        237 │ + ······const·{·sim,·pid,·controlId,·client,·sent,·sync·}·=·remote;
+        238 │ + ······const·named·=·row.selection·===·'named·slot';
+        239 │ + ······const·before·=·structuredClone(client.inventory);
+        240 │ + ······expect(before.find((slot)·=>·slot.itemId·===·ID)?.count).toBe(1);
+        241 │ + ······const·refusalOutcome·=·withoutMutation(sim,·pid,·()·=>
+        242 │ + ········row.invoke(client,·ID,·named·?·{·slotIndex:·0·}·:·undefined),
+        243 │ + ······);
+        244 │ + ······expect(refusalOutcome).toBeInstanceOf(Promise);
+        245 │ + ······expect(sent).toEqual([
+        246 │ + ········{
+        247 │ + ··········t:·'cmd',
+        248 │ + ··········cmd:·row.command,
+        249 │ + ··········item:·ID,
+        250 │ + ··········...row.fields,
+        251 │ + ··········...(named·&&·{·slot:·0·}),
+        252 │ + ··········rid:·expect.any(Number),
+        253 │ + ········},
+        254 │ + ······]);
+        255 │ + ······expect(client.inventory).toEqual(before);
+        256 │ + ······sync();
+        257 │ + ······expect(await·refusalOutcome).toBe(false);
+        258 │ + ······expect(client.inventory).toEqual(before);
+        259 │ + ······expect(client.drainEvents()).toEqual([
+        260 │ + ········{·type:·'riftForgeResult',·pid,·...refusal(row.action)·},
+        261 │ + ······]);
+    262 262 │
+    263     │ - ····const·wireRevBefore·=·sim.meta(pid)!.wireRev;
+    264     │ - ····const·controlOutcome·=·row.invoke(client,·controlId,·named·?·{·slotIndex:·1·}·:·undefined);
+    265     │ - ····expect(controlOutcome).toBeInstanceOf(Promise);
+    266     │ - ····expect(client.inventory).toEqual(before);
+    267     │ - ····sync();
+    268     │ - ····expect(await·controlOutcome).toBe(true);
+    269     │ - ····expectControl(sim,·pid,·controlId,·row);
+    270     │ - ····expect(sim.meta(pid)!.wireRev).toBeGreaterThan(wireRevBefore);
+    271     │ - ····expect(client.inventory).toEqual(sim.meta(pid)!.inventory);
+    272     │ - ····expect(client.inventory.find((slot)·=>·slot.itemId·===·ID)).toEqual(before[0]);
+    273     │ - ····expect(client.drainEvents().filter((event)·=>·event.type·===·'riftForgeResult')).toEqual([
+    274     │ - ······{
+    275     │ - ········type:·'riftForgeResult',
+    276     │ - ········pid,
+    277     │ - ········ok:·true,
+    278     │ - ········action:·row.action,
+    279     │ - ········itemId:·controlId,
+    280     │ - ········...row.result,
+    281     │ - ······},
+    282     │ - ····]);
+    283     │ - ··});
+        263 │ + ······const·wireRevBefore·=·sim.meta(pid)!.wireRev;
+        264 │ + ······const·controlOutcome·=·row.invoke(client,·controlId,·named·?·{·slotIndex:·1·}·:·undefined);
+        265 │ + ······expect(controlOutcome).toBeInstanceOf(Promise);
+        266 │ + ······expect(client.inventory).toEqual(before);
+        267 │ + ······sync();
+        268 │ + ······expect(await·controlOutcome).toBe(true);
+        269 │ + ······expectControl(sim,·pid,·controlId,·row);
+        270 │ + ······expect(sim.meta(pid)!.wireRev).toBeGreaterThan(wireRevBefore);
+        271 │ + ······expect(client.inventory).toEqual(sim.meta(pid)!.inventory);
+        272 │ + ······expect(client.inventory.find((slot)·=>·slot.itemId·===·ID)).toEqual(before[0]);
+        273 │ + ······expect(client.drainEvents().filter((event)·=>·event.type·===·'riftForgeResult')).toEqual([
+        274 │ + ········{
+        275 │ + ··········type:·'riftForgeResult',
+        276 │ + ··········pid,
+        277 │ + ··········ok:·true,
+        278 │ + ··········action:·row.action,
+        279 │ + ··········itemId:·controlId,
+        280 │ + ··········...row.result,
+        281 │ + ········},
+        282 │ + ······]);
+        283 │ + ····},
+        284 │ + ··);
+    284 285 │   });
+    285 286 │
+
+
+Checked 375 files in 539ms. No fixes applied.
+Found 2 errors.
+ci ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✖ Some errors were emitted while running checks.

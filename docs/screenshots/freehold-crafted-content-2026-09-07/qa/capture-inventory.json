@@ -1,0 +1,255 @@
+{
+  "guide-before": {
+    "captured": 6,
+    "targetErrors": 0,
+    "pageErrors": 0,
+    "consoleNotes": 6,
+    "http502": 6,
+    "modelPreloadNotes": 0,
+    "images": [
+      {
+        "file": "guide-before/01-provisioning-furnishing-guide-desktop-intro.png",
+        "width": 1280,
+        "height": 900,
+        "bytes": 173421,
+        "sha256": "23c0566bbbba39236dd1d7c62be508eff8064ada8e1c87f0b08f841b17985f7b"
+      },
+      {
+        "file": "guide-before/02-provisioning-furnishing-guide-desktop-row.png",
+        "width": 1280,
+        "height": 900,
+        "bytes": 158347,
+        "sha256": "961467cb0e685f76379ec5d3960250a6425f9d79c15aac8fcccfaf084077341e"
+      },
+      {
+        "file": "guide-before/03-provisioning-furnishing-guide-mobile-intro.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 232612,
+        "sha256": "c84277ddb297d66750bbfdc72bc92d15242a7461271bec866b1bf2e203ff38b1"
+      },
+      {
+        "file": "guide-before/04-provisioning-furnishing-guide-mobile-row.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 230412,
+        "sha256": "0c638e189c150fbcdb44cc9a8af5c3d51d618006fcf8369bc2097b7d373a0346"
+      },
+      {
+        "file": "guide-before/05-provisioning-furnishing-guide-japanese-intro.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 271500,
+        "sha256": "78abcfeeec167d2a9fddfa4c4ac988272d547bde4d12f7d41f528a0d3db57e5c"
+      },
+      {
+        "file": "guide-before/06-provisioning-furnishing-guide-japanese-row.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 263199,
+        "sha256": "06dd374eda9db70d68d311c20c8f586cf6a26009b804dc2d16c57cf7de37f106"
+      }
+    ]
+  },
+  "manual-before": {
+    "captured": 5,
+    "targetErrors": 0,
+    "pageErrors": 0,
+    "consoleNotes": 49,
+    "http502": 13,
+    "modelPreloadNotes": 36,
+    "images": [
+      {
+        "file": "manual-before/01-freehold-manual-tooltip-dark-desktop.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 1277502,
+        "sha256": "a2c495662404089aa21d47d41ef513fce35d22a14a06b8fac29e9324b5bae9fc"
+      },
+      {
+        "file": "manual-before/02-freehold-manual-tooltip-lit-desktop.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 1274800,
+        "sha256": "65f26c86828c59a21467fc4ed42d2ea74794cf19ed6efd039259a88aecaf3d01"
+      },
+      {
+        "file": "manual-before/03-freehold-manual-tooltip-dark-mobile.png",
+        "width": 1688,
+        "height": 780,
+        "bytes": 325143,
+        "sha256": "a36d29b1e34aa129527be867538a791e535d042b1446e466236becfec2706e87"
+      },
+      {
+        "file": "manual-before/04-freehold-manual-tooltip-lit-mobile.png",
+        "width": 1688,
+        "height": 780,
+        "bytes": 381388,
+        "sha256": "a71956f1c222cc75f47c9eb4cbd9decc78201b925bfa02d11930173bbc48878f"
+      },
+      {
+        "file": "manual-before/05-freehold-manual-tooltip-dark-forced-colors.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 1290914,
+        "sha256": "0e0becfc96722d089d08ba6a3800c328ea6620504c8197b1660550c4d122b24e"
+      }
+    ]
+  },
+  "refusal-layer-before": {
+    "captured": 1,
+    "targetErrors": 0,
+    "pageErrors": 0,
+    "consoleNotes": 17,
+    "http502": 2,
+    "modelPreloadNotes": 15,
+    "images": [
+      {
+        "file": "refusal-layer-before/01-freehold-manual-tooltip-dark-mobile.png",
+        "width": 1688,
+        "height": 780,
+        "bytes": 336738,
+        "sha256": "86a5d7fa30b8d521c87eb316bddbe3e1bd27ce7961cb6af961df24cb43271442"
+      }
+    ]
+  },
+  "combined-after": {
+    "captured": 11,
+    "targetErrors": 0,
+    "pageErrors": 0,
+    "consoleNotes": 65,
+    "http502": 29,
+    "modelPreloadNotes": 36,
+    "images": [
+      {
+        "file": "combined-after/01-provisioning-furnishing-guide-desktop-intro.png",
+        "width": 1280,
+        "height": 900,
+        "bytes": 174993,
+        "sha256": "0becda3af447c36ada80ee6cc3fa7003475a92a7589535ff8293250f541f564d"
+      },
+      {
+        "file": "combined-after/02-provisioning-furnishing-guide-desktop-row.png",
+        "width": 1280,
+        "height": 900,
+        "bytes": 162006,
+        "sha256": "66ddb734d6472045af9bcfaafaa9fafcfe1b9d940086ac3ee1c7a6aee8fcfe66"
+      },
+      {
+        "file": "combined-after/03-provisioning-furnishing-guide-mobile-intro.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 221818,
+        "sha256": "41b4c0115ce4868b6db934784314addff5b640995509c8d0f655f5b33ea47e79"
+      },
+      {
+        "file": "combined-after/04-provisioning-furnishing-guide-mobile-row.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 239792,
+        "sha256": "2f707188605dfdb2af0a4c3519c855363a711578902083babe7a862f2abfe269"
+      },
+      {
+        "file": "combined-after/05-provisioning-furnishing-guide-japanese-intro.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 288034,
+        "sha256": "5291789a6599a108f57f5635aa7213150896e4a4a9f6589f713f7c5a9f7aae99"
+      },
+      {
+        "file": "combined-after/06-provisioning-furnishing-guide-japanese-row.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 263307,
+        "sha256": "abab5fa1899e75dc5dfceb9b544c1f432ab4401c8c8faeb58d03a279c7821450"
+      },
+      {
+        "file": "combined-after/07-freehold-manual-tooltip-dark-desktop.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 1282732,
+        "sha256": "49eb51747f49258ec9a82a9a8df3b8d6351f3dfd7a7df23fbacd0a39230344df"
+      },
+      {
+        "file": "combined-after/08-freehold-manual-tooltip-lit-desktop.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 1276023,
+        "sha256": "46ec9d7e76bf3cf4545211cd5ac000ce5578104755167ed2e29feffa58099ebf"
+      },
+      {
+        "file": "combined-after/09-freehold-manual-tooltip-dark-mobile.png",
+        "width": 1688,
+        "height": 780,
+        "bytes": 341920,
+        "sha256": "34a2e694c233c343ca72c1cbc650648ca71c86fa6f9600da2e5cffc90cec08f8"
+      },
+      {
+        "file": "combined-after/10-freehold-manual-tooltip-lit-mobile.png",
+        "width": 1688,
+        "height": 780,
+        "bytes": 378930,
+        "sha256": "e7cf7712bf5d8ad9561bb82fb68fd068ab94d58067cb5aee8663c1baa0e8c720"
+      },
+      {
+        "file": "combined-after/11-freehold-manual-tooltip-dark-forced-colors.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 1274201,
+        "sha256": "076d3ff70c36df043ed32ce207bba1ca14880b539cdfd7088f6054ec41bb3148"
+      }
+    ]
+  },
+  "guide-after": {
+    "captured": 6,
+    "targetErrors": 0,
+    "pageErrors": 0,
+    "consoleNotes": 6,
+    "http502": 6,
+    "modelPreloadNotes": 0,
+    "images": [
+      {
+        "file": "guide-after/01-provisioning-furnishing-guide-desktop-intro.png",
+        "width": 1280,
+        "height": 900,
+        "bytes": 173429,
+        "sha256": "4d4d8ac4222fbb42148342049ade22dd117921b4b14c4ff08a2d6231625384db"
+      },
+      {
+        "file": "guide-after/02-provisioning-furnishing-guide-desktop-row.png",
+        "width": 1280,
+        "height": 900,
+        "bytes": 162006,
+        "sha256": "66ddb734d6472045af9bcfaafaa9fafcfe1b9d940086ac3ee1c7a6aee8fcfe66"
+      },
+      {
+        "file": "guide-after/03-provisioning-furnishing-guide-mobile-intro.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 221818,
+        "sha256": "41b4c0115ce4868b6db934784314addff5b640995509c8d0f655f5b33ea47e79"
+      },
+      {
+        "file": "guide-after/04-provisioning-furnishing-guide-mobile-row.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 239792,
+        "sha256": "2f707188605dfdb2af0a4c3519c855363a711578902083babe7a862f2abfe269"
+      },
+      {
+        "file": "guide-after/05-provisioning-furnishing-guide-japanese-intro.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 288034,
+        "sha256": "5291789a6599a108f57f5635aa7213150896e4a4a9f6589f713f7c5a9f7aae99"
+      },
+      {
+        "file": "guide-after/06-provisioning-furnishing-guide-japanese-row.png",
+        "width": 780,
+        "height": 1688,
+        "bytes": 263307,
+        "sha256": "abab5fa1899e75dc5dfceb9b544c1f432ab4401c8c8faeb58d03a279c7821450"
+      }
+    ]
+  }
+}

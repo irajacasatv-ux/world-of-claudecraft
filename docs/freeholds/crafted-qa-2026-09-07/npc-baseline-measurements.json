@@ -1,0 +1,3843 @@
+{
+  "root": "/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-npc-baselines-c148wflz",
+  "results": [
+    {
+      "ref": "49ed3f0933",
+      "commit": "49ed3f09333f4f1293edda9a98fe590c5651c20e",
+      "exitCode": 0,
+      "measurement": {
+        "nextId": 1003,
+        "primaryId": 998,
+        "merchants": [1, 33],
+        "bankers": [9, 22, 34, 94],
+        "entityCount": 1019,
+        "positionHash": "297a79e82e0de3213f051b5a5f338a483bc03445f3db02e00af7754d1a9d757e",
+        "rngNext": 0.30275995447300375,
+        "npcPrefix": [
+          {
+            "id": 1,
+            "templateId": "the_merchant",
+            "pos": {
+              "x": -19.333512834321652,
+              "y": -0.7008555399191915,
+              "z": -95.49976921301501
+            },
+            "facing": 2.4805494847391065,
+            "hp": 500
+          },
+          {
+            "id": 2,
+            "templateId": "marshal_redbrook",
+            "pos": {
+              "x": -58,
+              "y": -1.343028865473243,
+              "z": -102
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 3,
+            "templateId": "trader_wilkes",
+            "pos": {
+              "x": -17.833512834321652,
+              "y": -0.9317897434944669,
+              "z": -106.50023078698499
+            },
+            "facing": 0.6610431688506869,
+            "hp": 500
+          },
+          {
+            "id": 4,
+            "templateId": "apothecary_lin",
+            "pos": {
+              "x": -72,
+              "y": -1.5044441919874993,
+              "z": -96
+            },
+            "facing": 1.673877935317597,
+            "hp": 500
+          },
+          {
+            "id": 5,
+            "templateId": "brother_aldric",
+            "pos": {
+              "x": 5.181980515339464,
+              "y": 2.080013090890397,
+              "z": -74.81801948466054
+            },
+            "facing": 0.7853981633974483,
+            "hp": 500
+          },
+          {
+            "id": 6,
+            "templateId": "smith_haldren",
+            "pos": {
+              "x": -3.4,
+              "y": -0.8797050118190004,
+              "z": -112.5
+            },
+            "facing": -1.6631256615264958,
+            "hp": 500
+          },
+          {
+            "id": 7,
+            "templateId": "fisherman_brandt",
+            "pos": {
+              "x": -95,
+              "y": -2,
+              "z": -50
+            },
+            "facing": -1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 8,
+            "templateId": "foreman_odell",
+            "pos": {
+              "x": -84,
+              "y": -1.850220003635343,
+              "z": -63
+            },
+            "facing": 0.6747409422235526,
+            "hp": 500
+          },
+          {
+            "id": 9,
+            "templateId": "bursar_fernando",
+            "pos": {
+              "x": 8.49982143312659,
+              "y": -0.29194703568849123,
+              "z": -97.50017856687342
+            },
+            "facing": -2.356194490192345,
+            "hp": 500
+          },
+          {
+            "id": 10,
+            "templateId": "card_master",
+            "pos": {
+              "x": 20,
+              "y": 0.2740425740147221,
+              "z": -98
+            },
+            "facing": -2.677945044588987,
+            "hp": 500
+          },
+          {
+            "id": 11,
+            "templateId": "chronicler_saul",
+            "pos": {
+              "x": 10.2,
+              "y": 0.4883094952583371,
+              "z": -87.5
+            },
+            "facing": 0.5880026035475675,
+            "hp": 500
+          },
+          {
+            "id": 12,
+            "templateId": "forgemistress_darva",
+            "pos": {
+              "x": -8.171547617899419,
+              "y": -0.8821304980358816,
+              "z": -120.39003105620014
+            },
+            "facing": -2.0344439357957027,
+            "hp": 500
+          },
+          {
+            "id": 13,
+            "templateId": "cook_marlow",
+            "pos": {
+              "x": -42.62589170715949,
+              "y": -0.12071733115279024,
+              "z": -92.23189846640925
+            },
+            "facing": -0.669638945676638,
+            "hp": 500
+          },
+          {
+            "id": 14,
+            "templateId": "weaver_ottilie",
+            "pos": {
+              "x": -27.278889744907204,
+              "y": -1.6228766578456462,
+              "z": -126.68721665810318
+            },
+            "facing": 2.5535900500422257,
+            "hp": 500
+          },
+          {
+            "id": 15,
+            "templateId": "tinker_gizzel",
+            "pos": {
+              "x": -16.277350098112613,
+              "y": -0.8597495266774359,
+              "z": -122.64714310642654
+            },
+            "facing": 0.5880026035475675,
+            "hp": 500
+          },
+          {
+            "id": 16,
+            "templateId": "farmer_jessica",
+            "pos": {
+              "x": -15.5,
+              "y": -0.18394242893014168,
+              "z": -81.5
+            },
+            "facing": -1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 17,
+            "templateId": "warden_fenwick",
+            "pos": {
+              "x": 4.824455435060822,
+              "y": 1.2,
+              "z": 285.6503188335003
+            },
+            "facing": -0.4048917862850834,
+            "hp": 500
+          },
+          {
+            "id": 18,
+            "templateId": "brother_aldric_fen",
+            "pos": {
+              "x": -14.960203077497741,
+              "y": 1.2,
+              "z": 296.09529088730875
+            },
+            "facing": 1.1383885512243588,
+            "hp": 500
+          },
+          {
+            "id": 19,
+            "templateId": "provisioner_hale",
+            "pos": {
+              "x": -12.424844495021249,
+              "y": 1.2,
+              "z": 314.94714794895896
+            },
+            "facing": 2.191045812777718,
+            "hp": 500
+          },
+          {
+            "id": 20,
+            "templateId": "herbalist_yara",
+            "pos": {
+              "x": 14.020226082985031,
+              "y": 1.2,
+              "z": 293.9419887666108
+            },
+            "facing": -0.9971906342364164,
+            "hp": 500
+          },
+          {
+            "id": 21,
+            "templateId": "scout_maren",
+            "pos": {
+              "x": -12.942629598286846,
+              "y": 1.199833503796512,
+              "z": 320.2950179409249
+            },
+            "facing": 2.601173153319209,
+            "hp": 500
+          },
+          {
+            "id": 22,
+            "templateId": "bursar_petra_vell",
+            "pos": {
+              "x": 15.101663970557492,
+              "y": 1.2,
+              "z": 306.79285357068125
+            },
+            "facing": -1.8972270342276318,
+            "hp": 500
+          },
+          {
+            "id": 23,
+            "templateId": "chronicler_osric_fenn",
+            "pos": {
+              "x": -15.965942703405933,
+              "y": 1.2,
+              "z": 298.27439341010984
+            },
+            "facing": 1.1383885512243588,
+            "hp": 500
+          },
+          {
+            "id": 24,
+            "templateId": "tanner_hesk",
+            "pos": {
+              "x": 3.053383957289929,
+              "y": 1.2,
+              "z": 315.5600325924389
+            },
+            "facing": 3.024483909022929,
+            "hp": 500
+          },
+          {
+            "id": 25,
+            "templateId": "farmer_teasel",
+            "pos": {
+              "x": -21,
+              "y": 0.48144983759710563,
+              "z": 333.5
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 26,
+            "templateId": "captain_thessaly",
+            "pos": {
+              "x": 4,
+              "y": 9,
+              "z": 664
+            },
+            "facing": -2,
+            "hp": 500
+          },
+          {
+            "id": 27,
+            "templateId": "brother_aldric_highwatch",
+            "pos": {
+              "x": -10,
+              "y": 9,
+              "z": 656
+            },
+            "facing": 0.8,
+            "hp": 500
+          },
+          {
+            "id": 28,
+            "templateId": "scout_maren_highwatch",
+            "pos": {
+              "x": 7,
+              "y": 9,
+              "z": 670
+            },
+            "facing": -2.4,
+            "hp": 500
+          },
+          {
+            "id": 29,
+            "templateId": "quartermaster_bree",
+            "pos": {
+              "x": -5,
+              "y": 9,
+              "z": 668
+            },
+            "facing": 1.6,
+            "hp": 500
+          },
+          {
+            "id": 30,
+            "templateId": "armorer_hode",
+            "pos": {
+              "x": -2,
+              "y": 9,
+              "z": 672
+            },
+            "facing": 2.8,
+            "hp": 500
+          },
+          {
+            "id": 31,
+            "templateId": "heroic_quartermaster",
+            "pos": {
+              "x": -6.6625245019963995,
+              "y": 9,
+              "z": 663.5400139410802
+            },
+            "facing": 1.2,
+            "hp": 500
+          },
+          {
+            "id": 32,
+            "templateId": "loremaster_caddis",
+            "pos": {
+              "x": 12,
+              "y": 9,
+              "z": 655
+            },
+            "facing": -1.2,
+            "hp": 500
+          },
+          {
+            "id": 33,
+            "templateId": "auctioneer_voss",
+            "pos": {
+              "x": 16,
+              "y": 8.53054997121908,
+              "z": 666
+            },
+            "facing": -2.2,
+            "hp": 500
+          },
+          {
+            "id": 34,
+            "templateId": "bursar_aldous_crane",
+            "pos": {
+              "x": -12,
+              "y": 9,
+              "z": 663
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 35,
+            "templateId": "stablemaster_marla",
+            "pos": {
+              "x": 367,
+              "y": 3.8866891856536316,
+              "z": 608
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 36,
+            "templateId": "chronicler_edda_hartwell",
+            "pos": {
+              "x": 2,
+              "y": 8.969044288631789,
+              "z": 643
+            },
+            "facing": 3.1,
+            "hp": 500
+          },
+          {
+            "id": 37,
+            "templateId": "alchemist_verane",
+            "pos": {
+              "x": 8.5,
+              "y": 9,
+              "z": 658
+            },
+            "facing": -0.4,
+            "hp": 500
+          },
+          {
+            "id": 38,
+            "templateId": "farmer_hollis",
+            "pos": {
+              "x": -18,
+              "y": 2.794554225053506,
+              "z": 695.5
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 39,
+            "templateId": "tidewatcher_ondrel",
+            "pos": {
+              "x": -66,
+              "y": 0.07036950486194393,
+              "z": 786
+            },
+            "facing": -2.4,
+            "hp": 500
+          },
+          {
+            "id": 40,
+            "templateId": "brother_halven",
+            "pos": {
+              "x": -136,
+              "y": 1.1586440277697676,
+              "z": 112
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 41,
+            "templateId": "brother_halven_marsh",
+            "pos": {
+              "x": -95,
+              "y": 11.4184698429052,
+              "z": 505
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 42,
+            "templateId": "keeper_saelwyn",
+            "pos": {
+              "x": -43,
+              "y": 2.5,
+              "z": 1016
+            },
+            "facing": -2.85,
+            "hp": 500
+          },
+          {
+            "id": 43,
+            "templateId": "loremother_bryn",
+            "pos": {
+              "x": -22.789422802186177,
+              "y": 2.473806986783927,
+              "z": 1015.2447865001258
+            },
+            "facing": -0.9,
+            "hp": 500
+          },
+          {
+            "id": 44,
+            "templateId": "provisioner_fenna",
+            "pos": {
+              "x": -48.376377939427165,
+              "y": 2.5,
+              "z": 1034.7356161324478
+            },
+            "facing": -0.87,
+            "hp": 500
+          },
+          {
+            "id": 45,
+            "templateId": "wardsmith_orun",
+            "pos": {
+              "x": -31.278397709868006,
+              "y": 2.5,
+              "z": 1033.0866434708278
+            },
+            "facing": 0.87,
+            "hp": 500
+          },
+          {
+            "id": 46,
+            "templateId": "archivist_tullo",
+            "pos": {
+              "x": -31,
+              "y": 2.5,
+              "z": 1021
+            },
+            "facing": 2.08,
+            "hp": 500
+          },
+          {
+            "id": 47,
+            "templateId": "huntsman_deral",
+            "pos": {
+              "x": 18,
+              "y": -1.3351107048696882,
+              "z": 1104
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 48,
+            "templateId": "gatecaptain_brannoc",
+            "pos": {
+              "x": 407,
+              "y": 3.9875,
+              "z": 1895
+            },
+            "facing": 2.6,
+            "hp": 500
+          },
+          {
+            "id": 49,
+            "templateId": "quartermaster_sela",
+            "pos": {
+              "x": 398,
+              "y": 2.9318272000000003,
+              "z": 1908
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 50,
+            "templateId": "scout_yerrin",
+            "pos": {
+              "x": 494,
+              "y": 4.349877781907471,
+              "z": 2100
+            },
+            "facing": -2.4,
+            "hp": 500
+          },
+          {
+            "id": 51,
+            "templateId": "warden_kaldra",
+            "pos": {
+              "x": -29.789422802186177,
+              "y": 3,
+              "z": 1557.2447865001257
+            },
+            "facing": 2.4,
+            "hp": 500
+          },
+          {
+            "id": 52,
+            "templateId": "hearthkeeper_maeve",
+            "pos": {
+              "x": -37.27839770986801,
+              "y": 3.9725498327036877,
+              "z": 1559.0866434708278
+            },
+            "facing": 0.8,
+            "hp": 500
+          },
+          {
+            "id": 53,
+            "templateId": "scout_einna",
+            "pos": {
+              "x": -14.789422802186177,
+              "y": 0.15057475457554106,
+              "z": 1502.2447865001257
+            },
+            "facing": -0.4,
+            "hp": 500
+          },
+          {
+            "id": 54,
+            "templateId": "aurorist_veyla",
+            "pos": {
+              "x": 33.3374754980036,
+              "y": 5.637484180225462,
+              "z": 1742.5400139410804
+            },
+            "facing": -2.2,
+            "hp": 500
+          },
+          {
+            "id": 55,
+            "templateId": "trapper_brosk",
+            "pos": {
+              "x": -82,
+              "y": 8.500993067160382,
+              "z": 1744
+            },
+            "facing": 1.6,
+            "hp": 500
+          },
+          {
+            "id": 56,
+            "templateId": "reeve_ottoline",
+            "pos": {
+              "x": -358,
+              "y": 2.5,
+              "z": 2070
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 57,
+            "templateId": "waywatcher_sorrel",
+            "pos": {
+              "x": -349.6625245019964,
+              "y": 4.453364354612192,
+              "z": 1844.5400139410804
+            },
+            "facing": 2.8,
+            "hp": 500
+          },
+          {
+            "id": 58,
+            "templateId": "ferrymaster_caddow",
+            "pos": {
+              "x": -356,
+              "y": -1.3112683989042928,
+              "z": 2098
+            },
+            "facing": 0.2,
+            "hp": 500
+          },
+          {
+            "id": 59,
+            "templateId": "orchardist_pomeline",
+            "pos": {
+              "x": -428,
+              "y": -1.997436150872792,
+              "z": 1996
+            },
+            "facing": 1.2,
+            "hp": 500
+          },
+          {
+            "id": 60,
+            "templateId": "waykeeper_pell",
+            "pos": {
+              "x": -377,
+              "y": 3.9717797435728,
+              "z": 214
+            },
+            "facing": 0.6,
+            "hp": 500
+          },
+          {
+            "id": 61,
+            "templateId": "bridgewright_alden",
+            "pos": {
+              "x": -359,
+              "y": 2,
+              "z": 354
+            },
+            "facing": 2.9,
+            "hp": 500
+          },
+          {
+            "id": 62,
+            "templateId": "netter_maris",
+            "pos": {
+              "x": -354,
+              "y": 2,
+              "z": 364
+            },
+            "facing": -0.8,
+            "hp": 500
+          },
+          {
+            "id": 63,
+            "templateId": "mother_sedge",
+            "pos": {
+              "x": -414,
+              "y": -2.9742819249093455,
+              "z": 446
+            },
+            "facing": 1.2,
+            "hp": 500
+          },
+          {
+            "id": 64,
+            "templateId": "lamplighter_sorrel",
+            "pos": {
+              "x": -388,
+              "y": -0.2733999999999994,
+              "z": 1284
+            },
+            "facing": 0.4,
+            "hp": 500
+          },
+          {
+            "id": 65,
+            "templateId": "lira_dewsong",
+            "pos": {
+              "x": -370.6625245019964,
+              "y": 2.5,
+              "z": 1415.5400139410804
+            },
+            "facing": 2.2,
+            "hp": 500
+          },
+          {
+            "id": 66,
+            "templateId": "weaver_amelle",
+            "pos": {
+              "x": -364.6625245019964,
+              "y": 2.5,
+              "z": 1421.5400139410804
+            },
+            "facing": -1.4,
+            "hp": 500
+          },
+          {
+            "id": 67,
+            "templateId": "astronomer_cassian",
+            "pos": {
+              "x": -278,
+              "y": -0.40745811204633053,
+              "z": 1548
+            },
+            "facing": -2,
+            "hp": 500
+          },
+          {
+            "id": 68,
+            "templateId": "lampman_cobb",
+            "pos": {
+              "x": 387,
+              "y": 4.040615484886385,
+              "z": 1283
+            },
+            "facing": 2.9,
+            "hp": 500
+          },
+          {
+            "id": 69,
+            "templateId": "sexton_marrow",
+            "pos": {
+              "x": 364.3374754980036,
+              "y": 2.5,
+              "z": 1434.5400139410804
+            },
+            "facing": -2,
+            "hp": 500
+          },
+          {
+            "id": 70,
+            "templateId": "widow_tansy",
+            "pos": {
+              "x": 358.3374754980036,
+              "y": 2.5,
+              "z": 1422.5400139410804
+            },
+            "facing": 0.7,
+            "hp": 500
+          },
+          {
+            "id": 71,
+            "templateId": "vicar_creel",
+            "pos": {
+              "x": 297.3374754980036,
+              "y": 3.2516671565412762,
+              "z": 1612.5400139410804
+            },
+            "facing": 0.4,
+            "hp": 500
+          },
+          {
+            "id": 72,
+            "templateId": "strandwatcher_pell",
+            "pos": {
+              "x": -416,
+              "y": 3.7318555300218694,
+              "z": 722
+            },
+            "facing": 1,
+            "hp": 500
+          },
+          {
+            "id": 73,
+            "templateId": "salvage_boss_ryna",
+            "pos": {
+              "x": -296,
+              "y": 2,
+              "z": 816
+            },
+            "facing": -0.8,
+            "hp": 500
+          },
+          {
+            "id": 74,
+            "templateId": "pearlmother_isha",
+            "pos": {
+              "x": -293,
+              "y": 1.9866396667606168,
+              "z": 810
+            },
+            "facing": 0.6,
+            "hp": 500
+          },
+          {
+            "id": 75,
+            "templateId": "hermit_okku",
+            "pos": {
+              "x": -397,
+              "y": 0.7376138597979667,
+              "z": 1068
+            },
+            "facing": -0.24,
+            "hp": 500
+          },
+          {
+            "id": 76,
+            "templateId": "gatewarden_pell",
+            "pos": {
+              "x": 390,
+              "y": 4.247248130308458,
+              "z": 714
+            },
+            "facing": -2.6,
+            "hp": 500
+          },
+          {
+            "id": 77,
+            "templateId": "head_gardener_amaranth",
+            "pos": {
+              "x": 324.3374754980036,
+              "y": 2,
+              "z": 806.5400139410802
+            },
+            "facing": 2.8,
+            "hp": 500
+          },
+          {
+            "id": 78,
+            "templateId": "wickmother_sorrel",
+            "pos": {
+              "x": 314.21057719781385,
+              "y": 2,
+              "z": 814.2447865001258
+            },
+            "facing": 0.5,
+            "hp": 500
+          },
+          {
+            "id": 79,
+            "templateId": "gardener_yew",
+            "pos": {
+              "x": 349.3374754980036,
+              "y": -2.230039808128427,
+              "z": 1158.5400139410804
+            },
+            "facing": -0.8,
+            "hp": 500
+          },
+          {
+            "id": 80,
+            "templateId": "farmer_verbena",
+            "pos": {
+              "x": 348.5,
+              "y": 2.928722464853675,
+              "z": 867
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 81,
+            "templateId": "watcher_maren",
+            "pos": {
+              "x": 194,
+              "y": 5.418201165400086,
+              "z": 436
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 82,
+            "templateId": "harbormaster_odile",
+            "pos": {
+              "x": 424,
+              "y": 2.5,
+              "z": 364
+            },
+            "facing": -2.2,
+            "hp": 500
+          },
+          {
+            "id": 83,
+            "templateId": "keeper_bram",
+            "pos": {
+              "x": 503,
+              "y": 20.949807894426474,
+              "z": 309
+            },
+            "facing": -0.46,
+            "hp": 500
+          },
+          {
+            "id": 84,
+            "templateId": "salvager_edda",
+            "pos": {
+              "x": 360,
+              "y": -0.08222490916137559,
+              "z": 630
+            },
+            "facing": -1.8,
+            "hp": 500
+          },
+          {
+            "id": 85,
+            "templateId": "warden_coalfast",
+            "pos": {
+              "x": 306.3374754980036,
+              "y": 4.097604297005835,
+              "z": 64.54001394108025
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 86,
+            "templateId": "riftwatch_ollun",
+            "pos": {
+              "x": 372,
+              "y": 21.68290588195695,
+              "z": 2
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 87,
+            "templateId": "quartermaster_edda",
+            "pos": {
+              "x": 298,
+              "y": 2.4689722831447964,
+              "z": 74
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 88,
+            "templateId": "mender_saul",
+            "pos": {
+              "x": 311.31028985341607,
+              "y": 3.5384996031014726,
+              "z": 74.10052568751901
+            },
+            "facing": -1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 89,
+            "templateId": "bellkeeper_tam",
+            "pos": {
+              "x": 253.3374754980036,
+              "y": 3.2083653798640492,
+              "z": 16.54001394108025
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 90,
+            "templateId": "fisher_nell",
+            "pos": {
+              "x": 293.21057719781385,
+              "y": -0.1323237336760037,
+              "z": 80.24478650012576
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 91,
+            "templateId": "wayfarer_bryn",
+            "pos": {
+              "x": 6,
+              "y": 2.475565022505312,
+              "z": -7
+            },
+            "facing": 0.7,
+            "hp": 500
+          },
+          {
+            "id": 92,
+            "templateId": "instructor_maren",
+            "pos": {
+              "x": -299,
+              "y": -3.301772792170442,
+              "z": 49
+            },
+            "facing": -2.356194490192345,
+            "hp": 500
+          },
+          {
+            "id": 93,
+            "templateId": "quartermaster_finch",
+            "pos": {
+              "x": -312.68971014658393,
+              "y": -2.754307325273535,
+              "z": 53.300525687519006
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 94,
+            "templateId": "bursar_wick",
+            "pos": {
+              "x": -325,
+              "y": -0.2145625186852511,
+              "z": 42
+            },
+            "facing": 0.7853981633974483,
+            "hp": 500
+          },
+          {
+            "id": 95,
+            "templateId": "ferryman_odo",
+            "pos": {
+              "x": -284,
+              "y": -2.302102545109207,
+              "z": -9
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 96,
+            "templateId": "warden_tam",
+            "pos": {
+              "x": -283,
+              "y": -3.326909156969945,
+              "z": -21
+            },
+            "facing": 0.05,
+            "hp": 500
+          },
+          {
+            "id": 97,
+            "templateId": "overseer_pell",
+            "pos": {
+              "x": -337,
+              "y": 0.9491371469638858,
+              "z": -33
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 98,
+            "templateId": "drillmaster_rook",
+            "pos": {
+              "x": -345,
+              "y": 2.0712218533960804,
+              "z": -11
+            },
+            "facing": 2.356194490192345,
+            "hp": 500
+          },
+          {
+            "id": 99,
+            "templateId": "tidewarden_nel",
+            "pos": {
+              "x": -371,
+              "y": 0.8883873369226194,
+              "z": -13
+            },
+            "facing": 2.356194490192345,
+            "hp": 500
+          }
+        ],
+        "reserved": [
+          {
+            "id": 2000000001,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 5,
+              "y": -0.11408450943849013,
+              "z": -89
+            },
+            "facing": -2.17084654019665,
+            "hp": 1
+          },
+          {
+            "id": 2000000002,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -312,
+              "y": -0.9671194965491949,
+              "z": 41
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000003,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -11,
+              "y": 1.196102864020111,
+              "z": 278
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000004,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -5,
+              "y": 9,
+              "z": 652
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000005,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -52,
+              "y": 2.5,
+              "z": 1022
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000006,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 409,
+              "y": 4.253964799999999,
+              "z": 1892
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000007,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -38,
+              "y": 4.473069199937145,
+              "z": 1550
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000008,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -365,
+              "y": 2.5,
+              "z": 2064
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000009,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -365,
+              "y": 2,
+              "z": 354
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000010,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -375,
+              "y": 2.5,
+              "z": 1412
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000011,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 365,
+              "y": 2.5,
+              "z": 1422
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000012,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -305,
+              "y": 2,
+              "z": 812
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000013,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 325,
+              "y": 2.0001040654163207,
+              "z": 802
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000014,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 415,
+              "y": 2.5,
+              "z": 352
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000015,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 310,
+              "y": 4.792481872301369,
+              "z": 62
+            },
+            "facing": 0,
+            "hp": 1
+          }
+        ]
+      }
+    },
+    {
+      "ref": "54ce808436",
+      "commit": "54ce808436ce53a562175a21311dd45c7f409a9f",
+      "exitCode": 0,
+      "measurement": {
+        "nextId": 1004,
+        "primaryId": 999,
+        "merchants": [1, 33],
+        "bankers": [9, 22, 34, 95],
+        "entityCount": 1021,
+        "positionHash": "722c2cecf11f6e09cdcea8888a7050a9df9c786cc29ee2d771e516b827af00fe",
+        "rngNext": 0.30275995447300375,
+        "npcPrefix": [
+          {
+            "id": 1,
+            "templateId": "the_merchant",
+            "pos": {
+              "x": -19.333512834321652,
+              "y": -0.7008555399191915,
+              "z": -95.49976921301501
+            },
+            "facing": 2.4805494847391065,
+            "hp": 500
+          },
+          {
+            "id": 2,
+            "templateId": "marshal_redbrook",
+            "pos": {
+              "x": -58,
+              "y": -1.343028865473243,
+              "z": -102
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 3,
+            "templateId": "trader_wilkes",
+            "pos": {
+              "x": -17.833512834321652,
+              "y": -0.9317897434944669,
+              "z": -106.50023078698499
+            },
+            "facing": 0.6610431688506869,
+            "hp": 500
+          },
+          {
+            "id": 4,
+            "templateId": "apothecary_lin",
+            "pos": {
+              "x": -72,
+              "y": -1.5044441919874993,
+              "z": -96
+            },
+            "facing": 1.673877935317597,
+            "hp": 500
+          },
+          {
+            "id": 5,
+            "templateId": "brother_aldric",
+            "pos": {
+              "x": 5.181980515339464,
+              "y": 2.080013090890397,
+              "z": -74.81801948466054
+            },
+            "facing": 0.7853981633974483,
+            "hp": 500
+          },
+          {
+            "id": 6,
+            "templateId": "smith_haldren",
+            "pos": {
+              "x": -3.4,
+              "y": -0.8797050118190004,
+              "z": -112.5
+            },
+            "facing": -1.6631256615264958,
+            "hp": 500
+          },
+          {
+            "id": 7,
+            "templateId": "fisherman_brandt",
+            "pos": {
+              "x": -95,
+              "y": -2,
+              "z": -50
+            },
+            "facing": -1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 8,
+            "templateId": "foreman_odell",
+            "pos": {
+              "x": -84,
+              "y": -1.850220003635343,
+              "z": -63
+            },
+            "facing": 0.6747409422235526,
+            "hp": 500
+          },
+          {
+            "id": 9,
+            "templateId": "bursar_fernando",
+            "pos": {
+              "x": 8.49982143312659,
+              "y": -0.29194703568849123,
+              "z": -97.50017856687342
+            },
+            "facing": -2.356194490192345,
+            "hp": 500
+          },
+          {
+            "id": 10,
+            "templateId": "card_master",
+            "pos": {
+              "x": 20,
+              "y": 0.2740425740147221,
+              "z": -98
+            },
+            "facing": -2.677945044588987,
+            "hp": 500
+          },
+          {
+            "id": 11,
+            "templateId": "chronicler_saul",
+            "pos": {
+              "x": 10.2,
+              "y": 0.4883094952583371,
+              "z": -87.5
+            },
+            "facing": 0.5880026035475675,
+            "hp": 500
+          },
+          {
+            "id": 12,
+            "templateId": "forgemistress_darva",
+            "pos": {
+              "x": -8.171547617899419,
+              "y": -0.8821304980358816,
+              "z": -120.39003105620014
+            },
+            "facing": -2.0344439357957027,
+            "hp": 500
+          },
+          {
+            "id": 13,
+            "templateId": "cook_marlow",
+            "pos": {
+              "x": -42.62589170715949,
+              "y": -0.12071733115279024,
+              "z": -92.23189846640925
+            },
+            "facing": -0.669638945676638,
+            "hp": 500
+          },
+          {
+            "id": 14,
+            "templateId": "weaver_ottilie",
+            "pos": {
+              "x": -27.278889744907204,
+              "y": -1.6228766578456462,
+              "z": -126.68721665810318
+            },
+            "facing": 2.5535900500422257,
+            "hp": 500
+          },
+          {
+            "id": 15,
+            "templateId": "tinker_gizzel",
+            "pos": {
+              "x": -16.277350098112613,
+              "y": -0.8597495266774359,
+              "z": -122.64714310642654
+            },
+            "facing": 0.5880026035475675,
+            "hp": 500
+          },
+          {
+            "id": 16,
+            "templateId": "farmer_jessica",
+            "pos": {
+              "x": -15.5,
+              "y": -0.18394242893014168,
+              "z": -81.5
+            },
+            "facing": -1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 17,
+            "templateId": "warden_fenwick",
+            "pos": {
+              "x": 4.824455435060822,
+              "y": 1.2,
+              "z": 285.6503188335003
+            },
+            "facing": -0.4048917862850834,
+            "hp": 500
+          },
+          {
+            "id": 18,
+            "templateId": "brother_aldric_fen",
+            "pos": {
+              "x": -14.960203077497741,
+              "y": 1.2,
+              "z": 296.09529088730875
+            },
+            "facing": 1.1383885512243588,
+            "hp": 500
+          },
+          {
+            "id": 19,
+            "templateId": "provisioner_hale",
+            "pos": {
+              "x": -12.424844495021249,
+              "y": 1.2,
+              "z": 314.94714794895896
+            },
+            "facing": 2.191045812777718,
+            "hp": 500
+          },
+          {
+            "id": 20,
+            "templateId": "herbalist_yara",
+            "pos": {
+              "x": 14.020226082985031,
+              "y": 1.2,
+              "z": 293.9419887666108
+            },
+            "facing": -0.9971906342364164,
+            "hp": 500
+          },
+          {
+            "id": 21,
+            "templateId": "scout_maren",
+            "pos": {
+              "x": -12.942629598286846,
+              "y": 1.199833503796512,
+              "z": 320.2950179409249
+            },
+            "facing": 2.601173153319209,
+            "hp": 500
+          },
+          {
+            "id": 22,
+            "templateId": "bursar_petra_vell",
+            "pos": {
+              "x": 15.101663970557492,
+              "y": 1.2,
+              "z": 306.79285357068125
+            },
+            "facing": -1.8972270342276318,
+            "hp": 500
+          },
+          {
+            "id": 23,
+            "templateId": "chronicler_osric_fenn",
+            "pos": {
+              "x": -15.965942703405933,
+              "y": 1.2,
+              "z": 298.27439341010984
+            },
+            "facing": 1.1383885512243588,
+            "hp": 500
+          },
+          {
+            "id": 24,
+            "templateId": "tanner_hesk",
+            "pos": {
+              "x": 3.053383957289929,
+              "y": 1.2,
+              "z": 315.5600325924389
+            },
+            "facing": 3.024483909022929,
+            "hp": 500
+          },
+          {
+            "id": 25,
+            "templateId": "farmer_teasel",
+            "pos": {
+              "x": -21,
+              "y": 0.48144983759710563,
+              "z": 333.5
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 26,
+            "templateId": "captain_thessaly",
+            "pos": {
+              "x": 4,
+              "y": 9,
+              "z": 664
+            },
+            "facing": -2,
+            "hp": 500
+          },
+          {
+            "id": 27,
+            "templateId": "brother_aldric_highwatch",
+            "pos": {
+              "x": -10,
+              "y": 9,
+              "z": 656
+            },
+            "facing": 0.8,
+            "hp": 500
+          },
+          {
+            "id": 28,
+            "templateId": "scout_maren_highwatch",
+            "pos": {
+              "x": 7,
+              "y": 9,
+              "z": 670
+            },
+            "facing": -2.4,
+            "hp": 500
+          },
+          {
+            "id": 29,
+            "templateId": "quartermaster_bree",
+            "pos": {
+              "x": -5,
+              "y": 9,
+              "z": 668
+            },
+            "facing": 1.6,
+            "hp": 500
+          },
+          {
+            "id": 30,
+            "templateId": "armorer_hode",
+            "pos": {
+              "x": -2,
+              "y": 9,
+              "z": 672
+            },
+            "facing": 2.8,
+            "hp": 500
+          },
+          {
+            "id": 31,
+            "templateId": "heroic_quartermaster",
+            "pos": {
+              "x": -6.6625245019963995,
+              "y": 9,
+              "z": 663.5400139410802
+            },
+            "facing": 1.2,
+            "hp": 500
+          },
+          {
+            "id": 32,
+            "templateId": "loremaster_caddis",
+            "pos": {
+              "x": 12,
+              "y": 9,
+              "z": 655
+            },
+            "facing": -1.2,
+            "hp": 500
+          },
+          {
+            "id": 33,
+            "templateId": "auctioneer_voss",
+            "pos": {
+              "x": 16,
+              "y": 8.53054997121908,
+              "z": 666
+            },
+            "facing": -2.2,
+            "hp": 500
+          },
+          {
+            "id": 34,
+            "templateId": "bursar_aldous_crane",
+            "pos": {
+              "x": -12,
+              "y": 9,
+              "z": 663
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 35,
+            "templateId": "stablemaster_marla",
+            "pos": {
+              "x": 367,
+              "y": 3.8866891856536316,
+              "z": 608
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 36,
+            "templateId": "chronicler_edda_hartwell",
+            "pos": {
+              "x": 2,
+              "y": 8.969044288631789,
+              "z": 643
+            },
+            "facing": 3.1,
+            "hp": 500
+          },
+          {
+            "id": 37,
+            "templateId": "alchemist_verane",
+            "pos": {
+              "x": 8.5,
+              "y": 9,
+              "z": 658
+            },
+            "facing": -0.4,
+            "hp": 500
+          },
+          {
+            "id": 38,
+            "templateId": "farmer_hollis",
+            "pos": {
+              "x": -18,
+              "y": 2.794554225053506,
+              "z": 695.5
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 39,
+            "templateId": "tidewatcher_ondrel",
+            "pos": {
+              "x": -66,
+              "y": 0.07036950486194393,
+              "z": 786
+            },
+            "facing": -2.4,
+            "hp": 500
+          },
+          {
+            "id": 40,
+            "templateId": "brother_halven",
+            "pos": {
+              "x": -136,
+              "y": 1.1586440277697676,
+              "z": 112
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 41,
+            "templateId": "brother_halven_marsh",
+            "pos": {
+              "x": -95,
+              "y": 11.4184698429052,
+              "z": 505
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 42,
+            "templateId": "keeper_saelwyn",
+            "pos": {
+              "x": -43,
+              "y": 2.5,
+              "z": 1016
+            },
+            "facing": -2.85,
+            "hp": 500
+          },
+          {
+            "id": 43,
+            "templateId": "loremother_bryn",
+            "pos": {
+              "x": -22.789422802186177,
+              "y": 2.473806986783927,
+              "z": 1015.2447865001258
+            },
+            "facing": -0.9,
+            "hp": 500
+          },
+          {
+            "id": 44,
+            "templateId": "provisioner_fenna",
+            "pos": {
+              "x": -48.376377939427165,
+              "y": 2.5,
+              "z": 1034.7356161324478
+            },
+            "facing": -0.87,
+            "hp": 500
+          },
+          {
+            "id": 45,
+            "templateId": "wardsmith_orun",
+            "pos": {
+              "x": -31.278397709868006,
+              "y": 2.5,
+              "z": 1033.0866434708278
+            },
+            "facing": 0.87,
+            "hp": 500
+          },
+          {
+            "id": 46,
+            "templateId": "archivist_tullo",
+            "pos": {
+              "x": -31,
+              "y": 2.5,
+              "z": 1021
+            },
+            "facing": 2.08,
+            "hp": 500
+          },
+          {
+            "id": 47,
+            "templateId": "huntsman_deral",
+            "pos": {
+              "x": 18,
+              "y": -1.3351107048696882,
+              "z": 1104
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 48,
+            "templateId": "gatecaptain_brannoc",
+            "pos": {
+              "x": 407,
+              "y": 3.9875,
+              "z": 1895
+            },
+            "facing": 2.6,
+            "hp": 500
+          },
+          {
+            "id": 49,
+            "templateId": "quartermaster_sela",
+            "pos": {
+              "x": 398,
+              "y": 2.9318272000000003,
+              "z": 1908
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 50,
+            "templateId": "scout_yerrin",
+            "pos": {
+              "x": 494,
+              "y": 4.349877781907471,
+              "z": 2100
+            },
+            "facing": -2.4,
+            "hp": 500
+          },
+          {
+            "id": 51,
+            "templateId": "warden_kaldra",
+            "pos": {
+              "x": -29.789422802186177,
+              "y": 3,
+              "z": 1557.2447865001257
+            },
+            "facing": 2.4,
+            "hp": 500
+          },
+          {
+            "id": 52,
+            "templateId": "hearthkeeper_maeve",
+            "pos": {
+              "x": -37.27839770986801,
+              "y": 3.9725498327036877,
+              "z": 1559.0866434708278
+            },
+            "facing": 0.8,
+            "hp": 500
+          },
+          {
+            "id": 53,
+            "templateId": "scout_einna",
+            "pos": {
+              "x": -14.789422802186177,
+              "y": 0.15057475457554106,
+              "z": 1502.2447865001257
+            },
+            "facing": -0.4,
+            "hp": 500
+          },
+          {
+            "id": 54,
+            "templateId": "aurorist_veyla",
+            "pos": {
+              "x": 33.3374754980036,
+              "y": 5.637484180225462,
+              "z": 1742.5400139410804
+            },
+            "facing": -2.2,
+            "hp": 500
+          },
+          {
+            "id": 55,
+            "templateId": "trapper_brosk",
+            "pos": {
+              "x": -82,
+              "y": 8.500993067160382,
+              "z": 1744
+            },
+            "facing": 1.6,
+            "hp": 500
+          },
+          {
+            "id": 56,
+            "templateId": "reeve_ottoline",
+            "pos": {
+              "x": -358,
+              "y": 2.5,
+              "z": 2070
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 57,
+            "templateId": "waywatcher_sorrel",
+            "pos": {
+              "x": -349.6625245019964,
+              "y": 4.453364354612192,
+              "z": 1844.5400139410804
+            },
+            "facing": 2.8,
+            "hp": 500
+          },
+          {
+            "id": 58,
+            "templateId": "ferrymaster_caddow",
+            "pos": {
+              "x": -356,
+              "y": -1.3112683989042928,
+              "z": 2098
+            },
+            "facing": 0.2,
+            "hp": 500
+          },
+          {
+            "id": 59,
+            "templateId": "orchardist_pomeline",
+            "pos": {
+              "x": -428,
+              "y": -1.997436150872792,
+              "z": 1996
+            },
+            "facing": 1.2,
+            "hp": 500
+          },
+          {
+            "id": 60,
+            "templateId": "waykeeper_pell",
+            "pos": {
+              "x": -377,
+              "y": 3.9717797435728,
+              "z": 214
+            },
+            "facing": 0.6,
+            "hp": 500
+          },
+          {
+            "id": 61,
+            "templateId": "bridgewright_alden",
+            "pos": {
+              "x": -359,
+              "y": 2,
+              "z": 354
+            },
+            "facing": 2.9,
+            "hp": 500
+          },
+          {
+            "id": 62,
+            "templateId": "netter_maris",
+            "pos": {
+              "x": -354,
+              "y": 2,
+              "z": 364
+            },
+            "facing": -0.8,
+            "hp": 500
+          },
+          {
+            "id": 63,
+            "templateId": "mother_sedge",
+            "pos": {
+              "x": -414,
+              "y": -2.9742819249093455,
+              "z": 446
+            },
+            "facing": 1.2,
+            "hp": 500
+          },
+          {
+            "id": 64,
+            "templateId": "lamplighter_sorrel",
+            "pos": {
+              "x": -388,
+              "y": -0.2733999999999994,
+              "z": 1284
+            },
+            "facing": 0.4,
+            "hp": 500
+          },
+          {
+            "id": 65,
+            "templateId": "lira_dewsong",
+            "pos": {
+              "x": -370.6625245019964,
+              "y": 2.5,
+              "z": 1415.5400139410804
+            },
+            "facing": 2.2,
+            "hp": 500
+          },
+          {
+            "id": 66,
+            "templateId": "weaver_amelle",
+            "pos": {
+              "x": -364.6625245019964,
+              "y": 2.5,
+              "z": 1421.5400139410804
+            },
+            "facing": -1.4,
+            "hp": 500
+          },
+          {
+            "id": 67,
+            "templateId": "astronomer_cassian",
+            "pos": {
+              "x": -278,
+              "y": -0.40745811204633053,
+              "z": 1548
+            },
+            "facing": -2,
+            "hp": 500
+          },
+          {
+            "id": 68,
+            "templateId": "lampman_cobb",
+            "pos": {
+              "x": 387,
+              "y": 4.040615484886385,
+              "z": 1283
+            },
+            "facing": 2.9,
+            "hp": 500
+          },
+          {
+            "id": 69,
+            "templateId": "sexton_marrow",
+            "pos": {
+              "x": 364.3374754980036,
+              "y": 2.5,
+              "z": 1434.5400139410804
+            },
+            "facing": -2,
+            "hp": 500
+          },
+          {
+            "id": 70,
+            "templateId": "widow_tansy",
+            "pos": {
+              "x": 358.3374754980036,
+              "y": 2.5,
+              "z": 1422.5400139410804
+            },
+            "facing": 0.7,
+            "hp": 500
+          },
+          {
+            "id": 71,
+            "templateId": "vicar_creel",
+            "pos": {
+              "x": 297.3374754980036,
+              "y": 3.2516671565412762,
+              "z": 1612.5400139410804
+            },
+            "facing": 0.4,
+            "hp": 500
+          },
+          {
+            "id": 72,
+            "templateId": "strandwatcher_pell",
+            "pos": {
+              "x": -416,
+              "y": 3.7318555300218694,
+              "z": 722
+            },
+            "facing": 1,
+            "hp": 500
+          },
+          {
+            "id": 73,
+            "templateId": "salvage_boss_ryna",
+            "pos": {
+              "x": -296,
+              "y": 2,
+              "z": 816
+            },
+            "facing": -0.8,
+            "hp": 500
+          },
+          {
+            "id": 74,
+            "templateId": "pearlmother_isha",
+            "pos": {
+              "x": -293,
+              "y": 1.9866396667606168,
+              "z": 810
+            },
+            "facing": 0.6,
+            "hp": 500
+          },
+          {
+            "id": 75,
+            "templateId": "hermit_okku",
+            "pos": {
+              "x": -397,
+              "y": 0.7376138597979667,
+              "z": 1068
+            },
+            "facing": -0.24,
+            "hp": 500
+          },
+          {
+            "id": 76,
+            "templateId": "gatewarden_pell",
+            "pos": {
+              "x": 390,
+              "y": 4.247248130308458,
+              "z": 714
+            },
+            "facing": -2.6,
+            "hp": 500
+          },
+          {
+            "id": 77,
+            "templateId": "head_gardener_amaranth",
+            "pos": {
+              "x": 324.3374754980036,
+              "y": 2,
+              "z": 806.5400139410802
+            },
+            "facing": 2.8,
+            "hp": 500
+          },
+          {
+            "id": 78,
+            "templateId": "wickmother_sorrel",
+            "pos": {
+              "x": 314.21057719781385,
+              "y": 2,
+              "z": 814.2447865001258
+            },
+            "facing": 0.5,
+            "hp": 500
+          },
+          {
+            "id": 79,
+            "templateId": "gardener_yew",
+            "pos": {
+              "x": 349.3374754980036,
+              "y": -2.230039808128427,
+              "z": 1158.5400139410804
+            },
+            "facing": -0.8,
+            "hp": 500
+          },
+          {
+            "id": 80,
+            "templateId": "farmer_verbena",
+            "pos": {
+              "x": 348.5,
+              "y": 2.928722464853675,
+              "z": 867
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 81,
+            "templateId": "watcher_maren",
+            "pos": {
+              "x": 194,
+              "y": 5.418201165400086,
+              "z": 436
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 82,
+            "templateId": "harbormaster_odile",
+            "pos": {
+              "x": 424,
+              "y": 2.5,
+              "z": 364
+            },
+            "facing": -2.2,
+            "hp": 500
+          },
+          {
+            "id": 83,
+            "templateId": "keeper_bram",
+            "pos": {
+              "x": 503,
+              "y": 20.949807894426474,
+              "z": 309
+            },
+            "facing": -0.46,
+            "hp": 500
+          },
+          {
+            "id": 84,
+            "templateId": "salvager_edda",
+            "pos": {
+              "x": 360,
+              "y": -0.08222490916137559,
+              "z": 630
+            },
+            "facing": -1.8,
+            "hp": 500
+          },
+          {
+            "id": 85,
+            "templateId": "warden_coalfast",
+            "pos": {
+              "x": 306.3374754980036,
+              "y": 4.097604297005835,
+              "z": 64.54001394108025
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 86,
+            "templateId": "riftwatch_ollun",
+            "pos": {
+              "x": 372,
+              "y": 21.68290588195695,
+              "z": 2
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 87,
+            "templateId": "quartermaster_edda",
+            "pos": {
+              "x": 298,
+              "y": 2.4689722831447964,
+              "z": 74
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 88,
+            "templateId": "mender_saul",
+            "pos": {
+              "x": 311.31028985341607,
+              "y": 3.5384996031014726,
+              "z": 74.10052568751901
+            },
+            "facing": -1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 89,
+            "templateId": "bellkeeper_tam",
+            "pos": {
+              "x": 253.3374754980036,
+              "y": 3.2083653798640492,
+              "z": 16.54001394108025
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 90,
+            "templateId": "fisher_nell",
+            "pos": {
+              "x": 293.21057719781385,
+              "y": -0.1323237336760037,
+              "z": 80.24478650012576
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 91,
+            "templateId": "riftwright_maelis",
+            "pos": {
+              "x": 377,
+              "y": 20.42393438147436,
+              "z": 7
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 92,
+            "templateId": "wayfarer_bryn",
+            "pos": {
+              "x": 6,
+              "y": 2.475565022505312,
+              "z": -7
+            },
+            "facing": 0.7,
+            "hp": 500
+          },
+          {
+            "id": 93,
+            "templateId": "instructor_maren",
+            "pos": {
+              "x": -299,
+              "y": -3.301772792170442,
+              "z": 49
+            },
+            "facing": -2.356194490192345,
+            "hp": 500
+          },
+          {
+            "id": 94,
+            "templateId": "quartermaster_finch",
+            "pos": {
+              "x": -312.68971014658393,
+              "y": -2.754307325273535,
+              "z": 53.300525687519006
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 95,
+            "templateId": "bursar_wick",
+            "pos": {
+              "x": -325,
+              "y": -0.2145625186852511,
+              "z": 42
+            },
+            "facing": 0.7853981633974483,
+            "hp": 500
+          },
+          {
+            "id": 96,
+            "templateId": "ferryman_odo",
+            "pos": {
+              "x": -284,
+              "y": -2.302102545109207,
+              "z": -9
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 97,
+            "templateId": "warden_tam",
+            "pos": {
+              "x": -283,
+              "y": -3.326909156969945,
+              "z": -21
+            },
+            "facing": 0.05,
+            "hp": 500
+          },
+          {
+            "id": 98,
+            "templateId": "overseer_pell",
+            "pos": {
+              "x": -337,
+              "y": 0.9491371469638858,
+              "z": -33
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 99,
+            "templateId": "drillmaster_rook",
+            "pos": {
+              "x": -345,
+              "y": 2.0712218533960804,
+              "z": -11
+            },
+            "facing": 2.356194490192345,
+            "hp": 500
+          }
+        ],
+        "reserved": [
+          {
+            "id": 2000000001,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 5,
+              "y": -0.11408450943849013,
+              "z": -89
+            },
+            "facing": -2.17084654019665,
+            "hp": 1
+          },
+          {
+            "id": 2000000002,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -312,
+              "y": -0.9671194965491949,
+              "z": 41
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000003,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -11,
+              "y": 1.196102864020111,
+              "z": 278
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000004,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -5,
+              "y": 9,
+              "z": 652
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000005,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -52,
+              "y": 2.5,
+              "z": 1022
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000006,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 409,
+              "y": 4.253964799999999,
+              "z": 1892
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000007,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -38,
+              "y": 4.473069199937145,
+              "z": 1550
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000008,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -365,
+              "y": 2.5,
+              "z": 2064
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000009,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -365,
+              "y": 2,
+              "z": 354
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000010,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -375,
+              "y": 2.5,
+              "z": 1412
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000011,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 365,
+              "y": 2.5,
+              "z": 1422
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000012,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -305,
+              "y": 2,
+              "z": 812
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000013,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 325,
+              "y": 2.0001040654163207,
+              "z": 802
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000014,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 415,
+              "y": 2.5,
+              "z": 352
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000015,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 310,
+              "y": 4.792481872301369,
+              "z": 62
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000100,
+            "templateId": "realm_builder_monument",
+            "pos": {
+              "x": -14.75,
+              "y": -0.8889848055254774,
+              "z": -102
+            },
+            "facing": -1.5707963267948966,
+            "hp": 1
+          }
+        ]
+      }
+    },
+    {
+      "ref": "2e24ba8818",
+      "commit": "2e24ba8818cd188691147b605e1c38a91706decb",
+      "exitCode": 0,
+      "measurement": {
+        "nextId": 1004,
+        "primaryId": 999,
+        "merchants": [1, 33],
+        "bankers": [9, 22, 34, 95],
+        "entityCount": 1021,
+        "positionHash": "722c2cecf11f6e09cdcea8888a7050a9df9c786cc29ee2d771e516b827af00fe",
+        "rngNext": 0.30275995447300375,
+        "npcPrefix": [
+          {
+            "id": 1,
+            "templateId": "the_merchant",
+            "pos": {
+              "x": -19.333512834321652,
+              "y": -0.7008555399191915,
+              "z": -95.49976921301501
+            },
+            "facing": 2.4805494847391065,
+            "hp": 500
+          },
+          {
+            "id": 2,
+            "templateId": "marshal_redbrook",
+            "pos": {
+              "x": -58,
+              "y": -1.343028865473243,
+              "z": -102
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 3,
+            "templateId": "trader_wilkes",
+            "pos": {
+              "x": -17.833512834321652,
+              "y": -0.9317897434944669,
+              "z": -106.50023078698499
+            },
+            "facing": 0.6610431688506869,
+            "hp": 500
+          },
+          {
+            "id": 4,
+            "templateId": "apothecary_lin",
+            "pos": {
+              "x": -72,
+              "y": -1.5044441919874993,
+              "z": -96
+            },
+            "facing": 1.673877935317597,
+            "hp": 500
+          },
+          {
+            "id": 5,
+            "templateId": "brother_aldric",
+            "pos": {
+              "x": 5.181980515339464,
+              "y": 2.080013090890397,
+              "z": -74.81801948466054
+            },
+            "facing": 0.7853981633974483,
+            "hp": 500
+          },
+          {
+            "id": 6,
+            "templateId": "smith_haldren",
+            "pos": {
+              "x": -3.4,
+              "y": -0.8797050118190004,
+              "z": -112.5
+            },
+            "facing": -1.6631256615264958,
+            "hp": 500
+          },
+          {
+            "id": 7,
+            "templateId": "fisherman_brandt",
+            "pos": {
+              "x": -95,
+              "y": -2,
+              "z": -50
+            },
+            "facing": -1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 8,
+            "templateId": "foreman_odell",
+            "pos": {
+              "x": -84,
+              "y": -1.850220003635343,
+              "z": -63
+            },
+            "facing": 0.6747409422235526,
+            "hp": 500
+          },
+          {
+            "id": 9,
+            "templateId": "bursar_fernando",
+            "pos": {
+              "x": 8.49982143312659,
+              "y": -0.29194703568849123,
+              "z": -97.50017856687342
+            },
+            "facing": -2.356194490192345,
+            "hp": 500
+          },
+          {
+            "id": 10,
+            "templateId": "card_master",
+            "pos": {
+              "x": 20,
+              "y": 0.2740425740147221,
+              "z": -98
+            },
+            "facing": -2.677945044588987,
+            "hp": 500
+          },
+          {
+            "id": 11,
+            "templateId": "chronicler_saul",
+            "pos": {
+              "x": 10.2,
+              "y": 0.4883094952583371,
+              "z": -87.5
+            },
+            "facing": 0.5880026035475675,
+            "hp": 500
+          },
+          {
+            "id": 12,
+            "templateId": "forgemistress_darva",
+            "pos": {
+              "x": -8.171547617899419,
+              "y": -0.8821304980358816,
+              "z": -120.39003105620014
+            },
+            "facing": -2.0344439357957027,
+            "hp": 500
+          },
+          {
+            "id": 13,
+            "templateId": "cook_marlow",
+            "pos": {
+              "x": -42.62589170715949,
+              "y": -0.12071733115279024,
+              "z": -92.23189846640925
+            },
+            "facing": -0.669638945676638,
+            "hp": 500
+          },
+          {
+            "id": 14,
+            "templateId": "weaver_ottilie",
+            "pos": {
+              "x": -27.278889744907204,
+              "y": -1.6228766578456462,
+              "z": -126.68721665810318
+            },
+            "facing": 2.5535900500422257,
+            "hp": 500
+          },
+          {
+            "id": 15,
+            "templateId": "tinker_gizzel",
+            "pos": {
+              "x": -16.277350098112613,
+              "y": -0.8597495266774359,
+              "z": -122.64714310642654
+            },
+            "facing": 0.5880026035475675,
+            "hp": 500
+          },
+          {
+            "id": 16,
+            "templateId": "farmer_jessica",
+            "pos": {
+              "x": -15.5,
+              "y": -0.18394242893014168,
+              "z": -81.5
+            },
+            "facing": -1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 17,
+            "templateId": "warden_fenwick",
+            "pos": {
+              "x": 4.824455435060822,
+              "y": 1.2,
+              "z": 285.6503188335003
+            },
+            "facing": -0.4048917862850834,
+            "hp": 500
+          },
+          {
+            "id": 18,
+            "templateId": "brother_aldric_fen",
+            "pos": {
+              "x": -14.960203077497741,
+              "y": 1.2,
+              "z": 296.09529088730875
+            },
+            "facing": 1.1383885512243588,
+            "hp": 500
+          },
+          {
+            "id": 19,
+            "templateId": "provisioner_hale",
+            "pos": {
+              "x": -12.424844495021249,
+              "y": 1.2,
+              "z": 314.94714794895896
+            },
+            "facing": 2.191045812777718,
+            "hp": 500
+          },
+          {
+            "id": 20,
+            "templateId": "herbalist_yara",
+            "pos": {
+              "x": 14.020226082985031,
+              "y": 1.2,
+              "z": 293.9419887666108
+            },
+            "facing": -0.9971906342364164,
+            "hp": 500
+          },
+          {
+            "id": 21,
+            "templateId": "scout_maren",
+            "pos": {
+              "x": -12.942629598286846,
+              "y": 1.199833503796512,
+              "z": 320.2950179409249
+            },
+            "facing": 2.601173153319209,
+            "hp": 500
+          },
+          {
+            "id": 22,
+            "templateId": "bursar_petra_vell",
+            "pos": {
+              "x": 15.101663970557492,
+              "y": 1.2,
+              "z": 306.79285357068125
+            },
+            "facing": -1.8972270342276318,
+            "hp": 500
+          },
+          {
+            "id": 23,
+            "templateId": "chronicler_osric_fenn",
+            "pos": {
+              "x": -15.965942703405933,
+              "y": 1.2,
+              "z": 298.27439341010984
+            },
+            "facing": 1.1383885512243588,
+            "hp": 500
+          },
+          {
+            "id": 24,
+            "templateId": "tanner_hesk",
+            "pos": {
+              "x": 3.053383957289929,
+              "y": 1.2,
+              "z": 315.5600325924389
+            },
+            "facing": 3.024483909022929,
+            "hp": 500
+          },
+          {
+            "id": 25,
+            "templateId": "farmer_teasel",
+            "pos": {
+              "x": -21,
+              "y": 0.48144983759710563,
+              "z": 333.5
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 26,
+            "templateId": "captain_thessaly",
+            "pos": {
+              "x": 4,
+              "y": 9,
+              "z": 664
+            },
+            "facing": -2,
+            "hp": 500
+          },
+          {
+            "id": 27,
+            "templateId": "brother_aldric_highwatch",
+            "pos": {
+              "x": -10,
+              "y": 9,
+              "z": 656
+            },
+            "facing": 0.8,
+            "hp": 500
+          },
+          {
+            "id": 28,
+            "templateId": "scout_maren_highwatch",
+            "pos": {
+              "x": 7,
+              "y": 9,
+              "z": 670
+            },
+            "facing": -2.4,
+            "hp": 500
+          },
+          {
+            "id": 29,
+            "templateId": "quartermaster_bree",
+            "pos": {
+              "x": -5,
+              "y": 9,
+              "z": 668
+            },
+            "facing": 1.6,
+            "hp": 500
+          },
+          {
+            "id": 30,
+            "templateId": "armorer_hode",
+            "pos": {
+              "x": -2,
+              "y": 9,
+              "z": 672
+            },
+            "facing": 2.8,
+            "hp": 500
+          },
+          {
+            "id": 31,
+            "templateId": "heroic_quartermaster",
+            "pos": {
+              "x": -6.6625245019963995,
+              "y": 9,
+              "z": 663.5400139410802
+            },
+            "facing": 1.2,
+            "hp": 500
+          },
+          {
+            "id": 32,
+            "templateId": "loremaster_caddis",
+            "pos": {
+              "x": 12,
+              "y": 9,
+              "z": 655
+            },
+            "facing": -1.2,
+            "hp": 500
+          },
+          {
+            "id": 33,
+            "templateId": "auctioneer_voss",
+            "pos": {
+              "x": 16,
+              "y": 8.53054997121908,
+              "z": 666
+            },
+            "facing": -2.2,
+            "hp": 500
+          },
+          {
+            "id": 34,
+            "templateId": "bursar_aldous_crane",
+            "pos": {
+              "x": -12,
+              "y": 9,
+              "z": 663
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 35,
+            "templateId": "stablemaster_marla",
+            "pos": {
+              "x": 367,
+              "y": 3.8866891856536316,
+              "z": 608
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 36,
+            "templateId": "chronicler_edda_hartwell",
+            "pos": {
+              "x": 2,
+              "y": 8.969044288631789,
+              "z": 643
+            },
+            "facing": 3.1,
+            "hp": 500
+          },
+          {
+            "id": 37,
+            "templateId": "alchemist_verane",
+            "pos": {
+              "x": 8.5,
+              "y": 9,
+              "z": 658
+            },
+            "facing": -0.4,
+            "hp": 500
+          },
+          {
+            "id": 38,
+            "templateId": "farmer_hollis",
+            "pos": {
+              "x": -18,
+              "y": 2.794554225053506,
+              "z": 695.5
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 39,
+            "templateId": "tidewatcher_ondrel",
+            "pos": {
+              "x": -66,
+              "y": 0.07036950486194393,
+              "z": 786
+            },
+            "facing": -2.4,
+            "hp": 500
+          },
+          {
+            "id": 40,
+            "templateId": "brother_halven",
+            "pos": {
+              "x": -136,
+              "y": 1.1586440277697676,
+              "z": 112
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 41,
+            "templateId": "brother_halven_marsh",
+            "pos": {
+              "x": -95,
+              "y": 11.4184698429052,
+              "z": 505
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 42,
+            "templateId": "keeper_saelwyn",
+            "pos": {
+              "x": -43,
+              "y": 2.5,
+              "z": 1016
+            },
+            "facing": -2.85,
+            "hp": 500
+          },
+          {
+            "id": 43,
+            "templateId": "loremother_bryn",
+            "pos": {
+              "x": -22.789422802186177,
+              "y": 2.473806986783927,
+              "z": 1015.2447865001258
+            },
+            "facing": -0.9,
+            "hp": 500
+          },
+          {
+            "id": 44,
+            "templateId": "provisioner_fenna",
+            "pos": {
+              "x": -48.376377939427165,
+              "y": 2.5,
+              "z": 1034.7356161324478
+            },
+            "facing": -0.87,
+            "hp": 500
+          },
+          {
+            "id": 45,
+            "templateId": "wardsmith_orun",
+            "pos": {
+              "x": -31.278397709868006,
+              "y": 2.5,
+              "z": 1033.0866434708278
+            },
+            "facing": 0.87,
+            "hp": 500
+          },
+          {
+            "id": 46,
+            "templateId": "archivist_tullo",
+            "pos": {
+              "x": -31,
+              "y": 2.5,
+              "z": 1021
+            },
+            "facing": 2.08,
+            "hp": 500
+          },
+          {
+            "id": 47,
+            "templateId": "huntsman_deral",
+            "pos": {
+              "x": 18,
+              "y": -1.3351107048696882,
+              "z": 1104
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 48,
+            "templateId": "gatecaptain_brannoc",
+            "pos": {
+              "x": 407,
+              "y": 3.9875,
+              "z": 1895
+            },
+            "facing": 2.6,
+            "hp": 500
+          },
+          {
+            "id": 49,
+            "templateId": "quartermaster_sela",
+            "pos": {
+              "x": 398,
+              "y": 2.9318272000000003,
+              "z": 1908
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 50,
+            "templateId": "scout_yerrin",
+            "pos": {
+              "x": 494,
+              "y": 4.349877781907471,
+              "z": 2100
+            },
+            "facing": -2.4,
+            "hp": 500
+          },
+          {
+            "id": 51,
+            "templateId": "warden_kaldra",
+            "pos": {
+              "x": -29.789422802186177,
+              "y": 3,
+              "z": 1557.2447865001257
+            },
+            "facing": 2.4,
+            "hp": 500
+          },
+          {
+            "id": 52,
+            "templateId": "hearthkeeper_maeve",
+            "pos": {
+              "x": -37.27839770986801,
+              "y": 3.9725498327036877,
+              "z": 1559.0866434708278
+            },
+            "facing": 0.8,
+            "hp": 500
+          },
+          {
+            "id": 53,
+            "templateId": "scout_einna",
+            "pos": {
+              "x": -14.789422802186177,
+              "y": 0.15057475457554106,
+              "z": 1502.2447865001257
+            },
+            "facing": -0.4,
+            "hp": 500
+          },
+          {
+            "id": 54,
+            "templateId": "aurorist_veyla",
+            "pos": {
+              "x": 33.3374754980036,
+              "y": 5.637484180225462,
+              "z": 1742.5400139410804
+            },
+            "facing": -2.2,
+            "hp": 500
+          },
+          {
+            "id": 55,
+            "templateId": "trapper_brosk",
+            "pos": {
+              "x": -82,
+              "y": 8.500993067160382,
+              "z": 1744
+            },
+            "facing": 1.6,
+            "hp": 500
+          },
+          {
+            "id": 56,
+            "templateId": "reeve_ottoline",
+            "pos": {
+              "x": -358,
+              "y": 2.5,
+              "z": 2070
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 57,
+            "templateId": "waywatcher_sorrel",
+            "pos": {
+              "x": -349.6625245019964,
+              "y": 4.453364354612192,
+              "z": 1844.5400139410804
+            },
+            "facing": 2.8,
+            "hp": 500
+          },
+          {
+            "id": 58,
+            "templateId": "ferrymaster_caddow",
+            "pos": {
+              "x": -356,
+              "y": -1.3112683989042928,
+              "z": 2098
+            },
+            "facing": 0.2,
+            "hp": 500
+          },
+          {
+            "id": 59,
+            "templateId": "orchardist_pomeline",
+            "pos": {
+              "x": -428,
+              "y": -1.997436150872792,
+              "z": 1996
+            },
+            "facing": 1.2,
+            "hp": 500
+          },
+          {
+            "id": 60,
+            "templateId": "waykeeper_pell",
+            "pos": {
+              "x": -377,
+              "y": 3.9717797435728,
+              "z": 214
+            },
+            "facing": 0.6,
+            "hp": 500
+          },
+          {
+            "id": 61,
+            "templateId": "bridgewright_alden",
+            "pos": {
+              "x": -359,
+              "y": 2,
+              "z": 354
+            },
+            "facing": 2.9,
+            "hp": 500
+          },
+          {
+            "id": 62,
+            "templateId": "netter_maris",
+            "pos": {
+              "x": -354,
+              "y": 2,
+              "z": 364
+            },
+            "facing": -0.8,
+            "hp": 500
+          },
+          {
+            "id": 63,
+            "templateId": "mother_sedge",
+            "pos": {
+              "x": -414,
+              "y": -2.9742819249093455,
+              "z": 446
+            },
+            "facing": 1.2,
+            "hp": 500
+          },
+          {
+            "id": 64,
+            "templateId": "lamplighter_sorrel",
+            "pos": {
+              "x": -388,
+              "y": -0.2733999999999994,
+              "z": 1284
+            },
+            "facing": 0.4,
+            "hp": 500
+          },
+          {
+            "id": 65,
+            "templateId": "lira_dewsong",
+            "pos": {
+              "x": -370.6625245019964,
+              "y": 2.5,
+              "z": 1415.5400139410804
+            },
+            "facing": 2.2,
+            "hp": 500
+          },
+          {
+            "id": 66,
+            "templateId": "weaver_amelle",
+            "pos": {
+              "x": -364.6625245019964,
+              "y": 2.5,
+              "z": 1421.5400139410804
+            },
+            "facing": -1.4,
+            "hp": 500
+          },
+          {
+            "id": 67,
+            "templateId": "astronomer_cassian",
+            "pos": {
+              "x": -278,
+              "y": -0.40745811204633053,
+              "z": 1548
+            },
+            "facing": -2,
+            "hp": 500
+          },
+          {
+            "id": 68,
+            "templateId": "lampman_cobb",
+            "pos": {
+              "x": 387,
+              "y": 4.040615484886385,
+              "z": 1283
+            },
+            "facing": 2.9,
+            "hp": 500
+          },
+          {
+            "id": 69,
+            "templateId": "sexton_marrow",
+            "pos": {
+              "x": 364.3374754980036,
+              "y": 2.5,
+              "z": 1434.5400139410804
+            },
+            "facing": -2,
+            "hp": 500
+          },
+          {
+            "id": 70,
+            "templateId": "widow_tansy",
+            "pos": {
+              "x": 358.3374754980036,
+              "y": 2.5,
+              "z": 1422.5400139410804
+            },
+            "facing": 0.7,
+            "hp": 500
+          },
+          {
+            "id": 71,
+            "templateId": "vicar_creel",
+            "pos": {
+              "x": 297.3374754980036,
+              "y": 3.2516671565412762,
+              "z": 1612.5400139410804
+            },
+            "facing": 0.4,
+            "hp": 500
+          },
+          {
+            "id": 72,
+            "templateId": "strandwatcher_pell",
+            "pos": {
+              "x": -416,
+              "y": 3.7318555300218694,
+              "z": 722
+            },
+            "facing": 1,
+            "hp": 500
+          },
+          {
+            "id": 73,
+            "templateId": "salvage_boss_ryna",
+            "pos": {
+              "x": -296,
+              "y": 2,
+              "z": 816
+            },
+            "facing": -0.8,
+            "hp": 500
+          },
+          {
+            "id": 74,
+            "templateId": "pearlmother_isha",
+            "pos": {
+              "x": -293,
+              "y": 1.9866396667606168,
+              "z": 810
+            },
+            "facing": 0.6,
+            "hp": 500
+          },
+          {
+            "id": 75,
+            "templateId": "hermit_okku",
+            "pos": {
+              "x": -397,
+              "y": 0.7376138597979667,
+              "z": 1068
+            },
+            "facing": -0.24,
+            "hp": 500
+          },
+          {
+            "id": 76,
+            "templateId": "gatewarden_pell",
+            "pos": {
+              "x": 390,
+              "y": 4.247248130308458,
+              "z": 714
+            },
+            "facing": -2.6,
+            "hp": 500
+          },
+          {
+            "id": 77,
+            "templateId": "head_gardener_amaranth",
+            "pos": {
+              "x": 324.3374754980036,
+              "y": 2,
+              "z": 806.5400139410802
+            },
+            "facing": 2.8,
+            "hp": 500
+          },
+          {
+            "id": 78,
+            "templateId": "wickmother_sorrel",
+            "pos": {
+              "x": 314.21057719781385,
+              "y": 2,
+              "z": 814.2447865001258
+            },
+            "facing": 0.5,
+            "hp": 500
+          },
+          {
+            "id": 79,
+            "templateId": "gardener_yew",
+            "pos": {
+              "x": 349.3374754980036,
+              "y": -2.230039808128427,
+              "z": 1158.5400139410804
+            },
+            "facing": -0.8,
+            "hp": 500
+          },
+          {
+            "id": 80,
+            "templateId": "farmer_verbena",
+            "pos": {
+              "x": 348.5,
+              "y": 2.928722464853675,
+              "z": 867
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 81,
+            "templateId": "watcher_maren",
+            "pos": {
+              "x": 194,
+              "y": 5.418201165400086,
+              "z": 436
+            },
+            "facing": -0.6,
+            "hp": 500
+          },
+          {
+            "id": 82,
+            "templateId": "harbormaster_odile",
+            "pos": {
+              "x": 424,
+              "y": 2.5,
+              "z": 364
+            },
+            "facing": -2.2,
+            "hp": 500
+          },
+          {
+            "id": 83,
+            "templateId": "keeper_bram",
+            "pos": {
+              "x": 503,
+              "y": 20.949807894426474,
+              "z": 309
+            },
+            "facing": -0.46,
+            "hp": 500
+          },
+          {
+            "id": 84,
+            "templateId": "salvager_edda",
+            "pos": {
+              "x": 360,
+              "y": -0.08222490916137559,
+              "z": 630
+            },
+            "facing": -1.8,
+            "hp": 500
+          },
+          {
+            "id": 85,
+            "templateId": "warden_coalfast",
+            "pos": {
+              "x": 306.3374754980036,
+              "y": 4.097604297005835,
+              "z": 64.54001394108025
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 86,
+            "templateId": "riftwatch_ollun",
+            "pos": {
+              "x": 372,
+              "y": 21.68290588195695,
+              "z": 2
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 87,
+            "templateId": "quartermaster_edda",
+            "pos": {
+              "x": 298,
+              "y": 2.4689722831447964,
+              "z": 74
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 88,
+            "templateId": "mender_saul",
+            "pos": {
+              "x": 311.31028985341607,
+              "y": 3.5384996031014726,
+              "z": 74.10052568751901
+            },
+            "facing": -1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 89,
+            "templateId": "bellkeeper_tam",
+            "pos": {
+              "x": 253.3374754980036,
+              "y": 3.2083653798640492,
+              "z": 16.54001394108025
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 90,
+            "templateId": "fisher_nell",
+            "pos": {
+              "x": 293.21057719781385,
+              "y": -0.1323237336760037,
+              "z": 80.24478650012576
+            },
+            "facing": 0,
+            "hp": 500
+          },
+          {
+            "id": 91,
+            "templateId": "riftwright_maelis",
+            "pos": {
+              "x": 377,
+              "y": 20.42393438147436,
+              "z": 7
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 92,
+            "templateId": "wayfarer_bryn",
+            "pos": {
+              "x": 6,
+              "y": 2.475565022505312,
+              "z": -7
+            },
+            "facing": 0.7,
+            "hp": 500
+          },
+          {
+            "id": 93,
+            "templateId": "instructor_maren",
+            "pos": {
+              "x": -299,
+              "y": -3.301772792170442,
+              "z": 49
+            },
+            "facing": -2.356194490192345,
+            "hp": 500
+          },
+          {
+            "id": 94,
+            "templateId": "quartermaster_finch",
+            "pos": {
+              "x": -312.68971014658393,
+              "y": -2.754307325273535,
+              "z": 53.300525687519006
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 95,
+            "templateId": "bursar_wick",
+            "pos": {
+              "x": -325,
+              "y": -0.2145625186852511,
+              "z": 42
+            },
+            "facing": 0.7853981633974483,
+            "hp": 500
+          },
+          {
+            "id": 96,
+            "templateId": "ferryman_odo",
+            "pos": {
+              "x": -284,
+              "y": -2.302102545109207,
+              "z": -9
+            },
+            "facing": 3.141592653589793,
+            "hp": 500
+          },
+          {
+            "id": 97,
+            "templateId": "warden_tam",
+            "pos": {
+              "x": -283,
+              "y": -3.326909156969945,
+              "z": -21
+            },
+            "facing": 0.05,
+            "hp": 500
+          },
+          {
+            "id": 98,
+            "templateId": "overseer_pell",
+            "pos": {
+              "x": -337,
+              "y": 0.9491371469638858,
+              "z": -33
+            },
+            "facing": 1.5707963267948966,
+            "hp": 500
+          },
+          {
+            "id": 99,
+            "templateId": "drillmaster_rook",
+            "pos": {
+              "x": -345,
+              "y": 2.0712218533960804,
+              "z": -11
+            },
+            "facing": 2.356194490192345,
+            "hp": 500
+          }
+        ],
+        "reserved": [
+          {
+            "id": 2000000001,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 5,
+              "y": -0.11408450943849013,
+              "z": -89
+            },
+            "facing": -2.17084654019665,
+            "hp": 1
+          },
+          {
+            "id": 2000000002,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -312,
+              "y": -0.9671194965491949,
+              "z": 41
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000003,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -11,
+              "y": 1.196102864020111,
+              "z": 278
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000004,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -5,
+              "y": 9,
+              "z": 652
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000005,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -52,
+              "y": 2.5,
+              "z": 1022
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000006,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 409,
+              "y": 4.253964799999999,
+              "z": 1892
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000007,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -38,
+              "y": 4.473069199937145,
+              "z": 1550
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000008,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -365,
+              "y": 2.5,
+              "z": 2064
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000009,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -365,
+              "y": 2,
+              "z": 354
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000010,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -375,
+              "y": 2.5,
+              "z": 1412
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000011,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 365,
+              "y": 2.5,
+              "z": 1422
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000012,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": -305,
+              "y": 2,
+              "z": 812
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000013,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 325,
+              "y": 2.0001040654163207,
+              "z": 802
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000014,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 415,
+              "y": 2.5,
+              "z": 352
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000015,
+            "templateId": "noticeboard_eastbrook",
+            "pos": {
+              "x": 310,
+              "y": 4.792481872301369,
+              "z": 62
+            },
+            "facing": 0,
+            "hp": 1
+          },
+          {
+            "id": 2000000100,
+            "templateId": "realm_builder_monument",
+            "pos": {
+              "x": -14.75,
+              "y": -0.8889848055254774,
+              "z": -102
+            },
+            "facing": -1.5707963267948966,
+            "hp": 1
+          }
+        ]
+      }
+    }
+  ]
+}

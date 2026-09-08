@@ -1,0 +1,10 @@
+COMMAND: npx vitest run tests/provisioner_firewall.test.ts --maxWorkers=2 -t covers every bill and admits produce only in cooking and alchemy decor
+4:53:16 PM [vite-plugin-svelte] no Svelte config found at /private/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3 - using default configuration.
+
+ RUN  v4.1.10 /private/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 15 skipped (16)
+   Start at  16:53:16
+   Duration  440ms (transform 198ms, setup 164ms, import 203ms, tests 5ms, environment 0ms)

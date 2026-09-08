@@ -1,0 +1,19 @@
+{
+  "mode": "change-aware",
+  "captured": [
+    "01-provisioning-furnishing-guide-desktop-intro.png",
+    "02-provisioning-furnishing-guide-desktop-row.png",
+    "03-provisioning-furnishing-guide-mobile-intro.png",
+    "04-provisioning-furnishing-guide-mobile-row.png",
+    "05-provisioning-furnishing-guide-japanese-intro.png",
+    "06-provisioning-furnishing-guide-japanese-row.png"
+  ],
+  "errors": [
+    "CONSOLE(provisioning-furnishing-guide-desktop-intro): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(provisioning-furnishing-guide-desktop-row): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(provisioning-furnishing-guide-mobile-intro): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(provisioning-furnishing-guide-mobile-row): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(provisioning-furnishing-guide-japanese-intro): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(provisioning-furnishing-guide-japanese-row): Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+  ]
+}

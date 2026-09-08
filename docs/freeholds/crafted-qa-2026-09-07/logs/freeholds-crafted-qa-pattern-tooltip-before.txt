@@ -1,0 +1,190 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+(node:97464) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:97463) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:97465) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ tests/bags_view.test.ts (97 tests | 3 failed) 16ms
+     × pattern_freehold_clockwork_lamp advertises learning only on a host that enables Freeholds 3ms
+     × pattern_freehold_chart_easel advertises learning only on a host that enables Freeholds 0ms
+     × pattern_freehold_jewel_floor_lamp advertises learning only on a host that enables Freeholds 0ms
+stderr | tests/recipe_pattern_tooltip_view.test.ts
+[ktx2] no probe context; transcoding to uncompressed RGBA
+
+ ❯ tests/recipe_pattern_tooltip_view.test.ts (33 tests | 6 failed) 169ms
+     × pattern_freehold_clockwork_lamp states realm unavailability for a retained copy and matches the real use result 6ms
+     × pattern_freehold_chart_easel states realm unavailability for a retained copy and matches the real use result 2ms
+     × pattern_freehold_jewel_floor_lamp states realm unavailability for a retained copy and matches the real use result 2ms
+     × pattern_freehold_clockwork_lamp stays unavailable before the capability or character snapshot arrives 0ms
+     × pattern_freehold_chart_easel stays unavailable before the capability or character snapshot arrives 0ms
+     × pattern_freehold_jewel_floor_lamp stays unavailable before the capability or character snapshot arrives 0ms
+ ❯ tests/bags_window.test.ts (55 tests | 3 failed) 64ms
+     × reads the current capability (undefined) when the row tooltip opens 41ms
+     × reads the current capability (false) when the row tooltip opens 2ms
+     × reads the current capability (true) when the row tooltip opens 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/bags_view.test.ts > retained furnishing manual bag hints > pattern_freehold_clockwork_lamp advertises learning only on a host that enables Freeholds
+ FAIL  tests/bags_view.test.ts > retained furnishing manual bag hints > pattern_freehold_chart_easel advertises learning only on a host that enables Freeholds
+ FAIL  tests/bags_view.test.ts > retained furnishing manual bag hints > pattern_freehold_jewel_floor_lamp advertises learning only on a host that enables Freeholds
+AssertionError: expected 'itemUi.tooltip.clickUse' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ itemUi.tooltip.clickUse
+
+ ❯ tests/bags_view.test.ts:809:82
+    807|     expect(item?.kind).toBe('recipe');
+    808|     for (const capability of [undefined, false, true]) {
+    809|       expect(bagTooltipHintKey(item, NO_MODE, undefined, undefined, ca…
+       |                                                                                  ^
+    810|         capability ? 'itemUi.tooltip.clickUse' : '',
+    811|       );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  tests/bags_window.test.ts > bags_window: furnishing manual capability forwarding > reads the current capability (undefined) when the row tooltip opens
+ FAIL  tests/bags_window.test.ts > bags_window: furnishing manual capability forwarding > reads the current capability (false) when the row tooltip opens
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/bags_window.test.ts:128:49
+    126|     expect(row).toBeDefined();
+    127|     if (!row) throw new Error('Missing manual row tooltip');
+    128|     expect(row.html().includes('Click to use')).toBe(freeholdsEnabled …
+       |                                                 ^
+    129|     cfg.freeholdsEnabled = true;
+    130|     expect(row.html()).toContain('Click to use');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  tests/bags_window.test.ts > bags_window: furnishing manual capability forwarding > reads the current capability (true) when the row tooltip opens
+AssertionError: expected '<div class="tt-sub">Click to use</div…' not to contain 'Click to use'
+
+Expected: "Click to use"
+Received: "<div class="tt-sub">Click to use</div><div class="tt-sub">Drag out into the world to destroy</div><div class="tt-sub">Shift-click to link this item in chat.</div>"
+
+ ❯ tests/bags_window.test.ts:132:28
+    130|     expect(row.html()).toContain('Click to use');
+    131|     cfg.freeholdsEnabled = false;
+    132|     expect(row.html()).not.toContain('Click to use');
+       |                            ^
+    133|   });
+    134| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+ FAIL  tests/recipe_pattern_tooltip_view.test.ts > reachability through the real Hud tooltip > pattern_freehold_clockwork_lamp states realm unavailability for a retained copy and matches the real use result
+AssertionError: expected '<div class="tt-title" style="color:#0…' to contain '<div class="tt-red">Freeholds are not…'
+
+Expected: "<div class="tt-red">Freeholds are not available on this realm.</div>"
+Received: "<div class="tt-title" style="color:#0070dd">Schematic: Clockwork Lamp</div><div class="tt-sub">Rare Pattern</div><div class="tt-desc">Use: Teaches you how to craft Clockwork Lamp.</div><div class="tt-sub">Requires Engineering 50</div><div class="tt-sub">Sell price: 1s</div>"
+
+ ❯ tests/recipe_pattern_tooltip_view.test.ts:537:24
+    535|           expect(html).not.toContain('Freeholds are not available on t…
+    536|         } else {
+    537|           expect(html).toContain(
+       |                        ^
+    538|             '<div class="tt-red">Freeholds are not available on this r…
+    539|           );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/12]⎯
+
+ FAIL  tests/recipe_pattern_tooltip_view.test.ts > reachability through the real Hud tooltip > pattern_freehold_chart_easel states realm unavailability for a retained copy and matches the real use result
+AssertionError: expected '<div class="tt-title" style="color:#0…' to contain '<div class="tt-red">Freeholds are not…'
+
+Expected: "<div class="tt-red">Freeholds are not available on this realm.</div>"
+Received: "<div class="tt-title" style="color:#0070dd">Technique: Chart Easel</div><div class="tt-sub">Rare Pattern</div><div class="tt-desc">Use: Teaches you how to craft Chart Easel.</div><div class="tt-sub">Requires Inscription 50</div><div class="tt-sub">Sell price: 1s</div>"
+
+ ❯ tests/recipe_pattern_tooltip_view.test.ts:537:24
+    535|           expect(html).not.toContain('Freeholds are not available on t…
+    536|         } else {
+    537|           expect(html).toContain(
+       |                        ^
+    538|             '<div class="tt-red">Freeholds are not available on this r…
+    539|           );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/12]⎯
+
+ FAIL  tests/recipe_pattern_tooltip_view.test.ts > reachability through the real Hud tooltip > pattern_freehold_jewel_floor_lamp states realm unavailability for a retained copy and matches the real use result
+AssertionError: expected '<div class="tt-title" style="color:#0…' to contain '<div class="tt-red">Freeholds are not…'
+
+Expected: "<div class="tt-red">Freeholds are not available on this realm.</div>"
+Received: "<div class="tt-title" style="color:#0070dd">Design: Jewel Floor Lamp</div><div class="tt-sub">Rare Pattern</div><div class="tt-desc">Use: Teaches you how to craft Jewel Floor Lamp.</div><div class="tt-sub">Requires Jewelcrafting 50</div><div class="tt-sub">Sell price: 1s</div>"
+
+ ❯ tests/recipe_pattern_tooltip_view.test.ts:537:24
+    535|           expect(html).not.toContain('Freeholds are not available on t…
+    536|         } else {
+    537|           expect(html).toContain(
+       |                        ^
+    538|             '<div class="tt-red">Freeholds are not available on this r…
+    539|           );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/12]⎯
+
+ FAIL  tests/recipe_pattern_tooltip_view.test.ts > reachability through the real Hud tooltip > pattern_freehold_clockwork_lamp stays unavailable before the capability or character snapshot arrives
+AssertionError: expected '<div class="tt-desc">Use: Teaches you…' to be '<div class="tt-red">Freeholds are not…' // Object.is equality
+
+Expected: "<div class="tt-red">Freeholds are not available on this realm.</div>"
+Received: "<div class="tt-desc">Use: Teaches you how to craft Clockwork Lamp.</div>"
+
+ ❯ tests/recipe_pattern_tooltip_view.test.ts:556:23
+    554|         const state = viewer({ synced, craftSkills: { [craft]: 50 } });
+    555|         const lines = recipePatternTooltipLines(item, state);
+    556|         expect(lines).toBe(
+       |                       ^
+    557|           '<div class="tt-red">Freeholds are not available on this rea…
+    558|         );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/12]⎯
+
+ FAIL  tests/recipe_pattern_tooltip_view.test.ts > reachability through the real Hud tooltip > pattern_freehold_chart_easel stays unavailable before the capability or character snapshot arrives
+AssertionError: expected '<div class="tt-desc">Use: Teaches you…' to be '<div class="tt-red">Freeholds are not…' // Object.is equality
+
+Expected: "<div class="tt-red">Freeholds are not available on this realm.</div>"
+Received: "<div class="tt-desc">Use: Teaches you how to craft Chart Easel.</div>"
+
+ ❯ tests/recipe_pattern_tooltip_view.test.ts:556:23
+    554|         const state = viewer({ synced, craftSkills: { [craft]: 50 } });
+    555|         const lines = recipePatternTooltipLines(item, state);
+    556|         expect(lines).toBe(
+       |                       ^
+    557|           '<div class="tt-red">Freeholds are not available on this rea…
+    558|         );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/12]⎯
+
+ FAIL  tests/recipe_pattern_tooltip_view.test.ts > reachability through the real Hud tooltip > pattern_freehold_jewel_floor_lamp stays unavailable before the capability or character snapshot arrives
+AssertionError: expected '<div class="tt-desc">Use: Teaches you…' to be '<div class="tt-red">Freeholds are not…' // Object.is equality
+
+Expected: "<div class="tt-red">Freeholds are not available on this realm.</div>"
+Received: "<div class="tt-desc">Use: Teaches you how to craft Jewel Floor Lamp.</div>"
+
+ ❯ tests/recipe_pattern_tooltip_view.test.ts:556:23
+    554|         const state = viewer({ synced, craftSkills: { [craft]: 50 } });
+    555|         const lines = recipePatternTooltipLines(item, state);
+    556|         expect(lines).toBe(
+       |                       ^
+    557|           '<div class="tt-red">Freeholds are not available on this rea…
+    558|         );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/12]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  12 failed | 173 passed (185)
+   Start at  16:53:33
+   Duration  12.45s (transform 20.30s, setup 715ms, import 26.97s, tests 250ms, environment 223ms)

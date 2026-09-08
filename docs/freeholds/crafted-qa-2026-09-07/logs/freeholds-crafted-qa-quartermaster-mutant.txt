@@ -1,0 +1,36 @@
+COMMAND: npx vitest run tests/apex_pattern_channels.test.ts --maxWorkers=2 -t every recipe teaching pattern appears in EXACTLY
+4:53:13 PM [vite-plugin-svelte] no Svelte config found at /private/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3 - using default configuration.
+
+ RUN  v4.1.10 /private/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3
+
+ ❯ tests/apex_pattern_channels.test.ts (24 tests | 1 failed | 23 skipped) 7ms
+     × every recipe teaching pattern appears in EXACTLY the channels its family assigns 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/apex_pattern_channels.test.ts > masterwrought R8 referential contract: every drop recipe reaches exactly its channel > every recipe teaching pattern appears in EXACTLY the channels its family assigns
+AssertionError: recipe_freehold_clockwork_lamp has only the deterministic Marks route: expected [] to deeply equal [ 'vendor' ]
+
+- Expected
++ Received
+
+- [
+-   "vendor",
+- ]
++ []
+
+ ❯ tests/apex_pattern_channels.test.ts:254:81
+    252|       }
+    253|       if (FURNISHING_RECIPES.includes(recipe)) {
+    254|         expect(channels, `${recipe.id} has only the deterministic Mark…
+       |                                                                                 ^
+    255|         continue;
+    256|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+   Start at  16:53:13
+   Duration  761ms (transform 370ms, setup 162ms, import 521ms, tests 7ms, environment 0ms)

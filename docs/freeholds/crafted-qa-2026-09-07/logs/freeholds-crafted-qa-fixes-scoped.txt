@@ -1,0 +1,43 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+(node:97587) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:97584) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:97586) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ tests/guide.test.ts (149 tests | 1 failed) 1672ms
+     × matches the sim (regenerating leaves the committed file unchanged) 253ms
+(node:97894) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/guide.test.ts > Guide generated class content > matches the sim (regenerating leaves the committed file unchanged)
+AssertionError: expected [Function] to not throw an error but 'Error: Command failed: git diff --exi…' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"Error: Command failed: git diff --exit-code -- src/guide/content.generated.ts"
+
+ ❯ tests/guide.test.ts:497:13
+    495|           encoding: 'utf8',
+    496|         }),
+    497|       ).not.toThrow();
+       |             ^
+    498|     } finally {
+    499|       rmSync(tmp, { recursive: true, force: true });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 8 passed (9)
+      Tests  1 failed | 288 passed | 3 skipped (292)
+   Start at  16:53:35
+   Duration  8.60s (transform 9.97s, setup 1.39s, import 19.70s, tests 7.69s, environment 0ms)

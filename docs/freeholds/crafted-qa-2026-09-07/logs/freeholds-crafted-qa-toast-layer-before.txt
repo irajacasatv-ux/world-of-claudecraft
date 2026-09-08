@@ -1,0 +1,47 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+6:09:25 PM [vite] (client) Re-optimizing dependencies because lockfile has changed
+ ❯ |chromium| tests/browser/error_toast_layer.browser.test.ts (2 tests | 1 failed) 96ms
+     × paints above the overlapping sheet and remains pointer-inert 92ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |chromium| tests/browser/error_toast_layer.browser.test.ts > mobile refusal toast above the Bags sheet > paints above the overlapping sheet and remains pointer-inert
+AssertionError: expected <div id="bags" …(2)></div> to be <div id="error-msg" …(1)></div> // Object.is equality
+
+Failure screenshot:
+  - tests/browser/__screenshots__/error_toast_layer.browser.test.ts/mobile-refusal-toast-above-the-Bags-sheet-paints-above-the-overlapping-sheet-and-remains-pointer-inert-1.png
+
+- Expected
++ Received
+
+  <div
+-   id="error-msg"
+-   style="opacity: 1;"
+- >
+-   Freeholds are not available on this realm.
+- </div>
++   class="window panel"
++   id="bags"
++   style="display: flex; z-index: 51;"
++ />
+
+ ❯ tests/browser/error_toast_layer.browser.test.ts:55:46
+     53|     toast.style.pointerEvents = 'auto';
+     54|     try {
+     55|       expect(document.elementFromPoint(x, y)).toBe(toast);
+       |                                              ^
+     56|     } finally {
+     57|       toast.style.removeProperty('pointer-events');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  18:09:25
+   Duration  921ms (transform 0ms, setup 0ms, import 162ms, tests 96ms, environment 0ms)

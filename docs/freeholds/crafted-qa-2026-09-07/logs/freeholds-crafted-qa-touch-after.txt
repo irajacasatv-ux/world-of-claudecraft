@@ -1,0 +1,243 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+(node:29947) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29950) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29949) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ tests/bags_window.test.ts (55 tests | 1 failed) 45ms
+     × the shared dispatch reaches the transactional modes too, not just equip/use (issue 1852 review) 3ms
+(node:30003) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/bags_window.test.ts > bags_window: touch peek + bank-cluster close > the shared dispatch reaches the transactional modes too, not just equip/use (issue 1852 review)
+AssertionError: expected 'private runBagAction(item: (typeof IT…' to match /case 'use': \{[\s\S]{0,400}?if \(!ite…/
+
+- Expected:
+/case 'use': \{[\s\S]{0,400}?if \(!item \|\| !this\.deps\.useGatherTool\(item\)\) \{[\s\S]{0,300}?this\.deps\.world\(\)\.useItem\(s\.itemId, at\);/
+
++ Received:
+"private runBagAction(item: (typeof ITEMS)[string], s: InvSlot, ev: MouseEvent): void {
+    const action = bagItemAction(
+      // Vault admission needs honest-set membership, not item-kind identity;
+      // every other arm ignores this extra field.
+      { ...item, vaultMaterial: vaultMaterialIds().has(s.itemId) },
+      this.bagMode(),
+      s.instance,
+      s.craftedRecipeId,
+    );
+    switch (action) {
+      case 'none':
+        return;
+      case 'transferBlockedSoulbound':
+        this.deps.showError(t('hudChrome.itemSoulbound'));
+        return;
+      case 'trade':
+        this.deps.addItemToTrade(s.itemId);
+        break;
+      case 'mailAttachBlocked':
+        this.deps.showError(t('hudChrome.mailbox.cannotMail'));
+        return;
+      case 'mailAttachBlockedBound':
+        this.deps.showError(t('hudChrome.mailbox.cannotMail'));
+        return;
+      case 'mailAttach':
+        this.deps.stageMailParcel(s.itemId, s.instance);
+        break;
+      case 'marketSellBlockedQuest':
+        this.deps.showError(t('itemUi.errors.noQuestItems'));
+        return;
+      case 'marketSellBlockedNoMarket':
+        this.deps.showError(t('itemUi.tooltip.cannotMarket'));
+        return;
+      case 'marketSellBlockedBound':
+        this.deps.showError(t('hud.errors.marketListBound'));
+        return;
+      case 'marketSell':
+        this.deps.stageMarketSell(s.itemId, s.instance);
+        break;
+      case 'vendorSellBlocked':
+        this.deps.showError(t('itemUi.tooltip.cannotVendor'));
+        return;
+      case 'vendorSell':
+        this.sellBagItem(item, s, ev);
+        break;
+      case 'bankDeposit': {
+        // The command is inventory-index-based, so resolve the exact clicked stack
+        // by reference (duplicate stacks / distinct instanced copies share an
+        // itemId); a stale click whose stack already left the bags is a no-op.
+        const index = bagStackIndex(this.deps.world().inventory, s);
+        if (index < 0) break;
+        if (ev.shiftKey && bankDepositOpensPrompt(s)) {
+          this.showDepositQuantityPrompt(index, s, Math.max(1, Math.floor(s.count)));
+        } else {
+          // Whole-stack deposit (omitted count); an instanced slot always moves whole.
+          this.deps.world().bankDeposit(index);
+          this.deps.hideTooltip();
+          // Bank ops emit no client repaint event and the bags grid has no per-frame
+          // refresh (only the bank grid does), so repaint here like the use / equip
+          // local-action cases, not a bespoke path.
+          this.render();
+        }
+        break;
+      }
+      case 'bankDepositBlockedQuest':
+        // The sim would refuse this ('You cannot store quest items in the bank.');
+        // pre-empt with the same deny wording via its established sim key (rendered
+        // through the shared showError pipe), and send nothing.
+        this.deps.showError(tSim('error.bankQuestItem'));
+        return;
+      case 'bankSocketBag': // The bank-aimed twin of equipBag below: the clicked payload-free bag
+        // sockets into the bank's first empty unlocked socket (the sim owns
+        // the scan; no socket index is named), consuming the EXACT clicked
+        // copy via the named-slot selector. The bank pane repaints through its
+        // own signature (socketBags moves); the bags side repaints here.
+        {
+          const at = this.copyRefFor(s);
+          if (!at) return;
+          this.deps.world().bankSocketBag(s.itemId, undefined, at);
+          this.deps.hideTooltip();
+          this.render();
+          break;
+        }
+      case 'bankDepositBlockedNoTarget':
+        // The bank is open with no grid on screen to drop into (its guild pane's
+        // Log view). SPEAK, do not go quiet: this is a deliberate click on an
+        // item, in a docked window whose every other click either deposits or
+        // says why it will not, so silence here reads as a broken bag. The line
+        // is the same terse one the hover advertises, matching how the vendor
+        // and market denies reuse their cannot-hint wording.
+        this.deps.showError(t('hudChrome.bank.cannotDepositNow'));
+        return;
+      case 'guildBankDeposit': {
+        // The guild twin of bankDeposit: same reference-resolved index, same
+        // shift split prompt, sent through the IWorldGuildBank facet.
+        const index = bagStackIndex(this.deps.world().inventory, s);
+        if (index < 0) break;
+        if (ev.shiftKey && bankDepositOpensPrompt(s)) {
+          this.showDepositQuantityPrompt(index, s, Math.max(1, Math.floor(s.count)), 'guild');
+        } else {
+          this.deps.world().guildBankDeposit(index);
+          this.deps.hideTooltip();
+          this.render();
+        }
+        break;
+      }
+      case 'vaultDeposit': {
+        // The vault twin of bankDeposit: same reference-resolved index, same
+        // shift split prompt, sent through the IWorldBank vault facet (the
+        // sim clamps a partial fill to the material's headroom silently).
+        const index = bagStackIndex(this.deps.world().inventory, s);
+        if (index < 0) break;
+        if (ev.shiftKey && bankDepositOpensPrompt(s)) {
+          this.showDepositQuantityPrompt(index, s, Math.max(1, Math.floor(s.count)), 'vault');
+        } else {
+          this.deps.world().vaultDeposit(index);
+          this.deps.hideTooltip();
+          this.render();
+        }
+        break;
+      }
+      // The vault's one pre-empt deny voices the exact materials-only line the
+      // sim would refuse with, sending nothing. Identity-bearing materials
+      // reach the normal deposit arm and retain their payload in the vault.
+      case 'vaultDepositBlockedNotMaterial':
+        this.deps.showError(tSim('error.vaultOnlyMaterials'));
+        return;
+      // The guild pipe's pre-empt denies, each voicing the exact line the sim
+      // would refuse with (its established sim_i18n keys), sending nothing.
+      case 'guildBankDepositBlockedQuest':
+        // The guild pipe's OWN quest line, not the personal bank's
+        // error.bankQuestItem: the sim voices error.guildBankQuestItem here, and
+        // a pre-empt that voiced a different sentence would silently diverge.
+        this.deps.showError(tSim('error.guildBankQuestItem'));
+        return;
+      case 'guildBankDepositBlockedSoulbound':
+        this.deps.showError(tSim('error.guildBankSoulbound'));
+        return;
+      case 'guildBankDepositBlockedNoTransfer':
+        this.deps.showError(tSim('error.guildBankNoTransfer'));
+        return;
+      case 'petFeedBlocked':
+        this.deps.showError(t('hud.pet.petEatsFoodOnly'));
+        return;
+      case 'petFeed': {
+        const at = this.copyRefFor(s);
+        if (!at) return;
+        this.deps.world().feedPet(s.itemId, at);
+        this.deps.setPendingPetFeed(false);
+        this.deps.resetPetBarSig();
+        this.render();
+        break;
+      }
+      case 'discardQuest':
+        this.showDiscardItemPrompt(s.itemId, Math.max(1, Math.floor(s.count)), s);
+        break;
+      case 'equipBag': {
+        const at = this.copyRefFor(s);
+        if (!at) return;
+        this.deps.world().equipBag(s.itemId, undefined, at);
+        this.deps.hideTooltip();
+        this.render();
+        break;
+      }
+      case 'placeFeast': {
+        // The shared feast (Farming Phase 12): the click is the PLACE verb,
+        // never plain useItem. The server spends the bag item and spawns the
+        // feast entity (or answers with a text-free farmDenied), so nothing is
+        // predicted here; the one thing the click knows and the server cannot
+        // guess is WHICH copy was clicked, which now rides with it so a signed
+        // feast beside a plain one spends the one the player picked. The
+        // tooltip is hidden like the other spend arms: a successful place
+        // removes the hovered stack.
+        const at = this.copyRefFor(s);
+        if (!at) return;
+        this.deps.world().placeFeast(at);
+        this.deps.hideTooltip();
+        this.render();
+        break;
+      }
+      case 'use': {
+        if (
+          item?.kind === 'recipe' &&
+          !isFreeholdCraftAvailable(this.deps.world().cfg?.freeholdsEnabled === true, item.id)
+        ) {
+          this.deps.showError(t('apiError.freehold.disabled'));
+          return;
+        }
+        // Gathering tools (#2343) route through the interact-style handler
+        // (nearest matching node + autorun stop) when main.ts has wired it;
+        // everything else, and any unwired host, keeps the plain useItem.
+        if (!item || !this.deps.useGatherTool(item)) {
+          const at = this.copyRefFor(s);
+          if (!at) return;
+          this.deps.world().useItem(s.itemId, at);
+        }
+        this.render();
+        this.deps.renderCharIfOpen();
+        break;
+      }
+    }"
+
+ ❯ tests/bags_window.test.ts:569:18
+    567|     // The 'use' case tries the gathering-tool routing first (#2343) a…
+    568|     // falls back to the plain useItem command when the hook declines.
+    569|     expect(body).toMatch(
+       |                  ^
+    570|       /case 'use': \{[\s\S]{0,400}?if \(!item \|\| !this\.deps\.useGat…
+    571|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 327 passed (328)
+   Start at  17:41:22
+   Duration  4.54s (transform 5.20s, setup 1.61s, import 10.01s, tests 2.27s, environment 209ms)

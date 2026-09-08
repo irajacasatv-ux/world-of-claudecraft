@@ -1,0 +1,28 @@
+docs/screenshots/eastbrook-vale-rebuild/polish/metadata/after-desktop-ultra.json: swept 24 provenance block(s)
+docs/screenshots/eastbrook-vale-rebuild/polish/metadata/after-mobile-low.json: swept 24 provenance block(s)
+docs/screenshots/eastbrook-vale-rebuild/polish/performance/after-desktop-ultra-town.json: swept 1 provenance block(s)
+docs/screenshots/eastbrook-vale-rebuild/polish/performance/after-mobile-low-town.json: swept 1 provenance block(s)
+composite fingerprint (pin in eastbrook_polish_capture_contract.test.ts,
+PINNED_POLISH_COMPOSITE_FINGERPRINT):
+  23eb80a99bdbd23a57ad3d1cba9d13159464c4d57ce8c3947a603a4cb7221378
+metadata authority sha256 (pin in eastbrook_polish_artifact_integrity.test.ts,
+ACCEPTED_POLISH_V2_METADATA_SHA256, recomputed from the swept file):
+  245eb5c77b178651a8b5ef3a4fbabfa99d9915a9ef1ddfd8c9f8cbc8da94c9af
+second-order performance digest (pin in eastbrook_polish_artifact_integrity.test.ts):
+  aa2601a153ff8e57d697894410c4799e45e5f7ffae53565e2307683c8a2b4ae1
+do NOT touch ACCEPTED_POLISH_V2_TOWN_SOURCE_FINGERPRINT in that same test:
+it is the FROZEN identity of the tree the captures were taken against, and
+it moves only if the captures themselves are retaken.
+WARNING: fingerprinted inputs differ from HEAD in this working tree:
+  M  pnpm-lock.yaml
+  M  public/models/props/eastbrook_noticeboard.glb
+  M  public/models/props/mailbox_pillar.glb
+  M  src/render/eastbrook_town.ts
+  M  src/render/prewarm_policy.ts
+  A  src/render/realm_builder_monument_fx.ts
+  M  src/render/renderer.ts
+  M  src/sim/eastbrook_layout.ts
+This mint seals THESE bytes. Commit exactly these bytes with the new pins,
+and RE-RUN this tool if any of them moves again before the commit (the
+2026-08-05 craft-cast pin went stale exactly that way: renderer.ts moved
+after the mint).

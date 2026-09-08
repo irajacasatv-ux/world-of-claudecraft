@@ -1,0 +1,45 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+tests/deeds_content.test.ts(156,1): error TS1185: Merge conflict marker encountered.
+tests/deeds_content.test.ts(160,1): error TS1185: Merge conflict marker encountered.
+tests/deeds_content.test.ts(167,1): error TS1185: Merge conflict marker encountered.
+tests/deeds_content.test.ts(989,1): error TS1185: Merge conflict marker encountered.
+tests/deeds_content.test.ts(991,1): error TS1185: Merge conflict marker encountered.
+tests/deeds_content.test.ts(1000,1): error TS1185: Merge conflict marker encountered.
+tests/deeds_content.test.ts(1036,1): error TS1185: Merge conflict marker encountered.
+tests/deeds_content.test.ts(1042,1): error TS1185: Merge conflict marker encountered.
+tests/deeds_content.test.ts(1045,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(424,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(456,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(470,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(845,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(857,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(869,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1029,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1078,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1092,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1273,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1306,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1318,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1516,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1520,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1542,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1671,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1694,1): error TS1185: Merge conflict marker encountered.
+tests/monolith_budget.test.ts(1707,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2324,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2332,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2403,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2417,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2419,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2421,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2427,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2437,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2455,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2480,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2490,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2500,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2507,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2515,1): error TS1185: Merge conflict marker encountered.
+tests/professions_blob_growth.test.ts(2524,1): error TS1185: Merge conflict marker encountered.

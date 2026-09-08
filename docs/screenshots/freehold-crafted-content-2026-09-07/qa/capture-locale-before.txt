@@ -1,0 +1,5 @@
+FAIL dark-desktop: locale=ja_JP, preset=1
+FAIL lit-desktop: locale=ja_JP, preset=1
+FAIL dark-mobile: locale=ja_JP, preset=1
+FAIL lit-mobile: locale=ja_JP, preset=1
+FAIL dark-forced-colors: locale=ja_JP, preset=1

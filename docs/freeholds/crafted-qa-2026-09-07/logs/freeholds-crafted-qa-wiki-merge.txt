@@ -1,0 +1,5 @@
+
+> world-of-claudecraft@0.41.0 wiki:content
+> node scripts/wiki/build_content.mjs
+
+generated src/guide/content.generated.ts (9 classes, 15 zones, 6 dungeons, 3 warlock pets, 3 druid forms, 12 families, 2 delves, 287 deeds, 40 reliquary pages, 10 crafts, 5 gathering professions, 50 models)

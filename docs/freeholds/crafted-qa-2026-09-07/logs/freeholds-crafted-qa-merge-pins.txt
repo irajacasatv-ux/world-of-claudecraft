@@ -1,0 +1,61 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+stdout | tests/furnishing_rift_admission.test.ts > furnishing Rift admission through ClientWorld and GameServer > 'upgrade' refuses a furnishing via 'named slot' and mirrors shell success
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stdout | tests/furnishing_rift_admission.test.ts > furnishing Rift admission through ClientWorld and GameServer > 'upgrade' refuses a furnishing via 'legacy item id' and mirrors shell success
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stdout | tests/furnishing_rift_admission.test.ts > furnishing Rift admission through ClientWorld and GameServer > 'socket' refuses a furnishing via 'named slot' and mirrors shell success
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stdout | tests/furnishing_rift_admission.test.ts > furnishing Rift admission through ClientWorld and GameServer > 'socket' refuses a furnishing via 'legacy item id' and mirrors shell success
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stdout | tests/furnishing_rift_admission.test.ts
+[capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
+
+ ❯ tests/furnishing_rift_admission.test.ts (8 tests | 4 failed) 1826ms
+     × 'upgrade' refuses a furnishing via 'named slot' and mirrors shell success 726ms
+     × 'upgrade' refuses a furnishing via 'legacy item id' and mirrors shell success 112ms
+     × 'socket' refuses a furnishing via 'named slot' and mirrors shell success 109ms
+     × 'socket' refuses a furnishing via 'legacy item id' and mirrors shell success 110ms
+[professions-blob-material-sources] {"label":"representative","compactJSONBytes":165870,"sources":1,"warningBytes":229376,"relationToWarning":"below","physicalUnits":30040}
+[professions-blob-material-sources] {"label":"varied","compactJSONBytes":346836,"sources":5,"warningBytes":229376,"relationToWarning":"at-or-above","physicalUnits":30040}
+[professions-blob-material-sources] {"label":"premium-per-unit","compactJSONBytes":3883486,"sources":30040,"warningBytes":229376,"relationToWarning":"at-or-above","physicalUnits":30040}
+(node:37782) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/furnishing_rift_admission.test.ts > furnishing Rift admission through ClientWorld and GameServer > 'upgrade' refuses a furnishing via 'named slot' and mirrors shell success
+ FAIL  tests/furnishing_rift_admission.test.ts > furnishing Rift admission through ClientWorld and GameServer > 'upgrade' refuses a furnishing via 'legacy item id' and mirrors shell success
+ FAIL  tests/furnishing_rift_admission.test.ts > furnishing Rift admission through ClientWorld and GameServer > 'socket' refuses a furnishing via 'named slot' and mirrors shell success
+ FAIL  tests/furnishing_rift_admission.test.ts > furnishing Rift admission through ClientWorld and GameServer > 'socket' refuses a furnishing via 'legacy item id' and mirrors shell success
+AssertionError: expected Promise{…} to be undefined
+
+- Expected:
+undefined
+
++ Received:
+Promise {}
+
+ ❯ tests/furnishing_rift_admission.test.ts:243:7
+    241|     expect(
+    242|       withoutMutation(sim, pid, () => row.invoke(client, ID, named ? {…
+    243|     ).toBeUndefined();
+       |       ^
+    244|     expect(sent).toEqual([
+    245|       { t: 'cmd', cmd: row.command, item: ID, ...row.fields, ...(named…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+ Test Files  1 failed | 16 passed (17)
+      Tests  4 failed | 709 passed | 1 skipped (714)
+   Start at  16:40:15
+   Duration  10.58s (transform 4.85s, setup 2.76s, import 7.17s, tests 30.08s, environment 1ms)

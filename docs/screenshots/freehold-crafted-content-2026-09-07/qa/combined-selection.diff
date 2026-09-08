@@ -1,0 +1,4 @@
+--- a/src/guide/pages/professions_provisioning.ts
++++ b/src/guide/pages/professions_provisioning.ts
+--- a/src/ui/hud/professions/recipe_pattern_tooltip_view.ts
++++ b/src/ui/hud/professions/recipe_pattern_tooltip_view.ts

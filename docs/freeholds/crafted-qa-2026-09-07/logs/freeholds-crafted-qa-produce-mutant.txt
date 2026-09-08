@@ -1,0 +1,34 @@
+COMMAND: npx vitest run tests/provisioner_firewall.test.ts --maxWorkers=2 -t covers every bill and admits produce only in cooking and alchemy decor
+4:53:17 PM [vite-plugin-svelte] no Svelte config found at /private/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3 - using default configuration.
+
+ RUN  v4.1.10 /private/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3
+
+ ❯ tests/provisioner_firewall.test.ts (16 tests | 1 failed | 15 skipped) 6ms
+     × covers every bill and admits produce only in cooking and alchemy decor 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/provisioner_firewall.test.ts > crafted furnishings: the provisioner firewall > covers every bill and admits produce only in cooking and alchemy decor
+AssertionError: recipe_freehold_weapon_rack: vale_wheat: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/provisioner_firewall.test.ts:550:11
+    548|           furnishingReagentAllowed(recipe, reagent.itemId),
+    549|           `${recipe.id}: ${reagent.itemId}`,
+    550|         ).toBe(true);
+       |           ^
+    551|       }
+    552|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 skipped (16)
+   Start at  16:53:17
+   Duration  436ms (transform 191ms, setup 165ms, import 195ms, tests 6ms, environment 0ms)

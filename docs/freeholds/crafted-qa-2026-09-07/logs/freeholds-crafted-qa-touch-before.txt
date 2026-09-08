@@ -1,0 +1,101 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+(node:28705) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ tests/bags_window_use_routing.test.ts (31 tests | 12 failed) 64ms
+     × voices current realm availability undefined after touch Use 4ms
+     × voices current realm availability false after touch Use 2ms
+     × reads capability again when the already-open touch menu activates 2ms
+     × gives the same refusal on a direct desktop click 2ms
+     × voices current realm availability undefined after touch Use 4ms
+     × voices current realm availability false after touch Use 1ms
+     × reads capability again when the already-open touch menu activates 1ms
+     × gives the same refusal on a direct desktop click 1ms
+     × voices current realm availability undefined after touch Use 1ms
+     × voices current realm availability false after touch Use 1ms
+     × reads capability again when the already-open touch menu activates 4ms
+     × gives the same refusal on a direct desktop click 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 12 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_clockwork_lamp > voices current realm availability undefined after touch Use
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_clockwork_lamp > voices current realm availability false after touch Use
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_chart_easel > voices current realm availability undefined after touch Use
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_chart_easel > voices current realm availability false after touch Use
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_jewel_floor_lamp > voices current realm availability undefined after touch Use
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_jewel_floor_lamp > voices current realm availability false after touch Use
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- [
+-   "Freeholds are not available on this realm.",
+- ]
++ []
+
+ ❯ tests/bags_window_use_routing.test.ts:173:22
+    171|     expect(h.usedItems).toEqual([]);
+    172|     h.menuDefaults[0]();
+    173|     expect(h.errors).toEqual(flag === true ? [] : ['Freeholds are not …
+       |                      ^
+    174|     expect(h.usedItems).toEqual(flag === true ? [itemId] : []);
+    175|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/12]⎯
+
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_clockwork_lamp > reads capability again when the already-open touch menu activates
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_chart_easel > reads capability again when the already-open touch menu activates
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_jewel_floor_lamp > reads capability again when the already-open touch menu activates
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- [
+-   "Freeholds are not available on this realm.",
+- ]
++ []
+
+ ❯ tests/bags_window_use_routing.test.ts:184:22
+    182|     cfg.freeholdsEnabled = false;
+    183|     h.menuDefaults[0]();
+    184|     expect(h.errors).toEqual(['Freeholds are not available on this rea…
+       |                      ^
+    185|     expect(h.usedItems).toEqual([]);
+    186|     cfg.freeholdsEnabled = true;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/12]⎯
+
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_clockwork_lamp > gives the same refusal on a direct desktop click
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_chart_easel > gives the same refusal on a direct desktop click
+ FAIL  tests/bags_window_use_routing.test.ts > retained furnishing manual use feedback: pattern_freehold_jewel_floor_lamp > gives the same refusal on a direct desktop click
+AssertionError: expected [] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+- [
+-   "Freeholds are not available on this realm.",
+- ]
++ []
+
+ ❯ tests/bags_window_use_routing.test.ts:196:22
+    194|     clickFirstCell(h.root);
+    195|     expect(h.menuDefaults).toEqual([]);
+    196|     expect(h.errors).toEqual(['Freeholds are not available on this rea…
+       |                      ^
+    197|     expect(h.usedItems).toEqual([]);
+    198|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/12]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  12 failed | 19 passed (31)
+   Start at  17:40:48
+   Duration  2.41s (transform 1.03s, setup 129ms, import 1.95s, tests 64ms, environment 192ms)

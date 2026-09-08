@@ -1,0 +1,10 @@
+COMMAND: npx vitest run tests/apex_pattern_channels.test.ts --maxWorkers=2 -t every recipe teaching pattern appears in EXACTLY
+4:53:15 PM [vite-plugin-svelte] no Svelte config found at /private/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3 - using default configuration.
+
+ RUN  v4.1.10 /private/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 23 skipped (24)
+   Start at  16:53:15
+   Duration  747ms (transform 369ms, setup 181ms, import 492ms, tests 4ms, environment 0ms)

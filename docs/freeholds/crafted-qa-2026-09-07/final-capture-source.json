@@ -1,0 +1,6 @@
+{
+  "scripts/pr_shot_targets.mjs": "f6768fb545db1c0aeee18bbe789a224c908a184c58b12af79c29462846728658",
+  "src/ui/bags_window.ts": "3822e26b878bcb1eb3546de50de657cb4e4237d7898f290c42f2318fc1aa29d9",
+  "src/styles/hud.mobile.css": "696476739c39ae6fafca3d9e3331c65a6b8c354649a93226933856715af23da0",
+  "src/ui/hud/professions/recipe_pattern_tooltip_view.ts": "fa6c1df031ad8feda8e9316adafa986832fce6ac734742ca8b2e05352cee5b3c"
+}

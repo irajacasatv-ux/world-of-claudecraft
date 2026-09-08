@@ -1,0 +1,5 @@
+import {createHash} from 'node:crypto';
+import {Sim} from './src/sim/sim';
+const sim = new Sim({seed:1,playerClass:'warrior'});
+const projection=[...sim.entities.values()].map(e=>({id:e.id,templateId:e.templateId,pos:e.pos,facing:e.facing,hp:e.hp}));
+console.log(JSON.stringify({nextId:sim.nextId,primaryId:sim.primaryId,merchants:sim.market.merchantIds,bankers:sim.bankerIds,entityCount:sim.entities.size,positionHash:createHash('sha256').update(JSON.stringify(projection)).digest('hex'),rngNext:sim.rng.next(),npcPrefix:projection.filter(e=>e.id<100),reserved:projection.filter(e=>e.id>=2000000000)}));

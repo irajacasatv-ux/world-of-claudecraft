@@ -1,0 +1,43 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+[professions-blob-material-sources] {"label":"representative","compactJSONBytes":165870,"sources":1,"warningBytes":229376,"relationToWarning":"below","physicalUnits":30040}
+[professions-blob-material-sources] {"label":"varied","compactJSONBytes":346836,"sources":5,"warningBytes":229376,"relationToWarning":"at-or-above","physicalUnits":30040}
+[professions-blob-material-sources] {"label":"premium-per-unit","compactJSONBytes":3883486,"sources":30040,"warningBytes":229376,"relationToWarning":"at-or-above","physicalUnits":30040}
+stdout | tests/server/freehold_wire.test.ts
+[capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
+
+ ❯ tests/server/freehold_wire.test.ts (86 tests | 1 failed) 2591ms
+     × the env read sits behind the token short-circuit: a non-housing frame never touches the env 3ms
+(node:7117) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/server/freehold_wire.test.ts > freeholds flag: the pure verdict > the env read sits behind the token short-circuit: a non-housing frame never touches the env
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/server/freehold_wire.test.ts:426:71
+    424|     expect(refusedRiftForgeCommand('freehold_enter', countingEnv)).toB…
+    425|     expect(reads).toBe(0);
+    426|     expect(refusedRiftForgeCommand('rift_upgrade_item', countingEnv)).…
+       |                                                                       ^
+    427|     expect(reads).toBe(1);
+    428|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 18 passed (19)
+      Tests  1 failed | 1020 passed (1021)
+   Start at  16:55:32
+   Duration  14.06s (transform 5.16s, setup 2.17s, import 13.03s, tests 34.53s, environment 1ms)

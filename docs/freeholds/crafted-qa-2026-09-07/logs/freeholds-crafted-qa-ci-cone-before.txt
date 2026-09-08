@@ -1,0 +1,73 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+ ❯ tests/ci_workflow.test.ts (27 tests | 2 failed) 833ms
+     × sparse-checkout on the test jobs covers every referenced screenshot subtree 759ms
+     × classifies every CI job for the real-SQL merge bar: pg-wired, guarded DB-less, or test-free 20ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/ci_workflow.test.ts > CI workflow parity > sparse-checkout on the test jobs covers every referenced screenshot subtree
+AssertionError: expected [ 'admin-cheater-mark', …(31) ] to deeply equal [ 'admin-cheater-mark', …(30) ]
+
+- Expected
++ Received
+
+@@ -7,10 +7,11 @@
+    "eastbrook-grand-armoury",
+    "eastbrook-vale-rebuild",
+    "far-foliage-impostors",
+    "fenbridge-rebuild",
+    "freehold-content-2026-09-07",
++   "freehold-crafted-content-2026-09-07",
+    "furnishing-item-kind",
+    "guild-bank-history",
+    "guild-bank-tab",
+    "guild-pledge-board",
+    "guild-social-v1",
+
+ ❯ tests/ci_workflow.test.ts:551:36
+    549|     // (a one-way floor with slack would let a quietly narrowed corpus…
+    550|     // entries and stay green).
+    551|     expect([...referenced].sort()).toEqual([...coneDirs].sort());
+       |                                    ^
+    552|   });
+    553|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/ci_workflow.test.ts > CI workflow parity > classifies every CI job for the real-SQL merge bar: pg-wired, guarded DB-less, or test-free
+AssertionError: expected [ '.github/workflows/audit.yml', …(7) ] to deeply equal [ '.github/workflows/audit.yml', …(5) ]
+
+- Expected
++ Received
+
+  [
+    ".github/workflows/audit.yml",
+    ".github/workflows/ci-stall-rerun.yml",
+    ".github/workflows/ci.yml",
++   ".github/workflows/ci.yml",
++   ".github/workflows/ci.yml",
+    ".github/workflows/desktop-publish.yml",
+    ".github/workflows/nightly.yml",
+    ".github/workflows/ota-publish.yml",
+  ]
+
+ ❯ tests/ci_workflow.test.ts:2144:20
+    2142|       '.github/workflows/ota-publish.yml',
+    2143|     ];
+    2144|     expect(listed).toEqual(
+       |                    ^
+    2145|       ['.github/workflows/ci.yml', '.github/workflows/nightly.yml', ..…
+    2146|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 25 passed (27)
+   Start at  16:36:40
+   Duration  1.40s (transform 328ms, setup 406ms, import 67ms, tests 833ms, environment 0ms)

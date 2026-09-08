@@ -1,0 +1,96 @@
+{
+  "scratch": "/var/folders/w2/fg3_z30d42nfpjsy58cvh5z40000gn/T/freeholds-crafted-mutants-aaey2br3",
+  "runs": [
+    {
+      "label": "quartermaster",
+      "variant": "baseline",
+      "exitCode": 0,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/apex_pattern_channels.test.ts",
+        "--maxWorkers=2",
+        "-t",
+        "every recipe teaching pattern appears in EXACTLY"
+      ],
+      "log": "/tmp/freeholds-crafted-qa-quartermaster-baseline.log"
+    },
+    {
+      "label": "quartermaster",
+      "variant": "mutant",
+      "exitCode": 1,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/apex_pattern_channels.test.ts",
+        "--maxWorkers=2",
+        "-t",
+        "every recipe teaching pattern appears in EXACTLY"
+      ],
+      "log": "/tmp/freeholds-crafted-qa-quartermaster-mutant.log"
+    },
+    {
+      "label": "quartermaster",
+      "variant": "restored",
+      "exitCode": 0,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/apex_pattern_channels.test.ts",
+        "--maxWorkers=2",
+        "-t",
+        "every recipe teaching pattern appears in EXACTLY"
+      ],
+      "log": "/tmp/freeholds-crafted-qa-quartermaster-restored.log"
+    },
+    {
+      "label": "produce",
+      "variant": "baseline",
+      "exitCode": 0,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/provisioner_firewall.test.ts",
+        "--maxWorkers=2",
+        "-t",
+        "covers every bill and admits produce only in cooking and alchemy decor"
+      ],
+      "log": "/tmp/freeholds-crafted-qa-produce-baseline.log"
+    },
+    {
+      "label": "produce",
+      "variant": "mutant",
+      "exitCode": 1,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/provisioner_firewall.test.ts",
+        "--maxWorkers=2",
+        "-t",
+        "covers every bill and admits produce only in cooking and alchemy decor"
+      ],
+      "log": "/tmp/freeholds-crafted-qa-produce-mutant.log"
+    },
+    {
+      "label": "produce",
+      "variant": "restored",
+      "exitCode": 0,
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "tests/provisioner_firewall.test.ts",
+        "--maxWorkers=2",
+        "-t",
+        "covers every bill and admits produce only in cooking and alchemy decor"
+      ],
+      "log": "/tmp/freeholds-crafted-qa-produce-restored.log"
+    }
+  ],
+  "liveSourcesUnchanged": true
+}

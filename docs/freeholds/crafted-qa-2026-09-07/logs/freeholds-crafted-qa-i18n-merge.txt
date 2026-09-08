@@ -1,0 +1,20 @@
+
+> world-of-claudecraft@0.41.0 i18n:gen
+> npm run i18n:build && npm run i18n:admin && npm run i18n:scan
+
+
+> world-of-claudecraft@0.41.0 i18n:build
+> node scripts/i18n_build.mjs
+
+generated src/ui/i18n.resolved.generated/ (22 locales + en_XA pseudo + barrel + loaders + pending, 34934953 bytes, 24/26 rewritten)
+generated src/ui/i18n.catalog/translation_keys.generated.ts (flat TranslationKey union)
+
+> world-of-claudecraft@0.41.0 i18n:admin
+> node scripts/i18n_admin_build.mjs
+
+generated src/admin/i18n.resolved.generated/ (22 locales + en_XA pseudo + barrel + loaders + pending, 1198 keys, pending=1478, 1711105 bytes, 0/26 rewritten)
+
+> world-of-claudecraft@0.41.0 i18n:scan
+> node scripts/i18n_scan.mjs
+
+generated src/ui/i18n.status.json (15518 keys x 21 locales; translated=301055 blocked=458 pending=24365; blockedSource=114; 42680846 bytes) + src/ui/i18n.status.summary.json (2656 bytes)

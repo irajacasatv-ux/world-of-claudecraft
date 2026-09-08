@@ -1,0 +1,8 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+tests/rift_progression.test.ts(80,22): error TS2345: Argument of type '{ id: string; name: string; spellPower?: number | undefined; healPower?: number | undefined; critRating?: number | undefined; hasteRating?: number | undefined; hitRating?: number | undefined; ... 36 more ...; stats: Record<...> | undefined; } | ... 9 more ... | { ...; }' is not assignable to parameter of type 'ItemDef'.
+  Type '{ id: string; name: string; priceHonor?: number; sellValue: number; buyValue?: number; questId?: string; noVendorSell?: boolean; noDiscard?: boolean; noMarketList?: boolean; soulbound?: boolean; ... 33 more ...; stats: Record<...> | undefined; }' is not assignable to type 'ItemDef'.
+    Types of property 'stats' are incompatible.
+      Type 'Record<string, number> | undefined' is not assignable to type 'undefined'.
+        Type 'Record<string, number>' is not assignable to type 'undefined'.

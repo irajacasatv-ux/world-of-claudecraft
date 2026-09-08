@@ -1,0 +1,39 @@
+import { spawnSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const root = process.cwd();
+const files = JSON.parse(readFileSync('/tmp/freeholds-crafted-qa-unmeasured-all.json', 'utf8'));
+const { parseWeightLines } = await import(pathToFileURL(resolve(root, 'scripts/lib/ci_shard_weight_parse.mjs')));
+const argv = ['vitest', 'run', ...files, '--reporter=default', '--maxWorkers=4'];
+const result = { argv, files, runs: [], carry: null };
+const receipt = '/tmp/freeholds-crafted-qa-missing-weight-measurements.json';
+const save = () => writeFileSync(receipt, JSON.stringify(result, null, 2) + '\n');
+for (let i = 1; i <= 3; i++) {
+  const log = `/tmp/freeholds-crafted-qa-missing-weight-run${i}.log`;
+  console.log(`Measuring ${files.length} missing suites, run ${i}/3`);
+  const run = spawnSync('npx', argv, { cwd: root, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 });
+  const output = `${run.stdout ?? ''}\n${run.stderr ?? ''}`;
+  writeFileSync(log, output);
+  const durations = parseWeightLines(output);
+  const skipped = [...output.matchAll(/\u2193 (tests\/\S+\.test\.ts) \(/g)].map(m => m[1]);
+  const missing = files.filter(file => !Number.isInteger(durations[file]) || durations[file] <= 0);
+  const unexpected = Object.keys(durations).filter(file => !files.includes(file));
+  result.runs.push({ index: i, exitCode: run.status, signal: run.signal, log, durations, skipped, missing, unexpected });
+  save();
+  console.log(`Run ${i}: exit ${run.status}, ${Object.keys(durations).length} duration rows, ${skipped.length} skipped suites`);
+  if (run.status !== 0 || missing.length || unexpected.length || skipped.length) {
+    throw new Error(`Measurement needs review: missing=${missing.join(',')}; unexpected=${unexpected.join(',')}; skipped=${skipped.join(',')}; see ${log}`);
+  }
+}
+const tokens = files.map(file => `${file}=${result.runs.map(run => run.durations[file]).join(',')}`);
+const carryArgv = ['scripts/ci_shard_weights_harvest.mjs', '--carry-local', '--reason',
+  'Freehold release integration and crafted-content QA: three local suite runs pending the next full CI harvest', ...tokens];
+const carry = spawnSync(process.execPath, carryArgv, { cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+const carryLog = '/tmp/freeholds-crafted-qa-missing-weight-carry.log';
+writeFileSync(carryLog, `${carry.stdout ?? ''}\n${carry.stderr ?? ''}`);
+result.carry = { executable: process.execPath, argv: carryArgv, exitCode: carry.status, log: carryLog };
+save();
+console.log(`Owning carry generator exit ${carry.status}; receipt ${receipt}`);
+process.exitCode = carry.status ?? 1;
