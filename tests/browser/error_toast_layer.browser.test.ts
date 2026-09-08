@@ -63,7 +63,12 @@ describe('mobile refusal toast above the Bags sheet', () => {
   it('preserves the existing desktop toast and managed-window layers', () => {
     document.body.className = 'game-active';
     const { toast, bags } = mountedToast();
-    expect(getComputedStyle(toast).zIndex).toBe('auto');
+    // The desktop base: release/v0.42.0 seats #error-msg at 90 in hud.css
+    // (above the ordinary .window focus band, 50 to 89, so a mail or vendor
+    // deny toast never mis-layers with a window); this branch's touch rule
+    // only steps that base one above the mobile sheet's forced 95, and never
+    // touches the desktop value.
+    expect(getComputedStyle(toast).zIndex).toBe('90');
     expect(getComputedStyle(toast).pointerEvents).toBe('none');
     expect(getComputedStyle(bags).zIndex).toBe('51');
   });
