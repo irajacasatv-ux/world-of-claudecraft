@@ -2,214 +2,225 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4144,
-    "harvestedFiles": 3950,
+    "files": 4025,
+    "harvestedFiles": 3948,
     "carried": {
       "tests/ability_vfx_draped_pools.test.ts": {
         "ms": 9,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           9,
           9,
-          9
+          8
         ]
       },
       "tests/ability_vfx_idle_visibility.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          5,
-          5
-        ]
-      },
-      "tests/ability_vfx_instanced_pools.test.ts": {
-        "ms": 7,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          7,
-          6,
-          7
-        ]
-      },
-      "tests/action_bar_bind_banner.test.ts": {
-        "ms": 16,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          17,
-          16,
-          16
-        ]
-      },
-      "tests/agent_surface_paths.test.ts": {
         "ms": 4,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           4,
-          5,
+          4,
           4
+        ]
+      },
+      "tests/ability_vfx_instanced_pools.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          6,
+          7,
+          6
+        ]
+      },
+      "tests/account_mount_cosmetics_pg_integration.test.ts": {
+        "ms": 100,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          100,
+          100,
+          100
+        ]
+      },
+      "tests/action_bar_bind_banner.test.ts": {
+        "ms": 18,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          18,
+          15,
+          27
+        ]
+      },
+      "tests/agent_surface_paths.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          3,
+          3,
+          3
         ]
       },
       "tests/aura_bar_side.test.ts": {
         "ms": 2,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           2,
-          3,
+          2,
           2
         ]
       },
       "tests/aura_ids.test.ts": {
-        "ms": 3,
+        "ms": 2,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           3,
-          3,
-          4
+          2,
+          2
         ]
       },
       "tests/aura_track_catalog.test.ts": {
-        "ms": 642,
+        "ms": 624,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          639,
-          649,
-          642
+          624,
+          615,
+          635
         ]
       },
       "tests/aura_track_host.test.ts": {
-        "ms": 62,
+        "ms": 58,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          62,
-          61,
-          66
+          58,
+          60,
+          56
         ]
       },
       "tests/aura_track_painter.test.ts": {
-        "ms": 43,
+        "ms": 38,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          46,
-          42,
-          43
+          43,
+          38,
+          37
         ]
       },
       "tests/aura_track_view.test.ts": {
-        "ms": 6,
+        "ms": 5,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           5,
-          6,
-          6
+          5,
+          5
         ]
       },
       "tests/awarded_loot_hold.test.ts": {
-        "ms": 1611,
+        "ms": 1593,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          1611,
-          1671,
-          1609
+          1571,
+          1612,
+          1593
         ]
       },
       "tests/bags_pool_honest_refusal.test.ts": {
-        "ms": 804,
+        "ms": 776,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          797,
-          804,
-          808
+          768,
+          776,
+          787
         ]
       },
       "tests/bags_window_materials_only_cells.test.ts": {
-        "ms": 24,
+        "ms": 22,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          24,
-          24,
-          25
+          22,
+          21,
+          22
         ]
       },
       "tests/blade_grass_pool_core.test.ts": {
-        "ms": 145,
+        "ms": 144,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          144,
-          150,
-          145
+          148,
+          141,
+          144
         ]
       },
       "tests/blade_grass_sector_pool.test.ts": {
-        "ms": 1528,
+        "ms": 1562,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          1555,
-          1512,
-          1528
+          1544,
+          1562,
+          1579
         ]
       },
       "tests/blade_grass_upload_bands_core.test.ts": {
-        "ms": 41,
+        "ms": 40,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          41,
-          41,
+          40,
+          40,
           41
         ]
       },
       "tests/blank_entity.test.ts": {
-        "ms": 48,
+        "ms": 47,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          47,
           48,
-          48
+          47,
+          47
         ]
       },
       "tests/browser_fullscreen.test.ts": {
-        "ms": 9,
+        "ms": 10,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          9,
+          10,
           10,
           9
         ]
@@ -218,7 +229,7 @@
         "ms": 4,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           4,
           5,
@@ -229,10 +240,10 @@
         "ms": 9,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           11,
-          9,
+          8,
           9
         ]
       },
@@ -240,7 +251,7 @@
         "ms": 3,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           3,
           3,
@@ -248,87 +259,164 @@
         ]
       },
       "tests/chrome_profile_dir.test.ts": {
-        "ms": 5,
+        "ms": 4,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          5,
-          5,
-          5
+          4,
+          4,
+          4
         ]
       },
       "tests/chronomancy_cascade_relief.test.ts": {
-        "ms": 1058,
+        "ms": 1003,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          1031,
-          1058,
-          1074
+          988,
+          1003,
+          1023
         ]
       },
       "tests/chronomancy_echo_distribution.test.ts": {
         "ms": 3,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           3,
-          5,
+          3,
           3
         ]
       },
       "tests/ci_changed_entry.test.ts": {
-        "ms": 279,
+        "ms": 243,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          478,
-          274,
-          279
+          381,
+          243,
+          226
         ]
       },
       "tests/codex_hooks.test.ts": {
-        "ms": 5055,
+        "ms": 4609,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          5231,
-          5048,
-          5055
+          4765,
+          4576,
+          4609
+        ]
+      },
+      "tests/collection_actions_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          3,
+          3,
+          3
         ]
       },
       "tests/combat_res_released_ghost.test.ts": {
-        "ms": 2629,
+        "ms": 2579,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          2629,
-          2620,
-          2643
+          2582,
+          2557,
+          2579
         ]
       },
       "tests/context_loss_recovery.test.ts": {
         "ms": 8,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          9,
+          8,
           7,
           8
+        ]
+      },
+      "tests/cosmetics_view.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/cosmetics_window.test.ts": {
+        "ms": 60,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          65,
+          60,
+          60
+        ]
+      },
+      "tests/crucible_music.test.ts": {
+        "ms": 12,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          14,
+          11,
+          12
+        ]
+      },
+      "tests/crucible_music_playback.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          9,
+          9,
+          9
+        ]
+      },
+      "tests/crucible_vendor_reach.test.ts": {
+        "ms": 798,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          782,
+          798,
+          802
+        ]
+      },
+      "tests/deck_floor.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          5,
+          4,
+          5
         ]
       },
       "tests/deposit_all_status_text.test.ts": {
         "ms": 4,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           4,
           3,
@@ -336,23 +424,23 @@
         ]
       },
       "tests/discord_queue_ping_row.test.ts": {
-        "ms": 8,
+        "ms": 7,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           8,
-          8,
-          9
+          7,
+          7
         ]
       },
       "tests/draped_bounds_core.test.ts": {
-        "ms": 4,
+        "ms": 3,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          4,
+          3,
           3,
           4
         ]
@@ -361,53 +449,64 @@
         "ms": 4,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           4,
           4,
-          5
+          4
+        ]
+      },
+      "tests/engaged_combat.test.ts": {
+        "ms": 875,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Completed timing runs from the release integration harvest",
+        "runs": [
+          880,
+          875,
+          873
         ]
       },
       "tests/entity_flair_wire.test.ts": {
         "ms": 3,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           3,
           3,
-          3
+          5
         ]
       },
       "tests/entity_reanchor.test.ts": {
         "ms": 3,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          3,
+          4,
           3,
           3
         ]
       },
       "tests/far_bake_group_key.test.ts": {
-        "ms": 6,
+        "ms": 4,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          6,
-          7,
-          4
+          4,
+          4,
+          5
         ]
       },
       "tests/far_bake_groups_core.test.ts": {
         "ms": 3,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          4,
+          3,
           3,
           3
         ]
@@ -416,9 +515,9 @@
         "ms": 25,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          23,
+          36,
           25,
           25
         ]
@@ -427,7 +526,7 @@
         "ms": 4,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           4,
           4,
@@ -438,21 +537,21 @@
         "ms": 3,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           3,
           3,
-          3
+          4
         ]
       },
       "tests/freehold_art_admission.test.ts": {
-        "ms": 20,
+        "ms": 21,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          25,
-          19,
+          26,
+          21,
           20
         ]
       },
@@ -460,7 +559,7 @@
         "ms": 3,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           3,
           3,
@@ -468,76 +567,76 @@
         ]
       },
       "tests/freehold_command_chain_online.test.ts": {
-        "ms": 1362,
+        "ms": 1371,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          1427,
-          1362,
-          1346
+          1383,
+          1369,
+          1371
         ]
       },
       "tests/freehold_content.test.ts": {
         "ms": 13,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           13,
-          13,
-          13
+          11,
+          15
         ]
       },
       "tests/freehold_crafted_art.test.ts": {
         "ms": 31,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          34,
-          29,
+          35,
+          30,
           31
         ]
       },
       "tests/freehold_crafted_availability.test.ts": {
-        "ms": 2135,
+        "ms": 2189,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          2110,
-          2137,
-          2135
+          2189,
+          2165,
+          2204
         ]
       },
       "tests/freehold_crafted_presentation.test.ts": {
-        "ms": 786,
+        "ms": 817,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          780,
+          817,
           795,
-          786
+          817
         ]
       },
       "tests/freehold_deed_records.test.ts": {
-        "ms": 621,
+        "ms": 635,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          613,
-          621,
-          623
+          633,
+          637,
+          635
         ]
       },
       "tests/freehold_dev_authorization.test.ts": {
         "ms": 8,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           9,
           8,
@@ -548,73 +647,73 @@
         "ms": 53,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           53,
-          54,
-          51
+          53,
+          52
         ]
       },
       "tests/freehold_dev_grant.test.ts": {
-        "ms": 306,
+        "ms": 315,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          330,
-          306,
-          301
+          348,
+          315,
+          310
         ]
       },
       "tests/freehold_dungeon_defs.test.ts": {
-        "ms": 3011,
+        "ms": 3112,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          2995,
-          3045,
-          3011
+          3063,
+          3171,
+          3112
         ]
       },
       "tests/freehold_furnisher.test.ts": {
-        "ms": 940,
+        "ms": 957,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          940,
-          923,
-          943
+          948,
+          958,
+          957
         ]
       },
       "tests/freehold_instance.test.ts": {
-        "ms": 1232,
+        "ms": 1259,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          1230,
-          1232,
-          1236
+          1280,
+          1239,
+          1259
         ]
       },
       "tests/freehold_instance_online.test.ts": {
-        "ms": 1313,
+        "ms": 1348,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          1313,
-          1390,
-          1304
+          1368,
+          1348,
+          1342
         ]
       },
       "tests/freehold_ledger_schedule.test.ts": {
         "ms": 13,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
           14,
           13,
@@ -622,432 +721,14 @@
         ]
       },
       "tests/freehold_module.test.ts": {
-        "ms": 1167,
+        "ms": 1200,
         "method": "local-median",
         "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
+        "reason": "Completed timing runs from the release integration harvest",
         "runs": [
-          1167,
-          1195,
-          1160
-        ]
-      },
-      "tests/freehold_npc_spawn.test.ts": {
-        "ms": 1822,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1822,
-          1820,
-          1830
-        ]
-      },
-      "tests/freehold_offline_default.test.ts": {
-        "ms": 166,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          170,
-          166,
-          160
-        ]
-      },
-      "tests/freehold_snapshot_wire.test.ts": {
-        "ms": 22,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          21,
-          22,
-          22
-        ]
-      },
-      "tests/freehold_trial_economy.test.ts": {
-        "ms": 6,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          6,
-          6,
-          7
-        ]
-      },
-      "tests/freehold_trial_geometry.test.ts": {
-        "ms": 13,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          13,
-          13,
-          11
-        ]
-      },
-      "tests/furnishing_asset_identity.test.ts": {
-        "ms": 11,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          11,
-          11,
-          12
-        ]
-      },
-      "tests/furnishing_auto_equip.test.ts": {
-        "ms": 180,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          182,
-          177,
-          180
-        ]
-      },
-      "tests/furnishing_commerce_parity.test.ts": {
-        "ms": 1651,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1653,
-          1651,
-          1649
-        ]
-      },
-      "tests/furnishing_consumer_parity.test.ts": {
-        "ms": 3079,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3094,
-          3056,
-          3079
-        ]
-      },
-      "tests/furnishing_crafting.test.ts": {
-        "ms": 1367,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1367,
-          1356,
-          1385
-        ]
-      },
-      "tests/furnishing_dev_picker.test.ts": {
-        "ms": 25,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          25,
-          25,
-          24
-        ]
-      },
-      "tests/furnishing_discovery.test.ts": {
-        "ms": 611,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          607,
-          611,
-          626
-        ]
-      },
-      "tests/furnishing_enchant_picker.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          5,
-          5
-        ]
-      },
-      "tests/furnishing_equipment_power.test.ts": {
-        "ms": 629,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          646,
-          627,
-          629
-        ]
-      },
-      "tests/furnishing_event_identity.test.ts": {
-        "ms": 1607,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1603,
-          1607,
-          1674
-        ]
-      },
-      "tests/furnishing_exchange_identity.test.ts": {
-        "ms": 8,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          9,
-          8,
-          8
-        ]
-      },
-      "tests/furnishing_feast_admission.test.ts": {
-        "ms": 944,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          944,
-          949,
-          943
-        ]
-      },
-      "tests/furnishing_feast_parity.test.ts": {
-        "ms": 1081,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1095,
-          1081,
-          1080
-        ]
-      },
-      "tests/furnishing_item_kind.test.ts": {
-        "ms": 1749,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1758,
-          1749,
-          1706
-        ]
-      },
-      "tests/furnishing_market_catalog.test.ts": {
-        "ms": 678,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          689,
-          678,
-          678
-        ]
-      },
-      "tests/furnishing_market_identity.test.ts": {
-        "ms": 633,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          635,
-          631,
-          633
-        ]
-      },
-      "tests/furnishing_material_source_journal.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          5,
-          5
-        ]
-      },
-      "tests/furnishing_pattern_items.test.ts": {
-        "ms": 720,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          720,
-          718,
-          724
-        ]
-      },
-      "tests/furnishing_perfecting_collection.test.ts": {
-        "ms": 132,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          137,
-          132,
-          131
-        ]
-      },
-      "tests/furnishing_persistence.test.ts": {
-        "ms": 849,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          849,
-          868,
-          842
-        ]
-      },
-      "tests/furnishing_recipes.test.ts": {
-        "ms": 894,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          894,
-          912,
-          893
-        ]
-      },
-      "tests/furnishing_regalia.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          3,
-          3
-        ]
-      },
-      "tests/furnishing_rift_admission.test.ts": {
-        "ms": 1607,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1607,
-          1607,
-          1592
-        ]
-      },
-      "tests/furnishing_tool_effect_tooltip.test.ts": {
-        "ms": 11,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          11,
-          11,
-          11
-        ]
-      },
-      "tests/furnishing_tool_parity.test.ts": {
-        "ms": 2763,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          2757,
-          2763,
-          2779
-        ]
-      },
-      "tests/furnishing_tooltip_view.test.ts": {
-        "ms": 700,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          700,
-          705,
-          690
-        ]
-      },
-      "tests/furnishing_worn_presentation.test.ts": {
-        "ms": 170,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          167,
-          171,
-          170
-        ]
-      },
-      "tests/goblin_rocket_sled_fx_core.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          5,
-          5
-        ]
-      },
-      "tests/gpu_adapter_probe.test.ts": {
-        "ms": 58,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          58,
-          58,
-          57
-        ]
-      },
-      "tests/grass_tuft_cards_core.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          4,
-          4
-        ]
-      },
-      "tests/guide_provisioning.test.ts": {
-        "ms": 12,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          12,
-          12,
-          12
-        ]
-      },
-      "tests/guide_reliquary_hearth.test.ts": {
-        "ms": 12,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          12,
-          12,
-          11
-        ]
-      },
-      "tests/helpers/pg_plan.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
+          1221,
+          1200,
+          1194
         ]
       },
       "tests/hub_dummy_drill.test.ts": {
@@ -1138,325 +819,6 @@
           805
         ]
       },
-      "tests/hud_window_moved_flag.test.ts": {
-        "ms": 6,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          7,
-          6,
-          6
-        ]
-      },
-      "tests/ignivar_lift_car_walls.test.ts": {
-        "ms": 1054,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1071,
-          1047,
-          1054
-        ]
-      },
-      "tests/item_instance_view.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          4,
-          4
-        ]
-      },
-      "tests/jayson_stream_json_override.test.ts": {
-        "ms": 12,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          445,
-          12,
-          12
-        ]
-      },
-      "tests/keepalive_silence_deadline.test.ts": {
-        "ms": 2,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          2,
-          2
-        ]
-      },
-      "tests/loot_explorer_view.test.ts": {
-        "ms": 48,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          48,
-          49,
-          48
-        ]
-      },
-      "tests/loot_explorer_window.test.ts": {
-        "ms": 17,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          18,
-          17,
-          17
-        ]
-      },
-      "tests/loot_explorer_window_focus.test.ts": {
-        "ms": 1140,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1140,
-          1151,
-          1107
-        ]
-      },
-      "tests/map_surface_core.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          4
-        ]
-      },
-      "tests/meters_frame.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          5,
-          5
-        ]
-      },
-      "tests/mobile_frame_long_press.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          6,
-          5
-        ]
-      },
-      "tests/mobile_preflight.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/modular_name_facts.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/morph_union_core.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/mount_engine_airborne_poll.test.ts": {
-        "ms": 2,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          2,
-          2,
-          2
-        ]
-      },
-      "tests/mount_engine_bend.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/mount_landing_gain.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          4,
-          4
-        ]
-      },
-      "tests/mount_presentation.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/mount_tooltip_view.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/mouseover_cast_core.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/move_toward.test.ts": {
-        "ms": 584,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          584,
-          584,
-          580
-        ]
-      },
-      "tests/nameplate_paint_gate.test.ts": {
-        "ms": 20,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          21,
-          20,
-          19
-        ]
-      },
-      "tests/native_select_hold.test.ts": {
-        "ms": 9,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          9,
-          9,
-          9
-        ]
-      },
-      "tests/outdoor_light_rig_core.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/post_finite_guard_glsl.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/post_pixel_budget_core.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/post_shed.test.ts": {
-        "ms": 35,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          54,
-          34,
-          35
-        ]
-      },
-      "tests/post_shed_core.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/post_shed_wiring.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          4,
-          5
-        ]
-      },
       "tests/practice_dps_controller.test.ts": {
         "ms": 13,
         "method": "local-median",
@@ -1489,656 +851,10 @@
           11,
           11
         ]
-      },
-      "tests/rallycart_exhaust_ports.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          3,
-          3
-        ]
-      },
-      "tests/rallycart_headlights.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/rallycart_steer_lock.test.ts": {
-        "ms": 87,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          87,
-          90,
-          82
-        ]
-      },
-      "tests/rallycart_taillights.test.ts": {
-        "ms": 1149,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1143,
-          1149,
-          1165
-        ]
-      },
-      "tests/recipe_visibility.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/reliquary_empty_shelf.test.ts": {
-        "ms": 24,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          24,
-          25,
-          24
-        ]
-      },
-      "tests/reliquary_hearth_shelf.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          5,
-          5
-        ]
-      },
-      "tests/reliquary_hearth_window.test.ts": {
-        "ms": 38,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          43,
-          37,
-          38
-        ]
-      },
-      "tests/renderer_build_diag.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/renderer_gl_context.test.ts": {
-        "ms": 15,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          15,
-          12,
-          15
-        ]
-      },
-      "tests/resize_coalesce_core.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/rig_shared_skeleton.test.ts": {
-        "ms": 8,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          8,
-          10,
-          8
-        ]
-      },
-      "tests/rig_shared_skeleton_wiring.test.ts": {
-        "ms": 182,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          180,
-          182,
-          193
-        ]
-      },
-      "tests/rogue_eye_jab_swing_reset.test.ts": {
-        "ms": 734,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          751,
-          734,
-          729
-        ]
-      },
-      "tests/rogue_poison_coatings.test.ts": {
-        "ms": 1639,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1637,
-          1639,
-          1657
-        ]
-      },
-      "tests/seo_metadata.test.ts": {
-        "ms": 8,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          8,
-          8,
-          8
-        ]
-      },
-      "tests/server/admin_kick.test.ts": {
-        "ms": 7,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          7,
-          7,
-          9
-        ]
-      },
-      "tests/server/admin_perf_summary_cache.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/server/discord_activity_pvp.test.ts": {
-        "ms": 2,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          2,
-          2
-        ]
-      },
-      "tests/server/discord_queue_ping_cache.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/server/discord_queue_pings.test.ts": {
-        "ms": 98,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          97,
-          98,
-          98
-        ]
-      },
-      "tests/server/discord_queue_pops.test.ts": {
-        "ms": 190,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          190,
-          189,
-          190
-        ]
-      },
-      "tests/server/entity_wire_variant.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          5,
-          6
-        ]
-      },
-      "tests/server/freehold_dev_grant_boot.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/server/freehold_routes.test.ts": {
-        "ms": 9,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          9,
-          10,
-          9
-        ]
-      },
-      "tests/server/freehold_wire.test.ts": {
-        "ms": 2427,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          2460,
-          2427,
-          2426
-        ]
-      },
-      "tests/server/gl_backend.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/server/gpu_model_bucket.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          6,
-          5
-        ]
-      },
-      "tests/server/live_location.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/server/perf_report_text.test.ts": {
-        "ms": 13,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          13,
-          13,
-          12
-        ]
-      },
-      "tests/server/self_scalar_wire.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/shadow_extent_core.test.ts": {
-        "ms": 6,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          6,
-          5,
-          6
-        ]
-      },
-      "tests/slope_glue_terrain_floor.test.ts": {
-        "ms": 1321,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1321,
-          1313,
-          1322
-        ]
-      },
-      "tests/spirit_grade.test.ts": {
-        "ms": 7,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          7,
-          7,
-          7
-        ]
-      },
-      "tests/static_merge_shadow_core.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          3,
-          3
-        ]
-      },
-      "tests/surface_npc_bootstrap.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/system_text_i18n.test.ts": {
-        "ms": 12,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          12,
-          10,
-          17
-        ]
-      },
-      "tests/terrain_calm_anchor_freehold.test.ts": {
-        "ms": 1270,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          1270,
-          1289,
-          1266
-        ]
-      },
-      "tests/terrain_detail_shed_core.test.ts": {
-        "ms": 20,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          20,
-          20,
-          20
-        ]
-      },
-      "tests/terrain_detail_shed_wiring.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          3,
-          3
-        ]
-      },
-      "tests/texture_anisotropy.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          6,
-          4,
-          4
-        ]
-      },
-      "tests/toast_prompt_window_stacking.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/tooltip_paint.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/tutorial_bag_controller_step.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          2
-        ]
-      },
-      "tests/vehicle_exhaust_core.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          3,
-          3
-        ]
-      },
-      "tests/vehicle_steering_core.test.ts": {
-        "ms": 5,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5,
-          5,
-          4
-        ]
-      },
-      "tests/vehicle_suspension_core.test.ts": {
-        "ms": 11,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          11,
-          10,
-          11
-        ]
-      },
-      "tests/vehicle_suspension_fx.test.ts": {
-        "ms": 33,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          33,
-          33,
-          34
-        ]
-      },
-      "tests/vehicle_wheel_overspin.test.ts": {
-        "ms": 9,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          9,
-          9,
-          10
-        ]
-      },
-      "tests/vfx_screen_bounds_core.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/wand_swing_between_queued_casts.test.ts": {
-        "ms": 5512,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          5512,
-          5488,
-          5563
-        ]
-      },
-      "tests/weapon_stow_mount_overlay.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/weapon_stow_single_writer.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/window_reflow.test.ts": {
-        "ms": 4,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          4,
-          4,
-          4
-        ]
-      },
-      "tests/window_reflow_core.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/woc_market_quote_html.test.ts": {
-        "ms": 14,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          14,
-          14,
-          15
-        ]
-      },
-      "tests/woc_wallet_card_dismiss.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
-      },
-      "tests/zone_dressing_lod_core.test.ts": {
-        "ms": 7,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          8,
-          7,
-          7
-        ]
-      },
-      "tests/zone_dressing_lod_wiring.test.ts": {
-        "ms": 3,
-        "method": "local-median",
-        "measured": "2026-09-08",
-        "reason": "Freeholds release integration and instance-claim QA: three local suite runs for the suites the newest CI harvest did not measure, pending the next full harvest",
-        "runs": [
-          3,
-          3,
-          3
-        ]
       }
+    },
+    "removed": {
+      "tests/server/store_mount_grants.test.ts": "Replaced by store_mount_skin_grants.test.ts in PR3941; new suite uses the existing heuristic until measured."
     }
   },
   "tests/abilities_command.test.ts": 2213,
@@ -2162,8 +878,8 @@
   "tests/ability_vfx_frame_cost.test.ts": 59,
   "tests/ability_vfx_fx_sleep.test.ts": 78,
   "tests/ability_vfx_gesture_release.test.ts": 13,
-  "tests/ability_vfx_idle_visibility.test.ts": 5,
-  "tests/ability_vfx_instanced_pools.test.ts": 7,
+  "tests/ability_vfx_idle_visibility.test.ts": 4,
+  "tests/ability_vfx_instanced_pools.test.ts": 6,
   "tests/ability_vfx_longbuff_core.test.ts": 9,
   "tests/ability_vfx_longbuff_painter.test.ts": 35,
   "tests/ability_vfx_offscreen.test.ts": 13,
@@ -2178,13 +894,14 @@
   "tests/account_export_state.test.ts": 16,
   "tests/account_flair.test.ts": 15,
   "tests/account_flair_client.test.ts": 1390,
+  "tests/account_mount_cosmetics_pg_integration.test.ts": 100,
   "tests/account_portal.test.ts": 8,
   "tests/account_server.test.ts": 2306,
   "tests/account_wealth.test.ts": 23,
   "tests/account_wealth_db.pg.test.ts": 8976,
   "tests/account_wealth_db.test.ts": 21,
   "tests/account_wealth_pg_integration.test.ts": 2330,
-  "tests/action_bar_bind_banner.test.ts": 16,
+  "tests/action_bar_bind_banner.test.ts": 18,
   "tests/action_bar_bind_controller.test.ts": 25,
   "tests/action_bar_bind_core.test.ts": 7,
   "tests/action_bar_clear.test.ts": 8,
@@ -2302,7 +1019,7 @@
   "tests/affliction_familiar_core.test.ts": 7,
   "tests/affliction_sentence_queue.test.ts": 4,
   "tests/afk_wire.test.ts": 2715,
-  "tests/agent_surface_paths.test.ts": 4,
+  "tests/agent_surface_paths.test.ts": 3,
   "tests/aldric_meteor_quest.test.ts": 1627,
   "tests/alloc_probe.test.ts": 11,
   "tests/ambient_critters_removed.test.ts": 7,
@@ -2403,7 +1120,7 @@
   "tests/aura_icon_runtime.test.ts": 4,
   "tests/aura_icon_view.test.ts": 61,
   "tests/aura_icons.test.ts": 13,
-  "tests/aura_ids.test.ts": 3,
+  "tests/aura_ids.test.ts": 2,
   "tests/aura_image_art.test.ts": 164,
   "tests/aura_overflow_priority.test.ts": 9,
   "tests/aura_overlay_config.test.ts": 11,
@@ -2414,10 +1131,10 @@
   "tests/aura_preview_direction_css.test.ts": 4,
   "tests/aura_strip_order_core.test.ts": 9,
   "tests/aura_tooltip.test.ts": 6,
-  "tests/aura_track_catalog.test.ts": 642,
-  "tests/aura_track_host.test.ts": 62,
-  "tests/aura_track_painter.test.ts": 43,
-  "tests/aura_track_view.test.ts": 6,
+  "tests/aura_track_catalog.test.ts": 624,
+  "tests/aura_track_host.test.ts": 58,
+  "tests/aura_track_painter.test.ts": 38,
+  "tests/aura_track_view.test.ts": 5,
   "tests/aura_wire_decode.test.ts": 11,
   "tests/auras_painter.test.ts": 23,
   "tests/auras_view.test.ts": 40,
@@ -2431,7 +1148,7 @@
   "tests/avatar.test.ts": 19,
   "tests/avatar_break_control.test.ts": 3699,
   "tests/avatar_fallback.test.ts": 4,
-  "tests/awarded_loot_hold.test.ts": 1611,
+  "tests/awarded_loot_hold.test.ts": 1593,
   "tests/away_state.test.ts": 9,
   "tests/back_grips.test.ts": 13,
   "tests/backdrop_filter_survival.test.ts": 12,
@@ -2452,7 +1169,7 @@
   "tests/bags_guild_deposit_routing.test.ts": 201,
   "tests/bags_money_refresh.test.ts": 2891,
   "tests/bags_money_row_paint.test.ts": 97,
-  "tests/bags_pool_honest_refusal.test.ts": 804,
+  "tests/bags_pool_honest_refusal.test.ts": 776,
   "tests/bags_stale_click_refusal.test.ts": 57,
   "tests/bags_vendor_sell_confirm.test.ts": 292,
   "tests/bags_view.test.ts": 39,
@@ -2461,7 +1178,7 @@
   "tests/bags_window_drag_render_defer.test.ts": 62,
   "tests/bags_window_focus_restore.test.ts": 91,
   "tests/bags_window_instance_marker.test.ts": 183,
-  "tests/bags_window_materials_only_cells.test.ts": 24,
+  "tests/bags_window_materials_only_cells.test.ts": 22,
   "tests/bags_window_sort_button.test.ts": 162,
   "tests/bags_window_space_jump.test.ts": 49,
   "tests/bags_window_unknown_cell.test.ts": 63,
@@ -2535,10 +1252,10 @@
   "tests/biome_haze_field_core.test.ts": 276,
   "tests/birds.test.ts": 22,
   "tests/blade_grass_dense_core.test.ts": 14,
-  "tests/blade_grass_pool_core.test.ts": 145,
-  "tests/blade_grass_sector_pool.test.ts": 1528,
-  "tests/blade_grass_upload_bands_core.test.ts": 41,
-  "tests/blank_entity.test.ts": 48,
+  "tests/blade_grass_pool_core.test.ts": 144,
+  "tests/blade_grass_sector_pool.test.ts": 1562,
+  "tests/blade_grass_upload_bands_core.test.ts": 40,
+  "tests/blank_entity.test.ts": 47,
   "tests/blob_shadow_core.test.ts": 62,
   "tests/block_invites.test.ts": 3088,
   "tests/block_landing_feedback_core.test.ts": 6,
@@ -2560,7 +1277,7 @@
   "tests/breath.test.ts": 2952,
   "tests/broker_custody.test.ts": 3252,
   "tests/browser_env.test.ts": 8,
-  "tests/browser_fullscreen.test.ts": 9,
+  "tests/browser_fullscreen.test.ts": 10,
   "tests/browser_support_notice.test.ts": 12,
   "tests/browser_support_notice_dom.test.ts": 24,
   "tests/browserslist_targets.test.ts": 6,
@@ -2713,13 +1430,13 @@
   "tests/choice_rows_wave2.test.ts": 4549,
   "tests/chrome_focus_wiring.test.ts": 20,
   "tests/chrome_icons.test.ts": 21,
-  "tests/chrome_profile_dir.test.ts": 5,
+  "tests/chrome_profile_dir.test.ts": 4,
   "tests/chronomancy.test.ts": 3950,
   "tests/chronomancy_balance_targets.test.ts": 8306,
   "tests/chronomancy_buffs.test.ts": 3104,
   "tests/chronomancy_cascade.test.ts": 2547,
   "tests/chronomancy_cascade_aoe.test.ts": 7,
-  "tests/chronomancy_cascade_relief.test.ts": 1058,
+  "tests/chronomancy_cascade_relief.test.ts": 1003,
   "tests/chronomancy_cascade_threat.test.ts": 4207,
   "tests/chronomancy_echo.test.ts": 4506,
   "tests/chronomancy_echo_distribution.test.ts": 3,
@@ -2729,7 +1446,7 @@
   "tests/ci_balanced_sequencer.test.ts": 29,
   "tests/ci_change_classify.test.ts": 302,
   "tests/ci_changed_base.test.ts": 13,
-  "tests/ci_changed_entry.test.ts": 279,
+  "tests/ci_changed_entry.test.ts": 243,
   "tests/ci_leg_runner.test.ts": 1779,
   "tests/ci_pg_presence.test.ts": 7,
   "tests/ci_selection_pipeline.test.ts": 12,
@@ -2770,8 +1487,9 @@
   "tests/coach_prompt_view.test.ts": 40,
   "tests/coach_trail_core.test.ts": 14,
   "tests/coach_trail_materials.test.ts": 26,
-  "tests/codex_hooks.test.ts": 5055,
+  "tests/codex_hooks.test.ts": 4609,
   "tests/codex_setup.test.ts": 155,
+  "tests/collection_actions_core.test.ts": 3,
   "tests/collection_manuals.test.ts": 627,
   "tests/collective_reversal.test.ts": 5086,
   "tests/collective_reversal_online.test.ts": 2885,
@@ -2787,7 +1505,7 @@
   "tests/combat_event_fidelity.test.ts": 4834,
   "tests/combat_log_event_route_online.test.ts": 3165,
   "tests/combat_rating.test.ts": 1340,
-  "tests/combat_res_released_ghost.test.ts": 2629,
+  "tests/combat_res_released_ghost.test.ts": 2579,
   "tests/combat_scalar_wire.test.ts": 8,
   "tests/combat_sfx.test.ts": 18,
   "tests/combat_threat_modifiers.test.ts": 3360,
@@ -2861,6 +1579,8 @@
   "tests/corpse_loot_availability.test.ts": 11,
   "tests/corpse_loot_rights.test.ts": 13,
   "tests/corpse_loot_state.test.ts": 14,
+  "tests/cosmetics_view.test.ts": 4,
+  "tests/cosmetics_window.test.ts": 60,
   "tests/count_format.test.ts": 14,
   "tests/crab_summon.test.ts": 5235,
   "tests/craft_cast_view.test.ts": 7,
@@ -2904,11 +1624,14 @@
   "tests/crucible_collections.test.ts": 33,
   "tests/crucible_content_obligations.test.ts": 30,
   "tests/crucible_healer_combat.test.ts": 2152,
+  "tests/crucible_music.test.ts": 12,
+  "tests/crucible_music_playback.test.ts": 9,
   "tests/crucible_public_uniqueness.test.ts": 20,
   "tests/crucible_reagent_cost.test.ts": 9,
   "tests/crucible_reliquary.test.ts": 9,
   "tests/crucible_vendor.test.ts": 2632,
   "tests/crucible_vendor_online.test.ts": 2837,
+  "tests/crucible_vendor_reach.test.ts": 798,
   "tests/crucible_vendor_window.test.ts": 43,
   "tests/css_corpus.test.ts": 58,
   "tests/css_layer_containment.test.ts": 82,
@@ -2953,6 +1676,7 @@
   "tests/death_lesson.test.ts": 3358,
   "tests/death_recap_feedback.test.ts": 9,
   "tests/death_target_prevalidation.test.ts": 9,
+  "tests/deck_floor.test.ts": 5,
   "tests/deck_railings.test.ts": 256,
   "tests/decor_prop_colliders.test.ts": 48,
   "tests/decoration_dims.test.ts": 1580,
@@ -3100,7 +1824,7 @@
   "tests/discord_login_start.test.ts": 8,
   "tests/discord_oauth.test.ts": 19,
   "tests/discord_onboarding_gate.test.ts": 5,
-  "tests/discord_queue_ping_row.test.ts": 8,
+  "tests/discord_queue_ping_row.test.ts": 7,
   "tests/discord_relay.test.ts": 7,
   "tests/discord_roles.test.ts": 15,
   "tests/discord_server.test.ts": 1357,
@@ -3129,7 +1853,7 @@
   "tests/drain_life_vfx.test.ts": 33,
   "tests/drakelands_kit_assets.test.ts": 42,
   "tests/drape_lod_core.test.ts": 1680,
-  "tests/draped_bounds_core.test.ts": 4,
+  "tests/draped_bounds_core.test.ts": 3,
   "tests/draw_stats_core.test.ts": 17,
   "tests/dropdown_nav.test.ts": 7,
   "tests/dropdown_position.test.ts": 7,
@@ -3269,6 +1993,7 @@
   "tests/enchanting_view.test.ts": 9,
   "tests/enchants_magnitude_invariants.test.ts": 2677,
   "tests/encounter_wipe.test.ts": 7572,
+  "tests/engaged_combat.test.ts": 875,
   "tests/entity_display_core.test.ts": 19,
   "tests/entity_display_name.test.ts": 11,
   "tests/entity_flair_wire.test.ts": 3,
@@ -3320,7 +2045,7 @@
   "tests/facing_smooth.test.ts": 11,
   "tests/facing_stability.test.ts": 3271,
   "tests/falling_command.test.ts": 2743,
-  "tests/far_bake_group_key.test.ts": 6,
+  "tests/far_bake_group_key.test.ts": 4,
   "tests/far_bake_groups_core.test.ts": 3,
   "tests/far_lod_reveal_core.test.ts": 8,
   "tests/far_surface_core.test.ts": 4757,
@@ -3449,28 +2174,23 @@
   "tests/form_visual_selection_core.test.ts": 12,
   "tests/frame_pos_reset.test.ts": 13,
   "tests/frame_present.test.ts": 10,
-  "tests/freehold_art_admission.test.ts": 20,
+  "tests/freehold_art_admission.test.ts": 21,
   "tests/freehold_catalog_rollback.test.ts": 3,
-  "tests/freehold_command_chain_online.test.ts": 1362,
+  "tests/freehold_command_chain_online.test.ts": 1371,
   "tests/freehold_content.test.ts": 13,
   "tests/freehold_crafted_art.test.ts": 31,
-  "tests/freehold_crafted_availability.test.ts": 2135,
-  "tests/freehold_crafted_presentation.test.ts": 786,
-  "tests/freehold_deed_records.test.ts": 621,
+  "tests/freehold_crafted_availability.test.ts": 2189,
+  "tests/freehold_crafted_presentation.test.ts": 817,
+  "tests/freehold_deed_records.test.ts": 635,
   "tests/freehold_dev_authorization.test.ts": 8,
   "tests/freehold_dev_bootstrap.test.ts": 53,
-  "tests/freehold_dev_grant.test.ts": 306,
-  "tests/freehold_dungeon_defs.test.ts": 3011,
-  "tests/freehold_furnisher.test.ts": 940,
-  "tests/freehold_instance.test.ts": 1232,
-  "tests/freehold_instance_online.test.ts": 1313,
+  "tests/freehold_dev_grant.test.ts": 315,
+  "tests/freehold_dungeon_defs.test.ts": 3112,
+  "tests/freehold_furnisher.test.ts": 957,
+  "tests/freehold_instance.test.ts": 1259,
+  "tests/freehold_instance_online.test.ts": 1348,
   "tests/freehold_ledger_schedule.test.ts": 13,
-  "tests/freehold_module.test.ts": 1167,
-  "tests/freehold_npc_spawn.test.ts": 1822,
-  "tests/freehold_offline_default.test.ts": 166,
-  "tests/freehold_snapshot_wire.test.ts": 22,
-  "tests/freehold_trial_economy.test.ts": 6,
-  "tests/freehold_trial_geometry.test.ts": 13,
+  "tests/freehold_module.test.ts": 1200,
   "tests/frost_ice_fields.test.ts": 236,
   "tests/frost_ice_fields_core.test.ts": 9,
   "tests/frost_mage_aoe.test.ts": 5884,
@@ -3481,33 +2201,6 @@
   "tests/frostbrand.test.ts": 10,
   "tests/frostveil_pit_escape.test.ts": 5700,
   "tests/frozen_orb_fx.test.ts": 39,
-  "tests/furnishing_asset_identity.test.ts": 11,
-  "tests/furnishing_auto_equip.test.ts": 180,
-  "tests/furnishing_commerce_parity.test.ts": 1651,
-  "tests/furnishing_consumer_parity.test.ts": 3079,
-  "tests/furnishing_crafting.test.ts": 1367,
-  "tests/furnishing_dev_picker.test.ts": 25,
-  "tests/furnishing_discovery.test.ts": 611,
-  "tests/furnishing_enchant_picker.test.ts": 5,
-  "tests/furnishing_equipment_power.test.ts": 629,
-  "tests/furnishing_event_identity.test.ts": 1607,
-  "tests/furnishing_exchange_identity.test.ts": 8,
-  "tests/furnishing_feast_admission.test.ts": 944,
-  "tests/furnishing_feast_parity.test.ts": 1081,
-  "tests/furnishing_item_kind.test.ts": 1749,
-  "tests/furnishing_market_catalog.test.ts": 678,
-  "tests/furnishing_market_identity.test.ts": 633,
-  "tests/furnishing_material_source_journal.test.ts": 5,
-  "tests/furnishing_pattern_items.test.ts": 720,
-  "tests/furnishing_perfecting_collection.test.ts": 132,
-  "tests/furnishing_persistence.test.ts": 849,
-  "tests/furnishing_recipes.test.ts": 894,
-  "tests/furnishing_regalia.test.ts": 3,
-  "tests/furnishing_rift_admission.test.ts": 1607,
-  "tests/furnishing_tool_effect_tooltip.test.ts": 11,
-  "tests/furnishing_tool_parity.test.ts": 2763,
-  "tests/furnishing_tooltip_view.test.ts": 700,
-  "tests/furnishing_worn_presentation.test.ts": 170,
   "tests/gale_harbor.test.ts": 2326,
   "tests/galecrest.test.ts": 428,
   "tests/game_audio.test.ts": 35,
@@ -3600,10 +2293,8 @@
   "tests/global_invite.test.ts": 1758,
   "tests/gloom_bolt_vfx.test.ts": 20,
   "tests/gltf_decoder_csp.test.ts": 12,
-  "tests/goblin_rocket_sled_fx_core.test.ts": 5,
   "tests/gold_command.test.ts": 1717,
   "tests/gossip_menu.test.ts": 5,
-  "tests/gpu_adapter_probe.test.ts": 58,
   "tests/gpu_backend_class_core.test.ts": 10,
   "tests/gpu_hitch_receipt.test.ts": 5,
   "tests/gpu_notice_toast.test.ts": 2379,
@@ -3621,7 +2312,6 @@
   "tests/grass_build_slicer_core.test.ts": 7,
   "tests/grass_build_slicing.test.ts": 2958,
   "tests/grass_cap_collapse_core.test.ts": 7,
-  "tests/grass_tuft_cards_core.test.ts": 4,
   "tests/grave_inferno.test.ts": 3875,
   "tests/gravewyrm_boss_gold.test.ts": 15239,
   "tests/gravewyrm_farm_exploit.test.ts": 1819,
@@ -3652,8 +2342,6 @@
   "tests/guide_level_cap_drift.test.ts": 10,
   "tests/guide_models_fallback.test.ts": 8,
   "tests/guide_prof_faq_keys.test.ts": 9,
-  "tests/guide_provisioning.test.ts": 12,
-  "tests/guide_reliquary_hearth.test.ts": 12,
   "tests/guide_route_render.test.ts": 157,
   "tests/guide_search.test.ts": 57,
   "tests/guide_still_key.test.ts": 8,
@@ -3732,7 +2420,6 @@
   "tests/helpers/css_tree_under.test.ts": 22,
   "tests/helpers/driver_callback_bodies.test.ts": 34,
   "tests/helpers/method_call_sites.test.ts": 53,
-  "tests/helpers/pg_plan.test.ts": 4,
   "tests/helpers/save_fragment_keys.test.ts": 36,
   "tests/helpers/scan_guard_self_audit.test.ts": 16,
   "tests/helpers/source_files_under.test.ts": 23,
@@ -3780,7 +2467,6 @@
   "tests/hud_resurrection_prompt.test.ts": 26,
   "tests/hud_tones.test.ts": 23,
   "tests/hud_update_drive.test.ts": 129,
-  "tests/hud_window_moved_flag.test.ts": 6,
   "tests/hud_wire_enum_fallbacks.test.ts": 9,
   "tests/hunter_class_spec_kits.test.ts": 2272,
   "tests/hunter_dps_balance.test.ts": 166345,
@@ -3846,7 +2532,6 @@
   "tests/ignivar_keep_entrance.test.ts": 2907,
   "tests/ignivar_lava_moat.test.ts": 3801,
   "tests/ignivar_lava_moat_render.test.ts": 25,
-  "tests/ignivar_lift_car_walls.test.ts": 1054,
   "tests/ignivar_lift_room.test.ts": 7,
   "tests/ignivar_loot.test.ts": 2287,
   "tests/ignivar_meteors.test.ts": 360,
@@ -3903,7 +2588,6 @@
   "tests/inspect_instances.test.ts": 1719,
   "tests/inspect_view.test.ts": 24,
   "tests/inspect_window.test.ts": 128,
-  "tests/instance_exit_memory.test.ts": 8,
   "tests/instance_music.test.ts": 8,
   "tests/instance_provenance_boundaries.test.ts": 13372,
   "tests/instanced_occluder_ghosts.test.ts": 11,
@@ -3962,7 +2646,6 @@
   "tests/item_instance_stats.test.ts": 7,
   "tests/item_instance_tooltip.test.ts": 24,
   "tests/item_instance_transfer.test.ts": 22,
-  "tests/item_instance_view.test.ts": 4,
   "tests/item_kind_line.test.ts": 39,
   "tests/item_level.test.ts": 32,
   "tests/item_level_req.test.ts": 23,
@@ -3973,11 +2656,9 @@
   "tests/itemization_coverage.test.ts": 54,
   "tests/items.test.ts": 4083,
   "tests/items_sell_units.test.ts": 22,
-  "tests/jayson_stream_json_override.test.ts": 12,
   "tests/jewelcrafting_catalog.test.ts": 44,
   "tests/jewelcrafting_flow.test.ts": 3393,
   "tests/jewelcrafting_rung50_reachability.test.ts": 22,
-  "tests/keepalive_silence_deadline.test.ts": 2,
   "tests/keepalive_stall_sweep.test.ts": 2438,
   "tests/keybind_action_names_core.test.ts": 15,
   "tests/keybind_conflict_prompt_core.test.ts": 6,
@@ -4072,9 +2753,6 @@
   "tests/loopback_guard.test.ts": 107,
   "tests/loot_difficulty_gate.test.ts": 5,
   "tests/loot_drops.test.ts": 5425,
-  "tests/loot_explorer_view.test.ts": 48,
-  "tests/loot_explorer_window.test.ts": 17,
-  "tests/loot_explorer_window_focus.test.ts": 1140,
   "tests/loot_ffa.test.ts": 9,
   "tests/loot_ffa_sim.test.ts": 4861,
   "tests/loot_master.test.ts": 9,
@@ -4145,7 +2823,6 @@
   "tests/map_quest_list_view.test.ts": 3,
   "tests/map_semantic_accessibility_core.test.ts": 34,
   "tests/map_show_on_map_core.test.ts": 7,
-  "tests/map_surface_core.test.ts": 3,
   "tests/map_terrain.test.ts": 1193,
   "tests/map_window_painter.test.ts": 3346,
   "tests/map_window_view.test.ts": 111,
@@ -4265,7 +2942,6 @@
   "tests/metamorphosis_asset.test.ts": 77,
   "tests/meters.test.ts": 15,
   "tests/meters_breakdown_view.test.ts": 26,
-  "tests/meters_frame.test.ts": 5,
   "tests/meters_frame_core.test.ts": 13,
   "tests/meters_menu_view.test.ts": 4,
   "tests/meters_panel.test.ts": 47,
@@ -4372,14 +3048,12 @@
   "tests/mobile_chat_centered.test.ts": 11,
   "tests/mobile_chrome_fade.test.ts": 10,
   "tests/mobile_controls.test.ts": 62,
-  "tests/mobile_frame_long_press.test.ts": 5,
   "tests/mobile_fullscreen_window_core.test.ts": 4,
   "tests/mobile_hud_layout.test.ts": 18,
   "tests/mobile_hud_layout_applier.test.ts": 10,
   "tests/mobile_more_diagnostics.test.ts": 6,
   "tests/mobile_more_dialog.test.ts": 12,
   "tests/mobile_pad_chrome_css.test.ts": 7,
-  "tests/mobile_preflight.test.ts": 4,
   "tests/mobile_station_party.test.ts": 3565,
   "tests/mobile_station_tooltip.test.ts": 16,
   "tests/mobile_station_walk.test.ts": 921,
@@ -4396,38 +3070,29 @@
   "tests/moderation_service.test.ts": 23,
   "tests/modular_character.test.ts": 1802,
   "tests/modular_far_lod.test.ts": 82,
-  "tests/modular_name_facts.test.ts": 4,
   "tests/modular_variant_eviction.test.ts": 165,
   "tests/monolith_budget.test.ts": 26,
-  "tests/morph_union_core.test.ts": 3,
-  "tests/mount_engine_airborne_poll.test.ts": 2,
-  "tests/mount_engine_bend.test.ts": 3,
   "tests/mount_engine_state.test.ts": 9,
   "tests/mount_glow.test.ts": 19,
   "tests/mount_jump.test.ts": 1388,
   "tests/mount_jump_attitude.test.ts": 11,
   "tests/mount_labels.test.ts": 8,
   "tests/mount_lamps.test.ts": 8,
-  "tests/mount_landing_gain.test.ts": 4,
   "tests/mount_lifecycle.test.ts": 22,
-  "tests/mount_presentation.test.ts": 4,
   "tests/mount_prewarm.test.ts": 432,
   "tests/mount_quick_summon.test.ts": 9,
   "tests/mount_race.test.ts": 6716,
   "tests/mount_race_ui.test.ts": 13,
   "tests/mount_race_view.test.ts": 9,
   "tests/mount_race_wire.test.ts": 8,
-  "tests/mount_tooltip_view.test.ts": 3,
   "tests/mount_transition.test.ts": 2267,
   "tests/mount_visuals.test.ts": 52,
   "tests/mounts.test.ts": 1974,
   "tests/mounts_training.test.ts": 4099,
   "tests/mouse_binds.test.ts": 11,
   "tests/mouselook_release_facing.test.ts": 6,
-  "tests/mouseover_cast_core.test.ts": 3,
   "tests/movable_frame.test.ts": 1407,
   "tests/move_input.test.ts": 9,
-  "tests/move_toward.test.ts": 584,
   "tests/movement_ground_truth.test.ts": 3298,
   "tests/movement_latency_baseline.test.ts": 18152,
   "tests/movement_metrics.test.ts": 1428,
@@ -4451,7 +3116,6 @@
   "tests/nameplate_heraldry_core.test.ts": 62,
   "tests/nameplate_i18n_transition.test.ts": 1291,
   "tests/nameplate_loot_icon.test.ts": 6,
-  "tests/nameplate_paint_gate.test.ts": 20,
   "tests/nameplate_pick_core.test.ts": 10,
   "tests/nameplate_pick_integration.test.ts": 45,
   "tests/nameplate_pledge.test.ts": 3263,
@@ -4469,7 +3133,6 @@
   "tests/native_language.test.ts": 8,
   "tests/native_orientation.test.ts": 6,
   "tests/native_ota.test.ts": 13,
-  "tests/native_select_hold.test.ts": 9,
   "tests/native_solana_mobile.test.ts": 12,
   "tests/natures_fury.test.ts": 2534,
   "tests/nearby_command.test.ts": 3102,
@@ -4578,7 +3241,6 @@
   "tests/ota_server_layout.test.ts": 8,
   "tests/ota_update_gate.test.ts": 18,
   "tests/ota_update_overlay.test.ts": 35,
-  "tests/outdoor_light_rig_core.test.ts": 3,
   "tests/over_level_gear_inert.test.ts": 14,
   "tests/overhead_emote_parity.test.ts": 6,
   "tests/overlay_ip_scrub.test.ts": 3708,
@@ -4822,16 +3484,11 @@
   "tests/post_bloom_shader_core.test.ts": 11,
   "tests/post_composer.test.ts": 13,
   "tests/post_entry_warmups.test.ts": 9,
-  "tests/post_finite_guard_glsl.test.ts": 3,
   "tests/post_n8ao.test.ts": 23,
   "tests/post_output_grade.test.ts": 14,
   "tests/post_pipeline.test.ts": 59,
-  "tests/post_pixel_budget_core.test.ts": 3,
   "tests/post_plan_core.test.ts": 18,
   "tests/post_reveal_links_core.test.ts": 6,
-  "tests/post_shed.test.ts": 35,
-  "tests/post_shed_core.test.ts": 4,
-  "tests/post_shed_wiring.test.ts": 5,
   "tests/potion_command.test.ts": 2680,
   "tests/pr_shot_entry_opts.test.ts": 7,
   "tests/pr_shot_targets.test.ts": 40,
@@ -5082,10 +3739,6 @@
   "tests/raid_music_themes.test.ts": 7,
   "tests/raid_reset.test.ts": 76,
   "tests/raid_wipe_cooldowns.test.ts": 1454,
-  "tests/rallycart_exhaust_ports.test.ts": 3,
-  "tests/rallycart_headlights.test.ts": 4,
-  "tests/rallycart_steer_lock.test.ts": 87,
-  "tests/rallycart_taillights.test.ts": 1149,
   "tests/range_command.test.ts": 3024,
   "tests/ranged_shot.test.ts": 9,
   "tests/rare_ogre_spawn.test.ts": 2212,
@@ -5110,7 +3763,6 @@
   "tests/recipe_pattern_items.test.ts": 2285,
   "tests/recipe_pattern_tooltip_view.test.ts": 316,
   "tests/recipe_reachability.test.ts": 55,
-  "tests/recipe_visibility.test.ts": 3,
   "tests/reclaim_name.test.ts": 8,
   "tests/reconnect_overlay.test.ts": 26,
   "tests/reconnect_status_core.test.ts": 6,
@@ -5122,9 +3774,6 @@
   "tests/release_version.test.ts": 15,
   "tests/reliquary_cell_art.test.ts": 292,
   "tests/reliquary_content.test.ts": 188,
-  "tests/reliquary_empty_shelf.test.ts": 24,
-  "tests/reliquary_hearth_shelf.test.ts": 5,
-  "tests/reliquary_hearth_window.test.ts": 38,
   "tests/reliquary_i18n.test.ts": 245,
   "tests/reliquary_i18n_lazy.test.ts": 22,
   "tests/reliquary_i18n_pseudo.test.ts": 126,
@@ -5152,14 +3801,12 @@
   "tests/render_diagnostics.test.ts": 10,
   "tests/render_glb_replacement_assets.test.ts": 1364,
   "tests/render_light_census_pin.test.ts": 999,
-  "tests/renderer_build_diag.test.ts": 3,
   "tests/renderer_build_ledger_wiring.test.ts": 10,
   "tests/renderer_compile_gate.test.ts": 340,
   "tests/renderer_cpu_hot_path.test.ts": 13,
   "tests/renderer_extensions.test.ts": 15,
   "tests/renderer_farm_event_route.test.ts": 191,
   "tests/renderer_frame_stats_snapshot.test.ts": 7,
-  "tests/renderer_gl_context.test.ts": 15,
   "tests/renderer_lifecycle.test.ts": 19,
   "tests/renderer_look_pieces_hold.test.ts": 726,
   "tests/renderer_resource_lifecycle.test.ts": 26,
@@ -5169,7 +3816,6 @@
   "tests/report_window.test.ts": 153,
   "tests/reset_day_guard.test.ts": 2092,
   "tests/resident_scenery_core.test.ts": 7,
-  "tests/resize_coalesce_core.test.ts": 4,
   "tests/respawn_policy.test.ts": 3742,
   "tests/rest_indicator.test.ts": 10,
   "tests/restart_strip_core.test.ts": 5,
@@ -5231,8 +3877,6 @@
   "tests/rift_wall_swept_collision.test.ts": 2343,
   "tests/rig_merge.test.ts": 25,
   "tests/rig_merge_assets.test.ts": 99,
-  "tests/rig_shared_skeleton.test.ts": 8,
-  "tests/rig_shared_skeleton_wiring.test.ts": 182,
   "tests/rig_visibility_freeze.test.ts": 8,
   "tests/ring_of_frost.test.ts": 2531,
   "tests/ring_of_frost_visual.test.ts": 69,
@@ -5243,9 +3887,7 @@
   "tests/rogue_dps_balance.test.ts": 12949,
   "tests/rogue_energy_fix.test.ts": 2446,
   "tests/rogue_engines.test.ts": 13518,
-  "tests/rogue_eye_jab_swing_reset.test.ts": 734,
   "tests/rogue_finisher_scaling.test.ts": 2870,
-  "tests/rogue_poison_coatings.test.ts": 1639,
   "tests/rogue_sap_control.test.ts": 3703,
   "tests/rogue_shadeslip_friendly.test.ts": 1563,
   "tests/rogue_stealth_targeting.test.ts": 2055,
@@ -5301,7 +3943,6 @@
   "tests/sentence_renderer.test.ts": 38,
   "tests/sentence_vfx.test.ts": 100,
   "tests/sentence_vfx_core.test.ts": 14,
-  "tests/seo_metadata.test.ts": 8,
   "tests/serial_writer.test.ts": 33,
   "tests/server/account.test.ts": 87,
   "tests/server/ad_spend.test.ts": 26,
@@ -5311,14 +3952,12 @@
   "tests/server/admin_flag_transition_legacy.test.ts": 10,
   "tests/server/admin_general_chat_rate_limit.test.ts": 39,
   "tests/server/admin_guild_bank_view.test.ts": 3256,
-  "tests/server/admin_kick.test.ts": 7,
   "tests/server/admin_market_metrics.test.ts": 29,
   "tests/server/admin_oversight.test.ts": 29,
   "tests/server/admin_oversight_legacy.test.ts": 38,
   "tests/server/admin_oversight_redaction.test.ts": 21,
   "tests/server/admin_overview_cache.test.ts": 9,
   "tests/server/admin_overview_cache_arms.test.ts": 12,
-  "tests/server/admin_perf_summary_cache.test.ts": 4,
   "tests/server/admin_professions_db.test.ts": 16,
   "tests/server/admin_runtime_restore.test.ts": 2952,
   "tests/server/auth.attestation.test.ts": 12,
@@ -5379,20 +4018,15 @@
   "tests/server/desktop_login.test.ts": 35,
   "tests/server/desktop_wallet_handoff.test.ts": 129,
   "tests/server/discord.test.ts": 41,
-  "tests/server/discord_activity_pvp.test.ts": 2,
   "tests/server/discord_activity_queue.test.ts": 16,
   "tests/server/discord_bot_counters.test.ts": 13,
   "tests/server/discord_flex_batch.test.ts": 10,
   "tests/server/discord_link_changes.test.ts": 70,
   "tests/server/discord_outbox.test.ts": 59,
-  "tests/server/discord_queue_ping_cache.test.ts": 3,
-  "tests/server/discord_queue_pings.test.ts": 98,
-  "tests/server/discord_queue_pops.test.ts": 190,
   "tests/server/discord_relay_queue.test.ts": 9,
   "tests/server/discord_status_cache.test.ts": 16,
   "tests/server/dungeon_entry_facing.test.ts": 3143,
   "tests/server/earned_deeds_single_flight.test.ts": 9,
-  "tests/server/entity_wire_variant.test.ts": 5,
   "tests/server/env_bootstrap.test.ts": 6,
   "tests/server/epic_db.test.ts": 12,
   "tests/server/epic_mirror.test.ts": 95,
@@ -5401,16 +4035,11 @@
   "tests/server/epic_web_api.test.ts": 509,
   "tests/server/event_delivery.test.ts": 7,
   "tests/server/fake_woc_market_db.test.ts": 18,
-  "tests/server/freehold_dev_grant_boot.test.ts": 3,
-  "tests/server/freehold_routes.test.ts": 9,
-  "tests/server/freehold_wire.test.ts": 2427,
   "tests/server/game_boot_order.test.ts": 1160,
   "tests/server/game_flag_host_boot.test.ts": 2403,
   "tests/server/gathering_goal_commands.test.ts": 1686,
   "tests/server/general_chat_quota_connections.test.ts": 23,
   "tests/server/github.test.ts": 38,
-  "tests/server/gl_backend.test.ts": 3,
-  "tests/server/gpu_model_bucket.test.ts": 5,
   "tests/server/guild_bank_lazy_loader.test.ts": 42,
   "tests/server/guild_bank_log.test.ts": 22,
   "tests/server/guild_bank_op_coordinator.test.ts": 27,
@@ -5484,7 +4113,6 @@
   "tests/server/leaderboard_guild_reads.test.ts": 15,
   "tests/server/leaderboard_moderation.test.ts": 35,
   "tests/server/live_character_resolver.test.ts": 7,
-  "tests/server/live_location.test.ts": 4,
   "tests/server/loop_lateness_instrumentation.test.ts": 78,
   "tests/server/mail_custody_overlay.test.ts": 3044,
   "tests/server/mail_partition_backfill.test.ts": 9,
@@ -5512,7 +4140,6 @@
   "tests/server/pbe_boost.test.ts": 9835,
   "tests/server/pbe_boost_save_fence.test.ts": 9,
   "tests/server/perf_gate.test.ts": 60,
-  "tests/server/perf_report_text.test.ts": 13,
   "tests/server/periodic_save_flush.test.ts": 14,
   "tests/server/pg_rollback_proof.test.ts": 8,
   "tests/server/progress_events.test.ts": 11,
@@ -5535,7 +4162,6 @@
   "tests/server/schema_notices.test.ts": 9,
   "tests/server/seeker_entitlement.test.ts": 229,
   "tests/server/seeker_entitlement_import_isolation.test.ts": 52,
-  "tests/server/self_scalar_wire.test.ts": 3,
   "tests/server/serial_writer.test.ts": 31,
   "tests/server/service_reachability.test.ts": 7,
   "tests/server/signup_attribution.test.ts": 22,
@@ -5557,7 +4183,6 @@
   "tests/server/storage_recovery_gate.test.ts": 578,
   "tests/server/storage_recovery_session_sweep.test.ts": 6,
   "tests/server/storage_wire_ledger.test.ts": 72,
-  "tests/server/store_mount_grants.test.ts": 7,
   "tests/server/tick_perf_capture.test.ts": 5691,
   "tests/server/tick_perf_log.test.ts": 12,
   "tests/server/title_reads.test.ts": 11,
@@ -5634,7 +4259,6 @@
   "tests/shader_warmup_core.test.ts": 24,
   "tests/shader_warmup_gl_core.test.ts": 15,
   "tests/shadow_cadence_core.test.ts": 46,
-  "tests/shadow_extent_core.test.ts": 6,
   "tests/shadow_only_material.test.ts": 7,
   "tests/shadow_pass_gate_core.test.ts": 7,
   "tests/shadow_pass_gate_three.test.ts": 11,
@@ -5690,7 +4314,6 @@
   "tests/sky_zone_assets.test.ts": 852,
   "tests/sky_zone_haze.test.ts": 11,
   "tests/sloomtooth_drowned.test.ts": 1149,
-  "tests/slope_glue_terrain_floor.test.ts": 1321,
   "tests/sloppy_pick.test.ts": 8,
   "tests/snapshot_alpha.test.ts": 4,
   "tests/snapshot_timer_wire.test.ts": 20,
@@ -5732,7 +4355,6 @@
   "tests/spellbook_view.test.ts": 14,
   "tests/spellbook_window.test.ts": 14,
   "tests/spirit.test.ts": 3705,
-  "tests/spirit_grade.test.ts": 7,
   "tests/spirit_models.test.ts": 18,
   "tests/spirit_puppet_build.test.ts": 161,
   "tests/spirit_puppet_compile_gate.test.ts": 741,
@@ -5751,7 +4373,6 @@
   "tests/stat_tooltip_view.test.ts": 18,
   "tests/static_cache.test.ts": 14,
   "tests/static_matrix.test.ts": 10,
-  "tests/static_merge_shadow_core.test.ts": 3,
   "tests/stations_core.test.ts": 10,
   "tests/stats_command.test.ts": 2143,
   "tests/status_advert_single_flight.test.ts": 46,
@@ -5796,7 +4417,6 @@
   "tests/summon_threat_seed.test.ts": 6448,
   "tests/summoned_add_respawn.test.ts": 2675,
   "tests/surface_detail_fade.test.ts": 5,
-  "tests/surface_npc_bootstrap.test.ts": 3,
   "tests/surface_texture_ktx2.test.ts": 79,
   "tests/suspicion_flag_list.test.ts": 12,
   "tests/suspicion_flag_workflow.test.ts": 7,
@@ -5808,7 +4428,6 @@
   "tests/swing_timer.test.ts": 14,
   "tests/swing_timer_bars.test.ts": 31,
   "tests/swing_timer_painter.test.ts": 16,
-  "tests/system_text_i18n.test.ts": 12,
   "tests/tab_strip_painter.test.ts": 15,
   "tests/tab_strip_view.test.ts": 7,
   "tests/tab_target.test.ts": 9,
@@ -5883,11 +4502,8 @@
   "tests/temporal_hourglass_visual.test.ts": 18,
   "tests/terms_link.test.ts": 8,
   "tests/terrain_calm_anchor_doors.test.ts": 6,
-  "tests/terrain_calm_anchor_freehold.test.ts": 1270,
   "tests/terrain_chunk_geometry.test.ts": 2972,
   "tests/terrain_chunk_worker.test.ts": 436,
-  "tests/terrain_detail_shed_core.test.ts": 20,
-  "tests/terrain_detail_shed_wiring.test.ts": 3,
   "tests/terrain_edit_index.test.ts": 875,
   "tests/terrain_escape_walkout.test.ts": 4968,
   "tests/terrain_fragment_shader.test.ts": 2623,
@@ -5906,7 +4522,6 @@
   "tests/terrorspark_groundshaker_surface_maps.test.ts": 5282,
   "tests/terrorspark_groundshaker_surface_shading.test.ts": 31,
   "tests/text_sprite_cache.test.ts": 48,
-  "tests/texture_anisotropy.test.ts": 4,
   "tests/texture_prep_core.test.ts": 11,
   "tests/texture_prep_lane.test.ts": 22,
   "tests/texture_prewarm.test.ts": 7,
@@ -5925,7 +4540,6 @@
   "tests/tinted_material_cache_core.test.ts": 19,
   "tests/tinted_material_lifecycle.test.ts": 449,
   "tests/titans_grip_penalty.test.ts": 2381,
-  "tests/toast_prompt_window_stacking.test.ts": 4,
   "tests/token_scope_db.test.ts": 8,
   "tests/tolling_bells.test.ts": 7471,
   "tests/tool_effect_result_lines.test.ts": 32,
@@ -5934,7 +4548,6 @@
   "tests/tooltip_clamp_core.test.ts": 17,
   "tests/tooltip_line_core.test.ts": 479,
   "tests/tooltip_owner.test.ts": 6,
-  "tests/tooltip_paint.test.ts": 3,
   "tests/totarget_frame_css.test.ts": 9,
   "tests/totp.test.ts": 17,
   "tests/touch_item_drag.test.ts": 30,
@@ -5968,7 +4581,6 @@
   "tests/trophy_domination_claims.test.ts": 16,
   "tests/turnstile.test.ts": 13,
   "tests/tutorial.test.ts": 9,
-  "tests/tutorial_bag_controller_step.test.ts": 3,
   "tests/tutorial_copy.test.ts": 18,
   "tests/tutorial_graduation_deed.test.ts": 3518,
   "tests/tutorial_greeting.test.ts": 5256,
@@ -6063,11 +4675,6 @@
   "tests/vault_view.test.ts": 21,
   "tests/vault_window.test.ts": 860,
   "tests/vault_wire.test.ts": 7149,
-  "tests/vehicle_exhaust_core.test.ts": 3,
-  "tests/vehicle_steering_core.test.ts": 5,
-  "tests/vehicle_suspension_core.test.ts": 11,
-  "tests/vehicle_suspension_fx.test.ts": 33,
-  "tests/vehicle_wheel_overspin.test.ts": 9,
   "tests/veiled_hollow.test.ts": 7039,
   "tests/veiled_hollow_a.test.ts": 2221,
   "tests/veiled_hollow_b.test.ts": 3395,
@@ -6087,7 +4694,6 @@
   "tests/vfx_basic_materials.test.ts": 9,
   "tests/vfx_mote_floor.test.ts": 7,
   "tests/vfx_pool_core.test.ts": 9,
-  "tests/vfx_screen_bounds_core.test.ts": 3,
   "tests/view_candidate_pool.test.ts": 31,
   "tests/view_create_budget_core.test.ts": 11,
   "tests/view_create_retry.test.ts": 7,
@@ -6124,7 +4730,6 @@
   "tests/wallet_resume.test.ts": 7,
   "tests/wallet_server.test.ts": 215,
   "tests/wallet_verify_request.test.ts": 9,
-  "tests/wand_swing_between_queued_casts.test.ts": 5512,
   "tests/warfare_balance_harness.test.ts": 11,
   "tests/warfare_gear_tier.test.ts": 35,
   "tests/warfare_purchase_confirm.test.ts": 268,
@@ -6182,8 +4787,6 @@
   "tests/weapon_skin_sim.test.ts": 3089,
   "tests/weapon_skins.test.ts": 539,
   "tests/weapon_stow.test.ts": 2888,
-  "tests/weapon_stow_mount_overlay.test.ts": 4,
-  "tests/weapon_stow_single_writer.test.ts": 4,
   "tests/weapon_type_label.test.ts": 8,
   "tests/weapon_type_tooltip.test.ts": 22,
   "tests/weapon_vfx_apply_queue_core.test.ts": 17,
@@ -6209,8 +4812,6 @@
   "tests/willowfen_south_shore.test.ts": 1025,
   "tests/window_drag.test.ts": 15,
   "tests/window_fill_css.test.ts": 13,
-  "tests/window_reflow.test.ts": 4,
-  "tests/window_reflow_core.test.ts": 3,
   "tests/window_resize.test.ts": 13,
   "tests/wire_aura.test.ts": 2771,
   "tests/woc_affordable_core.test.ts": 4,
@@ -6226,7 +4827,6 @@
   "tests/woc_market_link.test.ts": 37,
   "tests/woc_market_plan_pins_pg_integration.test.ts": 8450,
   "tests/woc_market_poll_core.test.ts": 8,
-  "tests/woc_market_quote_html.test.ts": 14,
   "tests/woc_market_realm_scope_pg_integration.test.ts": 4141,
   "tests/woc_market_reason_text.test.ts": 192,
   "tests/woc_market_rules.test.ts": 31,
@@ -6243,7 +4843,6 @@
   "tests/woc_tokens_text.test.ts": 15,
   "tests/woc_trade_controller.test.ts": 390,
   "tests/woc_trade_offer_view.test.ts": 14,
-  "tests/woc_wallet_card_dismiss.test.ts": 3,
   "tests/world_active_content.test.ts": 175,
   "tests/world_api_parity.test.ts": 2473,
   "tests/world_audio.test.ts": 571,
@@ -6273,8 +4872,6 @@
   "tests/zone1_removed_content.test.ts": 28,
   "tests/zone3_sanctum_quests.test.ts": 6,
   "tests/zone_celebration_fanout_shape.test.ts": 112,
-  "tests/zone_dressing_lod_core.test.ts": 7,
-  "tests/zone_dressing_lod_wiring.test.ts": 3,
   "tests/zone_eviction_core.test.ts": 8,
   "tests/zone_eviction_renderer_seam.test.ts": 6,
   "tests/zone_feature_visibility.test.ts": 14,

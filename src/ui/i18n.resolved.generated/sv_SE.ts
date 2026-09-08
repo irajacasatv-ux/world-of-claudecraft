@@ -585,6 +585,7 @@ export const sv_SE: EnTranslations = {
       "mountsEyebrow": "Kontomontering",
       "mountsTitle": "Maskinstabil",
       "mountBuyAria": "Köp {item}",
+      "mountSkinType": "Mount skin",
       "loading": "Laddar WOC-butiken...",
       "error": "WOC-butiken är inte tillgänglig just nu. Försök igen om en stund.",
       "balance": "Claudium-saldo",
@@ -1472,6 +1473,7 @@ export const sv_SE: EnTranslations = {
       "desc_thunderstrut_gobbler": "En kolossal stormkläckt kalkon som stoltserar ner från Den vaknande toppen, med stjärten spretande som ett åskmoln.",
       "desc_goblin_rocket_sled": "En farligt överbyggd goblinsläde, driven av två raketer och utsökt dåligt omdöme.",
       "desc_rallycart_rxt": "En liten rallymaskin som ökar färdhastigheten.",
+      "desc_rallycart_skin": "A tiny rally car with a mighty roar.",
       "desc_terrorspark_groundshaker": "En kompakt bepansrad maskin med tunga larvband, en grovkalibrig kanon och en sadel byggd för orädda förare.",
       "desc_drakemaw_raptor": "En sadeltämjd kullraptor från Drakgapets kaldera, ren sena och sprint, som fortfarande doftar svagt av aska.",
       "desc_mech_bird": "En handbyggd urverkshöna som sprintar på knäppande servon medan upprullningsnyckeln fortfarande vrider sig.",
@@ -4885,6 +4887,32 @@ export const sv_SE: EnTranslations = {
         "crown_endures": "Kronan består (hård raseri vid 6:00, heroic 5:00)",
         "deathless_court": "Det Dödslösa Hovet (endast heroic, kungahovet reser sig efter Dödslöst Raseri)"
       }
+    },
+    "cosmetics": {
+      "title": "Cosmetics",
+      "close": "Close Cosmetics",
+      "tabsLabel": "Cosmetics sections",
+      "tabMounts": "Mounts",
+      "tabSkins": "Skins",
+      "tabMech": "Mech",
+      "legend": "Account: shared by every character. Character: this character only.",
+      "scopeAccount": "Account",
+      "scopeCharacter": "Character",
+      "wear": "Wear",
+      "takeOff": "Take off",
+      "worn": "Worn",
+      "apply": "Apply",
+      "detach": "Detach",
+      "applied": "Applied",
+      "owned": "Owned",
+      "storeOnly": "Available in the WOC Store",
+      "cardAria": "{name}, {rarity}",
+      "mountsIntro": "A mount skin is drawn over whichever mount this character rides. It never changes speed.",
+      "mountsNoMount": "Own a mount first: a skin needs something to ride.",
+      "skinsEmpty": "No weapon skins owned yet. Visit the WOC Store.",
+      "skinsApplyHint": "Equip a {type} to apply this skin.",
+      "mechIntro": "The Combat Mech replaces this character's body. One chroma is worn at a time.",
+      "mechEmpty": "No Combat Mech chromas owned yet."
     },
     "reliquary": {
       "title": "Relikvariet",
@@ -11411,7 +11439,7 @@ export const sv_SE: EnTranslations = {
       },
       "recall_the_fallen": {
         "name": "Kalla de fallna",
-        "description": "Återför en död gruppmedlem till livet med 35% hälsa och mana. En Solhelare på nivå 16 eller högre kallar i stället tillbaka varje fallen medlem i gruppen."
+        "description": "Återför en död gruppmedlem till livet vid din sida med 35% hälsa och mana. En Solhelare på nivå 16 eller högre kallar i stället tillbaka varje fallen medlem i gruppen inom 30 meter och inom synhåll."
       },
       "beacon_of_light": {
         "name": "Ljusets båk",
@@ -12144,6 +12172,14 @@ export const sv_SE: EnTranslations = {
         "name": "Märgbräckare",
         "description": "Förbrukar dina 3 Gammalt Blod för ett tungt slag med högt hot som ger {damage} skada. Under halv hälsa skyddar det dig i stället med en sköld på 18% av din maximala hälsa i 8 sek och återbetalar 15 raseri."
       },
+      "wildwake": {
+        "name": "Vildväckelse",
+        "description": "Lockar en fallen bundsförvant till plötslig blomning och för denne tillbaka till livet vid din sida med 35% av dennes hälsa och mana, även mitt i striden. (Lundhjärta)"
+      },
+      "grove_awakening": {
+        "name": "Lundens uppvaknande",
+        "description": "Kallar varje fallen medlem i din grupp eller räd, inom 40 meter och inom synhåll, tillbaka till din sida med 30% hälsa och mana. Kan inte kastas i strid. (Lundhjärta)"
+      },
       "overbloom": {
         "name": "Överblomning",
         "description": "Förbrukar 5 Grönska. Skördar varje läkning över tid du äger på alla allierade för {buff}% av dess återstående läkning, tar bort de effekterna och planterar en färsk Vildblomning på målet."
@@ -12454,15 +12490,15 @@ export const sv_SE: EnTranslations = {
       },
       "temporal_reversal": {
         "name": "Tidsåtergång",
-        "description": "Spolar tillbaka en fallen allierades tidslinje och återupplivar dem vid kroppen med en del av deras hälsa och mana, även mitt i strid. (Kronomantik)"
+        "description": "Spolar tillbaka en fallen allierades tidslinje och återupplivar dem vid din sida med 35% av deras hälsa och mana, även mitt i strid. (Kronomantik)"
       },
       "collective_reversal": {
         "name": "Kollektiv återgång",
-        "description": "Spolar tillbaka tidslinjen för varje fallen medlem i din grupp eller raid och återupplivar dem vid kroppen med 30% hälsa och mana. Kan inte användas i strid. (Kronomanti)"
+        "description": "Spolar tillbaka tidslinjen för varje fallen medlem i din grupp eller raid inom 40 meter och inom synhåll, och återupplivar dem vid din sida med 30% hälsa och mana. Kan inte användas i strid. (Kronomanti)"
       },
       "ancestor_return": {
         "name": "Förfädernas återkomst",
-        "description": "Kallar varje fallen medlem i din grupp eller räd tillbaka till livet vid sin kropp med 30% hälsa och mana. Kan inte kastas i strid. (Andelagning)"
+        "description": "Kallar varje fallen medlem i din grupp eller räd, inom 40 meter och inom synhåll, tillbaka till din sida med 30% hälsa och mana. Kan inte kastas i strid. (Andelagning)"
       },
       "temporal_rewind": {
         "name": "Tillbakaspolning",
@@ -12604,6 +12640,10 @@ export const sv_SE: EnTranslations = {
       "martyrs_aegis": {
         "name": "Martyrens egid",
         "description": "Minskar skadan en allierad tar med 40% i 8 sek."
+      },
+      "prayer_of_returning": {
+        "name": "Återkomstens bön",
+        "description": "Kallar varje fallen medlem i din grupp eller räd, inom 40 meter och inom synhåll, tillbaka till din sida med 30% hälsa och mana. Kan inte kastas i strid. (Helig och Lära)"
       },
       "choir_of_deliverance": {
         "name": "Befrielsens kör",

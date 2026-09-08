@@ -845,10 +845,12 @@ describe('item-art audit builder', () => {
     // and 1087 + 212 + 2 = 1301. The sha/bytes below are measured directly
     // from `node scripts/item_art_audit.mjs --verify-only` run on the merged
     // tree, not invented or derived from either parent.
+    // PR3941 plus Freeholds: measured again after retiring the five premium
+    // reins, with all furnishing definitions retained on the merged tree.
     expect(verified).toMatchObject({
       catalogPath: 'tmp/imagegen/item-art-consistency/final-audit/catalog.json',
-      catalogSha256: '42d3f9e94a55eec2626a7bd028b239253f09dd5e2de8d92d8acd141d9da56ca1',
-      catalogBytes: 711102,
+      catalogSha256: '26bdfe657ad8bdebc2cf8d187b3470a6dd4110b2d3c73cbe99994f7843592e3e',
+      catalogBytes: 711092,
       rendererFingerprint: '41f5404c4d6d9643c8f03b9d88a8546e44564cc03a1baabdd4a72cb9258a2da7',
       catalogCount: 1304,
       liveItemCount: 1322,

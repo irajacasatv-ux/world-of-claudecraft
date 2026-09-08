@@ -142,10 +142,9 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // 13. Set from a suite run on the merged tree, never by arithmetic in the
 // diff.
 // The combined universe preserves the Freehold commands and the release's
-// new dispatch-only command. Keep literal pins on both independently scanned
-// universes and their difference.
-const EXPECTED_SEND_COUNT = 231;
-const EXPECTED_DISPATCH_COUNT = 245;
+// mount-skin selection pair. Counts re-derived from both source scans.
+const EXPECTED_SEND_COUNT = 232;
+const EXPECTED_DISPATCH_COUNT = 246;
 const EXPECTED_DISPATCH_ONLY_COUNT = 14;
 
 // The chat sub-channel routing switch (server/game.ts `switch

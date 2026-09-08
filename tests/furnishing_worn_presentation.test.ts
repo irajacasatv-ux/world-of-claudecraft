@@ -158,6 +158,7 @@ function renderSheet(
     openPrestige: vi.fn(),
     openDeeds: vi.fn(),
     openReliquary: vi.fn(),
+    openCosmetics: vi.fn(),
     dragState: new ItemDragState(),
     renderBags: vi.fn(),
     showError: vi.fn(),

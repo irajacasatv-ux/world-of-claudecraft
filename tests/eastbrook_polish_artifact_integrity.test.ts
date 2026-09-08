@@ -1355,10 +1355,14 @@ const ACCEPTED_POLISH_V2_METADATA_PATH = path.join(REPO_ROOT, POLISH_SEAL_PATH);
 // OSSBrain PR #3781: re-sealed with the canonical remint command after
 // renderer reconciliation and the lockfile compatibility fix. Shipping GLB
 // changes are fingerprint-only; no capture or visual approval was retaken.
+// PR3941: canonical source-only reseal for mount-skin renderer prewarm.
+// Historical images, performance scores and capture identity are unchanged.
+// PR3946: remint the renderer leaf after restoring school-aware resurrection VFX.
+// Existing captures, performance measurements and capture identity are unchanged.
 const ACCEPTED_POLISH_V2_METADATA_SHA256 =
-  'a8934b064d40b33cb9b514d8aec8dfbb9a640db733017cd1400a8542e6e1dedf';
+  'b3fe282dd06f26d307ca942eeae3fd8e511f4ad52ae1020368def56d2afbdc98';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
-  '64a06d8593019668fbcd9dcd4d291475709492dea6b9f8e2422b2a9971f573fd';
+  '6b67ca67b0c2a09b86405d4559fafebfe51d4017b704dcd1bf49bb23a5a8773d';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2715,7 +2719,7 @@ describe('Eastbrook polish performance and contact evidence', () => {
       //
       // OSSBrain integration: this digest was recomputed LAST from the
       // canonical re-sealed evidence files. Capture pixels and scores did not change.
-    ).toBe('13284368843f6ccd12cc9937e95980731b18775dad4c970752cb9b692d695ab1');
+    ).toBe('6af0f60e98f22990ed41f19fa647321bf68cb9175bc924a3d5292866b5aec4d5');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {

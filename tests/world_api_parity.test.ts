@@ -190,6 +190,7 @@ export const IWORLD_MEMBERS = [
   { name: 'claimEventSkin', kind: 'method' },
   { name: 'unequipMechChroma', kind: 'method' },
   { name: 'changeWeaponSkin', kind: 'method' },
+  { name: 'changeMountSkin', kind: 'method' },
   { name: 'toggleWeaponStow', kind: 'method' },
   { name: 'setHelmHidden', kind: 'method' },
   { name: 'unstuck', kind: 'method' },
@@ -828,10 +829,11 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // data, 257 method. Set from a suite run on the merged tree, never by
     // arithmetic in the diff. The merged literal contains the Freehold
     // members, housing availability, and the release's ability resolution
-    // and Nythraxis readouts: 383 unique members, counted from the table.
-    expect(IWORLD_MEMBERS.length).toBe(383);
+    // and Nythraxis readouts plus mount-skin selection: 384 unique members,
+    // counted from the table.
+    expect(IWORLD_MEMBERS.length).toBe(384);
     expect(DATA_MEMBERS.length).toBe(105);
-    expect(METHOD_MEMBERS.length).toBe(278);
+    expect(METHOD_MEMBERS.length).toBe(279);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -907,6 +909,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'castAbilityBySlot',
       'castAbilityOn',
       'cfg',
+      'changeMountSkin',
       'changeSkin',
       'changeWeaponSkin',
       'characterProfile',
@@ -1377,6 +1380,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'castAbilityAt',
       'castAbilityBySlot',
       'castAbilityOn',
+      'changeMountSkin',
       'changeSkin',
       'changeWeaponSkin',
       'characterProfile',
@@ -1820,6 +1824,7 @@ const FACET_COSMETICS = [
   'claimEventSkin',
   'unequipMechChroma',
   'changeWeaponSkin',
+  'changeMountSkin',
   'toggleWeaponStow',
   'setHelmHidden',
 ] as const satisfies readonly (keyof IWorldCosmetics)[];
@@ -2375,8 +2380,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
     // Literal union size, including both branches' additions.
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(383);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(383);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(384);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(384);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

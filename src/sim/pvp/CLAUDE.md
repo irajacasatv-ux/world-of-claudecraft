@@ -28,8 +28,9 @@ ratings.
   `content/zone3.ts` with `dynamic: true` so the generic world-init NPC loop
   skips him: creating him in table order would shift the entity id of every
   NPC, camp mob, and ground object created after him and red the parity
-  goldens. The `Sim` ctor spawns him after the rng-drawing camp loop through
-  the same rng-free `findSafePos` path the generic loop uses, so neither
+  goldens. The `Sim` ctor delegates to `reserved_surface_npc_bootstrap.ts`
+  after the rng-drawing camp loop, using the same rng-free `findSafePos`
+  path the generic loop uses, so neither
   `nextId` nor the shared rng stream moves
   (`tests/warfare_vendor_npc.test.ts` asserts both). His stock is the one
   canonical `content/pvp_honor.ts` table, shared with FURY.
@@ -37,8 +38,9 @@ ratings.
   deliberate exception: `warfare_quartermaster.ts` is NOT re-exported there
   (see the comment in `index.ts`). It needs `createNpc` from `../entity` at
   runtime while `entity.ts` imports this barrel, so re-exporting it would
-  close a value-level ESM cycle. Its single consumer is the Sim coordinator at
-  world init; import it by path.
+  close a value-level ESM cycle. Its runtime consumer is
+  `reserved_surface_npc_bootstrap.ts`, called by the Sim coordinator at world
+  init; import it by path.
 - Keep reward amounts and rating curves named and covered in
   `docs/design/warfare.md`.
 - Cover changes in `tests/honor.test.ts` and `tests/pvp_honor_gear.test.ts`,

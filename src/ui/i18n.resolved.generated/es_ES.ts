@@ -585,6 +585,7 @@ export const es_ES: EnTranslations = {
       "mountsEyebrow": "Montajes de cuenta",
       "mountsTitle": "Estable de la máquina",
       "mountBuyAria": "Comprar {item}",
+      "mountSkinType": "Mount skin",
       "loading": "Cargando la tienda WOC...",
       "error": "La tienda WOC no está disponible en este momento. Vuelve a intentarlo dentro de poco.",
       "balance": "Saldo de Claudium",
@@ -1472,6 +1473,7 @@ export const es_ES: EnTranslations = {
       "desc_thunderstrut_gobbler": "Un pavo colosal nacido de la tormenta que baja pavoneándose del Pico Despierto, con la cola desplegada como un frente de tormenta.",
       "desc_goblin_rocket_sled": "Un trineo goblin peligrosamente sobredimensionado, propulsado por dos cohetes y un excelente mal juicio.",
       "desc_rallycart_rxt": "Una máquina de rally en miniatura que proporciona mayor velocidad de viaje.",
+      "desc_rallycart_skin": "A tiny rally car with a mighty roar.",
       "desc_terrorspark_groundshaker": "Una máquina blindada y compacta con orugas pesadas, un cañón de gran calibre y una silla hecha para pilotos intrépidos.",
       "desc_drakemaw_raptor": "Un raptor de cría domado para la silla, procedente de la Caldera de Drakemaw, puro tendón y arranque, que aún huele ligeramente a ceniza.",
       "desc_mech_bird": "Un pollo de guerra mecánico hecho a mano que corre con servos chasqueantes y la llave de cuerda sigue girando.",
@@ -4885,6 +4887,32 @@ export const es_ES: EnTranslations = {
         "crown_endures": "La Corona perdura (enfurecimiento rígido a 6:00, 5:00 en heroico)",
         "deathless_court": "La Corte inmortal (solo heroico, la corte real se alza tras Rabia inmortal)"
       }
+    },
+    "cosmetics": {
+      "title": "Cosmetics",
+      "close": "Close Cosmetics",
+      "tabsLabel": "Cosmetics sections",
+      "tabMounts": "Mounts",
+      "tabSkins": "Skins",
+      "tabMech": "Mech",
+      "legend": "Account: shared by every character. Character: this character only.",
+      "scopeAccount": "Account",
+      "scopeCharacter": "Character",
+      "wear": "Wear",
+      "takeOff": "Take off",
+      "worn": "Worn",
+      "apply": "Apply",
+      "detach": "Detach",
+      "applied": "Applied",
+      "owned": "Owned",
+      "storeOnly": "Available in the WOC Store",
+      "cardAria": "{name}, {rarity}",
+      "mountsIntro": "A mount skin is drawn over whichever mount this character rides. It never changes speed.",
+      "mountsNoMount": "Own a mount first: a skin needs something to ride.",
+      "skinsEmpty": "No weapon skins owned yet. Visit the WOC Store.",
+      "skinsApplyHint": "Equip a {type} to apply this skin.",
+      "mechIntro": "The Combat Mech replaces this character's body. One chroma is worn at a time.",
+      "mechEmpty": "No Combat Mech chromas owned yet."
     },
     "reliquary": {
       "title": "El Relicario",
@@ -11411,7 +11439,7 @@ export const es_ES: EnTranslations = {
       },
       "recall_the_fallen": {
         "name": "Llamar a los Caídos",
-        "description": "Devuelve a la vida a un miembro muerto del grupo con un 35% de salud y maná. Un Sanador del Sol de nivel 16 o superior llama de vuelta a todos los miembros caídos del grupo."
+        "description": "Devuelve a la vida a un miembro muerto del grupo a tu lado con un 35% de salud y maná. Un Sanador del Sol de nivel 16 o superior llama de vuelta a todos los miembros caídos del grupo en un radio de 30 yardas y dentro de tu línea de visión."
       },
       "beacon_of_light": {
         "name": "Faro de Luz",
@@ -12144,6 +12172,14 @@ export const es_ES: EnTranslations = {
         "name": "Quiebramédula",
         "description": "Consume tus 3 de Sangre Antigua para un golpe pesado de alta amenaza que inflige {damage} de daño. Por debajo de la mitad de salud, en su lugar te protege con un escudo del 18% de tu salud máxima durante 8 s y te devuelve 15 de ira."
       },
+      "wildwake": {
+        "name": "Despertar Silvestre",
+        "description": "Incita a un aliado caído a florecer de pronto, devolviéndolo a la vida a tu lado con un 35% de su salud y maná, incluso en pleno combate. (Corazón del Bosque)"
+      },
+      "grove_awakening": {
+        "name": "Despertar del Bosque",
+        "description": "Devuelve a la vida a todos los miembros caídos de tu grupo o banda en un radio de 40 yardas y dentro de tu línea de visión, de vuelta a tu lado con un 30% de salud y maná. No puede lanzarse en combate. (Corazón del Bosque)"
+      },
       "overbloom": {
         "name": "Sobrefloración",
         "description": "Consume 5 de Verdor. Cosecha cada sanación periódica tuya en todos los aliados por un {buff}% de su sanación restante, elimina esos efectos y planta una Floración Silvestre nueva en el objetivo."
@@ -12454,15 +12490,15 @@ export const es_ES: EnTranslations = {
       },
       "temporal_reversal": {
         "name": "Inversión Temporal",
-        "description": "Rebobina la línea temporal de un aliado caído, devolviéndolo a la vida junto a su cuerpo con una parte de su salud y maná, incluso en pleno combate. (Cronomancia)"
+        "description": "Rebobina la línea temporal de un aliado caído, devolviéndolo a la vida a tu lado con un 35% de su salud y maná, incluso en pleno combate. (Cronomancia)"
       },
       "collective_reversal": {
         "name": "Reversión colectiva",
-        "description": "Rebobina a todos los miembros muertos de tu grupo o banda y los devuelve a la vida junto a sus cuerpos con un 30% de salud y maná. No se puede lanzar en combate. (Cronomancia)"
+        "description": "Rebobina a todos los miembros muertos de tu grupo o banda en un radio de 40 yardas y dentro de tu línea de visión, y los devuelve a la vida a tu lado con un 30% de salud y maná. No se puede lanzar en combate. (Cronomancia)"
       },
       "ancestor_return": {
         "name": "Retorno de los Ancestros",
-        "description": "Devuelve a la vida junto a su cuerpo a todos los miembros caídos de tu grupo o banda con un 30% de salud y maná. No puede lanzarse en combate. (Remiendo Espiritual)"
+        "description": "Devuelve a la vida a todos los miembros caídos de tu grupo o banda en un radio de 40 yardas y dentro de tu línea de visión, de vuelta a tu lado con un 30% de salud y maná. No puede lanzarse en combate. (Remiendo Espiritual)"
       },
       "temporal_rewind": {
         "name": "Rebobinar",
@@ -12604,6 +12640,10 @@ export const es_ES: EnTranslations = {
       "martyrs_aegis": {
         "name": "Égida del Mártir",
         "description": "Reduce un 40% el daño recibido por un aliado durante 8 s."
+      },
+      "prayer_of_returning": {
+        "name": "Plegaria del Retorno",
+        "description": "Devuelve a la vida a todos los miembros caídos de tu grupo o banda en un radio de 40 yardas y dentro de tu línea de visión, de vuelta a tu lado con un 30% de salud y maná. No puede lanzarse en combate. (Bendición y Doctrina)"
       },
       "choir_of_deliverance": {
         "name": "Coro de Liberación",

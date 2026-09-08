@@ -188,14 +188,10 @@ describe('profile page Reliquary pair + Curator rank lines', () => {
     // (tsx, no full compile), since these additions could in principle
     // collide on a relic id. Re-confirm with
     // `npx vitest run tests/profile_page.test.ts` once the tree compiles.
-    //
-    // RE-PINNED AGAIN for the merge of that OSSBrain-integrated release tip
-    // (553a5672ed) into feature/freeholds: the release parent measures 416,
-    // the Freeholds parent 433 (its Homesteader title, eight vendor and ten
-    // crafted furnishings on top of the shared 414), and the two deltas are
-    // disjoint relic ids: 416 + 19 = 435, MEASURED on the merged tree with
-    // `npx vitest run tests/profile_page.test.ts`.
-    expect(catalogTotal).toBe(435);
+    // Freeholds adds the Homesteader title and eighteen Hearth furnishings;
+    // the release converts five paid mounts into account cosmetics. Measured
+    // through the merged live catalog: 435 - 5 = 430 character relics.
+    expect(catalogTotal).toBe(430);
   });
 
   it('renders the owned/total pair and the English rank name for a ranked character', async () => {

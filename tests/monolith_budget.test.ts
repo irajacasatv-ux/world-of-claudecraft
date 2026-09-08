@@ -99,7 +99,7 @@ const MONOLITHS: MonolithRow[] = [
     // wiring, the wallet re-arm, and the scroll-after-focus ordering. The
     // review round (the hold's lazy first-render attach, the no-rung scroll
     // carve-out) fits inside the same count. Exact count, zero slack.
-    ceiling: 2475,
+    ceiling: 2451,
     seam: 'a pure view-core module beside it (src/ui/woc_market_view.ts) that this window renders from',
   },
   {
@@ -458,7 +458,7 @@ const MONOLITHS: MonolithRow[] = [
     // on the reconciled file measures 18452 (the composed 18451 plus one line
     // from the merged import block). Exact merged count, zero slack: any further
     // growth reds again.
-    ceiling: 18452,
+    ceiling: 18446,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -853,7 +853,7 @@ const MONOLITHS: MonolithRow[] = [
     // counts: 12903 base, 12902 Freeholds (-1), 12879 incoming (-24); combined
     // 12878, measured. Exact merged count, zero slack: any further growth reds
     // again.
-    ceiling: 12878,
+    ceiling: 12850,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {
@@ -1027,7 +1027,7 @@ const MONOLITHS: MonolithRow[] = [
     // 11796, measured. The row never conflicted (the incoming pin still sat at
     // 11923), so the growth would have landed silently on a zero-slack pin.
     // Exact merged count, zero slack: any further growth reds again.
-    ceiling: 11796,
+    ceiling: 11775,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -1234,7 +1234,7 @@ const MONOLITHS: MonolithRow[] = [
     // counts: 11385 base, 11269 Freeholds (-116), 11363 incoming (-22); combined
     // 11247, measured. Exact merged count, zero slack: any further growth reds
     // again.
-    ceiling: 11247,
+    ceiling: 11216,
     seam: 'a src/game/ or src/ui/ sibling module; main.ts is a firewall, not a home',
   },
   {
@@ -1446,7 +1446,7 @@ const MONOLITHS: MonolithRow[] = [
     // counts: 10290 base, 10202 Freeholds (-88), 10276 incoming (-14); combined
     // 10188, measured. The row never conflicted (the incoming pin still sat at
     // 10291). Exact merged count, zero slack: any further growth reds again.
-    ceiling: 10188,
+    ceiling: 10007,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1593,7 +1593,7 @@ const MONOLITHS: MonolithRow[] = [
     // counts: 5788 base, 5629 Freeholds (-159), 5765 incoming (-23); combined
     // 5606, measured. Exact merged count, zero slack: any further growth reds
     // again.
-    ceiling: 5606,
+    ceiling: 5604,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {
@@ -1604,7 +1604,8 @@ const MONOLITHS: MonolithRow[] = [
     // the raid theme registrations were paid for by moving the Gravewyrm Sanctum composer to its sibling module; exact count.
     // Re-pinned 4943 -> 4935: the molten-assembly music row paid for itself by
     // moving the DUNGEON_MUSIC table to dungeon_music_zones.ts. Exact count.
-    ceiling: 4935,
+    // Pure location/rift routing moved to music_zones.ts; floor streams reuse the director.
+    ceiling: 4850,
     seam: 'a src/game sibling module (the refactor/game-music split is the template)',
   },
   {
@@ -1740,7 +1741,8 @@ const MONOLITHS: MonolithRow[] = [
     // stays imported at the top of db.ts too (the save-family fence sites
     // reach it directly), unlike createCharacterCapped's pure re-export.
     // Exact count, zero slack.
-    ceiling: 4893,
+    // Mount skins: bank the coordinator extraction at its measured size.
+    ceiling: 4744,
     seam: 'a domain <domain>_db.ts module with its own *_SCHEMA (server/CLAUDE.md)',
   },
   {
@@ -1808,7 +1810,7 @@ const MONOLITHS: MonolithRow[] = [
     // Lowered after extracting the world trees' camera-occluder fade (the
     // hideable records, the trunk hit test, the gated instance/ghost swap)
     // into src/render/tree_hide_fade.ts.
-    ceiling: 3996,
+    ceiling: 3969,
     seam: 'a new src/render/<thing>.ts module (src/render/CLAUDE.md)',
   },
   {
@@ -2088,7 +2090,7 @@ const MONOLITHS: MonolithRow[] = [
     // exact `wc -l < src/ui/bank_window.ts` measurement on the resolved tree.
     // RE-CONFIRMED at the final line-budget reconciliation: still 1810,
     // below both parent pins. Exact merged count, zero slack.
-    ceiling: 1810,
+    ceiling: 1808,
     seam: 'a pure view-core plus a thin painter sibling (src/ui/CLAUDE.md)',
   },
   {

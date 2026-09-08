@@ -585,6 +585,7 @@ export const cs_CZ: EnTranslations = {
       "mountsEyebrow": "Připojení účtu",
       "mountsTitle": "Strojově stabilní",
       "mountBuyAria": "Koupit {item}",
+      "mountSkinType": "Mount skin",
       "loading": "Načítání obchodu WOC…",
       "error": "Obchod WOC nyní není dostupný. Zkus to za chvíli znovu.",
       "balance": "Zůstatek Claudium",
@@ -1472,6 +1473,7 @@ export const cs_CZ: EnTranslations = {
       "desc_thunderstrut_gobbler": "Kolosální krocan zrozený z bouře, který se hrdě prochází z Probouzejícího se vrcholu, s ocasem rozevřeným jako bouřkový mrak.",
       "desc_goblin_rocket_sled": "Nebezpečně překonstruované gobliní saně poháněné dvěma raketami a skvěle špatným úsudkem.",
       "desc_rallycart_rxt": "Malý rallye stroj, který zvyšuje rychlost cestování.",
+      "desc_rallycart_skin": "A tiny rally car with a mighty roar.",
       "desc_terrorspark_groundshaker": "Kompaktní obrněný stroj s těžkými pásy, velkorážním kanónem a sedlem pro nebojácné piloty.",
       "desc_drakemaw_raptor": "Osedlaný raptor z líhně v Kaldeře Dračí tlamy, samé šlachy a hbitost, ještě slabě páchnoucí popelem.",
       "desc_mech_bird": "Ručně vyrobené strojové válečné kuře, které sprintuje na cvakací serva, natahovací klíč se stále otáčí.",
@@ -4885,6 +4887,32 @@ export const cs_CZ: EnTranslations = {
         "crown_endures": "Koruna vytrvá (tvrdé rozzuření v 6:00, heroic 5:00)",
         "deathless_court": "Nesmrtelný dvůr (jen heroic, královský dvůr povstane po Nesmrtelném běsnění)"
       }
+    },
+    "cosmetics": {
+      "title": "Cosmetics",
+      "close": "Close Cosmetics",
+      "tabsLabel": "Cosmetics sections",
+      "tabMounts": "Mounts",
+      "tabSkins": "Skins",
+      "tabMech": "Mech",
+      "legend": "Account: shared by every character. Character: this character only.",
+      "scopeAccount": "Account",
+      "scopeCharacter": "Character",
+      "wear": "Wear",
+      "takeOff": "Take off",
+      "worn": "Worn",
+      "apply": "Apply",
+      "detach": "Detach",
+      "applied": "Applied",
+      "owned": "Owned",
+      "storeOnly": "Available in the WOC Store",
+      "cardAria": "{name}, {rarity}",
+      "mountsIntro": "A mount skin is drawn over whichever mount this character rides. It never changes speed.",
+      "mountsNoMount": "Own a mount first: a skin needs something to ride.",
+      "skinsEmpty": "No weapon skins owned yet. Visit the WOC Store.",
+      "skinsApplyHint": "Equip a {type} to apply this skin.",
+      "mechIntro": "The Combat Mech replaces this character's body. One chroma is worn at a time.",
+      "mechEmpty": "No Combat Mech chromas owned yet."
     },
     "reliquary": {
       "title": "Relikviář",
@@ -11411,7 +11439,7 @@ export const cs_CZ: EnTranslations = {
       },
       "recall_the_fallen": {
         "name": "Povolej padlé",
-        "description": "Vrátí mrtvého člena skupiny zpět k životu s 35% zdraví a many. Slunečný léčitel na úrovni 16 nebo vyšší místo toho povolá zpět každého padlého člena skupiny."
+        "description": "Vrátí mrtvého člena skupiny zpět k životu po tvém boku s 35% zdraví a many. Slunečný léčitel na úrovni 16 nebo vyšší místo toho povolá zpět každého padlého člena skupiny do 30 yardů a na dohled."
       },
       "beacon_of_light": {
         "name": "Maják světla",
@@ -12144,6 +12172,14 @@ export const cs_CZ: EnTranslations = {
         "name": "Lámání morku",
         "description": "Spotřebuje 3 Staré krve na těžký úder s vysokou hrozbou za {damage} poškození. Pod polovinou zdraví tě místo toho chrání štítem za 18% maximálního zdraví na 8 s a vrátí 15 zuřivosti."
       },
+      "wildwake": {
+        "name": "Divoké probuzení",
+        "description": "Vyláká padlého spojence k náhlému rozkvětu a přivede ho zpět k životu po tvém boku s 35% zdraví a many, i uprostřed boje. (Srdce háje)"
+      },
+      "grove_awakening": {
+        "name": "Probuzení háje",
+        "description": "Povolá zpět k životu po tvém boku každého padlého člena tvé skupiny nebo výpravy do 40 yardů a na dohled s 30% zdraví a many. Nelze seslat v boji. (Srdce háje)"
+      },
       "overbloom": {
         "name": "Překvět",
         "description": "Spotřebuje 5 Zeleně. Sklidí každé tvé léčení v čase na všech spojencích za {buff}% zbývajícího léčení, odstraní tyto efekty a zasadí na cíl čerstvý Divoký květ."
@@ -12454,15 +12490,15 @@ export const cs_CZ: EnTranslations = {
       },
       "temporal_reversal": {
         "name": "Časový návrat",
-        "description": "Přetočíš časovou linku padlého spojence a navrátíš ho k životu u jeho těla se zlomkem zdraví a many, i uprostřed boje. (Chronomagie)"
+        "description": "Přetočíš časovou linku padlého spojence a navrátíš ho k životu po tvém boku s 35% zdraví a many, i uprostřed boje. (Chronomagie)"
       },
       "collective_reversal": {
         "name": "Hromadné navrácení",
-        "description": "Vrátí časovou osu každého padlého člena vaší skupiny nebo raidu a oživí ho u jeho těla s 30% zdraví a many. Nelze seslat v boji. (Chronomancie)"
+        "description": "Vrátí časovou osu každého padlého člena vaší skupiny nebo raidu do 40 yardů a na dohled a oživí ho po vašem boku s 30% zdraví a many. Nelze seslat v boji. (Chronomancie)"
       },
       "ancestor_return": {
         "name": "Návrat předků",
-        "description": "Povolá zpět k životu u jejich těla každého padlého člena tvé skupiny nebo výpravy s 30% zdraví a many. Nelze seslat v boji. (Duchovní látka)"
+        "description": "Povolá zpět k životu po tvém boku každého padlého člena tvé skupiny nebo výpravy do 40 yardů a na dohled s 30% zdraví a many. Nelze seslat v boji. (Duchovní látka)"
       },
       "temporal_rewind": {
         "name": "Přetočení",
@@ -12604,6 +12640,10 @@ export const cs_CZ: EnTranslations = {
       "martyrs_aegis": {
         "name": "Egida mučedníka",
         "description": "Snižuje poškození utrpěné spojencem o 40% na 8 s."
+      },
+      "prayer_of_returning": {
+        "name": "Modlitba návratu",
+        "description": "Povolá zpět k životu po tvém boku každého padlého člena tvé skupiny nebo výpravy do 40 yardů a na dohled s 30% zdraví a many. Nelze seslat v boji. (Požehnání a Věrouka)"
       },
       "choir_of_deliverance": {
         "name": "Sbor vysvobození",

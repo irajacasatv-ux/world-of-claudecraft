@@ -107,6 +107,7 @@ import {
   effectiveArmor as effectiveArmorImpl,
   effectiveAttackPower as effectiveAttackPowerImpl,
 } from './combat/effective_stats';
+import { collectEngagedPids } from './combat/engaged_combat';
 import { steerFearFromWalls } from './combat/fear_steering';
 import { applyIgnite } from './combat/fire_mage';
 import { frostMageChannelPulse } from './combat/frost_mage';
@@ -163,11 +164,11 @@ import {
   FARM_PATCHES,
   type FarmPatchDef,
 } from './content/farm_patches';
+import { normalizeMountSkinId } from './content/mount_skins';
 import { DEFAULT_MOUNT, type MountKey } from './content/mounts';
 import { GATHERING_PROFESSION_IDS, type GatheringProfessionId } from './content/professions';
 import { PROVING_SHORE_ARRIVAL } from './content/proving_shore';
 import { PTR_DEV_VENDOR_DEF } from './content/ptr_dev_vendor';
-import { FURY_ENTITY_ID, FURY_NPC_ID } from './content/pvp_honor';
 import {
   classHasSkin,
   EVENT_SKIN_TOKEN_ID,
@@ -396,6 +397,7 @@ import {
 import {
   forceDismount as forceDismountImpl,
   ownedMounts as ownedMountsImpl,
+  setMountSkin as setMountSkinImpl,
   toggleMount as toggleMountImpl,
   updateMountTransition,
 } from './mounts';
@@ -628,11 +630,6 @@ import {
 import { prestige as prestigeImpl, updateRested } from './progression/xp';
 import { advancePendingProjectiles, type PendingProjectile } from './projectile_travel';
 import * as honorMod from './pvp';
-// By path, not through the pvp barrel: see the comment in src/sim/pvp/index.ts.
-import {
-  spawnWarfareQuartermaster,
-  WARFARE_QUARTERMASTER_NPC_ID,
-} from './pvp/warfare_quartermaster';
 import { sanitizeCreditedObjects } from './quests/interact_object_credit';
 import { spawnRealmBuilderMonument } from './realm_builder_monument_spawn';
 import {
@@ -650,6 +647,7 @@ import {
   restoreReliquaryState,
 } from './reliquary';
 import { sanitizeRemovedZone1Content } from './removed_zone1_content';
+import { bootstrapReservedSurfaceNpcs } from './reserved_surface_npc_bootstrap';
 import { freshCounters, type RewardCounters } from './reward_counters';
 import { rideSteepnessAt, shoreStepOut, stepWaterLevel } from './ride_height';
 import { Rng } from './rng';
@@ -703,7 +701,6 @@ export type { MarketSave } from './market';
 
 import { updateBreath } from './breath';
 import { updateSwimFatigue } from './fatigue';
-import type { CombatExitMemory } from './instance_exit_memory';
 import { chainPullInstanceOnBossAggro } from './instances/boss_chain_pull';
 import { buyCrucibleVendorItem as buyCrucibleVendorItemImpl } from './instances/crucible_vendor';
 import {
@@ -1033,13 +1030,8 @@ const FOLLOW_MAX_RANGE = 60; // give up follow once the leader is this far away
 // src/sim/pet/pet_ai.ts (P1a). PET_GROWL_INTERVAL + PET_TELEPORT_DISTANCE relocated to
 // ./types: PET_GROWL_INTERVAL is consumed by pet_ai.ts + pet_commands.ts (petTaunt, P1b),
 // PET_TELEPORT_DISTANCE by pet_ai.ts + the delve-companion follow (delves/companion.ts);
-// sim.ts imports neither now.
-// A pet only keeps its OWNER flagged in combat while it is actively trading blows
-// (its combatTimer resets to 0 on every hit dealt/taken). A pet that merely holds a
-// target it is chasing or can't reach stops dragging the owner into perpetual combat
-// past this window, so the owner's out-of-combat health regen resumes. Matches the
-// 5s combat-linger used for the owner's own inCombat flag.
-const PET_COMBAT_LINGER = 5;
+// sim.ts imports neither now. PET_COMBAT_LINGER moved with the engaged pass to
+// src/sim/combat/engaged_combat.ts (the hate-table combat rule).
 // PET_TAUNT_RANGE / PET_FEED_DURATION / PET_FEED_TICK / DEMON_HEAL_MANA_COST /
 // DEMON_HEAL_DURATION / DEMON_HEAL_TICK / TAMED_TARGET_RESPAWN_SECONDS moved with the
 // slice to src/sim/pet/pet_commands.ts (P1b); DEMON_HEAL_CAST_ID -> ./types (read by the
@@ -1265,12 +1257,6 @@ export interface InstanceSlot {
   // claim's first-entry raid-boss welcome. Session-only and cleared with the
   // claim so a relog cannot replay it while a fresh instance can.
   raidBossWelcomeKeys: Set<string>;
-  // Recently-exited-mid-combat memory (issue #2653): a player who left this claim
-  // while a mob was actively fighting them has their dropped threat snapshotted
-  // here for a short window. Re-entering before it lapses resumes the fight
-  // instead of granting a free, unengaged reset (instances/dungeons.ts). Session
-  // state, cleared with the claim, same as clearedBy/enteredBy above.
-  combatExitMemory: CombatExitMemory;
 }
 
 export interface ResolvedAbility {
@@ -1369,6 +1355,9 @@ export interface PlayerMeta {
   deathPet?: PetReturnSnapshot;
   skin: number; // appearance index into the render SKINS[player_<cls>]; persisted, synced
   skinCatalog: SkinCatalog;
+  // Worn account mount skin (content/mount_skins.ts); persisted, mirrored to
+  // Entity.mountSkinId for the identity wire. null = the ridden mount's own look.
+  mountSkinId: string | null;
   // Cosmetic skin-select event: the rank rolled when the event token was used,
   // pending a lock-in. Set on use, cleared on claim. Persisted so the reward
   // survives reconnect; re-using the token re-shows the same rank (no reroll).
@@ -1952,7 +1941,7 @@ export class Sim {
   // and kept roster-exact on spawn/despawn/teleport
   readonly grid = new SpatialGrid();
   readonly playerGrid = new SpatialGrid();
-  private engagedPids = new Set<number>();
+  private readonly engagedPids = new Set<number>();
   primaryId = -1; // the local/RL player in single-player contexts
   // The pid of the player the CONSTRUCTOR itself created (cfg.noPlayer false),
   // -1 on a server-shaped sim. The compulsory-tutorial sweep ferries only this
@@ -1976,6 +1965,7 @@ export class Sim {
     mechChromaIds: [],
     weaponSkinIds: [],
     weaponSkinLoadout: {},
+    mountSkinIds: [],
   };
   private nextLootRollId = 1;
   private pendingLootRolls = new Map<number, PendingLootRoll>();
@@ -2459,26 +2449,9 @@ export class Sim {
     // createNpc draws no rng, so world-gen determinism is preserved.
     spawnOverworldSpiritHealers(this.ctx, worldContent.services?.graveyards ?? []);
 
-    // FURY uses a reserved id and spawns after the rng-driven world roster, so
-    // the Honor Quartermaster cannot perturb existing entity ids or replay RNG.
-    {
-      const furyDef = worldContent.npcs[FURY_NPC_ID];
-      if (furyDef && !this.entities.has(FURY_ENTITY_ID)) {
-        const safe = this.findSafePos(furyDef.pos.x, furyDef.pos.z, waterLevel() + 0.6);
-        const fury = createNpc(FURY_ENTITY_ID, furyDef, this.groundPos(safe.x, safe.z));
-        this.addEntity(fury);
-      }
-    }
-
-    // Warmarshal Draven Kole in Highwatch: the same reserved-id, rng-free
-    // treatment as Bram and FURY above. See src/sim/pvp/warfare_quartermaster.ts.
-    {
-      const kole = worldContent.npcs[WARFARE_QUARTERMASTER_NPC_ID];
-      if (kole) {
-        const safe = this.findSafePos(kole.pos.x, kole.pos.z, waterLevel() + 0.6);
-        spawnWarfareQuartermaster(this.ctx, kole, safe);
-      }
-    }
+    bootstrapReservedSurfaceNpcs(this.ctx, worldContent.npcs, (x, z, h) =>
+      this.findSafePos(x, z, h),
+    );
 
     for (const delve of DELVE_LIST) {
       for (let i = 0; i < DELVE_SLOT_COUNT; i++) {
@@ -2565,7 +2538,6 @@ export class Sim {
         progressed: false,
         seqResetAt: -Infinity,
         bossDeathZones: [],
-        combatExitMemory: new Map(),
       });
     }
 
@@ -2887,6 +2859,7 @@ export class Sim {
       name,
       skin: savedState?.skin ?? 0,
       skinCatalog: savedState?.skinCatalog === 'mech' ? 'mech' : 'class',
+      mountSkinId: normalizeMountSkinId(savedState?.mountSkinId),
       pendingSkinRank: savedState?.pendingSkinRank ?? null,
       pendingSkinCatalog: savedState?.pendingSkinCatalog ?? null,
       pendingSkinItemId: savedState?.pendingSkinItemId ?? null,
@@ -3039,6 +3012,7 @@ export class Sim {
     this.players.set(player.id, meta);
     player.skinCatalog = meta.skinCatalog;
     player.skin = meta.skin; // mirror onto the entity so the renderer + wire can read it
+    player.mountSkinId = meta.mountSkinId;
     this.accountCosmetics = accountCosmeticsWithWornMechChroma(
       this.accountCosmetics,
       meta.skinCatalog,
@@ -4228,6 +4202,8 @@ export class Sim {
       ...nodeReadinessSaveFragment(meta.nodeHarvestReadyAt, this.time),
       skin: meta.skin,
       skinCatalog: meta.skinCatalog,
+      // Absent while no mount skin is worn (zero-default omission; back-compat).
+      ...(meta.mountSkinId ? { mountSkinId: meta.mountSkinId } : {}),
       pendingSkinRank: meta.pendingSkinRank,
       pendingSkinCatalog: meta.pendingSkinCatalog,
       pendingSkinItemId: meta.pendingSkinItemId,
@@ -4509,6 +4485,18 @@ export class Sim {
 
   changeWeaponSkin(skinId: string | null, weaponType?: WeaponSkinType): void {
     this.setWeaponSkin(this.primaryId, skinId, weaponType);
+  }
+
+  /** Wear (skinId) or take off (null) a mount skin on a player. Rules live in
+   *  src/sim/mounts.ts (setMountSkin); the account-ownership gate is the
+   *  caller's (the server's session cosmetics; changeMountSkin below offline). */
+  setMountSkin(pid: number, skinId: string | null): boolean {
+    return setMountSkinImpl(this.ctx, pid, skinId);
+  }
+
+  changeMountSkin(skinId: string | null): void {
+    if (skinId !== null && !this.accountCosmetics.mountSkinIds.includes(skinId)) return;
+    this.setMountSkin(this.primaryId, skinId);
   }
 
   // IWorldActionBar (offline arm). The action-bar layout is client presentation
@@ -5083,6 +5071,12 @@ export class Sim {
       get players() {
         return sim.players;
       },
+      get accountCosmetics() {
+        return sim.accountCosmetics;
+      },
+      set accountCosmetics(value: AccountCosmetics) {
+        sim.accountCosmetics = value;
+      },
       get stationPlacements() {
         return sim.stationPlacements;
       },
@@ -5398,6 +5392,9 @@ export class Sim {
       get mobScanCounters() {
         return sim._mobScanCounters;
       },
+      // The engaged pass output (combat/engaged_combat.ts), cleared and refilled
+      // in place each tick; the /combat readout reads it instead of re-walking.
+      engagedPids: sim.engagedPids,
       // Offline Fiesta practice-bot roster (fiesta_bots.ts mutates it in place);
       // the deeds real-bout gate reads it through the seam.
       get fiestaBotPids() {
@@ -6226,30 +6223,12 @@ export class Sim {
     updateDragonkinBrood(this.ctx);
     lap?.('dragonkinBrood');
 
-    // one pass over the entities collects every player a mob is engaged
-    // with, instead of one full scan per player
-    this.engagedPids.clear();
-    for (const e of this.entities.values()) {
-      if (e.kind !== 'mob' || e.dead) continue;
-      // a wild mob actively engaged keeps its target in combat — and if that
-      // target is someone's pet, the pet's owner stays in combat too, so a
-      // hunter/warlock can't regen, eat/drink, or use out-of-combat abilities
-      // while their pet tanks
-      if (
-        e.ownerId === null &&
-        (e.aiState === 'chase' || e.aiState === 'attack' || e.aiState === 'flee') &&
-        e.aggroTargetId !== null
-      ) {
-        this.engagedPids.add(e.aggroTargetId);
-        const tgt = this.entities.get(e.aggroTargetId);
-        if (tgt && tgt.ownerId !== null) this.engagedPids.add(tgt.ownerId);
-      }
-      // a player's pet that is actively fighting an enemy keeps its owner in
-      // combat. A pet merely holding a target it is not trading blows with (out of
-      // reach, stale) must not freeze the owner's health regen indefinitely (#regen)
-      if (e.ownerId !== null && e.aggroTargetId !== null && e.combatTimer < PET_COMBAT_LINGER)
-        this.engagedPids.add(e.ownerId);
-    }
+    // The engaged pass (combat/engaged_combat.ts): one pass over the entities
+    // collects everyone a live mob still holds on its hate table (plus pet
+    // owners and, for an engaged boss, its attackers' nearby group members),
+    // instead of one full scan per player. Reads mob AND pet state after both
+    // updated above, so the phase stays here.
+    collectEngagedPids(this.ctx, this.engagedPids);
     for (const meta of this.players.values()) {
       const p = this.entities.get(meta.entityId);
       if (p) {

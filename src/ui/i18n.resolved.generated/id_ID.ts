@@ -585,6 +585,7 @@ export const id_ID: EnTranslations = {
       "mountsEyebrow": "Pemasangan Akun",
       "mountsTitle": "Mesin Stabil",
       "mountBuyAria": "Beli {item}",
+      "mountSkinType": "Mount skin",
       "loading": "Memuat Toko WOC...",
       "error": "Toko WOC tidak tersedia saat ini. Silakan coba lagi sebentar lagi.",
       "balance": "Saldo Claudium",
@@ -1472,6 +1473,7 @@ export const id_ID: EnTranslations = {
       "desc_thunderstrut_gobbler": "Kalkun raksasa tetasan badai yang melenggak-lenggok turun dari Puncak yang Terjaga, ekornya terkembang bagai awan guntur.",
       "desc_goblin_rocket_sled": "Kereta luncur goblin yang sangat berlebihan dan berbahaya, didorong dua roket serta penilaian buruk yang luar biasa.",
       "desc_rallycart_rxt": "Mesin reli mungil yang meningkatkan kecepatan perjalanan.",
+      "desc_rallycart_skin": "A tiny rally car with a mighty roar.",
       "desc_terrorspark_groundshaker": "Mesin lapis baja ringkas dengan rantai roda berat, meriam berkaliber besar, dan pelana yang dibuat untuk pilot tanpa rasa takut.",
       "desc_drakemaw_raptor": "Seekor raptor sarang dari Kaldera Drakemaw yang telah dijinakkan untuk ditunggangi, seluruhnya otot dan kecepatan, masih samar berbau abu.",
       "desc_mech_bird": "Ayam perang jarum jam buatan tangan yang berlari dengan kecepatan servo, kunci putaran masih berputar.",
@@ -4885,6 +4887,32 @@ export const id_ID: EnTranslations = {
         "crown_endures": "Mahkota Bertahan (enrage keras pada 6:00, heroic 5:00)",
         "deathless_court": "Istana Tanpa Kematian (khusus heroic, istana kerajaan bangkit setelah Amarah Tanpa Kematian)"
       }
+    },
+    "cosmetics": {
+      "title": "Cosmetics",
+      "close": "Close Cosmetics",
+      "tabsLabel": "Cosmetics sections",
+      "tabMounts": "Mounts",
+      "tabSkins": "Skins",
+      "tabMech": "Mech",
+      "legend": "Account: shared by every character. Character: this character only.",
+      "scopeAccount": "Account",
+      "scopeCharacter": "Character",
+      "wear": "Wear",
+      "takeOff": "Take off",
+      "worn": "Worn",
+      "apply": "Apply",
+      "detach": "Detach",
+      "applied": "Applied",
+      "owned": "Owned",
+      "storeOnly": "Available in the WOC Store",
+      "cardAria": "{name}, {rarity}",
+      "mountsIntro": "A mount skin is drawn over whichever mount this character rides. It never changes speed.",
+      "mountsNoMount": "Own a mount first: a skin needs something to ride.",
+      "skinsEmpty": "No weapon skins owned yet. Visit the WOC Store.",
+      "skinsApplyHint": "Equip a {type} to apply this skin.",
+      "mechIntro": "The Combat Mech replaces this character's body. One chroma is worn at a time.",
+      "mechEmpty": "No Combat Mech chromas owned yet."
     },
     "reliquary": {
       "title": "Relikuari",
@@ -11411,7 +11439,7 @@ export const id_ID: EnTranslations = {
       },
       "recall_the_fallen": {
         "name": "Panggil yang Gugur",
-        "description": "Menghidupkan kembali anggota kelompok yang mati dengan 35% nyawa dan mana. Penyembuh Surya level 16 atau lebih tinggi justru memanggil kembali seluruh anggota kelompok yang gugur."
+        "description": "Menghidupkan kembali anggota kelompok yang mati ke sisimu dengan 35% nyawa dan mana. Penyembuh Surya level 16 atau lebih tinggi justru memanggil kembali seluruh anggota kelompok yang gugur dalam 30 m dan dalam garis pandangmu."
       },
       "beacon_of_light": {
         "name": "Mercusuar Cahaya",
@@ -12144,6 +12172,14 @@ export const id_ID: EnTranslations = {
         "name": "Pematah Sumsum",
         "description": "Menghabiskan 3 Darah Tua milikmu untuk serangan berat berancaman tinggi sebesar {damage} kerusakan. Di bawah setengah nyawa, sebagai gantinya melindungimu dengan perisai sebesar 18% nyawa maksimum selama 8 dtk dan mengembalikan 15 amarah."
       },
+      "wildwake": {
+        "name": "Bangkit Liar",
+        "description": "Membujuk sekutu yang gugur untuk mekar seketika, menghidupkannya kembali di sisimu dengan 35% nyawa dan mananya, bahkan di tengah pertempuran. (Groveheart)"
+      },
+      "grove_awakening": {
+        "name": "Kebangkitan Rimba",
+        "description": "Memanggil kembali ke sisimu setiap anggota kelompok atau serbuanmu yang gugur dalam 40 m dan dalam garis pandangmu, dengan 30% nyawa dan mana. Tidak dapat dirapal dalam pertempuran. (Groveheart)"
+      },
       "overbloom": {
         "name": "Mekar Raya",
         "description": "Menghabiskan 5 Kehijauan. Memanen setiap penyembuhan berkala milikmu pada semua sekutu sebesar {buff}% dari penyembuhan tersisa, menghapus efek itu, dan menanam Mekar Liar segar pada sasaran."
@@ -12454,15 +12490,15 @@ export const id_ID: EnTranslations = {
       },
       "temporal_reversal": {
         "name": "Pembalikan Waktu",
-        "description": "Memundurkan garis waktu sekutu yang gugur, menghidupkan mereka kembali di dekat jasad dengan sebagian kesehatan dan mana mereka, bahkan di tengah pertempuran. (Kronomansi)"
+        "description": "Memundurkan garis waktu sekutu yang gugur, menghidupkan mereka kembali di sisimu dengan 35% kesehatan dan mana mereka, bahkan di tengah pertempuran. (Kronomansi)"
       },
       "collective_reversal": {
         "name": "Pembalikan Kolektif",
-        "description": "Memundurkan alur waktu setiap anggota grup atau raid yang gugur, menghidupkan mereka kembali di dekat jasad dengan 30% kesehatan dan mana. Tidak dapat digunakan saat bertarung. (Kronomansi)"
+        "description": "Memundurkan alur waktu setiap anggota grup atau raid yang gugur dalam 40 m dan dalam garis pandangmu, menghidupkan mereka kembali di sisimu dengan 30% kesehatan dan mana. Tidak dapat digunakan saat bertarung. (Kronomansi)"
       },
       "ancestor_return": {
         "name": "Kembalinya Leluhur",
-        "description": "Memanggil kembali setiap anggota kelompok atau serbuanmu yang gugur ke kehidupan di sisi jasadnya dengan 30% nyawa dan mana. Tidak dapat dirapal dalam pertempuran. (Tambal Roh)"
+        "description": "Memanggil kembali ke sisimu setiap anggota kelompok atau serbuanmu yang gugur dalam 40 m dan dalam garis pandangmu, dengan 30% nyawa dan mana. Tidak dapat dirapal dalam pertempuran. (Tambal Roh)"
       },
       "temporal_rewind": {
         "name": "Putar Balik Waktu",
@@ -12604,6 +12640,10 @@ export const id_ID: EnTranslations = {
       "martyrs_aegis": {
         "name": "Perisai Martir",
         "description": "Mengurangi kerusakan yang diterima sekutu sebesar 40% selama 8 dtk."
+      },
+      "prayer_of_returning": {
+        "name": "Doa Kepulangan",
+        "description": "Memanggil kembali ke sisimu setiap anggota kelompok atau serbuanmu yang gugur dalam 40 m dan dalam garis pandangmu, dengan 30% nyawa dan mana. Tidak dapat dirapal dalam pertempuran. (Suci dan Disiplin)"
       },
       "choir_of_deliverance": {
         "name": "Paduan Suara Pembebasan",

@@ -53,6 +53,8 @@ describe('authored furnisher construction and world geometry', () => {
     // after the player, so nextId and entityCount move by exactly three and
     // the position digest follows; primaryId, the merchant and banker ids and
     // the rng cursor are unchanged, which is what proves nothing else moved.
+    // Release 57a2ced3bd adds reserved-id Crucible Quartermaster Bronn. Removing
+    // only that row reproduces the previous position digest exactly.
     const sim = new Sim({ seed: 1, playerClass: 'warrior' });
     expect({
       nextId: sim.nextId,
@@ -75,10 +77,24 @@ describe('authored furnisher construction and world geometry', () => {
       primaryId: 999,
       merchants: [1, 33],
       bankers: [9, 22, 34, 95],
-      entityCount: 1024,
-      positionHash: 'f35ecfebc49623b9e237b6cb1f39656ad56011e5aebd8a6159e9a96dde11e400',
+      entityCount: 1025,
+      positionHash: '242a9339ce170c9fe5cda8142ce1248efe9251fcc09f6294d493ce67d0209d3d',
       rngNext: 0.30275995447300375,
     });
+    expect(sim.entities.get(1000000003)?.templateId).toBe('crucible_quartermaster');
+    expect(
+      digest(
+        [...sim.entities.values()]
+          .filter((e) => e.id !== 1000000003)
+          .map((e) => ({
+            id: e.id,
+            templateId: e.templateId,
+            pos: e.pos,
+            facing: e.facing,
+            hp: e.hp,
+          })),
+      ),
+    ).toBe('f35ecfebc49623b9e237b6cb1f39656ad56011e5aebd8a6159e9a96dde11e400');
     expect([...sim.entities.values()].some((e) => e.templateId === 'freehold_furnisher')).toBe(
       false,
     );

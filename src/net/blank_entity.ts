@@ -1,11 +1,11 @@
-// The blank-slate Entity the online mirror starts from for an id the snapshot
-// has not fully described yet (a lite record ahead of its identity fields, or
-// the local player before the first self frame lands): every field at its
-// neutral default so a partially described entity never reads `undefined`
-// into a sentence or a bar. Moved out of online.ts verbatim; it is a pure
-// factory with no ClientWorld state, and the server-local fields it fills
-// keep the host shapes identical (src/sim/types.ts).
-
+// The client mirror's placeholder entity: every field an Entity carries, at
+// its pre-first-snapshot default. ClientWorld hands one out when a read races
+// the first snapshot (the self read before join completes, a wire row for an
+// id the interest set has not delivered yet); the next snapshot overwrites
+// every live field. Pure data, no ClientWorld state, which is why it lives as
+// a sibling module rather than in online.ts. Defaults must stay in lockstep
+// with the Entity shape in src/sim/types.ts: tsc enforces presence, and the
+// value conventions (nulls, zeros, the procReadyAt cast) are the mirror's own.
 import type { Entity } from '../sim/types';
 
 export function blankEntity(id: number): Entity {
@@ -129,6 +129,7 @@ export function blankEntity(id: number): Entity {
     queuedOnSwing: null,
     queuedCastAbility: null,
     queuedCastAim: null,
+    queuedCastTargetId: null,
     fiveSecondRule: 99,
     comboPoints: 0,
     comboUntil: -1,
@@ -189,8 +190,10 @@ export function blankEntity(id: number): Entity {
     evadeStall: 0,
     chaseStall: 0,
     evadeEpoch: 0,
-    combatExitHoldUntil: 0,
     chainPullInbound: false,
+    // The instance combat hold's pin clock (instances/instance_combat_hold.ts):
+    // present from birth on the mirror too, so both hosts build one entity shape.
+    evadeInPlace: undefined,
     fleeTimer: 0,
     fleeReturnTimer: 0,
     hasFled: false,
@@ -223,6 +226,7 @@ export function blankEntity(id: number): Entity {
     offhandItemId: null,
     weaponSkinLoadout: {},
     weaponSkinId: null,
+    mountSkinId: null,
     equippedItems: {},
     equippedInstances: {},
     guild: '',
