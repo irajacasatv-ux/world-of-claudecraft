@@ -1,0 +1,333 @@
+[
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/ci-fixes.log",
+    "bytes": 1447206,
+    "sha256": "6406583d32986143056b4f06b6a1e21496d3addaa2df6a982c55c63cad4cfe60",
+    "resultExcerpts": [
+      "    178 \u2502     expect(keys.length).toBe(Object.keys(ERROR_CODES).length);",
+      "Checked 390 files in 746ms. No fixes applied."
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/fix-biome.log",
+    "bytes": 528,
+    "sha256": "417619b42a49cd993d09fc8b8179b136dfe59892c9471c4158590b97aefeb688",
+    "resultExcerpts": ["Checked 4 files in 52ms. No fixes applied."]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/fix-tsc.log",
+    "bytes": 485,
+    "sha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+    "resultExcerpts": []
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/fixes-scoped.log",
+    "bytes": 745,
+    "sha256": "628faf6a6f2a7444dd115d962cac086895f786ad89588ba7c96895145dafb77d",
+    "resultExcerpts": [
+      " Test Files  6 passed (6)",
+      "      Tests  291 passed (291)",
+      "   Duration  25.47s (transform 1.09s, setup 788ms, import 2.72s, tests 29.70s, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/gate.log",
+    "bytes": 1784933,
+    "sha256": "78eddb246e72672484706b9056dd4044e5eb0e87cfcd05aeab40632eb29c826b",
+    "resultExcerpts": [
+      "malware_scan --gate: PASS (8645 files, 450 flags, 0 high after priors).",
+      "    178 \u2502     expect(keys.length).toBe(Object.keys(ERROR_CODES).length);",
+      "Checked 390 files in 1431ms. No fixes applied.",
+      "     \u00d7 every family a harvest extracts has an item behind it (#2514) 20980ms",
+      "       \u00d7 persists the maximum ledger prefix plus one storage effect under PostgreSQL 16 3ms",
+      "\u23af\u23af\u23af\u23af\u23af\u23af Failed Suites 2 \u23af\u23af\u23af\u23af\u23af\u23af\u23af",
+      " FAIL  tests/server/client_perf_summary_sql.test.ts > clientPerfSummary differential vs the seven-statement spec (pg-gated)",
+      " FAIL  tests/server/deeds_board_sql.test.ts > deedsBoardRanked differential vs computeDeedsBoard (pg-gated)",
+      " FAIL  tests/server/client_perf_summary_sql.test.ts > clientPerfSummary differential vs the seven-statement spec (pg-gated)",
+      " FAIL  tests/server/deeds_board_sql.test.ts > deedsBoardRanked differential vs computeDeedsBoard (pg-gated)",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 2 \u23af\u23af\u23af\u23af\u23af\u23af\u23af",
+      " FAIL  tests/corpse_harvest_sim.test.ts > a corpse whose EVERY family is unmapped is never offered a harvest (#2513) > every family a harvest extracts has an item behind it (#2514)",
+      " FAIL  tests/woc_market_delivery_pg_integration.test.ts > woc market delivery finalization against real Postgres > the escrow listing transaction (custody entry) > persists the maximum ledger prefix plus one storage effect under PostgreSQL 16",
+      "AssertionError: expected 170011 to be less than 170000",
+      " Test Files  4 failed | 4024 passed | 1 skipped (4029)",
+      "      Tests  2 failed | 60607 passed | 2 expected fail | 28 skipped (60639)",
+      "   Duration  1043.85s (transform 37.40s, setup 476.27s, import 1774.50s, tests 5676.18s, environment 47.17s)",
+      "[gate:select] FAIL at \"vitest (full suite, planner fell back)\" (exit 1)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/i18n.log",
+    "bytes": 3941,
+    "sha256": "f415e7c8b6b3d367ef86a2f02762b13fa5b8bfe1d9a3b1f27304165d3649f3ab",
+    "resultExcerpts": []
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/install-pg16.log",
+    "bytes": 6684,
+    "sha256": "07be384913a7e9dd7840f68939f0298e9b422b1f10ab2d9022de22d06e8949eb",
+    "resultExcerpts": []
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/item-art.log",
+    "bytes": 879,
+    "sha256": "3176aa5caaec20947e9ab4895a7459b63689b78499f0e7440bf40f0f0d8444ba",
+    "resultExcerpts": ["  \"machineChecksPassed\": true,"]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/knowledge-baseline.log",
+    "bytes": 461,
+    "sha256": "9e9f534a17e8576ebe697bbe69c6c5690dbdfa41e4180f98ecf4243caaefdd4a",
+    "resultExcerpts": [
+      " Test Files  1 passed (1)",
+      "      Tests  17 passed (17)",
+      "   Duration  4.67s (transform 2.05s, setup 294ms, import 2.52s, tests 1.76s, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/knowledge-mutant.log",
+    "bytes": 2130,
+    "sha256": "ec269657ce395d908aa7e6622a3a62babdf30f0112f6cbbd6ed798ffd4a6090a",
+    "resultExcerpts": [
+      "     \u00d7 'pattern_freehold_clockwork_lamp' remains in its selected bag slot when learning is disabled 30ms",
+      "     \u00d7 'pattern_freehold_chart_easel' remains in its selected bag slot when learning is disabled 25ms",
+      "     \u00d7 'pattern_freehold_jewel_floor_lamp' remains in its selected bag slot when learning is disabled 29ms",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 3 \u23af\u23af\u23af\u23af\u23af\u23af\u23af",
+      " FAIL  tests/freehold_crafted_availability.test.ts > crafted furnishing availability on dark hosts > 'pattern_freehold_clockwork_lamp' remains in its selected bag slot when learning is disabled",
+      " FAIL  tests/freehold_crafted_availability.test.ts > crafted furnishing availability on dark hosts > 'pattern_freehold_chart_easel' remains in its selected bag slot when learning is disabled",
+      " FAIL  tests/freehold_crafted_availability.test.ts > crafted furnishing availability on dark hosts > 'pattern_freehold_jewel_floor_lamp' remains in its selected bag slot when learning is disabled",
+      "AssertionError: expected Set{} to deeply equal Set{ 'recipe_copper_bearded_axe' }",
+      " Test Files  1 failed (1)",
+      "      Tests  3 failed | 14 passed (17)",
+      "   Duration  2.98s (transform 597ms, setup 184ms, import 1.03s, tests 1.69s, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/knowledge-restored.log",
+    "bytes": 461,
+    "sha256": "4a8ec48f5013bfe7bbf1f0d39d7f8b21ccf4679217b172231d87bb59b5fc46b4",
+    "resultExcerpts": [
+      " Test Files  1 passed (1)",
+      "      Tests  17 passed (17)",
+      "   Duration  3.23s (transform 697ms, setup 172ms, import 1.21s, tests 1.77s, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/mutation-produce-baseline.log",
+    "bytes": 619,
+    "sha256": "51469d775e5304bf6b600ca2eb3bc3cadc6e59387c91cc8e24e4c73e01f1239a",
+    "resultExcerpts": [
+      " Test Files  1 passed (1)",
+      "      Tests  1 passed | 15 skipped (16)",
+      "   Duration  396ms (transform 146ms, setup 136ms, import 185ms, tests 5ms, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/mutation-produce-mutant.log",
+    "bytes": 1487,
+    "sha256": "ef2dfae3c7ef3c4ff86ca5f18a7670fa9f88a4de099af5466571dffc80a62cee",
+    "resultExcerpts": [
+      "     \u00d7 covers every bill and admits produce only in cooking and alchemy decor 5ms",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af",
+      " FAIL  tests/provisioner_firewall.test.ts > crafted furnishings: the provisioner firewall > covers every bill and admits produce only in cooking and alchemy decor",
+      "AssertionError: recipe_freehold_weapon_rack: vale_wheat: expected false to be true // Object.is equality",
+      " Test Files  1 failed (1)",
+      "      Tests  1 failed | 15 skipped (16)",
+      "   Duration  392ms (transform 139ms, setup 138ms, import 177ms, tests 5ms, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/mutation-produce-restored.log",
+    "bytes": 619,
+    "sha256": "84c3b2d0550aa1608a99e17ad6c77ea9db7c59bc274be3a3bba4d9c1d3ad4fb7",
+    "resultExcerpts": [
+      " Test Files  1 passed (1)",
+      "      Tests  1 passed | 15 skipped (16)",
+      "   Duration  382ms (transform 131ms, setup 139ms, import 166ms, tests 5ms, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/mutation-quartermaster-baseline.log",
+    "bytes": 599,
+    "sha256": "3cc26389426e27448f57e16f97b7004135bad0799b14d4d5ecf1244ab46eda73",
+    "resultExcerpts": [
+      " Test Files  1 passed (1)",
+      "      Tests  1 passed | 23 skipped (24)",
+      "   Duration  2.38s (transform 1.85s, setup 499ms, import 1.77s, tests 22ms, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/mutation-quartermaster-mutant.log",
+    "bytes": 1649,
+    "sha256": "c1406424e2653487d6f32931040142102bba2a76bbf3e702a99296cf52789a91",
+    "resultExcerpts": [
+      "     \u00d7 every recipe teaching pattern appears in EXACTLY the channels its family assigns 6ms",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af",
+      " FAIL  tests/apex_pattern_channels.test.ts > masterwrought R8 referential contract: every drop recipe reaches exactly its channel > every recipe teaching pattern appears in EXACTLY the channels its family assigns",
+      "AssertionError: recipe_freehold_clockwork_lamp has only the deterministic Marks route: expected [] to deeply equal [ 'vendor' ]",
+      " Test Files  1 failed (1)",
+      "      Tests  1 failed | 23 skipped (24)",
+      "   Duration  727ms (transform 292ms, setup 144ms, import 502ms, tests 7ms, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/mutation-quartermaster-restored.log",
+    "bytes": 598,
+    "sha256": "007aae37428c57bb8193b9307039a30608f9aabeb311f9a085ea3ab5cb075983",
+    "resultExcerpts": [
+      " Test Files  1 passed (1)",
+      "      Tests  1 passed | 23 skipped (24)",
+      "   Duration  727ms (transform 293ms, setup 155ms, import 494ms, tests 4ms, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/mutation.log",
+    "bytes": 158,
+    "sha256": "722be01f58f543b41528f4145b26a95ec19dce855e92f25adf3fd2b985951e96",
+    "resultExcerpts": []
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/pg16-recheck.log",
+    "bytes": 1373,
+    "sha256": "711923659d5cf62bfe2cc73787223dbba122eae42c3bfc29c4a56031e74f5e13",
+    "resultExcerpts": [
+      "[escrow-max-prefix] PostgreSQL 160015, 2048 rows, 2095164 encoded bytes, 13 statements under 3500ms each: p50 754.8ms max 764.3ms over 3 passes",
+      " Test Files  3 passed (3)",
+      "      Tests  57 passed (57)",
+      "   Duration  13.32s (transform 505ms, setup 399ms, import 1.90s, tests 10.77s, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/pg17-cleanup.log",
+    "bytes": 56,
+    "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d",
+    "resultExcerpts": []
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/roundtrip-baseline.log",
+    "bytes": 473,
+    "sha256": "add885e4eb32a8e25ce60bade0560ca9beaa8707f668c2f558557db80004affb",
+    "resultExcerpts": [
+      " Test Files  1 passed (1)",
+      "      Tests  1 passed | 17 skipped (18)",
+      "   Duration  3.05s (transform 1.01s, setup 216ms, import 1.45s, tests 1.30s, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/roundtrip-mutant.log",
+    "bytes": 2117,
+    "sha256": "e5b5601d764c38654d10fc297e55f1e2b5737c8598d1941fab6aad9c18d09040",
+    "resultExcerpts": [
+      "     \u00d7 preserves the authored cohort through lit, dark and relit JSON saves 1257ms",
+      "\u23af\u23af\u23af\u23af\u23af\u23af\u23af Failed Tests 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af",
+      " FAIL  tests/freehold_crafted_availability.test.ts > crafted furnishing availability on dark hosts > preserves the authored cohort through lit, dark and relit JSON saves",
+      "AssertionError: expected [] to deeply equal [ 'recipe_freehold_weapon_rack', \u2026(9) ]",
+      " Test Files  1 failed (1)",
+      "      Tests  1 failed | 17 skipped (18)",
+      "   Duration  2.19s (transform 409ms, setup 135ms, import 716ms, tests 1.26s, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/roundtrip-restored.log",
+    "bytes": 473,
+    "sha256": "a7a40cdbd8a15e3d79f8463d4f0547f265836531eeca4d56b56cc9d8b256e70a",
+    "resultExcerpts": [
+      " Test Files  1 passed (1)",
+      "      Tests  1 passed | 17 skipped (18)",
+      "   Duration  2.23s (transform 398ms, setup 141ms, import 703ms, tests 1.30s, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/scoped.log",
+    "bytes": 1669,
+    "sha256": "3a79aa2f53e7d3293d69a49ccebe4ab6bc6dc360c3bce90f28d402a24fe49390",
+    "resultExcerpts": [
+      " Test Files  20 passed (20)",
+      "      Tests  938 passed | 3 skipped (941)",
+      "   Duration  8.57s (transform 2.91s, setup 2.72s, import 11.81s, tests 17.66s, environment 1ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/tsc.log",
+    "bytes": 485,
+    "sha256": "ec5e9715d4b34cdd0bf79bf0c90921379705cbd09766584567f951e237d73886",
+    "resultExcerpts": []
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/wiki.log",
+    "bytes": 775,
+    "sha256": "56d6ba84dee57d46db604d4a3b4c976c308b29cc7972d043def8ce8caa75eda6",
+    "resultExcerpts": []
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/barrel-scoped.log",
+    "bytes": 743,
+    "sha256": "8331b25c31272b36c48a3b63e4422d4da50b4d4b8404769086388f8cb0a7acd1",
+    "resultExcerpts": [
+      " Test Files  4 passed (4)",
+      "      Tests  172 passed (172)",
+      "   Duration  2.49s (transform 545ms, setup 454ms, import 1.10s, tests 2.87s, environment 0ms)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/gate-interrupted.log",
+    "bytes": 1522826,
+    "sha256": "31b03c24538c4c7d4557acfa9bbbd126dd4c83f4a52424a8ffb7f3d700098034",
+    "resultExcerpts": [
+      "[gate:select] full gate step list, selective vitest step",
+      "[gate:select] suite: 4029 test files (2798 graph-visible, 320 blind, 911 partial); always-run 1231",
+      "[gate:select] diff base: origin/release/v0.42.0 (GATE_SELECT_BASE=origin/release/v0.42.0); 1273 changed path(s)",
+      "[gate:select] mode=full (broad/unclassified change (.codex/hooks/ensure-hooks.sh, .codex/hooks/qa-stop.sh, .env.example, ...): running the full suite)",
+      "[gate:select] workers=4",
+      "[gate:select] i18n + wiki + sfx artifacts: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run i18n:gen wiki:content sfx:check --ui=stream",
+      "[gate:select] i18n freshness: git diff --exit-code -- src/ui/i18n.resolved.generated src/admin/i18n.resolved.generated src/ui/i18n.catalog/translation_keys.generated.ts",
+      "[gate:select] sfx manifest regen: node scripts/build_sfx_manifest.mjs",
+      "[gate:select] media manifest regen: node scripts/build_media_manifest.mjs generate",
+      "[gate:select] manifest trackedness: git ls-files --error-unmatch -- src/game/sfx_manifest.generated.ts src/guide/content.generated.ts src/render/assets/manifest.generated.ts public/audio/sfx/runtime-pack.json scripts/sfx/sfx_gain_ceiling.generated.json",
+      "[gate:select] manifest freshness: git diff --exit-code -- src/game/sfx_manifest.generated.ts src/guide/content.generated.ts src/render/assets/manifest.generated.ts public/audio/sfx/runtime-pack.json scripts/sfx/sfx_gain_ceiling.generated.json",
+      "[gate:select] malware scan: npm run security:gate",
+      "malware_scan --gate: PASS (8645 files, 450 flags, 0 high after priors).",
+      "[gate:select] biome (changed files): npm run ci:changed",
+      "Checked 390 files in 575ms. No fixes applied.",
+      "[gate:select] vitest (full suite, planner fell back): /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/vitest run --maxWorkers=4"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/gate-final.log",
+    "bytes": 1835855,
+    "sha256": "4c3e258f7c5ee07216d280ef40535189300f90a7030c61fd937e8e6f9a6fe7da",
+    "resultExcerpts": [
+      "[gate:select] full gate step list, selective vitest step",
+      "[gate:select] suite: 4029 test files (2798 graph-visible, 320 blind, 911 partial); always-run 1231",
+      "[gate:select] diff base: origin/release/v0.42.0 (GATE_SELECT_BASE=origin/release/v0.42.0); 1273 changed path(s)",
+      "[gate:select] mode=full (broad/unclassified change (.codex/hooks/ensure-hooks.sh, .codex/hooks/qa-stop.sh, .env.example, ...): running the full suite)",
+      "[gate:select] workers=4",
+      "[gate:select] i18n + wiki + sfx artifacts: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run i18n:gen wiki:content sfx:check --ui=stream",
+      "[gate:select] i18n freshness: git diff --exit-code -- src/ui/i18n.resolved.generated src/admin/i18n.resolved.generated src/ui/i18n.catalog/translation_keys.generated.ts",
+      "[gate:select] sfx manifest regen: node scripts/build_sfx_manifest.mjs",
+      "[gate:select] media manifest regen: node scripts/build_media_manifest.mjs generate",
+      "[gate:select] manifest trackedness: git ls-files --error-unmatch -- src/game/sfx_manifest.generated.ts src/guide/content.generated.ts src/render/assets/manifest.generated.ts public/audio/sfx/runtime-pack.json scripts/sfx/sfx_gain_ceiling.generated.json",
+      "[gate:select] manifest freshness: git diff --exit-code -- src/game/sfx_manifest.generated.ts src/guide/content.generated.ts src/render/assets/manifest.generated.ts public/audio/sfx/runtime-pack.json scripts/sfx/sfx_gain_ceiling.generated.json",
+      "[gate:select] malware scan: npm run security:gate",
+      "malware_scan --gate: PASS (8645 files, 450 flags, 0 high after priors).",
+      "[gate:select] biome (changed files): npm run ci:changed",
+      "Checked 390 files in 566ms. No fixes applied.",
+      "[gate:select] vitest (full suite, planner fell back): /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/vitest run --maxWorkers=4",
+      " Test Files  4028 passed | 1 skipped (4029)",
+      "      Tests  60610 passed | 2 expected fail | 28 skipped (60640)",
+      "   Duration  1496.46s (transform 22.50s, setup 329.27s, import 1273.38s, tests 4076.75s, environment 38.83s)",
+      "[gate:select] browser regressions: npm run test:browser",
+      " Test Files  47 passed (47)",
+      "      Tests  389 passed (389)",
+      "   Duration  12.58s (transform 0ms, setup 0ms, import 52.08s, tests 63.85s, environment 0ms)",
+      "[gate:select] typecheck + env/server/bot builds: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run check:types build:env build:server build:bot --ui=stream",
+      "[gate:select] client build: /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/.bin/turbo run build:bundle --ui=stream",
+      "[gate:select] PASS: all 12 steps green (vitest workers: 4)"
+    ]
+  },
+  {
+    "sourceLog": "/tmp/freeholds-qa-current/pg16-cleanup.log",
+    "bytes": 56,
+    "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d",
+    "resultExcerpts": ["waiting for server to shut down.... done", "server stopped"]
+  }
+]

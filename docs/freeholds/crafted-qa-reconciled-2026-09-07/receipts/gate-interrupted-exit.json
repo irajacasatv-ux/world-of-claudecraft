@@ -1,0 +1,9 @@
+{
+  "command": "node scripts/gate_select.mjs",
+  "exitCode": -15,
+  "base": "origin/release/v0.42.0",
+  "pgArmed": true,
+  "postgresMajor": 16,
+  "workers": 4,
+  "differential": "separately passed pg16-recheck.log"
+}

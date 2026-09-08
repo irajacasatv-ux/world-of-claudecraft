@@ -1,0 +1,10 @@
+{
+  "command": "node scripts/gate_select.mjs",
+  "exitCode": 0,
+  "base": "origin/release/v0.42.0",
+  "source": "69ffdab561bbe204045c7e3a4fcb4a60c0222b43",
+  "pgMajor": 16,
+  "pgArmed": true,
+  "differentialFlag": false,
+  "workers": 4
+}

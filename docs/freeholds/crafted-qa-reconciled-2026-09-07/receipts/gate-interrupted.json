@@ -1,0 +1,7 @@
+{
+  "command": "node scripts/gate_select.mjs",
+  "source": "d5ea0825d1eb3520cf5114003eb585953ddefb90",
+  "status": "interrupted by coordinator for additional HN1 recipe catalog import fix",
+  "gatePid": 80621,
+  "terminatedProcesses": 7
+}

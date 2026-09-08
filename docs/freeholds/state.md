@@ -23,23 +23,47 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
-Phase 04 (`phase-04-content-crafted-and-patterns.md`): existing development content
-is complete locally; current implementation validation is **PASS**. The active user request
-protects `evaluateCraftAdmission`, `resolveTrain` and existing station/training/economy
-semantics. It supersedes the earlier QA whole-directory edit prohibition. F01 is
-resolved prospectively as a scope reconciliation under that current request, not a
-new numeric signature or a rewritten verdict. The two full function declarations
-are byte-identical from `86eb86bbe2^` to `7f4fe99619`. Fresh required reviews found
-no source defects; the full shared gate passed all twelve steps (60090 unit tests,
-389 browser tests). This local run left optional PostgreSQL coverage unarmed. The
-final post-commit check is recorded with the actual commit in the task handoff and
-local execution receipt linked from the revalidation record.
+04 is complete including its reconciled paired QA: **PASS, local**, 2026-09-07.
+Four findings were found and resolved: three source/test findings and DOC-1,
+a documentation nit. The source/test repairs span `0932963250..69ffdab561`,
+in commits `d5ea0825d1` and `69ffdab561` (five files): HN1 restores every
+content barrel route, including the recipe catalog; COV-1 strengthens full-state
+dark-refusal assertions; and PER-1 verifies the authored furnishing/pattern cohort through lit, dark, and
+relit JSON saves. No finding or nit remains deferred. The independent
+[fresh entire-fix review](crafted-qa-reconciled-2026-09-07/reviews/fresh-fix.md)
+and its supplement returned PASS after inspecting all current changes and the
+six historical repair commits. Simulation-architecture review also passed after
+its additional HN1 recipe-catalog occurrence was repaired. That occurrence is
+included in HN1, not counted as a distinct finding. The final shared gate exited 0 with all twelve steps green. Unit coverage passed 4028 files and 60610 tests; Chromium passed
+47 files and 389 tests. The single skipped CI-sentinel file, two expected failures
+and 28 explained skipped cases are disclosed in the current validation record.
+The separate PostgreSQL 16 run passed 57 tests, including the opt-in SQL cases.
+No furnishing acceptance case was skipped.
 
-See [current revalidation](crafted-content-revalidation-2026-09-07.md) for the
-comparison hashes, merge provenance and completed scoped checks. The four original
-content commits already exist; this resumption does not repeat them or regenerate
-accepted assets. Production approval remains false and final-model/room/LOW gates
-remain with their existing owners.
+The active user request preserves `evaluateCraftAdmission`, `resolveTrain`, and
+existing station, training, and economy semantics while permitting the existing
+availability seam. Both complete declarations remain byte-identical from
+`86eb86bbe2^` through `69ffdab561`. This explicit scope closes F01 prospectively;
+it is not a numeric signature or a rewritten historical QA verdict. The earlier
+29-found/28-repaired FAIL remains preserved in the historical receipt below.
+
+See [current validation](crafted-qa-reconciled-2026-09-07/validation.md) for exact
+commands, outcomes, source comparisons, PostgreSQL and mutation evidence, and
+[findings](crafted-qa-reconciled-2026-09-07/findings.md) for all four closures.
+DOC-1 corrects the validation and copied context wording
+to match the retained receipt: ten rows times five Boolean fields equals 50
+calibration checks, not 60. The [documentation review](crafted-qa-reconciled-2026-09-07/reviews/docs-final.md)
+records that correction; the three-source-finding review chronology and the
+two source repair commits remain unchanged.
+The actual post-last-commit `npm run ci:changed` remains the coordinator's final
+execution step, with commit and outcome recorded in the final handoff and local
+receipt. No prior source check pre-certifies that execution.
+
+The four original content commits, accepted development calibration, and final
+icons are reused. No asset was generated in this QA. `productionApproved` remains
+false; final-model, room/arrival/navigation, hardware LOW, and production numeric
+gates retain their existing owners. The branch remains local; 05 is next and has
+not started.
 
 ### Historical paired 04 QA receipt
 
@@ -87,9 +111,8 @@ was generated in this QA.
 
 ### Current next step
 
-Run the paired 04 QA against its reconciled protected boundaries after the final
-implementation commit check. Do not advance to implementation 05. Full path:
-`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-04-qa.md`.
+Reconciled paired 04 QA passed. Implementation 05 has not started; run:
+`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-05-instance-claim.md`.
 
 Previous phase 03 (`phase-03-content-tiers-and-basics.md`): COMPLETE INCLUDING QA,
 verdict PASS locally on 2026-09-07. All 39 distinct completion-round findings
@@ -126,8 +149,8 @@ round's own detail is in `progress.md` row "01 QA"; do NOT re-run that audit or 
 its judged findings. R01-R46 and D73-D75 are approved;
 D76-D93 (settlement round 2, R47-R64) were approved by Fernando on 2026-09-06 with the words
 "approve all recommendations R47-R64"; the review-fix round is applied across the packet,
-freshly reviewed and committed locally. Work after the current incomplete content
-slice remains unbuilt; the branch stays local.
+freshly reviewed and committed locally. Implementation 05 and subsequent
+work remain unbuilt; the branch stays local.
 
 ## Settle audit facts (verified 2026-09-05 and 2026-09-06)
 These facts were recorded before dependent implementation instructions changed. They
@@ -1345,7 +1368,7 @@ only and never declares its remaining deliverables or paired QA complete.
 | 01 | `src/world_api/housing.ts`, `src/sim/freehold/{types,state,commands,index}.ts` + `CLAUDE.md`, `src/net/freehold_snapshot_wire.ts`, `server/freehold_config.ts`, `server/freehold_wire.ts`, `server/freehold_routes.ts`; extractions `src/sim/mob/move_toward.ts`, `server/live_location.ts`, `src/net/blank_entity.ts`, `src/game/seo_metadata.ts`; tests `freehold_module`, `freehold_snapshot_wire`, `freehold_command_chain_online`, `move_toward`, `seo_metadata`, `server/freehold_wire`, `server/freehold_routes` | `myFreehold`, `freeholdLayout` (data, null); `housingNowMs`, `freeholdEnter`, `freeholdLeave`, `placeFurnishing`, `moveFurnishing`, `removeFurnishing`, `undoPlacement`, `redoPlacement`, `payLedger`, `setVisitPolicy`, `setFreeholdBuildPresence` (dark no-ops); SimContext `ctx.freeholds` (live map) and `ctx.freeholdsEnabled` (read-only); `SimConfig.freeholdsEnabled` | none | `freehold_enter`, `freehold_leave`, `place_furnishing`, `move_furnishing`, `remove_furnishing`, `undo_placement`, `redo_placement`, `pay_ledger`, `set_visit_policy`, `set_freehold_build_presence` (refused pre-switch while `FREEHOLDS_ENABLED !== '1'`; `freehold_enter` jail-blocked); self keys: none (empty allowlist) | GET `/api/freehold` (bearer read guard behind the dedicated tier-1-only `HOUSING_READ_POLICY` IP limiter, 60/min, no tier-2 write; `freehold.disabled` 503 while dark, `{ enabled: true, freehold: null }` lit) | none | `apiError.freehold.invalid_input` (generated, reserved), `apiError.freehold.disabled` (English plus the five M16 non-Latin fills); metrics `woc_freehold_refused_total`; env `FREEHOLDS_ENABLED` (strict `'1'`, default off, `.env.example` + `DEPLOY.md` + `turbo.json`) |
 | 02 | `src/sim/item_storage_rules.ts`; `src/ui/hud/housing/{index.ts,CLAUDE.md,furnishing_tooltip_view.ts,furnishing_tooltip.ts}`; extraction `src/ui/mount_tooltip_view.ts`; QA shared projection `src/ui/item_instance_view.ts`; fixture `tests/fixtures/furnishing_item.ts`; original furnishing and mount tooltip tests plus 22 QA suites, including actual consumer/tool/commerce/feast host parity, loaded power, custody/journal restart, identity and presentation | none | none | ItemKind `furnishing` and `FurnishingItemDef`; no new command or snapshot key | none | none | English only: `itemUi.kind.furnishing`, `itemUi.market.filterTypeFurnishing`, `hudChrome.housing.furnishing.footprint`, `hudChrome.housing.furnishing.decorCost`, `hudChrome.housing.furnishing.surfaceFloor`, `hudChrome.housing.furnishing.maker`; generic custody leaf `hudChrome.itemTooltip.partyTradeWindowCustody` |
 | 03 (complete, paired QA PASS) | `src/sim/content/freehold/{tiers,charters,ledger_schedule,ledger_trial,furnishings,index}.ts` plus local guidance; `src/sim/{surface_npc_bootstrap.ts,freehold/should_spawn_npc.ts}`; `scripts/freeholds/` measured economy/geometry producers; focused content, ledger, producer, furnishing, rollback, NPC, terrain, empty-Hearth and browser keyboard suites; accepted trial/art evidence and eight item WebPs | none | none | exactly eight furnishing ItemDefs; NPC freehold_furnisher and gated stock; existing wire shape unchanged | none | none | eight `entities.items.freehold_*.name` leaves; world entity name/title/greeting for freehold_furnisher; Hearth shelf and hearth_basics name/description; Homesteader/Householder labels and rewards; English plus five required non-Latin fills |
-| 04 (development implementation complete, local) | `src/sim/content/freehold/{furnishing_recipes,furnishing_patterns}.ts`; `src/sim/freehold/crafted_availability.ts`; `src/sim/professions/{recipe_visibility,train_recipe}.ts`; `src/net/item_copy_anchor_wire.ts`; `server/world_hello.ts`; crafted economy/geometry producers under `scripts/freeholds/`; `tests/{furnishing_recipes,furnishing_pattern_items,furnishing_crafting,freehold_crafted_availability,freehold_crafted_presentation,freehold_crafted_art,recipe_visibility}.test.ts`; accepted calibration evidence and `crafted-content-art-2026-09-07/catalog-verification.json`; current census in `scripts/item_art_audit.mjs`; accepted final runtime evidence | existing `cfg` gains optional `freeholdsEnabled`; existing `recipeList` reflects host availability through `ctx.freeholdsEnabled` on Sim | none | `hello.freeholdsEnabled` mirrors host availability; existing commands retained; ten output and three pattern ItemDefs | none | none | thirteen `entities.items.<id>.name` leaves listed below; `hearth_first_crafts` name in all eighteen base Reliquary locale tables and full desc in five non-Latin tables; changed `guide.reliquaryPage.catalogBody` and `guide.profPages.craftProse.armorcrafting.ladderBody`; English plus five M16 item/guide fills |
+| 04 (complete, paired QA PASS) | `src/sim/content/freehold/{furnishing_recipes,furnishing_patterns}.ts`; `src/sim/freehold/crafted_availability.ts`; `src/sim/professions/{recipe_visibility,train_recipe}.ts`; `src/net/item_copy_anchor_wire.ts`; `server/world_hello.ts`; crafted economy/geometry producers under `scripts/freeholds/`; `tests/{furnishing_recipes,furnishing_pattern_items,furnishing_crafting,freehold_crafted_availability,freehold_crafted_presentation,freehold_crafted_art,recipe_visibility}.test.ts`; accepted calibration evidence and `crafted-content-art-2026-09-07/catalog-verification.json`; current census in `scripts/item_art_audit.mjs`; accepted final runtime evidence; `crafted-qa-reconciled-2026-09-07/` paired QA evidence | existing `cfg` gains optional `freeholdsEnabled`; existing `recipeList` reflects host availability through `ctx.freeholdsEnabled` on Sim | none | `hello.freeholdsEnabled` mirrors host availability; existing commands retained; ten output and three pattern ItemDefs | none | none | thirteen `entities.items.<id>.name` leaves listed below; `hearth_first_crafts` name in all eighteen base Reliquary locale tables and full desc in five non-Latin tables; changed `guide.reliquaryPage.catalogBody` and `guide.profPages.craftProse.armorcrafting.ladderBody`; English plus five M16 item/guide fills |
 | 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
 | 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
 | 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
@@ -1353,6 +1376,21 @@ only and never declares its remaining deliverables or paired QA complete.
 | 30a (planned) | `server/guild_hall_boards.ts` | `guildHallBoards()` | | | GET `/api/guilds/hall-boards` | | `guild.lockouts`, `guild.firstKills`, `guild.lockoutRow`, `guild.ownLockoutRow`, `guild.noLockouts`, `guild.firstKillsUnavailable`, `guild.membersOnly`, `guild.boardLoading` |
 | 31 (planned) | `server/freehold_guild_clear_admission.ts`, `server/freehold_guild_clear_bridge.ts`, `src/sim/freehold/guild_clear_contract.ts` | none (D82) | | | fills 30a's firstKills arm | `guild_deeds` | `guild.firstKillRow` |
 
+
+04 reconciled paired QA inventory, 2026-09-07: **PASS**, four findings resolved
+(three source/test findings and DOC-1). The source repairs span
+`0932963250..69ffdab561`, in two commits, `d5ea0825d1` and
+`69ffdab561`, with independent entire-fix review and supplement PASS. HN1 adds
+`FURNISHING_PATTERN_ITEMS` to `src/sim/content/freehold/index.ts` and routes
+`src/sim/data.ts`, `src/sim/content/recipes.ts`, and
+`src/sim/freehold/crafted_availability.ts` through that barrel. COV-1 and PER-1 extend `tests/freehold_crafted_availability.test.ts` with
+unrelated-state preservation and the actual thirteen-item JSON save cohort.
+There are no new files, item IDs, balance values, schema, wire keys, or i18n keys
+from these source fixes. DOC-1 corrects only the evidence summaries' calibration
+check count to 50, matching the retained receipt; its correction is recorded in
+`crafted-qa-reconciled-2026-09-07/reviews/docs-final.md`. Current evidence is in
+`crafted-qa-reconciled-2026-09-07/`; the accepted original inventory below is
+retained as its historical snapshot. The final shared gate exited 0 with all twelve steps green.
 
 04 accepted development implementation inventory, 2026-09-07
 (original implementation snapshot at `3666d89647`):

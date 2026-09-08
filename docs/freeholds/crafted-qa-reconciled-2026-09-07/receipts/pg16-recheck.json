@@ -1,0 +1,14 @@
+{
+  "command": [
+    "npx",
+    "vitest",
+    "run",
+    "tests/server/client_perf_summary_sql.test.ts",
+    "tests/server/deeds_board_sql.test.ts",
+    "tests/woc_market_delivery_pg_integration.test.ts",
+    "--maxWorkers=1"
+  ],
+  "exitCode": 0,
+  "postgresMajor": 16,
+  "differential": true
+}

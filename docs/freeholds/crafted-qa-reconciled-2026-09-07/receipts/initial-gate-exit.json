@@ -1,0 +1,7 @@
+{
+  "command": "node scripts/gate_select.mjs",
+  "exitCode": 1,
+  "base": "origin/release/v0.42.0",
+  "pgArmed": true,
+  "workers": 8
+}

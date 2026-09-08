@@ -1,0 +1,11 @@
+{
+  "path": "docs/screenshots/intentional-gathering-pr1/corpse-choice-mobile-portrait.png",
+  "producer": "tests/browser/intentional_gathering.browser.test.ts:395",
+  "reason": "shared browser test emits this unrelated screenshot unconditionally; clean pre-gate tree, modification timestamp within final browser stage",
+  "emittedBytes": 73070,
+  "emittedSha256": "b0c234a4ff01b41cb11090c1be3243a7690560dd949d39fe214511662429de13",
+  "restoredBytes": 73284,
+  "restoredSha256": "3aa11486bbc102e7ece63fba46e9751ea916a8a9accc3a5072023a3e3e5a3196",
+  "restoredToPreGateHead": true,
+  "capturedSideEffect": "/tmp/freeholds-qa-current/gate-corpse-choice-mobile-portrait.png"
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "freehold_weapon_rack",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  },
+  {
+    "id": "freehold_iron_brazier",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  },
+  {
+    "id": "freehold_patchwork_rug",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  },
+  {
+    "id": "freehold_hide_armchair",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  },
+  {
+    "id": "freehold_clockwork_lamp",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  },
+  {
+    "id": "freehold_glass_floor_lamp",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  },
+  {
+    "id": "freehold_chart_easel",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  },
+  {
+    "id": "freehold_jewel_floor_lamp",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  },
+  {
+    "id": "freehold_set_supper_table",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  },
+  {
+    "id": "freehold_glow_lantern",
+    "recipe": true,
+    "item": true,
+    "resale": true,
+    "quality": true,
+    "transform": true
+  }
+]

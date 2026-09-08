@@ -1,0 +1,126 @@
+mutation-quartermaster-mutant.log
+
+AssertionError: recipe_freehold_clockwork_lamp has only the deterministic Marks route: expected [] to deeply equal [ 'vendor' ]
+
+- Expected
++ Received
+
+- [
+-   "vendor",
+- ]
++ []
+
+ ❯ tests/apex_pattern_channels.test.ts:254:81
+    252|       }
+    253|       if (FURNISHING_RECIPES.includes(recipe)) {
+    254|         expect(channels, `${recipe.id} has only the deterministic Mark…
+       |                                                                                 ^
+    255|         continue;
+    256|       }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+   Start at  20:17:34
+   Duration  727ms (transform 292ms, setup 144ms, import 502ms, tests 7ms, environment 0ms)
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 skipped (24)
+
+mutation-produce-mutant.log
+
+AssertionError: recipe_freehold_weapon_rack: vale_wheat: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/provisioner_firewall.test.ts:550:11
+    548|           furnishingReagentAllowed(recipe, reagent.itemId),
+    549|           `${recipe.id}: ${reagent.itemId}`,
+    550|         ).toBe(true);
+       |           ^
+    551|       }
+    552|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 skipped (16)
+   Start at  20:17:37
+   Duration  392ms (transform 139ms, setup 138ms, import 177ms, tests 5ms, environment 0ms)
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 skipped (16)
+
+knowledge-mutant.log
+
+AssertionError: expected Set{} to deeply equal Set{ 'recipe_copper_bearded_axe' }
+
+- Expected
++ Received
+
+- Set {
+-   "recipe_copper_bearded_axe",
+- }
++ Set {}
+
+ ❯ tests/freehold_crafted_availability.test.ts:107:33
+    105|       sim.useItem(pattern.id, undefined, slot);
+    106|       expect(meta.inventory).toEqual(inventory);
+    107|       expect(meta.knownRecipes).toEqual(knowledge);
+       |                                 ^
+    108|       expect(meta.copper).toBe(10000);
+    109|       expect(sim.drainEvents()).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 14 passed (17)
+   Start at  20:21:05
+   Duration  2.98s (transform 597ms, setup 184ms, import 1.03s, tests 1.69s, environment 0ms)
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 14 passed (17)
+
+roundtrip-mutant.log
+
+AssertionError: expected [] to deeply equal [ 'recipe_freehold_weapon_rack', …(9) ]
+
+- Expected
++ Received
+
+- [
+-   "recipe_freehold_weapon_rack",
+-   "recipe_freehold_iron_brazier",
+-   "recipe_freehold_patchwork_rug",
+-   "recipe_freehold_hide_armchair",
+-   "recipe_freehold_clockwork_lamp",
+-   "recipe_freehold_glass_floor_lamp",
+-   "recipe_freehold_chart_easel",
+-   "recipe_freehold_jewel_floor_lamp",
+-   "recipe_freehold_set_supper_table",
+-   "recipe_freehold_glow_lantern",
+- ]
++ []
+
+ ❯ tests/freehold_crafted_availability.test.ts:67:33
+     65|       expect(next.inventory).toEqual(original.inventory);
+     66|       expect(next.copper).toBe(12345);
+     67|       expect(next.knownRecipes).toEqual(original.knownRecipes);
+       |                                 ^
+     68|       expect(next.deedStats.itemsDiscovered).toEqual(original.deedStat…
+     69|       expect(next.reliquary).toEqual(original.reliquary);
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 skipped (18)
+

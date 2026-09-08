@@ -1,14 +1,18 @@
 # Freeholds and Guildhalls: progress
 
-Foundation, furnishing item-kind and content 03 implementation and paired QA are
-complete locally. Crafted content 04 retains its accepted development implementation.
-Current implementation validation and required reviews passed. The active request prospectively
-reconciles F01 against unchanged protected validators and station/training/economy
-semantics. The earlier paired QA FAIL and its 28 accepted repairs remain historical
-evidence in [validation.md](crafted-qa-2026-09-07/validation.md).
-[Current revalidation](crafted-content-revalidation-2026-09-07.md) owns the fresh
-review and execution outcomes. Production remains disabled; implementation 05 waits
-for the separate paired QA.
+Foundation, furnishing item-kind, and content 03 implementation and paired QA are
+complete locally. Crafted content 04 and its reconciled paired QA are complete
+locally: **PASS**, with four findings found and resolved, zero deferred: three
+source/test findings and the DOC-1 documentation nit.
+The fresh entire-fix review and its supplement passed for the five-file repair
+range `0932963250..69ffdab561`, across commits `d5ea0825d1` and `69ffdab561`.
+It also inspected all six historical repair commits. The final shared gate exited 0 with all twelve steps green.
+
+The current explicit protected-validator scope closes F01 prospectively. The
+earlier paired QA **FAIL**, with 29 findings and 28 accepted repairs, remains
+historical evidence. See [current validation](crafted-qa-reconciled-2026-09-07/validation.md)
+and [findings](crafted-qa-reconciled-2026-09-07/findings.md). Production remains
+disabled. Implementation 05 is the next task and has not started.
 
 Production calibration, activation, final GLBs and room/hardware LOW gates remain
 unsigned; NPC voice remains required before feature shipment.
@@ -18,7 +22,7 @@ unsigned; NPC voice remains required before feature shipment.
 There are 56 bounded work items and 56 paired QA rows; their actual status is recorded
 below. The 44 original numeric items retain their IDs and twelve suffixed pairs are
 inserted into the chain. The next handoff is
-[phase-04-qa.md](phase-04-qa.md).
+[phase-05-instance-claim.md](phase-05-instance-claim.md).
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
@@ -28,8 +32,8 @@ inserted into the chain. The next handoff is
 | 02 QA | PASS, local | 2026-09-07 | 2026-09-07 | 40 findings found and 40 resolved, zero deferred. Fresh entire-fix review PASS at d386635394 across 110 changed files and all four repair commits; final documentation and checklist PASS with both wording nits resolved. Final shared gate exit 0, all 12 steps green; 58,083 Vitest and 373 browser tests passed; standalone i18n/status PASS. Post-commit ci:changed actual exit 0 at c881543258 with clean status; the same check follows the evidence-only amendment. See furnishing-item-kind-qa-validation.md |
 | 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Complete (QA PASS), local | 2026-09-07 | 2026-09-07 | Accepted twelve-bill development cycle, eight common 250/60 furnishings, measured geometry, gated freehold_furnisher, manual Homesteader rewards and hearth_basics (eight ordinary item relics). Production remains disabled. See content-trial-2026-09-07/acceptance.md and content-final-validation-2026-09-07.md. No push. |
 | 03 QA | PASS, local | 2026-09-07 | 2026-09-07 | 39 distinct findings found and resolved, zero open. Paired correctness/coverage/hygiene, finishing and conditional reviews PASS, including fresh repairs. Final shared gate exit 0, all 12 steps; 57,726 unit and 376 browser tests passed. Runtime and canonical visual evidence accepted. Four reviewed completion commits; post-source-commit ci:changed exit 0, repeated after the final evidence commit with its result in the task handoff. See content-final-validation-2026-09-07.md. |
-| 04 Content: crafted furnishings and quartermaster patterns | Development implementation revalidated, local | 2026-09-07 | 2026-09-07 | Current revalidation: shared gate all 12 steps PASS, fresh content/coverage/doc-fix reviews PASS; see crafted-content-revalidation-2026-09-07.md for exact current outcomes and final commit-check receipt. Original accepted development v1: ten recipes/outputs, three 16-Mark patterns, Hearth page, thirteen final icons/provenance and 42 runtime captures. Shared gate exit 0, all 12 steps; implementation QA/fresh review closeout recorded in crafted-content-trial-2026-09-07/implementation-validation.md. Four authorized commits `86eb86bbe2`, `8bd097d898`, `b3c2452b49` and `3666d89647`; post-fourth-commit ci:changed exit 0 (1967 files, existing warnings only), clean status observed. The original completion receipt called for the same check after its documentation-only amendment; no push. Production gates remain unsigned. |
-| 04 QA | Ready for paired rerun; historical FAIL retained | 2026-09-07 | | Prior audit found 29 distinct findings, accepted 28 repairs and left F01 open under its whole-directory restriction. The current user implementation request supersedes that restriction with unchanged evaluateCraftAdmission/resolveTrain and preserved station/training/economy semantics; F01 is prospectively reconciled, not a retrospective PASS. Current implementation reviews and shared gate PASS; the separate paired QA has not been rerun. See [current revalidation](crafted-content-revalidation-2026-09-07.md) and the unchanged [historical findings](crafted-qa-2026-09-07/findings.md), [validation](crafted-qa-2026-09-07/validation.md) and [whole-fix review](crafted-qa-2026-09-07/reviews/qa-checklist-final.md). Do not advance to 05. |
+| 04 Content: crafted furnishings and quartermaster patterns | Complete (QA PASS), local | 2026-09-07 | 2026-09-07 | Reconciled paired QA PASS, four findings resolved (three source/test findings and DOC-1); fresh entire-source-fix review PASS at `69ffdab561` and documentation correction recorded in [docs-final.md](crafted-qa-reconciled-2026-09-07/reviews/docs-final.md); current evidence in crafted-qa-reconciled-2026-09-07/validation.md. Final shared gate exit 0, all 12 steps: 4028 unit files passed, one CI-sentinel file skipped; 60610 tests passed, 2 expected failures and 28 explained skips. Chromium passed 47 files and 389 tests; the separate PostgreSQL 16 run passed 57 tests. Earlier implementation revalidation: shared gate all 12 steps PASS, fresh content/coverage/doc-fix reviews PASS; see crafted-content-revalidation-2026-09-07.md for exact current outcomes and final commit-check receipt. Original accepted development v1: ten recipes/outputs, three 16-Mark patterns, Hearth page, thirteen final icons/provenance and 42 runtime captures. Shared gate exit 0, all 12 steps; implementation QA/fresh review closeout recorded in crafted-content-trial-2026-09-07/implementation-validation.md. Four authorized commits `86eb86bbe2`, `8bd097d898`, `b3c2452b49` and `3666d89647`; post-fourth-commit ci:changed exit 0 (1967 files, existing warnings only), clean status observed. The original completion receipt called for the same check after its documentation-only amendment; no push. Production gates remain unsigned. |
+| 04 QA | PASS, local | 2026-09-07 | 2026-09-07 | Four findings found and resolved: three source/test findings (HN1, COV-1, PER-1) and one documentation nit (DOC-1), zero deferred. Fresh entire-fix review and supplement PASS for `0932963250..69ffdab561` (five files, commits `d5ea0825d1` and `69ffdab561`), including all six historical repair commits; required content, coverage and qa-checklist reviews completed. Final shared gate exit 0, all 12 steps: 4028 unit files passed, one CI-sentinel file skipped; 60610 tests passed, 2 expected failures and 28 explained skips. Chromium passed 47 files and 389 tests; the separate PostgreSQL 16 run passed 57 tests. Historical F01 is closed prospectively by the current explicit protected-validator scope; the earlier 29-found/28-repaired FAIL remains unchanged. See [findings](crafted-qa-reconciled-2026-09-07/findings.md), [validation](crafted-qa-reconciled-2026-09-07/validation.md), [fresh source review](crafted-qa-reconciled-2026-09-07/reviews/fresh-fix.md) and [documentation review](crafted-qa-reconciled-2026-09-07/reviews/docs-final.md). Branch local, production disabled; 05 is next and remains Not started. |
 | 05 Instance claim | Not started | | | |
 | 05 QA | Not started | | | |
 | 06 Interiors, the Eastbrook gate, the Hearth Key | Not started | | | |
@@ -443,18 +447,62 @@ After phase-03-qa.md: [phase-04-content-crafted-and-patterns.md](phase-04-conten
 
 Implementation: [phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md). Paired audit: [phase-04-qa.md](phase-04-qa.md).
 
-Current resumption, 2026-09-07: **implementation validation PASS**. The active implementation
-request preserves the two named validators and existing mechanics rather than a
-whole-directory path freeze. F01 is prospectively reconciled under that request;
-the historical FAIL below remains unchanged. Full declarations are byte-identical
-from `86eb86bbe2^` to merged release `7f4fe99619`. Typecheck and scoped content,
-guide and i18n checks passed; fresh required reviews and all twelve shared-gate
-steps passed. The final post-commit check is recorded in the task handoff/local
-receipt; this is not a new paired QA verdict. See
-[current evidence](crafted-content-revalidation-2026-09-07.md). Existing content
-commits and accepted development calibration are reused; production remains off.
-The current next file is
-`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-04-qa.md`.
+Reconciled paired QA closeout, 2026-09-07: **PASS, local**. Four findings
+were found and resolved: three source/test findings and one documentation nit.
+The three source/test findings were resolved across `0932963250..69ffdab561`, in commits
+`d5ea0825d1` and `69ffdab561` (five files): HN1 restores content-barrel
+exports and all consumer imports, including the recipe catalog; COV-1 proves
+complete knowledge and possession preservation on dark refusals; PER-1 proves the actual ten furnishings and three unused
+patterns survive lit, dark, and relit JSON save round trips. No finding or nit
+remains deferred. The [fresh entire-fix review](crafted-qa-reconciled-2026-09-07/reviews/fresh-fix.md)
+independently inspected all current changes and the six historical repair commits
+and returned PASS with zero additional findings. Its supplement supersedes the
+earlier incomplete HN1 closure after simulation-architecture review found the
+remaining recipe-catalog import. The repaired import and full consumer census
+received fresh review and simulation-architecture PASS. This was another
+occurrence of HN1, not a distinct finding.
+
+DOC-1 corrects the current validation and copied context summaries to match the
+retained calibration receipt: ten rows with five Boolean checks each means 50
+checks, not 60. This is an evidence wording repair, not a change to calibration,
+source behavior, or the two source repair commits. The
+[final documentation review](crafted-qa-reconciled-2026-09-07/reviews/docs-final.md)
+records the finding and its correction. The earlier source-review reports retain
+their accurate three-source-finding chronology.
+
+The active user request protects `evaluateCraftAdmission`, `resolveTrain` and
+existing station, training, and economy semantics. The full declarations remain
+byte-identical from `86eb86bbe2^` through `69ffdab561`; the explicit scope closes
+historical F01 prospectively. It does not rewrite the earlier 29-found/28-repaired
+FAIL, approve new numbers, or authorize production activation. The unchanged
+historical receipt below remains evidence of that earlier audit.
+
+The final shared gate at `69ffdab561` exited 0 with all twelve steps green.
+Unit results: 4028 files passed and one CI-presence sentinel file skipped (4029
+files total); 60610 tests passed, two expected failures and 28 explained skips
+(60640 cases total), in 1496.46 seconds. Chromium passed all 47 files and 389 tests.
+The separate PostgreSQL 16 invocation passed 57 tests, including the five SQL
+differential cases deliberately not armed in the full invocation. The other 23
+skips are disclosed existing optional or historical cases; no furnishing
+acceptance case was skipped. The [skip disclosure](crafted-qa-reconciled-2026-09-07/reviews/skip-disclosure.md)
+and [validation](crafted-qa-reconciled-2026-09-07/validation.md) retain the exact
+commands and limits. Typechecks, builds, security, SFX and generated freshness
+passed. The audit database was stopped; the unrelated screenshot emitted by a
+shared browser test was preserved in scratch and restored to its pre-gate bytes.
+No product source changed after this passing source gate.
+Current exact commands, scoped checks, mutation controls, PostgreSQL evidence,
+generated freshness and limits are in [validation](crafted-qa-reconciled-2026-09-07/validation.md).
+[Findings](crafted-qa-reconciled-2026-09-07/findings.md) records all four closures
+and the required reviewers. The post-last-commit `npm run ci:changed` remains the
+coordinator's final execution step; its actual commit and outcome belong to the
+final task handoff and execution receipt, not a pre-certified PASS here.
+
+Original content commits, accepted calibration, and final item icons are reused.
+No asset was generated in this QA. Production numeric signatures, final GLBs,
+room/arrival/navigation and hardware LOW evidence retain their existing owners.
+The next implementation task is
+`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-05-instance-claim.md`;
+it has not started. The branch remains local.
 
 Development implementation completion notes, 2026-09-07 (original snapshot at `3666d89647`, before the separate 04 QA audit):
 
@@ -523,8 +571,8 @@ Development implementation completion notes, 2026-09-07 (original snapshot at `3
 
 
 Historical paired 04 QA closeout, 2026-09-07: **FAIL, local**.
-The following receipt describes that completed audit; the current resumption above
-and linked revalidation record own the prospective status and next step.
+The following receipt describes that completed historical audit. The reconciled
+paired closeout above owns the current status and next step.
 
 - The audit covers original implementation `49ed3f0933..3666d89647`, dependency
   head `54ce808436` integrated by `2e24ba8818`, and dedicated repair commits
@@ -584,10 +632,9 @@ Deliverables (at most five):
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
-Current handoff after implementation revalidation:
-[phase-04-qa.md](phase-04-qa.md).
-The planned [05 Instance claim](phase-05-instance-claim.md) remains gated by a later
-04 QA PASS; it has not started.
+Current handoff after reconciled paired QA PASS:
+[phase-05-instance-claim.md](phase-05-instance-claim.md).
+Implementation 05 has not started; it is the next task.
 
 #### 05 Instance claim
 
