@@ -197,6 +197,7 @@ const URL_GUARDED_SCRIPTS = [
   // state from a file the seed step wrote.
   'scripts/bank_guild_pane_probe.mjs',
   'scripts/crowd_fps_bench.mjs',
+  'scripts/freehold_key_capture.mjs',
   'scripts/gpu_hitch_capture.mjs',
 ] as const;
 
