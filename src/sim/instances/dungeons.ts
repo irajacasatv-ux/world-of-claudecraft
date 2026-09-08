@@ -706,11 +706,15 @@ export function enterDungeon(
   emitFirstRaidBossRoomWelcome(ctx, inst, r.meta.entityId);
   inst.enteredBy.add(r.meta.entityId);
   for (const devBotId of devReplacementEnteredBy) inst.enteredBy.add(devBotId);
-  // An owner-keyed room only: the owner has arrived in the room of its CURRENT
-  // tier, so any other owner-keyed room still claimed under the same key is the
-  // room of a tier it has left (a grant moved it up while the old claim was
-  // live). Free those now, unless a player still stands inside one.
-  if (dungeon.claimKey === 'owner') freeVacantOwnerClaims(ctx, key, dungeonId);
+  // An owner-keyed room only: a LIVING owner has arrived in the room of its
+  // current tier, so any other owner-keyed room still claimed under the same
+  // key is the room of a tier it has left (a grant moved it up while the old
+  // claim was live). Free those now, unless a player still stands inside one
+  // or a bound corpse lies there. A ghost's arrival is a corpse run into
+  // whichever room its body lies in (possibly the OLD tier's), not a
+  // tier-change arrival, so it sweeps nothing: the current tier's vacant claim
+  // must survive it.
+  if (dungeon.claimKey === 'owner' && !r.e.ghost) freeVacantOwnerClaims(ctx, key, dungeonId);
   // Stepping inside removes you from any arena queue: a match must never form for
   // a player standing in an instance and teleport them back inside fully restored
   // (issue #1600). No-op if they were not queued; notifies any 2v2 teammate.
@@ -1129,7 +1133,8 @@ export function freeInstance(ctx: SimContext, inst: InstanceSlot): void {
 }
 
 // The tier-change rule for owner-keyed rooms (a freehold, DungeonDef.claimKey
-// 'owner'): after an owner claims or rejoins the room of its current tier,
+// 'owner'): after a LIVING owner claims or rejoins the room of its current tier
+// (a ghost's corpse run never sweeps; see the call site),
 // every OTHER owner-keyed room claimed under the same owner key is stale (the
 // tier it was claimed for is no longer the owner's) and is freed at once, so
 // a grant does not leave the old room's slot to the empty-slot reaper's

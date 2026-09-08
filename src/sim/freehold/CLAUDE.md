@@ -31,9 +31,11 @@ carries an opaque plot id only.
   old room, which the vacant-claim sweep keeps while the corpse lies there)
   and resurrects at the entrance; a fresh corpse, a ghost bound elsewhere or
   to a room the reaper already freed, and a ghost with no record refuse
-  `dead`.
+  `dead`. The corpse run needs no usable tier (the room comes from the bound
+  claim), so a bound ghost is admitted to its body's room even when its
+  record's tier is corrupt, pinned.
   A record whose tier is outside the union (a corrupt or forward-version row)
-  answers `no_freehold`, never a throw. `leaveFreehold` is false and silent
+  answers `no_freehold` to a living enter, never a throw. `leaveFreehold` is false and silent
   unless the caller stands inside a live owner claim (a leave from anywhere
   else is a no-op, not a denial: D10 covers denials of an entry or a
   mutation), and ANY player inside a live owner claim may leave, not only
@@ -56,7 +58,8 @@ carries an opaque plot id only.
   other owner-keyed room still claimed under the same owner key unless a
   player stands inside it (pinned in `tests/freehold_instance.test.ts`). The
   guard is the room's `claimKey`, never the key string, so party and solo
-  claims are untouched.
+  claims are untouched. A ghost's corpse run sweeps nothing (the sweep is
+  gated on a living arrival), so the current tier's vacant claim survives it.
 - THE LIGHTING RULING: the claim slice adds no proximity, cast, cooldown or
   position-context gate (an out-of-combat player anywhere, including inside
   another dungeon claim, a delve, a rift, a battleground, an arena, a duel

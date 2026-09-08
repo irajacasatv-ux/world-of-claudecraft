@@ -28,11 +28,13 @@
 // already freed and a ghost with no record all refuse `dead` as before; the
 // Spirit Healer remains the other way back.
 //
-// THE TIER-CHANGE RULE lives in the dungeon module, not here: once an owner
-// has arrived in the room of its current tier, enterDungeon frees every other
-// owner-keyed room still claimed under the same owner key unless a player
-// stands inside it, so a grant that moved the owner up a tier does not leave
-// the old room's slot to the reaper's timeout.
+// THE TIER-CHANGE RULE lives in the dungeon module, not here: once a LIVING
+// owner has arrived in the room of its current tier, enterDungeon frees every
+// other owner-keyed room still claimed under the same owner key unless a
+// player stands inside it or a bound corpse lies there, so a grant that moved
+// the owner up a tier does not leave the old room's slot to the reaper's
+// timeout. A ghost's corpse run (into whichever room its body lies in) sweeps
+// nothing, so the current tier's vacant claim survives it.
 //
 // The empty hold is deliberately the shared INSTANCE_EMPTY_TIMEOUT for now:
 // an owner room keeps its slot for the same 300 s a dungeon does after the

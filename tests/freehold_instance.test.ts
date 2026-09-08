@@ -590,8 +590,9 @@ describe('text-free refusals', () => {
 
   it('refuses a ghost bound to a claim that is not its own room', () => {
     // A ghost whose corpse lies in a dungeon claim (a real corpse run there)
-    // is still `dead` to its freehold: the binding must name the owner's own
-    // claim of the record's current tier.
+    // is still `dead` to its freehold: the binding must name one of the
+    // owner's own OWNER-KEYED claims (any freehold room), never a party or
+    // solo claim.
     const sim = makeSim();
     const pid = addOwner(sim, 'Aaa');
     expect(sim.enterDungeon('hollow_crypt', pid)).toBe(true);
@@ -963,25 +964,65 @@ describe('a tier change frees the old room', () => {
     expect(inn.exitId).toBe(innExit);
     expect(sim.entities.has(innExit ?? -1)).toBe(true);
     expect(claimedSlots(sim)).toHaveLength(2);
+    // B leaves the Cottage: its claim is now VACANT, exactly what a tier-change
+    // sweep would free. A's corpse run must not be that sweep.
+    expect(leaveFreehold(sim.ctx, b)).toBe(true);
+    const cottage = sim.instances.find(
+      (i) => i.dungeonId === FREEHOLD_COTTAGE_DUNGEON_ID && i.partyKey === ACCOUNT,
+    );
+    if (!cottage) throw new Error('no cottage claim');
+    const cottageExit = cottage.exitId;
     // A's corpse run goes to the CORPSE's room (the Inn Room), not the tier's
-    // (the Cottage), and A resurrects there.
+    // (the Cottage), A resurrects there, and the vacant Cottage claim survives.
     sim.drainEvents();
     expect(enterFreehold(sim.ctx, a)).toBe(true);
     const ea = entity(sim, a);
     expect(sim.instanceSlotAt(ea.pos)).toBe(inn.slot);
     expect(ea.ghost).toBe(false);
     expect(ea.corpseInstanceId).toBeNull();
+    expect(cottage.partyKey).toBe(ACCOUNT);
+    expect(cottage.exitId).toBe(cottageExit);
+    expect(sim.entities.has(cottageExit ?? -1)).toBe(true);
+    expect(claimedSlots(sim)).toHaveLength(2);
     expect(textEvents(sim.drainEvents())).toEqual([
       { type: 'log', text: INN.enterText, color: '#b9f', pid: a },
     ]);
-    // Alive again and out, A's next enter is the current tier's room, and the
-    // Inn Room, now vacant with no corpse, is swept.
+    // Alive again and out, A's next enter REJOINS the current tier's claim
+    // (the same exit entity), and the Inn Room, now vacant with no corpse, is
+    // swept by that living arrival.
     expect(leaveFreehold(sim.ctx, a)).toBe(true);
     expect(enterFreehold(sim.ctx, a)).toBe(true);
-    expect(sim.instanceSlotAt(entity(sim, a).pos)).toBe(claimOf(sim, ACCOUNT)?.slot);
-    expect(claimOf(sim, ACCOUNT)?.dungeonId).toBe(FREEHOLD_COTTAGE_DUNGEON_ID);
+    expect(sim.instanceSlotAt(entity(sim, a).pos)).toBe(cottage.slot);
+    expect(cottage.exitId).toBe(cottageExit);
     expect(inn.partyKey).toBeNull();
-    expect(claimedSlots(sim)).toHaveLength(1);
+    expect(claimedSlots(sim)).toEqual([cottage]);
+  });
+
+  it("admits a bound ghost to its corpse's room even when the record's tier is corrupt", () => {
+    // The corpse run resolves the room from the bound claim, so an unusable
+    // tier (which refuses a LIVING enter with no_freehold) does not strand
+    // the body.
+    const sim = makeSim();
+    const pid = addOwner(sim, 'Aaa');
+    expect(enterFreehold(sim.ctx, pid)).toBe(true);
+    const inst = claimOf(sim, `entity:${pid}`);
+    if (!inst) throw new Error('no claim');
+    dieInsideAndRelease(sim, pid, inst);
+    const record = sim.freeholds.get(`entity:${pid}`);
+    if (!record) throw new Error('no record');
+    record.tier = 'lodge_v2' as FreeholdTier;
+    sim.drainEvents();
+    expect(enterFreehold(sim.ctx, pid)).toBe(true);
+    const e = entity(sim, pid);
+    expect(sim.instanceSlotAt(e.pos)).toBe(inst.slot);
+    expect(e.ghost).toBe(false);
+    expect(sim.drainEvents().filter((ev) => ev.type === 'freeholdDenied')).toEqual([]);
+    // Alive, the same record still refuses a fresh enter (an unusable tier).
+    expect(leaveFreehold(sim.ctx, pid)).toBe(true);
+    sim.drainEvents();
+    expect(enterFreehold(sim.ctx, pid)).toBe(false);
+    expect(sim.drainEvents()).toEqual([{ type: 'freeholdDenied', pid, reason: 'no_freehold' }]);
+    expect(dungeonAt(entity(sim, pid).pos.x)).toBeNull();
   });
 
   it('never frees a party-keyed claim under the same key string: the guard is the claimKey', () => {
@@ -1027,7 +1068,7 @@ describe('a tier change frees the old room', () => {
 
 describe('the corpse run', () => {
   it('the REAL death and release inside the room binds the corpse to the claim, and the run is admitted', () => {
-    // The synthetic helper below asserts the binding; this arm PROVES it: the
+    // The synthetic helper above asserts the binding; this arm PROVES it: the
     // sim's own death handler and spirit release capture the owner claim's
     // exit id (spirit.ts reads ctx.instanceClaimIdAt over the owner-keyed
     // slot), so a change to that lookup or to the release path fails here.
