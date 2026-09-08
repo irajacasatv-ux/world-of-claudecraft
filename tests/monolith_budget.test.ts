@@ -1157,7 +1157,14 @@ const MONOLITHS: MonolithRow[] = [
     // reductions. Newline counts: shared base 11448, Freeholds 11371,
     // incoming 11385, combined 11308. The measured merged size exactly
     // composes both reductions and sits below both parents. Zero headroom.
-    ceiling: 11308,
+    // Lowered 11308 -> 11269 at the freeholds instance claim (D81): the
+    // browser Fullscreen API pair (the vendor-prefixed document/element
+    // shapes, currentFullscreenElement, requestBrowserFullscreen and
+    // exitBrowserFullscreen) moved whole to src/game/browser_fullscreen.ts,
+    // paying for the offline dev-grant bootstrap (one awaited call before the
+    // Sim build plus the config field) and its two imports. Measured with
+    // wc -l < src/main.ts after biome. Exact count, zero slack.
+    ceiling: 11269,
     seam: 'a src/game/ or src/ui/ sibling module; main.ts is a firewall, not a home',
   },
   {

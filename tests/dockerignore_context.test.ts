@@ -51,6 +51,18 @@ describe('vite.config.ts survives the image build context', () => {
     expect(closure).toContain('scripts/ci_shard_partition.mjs');
     expect(closure).toContain('scripts/ci_shard_weights.generated.json');
   });
+
+  it('carries the freehold dev authorization bridge and the guard it reuses', () => {
+    // The bridge (D81) is a second-hop import under scripts/lib/: the config
+    // imports it, and it imports the diagnostics guard. Both must reach the
+    // image, and the directory allowlist is what admits them.
+    const closure = collectLocalImportClosure('vite.config.ts', readRepoFile);
+    expect(closure).toContain('scripts/lib/freehold_dev_authorization.mjs');
+    expect(closure).toContain('scripts/lib/diagnostics_capture_guard.mjs');
+    expect(
+      isIgnoredByDockerignore(dockerignore, 'scripts/lib/freehold_dev_authorization.mjs'),
+    ).toBe(false);
+  });
 });
 
 describe('isIgnoredByDockerignore', () => {

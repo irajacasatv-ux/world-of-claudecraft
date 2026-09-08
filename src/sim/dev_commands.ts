@@ -1,11 +1,13 @@
 import { applyCourserDaze } from './combat/hunter_shared';
 import { DEV_KIT_ROLES, devKitRole } from './content/dev_kit_roles';
+import { FREEHOLD_TIER_IDS } from './content/freehold';
 import { MOUNT_KEYS } from './content/mounts';
 import { GATHERING_PROFESSIONS } from './content/professions';
 import { DUNGEONS, ITEMS, MOBS, NPCS } from './data';
 import { equipBestInSlotForDev } from './dev/bis_gear';
 import { applyDevKit } from './dev_kit';
 import { createGroundObject, createMob } from './entity';
+import { devGrantFreeholdTier } from './freehold';
 import {
   ignivarDevRaidTravelRoster,
   setupIgnivarDevRaid,
@@ -1048,10 +1050,32 @@ export function handleDevChat(
     return null;
   }
 
+  // Housing: `/dev freehold <tier>` sets the caller's record tier. The second
+  // permission (ctx.freeholdDevGrantEnabled) and the tier write live in
+  // src/sim/freehold/dev_grant.ts; this arm only routes and reports.
+  const freeholdMatch = /^\/dev\s+freehold\s+(\S+)\s*$/i.exec(raw);
+  if (freeholdMatch) {
+    const tierText = freeholdMatch[1].toLowerCase();
+    const grant = devGrantFreeholdTier(ctx, pid, tierText);
+    // The three refusals ride the error channel like the file's other dev
+    // refusals (Unknown mob / item / dungeon); only the success line is a log.
+    if (grant.outcome === 'granted')
+      emitDevLog(ctx, pid, `[dev] Freehold tier set to ${grant.tier}.`);
+    else if (grant.outcome === 'bad_tier')
+      ctx.error(
+        pid,
+        `[dev] Unknown freehold tier '${tierText}'. Options: ${[...FREEHOLD_TIER_IDS].join(', ')}.`,
+      );
+    else if (grant.outcome === 'no_freehold')
+      ctx.error(pid, '[dev] You hold no freehold record on this host.');
+    else ctx.error(pid, '[dev] Freehold grant is not authorized on this host.');
+    return null;
+  }
+
   if (/^\/dev(?:\s|$)/i.test(raw)) {
     ctx.error(
       pid,
-      'Dev commands: /dev gui, /dev level, /dev tp, /dev spawn, /dev despawn, /dev killtarget, /dev give, /dev kit, /dev mounts, /dev mountquest, /dev gold, /dev quest, /dev quests, /dev attune, /dev mobilestation, /dev gather, /dev bot, /dev vendor, /dev bg, /dev bis, /dev lfg, /dev portal [seed] [level] [C|B|A|S] [infernal|random], /dev cascade, /dev sandbox, /dev smite, /dev god, /dev noaggro, /dev freezemobs, /dev immortal, /dev ignivarraid [boss], /dev varkhulraid [normal|heroic], /dev nythraxisraid [normal|heroic], /dev nyx <mechanic> [sec], /dev heal, /dev hp <1-100>, /dev resource, /dev cooldowns, /dev revive, /dev combatreset, /dev daze, /dev fear, /dev dungeon, /dev raid, /dev kill',
+      'Dev commands: /dev gui, /dev level, /dev tp, /dev spawn, /dev despawn, /dev killtarget, /dev give, /dev kit, /dev mounts, /dev mountquest, /dev gold, /dev quest, /dev quests, /dev attune, /dev mobilestation, /dev gather, /dev bot, /dev vendor, /dev bg, /dev bis, /dev lfg, /dev portal [seed] [level] [C|B|A|S] [infernal|random], /dev cascade, /dev sandbox, /dev smite, /dev god, /dev noaggro, /dev freezemobs, /dev immortal, /dev ignivarraid [boss], /dev varkhulraid [normal|heroic], /dev nythraxisraid [normal|heroic], /dev nyx <mechanic> [sec], /dev heal, /dev hp <1-100>, /dev resource, /dev cooldowns, /dev revive, /dev combatreset, /dev daze, /dev fear, /dev dungeon, /dev raid, /dev kill, /dev freehold <tier>',
     );
     return null;
   }

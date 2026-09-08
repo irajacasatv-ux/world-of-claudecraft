@@ -10,12 +10,16 @@ export function offlineWorldConfig(options: {
   readonly world?: SimConfig['world'];
   readonly seedOverride?: number;
   readonly devCommands: boolean;
+  // D81: the dev-only loopback bridge verdict (src/game/freehold_dev_bootstrap.ts);
+  // never persisted, false unless the host resolved it.
+  readonly freeholdDevGrantEnabled?: boolean;
 }): SimConfig {
   return {
     seed: options.seedOverride ?? WORLD_SEED,
     playerClass: options.playerClass,
     playerName: options.name,
     devCommands: options.devCommands,
+    freeholdDevGrantEnabled: options.freeholdDevGrantEnabled ?? false,
     // Editor play-test maps opt out of the live world's entry features.
     freeholdsEnabled: options.world === undefined,
     riftPortals: options.world === undefined,

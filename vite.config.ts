@@ -15,6 +15,10 @@ import {
   diagnosticsCaptureAllowed,
   diagnosticsReadAllowed,
 } from './scripts/lib/diagnostics_capture_guard.mjs';
+import {
+  freeholdDevAuthorizationEnabled,
+  freeholdDevAuthorizationPlugin,
+} from './scripts/lib/freehold_dev_authorization.mjs';
 import { shouldDisableVitestFsModuleCache } from './scripts/lib/vitest_fs_module_cache.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
@@ -407,6 +411,14 @@ export default defineConfig({
     i18nModulepreloadPlugin(),
     musicEditorSavePlugin(),
     ...(process.env.WOC_DIAGNOSTICS_CAPTURE === '1' ? [diagnosticsCapturePlugin()] : []),
+    // D81: the Freehold development grant bridge (scripts/lib/
+    // freehold_dev_authorization.mjs) exists only in the dev server and only
+    // under the exact flag the realm reads; never in preview or production.
+    // The flag read is the module's own strict predicate (one rule, one
+    // spelling), never an inline comparison that could drift from it.
+    ...(freeholdDevAuthorizationEnabled(process.env)
+      ? [freeholdDevAuthorizationPlugin({ enabled: true })]
+      : []),
   ],
   resolve: { alias: { '#bot-detector': botDetectorImpl } },
   define: {

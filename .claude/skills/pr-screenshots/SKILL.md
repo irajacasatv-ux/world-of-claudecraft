@@ -70,3 +70,7 @@ shadow tiers) keep the preset the comparison needs.
   mobile HUD shots (the shell/guide/admin pages allow portrait).
 - **Dev commands:** captures that teleport, level, or grant items need a server started
   with `ALLOW_DEV_COMMANDS=1` (dev only, never production).
+  The offline Freehold tier grant (`/dev freehold cottage`) additionally needs
+  `ALLOW_DEV_COMMANDS=1` on the `npm run dev` process itself and a loopback page host
+  (`http://localhost:<port>`), because the browser resolves the grant through the dev
+  server's loopback bridge before the offline world boots (D81).

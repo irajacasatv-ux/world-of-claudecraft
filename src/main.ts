@@ -26,6 +26,7 @@ import {
   cssEffectsTier,
   readBrowserEnv,
 } from './game/browser_env';
+import { exitBrowserFullscreen, requestBrowserFullscreen } from './game/browser_fullscreen';
 import { hideBrowserSupportNotice, initBrowserSupportNotice } from './game/browser_support_notice';
 import { isCameraDrivenFacingActive } from './game/camera_driven_facing';
 import {
@@ -86,6 +87,7 @@ import {
   suspendActiveEntryDiagnostics,
 } from './game/entry_diagnostics';
 import { ferryPrewarmTargetFor } from './game/ferry_prewarm';
+import { resolveBrowserFreeholdDevGrant } from './game/freehold_dev_bootstrap';
 import { GamepadManager } from './game/gamepad';
 import { createGamepadActivityNotifier } from './game/gamepad_activity_notify';
 import { GamepadBindings } from './game/gamepad_bindings';
@@ -954,49 +956,6 @@ function resetMobileGameplayOverlays(): void {
     more.style.bottom = '';
     more.style.transform = '';
     delete more.dataset.windowMoved;
-  }
-}
-
-type FullscreenDocument = Document & {
-  webkitFullscreenElement?: Element | null;
-  webkitExitFullscreen?: () => Promise<void> | void;
-};
-
-type FullscreenElement = HTMLElement & {
-  webkitRequestFullscreen?: () => Promise<void> | void;
-};
-
-function currentFullscreenElement(): Element | null {
-  const doc = document as FullscreenDocument;
-  return document.fullscreenElement ?? doc.webkitFullscreenElement ?? null;
-}
-
-function requestBrowserFullscreen(): void {
-  if (currentFullscreenElement()) return;
-  const root = document.documentElement as FullscreenElement;
-  const request = root.requestFullscreen?.bind(root) ?? root.webkitRequestFullscreen?.bind(root);
-  if (!request) return;
-  // Fullscreen needs transient activation. Chrome logs a console error for every
-  // call made without it, whether or not the rejection is caught, so skip the
-  // call we already know will be refused. Browsers without userActivation still
-  // attempt it, which is the previous behavior.
-  if (navigator.userActivation && !navigator.userActivation.isActive) return;
-  try {
-    const result = request();
-    if (result instanceof Promise) void result.catch(() => {});
-  } catch {
-    // Browsers can reject fullscreen outside a direct user gesture.
-  }
-}
-
-function exitBrowserFullscreen(): void {
-  if (!currentFullscreenElement()) return;
-  const doc = document as FullscreenDocument;
-  try {
-    const result = document.exitFullscreen?.() ?? doc.webkitExitFullscreen?.();
-    if (result instanceof Promise) void result.catch(() => {});
-  } catch {
-    // Fullscreen exit can also reject while the document is changing state.
   }
 }
 
@@ -5245,6 +5204,7 @@ async function startOffline(
   // Editor play-test: route terrain + props at the custom world too (the renderer
   // reaches it by module global), in addition to the Sim reading cfg.world.
   if (world) setActiveWorldContent(world);
+  const freeholdDevGrantEnabled = await resolveBrowserFreeholdDevGrant(import.meta.env.DEV);
   const sim = loadSpan(
     'sim-build',
     () =>
@@ -5255,6 +5215,7 @@ async function startOffline(
           world,
           seedOverride,
           devCommands: import.meta.env.DEV,
+          freeholdDevGrantEnabled,
         }),
       ),
   );

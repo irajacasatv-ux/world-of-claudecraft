@@ -46,4 +46,24 @@ describe('offline browser world configuration', () => {
     expect(config.compulsoryTutorial).toBe(false);
     expect(config.gathererIdentity).toBeUndefined();
   });
+
+  it('passes the resolved dev grant through and defaults it to an explicit false', () => {
+    vi.stubGlobal('crypto', undefined);
+    const base = { playerClass: 'warrior' as const, name: 'Ana', devCommands: true };
+    expect(offlineWorldConfig(base).freeholdDevGrantEnabled).toBe(false);
+    expect(
+      offlineWorldConfig({ ...base, freeholdDevGrantEnabled: false }).freeholdDevGrantEnabled,
+    ).toBe(false);
+    expect(
+      offlineWorldConfig({ ...base, freeholdDevGrantEnabled: true }).freeholdDevGrantEnabled,
+    ).toBe(true);
+    // The grant is a permission beside devCommands, never a substitute for it.
+    const granted = offlineWorldConfig({
+      ...base,
+      devCommands: false,
+      freeholdDevGrantEnabled: true,
+    });
+    expect(granted.devCommands).toBe(false);
+    expect(granted.freeholdDevGrantEnabled).toBe(true);
+  });
 });
