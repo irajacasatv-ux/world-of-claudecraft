@@ -7113,6 +7113,11 @@
   body.mobile-touch #ctx-menu {
     z-index: 96;
   }
+  /* Refused bag actions use the center toast after the menu closes. Keep the
+     pointer-inert explanation above the same mobile sheet. */
+  body.mobile-touch #error-msg {
+    z-index: 96;
+  }
   /* An Apply Enchant picker row (Professions 2.0) carries a dim meta
      sub-line; the flex row above would seat it inline beside the enchant name
      on a narrow menu, so a meta-bearing row stacks instead. */

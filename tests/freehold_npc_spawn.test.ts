@@ -43,8 +43,10 @@ describe('authored furnisher construction and world geometry', () => {
   ];
 
   it('the dark constructor preserves the pre-furnisher entity and rng fingerprint', () => {
-    // Captured before the content row was added, after the behavior-preserving
-    // extraction. This also detects decoration vetoes moving an existing spawn.
+    // Independently measured from incoming dependency 54ce808436, which adds
+    // Riftwright Maelis and the reserved-ID Realm Builder monument and moves
+    // Drakelands geometry. The dark merged world must match that baseline.
+    // This also detects decoration vetoes moving an existing spawn.
     const sim = new Sim({ seed: 1, playerClass: 'warrior' });
     expect({
       nextId: sim.nextId,
@@ -63,12 +65,12 @@ describe('authored furnisher construction and world geometry', () => {
       ),
       rngNext: sim.rng.next(),
     }).toEqual({
-      nextId: 1003,
-      primaryId: 998,
+      nextId: 1004,
+      primaryId: 999,
       merchants: [1, 33],
-      bankers: [9, 22, 34, 94],
-      entityCount: 1019,
-      positionHash: '297a79e82e0de3213f051b5a5f338a483bc03445f3db02e00af7754d1a9d757e',
+      bankers: [9, 22, 34, 95],
+      entityCount: 1021,
+      positionHash: '722c2cecf11f6e09cdcea8888a7050a9df9c786cc29ee2d771e516b827af00fe',
       rngNext: 0.30275995447300375,
     });
     expect([...sim.entities.values()].some((e) => e.templateId === 'freehold_furnisher')).toBe(

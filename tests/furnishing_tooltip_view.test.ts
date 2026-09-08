@@ -513,7 +513,10 @@ describe('loaded furnishings in equipment display projections', () => {
     expect(world.equipment.chest).toBe(furnishing.id);
     expect(world.equipmentInstances.chest).toEqual(copy);
     const control = loaded({ chest: armor.id }, { chest: copy });
-    expect(composedTooltip(armor, undefined, control, true)).toContain(
+    // A distinct candidate keeps the real gear delta active; the same-id
+    // non-Rift hover deliberately suppresses self-comparison.
+    const candidate = { ...armor, id: 'probe_furnishing_hover_candidate' };
+    expect(composedTooltip(candidate, undefined, control, true)).toContain(
       '<div class="tt-red">−100 Strength</div>',
     );
     expect(composedTooltip(furnishing, copy, world, true)).not.toContain('If you equip');

@@ -151,11 +151,13 @@ describe('crafted item tooltip coverage', () => {
       'materialProfessionHintText(item.id)',
       'elixirTooltipLines(item)',
       'wellFedTooltipLines(item)',
-      'recipePatternTooltipLines(item, this.sim.craftingIdentity)',
       'feastTooltipLines(item)',
       'stackSizeTooltipLine(item, instance)',
     ]) {
       expect(body, `itemTooltip must compose ${call}`).toContain(call);
     }
+    expect(body).toMatch(
+      /recipePatternTooltipLines\(\s*item,\s*this\.sim\.craftingIdentity,\s*this\.sim\.cfg\.freeholdsEnabled,\s*\)/,
+    );
   });
 });

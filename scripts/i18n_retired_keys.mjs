@@ -45,6 +45,8 @@ export const RETIRED_KEYS = [
 
   // -- Reworded successors. The replacement says something materially different, so the
   // old value is not a stale translation to fix but a claim the game no longer makes.
+  // Ornamental cooking outputs are not edible: the successor distinguishes furnishings.
+  'guide.profPages.prov.ladderBody', // -> guide.profPages.prov.ladderBodyFurnishings
   'guide.gear.soulboundBody', // -> guide.gear.soulboundBodyBound (bind-on-trade rules)
   'guide.profPages.ench.enchantsNote', // -> guide.profPages.ench.enchantsNoteOffhand
   'guide.profPages.specimenBody', // -> guide.profPages.specimenBodyFamilies
