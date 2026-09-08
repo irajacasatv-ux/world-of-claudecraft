@@ -1,0 +1,1031 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 5 gltf start /models/weapons/sword_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 6 gltf start /models/weapons/shield_round.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 7 gltf start /models/chars/players/paladin.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 1 gltf done /models/chars/players/knight.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 7 gltf done /models/chars/players/paladin.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 6 gltf done /models/weapons/shield_round.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 5 gltf done /models/weapons/sword_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 8 gltf start /models/chars/players/paladin_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 9 gltf start /models/chars/players/paladin_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 10 gltf start /models/weapons/axe_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 11 gltf start /models/weapons/shield_square.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 8 gltf done /models/chars/players/paladin_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 12 gltf start /models/chars/players/ranger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 9 gltf done /models/chars/players/paladin_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 13 gltf start /models/chars/players/bow_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 13 gltf done /models/chars/players/bow_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 10 gltf done /models/weapons/axe_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 11 gltf done /models/weapons/shield_square.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 14 gltf start /models/chars/players/bow_hold_anim.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 15 gltf start /models/chars/players/hunter_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+[load-diag] 16 gltf start /models/chars/players/ranger_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 12 gltf done /models/chars/players/ranger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 17 gltf start /models/weapons/crossbow_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 16 gltf done /models/chars/players/ranger_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 14 gltf done /models/chars/players/bow_hold_anim.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 15 gltf done /models/chars/players/hunter_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 18 gltf start /models/chars/players/rogue.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 19 gltf start /models/chars/players/rogue_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 20 gltf start /models/chars/players/rogue_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 19 gltf done /models/chars/players/rogue_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 20 gltf done /models/chars/players/rogue_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 17 gltf done /models/weapons/crossbow_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 21 gltf start /models/weapons/dagger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 22 gltf start /models/chars/players/mage.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 23 gltf start /models/chars/players/mage_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 23 gltf done /models/chars/players/mage_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 18 gltf done /models/chars/players/rogue.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 24 gltf start /models/weapons/staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 25 gltf start /models/weapons/spellbook_open.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 22 gltf done /models/chars/players/mage.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 21 gltf done /models/weapons/dagger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 26 gltf start /models/chars/players/barbarian.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 27 gltf start /models/chars/players/barbarian_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 27 gltf done /models/chars/players/barbarian_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 28 gltf start /models/chars/players/shaman_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 24 gltf done /models/weapons/staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 25 gltf done /models/weapons/spellbook_open.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 29 gltf start /models/chars/players/mage_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 30 gltf start /models/chars/players/warlock_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 28 gltf done /models/chars/players/shaman_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 31 gltf start /models/weapons/wand.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 29 gltf done /models/chars/players/mage_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 30 gltf done /models/chars/players/warlock_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 26 gltf done /models/chars/players/barbarian.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 32 gltf start /models/chars/players/druid.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 33 gltf start /models/chars/players/druid_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 34 gltf start /models/chars/players/druid_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 33 gltf done /models/chars/players/druid_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 34 gltf done /models/chars/players/druid_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 35 gltf start /models/creatures/alpaca.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 31 gltf done /models/weapons/wand.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 36 gltf start /models/creatures/bear_form.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 37 gltf start /models/chars/forms/metamorphosis.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 35 gltf done /models/creatures/alpaca.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 38 gltf start /models/creatures/wolf_basic.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 32 gltf done /models/chars/players/druid.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 39 gltf start /models/creatures/chicken_cow.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 39 gltf done /models/creatures/chicken_cow.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 40 gltf start /models/mounts/valorsteed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 36 gltf done /models/creatures/bear_form.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 38 gltf done /models/creatures/wolf_basic.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 41 gltf start /models/creatures/mushroom_pixie.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 42 gltf start /models/creatures/greyjaw.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 37 gltf done /models/chars/forms/metamorphosis.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 40 gltf done /models/mounts/valorsteed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 43 gltf start /models/creatures/greyjaw_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 44 gltf start /models/creatures/wild_boar.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 43 gltf done /models/creatures/greyjaw_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 45 gltf start /models/creatures/fox.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 42 gltf done /models/creatures/greyjaw.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 41 gltf done /models/creatures/mushroom_pixie.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 46 gltf start /models/creatures/yumi_cat.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 47 gltf start /models/creatures/stag.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 45 gltf done /models/creatures/fox.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+[load-diag] 44 gltf done /models/creatures/wild_boar.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 48 gltf start /models/creatures/stag_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 49 gltf start /models/creatures/veiled_stag.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 47 gltf done /models/creatures/stag.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 50 gltf start /models/creatures/gleamstag.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 49 gltf done /models/creatures/veiled_stag.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 48 gltf done /models/creatures/stag_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 51 gltf start /models/creatures/veiled_doe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 52 gltf start /models/creatures/aurelhorn.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 50 gltf done /models/creatures/gleamstag.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 46 gltf done /models/creatures/yumi_cat.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 53 gltf start /models/creatures/velociraptor.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 54 gltf start /models/creatures/yetialt.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 51 gltf done /models/creatures/veiled_doe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 52 gltf done /models/creatures/aurelhorn.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 55 gltf start /models/creatures/yetialt_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 56 gltf start /models/creatures/bear_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 53 gltf done /models/creatures/velociraptor.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 54 gltf done /models/creatures/yetialt.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 57 gltf start /models/creatures/yeti_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 58 gltf start /models/creatures/spider.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 56 gltf done /models/creatures/bear_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 55 gltf done /models/creatures/yetialt_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 59 gltf start /models/creatures/frog.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 60 gltf start /models/creatures/frog_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 57 gltf done /models/creatures/yeti_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 58 gltf done /models/creatures/spider.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 61 gltf start /models/creatures/murloc_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 62 gltf start /models/creatures/goblin.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 59 gltf done /models/creatures/frog.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 60 gltf done /models/creatures/frog_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 63 gltf start /models/creatures/goblin_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 64 gltf start /models/creatures/kobold_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 61 gltf done /models/creatures/murloc_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 65 gltf start /models/creatures/grubjaw.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 63 gltf done /models/creatures/goblin_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 64 gltf done /models/creatures/kobold_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 66 gltf start /models/creatures/kobold.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 67 gltf start /models/creatures/grix.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 62 gltf done /models/creatures/goblin.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 68 gltf start /models/creatures/orc.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 65 gltf done /models/creatures/grubjaw.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 68 gltf done /models/creatures/orc.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 69 gltf start /models/creatures/troll_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 70 gltf start /models/creatures/orc_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 66 gltf done /models/creatures/kobold.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 67 gltf done /models/creatures/grix.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 71 gltf start /models/creatures/ogre.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 72 gltf start /models/creatures/drogmar.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 69 gltf done /models/creatures/troll_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 70 gltf done /models/creatures/orc_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 73 gltf start /models/creatures/wildheart_stalker.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 74 gltf start /models/creatures/wildheart_stalker_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 74 gltf done /models/creatures/wildheart_stalker_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 75 gltf start /models/creatures/wildheart_stalker_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 71 gltf done /models/creatures/ogre.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 76 gltf start /models/creatures/wildheart_ravager.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 75 gltf done /models/creatures/wildheart_stalker_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 73 gltf done /models/creatures/wildheart_stalker.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 77 gltf start /models/creatures/wildheart_ravager_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 78 gltf start /models/creatures/wildheart_ravager_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 72 gltf done /models/creatures/drogmar.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 79 gltf start /models/creatures/wildheart_hexcaller.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 77 gltf done /models/creatures/wildheart_ravager_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 78 gltf done /models/creatures/wildheart_ravager_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 80 gltf start /models/creatures/wildheart_hexcaller_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 81 gltf start /models/creatures/wildheart_hexcaller_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 81 gltf done /models/creatures/wildheart_hexcaller_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 82 gltf start /models/creatures/wildheart_beastmaster.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 80 gltf done /models/creatures/wildheart_hexcaller_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 76 gltf done /models/creatures/wildheart_ravager.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 83 gltf start /models/creatures/wildheart_beastmaster_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 84 gltf start /models/creatures/wildheart_high_priest.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 79 gltf done /models/creatures/wildheart_hexcaller.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 85 gltf start /models/creatures/wildheart_high_priest_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 83 gltf done /models/creatures/wildheart_beastmaster_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 85 gltf done /models/creatures/wildheart_high_priest_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 86 gltf start /models/creatures/wildheart_high_priest_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+[load-diag] 87 gltf start /models/creatures/golelingevolved.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 82 gltf done /models/creatures/wildheart_beastmaster.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 88 gltf start /models/creatures/elemental_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 86 gltf done /models/creatures/wildheart_high_priest_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 87 gltf done /models/creatures/golelingevolved.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 84 gltf done /models/creatures/wildheart_high_priest.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 89 gltf start /models/creatures/ignivar_herald.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 90 gltf start /models/creatures/ignivar_ashcaller.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 91 gltf start /models/creatures/crucible_warden.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 88 gltf done /models/creatures/elemental_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 92 gltf start /models/creatures/ember_sentinel.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 89 gltf done /models/creatures/ignivar_herald.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 93 gltf start /models/creatures/cinder_artificer.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 90 gltf done /models/creatures/ignivar_ashcaller.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 94 gltf start /models/creatures/varkhul_forgefather.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 91 gltf done /models/creatures/crucible_warden.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 92 gltf done /models/creatures/ember_sentinel.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 95 gltf start /models/creatures/water_elemental.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 96 gltf start /models/creatures/gravewing.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 95 gltf done /models/creatures/water_elemental.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 97 gltf start /models/creatures/dragonevolved.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 93 gltf done /models/creatures/cinder_artificer.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 98 gltf start /models/creatures/dragonkin_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 97 gltf done /models/creatures/dragonevolved.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 94 gltf done /models/creatures/varkhul_forgefather.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 99 gltf start /models/creatures/dragonkin_elite.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 100 gltf start /models/creatures/dragonkin_mob.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 96 gltf done /models/creatures/gravewing.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 98 gltf done /models/creatures/dragonkin_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 101 gltf start /models/creatures/dragonkin_baby.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 102 gltf start /models/creatures/dragon_egg.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 99 gltf done /models/creatures/dragonkin_elite.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 100 gltf done /models/creatures/dragonkin_mob.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 101 gltf done /models/creatures/dragonkin_baby.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 102 gltf done /models/creatures/dragon_egg.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 103 gltf start /models/creatures/ghost.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 104 gltf start /models/creatures/tolling_bell.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 105 gltf start /models/creatures/emberkin.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 106 gltf start /models/creatures/mech.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 103 gltf done /models/creatures/ghost.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+[load-diag] 107 gltf start /models/creatures/gloomshade_abyssal_guardian.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 104 gltf done /models/creatures/tolling_bell.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 105 gltf done /models/creatures/emberkin.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 108 gltf start /models/creatures/pyre_colossus.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 109 gltf start /models/creatures/demonalt.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 106 gltf done /models/creatures/mech.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 107 gltf done /models/creatures/gloomshade_abyssal_guardian.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 110 gltf start /models/creatures/demonalt_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 111 gltf start /models/creatures/demon_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 109 gltf done /models/creatures/demonalt.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 112 gltf start /models/creatures/demon.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 110 gltf done /models/creatures/demonalt_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 111 gltf done /models/creatures/demon_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 113 gltf start /models/creatures/demon_flying_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 114 gltf start /models/creatures/tribal.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 112 gltf done /models/creatures/demon.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 108 gltf done /models/creatures/pyre_colossus.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 115 gltf start /models/creatures/nightkin_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 116 gltf start /models/creatures/ghost_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 113 gltf done /models/creatures/demon_flying_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 114 gltf done /models/creatures/tribal.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 117 gltf start /models/creatures/glimmerwisp.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 118 gltf start /models/creatures/duskwisp.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 115 gltf done /models/creatures/nightkin_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 116 gltf done /models/creatures/ghost_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 119 gltf start /models/creatures/glubevolved.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 120 gltf start /models/creatures/glub_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 119 gltf done /models/creatures/glubevolved.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 120 gltf done /models/creatures/glub_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 121 gltf start /models/creatures/crabenemy.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 122 gltf start /models/creatures/crabenemy_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 117 gltf done /models/creatures/glimmerwisp.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 118 gltf done /models/creatures/duskwisp.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 122 gltf done /models/creatures/crabenemy_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 121 gltf done /models/creatures/crabenemy.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 123 gltf start /models/creatures/crab_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 124 gltf start /models/creatures/bull.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 125 gltf start /models/creatures/yeti.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 126 gltf start /models/creatures/yeti_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 123 gltf done /models/creatures/crab_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 127 gltf start /models/creatures/treant_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 126 gltf done /models/creatures/yeti_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 124 gltf done /models/creatures/bull.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 125 gltf done /models/creatures/yeti.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 128 gltf start /models/chars/enemies/skeleton_minion.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 129 gltf start /models/chars/enemies/skeleton_minion_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 130 gltf start /models/chars/enemies/skeleton_rogue.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 127 gltf done /models/creatures/treant_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 131 gltf start /models/chars/enemies/skeleton_rogue_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 129 gltf done /models/chars/enemies/skeleton_minion_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 132 gltf start /models/weapons/skeleton_axe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 131 gltf done /models/chars/enemies/skeleton_rogue_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 133 gltf start /models/chars/enemies/skeleton_warrior.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 128 gltf done /models/chars/enemies/skeleton_minion.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 130 gltf done /models/chars/enemies/skeleton_rogue.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 132 gltf done /models/weapons/skeleton_axe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 134 gltf start /models/chars/enemies/skeleton_warrior_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 135 gltf start /models/weapons/skeleton_blade.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 136 gltf start /models/weapons/skeleton_shield_large_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 133 gltf done /models/chars/enemies/skeleton_warrior.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 137 gltf start /models/chars/enemies/skeleton_mage.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 134 gltf done /models/chars/enemies/skeleton_warrior_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 138 gltf start /models/chars/enemies/skeleton_mage_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 135 gltf done /models/weapons/skeleton_blade.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 136 gltf done /models/weapons/skeleton_shield_large_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 138 gltf done /models/chars/enemies/skeleton_mage_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 139 gltf start /models/weapons/skeleton_staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 140 gltf start /models/chars/enemies/skeleton_minion_free.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 141 gltf start /models/chars/enemies/skelboss_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 137 gltf done /models/chars/enemies/skeleton_mage.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 141 gltf done /models/chars/enemies/skelboss_ability_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 142 gltf start /models/chars/enemies/necromancer.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 143 gltf start /models/chars/enemies/necromancer_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 139 gltf done /models/weapons/skeleton_staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 144 gltf start /models/chars/enemies/skeleton_golem.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 143 gltf done /models/chars/enemies/necromancer_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 140 gltf done /models/chars/enemies/skeleton_minion_free.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 145 gltf start /models/chars/enemies/skeleton_golem_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 146 gltf start /models/chars/players/rogue_hooded.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 142 gltf done /models/chars/enemies/necromancer.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 147 gltf start /models/chars/players/rogue_hooded_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+[load-diag] 145 gltf done /models/chars/enemies/skeleton_golem_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 148 gltf start /models/weapons/axe_2handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 147 gltf done /models/chars/players/rogue_hooded_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 149 gltf start /models/chars/players/mage_classic.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 144 gltf done /models/chars/enemies/skeleton_golem.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 146 gltf done /models/chars/players/rogue_hooded.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 150 gltf start /models/chars/players/mage_classic_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 151 gltf start /models/creatures/stone_cantor.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 148 gltf done /models/weapons/axe_2handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 152 gltf start /models/creatures/spider_egg_sac.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 150 gltf done /models/chars/players/mage_classic_hit_variety_anims.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 153 gltf start /models/props/nythraxis_bone_spike.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 149 gltf done /models/chars/players/mage_classic.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 151 gltf done /models/creatures/stone_cantor.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 152 gltf done /models/creatures/spider_egg_sac.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 154 gltf start /models/chars/modular/warrior_modular.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 155 gltf start /models/weapons/brasscrown_walking_staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 156 gltf start /models/weapons/knotted_oak_stave.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 153 gltf done /models/props/nythraxis_bone_spike.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 157 gltf start /models/weapons/hammer_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 155 gltf done /models/weapons/brasscrown_walking_staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 158 gltf start /models/weapons/notched_woodaxe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 156 gltf done /models/weapons/knotted_oak_stave.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 159 gltf start /models/weapons/scythe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 154 gltf done /models/chars/modular/warrior_modular.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 157 gltf done /models/weapons/hammer_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 160 gltf start /models/weapons/whittler_s_knife.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 161 gltf start /models/weapons/spear_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 159 gltf done /models/weapons/scythe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 162 gltf start /models/weapons/sword_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 158 gltf done /models/weapons/notched_woodaxe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 163 gltf start /models/weapons/sword_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 160 gltf done /models/weapons/whittler_s_knife.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 164 gltf start /models/weapons/adv_sword_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 161 gltf done /models/weapons/spear_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 165 gltf start /models/weapons/sword_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 162 gltf done /models/weapons/sword_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 166 gltf start /models/weapons/sword_d.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 163 gltf done /models/weapons/sword_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 167 gltf start /models/weapons/sword_e.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 164 gltf done /models/weapons/adv_sword_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 168 gltf start /models/weapons/sword_f.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 165 gltf done /models/weapons/sword_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 169 gltf start /models/weapons/sword_g.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 166 gltf done /models/weapons/sword_d.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+[load-diag] 170 gltf start /models/weapons/adv_sword_2handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 167 gltf done /models/weapons/sword_e.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 171 gltf start /models/weapons/adv_sword_2handed_color.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 168 gltf done /models/weapons/sword_f.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 172 gltf start /models/weapons/dagger_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 169 gltf done /models/weapons/sword_g.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 170 gltf done /models/weapons/adv_sword_2handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 173 gltf start /models/weapons/dagger_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 171 gltf done /models/weapons/adv_sword_2handed_color.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 174 gltf start /models/weapons/dagger_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 175 gltf start /models/weapons/adv_dagger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 172 gltf done /models/weapons/dagger_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 176 gltf start /models/weapons/redskull_dagger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 175 gltf done /models/weapons/adv_dagger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 173 gltf done /models/weapons/dagger_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 174 gltf done /models/weapons/dagger_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 177 gltf start /models/weapons/purple_dagger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 178 gltf start /models/weapons/staff_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 179 gltf start /models/weapons/staff_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 176 gltf done /models/weapons/redskull_dagger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 180 gltf start /models/weapons/staff_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 177 gltf done /models/weapons/purple_dagger.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 178 gltf done /models/weapons/staff_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 179 gltf done /models/weapons/staff_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 181 gltf start /models/weapons/staff_d.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 182 gltf start /models/weapons/adv_staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 183 gltf start /models/weapons/adv_druid_staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 180 gltf done /models/weapons/staff_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 184 gltf start /models/weapons/wand_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 182 gltf done /models/weapons/adv_staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 183 gltf done /models/weapons/adv_druid_staff.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 181 gltf done /models/weapons/staff_d.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 185 gltf start /models/weapons/wand_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 186 gltf start /models/weapons/adv_wand.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 187 gltf start /models/weapons/hammer_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 184 gltf done /models/weapons/wand_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 188 gltf start /models/weapons/hammer_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 187 gltf done /models/weapons/hammer_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 186 gltf done /models/weapons/adv_wand.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 185 gltf done /models/weapons/wand_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 189 gltf start /models/weapons/hammer_d.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 190 gltf start /models/weapons/hammer_varkhul.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 191 gltf start /models/weapons/axe_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 188 gltf done /models/weapons/hammer_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 192 gltf start /models/weapons/axe_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 191 gltf done /models/weapons/axe_a.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 189 gltf done /models/weapons/hammer_d.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 193 gltf start /models/weapons/axe_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 194 gltf start /models/weapons/axe_d.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 192 gltf done /models/weapons/axe_b.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 195 gltf start /models/weapons/adv_axe_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 190 gltf done /models/weapons/hammer_varkhul.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 196 gltf start /models/weapons/purple_sword.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 193 gltf done /models/weapons/axe_c.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 194 gltf done /models/weapons/axe_d.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 195 gltf done /models/weapons/adv_axe_1handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 197 gltf start /models/weapons/purple_axe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 198 gltf start /models/weapons/adv_axe_2handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 199 gltf start /models/weapons/tome_silverleaf.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 199 gltf done /models/weapons/tome_silverleaf.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 196 gltf done /models/weapons/purple_sword.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 200 gltf start /models/weapons/tome_goldleaf.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 201 gltf start /models/weapons/tome_sunpetal.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 197 gltf done /models/weapons/purple_axe.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 200 gltf done /models/weapons/tome_goldleaf.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 198 gltf done /models/weapons/adv_axe_2handed.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 202 gltf start /models/weapons/tome_voidbound.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 201 gltf done /models/weapons/tome_sunpetal.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 203 gltf start /models/weapons/varkhul_emberward.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 202 gltf done /models/weapons/tome_voidbound.glb
+stdout | tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+[load-diag] 203 gltf done /models/weapons/varkhul_emberward.glb
+ ❯ |chromium| tests/browser/freehold_gate_input.browser.test.ts (17 tests | 14 failed) 2132ms
+     × Enter activates the own-home button once without chat or jump 651ms
+     × Space activates the own-home button once without chat or jump 101ms
+     × Enter keeps tab and Find Home activation native without entry 126ms
+     × Space keeps tab and Find Home activation native without entry 137ms
+     × Enter on the native home select never opens chat or jumps 104ms
+     × Space on the native home select never opens chat or jumps 94ms
+     × Enter on Cancel closes and returns the real opener 80ms
+     × Space on Cancel closes and returns the real opener 51ms
+     × Escape from the character name cancels, while composing Escape preserves the draft 79ms
+     × a trusted touch Cancel closes and returns focus without command or teleport 196ms
+     × stale range activation explains unavailability and disables Enter 85ms
+     × stale death activation explains unavailability and disables Enter 64ms
+     × stale gate removed activation explains unavailability and disables Enter 69ms
+     × stale disabled host activation explains unavailability and disables Enter 66ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 14 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter activates the own-home button once without chat or jump
+AssertionError: expected 1 to be +0 // Object.is equality
+
+Failure screenshot:
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Enter-activates-the-own-home-button-once-without-chat-or-jump-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+ ❯ tests/browser/freehold_gate_input.browser.test.ts:127:24
+    125|     control('enter').focus();
+    126|     await userEvent.keyboard(`[${key}]`);
+    127|     expect(f.chatOpens).toBe(0);
+       |                        ^
+    128|     expect(input.readMoveInput().jump).toBe(false);
+    129|     expect(f.enter).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/14]⎯
+
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space activates the own-home button once without chat or jump
+AssertionError: expected true to be false // Object.is equality
+
+Failure screenshot:
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Space-activates-the-own-home-button-once-without-chat-or-jump-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ tests/browser/freehold_gate_input.browser.test.ts:128:39
+    126|     await userEvent.keyboard(`[${key}]`);
+    127|     expect(f.chatOpens).toBe(0);
+    128|     expect(input.readMoveInput().jump).toBe(false);
+       |                                       ^
+    129|     expect(f.enter).toHaveBeenCalledTimes(1);
+    130|     expect(f.sim.player.dungeonEntrySeq).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/14]⎯
+
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter keeps tab and Find Home activation native without entry
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space keeps tab and Find Home activation native without entry
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+
+Failure screenshots:
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Enter-keeps-tab-and-Find-Home-activation-native-without-entry-1.png
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Space-keeps-tab-and-Find-Home-activation-native-without-entry-1.png
+
+ ❯ tests/browser/freehold_gate_input.browser.test.ts:144:19
+    142|     control('lookup').focus();
+    143|     await userEvent.keyboard(`[${key}]`);
+    144|     expect(lookup).toHaveBeenCalledTimes(1);
+       |                   ^
+    145|     expect(f.enter).not.toHaveBeenCalled();
+    146|     expect(f.chatOpens).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/14]⎯
+
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on the native home select never opens chat or jumps
+AssertionError: expected 1 to be +0 // Object.is equality
+
+Failure screenshot:
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Enter-on-the-native-home-select-never-opens-chat-or-jumps-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+ ❯ tests/browser/freehold_gate_input.browser.test.ts:159:24
+    157|     select.focus();
+    158|     await userEvent.keyboard(`[${key}]`);
+    159|     expect(f.chatOpens).toBe(0);
+       |                        ^
+    160|     expect(input.readMoveInput().jump).toBe(false);
+    161|     expect(prevented).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/14]⎯
+
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on the native home select never opens chat or jumps
+AssertionError: expected true to be false // Object.is equality
+
+Failure screenshot:
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Space-on-the-native-home-select-never-opens-chat-or-jumps-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ tests/browser/freehold_gate_input.browser.test.ts:160:39
+    158|     await userEvent.keyboard(`[${key}]`);
+    159|     expect(f.chatOpens).toBe(0);
+    160|     expect(input.readMoveInput().jump).toBe(false);
+       |                                       ^
+    161|     expect(prevented).toBe(false);
+    162|     expect(f.enter).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/14]⎯
+
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Enter on Cancel closes and returns the real opener
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Space on Cancel closes and returns the real opener
+AssertionError: expected true to be false // Object.is equality
+
+Failure screenshots:
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Enter-on-Cancel-closes-and-returns-the-real-opener-1.png
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Space-on-Cancel-closes-and-returns-the-real-opener-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ cancelled tests/browser/freehold_gate_input.browser.test.ts:114:26
+    112|
+    113| async function cancelled(f: ReturnType<typeof mount>, before: string) {
+    114|   expect(f.prompt.isOpen).toBe(false);
+       |                          ^
+    115|   expect(f.root.style.display).toBe('none');
+    116|   expect(f.enter).not.toHaveBeenCalled();
+ ❯ tests/browser/freehold_gate_input.browser.test.ts:173:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/14]⎯
+
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > Escape from the character name cancels, while composing Escape preserves the draft
+AssertionError: expected true to be false // Object.is equality
+
+Failure screenshot:
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-Escape-from-the-character-name-cancels--while-composing-Escape-preserves-the-draft-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+ ❯ cancelled tests/browser/freehold_gate_input.browser.test.ts:114:26
+    112|
+    113| async function cancelled(f: ReturnType<typeof mount>, before: string) {
+    114|   expect(f.prompt.isOpen).toBe(false);
+       |                          ^
+    115|   expect(f.root.style.display).toBe('none');
+    116|   expect(f.enter).not.toHaveBeenCalled();
+ ❯ tests/browser/freehold_gate_input.browser.test.ts:201:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/14]⎯
+
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > a trusted touch Cancel closes and returns focus without command or teleport
+AssertionError: expected false to be true // Object.is equality
+
+Failure screenshot:
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-a-trusted-touch-Cancel-closes-and-returns-focus-without-command-or-teleport-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ tests/browser/freehold_gate_input.browser.test.ts:248:27
+    246|       });
+    247|       await session.send('Input.dispatchTouchEvent', { type: 'touchEnd…
+    248|       expect(trustedTouch).toBe(true);
+       |                           ^
+    249|       await cancelled(f, before);
+    250|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/14]⎯
+
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > stale range activation explains unavailability and disables Enter
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > stale death activation explains unavailability and disables Enter
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > stale gate removed activation explains unavailability and disables Enter
+ FAIL  |chromium| tests/browser/freehold_gate_input.browser.test.ts > Freehold gate native input and cancellation > stale disabled host activation explains unavailability and disables Enter
+AssertionError: expected '' to be 'This is unavailable right now.' // Object.is equality
+
+Failure screenshots:
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-stale-range-activation-explains-unavailability-and-disables-Enter-1.png
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-stale-death-activation-explains-unavailability-and-disables-Enter-1.png
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-stale-gate-removed-activation-explains-unavailability-and-disables-Enter-1.png
+  - tests/browser/__screenshots__/freehold_gate_input.browser.test.ts/Freehold-gate-native-input-and-cancellation-stale-disabled-host-activation-explains-unavailability-and-disables-Enter-1.png
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- This is unavailable right now.[39m
+
+ ❯ tests/browser/freehold_gate_input.browser.test.ts:276:65
+    274|     expect(f.enter).not.toHaveBeenCalled();
+    275|     expect(travel(f.sim)).toBe(before);
+    276|     expect(f.root.querySelector('[role="status"]')!.textContent).toBe(…
+       |                                                                 ^
+    277|     expect((control('enter') as HTMLButtonElement).disabled).toBe(true…
+    278|     expect(f.chatOpens).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/14]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  14 failed | 3 passed (17)
+   Start at  14:54:46
+   Duration  5.36s (transform 0ms, setup 0ms, import 2.43s, tests 2.13s, environment 0ms)
+

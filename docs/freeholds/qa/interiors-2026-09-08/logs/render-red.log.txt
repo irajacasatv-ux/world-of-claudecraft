@@ -1,0 +1,67 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+(node:88103) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | tests/renderer_zone_dependency_lifecycle.test.ts
+[ktx2] no probe context; transcoding to uncompressed RGBA
+
+ ❯ tests/renderer_zone_dependency_lifecycle.test.ts (9 tests | 3 failed) 221ms
+     × releases a stalled zone dependency at the existing preparation deadline without publishing 5ms
+     × settles shutdown and the prewarm while the shared asset fetch never settles 102ms
+     × releases temporary interior instance handles once on retirement while retaining shared assets 57ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/renderer_zone_dependency_lifecycle.test.ts > renderer zone dependency lifetime > releases a stalled zone dependency at the existing preparation deadline without publishing
+AssertionError: expected undefined to be an instance of Error
+ ❯ tests/renderer_zone_dependency_lifecycle.test.ts:116:20
+    114|     });
+    115|     await vi.advanceTimersByTimeAsync(5000);
+    116|     expect(failed).toBeInstanceOf(Error);
+       |                    ^
+    117|     expect(String(failed)).toContain('dependency deadline');
+    118|     await task;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/renderer_zone_dependency_lifecycle.test.ts > renderer zone dependency lifetime > settles shutdown and the prewarm while the shared asset fetch never settles
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ vi.waitFor.timeout tests/renderer_zone_dependency_lifecycle.test.ts:141:46
+    139|     });
+    140|     try {
+    141|       await vi.waitFor(() => expect(stopped).toBe(true), { timeout: 10…
+       |                                              ^
+    142|       expect(String(failed)).toContain('prewarm cancelled');
+    143|       expect(renderer.disposeRendererResources).toHaveBeenCalledOnce();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/renderer_zone_dependency_lifecycle.test.ts > renderer zone dependency lifetime > releases temporary interior instance handles once on retirement while retaining shared assets
+AssertionError: expected "dispose" to be called once, but got 0 times
+ ❯ tests/renderer_zone_dependency_lifecycle.test.ts:178:54
+    176|     await rejection;
+    177|     await renderer.shutdown();
+    178|     for (const dispose of instances) expect(dispose).toHaveBeenCalledO…
+       |                                                      ^
+    179|     for (const dispose of [...geometries, ...materials]) expect(dispos…
+    180|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 6 passed (9)
+   Start at  14:52:13
+   Duration  2.99s (transform 1.24s, setup 140ms, import 2.56s, tests 221ms, environment 0ms)
+

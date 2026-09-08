@@ -1,0 +1,38 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+ ❯ tests/freehold_key_persistence.test.ts (6 tests | 2 failed) 617ms
+     × retains one banked key through JSON restore and gate entry before withdrawing it 6ms
+     × retains one banked key through JSON restore and gate entry before withdrawing it 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/freehold_key_persistence.test.ts > inn_room Hearth Key character JSON > retains one banked key through JSON restore and gate entry before withdrawing it
+ FAIL  tests/freehold_key_persistence.test.ts > cottage Hearth Key character JSON > retains one banked key through JSON restore and gate entry before withdrawing it
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/freehold_key_persistence.test.ts:188:64
+    186|     enterGate(restored.sim, restored.pid);
+    187|     expect(dungeonAt(entity(restored.sim, restored.pid).pos.x)?.id).to…
+    188|     expect(restored.sim.countItem('hearth_key', restored.pid)).toBe(0);
+       |                                                                ^
+    189|     expect(keyRows(meta.bank.inventory)).toEqual([{ itemId: 'hearth_ke…
+    190|     expect(meta.bank).toEqual(bankBefore);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+   Start at  15:29:33
+   Duration  1.79s (transform 652ms, setup 206ms, import 892ms, tests 617ms, environment 0ms)
+

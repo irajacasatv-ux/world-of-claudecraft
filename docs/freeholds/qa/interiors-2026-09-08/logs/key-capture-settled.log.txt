@@ -1,0 +1,2 @@
+desktop: gate grant, bag tooltip, native placement, bank round trip, key activation passed
+compact: gate grant, bag tooltip, native placement, bank round trip, key activation passed

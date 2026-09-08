@@ -1,0 +1,2 @@
+ux-key-manifest.json 557 BYTE_IDENTICAL /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/ux-key-manifest.json
+ux-shot-manifest.json 742 BYTE_IDENTICAL /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/ux-shot-manifest.json

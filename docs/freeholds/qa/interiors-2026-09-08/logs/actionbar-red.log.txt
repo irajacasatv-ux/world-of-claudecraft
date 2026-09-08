@@ -1,0 +1,36 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+ ❯ tests/action_bar_controller.test.ts (65 tests | 1 failed | 64 skipped) 6ms
+     × admits the permanent travel key while refusing forged and unusable item ids 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/action_bar_controller.test.ts > Hearth Key action-slot eligibility > admits the permanent travel key while refusing forged and unusable item ids
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/action_bar_controller.test.ts:1206:53
+    1204|   it('admits the permanent travel key while refusing forged and unusab…
+    1205|     const { controller } = makeHarness('warrior', [], bar());
+    1206|     expect(controller.isHotbarItemId('hearth_key')).toBe(true);
+       |                                                     ^
+    1207|     expect(controller.isAssignableAction({ type: 'item', id: 'hearth_k…
+    1208|     for (const id of ['forged_hearth_key', 'copper_ore', 'freehold_tim…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 64 skipped (65)
+   Start at  15:06:47
+   Duration  442ms (transform 172ms, setup 153ms, import 214ms, tests 6ms, environment 0ms)
+

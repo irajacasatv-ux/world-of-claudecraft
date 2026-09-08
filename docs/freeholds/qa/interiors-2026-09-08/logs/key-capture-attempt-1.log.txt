@@ -1,0 +1,12 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+Error: No element found for selector: #bank-window .bank-item[aria-label*="Hearth Key"]
+    at assert (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/puppeteer-core/lib/puppeteer/util/assert.js:15:15)
+    at CdpFrame.hover (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/puppeteer-core/lib/puppeteer/api/Frame.js:792:17)
+    at async tooltip (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/scripts/freehold_key_capture.mjs:88:8)
+    at async captureBank (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/scripts/freehold_key_capture.mjs:189:15)
+    at async file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/scripts/freehold_key_capture.mjs:283:7
+
+Node.js v26.8.1

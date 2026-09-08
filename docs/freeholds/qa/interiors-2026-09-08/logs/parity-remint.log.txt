@@ -1,0 +1,12 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 88 skipped (90)
+   Start at  15:15:19
+   Duration  1.77s (transform 475ms, setup 181ms, import 823ms, tests 683ms, environment 0ms)
+

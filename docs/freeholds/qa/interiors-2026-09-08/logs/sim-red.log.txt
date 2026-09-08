@@ -1,0 +1,124 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+ ❯ tests/freehold_arrival.test.ts (8 tests | 8 failed) 198ms
+     × gate preserves empty entry and separates a same-account arrival without mutating its occupant 149ms
+     × key preserves empty entry and separates a same-account arrival without mutating its occupant 5ms
+     × gate refuses a full protected approach before claiming a vacant room or changing travel state 12ms
+     × key refuses a full protected approach before claiming a vacant room or changing travel state 8ms
+     × gate preserves empty entry and separates a same-account arrival without mutating its occupant 2ms
+     × key preserves empty entry and separates a same-account arrival without mutating its occupant 2ms
+     × gate refuses a full protected approach before claiming a vacant room or changing travel state 10ms
+     × key refuses a full protected approach before claiming a vacant room or changing travel state 8ms
+ ❯ tests/freehold_gate_and_key.test.ts (51 tests | 1 failed) 975ms
+     × preserves dead/combat/ownership precedence for dead=false combat=true 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/freehold_arrival.test.ts > inn_room occupied owner arrivals > gate preserves empty entry and separates a same-account arrival without mutating its occupant
+ FAIL  tests/freehold_arrival.test.ts > inn_room occupied owner arrivals > key preserves empty entry and separates a same-account arrival without mutating its occupant
+ FAIL  tests/freehold_arrival.test.ts > cottage occupied owner arrivals > gate preserves empty entry and separates a same-account arrival without mutating its occupant
+ FAIL  tests/freehold_arrival.test.ts > cottage occupied owner arrivals > key preserves empty entry and separates a same-account arrival without mutating its occupant
+AssertionError: expected 0 to be greater than or equal to 1
+ ❯ replay tests/freehold_arrival.test.ts:79:84
+     77|         const second = sim.entities.get(b)!;
+     78|         expect(sim.ctx.instanceClaimIdAt(second.pos)).toBe(sim.ctx.ins…
+     79|         expect(Math.hypot(second.pos.x - first.pos.x, second.pos.z - f…
+       |                                                                                    ^
+     80|         expectSafe(sim, second, origin, tier === 'inn_room' ? 6 : 10);
+     81|         expect(first).toEqual(occupant);
+ ❯ tests/freehold_arrival.test.ts:87:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/freehold_arrival.test.ts > inn_room occupied owner arrivals > gate refuses a full protected approach before claiming a vacant room or changing travel state
+ FAIL  tests/freehold_arrival.test.ts > inn_room occupied owner arrivals > key refuses a full protected approach before claiming a vacant room or changing travel state
+AssertionError: expected [ { type: 'log', …(3) } ] to deeply equal [ { type: 'freeholdDenied', …(2) } ]
+
+- Expected
++ Received
+
+  [
+    {
++     "color": "#b9f",
+      "pid": 50,
+-     "reason": "busy",
+-     "type": "freeholdDenied",
++     "text": "You climb the inn stairs and let yourself into your rented room.",
++     "type": "log",
+    },
+  ]
+
+ ❯ tests/freehold_arrival.test.ts:115:33
+    113|       if (surface === 'gate') sim.freeholdEnter(b);
+    114|       else sim.useItem('hearth_key', b);
+    115|       expect(sim.drainEvents()).toEqual([{ type: 'freeholdDenied', pid…
+       |                                 ^
+    116|       expect(travelState(sim)).toEqual(before);
+    117|       expect(draws).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/freehold_arrival.test.ts > cottage occupied owner arrivals > gate refuses a full protected approach before claiming a vacant room or changing travel state
+ FAIL  tests/freehold_arrival.test.ts > cottage occupied owner arrivals > key refuses a full protected approach before claiming a vacant room or changing travel state
+AssertionError: expected [ { type: 'log', …(3) } ] to deeply equal [ { type: 'freeholdDenied', …(2) } ]
+
+- Expected
++ Received
+
+  [
+    {
++     "color": "#b9f",
+      "pid": 50,
+-     "reason": "busy",
+-     "type": "freeholdDenied",
++     "text": "You push open the garden gate and step into your own cottage.",
++     "type": "log",
+    },
+  ]
+
+ ❯ tests/freehold_arrival.test.ts:115:33
+    113|       if (surface === 'gate') sim.freeholdEnter(b);
+    114|       else sim.useItem('hearth_key', b);
+    115|       expect(sim.drainEvents()).toEqual([{ type: 'freeholdDenied', pid…
+       |                                 ^
+    116|       expect(travelState(sim)).toEqual(before);
+    117|       expect(draws).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/freehold_gate_and_key.test.ts > Public gate and key transition evidence > preserves dead/combat/ownership precedence for dead=false combat=true
+AssertionError: expected [ { type: 'freeholdDenied', …(2) } ] to deeply equal [ { type: 'freeholdDenied', …(2) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "pid": 45,
+-     "reason": "combat",
++     "reason": "no_freehold",
+      "type": "freeholdDenied",
+    },
+  ]
+
+ ❯ refusal tests/freehold_gate_and_key.test.ts:84:29
+     82|   sim.rng.setObserver(draws);
+     83|   action();
+     84|   expect(sim.drainEvents()).toEqual([{ type: 'freeholdDenied', pid: si…
+       |                             ^
+     85|   expect(travelState(sim)).toEqual(before);
+     86|   expect(draws).not.toHaveBeenCalled();
+ ❯ tests/freehold_gate_and_key.test.ts:462:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  9 failed | 50 passed (59)
+   Start at  14:51:02
+   Duration  2.48s (transform 1.70s, setup 595ms, import 2.26s, tests 1.17s, environment 0ms)
+

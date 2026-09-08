@@ -1,0 +1,36 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+ ❯ tests/release_v039_icon_art.test.ts (5 tests | 1 failed) 17ms
+     × keeps the sealed historical totals while current production remains fully painted 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/release_v039_icon_art.test.ts > release v0.39 icon-art second-pass lineage > keeps the sealed historical totals while current production remains fully painted
+AssertionError: production isHotbarItemId art-subject inventory (live minus ITEM_ART_PENDING): expected [ 'reins_valorsteed', …(97) ] to have a length of 97 but got 98
+
+- Expected
++ Received
+
+- 97
++ 98
+
+ ❯ tests/release_v039_icon_art.test.ts:496:7
+    494|       artSubjectHotbarItemIds,
+    495|       'production isHotbarItemId art-subject inventory (live minus ITE…
+    496|     ).toHaveLength(97);
+       |       ^
+    497|     expect(pendingHotbarItemIds, 'ITEM_ART_PENDING hotbar items').toHa…
+    498|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  16:33:18
+   Duration  705ms (transform 286ms, setup 240ms, import 351ms, tests 17ms, environment 0ms)
+

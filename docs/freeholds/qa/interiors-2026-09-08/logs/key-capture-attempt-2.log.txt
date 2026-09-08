@@ -1,0 +1,11 @@
+desktop: gate grant, bag tooltip, native placement, bank round trip, key activation passed
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+Error: Tab navigation never reached #bags .bag-item[data-coach-item="hearth_key"]
+    at keyboardFocus (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/scripts/freehold_key_capture.mjs:83:9)
+    at async tooltip (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/scripts/freehold_key_capture.mjs:89:15)
+    at async file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/scripts/freehold_key_capture.mjs:275:19
+
+Node.js v26.8.1

@@ -1,0 +1,242 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+(node:96770) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | tests/server/freehold_wire.test.ts > freeholds wire: lit realm dispatch reaches the Sim methods > freehold_enter: a well-formed frame invokes the Sim method once with the guarded args and the pid
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stderr | tests/server/freehold_wire.test.ts > freeholds wire: lit realm dispatch reaches the Sim methods > freehold_enter: a well-formed frame invokes the Sim method once with the guarded args and the pid
+account flair refresh failed: TypeError: Cannot read properties of null (reading 'streamer')
+    at wireStreamerLinks (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/account_flair.ts:141:14)
+    at chatSenderFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/chat_sender_flair.ts:17:17)
+    at GameServer.stampAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2911:25)
+    at GameServer.refreshAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2898:10)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+stdout | tests/server/freehold_wire.test.ts > freeholds wire: a jailed session cannot step through its own door > on a DARK realm the jail arm answers first, so the housing counter under-counts a jailed prober
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stderr | tests/server/freehold_wire.test.ts > freeholds wire: a jailed session cannot step through its own door > on a DARK realm the jail arm answers first, so the housing counter under-counts a jailed prober
+account flair refresh failed: TypeError: Cannot read properties of null (reading 'streamer')
+    at wireStreamerLinks (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/account_flair.ts:141:14)
+    at chatSenderFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/chat_sender_flair.ts:17:17)
+    at GameServer.stampAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2911:25)
+    at GameServer.refreshAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2898:10)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+stdout | tests/server/freehold_wire.test.ts > Freehold Gate and Hearth Key real server dispatch > jailed 'freehold_enter' returns only the personal busy denial and changes no travel state
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stderr | tests/server/freehold_wire.test.ts > Freehold Gate and Hearth Key real server dispatch > jailed 'freehold_enter' returns only the personal busy denial and changes no travel state
+account flair refresh failed: TypeError: Cannot read properties of null (reading 'streamer')
+    at wireStreamerLinks (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/account_flair.ts:141:14)
+    at chatSenderFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/chat_sender_flair.ts:17:17)
+    at GameServer.stampAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2911:25)
+    at GameServer.refreshAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2898:10)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+account flair refresh failed: TypeError: Cannot read properties of null (reading 'streamer')
+    at wireStreamerLinks (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/account_flair.ts:141:14)
+    at chatSenderFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/chat_sender_flair.ts:17:17)
+    at GameServer.stampAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2911:25)
+    at GameServer.refreshAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2898:10)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+stdout | tests/server/freehold_wire.test.ts > Freehold Gate and Hearth Key real server dispatch > jailed 'use' returns only the personal busy denial and changes no travel state
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stderr | tests/server/freehold_wire.test.ts > Freehold Gate and Hearth Key real server dispatch > jailed 'use' returns only the personal busy denial and changes no travel state
+account flair refresh failed: TypeError: Cannot read properties of null (reading 'streamer')
+    at wireStreamerLinks (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/account_flair.ts:141:14)
+    at chatSenderFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/chat_sender_flair.ts:17:17)
+    at GameServer.stampAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2911:25)
+    at GameServer.refreshAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2898:10)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+account flair refresh failed: TypeError: Cannot read properties of null (reading 'streamer')
+    at wireStreamerLinks (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/account_flair.ts:141:14)
+    at chatSenderFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/chat_sender_flair.ts:17:17)
+    at GameServer.stampAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2911:25)
+    at GameServer.refreshAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2898:10)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+stdout | tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > refusal refreshes heavy self only for a newly granted key
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stderr | tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > refusal refreshes heavy self only for a newly granted key
+account flair refresh failed: TypeError: Cannot read properties of null (reading 'streamer')
+    at wireStreamerLinks (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/account_flair.ts:141:14)
+    at chatSenderFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/chat_sender_flair.ts:17:17)
+    at GameServer.stampAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2911:25)
+    at GameServer.refreshAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2898:10)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+stdout | tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > existing key refreshes heavy self only for a newly granted key
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stderr | tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > existing key refreshes heavy self only for a newly granted key
+account flair refresh failed: TypeError: Cannot read properties of null (reading 'streamer')
+    at wireStreamerLinks (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/account_flair.ts:141:14)
+    at chatSenderFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/chat_sender_flair.ts:17:17)
+    at GameServer.stampAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2911:25)
+    at GameServer.refreshAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2898:10)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+stdout | tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > full bags refreshes heavy self only for a newly granted key
+[bot-detector] suspicion-flag host: not accepted by this detector build
+
+stderr | tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > full bags refreshes heavy self only for a newly granted key
+account flair refresh failed: TypeError: Cannot read properties of null (reading 'streamer')
+    at wireStreamerLinks (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/src/sim/account_flair.ts:141:14)
+    at chatSenderFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/chat_sender_flair.ts:17:17)
+    at GameServer.stampAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2911:25)
+    at GameServer.refreshAccountFlair (/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/server/game.ts:2898:10)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+stdout | tests/server/freehold_wire.test.ts
+[capi] META_CAPI_ACCESS_TOKEN unset; Conversions API disabled.
+
+ ❯ tests/server/freehold_wire.test.ts (115 tests | 7 failed) 3216ms
+     × freehold_enter: a well-formed frame invokes the Sim method once with the guarded args and the pid 27ms
+     × on a DARK realm the jail arm answers first, so the housing counter under-counts a jailed prober 29ms
+     × jailed 'freehold_enter' returns only the personal busy denial and changes no travel state 31ms
+     × jailed 'use' returns only the personal busy denial and changes no travel state 27ms
+     × refusal refreshes heavy self only for a newly granted key 30ms
+     × existing key refreshes heavy self only for a newly granted key 28ms
+     × full bags refreshes heavy self only for a newly granted key 27ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/server/freehold_wire.test.ts > freeholds wire: lit realm dispatch reaches the Sim methods > freehold_enter: a well-formed frame invokes the Sim method once with the guarded args and the pid
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/server/freehold_wire.test.ts:593:38
+    591|       expect(fc.sent.filter((m) => m.t === 'commandOutcome' && m.ok ==…
+    592|       expect(refusals.count()).toBe(0);
+    593|       expect(session.selfHeavyDirty).toBe(false);
+       |                                      ^
+    594|     },
+    595|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  tests/server/freehold_wire.test.ts > freeholds wire: a jailed session cannot step through its own door > on a DARK realm the jail arm answers first, so the housing counter under-counts a jailed prober
+AssertionError: expected [ { t: 'events', …(1) }, …(1) ] to deeply equal [ { t: 'events', …(1) }, …(1) ]
+
+- Expected
++ Received
+
+@@ -1,11 +1,11 @@
+  [
+    {
+      "list": [
+        {
+          "pid": 1006,
+-         "reason": "busy",
++         "reason": "no_freehold",
+          "type": "freeholdDenied",
+        },
+      ],
+      "t": "events",
+    },
+
+ ❯ tests/server/freehold_wire.test.ts:827:21
+    825|
+    826|     server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'fre…
+    827|     expect(fc.sent).toEqual([
+       |                     ^
+    828|       { t: 'events', list: [{ type: 'freeholdDenied', pid: session.pid…
+    829|       { t: 'commandOutcome', rid: 81, ok: false },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/server/freehold_wire.test.ts > Freehold Gate and Hearth Key real server dispatch > jailed 'freehold_enter' returns only the personal busy denial and changes no travel state
+AssertionError: expected [ { t: 'events', …(1) }, …(1) ] to deeply equal [ { t: 'events', …(1) }, …(1) ]
+
+- Expected
++ Received
+
+@@ -1,11 +1,11 @@
+  [
+    {
+      "list": [
+        {
+          "pid": 1008,
+-         "reason": "busy",
++         "reason": "no_freehold",
+          "type": "freeholdDenied",
+        },
+      ],
+      "t": "events",
+    },
+
+ ❯ tests/server/freehold_wire.test.ts:1174:21
+    1172|       JSON.stringify({ t: 'cmd', ...frame, ownerKey: 'account:1', pid:…
+    1173|     );
+    1174|     expect(fc.sent).toEqual([
+       |                     ^
+    1175|       { t: 'events', list: [{ type: 'freeholdDenied', pid, reason: 'bu…
+    1176|       { t: 'commandOutcome', rid: 701, ok: false },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/server/freehold_wire.test.ts > Freehold Gate and Hearth Key real server dispatch > jailed 'use' returns only the personal busy denial and changes no travel state
+AssertionError: expected [ { t: 'events', …(1) }, …(1) ] to deeply equal [ { t: 'events', …(1) }, …(1) ]
+
+- Expected
++ Received
+
+@@ -1,12 +1,11 @@
+  [
+    {
+      "list": [
+        {
+-         "pid": 1008,
+-         "reason": "busy",
+-         "type": "freeholdDenied",
++         "text": "You cannot do that while jailed.",
++         "type": "error",
+        },
+      ],
+      "t": "events",
+    },
+    {
+
+ ❯ tests/server/freehold_wire.test.ts:1174:21
+    1172|       JSON.stringify({ t: 'cmd', ...frame, ownerKey: 'account:1', pid:…
+    1173|     );
+    1174|     expect(fc.sent).toEqual([
+       |                     ^
+    1175|       { t: 'events', list: [{ type: 'freeholdDenied', pid, reason: 'bu…
+    1176|       { t: 'commandOutcome', rid: 701, ok: false },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > refusal refreshes heavy self only for a newly granted key
+ FAIL  tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > existing key refreshes heavy self only for a newly granted key
+ FAIL  tests/server/freehold_wire.test.ts > Freehold Gate inventory change drives heavy self snapshots > full bags refreshes heavy self only for a newly granted key
+AssertionError: expected "ownedMountsFor" to be called +0 times, but got 1 times
+ ❯ tests/server/freehold_wire.test.ts:1317:31
+    1315|       ).routeEvents(events);
+    1316|       broadcast(server);
+    1317|       expect(heavyProjection).toHaveBeenCalledTimes(outcome === 'new k…
+       |                               ^
+    1318|       if (outcome === 'new key') {
+    1319|         expect(lastSnap(fc.sent).self.inv).toEqual(meta.inventory);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 108 passed (115)
+   Start at  14:55:51
+   Duration  5.77s (transform 1.06s, setup 155ms, import 2.32s, tests 3.22s, environment 0ms)
+

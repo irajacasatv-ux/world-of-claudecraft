@@ -1,0 +1,12 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> world-of-claudecraft@0.42.0 perf:tour
+> node scripts/perf_tour.mjs
+
+capturing desktop perf tour...
+capturing mobile perf tour...
+wrote /tmp/freeholds-06-final-perf.json
+desktop: fps 117.5 (10s 119.6) p95 9.1ms maxP95 9.1ms longtask 3/126ms tasks 649 gltf 685 tex 47 boot 127.441MiB calls 28/187 tris 31572/926995 views 11/30 foliage q0.5 buckets 0 draws 0 tris 0 prewarm 1260.3/3000ms 26/33 fail 0 timeout 0 input 8.2ms tier low hudSkip 100%
+mobile: fps 117 (10s 119.5) p95 9.1ms maxP95 9.1ms longtask 3/139ms tasks 649 gltf 685 tex 48 boot 127.456MiB calls 28/205 tris 31572/1149725 views 11/30 foliage q0.5 buckets 0 draws 0 tris 0 prewarm 286.9/3000ms 8/33 fail 0 timeout 0 input 12.5ms tier low hudSkip 100%

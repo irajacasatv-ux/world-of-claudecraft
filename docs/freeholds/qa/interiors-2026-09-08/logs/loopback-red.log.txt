@@ -1,0 +1,46 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+ RUN  v4.1.10 /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds
+
+ ❯ tests/loopback_guard.test.ts (37 tests | 1 failed) 171ms
+     × pins the guarded set exhaustively so a new adopter joins the scan 116ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/loopback_guard.test.ts > loopback guard call sites > pins the guarded set exhaustively so a new adopter joins the scan
+AssertionError: expected [ …(24) ] to deeply equal [ …(23) ]
+
+- Expected
++ Received
+
+@@ -7,10 +7,11 @@
+    "scripts/bank_rung_claudium_probe.mjs",
+    "scripts/catalog_program_census.mjs",
+    "scripts/chat_mute_resume_shot.mjs",
+    "scripts/claudium_latency_proxy.mjs",
+    "scripts/crowd_fps_bench.mjs",
++   "scripts/freehold_key_capture.mjs",
+    "scripts/geared_arrival_bench.mjs",
+    "scripts/gpu_hitch_capture.mjs",
+    "scripts/guild_pledge_shot.mjs",
+    "scripts/kick_clear_retry_e2e.mjs",
+    "scripts/lib/perf_hitch_scenarios.mjs",
+
+ ❯ tests/loopback_guard.test.ts:254:23
+    252|       .filter((relPath) => scriptCode(relPath).includes('loopback_guar…
+    253|       .sort();
+    254|     expect(importers).toEqual([...GUARDED_SCRIPTS, ...URL_GUARDED_SCRI…
+       |                       ^
+    255|   });
+    256|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 36 passed (37)
+   Start at  16:31:53
+   Duration  563ms (transform 170ms, setup 297ms, import 10ms, tests 171ms, environment 0ms)
+

@@ -30,118 +30,77 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
-06 (interiors, Eastbrook gate and Hearth Key) is **IMPLEMENTED, SCOPED VALIDATION PASS**,
-2026-09-08. The source inventory and accepted evidence are in the 06 ledger below.
-Late focused fixes are green and their fresh source review is clean;
-the real first-view camera cutaway and silent lane-shed recovery repairs are in that
-source. The final real-GPU tour completed successfully (bounded receipt below).
-Both final capture commands completed, and the refreshed nine after images passed
-visual QA. QA independently viewed all nine new baseline images: final 18 visual
-PASS, with retained before/after bytes and all 31 source hashes matching across
-the 43-artifact set.
-The initial and notice-helper timing harvests are complete, 4187 rows total. The
-PostgreSQL-armed shared gate passed all 12 stages with exit 0. Implementation is
-ready within scope; the five commits and post-commit check remain delivery steps
-whose actual results belong in the final delivery response. Paired QA is not signed.
-Production remains disabled; capacity and durable account-authority
-gates remain unsigned.
 
-### 06 frozen runtime and shared-gate receipt
+06 (interiors, Eastbrook gate and Hearth Key) is **COMPLETE INCLUDING ITS PAIRED
+QA: PASS, local**, 2026-09-08. The audit found and fixed 37 distinct findings: 36 source/capture findings and
+DOC01, the final execution-ledger wording correction. Including that nit, zero remain open or deferred. The original delivery ends at
+`67281f8ed40f0e20c9c9a438e38177e49b0c50ab`; the fresh independent review accepts
+the full fix round through `957a93b05b418ac5baf7c164679b7bd72017b3c6`.
+Current receipts are [QA overview](qa/interiors-2026-09-08/README.md),
+[findings](qa/interiors-2026-09-08/findings.md),
+[execution](qa/interiors-2026-09-08/execution.md) and
+[fresh final review](qa/interiors-2026-09-08/reviews/fresh-fix-review.md).
+The prior implementation-only receipts at `67281f8ed4` remain historical; this
+paired QA supersedes their current gate, capture and source-seal counts.
 
-The camera cutaway uses shared `authored_walls` behavior and Freehold opaque faces.
-A silently shed command lane no longer traps the gate prompt: explicit close,
-reopen and retry recover without treating a generic command error as a housing
-refusal. Dormant friend-adapter composition/focus contract tests pass; production
-friend lookup/visiting remains unavailable. Mandatory NPC attachments preload, and
-new asynchronous renderer barriers check the Renderer generation so stale work
-cannot attach after replacement. Final renderer.ts line count is 12844, below its
-12850 baseline. These repairs close the fresh runtime review findings. Real captures also accept
-the camera/door-label composition and themed controls: `exit_label_core` and
-`nameplate_painter` anchor the exit label to the measured door and hide it with
-the south-wall cutaway. The shared full gate subsequently passed.
+### 06 accepted runtime and shared-gate receipt
 
-The first final full-gate attempt failed on 16 tests across 12 files, with
-63106 tests passing. Its failures exposed stale exact registry/extraction/catalog
-pins and a real shared-focus ownership violation. All focused repairs are now
-green and a fresh source review is clean; the subsequent shared full gate passed.
+Owner arrivals resolve a deterministic body-safe landing before any claim,
+teleport, membership or clock change. Saturation refuses without side effects.
+The gate counts carried and personal-bank key possession before granting; a real
+JSON restore cannot turn a banked key into a duplicate. The key remains a
+permanent action-slot-eligible tool and does not grant ownership. Physical gate
+entry, refusals and already-home no-op do not consume its exact `3_600_000` ms
+isolated account clock, which remains outside character/plot serialization.
+Renderer dependency waits obey cancellation/deadlines without cancelling shared
+cache fetches; generation ownership and temporary instance disposal are tested.
+Gate controls retain native keyboard behavior, IME, shared close/focus ownership,
+keyed personal refusals and one persistent authorized result/status node.
 
-Gate repaint/retry ownership now calls `focusedWithin`, including nested parked
-dialog roots. The painter uses shared `FOCUS_KEY_ATTR` for all six focus attributes;
-the generated markup is byte-identical. The actual nested parked-dialog regression
-failed before the fix and passed afterward: eight UI suites, 156 tests passed,
-plus typecheck exit 0. Exact frame, managed-close/root-creation, language-fanout and
-extracted toast-dispatch registrations were corrected without broad exceptions.
-Details: `/tmp/freeholds06-ui-gate-registries-report.md`.
+The final PostgreSQL-armed canonical shared gate exited 0 with all twelve steps
+green: 4,210 unit files and 63,227 tests passed, two existing expected failures
+and 27 explained skips (63,256 total); all 51 browser files and 429 tests passed.
+Typecheck, environment/server/bot/client builds, generated-artifact freshness and
+security passed. The post-source-fix `ci:changed` checked 604 files with no errors,
+775 warnings and 16 infos. Ordinary PostgreSQL and CI-presence checks executed;
+optional differential and release-tier bars are not claimed. The raw log retains
+nonfatal diagnostics, including config discovery in the unchanged older
+`docs/screenshots/freehold-crafted-content-2026-09-07/runtime/vite.config.mjs`
+archive; actual Svelte checking reports zero errors and zero warnings and exits 0.
+The two failed gate attempts and source-based 27-skip reconstruction remain in
+the execution ledger. No required Phase 06 acceptance case was omitted.
 
-The canonical art census is 1305 icons/1323 item definitions; historical 1209-icon
-approval stays isolated as historical evidence (17 art tests passed). The exact
-character blob total rose by 13 bytes to 213332; the old 213319 counterfactual is
-preserved, with the same 381-byte tracking band and 229376-byte warning threshold.
-Database-performance and persistence reviews passed. Renderer selector checks
-passed 10 tests; parent blob/heavy-self checks passed 21. These focused outcomes are supplemented by the completed shared full-gate rerun
-recorded below.
+The canonical capture set retains eighteen PNGs, eighteen sidecars, three raw and
+three formatted producer records, and its [acceptance receipt](../screenshots/freehold-interiors-2026-09-08/acceptance.json).
+All 42 source and seven harness seals match. Receipt-time Git identity is labeled
+as such; the real baseline remains `6540713541` without copied application runtime.
+Baseline diagnostics are 102 inherited preload messages plus 29 HTTP 502 responses;
+after diagnostics are 28 HTTP 502 responses, with no unclassified error or page
+exception. The fresh reviewer personally inspected all eighteen canonical images,
+[twenty presentation fixtures](../screenshots/freeholds-06-presentation/README.md)
+and [eight actual-key images](../screenshots/freeholds-06-key/README.md).
+Presentation images are observed 333 by 720, not the requested fixture dimensions;
+canonical compact captures prove the 874 by 402 viewport. Key captures complete
+both actual routes with one permanent key after use and one positive deadline.
+Compact tooltip presentation uses explicit automated DOM focus; no physical-phone
+or keyboard-only/touch-only tooltip-navigation claim is made.
 
-Latest real-GPU run: `tmp/freeholds06-perf-final.json`, generated
-`2026-09-08T19:20:04.444Z`, whole command exit 0. Desktop Inn/Cottage windows drew
-145/146 frames; mobile drew 146/144. Calls remain 33 for Inn and 28 for Cottage;
-all three required room-window GPU deltas are zero and errors/budgetFailures
-are empty. This is a window-delta claim, not an absolute cumulative zero.
-The refreshed [performance.json](../screenshots/freehold-interiors-2026-09-08/performance.json)
-and its [raw producer JSON](../screenshots/freehold-interiors-2026-09-08/performance.raw.json)
-now retain this 19:20 run after the final focus fix. Mobile remains browser evidence,
-not physical-device proof.
+The final hardware GPU record is `2026-09-08T21:37:37.430Z`: all four measured
+room/viewport windows draw 146 frames, Inn/Cottage calls are 33/28, and effective
+preset 1/tier low is retained. Required raw arrival-through-sample live-program,
+attach-watchdog and gate-timeout deltas are zero. Earlier cumulative events and
+two ignored HTTP 502 diagnostics per viewport remain; error and budget-failure
+arrays are empty. This is bounded functional LOW evidence, not final lighting.
 
-Both final nine-capture commands completed with exit 0. The refreshed directory
-holds 43 artifacts: 18 PNGs, 18 evidence sidecars, three formatted producer records,
-three byte-preserved raw producer JSONs and
-[acceptance.json](../screenshots/freehold-interiors-2026-09-08/acceptance.json).
-It pins 31 source hashes and four byte-identical baseline harness files; baseline
-`6540713` still has no feature application/public source copied into it. Raw producer
-JSONs remain separate from the matching formatted records. The final capture
-contract/CI/route checks passed three suites, 50 tests
-(`/tmp/freeholds06-final-capture-contract.log`). All nine AFTER and all nine newly captured baseline images have independent
-visual QA PASS. QA directly viewed the new baseline set and verified all 18
-retained PNG bytes plus all 31 source hashes against the 43-file artifact set;
-this is current-set acceptance, not an inherited earlier verdict.
-
-A fresh final review passed (`/tmp/freeholds06-review-completed-fix-round.md`):
-all 43 artifacts match the index, all 71 declared hashes (including 31 source
-hashes) match, all 18 visual checks are closed, the four baseline harness files
-are identical, and the timing inventory has 4187 rows. The final raw capture
-manifests retain 123 baseline console errors (102 inherited missing-preload
-errors and 21 HTTP 502 errors) and 23 after console errors, all HTTP 502. These
-diagnostics are separate from the successful capture commands and visual checks.
-
-The capture helper now waits for a real notice outcome and records `noticeResolution`.
-This fixes the actual delayed 30-second performance-warning race without spoofing
-GPU/warning state. Real notice dismissal and timing evidence are retained; no CSS
-hiding substitutes for the user's visible control path.
-
-The PostgreSQL-armed canonical timing harvest completed with exit 0:
-`node scripts/ci_shard_weights_harvest.mjs --carry-local-missing --runs 3 --reason 'Freehold interiors and release sync tests measured locally pending the next full CI harvest.'`.
-It measured 161 missing files in three real green runs each, bringing the weight
-inventory to 4186. A fresh reviewer independently matched all 161 triples and
-medians and verified that prior weights were unchanged. Evidence:
-`/tmp/freeholds06-final-weight-harvest.log`. The later notice helper added one
-missing test file, measured in three real green runs at 5, 4, 5 ms (median 5 ms), also
-PASS. The current total is 4187 weight rows; evidence for that bounded addition is
-`/tmp/freeholds06-notice-weight-harvest.log`.
-
-The 318-path staged snapshot preceded the late focused fixes and this documentation
-update; it is a historical staging count. The full-gate first-attempt log is
-`/tmp/freeholds06-final-gate.log`. The PostgreSQL-armed shared full-gate rerun
-completed in session 73919 with exit 0: all 12 stages PASS, recorded in
-`/tmp/freeholds06-final-gate-after-fixes.log`. The full suite passed 4204 files and
-63137 tests, with two expected failures and 28 skips (888.52 seconds); browser
-checks passed 50 files and 401 tests (15.20 seconds). Type and environment checks
-and server, bot and client builds passed. Security scanned 9030 files with 452
-flags and zero high findings after priors: PASS.
-
-The implementation is ready within its scoped acceptance. The five-commit delivery
-sequence and actual post-commit `npm run ci:changed` result will be recorded in the
-final delivery response; neither is claimed as already run here. The separate paired
-QA and all later packet authority, capacity, lighting, service, visiting and final-art
-acceptance remain unsigned.
+Production remains disabled. Remote key admission stays fail-closed until 07/07a
+supplies the durable account participant, locked database epoch and committed
+private display mirror. Injected server participants prove protocol only. Arrival
+directive consumption remains with 07c/08a/09; final lighting/camera/welcome with
+09; reserved Cottage anchors with 12; visiting with 18; final GLBs with 19; Wave A
+close with 20. Slot-capacity and repeated-entry deployment gates remain unsigned.
+No new art, push, PR merge or production activation is claimed. The coordinator
+will run `npm run ci:changed` after the separate verdict/documentation commit;
+that actual-last-commit packaging check has not yet run and is not claimed here.
 
 ### Previous completed pair: 05
 05 (the instance claim) is **COMPLETE INCLUDING ITS PAIRED QA: PASS, local**, 2026-09-08.
@@ -263,8 +222,9 @@ was generated in this QA.
 
 ### Current next step
 
-05 is complete including its paired QA (PASS, local, 2026-09-08, tip `9b21dd61fc`). Run:
-`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-06-interiors-gate-and-hearth-key.md`.
+06 is complete including its paired QA (PASS, local, 2026-09-08, reviewed source
+tip `957a93b05b`). Next run:
+`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-07-persistence.md`.
 
 Previous phase 03 (`phase-03-content-tiers-and-basics.md`): COMPLETE INCLUDING QA,
 verdict PASS locally on 2026-09-07. All 39 distinct completion-round findings
@@ -1512,12 +1472,14 @@ reference or an explicit ruling with a TUNING owner.
 
 ## Per-phase ledger
 
-06 required captures are the eighteen flat before/after PNG names under
-`docs/screenshots/freehold-interiors-2026-09-08/`, individually linked in progress.md under 06: nine refreshed after images have
-visual PASS, as do the nine independently viewed new baseline images; all 18
-retained PNG bytes and all 31 source hashes match. Raw runner JSONs and their formatted records are retained
-with acceptance.json. The shared full gate passed; actual commits and post-commit
-results belong in the final delivery response.
+06 and its paired QA are complete locally, PASS with 37 findings found and fixed. The
+canonical eighteen before/after PNGs are individually linked under 06 in
+progress.md; all image/sidecar bytes, 42 source seals and seven harness seals
+match. Three raw runner records and their formatted counterparts are retained.
+Twenty supplemental presentation and eight actual-key images also have fresh
+independent visual acceptance, with their scope limits in the linked receipts.
+The complete twelve-step shared gate passed. The actual-last-commit changed-file
+check follows the separate verdict commit and is not claimed executed here.
 Rows marked planned carry the names the packet fixed in advance; the completing phase
 replaces the marker with its actual outputs. A partial row records authored scope
 only and never declares its remaining deliverables or paired QA complete.
@@ -1529,7 +1491,7 @@ only and never declares its remaining deliverables or paired QA complete.
 | 03 (complete, paired QA PASS) | `src/sim/content/freehold/{tiers,charters,ledger_schedule,ledger_trial,furnishings,index}.ts` plus local guidance; `src/sim/{surface_npc_bootstrap.ts,freehold/should_spawn_npc.ts}`; `scripts/freeholds/` measured economy/geometry producers; focused content, ledger, producer, furnishing, rollback, NPC, terrain, empty-Hearth and browser keyboard suites; accepted trial/art evidence and eight item WebPs | none | none | exactly eight furnishing ItemDefs; NPC freehold_furnisher and gated stock; existing wire shape unchanged | none | none | eight `entities.items.freehold_*.name` leaves; world entity name/title/greeting for freehold_furnisher; Hearth shelf and hearth_basics name/description; Homesteader/Householder labels and rewards; English plus five required non-Latin fills |
 | 04 (complete, paired QA PASS) | `src/sim/content/freehold/{furnishing_recipes,furnishing_patterns}.ts`; `src/sim/freehold/crafted_availability.ts`; `src/sim/professions/{recipe_visibility,train_recipe}.ts`; `src/net/item_copy_anchor_wire.ts`; `server/world_hello.ts`; crafted economy/geometry producers under `scripts/freeholds/`; `tests/{furnishing_recipes,furnishing_pattern_items,furnishing_crafting,freehold_crafted_availability,freehold_crafted_presentation,freehold_crafted_art,recipe_visibility}.test.ts`; accepted calibration evidence and `crafted-content-art-2026-09-07/catalog-verification.json`; current census in `scripts/item_art_audit.mjs`; accepted final runtime evidence; `crafted-qa-reconciled-2026-09-07/` paired QA evidence | existing `cfg` gains optional `freeholdsEnabled`; existing `recipeList` reflects host availability through `ctx.freeholdsEnabled` on Sim | none | `hello.freeholdsEnabled` mirrors host availability; existing commands retained; ten output and three pattern ItemDefs | none | none | thirteen `entities.items.<id>.name` leaves listed below; `hearth_first_crafts` name in all eighteen base Reliquary locale tables and full desc in five non-Latin tables; changed `guide.reliquaryPage.catalogBody` and `guide.profPages.craftProse.armorcrafting.ladderBody`; English plus five M16 item/guide fills |
 | 05 (complete, paired QA PASS) | `src/sim/content/freehold/dungeons.ts`; `src/sim/freehold/{owner_key,instance,dev_grant}.ts`; extractions `src/sim/combat/effective_stats.ts` (sim.ts 11876 to 11857), `server/entity_wire_variant.ts` (game.ts 10234 to 10202), `src/game/browser_fullscreen.ts` (main.ts 11308 to 11269); `src/game/freehold_dev_bootstrap.ts`; `scripts/lib/freehold_dev_authorization.{mjs,d.mts}` (the dev-only Vite loopback bridge, admitted in `vite.config.ts` through `freeholdDevAuthorizationEnabled(process.env)` only); tests `freehold_instance`, `freehold_instance_online`, `freehold_offline_default`, `freehold_dev_grant`, `freehold_dev_authorization`, `freehold_dev_bootstrap`, `freehold_dungeon_defs`, `effective_stats`, `browser_fullscreen`, `server/entity_wire_variant`, `server/freehold_dev_grant_boot`; golden `tests/parity/golden/freehold_claim.json`; `tests/fixtures/terrain_height_parity.v1.f64le.gz` re-minted as a byte-prefix extension (owner rooms append last) | none new: `freeholdEnter`/`freeholdLeave` lit on both hosts, `myFreehold`/`freeholdLayout` still null until 08a; `DungeonDef.claimKey?: 'party' \| 'owner'`; `PlayerMeta.freeholdOwnerKey` (host stamp: `account:<id>` online, absent offline and resolved `entity:<pid>` by `freeholdKeyFor`; META_EXCLUDE); `SimConfig`/`SimContext.freeholdDevGrantEnabled` (read-only, nonpersisted, default false); `setFreeholdTier` the ONE tier writer, `ensureFreeholdRecord`/`loadFreehold` insert only on a lit host, `releaseFreeholdOnLeave` evicts at the last same-key session out | `freeholdDenied { pid, reason }`, reasons APPEND-ONLY in this order: `no_freehold`, `locked`, `cooldown`, `visitors_full`, `not_friend`, `dead`, `combat`, `busy` (05 fires no_freehold, dead, combat, busy; locked is 12's amenity lockout; cooldown 06; visitors_full and not_friend 18); `dead` has ONE exception, the corpse run (a released ghost whose corpse is bound to one of its own live owner claims is admitted to that room and resurrects at the entrance; every other dead body refuses); a record whose tier is outside the union answers `no_freehold` to a living enter, never a throw (a bound ghost still runs to its body's room); a leave from outside any owner room is a silent no-op, not a denial, and any player inside a live owner claim may leave; 05 had no client handler (06 now adds the keyed feedback; old clients drop it safely; historical 05 behavior: a dark REALM refused above the switch with `commandOutcome` false and NO event, while a dark OFFLINE world emitted `freeholdDenied no_freehold`; 06 supersedes the realm arm with requester-only keyed `freeholdDenied`, and its controller ignores generic command errors) | dungeon ids `freehold_inn_room` (index 15, origin x 119200) and `freehold_cottage` (index 16, origin x 119800), `spawns: []`, no objects, `overworldDoor: false`, `guideVisible: false`, `suggestedPlayers: 1`, historical 05 `interior: 'crypt'` (replaced by the authored 06 layouts in the row below), historical doorPos `{ x: -14, z: -92 }` north of the Eastbrook mailbox surround (leaving and the saved-inside rejoin both drop 4 yd south, at -14, -96, on open quay ground: the 05 QA moved the door from z -96, whose drop at z -100 sat inside the mailbox's blocked footprint, and pinned the drop unblocked with zero depenetration on every test seed; 06 now derives the gate from the canonical Eastbrook service at the same coordinates; current verification is pending); `freehold_enter`/`freehold_leave` LIT behind the unchanged dark gate; `freehold_enter` jail-blocked; HEAVY_SELF_CMDS unchanged (decision in `server/heavy_self.ts`: no heavy self field moves until 08a's `fhold` key); a malformed account id is refused by `planJoin` with `not authenticated` | none | none: the record and the grant are in-memory facts (D81); 07 persists the record under the same owner-key identity and the placeholder `plot:unassigned` plotId is replaced by 07's public id | `entities.dungeons.freehold_inn_room.{name,enterText,leaveText}` and `entities.dungeons.freehold_cottage.{...}`: English plus the five non-Latin fills (ja rows use the plain past like the newest rooms), the 16 Latin locales pending; the glossary housing note names both ids as common nouns; `[dev]` grant lines are dev-channel English |
-| 06 (implemented, scoped validation PASS; paired QA unsigned) | `src/sim/content/freehold/{layouts,items}.ts`; `src/sim/freehold/{gate_rules,entry_context,gate,hearth_key}.ts`; `src/sim/world_object_bootstrap.ts`; `src/render/freehold/` interior shell/dressing and shared pure resolver leaves; `src/ui/hud/housing/` gate view/painter/feedback/key tooltip; `src/sim/instances/owner_claim_occupancy.ts`; `server/{instance_presence,instance_scan_tick_stats}.ts`; `scripts/freehold_interior_route.mjs`, `scripts/lib/pr_shot_freeholds.mjs`; `docs/freeholds/generate-ux-manifests.mjs` | Existing `freeholdEnter` now confirms an actual nearby gate; `freeholdLeave` remains the live owner-room exit. `ItemUse { type: 'freeholdEnter' }` routes a permanent Hearth Key through `useHearthKey`; no new housing command. Sim/SimContext private `freeholdKeyReadyAtMs` map and injected `freeholdKeyAdmission`; `myFreehold`/`freeholdLayout` remain null until 08a. `instanceScanCounters` exposes current-tick claimed-slot/owner-roster/owner-claim-test counts | Append-only `freeholdDenied` suffix `instanced`, `match`; key emits `cooldown` and shared context refusals. Dark realm admission now emits requester-only keyed `freeholdDenied`; the housing controller ignores generic command errors, so the historical 05 command-outcome-only toast plan no longer applies. Existing `dungeonEntrySeq` self-wire value now also updates the online player entity after entry-facing resolution; it is arrival identity only, never permission to replay welcome/audio/camera | Owner ids/indexes unchanged; interiors now `inn_room`/`cottage`, entry `(0,-4)`, exit `(0,-6)`, facing 0; `freehold_gate` is an alive nonlootable `object`, `objectItemId: null`, at canonical Eastbrook service `(-14,-92)`, semantic marker `freehold-gate`; default exit/rejoin drop `(-14,-96)`. New item `hearth_key`, tool, permanent/soulbound/noMarketList/noDiscard, sellValue 0. Presence status `freehold` on both shared unions, shared leaf for roster/who and relay (`Freehold` only), admin kind/labels and bounded client perf class | none new | none: local key clock is not serialized, transferable plot state or durable online authority. Realm `freeholdKeyAdmission` refuses until 07/07a. O(1) `ctx.freeholds.size` read feeds `freeholdRecords` heartbeat; no record-map scan or database call added | Existing 38 planned owner-06 housing keys implemented; semantic gate and Hearth item labels; separate social `/who` and admin type/room labels. Shot targets `freehold-gate`, `freehold-inn`, `freehold-cottage`, each desktop/compact/tablet: 9 variants, 18 retained before/after PNG paths; all 18 current PNGs independent visual QA PASS with exact bytes and 31 source hashes matching acceptance.json. Planned manifests: 557 housing keys, 742 variants, 339 Wave A |
+| 06 (complete, paired QA PASS; 37 found and fixed) | `src/sim/content/freehold/{layouts,items}.ts`; `src/sim/freehold/{gate_rules,entry_context,gate,hearth_key}.ts`; `src/sim/world_object_bootstrap.ts`; `src/render/freehold/` interior shell/dressing and shared pure resolver leaves; `src/ui/hud/housing/` gate view/painter/feedback/key tooltip; `src/sim/instances/{owner_claim_occupancy,owner_arrival}.ts`; `server/{instance_presence,instance_scan_tick_stats}.ts`; `scripts/freehold_interior_route.mjs`, `scripts/lib/pr_shot_freeholds.mjs`, `scripts/freehold_capture_receipt.mjs`, `scripts/freehold_key_capture.mjs`; focused arrival, renderer-lifecycle, real browser input and character/bank persistence regressions; `docs/freeholds/qa/interiors-2026-09-08/`; `docs/freeholds/generate-ux-manifests.mjs` | Existing `freeholdEnter` confirms an actual nearby gate, granting only a character-wide missing key (carried and personal bank); `freeholdLeave` remains the live owner-room exit. `ItemUse { type: 'freeholdEnter' }` routes a permanent Hearth Key through `useHearthKey`; no new housing command. Sim/SimContext private `freeholdKeyReadyAtMs` map and injected `freeholdKeyAdmission`; `myFreehold`/`freeholdLayout` remain null until 08a. `instanceScanCounters` exposes current-tick claimed-slot/owner-roster/owner-claim-test counts | Append-only `freeholdDenied` suffix `instanced`, `match`; key emits `cooldown` and shared context refusals. Jailed gate/key dispatch emits one personal `busy` denial before Sim entry. Dark realm admission now emits requester-only keyed `freeholdDenied`; the housing controller ignores generic command errors, so the historical 05 command-outcome-only toast plan no longer applies. Existing `dungeonEntrySeq` self-wire value now also updates the online player entity after entry-facing resolution; it is arrival identity only, never permission to replay welcome/audio/camera | Owner ids/indexes unchanged; interiors now `inn_room`/`cottage`, empty-room entry `(0,-4)`, exit `(0,-6)`, facing 0; deterministic body-safe owner arrival resolves before claim/travel effects and refuses saturated approaches without side effects; `freehold_gate` is an alive nonlootable `object`, `objectItemId: null`, at canonical Eastbrook service `(-14,-92)`, semantic marker `freehold-gate`; default exit/rejoin drop `(-14,-96)`. New item `hearth_key`, tool, permanent/soulbound/noMarketList/noDiscard, sellValue 0. Presence status `freehold` on both shared unions, shared leaf for roster/who and relay (`Freehold` only), admin kind/labels and bounded client perf class | none new | none: real character JSON/bank restore regressions preserve a single key and safe exterior reload. The isolated `3_600_000` ms key clock uses `ctx.lockoutNowMs()` and is not serialized, transferable plot state or durable online authority. Realm `freeholdKeyAdmission` refuses until 07/07a. O(1) `ctx.freeholds.size` read feeds `freeholdRecords` heartbeat; no record-map scan or database call added. Heavy inventory self refresh occurs only after an actual grant changes the actor wire revision | Existing 38 planned owner-06 housing keys implemented; exact M16 fills retained and fifteen nonqualifying additions removed; semantic gate and Hearth item labels; separate social `/who` and admin type/room labels. Shot targets `freehold-gate`, `freehold-inn`, `freehold-cottage`, each desktop/compact/tablet: 9 variants, 18 retained before/after PNG paths; all 18 current PNGs independent visual QA PASS with exact bytes, 42 source and seven harness seals matching acceptance.json; twenty presentation fixtures and eight actual-key images separately accepted with explicit evidence limits. Planned manifests: 557 housing keys, 742 variants, 339 Wave A |
 | 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
 | 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
 | 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
@@ -2089,6 +2051,32 @@ inherits the reasoning rather than re-deriving it:
   remains honest. Preload mandatory attachments, and guard every new asynchronous
   renderer barrier with the owning Renderer generation; completing an old promise
   cannot authorize attachment into a replacement generation.
+
+- A new capture producer must join the exhaustive `URL_GUARDED_SCRIPTS` importer
+  inventory in `tests/loopback_guard.test.ts`, and output overrides such as
+  `KEY_SHOTS_DIR` must join Turbo's pass-through environment declarations. Add
+  new retained evidence directories to all five CI sparse cones and their exact
+  test inventory. Keep the source-derived, index-aware reference guard intact;
+  missing inventory entries are corrections, not reasons for exemptions.
+- Live art coverage follows production eligibility. The Hearth Key action-slot
+  repair raises the current painted hotbar set to 98, with explicit key membership.
+  The historical 81/81 approval, its artifacts and seals remain immutable; update
+  current producer-derived pins without rewriting past acceptance.
+- Key possession is character-wide across carried inventory and personal bank.
+  Test deposit, real JSON restore and physical entry before withdrawal to catch
+  duplicate grants. Resolve occupied owner arrival before every claim/travel
+  side effect, and pin saturated refusal plus ordinary-dungeon controls.
+- A bounded renderer waiter owns its deadline and abort, while a shared cache
+  fetch can outlive it. Dispose temporary instance handles only after compile and
+  resume users settle; generation checks alone do not release those handles.
+- Read-only game observation and real input must remain separate in captures.
+  On compact bank layouts, wait for a stable unobscured hit target before a true
+  touch tap. Label automated DOM-focus tooltip presentation explicitly, preserve
+  failed-attempt logs, and report measured PNG dimensions (333 by 720 for these
+  scaled-iframe fixtures). Do not convert requested dimensions into observed proof.
+- Full browser checks can refresh unrelated screenshot outputs. Establish clean
+  pre-run bytes first, preserve generated output, then restore only those known
+  unrelated paths. Never use a broad cleanup that could discard existing work.
 
 ### 05 instance claim gotchas (learned 2026-09-08, read before 06, 07, 08a)
 

@@ -1,0 +1,15 @@
+desktop: gate grant, bag tooltip, native placement, bank round trip, key activation passed
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+TimeoutError: Waiting failed: 30000ms exceeded
+    at new WaitTask (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/puppeteer-core/lib/puppeteer/common/WaitTask.js:46:34)
+    at IsolatedWorld.waitForFunction (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/puppeteer-core/lib/puppeteer/api/Realm.js:49:26)
+    at CdpFrame.waitForFunction (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/puppeteer-core/lib/puppeteer/api/Frame.js:580:43)
+    at CdpFrame.<anonymous> (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/puppeteer-core/lib/puppeteer/util/decorators.js:101:27)
+    at CdpPage.waitForFunction (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/node_modules/puppeteer-core/lib/puppeteer/api/Page.js:1447:37)
+    at captureBank (file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/scripts/freehold_key_capture.mjs:188:14)
+    at async file:///Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/scripts/freehold_key_capture.mjs:293:7
+
+Node.js v26.8.1

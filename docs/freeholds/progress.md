@@ -14,8 +14,10 @@ historical evidence. See [current validation](crafted-qa-reconciled-2026-09-07/v
 and [findings](crafted-qa-reconciled-2026-09-07/findings.md). Production remains
 disabled. Implementation 05 (the instance claim) is complete including its paired QA
 (PASS, local, 2026-09-08): six implementation commits `c578fd77d0..497bc1d73f`, the
-release sync `a461924855`, and fourteen QA commits `5f3fff5339..9b21dd61fc`. The next
-task is [phase-06-interiors-gate-and-hearth-key.md](phase-06-interiors-gate-and-hearth-key.md).
+release sync `a461924855`, and fourteen QA commits `5f3fff5339..9b21dd61fc`.
+Phase 06 and its paired QA are also complete locally: **PASS**, 37 findings found
+and 37 fixed, zero open or deferred. The next task is
+[phase-07-persistence.md](phase-07-persistence.md).
 
 Production calibration, activation, final GLBs and room/hardware LOW gates remain
 unsigned; NPC voice remains required before feature shipment.
@@ -25,7 +27,7 @@ unsigned; NPC voice remains required before feature shipment.
 There are 56 bounded work items and 56 paired QA rows; their actual status is recorded
 below. The 44 original numeric items retain their IDs and twelve suffixed pairs are
 inserted into the chain. The next handoff is
-[phase-05-qa.md](phase-05-qa.md).
+[phase-07-persistence.md](phase-07-persistence.md).
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
@@ -39,8 +41,8 @@ inserted into the chain. The next handoff is
 | 04 QA | PASS, local | 2026-09-07 | 2026-09-07 | Four findings found and resolved: three source/test findings (HN1, COV-1, PER-1) and one documentation nit (DOC-1), zero deferred. Fresh entire-fix review and supplement PASS for `0932963250..69ffdab561` (five files, commits `d5ea0825d1` and `69ffdab561`), including all six historical repair commits; required content, coverage and qa-checklist reviews completed. Final shared gate exit 0, all 12 steps: 4028 unit files passed, one CI-sentinel file skipped; 60610 tests passed, 2 expected failures and 28 explained skips. Chromium passed 47 files and 389 tests; the separate PostgreSQL 16 run passed 57 tests. Historical F01 is closed prospectively by the current explicit protected-validator scope; the earlier 29-found/28-repaired FAIL remains unchanged. See [findings](crafted-qa-reconciled-2026-09-07/findings.md), [validation](crafted-qa-reconciled-2026-09-07/validation.md), [fresh source review](crafted-qa-reconciled-2026-09-07/reviews/fresh-fix.md) and [documentation review](crafted-qa-reconciled-2026-09-07/reviews/docs-final.md). Branch local, production disabled; 05 is next and remains Not started. |
 | 05 Instance claim | Complete (QA PASS), local | 2026-09-08 | 2026-09-08 | Six commits `c578fd77d0..497bc1d73f` off the `7f4fe99619` release merge (the paired QA then synced `553a5672ed` as `a461924855` and re-validated everything below at `9b21dd61fc`; the implementation-round gate figures in this row were taken at `7f9ca00cbd`, before that sync): the two owner-claim DungeonDefs (`freehold_inn_room` index 15, `freehold_cottage` index 16, `claimKey: 'owner'`, placeholder `crypt` interior, doorPos north of the Eastbrook mailbox surround, moved there by the 05 QA so the drop lands on open ground), the host-stamped owner key (`account:<id>` online, `entity:<pid>` offline, META_EXCLUDE), owner-keyed enter/leave through the dungeon slot pool with text-free `freeholdDenied` refusals (dead, combat, no_freehold, busy), the default tier-0 Inn Room record seeded at addPlayer on a lit host and evicted at the last session out, `setFreeholdTier` as the one tier writer with the `/dev freehold <tier>` grant behind devCommands AND the new nonpersisted `freeholdDevGrantEnabled` (realm: `ALLOW_DEV_COMMANDS=1`; offline: the dev-only Vite loopback bridge `GET /__freehold/dev-authorization`), lit `freehold_enter`/`freehold_leave` dispatch behind the unchanged dark gate, a malformed-account refusal through `planJoin`, Unstuck and Reset All owner-key aware. Three monolith extractions lowered sim.ts to 11857, main.ts to 11269 and game.ts to 10202 (online.ts untouched at 5629). Seven domain reviews plus a fresh whole-fix review and the qa-checklist gate ran; every finding including nits applied or recorded as a named gate (see state.md). Validation: the 54-file battery 1986 tests green, tests/parity 265 green with the 81 existing goldens byte-identical and `freehold_claim` minted, both real-browser dev-grant probes PASS (flag-off refuses, flag-on loopback grants), the terrain fixture re-minted as a byte-prefix extension and verified on Linux aarch64 in Docker (132 tests), `npm run ci:changed` exit 0, and the shared gate on the committed tip PASS (all 12 steps: 4039 unit files, 60940 tests, 2 expected failures, 28 skips; browser 47 files, 389 tests). Production stays disabled: FREEHOLDS_ENABLED must not be lit before 06's gate proximity confirm and Hearth Key context refusals (the lighting ruling in `src/sim/freehold/instance.ts`). |
 | 05 QA | PASS, local | 2026-09-08 | 2026-09-08 | 119 finding rows (about 90 distinct) across thirteen coverage reports (the release-merge audit, the correctness, test-coverage and hygiene auditors, the architecture, cross-platform-sync, server-hot-path, content-obligations, privacy-security and qa-checklist reviewers, and three fresh fix-round reviews), every one applied in code, tests or docs or recorded as a named gate with an owner (the pool bound and the reaper cost re-tagged BLOCKING before lighting), zero deferred. Fourteen QA commits `5f3fff5339..9b21dd61fc` after the `a461924855` release sync: the quay drop onto clear ground (pinned on every seed, glibc-verified), the owner's corpse run and the corpse-aware tier-change sweep, the unusable-tier refusal, the uniform dev-bridge refusal, the wiki seed's guideVisible gate, the re-pinned deny-toast layer, the re-minted golden and terrain fixture in their own commits, 183 carried shard weights, and the ledger rulings. Fresh fix-round reviews: the first FAILED on four should-fix (all applied), the second FAILED on two (applied), the third PASS with three wording nits (applied and confirmed). Final shared gate at `9b21dd61fc`, armed, full-suite mode: PASS all 12 steps, 4160 unit files passed and 1 skipped, 62624 tests passed with 2 expected failures and 28 skips, browser 48 files and 392 tests, typecheck and builds green; `npm run ci:changed` exit 0 after the last commit. Not pushed, no PR. |
-| 06 Interiors, the Eastbrook gate, the Hearth Key | Implemented; scoped validation PASS, local | 2026-09-08 | | Authored Inn/Cottage shells and layout/collision facts, explicit nonlootable Eastbrook gate and semantic marker, permanent Hearth Key via ItemUse with isolated account cooldown and fail-closed realm admission, keyed prompt/refusals, owner reaper index/counters and O(1) record-count heartbeat, shared bounded social/relay/admin presence, online entity dungeonEntrySeq mirror. Detailed source inventory and unsigned follow-ups below; both final capture commands exited 0; all 18 refreshed before/after PNGs independently have visual QA PASS and matching bytes/source hashes. Reviewed timing weights complete; shared gate all 12 stages PASS, exit 0. Implementation ready within scope; actual five-commit delivery and post-commit check outcomes will be recorded in the final delivery response. Paired QA remains unsigned. |
-| 06 QA | Not started | | | |
+| 06 Interiors, the Eastbrook gate, the Hearth Key | Complete (QA PASS), local | 2026-09-08 | 2026-09-08 | Authored Inn/Cottage shells and safe deterministic owner arrival, explicit Eastbrook gate, permanent Hearth Key with character-wide carried/bank possession, isolated account cooldown and fail-closed realm admission; guarded prompt/refusals and usable action assignment; bounded renderer preparation/disposal, indexed owner reaper, O(1) record heartbeat and shared presence. Five delivery commits through `67281f8ed4`, followed by independently reviewed QA repairs through `957a93b05b`. Current captures, complete gate and scoped limits are recorded below. |
+| 06 QA | PASS, local | 2026-09-08 | 2026-09-08 | 37 findings found and 37 fixed, zero open or deferred: 36 source/capture findings and DOC01, the final execution-ledger wording correction. Required audits, finished persistence/database review and fresh independent entire-fix review PASS through `957a93b05b418ac5baf7c164679b7bd72017b3c6`. Final PostgreSQL-armed shared gate exit 0, all 12 steps: 4,210 unit files and 63,227 tests passed, two existing expected failures and 27 explained skips; 51 browser files and 429 tests passed. Typecheck, builds, security and artifact freshness passed. All 18 canonical, 20 presentation and eight actual-key PNGs independently inspected; source/raw seals match and final hardware LOW deltas are zero within measured room windows. Failed attempts and nonfatal diagnostics are retained. See [QA receipt](qa/interiors-2026-09-08/README.md), [execution](qa/interiors-2026-09-08/execution.md) and [fresh review](qa/interiors-2026-09-08/reviews/fresh-fix-review.md). The actual-last-commit `ci:changed` check follows the separate verdict commit and is not claimed here. Production remains disabled; 07/07a durable authority and later named gates remain unsigned. |
 | 07 Persistence | Not started | | | |
 | 07 QA | Not started | | | |
 | 07a Transactional mutations and global claim fencing | Not started | | | |
@@ -680,100 +682,55 @@ After phase-05-qa.md: [phase-06-interiors-gate-and-hearth-key.md](phase-06-inter
 
 Implementation: [phase-06-interiors-gate-and-hearth-key.md](phase-06-interiors-gate-and-hearth-key.md). Paired audit: [phase-06-qa.md](phase-06-qa.md).
 
-Status 2026-09-08: **IMPLEMENTED, SCOPED VALIDATION PASS, local**. The implementation
-is ready within scope: final captures, fresh review and all 12 shared gate stages
-passed. Actual five-commit delivery and post-commit check outcomes belong in the
-final delivery response. The separate paired QA remains unsigned.
-Late focused fixes are green and their fresh source review is clean; the shared
-full-gate rerun completed with exit 0.
-The first-view camera cutaway now uses shared `authored_walls` and Freehold opaque
-faces. Silent lane-shed recovery uses explicit close/reopen/retry. Dormant friend
-adapter composition/focus contract tests pass, while production lookup/visiting
-remains unavailable. Mandatory NPC attachments preload and new async barriers check
-the Renderer generation. Final renderer.ts is 12844 lines against a 12850 baseline.
+Status 2026-09-08: **COMPLETE INCLUDING PAIRED QA: PASS, local**.
+The [QA receipt](qa/interiors-2026-09-08/README.md) records 37 findings found and
+37 fixed, zero open or deferred: 36 source/capture findings plus DOC01, which
+corrects stale pending-evidence wording in the final execution ledger. The original delivery ends at `67281f8ed4`;
+the fresh independent review accepts the full repair range through
+`957a93b05b418ac5baf7c164679b7bd72017b3c6`, including all source, tests,
+46 final PNGs, producer provenance and completed shared-gate evidence.
 
-The first final full-gate attempt failed on 16 tests across 12 files, with
-63106 tests passing. Its failures exposed stale exact registry/extraction/catalog
-pins and a real shared-focus ownership violation. All focused repairs are now
-green and a fresh source review is clean; the subsequent shared full gate passed.
+The final PostgreSQL-armed `node scripts/gate_select.mjs` exited 0 with all twelve
+steps green: 4,210 unit files and 63,227 tests passed, two existing expected
+failures and 27 explained skips; all 51 browser files and 429 tests passed.
+Typecheck, environment/server/bot/client builds, generated-artifact freshness,
+security and `ci:changed` passed. The final source-commit changed-file check
+reports 604 files, 775 warnings and 16 infos, no errors. The raw log retains
+nonfatal diagnostics, including the older archived Vite config discovery error;
+actual Svelte checking completed with zero errors and zero warnings.
+The [execution ledger](qa/interiors-2026-09-08/execution.md) preserves exact
+commands, earlier failed gate attempts and source-based skip attribution.
+The actual-last-commit `npm run ci:changed` check follows the separate verdict
+commit; its future result is not claimed here.
 
-Gate repaint/retry ownership now calls `focusedWithin`, including nested parked
-dialog roots. The painter uses shared `FOCUS_KEY_ATTR` for all six focus attributes;
-the generated markup is byte-identical. The actual nested parked-dialog regression
-failed before the fix and passed afterward: eight UI suites, 156 tests passed,
-plus typecheck exit 0. Exact frame, managed-close/root-creation, language-fanout and
-extracted toast-dispatch registrations were corrected without broad exceptions.
-Details: `/tmp/freeholds06-ui-gate-registries-report.md`.
+The current hardware GPU receipt was generated at `2026-09-08T21:37:37.430Z`:
+all four Inn/Cottage desktop/mobile windows advance 146 drawn frames, draw calls
+are 33/28, preset is 1 and effective tier is low. The three required raw
+arrival-through-sample counter deltas are zero; earlier cumulative events and
+two ignored HTTP 502 diagnostics per viewport remain intact. Both error and
+budget-failure arrays are empty. See the byte-preserved
+[raw performance record](../screenshots/freehold-interiors-2026-09-08/performance.raw.json).
 
-The canonical art census is 1305 icons/1323 item definitions; historical 1209-icon
-approval stays isolated as historical evidence (17 art tests passed). The exact
-character blob total rose by 13 bytes to 213332; the old 213319 counterfactual is
-preserved, with the same 381-byte tracking band and 229376-byte warning threshold.
-Database-performance and persistence reviews passed. Renderer selector checks
-passed 10 tests; parent blob/heavy-self checks passed 21. These focused outcomes are supplemented by the completed shared full-gate rerun
-recorded below.
-
-Latest real-GPU run: `tmp/freeholds06-perf-final.json`, generated
-`2026-09-08T19:20:04.444Z`, whole command exit 0. Desktop Inn/Cottage windows drew
-145/146 frames; mobile drew 146/144. Calls remain 33 for Inn and 28 for Cottage;
-all three required room-window GPU deltas are zero and errors/budgetFailures
-are empty. This is a window-delta claim, not an absolute cumulative zero.
-The refreshed [performance.json](../screenshots/freehold-interiors-2026-09-08/performance.json)
-and its [raw producer JSON](../screenshots/freehold-interiors-2026-09-08/performance.raw.json)
-now retain this 19:20 run after the final focus fix. Mobile remains browser evidence,
-not physical-device proof.
-
-Both final nine-capture commands completed with exit 0. The refreshed directory
-holds 43 artifacts: 18 PNGs, 18 evidence sidecars, three formatted producer records,
-three byte-preserved raw producer JSONs and
+The canonical capture receipt retains 43 artifacts: eighteen PNGs, eighteen
+sidecars, three raw and three formatted records, and
 [acceptance.json](../screenshots/freehold-interiors-2026-09-08/acceptance.json).
-It pins 31 source hashes and four byte-identical baseline harness files; baseline
-`6540713` still has no feature application/public source copied into it. Raw producer
-JSONs remain separate from the matching formatted records. The final capture
-contract/CI/route checks passed three suites, 50 tests
-(`/tmp/freeholds06-final-capture-contract.log`). All nine AFTER and all nine newly captured baseline images have independent
-visual QA PASS. QA directly viewed the new baseline set and verified all 18
-retained PNG bytes plus all 31 source hashes against the 43-file artifact set;
-this is current-set acceptance, not an inherited earlier verdict.
+All 42 source seals and seven harness seals match; Git identity is explicitly a
+receipt-time observation. The real baseline remains `6540713541`, with no copied
+feature application runtime. Baseline diagnostics are 102 inherited character
+preload messages plus 29 HTTP 502 responses; all 28 after diagnostics are HTTP 502.
+No page exception or unclassified diagnostic is present.
 
-A fresh final review passed (`/tmp/freeholds06-review-completed-fix-round.md`):
-all 43 artifacts match the index, all 71 declared hashes (including 31 source
-hashes) match, all 18 visual checks are closed, the four baseline harness files
-are identical, and the timing inventory has 4187 rows. The final raw capture
-manifests retain 123 baseline console errors (102 inherited missing-preload
-errors and 21 HTTP 502 errors) and 23 after console errors, all HTTP 502. These
-diagnostics are separate from the successful capture commands and visual checks.
-
-The capture helper now waits for a real notice outcome and records `noticeResolution`.
-This fixes the actual delayed 30-second performance-warning race without spoofing
-GPU/warning state. Real notice dismissal and timing evidence are retained; no CSS
-hiding substitutes for the user's visible control path.
-
-The PostgreSQL-armed canonical timing harvest completed with exit 0:
-`node scripts/ci_shard_weights_harvest.mjs --carry-local-missing --runs 3 --reason 'Freehold interiors and release sync tests measured locally pending the next full CI harvest.'`.
-It measured 161 missing files in three real green runs each, bringing the weight
-inventory to 4186. A fresh reviewer independently matched all 161 triples and
-medians and verified that prior weights were unchanged. Evidence:
-`/tmp/freeholds06-final-weight-harvest.log`. The later notice helper added one
-missing test file, measured in three real green runs at 5, 4, 5 ms (median 5 ms), also
-PASS. The current total is 4187 weight rows; evidence for that bounded addition is
-`/tmp/freeholds06-notice-weight-harvest.log`.
-
-The 318-path staged snapshot preceded the late focused fixes and this documentation
-update; it is a historical staging count. The full-gate first-attempt log is
-`/tmp/freeholds06-final-gate.log`. The PostgreSQL-armed shared full-gate rerun
-completed in session 73919 with exit 0: all 12 stages PASS, recorded in
-`/tmp/freeholds06-final-gate-after-fixes.log`. The full suite passed 4204 files and
-63137 tests, with two expected failures and 28 skips (888.52 seconds); browser
-checks passed 50 files and 401 tests (15.20 seconds). Type and environment checks
-and server, bot and client builds passed. Security scanned 9030 files with 452
-flags and zero high findings after priors: PASS.
-
-The implementation is ready within its scoped acceptance. The five-commit delivery
-sequence and actual post-commit `npm run ci:changed` result will be recorded in the
-final delivery response; neither is claimed as already run here. The separate paired
-QA and all later packet authority, capacity, lighting, service, visiting and final-art
-acceptance remain unsigned.
+The fresh reviewer personally inspected all eighteen canonical images,
+[twenty narrow presentation fixtures](../screenshots/freeholds-06-presentation/README.md)
+and [eight actual-key images](../screenshots/freeholds-06-key/README.md).
+Presentation PNGs are observed 333 by 720, due to the browser-test iframe;
+canonical compact captures prove the requested 874 by 402 viewport. Both real
+key routes complete grant, bag art/tooltip, action placement, personal-bank round
+trip and use, retaining one permanent key and one positive travel deadline.
+Compact tooltips use explicit automated DOM focus on the shipping handler;
+keyboard-only/touch-only tooltip navigation and physical-phone behavior are not
+claimed. Actual touch opening, held drag, bank operations and activation remain
+real inputs. No art was generated during this audit.
 
 Source facts: `content/freehold/layouts.ts` defines the Inn 16×20 and Cottage 24×24
 measured development shells, protected central paths, entry `(0,-4)`, exit `(0,-6)`
@@ -781,7 +738,10 @@ and facing 0; model/space evidence remains development sizing pending final acce
 `world_object_bootstrap.ts` creates the alive nonlootable `freehold_gate` only on an
 opted-in stock world service; map semantics use `freehold-gate`. `gate.ts` rechecks
 nearby authority and grants an absent permanent `hearth_key` after accepted entry
-when bags permit. The tool's `ItemUse { type: 'freeholdEnter' }` routes through
+when bags permit, counting positive carried and personal-bank possession.
+`owner_arrival.ts` resolves a deterministic body-safe position before claim or
+travel side effects; saturation refuses without changing claims, inventory, RNG
+or clocks. Empty rooms retain the authored entry. The tool's `ItemUse { type: 'freeholdEnter' }` routes through
 `hearth_key.ts`; append-only refusals add `instanced` and `match`, and cooldown uses
 one hour in the isolated Sim account map. Physical entry does not spend that clock;
 full bags do not reverse accepted entry. Realm `freeholdKeyAdmission` fails closed
@@ -799,24 +759,22 @@ this fixes observed transition identity, not authorization to replay optional ar
 presentation. Public `myFreehold`/`freeholdLayout` remain null until 08a.
 
 The live functional capture helper is `scripts/lib/pr_shot_freeholds.mjs`, separate
-from 09's planned day/night helper. Its nine target/view variants require eighteen
-before/after PNGs. Both final capture commands exited 0 and the refreshed 43-artifact
-set is retained with 31 source hashes. The nine AFTER images have visual QA PASS;
-the nine newly captured baseline images also have **independent visual QA PASS**,
-with all 18 retained PNG bytes and all 31 source hashes verified.
-The baseline is the release's real quay without the new surface, never a fabricated
-prior gate or interior. Captures do not sign 09 lighting/arrival, 12 service props,
-18 visiting or 19 final GLBs. Production capacity/broadcast and 07/07a durable
-account-authority gates remain unsigned.
+from 09's planned day/night helper. Its nine target/view variants produce the
+eighteen exact before/after paths below. Both producers exited 0, and every
+retained image and sidecar hash matches the personally inspected producer bytes.
+The release baseline is the real quay without the new surface. No previous visual
+acceptance transfers to new bytes.
 
-Required retained files under `docs/screenshots/freehold-interiors-2026-09-08/`
-(copy exact runner PNG bytes to these flat names; retain raw runner manifests
-separately). Links identify the refreshed retained paths: the nine AFTER images
-have visual QA PASS; the nine new baseline images also independently passed
-visual QA with exact retained-byte and source-hash matches.
-No previous acceptance transfers to new bytes. The shared full gate passed all
-12 stages with exit 0. Actual commit delivery and post-commit check results belong
-in the final delivery response.
+This PASS accepts the functional shells, interaction and safe arrival. Production
+remote-key admission remains fail-closed until 07/07a supplies durable account
+participation, the database epoch after its lock and the committed private mirror.
+Injected participant tests prove protocol behavior only. Fresh arrival directive
+consumption belongs to 07c/08a/09; final lighting/camera/welcome to 09; reserved
+Cottage anchors to 12; visiting to 18; final GLBs to 19; Wave A close to 20.
+Production activation, slot-capacity and repeated-entry deployment gates remain
+unsigned. The next task is 07 Persistence.
+
+Required retained files under `docs/screenshots/freehold-interiors-2026-09-08/`:
 
 | Required filename | Status |
 |---|---|
