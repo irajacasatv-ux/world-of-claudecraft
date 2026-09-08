@@ -35,6 +35,7 @@ import {
 // Off the barrel on purpose (the join hook is its one caller): the direct
 // test imports the owning file.
 import { applyFreeholdOwnerStamp } from '../src/sim/freehold/state';
+import type { FreeholdTier } from '../src/sim/freehold/types';
 import { instanceKeyFor } from '../src/sim/instances/dungeons';
 import type { InstanceSlot } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
@@ -100,6 +101,21 @@ function textEvents(events: SimEvent[]): SimEvent[] {
   return events.filter((ev) => ev.type === 'log' || ev.type === 'error');
 }
 
+// A death inside `inst` and the spirit release that follows, as the sim
+// records them (spirit.ts): the corpse stays where the player fell, bound to
+// the claim's exit entity, and the released ghost stands at the graveyard,
+// outside every instance.
+function dieInsideAndRelease(sim: Sim, pid: number, inst: InstanceSlot): void {
+  const e = entity(sim, pid);
+  expect(sim.instanceSlotAt(e.pos)).toBe(inst.slot);
+  e.hp = 0;
+  e.dead = true;
+  e.ghost = true;
+  e.corpsePos = { ...e.pos };
+  e.corpseInstanceId = inst.exitId;
+  e.pos = { x: 0, y: 0, z: 0 };
+}
+
 // Everything a refusal must leave alone, as a value snapshot.
 function refusalSnapshot(sim: Sim, pid: number) {
   const e = entity(sim, pid);
@@ -112,6 +128,8 @@ function refusalSnapshot(sim: Sim, pid: number) {
       i.slot,
       i.partyKey,
       i.exitId,
+      i.emptyFor,
+      i.difficulty,
       [...i.enteredBy],
       [...i.mobIds],
     ]),
@@ -120,6 +138,18 @@ function refusalSnapshot(sim: Sim, pid: number) {
     freeholds: JSON.parse(JSON.stringify([...sim.freeholds.entries()])),
   };
 }
+
+describe('the draw counter', () => {
+  it('is live: one rng draw counts as one (the positive control for every zero-draw pin below)', () => {
+    const sim = makeSim();
+    expect(
+      countDraws(sim, () => {
+        sim.rng.next();
+      }),
+    ).toBe(1);
+    expect(countDraws(sim, () => {})).toBe(0);
+  });
+});
 
 describe('the owner-keyed claim', () => {
   it("a fresh lit Sim's player enters its Inn Room with no seeding step", () => {
@@ -196,6 +226,12 @@ describe('the owner-keyed claim', () => {
     expect(inst).not.toBeNull();
     const exitId = inst?.exitId;
     const claimedBefore = claimedSlots(sim).length;
+    // A's exact pose and arrival count before B arrives: B's entry must not
+    // re-teleport or re-arrive A (a second teleport to the same entry pose
+    // would keep A's slot membership and still be wrong).
+    const ea = entity(sim, a);
+    ea.pos.x += 1.5;
+    const aPose = { pos: { ...ea.pos }, facing: ea.facing, entrySeq: ea.dungeonEntrySeq };
     sim.drainEvents();
 
     const draws = countDraws(sim, () => {
@@ -207,6 +243,7 @@ describe('the owner-keyed claim', () => {
     expect(inst?.exitId).toBe(exitId);
     expect(sim.instanceSlotAt(entity(sim, b).pos)).toBe(inst?.slot);
     expect(sim.instanceSlotAt(entity(sim, a).pos)).toBe(inst?.slot);
+    expect({ pos: { ...ea.pos }, facing: ea.facing, entrySeq: ea.dungeonEntrySeq }).toEqual(aPose);
     expect(inst?.enteredBy.has(b)).toBe(true);
     expect(textEvents(sim.drainEvents())).toEqual([
       { type: 'log', text: INN.enterText, color: '#b9f', pid: b },
@@ -252,6 +289,10 @@ describe('the owner-keyed claim', () => {
   });
 
   it('reaps the empty claim after INSTANCE_EMPTY_TIMEOUT, not before', () => {
+    // The shared 300 s empty hold, as a literal: every boundary below is
+    // written relative to the constant, so this is the one place the
+    // gameplay bound itself is pinned (the INSTANCE_SLOT_COUNT shape).
+    expect(INSTANCE_EMPTY_TIMEOUT).toBe(300);
     const sim = makeSim();
     const pid = addOwner(sim, 'Aaa');
     expect(enterFreehold(sim.ctx, pid)).toBe(true);
@@ -272,6 +313,10 @@ describe('the owner-keyed claim', () => {
     for (let i = 0; i < 20; i++) sim.tick();
     expect(inst.partyKey).toBeNull();
     expect(inst.exitId).toBeNull();
+    // The slot's session roster is emptied with it: a recycled slot carries
+    // no stale membership into the next owner's claim.
+    expect(inst.enteredBy.size).toBe(0);
+    expect(inst.emptyFor).toBe(0);
     expect(claimedSlots(sim)).toEqual([]);
   });
 
@@ -342,13 +387,27 @@ describe('text-free refusals', () => {
     expectRefusal(sim, pid, 'dead');
   });
 
-  it('dead (a released ghost) is refused with `dead` too: the room is no corpse run', () => {
+  it('dead (a released ghost bound to no claim) is refused with `dead` too', () => {
     const sim = makeSim();
     const pid = addOwner(sim, 'Aaa');
     const e = entity(sim, pid);
     e.dead = true;
     e.ghost = true;
+    expect(e.corpseInstanceId).toBeNull();
     expectRefusal(sim, pid, 'dead');
+  });
+
+  it('a record whose tier is outside the union is unusable: `no_freehold`, never a throw', () => {
+    const sim = makeSim();
+    const pid = addOwner(sim, 'Aaa');
+    const record = sim.freeholds.get(`entity:${pid}`);
+    expect(record).toBeDefined();
+    if (!record) return;
+    // A corrupt or forward-version row (the persistence slice's channel):
+    // the switch in freeholdDefForTier answers undefined at runtime.
+    record.tier = 'lodge_v2' as FreeholdTier;
+    expectRefusal(sim, pid, 'no_freehold');
+    expect(record.tier).toBe('lodge_v2');
   });
 
   it('in combat is refused with `combat`', () => {
@@ -398,6 +457,25 @@ describe('text-free refusals', () => {
     ensureFreeholdRecord(sim.ctx, `entity:${last}`);
     expectRefusal(sim, last, 'busy');
     expect(dungeonAt(entity(sim, last).pos.x)).toBeNull();
+
+    // The refusal is not sticky: once one owner leaves and the reaper frees
+    // that slot, the refused owner's next enter claims exactly that slot.
+    const leaver = owners[0];
+    const freed = claimOf(sim, `entity:${leaver}`);
+    expect(freed).not.toBeNull();
+    if (!freed) return;
+    expect(leaveFreehold(sim.ctx, leaver)).toBe(true);
+    freed.emptyFor = INSTANCE_EMPTY_TIMEOUT - 1;
+    for (let i = 0; i < 20; i++) sim.tick();
+    expect(freed.partyKey).toBeNull();
+    sim.drainEvents();
+    expect(enterFreehold(sim.ctx, last)).toBe(true);
+    expect(freed.partyKey).toBe(`entity:${last}`);
+    expect(sim.instanceSlotAt(entity(sim, last).pos)).toBe(freed.slot);
+    expect(inn.filter((i) => i.partyKey !== null)).toHaveLength(INSTANCE_SLOT_COUNT);
+    expect(textEvents(sim.drainEvents())).toEqual([
+      { type: 'log', text: INN.enterText, color: '#b9f', pid: last },
+    ]);
   });
 
   it('INVARIANT: every false return for a resolved player is exactly one freeholdDenied, and nothing else', () => {
@@ -482,6 +560,35 @@ describe('text-free refusals', () => {
     expect(claimedSlots(sim).length).toBe(claims);
     expect(sim.drainEvents()).toEqual([]);
   });
+
+  it('refuses the ghost with `dead` once the reaper has freed the room its corpse lay in', () => {
+    const sim = makeSim();
+    const pid = addOwner(sim, 'Aaa');
+    expect(enterFreehold(sim.ctx, pid)).toBe(true);
+    const inst = claimOf(sim, `entity:${pid}`);
+    if (!inst) throw new Error('no claim');
+    dieInsideAndRelease(sim, pid, inst);
+    // The shared reaper counts live bodies only, so the corpse does not hold
+    // the slot past the empty timeout (a dungeon behaves the same way).
+    inst.emptyFor = INSTANCE_EMPTY_TIMEOUT - 1;
+    for (let i = 0; i < 20; i++) sim.tick();
+    expect(inst.partyKey).toBeNull();
+    expect(entity(sim, pid).ghost).toBe(true);
+    expectRefusal(sim, pid, 'dead');
+  });
+
+  it('refuses a ghost bound to a claim that is not its own room', () => {
+    // A ghost whose corpse lies in a dungeon claim (a real corpse run there)
+    // is still `dead` to its freehold: the binding must name the owner's own
+    // claim of the record's current tier.
+    const sim = makeSim();
+    const pid = addOwner(sim, 'Aaa');
+    expect(sim.enterDungeon('hollow_crypt', pid)).toBe(true);
+    const crypt = sim.instances.find((i) => i.dungeonId === 'hollow_crypt' && i.partyKey !== null);
+    if (!crypt) throw new Error('no crypt claim');
+    dieInsideAndRelease(sim, pid, crypt);
+    expectRefusal(sim, pid, 'dead');
+  });
 });
 
 describe('leaving', () => {
@@ -498,6 +605,9 @@ describe('leaving', () => {
     const drop = INN.leaveOffset ?? { x: 0, z: -4 };
     expect(e.pos.x).toBeCloseTo(INN.doorPos.x + drop.x, 6);
     expect(e.pos.z).toBeCloseTo(INN.doorPos.z + drop.z, 6);
+    // The literal, so a moved door or a new offset re-pins the standability
+    // proof in tests/freehold_dungeon_defs.test.ts too.
+    expect({ x: e.pos.x, z: e.pos.z }).toEqual({ x: -14, z: -96 });
     expect(dungeonAt(e.pos.x)).toBeNull();
     expect(textEvents(sim.drainEvents())).toEqual([
       { type: 'log', text: INN.leaveText, color: '#b9f', pid },
@@ -789,6 +899,61 @@ describe('a tier change frees the old room', () => {
     expect(claimedSlots(sim)).toEqual([cottage]);
   });
 
+  it("never frees ANOTHER owner's vacant room: the key clause is the guard", () => {
+    // Two accounts each claim and vacate an Inn Room; only the arriving
+    // owner's own stale room goes. Drop the partyKey clause and the sweep
+    // would free every vacant owner room in the realm.
+    const sim = makeSim();
+    const p = addOwner(sim, 'Ppp', 'account:7');
+    const q = addOwner(sim, 'Qqq', 'account:8');
+    expect(enterFreehold(sim.ctx, p)).toBe(true);
+    expect(enterFreehold(sim.ctx, q)).toBe(true);
+    const pInn = claimOf(sim, 'account:7');
+    const qInn = claimOf(sim, 'account:8');
+    expect(pInn?.dungeonId).toBe(FREEHOLD_INN_ROOM_DUNGEON_ID);
+    expect(qInn?.dungeonId).toBe(FREEHOLD_INN_ROOM_DUNGEON_ID);
+    expect(pInn?.slot).not.toBe(qInn?.slot);
+    const qExit = innExitEntity(sim, qInn);
+    expect(leaveFreehold(sim.ctx, p)).toBe(true);
+    expect(leaveFreehold(sim.ctx, q)).toBe(true);
+    expect(setFreeholdTier(sim.ctx, 'account:7', 'cottage')).toBe(true);
+    expect(enterFreehold(sim.ctx, p)).toBe(true);
+    expect(pInn?.partyKey).toBeNull();
+    expect(qInn?.partyKey).toBe('account:8');
+    expect(qInn?.exitId).toBe(qExit);
+    expect(sim.entities.has(qExit ?? -1)).toBe(true);
+    expect(
+      claimedSlots(sim)
+        .map((i) => [i.dungeonId, i.partyKey])
+        .sort(),
+    ).toEqual([
+      [FREEHOLD_COTTAGE_DUNGEON_ID, 'account:7'],
+      [FREEHOLD_INN_ROOM_DUNGEON_ID, 'account:8'],
+    ]);
+  });
+
+  it("keeps an old-tier room that still holds the owner's bound corpse (the corpse run)", () => {
+    const sim = makeSim();
+    const a = addOwner(sim, 'Aaa', ACCOUNT);
+    const b = addOwner(sim, 'Bbb', ACCOUNT);
+    expect(enterFreehold(sim.ctx, a)).toBe(true);
+    const inn = claimOf(sim, ACCOUNT);
+    const innExit = innExitEntity(sim, inn);
+    if (!inn) throw new Error('no claim');
+    // A dies inside and releases: the body stays bound to the Inn Room claim
+    // while the ghost stands at the graveyard, outside every instance.
+    dieInsideAndRelease(sim, a, inn);
+    expect(setFreeholdTier(sim.ctx, ACCOUNT, 'cottage')).toBe(true);
+    expect(enterFreehold(sim.ctx, b)).toBe(true);
+    expect(claimOf(sim, ACCOUNT)?.dungeonId).toBe(FREEHOLD_INN_ROOM_DUNGEON_ID);
+    // The Inn Room claim is NOT freed: nobody stands inside, but A's corpse
+    // lies there, bound to this claim's exit.
+    expect(inn.partyKey).toBe(ACCOUNT);
+    expect(inn.exitId).toBe(innExit);
+    expect(sim.entities.has(innExit ?? -1)).toBe(true);
+    expect(claimedSlots(sim)).toHaveLength(2);
+  });
+
   it('never frees a party-keyed claim under the same key string: the guard is the claimKey', () => {
     // The offline solo key is `solo:<pid>`; stamping the SAME string as the
     // owner key (the resetDungeonInstances collision) puts a Hollow Crypt
@@ -827,6 +992,37 @@ describe('a tier change frees the old room', () => {
         .map((i) => i.dungeonId)
         .sort(),
     ).toEqual([FREEHOLD_COTTAGE_DUNGEON_ID, 'hollow_crypt']);
+  });
+});
+
+describe('the corpse run', () => {
+  it('admits a released ghost whose corpse lies in its own live claim, and it resurrects at the entrance', () => {
+    const sim = makeSim();
+    const pid = addOwner(sim, 'Aaa');
+    const e = entity(sim, pid);
+    expect(enterFreehold(sim.ctx, pid)).toBe(true);
+    const inst = claimOf(sim, `entity:${pid}`);
+    if (!inst) throw new Error('no claim');
+    const exitId = inst.exitId;
+    dieInsideAndRelease(sim, pid, inst);
+    expect(dungeonAt(e.pos.x)).toBeNull();
+    sim.drainEvents();
+    const draws = countDraws(sim, () => {
+      expect(enterFreehold(sim.ctx, pid)).toBe(true);
+    });
+    expect(draws).toBe(0);
+    // Back inside the SAME claim, alive again at the entrance (the dungeon
+    // module's resurrect-on-reentry), with no refusal and no new claim.
+    expect(sim.instanceSlotAt(e.pos)).toBe(inst.slot);
+    expect(inst.exitId).toBe(exitId);
+    expect(e.dead).toBe(false);
+    expect(e.ghost).toBe(false);
+    expect(e.hp).toBeGreaterThan(0);
+    expect(claimedSlots(sim)).toEqual([inst]);
+    const events = sim.drainEvents();
+    expect(events.filter((ev) => ev.type === 'freeholdDenied')).toEqual([]);
+    expect(events.filter((ev) => ev.type === 'respawn')).toEqual([{ type: 'respawn', pid }]);
+    expect(textEvents(events)).toEqual([{ type: 'log', text: INN.enterText, color: '#b9f', pid }]);
   });
 });
 

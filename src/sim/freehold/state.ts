@@ -189,10 +189,14 @@ export function seedFreeholdOnJoin(
  *  evict the leaver's record ONLY when no other live player shares the owner
  *  key (two characters of one account share one record; the last session
  *  out evicts). Must run while the leaver is still on the roster. The roster
- *  walk is a pure existence check, so its iteration order cannot matter, and
- *  it runs only when there is a record to evict: a dark realm (no records at
- *  all) and a leaver whose key holds none return before touching the roster,
- *  so the common leave costs two map lookups, never a walk. */
+ *  walk is a pure existence check, so its iteration order cannot matter. The
+ *  two guards short-circuit a DARK host only (no records at all, or a leaver
+ *  whose key holds none): on a lit host every joining player is seeded a
+ *  record, so every leave walks the roster once, O(players) per leave (about
+ *  16 us at 5000, measured), spread across the server leave's own awaits
+ *  rather than landing on one tick. An owner-key to live-session-count index
+ *  kept by these same two hooks would make the evict O(1); it is named work
+ *  for the persistence slice, which reshapes both hooks anyway. */
 export function releaseFreeholdOnLeave(ctx: SimContext, pid: number): void {
   if (ctx.freeholds.size === 0) return;
   const meta = ctx.players.get(pid);

@@ -1942,9 +1942,6 @@ describe('coverage: each scenario fires its subsystem', { timeout: 90_000 }, () 
         (i) => i.dungeonId === FREEHOLD_INN_ROOM_DUNGEON_ID && i.partyKey !== null,
       ),
     ).toEqual([]);
-    expect(
-      entities(rec).some((e) => e.templateId === 'dungeon_exit' && e.dungeonId === inn.id),
-    ).toBe(false);
     // The claim frame draws no rng: an owner claim spawns nothing (spawns: []),
     // and the one tick that follows it on the slim world draws nothing either.
     const frame = (label: string) => {
@@ -1952,6 +1949,15 @@ describe('coverage: each scenario fires its subsystem', { timeout: 90_000 }, () 
       if (!found) throw new Error(`no frame ${label}`);
       return found;
     };
+    const exitOf = (list: readonly { templateId?: unknown; dungeonId?: unknown }[]) =>
+      list.some((e) => e.templateId === 'dungeon_exit' && e.dungeonId === inn.id);
+    expect(exitOf(entities(rec))).toBe(false);
+    // The positive control for that absence: the same predicate finds the
+    // claim's exit entity in the checkpoint frame taken while the room was
+    // claimed, so a renamed field could not turn the absence vacuous.
+    expect(
+      exitOf((frame('entered').entities ?? []) as { templateId?: unknown; dungeonId?: unknown }[]),
+    ).toBe(true);
     expect(frame('entered').rng.draws - frame('seeded').rng.draws).toBe(0);
     expect(frame('shared').rng.draws - frame('entered').rng.draws).toBe(0);
   });

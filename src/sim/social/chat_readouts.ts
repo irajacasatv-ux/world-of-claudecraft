@@ -192,8 +192,9 @@ export function combatReadout(e: Entity): string {
 // anyone can walk to, so they never appear in this player-visible list.
 // Deliberately NOT memoized: zoneAt reads the ACTIVE world content, which the
 // editor play-test path swaps at runtime, so a cached string would report the
-// first world's zone names forever. The walk is 14 static rows behind the
-// chat lane's per-session rate limit, so rebuilding per call costs nothing.
+// first world's zone names forever. The walk is DUNGEON_LIST's few static
+// rows behind the chat lane's per-session rate limit, so rebuilding per call
+// costs nothing.
 export function dungeonsReadout(): string {
   const parts = DUNGEON_LIST.filter((d) => d.claimKey !== 'owner').map(
     (d) => `${d.name} (${zoneAt(d.doorPos.x, d.doorPos.z).name}, ${d.suggestedPlayers} players)`,

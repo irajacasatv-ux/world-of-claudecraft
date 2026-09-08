@@ -4337,9 +4337,9 @@ export class ClientWorld extends ReconWireState implements IWorld {
   consumeFeast(feastId: number): void {
     this.cmd({ cmd: 'consume_feast', id: feastId });
   }
-  // --- IWorldHousing: the ten freehold commands. Every one is dark on both
-  // hosts in the foundation (the sim stubs decide nothing; nothing is mirrored
-  // here), so the frames exist to pin the wire vocabulary, the dispatch guard
+  // --- IWorldHousing: the ten freehold commands. Enter and leave are live
+  // (the server's sim decides the claim; nothing is mirrored here), the other
+  // eight still dark; every frame pins the wire vocabulary, the dispatch guard
   // and the send set from the start. See src/world_api/housing.ts. ---
   freeholdEnter(): void {
     this.cmd({ cmd: 'freehold_enter' });

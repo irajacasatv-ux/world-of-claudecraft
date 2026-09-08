@@ -3,6 +3,8 @@
 // effectiveAttackPower). Pure over the entity, so no Sim is built: a real mob
 // and a real player from entity.ts carry hand-set base stats and auras.
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { effectiveArmor, effectiveAttackPower } from '../src/sim/combat/effective_stats';
 import { MOBS } from '../src/sim/data';
@@ -13,6 +15,7 @@ import {
   FAERIE_FIRE_ARMOR_PCT,
   SUNDER_ARMOR_PCT_PER_STACK,
 } from '../src/sim/types';
+import { stripComments } from './helpers/strip_comments';
 
 const ORIGIN = { x: 0, y: 0, z: 0 };
 
@@ -137,5 +140,32 @@ describe('effectiveAttackPower', () => {
     const m = mob();
     m.auras.push(aura('debuff_ap', 500));
     expect(effectiveAttackPower(m)).toBe(0);
+  });
+});
+
+describe('src/sim/sim.ts delegates to the module instead of re-implementing it', () => {
+  const sim = stripComments(readFileSync(resolve(process.cwd(), 'src/sim/sim.ts'), 'utf8'));
+
+  it('imports both bodies under their Impl aliases', () => {
+    expect(sim).toContain('effectiveArmor as effectiveArmorImpl,');
+    expect(sim).toContain('effectiveAttackPower as effectiveAttackPowerImpl,');
+    expect(sim).toContain("} from './combat/effective_stats';");
+  });
+
+  it('keeps thin one-line delegates and none of the moved arithmetic', () => {
+    // The seam binds sim.effectiveArmor / sim.effectiveAttackPower by
+    // identity, so Sim keeps a same-named private method; each must forward
+    // and nothing more (a divergent re-implementation inside sim.ts would be
+    // caught only indirectly by the zero-slack line ratchet otherwise).
+    expect(sim).toContain(
+      'private effectiveArmor(e: Entity): number {\n    return effectiveArmorImpl(e);\n  }',
+    );
+    expect(sim).toContain(
+      'private effectiveAttackPower(e: Entity): number {\n    return effectiveAttackPowerImpl(e);\n  }',
+    );
+    // The moved bodies' own arithmetic (the sunder/faerie-fire max-combine
+    // and the percent-of-base attack-power arm) no longer appears in sim.ts.
+    expect(sim).not.toContain("a.kind === 'faerie_fire'");
+    expect(sim).not.toContain("a.kind === 'buff_ap_pct'");
   });
 });

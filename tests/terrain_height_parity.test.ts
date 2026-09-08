@@ -399,6 +399,35 @@ describe('terrain height bit identity', () => {
     return (a > b ? a - b : b - a) <= 2n;
   }
 
+  it('appends the owner-keyed rooms LAST, at pinned indices, so the older body stays a byte prefix', () => {
+    // The corpus is index-seeded (SEEDS[points.length % SEEDS.length] at add
+    // time), so a room inserted into any earlier loop would re-seed every
+    // later point and a same-commit re-mint would still pass the bit-identity
+    // test below. Pin the shape by literal: the total, the index of the first
+    // owner-room point, and that no point before it belongs to an owner room.
+    // A moved room stencil changes coordinates, never these counts; a new
+    // room, or a room that slips into an earlier loop, moves them and must
+    // re-prove the prefix property against the previous fixture body.
+    const points = buildPoints();
+    const ownerIds = DUNGEON_LIST.filter((d) => d.claimKey === 'owner').map((d) => d.id);
+    expect(ownerIds).toEqual(['freehold_inn_room', 'freehold_cottage']);
+    const isOwnerLabel = (label: string) => ownerIds.some((id) => label.includes(id));
+    const firstOwner = points.findIndex((p) => isOwnerLabel(p.label));
+    expect(firstOwner).toBe(152_181);
+    expect(points).toHaveLength(152_992);
+    expect(points.slice(0, firstOwner).some((p) => isOwnerLabel(p.label))).toBe(false);
+    expect(points[firstOwner]?.label).toBe('dungeon door freehold_inn_room center');
+    // The tail is the owner rooms' three shapes and nothing else: every point
+    // from the first owner-room point on is a room stencil, a routing column
+    // the older rooms did not already contribute, or a slot pad of a room.
+    for (const p of points.slice(firstOwner)) {
+      expect(
+        isOwnerLabel(p.label) || p.label.startsWith('instance x routing'),
+        `tail point ${p.label}`,
+      ).toBe(true);
+    }
+  });
+
   it('keeps terrainHeight and groundHeight within two ULPs over the authored world corpus', () => {
     const points = buildPoints();
     if (UPDATE) writeFileSync(FIXTURE_URL, captureFixture(points));

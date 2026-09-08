@@ -10,13 +10,15 @@ export type { FreeholdLayoutView, FreeholdView, FreeholdVisitPolicy };
 // furnishing layout of the freehold the caller stands in, and the commands
 // that mutate a freehold (enter and leave, furnishing placement with its undo
 // stack, the ledger payment, the visit policy, and the ephemeral build
-// presence). This foundation lands the whole surface DARK: every method is a
-// no-op on both hosts (the Sim stubs decide nothing and mutate nothing;
-// ClientWorld sends the wire command and mirrors nothing), both data members
-// are null everywhere, and the server refuses all ten commands at dispatch
-// while the realm flag is off. Later work lights each member behind exactly
-// this shape, so the facet, the wire vocabulary and the parity pins never
-// move again.
+// presence). The foundation landed the whole surface DARK behind one gate:
+// the server refuses all ten commands at dispatch while the realm flag is
+// off, both data members are null everywhere, and each member lights behind
+// exactly this shape, so the facet, the wire vocabulary and the parity pins
+// never move again. Lit so far: `freeholdEnter` and `freeholdLeave` (the
+// owner-keyed claim on the dungeon slot pool; the Sim decides and moves the
+// player, ClientWorld sends the command and mirrors nothing, and the
+// refusals are text-free `freeholdDenied` events). The other eight are still
+// no-ops on both hosts.
 //
 // THE WIRE NEVER CARRIES AN OWNER KEY. FreeholdView is an opaque public plot
 // identity plus its tier and visit policy; the account or guild ownership key
@@ -42,7 +44,8 @@ export interface IWorldHousing {
   housingNowMs(): number;
   // Step through the caller's own freehold door, and back out to the world.
   // Both carry NO payload: which plot, whether the caller may enter it, and
-  // where they land all resolve server-side. Dark no-ops here.
+  // where they land all resolve server-side (src/sim/freehold/instance.ts;
+  // the realm's dispatch gate still refuses both while the flag is off).
   freeholdEnter(): void;
   freeholdLeave(): void;
   // Set the bagged furnishing in carried slot `slot` down at a freehold-local

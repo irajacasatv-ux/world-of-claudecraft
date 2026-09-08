@@ -715,6 +715,11 @@ describe('createSimContext (isolated, fake host)', () => {
     const files = tsFilesUnder(simDir);
     expect(files.length).toBeGreaterThan(100);
     expect(files.some((f) => f.file === 'sim.ts')).toBe(true);
+    // Stated bound (the .tier scan's form): the regex sees the dotted read
+    // `cfg.freeholdDevGrantEnabled` only. A destructured read
+    // (`const { freeholdDevGrantEnabled } = cfg`) or a bracket read would
+    // escape it; neither exists today, and whoever adds one owes this scan a
+    // matching arm.
     const hits: string[] = [];
     for (const { file, full } of files) {
       const code = codeOnly(readFileSync(full, 'utf8'));

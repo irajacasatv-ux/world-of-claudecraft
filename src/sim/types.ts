@@ -7946,6 +7946,14 @@ export type SimEvent = { pid?: number } & (
   | {
       type: 'freeholdDenied';
       pid: number;
+      // APPEND-ONLY, in this order. Emitted today: no_freehold (no record, an
+      // unusable record, or a dark host), dead (a corpse or a ghost not bound
+      // to its own live claim), combat and busy (a full slot pool), all from
+      // src/sim/freehold/instance.ts. Declared ahead of their emitters, each
+      // owned by a later housing slice: locked (the amenity lockout), cooldown
+      // (the Hearth Key), visitors_full and not_friend (the visitor policy).
+      // The client toast resolves every token, so a new token lands with its
+      // catalog line in the same change.
       reason:
         | 'no_freehold'
         | 'locked'

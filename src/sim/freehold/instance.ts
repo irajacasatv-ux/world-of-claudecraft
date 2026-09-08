@@ -8,13 +8,22 @@
 // Every refusal here is TEXT-FREE (D10): exactly one id-carrying, pid-scoped
 // `freeholdDenied` event, no `log` or `error` line, and nothing moves, nothing
 // is claimed and no rng is drawn. The refusals run BEFORE the dungeon module
-// is asked to enter, in this fixed order: dead (a ghost included: the room is
-// no corpse run), in combat, no record, then a full slot pool (`busy`), which
-// is checked here precisely so the dungeon module's own English "instances
-// are busy" error can never fire for a freehold. The flag is NOT re-checked
-// here: the server dispatch gate is the one gate, and a dark host's record
+// is asked to enter, in this fixed order: dead, in combat, no record (an
+// unusable record counts as none), then a full slot pool (`busy`), which is
+// checked here precisely so the dungeon module's own English "instances are
+// busy" error can never fire for a freehold. The flag is NOT re-checked here:
+// the server dispatch gate is the one gate, and a dark host's record
 // inserters insert nothing (state.ts), so it answers `no_freehold` (the
 // ruling recorded in commands.ts).
+//
+// THE CORPSE RUN: `dead` has one exception, the dungeon idiom. A player can
+// die inside its room (a hostile periodic aura ticks on after combat drops
+// and passes the combat check), and the room has no door, so a released ghost
+// whose corpse lies inside its OWN live claim of the current tier is admitted
+// exactly as the dungeon module admits a ghost bound to a claim, and
+// resurrects at the entrance. A fresh corpse, a ghost bound to another claim,
+// a ghost whose room the reaper already freed and a ghost with no record all
+// refuse `dead` as before; the Spirit Healer remains the other way back.
 //
 // THE TIER-CHANGE RULE lives in the dungeon module, not here: once an owner
 // has arrived in the room of its current tier, enterDungeon frees every other
@@ -27,11 +36,17 @@
 // last occupant leaves, and the 24-slot pool depth is the shared pool's; a
 // per-record slot count and a shorter owner hold are named later work.
 //
-// THE LIGHTING RULING: this change adds no proximity, cast or cooldown gate.
-// An out-of-combat player anywhere in the world could enter its room and
-// leave to the Eastbrook quay, so FREEHOLDS_ENABLED stays dark on the realm
-// until the interiors slice lands the Eastbrook gate proximity confirm and
-// the Hearth Key context refusals.
+// THE LIGHTING RULING: this change adds no proximity, cast, cooldown or
+// position-context gate. An out-of-combat player anywhere in the world,
+// including inside another dungeon claim, a delve, a rift, a battleground,
+// an arena, a duel or a moderator jail visit, could enter its room and leave
+// to the Eastbrook quay (and an enter from inside another instance never runs
+// that instance's detach bookkeeping), so FREEHOLDS_ENABLED stays dark on the
+// realm until the interiors slice lands the Eastbrook gate proximity confirm
+// (which is also the position-context guard: the gate stands on open
+// overworld ground, on BOTH hosts, in the sim) and the Hearth Key context
+// refusals, and the enter cooldown that bounds the interest-set churn each
+// cross-band teleport costs every nearby viewer.
 //
 // The dungeon machinery is reached ONLY through the SimContext seam
 // (ctx.enterDungeon / ctx.leaveDungeon / ctx.instanceClaimIdAt), never by
@@ -51,14 +66,15 @@ import {
 import type { SimContext } from '../sim_context';
 import type { DungeonDef, SimEvent } from '../types';
 import { freeholdKeyFor } from './owner_key';
-import type { FreeholdPlotId, FreeholdTier, FreeholdVisitPolicy } from './types';
-
-export { freeholdKeyFor } from './owner_key';
+import type { FreeholdPlotId, FreeholdState, FreeholdTier, FreeholdVisitPolicy } from './types';
 
 type FreeholdDenyReason = Extract<SimEvent, { type: 'freeholdDenied' }>['reason'];
 
 /** The room a record's tier is claimed in. Exhaustive over the tier union so
- *  a new tier is a compile error here rather than a silent Inn Room. */
+ *  a new tier is a compile error here rather than a silent Inn Room. A value
+ *  OUTSIDE the union (a corrupt or forward-version record, once records
+ *  persist) falls off the switch and answers undefined at runtime; the one
+ *  caller treats that as an unusable record, never a throw inside a tick. */
 export function freeholdDefForTier(tier: FreeholdTier): DungeonDef {
   switch (tier) {
     case 'inn_room':
@@ -87,20 +103,44 @@ function denyFreehold(ctx: SimContext, pid: number, reason: FreeholdDenyReason):
   return false;
 }
 
+/** The corpse-run exception to `dead`: a released ghost whose corpse is bound
+ *  to the caller's OWN live claim of the record's current tier. The binding is
+ *  the claim's exit entity id the death captured (corpseInstanceId), the same
+ *  fact the dungeon module's corpseBoundToClaim reads, so a ghost bound to a
+ *  stranger's room, to a room the reaper already freed (its exit entity is
+ *  gone) or to nothing is not one. */
+function corpseInsideOwnClaim(
+  ctx: SimContext,
+  e: { ghost: boolean; corpseInstanceId: number | null },
+  key: string,
+  record: FreeholdState,
+): boolean {
+  if (!e.ghost || e.corpseInstanceId === null) return false;
+  const def = freeholdDefForTier(record.tier) as DungeonDef | undefined;
+  if (def === undefined) return false;
+  return ctx.instances.some(
+    (i) => i.dungeonId === def.id && i.partyKey === key && i.exitId === e.corpseInstanceId,
+  );
+}
+
 /** Enter the caller's own freehold: rejoin the live owner claim or claim a
  *  vacant slot of the tier's room, then take the dungeon module's arrival
- *  (entry pose, facing 0, the entry log, dungeonEntrySeq). False on every
- *  refusal, each announced by exactly one `freeholdDenied`. */
+ *  (entry pose, facing 0, the entry log, dungeonEntrySeq; a bound ghost
+ *  resurrects at the entrance there). False on every refusal, each announced
+ *  by exactly one `freeholdDenied`. */
 export function enterFreehold(ctx: SimContext, pid: number): boolean {
   const r = ctx.resolve(pid);
   if (!r) return false;
   const entityId = r.meta.entityId;
-  if (r.e.dead) return denyFreehold(ctx, entityId, 'dead');
-  if (r.e.inCombat) return denyFreehold(ctx, entityId, 'combat');
   const key = freeholdKeyFor(ctx, entityId);
   const record = ctx.freeholds.get(key);
+  if (r.e.dead && !(record !== undefined && corpseInsideOwnClaim(ctx, r.e, key, record))) {
+    return denyFreehold(ctx, entityId, 'dead');
+  }
+  if (r.e.inCombat) return denyFreehold(ctx, entityId, 'combat');
   if (!record) return denyFreehold(ctx, entityId, 'no_freehold');
-  const def = freeholdDefForTier(record.tier);
+  const def = freeholdDefForTier(record.tier) as DungeonDef | undefined;
+  if (def === undefined) return denyFreehold(ctx, entityId, 'no_freehold');
   // One pass over the pool: a live claim under this key wins outright, else
   // any vacant slot of the room will do; neither means the pool is full.
   let rejoining = false;
@@ -120,7 +160,15 @@ export function enterFreehold(ctx: SimContext, pid: number): boolean {
 /** Leave the freehold the caller stands in: false (and nothing emitted) unless
  *  the caller is inside a live owner claim, else the dungeon module's exit,
  *  which sets the player down at the room's doorPos plus its leave offset and
- *  emits the leave log once. */
+ *  emits the leave log once. A leave from anywhere else is a no-op, not a
+ *  refusal: nothing was asked that could have been granted, so no
+ *  `freeholdDenied` is owed (D10 covers denials of an entry or a mutation).
+ *  ANY player standing in a live owner claim may leave, not only its owner:
+ *  the room's exit is the one way out for a sibling character, a later guest,
+ *  or a body a dead relog placed there, and the dungeon module's own exit
+ *  refusals (a fresh corpse cannot walk) still apply. Two pool walks (the
+ *  claim id, then its slot) are deliberate: the seam exposes no slot lookup
+ *  and both are sub-microsecond. */
 export function leaveFreehold(ctx: SimContext, pid: number): boolean {
   const r = ctx.resolve(pid);
   if (!r) return false;

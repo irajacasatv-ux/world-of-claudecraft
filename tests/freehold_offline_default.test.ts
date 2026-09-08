@@ -55,6 +55,17 @@ function countDraws(sim: Sim, run: () => void): number {
   return draws;
 }
 
+describe('the draw counter', () => {
+  it('is live: one rng draw counts as one (the positive control for the zero-draw pins)', () => {
+    const sim = litSim();
+    expect(
+      countDraws(sim, () => {
+        sim.rng.next();
+      }),
+    ).toBe(1);
+  });
+});
+
 describe('the default record on a lit offline Sim', () => {
   it('exists for entity:<pid> at addPlayer: tier inn_room, rev 0, the stand-in plot id', () => {
     const sim = litSim();

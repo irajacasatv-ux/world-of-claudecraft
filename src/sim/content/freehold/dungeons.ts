@@ -8,7 +8,9 @@ import type { DungeonDef } from '../../types';
 // spawned and no map portal or calm-anchor pad is minted), stay out of the
 // public Guide, the Dungeon Finder and the `/dungeons` chat readout (which
 // skips every `claimKey: 'owner'` record), and use the plain crypt kit as a
-// stand-in interior until the authored room layouts replace it.
+// PLACEHOLDER interior until the interiors slice lands the authored room
+// layouts; `doorPos` below is a placeholder too, replaced by that slice's
+// authored gate spot.
 //
 // Both records carry NO `objects` on purpose: a placed object would pull in
 // the Reliquary obligation for its item, so the instance-placement sweep in
@@ -19,12 +21,19 @@ import type { DungeonDef } from '../../types';
 // resolves it through `entities.dungeons.<id>.<field>`, whose English derives
 // from these values (src/ui/world_entity_i18n.ts DUNGEON_IDS).
 //
-// `doorPos` is only where leaving drops the player: the planned Eastbrook quay
-// gate spot beside the mailbox (SERVICES.mailbox at { x: -10, z: -98 }); the
-// interiors slice moves the gate entity itself to its final authored position.
+// `doorPos` is only where leaving drops the player: 4 yd south of it, the
+// shared door inset both the leave path (instances/dungeons.ts leaveDungeon,
+// no `leaveOffset` here) and the saved-inside rejoin (sim.ts) apply, so the
+// drop is { x: -14, z: -96 } on the open quay beside the mailbox
+// (SERVICES.mailbox at { x: -10, z: -98 }). The door sits north of the quay's
+// blocked footprint (the mailbox and its surround, x -18 to -10, z -98 to
+// -104): a door at z -96 dropped the player INSIDE that footprint at z -100,
+// pinned unblocked with zero depenetration on every test seed by
+// tests/freehold_dungeon_defs.test.ts. The interiors slice moves the gate
+// entity itself to its final authored position and re-pins the drop.
 // Overflow band: the forge lift took 14, so the Inn Room claims 15 and the
 // Cottage 16 (instanceOriginX: 119200 and 119800).
-const FREEHOLD_GATE_DOOR_POS = { x: -14, z: -96 } as const;
+const FREEHOLD_GATE_DOOR_POS = { x: -14, z: -92 } as const;
 
 export const FREEHOLD_INN_ROOM_DUNGEON_ID = 'freehold_inn_room';
 export const FREEHOLD_COTTAGE_DUNGEON_ID = 'freehold_cottage';

@@ -247,12 +247,15 @@ describe('tier validation through the one writer', () => {
     expect(record?.rev).toBe(5);
   });
 
-  it('draws no rng', () => {
+  it('draws no rng (with the observer proven live first)', () => {
     const sim = makeSim(true, true);
     let draws = 0;
     sim.rng.setObserver(() => {
       draws++;
     });
+    sim.rng.next();
+    expect(draws).toBe(1);
+    draws = 0;
     try {
       expect(devGrantFreeholdTier(sim.ctx, sim.primaryId, 'cottage')).toEqual({
         outcome: 'granted',
@@ -265,6 +268,42 @@ describe('tier validation through the one writer', () => {
       sim.rng.setObserver(null);
     }
     expect(draws).toBe(0);
+  });
+});
+
+describe('applyFreeholdOwnerStamp is the SOLE owner-stamp writer (source scan)', () => {
+  const simDir = join(__dirname, '..', 'src', 'sim');
+  const serverDir = join(__dirname, '..', 'server');
+  const codeOnly = (src: string): string =>
+    src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+
+  it('finds exactly one `.freeholdOwnerKey =` assignment across src/sim and server, inside applyFreeholdOwnerStamp', () => {
+    const files = [...tsFilesUnder(simDir), ...tsFilesUnder(serverDir)];
+    expect(files.length).toBeGreaterThan(150);
+    const hits: string[] = [];
+    for (const { file, full } of files) {
+      const code = codeOnly(readFileSync(full, 'utf8'));
+      for (const line of code.split('\n')) {
+        if (/\.freeholdOwnerKey\s*=[^=]/.test(line)) hits.push(`${file}: ${line.trim()}`);
+      }
+    }
+    // The server MINTS the key (freeholdOwnerKeyForAccount) and passes it as
+    // an addPlayer option; the one assignment onto a PlayerMeta is the stamp
+    // writer in state.ts, which the directory keeps off its barrel. Same
+    // stated bound as the tier scan below: dotted assignments only.
+    expect(hits).toEqual(['freehold/state.ts: meta.freeholdOwnerKey = key;']);
+  });
+
+  it('no production module imports the stamp writer: addPlayer reaches it through seedFreeholdOnJoin only', () => {
+    const files = [...tsFilesUnder(simDir), ...tsFilesUnder(serverDir)];
+    const importers: string[] = [];
+    for (const { file, full } of files) {
+      const code = codeOnly(readFileSync(full, 'utf8'));
+      if (/\bapplyFreeholdOwnerStamp\b/.test(code) && !file.startsWith('freehold/')) {
+        importers.push(file);
+      }
+    }
+    expect(importers).toEqual([]);
   });
 });
 

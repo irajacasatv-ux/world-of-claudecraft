@@ -61,6 +61,7 @@ vi.mock('../server/db', () => ({
 import { type ClientSession, GameServer } from '../server/game';
 import { noopGameMetricsCounters, setGameMetricsCounters } from '../server/http/game_signals';
 import { DUNGEONS } from '../src/sim/data';
+import { setFreeholdTier } from '../src/sim/freehold/state';
 import type { InstanceSlot } from '../src/sim/sim';
 import { INSTANCE_EMPTY_TIMEOUT, type PlayerClass } from '../src/sim/types';
 import { type FakeClient, fakeWs } from './helpers/bare_client';
@@ -71,9 +72,10 @@ import { type FakeClient, fakeWs } from './helpers/bare_client';
 const INN_ROOM_BAND = { min: 118900, max: 119500 } as const;
 const COTTAGE_BAND = { min: 119500, max: 120100 } as const;
 // Leaving sets the player down outside the Eastbrook gate: the def's doorPos
-// { x: -14, z: -96 } plus the default 4 yd door inset (the record declares no
-// leaveOffset), so { x: -14, z: -100 }.
-const GATE_DROP = { x: -14, z: -100 } as const;
+// { x: -14, z: -92 } plus the default 4 yd door inset (the record declares no
+// leaveOffset), so { x: -14, z: -96 } on the open quay (standability is pinned
+// in tests/freehold_dungeon_defs.test.ts).
+const GATE_DROP = { x: -14, z: -96 } as const;
 const JAILED_NOTICE = 'You cannot do that while jailed.';
 
 // process.env is safe to flip here because vitest's default forks pool gives
@@ -335,6 +337,12 @@ describe('freehold claim online: one account, one claim', () => {
     const key = 'account:4302';
     enter(server, a);
     const inst = claimFor(server, key);
+    // A revision the default seed would NOT reproduce, so "record intact"
+    // below is decisive: a wrongly re-seeded record would read rev 0 again.
+    // The tier stays inn_room on purpose, so the replacement still re-enters
+    // this same claim rather than a fresh Cottage.
+    expect(setFreeholdTier(server.sim.ctx, key, 'inn_room')).toBe(true);
+    expect(server.sim.ctx.freeholds.get(key)?.rev).toBe(1);
     expect(dropSocket(server, a, fa)).toBe(true);
 
     // Logging in on another character of the same account ends the held
@@ -346,7 +354,11 @@ describe('freehold claim online: one account, one claim', () => {
       expect(server.sim.entities.has(a.pid)).toBe(false);
     });
     expect(server.sim.meta(b.pid)?.freeholdOwnerKey).toBe(key);
-    expect(server.sim.ctx.freeholds.get(key)).toMatchObject({ ownerKey: key, tier: 'inn_room' });
+    expect(server.sim.ctx.freeholds.get(key)).toMatchObject({
+      ownerKey: key,
+      tier: 'inn_room',
+      rev: 1,
+    });
     expect(inst.partyKey).toBe(key);
 
     enter(server, b);
@@ -613,7 +625,9 @@ describe('freehold claim online: the /dev freehold <tier> server path (D24, D81)
     expect(list.filter((ev) => ev.type === 'log' && String(ev.text).startsWith('[dev]'))).toEqual(
       [],
     );
-    expect(server.sim.ctx.freeholds.get(key)?.tier).toBe('inn_room');
+    // The record is untouched: not only the tier but the revision, which a
+    // grant that ran and wrote inn_room again would have bumped.
+    expect(server.sim.ctx.freeholds.get(key)).toMatchObject({ tier: 'inn_room', rev: 0 });
     enter(server, s);
     const inst = claimFor(server, key);
     expect(inst.dungeonId).toBe('freehold_inn_room');

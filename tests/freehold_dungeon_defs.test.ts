@@ -9,6 +9,7 @@
 // id on a lit AND a dark host), and the `/dungeons` readout exclusion.
 // `npcs` is deliberately NOT pinned empty: later work adds a room NPC.
 import { beforeAll, describe, expect, it } from 'vitest';
+import { isBlocked, resolvePosition } from '../src/sim/colliders';
 import { FINDER_ACTIVITIES } from '../src/sim/content/dungeon_finder';
 import {
   FREEHOLD_COTTAGE_DUNGEON_ID,
@@ -16,6 +17,7 @@ import {
   FREEHOLD_INN_ROOM_DUNGEON_ID,
 } from '../src/sim/content/freehold';
 import { DUNGEON_LIST, DUNGEONS, dungeonAt, instanceOriginX } from '../src/sim/data';
+import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { Sim } from '../src/sim/sim';
 import { dungeonsReadout } from '../src/sim/social/chat_readouts';
 import { dungeonText } from '../src/ui/entity_display_core';
@@ -89,10 +91,35 @@ describe('freehold dungeon defs: registry shape', () => {
       expect(def.tombDressing).toBeUndefined();
       expect(def.staticDoor).toBeUndefined();
       expect(def.leaveOffset).toBeUndefined();
-      expect(def.doorPos).toEqual({ x: -14, z: -96 });
+      expect(def.doorPos).toEqual({ x: -14, z: -92 });
     }
     expect(DUNGEONS.freehold_inn_room.name).toBe('Inn Room');
     expect(DUNGEONS.freehold_cottage.name).toBe('Cottage');
+  });
+
+  it('drops a leaving player on clear quay ground: unblocked, with zero depenetration, on every test seed', () => {
+    // The drop is doorPos plus the shared 4 yd door inset (no leaveOffset;
+    // the saved-inside rejoin in sim.ts applies the same inset). The
+    // literal, then the proof: isBlocked false AND resolvePosition moves the
+    // body nowhere, at the real player radius, across the world seeds the
+    // suites and the client use. A door at z -96 failed this (its drop at
+    // z -100 sat inside the mailbox surround), which is why it moved.
+    for (const def of [DUNGEONS.freehold_inn_room, DUNGEONS.freehold_cottage]) {
+      expect(def.leaveOffset).toBeUndefined();
+      const drop = { x: def.doorPos.x, z: def.doorPos.z - 4 };
+      expect(drop).toEqual({ x: -14, z: -96 });
+      for (const seed of [1, 7, 42, 99, 1032, 1337]) {
+        expect(isBlocked(seed, drop.x, drop.z, PLAYER_BODY_RADIUS), `${def.id} seed ${seed}`).toBe(
+          false,
+        );
+        const resolved = resolvePosition(seed, drop.x, drop.z, PLAYER_BODY_RADIUS);
+        expect(
+          Math.hypot(resolved.x - drop.x, resolved.z - drop.z),
+          `${def.id} seed ${seed} depenetration`,
+        ).toBe(0);
+      }
+      expect(dungeonAt(drop.x)).toBeNull();
+    }
   });
 
   it('is the only owner-keyed pair: every other dungeon claims by party', () => {
@@ -242,7 +269,7 @@ describe('freehold dungeon defs: fresh Sim boot', () => {
       expect(doorDungeonIds).toContain('hollow_crypt');
       // No door stands at the planned gate spot either: the record's doorPos
       // is only where leaving drops the player.
-      expect(doors.some((d) => d.pos.x === -14 && d.pos.z === -96)).toBe(false);
+      expect(doors.some((d) => d.pos.x === -14 && d.pos.z === -92)).toBe(false);
     }
   });
 

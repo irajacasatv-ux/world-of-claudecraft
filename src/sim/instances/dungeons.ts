@@ -1134,10 +1134,13 @@ export function freeInstance(ctx: SimContext, inst: InstanceSlot): void {
 // tier it was claimed for is no longer the owner's) and is freed at once, so
 // a grant does not leave the old room's slot to the empty-slot reaper's
 // timeout. A stale room with a player still inside it (a sibling character of
-// the same account) is left alone: it frees the way any claim does, once it
-// empties. Party- and solo-keyed claims are never touched: the claimKey check
-// is the guard, not the key string, so a host stamp that ever collided with a
-// party/solo key still could not free a dungeon claim (see resetDungeonInstances).
+// the same account), or with a released ghost's corpse still bound to it (the
+// corpse run enterFreehold admits), is left alone: it frees the way any claim
+// does, once the reaper finds it empty. Party- and solo-keyed claims are never
+// touched: the claimKey check is the guard, not the key string, so a host
+// stamp that ever collided with a party/solo key still could not free a
+// dungeon claim (see resetDungeonInstances). The key clause is what keeps
+// another owner's vacant room out of reach.
 function freeVacantOwnerClaims(ctx: SimContext, ownerKey: string, keepDungeonId: string): void {
   for (const inst of ctx.instances) {
     if (
@@ -1149,7 +1152,12 @@ function freeVacantOwnerClaims(ctx: SimContext, ownerKey: string, keepDungeonId:
     let occupied = false;
     for (const meta of ctx.players.values()) {
       const e = ctx.entities.get(meta.entityId);
-      if (e && instanceClaimContains(inst, e.pos)) {
+      if (!e) continue;
+      const corpsePos = e.ghost && e.corpseInstanceId === inst.exitId ? e.corpsePos : null;
+      if (
+        instanceClaimContains(inst, e.pos) ||
+        (corpsePos !== null && instanceClaimContains(inst, corpsePos))
+      ) {
         occupied = true;
         break;
       }
