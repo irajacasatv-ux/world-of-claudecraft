@@ -5,17 +5,18 @@ next implementation phase never starts before this file has run.
 
 ## Exact screenshot integration contract
 
-These are NEW planned helper APIs. 09 introduces the common helper, constructor,
-visual selector and one import/spread in scripts/pr_shot_targets.mjs, initially with
-its functional interior-only capture subset. 11 extends that same
+06 registers nine functional gate/landing variants through
+scripts/lib/pr_shot_freeholds.mjs::freeholdReviewTargets. 09 introduces the planned
+scripts/lib/pr_shot_housing.mjs common helper, constructor and visual selector with
+twelve additional day/night interior variants. 11 extends that same
 scripts/lib/pr_shot_housing.mjs build target; 16/17/18 append their own functional
 descriptors as their UI lands. Never register a later nonfunctional UI target. No new screenshot runner or multi-image capture API is introduced.
 The registry has one optional-clip result and one image per uniquely keyed variant.
 
-Registration is cumulative by actual producer: file 09 registers the interior
-baseline subset (12 variants); file 11 extends the same target to 89; file 16
-reaches 178; file 17 reaches 226; file 18 reaches 330. File 20 verifies the complete
-wave A set (330 of the 733-variant program inventory in ux-spec section 11; 21 to 42
+Registration is cumulative by actual producer: file 06 registers nine functional
+gate and safe-landing variants; file 09 adds twelve day/night interiors (21 total); file 11 extends the registry to 98; file 16
+reaches 187; file 17 reaches 235; file 18 reaches 339. File 20 verifies the complete
+wave A set (339 of the 742-variant program inventory in ux-spec section 11; 21 to 42
 register their own milestones and each wave close verifies its union). Earlier files
 require only their registered working subset,
 never nonfunctional future UI. These are derived inventory counts, not new gameplay
@@ -514,8 +515,8 @@ Deliverables (at most five):
    Never stage multiple transient states then return the last, use internal side-shot
    writes or skip a required after-state. The exact descriptor/constructor inventory
    below expands to 89 working build-target variants including the 12 inherited interior
-   variants. Pin that implemented subset now; 16/17/18 append only their functional
-   targets, and 20 pins the complete wave A union (330 of the 733-variant program
+   variants (98 total with the nine separate 06 variants). Pin that implemented subset now; 16/17/18 append only their functional
+   targets, and 20 pins the complete wave A union (339 of the 742-variant program
    inventory in ux-spec section 11). No future placeholder UI target
    or duplicate build descriptor satisfies this gate.
    09 owns NEW isHousingVisualPath with housingVisualWhen in the shared helper and its

@@ -145,7 +145,7 @@ and return full reports to the scratchpad with a path and short summary.
    key tables with the section 11 housing-layouts screenshot target (scenes
    layouts-empty, layouts-saved, layouts-overwrite, layouts-import-review,
    layouts-shortfall, layouts-dye-shortfall, layouts-displaced and layouts-stale x
-   desktop/compact/tablet: 24 variants, the 696 milestone), both manifests
+   desktop/compact/tablet: 24 variants, the 705 milestone), both manifests
    regenerated in this same change with every cited count updated: layouts.empty "You
    have no saved layouts yet."; layouts.nameLabel "Layout name"; layouts.slotsFull "All
    {count} layout slots are in use. Replace one to save."; layouts.overwrite "Replace

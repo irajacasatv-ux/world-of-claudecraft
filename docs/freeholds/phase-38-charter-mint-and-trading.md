@@ -134,7 +134,7 @@ and return full reports to the scratchpad with a path and short summary.
    deed-contents-review, deed-step-up, deed-listed, deed-sold, deed-received and
    deed-buyer-capacity x desktop/compact/tablet, deed-card and deed-homes-tab on
    website-desktop, and deed-denied across the six denied surfaces: 44 variants, the
-   639 milestone), and ux-key-manifest.json plus
+   648 milestone), and ux-key-manifest.json plus
    ux-shot-manifest.json regenerated in this same change with every cited count
    updated: deed.title "Optional Freehold Deed"; deed.mint "Mint Freehold Deed";
    deed.homesTab "Homes"; deed.list "List This Home"; deed.cancelListing "Cancel

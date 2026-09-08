@@ -597,7 +597,7 @@ files (disjoint except the shared pin files the coordinator edits last):
   tests/hall_boards_view.test.ts, the ux-spec row and ux-key-manifest.json regeneration
   with the cited count updated (D92), and the war-table-first-kills-ready and
   war-table-first-kills-empty scenes appended to `housing-war-table` x
-  desktop/compact/tablet (6 variants, the 517 milestone) with ux-shot-manifest.json
+  desktop/compact/tablet (6 variants, the 526 milestone) with ux-shot-manifest.json
   regenerated.
 The coordinator edits last: tests/sim_context.test.ts CALLBACK_KEYS and the fake host,
 tests/monolith_budget.test.ts, parity goldens if the clear path now emits (their own

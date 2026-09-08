@@ -143,7 +143,7 @@ and return full reports to the scratchpad with a path and short summary.
    ux-spec section 10, register the requirement/overflow scenes
    steward-requirements-met, steward-requirements-unmet, steward-guild-clear-unmet,
    steward-overflow-review and steward-overflow-none x desktop/compact/tablet (15
-   variants, the 654 milestone) on the `housing-steward-store` section 11 target (the
+   variants, the 663 milestone) on the `housing-steward-store` section 11 target (the
    Steward window), and regenerate ux-key-manifest.json and ux-shot-manifest.json in
    the same
    change.

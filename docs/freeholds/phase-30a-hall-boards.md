@@ -211,7 +211,7 @@ STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
   stable `housing-war-table` scenes ux-spec section 11 registers for this phase:
   hall-boards-roster, hall-boards-calendar, hall-boards-pledge, hall-boards-members-only,
   war-table-lockouts and war-table-first-kills-unavailable x desktop/compact/tablet (18
-  variants, the 511 milestone; 31 appends war-table-first-kills-ready and
+  variants, the 520 milestone; 31 appends war-table-first-kills-ready and
   war-table-first-kills-empty).
 - SERVER owner: reuse existing cached reads and raw projections wherever available.
   The missing lockout projection is exactly the NEW bounded sibling read named in STEP 1

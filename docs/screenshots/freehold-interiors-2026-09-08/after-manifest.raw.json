@@ -1,0 +1,39 @@
+{
+  "mode": "change-aware",
+  "captured": [
+    "01-freehold-gate-desktop.png",
+    "02-freehold-gate-compact.png",
+    "03-freehold-gate-tablet.png",
+    "04-freehold-inn-desktop.png",
+    "05-freehold-inn-compact.png",
+    "06-freehold-inn-tablet.png",
+    "07-freehold-cottage-desktop.png",
+    "08-freehold-cottage-compact.png",
+    "09-freehold-cottage-tablet.png"
+  ],
+  "errors": [
+    "CONSOLE(freehold-gate-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-gate-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-gate-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-gate-compact): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-gate-compact): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-gate-compact): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-gate-tablet): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-gate-tablet): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-gate-tablet): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-inn-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-inn-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-inn-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-inn-compact): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-inn-compact): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-inn-tablet): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-inn-tablet): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-cottage-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-cottage-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-cottage-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-cottage-compact): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-cottage-compact): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-cottage-tablet): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+    "CONSOLE(freehold-cottage-tablet): Failed to load resource: the server responded with a status of 502 (Bad Gateway)"
+  ]
+}

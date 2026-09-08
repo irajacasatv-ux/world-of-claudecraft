@@ -131,7 +131,7 @@ and return full reports to the scratchpad with a path and short summary.
    `housing-ward` section 11 target with the six favor/endeavor scenes
    ward-endeavors-loading, ward-endeavors-empty, ward-endeavor-in-progress,
    ward-endeavor-complete, ward-endeavor-hidden-reward and ward-endeavors-unavailable x
-   desktop/compact/tablet (18 variants, the 553 milestone), regenerate
+   desktop/compact/tablet (18 variants, the 562 milestone), regenerate
    ux-key-manifest.json and ux-shot-manifest.json in
    the same change, and add the parity pins.
 5. Proof: tests/freehold_ward_favor.test.ts covers permanent ranks across month/ward

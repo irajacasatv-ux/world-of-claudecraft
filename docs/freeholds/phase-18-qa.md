@@ -5,17 +5,18 @@ implementation phase never starts before this file has run.
 
 ## Exact screenshot integration contract
 
-These are NEW planned helper APIs. 09 introduces the common helper, constructor,
-visual selector and one import/spread in scripts/pr_shot_targets.mjs, initially with
-its functional interior-only capture subset. 11 extends that same
+06 registers nine functional gate/landing variants through
+scripts/lib/pr_shot_freeholds.mjs::freeholdReviewTargets. 09 introduces the planned
+scripts/lib/pr_shot_housing.mjs common helper, constructor and visual selector with
+twelve additional day/night interior variants. 11 extends that same
 scripts/lib/pr_shot_housing.mjs build target; 16/17/18 append their own functional
 descriptors as their UI lands. Never register a later nonfunctional UI target. No new screenshot runner or multi-image capture API is introduced.
 The registry has one optional-clip result and one image per uniquely keyed variant.
 
-Registration is cumulative by actual producer: file 09 registers the interior
-baseline subset (12 variants); file 11 extends the same target to 89; file 16
-reaches 178; file 17 reaches 226; file 18 reaches 330. File 20 verifies the complete
-wave A set (330 of the 733-variant program inventory in ux-spec section 11; 21 to 42
+Registration is cumulative by actual producer: file 06 registers nine functional
+gate and safe-landing variants; file 09 adds twelve day/night interiors (21 total); file 11 extends the registry to 98; file 16
+reaches 187; file 17 reaches 235; file 18 reaches 339. File 20 verifies the complete
+wave A set (339 of the 742-variant program inventory in ux-spec section 11; 21 to 42
 register their own milestones and each wave close verifies its union). Earlier files
 require only their registered working subset,
 never nonfunctional future UI. These are derived inventory counts, not new gameplay
@@ -24,7 +25,7 @@ or tuning values.
 The common housingVariants, housingVisualWhen and supplied beforeLoad are
 owned initially by 09 and extended by 11 exactly as ux-spec.md section 11 defines them.
 Append only this file's implemented target; validate the registered cumulative subset
-of 330 working variants (the wave A set of the 733-variant program inventory). Later UI
+of 339 working variants (the wave A set of the 742-variant program inventory). Later UI
 targets register only when their producer lands:
 
 ```js
@@ -237,7 +238,7 @@ Deliverables (at most five):
    gate/loading/error/full/private/guest/owner-building, and regenerate
    docs/freeholds/ux-key-manifest.json and docs/freeholds/ux-shot-manifest.json in this
    same change with every cited count updated: this file's registration reaches the
-   330-variant wave A milestone (D92). Screenshot fixtures are not
+   339-variant wave A milestone (D92). Screenshot fixtures are not
    proof of authorization; record separate real two-client results. Dispatch
    architecture-reviewer, cross-platform-sync, frontend-seam-reviewer,
    privacy-security-review, server-hot-path-reviewer, migration-safety, before/final
@@ -254,7 +255,7 @@ Deliverables (at most five):
 - HYGIENE checks source anchors and imports, ownership, no dead/TODO code, actual
   monolith ceilings, all i18n render sinks and generated-artifact obligations (both UX
   manifests regenerated in the 18 change with the cited counts updated to the
-  330-variant wave A milestone, D92), no
+  339-variant wave A milestone, D92), no
   em/en dash or emoji and no forbidden purchase language. Cross-check every numeric
   literal to state.md Content numbers or its measured/accepted artifact.
 Then dispatch every reviewer the implementation STEP 3 and canonical surface matrix
@@ -288,7 +289,7 @@ resolved and a fresh review of the complete fix round.
   ux-spec.md states are checked against real evidence; no unresolved scope ruling remains.
 - [ ] Every Phase 18 acceptance box is verified by a check that ran, not by inspection.
 - [ ] docs/freeholds/ux-key-manifest.json and ux-shot-manifest.json were regenerated in
-  the 18 change and the exact comparison ran (the 330-variant wave A count, D92).
+  the 18 change and the exact comparison ran (the 339-variant wave A count, D92).
 - [ ] The two D76 decisive negatives ran and passed: the direction case refused
   not_friend on both dispatch arms, and the owner-side /friend remove ejected the guest
   within one routeTick without a relog.

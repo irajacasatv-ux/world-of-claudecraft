@@ -61,8 +61,8 @@ This file appends its own functional descriptor to the shared housing target fam
 housingVisualWhen, housingViews and the supplied beforeLoad exactly as ux-spec.md
 section 11 defines them). No new screenshot runner or multi-image capture API is
 introduced; the registry has one image per uniquely keyed variant. The wave A set
-closes at 330 variants (file 18; 330 of the 733-variant program inventory); this file
-adds the 38 variants below, reaching the 437 milestone (nine scenes at
+closes at 339 variants (file 18; 339 of the 742-variant program inventory); this file
+adds the 38 variants below, reaching the 446 milestone (nine scenes at
 three views, plus reduced motion, keyboard and gamepad at three views and touch at the
 two mobile views) and regenerates ux-shot-manifest.json in the same change with every
 cited count updated (D92); the wave B close (27) verifies the union. These are derived

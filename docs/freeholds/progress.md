@@ -39,7 +39,7 @@ inserted into the chain. The next handoff is
 | 04 QA | PASS, local | 2026-09-07 | 2026-09-07 | Four findings found and resolved: three source/test findings (HN1, COV-1, PER-1) and one documentation nit (DOC-1), zero deferred. Fresh entire-fix review and supplement PASS for `0932963250..69ffdab561` (five files, commits `d5ea0825d1` and `69ffdab561`), including all six historical repair commits; required content, coverage and qa-checklist reviews completed. Final shared gate exit 0, all 12 steps: 4028 unit files passed, one CI-sentinel file skipped; 60610 tests passed, 2 expected failures and 28 explained skips. Chromium passed 47 files and 389 tests; the separate PostgreSQL 16 run passed 57 tests. Historical F01 is closed prospectively by the current explicit protected-validator scope; the earlier 29-found/28-repaired FAIL remains unchanged. See [findings](crafted-qa-reconciled-2026-09-07/findings.md), [validation](crafted-qa-reconciled-2026-09-07/validation.md), [fresh source review](crafted-qa-reconciled-2026-09-07/reviews/fresh-fix.md) and [documentation review](crafted-qa-reconciled-2026-09-07/reviews/docs-final.md). Branch local, production disabled; 05 is next and remains Not started. |
 | 05 Instance claim | Complete (QA PASS), local | 2026-09-08 | 2026-09-08 | Six commits `c578fd77d0..497bc1d73f` off the `7f4fe99619` release merge (the paired QA then synced `553a5672ed` as `a461924855` and re-validated everything below at `9b21dd61fc`; the implementation-round gate figures in this row were taken at `7f9ca00cbd`, before that sync): the two owner-claim DungeonDefs (`freehold_inn_room` index 15, `freehold_cottage` index 16, `claimKey: 'owner'`, placeholder `crypt` interior, doorPos north of the Eastbrook mailbox surround, moved there by the 05 QA so the drop lands on open ground), the host-stamped owner key (`account:<id>` online, `entity:<pid>` offline, META_EXCLUDE), owner-keyed enter/leave through the dungeon slot pool with text-free `freeholdDenied` refusals (dead, combat, no_freehold, busy), the default tier-0 Inn Room record seeded at addPlayer on a lit host and evicted at the last session out, `setFreeholdTier` as the one tier writer with the `/dev freehold <tier>` grant behind devCommands AND the new nonpersisted `freeholdDevGrantEnabled` (realm: `ALLOW_DEV_COMMANDS=1`; offline: the dev-only Vite loopback bridge `GET /__freehold/dev-authorization`), lit `freehold_enter`/`freehold_leave` dispatch behind the unchanged dark gate, a malformed-account refusal through `planJoin`, Unstuck and Reset All owner-key aware. Three monolith extractions lowered sim.ts to 11857, main.ts to 11269 and game.ts to 10202 (online.ts untouched at 5629). Seven domain reviews plus a fresh whole-fix review and the qa-checklist gate ran; every finding including nits applied or recorded as a named gate (see state.md). Validation: the 54-file battery 1986 tests green, tests/parity 265 green with the 81 existing goldens byte-identical and `freehold_claim` minted, both real-browser dev-grant probes PASS (flag-off refuses, flag-on loopback grants), the terrain fixture re-minted as a byte-prefix extension and verified on Linux aarch64 in Docker (132 tests), `npm run ci:changed` exit 0, and the shared gate on the committed tip PASS (all 12 steps: 4039 unit files, 60940 tests, 2 expected failures, 28 skips; browser 47 files, 389 tests). Production stays disabled: FREEHOLDS_ENABLED must not be lit before 06's gate proximity confirm and Hearth Key context refusals (the lighting ruling in `src/sim/freehold/instance.ts`). |
 | 05 QA | PASS, local | 2026-09-08 | 2026-09-08 | 119 finding rows (about 90 distinct) across thirteen coverage reports (the release-merge audit, the correctness, test-coverage and hygiene auditors, the architecture, cross-platform-sync, server-hot-path, content-obligations, privacy-security and qa-checklist reviewers, and three fresh fix-round reviews), every one applied in code, tests or docs or recorded as a named gate with an owner (the pool bound and the reaper cost re-tagged BLOCKING before lighting), zero deferred. Fourteen QA commits `5f3fff5339..9b21dd61fc` after the `a461924855` release sync: the quay drop onto clear ground (pinned on every seed, glibc-verified), the owner's corpse run and the corpse-aware tier-change sweep, the unusable-tier refusal, the uniform dev-bridge refusal, the wiki seed's guideVisible gate, the re-pinned deny-toast layer, the re-minted golden and terrain fixture in their own commits, 183 carried shard weights, and the ledger rulings. Fresh fix-round reviews: the first FAILED on four should-fix (all applied), the second FAILED on two (applied), the third PASS with three wording nits (applied and confirmed). Final shared gate at `9b21dd61fc`, armed, full-suite mode: PASS all 12 steps, 4160 unit files passed and 1 skipped, 62624 tests passed with 2 expected failures and 28 skips, browser 48 files and 392 tests, typecheck and builds green; `npm run ci:changed` exit 0 after the last commit. Not pushed, no PR. |
-| 06 Interiors, the Eastbrook gate, the Hearth Key | Not started | | | |
+| 06 Interiors, the Eastbrook gate, the Hearth Key | Implemented; scoped validation PASS, local | 2026-09-08 | | Authored Inn/Cottage shells and layout/collision facts, explicit nonlootable Eastbrook gate and semantic marker, permanent Hearth Key via ItemUse with isolated account cooldown and fail-closed realm admission, keyed prompt/refusals, owner reaper index/counters and O(1) record-count heartbeat, shared bounded social/relay/admin presence, online entity dungeonEntrySeq mirror. Detailed source inventory and unsigned follow-ups below; both final capture commands exited 0; all 18 refreshed before/after PNGs independently have visual QA PASS and matching bytes/source hashes. Reviewed timing weights complete; shared gate all 12 stages PASS, exit 0. Implementation ready within scope; actual five-commit delivery and post-commit check outcomes will be recorded in the final delivery response. Paired QA remains unsigned. |
 | 06 QA | Not started | | | |
 | 07 Persistence | Not started | | | |
 | 07 QA | Not started | | | |
@@ -645,23 +645,24 @@ Implementation: [phase-05-instance-claim.md](phase-05-instance-claim.md). Paired
 
 Status 2026-09-08: implementation COMPLETE locally (`c578fd77d0..497bc1d73f`) and the
 paired QA PASS (the release sync `a461924855` plus `5f3fff5339..9b21dd61fc`, not pushed).
-Named unsigned gates carried forward (owner in brackets):
-the Eastbrook gate proximity confirm (also the position-context guard, in the sim on
-both hosts), the Hearth Key context refusals and the enter cooldown (a broadcast-cost
-gate too) before the flag is ever lit [06]; the authored interiors replacing the `crypt`
-placeholder and the final gate spot replacing doorPos (-14, -92), re-pinning the drop's
-standability [06]; the deny toast for `freeholdDenied`, reading the command outcome on a
-dark realm [06]; the persisted record and the `fhold` self key, never keyed on the
-offline `entity:<pid>` key and never inheriting the displacement's seed-before-evict
-ordering [07, 08a]; a per-record slot count and a per-claimKey empty hold instead of the
-shared 24 slots and 300 s, BLOCKING [before lighting]; the `updateInstances` per-check
-allocation (cache the origin on the slot or invert the walk) and a `ctx.freeholds.size`
-gauge plus a claimed-slot visit counter on the tick heartbeat with its own profiler
-phase, BOTH [before lighting]; a `freehold` client perf scene class, and the same class
-(or an owner-key check) on `/who` and the friend and guild rosters, the `!word` Discord
-relay and the admin live-location readout, plus the two admin `dungeon.<id>` label keys
-[06]; the ja_JP register of the six room rows [release fill]; the Homesteader deeds'
-raise sites [08 first placement, 15 confirmed Cottage grant].
+Current supersession note (06 source implemented, verification pending): the historical
+05 crypt placeholders are now authored `inn_room`/`cottage` layouts. The gate uses the
+canonical Eastbrook service at the retained `(-14,-92)` position, with quay drop
+`(-14,-96)`, explicit sim proximity/context confirmation and keyed feedback. The
+Hearth Key adds shared context refusals and the isolated account cooldown. Owner
+occupancy now indexes claims and walks the roster once; scan counters, a distinct
+`updateInstances` profiler lap, the O(1) record-count gauge and bounded Freehold
+presence/relay/admin labels are implemented. This replaces the corresponding source
+TODOs; it does not replace verification or rewrite the 05 QA measurements above.
+
+Named unsigned gates still carried forward: owner-pool capacity/empty hold (still
+24/300) and physical-entry broadcast cost [before production lighting]; durable
+record and account Hearth authority/private account mirror, never plot-owned and
+never keyed durably on `entity:<pid>` [07/07a]; `fhold` descriptors [08a]; lighting and
+fresh-directive arrival presentation [09]; service props [12]; visiting authority
+[18]; final GLBs [19]. The realm Hearth participant currently refuses. The earlier
+release displacement's seed-before-evict ordering must not become persistence
+semantics. The Homesteader raise sites remain owned by 08/15.
 
 Deliverables (at most five):
 
@@ -679,6 +680,165 @@ After phase-05-qa.md: [phase-06-interiors-gate-and-hearth-key.md](phase-06-inter
 
 Implementation: [phase-06-interiors-gate-and-hearth-key.md](phase-06-interiors-gate-and-hearth-key.md). Paired audit: [phase-06-qa.md](phase-06-qa.md).
 
+Status 2026-09-08: **IMPLEMENTED, SCOPED VALIDATION PASS, local**. The implementation
+is ready within scope: final captures, fresh review and all 12 shared gate stages
+passed. Actual five-commit delivery and post-commit check outcomes belong in the
+final delivery response. The separate paired QA remains unsigned.
+Late focused fixes are green and their fresh source review is clean; the shared
+full-gate rerun completed with exit 0.
+The first-view camera cutaway now uses shared `authored_walls` and Freehold opaque
+faces. Silent lane-shed recovery uses explicit close/reopen/retry. Dormant friend
+adapter composition/focus contract tests pass, while production lookup/visiting
+remains unavailable. Mandatory NPC attachments preload and new async barriers check
+the Renderer generation. Final renderer.ts is 12844 lines against a 12850 baseline.
+
+The first final full-gate attempt failed on 16 tests across 12 files, with
+63106 tests passing. Its failures exposed stale exact registry/extraction/catalog
+pins and a real shared-focus ownership violation. All focused repairs are now
+green and a fresh source review is clean; the subsequent shared full gate passed.
+
+Gate repaint/retry ownership now calls `focusedWithin`, including nested parked
+dialog roots. The painter uses shared `FOCUS_KEY_ATTR` for all six focus attributes;
+the generated markup is byte-identical. The actual nested parked-dialog regression
+failed before the fix and passed afterward: eight UI suites, 156 tests passed,
+plus typecheck exit 0. Exact frame, managed-close/root-creation, language-fanout and
+extracted toast-dispatch registrations were corrected without broad exceptions.
+Details: `/tmp/freeholds06-ui-gate-registries-report.md`.
+
+The canonical art census is 1305 icons/1323 item definitions; historical 1209-icon
+approval stays isolated as historical evidence (17 art tests passed). The exact
+character blob total rose by 13 bytes to 213332; the old 213319 counterfactual is
+preserved, with the same 381-byte tracking band and 229376-byte warning threshold.
+Database-performance and persistence reviews passed. Renderer selector checks
+passed 10 tests; parent blob/heavy-self checks passed 21. These focused outcomes are supplemented by the completed shared full-gate rerun
+recorded below.
+
+Latest real-GPU run: `tmp/freeholds06-perf-final.json`, generated
+`2026-09-08T19:20:04.444Z`, whole command exit 0. Desktop Inn/Cottage windows drew
+145/146 frames; mobile drew 146/144. Calls remain 33 for Inn and 28 for Cottage;
+all three required room-window GPU deltas are zero and errors/budgetFailures
+are empty. This is a window-delta claim, not an absolute cumulative zero.
+The refreshed [performance.json](../screenshots/freehold-interiors-2026-09-08/performance.json)
+and its [raw producer JSON](../screenshots/freehold-interiors-2026-09-08/performance.raw.json)
+now retain this 19:20 run after the final focus fix. Mobile remains browser evidence,
+not physical-device proof.
+
+Both final nine-capture commands completed with exit 0. The refreshed directory
+holds 43 artifacts: 18 PNGs, 18 evidence sidecars, three formatted producer records,
+three byte-preserved raw producer JSONs and
+[acceptance.json](../screenshots/freehold-interiors-2026-09-08/acceptance.json).
+It pins 31 source hashes and four byte-identical baseline harness files; baseline
+`6540713` still has no feature application/public source copied into it. Raw producer
+JSONs remain separate from the matching formatted records. The final capture
+contract/CI/route checks passed three suites, 50 tests
+(`/tmp/freeholds06-final-capture-contract.log`). All nine AFTER and all nine newly captured baseline images have independent
+visual QA PASS. QA directly viewed the new baseline set and verified all 18
+retained PNG bytes plus all 31 source hashes against the 43-file artifact set;
+this is current-set acceptance, not an inherited earlier verdict.
+
+A fresh final review passed (`/tmp/freeholds06-review-completed-fix-round.md`):
+all 43 artifacts match the index, all 71 declared hashes (including 31 source
+hashes) match, all 18 visual checks are closed, the four baseline harness files
+are identical, and the timing inventory has 4187 rows. The final raw capture
+manifests retain 123 baseline console errors (102 inherited missing-preload
+errors and 21 HTTP 502 errors) and 23 after console errors, all HTTP 502. These
+diagnostics are separate from the successful capture commands and visual checks.
+
+The capture helper now waits for a real notice outcome and records `noticeResolution`.
+This fixes the actual delayed 30-second performance-warning race without spoofing
+GPU/warning state. Real notice dismissal and timing evidence are retained; no CSS
+hiding substitutes for the user's visible control path.
+
+The PostgreSQL-armed canonical timing harvest completed with exit 0:
+`node scripts/ci_shard_weights_harvest.mjs --carry-local-missing --runs 3 --reason 'Freehold interiors and release sync tests measured locally pending the next full CI harvest.'`.
+It measured 161 missing files in three real green runs each, bringing the weight
+inventory to 4186. A fresh reviewer independently matched all 161 triples and
+medians and verified that prior weights were unchanged. Evidence:
+`/tmp/freeholds06-final-weight-harvest.log`. The later notice helper added one
+missing test file, measured in three real green runs at 5, 4, 5 ms (median 5 ms), also
+PASS. The current total is 4187 weight rows; evidence for that bounded addition is
+`/tmp/freeholds06-notice-weight-harvest.log`.
+
+The 318-path staged snapshot preceded the late focused fixes and this documentation
+update; it is a historical staging count. The full-gate first-attempt log is
+`/tmp/freeholds06-final-gate.log`. The PostgreSQL-armed shared full-gate rerun
+completed in session 73919 with exit 0: all 12 stages PASS, recorded in
+`/tmp/freeholds06-final-gate-after-fixes.log`. The full suite passed 4204 files and
+63137 tests, with two expected failures and 28 skips (888.52 seconds); browser
+checks passed 50 files and 401 tests (15.20 seconds). Type and environment checks
+and server, bot and client builds passed. Security scanned 9030 files with 452
+flags and zero high findings after priors: PASS.
+
+The implementation is ready within its scoped acceptance. The five-commit delivery
+sequence and actual post-commit `npm run ci:changed` result will be recorded in the
+final delivery response; neither is claimed as already run here. The separate paired
+QA and all later packet authority, capacity, lighting, service, visiting and final-art
+acceptance remain unsigned.
+
+Source facts: `content/freehold/layouts.ts` defines the Inn 16×20 and Cottage 24×24
+measured development shells, protected central paths, entry `(0,-4)`, exit `(0,-6)`
+and facing 0; model/space evidence remains development sizing pending final acceptance.
+`world_object_bootstrap.ts` creates the alive nonlootable `freehold_gate` only on an
+opted-in stock world service; map semantics use `freehold-gate`. `gate.ts` rechecks
+nearby authority and grants an absent permanent `hearth_key` after accepted entry
+when bags permit. The tool's `ItemUse { type: 'freeholdEnter' }` routes through
+`hearth_key.ts`; append-only refusals add `instanced` and `match`, and cooldown uses
+one hour in the isolated Sim account map. Physical entry does not spend that clock;
+full bags do not reverse accepted entry. Realm `freeholdKeyAdmission` fails closed
+until 07/07a; local cached readiness is not durable authority or transferable plot data.
+
+`owner_claim_occupancy.ts` indexes active owner claims and visits the roster once;
+`instanceScanCounters` and `server/instance_scan_tick_stats.ts` retain current-tick
+counts, capture totals and claimed-slot peak. The heartbeat's `freeholdRecords` is
+a direct O(1) `ctx.freeholds.size` read; `updateInstances` has its own profiler lap.
+`server/instance_presence.ts` shares catalog-based classification for `/who`, friend/
+guild rosters and relay; relay publishes only `Freehold`. Shared status unions and
+admin kind/room labels are distinct, without owner IDs. The online entry-facing
+resolution now copies the existing self-wire `dungeonEntrySeq` into the player entity;
+this fixes observed transition identity, not authorization to replay optional arrival
+presentation. Public `myFreehold`/`freeholdLayout` remain null until 08a.
+
+The live functional capture helper is `scripts/lib/pr_shot_freeholds.mjs`, separate
+from 09's planned day/night helper. Its nine target/view variants require eighteen
+before/after PNGs. Both final capture commands exited 0 and the refreshed 43-artifact
+set is retained with 31 source hashes. The nine AFTER images have visual QA PASS;
+the nine newly captured baseline images also have **independent visual QA PASS**,
+with all 18 retained PNG bytes and all 31 source hashes verified.
+The baseline is the release's real quay without the new surface, never a fabricated
+prior gate or interior. Captures do not sign 09 lighting/arrival, 12 service props,
+18 visiting or 19 final GLBs. Production capacity/broadcast and 07/07a durable
+account-authority gates remain unsigned.
+
+Required retained files under `docs/screenshots/freehold-interiors-2026-09-08/`
+(copy exact runner PNG bytes to these flat names; retain raw runner manifests
+separately). Links identify the refreshed retained paths: the nine AFTER images
+have visual QA PASS; the nine new baseline images also independently passed
+visual QA with exact retained-byte and source-hash matches.
+No previous acceptance transfers to new bytes. The shared full gate passed all
+12 stages with exit 0. Actual commit delivery and post-commit check results belong
+in the final delivery response.
+
+| Required filename | Status |
+|---|---|
+| [before-freehold-gate-desktop.png](../screenshots/freehold-interiors-2026-09-08/before-freehold-gate-desktop.png) | Visual QA PASS |
+| [before-freehold-gate-compact.png](../screenshots/freehold-interiors-2026-09-08/before-freehold-gate-compact.png) | Visual QA PASS |
+| [before-freehold-gate-tablet.png](../screenshots/freehold-interiors-2026-09-08/before-freehold-gate-tablet.png) | Visual QA PASS |
+| [before-freehold-inn-desktop.png](../screenshots/freehold-interiors-2026-09-08/before-freehold-inn-desktop.png) | Visual QA PASS |
+| [before-freehold-inn-compact.png](../screenshots/freehold-interiors-2026-09-08/before-freehold-inn-compact.png) | Visual QA PASS |
+| [before-freehold-inn-tablet.png](../screenshots/freehold-interiors-2026-09-08/before-freehold-inn-tablet.png) | Visual QA PASS |
+| [before-freehold-cottage-desktop.png](../screenshots/freehold-interiors-2026-09-08/before-freehold-cottage-desktop.png) | Visual QA PASS |
+| [before-freehold-cottage-compact.png](../screenshots/freehold-interiors-2026-09-08/before-freehold-cottage-compact.png) | Visual QA PASS |
+| [before-freehold-cottage-tablet.png](../screenshots/freehold-interiors-2026-09-08/before-freehold-cottage-tablet.png) | Visual QA PASS |
+| [after-freehold-gate-desktop.png](../screenshots/freehold-interiors-2026-09-08/after-freehold-gate-desktop.png) | Visual QA PASS |
+| [after-freehold-gate-compact.png](../screenshots/freehold-interiors-2026-09-08/after-freehold-gate-compact.png) | Visual QA PASS |
+| [after-freehold-gate-tablet.png](../screenshots/freehold-interiors-2026-09-08/after-freehold-gate-tablet.png) | Visual QA PASS |
+| [after-freehold-inn-desktop.png](../screenshots/freehold-interiors-2026-09-08/after-freehold-inn-desktop.png) | Visual QA PASS |
+| [after-freehold-inn-compact.png](../screenshots/freehold-interiors-2026-09-08/after-freehold-inn-compact.png) | Visual QA PASS |
+| [after-freehold-inn-tablet.png](../screenshots/freehold-interiors-2026-09-08/after-freehold-inn-tablet.png) | Visual QA PASS |
+| [after-freehold-cottage-desktop.png](../screenshots/freehold-interiors-2026-09-08/after-freehold-cottage-desktop.png) | Visual QA PASS |
+| [after-freehold-cottage-compact.png](../screenshots/freehold-interiors-2026-09-08/after-freehold-cottage-compact.png) | Visual QA PASS |
+| [after-freehold-cottage-tablet.png](../screenshots/freehold-interiors-2026-09-08/after-freehold-cottage-tablet.png) | Visual QA PASS |
+
 Deliverables (at most five):
 
 1. The measured Inn/Cottage layouts, collision/lift derivations and safe entry/exit poses.
@@ -688,8 +848,9 @@ Deliverables (at most five):
    item/entity/i18n/content obligations.
 5. Decisive offline/online tests and the desktop/compact/tablet visual evidence.
 
-Regenerates ux-key-manifest.json (38 keys owned) in this phase with every cited count
-updated (D92).
+Regenerates ux-key-manifest.json (38 planned keys owned; 557 housing keys total) and
+ux-shot-manifest.json (742 planned variants; 339 Wave A including nine functional 06 variants)
+with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -850,7 +1011,7 @@ rotateFurnishingRight, undoPlacement and redoPlacement; the Replace trophy and C
 plinth affordances ship disabled for 17's record-only chooser.
 
 Regenerates ux-key-manifest.json (81 keys owned) and ux-shot-manifest.json (the registry
-reaches 89 variants) in this phase with every cited count updated (D92).
+reaches 98 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -976,7 +1137,7 @@ Deliverable 3 renders 15's charter.feeDetails, charter.quoteExpiry and charter.t
 (the fee, tax and Purchase Terms lines, D92); window id steward-window.
 
 Regenerates ux-key-manifest.json (74 keys owned) and ux-shot-manifest.json (the registry
-reaches 178 variants) in this phase with every cited count updated (D92).
+reaches 187 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1001,7 +1162,7 @@ selection/focus UX, and wires the Replace trophy/Clear plinth affordances 11 shi
 disabled.
 
 Regenerates ux-key-manifest.json (50 keys owned) and ux-shot-manifest.json (the registry
-reaches 226 variants) in this phase with every cited count updated (D92).
+reaches 235 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1025,7 +1186,7 @@ friendAdd/friendRemove/blockAdd mutation-site hook that triggers the D51 ejectio
 (D76).
 
 Regenerates ux-key-manifest.json (33 keys owned) and ux-shot-manifest.json (the registry
-reaches 330 variants) in this phase with every cited count updated (D92).
+reaches 339 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1087,7 +1248,7 @@ steward-upgrade-* captures; the contribute command takes an explicit source mode
 finish re-attempt arm per D89.
 
 Regenerates ux-key-manifest.json (14 keys owned) and ux-shot-manifest.json (the registry
-reaches 348 variants) in this phase with every cited count updated (D92).
+reaches 357 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1129,7 +1290,7 @@ Deliverable 5 carries the plaque, finish and inactive picks on the descriptor wi
 old-client default, owned by a WIRE slice.
 
 Regenerates ux-key-manifest.json (19 keys owned) and ux-shot-manifest.json (the registry
-reaches 357 variants) in this phase with every cited count updated (D92).
+reaches 366 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1149,7 +1310,7 @@ Deliverables (at most five):
    registered garden screenshot target and regenerated key/shot manifests (D92).
 
 Regenerates ux-key-manifest.json (17 keys owned) and ux-shot-manifest.json (the registry
-reaches 399 variants) in this phase with every cited count updated (D92).
+reaches 408 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1170,7 +1331,7 @@ Deliverables (at most five):
 Deliverable 4 includes the build.snap mode toggle and the touch free-yaw handle.
 
 Regenerates ux-key-manifest.json (5 keys owned) and ux-shot-manifest.json (the registry
-reaches 437 variants) in this phase with every cited count updated (D92).
+reaches 446 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1212,7 +1373,7 @@ Deliverable 4 uses account+plot knock and public-entry buckets and refuses at ad
 when a block row exists on either side (D76).
 
 Regenerates ux-key-manifest.json (15 keys owned) and ux-shot-manifest.json (the registry
-reaches 455 variants) in this phase with every cited count updated (D92).
+reaches 464 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1312,7 +1473,7 @@ Deliverable 2 is the existing feast object at the authored long table (party fea
 place_feast, apex feasts through use) with unchanged Well Fed behavior.
 
 Regenerates ux-key-manifest.json (3 keys owned) and ux-shot-manifest.json (the registry
-reaches 493 variants) in this phase with every cited count updated (D92).
+reaches 502 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1331,7 +1492,7 @@ Deliverables (at most five):
 5. Final board art, measured anchors, shared UI states and privacy/interaction evidence.
 
 Regenerates ux-key-manifest.json (8 keys owned) and ux-shot-manifest.json (the registry
-reaches 511 variants) in this phase with every cited count updated (D92).
+reaches 520 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1354,7 +1515,7 @@ Deliverable 5's War table first-kill UI rides 30a's bounded sibling read with no
 member (D82); capacity exhaustion never refuses join, dungeon entry or respawn (D83).
 
 Regenerates ux-key-manifest.json (1 key owned) and ux-shot-manifest.json (the registry
-reaches 517 variants) in this phase with every cited count updated (D92).
+reaches 526 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1424,7 +1585,7 @@ Deliverables (at most five):
 5. Proof.
 
 Regenerates ux-key-manifest.json (17 keys owned) and ux-shot-manifest.json (the registry
-reaches 535 variants) in this phase with every cited count updated (D92).
+reaches 544 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1443,7 +1604,7 @@ Deliverables (at most five):
 5. Proof.
 
 Regenerates ux-key-manifest.json (14 keys owned) and ux-shot-manifest.json (the registry
-reaches 553 variants) in this phase with every cited count updated (D92).
+reaches 562 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1462,7 +1623,7 @@ Deliverables (at most five):
 5. Proof.
 
 Regenerates ux-key-manifest.json (19 keys owned) and ux-shot-manifest.json (the registry
-reaches 595 variants) in this phase with every cited count updated (D92).
+reaches 604 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1500,7 +1661,7 @@ Deliverables (at most five):
 5. Proof.
 
 Regenerates ux-key-manifest.json (28 keys owned) and ux-shot-manifest.json (the registry
-reaches 639 variants) in this phase with every cited count updated (D92).
+reaches 648 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1537,7 +1698,7 @@ Deliverables (at most five):
 5. Steward requirements and proof.
 
 Regenerates ux-key-manifest.json (12 keys owned) and ux-shot-manifest.json (the registry
-reaches 654 variants) in this phase with every cited count updated (D92).
+reaches 663 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1555,7 +1716,7 @@ Deliverables (at most five):
 4. Wire, persistence and proof.
 
 Regenerates ux-key-manifest.json (16 keys owned) and ux-shot-manifest.json (the registry
-reaches 672 variants) in this phase with every cited count updated (D92).
+reaches 681 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1573,7 +1734,7 @@ Deliverables (at most five):
 4. Layout tab and proof.
 
 Regenerates ux-key-manifest.json (19 keys owned) and ux-shot-manifest.json (the registry
-reaches 696 variants) in this phase with every cited count updated (D92).
+reaches 705 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
@@ -1591,7 +1752,7 @@ Deliverables (at most five):
 4. Steward/store UX and proof.
 
 Regenerates ux-key-manifest.json (10 keys owned) and ux-shot-manifest.json (the registry
-reaches 733 variants) in this phase with every cited count updated (D92).
+reaches 742 variants) in this phase with every cited count updated (D92).
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.

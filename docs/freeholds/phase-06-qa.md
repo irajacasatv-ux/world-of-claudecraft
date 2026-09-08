@@ -1,5 +1,19 @@
 # Phase 06 QA: audit the interiors, the gate, and the Hearth Key
 
+## Functional capture inventory
+
+The exact 06 registry is `scripts/lib/pr_shot_freeholds.mjs::freeholdReviewTargets`:
+`freehold-gate` (`gate-own-prompt`), `freehold-inn` (`inn-safe-landing`) and
+`freehold-cottage` (`cottage-safe-landing`), each with desktop, compact and tablet
+variants. This is nine registry variants and eighteen before/after image files.
+The absent-surface baseline uses the real release quay under
+`PR_SHOTS_FREEHOLD_BASELINE=1`; it never fabricates a prior prompt or room.
+09 still owns its separate twelve day/night variants and final lighting evidence.
+Regenerate the planned inventories with `node docs/freeholds/generate-ux-manifests.mjs`;
+the unchanged 557 housing keys and expanded 742 planned variants (339 in Wave A)
+are requirements, not proof that later capture fixtures exist.
+
+
 Audits `phase-06-interiors-gate-and-hearth-key.md`. Verdict goes in `progress.md` (row
 "06 QA"). The next implementation phase never starts before this file has run.
 

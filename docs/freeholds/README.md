@@ -71,11 +71,11 @@ reported complete. The service owns all prices and token arithmetic.
 | [Territory and authority schedule](../prd/woc/freehold-territory-authority-schedule.md) | 37/38 enforce signed supported territories and explicit per-asset authority; unknown eligibility refuses new operations. |
 
 The current UX inventory has 557 English keys, each with one owning phase in
-ux-key-manifest.json, and 733 screenshot variants, each with its producing phase in
-ux-shot-manifest.json. Registration follows functioning producers: 09 starts with 12 room
-variants, 11 reaches 89, 16 reaches 178, 17 reaches 226, 18 reaches 330 (20 verifies the
-wave A set); 21 reaches 348, 23 357, 24 399, 25 437, 26 455, 30 493, 30a 511, 31 517, 34
-535, 35 553, 36 595, 38 639, 40 654, 41 672, 41a 696 and 42 733, each wave close verifying
+ux-key-manifest.json, and 742 screenshot variants, each with its producing phase in
+ux-shot-manifest.json. Registration follows functioning producers: 06 starts with nine functional gate/landing
+variants; 09 adds 12 day/night room variants (21 total), 11 reaches 98, 16 reaches 187, 17 reaches 235, 18 reaches 339 (20 verifies the
+wave A set); 21 reaches 357, 23 366, 24 408, 25 446, 26 464, 30 502, 30a 520, 31 526, 34
+544, 35 562, 36 604, 38 648, 40 663, 41 681, 41a 705 and 42 742, each wave close verifying
 its union. These derived inventories are not balance values or evidence that
 implementation exists.
 

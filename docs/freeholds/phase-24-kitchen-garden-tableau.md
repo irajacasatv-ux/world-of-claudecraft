@@ -170,9 +170,9 @@ wave B acceptance evidence at desktop, compact and tablet sizes at LOW. The cano
 manifest owns target identities, so this phase registers them rather than inventing an
 alias: append the NEW `housing-garden` target (the scenes
 garden-{live,saved,mixed,incomplete,unavailable,empty,loading}-{owner,guest} x
-desktop/compact/tablet, 42 variants, the 399 milestone) to ux-spec section 11
+desktop/compact/tablet, 42 variants, the 408 milestone) to ux-spec section 11
 (housingReviewTargets) and regenerate
-ux-shot-manifest.json in the same change (D92); the four wave A targets are unchanged,
+ux-shot-manifest.json in the same change (D92); the seven wave A targets are unchanged,
 and 27 captures only registered keys.
 
 ## Required Codex asset execution

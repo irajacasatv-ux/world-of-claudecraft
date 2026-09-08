@@ -136,7 +136,7 @@ and return full reports to the scratchpad with a path and short summary.
    below (D92); refusals resolve through the D26 freeholdDeniedLineKey selector with
    the denied rows appended there. Register the NEW `housing-ward` target (scenes
    ward-square, ward-exterior, ward-roster, ward-busy-cap, ward-door and
-   ward-move-review x desktop/compact/tablet: 18 variants, the 535 milestone)
+   ward-move-review x desktop/compact/tablet: 18 variants, the 544 milestone)
    in ux-spec section 11 (housingReviewTargets), append the key rows to ux-spec section
    10, and regenerate ux-shot-manifest.json and ux-key-manifest.json in the same
    change; no stand-in art ships.

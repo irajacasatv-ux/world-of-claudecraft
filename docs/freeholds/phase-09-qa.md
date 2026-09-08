@@ -5,10 +5,11 @@ The next implementation phase never starts before this file has run.
 
 ## Exact interior capture producer (09, C04/F03)
 
-This pair produces NEW scripts/lib/pr_shot_housing.mjs::housingReviewTargets and the
-one import/spread in scripts/pr_shot_targets.mjs. It registers only twelve functioning
-interior variants. 11 extends this same target to 89, 16 reaches 178, 17 reaches 226,
-18 reaches 330 and 20 verifies the complete wave A set (330 of the 733-variant program
+This pair introduces scripts/lib/pr_shot_housing.mjs::housingReviewTargets and its
+import/spread beside the 06 freeholdReviewTargets in scripts/pr_shot_targets.mjs.
+Its twelve day/night interior variants join the nine functional gate/landing variants
+from scripts/lib/pr_shot_freeholds.mjs (21 total). 11 extends the registry to 98, 16 reaches 187, 17 reaches 235,
+18 reaches 339 and 20 verifies the complete wave A set (339 of the 742-variant program
 inventory in ux-spec section 11; each later producer's close verifies its own
 milestone). No unavailable build, Steward,
 trophy or visiting UI is registered early. Counts derive from the UX manifest.

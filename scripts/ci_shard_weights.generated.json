@@ -2,7 +2,7 @@
   "__provenance": {
     "run": "34168361798",
     "harvested": "2026-09-08",
-    "files": 4025,
+    "files": 4187,
     "harvestedFiles": 3948,
     "carried": {
       "tests/ability_vfx_draped_pools.test.ts": {
@@ -137,6 +137,17 @@
           5
         ]
       },
+      "tests/authored_walls.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
       "tests/awarded_loot_hold.test.ts": {
         "ms": 1593,
         "method": "local-median",
@@ -245,6 +256,17 @@
           11,
           8,
           9
+        ]
+      },
+      "tests/character_streaming_policy_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
         ]
       },
       "tests/chat_scroll_follow.test.ts": {
@@ -445,6 +467,17 @@
           4
         ]
       },
+      "tests/dungeon_interior_resolver_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
       "tests/effective_stats.test.ts": {
         "ms": 4,
         "method": "local-median",
@@ -553,6 +586,28 @@
           26,
           21,
           20
+        ]
+      },
+      "tests/freehold_capture_contract.test.ts": {
+        "ms": 39,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          44,
+          39,
+          39
+        ]
+      },
+      "tests/freehold_capture_notices.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          4,
+          5
         ]
       },
       "tests/freehold_catalog_rollback.test.ts": {
@@ -665,6 +720,17 @@
           310
         ]
       },
+      "tests/freehold_dungeon_build.test.ts": {
+        "ms": 27,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          26,
+          27,
+          28
+        ]
+      },
       "tests/freehold_dungeon_defs.test.ts": {
         "ms": 3112,
         "method": "local-median",
@@ -676,6 +742,17 @@
           3112
         ]
       },
+      "tests/freehold_exit_label_core.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
       "tests/freehold_furnisher.test.ts": {
         "ms": 957,
         "method": "local-median",
@@ -685,6 +762,28 @@
           948,
           958,
           957
+        ]
+      },
+      "tests/freehold_gate_and_key.test.ts": {
+        "ms": 927,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          927,
+          924,
+          927
+        ]
+      },
+      "tests/freehold_gate_prompt.test.ts": {
+        "ms": 53,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          52,
+          53,
+          54
         ]
       },
       "tests/freehold_instance.test.ts": {
@@ -709,6 +808,39 @@
           1342
         ]
       },
+      "tests/freehold_interior_dressing.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          9,
+          11,
+          8
+        ]
+      },
+      "tests/freehold_interior_route.test.ts": {
+        "ms": 2410,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          2412,
+          2410,
+          2408
+        ]
+      },
+      "tests/freehold_layouts.test.ts": {
+        "ms": 188,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          187,
+          188,
+          189
+        ]
+      },
       "tests/freehold_ledger_schedule.test.ts": {
         "ms": 13,
         "method": "local-median",
@@ -729,6 +861,501 @@
           1221,
           1200,
           1194
+        ]
+      },
+      "tests/freehold_npc_spawn.test.ts": {
+        "ms": 1882,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1891,
+          1882,
+          1869
+        ]
+      },
+      "tests/freehold_offline_default.test.ts": {
+        "ms": 170,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          227,
+          170,
+          166
+        ]
+      },
+      "tests/freehold_snapshot_wire.test.ts": {
+        "ms": 22,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          20,
+          22,
+          23
+        ]
+      },
+      "tests/freehold_trial_economy.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          7,
+          6
+        ]
+      },
+      "tests/freehold_trial_geometry.test.ts": {
+        "ms": 11,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          11,
+          11,
+          11
+        ]
+      },
+      "tests/furnishing_asset_identity.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          6,
+          6
+        ]
+      },
+      "tests/furnishing_auto_equip.test.ts": {
+        "ms": 180,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          179,
+          183,
+          180
+        ]
+      },
+      "tests/furnishing_commerce_parity.test.ts": {
+        "ms": 1691,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1691,
+          1693,
+          1665
+        ]
+      },
+      "tests/furnishing_consumer_parity.test.ts": {
+        "ms": 3227,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3179,
+          3251,
+          3227
+        ]
+      },
+      "tests/furnishing_crafting.test.ts": {
+        "ms": 1401,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1401,
+          1403,
+          1385
+        ]
+      },
+      "tests/furnishing_dev_picker.test.ts": {
+        "ms": 24,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          24,
+          25,
+          24
+        ]
+      },
+      "tests/furnishing_discovery.test.ts": {
+        "ms": 617,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          617,
+          610,
+          682
+        ]
+      },
+      "tests/furnishing_enchant_picker.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          5,
+          5
+        ]
+      },
+      "tests/furnishing_equipment_power.test.ts": {
+        "ms": 640,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          640,
+          647,
+          634
+        ]
+      },
+      "tests/furnishing_event_identity.test.ts": {
+        "ms": 1484,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1484,
+          1487,
+          1458
+        ]
+      },
+      "tests/furnishing_exchange_identity.test.ts": {
+        "ms": 8,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          8,
+          8,
+          8
+        ]
+      },
+      "tests/furnishing_feast_admission.test.ts": {
+        "ms": 972,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          972,
+          993,
+          964
+        ]
+      },
+      "tests/furnishing_feast_parity.test.ts": {
+        "ms": 1116,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1109,
+          1116,
+          1124
+        ]
+      },
+      "tests/furnishing_item_kind.test.ts": {
+        "ms": 1834,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1849,
+          1834,
+          1821
+        ]
+      },
+      "tests/furnishing_market_catalog.test.ts": {
+        "ms": 732,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          740,
+          732,
+          732
+        ]
+      },
+      "tests/furnishing_market_identity.test.ts": {
+        "ms": 670,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          670,
+          672,
+          666
+        ]
+      },
+      "tests/furnishing_material_source_journal.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          5,
+          6
+        ]
+      },
+      "tests/furnishing_pattern_items.test.ts": {
+        "ms": 782,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          786,
+          770,
+          782
+        ]
+      },
+      "tests/furnishing_perfecting_collection.test.ts": {
+        "ms": 138,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          138,
+          139,
+          138
+        ]
+      },
+      "tests/furnishing_persistence.test.ts": {
+        "ms": 899,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          896,
+          911,
+          899
+        ]
+      },
+      "tests/furnishing_recipes.test.ts": {
+        "ms": 972,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          972,
+          950,
+          982
+        ]
+      },
+      "tests/furnishing_regalia.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          4,
+          4
+        ]
+      },
+      "tests/furnishing_rift_admission.test.ts": {
+        "ms": 1722,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1722,
+          1736,
+          1700
+        ]
+      },
+      "tests/furnishing_tool_effect_tooltip.test.ts": {
+        "ms": 13,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          13,
+          13,
+          12
+        ]
+      },
+      "tests/furnishing_tool_parity.test.ts": {
+        "ms": 3082,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3055,
+          3085,
+          3082
+        ]
+      },
+      "tests/furnishing_tooltip_view.test.ts": {
+        "ms": 741,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          741,
+          750,
+          739
+        ]
+      },
+      "tests/furnishing_worn_presentation.test.ts": {
+        "ms": 198,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          236,
+          198,
+          198
+        ]
+      },
+      "tests/gathering_denial_feedback.test.ts": {
+        "ms": 8,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          8,
+          7,
+          8
+        ]
+      },
+      "tests/goblin_rocket_sled_fx_core.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          6,
+          6
+        ]
+      },
+      "tests/gpu_adapter_probe.test.ts": {
+        "ms": 58,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          58,
+          63,
+          58
+        ]
+      },
+      "tests/grass_tuft_cards_core.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          5,
+          5
+        ]
+      },
+      "tests/ground_object.test.ts": {
+        "ms": 8,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          8,
+          8,
+          8
+        ]
+      },
+      "tests/guide_provisioning.test.ts": {
+        "ms": 14,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          14,
+          14,
+          14
+        ]
+      },
+      "tests/guide_reliquary_hearth.test.ts": {
+        "ms": 13,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          13,
+          12,
+          15
+        ]
+      },
+      "tests/guild_bank_material_settle_gate.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          13,
+          7
+        ]
+      },
+      "tests/guild_bank_settle_gate.test.ts": {
+        "ms": 17,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          17,
+          23,
+          7
+        ]
+      },
+      "tests/guild_book_holders.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          7,
+          5
+        ]
+      },
+      "tests/healer_rez_parity.test.ts": {
+        "ms": 3861,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3853,
+          4018,
+          3861
+        ]
+      },
+      "tests/helpers/pg_plan.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/housing_view.test.ts": {
+        "ms": 15,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          15,
+          15,
+          15
         ]
       },
       "tests/hub_dummy_drill.test.ts": {
@@ -819,6 +1446,380 @@
           805
         ]
       },
+      "tests/hud_window_moved_flag.test.ts": {
+        "ms": 8,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          8,
+          9,
+          8
+        ]
+      },
+      "tests/ignivar_lift_car_walls.test.ts": {
+        "ms": 1138,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1138,
+          1164,
+          1130
+        ]
+      },
+      "tests/instance_combat_hold.test.ts": {
+        "ms": 755,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          768,
+          755,
+          755
+        ]
+      },
+      "tests/item_instance_view.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          4,
+          5
+        ]
+      },
+      "tests/jayson_stream_json_override.test.ts": {
+        "ms": 16,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          47,
+          16,
+          16
+        ]
+      },
+      "tests/keepalive_silence_deadline.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/loot_explorer_view.test.ts": {
+        "ms": 52,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          52,
+          54,
+          50
+        ]
+      },
+      "tests/loot_explorer_window.test.ts": {
+        "ms": 20,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          20,
+          20,
+          20
+        ]
+      },
+      "tests/loot_explorer_window_focus.test.ts": {
+        "ms": 1277,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1306,
+          1271,
+          1277
+        ]
+      },
+      "tests/main_hotfix_integration.test.ts": {
+        "ms": 786,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          771,
+          793,
+          786
+        ]
+      },
+      "tests/map_surface_core.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/meters_frame.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          5,
+          5
+        ]
+      },
+      "tests/mobile_frame_long_press.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          6,
+          6
+        ]
+      },
+      "tests/mobile_preflight.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          5,
+          5
+        ]
+      },
+      "tests/modular_name_facts.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          5,
+          4
+        ]
+      },
+      "tests/morph_union_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/mount_engine_airborne_poll.test.ts": {
+        "ms": 2,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          2,
+          2,
+          3
+        ]
+      },
+      "tests/mount_engine_bend.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          3
+        ]
+      },
+      "tests/mount_landing_gain.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/mount_presentation.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/mount_skin_legacy_items.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          3,
+          4
+        ]
+      },
+      "tests/mount_skins.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          5,
+          5
+        ]
+      },
+      "tests/mount_tooltip_view.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/mouseover_cast_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/move_toward.test.ts": {
+        "ms": 631,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          631,
+          620,
+          635
+        ]
+      },
+      "tests/nameplate_paint_gate.test.ts": {
+        "ms": 22,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          20,
+          22,
+          22
+        ]
+      },
+      "tests/native_select_hold.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          9,
+          9,
+          9
+        ]
+      },
+      "tests/outdoor_light_rig_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/owner_claim_occupancy.test.ts": {
+        "ms": 812,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          803,
+          812,
+          823
+        ]
+      },
+      "tests/post_finite_guard_glsl.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/post_pixel_budget_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          4
+        ]
+      },
+      "tests/post_shed.test.ts": {
+        "ms": 41,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          45,
+          41,
+          39
+        ]
+      },
+      "tests/post_shed_core.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          4,
+          5
+        ]
+      },
+      "tests/post_shed_wiring.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          5,
+          5
+        ]
+      },
       "tests/practice_dps_controller.test.ts": {
         "ms": 13,
         "method": "local-median",
@@ -850,6 +1851,787 @@
           11,
           11,
           11
+        ]
+      },
+      "tests/rallycart_exhaust_ports.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          3,
+          3
+        ]
+      },
+      "tests/rallycart_headlights.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/rallycart_steer_lock.test.ts": {
+        "ms": 94,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          105,
+          94,
+          94
+        ]
+      },
+      "tests/rallycart_taillights.test.ts": {
+        "ms": 1218,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1213,
+          1220,
+          1218
+        ]
+      },
+      "tests/recipe_visibility.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/reliquary_empty_shelf.test.ts": {
+        "ms": 28,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          27,
+          29,
+          28
+        ]
+      },
+      "tests/reliquary_hearth_shelf.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          6,
+          5
+        ]
+      },
+      "tests/reliquary_hearth_window.test.ts": {
+        "ms": 45,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          49,
+          45,
+          44
+        ]
+      },
+      "tests/renderer_build_diag.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          3,
+          3
+        ]
+      },
+      "tests/renderer_gl_context.test.ts": {
+        "ms": 13,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          17,
+          13,
+          12
+        ]
+      },
+      "tests/renderer_zone_dependency_lifecycle.test.ts": {
+        "ms": 61,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          61,
+          60,
+          61
+        ]
+      },
+      "tests/reserved_surface_npc_bootstrap.test.ts": {
+        "ms": 791,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          791,
+          795,
+          789
+        ]
+      },
+      "tests/resize_coalesce_core.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/ridden_mount_audio.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          5,
+          5
+        ]
+      },
+      "tests/rig_shared_skeleton.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          10,
+          9,
+          9
+        ]
+      },
+      "tests/rig_shared_skeleton_wiring.test.ts": {
+        "ms": 237,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          225,
+          252,
+          237
+        ]
+      },
+      "tests/rogue_eye_jab_swing_reset.test.ts": {
+        "ms": 793,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          793,
+          784,
+          807
+        ]
+      },
+      "tests/rogue_poison_coatings.test.ts": {
+        "ms": 1990,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1997,
+          1982,
+          1990
+        ]
+      },
+      "tests/seo_metadata.test.ts": {
+        "ms": 9,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          8,
+          9,
+          9
+        ]
+      },
+      "tests/server/account_cosmetics_live.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          3,
+          3
+        ]
+      },
+      "tests/server/account_cosmetics_service.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          4,
+          5
+        ]
+      },
+      "tests/server/admin_kick.test.ts": {
+        "ms": 8,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          8,
+          8,
+          7
+        ]
+      },
+      "tests/server/admin_perf_summary_cache.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          4,
+          5
+        ]
+      },
+      "tests/server/discord_activity_pvp.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/discord_queue_ping_cache.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/discord_queue_pings.test.ts": {
+        "ms": 106,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          106,
+          106,
+          106
+        ]
+      },
+      "tests/server/discord_queue_pops.test.ts": {
+        "ms": 209,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          218,
+          205,
+          209
+        ]
+      },
+      "tests/server/entity_wire_variant.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          7,
+          7,
+          6
+        ]
+      },
+      "tests/server/freehold_dev_grant_boot.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/freehold_routes.test.ts": {
+        "ms": 11,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          10,
+          11,
+          12
+        ]
+      },
+      "tests/server/freehold_wire.test.ts": {
+        "ms": 2912,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          2929,
+          2893,
+          2912
+        ]
+      },
+      "tests/server/gl_backend.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          4,
+          3
+        ]
+      },
+      "tests/server/gpu_model_bucket.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          6,
+          7
+        ]
+      },
+      "tests/server/instance_presence.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          4
+        ]
+      },
+      "tests/server/instance_scan_tick_stats.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/server/live_location.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/server/mount_skin_reconcile.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          2,
+          3,
+          3
+        ]
+      },
+      "tests/server/perf_report_text.test.ts": {
+        "ms": 14,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          15,
+          14,
+          14
+        ]
+      },
+      "tests/server/self_scalar_wire.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/shadow_extent_core.test.ts": {
+        "ms": 6,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          6,
+          6,
+          6
+        ]
+      },
+      "tests/slope_glue_terrain_floor.test.ts": {
+        "ms": 1424,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1420,
+          1433,
+          1424
+        ]
+      },
+      "tests/spirit_grade.test.ts": {
+        "ms": 7,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          7,
+          7,
+          7
+        ]
+      },
+      "tests/static_merge_shadow_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          3,
+          3
+        ]
+      },
+      "tests/surface_npc_bootstrap.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          4,
+          3
+        ]
+      },
+      "tests/system_text_i18n.test.ts": {
+        "ms": 11,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          11,
+          11,
+          10
+        ]
+      },
+      "tests/terrain_calm_anchor_freehold.test.ts": {
+        "ms": 1360,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          1360,
+          1357,
+          1373
+        ]
+      },
+      "tests/terrain_detail_shed_core.test.ts": {
+        "ms": 22,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          23,
+          22,
+          22
+        ]
+      },
+      "tests/terrain_detail_shed_wiring.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/texture_anisotropy.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          5,
+          5
+        ]
+      },
+      "tests/threat_drop_range.test.ts": {
+        "ms": 572,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          573,
+          568,
+          572
+        ]
+      },
+      "tests/toast_prompt_window_stacking.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/tooltip_paint.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/tutorial_bag_controller_step.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/vehicle_exhaust_core.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/vehicle_steering_core.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          5,
+          5
+        ]
+      },
+      "tests/vehicle_suspension_core.test.ts": {
+        "ms": 12,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          12,
+          12,
+          12
+        ]
+      },
+      "tests/vehicle_suspension_fx.test.ts": {
+        "ms": 36,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          36,
+          36,
+          36
+        ]
+      },
+      "tests/vehicle_wheel_overspin.test.ts": {
+        "ms": 10,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          10,
+          10,
+          11
+        ]
+      },
+      "tests/vfx_screen_bounds_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/wand_swing_between_queued_casts.test.ts": {
+        "ms": 7049,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          7239,
+          7049,
+          6837
+        ]
+      },
+      "tests/weapon_skin_optimistic.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/weapon_stow_mount_overlay.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          5,
+          4
+        ]
+      },
+      "tests/weapon_stow_single_writer.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          4
+        ]
+      },
+      "tests/window_reflow.test.ts": {
+        "ms": 5,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          5,
+          5,
+          5
+        ]
+      },
+      "tests/window_reflow_core.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/woc_market_quote_html.test.ts": {
+        "ms": 16,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          16,
+          17,
+          16
+        ]
+      },
+      "tests/woc_wallet_card_dismiss.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          3
+        ]
+      },
+      "tests/world_object_bootstrap.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          3,
+          3,
+          4
+        ]
+      },
+      "tests/zone_character_dependencies.test.ts": {
+        "ms": 4,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          4,
+          5
+        ]
+      },
+      "tests/zone_dressing_lod_core.test.ts": {
+        "ms": 8,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          8,
+          8,
+          8
+        ]
+      },
+      "tests/zone_dressing_lod_wiring.test.ts": {
+        "ms": 3,
+        "method": "local-median",
+        "measured": "2026-09-08",
+        "reason": "Freehold interiors and release sync tests measured locally pending the next full CI harvest.",
+        "runs": [
+          4,
+          3,
+          3
         ]
       }
     },
@@ -1141,6 +2923,7 @@
   "tests/auth_token_scope_constraint_integration.test.ts": 1030,
   "tests/auth_utils.test.ts": 12,
   "tests/authored_surfaces.test.ts": 104,
+  "tests/authored_walls.test.ts": 4,
   "tests/auto_acquire_target.test.ts": 9,
   "tests/auto_equip_gate.test.ts": 10,
   "tests/auto_target.test.ts": 7,
@@ -1372,6 +3155,7 @@
   "tests/character_skeleton_update.test.ts": 10,
   "tests/character_state_backcompat.test.ts": 3315,
   "tests/character_state_module.test.ts": 15,
+  "tests/character_streaming_policy_core.test.ts": 3,
   "tests/character_tpose_repair.test.ts": 1197,
   "tests/character_uv_dequantize.test.ts": 8,
   "tests/character_view_core.test.ts": 14,
@@ -1879,6 +3663,7 @@
   "tests/dungeon_finder_view.test.ts": 24,
   "tests/dungeon_finder_window.test.ts": 10,
   "tests/dungeon_instance_disconnect_reset.test.ts": 3634,
+  "tests/dungeon_interior_resolver_core.test.ts": 3,
   "tests/dungeon_map_painter.test.ts": 11,
   "tests/dungeon_map_view.test.ts": 14,
   "tests/dungeon_miniboss_stomp.test.ts": 2867,
@@ -2175,6 +3960,8 @@
   "tests/frame_pos_reset.test.ts": 13,
   "tests/frame_present.test.ts": 10,
   "tests/freehold_art_admission.test.ts": 21,
+  "tests/freehold_capture_contract.test.ts": 39,
+  "tests/freehold_capture_notices.test.ts": 5,
   "tests/freehold_catalog_rollback.test.ts": 3,
   "tests/freehold_command_chain_online.test.ts": 1371,
   "tests/freehold_content.test.ts": 13,
@@ -2185,12 +3972,24 @@
   "tests/freehold_dev_authorization.test.ts": 8,
   "tests/freehold_dev_bootstrap.test.ts": 53,
   "tests/freehold_dev_grant.test.ts": 315,
+  "tests/freehold_dungeon_build.test.ts": 27,
   "tests/freehold_dungeon_defs.test.ts": 3112,
+  "tests/freehold_exit_label_core.test.ts": 4,
   "tests/freehold_furnisher.test.ts": 957,
+  "tests/freehold_gate_and_key.test.ts": 927,
+  "tests/freehold_gate_prompt.test.ts": 53,
   "tests/freehold_instance.test.ts": 1259,
   "tests/freehold_instance_online.test.ts": 1348,
+  "tests/freehold_interior_dressing.test.ts": 9,
+  "tests/freehold_interior_route.test.ts": 2410,
+  "tests/freehold_layouts.test.ts": 188,
   "tests/freehold_ledger_schedule.test.ts": 13,
   "tests/freehold_module.test.ts": 1200,
+  "tests/freehold_npc_spawn.test.ts": 1882,
+  "tests/freehold_offline_default.test.ts": 170,
+  "tests/freehold_snapshot_wire.test.ts": 22,
+  "tests/freehold_trial_economy.test.ts": 6,
+  "tests/freehold_trial_geometry.test.ts": 11,
   "tests/frost_ice_fields.test.ts": 236,
   "tests/frost_ice_fields_core.test.ts": 9,
   "tests/frost_mage_aoe.test.ts": 5884,
@@ -2201,6 +4000,33 @@
   "tests/frostbrand.test.ts": 10,
   "tests/frostveil_pit_escape.test.ts": 5700,
   "tests/frozen_orb_fx.test.ts": 39,
+  "tests/furnishing_asset_identity.test.ts": 6,
+  "tests/furnishing_auto_equip.test.ts": 180,
+  "tests/furnishing_commerce_parity.test.ts": 1691,
+  "tests/furnishing_consumer_parity.test.ts": 3227,
+  "tests/furnishing_crafting.test.ts": 1401,
+  "tests/furnishing_dev_picker.test.ts": 24,
+  "tests/furnishing_discovery.test.ts": 617,
+  "tests/furnishing_enchant_picker.test.ts": 5,
+  "tests/furnishing_equipment_power.test.ts": 640,
+  "tests/furnishing_event_identity.test.ts": 1484,
+  "tests/furnishing_exchange_identity.test.ts": 8,
+  "tests/furnishing_feast_admission.test.ts": 972,
+  "tests/furnishing_feast_parity.test.ts": 1116,
+  "tests/furnishing_item_kind.test.ts": 1834,
+  "tests/furnishing_market_catalog.test.ts": 732,
+  "tests/furnishing_market_identity.test.ts": 670,
+  "tests/furnishing_material_source_journal.test.ts": 5,
+  "tests/furnishing_pattern_items.test.ts": 782,
+  "tests/furnishing_perfecting_collection.test.ts": 138,
+  "tests/furnishing_persistence.test.ts": 899,
+  "tests/furnishing_recipes.test.ts": 972,
+  "tests/furnishing_regalia.test.ts": 4,
+  "tests/furnishing_rift_admission.test.ts": 1722,
+  "tests/furnishing_tool_effect_tooltip.test.ts": 13,
+  "tests/furnishing_tool_parity.test.ts": 3082,
+  "tests/furnishing_tooltip_view.test.ts": 741,
+  "tests/furnishing_worn_presentation.test.ts": 198,
   "tests/gale_harbor.test.ts": 2326,
   "tests/galecrest.test.ts": 428,
   "tests/game_audio.test.ts": 35,
@@ -2248,6 +4074,7 @@
   "tests/gather_tool_use.test.ts": 2790,
   "tests/gatherer_host_identity.test.ts": 15,
   "tests/gathering.test.ts": 99,
+  "tests/gathering_denial_feedback.test.ts": 8,
   "tests/gathering_goal_cache.test.ts": 3550,
   "tests/gathering_goal_hud_integration.test.ts": 586,
   "tests/gathering_goal_once_use_recipe.test.ts": 2917,
@@ -2293,8 +4120,10 @@
   "tests/global_invite.test.ts": 1758,
   "tests/gloom_bolt_vfx.test.ts": 20,
   "tests/gltf_decoder_csp.test.ts": 12,
+  "tests/goblin_rocket_sled_fx_core.test.ts": 6,
   "tests/gold_command.test.ts": 1717,
   "tests/gossip_menu.test.ts": 5,
+  "tests/gpu_adapter_probe.test.ts": 58,
   "tests/gpu_backend_class_core.test.ts": 10,
   "tests/gpu_hitch_receipt.test.ts": 5,
   "tests/gpu_notice_toast.test.ts": 2379,
@@ -2312,6 +4141,7 @@
   "tests/grass_build_slicer_core.test.ts": 7,
   "tests/grass_build_slicing.test.ts": 2958,
   "tests/grass_cap_collapse_core.test.ts": 7,
+  "tests/grass_tuft_cards_core.test.ts": 5,
   "tests/grave_inferno.test.ts": 3875,
   "tests/gravewyrm_boss_gold.test.ts": 15239,
   "tests/gravewyrm_farm_exploit.test.ts": 1819,
@@ -2325,6 +4155,7 @@
   "tests/ground_aim_reticle_visual.test.ts": 17,
   "tests/ground_decor_prewarm.test.ts": 215,
   "tests/ground_glow_patch.test.ts": 12,
+  "tests/ground_object.test.ts": 8,
   "tests/ground_object_placement.test.ts": 2711,
   "tests/ground_object_pool.test.ts": 18,
   "tests/ground_pickup_i18n.test.ts": 25,
@@ -2342,6 +4173,8 @@
   "tests/guide_level_cap_drift.test.ts": 10,
   "tests/guide_models_fallback.test.ts": 8,
   "tests/guide_prof_faq_keys.test.ts": 9,
+  "tests/guide_provisioning.test.ts": 14,
+  "tests/guide_reliquary_hearth.test.ts": 13,
   "tests/guide_route_render.test.ts": 157,
   "tests/guide_search.test.ts": 57,
   "tests/guide_still_key.test.ts": 8,
@@ -2360,14 +4193,17 @@
   "tests/guild_bank_log_server.test.ts": 2190,
   "tests/guild_bank_log_view.test.ts": 2333,
   "tests/guild_bank_log_wire.test.ts": 46,
+  "tests/guild_bank_material_settle_gate.test.ts": 7,
   "tests/guild_bank_material_sources.test.ts": 32,
   "tests/guild_bank_persistence.test.ts": 14430,
   "tests/guild_bank_pg_integration.test.ts": 7657,
+  "tests/guild_bank_settle_gate.test.ts": 17,
   "tests/guild_bank_view.test.ts": 53,
   "tests/guild_bank_window.test.ts": 1145,
   "tests/guild_bank_window_instance_marker.test.ts": 207,
   "tests/guild_billboard_wire.test.ts": 1793,
   "tests/guild_board_window.test.ts": 750,
+  "tests/guild_book_holders.test.ts": 6,
   "tests/guild_hide_offline.test.ts": 8,
   "tests/guild_leaderboard_view.test.ts": 7,
   "tests/guild_letter_online.test.ts": 3491,
@@ -2407,6 +4243,7 @@
   "tests/heal_power.test.ts": 4952,
   "tests/heal_rank_caps.test.ts": 17,
   "tests/heal_spellpower.test.ts": 1757,
+  "tests/healer_rez_parity.test.ts": 3861,
   "tests/healing_power_readers.test.ts": 12462,
   "tests/heap_sample.test.ts": 4,
   "tests/heap_sawtooth.test.ts": 9,
@@ -2420,6 +4257,7 @@
   "tests/helpers/css_tree_under.test.ts": 22,
   "tests/helpers/driver_callback_bodies.test.ts": 34,
   "tests/helpers/method_call_sites.test.ts": 53,
+  "tests/helpers/pg_plan.test.ts": 4,
   "tests/helpers/save_fragment_keys.test.ts": 36,
   "tests/helpers/scan_guard_self_audit.test.ts": 16,
   "tests/helpers/source_files_under.test.ts": 23,
@@ -2447,6 +4285,7 @@
   "tests/honor_ui.test.ts": 7,
   "tests/hotbar.test.ts": 23,
   "tests/hotbar_drop_tooltip.test.ts": 8,
+  "tests/housing_view.test.ts": 15,
   "tests/http_util.test.ts": 11,
   "tests/hub_dummy_drill.test.ts": 3069,
   "tests/hub_dummy_visual_alias.test.ts": 2,
@@ -2467,6 +4306,7 @@
   "tests/hud_resurrection_prompt.test.ts": 26,
   "tests/hud_tones.test.ts": 23,
   "tests/hud_update_drive.test.ts": 129,
+  "tests/hud_window_moved_flag.test.ts": 8,
   "tests/hud_wire_enum_fallbacks.test.ts": 9,
   "tests/hunter_class_spec_kits.test.ts": 2272,
   "tests/hunter_dps_balance.test.ts": 166345,
@@ -2532,6 +4372,7 @@
   "tests/ignivar_keep_entrance.test.ts": 2907,
   "tests/ignivar_lava_moat.test.ts": 3801,
   "tests/ignivar_lava_moat_render.test.ts": 25,
+  "tests/ignivar_lift_car_walls.test.ts": 1138,
   "tests/ignivar_lift_room.test.ts": 7,
   "tests/ignivar_loot.test.ts": 2287,
   "tests/ignivar_meteors.test.ts": 360,
@@ -2588,6 +4429,7 @@
   "tests/inspect_instances.test.ts": 1719,
   "tests/inspect_view.test.ts": 24,
   "tests/inspect_window.test.ts": 128,
+  "tests/instance_combat_hold.test.ts": 755,
   "tests/instance_music.test.ts": 8,
   "tests/instance_provenance_boundaries.test.ts": 13372,
   "tests/instanced_occluder_ghosts.test.ts": 11,
@@ -2646,6 +4488,7 @@
   "tests/item_instance_stats.test.ts": 7,
   "tests/item_instance_tooltip.test.ts": 24,
   "tests/item_instance_transfer.test.ts": 22,
+  "tests/item_instance_view.test.ts": 5,
   "tests/item_kind_line.test.ts": 39,
   "tests/item_level.test.ts": 32,
   "tests/item_level_req.test.ts": 23,
@@ -2656,9 +4499,11 @@
   "tests/itemization_coverage.test.ts": 54,
   "tests/items.test.ts": 4083,
   "tests/items_sell_units.test.ts": 22,
+  "tests/jayson_stream_json_override.test.ts": 16,
   "tests/jewelcrafting_catalog.test.ts": 44,
   "tests/jewelcrafting_flow.test.ts": 3393,
   "tests/jewelcrafting_rung50_reachability.test.ts": 22,
+  "tests/keepalive_silence_deadline.test.ts": 3,
   "tests/keepalive_stall_sweep.test.ts": 2438,
   "tests/keybind_action_names_core.test.ts": 15,
   "tests/keybind_conflict_prompt_core.test.ts": 6,
@@ -2753,6 +4598,9 @@
   "tests/loopback_guard.test.ts": 107,
   "tests/loot_difficulty_gate.test.ts": 5,
   "tests/loot_drops.test.ts": 5425,
+  "tests/loot_explorer_view.test.ts": 52,
+  "tests/loot_explorer_window.test.ts": 20,
+  "tests/loot_explorer_window_focus.test.ts": 1277,
   "tests/loot_ffa.test.ts": 9,
   "tests/loot_ffa_sim.test.ts": 4861,
   "tests/loot_master.test.ts": 9,
@@ -2798,6 +4646,7 @@
   "tests/mailbox_window.test.ts": 21,
   "tests/mailbox_window_focus.test.ts": 92,
   "tests/main_api_error.test.ts": 36,
+  "tests/main_hotfix_integration.test.ts": 786,
   "tests/makeup.test.ts": 310,
   "tests/malware_scan.test.ts": 13688,
   "tests/mana_regen.test.ts": 7,
@@ -2823,6 +4672,7 @@
   "tests/map_quest_list_view.test.ts": 3,
   "tests/map_semantic_accessibility_core.test.ts": 34,
   "tests/map_show_on_map_core.test.ts": 7,
+  "tests/map_surface_core.test.ts": 4,
   "tests/map_terrain.test.ts": 1193,
   "tests/map_window_painter.test.ts": 3346,
   "tests/map_window_view.test.ts": 111,
@@ -2942,6 +4792,7 @@
   "tests/metamorphosis_asset.test.ts": 77,
   "tests/meters.test.ts": 15,
   "tests/meters_breakdown_view.test.ts": 26,
+  "tests/meters_frame.test.ts": 5,
   "tests/meters_frame_core.test.ts": 13,
   "tests/meters_menu_view.test.ts": 4,
   "tests/meters_panel.test.ts": 47,
@@ -3048,12 +4899,14 @@
   "tests/mobile_chat_centered.test.ts": 11,
   "tests/mobile_chrome_fade.test.ts": 10,
   "tests/mobile_controls.test.ts": 62,
+  "tests/mobile_frame_long_press.test.ts": 6,
   "tests/mobile_fullscreen_window_core.test.ts": 4,
   "tests/mobile_hud_layout.test.ts": 18,
   "tests/mobile_hud_layout_applier.test.ts": 10,
   "tests/mobile_more_diagnostics.test.ts": 6,
   "tests/mobile_more_dialog.test.ts": 12,
   "tests/mobile_pad_chrome_css.test.ts": 7,
+  "tests/mobile_preflight.test.ts": 5,
   "tests/mobile_station_party.test.ts": 3565,
   "tests/mobile_station_tooltip.test.ts": 16,
   "tests/mobile_station_walk.test.ts": 921,
@@ -3070,29 +4923,40 @@
   "tests/moderation_service.test.ts": 23,
   "tests/modular_character.test.ts": 1802,
   "tests/modular_far_lod.test.ts": 82,
+  "tests/modular_name_facts.test.ts": 4,
   "tests/modular_variant_eviction.test.ts": 165,
   "tests/monolith_budget.test.ts": 26,
+  "tests/morph_union_core.test.ts": 3,
+  "tests/mount_engine_airborne_poll.test.ts": 2,
+  "tests/mount_engine_bend.test.ts": 4,
   "tests/mount_engine_state.test.ts": 9,
   "tests/mount_glow.test.ts": 19,
   "tests/mount_jump.test.ts": 1388,
   "tests/mount_jump_attitude.test.ts": 11,
   "tests/mount_labels.test.ts": 8,
   "tests/mount_lamps.test.ts": 8,
+  "tests/mount_landing_gain.test.ts": 4,
   "tests/mount_lifecycle.test.ts": 22,
+  "tests/mount_presentation.test.ts": 4,
   "tests/mount_prewarm.test.ts": 432,
   "tests/mount_quick_summon.test.ts": 9,
   "tests/mount_race.test.ts": 6716,
   "tests/mount_race_ui.test.ts": 13,
   "tests/mount_race_view.test.ts": 9,
   "tests/mount_race_wire.test.ts": 8,
+  "tests/mount_skin_legacy_items.test.ts": 4,
+  "tests/mount_skins.test.ts": 5,
+  "tests/mount_tooltip_view.test.ts": 3,
   "tests/mount_transition.test.ts": 2267,
   "tests/mount_visuals.test.ts": 52,
   "tests/mounts.test.ts": 1974,
   "tests/mounts_training.test.ts": 4099,
   "tests/mouse_binds.test.ts": 11,
   "tests/mouselook_release_facing.test.ts": 6,
+  "tests/mouseover_cast_core.test.ts": 3,
   "tests/movable_frame.test.ts": 1407,
   "tests/move_input.test.ts": 9,
+  "tests/move_toward.test.ts": 631,
   "tests/movement_ground_truth.test.ts": 3298,
   "tests/movement_latency_baseline.test.ts": 18152,
   "tests/movement_metrics.test.ts": 1428,
@@ -3116,6 +4980,7 @@
   "tests/nameplate_heraldry_core.test.ts": 62,
   "tests/nameplate_i18n_transition.test.ts": 1291,
   "tests/nameplate_loot_icon.test.ts": 6,
+  "tests/nameplate_paint_gate.test.ts": 22,
   "tests/nameplate_pick_core.test.ts": 10,
   "tests/nameplate_pick_integration.test.ts": 45,
   "tests/nameplate_pledge.test.ts": 3263,
@@ -3133,6 +4998,7 @@
   "tests/native_language.test.ts": 8,
   "tests/native_orientation.test.ts": 6,
   "tests/native_ota.test.ts": 13,
+  "tests/native_select_hold.test.ts": 9,
   "tests/native_solana_mobile.test.ts": 12,
   "tests/natures_fury.test.ts": 2534,
   "tests/nearby_command.test.ts": 3102,
@@ -3241,6 +5107,7 @@
   "tests/ota_server_layout.test.ts": 8,
   "tests/ota_update_gate.test.ts": 18,
   "tests/ota_update_overlay.test.ts": 35,
+  "tests/outdoor_light_rig_core.test.ts": 3,
   "tests/over_level_gear_inert.test.ts": 14,
   "tests/overhead_emote_parity.test.ts": 6,
   "tests/overlay_ip_scrub.test.ts": 3708,
@@ -3258,6 +5125,7 @@
   "tests/owned_class_raid_armor_avoidance.test.ts": 170565,
   "tests/owned_class_raid_sustain_bands.test.ts": 115825,
   "tests/owned_class_tooltip_clarity.test.ts": 8,
+  "tests/owner_claim_occupancy.test.ts": 812,
   "tests/pad_cast_routing.test.ts": 9,
   "tests/pad_cast_wiring.test.ts": 6,
   "tests/pad_focus_action.test.ts": 9,
@@ -3484,11 +5352,16 @@
   "tests/post_bloom_shader_core.test.ts": 11,
   "tests/post_composer.test.ts": 13,
   "tests/post_entry_warmups.test.ts": 9,
+  "tests/post_finite_guard_glsl.test.ts": 3,
   "tests/post_n8ao.test.ts": 23,
   "tests/post_output_grade.test.ts": 14,
   "tests/post_pipeline.test.ts": 59,
+  "tests/post_pixel_budget_core.test.ts": 3,
   "tests/post_plan_core.test.ts": 18,
   "tests/post_reveal_links_core.test.ts": 6,
+  "tests/post_shed.test.ts": 41,
+  "tests/post_shed_core.test.ts": 5,
+  "tests/post_shed_wiring.test.ts": 5,
   "tests/potion_command.test.ts": 2680,
   "tests/pr_shot_entry_opts.test.ts": 7,
   "tests/pr_shot_targets.test.ts": 40,
@@ -3739,6 +5612,10 @@
   "tests/raid_music_themes.test.ts": 7,
   "tests/raid_reset.test.ts": 76,
   "tests/raid_wipe_cooldowns.test.ts": 1454,
+  "tests/rallycart_exhaust_ports.test.ts": 3,
+  "tests/rallycart_headlights.test.ts": 4,
+  "tests/rallycart_steer_lock.test.ts": 94,
+  "tests/rallycart_taillights.test.ts": 1218,
   "tests/range_command.test.ts": 3024,
   "tests/ranged_shot.test.ts": 9,
   "tests/rare_ogre_spawn.test.ts": 2212,
@@ -3763,6 +5640,7 @@
   "tests/recipe_pattern_items.test.ts": 2285,
   "tests/recipe_pattern_tooltip_view.test.ts": 316,
   "tests/recipe_reachability.test.ts": 55,
+  "tests/recipe_visibility.test.ts": 3,
   "tests/reclaim_name.test.ts": 8,
   "tests/reconnect_overlay.test.ts": 26,
   "tests/reconnect_status_core.test.ts": 6,
@@ -3774,6 +5652,9 @@
   "tests/release_version.test.ts": 15,
   "tests/reliquary_cell_art.test.ts": 292,
   "tests/reliquary_content.test.ts": 188,
+  "tests/reliquary_empty_shelf.test.ts": 28,
+  "tests/reliquary_hearth_shelf.test.ts": 5,
+  "tests/reliquary_hearth_window.test.ts": 45,
   "tests/reliquary_i18n.test.ts": 245,
   "tests/reliquary_i18n_lazy.test.ts": 22,
   "tests/reliquary_i18n_pseudo.test.ts": 126,
@@ -3801,21 +5682,26 @@
   "tests/render_diagnostics.test.ts": 10,
   "tests/render_glb_replacement_assets.test.ts": 1364,
   "tests/render_light_census_pin.test.ts": 999,
+  "tests/renderer_build_diag.test.ts": 3,
   "tests/renderer_build_ledger_wiring.test.ts": 10,
   "tests/renderer_compile_gate.test.ts": 340,
   "tests/renderer_cpu_hot_path.test.ts": 13,
   "tests/renderer_extensions.test.ts": 15,
   "tests/renderer_farm_event_route.test.ts": 191,
   "tests/renderer_frame_stats_snapshot.test.ts": 7,
+  "tests/renderer_gl_context.test.ts": 13,
   "tests/renderer_lifecycle.test.ts": 19,
   "tests/renderer_look_pieces_hold.test.ts": 726,
   "tests/renderer_resource_lifecycle.test.ts": 26,
   "tests/renderer_shadow_prewarm.test.ts": 12,
   "tests/renderer_spellfx_dispatch_order.test.ts": 7,
+  "tests/renderer_zone_dependency_lifecycle.test.ts": 61,
   "tests/report_target.test.ts": 7,
   "tests/report_window.test.ts": 153,
+  "tests/reserved_surface_npc_bootstrap.test.ts": 791,
   "tests/reset_day_guard.test.ts": 2092,
   "tests/resident_scenery_core.test.ts": 7,
+  "tests/resize_coalesce_core.test.ts": 4,
   "tests/respawn_policy.test.ts": 3742,
   "tests/rest_indicator.test.ts": 10,
   "tests/restart_strip_core.test.ts": 5,
@@ -3834,6 +5720,7 @@
   "tests/rewind.test.ts": 4890,
   "tests/rickshaw_mount.test.ts": 20,
   "tests/rickshaw_mount_asset.test.ts": 97,
+  "tests/ridden_mount_audio.test.ts": 5,
   "tests/ride_height.test.ts": 78,
   "tests/rift_band_ladder.test.ts": 18,
   "tests/rift_band_tooltip.test.ts": 17,
@@ -3877,6 +5764,8 @@
   "tests/rift_wall_swept_collision.test.ts": 2343,
   "tests/rig_merge.test.ts": 25,
   "tests/rig_merge_assets.test.ts": 99,
+  "tests/rig_shared_skeleton.test.ts": 9,
+  "tests/rig_shared_skeleton_wiring.test.ts": 237,
   "tests/rig_visibility_freeze.test.ts": 8,
   "tests/ring_of_frost.test.ts": 2531,
   "tests/ring_of_frost_visual.test.ts": 69,
@@ -3887,7 +5776,9 @@
   "tests/rogue_dps_balance.test.ts": 12949,
   "tests/rogue_energy_fix.test.ts": 2446,
   "tests/rogue_engines.test.ts": 13518,
+  "tests/rogue_eye_jab_swing_reset.test.ts": 793,
   "tests/rogue_finisher_scaling.test.ts": 2870,
+  "tests/rogue_poison_coatings.test.ts": 1990,
   "tests/rogue_sap_control.test.ts": 3703,
   "tests/rogue_shadeslip_friendly.test.ts": 1563,
   "tests/rogue_stealth_targeting.test.ts": 2055,
@@ -3943,8 +5834,11 @@
   "tests/sentence_renderer.test.ts": 38,
   "tests/sentence_vfx.test.ts": 100,
   "tests/sentence_vfx_core.test.ts": 14,
+  "tests/seo_metadata.test.ts": 9,
   "tests/serial_writer.test.ts": 33,
   "tests/server/account.test.ts": 87,
+  "tests/server/account_cosmetics_live.test.ts": 3,
+  "tests/server/account_cosmetics_service.test.ts": 4,
   "tests/server/ad_spend.test.ts": 26,
   "tests/server/admin.test.ts": 807,
   "tests/server/admin_activity_cache.test.ts": 8,
@@ -3952,12 +5846,14 @@
   "tests/server/admin_flag_transition_legacy.test.ts": 10,
   "tests/server/admin_general_chat_rate_limit.test.ts": 39,
   "tests/server/admin_guild_bank_view.test.ts": 3256,
+  "tests/server/admin_kick.test.ts": 8,
   "tests/server/admin_market_metrics.test.ts": 29,
   "tests/server/admin_oversight.test.ts": 29,
   "tests/server/admin_oversight_legacy.test.ts": 38,
   "tests/server/admin_oversight_redaction.test.ts": 21,
   "tests/server/admin_overview_cache.test.ts": 9,
   "tests/server/admin_overview_cache_arms.test.ts": 12,
+  "tests/server/admin_perf_summary_cache.test.ts": 5,
   "tests/server/admin_professions_db.test.ts": 16,
   "tests/server/admin_runtime_restore.test.ts": 2952,
   "tests/server/auth.attestation.test.ts": 12,
@@ -4018,15 +5914,20 @@
   "tests/server/desktop_login.test.ts": 35,
   "tests/server/desktop_wallet_handoff.test.ts": 129,
   "tests/server/discord.test.ts": 41,
+  "tests/server/discord_activity_pvp.test.ts": 3,
   "tests/server/discord_activity_queue.test.ts": 16,
   "tests/server/discord_bot_counters.test.ts": 13,
   "tests/server/discord_flex_batch.test.ts": 10,
   "tests/server/discord_link_changes.test.ts": 70,
   "tests/server/discord_outbox.test.ts": 59,
+  "tests/server/discord_queue_ping_cache.test.ts": 3,
+  "tests/server/discord_queue_pings.test.ts": 106,
+  "tests/server/discord_queue_pops.test.ts": 209,
   "tests/server/discord_relay_queue.test.ts": 9,
   "tests/server/discord_status_cache.test.ts": 16,
   "tests/server/dungeon_entry_facing.test.ts": 3143,
   "tests/server/earned_deeds_single_flight.test.ts": 9,
+  "tests/server/entity_wire_variant.test.ts": 7,
   "tests/server/env_bootstrap.test.ts": 6,
   "tests/server/epic_db.test.ts": 12,
   "tests/server/epic_mirror.test.ts": 95,
@@ -4035,11 +5936,16 @@
   "tests/server/epic_web_api.test.ts": 509,
   "tests/server/event_delivery.test.ts": 7,
   "tests/server/fake_woc_market_db.test.ts": 18,
+  "tests/server/freehold_dev_grant_boot.test.ts": 3,
+  "tests/server/freehold_routes.test.ts": 11,
+  "tests/server/freehold_wire.test.ts": 2912,
   "tests/server/game_boot_order.test.ts": 1160,
   "tests/server/game_flag_host_boot.test.ts": 2403,
   "tests/server/gathering_goal_commands.test.ts": 1686,
   "tests/server/general_chat_quota_connections.test.ts": 23,
   "tests/server/github.test.ts": 38,
+  "tests/server/gl_backend.test.ts": 3,
+  "tests/server/gpu_model_bucket.test.ts": 6,
   "tests/server/guild_bank_lazy_loader.test.ts": 42,
   "tests/server/guild_bank_log.test.ts": 22,
   "tests/server/guild_bank_op_coordinator.test.ts": 27,
@@ -4107,12 +6013,15 @@
   "tests/server/http/surface_inventory.test.ts": 26,
   "tests/server/http/with_errors.test.ts": 9,
   "tests/server/importable_spine.test.ts": 1468,
+  "tests/server/instance_presence.test.ts": 3,
+  "tests/server/instance_scan_tick_stats.test.ts": 3,
   "tests/server/internal.test.ts": 89,
   "tests/server/keepalive_sweep.test.ts": 6,
   "tests/server/leaderboard.test.ts": 35,
   "tests/server/leaderboard_guild_reads.test.ts": 15,
   "tests/server/leaderboard_moderation.test.ts": 35,
   "tests/server/live_character_resolver.test.ts": 7,
+  "tests/server/live_location.test.ts": 4,
   "tests/server/loop_lateness_instrumentation.test.ts": 78,
   "tests/server/mail_custody_overlay.test.ts": 3044,
   "tests/server/mail_partition_backfill.test.ts": 9,
@@ -4127,6 +6036,7 @@
   "tests/server/mob_scan_tick_stats.test.ts": 7,
   "tests/server/moderation_error_body.test.ts": 11,
   "tests/server/moderation_queue_cache.test.ts": 12,
+  "tests/server/mount_skin_reconcile.test.ts": 3,
   "tests/server/movement_input_timeline_stats.test.ts": 7,
   "tests/server/movement_input_timeline_v2.test.ts": 15,
   "tests/server/movement_override_epoch.test.ts": 2786,
@@ -4140,6 +6050,7 @@
   "tests/server/pbe_boost.test.ts": 9835,
   "tests/server/pbe_boost_save_fence.test.ts": 9,
   "tests/server/perf_gate.test.ts": 60,
+  "tests/server/perf_report_text.test.ts": 14,
   "tests/server/periodic_save_flush.test.ts": 14,
   "tests/server/pg_rollback_proof.test.ts": 8,
   "tests/server/progress_events.test.ts": 11,
@@ -4162,6 +6073,7 @@
   "tests/server/schema_notices.test.ts": 9,
   "tests/server/seeker_entitlement.test.ts": 229,
   "tests/server/seeker_entitlement_import_isolation.test.ts": 52,
+  "tests/server/self_scalar_wire.test.ts": 3,
   "tests/server/serial_writer.test.ts": 31,
   "tests/server/service_reachability.test.ts": 7,
   "tests/server/signup_attribution.test.ts": 22,
@@ -4259,6 +6171,7 @@
   "tests/shader_warmup_core.test.ts": 24,
   "tests/shader_warmup_gl_core.test.ts": 15,
   "tests/shadow_cadence_core.test.ts": 46,
+  "tests/shadow_extent_core.test.ts": 6,
   "tests/shadow_only_material.test.ts": 7,
   "tests/shadow_pass_gate_core.test.ts": 7,
   "tests/shadow_pass_gate_three.test.ts": 11,
@@ -4314,6 +6227,7 @@
   "tests/sky_zone_assets.test.ts": 852,
   "tests/sky_zone_haze.test.ts": 11,
   "tests/sloomtooth_drowned.test.ts": 1149,
+  "tests/slope_glue_terrain_floor.test.ts": 1424,
   "tests/sloppy_pick.test.ts": 8,
   "tests/snapshot_alpha.test.ts": 4,
   "tests/snapshot_timer_wire.test.ts": 20,
@@ -4355,6 +6269,7 @@
   "tests/spellbook_view.test.ts": 14,
   "tests/spellbook_window.test.ts": 14,
   "tests/spirit.test.ts": 3705,
+  "tests/spirit_grade.test.ts": 7,
   "tests/spirit_models.test.ts": 18,
   "tests/spirit_puppet_build.test.ts": 161,
   "tests/spirit_puppet_compile_gate.test.ts": 741,
@@ -4373,6 +6288,7 @@
   "tests/stat_tooltip_view.test.ts": 18,
   "tests/static_cache.test.ts": 14,
   "tests/static_matrix.test.ts": 10,
+  "tests/static_merge_shadow_core.test.ts": 3,
   "tests/stations_core.test.ts": 10,
   "tests/stats_command.test.ts": 2143,
   "tests/status_advert_single_flight.test.ts": 46,
@@ -4417,6 +6333,7 @@
   "tests/summon_threat_seed.test.ts": 6448,
   "tests/summoned_add_respawn.test.ts": 2675,
   "tests/surface_detail_fade.test.ts": 5,
+  "tests/surface_npc_bootstrap.test.ts": 3,
   "tests/surface_texture_ktx2.test.ts": 79,
   "tests/suspicion_flag_list.test.ts": 12,
   "tests/suspicion_flag_workflow.test.ts": 7,
@@ -4428,6 +6345,7 @@
   "tests/swing_timer.test.ts": 14,
   "tests/swing_timer_bars.test.ts": 31,
   "tests/swing_timer_painter.test.ts": 16,
+  "tests/system_text_i18n.test.ts": 11,
   "tests/tab_strip_painter.test.ts": 15,
   "tests/tab_strip_view.test.ts": 7,
   "tests/tab_target.test.ts": 9,
@@ -4502,8 +6420,11 @@
   "tests/temporal_hourglass_visual.test.ts": 18,
   "tests/terms_link.test.ts": 8,
   "tests/terrain_calm_anchor_doors.test.ts": 6,
+  "tests/terrain_calm_anchor_freehold.test.ts": 1360,
   "tests/terrain_chunk_geometry.test.ts": 2972,
   "tests/terrain_chunk_worker.test.ts": 436,
+  "tests/terrain_detail_shed_core.test.ts": 22,
+  "tests/terrain_detail_shed_wiring.test.ts": 4,
   "tests/terrain_edit_index.test.ts": 875,
   "tests/terrain_escape_walkout.test.ts": 4968,
   "tests/terrain_fragment_shader.test.ts": 2623,
@@ -4522,6 +6443,7 @@
   "tests/terrorspark_groundshaker_surface_maps.test.ts": 5282,
   "tests/terrorspark_groundshaker_surface_shading.test.ts": 31,
   "tests/text_sprite_cache.test.ts": 48,
+  "tests/texture_anisotropy.test.ts": 5,
   "tests/texture_prep_core.test.ts": 11,
   "tests/texture_prep_lane.test.ts": 22,
   "tests/texture_prewarm.test.ts": 7,
@@ -4531,6 +6453,7 @@
   "tests/thorns_charge.test.ts": 5,
   "tests/threat.test.ts": 5375,
   "tests/threat_command.test.ts": 2615,
+  "tests/threat_drop_range.test.ts": 572,
   "tests/threat_subject_core.test.ts": 14,
   "tests/three_compile_async_patch.test.ts": 43,
   "tests/three_reflection_contract.test.ts": 10,
@@ -4540,6 +6463,7 @@
   "tests/tinted_material_cache_core.test.ts": 19,
   "tests/tinted_material_lifecycle.test.ts": 449,
   "tests/titans_grip_penalty.test.ts": 2381,
+  "tests/toast_prompt_window_stacking.test.ts": 4,
   "tests/token_scope_db.test.ts": 8,
   "tests/tolling_bells.test.ts": 7471,
   "tests/tool_effect_result_lines.test.ts": 32,
@@ -4548,6 +6472,7 @@
   "tests/tooltip_clamp_core.test.ts": 17,
   "tests/tooltip_line_core.test.ts": 479,
   "tests/tooltip_owner.test.ts": 6,
+  "tests/tooltip_paint.test.ts": 3,
   "tests/totarget_frame_css.test.ts": 9,
   "tests/totp.test.ts": 17,
   "tests/touch_item_drag.test.ts": 30,
@@ -4581,6 +6506,7 @@
   "tests/trophy_domination_claims.test.ts": 16,
   "tests/turnstile.test.ts": 13,
   "tests/tutorial.test.ts": 9,
+  "tests/tutorial_bag_controller_step.test.ts": 3,
   "tests/tutorial_copy.test.ts": 18,
   "tests/tutorial_graduation_deed.test.ts": 3518,
   "tests/tutorial_greeting.test.ts": 5256,
@@ -4675,6 +6601,11 @@
   "tests/vault_view.test.ts": 21,
   "tests/vault_window.test.ts": 860,
   "tests/vault_wire.test.ts": 7149,
+  "tests/vehicle_exhaust_core.test.ts": 4,
+  "tests/vehicle_steering_core.test.ts": 5,
+  "tests/vehicle_suspension_core.test.ts": 12,
+  "tests/vehicle_suspension_fx.test.ts": 36,
+  "tests/vehicle_wheel_overspin.test.ts": 10,
   "tests/veiled_hollow.test.ts": 7039,
   "tests/veiled_hollow_a.test.ts": 2221,
   "tests/veiled_hollow_b.test.ts": 3395,
@@ -4694,6 +6625,7 @@
   "tests/vfx_basic_materials.test.ts": 9,
   "tests/vfx_mote_floor.test.ts": 7,
   "tests/vfx_pool_core.test.ts": 9,
+  "tests/vfx_screen_bounds_core.test.ts": 3,
   "tests/view_candidate_pool.test.ts": 31,
   "tests/view_create_budget_core.test.ts": 11,
   "tests/view_create_retry.test.ts": 7,
@@ -4730,6 +6662,7 @@
   "tests/wallet_resume.test.ts": 7,
   "tests/wallet_server.test.ts": 215,
   "tests/wallet_verify_request.test.ts": 9,
+  "tests/wand_swing_between_queued_casts.test.ts": 7049,
   "tests/warfare_balance_harness.test.ts": 11,
   "tests/warfare_gear_tier.test.ts": 35,
   "tests/warfare_purchase_confirm.test.ts": 268,
@@ -4783,10 +6716,13 @@
   "tests/weapon_icons.test.ts": 492,
   "tests/weapon_proc_view.test.ts": 11,
   "tests/weapon_skin_materials.test.ts": 7,
+  "tests/weapon_skin_optimistic.test.ts": 3,
   "tests/weapon_skin_point_lights.test.ts": 6,
   "tests/weapon_skin_sim.test.ts": 3089,
   "tests/weapon_skins.test.ts": 539,
   "tests/weapon_stow.test.ts": 2888,
+  "tests/weapon_stow_mount_overlay.test.ts": 4,
+  "tests/weapon_stow_single_writer.test.ts": 4,
   "tests/weapon_type_label.test.ts": 8,
   "tests/weapon_type_tooltip.test.ts": 22,
   "tests/weapon_vfx_apply_queue_core.test.ts": 17,
@@ -4812,6 +6748,8 @@
   "tests/willowfen_south_shore.test.ts": 1025,
   "tests/window_drag.test.ts": 15,
   "tests/window_fill_css.test.ts": 13,
+  "tests/window_reflow.test.ts": 5,
+  "tests/window_reflow_core.test.ts": 3,
   "tests/window_resize.test.ts": 13,
   "tests/wire_aura.test.ts": 2771,
   "tests/woc_affordable_core.test.ts": 4,
@@ -4827,6 +6765,7 @@
   "tests/woc_market_link.test.ts": 37,
   "tests/woc_market_plan_pins_pg_integration.test.ts": 8450,
   "tests/woc_market_poll_core.test.ts": 8,
+  "tests/woc_market_quote_html.test.ts": 16,
   "tests/woc_market_realm_scope_pg_integration.test.ts": 4141,
   "tests/woc_market_reason_text.test.ts": 192,
   "tests/woc_market_rules.test.ts": 31,
@@ -4843,6 +6782,7 @@
   "tests/woc_tokens_text.test.ts": 15,
   "tests/woc_trade_controller.test.ts": 390,
   "tests/woc_trade_offer_view.test.ts": 14,
+  "tests/woc_wallet_card_dismiss.test.ts": 3,
   "tests/world_active_content.test.ts": 175,
   "tests/world_api_parity.test.ts": 2473,
   "tests/world_audio.test.ts": 571,
@@ -4853,6 +6793,7 @@
   "tests/world_edge_coast.test.ts": 1547,
   "tests/world_grid.test.ts": 199,
   "tests/world_interaction_requests.test.ts": 24,
+  "tests/world_object_bootstrap.test.ts": 3,
   "tests/world_population_invariant.test.ts": 43341,
   "tests/world_telemetry.test.ts": 5,
   "tests/worn_item_cell_view.test.ts": 7,
@@ -4872,6 +6813,9 @@
   "tests/zone1_removed_content.test.ts": 28,
   "tests/zone3_sanctum_quests.test.ts": 6,
   "tests/zone_celebration_fanout_shape.test.ts": 112,
+  "tests/zone_character_dependencies.test.ts": 4,
+  "tests/zone_dressing_lod_core.test.ts": 8,
+  "tests/zone_dressing_lod_wiring.test.ts": 3,
   "tests/zone_eviction_core.test.ts": 8,
   "tests/zone_eviction_renderer_seam.test.ts": 6,
   "tests/zone_feature_visibility.test.ts": 14,

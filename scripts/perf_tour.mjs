@@ -6,6 +6,10 @@ import puppeteer from 'puppeteer-core';
 
 import { BROWSER_PATH } from './browser_path.mjs';
 import { enterOfflineGame } from './enter_offline_game.mjs';
+import {
+  freeholdInteriorPerfFailures,
+  runFreeholdInteriorRoute,
+} from './freehold_interior_route.mjs';
 import { perfTourEntryOptions } from './perf_tour_entry_options.mjs';
 
 const BASE_URL = process.env.GAME_URL ?? 'http://localhost:5173';
@@ -516,20 +520,24 @@ async function runViewport(browser, viewport) {
     const samples = [];
     samples.push(await sample(page, 'spawn'));
 
-    await teleportTown(page);
-    samples.push(await sample(page, 'town-nameplates'));
+    if (PERF_SCENARIO === 'bench_freehold_interiors') {
+      samples.push(...(await runFreeholdInteriorRoute(page, { sample })));
+    } else {
+      await teleportTown(page);
+      samples.push(await sample(page, 'town-nameplates'));
 
-    await driveMove(page, { forward: true, back: false, strafeLeft: false, strafeRight: false });
-    samples.push(await sample(page, 'forward'));
+      await driveMove(page, { forward: true, back: false, strafeLeft: false, strafeRight: false });
+      samples.push(await sample(page, 'forward'));
 
-    await driveMove(page, { forward: true, back: false, strafeLeft: true, strafeRight: false });
-    samples.push(await sample(page, 'forward-strafe'));
+      await driveMove(page, { forward: true, back: false, strafeLeft: true, strafeRight: false });
+      samples.push(await sample(page, 'forward-strafe'));
 
-    await driveLook(page, { x: 0.75, y: -0.1 });
-    samples.push(await sample(page, 'look'));
+      await driveLook(page, { x: 0.75, y: -0.1 });
+      samples.push(await sample(page, 'look'));
 
-    await openMapBriefly(page);
-    samples.push(await sample(page, 'map-open-close'));
+      await openMapBriefly(page);
+      samples.push(await sample(page, 'map-open-close'));
+    }
 
     const firstFrame = samples[0]?.report?.frames ?? 0;
     const lastFrame = samples.at(-1)?.report?.frames ?? 0;
@@ -538,7 +546,8 @@ async function runViewport(browser, viewport) {
 
     // run the bounded-node FCT burst AFTER the tour samples, so its hot DOM writes do
     // not skew the steady-state frameP95 / skip-rate the summary reads from the last sample.
-    const fctBurst = await fctBurstBoundedNodes(page);
+    const fctBurst =
+      PERF_SCENARIO === 'bench_freehold_interiors' ? null : await fctBurstBoundedNodes(page);
 
     const result = {
       viewport: viewport.label,
@@ -557,6 +566,8 @@ async function runViewport(browser, viewport) {
     };
     result.summary = summarizeResult(result);
     result.budgetFailures = budgetFailures(result.summary);
+    if (PERF_SCENARIO === 'bench_freehold_interiors')
+      result.budgetFailures.push(...freeholdInteriorPerfFailures(samples));
     result.fctBurstFailures = fctBurstFailures(fctBurst);
     return result;
   } finally {

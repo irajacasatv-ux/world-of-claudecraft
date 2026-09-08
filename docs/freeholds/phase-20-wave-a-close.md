@@ -24,6 +24,7 @@ after-state is a failure.
 
 | Scenario target | Required visible state and assertion | Viewports | Primary owner |
 |---|---|---|---|
+| gate-own-prompt; inn-safe-landing; cottage-safe-landing | Real own-home prompt and authoritative safe room landing/exit; honest absent-surface quay baseline; no day/night or first-arrival presentation claim | All baseline | 06 |
 | gate-own-choice; gate-friend-empty; gate-lookup-pending; gate-lookup-ready; gate-lookup-stale; gate-lookup-refused | Eastbrook semantic marker, real interact prompt, own/friend choice, no proximity teleport | All baseline | 06/18 |
 | arrival-inn | New accepted owner transition with committed fresh first-tier directive, safe reveal, truthful plinth, welcome and no automatic panel | All baseline | 06/09/19 |
 | arrival-cottage; arrival-ordinary-return; arrival-visitor | Cottage first-tier view requires fresh committed-winner directive; ordinary-return/visitor scenes have new ordinary welcome only and static camera | All baseline | 06/09/19 |
@@ -191,7 +192,7 @@ Deliverables (at most five):
 2. Exact visual and input matrix. Execute the exact screenshot target/state matrix above
    on desktop 1600x900, compact 874x402 and tablet 1180x820, using the common housing
    helper and real HUD/Sim states. The approved constructor/descriptors expand to the
-   wave A set of 330 unique variants (330 of the 733-variant program inventory in
+   wave A set of 339 unique variants (339 of the 742-variant program inventory in
    ux-spec section 11; each later close verifies its own milestone union); one capture
    callback produces one image. A transient sequence
    ending in success never substitutes for pending/refusal/reconnect images. Required after-shots fail on missing state. Capture

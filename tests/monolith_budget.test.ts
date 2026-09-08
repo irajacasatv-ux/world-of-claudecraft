@@ -458,7 +458,8 @@ const MONOLITHS: MonolithRow[] = [
     // on the reconciled file measures 18452 (the composed 18451 plus one line
     // from the merged import block). Exact merged count, zero slack: any further
     // growth reds again.
-    ceiling: 18446,
+    // Lowered after extracting gathering denial feedback; measured after formatting.
+    ceiling: 18436,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
@@ -853,7 +854,7 @@ const MONOLITHS: MonolithRow[] = [
     // counts: 12903 base, 12902 Freeholds (-1), 12879 incoming (-24); combined
     // 12878, measured. Exact merged count, zero slack: any further growth reds
     // again.
-    ceiling: 12850,
+    ceiling: 12844,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
   },
   {
@@ -1027,7 +1028,8 @@ const MONOLITHS: MonolithRow[] = [
     // 11796, measured. The row never conflicted (the incoming pin still sat at
     // 11923), so the growth would have landed silently on a zero-slack pin.
     // Exact merged count, zero slack: any further growth reds again.
-    ceiling: 11775,
+    // Lowered after extracting world object bootstrap; measured after formatting.
+    ceiling: 11737,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -1446,7 +1448,8 @@ const MONOLITHS: MonolithRow[] = [
     // counts: 10290 base, 10202 Freeholds (-88), 10276 incoming (-14); combined
     // 10188, measured. The row never conflicted (the incoming pin still sat at
     // 10291). Exact merged count, zero slack: any further growth reds again.
-    ceiling: 10007,
+    // Lowered after extracting travel guards and instance presence; measured after formatting.
+    ceiling: 10002,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1627,7 +1630,8 @@ const MONOLITHS: MonolithRow[] = [
     // Re-pinned at the 2026-09-07 release/v0.42.0 sync of the Drakelands
     // map-improvements epic (PR #3746): the castle pad chain and the Last Spring bank left with the castle (keep_site.ts holds the new pad). Measured with wc -l on the
     // merged tree. Exact merged count, zero headroom.
-    ceiling: 5216,
+    // Lowered after extracting shared dungeon floor dispatch; measured after formatting.
+    ceiling: 5188,
     seam: 'zone/terrain data as content records; logic as sim sibling modules',
   },
   {
@@ -1878,7 +1882,8 @@ const MONOLITHS: MonolithRow[] = [
     // Re-pinned at the 2026-09-07 release/v0.42.0 sync of the Drakelands
     // map-improvements epic (PR #3746): the keep wall-ledge and parapet loops retired and the Wildheart static set moved beside its field data. Measured with wc -l on the
     // merged tree. Exact merged count, zero headroom.
-    ceiling: 2548,
+    // Lowered after extracting derived interior collider registry; measured after formatting.
+    ceiling: 2518,
     seam: 'per-zone collider data beside the zone content; shared logic stays here',
   },
   {
@@ -1916,7 +1921,8 @@ const MONOLITHS: MonolithRow[] = [
     // disagreement about TEXT; this gate is about SIZE). BOTH parent pins for
     // the record: ours 2804, the release 2433. Measured on the merged tree,
     // never reconciled by arithmetic. Exact merged count, zero slack.
-    ceiling: 2432,
+    // Lowered after extracting interior variant and layout resolution; measured after formatting.
+    ceiling: 2321,
     seam: 'a new src/render/<thing>.ts module (src/render/CLAUDE.md)',
   },
   {

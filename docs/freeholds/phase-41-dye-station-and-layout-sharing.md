@@ -137,7 +137,7 @@ and return full reports to the scratchpad with a path and short summary.
    return and full touch/keyboard/gamepad parity. Register the NEW `housing-dyes`
    section 11 target (scenes dyes-picker, dyes-station-locked, dyes-station-unlocked
    and dyes-shortfall x desktop/compact/tablet, plus dyes-picker at the high preset and
-   with reduced motion: 18 variants, the 672 milestone), append the rows
+   with reduced motion: 18 variants, the 681 milestone), append the rows
    to ux-spec section 10 and regenerate ux-shot-manifest.json and ux-key-manifest.json
    in the same change.
 4. Wire, persistence and proof: route dye_furnishing through the existing dispatch

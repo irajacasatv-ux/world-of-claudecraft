@@ -1,5 +1,194 @@
 [
   {
+    "target": "freehold-gate",
+    "key": "desktop",
+    "scene": "gate-own-prompt",
+    "view": "desktop",
+    "width": 1600,
+    "height": 900,
+    "mobile": false,
+    "viewport": {
+      "width": 1600,
+      "height": 900
+    },
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "owner": "06"
+  },
+  {
+    "target": "freehold-gate",
+    "key": "compact",
+    "scene": "gate-own-prompt",
+    "view": "compact",
+    "width": 874,
+    "height": 402,
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    },
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "owner": "06"
+  },
+  {
+    "target": "freehold-gate",
+    "key": "tablet",
+    "scene": "gate-own-prompt",
+    "view": "tablet",
+    "width": 1180,
+    "height": 820,
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    },
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "owner": "06"
+  },
+  {
+    "target": "freehold-inn",
+    "key": "desktop",
+    "scene": "inn-safe-landing",
+    "view": "desktop",
+    "width": 1600,
+    "height": 900,
+    "mobile": false,
+    "viewport": {
+      "width": 1600,
+      "height": 900
+    },
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "owner": "06"
+  },
+  {
+    "target": "freehold-inn",
+    "key": "compact",
+    "scene": "inn-safe-landing",
+    "view": "compact",
+    "width": 874,
+    "height": 402,
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    },
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "owner": "06"
+  },
+  {
+    "target": "freehold-inn",
+    "key": "tablet",
+    "scene": "inn-safe-landing",
+    "view": "tablet",
+    "width": 1180,
+    "height": 820,
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    },
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "owner": "06"
+  },
+  {
+    "target": "freehold-cottage",
+    "key": "desktop",
+    "scene": "cottage-safe-landing",
+    "view": "desktop",
+    "width": 1600,
+    "height": 900,
+    "mobile": false,
+    "viewport": {
+      "width": 1600,
+      "height": 900
+    },
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "owner": "06"
+  },
+  {
+    "target": "freehold-cottage",
+    "key": "compact",
+    "scene": "cottage-safe-landing",
+    "view": "compact",
+    "width": 874,
+    "height": 402,
+    "mobile": true,
+    "viewport": {
+      "width": 874,
+      "height": 402
+    },
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "owner": "06"
+  },
+  {
+    "target": "freehold-cottage",
+    "key": "tablet",
+    "scene": "cottage-safe-landing",
+    "view": "tablet",
+    "width": 1180,
+    "height": 820,
+    "mobile": true,
+    "viewport": {
+      "width": 1180,
+      "height": 820
+    },
+    "theme": "classic",
+    "graphics": "low",
+    "motion": "normal",
+    "input": "pointer",
+    "surface": "web",
+    "light": "normal",
+    "forcedColors": "none",
+    "owner": "06"
+  },
+  {
     "target": "housing-build-mode",
     "key": "interior-inn-day-desktop-classic-low-normal-pointer-web-normal-none",
     "scene": "interior-inn-day",

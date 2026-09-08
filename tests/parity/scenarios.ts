@@ -3215,6 +3215,7 @@ function freeholdClaim(): Scenario {
       const eb = requireEntity(sim, b, 'parity scenario freehold owner B');
       rec.notes.record = sim.freeholds.get('account:7')?.tier ?? null;
       rec.snapshot('seeded');
+      teleport(sim, ea, -14, -92);
       sim.freeholdEnter(a);
       rec.tick(1);
       const inst = requireValue(
@@ -3226,6 +3227,7 @@ function freeholdClaim(): Scenario {
       if (inst.exitId != null) rec.track(inst.exitId);
       rec.notes.slotA = sim.instanceSlotAt(ea.pos);
       rec.snapshot('entered');
+      teleport(sim, eb, -14, -92);
       sim.freeholdEnter(b);
       rec.tick(1);
       rec.notes.slotB = sim.instanceSlotAt(eb.pos);

@@ -295,17 +295,20 @@ and bounded offline waiting does not guarantee final cosmetics. Use prepared rea
 representations while optional art loads. Arrival input resumes immediately on cancel,
 while the existing camera offset blends safely over DIRECTOR_RELEASE_TIME; reduced motion
 starts no directive. Sampled cue/SFX conformance and real audio evidence are independent
-from screenshots. 09 owns the initial shared helper and twelve interior variants; 11/16/17/18 extend
+from screenshots. 06 owns its functional helper and nine gate/landing variants;
+09 introduces the planned shared housing helper with twelve day/night interior variants; 11/16/17/18 extend
 its exact one-capture/one-image targets, and 11 extends
 housing art-only diff selection; 20 verifies the expanded matrix.
 
-The shared capture helper/registry import is produced by 09 with twelve functional
-Inn/Cottage day/night variants. 11 replaces that descriptor with its 89 working variants;
-16/17/18 cumulatively register 178/226/330. 20 verifies 330, never requiring later UI in
+06 registers nine functional gate/landing variants through pr_shot_freeholds.mjs.
+09 introduces the shared pr_shot_housing.mjs helper and twelve Inn/Cottage day/night
+variants (21 total across both helpers).
+11 extends the build descriptor (98 total across the registry);
+16/17/18 cumulatively register 187/235/339. 20 verifies 339, never requiring later UI in
 an earlier pair. Later waves register by producer in the same way and each regenerates
-ux-shot-manifest.json in its own change: 21 reaches 348, 23 357, 24 399, 25 437, 26 455,
-30 493, 30a 511, 31 517, 34 535, 35 553, 36 595, 38 639, 40 654, 41 672, 41a 696 and 42
-733, each wave close verifying its union. Explicit build-empty is included; guest
+ux-shot-manifest.json in its own change: 21 reaches 357, 23 366, 24 408, 25 446, 26 464,
+30 502, 30a 520, 31 526, 34 544, 35 562, 36 604, 38 648, 40 663, 41 681, 41a 705 and 42
+742, each wave close verifying its union. Explicit build-empty is included; guest
 observation uses the existing visit-owner-building scene without duplication. Exact
 constructor/descriptors, fixture postconditions and 557 English keys (each with one owning phase) are recorded in UX and regenerated JSON inventories; every UI phase names its new
 keys with exact English in its own file, ux-spec carries the rows, and the manifests

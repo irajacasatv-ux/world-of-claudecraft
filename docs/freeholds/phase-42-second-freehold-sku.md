@@ -179,7 +179,7 @@ and return full reports to the scratchpad with a path and short summary.
    second-home-primary-tab, second-home-second-tab, second-home-hearth-destination,
    second-home-card, second-home-owned and second-home-bill x desktop/compact/tablet,
    second-home-card on website-desktop, and second-home-denied across the six denied
-   surfaces: 37 variants, the 733 milestone that completes the program inventory), both
+   surfaces: 37 variants, the 742 milestone that completes the program inventory), both
    manifests regenerated in this same change with every cited count updated:
    steward.primaryTab "Primary Home"; steward.secondTab "Second Home";
    charter.secondTitle "Second Freehold Charter"; charter.secondSummary "Open a second

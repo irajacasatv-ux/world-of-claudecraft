@@ -55,10 +55,11 @@ isDecorating only; two-client cleanup/reconnect/stale/permission/private-field p
 required. All findings including nits close with fresh fix review; no deferred-nit PASS.
 Progress rows carry named unsigned release gates; the packet defines no deferral record.
 
-Capture acceptance is staged: 09 proves 12 real day/night room variants; 11 proves 89, 16
-proves 178, 17 proves 226, 18 proves 330 and 20 verifies the wave A 330. Later producers
-extend the registry to 733 (21 348, 23 357, 24 399, 25 437, 26 455, 30 493, 30a 511, 31
-517, 34 535, 35 553, 36 595, 38 639, 40 654, 41 672, 41a 696, 42 733), each wave close
+Capture acceptance is staged: 06 proves nine functional gate/landing variants;
+09 adds 12 real day/night room variants (21 total); 11 proves 98, 16
+proves 187, 17 proves 235, 18 proves 339 and 20 verifies the wave A 339. Later producers
+extend the registry to 742 (21 357, 23 366, 24 408, 25 446, 26 464, 30 502, 30a 520, 31
+526, 34 544, 35 562, 36 604, 38 648, 40 663, 41 681, 41a 705, 42 742), each wave close
 verifying its union. All scenes have an exact fixture and asserted state; no early target
 pretends that later UI exists. The key inventory is 557 English keys, each with one owning
 phase in ux-key-manifest.json. Baseline mobile evidence is Chromium with iOS-profile

@@ -333,6 +333,7 @@ describe('CI workflow parity', () => {
       '            /docs/screenshots/fenbridge-rebuild/',
       '            /docs/screenshots/freehold-content-2026-09-07/',
       '            /docs/screenshots/freehold-crafted-content-2026-09-07/',
+      '            /docs/screenshots/freehold-interiors-2026-09-08/',
       '            /docs/screenshots/furnishing-item-kind/',
       '            /docs/screenshots/guild-bank-history/',
       '            /docs/screenshots/guild-bank-tab/',

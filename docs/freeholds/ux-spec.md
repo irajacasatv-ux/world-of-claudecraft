@@ -65,8 +65,8 @@ use. A missing measurement cannot be replaced with an invented balance value.
 
 Completion bar for this specification's inventories: the key tables below carry
 557 exact hudChrome.housing.* keys, each with one owning phase, and the
-section 11 registry expands to 733 screenshot variants, of which the
-four wave A targets hold 330 (file 20 verifies that wave A union) and
+section 11 registry expands to 742 screenshot variants, of which the
+seven wave A targets hold 339 (file 20 verifies that wave A union) and
 the later producers register the rest in their own changes. ux-key-manifest.json
 and ux-shot-manifest.json are regenerated from these tables and this registry in
 the same change as any row change (D92).
@@ -2240,14 +2240,48 @@ are src/ui/deed_card_view.ts and deed_card_window.ts (38).
 
 ## 11. Exact screenshot registry and fixture contract
 
+### Functional gate and safe landing (06)
+
+06 registers `scripts/lib/pr_shot_freeholds.mjs::freeholdReviewTargets` in
+`scripts/pr_shot_targets.mjs`. Its three targets each have desktop, compact and
+tablet variants: nine registry variants, eighteen files when the runner captures
+before and after. The filename identities are `freehold-gate-{view}`,
+`freehold-inn-{view}` and `freehold-cottage-{view}`, with the normal before/after
+prefix. Before/after is evidence identity, not another registry variant.
+
+```js
+const freeholdFunctionalTargets = [
+  { key: 'freehold-gate', scene: 'gate-own-prompt' },
+  { key: 'freehold-inn', scene: 'inn-safe-landing' },
+  { key: 'freehold-cottage', scene: 'cottage-safe-landing' },
+];
+const freeholdFunctionalVariants = [
+  { key: 'desktop', width: 1600, height: 900, mobile: false },
+  { key: 'compact', width: 874, height: 402, mobile: true },
+  { key: 'tablet', width: 1180, height: 820, mobile: true },
+].map((view) => ({ ...view, viewport: { width: view.width, height: view.height } }));
+```
+
+Each capture stages one real state through the movement/entry route and returns
+one region. The gate shows the own-home prompt without a proximity teleport;
+Inn/Cottage show the accepted authoritative safe landing and usable exit. The
+release baseline has no gate or owner room: `PR_SHOTS_FREEHOLD_BASELINE=1` captures
+its real quay for each prior state, explicitly recording the absent surface.
+These LOW classic captures prove functional geometry, prompt and landing. They
+do not prove 09 day/night lighting, first-tier camera, welcome, sampled audio,
+placement UI or physical-device performance. Those later scenes remain separately
+owned below. The functional helper's real low seed and viewport/CDP dimensions
+remain its capture authority; the planned constructor below belongs to 09.
+
 ### Registry ownership and one-shot semantics
 
-These are NEW planned script symbols, not existing exported APIs. File 09 introduces
+The following shared housing symbols remain planned APIs, alongside the working
+06 functional helper above. File 09 introduces
 scripts/lib/pr_shot_housing.mjs and its housingReviewTargets export with only the
 functional interior subset. File 11 extends that same build descriptor; 16/17/18
 append their functional targets. There is one descriptor per target key, never
 parallel interior and build descriptors with a duplicate key. The existing scripts/pr_shot_targets.mjs receives
-only this import/spread in TARGETS. Every capture(page, variant) returns one
+this import/spread beside the 06 functional targets in TARGETS. Every capture(page, variant) returns one
 region and the runner writes exactly one image with that target/variant key.
 A capture callback cannot emit a sequence by changing state several times before
 returning. Pending, refused, cancelled and reconnected are separate uniquely
@@ -2263,18 +2297,19 @@ import { housingReviewTargets, isHousingVisualPath } from './lib/pr_shot_housing
 }),
 ```
 
-Registration is cumulative by actual producer: file 09 registers the interior baseline
-subset (12 variants); file 11 extends the same target to 89; file 16 reaches 178; file
-17 reaches 226; file 18 reaches 330. File 20 verifies the complete 330-variant wave A
+Registration is cumulative by actual producer: file 06 registers nine functional
+gate/landing variants; file 09 adds twelve day/night interiors (21 total); file 11 extends the registry to 98; file 16 reaches 187; file
+17 reaches 235; file 18 reaches 339. File 20 verifies the complete 339-variant wave A
 inventory. Later waves register by producer in the same way, through the
 housingLaterRegistrations list below, each regenerating ux-shot-manifest.json in its
 own change with every cited count updated and each wave close verifying the union:
-file 21 reaches 348; file 23 reaches 357; file 24 reaches 399; file 25 reaches 437;
-file 26 reaches 455; file 30 reaches 493; file 30a reaches 511; file 31 reaches 517;
-file 34 reaches 535; file 35 reaches 553; file 36 reaches 595; file 38 reaches 639;
-file 40 reaches 654; file 41 reaches 672; file 41a reaches 696; file 42 reaches 733.
-The complete registry therefore expands to 733 variants, and the owner of every
-variant is reproducible from housingVariantOwner below and recorded in the manifest's
+file 21 reaches 357; file 23 reaches 366; file 24 reaches 408; file 25 reaches 446;
+file 26 reaches 464; file 30 reaches 502; file 30a reaches 520; file 31 reaches 526;
+file 34 reaches 544; file 35 reaches 562; file 36 reaches 604; file 38 reaches 648;
+file 40 reaches 663; file 41 reaches 681; file 41a reaches 705; file 42 reaches 742.
+The complete registry therefore expands to 742 variants, and the owner of every
+planned housing variant is reproducible from housingVariantOwner below; the
+functional freehold targets are owned by 06. Each owner is recorded in the manifest's
 owner field. Earlier files require only their registered working subset, never
 nonfunctional future UI. These are derived inventory counts, not new gameplay or
 tuning values.
@@ -2382,6 +2417,10 @@ const housingVisualWhen = [
   'src/styles/hud.css',
   'src/styles/hud.mobile.css',
   'scripts/lib/pr_shot_housing.mjs',
+  'scripts/lib/pr_shot_freeholds.mjs',
+  'scripts/freehold_interior_route.mjs',
+  'src/ui/hud/housing/',
+  'src/sim/freehold/',
 ];
 ```
 
@@ -2890,12 +2929,11 @@ the local test server before its one capture. Presentation fixtures and real
 multiplayer/authority evidence are labeled separately. Real UI controls are
 used after fixture state is authorized; no fake DOM or post-capture correction.
 
-The ordinary offline constructor currently gets devCommands from
-import.meta.env.DEV; server ALLOW_DEV_COMMANDS has no browser bridge. File 07
-owns this NEW housing-only explicit dev/loopback bridge, realizing existing
-D3/D24 intent while leaving ordinary devCommands unchanged:
+The ordinary offline constructor gets devCommands from import.meta.env.DEV.
+05 already delivered the housing-only explicit dev/loopback bridge below, gated
+by ALLOW_DEV_COMMANDS, realizing D3/D24 while leaving ordinary devCommands unchanged:
 
-| NEW owner/module | Exact engineering responsibility |
+| Existing owner/module | Exact engineering responsibility |
 |---|---|
 | scripts/lib/freehold_dev_authorization.mjs and its .d.mts | freeholdDevAuthorizationPlugin({ enabled }) and directly tested request predicate reuse existing diagnosticsReadAllowed socket/Host guard. |
 | vite.config.ts composition | Pass enabled: process.env.ALLOW_DEV_COMMANDS === '1'; use configureServer only with apply: 'serve', preserving the literal defineConfig object AST pin. No preview/production route. |
@@ -3007,6 +3045,7 @@ after-state is a failure.
 
 | Scenario target | Required visible state and assertion | Viewports | Primary owner |
 |---|---|---|---|
+| gate-own-prompt; inn-safe-landing; cottage-safe-landing | Real own-home prompt and authoritative safe room landing/exit; honest absent-surface quay baseline; no day/night or first-arrival presentation claim | All baseline | 06; freehold-gate/freehold-inn/freehold-cottage |
 | gate-own-choice; gate-friend-empty; gate-lookup-pending; gate-lookup-ready; gate-lookup-stale; gate-lookup-refused | Eastbrook semantic marker, real interact prompt, own/friend choice, no proximity teleport | All baseline | 06/18 |
 | arrival-inn | New accepted owner transition with committed fresh first-tier directive, safe reveal, truthful plinth, welcome and no automatic panel | All baseline | 06/09/19 |
 | arrival-cottage; arrival-ordinary-return; arrival-visitor | Cottage first-tier view requires fresh committed-winner directive; ordinary-return/visitor scenes have new ordinary welcome only and static camera | All baseline | 06/09/19 |
@@ -3127,14 +3166,21 @@ docs/prd/woc/freehold-final-legal-handoff.md. External legal and platform
 sign-offs remain the existing release gates recorded in state. Preparing that
 handoff does not itself send a message or authorize release.
 
+Regenerate both planned inventories from the repository root with
+`node docs/freeholds/generate-ux-manifests.mjs`. The optional first argument is a
+repository root and the optional second argument is an output directory for a
+read-only comparison. The generator preserves table/target order, excludes the
+separate keybinding namespace, and expands capture metadata without executing
+browser callbacks.
+
 The checked-in [English key inventory](ux-key-manifest.json) and [screenshot target
 inventory](ux-shot-manifest.json) are generated from this specification's tables and
 executable registry examples. They record the approved 557 keys (each with its owning
-phase) and 733 planned variants (330 in wave A, then file 21 reaches 348; file 23
-reaches 357; file 24 reaches 399; file 25 reaches 437; file 26 reaches 455; file 30
-reaches 493; file 30a reaches 511; file 31 reaches 517; file 34 reaches 535; file 35
-reaches 553; file 36 reaches 595; file 38 reaches 639; file 40 reaches 654; file 41
-reaches 672; file 41a reaches 696; file 42 reaches 733), respectively; they are
+phase) and 742 planned variants (339 in wave A, then file 21 reaches 357; file 23
+reaches 366; file 24 reaches 408; file 25 reaches 446; file 26 reaches 464; file 30
+reaches 502; file 30a reaches 520; file 31 reaches 526; file 34 reaches 544; file 35
+reaches 562; file 36 reaches 604; file 38 reaches 648; file 40 reaches 663; file 41
+reaches 681; file 41a reaches 705; file 42 reaches 742), respectively; they are
 requirements, not screenshots, implemented translations or evidence that a capture
 ran. A later reviewed source change regenerates the matching inventory in the same
 change.

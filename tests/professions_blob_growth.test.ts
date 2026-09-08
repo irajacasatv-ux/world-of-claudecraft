@@ -2177,8 +2177,22 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // the release/v0.42.0 OSSBrain merge: 213,319 over 213,105, the same +214,
     // with every absolute figure below it up by the release's +99 (the two hub
     // practice quests and the two dev-mount reins, attributed further down).
+    // The permanent Hearth Key adds one discovery ID to this closed catalog.
+    // Isolate it first so the older room and furnishing measurements retain
+    // their historical values. No save field or legal container cap changes.
+    expect(s2.deedStats?.itemsDiscovered?.filter((id) => id === 'hearth_key')).toHaveLength(1);
+    const beforeHearthKey = structuredClone(s2);
+    if (beforeHearthKey.deedStats) {
+      beforeHearthKey.deedStats.itemsDiscovered = beforeHearthKey.deedStats.itemsDiscovered?.filter(
+        (id) => id !== 'hearth_key',
+      );
+    }
+    const beforeHearthKeyBytes = Buffer.byteLength(JSON.stringify(beforeHearthKey), 'utf8');
+    expect(bytes - beforeHearthKeyBytes).toBe(13);
+    expect(fieldBytes(s2, 'deedStats') - fieldBytes(beforeHearthKey, 'deedStats')).toBe(13);
+    expect(beforeHearthKeyBytes).toBe(213319);
     const FREEHOLD_ROOM_IDS = ['freehold_inn_room', 'freehold_cottage'] as const;
-    const withoutFreeholdRooms = structuredClone(s2);
+    const withoutFreeholdRooms = structuredClone(beforeHearthKey);
     for (const id of FREEHOLD_ROOM_IDS) {
       expect(s2.raidLockouts?.[id]).toBe(CEILING_EPOCH_MS + SEVEN_DAYS_MS);
       expect(s2.deedStats?.dungeonClears?.[id]).toBe(999);
@@ -2196,7 +2210,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     const freeholdRoomsDelta = Object.fromEntries(
       (['raidLockouts', 'deedStats', 'heroicDaily'] as const).map((key) => [
         key,
-        fieldBytes(s2, key) - fieldBytes(withoutFreeholdRooms, key),
+        fieldBytes(beforeHearthKey, key) - fieldBytes(withoutFreeholdRooms, key),
       ]),
     );
     expect(freeholdRoomsDelta).toEqual({ raidLockouts: 67, deedStats: 108, heroicDaily: 39 });
@@ -2204,13 +2218,13 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       JSON.stringify(withoutFreeholdRooms),
       'utf8',
     );
-    expect(bytes - withoutFreeholdRoomsBytes).toBe(214);
+    expect(beforeHearthKeyBytes - withoutFreeholdRoomsBytes).toBe(214);
     // The three per-field deltas account for the whole-blob delta exactly.
     expect(
       freeholdRoomsDelta.raidLockouts +
         freeholdRoomsDelta.deedStats +
         freeholdRoomsDelta.heroicDaily,
-    ).toBe(bytes - withoutFreeholdRoomsBytes);
+    ).toBe(beforeHearthKeyBytes - withoutFreeholdRoomsBytes);
     expect(withoutFreeholdRoomsBytes).toBe(213105);
     // Isolate the accepted crafted cohort before checking older catalog baselines.
     const craftedRecipeIds = FURNISHING_RECIPES.map((recipe) => recipe.id);
@@ -2249,7 +2263,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     const beforeCraftedBytes = Buffer.byteLength(JSON.stringify(beforeCrafted), 'utf8');
     expect(beforeCraftedBytes).toBe(211850);
     expect(withoutFreeholdRoomsBytes - beforeCraftedBytes).toBe(1255);
-    expect(bytes).toBe(213319);
+    expect(bytes).toBe(213332);
     const fixtureBaseline = {
       equipment: 273,
       equipmentInstance: 1593,
@@ -2547,15 +2561,17 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // alone on the release parent (211,133 against its 211,034). Keep the
     // tracking band exactly 381 bytes wide (measurement minus 380 to
     // measurement plus one); the warning threshold remains unchanged.
-    expect(bytes, reMint).toBeGreaterThan(212939);
-    expect(bytes, reMint).toBeLessThan(213320);
+    // The Hearth Key discovery entry adds exactly 13 measured bytes to the
+    // composed fixture. Rebase both edges together, keeping the same width.
+    expect(bytes, reMint).toBeGreaterThan(212952);
+    expect(bytes, reMint).toBeLessThan(213333);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was
     // minted against (historical: that is the figure the threshold's own 32-KiB
     // step was derived from, not this arm's measurement). The previous
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
-    // the combined fixture is 213,319 bytes, 16,057 below the threshold.
+    // the combined fixture is 213,332 bytes, 16,044 below the threshold.
     // A content change must be attributed and the narrow band re-measured,
     // never widened. This is warning-only; save-path tests prove oversized
     // saves stay whole.

@@ -16,7 +16,7 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 48,
+      "nextId": 49,
       "state": "5bc471b0",
       "events": "741638a5",
       "rng": {
@@ -30,8 +30,8 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 50,
-      "state": "bc8ccbc1",
+      "nextId": 51,
+      "state": "5519cd9e",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -76,7 +76,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 48,
+          "entityId": 49,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -147,7 +147,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 49,
+          "entityId": 50,
           "equipment": {
             "chest": "apprentice_robe",
             "mainhand": "gnarled_staff"
@@ -197,7 +197,7 @@
               "name": "Battle Stance",
               "remaining": 3600,
               "school": "physical",
-              "sourceId": 48
+              "sourceId": 49
             }
           ],
           "blockChance": 0.05,
@@ -211,7 +211,7 @@
           "fiveSecondRule": 99,
           "healPower": 5,
           "hp": 100,
-          "id": 48,
+          "id": 49,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -262,7 +262,7 @@
           "fiveSecondRule": 99,
           "healPower": 13,
           "hp": 54,
-          "id": 49,
+          "id": 50,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -306,9 +306,9 @@
     {
       "tick": 1,
       "time": 0.05,
-      "nextId": 51,
-      "state": "f21c505a",
-      "events": "be3c74a1",
+      "nextId": 52,
+      "state": "f766325e",
+      "events": "440988de",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -346,13 +346,14 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "hearth_key",
               "recruit_tunic",
               "worn_sword"
             ]
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 48,
+          "entityId": 49,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -368,6 +369,10 @@
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 1,
+              "itemId": "hearth_key"
             }
           ],
           "mailWelcomed": true,
@@ -423,7 +428,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 49,
+          "entityId": 50,
           "equipment": {
             "chest": "apprentice_robe",
             "mainhand": "gnarled_staff"
@@ -473,7 +478,7 @@
               "name": "Battle Stance",
               "remaining": 3599.95,
               "school": "physical",
-              "sourceId": 48
+              "sourceId": 49
             }
           ],
           "blockChance": 0.05,
@@ -486,7 +491,7 @@
           "fiveSecondRule": 99.05,
           "healPower": 5,
           "hp": 100,
-          "id": 48,
+          "id": 49,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -499,7 +504,7 @@
           "petMode": "defensive",
           "pos": {
             "x": 119200,
-            "z": -1252
+            "z": -1254
           },
           "potionCooldownUntil": -1,
           "resourceType": "rage",
@@ -536,7 +541,7 @@
           "fiveSecondRule": 99.05,
           "healPower": 13,
           "hp": 54,
-          "id": 49,
+          "id": 50,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -585,7 +590,7 @@
           "dungeonId": "freehold_inn_room",
           "fiveSecondRule": 99,
           "hp": 1,
-          "id": 50,
+          "id": 51,
           "kind": "object",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -617,9 +622,9 @@
     {
       "tick": 2,
       "time": 0.1,
-      "nextId": 51,
-      "state": "75b2a10c",
-      "events": "a8c59838",
+      "nextId": 52,
+      "state": "b63aea4a",
+      "events": "e6830c5e",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -657,13 +662,14 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "hearth_key",
               "recruit_tunic",
               "worn_sword"
             ]
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 48,
+          "entityId": 49,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -679,6 +685,10 @@
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 1,
+              "itemId": "hearth_key"
             }
           ],
           "mailWelcomed": true,
@@ -729,12 +739,13 @@
               "apprentice_robe",
               "baked_bread",
               "gnarled_staff",
+              "hearth_key",
               "spring_water"
             ]
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 49,
+          "entityId": 50,
           "equipment": {
             "chest": "apprentice_robe",
             "mainhand": "gnarled_staff"
@@ -753,6 +764,10 @@
             {
               "count": 5,
               "itemId": "spring_water"
+            },
+            {
+              "count": 1,
+              "itemId": "hearth_key"
             }
           ],
           "mailWelcomed": true,
@@ -784,7 +799,7 @@
               "name": "Battle Stance",
               "remaining": 3599.9,
               "school": "physical",
-              "sourceId": 48
+              "sourceId": 49
             }
           ],
           "blockChance": 0.05,
@@ -797,7 +812,7 @@
           "fiveSecondRule": 99.1,
           "healPower": 5,
           "hp": 100,
-          "id": 48,
+          "id": 49,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -810,7 +825,7 @@
           "petMode": "defensive",
           "pos": {
             "x": 119200,
-            "z": -1252
+            "z": -1254
           },
           "potionCooldownUntil": -1,
           "resourceType": "rage",
@@ -846,7 +861,7 @@
           "fiveSecondRule": 99.1,
           "healPower": 13,
           "hp": 54,
-          "id": 49,
+          "id": 50,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -858,7 +873,7 @@
           "petMode": "defensive",
           "pos": {
             "x": 119200,
-            "z": -1252
+            "z": -1254
           },
           "potionCooldownUntil": -1,
           "resource": 195,
@@ -894,7 +909,7 @@
           "dungeonId": "freehold_inn_room",
           "fiveSecondRule": 99,
           "hp": 1,
-          "id": 50,
+          "id": 51,
           "kind": "object",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -926,9 +941,9 @@
     {
       "tick": 3,
       "time": 0.15,
-      "nextId": 51,
-      "state": "f8688e7e",
-      "events": "f52a942a",
+      "nextId": 52,
+      "state": "034a05a6",
+      "events": "ee843c4b",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -966,13 +981,14 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "hearth_key",
               "recruit_tunic",
               "worn_sword"
             ]
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 48,
+          "entityId": 49,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -988,6 +1004,10 @@
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 1,
+              "itemId": "hearth_key"
             }
           ],
           "mailWelcomed": true,
@@ -1038,12 +1058,13 @@
               "apprentice_robe",
               "baked_bread",
               "gnarled_staff",
+              "hearth_key",
               "spring_water"
             ]
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 49,
+          "entityId": 50,
           "equipment": {
             "chest": "apprentice_robe",
             "mainhand": "gnarled_staff"
@@ -1062,6 +1083,10 @@
             {
               "count": 5,
               "itemId": "spring_water"
+            },
+            {
+              "count": 1,
+              "itemId": "hearth_key"
             }
           ],
           "mailWelcomed": true,
@@ -1093,7 +1118,7 @@
               "name": "Battle Stance",
               "remaining": 3599.85,
               "school": "physical",
-              "sourceId": 48
+              "sourceId": 49
             }
           ],
           "blockChance": 0.05,
@@ -1107,7 +1132,7 @@
           "fiveSecondRule": 99.15,
           "healPower": 5,
           "hp": 100,
-          "id": 48,
+          "id": 49,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1158,7 +1183,7 @@
           "fiveSecondRule": 99.15,
           "healPower": 13,
           "hp": 54,
-          "id": 49,
+          "id": 50,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1207,7 +1232,7 @@
           "dungeonId": "freehold_inn_room",
           "fiveSecondRule": 99,
           "hp": 1,
-          "id": 50,
+          "id": 51,
           "kind": "object",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1239,8 +1264,8 @@
     {
       "tick": 5,
       "time": 0.25,
-      "nextId": 51,
-      "state": "7ad4b183",
+      "nextId": 52,
+      "state": "26e9248b",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1250,8 +1275,8 @@
     {
       "tick": 10,
       "time": 0.5,
-      "nextId": 51,
-      "state": "f9836592",
+      "nextId": 52,
+      "state": "49fc118a",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1261,8 +1286,8 @@
     {
       "tick": 15,
       "time": 0.75,
-      "nextId": 51,
-      "state": "2249a828",
+      "nextId": 52,
+      "state": "0c551388",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1272,9 +1297,9 @@
     {
       "tick": 20,
       "time": 1,
-      "nextId": 51,
-      "state": "df978a96",
-      "events": "69598a52",
+      "nextId": 52,
+      "state": "1ef8bc73",
+      "events": "3daa87f3",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -1283,8 +1308,8 @@
     {
       "tick": 23,
       "time": 1.15,
-      "nextId": 51,
-      "state": "a59e0f7e",
+      "nextId": 52,
+      "state": "d448a03b",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1323,6 +1348,7 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "hearth_key",
               "recruit_tunic",
               "worn_sword"
             ],
@@ -1333,7 +1359,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 48,
+          "entityId": 49,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -1349,6 +1375,10 @@
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 1,
+              "itemId": "hearth_key"
             }
           ],
           "mailWelcomed": true,
@@ -1399,6 +1429,7 @@
               "apprentice_robe",
               "baked_bread",
               "gnarled_staff",
+              "hearth_key",
               "spring_water"
             ],
             "visited": [
@@ -1408,7 +1439,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 49,
+          "entityId": 50,
           "equipment": {
             "chest": "apprentice_robe",
             "mainhand": "gnarled_staff"
@@ -1427,6 +1458,10 @@
             {
               "count": 5,
               "itemId": "spring_water"
+            },
+            {
+              "count": 1,
+              "itemId": "hearth_key"
             }
           ],
           "mailWelcomed": true,
@@ -1458,7 +1493,7 @@
               "name": "Battle Stance",
               "remaining": 3598.85,
               "school": "physical",
-              "sourceId": 48
+              "sourceId": 49
             }
           ],
           "blockChance": 0.05,
@@ -1472,7 +1507,7 @@
           "fiveSecondRule": 100.15,
           "healPower": 5,
           "hp": 100,
-          "id": 48,
+          "id": 49,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1523,7 +1558,7 @@
           "fiveSecondRule": 100.15,
           "healPower": 13,
           "hp": 54,
-          "id": 49,
+          "id": 50,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1567,8 +1602,8 @@
     {
       "tick": 23,
       "time": 1.15,
-      "nextId": 51,
-      "state": "a59e0f7e",
+      "nextId": 52,
+      "state": "d448a03b",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1607,6 +1642,7 @@
             "itemsDiscovered": [
               "baked_bread",
               "eastbrook_buckler",
+              "hearth_key",
               "recruit_tunic",
               "worn_sword"
             ],
@@ -1617,7 +1653,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 48,
+          "entityId": 49,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -1633,6 +1669,10 @@
             {
               "count": 5,
               "itemId": "baked_bread"
+            },
+            {
+              "count": 1,
+              "itemId": "hearth_key"
             }
           ],
           "mailWelcomed": true,
@@ -1683,6 +1723,7 @@
               "apprentice_robe",
               "baked_bread",
               "gnarled_staff",
+              "hearth_key",
               "spring_water"
             ],
             "visited": [
@@ -1692,7 +1733,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 49,
+          "entityId": 50,
           "equipment": {
             "chest": "apprentice_robe",
             "mainhand": "gnarled_staff"
@@ -1711,6 +1752,10 @@
             {
               "count": 5,
               "itemId": "spring_water"
+            },
+            {
+              "count": 1,
+              "itemId": "hearth_key"
             }
           ],
           "mailWelcomed": true,
@@ -1742,7 +1787,7 @@
               "name": "Battle Stance",
               "remaining": 3598.85,
               "school": "physical",
-              "sourceId": 48
+              "sourceId": 49
             }
           ],
           "blockChance": 0.05,
@@ -1756,7 +1801,7 @@
           "fiveSecondRule": 100.15,
           "healPower": 5,
           "hp": 100,
-          "id": 48,
+          "id": 49,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1807,7 +1852,7 @@
           "fiveSecondRule": 100.15,
           "healPower": 13,
           "hp": 54,
-          "id": 49,
+          "id": 50,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",

@@ -421,8 +421,8 @@ earlier family's asset-generation, reference, GLB or activation gate.
 Verify the final registered assets in real desktop, compact and tablet scenes and
 LOW, including the approved reduced-light phone cases. Rebuild media/icon mappings,
 source fingerprints, provenance/CREDITS and affected asset pins through their normal
-producers. The screenshot inventory in UX remains the exact Wave A contract (four
-registered targets, 330 variants); a later art owner that needs changed-surface
+producers. The screenshot inventory in UX remains the exact Wave A contract (seven
+registered targets, 339 variants); a later art owner that needs changed-surface
 evidence registers its target and variants in ux-spec section 11 and regenerates
 ux-shot-manifest.json in the same change, never captures under an unregistered alias
 and never substitutes concept art for in-game proof (U3 F4).
@@ -438,7 +438,8 @@ or release approval.
 ## 11. Visual and technical acceptance evidence
 
 The exact screenshot registry entries and state list live in UX and the owning
-11/16/17/18 implementation files; only those four registered targets exist, and a
+06/09/11/16/17/18 implementation files; the seven Wave A targets are registered
+by their functional producer, and a
 later wave extends the registry before it captures. Art acceptance includes desktop,
 compact and tablet views (compact/tablet baselines are Chromium with iOS-profile
 emulation); empty,

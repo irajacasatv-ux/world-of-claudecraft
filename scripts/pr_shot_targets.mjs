@@ -7,6 +7,7 @@
 // drive window.__game directly: sim.addItem, hud.toggleBags/toggleMap, sim.player.pos).
 
 import { dismissEntryOverlays } from './enter_offline_game.mjs';
+import { freeholdReviewTargets } from './lib/pr_shot_freeholds.mjs';
 import { masterwroughtReviewTargets } from './lib/pr_shot_masterwrought.mjs';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -1058,6 +1059,7 @@ async function triggerRowBreakdown(page, rowSelector, variant) {
 }
 
 export const TARGETS = [
+  ...freeholdReviewTargets,
   {
     key: 'provisioning-furnishing-guide',
     label: 'Provisioning guide separates ornamental furnishings from food',

@@ -171,7 +171,7 @@ and return full reports to the scratchpad with a path and short summary.
    showcase-loading and showcase-error x desktop/compact/tablet, 27 variants) and
    housing-guest-book target (guest-book-empty, guest-book-reactions,
    guest-book-recorded, guest-book-used and guest-book-denied, 15 variants; together
-   the 595 milestone), both manifests
+   the 604 milestone), both manifests
    regenerated in this same change with every cited count updated:
    showcase.seasonClosed "This Showcase season is closed. The next season opens on
    {date}."; showcase.seasonLocked "Voting is locked while results are counted.";

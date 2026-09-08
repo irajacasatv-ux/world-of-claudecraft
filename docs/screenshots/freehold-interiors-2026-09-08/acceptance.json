@@ -1,0 +1,289 @@
+{
+  "baselineCommit": "654071354172b3e252cfc03a1e85efde2daddaa6",
+  "baselineHarness": {
+    "files": [
+      {
+        "path": "scripts/pr_shot_targets.mjs",
+        "sha256": "f36281433789f29bb1db3bb3a7164b9b0f5a83f3b69fd8540c63c9fcd134007c"
+      },
+      {
+        "path": "scripts/lib/pr_shot_freeholds.mjs",
+        "sha256": "60597bc900d5cb503ee714d6ed9ef71cba50f0487ea4cfb6b2e8c8ce1f99e2eb"
+      },
+      {
+        "path": "scripts/lib/freehold_capture_notices.mjs",
+        "sha256": "857ea17accb590aab2323a10686c687dd8942713f85dfc1c3aa9bf43e6c5e00e"
+      },
+      {
+        "path": "scripts/freehold_interior_route.mjs",
+        "sha256": "21aeb8ba13b57b7b0097d90dd6da9a98dfe6fb36c185ee806d43b4dd657d51b6"
+      }
+    ],
+    "applicationDiff": []
+  },
+  "capturedAt": "2026-09-08T19:53:44.478Z",
+  "captureCommand": "DIFF_FILE=/tmp/freeholds06-shots.diff SHOTS_DIR=<side-output> node scripts/pr_screenshots.mjs",
+  "baselineEnvironment": "PR_SHOTS_FREEHOLD_BASELINE=1 GAME_URL=http://127.0.0.1:5174",
+  "notes": [
+    "Before captures show the real release-baseline quay because that commit has neither a Freehold Gate nor the authored Inn Room and Cottage.",
+    "Both sides use the same capture harness, lowest graphics preset and classic theme. No application source from the feature was copied into the baseline.",
+    "Performance counters are measured over gate confirmation through rendered room samples. The zero requirement applies to new events in each room window."
+  ],
+  "sourceInputs": [
+    {
+      "path": "src/render/renderer.ts",
+      "sha256": "ae4940609fe1c62e50d00fcd822012f020da48b30c61e51a0ddb27f81e756eb5"
+    },
+    {
+      "path": "src/render/dungeon.ts",
+      "sha256": "ea961abfe1428ebf06068b8c3c6b60fd823c8b8d4990b0dc9a8b9a3125641452"
+    },
+    {
+      "path": "src/render/authored_walls.ts",
+      "sha256": "c3bdb1e3afc412b7437f1d8c82796c39437e225d72d3cf6407285f2f84fadf19"
+    },
+    {
+      "path": "src/render/dungeon_wall_occlusion.ts",
+      "sha256": "151f06415ab37382dbb09c2ae95917417f819e178368db60995f015b8f4c4fe1"
+    },
+    {
+      "path": "src/render/entity_labels.ts",
+      "sha256": "914e85deeffe660542c72f0c7cf9668564b4052f18eb690618af6d62f6036ea5"
+    },
+    {
+      "path": "src/render/nameplate_painter.ts",
+      "sha256": "d79d314033cd4b49bd595ff0e761c7b2067e0f3e4a7b4a02a1940e7998b0a77d"
+    },
+    {
+      "path": "src/render/zone_character_dependencies.ts",
+      "sha256": "6034876129ffb847580b787e7bbf7301b1f4dcc2ed2a076c2feaa0151e77a861"
+    },
+    {
+      "path": "src/render/characters/assets.ts",
+      "sha256": "1349fb93b27ee66399aad73f24f1f005fe4d86aa52e288a5aa2d4b84bec832d5"
+    },
+    {
+      "path": "src/render/characters/streaming_policy_core.ts",
+      "sha256": "ff75681fcd094c90c611ea3db8ef37dd9749c8641944c680fbe4be4114378b2b"
+    },
+    {
+      "path": "src/render/dungeon_variant_core.ts",
+      "sha256": "fc2025f85f4ece142eee0a2f5638e68eafed6627be3fed43903d678accbef9e5"
+    },
+    {
+      "path": "src/render/dungeon_interior_resolver_core.ts",
+      "sha256": "95908e2e4a3282160a185798185d1ac558eaf8b4f23f1fd94700fab5a0d604b2"
+    },
+    {
+      "path": "src/render/zone_prewarm_groups.ts",
+      "sha256": "9cebe737fae1ad21acb38ea9e3994d26e4226ebec49e1cdf03dcf9dd936a644c"
+    },
+    {
+      "path": "src/render/freehold/wall_cutaway.ts",
+      "sha256": "24779c6a68bf8d7c1e9f828ce8e42190ef5a8d37b809ab5d97a8d5dc615368c9"
+    },
+    {
+      "path": "src/render/freehold/exit_label_core.ts",
+      "sha256": "18364b22545544c10869deb2137b5c757f1dcf115481519d1e0eff3a70ce1a0f"
+    },
+    {
+      "path": "src/render/door_portal.ts",
+      "sha256": "6c8325758c2fde1374bed79ead3b9af3bf3c1067f1dee5792c724c1f872a1f86"
+    },
+    {
+      "path": "src/render/ground_object.ts",
+      "sha256": "dc894e35df15c48b5622eeae8223ea8ea882a52427d2bb83ca900739ae2c6c34"
+    },
+    {
+      "path": "src/render/freehold/interior_dressing.ts",
+      "sha256": "544bfcf93e602901b9b611c85c97ca105b6c75db56b94c1c4c62d05967ed7856"
+    },
+    {
+      "path": "src/render/freehold/model_spec_core.ts",
+      "sha256": "91d338f1c55bbd94c5d8a34d0e30b9ee7346dab98887fa63dbf7d21eb2d74b21"
+    },
+    {
+      "path": "src/sim/content/freehold/layouts.ts",
+      "sha256": "5a665f61aaec2a5cb725e695bc25e4647e41ec869a73a879dfac2c520178f4b8"
+    },
+    {
+      "path": "src/sim/eastbrook_layout.ts",
+      "sha256": "c12f358a75b9fd6701fe3d31ff0fd6851030043ebc739f23d5b9a07805b04b37"
+    },
+    {
+      "path": "src/ui/hud/housing/gate_prompt_controller.ts",
+      "sha256": "3caa4063b940db48fed6adc22f3eb246e78b7ff2003fba42af81784475c9b73b"
+    },
+    {
+      "path": "src/ui/hud/housing/gate_prompt_painter.ts",
+      "sha256": "1bf7f1580067ee430b737692cd008303c211bd2ce7b4da1428a674c43381fd26"
+    },
+    {
+      "path": "src/ui/hud/housing/housing_view.ts",
+      "sha256": "b3d035a4760ea704bee43058937c9a8c116a8cfa63475ba073bff0ec89e528f7"
+    },
+    {
+      "path": "src/styles/components.css",
+      "sha256": "a373fc6c01e7bbe313e9a23644cc96a23342498cc0eaf2c82727bccacce2c43d"
+    },
+    {
+      "path": "src/styles/hud.mobile.css",
+      "sha256": "c06187a1423dd63c353f62f40dcf0eafac800e0d19984a4030f6cc92a3686db2"
+    },
+    {
+      "path": "scripts/lib/freehold_capture_notices.mjs",
+      "sha256": "857ea17accb590aab2323a10686c687dd8942713f85dfc1c3aa9bf43e6c5e00e"
+    },
+    {
+      "path": "scripts/lib/pr_shot_freeholds.mjs",
+      "sha256": "60597bc900d5cb503ee714d6ed9ef71cba50f0487ea4cfb6b2e8c8ce1f99e2eb"
+    },
+    {
+      "path": "scripts/pr_shot_targets.mjs",
+      "sha256": "f36281433789f29bb1db3bb3a7164b9b0f5a83f3b69fd8540c63c9fcd134007c"
+    },
+    {
+      "path": "scripts/pr_screenshots.mjs",
+      "sha256": "d5833b9c7c2ab54e09a7c7c6ae5863c70aef1dcabbe09d327ae1aea762955877"
+    },
+    {
+      "path": "scripts/freehold_interior_route.mjs",
+      "sha256": "21aeb8ba13b57b7b0097d90dd6da9a98dfe6fb36c185ee806d43b4dd657d51b6"
+    },
+    {
+      "path": "scripts/perf_tour.mjs",
+      "sha256": "e85907dfd8ea96b9256de49e40a8b4dd9c88d00c220b1aa83eb1ae6c14a87216"
+    }
+  ],
+  "performance": {
+    "file": "performance.json",
+    "sha256": "4a92d14bc381f515b3132b4c317b301cefa97d1c413b6770f9bedc9dbc94645c"
+  },
+  "captures": [
+    {
+      "file": "before-freehold-gate-desktop.png",
+      "sha256": "95f9eff88d85b4882e0c2d6ae05376c5be5d7a4b121c80623b51b956ad9cfd8e",
+      "evidence": "before-evidence-freehold-gate-desktop.json",
+      "evidenceSha256": "4bf0c7eb187a905708e2271b4768b59e589ee83acd5cb0e2eb30eb67bd548def"
+    },
+    {
+      "file": "before-freehold-gate-compact.png",
+      "sha256": "c78ee7c7bb20b5d02fad71dabef0237785f9361b2b62e7f3ea5993752c8340d4",
+      "evidence": "before-evidence-freehold-gate-compact.json",
+      "evidenceSha256": "3f6c3fe8f9fb85b61a3c4ff4e86eb0446a26efac97dba61116cc26ae620c5f98"
+    },
+    {
+      "file": "before-freehold-gate-tablet.png",
+      "sha256": "533b7099688edf40c258d6e99dcd429b6b5876c0060939b15048cb08b0726032",
+      "evidence": "before-evidence-freehold-gate-tablet.json",
+      "evidenceSha256": "81ab9e0da805b63bd1c2d16b44cd8e4408590832ceaeb569ac70384b9a2d8258"
+    },
+    {
+      "file": "before-freehold-inn-desktop.png",
+      "sha256": "53e8102719e94b7f10560f67bf949b7661b76f5739cb1e22034ff69e9192b6e6",
+      "evidence": "before-evidence-freehold-inn-desktop.json",
+      "evidenceSha256": "d3771b15e04273895e6c16e90cc0e29d6e731e9de9d01dd3745e2d154b3c0041"
+    },
+    {
+      "file": "before-freehold-inn-compact.png",
+      "sha256": "348c670a94a9623aea5adbcf5f69d0ddeece4eac5685052ba5f72abc2ddfe103",
+      "evidence": "before-evidence-freehold-inn-compact.json",
+      "evidenceSha256": "8322db7c30a7197a6542b1f8da205de907cd65376259b8ccb898511f02ed8192"
+    },
+    {
+      "file": "before-freehold-inn-tablet.png",
+      "sha256": "b5878ece15214522ae09c27b7a31bcbb6f2a40dc84a168b1cd10591d14e97742",
+      "evidence": "before-evidence-freehold-inn-tablet.json",
+      "evidenceSha256": "9e60b2795cb4a3d8d0c9caeb97cc0594e61cd8f589b620f0ee7bc84f628539c6"
+    },
+    {
+      "file": "before-freehold-cottage-desktop.png",
+      "sha256": "af2c4b03ce5be37d1cf040ddeeaf4f9456dfab669634498132dc2907fa8eb334",
+      "evidence": "before-evidence-freehold-cottage-desktop.json",
+      "evidenceSha256": "c2333758668e0d7efcaeb7b0c1ae689faa39a9c5d0cc1afc11ecd1799fba360b"
+    },
+    {
+      "file": "before-freehold-cottage-compact.png",
+      "sha256": "3ba7a8749a98dc6bae9c3e1a874a818206e46ff0fb7079949bc02200c3131c10",
+      "evidence": "before-evidence-freehold-cottage-compact.json",
+      "evidenceSha256": "5ddc972fe809dd1954441b08d69acb0563583379cbab2f6d4f44e2b8c66a4b35"
+    },
+    {
+      "file": "before-freehold-cottage-tablet.png",
+      "sha256": "170eada9e4146dadcd4a562e88c8a4d2942d7a982ac7d950a6806cd5e24319a5",
+      "evidence": "before-evidence-freehold-cottage-tablet.json",
+      "evidenceSha256": "42d0af94d05eff194846dbfad8248a86182688a8cf0dc9e3b2ed3fe8347794ef"
+    },
+    {
+      "file": "after-freehold-gate-desktop.png",
+      "sha256": "e73c112ec2b43c96f0437b8f5a5fd79d7cefd3baaebc1df9dccbc13263ff5017",
+      "evidence": "after-evidence-freehold-gate-desktop.json",
+      "evidenceSha256": "fa107700f4d0d8d2c066f4f3d855e476f4b6b57d4712968c761a516f082f5e87"
+    },
+    {
+      "file": "after-freehold-gate-compact.png",
+      "sha256": "3d525be597911af04e24bd9a584252874aa3d0333e7d530456238ad71715ba01",
+      "evidence": "after-evidence-freehold-gate-compact.json",
+      "evidenceSha256": "add5165249c3ba4374162e278ecf8fa81b638be7d965b2c1d0602d28a4ba6179"
+    },
+    {
+      "file": "after-freehold-gate-tablet.png",
+      "sha256": "b6ac2162d09d7806a493fb77d72686677480f7af218a603c90e1bf13b6745c69",
+      "evidence": "after-evidence-freehold-gate-tablet.json",
+      "evidenceSha256": "1f79121e04fea025344112377016360961c27e97de431bbd662d7c4bab8ce3c4"
+    },
+    {
+      "file": "after-freehold-inn-desktop.png",
+      "sha256": "870a5793f6e68262a0ad3d370628e8f11e3afa82275b28738db30efbdd326df8",
+      "evidence": "after-evidence-freehold-inn-desktop.json",
+      "evidenceSha256": "eb21cc0cb71f187f890a0b7296c2d0c89f98b5b1b002a27d6f14d3b750c3e52a"
+    },
+    {
+      "file": "after-freehold-inn-compact.png",
+      "sha256": "c79c82deb8dc31c2f5077291e8d013f9eda6de5f1a3e340111a1d597d432a78c",
+      "evidence": "after-evidence-freehold-inn-compact.json",
+      "evidenceSha256": "98c885837d6b2199a5108a27742344f58197ff045838fe3910c18e033dd836b7"
+    },
+    {
+      "file": "after-freehold-inn-tablet.png",
+      "sha256": "dbf0d500e54e964e1e29d4c884ff0b2c7d1ecaee7afd6a1f3d43a371e7e8efee",
+      "evidence": "after-evidence-freehold-inn-tablet.json",
+      "evidenceSha256": "0e684e7d3ffb2069995d4e653b4182d00f9afc4c5a754cbe460a936773d441b6"
+    },
+    {
+      "file": "after-freehold-cottage-desktop.png",
+      "sha256": "5dbb6a24aaaf961b3e86d60053b1c23c075a991471e0f130f329255457c9ea19",
+      "evidence": "after-evidence-freehold-cottage-desktop.json",
+      "evidenceSha256": "d20422cc0e37cdd552b9edf2b1fbdff148afdcb041a6a31f5a990ecbebef7f2d"
+    },
+    {
+      "file": "after-freehold-cottage-compact.png",
+      "sha256": "d8d61092fcf6b07ecae4ddec160f1646aa9e39b25885e12e3edfa4c73ea75adb",
+      "evidence": "after-evidence-freehold-cottage-compact.json",
+      "evidenceSha256": "10ff0b0ac3c04839f160af93f0aad45e833f3d61a701a5453d126282e4225056"
+    },
+    {
+      "file": "after-freehold-cottage-tablet.png",
+      "sha256": "8c17d9e55e952e108bcf0c98d9f58a388057d22467167393d89716604968afe5",
+      "evidence": "after-evidence-freehold-cottage-tablet.json",
+      "evidenceSha256": "ad4a60fe154f27f3ba4dfda8e579829d1e1522dd592f7813071f8d351a5a504c"
+    }
+  ],
+  "rawFiles": [
+    {
+      "file": "before-manifest.raw.json",
+      "sha256": "e2ada5f5ecfc2d1ea8dad08616a38204424d0cfd31eb46bb1b43ac579c196bd4",
+      "formattedFile": "before-manifest.json"
+    },
+    {
+      "file": "after-manifest.raw.json",
+      "sha256": "56bb41ecd3d11b99490a1e7d21fdd61db7e730c7e923ba37112fff521b424482",
+      "formattedFile": "after-manifest.json"
+    },
+    {
+      "file": "performance.raw.json",
+      "sha256": "c86e4042e62c7abfe4472117a4b5270e50ac7d88d21b70d5c37793305bbf5eda",
+      "formattedFile": "performance.json"
+    }
+  ]
+}
