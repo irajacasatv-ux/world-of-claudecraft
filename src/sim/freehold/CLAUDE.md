@@ -25,10 +25,13 @@ carries an opaque plot id only.
   nothing moved, claimed or drawn; `busy` is decided HERE, before the dungeon
   module is asked, so its English "instances are busy" error can never fire
   for a freehold). THE CORPSE RUN is `dead`'s one exception, the dungeon
-  idiom: a released ghost whose corpse is bound (corpseInstanceId) to the
-  caller's OWN live claim of the record's current tier is admitted and
-  resurrects at the entrance; a fresh corpse, a ghost bound elsewhere or to a
-  room the reaper already freed, and a ghost with no record refuse `dead`.
+  idiom: a released ghost whose corpse is bound (corpseInstanceId) to one of
+  the caller's OWN live owner claims is admitted to THAT room (the corpse's,
+  not the current tier's: a tier change in between leaves the corpse in the
+  old room, which the vacant-claim sweep keeps while the corpse lies there)
+  and resurrects at the entrance; a fresh corpse, a ghost bound elsewhere or
+  to a room the reaper already freed, and a ghost with no record refuse
+  `dead`.
   A record whose tier is outside the union (a corrupt or forward-version row)
   answers `no_freehold`, never a throw. `leaveFreehold` is false and silent
   unless the caller stands inside a live owner claim (a leave from anywhere

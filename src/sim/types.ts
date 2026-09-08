@@ -7952,8 +7952,9 @@ export type SimEvent = { pid?: number } & (
       // src/sim/freehold/instance.ts. Declared ahead of their emitters, each
       // owned by a later housing slice: locked (the amenity lockout), cooldown
       // (the Hearth Key), visitors_full and not_friend (the visitor policy).
-      // The client toast resolves every token, so a new token lands with its
-      // catalog line in the same change.
+      // No client consumer exists yet (the interiors slice owes the toast; a
+      // client without one drops the event safely); once it lands, a new
+      // token lands with its catalog line in the same change.
       reason:
         | 'no_freehold'
         | 'locked'

@@ -952,6 +952,25 @@ describe('a tier change frees the old room', () => {
     expect(inn.exitId).toBe(innExit);
     expect(sim.entities.has(innExit ?? -1)).toBe(true);
     expect(claimedSlots(sim)).toHaveLength(2);
+    // A's corpse run goes to the CORPSE's room (the Inn Room), not the tier's
+    // (the Cottage), and A resurrects there.
+    sim.drainEvents();
+    expect(enterFreehold(sim.ctx, a)).toBe(true);
+    const ea = entity(sim, a);
+    expect(sim.instanceSlotAt(ea.pos)).toBe(inn.slot);
+    expect(ea.ghost).toBe(false);
+    expect(ea.corpseInstanceId).toBeNull();
+    expect(textEvents(sim.drainEvents())).toEqual([
+      { type: 'log', text: INN.enterText, color: '#b9f', pid: a },
+    ]);
+    // Alive again and out, A's next enter is the current tier's room, and the
+    // Inn Room, now vacant with no corpse, is swept.
+    expect(leaveFreehold(sim.ctx, a)).toBe(true);
+    expect(enterFreehold(sim.ctx, a)).toBe(true);
+    expect(sim.instanceSlotAt(entity(sim, a).pos)).toBe(claimOf(sim, ACCOUNT)?.slot);
+    expect(claimOf(sim, ACCOUNT)?.dungeonId).toBe(FREEHOLD_COTTAGE_DUNGEON_ID);
+    expect(inn.partyKey).toBeNull();
+    expect(claimedSlots(sim)).toHaveLength(1);
   });
 
   it('never frees a party-keyed claim under the same key string: the guard is the claimKey', () => {

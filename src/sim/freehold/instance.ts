@@ -19,11 +19,14 @@
 // THE CORPSE RUN: `dead` has one exception, the dungeon idiom. A player can
 // die inside its room (a hostile periodic aura ticks on after combat drops
 // and passes the combat check), and the room has no door, so a released ghost
-// whose corpse lies inside its OWN live claim of the current tier is admitted
-// exactly as the dungeon module admits a ghost bound to a claim, and
-// resurrects at the entrance. A fresh corpse, a ghost bound to another claim,
-// a ghost whose room the reaper already freed and a ghost with no record all
-// refuse `dead` as before; the Spirit Healer remains the other way back.
+// whose corpse lies inside one of its OWN live owner claims is admitted to
+// THAT room exactly as the dungeon module admits a ghost bound to a claim,
+// and resurrects at the entrance. The corpse's room, not the tier's: a tier
+// change between the death and the run leaves the corpse in the old tier's
+// room, which the vacant-claim sweep keeps while the corpse lies there. A
+// fresh corpse, a ghost bound to another claim, a ghost whose room the reaper
+// already freed and a ghost with no record all refuse `dead` as before; the
+// Spirit Healer remains the other way back.
 //
 // THE TIER-CHANGE RULE lives in the dungeon module, not here: once an owner
 // has arrived in the room of its current tier, enterDungeon frees every other
@@ -66,7 +69,7 @@ import {
 import type { SimContext } from '../sim_context';
 import type { DungeonDef, SimEvent } from '../types';
 import { freeholdKeyFor } from './owner_key';
-import type { FreeholdPlotId, FreeholdState, FreeholdTier, FreeholdVisitPolicy } from './types';
+import type { FreeholdPlotId, FreeholdTier, FreeholdVisitPolicy } from './types';
 
 type FreeholdDenyReason = Extract<SimEvent, { type: 'freeholdDenied' }>['reason'];
 
@@ -103,24 +106,24 @@ function denyFreehold(ctx: SimContext, pid: number, reason: FreeholdDenyReason):
   return false;
 }
 
-/** The corpse-run exception to `dead`: a released ghost whose corpse is bound
- *  to the caller's OWN live claim of the record's current tier. The binding is
- *  the claim's exit entity id the death captured (corpseInstanceId), the same
- *  fact the dungeon module's corpseBoundToClaim reads, so a ghost bound to a
- *  stranger's room, to a room the reaper already freed (its exit entity is
- *  gone) or to nothing is not one. */
-function corpseInsideOwnClaim(
+/** The corpse-run exception to `dead`: the room whose live claim, held under
+ *  the caller's OWN owner key, the caller's corpse is bound to, else
+ *  undefined. The binding is the claim's exit entity id the death captured
+ *  (corpseInstanceId), the same fact the dungeon module's corpseBoundToClaim
+ *  reads, so a ghost bound to a stranger's room, to a party claim, to a room
+ *  the reaper already freed (its exit entity is gone) or to nothing has none.
+ *  Any of the caller's owner rooms qualifies, not only the current tier's. */
+function corpseRunRoom(
   ctx: SimContext,
   e: { ghost: boolean; corpseInstanceId: number | null },
   key: string,
-  record: FreeholdState,
-): boolean {
-  if (!e.ghost || e.corpseInstanceId === null) return false;
-  const def = freeholdDefForTier(record.tier) as DungeonDef | undefined;
-  if (def === undefined) return false;
-  return ctx.instances.some(
-    (i) => i.dungeonId === def.id && i.partyKey === key && i.exitId === e.corpseInstanceId,
+): DungeonDef | undefined {
+  if (!e.ghost || e.corpseInstanceId === null) return undefined;
+  const claim = ctx.instances.find(
+    (i) =>
+      i.partyKey === key && i.exitId === e.corpseInstanceId && isOwnerClaimDungeon(i.dungeonId),
   );
+  return claim === undefined ? undefined : FREEHOLD_DUNGEON_DEFS[claim.dungeonId];
 }
 
 /** Enter the caller's own freehold: rejoin the live owner claim or claim a
@@ -134,12 +137,11 @@ export function enterFreehold(ctx: SimContext, pid: number): boolean {
   const entityId = r.meta.entityId;
   const key = freeholdKeyFor(ctx, entityId);
   const record = ctx.freeholds.get(key);
-  if (r.e.dead && !(record !== undefined && corpseInsideOwnClaim(ctx, r.e, key, record))) {
-    return denyFreehold(ctx, entityId, 'dead');
-  }
+  const corpseRoom = r.e.dead && record !== undefined ? corpseRunRoom(ctx, r.e, key) : undefined;
+  if (r.e.dead && corpseRoom === undefined) return denyFreehold(ctx, entityId, 'dead');
   if (r.e.inCombat) return denyFreehold(ctx, entityId, 'combat');
   if (!record) return denyFreehold(ctx, entityId, 'no_freehold');
-  const def = freeholdDefForTier(record.tier) as DungeonDef | undefined;
+  const def = corpseRoom ?? (freeholdDefForTier(record.tier) as DungeonDef | undefined);
   if (def === undefined) return denyFreehold(ctx, entityId, 'no_freehold');
   // One pass over the pool: a live claim under this key wins outright, else
   // any vacant slot of the room will do; neither means the pool is full.
