@@ -131,6 +131,10 @@ export const HEAVY_SELF_CMDS = new Set<string>([
   // ALWAYS-SENT base self object, and the vault view rides the ungated
   // proximity section beside 'bank', so listing it would only buy a redundant
   // heavy re-serialize (the guild bank's gold ops sit out for the same reason).
+  // freehold_enter and freehold_leave are absent on the same terms: a claim or
+  // an exit moves the player (the always-sent entity record) and touches no
+  // heavy-gated self field until the housing self key lands with the
+  // descriptor wire; that change adds the rows here, arm-marked.
   'vault_deposit',
   'vault_withdraw',
   // The batched sweep rewrites the carried inventory like the two above, only

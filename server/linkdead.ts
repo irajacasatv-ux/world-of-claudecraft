@@ -42,6 +42,14 @@ export type JoinPlan =
   | { action: 'join' };
 
 // Decide what a join request means given the account's existing sessions.
+// - The account id must be a real one (a positive safe integer) before any
+//   other rule runs: the fresh-join arm stamps the freehold owner key from it
+//   (server/freehold_wire.ts freeholdOwnerKeyForAccount), and a malformed id
+//   must refuse through join's `{ error }` contract rather than throw, so the
+//   caller's character-lease release (server/ws_auth.ts, the `'error' in
+//   result` arm) and the linkdead-sibling logout ordering in GameServer.join
+//   both stay intact. The refusal string is the existing auth one, so the
+//   client matcher already localizes it.
 // - The same character is already in the world: resume it when it is linkdead
 //   and owned by the requesting account (an accidental-disconnect reconnect);
 //   otherwise reject, so the explicit takeover flow stays the only way to
@@ -57,6 +65,9 @@ export function planJoin(opts: {
   liveOtherSessions: number;
   maxPerAccount: number;
 }): JoinPlan {
+  if (!Number.isSafeInteger(opts.accountId) || opts.accountId <= 0) {
+    return { action: 'reject', error: 'not authenticated' };
+  }
   if (opts.sameCharacter) {
     if (
       opts.sameCharacter.linkdead &&

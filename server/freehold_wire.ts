@@ -20,6 +20,14 @@
 // offline single-player world and the headless RL env (D3); a dark realm
 // refuses every housing frame before the sim sees it, and its Sim boots with
 // freeholdsEnabled false (server/sim_boot_config.ts, D85).
+//
+// The owner key (freeholdOwnerKeyForAccount) is the second server-only piece:
+// game.ts stamps it at the addPlayer call from the session's authenticated
+// account id, so the sim's owner-keyed claim (D15) can never be shaped by a
+// client frame. The two payload-free arms (freehold_enter, freehold_leave)
+// read NOTHING from the frame: an `ownerKey`, `accountId` or any other extra
+// field on the wire is ignored, and the sim resolves the owner from the
+// stamped meta alone.
 
 import type { FreeholdVisitPolicy } from '../src/sim/freehold/types';
 import type { Sim } from '../src/sim/sim';
@@ -57,6 +65,28 @@ export function refusedFreeholdCommand(cmd: unknown, env?: NodeJS.ProcessEnv): b
   return (
     typeof cmd === 'string' && FREEHOLD_CMD_SET.has(cmd) && !freeholdsEnabled(env ?? process.env)
   );
+}
+
+/** The freehold owner key of an account: `account:<id>` (D15). SERVER-ONLY,
+ *  by construction and by contract: game.ts computes it at the addPlayer call
+ *  from the account id the authenticated session already holds (never from a
+ *  client frame), the sim keeps it on the session-only PlayerMeta stamp, no
+ *  snapshot or event serializes it to any client, and the parity suite lists
+ *  it in META_EXCLUDE. It keys the account's live record (ctx.freeholds) and
+ *  its owner-keyed InstanceSlot claim (partyKey), so every character of one
+ *  account resolves the same house. A non-positive or non-integer id throws
+ *  rather than minting a shared sentinel: `account:NaN` would let every
+ *  malformed session claim ONE house together, and the id is a database row
+ *  fact, so a bad one is a programming error. The join REFUSES FIRST: planJoin
+ *  (server/linkdead.ts) rejects such an id with `not authenticated` before
+ *  any session or entity exists, so this throw is the unreachable last line
+ *  of defense, never the path a caller's lease release or sibling logout
+ *  ordering depends on. */
+export function freeholdOwnerKeyForAccount(accountId: number): string {
+  if (!Number.isSafeInteger(accountId) || accountId <= 0) {
+    throw new Error(`freehold owner key needs a positive account id, got ${String(accountId)}`);
+  }
+  return `account:${accountId}`;
 }
 
 /** The three visit policies the wire may name, pinned to the sim's union. */
@@ -109,8 +139,12 @@ function isOpaqueIdOrNull(v: unknown): v is string | null {
  *  rides this answer (server/heavy_self.ts HEAVY_SELF_ARM_MARKED_CMDS), so a
  *  frame refused HERE never buys a heavy self re-serialize. The sim's own
  *  verdict is not visible here and is not claimed: true means invoked, never
- *  accepted. Every Sim method is a dark no-op today (the sim-side bodies land
- *  in later work), so an accepted frame changes nothing yet. */
+ *  accepted. freehold_enter and freehold_leave are LIVE (the sim claims and
+ *  leaves the owner-keyed room, and a sim-side refusal rides the text-free
+ *  freeholdDenied event); the other eight Sim methods are still dark no-ops
+ *  (their bodies land in later work), so those accepted frames change
+ *  nothing yet. The dark-realm refusal above the switch in game.ts stays the
+ *  ONE server gate for every arm, lit or dark. */
 export function dispatchFreeholdCommand(
   sim: Sim,
   session: ClientSession,

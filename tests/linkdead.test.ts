@@ -864,3 +864,59 @@ describe('planJoin: an escrow-quarantined session is never resumed', () => {
     });
   });
 });
+
+describe('planJoin: a malformed account id is refused before any other rule', () => {
+  // The fresh-join arm stamps the freehold owner key from the account id
+  // (server/freehold_wire.ts freeholdOwnerKeyForAccount throws on a bad one);
+  // refusing here keeps that throw unreachable, so the caller's lease release
+  // and the linkdead-sibling logout ordering in GameServer.join stay intact.
+  const base = { isGm: false, liveOtherSessions: 0, maxPerAccount: 1 };
+  const held = (accountId: number) => ({
+    accountId,
+    linkdead: true,
+    left: false,
+    escrowQuarantined: false,
+  });
+
+  it.each([
+    ['zero', 0],
+    ['negative', -1],
+    ['NaN', Number.NaN],
+    ['fractional', 1.5],
+    ['past the safe range', 2 ** 53],
+  ])('rejects a %s id with the existing auth refusal on the fresh arm', (_label, accountId) => {
+    expect(planJoin({ ...base, accountId, sameCharacter: null })).toEqual({
+      action: 'reject',
+      error: 'not authenticated',
+    });
+  });
+
+  it.each([
+    ['zero', 0],
+    ['negative', -1],
+    ['NaN', Number.NaN],
+    ['fractional', 1.5],
+    ['past the safe range', 2 ** 53],
+  ])('rejects a %s id even where a same-account linkdead session would resume', (_label, id) => {
+    // The held session carries the same malformed id, so without the guard the
+    // ownership check would pass and the plan would be a resume.
+    expect(planJoin({ ...base, accountId: id, sameCharacter: held(id) })).toEqual({
+      action: 'reject',
+      error: 'not authenticated',
+    });
+  });
+
+  it('rejects a malformed id ahead of the GM cap exemption', () => {
+    expect(planJoin({ ...base, isGm: true, accountId: 0, sameCharacter: null })).toEqual({
+      action: 'reject',
+      error: 'not authenticated',
+    });
+  });
+
+  it('still joins and still resumes for the smallest real id', () => {
+    expect(planJoin({ ...base, accountId: 1, sameCharacter: null })).toEqual({ action: 'join' });
+    expect(planJoin({ ...base, accountId: 1, sameCharacter: held(1) })).toEqual({
+      action: 'resume',
+    });
+  });
+});

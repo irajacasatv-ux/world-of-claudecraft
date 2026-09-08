@@ -239,6 +239,12 @@ import {
   harvestTierForNode,
 } from './economy_telemetry';
 import { isUpdateDue } from './entity_update_cadence';
+import {
+  type EntityWireVariantCache,
+  emptyWireVariant,
+  fullEntityJson,
+  liteEntityJson,
+} from './entity_wire_variant';
 // Imported from the mirror modules DIRECTLY (not the ./steam or ./epic
 // barrels), the same way deeds_records imports onDeedRecorded: the barrels
 // drag routes.ts (and its load-time requireAccount over the db module) into
@@ -250,7 +256,11 @@ import { assembleEventsFrame, filterRoutableEvents, serializeEventFragments } fr
 import { buildEventPidIndex, forEachSelectedEventIndex } from './event_pid_index';
 import { appendFarmPlotsWire, dispatchFarmingCommand } from './farming_commands';
 import { fishingBandLabel, isKoi, isRodFeeRecipe } from './fishing_telemetry';
-import { dispatchFreeholdCommand, refusedFreeholdCommand } from './freehold_wire';
+import {
+  dispatchFreeholdCommand,
+  freeholdOwnerKeyForAccount,
+  refusedFreeholdCommand,
+} from './freehold_wire';
 import { dispatchGatheringGoalCommand } from './gathering_goal_commands';
 import { appendGatheringGoalSelfWire } from './gathering_goal_wire';
 import { appendGatheringSelfWire } from './gathering_self_wire';
@@ -1468,24 +1478,6 @@ export function wireEntity(e: Entity, includeAuras = true): Record<string, unkno
   return { id: e.id, ...identityFields(e), ...dynamicFields(e, includeAuras) };
 }
 
-// Per-entity wire fragments, refreshed lazily at most once per tick and
-// shared by every recipient. The version counters bump only when the
-// serialized form actually changes, making per-session diffing O(1).
-interface EntityWireVariantCache {
-  tick: number;
-  idVer: number;
-  dynJson: string;
-  dynVer: number;
-  auraVer: number;
-  builtIdVer: number;
-  builtDynVer: number;
-  builtAuraVer: number;
-  fullJson: string;
-  liteJson: string;
-  fullAuraJson: string;
-  liteAuraJson: string;
-}
-
 interface EntityWireCache {
   tick: number;
   /** identityFields() as JSON, WITHOUT the authored look: the string actually
@@ -1528,31 +1520,6 @@ interface SnapshotAnchor {
   anchorMeta: PlayerMeta;
   anchorSession: ClientSession;
   stableTimerWire: boolean;
-}
-
-function emptyWireVariant(): EntityWireVariantCache {
-  return {
-    tick: -1,
-    idVer: 0,
-    dynJson: '',
-    dynVer: 0,
-    auraVer: 0,
-    builtIdVer: -1,
-    builtDynVer: -1,
-    builtAuraVer: -1,
-    fullJson: '',
-    liteJson: '',
-    fullAuraJson: '',
-    liteAuraJson: '',
-  };
-}
-
-function fullEntityJson(id: number, idJson: string, dynJson: string): string {
-  return `{"id":${id},${idJson.slice(1, -1)},${dynJson.slice(1, -1)}}`;
-}
-
-function liteEntityJson(id: number, dynJson: string): string {
-  return `{"id":${id},${dynJson.slice(1, -1)}}`;
 }
 
 function logSocialErr(err: unknown): void {
@@ -3510,6 +3477,7 @@ export class GameServer {
       state: state ?? undefined,
       characterId,
       bankBonus: meta.bankBonus,
+      freeholdOwnerKey: freeholdOwnerKeyForAccount(accountId),
       appearance: meta.appearance ?? null,
       tutorialGreetingSent: state === null,
     });

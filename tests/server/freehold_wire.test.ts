@@ -22,10 +22,15 @@
 //    predicate, and an unrecognised token lands in the default arm (proved by
 //    its unknown_command protocol anomaly) with no kick and no housing
 //    refusal (the old-server arm);
-//  - lit: a well-formed frame per token reaches the matching Sim stub once
+//  - lit: a well-formed frame per token reaches the matching Sim method once
 //    with the guarded args and the session pid, with no refusal count and no
 //    heavy-self mark; a malformed payload per typed field is refused at the
-//    type boundary and invokes nothing;
+//    type boundary and invokes nothing; the two payload-free arms
+//    (freehold_enter, freehold_leave) are LIVE and read nothing off the frame,
+//    while the other eight still reach nothing in the sim;
+//  - the owner key: `account:<id>` is minted server-side from the session's
+//    account id at the ONE addPlayer call in game.ts (a source pin), refuses a
+//    malformed id, and is never shaped by a client frame;
 //  - jailed: freehold_enter is a JAILED_BLOCKED_COMMANDS member (a door step
 //    into instanced space) and freehold_leave is not, pinned in source and
 //    behaviorally on a lit realm;
@@ -74,6 +79,7 @@ import { freeholdsEnabled } from '../../server/freehold_config';
 import {
   dispatchFreeholdCommand,
   FREEHOLD_WIRE_COMMANDS,
+  freeholdOwnerKeyForAccount,
   refusedFreeholdCommand,
 } from '../../server/freehold_wire';
 import { GameServer } from '../../server/game';
@@ -581,9 +587,9 @@ describe('freeholds wire: dark realm dispatch', () => {
   });
 });
 
-describe('freeholds wire: lit realm dispatch reaches the dark Sim stubs', () => {
+describe('freeholds wire: lit realm dispatch reaches the Sim methods', () => {
   it.each(TEN_TOKENS)(
-    '%s: a well-formed frame invokes the Sim stub once with the guarded args and the pid',
+    '%s: a well-formed frame invokes the Sim method once with the guarded args and the pid',
     (cmd) => {
       process.env.FREEHOLDS_ENABLED = '1';
       const refusals = recordingRefusalSink();
@@ -598,8 +604,8 @@ describe('freeholds wire: lit realm dispatch reaches the dark Sim stubs', () => 
 
       expect(stub).toHaveBeenCalledTimes(1);
       expect(stub.mock.calls[0]).toEqual(STUB[cmd].args(pid));
-      // No gate refusal: no ok:false ack, no count, and (every housing member
-      // being a dark no-op today, none is a heavy-self member) no dirty mark.
+      // No gate refusal: no ok:false ack, no count, and (no housing member
+      // being a heavy-self member) no dirty mark.
       expect(fc.sent.filter((m) => m.t === 'commandOutcome' && m.ok === false)).toEqual([]);
       expect(refusals.count()).toBe(0);
       expect(session.selfHeavyDirty).toBe(false);
@@ -883,5 +889,123 @@ describe('freeholds wire: the ops contract and the game.ts shape', () => {
     }
     // The labels route through the sibling, never an inline body.
     expect(src).toContain('dispatchFreeholdCommand(sim, session, command, msg, pid)');
+  });
+});
+
+describe('the owner key: minted server-side from the session account (D15)', () => {
+  it('freeholdOwnerKeyForAccount is the literal account:<id>', () => {
+    expect(freeholdOwnerKeyForAccount(42)).toBe('account:42');
+    expect(freeholdOwnerKeyForAccount(1)).toBe('account:1');
+    expect(freeholdOwnerKeyForAccount(Number.MAX_SAFE_INTEGER)).toBe('account:9007199254740991');
+  });
+
+  it.each([
+    ['zero', 0],
+    ['negative', -7],
+    ['fractional', 1.5],
+    ['NaN', Number.NaN],
+    ['infinite', Number.POSITIVE_INFINITY],
+    ['past the safe-integer range', 2 ** 53],
+  ])('refuses a %s account id by throwing, never a shared sentinel key', (_why, id) => {
+    // `account:NaN` would let every malformed session claim ONE house
+    // together; the id is a database row fact, so a bad one is a programming
+    // error the join must surface, not launder.
+    expect(() => freeholdOwnerKeyForAccount(id)).toThrow(/positive account id/);
+  });
+
+  it('game.ts stamps the key from the join accountId at exactly one addPlayer call', () => {
+    const src = codeOnly(repoFile('server/game.ts'));
+    const stamp = 'freeholdOwnerKey: freeholdOwnerKeyForAccount(accountId),';
+    expect(src.split(stamp).length - 1, 'the stamp appears exactly once').toBe(1);
+    // The stamp sits INSIDE the sim.addPlayer call of join, keyed on join's
+    // own accountId parameter (the authenticated session), never on a meta
+    // field a client-supplied join payload could shape.
+    const call = src.indexOf('this.sim.addPlayer(');
+    expect(call, 'the addPlayer call').toBeGreaterThanOrEqual(0);
+    expect(balancedCall(src, call + 'this.sim.addPlayer'.length)).toContain(stamp);
+    expect(src.replace(/\s+/g, ' ')).toContain(
+      "import { dispatchFreeholdCommand, freeholdOwnerKeyForAccount, refusedFreeholdCommand, } from './freehold_wire';",
+    );
+    // No other spelling of the stamp exists (a second, differently keyed
+    // stamp would let two call sites disagree on the owner).
+    expect(src.split('freeholdOwnerKey:').length - 1).toBe(1);
+  });
+
+  it('the stamped key is the session account, observed live: one account, two characters, one key', () => {
+    process.env.FREEHOLDS_ENABLED = '1';
+    const server = new GameServer();
+    // The per-account live-session cap admits a second character only for a
+    // GM, which is the exemption that makes two concurrent sessions possible.
+    const a = server.join(fakeWs().ws, 4242, 424201, 'Ari', 'warrior', null, true);
+    const b = server.join(fakeWs().ws, 4242, 424202, 'Bo', 'mage', null, true);
+    const c = server.join(fakeWs().ws, 4343, 434301, 'Cy', 'rogue', null, true);
+    if ('error' in a || 'error' in b || 'error' in c) throw new Error('join refused');
+    expect(server.sim.meta(a.pid)?.freeholdOwnerKey).toBe('account:4242');
+    expect(server.sim.meta(b.pid)?.freeholdOwnerKey).toBe('account:4242');
+    expect(server.sim.meta(c.pid)?.freeholdOwnerKey).toBe('account:4343');
+  });
+});
+
+describe('freeholds wire: the two lit arms read nothing off the frame', () => {
+  const SMUGGLED = {
+    ownerKey: 'account:999',
+    freeholdOwnerKey: 'account:999',
+    accountId: 999,
+    characterId: 999,
+    pid: 999,
+    slot: 3,
+    x: 1,
+    z: 2,
+  };
+
+  it.each([
+    ['freehold_enter', 'freeholdEnter'],
+    ['freehold_leave', 'freeholdLeave'],
+  ] as const)(
+    '%s reaches %s with the session pid and NOTHING else, whatever the frame carries',
+    (cmd, method) => {
+      process.env.FREEHOLDS_ENABLED = '1';
+      const refusals = recordingRefusalSink();
+      const { server, fc, session, pid } = housingSession();
+      const target = vi.spyOn(server.sim, method);
+      server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd, ...SMUGGLED, rid: 93 }));
+      expect(target).toHaveBeenCalledTimes(1);
+      // Exactly one argument, the session's own pid: no smuggled owner, account
+      // or pid field reaches the sim through this arm.
+      expect(target.mock.calls[0]).toEqual([pid]);
+      expect(refusals.count()).toBe(0);
+      expect(fc.sent.filter((m) => m.t === 'commandOutcome' && m.ok === false)).toEqual([]);
+    },
+  );
+
+  it('the other eight arms still reach nothing in the sim: no claim, no move, no event, no rng draw', () => {
+    process.env.FREEHOLDS_ENABLED = '1';
+    const { server, session, pid } = housingSession();
+    const key = `account:${session.accountId}`;
+    const p = server.sim.entities.get(pid);
+    if (!p) throw new Error('no player entity');
+    const before = { ...p.pos };
+    let draws = 0;
+    server.sim.rng.setObserver(() => {
+      draws++;
+    });
+    server.sim.drainEvents();
+    const darkArms = TEN_TOKENS.filter((c) => c !== 'freehold_enter' && c !== 'freehold_leave');
+    expect(darkArms).toHaveLength(8);
+    for (const cmd of darkArms) {
+      server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd, ...WELL_FORMED[cmd] }));
+    }
+    expect(server.sim.instances.filter((i) => i.partyKey === key)).toEqual([]);
+    expect(p.pos).toEqual(before);
+    expect(server.sim.drainEvents()).toEqual([]);
+    expect(draws).toBe(0);
+    // The positive control that the four "nothing" reads above can move: the
+    // live enter arm through the same session claims a slot and moves the
+    // player into the Inn Room band (instanceOriginX(15) = 119200, +/- 300).
+    server.handleMessage(session, JSON.stringify({ t: 'cmd', cmd: 'freehold_enter' }));
+    server.sim.rng.setObserver(null);
+    expect(server.sim.instances.filter((i) => i.partyKey === key)).toHaveLength(1);
+    expect(p.pos.x).toBeGreaterThanOrEqual(118900);
+    expect(p.pos.x).toBeLessThan(119500);
   });
 });

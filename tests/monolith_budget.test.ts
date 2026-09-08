@@ -1366,7 +1366,12 @@ const MONOLITHS: MonolithRow[] = [
     // reductions. Newline counts: shared base 10327, Freeholds 10271,
     // incoming 10290, combined 10234. The measured merged size exactly
     // composes both reductions and sits below both parents. Zero headroom.
-    ceiling: 10234,
+    // Lowered 10234 -> 10202 at the freeholds instance claim: the
+    // EntityWireVariantCache shape with emptyWireVariant, fullEntityJson and
+    // liteEntityJson moved whole to server/entity_wire_variant.ts, paying for
+    // the owner-key join stamp at the addPlayer call and its import. Measured
+    // with wc -l < server/game.ts after biome. Exact count, zero slack.
+    ceiling: 10202,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
