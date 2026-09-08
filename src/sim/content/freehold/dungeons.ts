@@ -26,8 +26,8 @@ import type { DungeonDef } from '../../types';
 // no `leaveOffset` here) and the saved-inside rejoin (sim.ts) apply, so the
 // drop is { x: -14, z: -96 } on the open quay beside the mailbox
 // (SERVICES.mailbox at { x: -10, z: -98 }). The door sits north of the quay's
-// blocked footprint (the mailbox and its surround, x -18 to -10, z -98 to
-// -104): a door at z -96 dropped the player INSIDE that footprint at z -100,
+// blocked footprint (the mailbox and its surround, from z -98 southward
+// across x -18 to -10): a door at z -96 dropped the player INSIDE it at z -100,
 // pinned unblocked with zero depenetration on every test seed by
 // tests/freehold_dungeon_defs.test.ts. The interiors slice moves the gate
 // entity itself to its final authored position and re-pins the drop.

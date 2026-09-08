@@ -419,12 +419,24 @@ describe('terrain height bit identity', () => {
     expect(points[firstOwner]?.label).toBe('dungeon door freehold_inn_room center');
     // The tail is the owner rooms' three shapes and nothing else: every point
     // from the first owner-room point on is a room stencil, a routing column
-    // the older rooms did not already contribute, or a slot pad of a room.
+    // AT an owner room's own x (its origin and the two 300 yd neighbours), or
+    // a slot pad of a room.
+    const ownerRooms = DUNGEON_LIST.filter((d) => d.claimKey === 'owner');
+    const ownerColumns = new Set(
+      ownerRooms.flatMap((d) => {
+        const x = instanceOrigin(d.index, 0).x;
+        return [x - 300, x, x + 300];
+      }),
+    );
     for (const p of points.slice(firstOwner)) {
-      expect(
-        isOwnerLabel(p.label) || p.label.startsWith('instance x routing'),
-        `tail point ${p.label}`,
-      ).toBe(true);
+      const routing = p.label.startsWith('instance x routing');
+      expect(isOwnerLabel(p.label) || routing, `tail point ${p.label}`).toBe(true);
+      if (routing) {
+        expect(
+          [...ownerColumns].some((x) => Math.abs(p.x - x) < 1),
+          `tail routing column x=${p.x}`,
+        ).toBe(true);
+      }
     }
   });
 

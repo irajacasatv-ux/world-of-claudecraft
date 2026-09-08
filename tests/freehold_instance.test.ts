@@ -561,6 +561,17 @@ describe('text-free refusals', () => {
     expect(sim.drainEvents()).toEqual([]);
   });
 
+  it('a bound ghost flagged in combat answers `combat` (the exception clears dead, the order holds)', () => {
+    const sim = makeSim();
+    const pid = addOwner(sim, 'Aaa');
+    expect(enterFreehold(sim.ctx, pid)).toBe(true);
+    const inst = claimOf(sim, `entity:${pid}`);
+    if (!inst) throw new Error('no claim');
+    dieInsideAndRelease(sim, pid, inst);
+    entity(sim, pid).inCombat = true;
+    expectRefusal(sim, pid, 'combat');
+  });
+
   it('refuses the ghost with `dead` once the reaper has freed the room its corpse lay in', () => {
     const sim = makeSim();
     const pid = addOwner(sim, 'Aaa');
@@ -1015,6 +1026,37 @@ describe('a tier change frees the old room', () => {
 });
 
 describe('the corpse run', () => {
+  it('the REAL death and release inside the room binds the corpse to the claim, and the run is admitted', () => {
+    // The synthetic helper below asserts the binding; this arm PROVES it: the
+    // sim's own death handler and spirit release capture the owner claim's
+    // exit id (spirit.ts reads ctx.instanceClaimIdAt over the owner-keyed
+    // slot), so a change to that lookup or to the release path fails here.
+    const sim = makeSim();
+    const pid = addOwner(sim, 'Aaa');
+    const e = entity(sim, pid);
+    expect(enterFreehold(sim.ctx, pid)).toBe(true);
+    const inst = claimOf(sim, `entity:${pid}`);
+    if (!inst) throw new Error('no claim');
+    const inside = { ...e.pos };
+    (sim as unknown as { handleDeath(e: Entity, killer: Entity | null): void }).handleDeath(
+      e,
+      null,
+    );
+    expect(e.dead).toBe(true);
+    sim.releaseSpirit(pid);
+    expect(e.ghost).toBe(true);
+    expect(e.corpseInstanceId).toBe(inst.exitId);
+    expect(e.corpsePos).toEqual(inside);
+    expect(dungeonAt(e.pos.x)).toBeNull();
+    sim.drainEvents();
+    expect(enterFreehold(sim.ctx, pid)).toBe(true);
+    expect(sim.instanceSlotAt(e.pos)).toBe(inst.slot);
+    expect(e.dead).toBe(false);
+    expect(e.ghost).toBe(false);
+    expect(e.corpseInstanceId).toBeNull();
+    expect(sim.drainEvents().filter((ev) => ev.type === 'freeholdDenied')).toEqual([]);
+  });
+
   it('admits a released ghost whose corpse lies in its own live claim, and it resurrects at the entrance', () => {
     const sim = makeSim();
     const pid = addOwner(sim, 'Aaa');

@@ -295,11 +295,16 @@ describe('applyFreeholdOwnerStamp is the SOLE owner-stamp writer (source scan)',
   });
 
   it('no production module imports the stamp writer: addPlayer reaches it through seedFreeholdOnJoin only', () => {
-    const files = [...tsFilesUnder(simDir), ...tsFilesUnder(serverDir)];
+    // Each root is tagged so the writer's own directory is exempt under
+    // src/sim only; a server/freehold/ path would still be reported.
+    const files = [
+      ...tsFilesUnder(simDir).map((f) => ({ ...f, file: `src/sim/${f.file}` })),
+      ...tsFilesUnder(serverDir).map((f) => ({ ...f, file: `server/${f.file}` })),
+    ];
     const importers: string[] = [];
     for (const { file, full } of files) {
       const code = codeOnly(readFileSync(full, 'utf8'));
-      if (/\bapplyFreeholdOwnerStamp\b/.test(code) && !file.startsWith('freehold/')) {
+      if (/\bapplyFreeholdOwnerStamp\b/.test(code) && !file.startsWith('src/sim/freehold/')) {
         importers.push(file);
       }
     }

@@ -54,7 +54,7 @@ export {
 // live (state.ts, instance.ts and dev_grant.ts import it from ./types).
 // Counted repo-wide rather than through this barrel, because most consumers
 // import the type they want from ./types directly (the type-only exception
-// below), so today only FreeholdState is actually imported through here. The
+// below); sim.ts and the tests import a handful of these through here. The
 // FreeholdOwnerStampSlice re-export from ./owner_key is the same kind of
 // reserved row: the persistence slice's row mapper stamps through it. They are
 // listed so the directory's public shape is frozen before its producers

@@ -370,6 +370,35 @@ describe('freehold claim online: one account, one claim', () => {
   });
 });
 
+describe('freehold claim online: the corpse run', () => {
+  it('a character that dies inside and releases re-enters its own room through the real dispatch and resurrects', () => {
+    const server = litServer();
+    const fc = fakeWs();
+    const s = joinAs(server, fc, 4310, 431001, 'Ari');
+    const key = 'account:4310';
+    enter(server, s);
+    const inst = claimFor(server, key);
+    const e = entityOf(server, s.pid);
+    (server.sim as unknown as { handleDeath(e: unknown, killer: null): void }).handleDeath(e, null);
+    server.sim.releaseSpirit(s.pid);
+    expect(e.ghost).toBe(true);
+    expect(e.corpseInstanceId).toBe(inst.exitId);
+    expect(server.sim.instanceInfoAt(e.pos)).toBeNull();
+    // The dispatch has no dead gate of its own: the sim's corpse-run exception
+    // decides, and the ghost is back inside the SAME claim, alive.
+    enter(server, s, 31);
+    expect(claimFor(server, key)).toBe(inst);
+    expect(server.sim.instanceInfoAt(e.pos)).toEqual({
+      slot: inst.slot,
+      dungeonId: 'freehold_inn_room',
+    });
+    expect(e.dead).toBe(false);
+    expect(e.ghost).toBe(false);
+    expect(e.corpseInstanceId).toBeNull();
+    expect(claimsFor(server, key)).toHaveLength(1);
+  });
+});
+
 describe('freehold claim online: the disconnect-reset model', () => {
   it('a dropped socket keeps the claim alive; resuming within the grace rebinds the same session', () => {
     const server = litServer();

@@ -76,8 +76,9 @@ type FreeholdDenyReason = Extract<SimEvent, { type: 'freeholdDenied' }>['reason'
 /** The room a record's tier is claimed in. Exhaustive over the tier union so
  *  a new tier is a compile error here rather than a silent Inn Room. A value
  *  OUTSIDE the union (a corrupt or forward-version record, once records
- *  persist) falls off the switch and answers undefined at runtime; the one
- *  caller treats that as an unusable record, never a throw inside a tick. */
+ *  persist) falls off the switch and answers undefined at runtime; every
+ *  caller (enterFreehold, freeholdDescriptorFor) treats that as an unusable
+ *  record, never a throw inside a tick. */
 export function freeholdDefForTier(tier: FreeholdTier): DungeonDef {
   switch (tier) {
     case 'inn_room':
@@ -194,18 +195,21 @@ export interface FreeholdClaimDescriptor {
 
 /** A VALUE COPY of an owner's descriptor (every field is a primitive, so the
  *  fresh literal aliases nothing in the live record), or null when the owner
- *  holds no record. */
+ *  holds no record or an unusable one (a tier outside the union names no
+ *  room, so there is no descriptor to publish and nothing throws). */
 export function freeholdDescriptorFor(
   ctx: SimContext,
   ownerKey: string,
 ): FreeholdClaimDescriptor | null {
   const record = ctx.freeholds.get(ownerKey);
   if (!record) return null;
+  const def = freeholdDefForTier(record.tier) as DungeonDef | undefined;
+  if (def === undefined) return null;
   return {
     plotId: record.plotId,
     tier: record.tier,
     visitPolicy: record.visitPolicy,
     rev: record.rev,
-    dungeonId: freeholdDefForTier(record.tier).id,
+    dungeonId: def.id,
   };
 }
