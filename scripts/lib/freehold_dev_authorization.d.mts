@@ -1,5 +1,6 @@
 export declare const FREEHOLD_DEV_AUTHORIZATION_PATH: '/__freehold/dev-authorization';
 export declare const FREEHOLD_DEV_AUTHORIZATION_BODY: '{"authorized":true}';
+export declare const FREEHOLD_DEV_AUTHORIZATION_REFUSAL_BODY: 'not found';
 
 export interface FreeholdDevAuthorizationRequest {
   url?: string | undefined;
@@ -17,7 +18,7 @@ export interface FreeholdDevAuthorizationResponse {
 export type FreeholdDevAuthorizationVerdict =
   | { kind: 'pass' }
   | { kind: 'allow' }
-  | { kind: 'refuse'; status: 403 | 404 | 405; reason: string };
+  | { kind: 'refuse'; status: 404; reason: string };
 
 export interface FreeholdDevAuthorizationServer {
   middlewares: {

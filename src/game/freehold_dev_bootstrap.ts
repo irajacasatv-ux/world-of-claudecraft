@@ -14,8 +14,14 @@
 // refusal, a timeout, or the caller's own cancellation all resolve `false` and
 // ordinary Inn Room entry continues. It never throws and never reads a query
 // parameter, storage, or a VITE_* variable (the plan forbids every one of those
-// as a public switch). Everything is injected so the arms pin directly.
+// as a public switch). Everything is injected so the arms pin directly, and
+// the predicates below (the loopback host, the origin, the payload shape, the
+// content type) are exported as pure-core test seams: src/main.ts calls only
+// resolveOfflineFreeholdDevGrant.
 
+// The bridge's path, duplicated from scripts/lib/freehold_dev_authorization.mjs
+// on purpose: the browser bundle cannot import the Node plugin. The two literals
+// are pinned equal by tests/freehold_dev_bootstrap.test.ts.
 export const FREEHOLD_DEV_AUTHORIZATION_PATH = '/__freehold/dev-authorization';
 // Loopback only, so the answer is a few milliseconds away; the bound exists so
 // a wedged dev server can never stall world entry.

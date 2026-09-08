@@ -10,6 +10,7 @@ import {
   classifyFreeholdDevAuthorizationRequest,
   FREEHOLD_DEV_AUTHORIZATION_BODY,
   FREEHOLD_DEV_AUTHORIZATION_PATH,
+  FREEHOLD_DEV_AUTHORIZATION_REFUSAL_BODY,
   type FreeholdDevAuthorizationRequest,
   freeholdDevAuthorizationEnabled,
   freeholdDevAuthorizationPlugin,
@@ -118,19 +119,19 @@ describe('the request verdict', () => {
     ['loopback-prefixed suffix', 'localhost.evil.com:5173'],
     ['unspecified address', '0.0.0.0:5173'],
     ['empty', ''],
-  ])('refuses a %s Host header with 403 even from a loopback socket', (_label, host) => {
+  ])('refuses a %s Host header with 404 even from a loopback socket', (_label, host) => {
     const req = request({ headers: { host } });
     expect(classifyFreeholdDevAuthorizationRequest(req)).toMatchObject({
       kind: 'refuse',
-      status: 403,
+      status: 404,
     });
   });
 
-  it('refuses an absent Host header with 403', () => {
+  it('refuses an absent Host header with 404', () => {
     const req = request({ headers: {} });
     expect(classifyFreeholdDevAuthorizationRequest(req)).toMatchObject({
       kind: 'refuse',
-      status: 403,
+      status: 404,
     });
   });
 
@@ -138,18 +139,18 @@ describe('the request verdict', () => {
     ['external', '203.0.113.9'],
     ['private LAN', '192.168.1.20'],
     ['missing', undefined],
-  ])('refuses a %s socket address with 403 even with a loopback Host', (_label, remoteAddress) => {
+  ])('refuses a %s socket address with 404 even with a loopback Host', (_label, remoteAddress) => {
     const req = request({ socket: { remoteAddress } });
     expect(classifyFreeholdDevAuthorizationRequest(req)).toMatchObject({
       kind: 'refuse',
-      status: 403,
+      status: 404,
     });
   });
 
   it('refuses a request with no socket at all', () => {
     expect(classifyFreeholdDevAuthorizationRequest(request({ socket: undefined }))).toMatchObject({
       kind: 'refuse',
-      status: 403,
+      status: 404,
     });
   });
 
@@ -160,11 +161,11 @@ describe('the request verdict', () => {
     ['empty', ''],
     ['a different loopback spelling', 'http://localhost:5173'],
     ['a non-http scheme', 'capacitor://127.0.0.1:5173'],
-  ])('refuses a forged %s Origin with 403', (_label, origin) => {
+  ])('refuses a forged %s Origin with 404', (_label, origin) => {
     const req = request({ headers: { host: LOOPBACK_HOST, origin } });
     expect(classifyFreeholdDevAuthorizationRequest(req)).toMatchObject({
       kind: 'refuse',
-      status: 403,
+      status: 404,
     });
   });
 
@@ -174,11 +175,11 @@ describe('the request verdict', () => {
     expect(classifyFreeholdDevAuthorizationRequest(request())).toEqual({ kind: 'allow' });
   });
 
-  it.each(['POST', 'HEAD', 'OPTIONS', 'get'])('refuses method %s with 405', (method) => {
+  it.each(['POST', 'HEAD', 'OPTIONS', 'get'])('refuses method %s with 404', (method) => {
     const req = request({ method });
     expect(classifyFreeholdDevAuthorizationRequest(req)).toEqual({
       kind: 'refuse',
-      status: 405,
+      status: 404,
       reason: 'GET only',
     });
   });
@@ -224,7 +225,7 @@ describe('the request verdict', () => {
     const forged = request({ headers: { host: ['evil.example', LOOPBACK_HOST] } });
     expect(classifyFreeholdDevAuthorizationRequest(forged)).toMatchObject({
       kind: 'refuse',
-      status: 403,
+      status: 404,
     });
   });
 });
@@ -251,37 +252,61 @@ describe('freeholdDevAuthorizationPlugin', () => {
     expect(Object.keys(JSON.parse(res.body ?? '') as object)).toEqual(['authorized']);
   });
 
-  it('answers a failed loopback check with 403 and never the affirmative', () => {
+  it('answers a failed loopback check with 404, the fixed refusal body, and never the affirmative', () => {
     const { res, headers, next } = serve(
       freeholdDevAuthorizationPlugin({ enabled: true }),
       request({ socket: { remoteAddress: '203.0.113.9' } }),
     );
     expect(next).not.toHaveBeenCalled();
-    expect(res.statusCode).toBe(403);
+    expect(res.statusCode).toBe(404);
     expect(res.ended).toBe(true);
+    expect(res.body).toBe(FREEHOLD_DEV_AUTHORIZATION_REFUSAL_BODY);
     expect(res.body).not.toContain('authorized');
     expect(headers.get('cache-control')).toBe('no-store');
     expect(headers.get('content-type')).not.toBe('application/json');
   });
 
-  it('answers a forged Host with 403', () => {
+  it('answers a forged Host with 404 and the fixed refusal body', () => {
     const { res, next } = serve(
       freeholdDevAuthorizationPlugin({ enabled: true }),
       request({ headers: { host: 'evil.example:5173' } }),
     );
     expect(next).not.toHaveBeenCalled();
-    expect(res.statusCode).toBe(403);
-    expect(res.body).not.toContain('authorized');
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toBe(FREEHOLD_DEV_AUTHORIZATION_REFUSAL_BODY);
   });
 
-  it('answers a wrong method with 405', () => {
+  it('answers a wrong method with 404 and the fixed refusal body', () => {
     const { res, next } = serve(
       freeholdDevAuthorizationPlugin({ enabled: true }),
       request({ method: 'POST' }),
     );
     expect(next).not.toHaveBeenCalled();
-    expect(res.statusCode).toBe(405);
-    expect(res.body).not.toContain('authorized');
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toBe(FREEHOLD_DEV_AUTHORIZATION_REFUSAL_BODY);
+  });
+
+  it('gives every refusal the SAME status and body, so no refusal is an existence oracle', () => {
+    // A non-loopback socket, a forged Host, a wrong method and a query string
+    // are four different reasons; over the wire they are one answer, the one
+    // an uninstalled plugin's path gives (404). The reason survives only on
+    // the classifier verdict, never in the body.
+    const shapes = [
+      request({ socket: { remoteAddress: '203.0.113.9' } }),
+      request({ headers: { host: 'evil.example:5173' } }),
+      request({ method: 'POST' }),
+      request({ url: `${FREEHOLD_DEV_AUTHORIZATION_PATH}?tier=2` }),
+    ];
+    const answers = shapes.map((req) => {
+      const { res } = serve(freeholdDevAuthorizationPlugin({ enabled: true }), req);
+      return [res.statusCode, res.body] as const;
+    });
+    for (const answer of answers) expect(answer).toEqual([404, 'not found']);
+    expect(new Set(shapes.map((req) => classifyFreeholdDevAuthorizationRequest(req).kind))).toEqual(
+      new Set(['refuse']),
+    );
+    expect(FREEHOLD_DEV_AUTHORIZATION_REFUSAL_BODY).toBe('not found');
+    expect(FREEHOLD_DEV_AUTHORIZATION_REFUSAL_BODY).not.toContain('authorized');
   });
 
   it('answers the path with a query string with 404', () => {

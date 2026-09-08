@@ -5,6 +5,7 @@
 // verdict is the only thing that reaches offlineWorldConfig).
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { FREEHOLD_DEV_AUTHORIZATION_PATH as BRIDGE_PATH } from '../scripts/lib/freehold_dev_authorization.mjs';
 import {
   FREEHOLD_DEV_AUTHORIZATION_PATH,
   FREEHOLD_DEV_AUTHORIZATION_TIMEOUT_MS,
@@ -350,7 +351,7 @@ describe('resolveOfflineFreeholdDevGrant', () => {
     },
   );
 
-  it('defaults the timeout to the exported bound', () => {
+  it('pins the exported timeout bound at 1500 ms (the default-parameter behaviour is proven by the timeout cases above)', () => {
     expect(FREEHOLD_DEV_AUTHORIZATION_TIMEOUT_MS).toBe(1500);
   });
 });
@@ -452,5 +453,14 @@ describe('src/main.ts bootstraps the grant once, before the offline Sim', () => 
     expect(main).toContain(
       "import { resolveBrowserFreeholdDevGrant } from './game/freehold_dev_bootstrap';",
     );
+  });
+});
+
+describe('the bridge path literal', () => {
+  it('is the same string on the browser side and the Node plugin side', () => {
+    // The browser bundle cannot import the Node plugin, so the path is
+    // duplicated; this is the one place the two copies meet.
+    expect(FREEHOLD_DEV_AUTHORIZATION_PATH).toBe(BRIDGE_PATH);
+    expect(FREEHOLD_DEV_AUTHORIZATION_PATH).toBe('/__freehold/dev-authorization');
   });
 });

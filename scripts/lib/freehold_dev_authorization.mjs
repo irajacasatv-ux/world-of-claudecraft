@@ -14,12 +14,20 @@
 // serves nothing (the path then 404s like any unknown path). A request is
 // admitted by the real socket address PLUS the Host header through the
 // diagnostics guard (never a header alone), and a present Origin must be the
-// same loopback origin. Zero dependencies beyond that guard. vite.config.ts is
-// outside tsconfig `include`, so the typed surface lives in the sibling .d.mts.
+// same loopback origin. EVERY refusal answers alike, 404 with one fixed body,
+// exactly as the path answers when the plugin is not installed: a 403 or a
+// 405 would tell a requester that can reach the dev port (`--host`) that the
+// endpoint exists, an oracle for ALLOW_DEV_COMMANDS=1 on the machine. The
+// verdict keeps a `reason` for the tests; the wire never carries it. Zero
+// dependencies beyond that guard. vite.config.ts is outside tsconfig
+// `include`, so the typed surface lives in the sibling .d.mts.
 import { diagnosticsReadAllowed, sameOrigin } from './diagnostics_capture_guard.mjs';
 
 export const FREEHOLD_DEV_AUTHORIZATION_PATH = '/__freehold/dev-authorization';
 export const FREEHOLD_DEV_AUTHORIZATION_BODY = '{"authorized":true}';
+// The one body every refusal answers with (404, text/plain), whatever the
+// reason: never the reason text, never a hint that the path is served.
+export const FREEHOLD_DEV_AUTHORIZATION_REFUSAL_BODY = 'not found';
 
 // Strictly the string '1', the same read server/freehold_config.ts and
 // server/sim_boot_config.ts make: 'true', ' 1', '01' and friends stay off.
@@ -42,7 +50,7 @@ export function classifyFreeholdDevAuthorizationRequest(req) {
   // The endpoint takes no input at all: a query string is refused outright
   // rather than ignored, so no future parameter can grow on it unnoticed.
   if (queryAt !== -1) return { kind: 'refuse', status: 404, reason: 'no query string' };
-  if (req.method !== 'GET') return { kind: 'refuse', status: 405, reason: 'GET only' };
+  if (req.method !== 'GET') return { kind: 'refuse', status: 404, reason: 'GET only' };
   const host = headerValue(req.headers?.host);
   // The real socket address AND the Host header, the shared diagnostics
   // guard's rule. Its stated bound applies here too: a same-host reverse
@@ -51,7 +59,7 @@ export function classifyFreeholdDevAuthorizationRequest(req) {
   // read endpoint; the operator who terminates such a hop on the dev box
   // has opted in to it.
   if (!diagnosticsReadAllowed(req.socket?.remoteAddress, host)) {
-    return { kind: 'refuse', status: 403, reason: 'loopback requests only' };
+    return { kind: 'refuse', status: 404, reason: 'loopback requests only' };
   }
   const origin = headerValue(req.headers?.origin);
   // A present Origin must be the same loopback origin. An ABSENT Origin is
@@ -61,7 +69,7 @@ export function classifyFreeholdDevAuthorizationRequest(req) {
   // that provoked the request could not read it (opaque cross-site) and
   // gained nothing if it could.
   if (origin !== undefined && !sameOrigin(origin, host)) {
-    return { kind: 'refuse', status: 403, reason: 'same-origin loopback requests only' };
+    return { kind: 'refuse', status: 404, reason: 'same-origin loopback requests only' };
   }
   return { kind: 'allow' };
 }
@@ -86,7 +94,7 @@ export function freeholdDevAuthorizationPlugin(options) {
         if (verdict.kind === 'refuse') {
           res.statusCode = verdict.status;
           res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-          res.end(verdict.reason);
+          res.end(FREEHOLD_DEV_AUTHORIZATION_REFUSAL_BODY);
           return;
         }
         res.statusCode = 200;
