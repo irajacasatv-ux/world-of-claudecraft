@@ -1,11 +1,20 @@
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
+import { resolveDungeonInteriorLayout } from '../src/render/dungeon_interior_resolver_core';
 import {
   buildIgnivarRaidGate,
   IGNIVAR_RAID_GATE_HEIGHT,
   ignivarRaidGatePlan,
 } from '../src/render/ignivar_raid_gate';
+import { INTERIOR_LAYOUTS } from '../src/sim/dungeon_floor';
+import {
+  CRYPT_LAYOUT,
+  IGNIVAR_FORGE_APPROACH_LAYOUT,
+  IGNIVAR_LIFT_LAYOUT,
+  IGNIVAR_SECOND_WING_LAYOUT,
+} from '../src/sim/dungeon_layout';
+import { stripComments } from './helpers/strip_comments';
 
 describe('Ignivar raid gate', () => {
   it('keeps a solid physical barrier while locked', () => {
@@ -80,15 +89,28 @@ describe('Ignivar raid gate', () => {
     expect(rendererSource).toContain('ignivarRaidGatePlan(e.templateId, e.dungeonId)');
     expect(rendererSource).toContain('buildIgnivarRaidGate(raidGatePlan)');
     expect(rendererSource).toContain('height = raidGatePlan.height');
-    const dungeonSource = readFileSync(
-      new URL('../src/render/dungeon.ts', import.meta.url),
-      'utf8',
+    const dungeonSource = stripComments(
+      readFileSync(new URL('../src/render/dungeon.ts', import.meta.url), 'utf8'),
     );
-    // ignivar_depths (and every newer interior, the Forge-Lift included)
-    // resolves through the INTERIOR_LAYOUTS registry fallback
-    expect(dungeonSource).toMatch(/INTERIOR_LAYOUTS\[interior\] \?\? CRYPT_LAYOUT/);
-    expect(dungeonSource).toMatch(
-      /interior === 'ignivar_approach'[\s\S]{0,120}\? IGNIVAR_FORGE_APPROACH_LAYOUT/,
+    expect(dungeonSource).toContain(
+      'const layout = resolveDungeonInteriorLayout(interior, oz, opts?.layout)',
     );
+    const resolverSource = stripComments(
+      readFileSync(
+        new URL('../src/render/dungeon_interior_resolver_core.ts', import.meta.url),
+        'utf8',
+      ),
+    );
+    expect(resolverSource).toMatch(/INTERIOR_LAYOUTS\[interior\] \?\? CRYPT_LAYOUT/);
+  });
+
+  it('keeps authored approach, registered depths and lift layouts ahead of the crypt fallback', () => {
+    expect(resolveDungeonInteriorLayout('ignivar_approach', 0)).toBe(IGNIVAR_FORGE_APPROACH_LAYOUT);
+    expect(INTERIOR_LAYOUTS.ignivar_depths).toBe(IGNIVAR_SECOND_WING_LAYOUT);
+    expect(resolveDungeonInteriorLayout('ignivar_depths', 0)).toBe(IGNIVAR_SECOND_WING_LAYOUT);
+    expect(INTERIOR_LAYOUTS.ignivar_lift).toBe(IGNIVAR_LIFT_LAYOUT);
+    expect(resolveDungeonInteriorLayout('ignivar_lift', 0)).toBe(IGNIVAR_LIFT_LAYOUT);
+    expect(resolveDungeonInteriorLayout('unknown-interior', 0)).toBe(CRYPT_LAYOUT);
+    expect(resolveDungeonInteriorLayout('ignivar_approach', 0, CRYPT_LAYOUT)).toBe(CRYPT_LAYOUT);
   });
 });

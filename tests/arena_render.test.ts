@@ -1,10 +1,16 @@
+import { readFileSync } from 'node:fs';
 import { getBounds, NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { MeshoptDecoder } from 'meshoptimizer';
 import { describe, expect, it } from 'vitest';
 import { DungeonInteriors } from '../src/render/dungeon';
+import {
+  resolveDungeonInteriorLayout,
+  resolveDungeonInteriorVariant,
+} from '../src/render/dungeon_interior_resolver_core';
 import { ARENA_SLOT_COUNT, arenaOrigin } from '../src/sim/data';
 import { ARENA_LAYOUT, arenaMapForSlot } from '../src/sim/dungeon_layout';
+import { stripComments } from './helpers/strip_comments';
 
 interface PlacementCall {
   kind: string;
@@ -81,17 +87,29 @@ describe('arena cover rendering', () => {
 
 describe('arena variant parity (render vs sim map selection)', () => {
   it('resolves the same map as arenaMapForSlot at every arena slot', () => {
-    const interiors = Object.create(DungeonInteriors.prototype) as DungeonInteriors;
-    const variantFor = (
-      interiors as unknown as {
-        variantFor(interior: string, ox: number, oz: number): string;
-      }
-    ).variantFor.bind(interiors);
+    const variants = new Set<string>();
     for (let slot = 0; slot < ARENA_SLOT_COUNT; slot++) {
       const o = arenaOrigin(slot);
-      const variant = variantFor('arena', o.x, o.z);
+      const variant = resolveDungeonInteriorVariant('arena', o.x, o.z);
+      variants.add(variant);
+      expect(resolveDungeonInteriorLayout('arena', o.z), `slot ${slot} layout`).toBe(
+        arenaMapForSlot(slot).layout,
+      );
       const expected = arenaMapForSlot(slot).id === 'drowned_court' ? 'arena_drowned' : 'arena';
       expect(variant, `slot ${slot}`).toBe(expected);
     }
+    expect([...variants].sort()).toEqual(['arena', 'arena_drowned']);
+  });
+
+  it('uses the shared arena selectors in the live interior builder', () => {
+    const source = stripComments(
+      readFileSync(new URL('../src/render/dungeon.ts', import.meta.url), 'utf8'),
+    );
+    expect(source).toContain(
+      'const layout = resolveDungeonInteriorLayout(interior, oz, opts?.layout)',
+    );
+    expect(source).toContain(
+      'opts?.style?.kit ?? opts?.variant ?? resolveDungeonInteriorVariant(interior, ox, oz)',
+    );
   });
 });

@@ -22,6 +22,9 @@ export const TORCH_COLORS: Record<DungeonInteriorVariant, TorchFireColors> = {
   // Dawnhold Castle is a garden palace in DAYLIGHT: paler, golder candle
   // flames than the keep's torchlit halls, closer to sun through blossom.
   dawnhold: { flame: 0xffd98f, emissive: 0xd08428, light: 0xffc061 },
+  // Exhaustive palette entries only; home builders produce no flame or light.
+  inn_room: { flame: 0, emissive: 0, light: 0 },
+  cottage: { flame: 0, emissive: 0, light: 0 },
   nythraxis: { flame: 0x8f5cff, emissive: 0x4b1c9a, light: 0x7b4dff },
   ignivar: { flame: 0xffd06a, emissive: 0xe05a16, light: 0xff7a2e },
   // delve reliquaries burn with grave-ember red: warm coals over cold stone

@@ -16,6 +16,7 @@ import { pieceMaterialsOf } from '../src/render/program_variant_settle';
 import { type EntityView, Renderer } from '../src/render/renderer';
 import { FARM_PATCHES } from '../src/sim/content/farm_patches';
 import type { Entity } from '../src/sim/types';
+import { stripComments } from './helpers/strip_comments';
 
 interface CompileGateHarness {
   gateViewOnCompile(
@@ -456,6 +457,21 @@ describe('Renderer live shader compile rejection recovery', () => {
     expect(wildheart).toBeGreaterThan(-1);
     const wildheartArm = body.slice(wildheart, body.indexOf('return group;', wildheart));
     expect(wildheartArm).toContain('this.scene.add(group);');
+  });
+
+  it('keeps both home variants in the gated authored branch with prepared dressing', () => {
+    const source = stripComments(
+      readFileSync(new URL('../src/render/dungeon.ts', import.meta.url), 'utf8'),
+    );
+    const start = source.indexOf('        if (layout.rooms) {');
+    const end = source.indexOf('          return group;', start);
+    const homeArm = source.slice(start, end);
+    expect(homeArm).toContain('isFreeholdInterior(variant)');
+    expect(homeArm).toContain('ensureFreeholdDressing(this.lowGfx)');
+    expect(homeArm).toContain('buildFreeholdDressing(group, layout, this.lowGfx)');
+    expect(homeArm).toContain('await attachSceneGroupGated(');
+    expect(homeArm).toMatch(/if \(!isFreeholdInterior\(variant\)\)\s*this.placeDais/);
+    expect(source).toContain('group.add(buildFreeholdPrewarmGroup(this.lowGfx))');
   });
 
   it('ignores a rejection after renderer shutdown starts', async () => {

@@ -95,6 +95,7 @@ import { characterMeshCastsShadow } from './shadow_policy';
 import { weaponSkinAttachBone, weaponSkinHandling } from './skin_attack';
 import { optimizeSkinGpuLayout } from './skin_gpu_layout';
 import { primeSkinnedSortSpheres } from './skinned_sort_spheres';
+import { streamedCharacterUrls } from './streaming_policy_core';
 import { buildStubbleDecal, headNodeName } from './stubble';
 import { TINTED_MATERIAL_IDLE_CACHE_MAX, TintedMaterialCache } from './tinted_material_cache_core';
 import { variantGripTransform, WEAPON_GRIP_OVERRIDES } from './weapon_grip';
@@ -569,12 +570,9 @@ const allPreloadUrls = characterPreloadUrls(false);
 // the char-select preview builds CharacterVisual DIRECTLY (not through the
 // fail-soft factory), so a missing held-weapon GLB there would throw.
 const STREAMED_URL_PREFIXES = ['models/creatures/', 'models/chars/enemies/'];
-// Armory weapon-SKIN models stay out of the gate too (64 of the 78 weapon
-// files), but remain on demand instead of joining the bulk post-entry stream.
-// They are cosmetic replacements for base weapons that always stay in the
-// gate, so a wearer whose skin GLB has not arrived yet degrades to their base
-// weapon (the swapAttachDef guard below) instead of throwing. Base item weapons
-// stay resident so the player's own hands are never empty at spawn.
+// Optional player weapon-skin models remain on demand, falling back to the
+// resident base weapon until ready. A cosmetic URL also used by an eager
+// fixed NPC rig stays in the boot gate because that attachment is required.
 const streamedSkinUrls = new Set(weaponSkinModelUrls());
 
 /** True for a weapon-skin cosmetic model url. Exported so asset-ready
@@ -584,10 +582,12 @@ export function isWeaponSkinModelUrl(url: string): boolean {
   return streamedSkinUrls.has(url);
 }
 function streamedCharacterUrlsFor(profile: Readonly<GfxSettings>): string[] {
-  return allPreloadUrls.filter(
-    (url) =>
-      streamedSkinUrls.has(url) ||
-      (profile.iosMemoryProfile && STREAMED_URL_PREFIXES.some((prefix) => url.includes(prefix))),
+  return streamedCharacterUrls(
+    allPreloadUrls,
+    streamedSkinUrls,
+    VISUALS,
+    profile.iosMemoryProfile,
+    STREAMED_URL_PREFIXES,
   );
 }
 function postEntryStreamUrlsFor(urls: readonly string[]): string[] {
@@ -625,13 +625,10 @@ function notifyCharacterAssetReady(url: string): void {
   }
 }
 
-// Keyed on the RAW url for every caller (the eager boot loop and the streamed
-// lanes); readers resolve through assetUrl(url). Consistent today because no
-// url this function loads is aliased (LOW_URL_ALIAS only rewrites the rogue
-// body, which preloads under its own raw entry); an alias added inside
-// models/creatures/ or the weapon-skin set would make that asset look
-// permanently non-resident, so key any such future entry resolved.
-function prepareCharacterUrl(url: string): Promise<void> {
+// Cache and task keys use the URL supplied by the caller. Eager and streamed
+// catalogs supply their listed asset URL; zone dependency barriers first apply
+// visualAssetUrlForGraphics so the loaded key matches the rig reader's alias.
+export function prepareCharacterUrl(url: string): Promise<void> {
   if (gltfByUrl.has(url)) return Promise.resolve();
   const existing = characterLoadTasks.get(url);
   if (existing) return existing;

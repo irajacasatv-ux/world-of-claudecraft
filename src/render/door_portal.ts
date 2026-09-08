@@ -1007,34 +1007,8 @@ export function doorArchAuthoredElsewhere(
   return false;
 }
 
-// Build a dungeon-door (entering) or dungeon-exit (leaving) body: a stone arch +
-// keystone + plinths framing an additive portal swirl. The Nythraxis crypt door
-// is a bespoke invisible click-box instead (the visible arch is baked into that
-// dungeon's geometry). Returns the portal mesh separately so the renderer can
-// animate its swirl per frame.
-export function buildDoorBody(
-  entering: boolean,
-  dungeonId: string | null | undefined,
-  lowGfx: boolean,
-): { body: THREE.Group; portal?: THREE.Mesh } {
-  const body = new THREE.Group();
-  // Doors whose visible arch is authored elsewhere render only an invisible
-  // click-box: the Nythraxis crypt arch is baked into that dungeon's
-  // geometry, and the Forgefather raid door yields to the owner's placed
-  // dungeon_entrance facade with its mist gate (ignivar_mist_gate.ts) the
-  // moment one is baked into the fortress table; until then it keeps the
-  // generic arch so the door is never invisible.
-  if (entering && doorArchAuthoredElsewhere(dungeonId)) {
-    // The shared 4.6x4.2 box is a deliberate one-size click affordance: it
-    // covers the crypt arch AND the facade's doorway (about 3.3yd wide at
-    // the owner's scale), and the walk-in trigger owns actual entry.
-    const clickBox = new THREE.Mesh(doorNythraxisClickGeometry(), doorNythraxisClickMaterial());
-    clickBox.position.y = 2.1;
-    body.add(clickBox);
-    return { body };
-  }
-
-  const isWildheart = dungeonId === 'wildheart_basin';
+/** Static arch shared by doors and the unlit home service. No membrane or glow. */
+function appendStaticDoorArch(body: THREE.Group, isWildheart: boolean): boolean {
   const wildheartGate = isWildheart ? cloneWildheartGate() : null;
   if (wildheartGate) {
     body.add(wildheartGate);
@@ -1069,6 +1043,54 @@ export function buildDoorBody(
       body.add(plinth);
     }
   }
+  return wildheartGate !== null;
+}
+
+export function buildStaticDoorBody(): THREE.Group {
+  const body = new THREE.Group();
+  body.name = 'freehold-gate';
+  appendStaticDoorArch(body, false);
+  return body;
+}
+
+// Build a dungeon-door (entering) or dungeon-exit (leaving) body: a stone arch +
+// keystone + plinths framing an additive portal swirl. The Nythraxis crypt door
+// is a bespoke invisible click-box instead (the visible arch is baked into that
+// dungeon's geometry). Returns the portal mesh separately so the renderer can
+// animate its swirl per frame.
+export function buildDoorBody(
+  entering: boolean,
+  dungeonId: string | null | undefined,
+  lowGfx: boolean,
+): { body: THREE.Group; portal?: THREE.Mesh } {
+  const body = new THREE.Group();
+  if (!entering && dungeonId && DUNGEONS[dungeonId]?.claimKey === 'owner') {
+    // The room's measured closed door is the visible body; this is its pick surface.
+    const proxy = new THREE.Mesh(doorNythraxisClickGeometry(), doorNythraxisClickMaterial());
+    proxy.scale.set(2.4 / 4.6, 3.2 / 4.2, 0.12 / 2.4);
+    proxy.position.set(0, 1.6, -0.9);
+    proxy.visible = false;
+    body.add(proxy);
+    return { body };
+  }
+  // Doors whose visible arch is authored elsewhere render only an invisible
+  // click-box: the Nythraxis crypt arch is baked into that dungeon's
+  // geometry, and the Forgefather raid door yields to the owner's placed
+  // dungeon_entrance facade with its mist gate (ignivar_mist_gate.ts) the
+  // moment one is baked into the fortress table; until then it keeps the
+  // generic arch so the door is never invisible.
+  if (entering && doorArchAuthoredElsewhere(dungeonId)) {
+    // The shared 4.6x4.2 box is a deliberate one-size click affordance: it
+    // covers the crypt arch AND the facade's doorway (about 3.3yd wide at
+    // the owner's scale), and the walk-in trigger owns actual entry.
+    const clickBox = new THREE.Mesh(doorNythraxisClickGeometry(), doorNythraxisClickMaterial());
+    clickBox.position.y = 2.1;
+    body.add(clickBox);
+    return { body };
+  }
+
+  const isWildheart = dungeonId === 'wildheart_basin';
+  const wildheartGate = appendStaticDoorArch(body, isWildheart);
   const portalMat = isWildheart
     ? wildheartDoorPortalMaterial(lowGfx)
     : doorPortalMaterial(entering, lowGfx);

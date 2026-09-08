@@ -35,6 +35,7 @@ import { type IWorld, OVERHEAD_EMOTES } from '../world_api';
 import { castBarState } from './cast_bar';
 import { anyCharacterRigDrawing, entityHasNoBody } from './entity_gate_stand_in_core';
 import { mobDisplayName, npcDisplayName, objectDisplayName } from './entity_labels';
+import { applyFreeholdExitLabelAnchor } from './freehold/exit_label_core';
 import {
   createNameplateCanvasState,
   type NameplateCanvasState,
@@ -290,6 +291,7 @@ export class NameplatePainter {
 
       this.tmpV.copy(view.group.position);
       this.tmpV.y += plan.anchorYOffset;
+      if (!applyFreeholdExitLabelAnchor(this.tmpV, entity, this.camera.position)) continue;
       if (!isProjectedNameplateAnchorVisible(this.camera, this.tmpV, this.tmpV2)) continue;
       this.tmpV.project(this.camera);
       if (this.tmpV.z < -1 || this.tmpV.z > 1) continue;

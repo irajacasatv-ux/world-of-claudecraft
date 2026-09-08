@@ -11,6 +11,7 @@ import { ALL_CLASSES, type Entity, type ZoneDef } from '../sim/types';
 import { type CharacterVisual, createCharacterVisual } from './characters';
 import { skinCount, visualKeyFor } from './characters/manifest';
 import { characterVisualPoolKey } from './characters/visual_pool';
+import { buildStaticDoorBody } from './door_portal';
 import type { PooledObjectView } from './ground_object_pool';
 import { buildGroundQuestObject } from './quest_objects';
 import { setRenderCategory } from './renderer_diagnostics';
@@ -280,6 +281,7 @@ export function buildObjectPrewarmGroup(host: object): THREE.Group {
     group.add(obj);
     idx++;
   };
+  place(buildStaticDoorBody());
   for (const itemId of PREWARM_OBJECT_ITEM_IDS) {
     const key = `object:${itemId}`;
     for (let i = 0; i < PREWARM_OBJECT_POOL_COPIES; i++) {

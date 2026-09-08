@@ -20,8 +20,11 @@ import {
   takePooledObject,
 } from '../src/render/ground_object_pool';
 import { buildGroundQuestObject } from '../src/render/quest_objects';
+import { stripComments } from './helpers/strip_comments';
 
-const rendererSource = readFileSync(new URL('../src/render/renderer.ts', import.meta.url), 'utf8');
+const rendererSource = stripComments(
+  readFileSync(new URL('../src/render/renderer.ts', import.meta.url), 'utf8'),
+);
 
 describe('takePooledObject / storePooledObject', () => {
   it('misses on an empty pool and returns null', () => {
@@ -93,18 +96,21 @@ describe('takeOrBuildGroundObject', () => {
 
 describe('Renderer.createView object branch (source pin)', () => {
   it('routes the generic ground-object branch through takeOrBuildGroundObject and never re-nulls the key', () => {
-    const objectBranch = rendererSource.slice(
-      rendererSource.indexOf("} else if (e.kind === 'object') {"),
-      rendererSource.indexOf(
-        "} else if (e.kind === 'mob' && e.templateId === VALE_CUP_BALL_TEMPLATE) {",
-      ),
+    const start = rendererSource.indexOf("} else if (e.kind === 'object') {");
+    const objectBranch = rendererSource.slice(start, rendererSource.indexOf('    } else {', start));
+    expect(objectBranch).toContain('buildGroundObjectView(this, e)');
+    expect(objectBranch).toContain('({ body, height, sparkle, objectPoolKey } = built)');
+    const adapter = stripComments(
+      readFileSync(new URL('../src/render/ground_object.ts', import.meta.url), 'utf8'),
     );
-    expect(objectBranch).toContain(
-      'const result = takeOrBuildGroundObject(this.objectPool, groundObjectPoolKey(e), () =>',
+    expect(adapter).toContain('takeOrBuildGroundObject(h.objectPool, groundObjectPoolKey(entity)');
+    expect(adapter).toContain('objectPoolKey: result.poolKey');
+    // The regression: generic item creation must never discard the pool's key.
+    expect(objectBranch).not.toMatch(/objectPoolKey\s*=\s*null/);
+    const genericAdapter = adapter.slice(
+      adapter.indexOf('  const result = takeOrBuildGroundObject('),
     );
-    expect(objectBranch).toContain('objectPoolKey = result.poolKey;');
-    // The regression itself: this branch must never null the key it just took.
-    expect(objectBranch).not.toContain('objectPoolKey = null');
+    expect(genericAdapter).not.toMatch(/(?:objectPoolKey|result\.poolKey)\s*[:=]\s*null/);
   });
 });
 

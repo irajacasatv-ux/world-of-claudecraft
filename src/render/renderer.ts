@@ -370,11 +370,10 @@ import { gpuPrepEventsSnapshot } from './gpu_prep_events';
 import { bakeGrassGroundTexture, setGrassGroundBake } from './grass_ground_bake';
 import { buildGreatTreePrewarmGroup } from './great_tree_prewarm';
 import { GroundAimReticleVisual } from './ground_aim_reticle_visual';
+import { buildGroundObjectView } from './ground_object';
 import {
-  groundObjectPoolKey,
   type PooledObjectView,
   storePooledObject as storeGroundObjectInPool,
-  takeOrBuildGroundObject,
 } from './ground_object_pool';
 import { emitGroundPuff } from './ground_puff';
 import { createGroundTilt, type GroundTiltState, stepGroundTilt } from './ground_tilt_core';
@@ -608,7 +607,6 @@ import { type PriestMarkersVisual, syncPriestMarkersVisual } from './priest_mark
 import { pieceProgramSettle } from './program_variant_settle';
 import { buildPropMaterialPrewarmGroup, buildProps, propResidencySources } from './props';
 import { makeQuestObjectGate, type QuestObjectGateOptions } from './quest_object_gate_core';
-import { buildGroundQuestObject } from './quest_objects';
 import { RaceLine } from './race_line';
 import {
   disposeRaidEncounterVisuals,
@@ -813,6 +811,7 @@ import { buildWorldAmbientSources, footstepSurfaceAt } from './world_audio';
 import { surfaceDetailPrewarmTextures } from './worn_stone';
 import { buildYumiMaze, type YumiMazeView } from './yumi_maze';
 import { YumiTeamMarkers } from './yumi_team_markers';
+import { prepareZoneCharacterDependencies } from './zone_character_dependencies';
 import { zonesEligibleForEviction } from './zone_eviction_core';
 import {
   type FeatureFootprint,
@@ -3783,14 +3782,22 @@ export class Renderer {
   /** Stage wall-times of the most recent prewarmZoneAt, for perf tooling. */
   lastZonePrewarmStats: ZonePrewarmStats | null = null;
 
+  private assertPrewarmGeneration(generation: number): void {
+    if (this.shutdownStarted || generation !== this.lifecycleGeneration)
+      throw new Error('Renderer prewarm cancelled after shutdown');
+  }
+
   async prewarmZoneAt(x: number, z: number, opts?: { background?: boolean }): Promise<void> {
     if (this.shutdownStarted) return;
     const zoneId = this.zoneIdAt(x, z);
     if (zoneId === null || this.prewarmedZonePrograms.has(zoneId)) return;
     const pending = this.pendingZonePrewarms.get(zoneId);
     if (pending) return pending;
+    const generation = this.lifecycleGeneration;
     const task = (async () => {
       const zone = zoneAt(x, z);
+      await prepareZoneCharacterDependencies(this.zonePrewarmHost(), zone);
+      this.assertPrewarmGeneration(generation);
       const deadline = performance.now() + 5000;
       const t0 = performance.now();
       const mobPrewarm = buildEntityPrewarmGroup(this.zonePrewarmHost(), zone);
@@ -3893,6 +3900,7 @@ export class Renderer {
             await this.compilePrewarmColorPrograms(this.scene, false);
           }
         }
+        this.assertPrewarmGeneration(generation);
         this.prewarmedZonePrograms.add(zoneId);
       } finally {
         mobGroup.removeFromParent();
@@ -3900,14 +3908,17 @@ export class Renderer {
         // Only publish visuals to the live pool after the warm pass. Background
         // gameplay can otherwise take one out of its T-pose grid while the
         // prewarm awaits idle compile slots, leaving its shadow variant cold.
-        for (const item of mobPrewarm.pooled) this.pooledVisuals.store(item.key, item.visual);
-        for (const item of npcPrewarm.pooled) this.pooledVisuals.store(item.key, item.visual);
-        this.lastZonePrewarmStats = {
-          zoneId,
-          buildMs: Math.round(tBuild - t0),
-          compileMs: Math.round(tCompile - tBuild),
-          passMs: Math.round(performance.now() - tCompile),
-        };
+        const retired = this.shutdownStarted || generation !== this.lifecycleGeneration;
+        for (const item of [...mobPrewarm.pooled, ...npcPrewarm.pooled])
+          if (retired) item.visual.dispose();
+          else this.pooledVisuals.store(item.key, item.visual);
+        if (!retired)
+          this.lastZonePrewarmStats = {
+            zoneId,
+            buildMs: Math.round(tBuild - t0),
+            compileMs: Math.round(tCompile - tBuild),
+            passMs: Math.round(performance.now() - tCompile),
+          };
       }
     })().finally(() => this.pendingZonePrewarms.delete(zoneId));
     this.pendingZonePrewarms.set(zoneId, task);
@@ -5444,6 +5455,7 @@ export class Renderer {
       onEntryStart?: (id: string, category: RendererPrewarmCategory) => void;
     } = {},
   ): Promise<RendererPrewarmStats> {
+    const generation = this.lifecycleGeneration;
     this.initialGpuWorkStart = options.resumeAfterFirstPaint ?? null;
     void this.initialGpuWorkStart?.then(() => {
       this.initialGpuWorkStart = null;
@@ -5883,9 +5895,11 @@ export class Renderer {
         }
         await entry.run();
       } catch (err) {
+        this.assertPrewarmGeneration(generation);
         status = 'failed';
         console.warn(`Renderer prewarm entry failed: ${entry.id}`, err);
       }
+      this.assertPrewarmGeneration(generation);
       // Deadline-limited work with planned units remaining reports 'partial',
       // never 'completed'.
       const progress = entry.progress?.() ?? null;
@@ -5963,9 +5977,10 @@ export class Renderer {
       if (interiorPrewarmGroup) this.scene.remove(interiorPrewarmGroup);
       if (entityPrewarmGroup) this.scene.remove(entityPrewarmGroup);
       if (npcPrewarmGroup) this.scene.remove(npcPrewarmGroup);
-      if (opts.publishPools) {
-        for (const item of entityPrewarmPool) this.pooledVisuals.store(item.key, item.visual);
-        for (const item of npcPrewarmPool) this.pooledVisuals.store(item.key, item.visual);
+      const retired = this.shutdownStarted || generation !== this.lifecycleGeneration;
+      for (const item of [...entityPrewarmPool, ...npcPrewarmPool]) {
+        if (retired) item.visual.dispose();
+        else if (opts.publishPools) this.pooledVisuals.store(item.key, item.visual);
       }
       if (playerPrewarmGroup) this.scene.remove(playerPrewarmGroup);
       for (const visual of playerPrewarmInstances) visual.dispose();
@@ -5994,7 +6009,7 @@ export class Renderer {
       if (mountPrewarmGroup) this.scene.remove(mountPrewarmGroup);
       doorPrewarmGroup = null;
       interiorPrewarmGroup = null;
-      if (opts.publishPools) {
+      if (opts.publishPools || retired) {
         entityPrewarmGroup = null;
         npcPrewarmGroup = null;
         entityPrewarmPool = [];
@@ -6186,7 +6201,9 @@ export class Renderer {
         category: 'entities',
         priority: 35,
         required: true,
-        run: () => {
+        run: async () => {
+          await prepareZoneCharacterDependencies(this.zonePrewarmHost(), activeZone);
+          this.assertPrewarmGeneration(generation);
           const built = buildEntityPrewarmGroup(this.zonePrewarmHost(), activeZone);
           entityPrewarmGroup = built.group;
           entityPrewarmPool = built.pooled;
@@ -6200,7 +6217,9 @@ export class Renderer {
         category: 'entities',
         priority: 36,
         required: true,
-        run: () => {
+        run: async () => {
+          await prepareZoneCharacterDependencies(this.zonePrewarmHost(), activeZone);
+          this.assertPrewarmGeneration(generation);
           const built = buildNpcPrewarmGroup(this.zonePrewarmHost(), activeZone, buildDeadline);
           npcPrewarmGroup = built.group;
           npcPrewarmPool = built.pooled;
@@ -6945,13 +6964,15 @@ export class Renderer {
           });
           continue;
         }
-        // Yield the EVENT LOOP between entries (the awaits inside runEntry are
-        // microtask-only, which never lets the process service events) so the
-        // responsiveness watchdog sees a live process.
+        // Resident entries otherwise yield only microtasks, which do not let
+        // the process service events. Yield the event loop between entries so
+        // the responsiveness watchdog sees a live process.
         if (policy.yieldBetweenEntries) {
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
+        this.assertPrewarmGeneration(generation);
         await runEntry(entry);
+        this.assertPrewarmGeneration(generation);
         // Without parallel compile, link group-by-group per entry (the monolith is
         // skipped). With it, these passes are counterproductive and the async
         // compile entry links off-thread instead (prewarm_policy.ts).
@@ -8046,37 +8067,10 @@ export class Renderer {
       // Ward shard orbit, and no flag carrier ring or lean.
       group.userData.bg = built.group.userData.bg;
     } else if (e.kind === 'object') {
-      // Pool MISS keeps its pool key (mirrors the character-visual pool's
-      // "Pool MISS: build a fresh visual but KEEP its pool key" above): see
-      // ground_object_pool.ts for why nulling it here used to corrupt the
-      // forever-cached, geometry-sharing template every ground object clones.
-      const result = takeOrBuildGroundObject(this.objectPool, groundObjectPoolKey(e), () =>
-        buildGroundQuestObject(e.objectItemId ?? '', e.id),
-      );
-      // takeOrBuildGroundObject pops through its own internal takePooledObject,
-      // not this class's storePooledObject counterpart, so a HIT here must mirror
-      // storePooledObject's increment by decrementing pooledObjectCount itself;
-      // otherwise the retention cap (GFX.maxPooledObjects) only ever counts up.
-      if (result.reused) this.pooledObjectCount = Math.max(0, this.pooledObjectCount - 1);
-      objectPoolKey = result.poolKey;
-      body = result.object.group;
-      height = result.object.height;
-      if (result.reused) body.rotation.y = (e.id % 7) * 0.45;
+      const built = buildGroundObjectView(this, e);
+      ({ body, height, sparkle, objectPoolKey } = built);
       objectMesh = body;
-      if (!this.sparkleMat) {
-        this.sparkleMat = markSharedMaterial(
-          new THREE.SpriteMaterial({
-            map: sparkleTexture(),
-            transparent: true,
-            depthWrite: false,
-          }),
-        );
-        if (!this.lowGfx) this.sparkleMat.color.setScalar(SPARKLE_BOOST); // gold glint via bloom
-      }
-      sparkle = new THREE.Sprite(this.sparkleMat);
-      sparkle.scale.set(0.9, 0.9, 1);
-      sparkle.position.y = 1.35;
-      group.add(sparkle);
+      if (sparkle) group.add(sparkle);
     } else {
       const visualKey = visualKeyFor(e);
       // The in-flight cooldown stops the deferring entity from burning a

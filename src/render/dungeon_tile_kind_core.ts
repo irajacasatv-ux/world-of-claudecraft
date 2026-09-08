@@ -8,6 +8,7 @@ import { polygonContainsPoint } from '../sim/geometry2d';
 import { ignivarArenaFloorTileCenterHasStone } from '../sim/ignivar_arena';
 import type { DungeonInteriorVariant } from './dungeon';
 import { pickKind } from './dungeon_banner_core';
+import { isFreeholdInterior, usesDawnholdGrammar } from './dungeon_variant_core';
 import { IGNIVAR_FLOOR_KIND_WEIGHTS, IGNIVAR_FLOOR_QUAD_KIND } from './ignivar_tile_kit';
 
 /** Kit floor kind for a 4u tile. `isDelve` is passed in by the caller (the
@@ -71,7 +72,7 @@ export function dungeonFloorKind(
       t,
     );
   }
-  if (variant === 'dawnhold') {
+  if (usesDawnholdGrammar(variant)) {
     // the garden palace floor: whole pale flags, even fewer breaks than the
     // keep and a richer decorated share (sun-catching insets), no dirt, no
     // weeds, no grates anywhere
@@ -112,6 +113,8 @@ export function dungeonFloorKind(
 
 /** Kit sub-tile kind for the 2u quads a `quad` floor tile subdivides into. */
 export function dungeonFloorQuadKind(variant: DungeonInteriorVariant, t: number): string {
+  // Home floors keep the castle module grammar without baked candle clusters.
+  if (isFreeholdInterior(variant)) return 'floor_tile_small';
   if (variant === 'ignivar') return IGNIVAR_FLOOR_QUAD_KIND;
   if (variant === 'arena_drowned') return dungeonFloorQuadKind('temple', t);
   if (variant === 'bastion') {
@@ -168,7 +171,7 @@ export function dungeonFloorQuadKind(variant: DungeonInteriorVariant, t: number)
       t,
     );
   }
-  if (variant === 'dawnhold') {
+  if (usesDawnholdGrammar(variant)) {
     // garden-palace flags: swept whole slabs with soft weed tufts breaking
     // through between them (green growing INTO the palace is the identity;
     // the decorated votive tile stays a rare accent, same vigil rule)
@@ -254,7 +257,7 @@ export function dungeonWallKind(
       t,
     );
   }
-  if (variant === 'dawnhold') {
+  if (usesDawnholdGrammar(variant)) {
     // the garden palace: clean masonry thrown OPEN to the light: nearly a
     // third of every run is arched bays and windows so the halls read
     // daylit, and no cracked stone anywhere

@@ -61,7 +61,8 @@ vi.mock('../src/render/characters/manifest', () => ({
 
 // Static records under test control: three NPC ids, one PREWARM_MOB_COMMON_IDS
 // member (forest_wolf) and one uncommon mob for the copy-count split.
-vi.mock('../src/sim/data', () => ({
+vi.mock('../src/sim/data', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/sim/data')>()),
   CLASSES: { warlock: { color: 0x8844cc } },
   MOBS: {
     forest_wolf: { id: 'forest_wolf', color: 0x445566, scale: 1 },
@@ -239,7 +240,8 @@ describe('buildObjectPrewarmGroup pooled copies and the point-light hide', () =>
     // Vacuity floor: with an emptied id list every count below is 0 == 0.
     expect(PREWARM_OBJECT_ITEM_IDS.length).toBeGreaterThan(0);
     expect(PREWARM_OBJECT_POOL_COPIES).toBeGreaterThan(0);
-    expect(group.children).toHaveLength(
+    expect(group.children.filter((child) => child.name === 'freehold-gate')).toHaveLength(1);
+    expect(group.children.filter((child) => child.name !== 'freehold-gate')).toHaveLength(
       PREWARM_OBJECT_ITEM_IDS.length * PREWARM_OBJECT_POOL_COPIES,
     );
     for (const itemId of PREWARM_OBJECT_ITEM_IDS) {

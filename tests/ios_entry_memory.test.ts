@@ -257,8 +257,8 @@ describe('post-entry mob-body streaming', () => {
     expect(assetsSource).toContain(
       'const preloadUrls = allPreloadUrls.filter((url) => !streamedUrlSet.has(url));',
     );
-    expect(assetsSource).toContain(
-      'streamedSkinUrls.has(url) ||\n      (profile.iosMemoryProfile && STREAMED_URL_PREFIXES.some((prefix) => url.includes(prefix)))',
+    expect(assetsSource).toMatch(
+      /return streamedCharacterUrls\(\s*allPreloadUrls,\s*streamedSkinUrls,\s*VISUALS,\s*profile.iosMemoryProfile,\s*STREAMED_URL_PREFIXES,/,
     );
     expect(assetsSource).toContain('let streamedUrls = streamedCharacterUrlsFor(GFX);');
     expect(assetsSource).toContain(

@@ -3,6 +3,7 @@
 // Extracted from dungeon.ts (monolith ratchet); dungeon.ts is the thin
 // consumer. Deterministic and Three-free so it unit-tests headless.
 import type { DungeonInteriorVariant } from './dungeon';
+import { isFreeholdInterior } from './dungeon_variant_core';
 
 export type WeightedKinds = [name: string, weight: number][];
 
@@ -21,7 +22,7 @@ export function pickKind(kinds: WeightedKinds, t: number): string {
  *  (gear walls, chains), and the pale hangings read as bedsheets under the
  *  forge grade (same suppression as the walk-in keeps' authored passes). */
 export function hangsKitBanners(variant: DungeonInteriorVariant): boolean {
-  return variant !== 'ignivar';
+  return variant !== 'ignivar' && !isFreeholdInterior(variant);
 }
 
 /** Kit banner kind for a wall slot. `isDelve` is passed in by the caller

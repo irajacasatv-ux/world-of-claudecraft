@@ -34,6 +34,8 @@ export interface WallHideable {
   /** Present on the Ignivar raid shells: cull to alpha 0 whenever the camera
    *  is on this plane's outside, instead of the sightline ghost. */
   backface?: WallCullPlane;
+  /** Opaque whole-face cutaway: hide geometry directly, with no transparent variant. */
+  opaqueCutaway?: boolean;
 }
 
 /** A wall-face subgroup of mounted dressing props, culled with its wall. */
@@ -144,6 +146,13 @@ export function updateWallOcclusion(
   reducedMotion = false,
 ): void {
   for (const h of hideables) {
+    if (h.opaqueCutaway && h.backface) {
+      const hide = cameraSeesWallBack(h.backface, camX, camZ);
+      h.hidden = hide;
+      h.alpha = hide ? 0 : 1;
+      h.group.visible = !hide;
+      continue;
+    }
     if (!h.backface) {
       // The classic sightline ghost draws its transparent twin, so it steps
       // through the shared gated advance: the flip waits for the linked fade

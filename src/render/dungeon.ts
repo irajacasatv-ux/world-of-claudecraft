@@ -15,44 +15,27 @@
 import * as THREE from 'three';
 import type { GLTF } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { arenaOriginAt, instanceOrigin } from '../sim/data';
 import type { DelveModuleId } from '../sim/delve_layout';
 import { isLitanyModuleId, polygonWallSegments } from '../sim/delve_litany_layout';
-import { INTERIOR_LAYOUTS } from '../sim/dungeon_floor';
 import {
-  arenaMapForSlot,
-  CRYPT_LAYOUT,
   DAIS_HEIGHT,
-  DAWNHOLD_LAYOUT,
   DUNGEON_END_WALL_HW,
   DUNGEON_WALL_HEIGHT,
   DUNGEON_WALL_HW,
   DUNGEON_WALL_X,
   type DungeonLayout,
   type GridPoint,
-  IGNIVAR_FORGE_APPROACH_LAYOUT,
-  IGNIVAR_LAYOUT,
-  IGNIVAR_SECOND_WING_LAYOUT,
   type InteriorStyle,
-  LASTKEEP_LAYOUT,
-  NYTHRAXIS_LAYOUT,
-  SANCTUM_LAYOUT,
-  TEMPLE_LAYOUT,
   TOMB_HD,
   tombSlotRoll,
   type WallStub,
 } from '../sim/dungeon_layout';
 import { polygonContainsPoint, polygonXAtZ } from '../sim/geometry2d';
-import {
-  authoredLiftAt,
-  authoredWallSegments,
-  doorRampHalf,
-  type WallSeg,
-} from '../sim/rift/authored';
+import { authoredLiftAt, doorRampHalf } from '../sim/rift/authored';
 import { ARENA_WATER_NAVE_HALF_X, arenaWaterBands } from './arena_water_band_core';
 import { loadGltf, releaseGltf } from './assets/loader';
 import { registerDeferredPreload } from './assets/preload';
-import { fitAuthoredWallSegment } from './authored_walls_core';
+import { placeAuthoredWalls } from './authored_walls';
 import { DAIS_PLATFORM_HEIGHT } from './dais_lift';
 import { buildDawnholdDressing, ensureDawnholdDressing } from './dawnhold_dressing';
 import {
@@ -71,6 +54,10 @@ import {
 } from './dungeon_arena_walls';
 import { dungeonBannerKind, hangsKitBanners } from './dungeon_banner_core';
 import {
+  resolveDungeonInteriorLayout,
+  resolveDungeonInteriorVariant,
+} from './dungeon_interior_resolver_core';
+import {
   dungeonFloorKind,
   dungeonFloorQuadKind,
   dungeonWallKind,
@@ -80,6 +67,7 @@ import {
 import { TORCH_COLORS } from './dungeon_torch_colors';
 import type { TorchFireColors } from './dungeon_torch_rig';
 import { addTorchFire, type TorchFireTuning } from './dungeon_torch_rig';
+import { isFreeholdInterior, usesDawnholdGrammar } from './dungeon_variant_core';
 import {
   collectWallPropBindings,
   retireWallOcclusion,
@@ -88,6 +76,12 @@ import {
   type WallPropBinding,
 } from './dungeon_wall_occlusion';
 import { rectShellWallSegments, stubFaceSegments } from './dungeon_wall_segments';
+import {
+  buildFreeholdDressing,
+  buildFreeholdPrewarmGroup,
+  ensureFreeholdDressing,
+} from './freehold';
+import { emitFreeholdWallFaces } from './freehold/wall_cutaway';
 import { attachSceneGroupGated } from './gated_scene_attach';
 import { EMISSIVE_LIGHT, sharedUniforms } from './gfx';
 import { buildIgnivarArenaAtmosphere } from './ignivar_arena_atmosphere';
@@ -98,7 +92,6 @@ import {
   ensureIgnivarTileAssets,
   ignivarTileKind,
   ignivarUpperWallKind,
-  isIgnivarInterior,
 } from './ignivar_tile_kit';
 import {
   collectOwnedInteriorResources,
@@ -148,6 +141,8 @@ export type DungeonInteriorVariant =
   // undercroft anywhere), furnished by the dawnhold dressing pass with
   // planters and flowers.
   | 'dawnhold'
+  | 'inn_room'
+  | 'cottage'
   | 'nythraxis'
   | 'ignivar'
   // Collapsed Reliquary delve sub-themes (share the ember crypt-stone base, see
@@ -184,7 +179,13 @@ export function dungeonDaisHasRaisedPlatform(variant: DungeonInteriorVariant): b
   // Flat fighting floors: the arena pits, the Nythraxis raid, and the delve
   // trash rooms (their "dais" marker is only the exit threshold). The delve
   // finale keeps a raised boss stage for Deacon Vandric.
-  if (isArenaVariant(variant) || variant === 'nythraxis' || variant === 'ignivar') return false;
+  if (
+    isFreeholdInterior(variant) ||
+    isArenaVariant(variant) ||
+    variant === 'nythraxis' ||
+    variant === 'ignivar'
+  )
+    return false;
   if (variant === 'delve_ossuary' || variant === 'delve_bell' || variant === 'delve_hall')
     return false;
   // marsh trash rooms are flat fighting floors like the other delve trash; the
@@ -610,6 +611,7 @@ export class DungeonInteriors {
     };
     addPack(kitGeo, 'kit');
     addPack(bitsGeo, 'bits');
+    group.add(buildFreeholdPrewarmGroup(this.lowGfx));
     // Drowned Temple flood water (the one bespoke interior shader).
     const water = new THREE.Mesh(
       new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2),
@@ -672,33 +674,9 @@ export class DungeonInteriors {
     // the SAME layout sim/colliders.ts derives collision from (what you see is
     // what you collide with). Without it, every module fell back to CRYPT_LAYOUT
     // while collision used the real delve footprint, drifting walls and floor.
-    const layout =
-      opts?.layout ??
-      (interior === 'sanctum'
-        ? SANCTUM_LAYOUT
-        : interior === 'temple'
-          ? TEMPLE_LAYOUT
-          : interior === 'arena'
-            ? // per-slot arena map: same parity selection collision uses
-              // (arenaCollidersForSlot), resolved from the instance origin
-              arenaMapForSlot(arenaOriginAt(oz).slot).layout
-            : interior === 'nythraxis'
-              ? NYTHRAXIS_LAYOUT
-              : interior === 'lastkeep'
-                ? // The Last Keep: an authored room-graph castle interior; its
-                  // rooms/doors/decor route the build through the authored path
-                  // below, exactly like the citadel's set-piece floors.
-                  LASTKEEP_LAYOUT
-                : interior === 'dawnhold'
-                  ? // Dawnhold Castle: the Evergarden garden palace, same
-                    // authored room-graph path at a smaller, warmer scale.
-                    DAWNHOLD_LAYOUT
-                  : interior === 'ignivar_approach'
-                    ? IGNIVAR_FORGE_APPROACH_LAYOUT
-                    : interior === 'ignivar'
-                      ? IGNIVAR_LAYOUT
-                      : (INTERIOR_LAYOUTS[interior] ?? CRYPT_LAYOUT));
-    const variant = opts?.style?.kit ?? opts?.variant ?? this.variantFor(interior, ox, oz);
+    const layout = resolveDungeonInteriorLayout(interior, oz, opts?.layout);
+    const variant =
+      opts?.style?.kit ?? opts?.variant ?? resolveDungeonInteriorVariant(interior, ox, oz);
     const torch = opts?.style?.torch ?? TORCH_COLORS[variant];
     const daisRaised = opts?.style?.daisRaised;
     const group = new THREE.Group();
@@ -722,16 +700,29 @@ export class DungeonInteriors {
         // replace the single-room shell entirely. Walls come from the SAME segment
         // helper the sim derives collision from, so they cannot drift apart.
         if (layout.rooms) {
-          await ensureInfernalDecorAssets();
+          if (isFreeholdInterior(variant)) ensureFreeholdDressing(this.lowGfx);
+          else await ensureInfernalDecorAssets();
           this.placeAuthoredFloor(p, layout, variant);
-          this.placeAuthoredWalls(p, layout, variant);
+          const wallFaces = placeAuthoredWalls(
+            p,
+            layout,
+            variant,
+            {
+              wallKind: (kind, roll) => this.wallKind(kind, roll),
+              hash: hash2,
+              moduleScale: MODULE_SCALE,
+            },
+            isFreeholdInterior(variant),
+          );
           this.placeAuthoredRelief(group, layout);
           this.placeAuthoredLedges(group, layout);
           const liftAt = (x: number, z: number): number =>
             authoredLiftAt(layout.rooms ?? [], layout.doors ?? [], x, z);
           const light = (x: number, z: number, color: number, y?: number, scale?: number): void =>
             this.addInfernalLight(group, x, z, color, y, scale);
-          if (variant === 'lastkeep') {
+          if (isFreeholdInterior(variant)) {
+            buildFreeholdDressing(group, layout, this.lowGfx);
+          } else if (variant === 'lastkeep') {
             // The keep's stories light differently: the undercroft (the one
             // dungeon-flavored story) keeps the crypt's cold blue flame while the
             // lived-in floors above burn warm candle-orange, so the same decor
@@ -765,7 +756,8 @@ export class DungeonInteriors {
           } else {
             buildInfernalDecor(group, layout.decor ?? [], torch, light, liftAt);
           }
-          this.placeDais(group, p, layout, variant, torch, daisRaised);
+          if (!isFreeholdInterior(variant))
+            this.placeDais(group, p, layout, variant, torch, daisRaised);
           if (opts?.hazards?.length) {
             this.placeBlackwaterPools(group, opts.hazards, opts?.hazardStyle ?? 'lava', liftAt);
           }
@@ -780,17 +772,27 @@ export class DungeonInteriors {
               opts?.style?.wallTint ??
               (variant === 'lastkeep'
                 ? KEEP_WALL_TINT
-                : variant === 'dawnhold'
+                : usesDawnholdGrammar(variant)
                   ? DAWNHOLD_WALL_TINT
                   : undefined),
             floor:
               opts?.style?.floorTint ??
               (variant === 'lastkeep'
                 ? KEEP_FLOOR_TINT
-                : variant === 'dawnhold'
+                : usesDawnholdGrammar(variant)
                   ? DAWNHOLD_FLOOR_TINT
                   : undefined),
           });
+          emitFreeholdWallFaces(
+            group,
+            wallFaces,
+            layout,
+            ox,
+            oz,
+            this.arenaHideables,
+            (wall, placements) =>
+              this.emit(wall, placements, variant, { wall: DAWNHOLD_WALL_TINT }),
+          );
           group.position.set(ox, 0, oz);
           group.userData.renderCategory = 'dungeon';
           this.collectInteriorResources(group);
@@ -1332,32 +1334,6 @@ export class DungeonInteriors {
     }
   }
 
-  // Hollow Crypt and Sunken Bastion share interior 'crypt'; the origin x-band
-  // (instanceOrigin in sim/data.ts: 900 + index*600) says which dungeon.
-  private variantFor(interior: string, ox: number, oz: number): Variant {
-    // Arena slots host fixed maps by parity (EVEN = Coliseum, ODD = Drowned
-    // Court). The map id comes from the SAME arenaMapForSlot the sim's
-    // colliders use, so look and collision cannot disagree on parity.
-    if (interior === 'arena') {
-      return arenaMapForSlot(arenaOriginAt(oz).slot).id === 'drowned_court'
-        ? 'arena_drowned'
-        : 'arena';
-    }
-    if (interior === 'nythraxis') return 'nythraxis';
-    if (isIgnivarInterior(interior)) return 'ignivar';
-    if (interior === 'sanctum') return 'sanctum';
-    if (interior === 'temple') return 'temple';
-    // The Last Keep gets its own warm castle grade (clean stone, candle light,
-    // kcas furniture). Explicit so the overflow band's origin x can never
-    // accidentally trip the bastion-band check below.
-    if (interior === 'lastkeep') return 'lastkeep';
-    // Dawnhold Castle, same reasoning in the overflow band.
-    if (interior === 'dawnhold') return 'dawnhold';
-    const bastionX = instanceOrigin(1, 0).x;
-    if (Math.abs(ox - bastionX) < 250) return 'bastion';
-    return 'crypt';
-  }
-
   private material(pack: Pack): THREE.Material {
     let mat = this.packMats.get(pack);
     if (mat) return mat;
@@ -1622,93 +1598,6 @@ export class DungeonInteriors {
         }
         const rot = Math.floor(hash2(z, x) * 4) * quarter;
         p.add(kind, x, y, z, rot);
-      }
-    }
-  }
-
-  // Authored walls: one run of ~8u modules along every wall segment the sim's
-  // `authoredWallSegments` produced (doorway gaps already subtracted), each turned
-  // to face into the room it borders. The fitted wall ends frame each opening on
-  // their own: placing a nominal "arched wall" in the gap visually sealed doors
-  // even though the shared sim collider correctly left them open.
-  private placeAuthoredWalls(p: Placements, layout: DungeonLayout, variant: Variant): void {
-    const rooms = layout.rooms ?? [];
-    const doors = layout.doors ?? [];
-    const bannerEvery = variant === 'crypt' ? 4 : 3;
-    // Both walk-in castles suppress the kit's crypt hangings (their dressing
-    // passes hang the kcas banners) and stack a second wall storey below.
-    const isKeep = variant === 'lastkeep' || variant === 'dawnhold';
-    const openAt = (x: number, z: number): boolean =>
-      rooms.some((r) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1);
-    // Highest lift among the rooms a wall segment borders: says which story the
-    // wall belongs to (the keep's undercroft keeps cracked crypt stone, and the
-    // lookout's parapet row is shortened so it stays an OPEN rooftop).
-    const segMaxLift = (seg: WallSeg): number => {
-      let best = 0;
-      for (const r of rooms) {
-        const touches =
-          seg.axis === 'x'
-            ? (r.z0 === seg.fixed || r.z1 === seg.fixed) && r.x1 > seg.a && r.x0 < seg.b
-            : (r.x0 === seg.fixed || r.x1 === seg.fixed) && r.z1 > seg.a && r.z0 < seg.b;
-        if (touches) best = Math.max(best, r.lift ?? 0);
-      }
-      return best;
-    };
-    const segRy = (seg: WallSeg): number => {
-      const mid = (seg.a + seg.b) / 2;
-      if (seg.axis === 'x') return openAt(mid, seg.fixed + 1.5) ? 0 : Math.PI;
-      return openAt(seg.fixed + 1.5, mid) ? Math.PI / 2 : -Math.PI / 2;
-    };
-    let i = 0;
-    for (const seg of authoredWallSegments(rooms, doors)) {
-      const cells = fitAuthoredWallSegment(seg.a, seg.b, 8);
-      // Face the wall detail into an adjacent room (either one, when it is shared).
-      const ry = segRy(seg);
-      // Only the Last Keep has a dungeon-flavored undercroft to re-key to the
-      // crypt mix; Dawnhold's ground floor stays warm palace stone.
-      const segVariant: Variant =
-        variant === 'lastkeep' && segMaxLift(seg) < 1.6 ? 'crypt' : variant;
-      for (const cell of cells) {
-        const t = cell.center;
-        const x = seg.axis === 'x' ? t : seg.fixed;
-        const z = seg.axis === 'x' ? seg.fixed : t;
-        const kind = this.wallKind(segVariant, hash2(x * 13.7, z));
-        const scale: [number, number, number] = [cell.length / 4, MODULE_SCALE, MODULE_SCALE];
-        p.add(kind, x, 0, z, ry, scale);
-        // The keep hangs its red kcas banners from the lastkeep dressing pass
-        // instead of the kit's crypt hangings.
-        if (!isKeep && i % bannerEvery === 2 && kind !== 'wall_archedwindow_gated') {
-          const banner = hash2(z, x * 7.3) < 0.5 ? 'banner_red' : 'banner_triple_red';
-          p.add(banner, x, 0, z, ry, scale);
-        }
-        i++;
-      }
-    }
-    if (!isKeep) return;
-    // ---- The walk-in castles' SECOND wall storey ----
-    // One 8u module row is only wall-top 8, which the keep's residence floor
-    // (lift 6) and tower would poke straight through. Stack a second row at
-    // y=8 so the state floor soars (13u of wall over its 3.0 floor) and the
-    // residence keeps 10u; Dawnhold's solar story (lift 3.0) gets the same
-    // tall, airy read. The row is cut by the SAME door openings as the base row:
-    // capping a low doorway looks like a lintel but puts the chase camera
-    // inside the solid cap whenever it trails the player through a door (the
-    // cap carries no collider, so the boom happily enters it and the frame
-    // blacks out). Tall open archways cost that lintel read but keep every
-    // doorway camera-safe. Segments bordering the lookout (lift 9) shorten to
-    // a parapet so the tower top stays an open rooftop.
-    for (const seg of authoredWallSegments(rooms, doors)) {
-      const maxLift = segMaxLift(seg);
-      const ry = segRy(seg);
-      const upperVariant: Variant = variant === 'lastkeep' && maxLift < 1.6 ? 'crypt' : variant;
-      const sy = maxLift >= 8 ? 0.75 : MODULE_SCALE; // lookout parapet: 3u, not 8u
-      for (const cell of fitAuthoredWallSegment(seg.a, seg.b, 8)) {
-        const t = cell.center;
-        const x = seg.axis === 'x' ? t : seg.fixed;
-        const z = seg.axis === 'x' ? seg.fixed : t;
-        let kind = this.wallKind(upperVariant, hash2(x * 7.1, z * 3.3));
-        if (kind === 'wall_arched') kind = 'wall'; // no archways floating at mid-wall
-        p.add(kind, x, DUNGEON_WALL_HEIGHT, z, ry, [cell.length / 4, sy, MODULE_SCALE]);
       }
     }
   }
