@@ -23,7 +23,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path, { resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { ABILITIES } from '../src/sim/data';
+import { ABILITIES, DUNGEON_LIST } from '../src/sim/data';
 
 let xml = '';
 let workDir = '';
@@ -71,5 +71,29 @@ describe('MediaWiki ability visibility', () => {
   it('publishes the reworked Retribution defensive under its current name only', () => {
     expect(xml).toContain('<title>Debt of Light (Ability)</title>');
     expect(xml).not.toContain('Faithforged Guard (Ability)');
+  });
+});
+
+describe('MediaWiki dungeon visibility', () => {
+  it('publishes exactly the guideVisible dungeons, never a development room or a freehold room', () => {
+    // Dungeon titles are the bare def name (no suffix), so match the Dungeons
+    // portal's own article list rather than the whole title stream.
+    const portal = xml.match(/<title>Dungeons<\/title>[\s\S]*?<\/page>/)?.[0] ?? '';
+    expect(portal.length).toBeGreaterThan(0);
+    const listed = [...portal.matchAll(/\* \[\[([^\]]+)\]\]/g)].map((m) => m[1]).sort();
+    const expected = DUNGEON_LIST.filter((d) => d.guideVisible !== false)
+      .map((d) => d.name)
+      .sort();
+    expect(listed).toEqual(expected);
+    // Both gates are real: the hidden set is non-empty and holds the two
+    // owner-claimed freehold rooms, and none of them has a page.
+    const hidden = DUNGEON_LIST.filter((d) => d.guideVisible === false);
+    expect(hidden.map((d) => d.id)).toEqual(
+      expect.arrayContaining(['freehold_inn_room', 'freehold_cottage']),
+    );
+    for (const dungeon of hidden) {
+      expect(xml).not.toContain(`<title>${dungeon.name}</title>`);
+      expect(portal).not.toContain(`[[${dungeon.name}]]`);
+    }
   });
 });
