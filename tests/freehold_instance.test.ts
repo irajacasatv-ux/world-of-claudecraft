@@ -210,9 +210,8 @@ describe('the owner-keyed claim', () => {
         isBlocked(sim.cfg.seed, far.x + def.entry.x, far.z + def.entry.z, 0.5),
         `${def.id} slot 23`,
       ).toBe(false);
-      // Positive control: the collider is live in this band (the crypt kit's
-      // front wall sits on the local z = -19 line, one yard behind the entry).
-      expect(isBlocked(sim.cfg.seed, far.x, far.z - 19, 0.5), `${def.id} wall`).toBe(true);
+      // Positive control: both authored homes have a south wall at local z = -8.
+      expect(isBlocked(sim.cfg.seed, far.x, far.z - 8, 0.5), `${def.id} wall`).toBe(true);
       expect(leaveFreehold(sim.ctx, pid)).toBe(true);
     }
   });

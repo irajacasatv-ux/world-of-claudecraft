@@ -1284,6 +1284,7 @@ const NOTICEBOARD_FRONT_STANDING_POINT = localToWorld(
 );
 
 const SERVICES = {
+  freeholdGate: { position: { x: -14, z: -92 }, facing: 0 },
   playerStart: {
     id: 'eastbrook_player_start',
     position: { x: -94, z: -58 },

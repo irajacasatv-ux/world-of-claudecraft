@@ -11,11 +11,8 @@ import {
   columnBlendAt,
   DUNGEON_FLOOR_Y,
   DUNGEON_X_THRESHOLD,
-  dungeonAt,
   getActiveWorldContent,
   getContentGeneration,
-  instanceOrigin,
-  instanceSlotForZ,
   isBgPos,
   STRIP_MAX_X,
   STRIP_MIN_X,
@@ -30,8 +27,7 @@ import {
 } from './data';
 import { dawnholdPadTarget, dawnholdPadWeight } from './dawnhold_layout';
 import { dockSurfaceHeight } from './deck_surfaces';
-import { dungeonFloorLift } from './dungeon_floor';
-import { dawnholdKeepLiftAt, lastKeepLiftAt } from './dungeon_layout';
+import { dungeonGroundHeight } from './dungeon_floor';
 import { eastbrookDeckSurface } from './eastbrook_harbor';
 import {
   EMBER_FLAT_POOLS,
@@ -62,7 +58,6 @@ import {
 import { cragLayer, highlandMask, reliefBase, ridged2, warpedCoords } from './terrain_relief';
 import type { BiomeId, HeightStamp, ZoneDef } from './types';
 import { overworldWalkSurface } from './walk_lifts';
-import { wildheartFieldHeight } from './wildheart_field';
 
 // Terrain is a pure function of (x, z, seed): both the sim (ground clamping)
 // and the renderer (mesh) sample the same heightfield, so they always agree.
@@ -3856,30 +3851,7 @@ export function groundHeight(x: number, z: number, seed: number): number {
     const o = bgOriginAt(z);
     return bgFieldHeightLocal(x - o.x, z - o.z);
   }
-  if (x > DUNGEON_X_THRESHOLD) {
-    const dungeon = dungeonAt(x);
-    if (dungeon?.interior === 'wildheart') {
-      const origin = instanceOrigin(dungeon.index, instanceSlotForZ(z));
-      return DUNGEON_FLOOR_Y + wildheartFieldHeight(x - origin.x, z - origin.z);
-    }
-    if (dungeon?.interior === 'lastkeep') {
-      // The Last Keep's authored rooms carry per-room lifts (door ramps
-      // become stairs); the renderer builds risers and stairs from the same
-      // authoredLiftAt field, so what you climb is what you stand on.
-      const origin = instanceOrigin(dungeon.index, instanceSlotForZ(z));
-      return DUNGEON_FLOOR_Y + lastKeepLiftAt(x - origin.x, z - origin.z);
-    }
-    if (dungeon?.interior === 'dawnhold') {
-      // Dawnhold Castle's interior rides the same authored-lift idiom as the
-      // Last Keep: the solar story and its stair ramps come from the shared
-      // room plan (src/sim/dungeon_layout.ts).
-      const origin = instanceOrigin(dungeon.index, instanceSlotForZ(z));
-      return DUNGEON_FLOOR_Y + dawnholdKeepLiftAt(x - origin.x, z - origin.z);
-    }
-    // Every other interior is the flat room floor plus the raised boss dais
-    // where its room plan stacks one (dungeon_floor.ts).
-    return DUNGEON_FLOOR_Y + dungeonFloorLift(x, z);
-  }
+  if (x > DUNGEON_X_THRESHOLD) return dungeonGroundHeight(x, z);
   // The Vale Cup grandstands are walkable: the ground steps up in seated tiers so
   // players can climb the bleachers (raised WALKABLE ground is the heightfield).
   // This lives in groundHeight, NOT terrainHeight, so the render's flat terrain

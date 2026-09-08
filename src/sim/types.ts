@@ -4121,7 +4121,9 @@ export interface DungeonDef {
     | 'ignivar_depths'
     | 'wildheart'
     | 'lastkeep'
-    | 'dawnhold';
+    | 'dawnhold'
+    | 'inn_room'
+    | 'cottage';
   /**
    * What dresses this dungeon's wall-side obstacle slots (matches the render
    * variant): coffins get one standable lid, cargo splits into the crate

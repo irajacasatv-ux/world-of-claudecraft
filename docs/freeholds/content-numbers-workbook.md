@@ -405,6 +405,63 @@ an alt/process or restart; only the next admitted authoritative day permits it.
 
 ## H. Measurement and finite-size derivation
 
+
+### 06 development room measurements (2026-09-08)
+
+`art/space-measurements.json` records the measurements BEFORE runtime layout
+constants. This is new procedural development geometry, not a dimensional approval
+of the earlier composition diagram and not final art approval. The measured shipped
+`floor_tile_small.glb` horizontal extent is exactly 2 by 2 yards after normalized
+POSITION decoding and node transform. Inn Room uses 8 by 10 repeats (16 by 20 yards);
+Cottage uses 12 by 12 (24 by 24 yards). Walls use the existing 1 yard half-thickness
+and authored two-story 16 yard wall top. Both rooms have a flat floor, no dais and
+no room lights. The existing open-top dungeon shell leaves camera clearance; this
+record does not claim an authored roof mesh.
+
+| Quantity | Inn Room | Cottage |
+| --- | --- | --- |
+| Floor bounds X / Z | -8 to 8 / -8 to 12 | -12 to 12 / -8 to 16 |
+| Entry / facing / exit | (0,-4) / 0 / (0,-6) | (0,-4) / 0 / (0,-6) |
+| Hearth | (0,9) | (0,13) |
+| Fixed bed / reserved Strongbox anchor | bed (-5,3) | reserved Strongbox (8,8), no prop or collision |
+| Plinth anchors | (-5,8), (5,8), (5,3) | (-8,11), (-8,6), (8,11), (8,3) |
+| Reserved station anchor | none | (-8,0) |
+| Protected arrival, hearth approach and exit corridor | X -1.5 to 1.5, Z -6 to 6 | X -1.5 to 1.5, Z -6 to 10 |
+| Closed door panel / reserved swing box | center (0,-6.9), 2.4 wide; X -1.2 to 1.2, Z -7 to -4.6 | same |
+| Camera navigation volume | X -7 to 7, Z -7 to 11, Y 0 to 16 | X -11 to 11, Z -7 to 15, Y 0 to 16 |
+
+The gate is (-14,-92), facing 0. The existing shared 4 yard south return inset
+lands at (-14,-96), north of the blocked mailbox surround. No custom leave offset
+is introduced. The gate is a walk-through service marker. The closed ornamental
+door is backed by the south structural wall, so no aperture permits walking into
+unfloored space. Its fixed swing reservation and the complete protected corridor
+remain unavailable to future mutable furnishings.
+
+The procedural model source is `src/render/freehold/model_spec_core.ts`; its
+pre-runtime source hash and every box part are retained in the measurement artifact.
+Strongbox and station are named reserved anchors only; their props and interactions
+belong to 12. The initial measurement scratch included a Strongbox model that was
+removed at scope review before acceptance; its pre-runtime hash remains provenance,
+while the final source hash identifies the corrected rendered model set. All retained
+model transforms use scale 1 and yaw 0. Unioning the explicit box corners gives:
+
+| Model | Shipping X by Y by Z yards | Collision radius / class |
+| --- | --- | --- |
+| Bed | 2.6 by 1.5 by 4.2 | hypot(1.3,2.1) = 2.4698178070456938 |
+| Hearth | 3.2 by 3.2 by 1.4 | hypot(1.6,0.7) = 1.746424919657298 |
+| Empty plinth socket | 1.2 by 0.02 by 1.2 | walk-through floor underlay, no solid trophy |
+| Closed door panel | 2.4 by 3.2 by 0.12 | wall-attached visual backed by structural collision |
+
+The radii conservatively enclose every transformed solid box corner. The 0.5 yard
+candidate placement pitch divides the measured floor module into four and exactly
+represents the reserved path boundary; placement persistence remains disabled.
+This does not complete the maximum legal furnishing fixtures, finite serialization
+bounds, final model approval, lighting, or physical-device LOW gates owned later.
+`tests/freehold_layouts.test.ts` pins strict room membership, repeatability, model
+radii, collision and complete corridor walks; renderer bounds checks compare the
+constructed geometry to the recorded source envelopes.
+
+
 No pixel/world-unit conversion, room dimension, collision radius, grid pitch,
 parent height, query bound or serialized byte ceiling is guessed in this packet.
 The art/space producer emits a measured machine-readable fixture manifest and its

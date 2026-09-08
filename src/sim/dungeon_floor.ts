@@ -7,20 +7,30 @@
 //
 // Pure and deterministic: no rng, no wall clock, no sim state.
 
-import { dungeonAt, INSTANCE_SLOT_COUNT, instanceOrigin } from './data';
+import { COTTAGE_LAYOUT, INN_ROOM_LAYOUT } from './content/freehold/layouts';
+import {
+  DUNGEON_FLOOR_Y,
+  dungeonAt,
+  INSTANCE_SLOT_COUNT,
+  instanceOrigin,
+  instanceSlotForZ,
+} from './data';
 import {
   CRYPT_LAYOUT,
   type DungeonLayout,
   daisLiftAt,
+  dawnholdKeepLiftAt,
   IGNIVAR_FORGE_APPROACH_LAYOUT,
   IGNIVAR_LAYOUT,
   IGNIVAR_LIFT_LAYOUT,
   IGNIVAR_SECOND_WING_LAYOUT,
+  lastKeepLiftAt,
   NYTHRAXIS_LAYOUT,
   SANCTUM_LAYOUT,
   TEMPLE_LAYOUT,
 } from './dungeon_layout';
 import { IGNIVAR_LAVA_MOAT_DEPTH, ignivarArenaPointInLava } from './ignivar_arena';
+import { wildheartFieldHeight } from './wildheart_field';
 
 /** Room plan per DungeonDef.interior key (colliders.ts derives its sets from
  *  the same map, so floor and walls can never disagree about the plan). */
@@ -33,6 +43,8 @@ export const INTERIOR_LAYOUTS: Record<string, DungeonLayout> = {
   ignivar_approach: IGNIVAR_FORGE_APPROACH_LAYOUT,
   ignivar: IGNIVAR_LAYOUT,
   ignivar_depths: IGNIVAR_SECOND_WING_LAYOUT,
+  inn_room: INN_ROOM_LAYOUT,
+  cottage: COTTAGE_LAYOUT,
 };
 
 export interface DungeonInstanceFrame {
@@ -94,4 +106,31 @@ export function dungeonFloorLift(x: number, z: number): number {
     return -IGNIVAR_LAVA_MOAT_DEPTH;
   }
   return daisLiftAt(inst.layout, localX, localZ);
+}
+
+/** Absolute dungeon floor height. The world band dispatcher delegates here;
+ * authored lifts and field terrain use the same slot arithmetic as before. */
+export function dungeonGroundHeight(x: number, z: number): number {
+  const dungeon = dungeonAt(x);
+  if (dungeon?.interior === 'wildheart') {
+    const origin = instanceOrigin(dungeon.index, instanceSlotForZ(z));
+    return DUNGEON_FLOOR_Y + wildheartFieldHeight(x - origin.x, z - origin.z);
+  }
+  if (dungeon?.interior === 'lastkeep') {
+    // The Last Keep's authored rooms carry per-room lifts (door ramps
+    // become stairs); the renderer builds risers and stairs from the same
+    // authoredLiftAt field, so what you climb is what you stand on.
+    const origin = instanceOrigin(dungeon.index, instanceSlotForZ(z));
+    return DUNGEON_FLOOR_Y + lastKeepLiftAt(x - origin.x, z - origin.z);
+  }
+  if (dungeon?.interior === 'dawnhold') {
+    // Dawnhold Castle's interior rides the same authored-lift idiom as the
+    // Last Keep: the solar story and its stair ramps come from the shared
+    // room plan (src/sim/dungeon_layout.ts).
+    const origin = instanceOrigin(dungeon.index, instanceSlotForZ(z));
+    return DUNGEON_FLOOR_Y + dawnholdKeepLiftAt(x - origin.x, z - origin.z);
+  }
+  // Every other interior is the flat room floor plus the raised boss dais
+  // where its room plan stacks one (dungeon_floor.ts).
+  return DUNGEON_FLOOR_Y + dungeonFloorLift(x, z);
 }

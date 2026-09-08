@@ -3,7 +3,7 @@
 // under `claimKey: 'owner'` (D15). This suite pins the record shape that keeps
 // every exhaustive dungeon sweep green without content it must not carry (no
 // spawns, no objects, no overworld door, no Guide or Finder row), the overflow
-// band math both ids resolve through, the entry point on the open crypt floor,
+// band math both ids resolve through, the entry point on the protected home floor,
 // the English catalog rows that derive from the defs plus their five non-Latin
 // fills (M16), the fresh-Sim boot shape (no door entity, 24 unclaimed slots per
 // id on a lit AND a dark host), and the `/dungeons` readout exclusion.
@@ -86,7 +86,7 @@ describe('freehold dungeon defs: registry shape', () => {
       expect(def.overworldDoor).toBe(false);
       expect(def.guideVisible).toBe(false);
       expect(def.suggestedPlayers).toBe(1);
-      expect(def.interior).toBe('crypt');
+      expect(def.interior).toBe(id === 'freehold_inn_room' ? 'inn_room' : 'cottage');
       expect(def.bossChainPull).toBeUndefined();
       expect(def.tombDressing).toBeUndefined();
       expect(def.staticDoor).toBeUndefined();
@@ -150,21 +150,19 @@ describe('freehold dungeon defs: overflow band and entry floor', () => {
     expect(dungeonAt(120400)).toBeNull();
   });
 
-  it('arrives on the open crypt floor, clear of pillars, tombs and the walls', () => {
-    // CRYPT_LAYOUT (src/sim/dungeon_layout.ts): walkable |x| <= 22, the front
-    // wall's inner face at z -18, the first pillar row at z 10.
+  it('arrives on the protected home floor, clear of fixed dressing and walls', () => {
     for (const id of ROOM_IDS) {
       const { entry, exitOffset } = DUNGEONS[id];
-      expect(entry).toEqual({ x: 0, z: -2 });
+      expect(entry).toEqual({ x: 0, z: -4 });
       expect(exitOffset).toEqual({ x: 0, z: -6 });
-      expect(entry.x).toBeGreaterThanOrEqual(-22);
-      expect(entry.x).toBeLessThanOrEqual(22);
-      expect(entry.z).toBeGreaterThanOrEqual(-18);
-      expect(entry.z).toBeLessThanOrEqual(8);
-      expect(exitOffset.x).toBeGreaterThanOrEqual(-22);
-      expect(exitOffset.x).toBeLessThanOrEqual(22);
-      expect(exitOffset.z).toBeGreaterThanOrEqual(-18);
-      expect(exitOffset.z).toBeLessThanOrEqual(8);
+      expect(entry.x).toBeGreaterThan(-7);
+      expect(entry.x).toBeLessThan(7);
+      expect(entry.z).toBeGreaterThan(-7);
+      expect(entry.z).toBeLessThan(11);
+      expect(exitOffset.x).toBeGreaterThan(-7);
+      expect(exitOffset.x).toBeLessThan(7);
+      expect(exitOffset.z).toBeGreaterThan(-7);
+      expect(exitOffset.z).toBeLessThan(11);
     }
   });
 });

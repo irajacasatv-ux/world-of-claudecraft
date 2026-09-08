@@ -1,0 +1,489 @@
+{
+  "schemaVersion": 1,
+  "measurement": "MEASURE-SPACE",
+  "date": "2026-09-08",
+  "status": "development_measured_procedural_stand_ins",
+  "productionApproved": false,
+  "provenance": "New module-count room designs composed from a measured shipped kit floor and source-defined procedural box parts. These are reproducible engineering measurements, not approved final art or inferred dimensions from composition diagrams.",
+  "sources": [
+    {
+      "path": "public/models/dungeon/floor_tile_small.glb",
+      "sha256": "02a3d76515b27ae064c012a04eb8375da672da45ad48770c0522b0108bfeef85",
+      "method": "KHR_mesh_quantization normalized signed-short POSITION accessor extrema (index2), then node translation; EXT_meshopt_compression preserves those extrema.",
+      "rawPositionBounds": {
+        "min": [-32767, -2456, -32767],
+        "max": [32767, 2456, 32767]
+      },
+      "shippingBounds": {
+        "min": [-1, -0.09995346150822329, -1],
+        "max": [1.0, 0.04995345703787493, 1.0]
+      },
+      "shippingSize": [2.0, 0.14990691854609822, 2.0]
+    },
+    {
+      "path": "src/render/freehold/model_spec_core.ts",
+      "measuredFrom": "/tmp/freehold-model-spec-core.ts before runtime edits",
+      "sha256": "91d338f1c55bbd94c5d8a34d0e30b9ee7346dab98887fa63dbf7d21eb2d74b21",
+      "method": "Enumerate every box corner as center +/- size/2, union per model. Radius is hypot(maxAbsX,maxAbsZ); yaw preserves circle enclosure. Geometry spec included in models.parts. Final source hash refreshed after formatting and removing the out-of-scope Strongbox model; retained box geometry unchanged.",
+      "preRuntimeSha256": "fa03307fa9f8540525414b7dc6beaa35a9bf3e7731446af2e92668738725d53f"
+    }
+  ],
+  "models": {
+    "bed": {
+      "parts": [
+        {
+          "size": [2.6, 0.3, 4.2],
+          "center": [0, 0.45, 0]
+        },
+        {
+          "size": [2.4, 0.3, 3.8],
+          "center": [0, 0.75, 0]
+        },
+        {
+          "size": [2.42, 0.12, 2.6],
+          "center": [0, 0.96, -0.5]
+        },
+        {
+          "size": [1.8, 0.2, 0.65],
+          "center": [0, 1, 1.28]
+        },
+        {
+          "size": [2.6, 1.5, 0.2],
+          "center": [0, 0.75, 2]
+        },
+        {
+          "size": [2.6, 0.9, 0.2],
+          "center": [0, 0.45, -2]
+        },
+        {
+          "size": [0.24, 0.4, 0.24],
+          "center": [-1.13, 0.2, -1.7]
+        },
+        {
+          "size": [0.24, 0.4, 0.24],
+          "center": [1.13, 0.2, -1.7]
+        },
+        {
+          "size": [0.24, 0.4, 0.24],
+          "center": [-1.13, 0.2, 1.7]
+        },
+        {
+          "size": [0.24, 0.4, 0.24],
+          "center": [1.13, 0.2, 1.7]
+        }
+      ],
+      "rawBounds": {
+        "min": [-1.3, 0.0, -2.1],
+        "max": [1.3, 1.5, 2.1]
+      },
+      "shippingBounds": {
+        "min": [-1.3, 0.0, -2.1],
+        "max": [1.3, 1.5, 2.1]
+      },
+      "normalization": {
+        "scale": [1, 1, 1],
+        "translation": [0, 0, 0]
+      },
+      "height": 1.5,
+      "footprint": {
+        "x0": -1.3,
+        "x1": 1.3,
+        "z0": -2.1,
+        "z1": 2.1
+      },
+      "colliderRadius": 2.4698178070456938,
+      "collisionClass": "solid",
+      "occupiedSurfaceClass": "floor",
+      "tableTop": null,
+      "childSockets": [],
+      "ceilingSockets": []
+    },
+    "hearth": {
+      "parts": [
+        {
+          "size": [3.2, 0.2, 1.4],
+          "center": [0, 0.1, 0]
+        },
+        {
+          "size": [0.55, 2.35, 1.1],
+          "center": [-1.225, 1.375, 0.1]
+        },
+        {
+          "size": [0.55, 2.35, 1.1],
+          "center": [1.225, 1.375, 0.1]
+        },
+        {
+          "size": [3.2, 0.3, 1.4],
+          "center": [0, 2.65, 0]
+        },
+        {
+          "size": [2.2, 0.4, 0.9],
+          "center": [0, 3, 0.2]
+        },
+        {
+          "size": [1.9, 2.3, 0.15],
+          "center": [0, 1.35, 0.625]
+        },
+        {
+          "size": [1.9, 0.15, 1],
+          "center": [0, 0.25, 0.1]
+        }
+      ],
+      "rawBounds": {
+        "min": [-1.6, 0.0, -0.7],
+        "max": [1.6, 3.2, 0.7]
+      },
+      "shippingBounds": {
+        "min": [-1.6, 0.0, -0.7],
+        "max": [1.6, 3.2, 0.7]
+      },
+      "normalization": {
+        "scale": [1, 1, 1],
+        "translation": [0, 0, 0]
+      },
+      "height": 3.2,
+      "footprint": {
+        "x0": -1.6,
+        "x1": 1.6,
+        "z0": -0.7,
+        "z1": 0.7
+      },
+      "colliderRadius": 1.746424919657298,
+      "collisionClass": "solid",
+      "occupiedSurfaceClass": "floor",
+      "tableTop": null,
+      "childSockets": [],
+      "ceilingSockets": []
+    },
+    "entry_door": {
+      "parts": [
+        {
+          "size": [2.4, 3.2, 0.08],
+          "center": [0, 1.6, 0.02]
+        },
+        {
+          "size": [0.16, 3.2, 0.12],
+          "center": [-1.12, 1.6, 0]
+        },
+        {
+          "size": [0.16, 3.2, 0.12],
+          "center": [1.12, 1.6, 0]
+        },
+        {
+          "size": [2.4, 0.16, 0.12],
+          "center": [0, 3.12, 0]
+        },
+        {
+          "size": [0.12, 0.3, 0.12],
+          "center": [0.8, 1.4, 0]
+        }
+      ],
+      "rawBounds": {
+        "min": [-1.2000000000000002, 0.0, -0.06],
+        "max": [1.2000000000000002, 3.2, 0.06]
+      },
+      "shippingBounds": {
+        "min": [-1.2000000000000002, 0.0, -0.06],
+        "max": [1.2000000000000002, 3.2, 0.06]
+      },
+      "normalization": {
+        "scale": [1, 1, 1],
+        "translation": [0, 0, 0]
+      },
+      "height": 3.2,
+      "footprint": {
+        "x0": -1.2000000000000002,
+        "x1": 1.2000000000000002,
+        "z0": -0.06,
+        "z1": 0.06
+      },
+      "colliderRadius": null,
+      "collisionClass": "wall_attached_visual",
+      "occupiedSurfaceClass": "fixed_wall",
+      "tableTop": null,
+      "childSockets": [],
+      "ceilingSockets": []
+    },
+    "plinth": {
+      "parts": [
+        {
+          "size": [1.2, 0.02, 1.2],
+          "center": [0, 0.01, 0]
+        },
+        {
+          "size": [1.02, 0.01, 1.02],
+          "center": [0, 0.015, 0]
+        }
+      ],
+      "rawBounds": {
+        "min": [-0.6, 0.0, -0.6],
+        "max": [0.6, 0.02, 0.6]
+      },
+      "shippingBounds": {
+        "min": [-0.6, 0.0, -0.6],
+        "max": [0.6, 0.02, 0.6]
+      },
+      "normalization": {
+        "scale": [1, 1, 1],
+        "translation": [0, 0, 0]
+      },
+      "height": 0.02,
+      "footprint": {
+        "x0": -0.6,
+        "x1": 0.6,
+        "z0": -0.6,
+        "z1": 0.6
+      },
+      "colliderRadius": null,
+      "collisionClass": "walk_through_underlay",
+      "occupiedSurfaceClass": "floor",
+      "tableTop": null,
+      "childSockets": [],
+      "ceilingSockets": []
+    }
+  },
+  "rooms": {
+    "inn_room": {
+      "bounds": {
+        "x0": -8,
+        "x1": 8,
+        "z0": -8,
+        "z1": 12
+      },
+      "floorPolygon": [[-8, -8], [8, -8], [8, 12], [-8, 12]],
+      "gridOrigin": [-8, -8],
+      "structuralGridPitch": 2,
+      "structuralModules": [8, 10],
+      "placementGridPitch": 0.5,
+      "placementGridDerivation": "Four subdivisions of the measured 2yd module support the half-yard anchor and reserved path boundaries. Placement persistence is not enabled.",
+      "entry": {
+        "x": 0,
+        "z": -4,
+        "facing": 0
+      },
+      "exit": {
+        "x": 0,
+        "z": -6
+      },
+      "doorway": {
+        "center": [0, -6.9],
+        "width": 2.4,
+        "height": 3.2,
+        "depth": 0.12,
+        "state": "closed_static",
+        "opening": null,
+        "reservedSwingBox": {
+          "x0": -1.2,
+          "x1": 1.2,
+          "z0": -7,
+          "z1": -4.6
+        }
+      },
+      "protectedCorridor": {
+        "x0": -1.5,
+        "x1": 1.5,
+        "z0": -6,
+        "z1": 6
+      },
+      "anchors": [
+        {
+          "key": "hearth",
+          "x": 0,
+          "z": 9,
+          "yaw": 0
+        },
+        {
+          "key": "entry_door",
+          "x": 0,
+          "z": -6.9,
+          "yaw": 0
+        },
+        {
+          "key": "plinth_1",
+          "x": -5,
+          "z": 8,
+          "yaw": 0
+        },
+        {
+          "key": "plinth_2",
+          "x": 5,
+          "z": 8,
+          "yaw": 0
+        },
+        {
+          "key": "plinth_3",
+          "x": 5,
+          "z": 3,
+          "yaw": 0
+        },
+        {
+          "key": "bed",
+          "x": -5,
+          "z": 3,
+          "yaw": 0
+        }
+      ],
+      "cameraNavigationVolume": {
+        "x0": -7,
+        "x1": 7,
+        "z0": -7,
+        "z1": 11,
+        "y0": 0,
+        "y1": 16
+      },
+      "viewPath": [[0, 1.7, -4], [0, 1.7, 6]],
+      "wallHalfThickness": 1,
+      "wallHeight": 16,
+      "roof": {
+        "fixed": true,
+        "height": 16,
+        "rendered": false,
+        "reason": "Existing authored dungeon grammar has open top for chase-camera clearance; no new roof asset claimed."
+      },
+      "exclusionVolumes": [
+        "structural walls",
+        "reservedSwingBox",
+        "protectedCorridor",
+        "solid model footprints expanded by player body radius"
+      ],
+      "floorLift": 0,
+      "verticalClearanceAboveTallestFixture": 12.8
+    },
+    "cottage": {
+      "bounds": {
+        "x0": -12,
+        "x1": 12,
+        "z0": -8,
+        "z1": 16
+      },
+      "floorPolygon": [[-12, -8], [12, -8], [12, 16], [-12, 16]],
+      "gridOrigin": [-12, -8],
+      "structuralGridPitch": 2,
+      "structuralModules": [12, 12],
+      "placementGridPitch": 0.5,
+      "placementGridDerivation": "Four subdivisions of the measured 2yd module support the half-yard anchor and reserved path boundaries. Placement persistence is not enabled.",
+      "entry": {
+        "x": 0,
+        "z": -4,
+        "facing": 0
+      },
+      "exit": {
+        "x": 0,
+        "z": -6
+      },
+      "doorway": {
+        "center": [0, -6.9],
+        "width": 2.4,
+        "height": 3.2,
+        "depth": 0.12,
+        "state": "closed_static",
+        "opening": null,
+        "reservedSwingBox": {
+          "x0": -1.2,
+          "x1": 1.2,
+          "z0": -7,
+          "z1": -4.6
+        }
+      },
+      "protectedCorridor": {
+        "x0": -1.5,
+        "x1": 1.5,
+        "z0": -6,
+        "z1": 10
+      },
+      "anchors": [
+        {
+          "key": "hearth",
+          "x": 0,
+          "z": 13,
+          "yaw": 0
+        },
+        {
+          "key": "entry_door",
+          "x": 0,
+          "z": -6.9,
+          "yaw": 0
+        },
+        {
+          "key": "plinth_1",
+          "x": -8,
+          "z": 11,
+          "yaw": 0
+        },
+        {
+          "key": "plinth_2",
+          "x": -8,
+          "z": 6,
+          "yaw": 0
+        },
+        {
+          "key": "plinth_3",
+          "x": 8,
+          "z": 11,
+          "yaw": 0
+        },
+        {
+          "key": "plinth_4",
+          "x": 8,
+          "z": 3,
+          "yaw": 0
+        },
+        {
+          "key": "strongbox",
+          "x": 8,
+          "z": 8,
+          "yaw": 0
+        },
+        {
+          "key": "station",
+          "x": -8,
+          "z": 0,
+          "yaw": 0
+        }
+      ],
+      "cameraNavigationVolume": {
+        "x0": -11,
+        "x1": 11,
+        "z0": -7,
+        "z1": 15,
+        "y0": 0,
+        "y1": 16
+      },
+      "viewPath": [[0, 1.7, -4], [0, 1.7, 10]],
+      "wallHalfThickness": 1,
+      "wallHeight": 16,
+      "roof": {
+        "fixed": true,
+        "height": 16,
+        "rendered": false,
+        "reason": "Existing authored dungeon grammar has open top for chase-camera clearance; no new roof asset claimed."
+      },
+      "exclusionVolumes": [
+        "structural walls",
+        "reservedSwingBox",
+        "protectedCorridor",
+        "solid model footprints expanded by player body radius"
+      ],
+      "floorLift": 0,
+      "verticalClearanceAboveTallestFixture": 12.8
+    }
+  },
+  "gate": {
+    "position": [-14, -92],
+    "facing": 0,
+    "return": [-14, -96],
+    "collisionClass": "walk_through_service",
+    "returnDerivation": "Existing shared dungeon return subtracts4 Z; no custom leaveOffset."
+  },
+  "precision": {
+    "floorHorizontalError": 0,
+    "modelArithmetic": "IEEE754 doubles; tests tolerate1e-6 for Float32 render geometry bounds, never use tolerance to legalize placement."
+  },
+  "pending": [
+    "Final art approval and shipping GLB evidence",
+    "Maximum legal furnishing fixture layout and placement codec bounds",
+    "Room lighting and camera presentation",
+    "Physical device LOW evidence"
+  ],
+  "scopeCorrection": "Strongbox and station remain named reserved anchors only. Their props and interactions belong to12; no Strongbox geometry or radius ships in06. Pre-runtime hash retains original measured scratch provenance; final source hash records the corrected rendered model set."
+}
