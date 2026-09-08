@@ -1,14 +1,14 @@
 # Freeholds and Guildhalls: progress
 
 Foundation, furnishing item-kind and content 03 implementation and paired QA are
-complete locally. Crafted content 04 retains its accepted development implementation;
-its separate paired QA verdict is FAIL, local, on 2026-09-07. The audit found 29
-distinct findings: 28 repairs are applied and independently accepted, while F01
-remains open because the explicit profession-path freeze has no owner reconciliation
-with the D85 availability changes. Final command and visual outcomes are recorded in
-[validation.md](crafted-qa-2026-09-07/validation.md), with findings and the fresh
-whole-fix review linked below. Production remains disabled; the failed QA does not
-advance to implementation 05.
+complete locally. Crafted content 04 retains its accepted development implementation.
+Current implementation validation and required reviews passed. The active request prospectively
+reconciles F01 against unchanged protected validators and station/training/economy
+semantics. The earlier paired QA FAIL and its 28 accepted repairs remain historical
+evidence in [validation.md](crafted-qa-2026-09-07/validation.md).
+[Current revalidation](crafted-content-revalidation-2026-09-07.md) owns the fresh
+review and execution outcomes. Production remains disabled; implementation 05 waits
+for the separate paired QA.
 
 Production calibration, activation, final GLBs and room/hardware LOW gates remain
 unsigned; NPC voice remains required before feature shipment.
@@ -18,7 +18,7 @@ unsigned; NPC voice remains required before feature shipment.
 There are 56 bounded work items and 56 paired QA rows; their actual status is recorded
 below. The 44 original numeric items retain their IDs and twelve suffixed pairs are
 inserted into the chain. The next handoff is
-[phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md).
+[phase-04-qa.md](phase-04-qa.md).
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
@@ -28,8 +28,8 @@ inserted into the chain. The next handoff is
 | 02 QA | PASS, local | 2026-09-07 | 2026-09-07 | 40 findings found and 40 resolved, zero deferred. Fresh entire-fix review PASS at d386635394 across 110 changed files and all four repair commits; final documentation and checklist PASS with both wording nits resolved. Final shared gate exit 0, all 12 steps green; 58,083 Vitest and 373 browser tests passed; standalone i18n/status PASS. Post-commit ci:changed actual exit 0 at c881543258 with clean status; the same check follows the evidence-only amendment. See furnishing-item-kind-qa-validation.md |
 | 03 Content: tiers, Charter SKU, ledger schedule, vendor basics | Complete (QA PASS), local | 2026-09-07 | 2026-09-07 | Accepted twelve-bill development cycle, eight common 250/60 furnishings, measured geometry, gated freehold_furnisher, manual Homesteader rewards and hearth_basics (eight ordinary item relics). Production remains disabled. See content-trial-2026-09-07/acceptance.md and content-final-validation-2026-09-07.md. No push. |
 | 03 QA | PASS, local | 2026-09-07 | 2026-09-07 | 39 distinct findings found and resolved, zero open. Paired correctness/coverage/hygiene, finishing and conditional reviews PASS, including fresh repairs. Final shared gate exit 0, all 12 steps; 57,726 unit and 376 browser tests passed. Runtime and canonical visual evidence accepted. Four reviewed completion commits; post-source-commit ci:changed exit 0, repeated after the final evidence commit with its result in the task handoff. See content-final-validation-2026-09-07.md. |
-| 04 Content: crafted furnishings and quartermaster patterns | Development implementation complete, local | 2026-09-07 | 2026-09-07 | Accepted development v1, ten recipes/outputs, three 16-Mark patterns, Hearth page, thirteen final icons/provenance and 42 runtime captures. Shared gate exit 0, all 12 steps; implementation QA/fresh review closeout recorded in crafted-content-trial-2026-09-07/implementation-validation.md. Four authorized commits `86eb86bbe2`, `8bd097d898`, `b3c2452b49` and `3666d89647`; post-fourth-commit ci:changed exit 0 (1967 files, existing warnings only), clean status observed. The original completion receipt called for the same check after its documentation-only amendment; no push. Production gates remain unsigned. |
-| 04 QA | FAIL, local | 2026-09-07 | 2026-09-07 | 29 distinct findings, 28 repairs applied and independently accepted, 1 open requirement conflict (F01). Final validation and fresh whole-fix review support repaired source `b379ee462d`, but the explicit no-edits-under-src/sim/professions requirement remains unmet without an owner decision reconciling D85. See [findings](crafted-qa-2026-09-07/findings.md), [validation](crafted-qa-2026-09-07/validation.md) and [fresh whole-fix review](crafted-qa-2026-09-07/reviews/qa-checklist-final.md). Return to 04 implementation; do not advance to 05. |
+| 04 Content: crafted furnishings and quartermaster patterns | Development implementation revalidated, local | 2026-09-07 | 2026-09-07 | Current revalidation: shared gate all 12 steps PASS, fresh content/coverage/doc-fix reviews PASS; see crafted-content-revalidation-2026-09-07.md for exact current outcomes and final commit-check receipt. Original accepted development v1: ten recipes/outputs, three 16-Mark patterns, Hearth page, thirteen final icons/provenance and 42 runtime captures. Shared gate exit 0, all 12 steps; implementation QA/fresh review closeout recorded in crafted-content-trial-2026-09-07/implementation-validation.md. Four authorized commits `86eb86bbe2`, `8bd097d898`, `b3c2452b49` and `3666d89647`; post-fourth-commit ci:changed exit 0 (1967 files, existing warnings only), clean status observed. The original completion receipt called for the same check after its documentation-only amendment; no push. Production gates remain unsigned. |
+| 04 QA | Ready for paired rerun; historical FAIL retained | 2026-09-07 | | Prior audit found 29 distinct findings, accepted 28 repairs and left F01 open under its whole-directory restriction. The current user implementation request supersedes that restriction with unchanged evaluateCraftAdmission/resolveTrain and preserved station/training/economy semantics; F01 is prospectively reconciled, not a retrospective PASS. Current implementation reviews and shared gate PASS; the separate paired QA has not been rerun. See [current revalidation](crafted-content-revalidation-2026-09-07.md) and the unchanged [historical findings](crafted-qa-2026-09-07/findings.md), [validation](crafted-qa-2026-09-07/validation.md) and [whole-fix review](crafted-qa-2026-09-07/reviews/qa-checklist-final.md). Do not advance to 05. |
 | 05 Instance claim | Not started | | | |
 | 05 QA | Not started | | | |
 | 06 Interiors, the Eastbrook gate, the Hearth Key | Not started | | | |
@@ -443,6 +443,19 @@ After phase-03-qa.md: [phase-04-content-crafted-and-patterns.md](phase-04-conten
 
 Implementation: [phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md). Paired audit: [phase-04-qa.md](phase-04-qa.md).
 
+Current resumption, 2026-09-07: **implementation validation PASS**. The active implementation
+request preserves the two named validators and existing mechanics rather than a
+whole-directory path freeze. F01 is prospectively reconciled under that request;
+the historical FAIL below remains unchanged. Full declarations are byte-identical
+from `86eb86bbe2^` to merged release `7f4fe99619`. Typecheck and scoped content,
+guide and i18n checks passed; fresh required reviews and all twelve shared-gate
+steps passed. The final post-commit check is recorded in the task handoff/local
+receipt; this is not a new paired QA verdict. See
+[current evidence](crafted-content-revalidation-2026-09-07.md). Existing content
+commits and accepted development calibration are reused; production remains off.
+The current next file is
+`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-04-qa.md`.
+
 Development implementation completion notes, 2026-09-07 (original snapshot at `3666d89647`, before the separate 04 QA audit):
 
 - Fernando accepted development v1 in
@@ -509,7 +522,9 @@ Development implementation completion notes, 2026-09-07 (original snapshot at `3
   arrival/navigation and actual LOW performance remain named production gates.
 
 
-Paired 04 QA closeout, 2026-09-07: **FAIL, local**.
+Historical paired 04 QA closeout, 2026-09-07: **FAIL, local**.
+The following receipt describes that completed audit; the current resumption above
+and linked revalidation record own the prospective status and next step.
 
 - The audit covers original implementation `49ed3f0933..3666d89647`, dependency
   head `54ce808436` integrated by `2e24ba8818`, and dedicated repair commits
@@ -569,8 +584,8 @@ Deliverables (at most five):
 
 Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
-Current handoff after 04 QA FAIL:
-[phase-04-content-crafted-and-patterns.md](phase-04-content-crafted-and-patterns.md).
+Current handoff after implementation revalidation:
+[phase-04-qa.md](phase-04-qa.md).
 The planned [05 Instance claim](phase-05-instance-claim.md) remains gated by a later
 04 QA PASS; it has not started.
 

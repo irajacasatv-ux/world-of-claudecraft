@@ -1,0 +1,14 @@
+[
+  {
+    "file": "src/sim/professions/crafting.ts",
+    "name": "evaluateCraftAdmission",
+    "identical": true,
+    "sha256": "02084dd3b64fc40fc1f15bf18226964176f232ebd763829ca9402728772870c3"
+  },
+  {
+    "file": "src/sim/professions/training.ts",
+    "name": "resolveTrain",
+    "identical": true,
+    "sha256": "ca7437959bbc99f2f155217bc25f8a8b0f9ffb5b420808ae83728567fc90bbd3"
+  }
+]

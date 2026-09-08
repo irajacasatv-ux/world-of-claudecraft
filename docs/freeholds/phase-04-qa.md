@@ -3,6 +3,14 @@
 Audits `phase-04-content-crafted-and-patterns.md`. Verdict goes in `progress.md` (row
 "04 QA"). The next implementation phase never starts before this file has run.
 
+Current scope reconciliation, 2026-09-07: the active implementation request protects
+`evaluateCraftAdmission`, `resolveTrain`, existing station bindings and training/economy
+semantics. It supersedes the older whole-directory profession edit prohibition.
+[The revalidation record](crafted-content-revalidation-2026-09-07.md) preserves the
+prior FAIL verdict and records the protected-function comparison. Current implementation
+validation and fresh documentation review passed; this separate paired QA still needs
+to run against the reconciled scope.
+
 ### Starter Prompt
 ```
 This is Phase 04 (QA) of the Freeholds and Guildhalls feature: audit the content (ten
@@ -40,13 +48,18 @@ Spawn one Explore agent to read and summarize:
   tests/apex_pattern_channels.test.ts, tests/recipe_pattern_items.test.ts,
   tests/recipe_economy.test.ts, tests/provisioner_firewall.test.ts (the furnishing arm),
   tests/freehold_content.test.ts, tests/professions_crafting_hub.test.ts
-- src/sim/professions/crafting.ts and src/sim/professions/training.ts as they stand
-  (prove neither changed: `git diff <phase-start>..HEAD -- src/sim/professions/`)
+- src/sim/professions/crafting.ts and src/sim/professions/training.ts as they stand:
+  compare the full evaluateCraftAdmission and resolveTrain declarations with the
+  pre-content baseline and prove they are unchanged. Inspect every profession-source
+  diff for preserved station, teach-tier, fee and economy semantics. Review the
+  existing isFreeholdCraftAvailable seam and its acquisition/training/craft callers;
+  availability guards do not authorize changing either protected validator.
 The agent returns: the promised-versus-delivered table per deliverable, a table of the
 ten recipes (craft, station type, acquisition, bill ids by tier, produce or not, trainer row
 or pattern), a table of the three patterns (id, prefix, quality, quartermaster row, Marks
 price), the obligation table per new item id, every test added with what it asserts, and
-any edit under src/sim/professions/ (which must be none).
+every edit under src/sim/professions/, with protected-function comparison evidence
+and acquisition tests proving dark-host refusals preserve knowledge, copies and fees.
 
 STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report to a
 file and replying with the path plus a short summary; prompt each for COVERAGE: report
@@ -63,8 +76,10 @@ every issue including low-severity and uncertain ones; ranking happens later):
   floor, partition and header-comment literals pin 55 teaching items (54 recipe manuals
   teaching 76 drop recipes plus one enchant teaching item), 43 non-Crucible teaching
   items and seven disjoint recipe families; every recipe's itemLevelBudget and skillReq
-  equal the CAL-RECIPES-A workbook literals; nothing under src/sim/professions/ moved; the market can list every
-  furnishing (R18).
+  equal the CAL-RECIPES-A workbook literals; evaluateCraftAdmission and resolveTrain
+  are unchanged, existing station/training/economy behavior is preserved, and the
+  existing freehold availability seam covers acquisition, training and crafting
+  without spending on refusal; the market can list every furnishing (R18).
 - TEST COVERAGE: the pattern suite drives resolvePatternLearn with the item in a bag
   slot and asserts the recipe known plus exactly one copy consumed; the trainer path is
   driven for at least one furnishing recipe; the channel sweep would fail on a pattern

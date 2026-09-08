@@ -9,25 +9,10 @@ Only what the next session needs. Update at the end of every phase and QA.
   (`origin/feature/masterwrought` at `0f53c92ff7`, Masterwrought crafting and Farming,
   itself based on `release/v0.42.0`). The packet tip carries three cherry-picked docs
   commits (the proposal, the deck and index, the feature-plan skill refresh) on top.
-- Dependency PR #3872: OPEN and, at packet creation, CONFLICTING against
-  `origin/release/v0.42.0` (the release moved 37 commits past the PR base). Re-verified at
-  the review-fix round (2026-09-06): still OPEN and CONFLICTING (merge state DIRTY, no
-  merge timestamp); `origin/release/v0.42.0` is now 87 commits past the merge-base
-  `1fdf0f55a3`, and its head at that check was `4e168d1ad7`. The release keeps advancing:
-  re-read it at every phase start and never treat a recorded revision as the current tip.
-  Merge-forward rule, repeated in every starter prompt:
-  - While PR #3872 is OPEN: at every phase start `git fetch origin --prune` and
-    `git merge origin/feature/masterwrought` (its fresh head, never a stale copy).
-  - Once PR #3872 has MERGED: discover the newest release branch
-    (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare with
-    `git rev-list --left-right --count HEAD...origin/release/<newest>`, merge it, and
-    DELETE this dependency block from `state.md`.
-  - Paired 04 QA sync on 2026-09-07: dependency head `54ce808436` was merged
-    through `2e24ba8818`, whose parents are original implementation tip
-    `3666d89647` and that dependency head. PR #3872 remained OPEN. The merge
-    does not itself establish a completed integration audit or final QA verdict.
-  - After any non-empty merge run the `release-merge-audit` skill; if the merge touched
-    `patches/`, run `pnpm install --frozen-lockfile` before anything else.
+- Current sync (2026-09-07): PR #3872 is MERGED at `6111e6d206`. The newest
+  fetched release is `origin/release/v0.42.0`; merge `7f4fe99619` integrated it
+  locally. No `patches/` path changed. Future starts fetch with prune and merge
+  the newest `origin/release/**`, then audit any non-empty merge.
 - Push policy: the branch stays local until Fernando says to push. Pushes go to `origin`,
   never a fork. A PR is opened only by a wave close phase (20, 27, 33, 39 and 44: one PR
   per wave under D12, owned for every wave), after the whole-feature matrix, and only
@@ -38,14 +23,31 @@ Only what the next session needs. Update at the end of every phase and QA.
   from a session.
 
 ## Current phase
-Phase 04 (`phase-04-content-crafted-and-patterns.md`): development implementation
-complete locally; paired 04 QA verdict **FAIL, local**, on 2026-09-07. The audit
-found 29 distinct findings: 28 repairs are applied and independently accepted,
-with F01 still open. The original implementation changed four profession paths
-for D85 availability and trainer extraction, while the explicit QA requirement
-prohibits all edits under `src/sim/professions/`. Preserved station, tier and fee
-mechanics do not satisfy that path freeze. Fernando has not supplied the requested
-reconciliation; no waiver or PASS is inferred.
+Phase 04 (`phase-04-content-crafted-and-patterns.md`): existing development content
+is complete locally; current implementation validation is **PASS**. The active user request
+protects `evaluateCraftAdmission`, `resolveTrain` and existing station/training/economy
+semantics. It supersedes the earlier QA whole-directory edit prohibition. F01 is
+resolved prospectively as a scope reconciliation under that current request, not a
+new numeric signature or a rewritten verdict. The two full function declarations
+are byte-identical from `86eb86bbe2^` to `7f4fe99619`. Fresh required reviews found
+no source defects; the full shared gate passed all twelve steps (60090 unit tests,
+389 browser tests). This local run left optional PostgreSQL coverage unarmed. The
+final post-commit check is recorded with the actual commit in the task handoff and
+local execution receipt linked from the revalidation record.
+
+See [current revalidation](crafted-content-revalidation-2026-09-07.md) for the
+comparison hashes, merge provenance and completed scoped checks. The four original
+content commits already exist; this resumption does not repeat them or regenerate
+accepted assets. Production approval remains false and final-model/room/LOW gates
+remain with their existing owners.
+
+### Historical paired 04 QA receipt
+
+The paired 04 QA verdict was **FAIL, local**, on 2026-09-07. Its audit found 29
+distinct findings: 28 repairs applied and independently accepted, with F01 open
+under the then-current whole-directory prohibition. That historical requirement
+conflict and verdict remain recorded in the original findings and review receipts.
+The prospective reconciliation above does not claim that historical QA passed.
 
 The original accepted development implementation remains snapshot `3666d89647`,
 with commits `86eb86bbe2`, `8bd097d898`, `b3c2452b49` and `3666d89647`. Its exact
@@ -83,10 +85,11 @@ occurred. `productionApproved` remains false. Production numeric, final GLB, roo
 arrival/navigation and hardware LOW gates retain their existing owners. No asset
 was generated in this QA.
 
-NEXT: return to 04 implementation to obtain the owner decision for F01 and apply
-the authorized outcome, then rerun 04 QA. Do not advance to implementation 05.
-Full path:
-`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-04-content-crafted-and-patterns.md`.
+### Current next step
+
+Run the paired 04 QA against its reconciled protected boundaries after the final
+implementation commit check. Do not advance to implementation 05. Full path:
+`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-04-qa.md`.
 
 Previous phase 03 (`phase-03-content-tiers-and-basics.md`): COMPLETE INCLUDING QA,
 verdict PASS locally on 2026-09-07. All 39 distinct completion-round findings
@@ -116,7 +119,8 @@ passed with exit 0 and clean status. It will run again after the evidence-only
 amendment; see `progress.md` row "02 QA" and
 `furnishing-item-kind-qa-validation.md`.
 The QA dependency sync merged PR #3872 head `d3dcdaa4af` through merge commit
-`041fd790ce`; the PR remains OPEN, so the dependency block above still applies.
+`041fd790ce`; the PR was still OPEN at that historical checkpoint. The current
+merged-release sync above supersedes that dependency status.
 Phase 01 remains COMPLETE INCLUDING QA, verdict PASS (`c946091c07..2e247df270`). Its QA
 round's own detail is in `progress.md` row "01 QA"; do NOT re-run that audit or re-raise
 its judged findings. R01-R46 and D73-D75 are approved;
@@ -1398,8 +1402,11 @@ only and never declares its remaining deliverables or paired QA complete.
   `guide.profPages.craftProse.armorcrafting.ladderBody`. Item names and both guide
   keys have English sources plus the five M16 fills; compiled locale generation
   and wiki freshness passed in the shared gate.
-- Verified catalog totals are 43 pages / 484 raw slots / 337 unique
-  item IDs / 448 full-completion slots / 419 character-completion slots. Channel
+- Original implementation snapshot totals were 43 pages / 484 raw slots / 337
+  unique item IDs / 448 full-completion slots / 419 character-completion slots.
+  After release merge `7f4fe99619`, current `tests/reliquary_content.test.ts`
+  pins full completion at 462 and character completion at 433; preserve incoming
+  catalog additions rather than restoring historical totals. Channel
   pins preserve Crucible: 55 teaching items comprise 54 recipe manuals teaching
   76 drop recipes plus one enchant teaching item. There are 43 non-Crucible
   teaching items; furnishings are the seventh disjoint recipe family. Historical
