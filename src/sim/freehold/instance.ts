@@ -9,7 +9,8 @@
 // `freeholdDenied` event, no `log` or `error` line, and nothing moves, nothing
 // is claimed and no rng is drawn. The refusals run BEFORE the dungeon module
 // is asked to enter, in this fixed order: dead, in combat, no record (an
-// unusable record counts as none), then a full slot pool (`busy`), which is
+// unusable record counts as none for a LIVING enter; the corpse run below
+// needs no usable tier), then a full slot pool (`busy`), which is
 // checked here precisely so the dungeon module's own English "instances are
 // busy" error can never fire for a freehold. The flag is NOT re-checked here:
 // the server dispatch gate is the one gate, and a dark host's record

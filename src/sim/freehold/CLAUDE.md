@@ -53,10 +53,11 @@ carries an opaque plot id only.
   modules import this directory's barrel, so a freehold -> `instances/dungeons`
   edge would sit one import away from a loop through the barrel (the
   `pvp/index.ts` rule).
-- THE TIER-CHANGE RULE lives in `instances/dungeons.ts`, not here: once an
-  owner has arrived in the room of its current tier, `enterDungeon` frees every
-  other owner-keyed room still claimed under the same owner key unless a
-  player stands inside it (pinned in `tests/freehold_instance.test.ts`). The
+- THE TIER-CHANGE RULE lives in `instances/dungeons.ts`, not here: once a
+  living owner has arrived in the room of its current tier, `enterDungeon`
+  frees every other owner-keyed room still claimed under the same owner key
+  unless a player stands inside it or a bound corpse lies there (pinned in
+  `tests/freehold_instance.test.ts`). The
   guard is the room's `claimKey`, never the key string, so party and solo
   claims are untouched. A ghost's corpse run sweeps nothing (the sweep is
   gated on a living arrival), so the current tier's vacant claim survives it.
