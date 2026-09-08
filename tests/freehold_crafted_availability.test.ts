@@ -19,10 +19,68 @@ function fixture() {
   if (!meta) throw new Error('Missing player');
   meta.inventory = [];
   meta.copper = 10000;
+  meta.knownRecipes.add('recipe_copper_bearded_axe');
   return { sim, meta };
 }
 
 describe('crafted furnishing availability on dark hosts', () => {
+  it('preserves the authored cohort through lit, dark and relit JSON saves', () => {
+    const sim = new Sim({
+      seed: 42,
+      playerClass: 'warrior',
+      autoEquip: false,
+      freeholdsEnabled: true,
+    });
+    const meta = sim.meta(sim.playerId);
+    if (!meta) throw new Error('Missing player');
+    meta.inventory = [];
+    meta.copper = 12345;
+    const recipeIds = FURNISHING_RECIPES.map((recipe) => recipe.id);
+    const furnishingIds = FURNISHING_RECIPES.map((recipe) => recipe.resultItemId);
+    const patternIds = Object.keys(FURNISHING_PATTERN_ITEMS);
+    expect(recipeIds).toHaveLength(10);
+    expect(patternIds).toHaveLength(3);
+    for (const id of recipeIds) meta.knownRecipes.add(id);
+    for (const id of [...furnishingIds, ...patternIds]) sim.addItem(id, 1);
+    meta.inventory[0].instance = { signer: 'Craftedkeeper' };
+    const original = JSON.parse(JSON.stringify(sim.serializeCharacter(sim.playerId)));
+    expect(original).not.toBeNull();
+    expect(original.inventory[0]).toMatchObject({
+      itemId: 'freehold_weapon_rack',
+      count: 1,
+      instance: { signer: 'Craftedkeeper' },
+    });
+    const before = structuredClone(original);
+    let saved = original;
+    for (const freeholdsEnabled of [false, true]) {
+      const restored = new Sim({
+        seed: 43,
+        playerClass: 'warrior',
+        noPlayer: true,
+        autoEquip: false,
+        freeholdsEnabled,
+      });
+      const pid = restored.addPlayer('warrior', meta.name, { state: saved });
+      const next = JSON.parse(JSON.stringify(restored.serializeCharacter(pid)));
+      expect(next.inventory).toEqual(original.inventory);
+      expect(next.copper).toBe(12345);
+      expect(next.knownRecipes).toEqual(original.knownRecipes);
+      expect(next.deedStats.itemsDiscovered).toEqual(original.deedStats.itemsDiscovered);
+      expect(next.reliquary).toEqual(original.reliquary);
+      for (const id of recipeIds) expect(next.knownRecipes).toContain(id);
+      for (const id of [...furnishingIds, ...patternIds]) {
+        expect(restored.countItem(id, pid)).toBe(1);
+        expect(next.deedStats.itemsDiscovered).toContain(id);
+      }
+      for (const id of furnishingIds) {
+        expect(next.reliquary.firstFind[id]).toEqual({ count: 1 });
+      }
+      expect(next.reliquary.illuminatedPages).toContain('hearth_first_crafts');
+      expect(original).toEqual(before);
+      saved = next;
+    }
+  });
+
   it('preserves catalog identity and existing content while hiding the ten new recipes', () => {
     const { sim } = fixture();
     expect(sim.cfg.freeholdsEnabled).toBe(false);
@@ -50,6 +108,7 @@ describe('crafted furnishing availability on dark hosts', () => {
       for (const reagent of recipe.reagents) sim.addItem(reagent.itemId, reagent.count);
       sim.drainEvents();
       const inventory = structuredClone(meta.inventory);
+      const knowledge = new Set(meta.knownRecipes);
       const rng = vi.spyOn(sim.rng, 'next');
       sim.trainRecipe(recipe.id);
       expect(meta.lastTrainResult).toEqual({
@@ -59,7 +118,7 @@ describe('crafted furnishing availability on dark hosts', () => {
         fee: 0,
       });
       expect(meta.copper).toBe(10000);
-      expect(meta.knownRecipes.has(recipe.id)).toBe(false);
+      expect(meta.knownRecipes).toEqual(knowledge);
       expect(
         acquireRecipeForRecipe(
           sim.ctx,
@@ -68,8 +127,9 @@ describe('crafted furnishing availability on dark hosts', () => {
           recipe.acquisition?.includes('trainer') ? 'trainer' : 'drop',
         ),
       ).toEqual({ ok: false, recipeId: recipe.id, reason: 'unknown_recipe' });
-      expect(meta.knownRecipes.has(recipe.id)).toBe(false);
+      expect(meta.knownRecipes).toEqual(knowledge);
       meta.knownRecipes.add(recipe.id);
+      knowledge.add(recipe.id);
       sim.craftItem(recipe.id);
       expect(sim.player.craftCastRecipeId).toBe('');
       expect(meta.lastCraftResult).toMatchObject({ ok: false, reason: 'unknown_recipe' });
@@ -81,7 +141,7 @@ describe('crafted furnishing availability on dark hosts', () => {
       expect(maxCraftCountForRecipe(sim.ctx, recipe, sim.playerId)).toBe(0);
       expect(meta.inventory).toEqual(inventory);
       expect(meta.copper).toBe(10000);
-      expect(meta.knownRecipes.has(recipe.id)).toBe(true);
+      expect(meta.knownRecipes).toEqual(knowledge);
       expect(rng).not.toHaveBeenCalled();
       rng.mockRestore();
     },
@@ -97,10 +157,11 @@ describe('crafted furnishing availability on dark hosts', () => {
       sim.addItem(pattern.id, 1);
       const slot = meta.inventory.findIndex((entry) => entry.itemId === pattern.id);
       const inventory = structuredClone(meta.inventory);
+      const knowledge = new Set(meta.knownRecipes);
       sim.drainEvents();
       sim.useItem(pattern.id, undefined, slot);
       expect(meta.inventory).toEqual(inventory);
-      expect(meta.knownRecipes.has(recipe.id)).toBe(false);
+      expect(meta.knownRecipes).toEqual(knowledge);
       expect(meta.copper).toBe(10000);
       expect(sim.drainEvents()).toEqual([]);
     },
@@ -122,8 +183,18 @@ describe('crafted furnishing availability on dark hosts', () => {
       );
       if (!player || !npc) throw new Error('Missing vendor fixture');
       Object.assign(player.pos, npc.pos);
+      const meta = sim.meta(pid);
+      if (!meta) throw new Error('Missing buyer');
+      meta.copper = 10000;
+      meta.knownRecipes.add('recipe_copper_bearded_axe');
       sim.addItem('heroic_mark', 20, pid);
+      sim.addItem('copper_ore', 2, pid);
+      const inventory = structuredClone(meta.inventory);
+      const knowledge = new Set(meta.knownRecipes);
       sim.buyHeroicVendorItem(itemId, pid);
+      expect(meta.inventory).toEqual(inventory);
+      expect(meta.knownRecipes).toEqual(knowledge);
+      expect(meta.copper).toBe(10000);
       expect(sim.countItem('heroic_mark', pid)).toBe(20);
       expect(sim.countItem(itemId, pid)).toBe(0);
       sim.buyHeroicVendorItem('pattern_ironhusk_flask', pid);

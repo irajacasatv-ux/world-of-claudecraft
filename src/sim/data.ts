@@ -4,8 +4,11 @@
 // merges those records into the flat tables the rest of the engine consumes,
 // and owns the world-layout constants.
 
-import { FREEHOLD_FURNISHER, FREEHOLD_FURNISHINGS } from './content/freehold';
-import { FURNISHING_PATTERN_ITEMS } from './content/freehold/furnishing_patterns';
+import {
+  FREEHOLD_FURNISHER,
+  FREEHOLD_FURNISHINGS,
+  FURNISHING_PATTERN_ITEMS,
+} from './content/freehold';
 import { BASE_ITEMS } from './content/items';
 import type {
   CampDef,

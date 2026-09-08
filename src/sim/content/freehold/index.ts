@@ -1,4 +1,5 @@
 export { FREEHOLD_CHARTERS, type FreeholdCharterDef, isKnownFreeholdCharterId } from './charters';
+export { FURNISHING_PATTERN_ITEMS } from './furnishing_patterns';
 export { FURNISHING_RECIPES } from './furnishing_recipes';
 export {
   FREEHOLD_CRAFTED_FURNISHING_IDS,
