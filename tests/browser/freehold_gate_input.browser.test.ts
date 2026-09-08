@@ -406,6 +406,7 @@ describe('Freehold gate native input and cancellation', () => {
     const friendEnter = vi.fn();
     const f = mount({ lookup, enter: friendEnter });
     control('visit').click();
+    const liveStatus = f.root.querySelector('[role="status"]');
     expect(f.root.querySelector('[role="status"]')!.textContent).toBe(
       'Enter a character name to visit.',
     );
@@ -430,6 +431,9 @@ describe('Freehold gate native input and cancellation', () => {
     settle({ ...request, homeId: 'presentation-home', displayName: '芬 Fen' });
     await vi.waitFor(() => expect(document.activeElement).toBe(control('result')));
     expect(f.root.querySelector('[role="status"]')!.textContent).toBe('Home belonging to 芬 Fen');
+    expect(f.root.innerText.match(/Home belonging to 芬 Fen/g)).toHaveLength(1);
+    expect(control('result')).toBe(liveStatus);
+    expect(liveStatus?.getAttribute('aria-atomic')).toBe('true');
     expect(friendEnter).not.toHaveBeenCalled();
     await capturePresentation('friend-lookup-result');
     await userEvent.keyboard('[Tab]');

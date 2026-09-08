@@ -513,6 +513,24 @@ describe('dormant friend lookup composition', () => {
     expect(f.enter).not.toHaveBeenCalled();
     expect(f.world.freeholdEnter).not.toHaveBeenCalled();
   });
+  it('preserves the live status when IME editing retires a focused friend result', async () => {
+    const f = friendFixture();
+    f.edit('Fen');
+    f.find();
+    await f.settle(0);
+    const status = f.control('gate-result');
+    const name = f.control('gate-name') as HTMLInputElement;
+    name.focus();
+    name.value = '芬';
+    name.dispatchEvent(new InputEvent('input', { bubbles: true, isComposing: true }));
+    expect(f.root.querySelector('[role="status"]')).toBe(status);
+    expect(status.textContent).toBe("Find this character's home before entering.");
+    expect(status.hasAttribute('tabindex')).toBe(false);
+    expect(f.control('gate-result')).toBeNull();
+    expect(f.control('gate-enter')).toBeNull();
+    expect(document.activeElement).toBe(name);
+    expect(f.enter).not.toHaveBeenCalled();
+  });
   it('keeps a completed friend result separate from the selected own-home entry', async () => {
     const f = friendFixture();
     f.edit('Fen');

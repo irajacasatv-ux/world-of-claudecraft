@@ -36,8 +36,12 @@ export function confirmFreeholdGate(ctx: SimContext, pid: number): boolean {
   if (!nearby) return denyFreehold(ctx, pid, 'busy');
   if (!enterFreehold(ctx, pid)) return false;
   // Full bags never reverse a successful entry or emit a misleading refusal.
-  // The next accepted gate entry retries the absent permanent tool.
-  if (ctx.countItem(HEARTH_KEY_ITEM_ID, pid) === 0 && ctx.canAddItem(HEARTH_KEY_ITEM_ID, 1, pid))
+  // Retry only when the permanent tool is absent from both bags and personal bank.
+  if (
+    ctx.countItem(HEARTH_KEY_ITEM_ID, pid) === 0 &&
+    !r.meta.bank.inventory.some((slot) => slot.itemId === HEARTH_KEY_ITEM_ID && slot.count > 0) &&
+    ctx.canAddItem(HEARTH_KEY_ITEM_ID, 1, pid)
+  )
     ctx.addItem(HEARTH_KEY_ITEM_ID, 1, pid);
   return true;
 }

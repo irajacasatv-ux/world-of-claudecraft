@@ -8,6 +8,7 @@ import type { IWorld } from '../../../world_api';
 import { markDialogRoot } from '../../dialog_root';
 import {
   captureFocusKey,
+  FOCUS_KEY_ATTR,
   findFocusKey,
   focusedWithin,
   restoreFirstEnabled,
@@ -245,6 +246,20 @@ export class FreeholdGatePrompt {
     const markup = gatePromptHtml(this.draft, canEnter, this.pending !== null, !!this.deps.friend);
     content.innerHTML = markup.content;
     actions.innerHTML = markup.actions;
+    const resultVisible =
+      this.draft.tab === 'visit' &&
+      !!this.deps.friend &&
+      gateVisitAuthorized(this.draft) &&
+      !this.pending &&
+      !this.statusKey &&
+      canEnter;
+    if (resultVisible) {
+      status.setAttribute(FOCUS_KEY_ATTR, 'gate-result');
+      status.tabIndex = 0;
+    } else {
+      status.removeAttribute(FOCUS_KEY_ATTR);
+      status.removeAttribute('tabindex');
+    }
     root.setAttribute('aria-busy', this.pending || this.draft.request ? 'true' : 'false');
     status.textContent = this.pending
       ? t('hudChrome.housing.gate.loading')
@@ -283,7 +298,8 @@ export class FreeholdGatePrompt {
       if (!(event as InputEvent).isComposing) edit();
       else {
         findFocusKey(root, 'gate-enter')?.remove();
-        findFocusKey(root, 'gate-result')?.remove();
+        status!.removeAttribute(FOCUS_KEY_ATTR);
+        status!.removeAttribute('tabindex');
         status!.textContent = gatePromptHtml(
           this.draft,
           this.canEnter(),

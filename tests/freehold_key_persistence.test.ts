@@ -153,7 +153,7 @@ describe.each(['inn_room', 'cottage'] as const)('%s Hearth Key character JSON', 
     expect(restored.sim.freeholdKeyReadyAtMs.size).toBe(0);
   });
 
-  it('round-trips an ordinarily deposited bank key and withdraws the same single tool', () => {
+  it('retains one banked key through JSON restore and gate entry before withdrawing it', () => {
     const source = makeSim();
     const pid = source.addPlayer('warrior', 'Banker', { freeholdOwnerKey: OWNER });
     setFreeholdTier(source.ctx, OWNER, tier);
@@ -177,6 +177,22 @@ describe.each(['inn_room', 'cottage'] as const)('%s Hearth Key character JSON', 
     ]);
     keyRows(character.bank!.inventory)[0].count = 9;
     expect(keyRows(restored.sim.meta(restored.pid)!.bank.inventory)[0].count).toBe(1);
+    const meta = restored.sim.meta(restored.pid)!;
+    const bankBefore = structuredClone(meta.bank);
+    const entitlementBefore = serializeFreehold(restored.sim.ctx, OWNER);
+    const wireRevBefore = meta.wireRev;
+    const clockBefore = [...restored.sim.freeholdKeyReadyAtMs];
+    restored.sim.drainEvents();
+    enterGate(restored.sim, restored.pid);
+    expect(dungeonAt(entity(restored.sim, restored.pid).pos.x)?.id).toBe(`freehold_${tier}`);
+    expect(restored.sim.countItem('hearth_key', restored.pid)).toBe(0);
+    expect(keyRows(meta.bank.inventory)).toEqual([{ itemId: 'hearth_key', count: 1 }]);
+    expect(meta.bank).toEqual(bankBefore);
+    expect(meta.wireRev).toBe(wireRevBefore);
+    expect(serializeFreehold(restored.sim.ctx, OWNER)).toEqual(entitlementBefore);
+    expect([...restored.sim.freeholdKeyReadyAtMs]).toEqual(clockBefore);
+    expect(restored.sim.drainEvents().filter((event) => event.type === 'loot')).toEqual([]);
+    restored.sim.freeholdLeave(restored.pid);
     moveTo(restored.sim, restored.pid, 'bursar_fernando');
     restored.sim.bankWithdraw(
       restored.sim
