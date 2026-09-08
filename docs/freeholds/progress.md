@@ -12,7 +12,9 @@ The current explicit protected-validator scope closes F01 prospectively. The
 earlier paired QA **FAIL**, with 29 findings and 28 accepted repairs, remains
 historical evidence. See [current validation](crafted-qa-reconciled-2026-09-07/validation.md)
 and [findings](crafted-qa-reconciled-2026-09-07/findings.md). Production remains
-disabled. Implementation 05 is the next task and has not started.
+disabled. Implementation 05 (the instance claim) is complete locally in commits
+`c578fd77d0..7f9ca00cbd`; its paired QA, [phase-05-qa.md](phase-05-qa.md), is the
+next task and has not started.
 
 Production calibration, activation, final GLBs and room/hardware LOW gates remain
 unsigned; NPC voice remains required before feature shipment.
@@ -22,7 +24,7 @@ unsigned; NPC voice remains required before feature shipment.
 There are 56 bounded work items and 56 paired QA rows; their actual status is recorded
 below. The 44 original numeric items retain their IDs and twelve suffixed pairs are
 inserted into the chain. The next handoff is
-[phase-05-instance-claim.md](phase-05-instance-claim.md).
+[phase-05-qa.md](phase-05-qa.md).
 
 | Phase | Status | Started | Completed | Verdict / notes |
 |---|---|---|---|---|
@@ -34,7 +36,7 @@ inserted into the chain. The next handoff is
 | 03 QA | PASS, local | 2026-09-07 | 2026-09-07 | 39 distinct findings found and resolved, zero open. Paired correctness/coverage/hygiene, finishing and conditional reviews PASS, including fresh repairs. Final shared gate exit 0, all 12 steps; 57,726 unit and 376 browser tests passed. Runtime and canonical visual evidence accepted. Four reviewed completion commits; post-source-commit ci:changed exit 0, repeated after the final evidence commit with its result in the task handoff. See content-final-validation-2026-09-07.md. |
 | 04 Content: crafted furnishings and quartermaster patterns | Complete (QA PASS), local | 2026-09-07 | 2026-09-07 | Reconciled paired QA PASS, four findings resolved (three source/test findings and DOC-1); fresh entire-source-fix review PASS at `69ffdab561` and documentation correction recorded in [docs-final.md](crafted-qa-reconciled-2026-09-07/reviews/docs-final.md); current evidence in crafted-qa-reconciled-2026-09-07/validation.md. Final shared gate exit 0, all 12 steps: 4028 unit files passed, one CI-sentinel file skipped; 60610 tests passed, 2 expected failures and 28 explained skips. Chromium passed 47 files and 389 tests; the separate PostgreSQL 16 run passed 57 tests. Earlier implementation revalidation: shared gate all 12 steps PASS, fresh content/coverage/doc-fix reviews PASS; see crafted-content-revalidation-2026-09-07.md for exact current outcomes and final commit-check receipt. Original accepted development v1: ten recipes/outputs, three 16-Mark patterns, Hearth page, thirteen final icons/provenance and 42 runtime captures. Shared gate exit 0, all 12 steps; implementation QA/fresh review closeout recorded in crafted-content-trial-2026-09-07/implementation-validation.md. Four authorized commits `86eb86bbe2`, `8bd097d898`, `b3c2452b49` and `3666d89647`; post-fourth-commit ci:changed exit 0 (1967 files, existing warnings only), clean status observed. The original completion receipt called for the same check after its documentation-only amendment; no push. Production gates remain unsigned. |
 | 04 QA | PASS, local | 2026-09-07 | 2026-09-07 | Four findings found and resolved: three source/test findings (HN1, COV-1, PER-1) and one documentation nit (DOC-1), zero deferred. Fresh entire-fix review and supplement PASS for `0932963250..69ffdab561` (five files, commits `d5ea0825d1` and `69ffdab561`), including all six historical repair commits; required content, coverage and qa-checklist reviews completed. Final shared gate exit 0, all 12 steps: 4028 unit files passed, one CI-sentinel file skipped; 60610 tests passed, 2 expected failures and 28 explained skips. Chromium passed 47 files and 389 tests; the separate PostgreSQL 16 run passed 57 tests. Historical F01 is closed prospectively by the current explicit protected-validator scope; the earlier 29-found/28-repaired FAIL remains unchanged. See [findings](crafted-qa-reconciled-2026-09-07/findings.md), [validation](crafted-qa-reconciled-2026-09-07/validation.md), [fresh source review](crafted-qa-reconciled-2026-09-07/reviews/fresh-fix.md) and [documentation review](crafted-qa-reconciled-2026-09-07/reviews/docs-final.md). Branch local, production disabled; 05 is next and remains Not started. |
-| 05 Instance claim | Not started | | | |
+| 05 Instance claim | Complete, local (paired QA pending) | 2026-09-08 | 2026-09-08 | Five commits `c578fd77d0..7f9ca00cbd` off the current `release/v0.42.0` merge: the two owner-claim DungeonDefs (`freehold_inn_room` index 15, `freehold_cottage` index 16, `claimKey: 'owner'`, placeholder `crypt` interior, doorPos beside the Eastbrook mailbox), the host-stamped owner key (`account:<id>` online, `entity:<pid>` offline, META_EXCLUDE), owner-keyed enter/leave through the dungeon slot pool with text-free `freeholdDenied` refusals (dead, combat, no_freehold, busy), the default tier-0 Inn Room record seeded at addPlayer on a lit host and evicted at the last session out, `setFreeholdTier` as the one tier writer with the `/dev freehold <tier>` grant behind devCommands AND the new nonpersisted `freeholdDevGrantEnabled` (realm: `ALLOW_DEV_COMMANDS=1`; offline: the dev-only Vite loopback bridge `GET /__freehold/dev-authorization`), lit `freehold_enter`/`freehold_leave` dispatch behind the unchanged dark gate, a malformed-account refusal through `planJoin`, Unstuck and Reset All owner-key aware. Three monolith extractions lowered sim.ts to 11857, main.ts to 11269 and game.ts to 10202 (online.ts untouched at 5629). Seven domain reviews plus a fresh whole-fix review and the qa-checklist gate ran; every finding including nits applied or recorded as a named gate (see state.md). Validation: the 54-file battery 1986 tests green, tests/parity 265 green with the 81 existing goldens byte-identical and `freehold_claim` minted, both real-browser dev-grant probes PASS (flag-off refuses, flag-on loopback grants), the terrain fixture re-minted as a byte-prefix extension and verified on Linux aarch64 in Docker (132 tests), `npm run ci:changed` exit 0, and the shared gate on the committed tip PASS (all 12 steps: 4039 unit files, 60940 tests, 2 expected failures, 28 skips; browser 47 files, 389 tests). Production stays disabled: FREEHOLDS_ENABLED must not be lit before 06's gate proximity confirm and Hearth Key context refusals (the lighting ruling in `src/sim/freehold/instance.ts`). |
 | 05 QA | Not started | | | |
 | 06 Interiors, the Eastbrook gate, the Hearth Key | Not started | | | |
 | 06 QA | Not started | | | |
@@ -634,11 +636,22 @@ Acceptance: every linked implementation checkbox and its paired QA must pass;
 the reviewer matrix and whole-feature checklist supply the shared evidence floor.
 Current handoff after reconciled paired QA PASS:
 [phase-05-instance-claim.md](phase-05-instance-claim.md).
-Implementation 05 has not started; it is the next task.
+Implementation 05 is complete locally; its paired QA is the next task.
 
 #### 05 Instance claim
 
 Implementation: [phase-05-instance-claim.md](phase-05-instance-claim.md). Paired audit: [phase-05-qa.md](phase-05-qa.md).
+
+Status 2026-09-08: implementation COMPLETE locally (`c578fd77d0..7f9ca00cbd`, not pushed);
+the paired QA has not started. Named unsigned gates carried forward (owner in brackets):
+the Eastbrook gate proximity confirm and Hearth Key context refusals before the flag is
+ever lit [06]; the authored interiors replacing the `crypt` placeholder and the final gate
+spot replacing doorPos (-14, -96) [06]; the deny toast for `freeholdDenied` [06]; the
+persisted record and the `fhold` self key [07, 08a]; a per-record slot count and a
+shorter owner empty hold instead of the shared 24 slots and 300 s [before lighting];
+the pre-existing `updateInstances` per-check allocation and a `ctx.freeholds.size` perf
+counter [the slice that opens the doors]; a `freehold` client perf scene class [06]; the
+ja_JP register of the six room rows [release fill].
 
 Deliverables (at most five):
 
