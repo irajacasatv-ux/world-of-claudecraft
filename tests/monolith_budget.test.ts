@@ -454,8 +454,10 @@ const MONOLITHS: MonolithRow[] = [
     // reds again.
     // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
     // integration and the hub practice PRs) into feature/freeholds. Newline
-    // counts: 18577 base, 18550 Freeholds (-27), 18478 incoming (-99); `wc -l` on the reconciled file measures 18452 (the composed 18451 plus one line from the merged import block). Exact merged count, zero slack: any further growth reds
-    // again.
+    // counts: 18577 base, 18550 Freeholds (-27), 18478 incoming (-99); `wc -l`
+    // on the reconciled file measures 18452 (the composed 18451 plus one line
+    // from the merged import block). Exact merged count, zero slack: any further
+    // growth reds again.
     ceiling: 18452,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
@@ -848,7 +850,8 @@ const MONOLITHS: MonolithRow[] = [
     // Measured after formatting; lower the ratchet with the extraction.
     // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
     // integration and the hub practice PRs) into feature/freeholds. Newline
-    // counts: 12903 base, 12902 Freeholds (-1), 12879 incoming (-24); combined 12878, measured. Exact merged count, zero slack: any further growth reds
+    // counts: 12903 base, 12902 Freeholds (-1), 12879 incoming (-24); combined
+    // 12878, measured. Exact merged count, zero slack: any further growth reds
     // again.
     ceiling: 12878,
     seam: 'a new src/render/<thing>.ts module the renderer calls (src/render/CLAUDE.md)',
@@ -1020,8 +1023,10 @@ const MONOLITHS: MonolithRow[] = [
     // stamp on PlayerMeta and the freehold join/leave hooks. Exact count.
     // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
     // integration and the hub practice PRs) into feature/freeholds. Newline
-    // counts: 11919 base, 11857 Freeholds (-62), 11858 incoming (-61); combined 11796, measured. The row never conflicted (the incoming pin still sat at 11923), so the growth would have landed silently on a zero-slack pin. Exact merged count, zero slack: any further growth reds
-    // again.
+    // counts: 11919 base, 11857 Freeholds (-62), 11858 incoming (-61); combined
+    // 11796, measured. The row never conflicted (the incoming pin still sat at
+    // 11923), so the growth would have landed silently on a zero-slack pin.
+    // Exact merged count, zero slack: any further growth reds again.
     ceiling: 11796,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
@@ -1226,7 +1231,8 @@ const MONOLITHS: MonolithRow[] = [
     // reds again.
     // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
     // integration and the hub practice PRs) into feature/freeholds. Newline
-    // counts: 11385 base, 11269 Freeholds (-116), 11363 incoming (-22); combined 11247, measured. Exact merged count, zero slack: any further growth reds
+    // counts: 11385 base, 11269 Freeholds (-116), 11363 incoming (-22); combined
+    // 11247, measured. Exact merged count, zero slack: any further growth reds
     // again.
     ceiling: 11247,
     seam: 'a src/game/ or src/ui/ sibling module; main.ts is a firewall, not a home',
@@ -1437,8 +1443,9 @@ const MONOLITHS: MonolithRow[] = [
     // with wc -l < server/game.ts after biome. Exact count, zero slack.
     // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
     // integration and the hub practice PRs) into feature/freeholds. Newline
-    // counts: 10290 base, 10202 Freeholds (-88), 10276 incoming (-14); combined 10188, measured. The row never conflicted (the incoming pin still sat at 10291). Exact merged count, zero slack: any further growth reds
-    // again.
+    // counts: 10290 base, 10202 Freeholds (-88), 10276 incoming (-14); combined
+    // 10188, measured. The row never conflicted (the incoming pin still sat at
+    // 10291). Exact merged count, zero slack: any further growth reds again.
     ceiling: 10188,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
@@ -1583,7 +1590,8 @@ const MONOLITHS: MonolithRow[] = [
     // Measured after formatting; lower the ratchet with the extraction.
     // RESOLVED for the merge of release/v0.42.0 (tip 553a5672ed, the OSSBrain
     // integration and the hub practice PRs) into feature/freeholds. Newline
-    // counts: 5788 base, 5629 Freeholds (-159), 5765 incoming (-23); combined 5606, measured. Exact merged count, zero slack: any further growth reds
+    // counts: 5788 base, 5629 Freeholds (-159), 5765 incoming (-23); combined
+    // 5606, measured. Exact merged count, zero slack: any further growth reds
     // again.
     ceiling: 5606,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',

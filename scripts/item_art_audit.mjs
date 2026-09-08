@@ -119,8 +119,10 @@ const build = await buildItemArtAudit({
     // 1071 / 1089 (its two disjoint reins items, reins_goblin_rocket_sled and
     // reins_rallycart_rxt, on the shared 1069 / 1087 base); both deltas are
     // additive over that shared base, so 1069 + 212 + 2 = 1283 and
-    // 1087 + 212 + 2 = 1301. Verified with `node scripts/item_art_audit.mjs
-    // --verify-only` against the merged tree.
+    // 1087 + 212 + 2 = 1301. The Freeholds branch adds its eight vendor and
+    // thirteen crafted furnishing ids on top, disjoint from every release id:
+    // 1283 + 21 = 1304 and 1301 + 21 = 1322. Verified with
+    // `node scripts/item_art_audit.mjs --verify-only` against the merged tree.
     catalogCount: 1304,
     liveItemCount: 1322,
     pendingArtCount: 0,
