@@ -240,6 +240,7 @@ describe('mobile window coverage (Phase 5 parity)', () => {
     // the same change that gives its window a mobile rule or an exception below.
     expect(dyn.windowClassFiles).toEqual([
       'dev_command_window.ts',
+      'hud/housing/gate_prompt_controller.ts',
       // The Perfecting window (Masterwrought phase 14) mints its own root and
       // carries the four-edge body.mobile-touch pin in hud.mobile.css.
       'hud/professions/perfecting_window.ts',
@@ -254,6 +255,7 @@ describe('mobile window coverage (Phase 5 parity)', () => {
     expect([...dyn.ids].sort()).toEqual([
       'confirm-dialog',
       'dev-command-window',
+      'freehold-gate-window',
       'keyboard-map-window',
       'perfecting-window',
       'profession-tutorial',

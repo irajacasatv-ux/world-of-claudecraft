@@ -134,6 +134,7 @@ export function entityDisplayName(entity: Entity): string {
   }
   if (entity.kind === 'npc') return tEntity({ kind: 'npc', id: entity.templateId, field: 'name' });
   if (entity.kind === 'object') {
+    if (entity.templateId === 'freehold_gate') return t('worldContent.freeholdGateName');
     // ANY placed feast, of any tier (masterwrought Phase 11k): the shared
     // feast_title leaf owns the templateId-to-key rule so this surface and the
     // world label cannot name the same table two different things.

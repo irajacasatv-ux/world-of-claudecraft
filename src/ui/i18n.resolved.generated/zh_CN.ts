@@ -327,6 +327,52 @@ export const zh_CN: EnTranslations = {
   },
   "hudChrome": {
     "housing": {
+      "common": {
+        "close": "关闭",
+        "cancel": "取消",
+        "back": "返回",
+        "retry": "重试",
+        "loading": "正在加载你的家园...",
+        "pending": "正在等待确认...",
+        "reconnecting": "正在重新连接。已保存的家园安全无恙。",
+        "readOnly": "只读",
+        "unavailable": "目前无法使用。",
+        "unknown": "未知",
+        "selected": "已选择：{name}",
+        "closeAria": "关闭{window}"
+      },
+      "denied": {
+        "unavailable": "目前无法使用这处家园。请稍后再试。",
+        "busy": "这处家园正在别处使用或尚未打开。请稍后重试。",
+        "permission": "你无法在这里使用此功能。",
+        "condition": "请修复家园状况后再使用这项设施。",
+        "dead": "死亡时无法进行此操作。",
+        "combat": "战斗中无法进行此操作。",
+        "cooldown": "你的炉边钥匙仍在冷却中。",
+        "instanced": "你无法在副本内使用此功能。",
+        "match": "你无法在对局期间使用此功能。"
+      },
+      "gate": {
+        "title": "选择家园",
+        "own": "我的家园",
+        "visit": "拜访好友",
+        "name": "角色名称",
+        "namePlaceholder": "输入角色名称",
+        "nameRequired": "请输入要拜访的角色名称。",
+        "homeChoice": "选择你的家园",
+        "lookup": "查找家园",
+        "lookupPending": "正在查找好友的家园...",
+        "lookupChanged": "请先找到该角色的家园再进入。",
+        "result": "{name}的家园",
+        "enter": "进入",
+        "loading": "正在开门...",
+        "marker": "自由领地之门",
+        "interact": "选择家园"
+      },
+      "hearthKey": {
+        "tooltip": "返回你的家园。战斗中、死亡时、被监禁时、身处副本内或对局期间无法使用。",
+        "destination": "目的地：{home}"
+      },
       "furnishing": {
         "footprint": "Footprint: {width} by {depth} cells.",
         "decorCost": "Decor cost: {cost}.",
@@ -3984,6 +4030,7 @@ export const zh_CN: EnTranslations = {
       }
     },
     "social": {
+      "statusFreehold": "在自由领地",
       "lastSeen": "最后在线: {when}",
       "lastSeenNever": "从未",
       "ignoredTab": "已忽略",
@@ -14391,6 +14438,9 @@ export const zh_CN: EnTranslations = {
       "voidbound_grimoire": {
         "name": "缚虚魔典"
       },
+      "hearth_key": {
+        "name": "炉边钥匙"
+      },
       "masters_field_forge": {
         "name": "匠人野战锻炉"
       },
@@ -21034,6 +21084,7 @@ export const zh_CN: EnTranslations = {
     "delveRiteShrineCandleInteract": "烛火神龛：按 F 触碰",
     "delveRiteShrineReedInteract": "芦苇神龛：按 F 触碰",
     "delveRiteShrineSkullInteract": "骷髅神龛：按 F 触碰",
+    "freeholdGateName": "自由领地之门",
     "mailboxName": "邮箱",
     "noticeboardName": "告示板",
     "farmPatchName": "菜畦",

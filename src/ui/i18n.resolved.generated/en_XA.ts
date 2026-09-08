@@ -327,6 +327,52 @@ export const en_XA: EnTranslations = {
   },
   "hudChrome": {
     "housing": {
+      "common": {
+        "close": "[Çļóšé]",
+        "cancel": "[Çáñçéļ]",
+        "back": "[Ɓáçķ]",
+        "retry": "[Ţŕý Áĝáíñ]",
+        "loading": "[Ļóáðíñĝ ýóúŕ ĥóɱé...]",
+        "pending": "[Ŵáíţíñĝ ƒóŕ çóñƒíŕɱáţíóñ...]",
+        "reconnecting": "[Ŕéçóññéçţíñĝ. Ýóúŕ šáʋéð ĥóɱé íš šáƒé.]",
+        "readOnly": "[Ŕéáð óñļý]",
+        "unavailable": "[Ţĥíš íš úñáʋáíļáƀļé ŕíĝĥţ ñóŵ.]",
+        "unknown": "[Úñķñóŵñ]",
+        "selected": "[Šéļéçţéð: {name}]",
+        "closeAria": "[Çļóšé {window}]"
+      },
+      "denied": {
+        "unavailable": "[Ţĥíš ĥóɱé íš úñáʋáíļáƀļé ŕíĝĥţ ñóŵ. Ţŕý áĝáíñ ļáţéŕ.]",
+        "busy": "[Ţĥíš ĥóɱé íš áçţíʋé éļšéŵĥéŕé óŕ šţíļļ óþéñíñĝ. Ţŕý áĝáíñ šĥóŕţļý.]",
+        "permission": "[Ýóú çáññóţ úšé ţĥíš ĥéŕé.]",
+        "condition": "[Ŕéšţóŕé ýóúŕ ĥóɱé'š çóñðíţíóñ ţó úšé ţĥíš áɱéñíţý.]",
+        "dead": "[Ýóú çáññóţ ðó ţĥáţ ŵĥíļé ðéáð.]",
+        "combat": "[Ýóú çáññóţ ðó ţĥáţ íñ çóɱƀáţ.]",
+        "cooldown": "[Ýóúŕ Ĥéáŕţĥ Ķéý íš šţíļļ çóóļíñĝ ðóŵñ.]",
+        "instanced": "[Ýóú çáññóţ úšé ţĥíš íñšíðé áñ íñšţáñçé.]",
+        "match": "[Ýóú çáññóţ úšé ţĥíš ðúŕíñĝ á ɱáţçĥ.]"
+      },
+      "gate": {
+        "title": "[Çĥóóšé á Ĥóɱé]",
+        "own": "[Ɱý Ĥóɱé]",
+        "visit": "[Ʋíšíţ á Ƒŕíéñð]",
+        "name": "[Çĥáŕáçţéŕ ñáɱé]",
+        "namePlaceholder": "[Éñţéŕ á çĥáŕáçţéŕ ñáɱé]",
+        "nameRequired": "[Éñţéŕ á çĥáŕáçţéŕ ñáɱé ţó ʋíšíţ.]",
+        "homeChoice": "[Çĥóóšé ýóúŕ ĥóɱé]",
+        "lookup": "[Ƒíñð Ĥóɱé]",
+        "lookupPending": "[Ƒíñðíñĝ ýóúŕ ƒŕíéñð'š ĥóɱé...]",
+        "lookupChanged": "[Ƒíñð ţĥíš çĥáŕáçţéŕ'š ĥóɱé ƀéƒóŕé éñţéŕíñĝ.]",
+        "result": "[Ĥóɱé ƀéļóñĝíñĝ ţó {name}]",
+        "enter": "[Éñţéŕ]",
+        "loading": "[Óþéñíñĝ ţĥé ðóóŕ...]",
+        "marker": "[Ƒŕééĥóļðš ĝáţé]",
+        "interact": "[Çĥóóšé á ĥóɱé]"
+      },
+      "hearthKey": {
+        "tooltip": "[Ŕéţúŕñ ţó ýóúŕ ĥóɱé. Ýóú çáññóţ úšé ţĥíš ŵĥíļé íñ çóɱƀáţ, ðéáð, íñ ĵáíļ, íñšíðé áñ íñšţáñçé óŕ ðúŕíñĝ á ɱáţçĥ.]",
+        "destination": "[Ðéšţíñáţíóñ: {home}]"
+      },
       "furnishing": {
         "footprint": "[Ƒóóţþŕíñţ: {width} ƀý {depth} çéļļš.]",
         "decorCost": "[Ðéçóŕ çóšţ: {cost}.]",
@@ -3984,6 +4030,7 @@ export const en_XA: EnTranslations = {
       }
     },
     "social": {
+      "statusFreehold": "[Íñ Ƒŕééĥóļð]",
       "lastSeen": "[Ļášţ šééñ: {when}]",
       "lastSeenNever": "[ñéʋéŕ]",
       "ignoredTab": "[Íĝñóŕéð]",
@@ -14391,6 +14438,9 @@ export const en_XA: EnTranslations = {
       "voidbound_grimoire": {
         "name": "[Ʋóíðƀóúñð Ĝŕíɱóíŕé]"
       },
+      "hearth_key": {
+        "name": "[Ĥéáŕţĥ Ķéý]"
+      },
       "masters_field_forge": {
         "name": "[Ɱášţéŕ'š Ƒíéļð Ƒóŕĝé]"
       },
@@ -21034,6 +21084,7 @@ export const en_XA: EnTranslations = {
     "delveRiteShrineCandleInteract": "[Çáñðļé Šĥŕíñé: Þŕéšš Ƒ ţó ţóúçĥ íţ]",
     "delveRiteShrineReedInteract": "[Ŕééð Šĥŕíñé: Þŕéšš Ƒ ţó ţóúçĥ íţ]",
     "delveRiteShrineSkullInteract": "[Šķúļļ Šĥŕíñé: Þŕéšš Ƒ ţó ţóúçĥ íţ]",
+    "freeholdGateName": "[Ƒŕééĥóļð Ĝáţé]",
     "mailboxName": "[Ɱáíļƀóẋ]",
     "noticeboardName": "[Ñóţíçé Ɓóáŕð]",
     "farmPatchName": "[Ĝáŕðéñ Ɓéðš]",

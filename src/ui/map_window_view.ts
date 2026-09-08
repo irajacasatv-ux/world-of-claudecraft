@@ -49,6 +49,7 @@ import { dungeonMapActive } from './dungeon_map_view';
 import { viewerUsableToolTier } from './hud/professions/gathering_view';
 import { dawnholdMapActive, lastKeepMapActive } from './lastkeep_map_view';
 import { overworldDungeonPortals } from './map_dungeon_portals';
+import { isLiveMapEntityDisclosed } from './map_entity_disclosure_core';
 import type { MapMarkerProfile } from './map_marker_profile_core';
 import {
   isNearbyLiveRiftZoneMapEntity,
@@ -310,6 +311,7 @@ export interface MapServiceMarker {
  * identities come from authored content; Rift name/rank come only from a live
  * entity inside the host-fair disclosure range. */
 export type MapNavigationMarker =
+  | { kind: 'freehold-gate'; mx: number; my: number }
   | {
       kind: 'delve-entrance';
       mx: number;
@@ -1061,6 +1063,16 @@ export function buildOverworldMapModel(input: OverworldMapInput): OverworldMapMo
     }
   }
   for (const entity of world.entities.values()) {
+    if (
+      entity.kind === 'object' &&
+      entity.templateId === 'freehold_gate' &&
+      isLiveMapEntityDisclosed(p.pos.x, p.pos.z, entity.pos.x, entity.pos.z) &&
+      inZone(entity.pos.x, entity.pos.z)
+    ) {
+      const placed = placeNavigation(entity.pos.x, entity.pos.z);
+      if (placed) navigation.push({ kind: 'freehold-gate', ...placed });
+      continue;
+    }
     if (!isNearbyLiveRiftZoneMapEntity(entity, p.pos)) continue;
     if (!inZone(entity.pos.x, entity.pos.z)) continue;
     const placed = placeNavigation(entity.pos.x, entity.pos.z);

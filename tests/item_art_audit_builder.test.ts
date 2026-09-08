@@ -847,13 +847,15 @@ describe('item-art audit builder', () => {
     // tree, not invented or derived from either parent.
     // PR3941 plus Freeholds: measured again after retiring the five premium
     // reins, with all furnishing definitions retained on the merged tree.
+    // The Hearth Key adds one shipping icon and one live definition; catalog
+    // hashes and bytes below are remeasured by the same verify-only command.
     expect(verified).toMatchObject({
       catalogPath: 'tmp/imagegen/item-art-consistency/final-audit/catalog.json',
-      catalogSha256: '26bdfe657ad8bdebc2cf8d187b3470a6dd4110b2d3c73cbe99994f7843592e3e',
-      catalogBytes: 711092,
+      catalogSha256: 'ea36cd4c751f14984ca4ee07ac821862e05352179b6152f5f3c72385950b80cb',
+      catalogBytes: 711586,
       rendererFingerprint: '41f5404c4d6d9643c8f03b9d88a8546e44564cc03a1baabdd4a72cb9258a2da7',
-      catalogCount: 1304,
-      liveItemCount: 1322,
+      catalogCount: 1305,
+      liveItemCount: 1323,
       generatedHeroicDefinitions: 78,
       heroicDefinitionsWithOwnWebp: 59,
       heroicWeaponArtAliases: 19,
@@ -871,7 +873,7 @@ describe('item-art audit builder', () => {
         identity: 32,
       },
       sheetSetSha256: null,
-      shippingCatalogSha256: '3e3962188888935cd77f79e2f88875d40f168b000b9f17576920dbdef2e62774',
+      shippingCatalogSha256: '2f5175bf9a90d93425e0873a5ef62c7e5842916d00ebe977748112bdb4aab073',
       machineChecksPassed: true,
       verdict: null,
     });

@@ -271,6 +271,21 @@ describe('social_window: guild displayed-role chip (rendered rows)', () => {
   const chips = (html: string): string[] =>
     html.match(/<span class="rank[^"]*">[^<]*<\/span>/g) ?? [];
 
+  it('renders the Freehold status in the row and accessible dot title', () => {
+    const html = guildMemberRowHtml(
+      row({
+        online: true,
+        status: 'freehold',
+        dot: 'freehold',
+        zone: 'Inn Room',
+      }),
+      NOW,
+    );
+    expect(html).toContain('soc-dot freehold');
+    expect(html).toContain('title="In Freehold - Inn Room"');
+    expect(html).toContain('<br>In Freehold');
+  });
+
   it('renders ONE chip, the Recruit tier as the role, for a 3-day member', () => {
     const html = guildMemberRowHtml(row({ joinedAt: NOW - 3 * DAY }), NOW);
     expect(chips(html)).toEqual(['<span class="rank">Recruit</span>']);

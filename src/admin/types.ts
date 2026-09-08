@@ -164,7 +164,7 @@ export interface DetectionCalibrationData {
 }
 
 export interface LivePlayerLocation {
-  kind: 'overworld' | 'dungeon' | 'delve';
+  kind: 'overworld' | 'dungeon' | 'freehold' | 'delve';
   zoneId: string | null;
   zone: string;
   instanceId: string | null;

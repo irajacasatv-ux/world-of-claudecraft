@@ -24,6 +24,7 @@ export * from './farming_plant_sheet_window';
 export * from './farming_view';
 export * from './feast_title';
 export * from './feast_tooltip_view';
+export * from './gathering_denial_feedback';
 export * from './gathering_goal_controller';
 export * from './gathering_goal_painter';
 export * from './gathering_goal_track_row';

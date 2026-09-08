@@ -12192,6 +12192,7 @@
     background: #ff5040;
     box-shadow: 0 0 5px #ff5040aa;
   }
+  .soc-dot.freehold,
   .soc-dot.dungeon {
     background: #c98bff;
     box-shadow: 0 0 5px #c98bffaa;
@@ -19809,5 +19810,84 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  /* ---------- freehold gate ---------- */
+  #freehold-gate-window {
+    width: min(460px, calc(100% - 32px));
+    max-height: calc(100% - 32px);
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px;
+    overflow: hidden;
+  }
+  #freehold-gate-window h2 {
+    margin: 0;
+  }
+  .fh-gate-tabs,
+  .fh-gate-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .fh-gate-tabs button,
+  .fh-gate-actions button {
+    flex: 1;
+  }
+  .fh-gate-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+  .fh-gate-content > h2,
+  .fh-gate-tabs,
+  .fh-gate-actions,
+  .fh-gate-status {
+    flex-shrink: 0;
+  }
+  .fh-gate-body {
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  #freehold-gate-window [data-focus-key="gate-result"],
+  #freehold-gate-window button,
+  #freehold-gate-window input,
+  #freehold-gate-window select {
+    min-height: 40px;
+    min-width: 40px;
+  }
+  #freehold-gate-window .btn {
+    margin: 0;
+  }
+  .fh-gate-tab,
+  .fh-gate-tab.on {
+    background: var(--color-bg-input);
+  }
+  .fh-gate-name {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 7px 10px;
+    background: var(--color-bg-input);
+    color: var(--color-text-light);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
+    font: inherit;
+  }
+  .fh-gate-name:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: -2px;
+    border-color: var(--color-border-focus);
+  }
+  #freehold-gate-window [aria-selected="true"] {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .fh-gate-status {
+    margin: 0;
+    min-height: 1.2em;
   }
 }

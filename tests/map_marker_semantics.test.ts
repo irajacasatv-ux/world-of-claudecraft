@@ -21,6 +21,7 @@ function object(templateId: string, riftTier?: 'C' | 'B' | 'A' | 'S') {
 describe('classifyMapObjectMarker', () => {
   it.each<[string, MapMarkerSemantic]>([
     ['dungeon_door', { kind: 'dungeon', role: 'entrance' }],
+    ['freehold_gate', { kind: 'freehold-gate' }],
     ['dungeon_exit', { kind: 'dungeon', role: 'exit' }],
     ['rift_portal', { kind: 'rift-entrance', rank: null }],
     ['rift_descent', { kind: 'rift-descent' }],

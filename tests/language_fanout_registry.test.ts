@@ -201,6 +201,9 @@ const FANOUT_ARMS: readonly string[] = [
   // The plant sheet's relocalize gates itself (paint only while open), so the
   // arm carries no guard of its own.
   'this.plantSheetWindow.relocalize|',
+  // The gate controller repaints only while visible, resolving tabs, draft
+  // lookup status and keyed refusals again while preserving control focus.
+  'this.freeholdGatePrompt.relocalize|',
   // The Perfecting window's relocalize gates itself the same way; its repaint
   // signature is ids/ranks/counts (text-independent), so the arm forces the
   // one rebuild (Masterwrought phase 14).

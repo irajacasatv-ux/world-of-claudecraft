@@ -1069,3 +1069,31 @@ describe('recipe patterns take the parchment page, whatever they are named', () 
     }
   });
 });
+
+describe('Hearth Key accepted art', () => {
+  it('binds the owned tool to its Codex artwork and exact shipping bytes', async () => {
+    const evidencePath = 'docs/freeholds/hearth-key-art-2026-09-08/accepted-art.json';
+    const evidence = JSON.parse(readFileSync(path.join(repoRoot, evidencePath), 'utf8'));
+    expect(evidence.generator).toBe('OpenAI built-in image generation executed by Codex');
+    expect(evidence.items.map((item: { itemId: string }) => item.itemId)).toEqual(['hearth_key']);
+    const owners = mapping().generatedBatches?.filter((batch) =>
+      batch.itemIds.includes('hearth_key'),
+    );
+    expect(owners).toHaveLength(1);
+    expect(owners?.[0].provenanceRecord).toBe(evidencePath);
+    expect(itemImageUrl('hearth_key')).toBe('/ui/items/hearth_key.webp');
+    const bytes = readFileSync(path.join(repoRoot, 'public/ui/items/hearth_key.webp'));
+    expect(bytes.length).toBe(2220);
+    expect(createHash('sha256').update(bytes).digest('hex')).toBe(
+      '7ce9c6ca71367b295e8c9165985eb16fba20fd417f54ba323cd6ef620694b0aa',
+    );
+    expect(evidence.items[0].shipping.sha256).toBe(
+      createHash('sha256').update(bytes).digest('hex'),
+    );
+    const decoded = await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    expect([decoded.info.width, decoded.info.height]).toEqual([128, 128]);
+    expect(decoded.data.filter((_, index) => index % 4 === 3).every((value) => value === 255)).toBe(
+      true,
+    );
+  });
+});

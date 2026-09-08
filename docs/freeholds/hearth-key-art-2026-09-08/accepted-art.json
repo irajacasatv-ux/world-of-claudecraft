@@ -1,0 +1,59 @@
+{
+  "batchId": "freehold-hearth-key-2026-09-08",
+  "styleContract": "woc-item-icon-v1",
+  "generator": "OpenAI built-in image generation executed by Codex",
+  "owner": "World of ClaudeCraft",
+  "license": "World of ClaudeCraft project-generated art, project asset, rights reserved",
+  "items": [
+    {
+      "itemId": "hearth_key",
+      "prompt": "Use case: stylized-concept. Create one opaque square fantasy MMORPG inventory icon, Hearth Key (hearth_key), in World of ClaudeCraft item style contract woc-item-icon-v1. Subject: a complete sturdy old brass house key, single oval bow, simple stout shaft and distinct square teeth, tactile warm worn brass and tiny leather cord tied through the bow. Warm restrained hearth-amber glint inside the bow, no flame cloud. Full key diagonal centered at 72 percent square fill with safe padding on every side. Deep charcoal and umber painted vignette, subtle contact shadow; warm top-left key light and cool deep bottom-right shadows. Premium hand-painted classic dark fantasy MMO inventory painting, crisp focal edges, softer perimeter brushwork. Readable silhouette at 22px and circular crop. References are STYLE ONLY: arcanite_mining_pick for complete tool silhouette, eastbrook_buckler for brass and dark lighting, linen_pouch for warm worn materials. Do not copy unrelated shapes. One icon only. Fully opaque square ground, no transparency, no UI frame, no text, numbers, letters, runes, labels, watermark, hands, collage, cropped subject or photographic realism. 1024x1024.",
+      "references": [
+        {
+          "path": "public/ui/items/arcanite_mining_pick.webp",
+          "sha256": "1f68e6bfbc521b2eb7c67cf7931bad05d1c68d68b132b7cf328d6c0d135f43b6",
+          "role": "style only",
+          "order": 1
+        },
+        {
+          "path": "public/ui/items/eastbrook_buckler.webp",
+          "sha256": "2c4d58c9050f1fdfd88b4e3aacbeeb90e4b859709145bee38be3db380685e156",
+          "role": "style only",
+          "order": 2
+        },
+        {
+          "path": "public/ui/items/linen_pouch.webp",
+          "sha256": "b526923bf6aa8e9c06395c80fcb97f3bdbe87e0f1f5a55eee4217f7389b08937",
+          "role": "style only",
+          "order": 3
+        }
+      ],
+      "original": {
+        "path": "tmp/freehold-hearth-key-art/original.png",
+        "sha256": "63c7c76e0658d4aac8b2590e664e992949999fcdc007e0892084eff5a3cd37b9"
+      },
+      "master": {
+        "path": "tmp/freehold-hearth-key-art/master.png",
+        "sha256": "1557f5a236bc7baa2b8e3108a6f8ffa7869a2f39bcafb02e7d5106487994804b"
+      },
+      "shipping": {
+        "path": "public/ui/items/hearth_key.webp",
+        "sha256": "7ce9c6ca71367b295e8c9165985eb16fba20fd417f54ba323cd6ef620694b0aa",
+        "bytes": 2220
+      },
+      "processing": [
+        "Preserved original generated PNG in ignored staging.",
+        "Normalized reviewed 512px opaque sRGB master with Sharp.",
+        "Converted through npm run assets:items to 128px WebP q82."
+      ],
+      "retryCount": 0,
+      "review": {
+        "sizes": [512, 128, 40, 28, 22],
+        "grayscale28": true,
+        "circular64": true,
+        "evidence": "review.png",
+        "verdict": "Accepted: complete key silhouette, top-left brass highlights, opaque painted ground and no writing or frame. Key teeth and bow remain distinct at 22px and circular crop."
+      }
+    }
+  ]
+}

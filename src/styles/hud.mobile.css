@@ -8865,4 +8865,15 @@
     width: min(460px, calc(var(--app-vw, 100vw) / var(--ui-scale, 1) - 20px));
     max-height: calc(var(--app-vh, 100dvh) / var(--ui-scale, 1) - 20px);
   }
+  body.mobile-touch #freehold-gate-window {
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    top: max(12px, env(safe-area-inset-top));
+    transform: none;
+    width: auto;
+    max-width: 460px;
+    max-height: calc(100% - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 12px;
+    gap: 8px;
+  }
 }

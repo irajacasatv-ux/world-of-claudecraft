@@ -815,7 +815,8 @@ describe('Masterwrought art completion evidence', () => {
     // weapon_icons.test.ts, so their mapping owners are genuine, not fabricated.
     // OSSBrain adds the Goblin Rocket Sled and Rallycart RXT reins owners;
     // these do not alter the dated completion/approval universe below.
-    expect(currentOwnerIds).toHaveLength(1304);
+    // The Hearth Key is a separate later owner, outside the dated approval.
+    expect(currentOwnerIds).toHaveLength(1305);
     for (const id of datedIds) {
       expect(currentOwnerIds.includes(id), `${id} still has a current mapping owner`).toBe(true);
     }
@@ -865,6 +866,13 @@ describe('Masterwrought art completion evidence', () => {
       'pattern_freehold_jewel_floor_lamp',
     ]);
     expect(value.targetSets.items.filter((id) => craftedIds.has(id))).toEqual([]);
+    const hearthKeyBatches = mapping.generatedBatches.filter(
+      ({ batchId: id }) => id === 'freehold-hearth-key-2026-09-08',
+    );
+    expect(hearthKeyBatches).toHaveLength(1);
+    expect(hearthKeyBatches[0].itemIds).toEqual(['hearth_key']);
+    expect(datedIds).not.toContain('hearth_key');
+    expect(value.targetSets.items).not.toContain('hearth_key');
 
     // The two later release-merge art waves (Nythraxis gap-fill weapon renders, then
     // Roots' Bramblehide plus further Nythraxis gap-fill paintings) each land as exactly
@@ -908,7 +916,7 @@ describe('Masterwrought art completion evidence', () => {
 
     // Strip the later additive waves (Crucible professions, the Field Kit, the
     // Nythraxis gap-fill weapon renders, the Roots' Bramblehide/gap-fill paintings,
-    // and the OSSBrain mount reins) and the vendor/crafted furnishings by their
+    // and the OSSBrain mount reins) and the vendor/crafted furnishings and Hearth Key by their
     // exact ids, so the 1,209-item completion union equation below stays isolated
     // to the same set as completionDatedIds above. This filters by exact batch ids only,
     // never by broad membership of datedIds: a filter keyed on datedIds membership would
@@ -917,6 +925,7 @@ describe('Masterwrought art completion evidence', () => {
       (id) =>
         !crucibleIds.has(id) &&
         id !== 'field_kit' &&
+        id !== 'hearth_key' &&
         !laterGapFillIds.has(id) &&
         !freeholdIds.has(id) &&
         !craftedIds.has(id) &&

@@ -6774,6 +6774,22 @@
         "stormhymn_chain_treads",
         "heroic_stormhymn_chain_treads"
       ]
+    },
+    {
+      "batchId": "freehold-hearth-key-2026-09-08",
+      "source": "OpenAI built-in image generation executed by Codex",
+      "owner": "World of ClaudeCraft",
+      "license": "World of ClaudeCraft project-generated art, project asset, rights reserved",
+      "styleContract": {
+        "id": "woc-item-icon-v1",
+        "document": "docs/design/item-icon-art-style.md"
+      },
+      "commonPrompt": "One individually painted worn brass house key; exact prompt in accepted-art record.",
+      "itemIds": [
+        "hearth_key"
+      ],
+      "styleReference": "arcanite_mining_pick, eastbrook_buckler and linen_pouch, style only",
+      "provenanceRecord": "docs/freeholds/hearth-key-art-2026-09-08/accepted-art.json"
     }
   ]
 }

@@ -1425,3 +1425,22 @@ describe('harvest marker full silhouette at the circular rim', () => {
     expect(harvest()).toHaveLength(1);
   });
 });
+
+describe('Freehold gate minimap identity', () => {
+  it.each(['sim', 'client'] as const)('keeps a nonlootable gate on navigation for %s', (shape) => {
+    const world = makeWorld(shape);
+    (world.entities as Map<number, unknown>).set(991, {
+      id: 991,
+      kind: 'object',
+      templateId: 'freehold_gate',
+      lootable: false,
+      pos: { x: 2, z: PZ },
+    });
+    const markers = buildMarkers(world);
+    expect(
+      markers.filter(
+        (marker) => marker.kind === 'semantic-object' && marker.semantic.kind === 'freehold-gate',
+      ),
+    ).toHaveLength(1);
+  });
+});

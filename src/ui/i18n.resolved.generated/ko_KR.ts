@@ -327,6 +327,52 @@ export const ko_KR: EnTranslations = {
   },
   "hudChrome": {
     "housing": {
+      "common": {
+        "close": "닫기",
+        "cancel": "취소",
+        "back": "뒤로",
+        "retry": "다시 시도",
+        "loading": "집을 불러오는 중...",
+        "pending": "확인을 기다리는 중...",
+        "reconnecting": "다시 연결하는 중입니다. 저장된 집은 안전합니다.",
+        "readOnly": "읽기 전용",
+        "unavailable": "지금은 이용할 수 없습니다.",
+        "unknown": "알 수 없음",
+        "selected": "선택됨: {name}",
+        "closeAria": "{window} 닫기"
+      },
+      "denied": {
+        "unavailable": "지금은 이 집을 이용할 수 없습니다. 나중에 다시 시도하세요.",
+        "busy": "이 집은 다른 곳에서 사용 중이거나 아직 열리는 중입니다. 잠시 후 다시 시도하세요.",
+        "permission": "여기서는 사용할 수 없습니다.",
+        "condition": "이 시설을 사용하려면 집의 상태를 복구하세요.",
+        "dead": "죽은 상태에서는 할 수 없습니다.",
+        "combat": "전투 중에는 할 수 없습니다.",
+        "cooldown": "난로 열쇠의 재사용 대기시간이 아직 남아 있습니다.",
+        "instanced": "인스턴스 안에서는 사용할 수 없습니다.",
+        "match": "경기 중에는 사용할 수 없습니다."
+      },
+      "gate": {
+        "title": "집 선택",
+        "own": "내 집",
+        "visit": "친구 방문",
+        "name": "캐릭터 이름",
+        "namePlaceholder": "캐릭터 이름 입력",
+        "nameRequired": "방문할 캐릭터의 이름을 입력하세요.",
+        "homeChoice": "내 집 선택",
+        "lookup": "집 찾기",
+        "lookupPending": "친구의 집을 찾는 중...",
+        "lookupChanged": "들어가기 전에 이 캐릭터의 집을 찾으세요.",
+        "result": "{name}의 집",
+        "enter": "입장",
+        "loading": "문을 여는 중...",
+        "marker": "자유 영지 관문",
+        "interact": "집 선택"
+      },
+      "hearthKey": {
+        "tooltip": "내 집으로 돌아갑니다. 전투 중, 죽은 상태, 수감 중, 인스턴스 안 또는 경기 중에는 사용할 수 없습니다.",
+        "destination": "목적지: {home}"
+      },
       "furnishing": {
         "footprint": "Footprint: {width} by {depth} cells.",
         "decorCost": "Decor cost: {cost}.",
@@ -3984,6 +4030,7 @@ export const ko_KR: EnTranslations = {
       }
     },
     "social": {
+      "statusFreehold": "자유 영지에 있음",
       "lastSeen": "마지막 접속: {when}",
       "lastSeenNever": "없음",
       "ignoredTab": "무시됨",
@@ -14391,6 +14438,9 @@ export const ko_KR: EnTranslations = {
       "voidbound_grimoire": {
         "name": "공허에 묶인 마법서"
       },
+      "hearth_key": {
+        "name": "난로 열쇠"
+      },
       "masters_field_forge": {
         "name": "장인의 야전 화로"
       },
@@ -21034,6 +21084,7 @@ export const ko_KR: EnTranslations = {
     "delveRiteShrineCandleInteract": "촛불 제단: F를 눌러 만지기",
     "delveRiteShrineReedInteract": "갈대 제단: F를 눌러 만지기",
     "delveRiteShrineSkullInteract": "해골 제단: F를 눌러 만지기",
+    "freeholdGateName": "자유 영지 관문",
     "mailboxName": "우편함",
     "noticeboardName": "게시판",
     "farmPatchName": "텃밭",

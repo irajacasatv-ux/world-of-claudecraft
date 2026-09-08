@@ -486,6 +486,8 @@ describe('bare containment reads of the active element stay out of repaint ladde
     'dialog_key_activation.ts': 'keyboard activation guard, requires a button',
     'focus_manager.ts': 'the Tab trap itself (armed while focus is inside the root)',
     'focus_restore.ts': 'the helper',
+    'hud/housing/gate_prompt_controller.ts':
+      'accepted-close blur only; repaint and retry ownership use focusedWithin instead',
     'hud/vendor/buy_quantity_prompt_window.ts': 'do-not-steal-focus check, never focuses anything',
     'spellbook_window.ts':
       'dataset/class-keyed read with no Close rung; a parked root resolves nothing',
@@ -502,6 +504,16 @@ describe('bare containment reads of the active element stay out of repaint ladde
   it('finds the known readers (anti-vacuity)', () => {
     expect(readers).toContain('focus_manager.ts');
     expect(readers).toContain('spellbook_window.ts');
+  });
+
+  it('keeps the gate controller bare read confined to accepted-close blur', () => {
+    const code = uiFiles.find((f) => f.file === 'hud/housing/gate_prompt_controller.ts')!.code;
+    expect(code.match(/\.contains\(document\.activeElement\)/g)).toHaveLength(1);
+    expect(code).toMatch(
+      /accepted\s*&&\s*root\.contains\(document\.activeElement\)\s*&&\s*document\.activeElement instanceof HTMLElement\s*\)\s*document\.activeElement\.blur\(\)/,
+    );
+    expect(code).toContain('const hadFocus = focusedWithin(root) !== null;');
+    expect(code).toContain('this.retryFocus = focusedWithin(this.deps.root()) !== null;');
   });
 
   it('every bare read is a listed non-ladder, and every listed one still exists', () => {

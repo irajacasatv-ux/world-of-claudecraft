@@ -47,6 +47,7 @@ const CODE_BUILT: Record<string, string> = {
   'dev-command-window': 'src/ui/dev_command_window.ts',
   'perfecting-window': 'src/ui/hud/professions/perfecting_window.ts',
   'keyboard-map-window': 'src/ui/keyboard_map_window.ts',
+  'freehold-gate-window': 'src/ui/hud/housing/gate_prompt_controller.ts',
 };
 
 /**
@@ -360,6 +361,8 @@ describe('closeManagedWindow case registry', () => {
       'ui/hud/professions/profession_tutorial_window.ts': 1,
       // The Perfecting window mints its own root (no markup entry).
       'ui/hud/professions/perfecting_window.ts': 1,
+      // The gate's explicit entry dialog owns one runtime root and close lifecycle.
+      'ui/hud/housing/gate_prompt_controller.ts': 1,
     });
     for (const id of Object.keys(CODE_BUILT)) expect(caseIds).toContain(id);
   });

@@ -5,6 +5,7 @@
 import type { RiftTier } from '../sim/types';
 
 export type MapMarkerSemantic =
+  | { kind: 'freehold-gate' }
   | { kind: 'dungeon'; role: 'entrance' | 'exit' }
   | { kind: 'rift-entrance'; rank: RiftTier | null }
   | { kind: 'rift-descent' }
@@ -71,6 +72,8 @@ export function classifyMapObjectMarker(
   if (entity.kind !== 'object') return null;
   const bountiful = context.delveRun?.bountiful ?? false;
   switch (entity.templateId) {
+    case 'freehold_gate':
+      return { kind: 'freehold-gate' };
     case 'dungeon_door':
       return { kind: 'dungeon', role: 'entrance' };
     case 'dungeon_exit':
@@ -157,6 +160,7 @@ export function mapMarkerSemanticLayer(semantic: MapMarkerSemantic): MapMarkerSe
     case 'rift-reward':
     case 'delve-reward':
       return 'reward';
+    case 'freehold-gate':
     case 'dungeon':
     case 'rift-entrance':
     case 'rift-descent':

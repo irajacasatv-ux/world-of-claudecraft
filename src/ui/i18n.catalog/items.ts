@@ -2582,6 +2582,7 @@ const ITEM_ENTITY_IDS = [
   'prismglass_loop',
   'gyrelens_array',
   'voidbound_grimoire',
+  'hearth_key',
   'masters_field_forge',
   'makers_charm',
   'ironhusk_flask',
@@ -3248,6 +3249,7 @@ const APPENDED_ITEM_NAMES: Partial<Record<ItemEntityId, string>> = {
   prismglass_loop: 'Prismglass Loop',
   gyrelens_array: 'Gyrelens Array',
   voidbound_grimoire: 'Voidbound Grimoire',
+  hearth_key: 'Hearth Key',
   masters_field_forge: "Master's Field Forge",
   makers_charm: "Maker's Charm",
   // Masterwrought apex consumables (phase 10): the three alchemy flasks, the

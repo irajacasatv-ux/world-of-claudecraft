@@ -734,6 +734,7 @@ type WorldEntityTranslations = {
     delveRiteShrineCandleInteract: string;
     delveRiteShrineReedInteract: string;
     delveRiteShrineSkullInteract: string;
+    freeholdGateName: string;
     mailboxName: string;
     noticeboardName: string;
     farmPatchName: string;
@@ -852,6 +853,7 @@ function makeEnglishWorldEntities(): WorldEntityTranslations {
       delveRiteShrineCandleInteract: 'Candle Shrine: Press F to touch it',
       delveRiteShrineReedInteract: 'Reed Shrine: Press F to touch it',
       delveRiteShrineSkullInteract: 'Skull Shrine: Press F to touch it',
+      freeholdGateName: 'Freehold Gate',
       mailboxName: 'Mailbox',
       noticeboardName: 'Notice Board',
       farmPatchName: 'Garden Beds',

@@ -630,3 +630,28 @@ describe('map semantic accessibility core', () => {
     ).toBe('Rift entrance: Storm Rift (S)');
   });
 });
+
+it('composes the disclosed Freeholds gate into both map description and pointer tooltip', () => {
+  const view = core();
+  const model = {
+    questAreas: [],
+    npcs: [],
+    gatherNodes: [],
+    stations: [],
+    services: [],
+    farmPatches: [],
+    navigation: [{ kind: 'freehold-gate', mx: 280, my: 100 }],
+    player: { mx: 280, my: 280 },
+    allies: [],
+    party: [],
+    portals: [],
+    pois: [],
+  } as unknown as MapPaintResult;
+  expect(view.updateOverworld(model, 'Eastbrook Vale', 560)).toContain(
+    'Freeholds gate: north, medium distance.',
+  );
+  expect(view.navigationText(model.navigation[0])).toBe('Freeholds gate');
+  model.navigation.length = 0;
+  expect(view.updateOverworld(model, 'Eastbrook Vale', 560)).not.toContain('Freeholds gate');
+  expect(view.tooltipAt(280, 100, 20)).toBe('');
+});

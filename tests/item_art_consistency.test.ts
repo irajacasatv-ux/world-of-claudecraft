@@ -867,7 +867,7 @@ describe('item-art consistency accepted-art provenance', () => {
     // furnishings and thirteen crafted-content definitions = 1,320. The OSSBrain
     // PR #3781 reconcile's two disjoint reins item definitions
     // (reins_goblin_rocket_sled, reins_rallycart_rxt) add two more: 1,322.
-    expect(Object.keys(ITEMS)).toHaveLength(1322);
+    expect(Object.keys(ITEMS)).toHaveLength(1323);
     expect(Object.values(verdict.auditScope.groups).reduce((sum, count) => sum + count, 0)).toBe(
       1255,
     );
@@ -1021,10 +1021,10 @@ describe('item-art consistency accepted-art provenance', () => {
     // (nythraxis-gap-weapon-renders-2026-09-04 + roots-bramblehide-icons-2026-09-07)
     // + eight vendor furnishings + thirteen crafted-content icons = 1,302. The
     // OSSBrain PR #3781 reconcile's two disjoint reins owners
-    // (reins_goblin_rocket_sled, reins_rallycart_rxt) add two more: 1,304.
-    expect(new Set(currentOwnerIds).size).toBe(1304);
-    expect(shippingIds).toHaveLength(1304);
-    expect(Object.keys(ITEMS)).toHaveLength(1322);
+    // (reins_goblin_rocket_sled, reins_rallycart_rxt) add two more; the Hearth Key adds one: 1,305.
+    expect(new Set(currentOwnerIds).size).toBe(1305);
+    expect(shippingIds).toHaveLength(1305);
+    expect(Object.keys(ITEMS)).toHaveLength(1323);
 
     const datedVerdict = readJson<FinalAuditVerdict>(CURRENT_VERDICT_PATH);
     const oldPassIds = sorted(datedVerdict.visualVerdict.passIds);
@@ -1054,6 +1054,7 @@ describe('item-art consistency accepted-art provenance', () => {
         ...oldPassIds,
         ...releaseBatchIds,
         'field_kit',
+        'hearth_key',
         ...FREEHOLD_ITEM_IDS,
         ...CRAFTED_ITEM_IDS,
         'reins_goblin_rocket_sled',
@@ -1217,7 +1218,7 @@ describe('item-art consistency accepted-art provenance', () => {
     // plus two Freeholds batches = 31. OSSBrain PR #3781 reconcile adds its own 2
     // disjoint batches (goblin-rocket-sled-icon-2026-08-12,
     // rallycart-rxt-icon-2026-08-20) = 33.
-    expect(mapping.generatedBatches).toHaveLength(33);
+    expect(mapping.generatedBatches).toHaveLength(34);
     const batch = mapping.generatedBatches.find(({ batchId }) => batchId === BATCH_ID);
     expect(batch).toBeDefined();
     expect(batch).toMatchObject({
@@ -1286,7 +1287,8 @@ describe('item-art consistency accepted-art provenance', () => {
           batchId !== CURRENT_BATCH_ID &&
           batchId !== CRUCIBLE_BATCH_ID &&
           batchId !== FREEHOLD_BATCH_ID &&
-          batchId !== CRAFTED_BATCH_ID,
+          batchId !== CRAFTED_BATCH_ID &&
+          batchId !== 'freehold-hearth-key-2026-09-08',
       )
       .flatMap(({ itemIds }) => itemIds);
     // 727 base + this branch's Field Kit batch (+1) + the release's three
@@ -1299,8 +1301,8 @@ describe('item-art consistency accepted-art provenance', () => {
       ...mapping.entries.map(({ itemId }) => itemId),
       ...mapping.generatedBatches.flatMap(({ itemIds }) => itemIds),
     ];
-    expect(allCurrentOwnerIds).toHaveLength(1304);
-    expect(new Set(allCurrentOwnerIds).size).toBe(1304);
+    expect(allCurrentOwnerIds).toHaveLength(1305);
+    expect(new Set(allCurrentOwnerIds).size).toBe(1305);
     expect({
       entries: mapping.entries.length,
       priorGenerated: priorGeneratedIds.length,
@@ -1309,6 +1311,9 @@ describe('item-art consistency accepted-art provenance', () => {
       crucibleProfessions: crucibleBatch?.itemIds.length,
       freeholdFurnishings: freeholdBatch?.itemIds.length,
       craftedContent: craftedBatch?.itemIds.length,
+      hearthKey: mapping.generatedBatches.find(
+        ({ batchId }) => batchId === 'freehold-hearth-key-2026-09-08',
+      )?.itemIds,
     }).toEqual({
       entries: 43,
       priorGenerated: 755,
@@ -1317,6 +1322,7 @@ describe('item-art consistency accepted-art provenance', () => {
       crucibleProfessions: 46,
       freeholdFurnishings: 8,
       craftedContent: 13,
+      hearthKey: ['hearth_key'],
     });
     const historicalVerdict = readJson<FinalAuditVerdict>(
       `${evidenceDir}/final-item-art-audit-verdict.json`,
@@ -1374,6 +1380,7 @@ describe('item-art consistency accepted-art provenance', () => {
         ...datedMasterwroughtVerdict.visualVerdict.passIds,
         ...releaseBatchIdsForCatalog,
         'field_kit',
+        'hearth_key',
         ...FREEHOLD_ITEM_IDS,
         ...CRAFTED_ITEM_IDS,
         'reins_goblin_rocket_sled',
@@ -1508,10 +1515,10 @@ describe('item-art consistency accepted-art provenance', () => {
     // Matches the mapping-owner sum above: 43 entries + 755 prior-generated
     // batch ids + 274 historical-audit batch ids + 165 Masterwrought-completion
     // batch ids + 46 Crucible-professions + 8 vendor + 13 crafted ids + 2 OSSBrain
-    // reins ids = 1304.
-    if (ownerIds.length !== 1304)
-      violations.push(`mapping owner count: ${ownerIds.length} != 1304`);
-    if (fileIds.length !== 1304) violations.push(`shipping WebP count: ${fileIds.length} != 1304`);
+    // reins ids = 1305.
+    if (ownerIds.length !== 1305)
+      violations.push(`mapping owner count: ${ownerIds.length} != 1305`);
+    if (fileIds.length !== 1305) violations.push(`shipping WebP count: ${fileIds.length} != 1305`);
     for (const id of ids) {
       const ownerCount = ownerCountById.get(id) ?? 0;
       if (ownerCount !== 1) violations.push(`${id}: current owner count ${ownerCount} != 1`);

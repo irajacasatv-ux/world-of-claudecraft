@@ -11,7 +11,7 @@
 import { CLASSES, DUNGEONS, ZONES } from '../sim/data';
 import type { PlayerClass } from '../sim/types';
 import { tEntity } from './entity_i18n';
-import { getLanguage, type InterpolationValues, type SupportedLanguage, tPlural } from './i18n';
+import { getLanguage, type InterpolationValues, type SupportedLanguage, t, tPlural } from './i18n';
 import { SERVER_NEW } from './server_i18n.newlocales';
 import { IN_GAME_MODERATION_MESSAGES } from './server_i18n_moderation';
 
@@ -2133,6 +2133,7 @@ function localizeStatus(s: string): string {
   if (k === 'combat') return tServer('who.statusCombat');
   if (k === 'dead') return tServer('who.statusDead');
   if (k === 'dungeon') return tServer('who.statusDungeon');
+  if (k === 'freehold') return t('hudChrome.social.statusFreehold');
   return s;
 }
 

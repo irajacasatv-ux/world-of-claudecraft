@@ -8,6 +8,13 @@ import { localizeServerText, tServer } from '../src/ui/server_i18n';
 // Messages the authoritative server emits as plain English; the client must
 // re-render them in the active locale (friends/guild/world/who/moderation).
 describe('server-sent message localization', () => {
+  it('renders the shared Freehold presence label in a who row', () => {
+    setLanguage('en');
+    expect(localizeServerText('Tester - level 10 Warrior - Inn Room (freehold)')).toBe(
+      'Tester - level 10 Warrior - Inn Room (In Freehold)',
+    );
+  });
+
   const samples: string[] = [
     // The two chat-suppression tiers. These are emitted from server/social.ts and
     // server/game.ts, which the S3 drift guard only partially scans, so pin every

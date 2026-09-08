@@ -495,6 +495,8 @@ const DELVE_REWARD_ART = {
 /** Closed semantic routing shared by the minimap and delve schematic painters. */
 export function semanticMapMarkerArt(semantic: MapMarkerSemantic): SemanticMapMarkerArt | null {
   switch (semantic.kind) {
+    case 'freehold-gate':
+      return DUNGEON_SEMANTIC_ART.entrance;
     case 'dungeon':
       return DUNGEON_SEMANTIC_ART[semantic.role];
     case 'rift-entrance':

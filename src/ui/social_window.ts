@@ -120,6 +120,8 @@ function statusLabel(status: string | undefined): string {
       return t('hud.social.status.combat');
     case 'dungeon':
       return t('hud.social.status.dungeon');
+    case 'freehold':
+      return t('hudChrome.social.statusFreehold');
     case 'dead':
       return t('hud.social.status.dead');
     case 'afk':

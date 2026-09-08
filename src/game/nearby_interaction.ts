@@ -1,6 +1,8 @@
+import { FREEHOLD_GATE_TEMPLATE_ID } from '../sim/freehold/gate_rules';
 import { isQuestGatedGroundObjectHidden } from '../sim/quest_gated_entity';
 import { isObjectOpenedByViewer } from '../sim/quests/opened_object_view';
 import { dist2d, type Entity, INTERACT_RANGE, type QuestProgress } from '../sim/types';
+import { canPresentFreeholdGate } from '../ui/hud/housing/housing_view';
 import type { FarmPatchDef, FarmPlotView } from '../world_api/farming';
 import { corpseLootAvailability, localPartyMemberIds } from './corpse_loot_availability';
 import { decideEscortPress, handleEscortPress } from './escort_interact';
@@ -46,6 +48,7 @@ export interface NearbyInteractionWorld {
 
 export interface NearbyInteractionHud {
   openMailbox(): void;
+  openFreeholdGate(): void;
   openQuestDialog(npcId: number): void;
   openDelveBoard(npcId: number): void;
   showError(text: string): void;
@@ -109,9 +112,9 @@ export function tryNearbyInteraction(
         bestDelveDistance = distance;
       }
     } else if (
-      !player.dead &&
       entity.kind === 'object' &&
-      entity.lootable &&
+      ((!player.dead && entity.lootable) ||
+        (entity.templateId === FREEHOLD_GATE_TEMPLATE_ID && canPresentFreeholdGate(player))) &&
       // Nothing the viewer cannot see may win the press. An off-quest quest
       // collectable is withheld from the scene entirely (the renderer's gate), so
       // selecting it here would spend the interact on an invisible object and let
@@ -122,7 +125,10 @@ export function tryNearbyInteraction(
       !isQuestGatedGroundObjectHidden(entity, world.questLog) &&
       !isObjectOpenedByViewer(entity, world.questLog)
     ) {
-      if (distance <= objectInteractionRange(entity) && distance < bestObjectDistance) {
+      if (
+        distance <= objectInteractionRange(entity) &&
+        (distance < bestObjectDistance || (bestObject === null && distance === bestObjectDistance))
+      ) {
         bestObject = entity.id;
         bestObjectDistance = distance;
       }
@@ -155,6 +161,10 @@ export function tryNearbyInteraction(
   if (bestObject !== null) {
     const object = world.entities.get(bestObject);
     if (!object) return false;
+    if (object.templateId === FREEHOLD_GATE_TEMPLATE_ID) {
+      hud.openFreeholdGate();
+      return true;
+    }
     if (object.templateId === 'dungeon_door' && object.dungeonId) {
       return world.enterDungeon(object.dungeonId);
     } else if (object.templateId === 'dungeon_exit') {

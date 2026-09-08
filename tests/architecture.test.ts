@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 // Enforces the two load-bearing src/sim invariants from the root CLAUDE.md as a
@@ -209,6 +210,7 @@ describe('live graphics profile architecture', () => {
 // import), so it is registered here even though it lives in src/game. Paths are
 // repo-relative for the failure messages.
 const UI_PURE_CORES = [
+  'src/ui/hud/housing/housing_view.ts',
   'src/ui/ability_tooltip_lines.ts',
   'src/ui/collection_actions_core.ts',
   'src/ui/hud/cosmetics/cosmetics_cards_view.ts',
@@ -2396,6 +2398,7 @@ const UI_PAINTER_HELPERS = [
 // the English catalog, it is a maintainer fix during the release locale fill:
 // contributors do not edit those files.
 const UI_DOM_MODULES = [
+  'src/ui/hud/housing/gate_prompt_controller.ts',
   'src/ui/mobile_frame_long_press.ts',
   'src/ui/account_portal_dom.ts',
   'src/ui/appearance_customizer.ts',
@@ -2620,9 +2623,39 @@ function uiResidualModules(): string[] {
 
 // True when the file reaches for the browser at all: a DOM global in any of its
 // live forms, a browser-only API, or wall-clock/random nondeterminism.
-function touchesBrowser(file: string): boolean {
-  const code = stripComments(readFileSync(file, 'utf8'));
+function hasBrowserReach(source: string): boolean {
+  // Catalog values can contain placeholders such as "Close {window}". Mask
+  // literal data while retaining executable template substitutions and code.
+  const ast = ts.createSourceFile('scan.ts', source, ts.ScriptTarget.Latest, true);
+  const spans: Array<[number, number]> = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+      spans.push([node.getStart(ast), node.end]);
+    } else if (ts.isTemplateHead(node)) {
+      spans.push([node.getStart(ast), node.end - 2]);
+    } else if (ts.isTemplateMiddle(node)) {
+      spans.push([node.getStart(ast) + 1, node.end - 2]);
+    } else if (ts.isTemplateTail(node)) {
+      spans.push([node.getStart(ast) + 1, node.end]);
+    } else ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  const parts: string[] = [];
+  let cursor = 0;
+  for (const [start, end] of spans) {
+    parts.push(
+      source.slice(cursor, start),
+      source.slice(start, end).replace(/[^\n]/g, ' ').replace(/ /, '0'),
+    );
+    cursor = end;
+  }
+  parts.push(source.slice(cursor));
+  const code = stripComments(parts.join(''));
   return UI_HOST_PATTERNS.some(([, re]) => re.test(code));
+}
+
+function touchesBrowser(file: string): boolean {
+  return hasBrowserReach(readFileSync(file, 'utf8'));
 }
 
 describe('src/ui module classification (every module is swept by exactly one gate)', () => {
@@ -2634,6 +2667,21 @@ describe('src/ui module classification (every module is swept by exactly one gat
   // accidentally matched everything, would make every scan below pass over an
   // empty set. Pin that the sweep really reaches the tree AND the one module this
   // gate was written for.
+  it('ignores catalog placeholders while retaining actual browser expressions', () => {
+    expect(hasBrowserReach('export const label = "Close {window}";')).toBe(false);
+    expect(hasBrowserReach('const host = {window};')).toBe(true);
+    expect(hasBrowserReach('const host = `width: ${window.innerWidth}`;')).toBe(true);
+    expect(hasBrowserReach('const label = "Close {window}"; window.alert(label);')).toBe(true);
+    expect(hasBrowserReach('const host = document["body"];')).toBe(true);
+    expect(hasBrowserReach("const fixed = new Date('2026-09-08');")).toBe(false);
+    expect(hasBrowserReach('const fixed = new Date(`2026-09-08`);')).toBe(false);
+    expect(hasBrowserReach('const label = `Close {window}: ${name}`;')).toBe(false);
+    expect(
+      hasBrowserReach('const label = `Close {window}: ${window.innerWidth} {document}`;'),
+    ).toBe(true);
+    expect(hasBrowserReach('const clock = new Date();')).toBe(true);
+  });
+
   it('sweeps a real, non-empty slice of src/ui (anti-vacuity)', () => {
     expect(walk(uiRoot).length).toBeGreaterThan(200);
     expect(residual.length).toBeGreaterThan(100);

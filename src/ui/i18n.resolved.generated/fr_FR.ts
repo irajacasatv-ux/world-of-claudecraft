@@ -327,6 +327,52 @@ export const fr_FR: EnTranslations = {
   },
   "hudChrome": {
     "housing": {
+      "common": {
+        "close": "Close",
+        "cancel": "Cancel",
+        "back": "Back",
+        "retry": "Try Again",
+        "loading": "Loading your home...",
+        "pending": "Waiting for confirmation...",
+        "reconnecting": "Reconnecting. Your saved home is safe.",
+        "readOnly": "Read only",
+        "unavailable": "This is unavailable right now.",
+        "unknown": "Unknown",
+        "selected": "Selected: {name}",
+        "closeAria": "Close {window}"
+      },
+      "denied": {
+        "unavailable": "This home is unavailable right now. Try again later.",
+        "busy": "This home is active elsewhere or still opening. Try again shortly.",
+        "permission": "You cannot use this here.",
+        "condition": "Restore your home's condition to use this amenity.",
+        "dead": "You cannot do that while dead.",
+        "combat": "You cannot do that in combat.",
+        "cooldown": "Your Hearth Key is still cooling down.",
+        "instanced": "You cannot use this inside an instance.",
+        "match": "You cannot use this during a match."
+      },
+      "gate": {
+        "title": "Choose a Home",
+        "own": "My Home",
+        "visit": "Visit a Friend",
+        "name": "Character name",
+        "namePlaceholder": "Enter a character name",
+        "nameRequired": "Enter a character name to visit.",
+        "homeChoice": "Choose your home",
+        "lookup": "Find Home",
+        "lookupPending": "Finding your friend's home...",
+        "lookupChanged": "Find this character's home before entering.",
+        "result": "Home belonging to {name}",
+        "enter": "Enter",
+        "loading": "Opening the door...",
+        "marker": "Freeholds gate",
+        "interact": "Choose a home"
+      },
+      "hearthKey": {
+        "tooltip": "Return to your home. You cannot use this while in combat, dead, in jail, inside an instance or during a match.",
+        "destination": "Destination: {home}"
+      },
       "furnishing": {
         "footprint": "Footprint: {width} by {depth} cells.",
         "decorCost": "Decor cost: {cost}.",
@@ -3984,6 +4030,7 @@ export const fr_FR: EnTranslations = {
       }
     },
     "social": {
+      "statusFreehold": "In Freehold",
       "lastSeen": "Vu pour la dernière fois : {when}",
       "lastSeenNever": "jamais",
       "ignoredTab": "Ignorés",
@@ -14391,6 +14438,9 @@ export const fr_FR: EnTranslations = {
       "voidbound_grimoire": {
         "name": "Voidbound Grimoire"
       },
+      "hearth_key": {
+        "name": "Hearth Key"
+      },
       "masters_field_forge": {
         "name": "Master's Field Forge"
       },
@@ -21034,6 +21084,7 @@ export const fr_FR: EnTranslations = {
     "delveRiteShrineCandleInteract": "Autel de la chandelle : appuyez sur F pour la toucher",
     "delveRiteShrineReedInteract": "Autel du roseau : appuyez sur F pour le toucher",
     "delveRiteShrineSkullInteract": "Autel du crâne : appuyez sur F pour le toucher",
+    "freeholdGateName": "Freehold Gate",
     "mailboxName": "Boîte aux lettres",
     "noticeboardName": "Panneau d'affichage",
     "farmPatchName": "Garden Beds",

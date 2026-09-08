@@ -195,6 +195,16 @@ function drawSemanticFallback(
   ctx.lineWidth = outlineWidth;
   ctx.strokeStyle = colors.outline;
   ctx.fillStyle = colors.reward;
+  if (semantic.kind === 'freehold-gate') {
+    ctx.beginPath();
+    ctx.arc(marker.cx, marker.cy, radius, Math.PI, 0);
+    ctx.lineTo(marker.cx + radius, marker.cy + radius);
+    ctx.lineTo(marker.cx - radius, marker.cy + radius);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    return;
+  }
   if (semantic.kind === 'rift-descent') {
     ctx.beginPath();
     ctx.moveTo(marker.cx, marker.cy + radius);

@@ -187,14 +187,40 @@ describe('gatherNodeToolGateFor', () => {
   });
 });
 
+describe('HUD dispatches gathering refusals through the extracted toast helper', () => {
+  const source = readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|\s)\/\/.*$/gm, '$1');
+
+  it('imports the actual helper and routes all three events with the HUD toast host', () => {
+    expect(source).toContain(
+      "import { handleGatheringDenial } from './hud/professions/gathering_denial_feedback';",
+    );
+    for (const event of ['gatherDenied', 'gatherToolNoNode', 'gatherDowngrade']) {
+      const start = source.indexOf(`case '${event}':`);
+      const end = source.indexOf('break;', start);
+      expect(start, event).toBeGreaterThan(-1);
+      expect(end, event).toBeGreaterThan(start);
+      const body = source.slice(start, end);
+      expect(body, event).toContain('handleGatheringDenial(ev, this);');
+      expect(body, event).not.toContain('this.log(');
+      expect(body, event).not.toContain('audio.');
+      expect(body, event).not.toContain('this.showError(');
+    }
+  });
+});
+
 describe('hud gatherDenied case stays an error toast only (source pin)', () => {
-  const source = readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8');
+  const source = readFileSync(
+    path.resolve(process.cwd(), 'src/ui/hud/professions/gathering_denial_feedback.ts'),
+    'utf8',
+  );
   const caseStart = source.indexOf("case 'gatherDenied'");
   const block = source.slice(caseStart, source.indexOf('break;', caseStart));
 
   it('maps surface + professionId + requiredTier + wieldProficiency through the pure key mapper into showError', () => {
     expect(caseStart).toBeGreaterThan(-1);
-    expect(block).toContain('this.showError(');
+    expect(block).toContain('host.showError(');
     // Comment-stripped THEN whitespace- and trailing-comma-normalized: the
     // case's own comment names all four fields, so an unstripped scrape
     // could be satisfied by prose with the argument removed; and the
@@ -213,41 +239,47 @@ describe('hud gatherDenied case stays an error toast only (source pin)', () => {
   });
 
   it('adds no log line and no audio cue (toast only, the double-feedback trap)', () => {
-    expect(block).not.toContain('this.log(');
+    expect(block).not.toMatch(/(?:this|host)\.log\(/);
     expect(block).not.toContain('audio.');
   });
 });
 
 describe('hud gatherToolNoNode case mirrors the gatherDenied toast-only pattern (source pin)', () => {
-  const source = readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8');
+  const source = readFileSync(
+    path.resolve(process.cwd(), 'src/ui/hud/professions/gathering_denial_feedback.ts'),
+    'utf8',
+  );
   const caseStart = source.indexOf("case 'gatherToolNoNode'");
   const block = source.slice(caseStart, source.indexOf('break;', caseStart));
 
   it('maps the professionId through the pure key mapper into showError', () => {
     expect(caseStart).toBeGreaterThan(-1);
-    expect(block).toContain('this.showError(');
+    expect(block).toContain('host.showError(');
     expect(block).toContain('gatherToolNoNodeKey(ev.professionId)');
   });
 
   it('adds no log line and no audio cue (toast only, the double-feedback trap)', () => {
-    expect(block).not.toContain('this.log(');
+    expect(block).not.toMatch(/(?:this|host)\.log\(/);
     expect(block).not.toContain('audio.');
   });
 });
 
 describe('hud gatherDowngrade case mirrors the gatherDenied toast-only pattern (source pin)', () => {
-  const source = readFileSync(path.resolve(process.cwd(), 'src/ui/hud.ts'), 'utf8');
+  const source = readFileSync(
+    path.resolve(process.cwd(), 'src/ui/hud/professions/gathering_denial_feedback.ts'),
+    'utf8',
+  );
   const caseStart = source.indexOf("case 'gatherDowngrade'");
   const block = source.slice(caseStart, source.indexOf('break;', caseStart));
 
   it('maps the lost arm through the pure key mapper into showError', () => {
     expect(caseStart).toBeGreaterThan(-1);
-    expect(block).toContain('this.showError(');
+    expect(block).toContain('host.showError(');
     expect(block).toContain('gatherDowngradeLineKey(ev.lost, ev.surface)');
   });
 
   it('adds no log line and no audio cue (toast only, the double-feedback trap)', () => {
-    expect(block).not.toContain('this.log(');
+    expect(block).not.toMatch(/(?:this|host)\.log\(/);
     expect(block).not.toContain('audio.');
   });
 });

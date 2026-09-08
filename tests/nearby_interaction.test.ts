@@ -89,6 +89,7 @@ function rig(targets: Entity[] = []) {
     },
   };
   const hud = {
+    openFreeholdGate: () => calls.push('gate'),
     openMailbox: () => calls.push('mailbox'),
     openQuestDialog: (id: number) => calls.push(`quest:${id}`),
     openDelveBoard: (id: number) => calls.push(`board:${id}`),
@@ -769,4 +770,70 @@ describe('the feast arm (Phase 12)', () => {
     expect(interact(r)).toBe(false);
     expect(r.calls).toEqual(['error:nothing']);
   });
+});
+
+describe('nearby Freehold gate', () => {
+  it.each([false, true])(
+    'opens a nonlootable gate at the exact shared range, ghost=%s',
+    (ghost) => {
+      const gate = entity({
+        id: 2,
+        kind: 'object',
+        templateId: 'freehold_gate',
+        lootable: false,
+        pos: { x: 5, y: 0, z: 0 },
+      });
+      const r = rig([gate]);
+      r.player.dead = ghost;
+      r.player.ghost = ghost;
+      r.player.corpseInstanceId = ghost ? 123 : null;
+      expect(interact(r)).toBe(true);
+      expect(r.calls).toEqual(['gate']);
+    },
+  );
+  it('does not offer the gate to an unbound ghost or outside its shared range', () => {
+    const gate = entity({
+      id: 2,
+      kind: 'object',
+      templateId: 'freehold_gate',
+      lootable: false,
+      pos: { x: 5.01, y: 0, z: 0 },
+    });
+    const r = rig([gate]);
+    expect(interact(r)).toBe(false);
+    gate.pos.x = 1;
+    r.player.dead = true;
+    r.player.ghost = true;
+    r.player.corpseInstanceId = null;
+    expect(interact(r)).toBe(false);
+    expect(r.calls).toEqual(['error:nothing', 'error:nothing']);
+  });
+});
+
+it('preserves corpse-loot priority over a closer Freehold gate, then offers the gate after looting', () => {
+  const gate = entity({
+    id: 2,
+    kind: 'object',
+    templateId: 'freehold_gate',
+    pos: { x: 3, y: 0, z: 0 },
+  });
+  const corpse = entity({
+    id: 3,
+    kind: 'mob',
+    dead: true,
+    lootable: true,
+    loot: { copper: 1, items: [] },
+    pos: { x: 1, y: 0, z: 0 },
+  });
+  const r = rig([gate, corpse]);
+  expect(interact(r)).toBe(true);
+  expect(r.calls).toEqual(['loot:3']);
+  r.calls.length = 0;
+  gate.pos.x = 0.5;
+  expect(interact(r)).toBe(true);
+  expect(r.calls).toEqual(['loot:3']);
+  r.calls.length = 0;
+  corpse.lootable = false;
+  expect(interact(r)).toBe(true);
+  expect(r.calls).toEqual(['gate']);
 });

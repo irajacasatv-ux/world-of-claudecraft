@@ -231,6 +231,8 @@ export function mapSemanticHitsInto(
 /** Deterministic state token for write-elision signatures and regression tests. */
 export function mapMarkerSemanticToken(semantic: MapInstanceSemantic): string {
   switch (semantic.kind) {
+    case 'freehold-gate':
+      return 'freehold-gate';
     case 'rift-descent':
       return 'rift-descent';
     case 'rift-return':
@@ -260,6 +262,7 @@ export function mapSemanticMarkerSignature(
 }
 
 export type MapSemanticLabelId =
+  | 'freeholdGate'
   | 'you'
   | 'availableQuest'
   | 'readyQuest'
@@ -373,6 +376,7 @@ const SUMMARY_IDENTITY_PRIORITY = Object.freeze([
 
 function mapSummaryCategory(label: MapSemanticLabelId): MapSummaryCategory {
   switch (label) {
+    case 'freeholdGate':
     case 'pointOfInterest':
     case 'dungeonEntrance':
     case 'dungeonExit':
@@ -473,6 +477,8 @@ function mapSummaryCategory(label: MapSemanticLabelId): MapSummaryCategory {
 
 export function mapSemanticLabelId(semantic: MapInstanceSemantic): MapSemanticLabelId {
   switch (semantic.kind) {
+    case 'freehold-gate':
+      return 'freeholdGate';
     case 'rift-descent':
       return 'riftDescent';
     case 'rift-return':
@@ -766,6 +772,7 @@ export class MapSemanticAccessibilityCore {
     bountiful = false,
     argumentIndex = 0,
   ): string {
+    if (label === 'freeholdGate') return t('hudChrome.housing.gate.marker');
     const name = this.argument(argumentKind, argument, argumentIndex, rank);
     let values: Record<string, string> | undefined;
     if (
@@ -1040,7 +1047,8 @@ export class MapSemanticAccessibilityCore {
     this.begin(area, centerX, centerY, canvasSize);
     if (model.player) this.add(model.player.mx, model.player.my, 'you');
     for (const marker of model.navigation) {
-      if (marker.kind === 'delve-entrance')
+      if (marker.kind === 'freehold-gate') this.add(marker.mx, marker.my, 'freeholdGate');
+      else if (marker.kind === 'delve-entrance')
         this.add(marker.mx, marker.my, 'delveEntrance', 'delve', marker.delveId);
       else if (marker.kind === 'world-passage')
         this.add(marker.mx, marker.my, 'worldPassage', 'zone', marker.destinationZoneId);
@@ -1150,6 +1158,7 @@ export class MapSemanticAccessibilityCore {
   }
 
   navigationText(marker: MapNavigationMarker): string {
+    if (marker.kind === 'freehold-gate') return t('hudChrome.housing.gate.marker');
     if (marker.kind === 'delve-entrance')
       return this.labelText('delveEntrance', 'delve', marker.delveId);
     if (marker.kind === 'world-passage')

@@ -20,6 +20,7 @@ export function npcDisplayName(npcId: string): string {
 }
 
 export function objectDisplayName(entity: Entity): string {
+  if (entity.templateId === 'freehold_gate') return t('worldContent.freeholdGateName');
   if (entity.templateId === 'mailbox') {
     return t('worldContent.mailboxName');
   }

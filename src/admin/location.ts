@@ -22,7 +22,8 @@ export function formatCoordinates(x: number, z: number): string {
 function instanceLabel(location: LivePlayerLocation): string | null {
   if (!location.instanceId) return location.instance;
   if (location.kind === 'delve') return delveIdLabel(location.instanceId, location.instance);
-  if (location.kind === 'dungeon') return dungeonIdLabel(location.instanceId, location.instance);
+  if (location.kind === 'dungeon' || location.kind === 'freehold')
+    return dungeonIdLabel(location.instanceId, location.instance);
   return location.instance;
 }
 

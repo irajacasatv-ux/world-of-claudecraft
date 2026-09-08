@@ -123,8 +123,9 @@ const build = await buildItemArtAudit({
     // thirteen crafted furnishing ids on top, disjoint from every release id:
     // 1283 + 21 = 1304 and 1301 + 21 = 1322. Verified with
     // `node scripts/item_art_audit.mjs --verify-only` against the merged tree.
-    catalogCount: 1304,
-    liveItemCount: 1322,
+    // The permanent Hearth Key adds one shipping icon and one live definition.
+    catalogCount: 1305,
+    liveItemCount: 1323,
     pendingArtCount: 0,
     generatedHeroicDefinitions: 78,
     heroicDefinitionsWithOwnWebp: 59,

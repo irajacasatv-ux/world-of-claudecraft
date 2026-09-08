@@ -381,3 +381,10 @@ MIT License covering the source code.
 
 If you are unsure whether you may use an asset, or you want permission for
 something this file marks as restricted, ask first: tony@levystreet.com.
+
+### Hearth Key inventory painting
+
+`public/ui/items/hearth_key.webp` is project-owned original art generated with
+OpenAI's built-in image generation by Codex. The prompt, style-only references,
+source and shipping hashes, and review evidence are recorded in
+`docs/freeholds/hearth-key-art-2026-09-08/accepted-art.json`.

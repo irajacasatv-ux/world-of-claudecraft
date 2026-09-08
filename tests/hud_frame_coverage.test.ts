@@ -181,6 +181,8 @@ const UI_ROOT_TOUCHERS: Record<string, string> = {
     'the Perfecting window (a .window.panel, window_drag governs it), minted at runtime like dev_command_window.ts since no markup entry ships it',
   'src/ui/keyboard_map_window.ts':
     'the keyboard overview pop-out (a .window, window_drag governs it; closeManagedWindow closes it)',
+  'src/ui/hud/housing/gate_prompt_controller.ts':
+    'the explicit Freehold entry dialog is a runtime .window.panel governed by window_drag and closeManagedWindow, not standing HUD chrome',
   'src/ui/hud/fiesta/fiesta_controller.ts': 'match-scoped fiesta strips and confetti',
   'src/ui/hud/loot/loot_roll_controller.ts': 'transient loot roll stack',
   'src/ui/hud/practice/hub_lesson_controller.ts':

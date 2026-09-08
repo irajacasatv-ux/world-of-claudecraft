@@ -12,6 +12,53 @@ import { cosmeticsStrings } from './cosmetics';
 
 export const hudChromeStrings = {
   housing: {
+    common: {
+      close: 'Close',
+      cancel: 'Cancel',
+      back: 'Back',
+      retry: 'Try Again',
+      loading: 'Loading your home...',
+      pending: 'Waiting for confirmation...',
+      reconnecting: 'Reconnecting. Your saved home is safe.',
+      readOnly: 'Read only',
+      unavailable: 'This is unavailable right now.',
+      unknown: 'Unknown',
+      selected: 'Selected: {name}',
+      closeAria: 'Close {window}',
+    },
+    denied: {
+      unavailable: 'This home is unavailable right now. Try again later.',
+      busy: 'This home is active elsewhere or still opening. Try again shortly.',
+      permission: 'You cannot use this here.',
+      condition: "Restore your home's condition to use this amenity.",
+      dead: 'You cannot do that while dead.',
+      combat: 'You cannot do that in combat.',
+      cooldown: 'Your Hearth Key is still cooling down.',
+      instanced: 'You cannot use this inside an instance.',
+      match: 'You cannot use this during a match.',
+    },
+    gate: {
+      title: 'Choose a Home',
+      own: 'My Home',
+      visit: 'Visit a Friend',
+      name: 'Character name',
+      namePlaceholder: 'Enter a character name',
+      nameRequired: 'Enter a character name to visit.',
+      homeChoice: 'Choose your home',
+      lookup: 'Find Home',
+      lookupPending: "Finding your friend's home...",
+      lookupChanged: "Find this character's home before entering.",
+      result: 'Home belonging to {name}',
+      enter: 'Enter',
+      loading: 'Opening the door...',
+      marker: 'Freeholds gate',
+      interact: 'Choose a home',
+    },
+    hearthKey: {
+      tooltip:
+        'Return to your home. You cannot use this while in combat, dead, in jail, inside an instance or during a match.',
+      destination: 'Destination: {home}',
+    },
     furnishing: {
       footprint: 'Footprint: {width} by {depth} cells.',
       decorCost: 'Decor cost: {cost}.',
@@ -5692,6 +5739,7 @@ export const hudChromeStrings = {
   // is a locale-formatted date/time, or the "never" leaf when the character has no
   // recorded login.
   social: {
+    statusFreehold: 'In Freehold',
     lastSeen: 'Last seen: {when}',
     lastSeenNever: 'never',
     // The two PLAYER chat-filter tiers get a tab each. Ignored is chat-only;

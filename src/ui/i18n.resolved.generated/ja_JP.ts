@@ -327,6 +327,52 @@ export const ja_JP: EnTranslations = {
   },
   "hudChrome": {
     "housing": {
+      "common": {
+        "close": "閉じる",
+        "cancel": "キャンセル",
+        "back": "戻る",
+        "retry": "再試行",
+        "loading": "自宅を読み込み中...",
+        "pending": "確認を待っています...",
+        "reconnecting": "再接続中です。保存された自宅は安全です。",
+        "readOnly": "閲覧のみ",
+        "unavailable": "現在は利用できません。",
+        "unknown": "不明",
+        "selected": "選択中：{name}",
+        "closeAria": "{window}を閉じる"
+      },
+      "denied": {
+        "unavailable": "この家は現在利用できません。後でもう一度お試しください。",
+        "busy": "この家は別の場所で使用中か、まだ開いている途中です。少し待ってから再試行してください。",
+        "permission": "ここでは使用できません。",
+        "condition": "この設備を使うには、自宅の状態を回復してください。",
+        "dead": "死亡中は実行できません。",
+        "combat": "戦闘中は実行できません。",
+        "cooldown": "暖炉の鍵はまだ再使用できません。",
+        "instanced": "インスタンス内では使用できません。",
+        "match": "対戦中は使用できません。"
+      },
+      "gate": {
+        "title": "家を選ぶ",
+        "own": "自宅",
+        "visit": "フレンドを訪問",
+        "name": "キャラクター名",
+        "namePlaceholder": "キャラクター名を入力",
+        "nameRequired": "訪問するキャラクターの名前を入力してください。",
+        "homeChoice": "自分の家を選ぶ",
+        "lookup": "家を探す",
+        "lookupPending": "フレンドの家を探しています...",
+        "lookupChanged": "入る前に、このキャラクターの家を探してください。",
+        "result": "{name}の家",
+        "enter": "入る",
+        "loading": "扉を開いています...",
+        "marker": "領地への門",
+        "interact": "家を選ぶ"
+      },
+      "hearthKey": {
+        "tooltip": "自宅に戻ります。戦闘中、死亡中、投獄中、インスタンス内、または対戦中は使用できません。",
+        "destination": "行き先：{home}"
+      },
       "furnishing": {
         "footprint": "Footprint: {width} by {depth} cells.",
         "decorCost": "Decor cost: {cost}.",
@@ -3984,6 +4030,7 @@ export const ja_JP: EnTranslations = {
       }
     },
     "social": {
+      "statusFreehold": "領地内",
       "lastSeen": "最終ログイン: {when}",
       "lastSeenNever": "なし",
       "ignoredTab": "無視中",
@@ -14391,6 +14438,9 @@ export const ja_JP: EnTranslations = {
       "voidbound_grimoire": {
         "name": "虚無縛りの魔導書"
       },
+      "hearth_key": {
+        "name": "暖炉の鍵"
+      },
       "masters_field_forge": {
         "name": "匠の野営炉"
       },
@@ -21034,6 +21084,7 @@ export const ja_JP: EnTranslations = {
     "delveRiteShrineCandleInteract": "蝋燭の祠：Fで触れる",
     "delveRiteShrineReedInteract": "葦の祠：Fで触れる",
     "delveRiteShrineSkullInteract": "髑髏の祠：Fで触れる",
+    "freeholdGateName": "領地への門",
     "mailboxName": "メールボックス",
     "noticeboardName": "掲示板",
     "farmPatchName": "菜園",

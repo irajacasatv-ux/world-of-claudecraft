@@ -577,6 +577,7 @@ describe('handlePickedEntity', () => {
       },
     } as unknown as Parameters<typeof handlePickedEntity>[0];
     const hud = {
+      openFreeholdGate: () => {},
       openMailbox: () => calls.push('openMailbox'),
       closeContextMenu: () => {},
     } as unknown as Parameters<typeof handlePickedEntity>[1];
@@ -682,6 +683,7 @@ describe('handlePickedEntity', () => {
       openLoot: () => {},
       openQuestDialog: () => {},
       openDelveBoard: () => {},
+      openFreeholdGate: () => {},
       openMailbox: () => {},
       showError: () => {},
       closeContextMenu: () => {},
@@ -722,6 +724,7 @@ describe('handlePickedEntity', () => {
       openLoot: () => {},
       openQuestDialog: () => {},
       openDelveBoard: () => {},
+      openFreeholdGate: () => {},
       openMailbox: () => {},
       showError: () => {},
       closeContextMenu: () => {},
@@ -769,6 +772,7 @@ describe('handlePickedEntity while dead (the ghost/death loop)', () => {
       openLoot: () => calls.push('openLoot'),
       openQuestDialog: () => calls.push('openQuestDialog'),
       openDelveBoard: () => calls.push('openDelveBoard'),
+      openFreeholdGate: () => {},
       openMailbox: () => calls.push('openMailbox'),
       showError: () => calls.push('showError'),
       closeContextMenu: () => {},
@@ -1011,4 +1015,51 @@ describe('HoverPickGate', () => {
     expect(gate.shouldPick(5, 5, 1030 + HOVER_REPICK_MS - 1)).toBe(false);
     expect(gate.shouldPick(5, 5, 1030 + HOVER_REPICK_MS)).toBe(true);
   });
+});
+
+describe('picked Freehold gate', () => {
+  it.each([0, 2])(
+    'opens the nonlootable gate from button %s for a living player and a bound ghost',
+    (button) => {
+      for (const ghost of [false, true]) {
+        const player = stubEntity({
+          id: 1,
+          kind: 'player',
+          dead: ghost,
+          ghost,
+          corpseInstanceId: ghost ? 123 : null,
+        });
+        const gate = stubEntity({
+          id: 2,
+          kind: 'object',
+          templateId: 'freehold_gate',
+          lootable: false,
+          pos: { x: 5, y: 0, z: 0 },
+        });
+        const world = {
+          player,
+          entities: new Map([[2, gate]]),
+          questLog: new Map(),
+          pickUpObject: vi.fn(),
+        } as unknown as Parameters<typeof handlePickedEntity>[0];
+        const openFreeholdGate = vi.fn();
+        const hud = {
+          openFreeholdGate,
+          closeContextMenu: vi.fn(),
+          showError: vi.fn(),
+        } as unknown as Parameters<typeof handlePickedEntity>[1];
+        expect(handlePickedEntity(world, hud, 2, button, 0, 0)).toBe(true);
+        expect(openFreeholdGate).toHaveBeenCalledTimes(1);
+        expect(world.pickUpObject).not.toHaveBeenCalled();
+        gate.pos.x = 5.01;
+        expect(handlePickedEntity(world, hud, 2, button, 0, 0)).toBe(false);
+        expect(openFreeholdGate).toHaveBeenCalledTimes(1);
+        player.dead = true;
+        player.ghost = true;
+        player.corpseInstanceId = null;
+        gate.pos.x = 1;
+        expect(handlePickedEntity(world, hud, 2, button, 0, 0)).toBe(false);
+      }
+    },
+  );
 });

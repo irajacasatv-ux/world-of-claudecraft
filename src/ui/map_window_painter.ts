@@ -395,7 +395,7 @@ function drawMapNavigationFallback(
   ctx.fillStyle = colors.portalDot;
   ctx.strokeStyle = colors.outline;
   ctx.lineWidth = geometry.markerOutlineWidth;
-  if (marker.kind === 'delve-entrance') {
+  if (marker.kind === 'delve-entrance' || marker.kind === 'freehold-gate') {
     ctx.beginPath();
     ctx.arc(marker.mx, marker.my, radius, Math.PI, Math.PI * 2);
     ctx.lineTo(marker.mx + radius, marker.my + radius);
@@ -828,11 +828,13 @@ export class MapWindowPainter {
     // the localized name while this high-salience layer stays immediately legible.
     for (const marker of model.navigation) {
       const artId: MapMarkerArtId =
-        marker.kind === 'delve-entrance'
-          ? 'delve-entrance'
-          : marker.kind === 'world-passage'
-            ? 'world-passage'
-            : 'rift-entrance';
+        marker.kind === 'freehold-gate'
+          ? 'dungeon-entrance'
+          : marker.kind === 'delve-entrance'
+            ? 'delve-entrance'
+            : marker.kind === 'world-passage'
+              ? 'world-passage'
+              : 'rift-entrance';
       let sizeId: keyof typeof MAP_MARKER_SIZES =
         profile === 'compact' ? 'mapNavigationCompact' : 'mapNavigation';
       if (marker.kind === 'rift-entrance') {

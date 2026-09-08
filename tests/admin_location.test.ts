@@ -2,6 +2,31 @@ import { describe, expect, it } from 'vitest';
 import { locationDisplay } from '../src/admin/location';
 
 describe('admin location display', () => {
+  it.each([
+    ['freehold_inn_room', 'Inn Room'],
+    ['freehold_cottage', 'Cottage'],
+  ])('uses the public type and localized catalog name for %s', (id, label) => {
+    const display = locationDisplay({
+      x: 900,
+      z: -1250,
+      location: {
+        kind: 'freehold',
+        zoneId: 'eastbrook_vale',
+        zone: 'Eastbrook Vale',
+        instanceId: id,
+        instance: 'Server fallback label',
+        instanceSlot: 2,
+        poiIndex: null,
+        poi: null,
+        poiDistance: null,
+      },
+    });
+    expect(display.primary).toBe(label);
+    expect(display.details).toContain('Type: Freehold');
+    expect(display.details).toContain(`Instance: ${label}`);
+    expect(display.details).toContain('Slot: 2');
+  });
+
   it('uses a nearby POI as the primary overworld location', () => {
     const display = locationDisplay({
       x: 76,

@@ -1,3 +1,7 @@
+import {
+  FREEHOLD_GATE_INTERACT_RANGE,
+  FREEHOLD_GATE_TEMPLATE_ID,
+} from '../sim/freehold/gate_rules';
 import { isQuestGatedEntityHidden } from '../sim/quest_gated_entity';
 import {
   dist2d,
@@ -8,6 +12,7 @@ import {
   REALM_BUILDER_MONUMENT_INTERACT_RADIUS,
   REALM_BUILDER_MONUMENT_TEMPLATE_ID,
 } from '../sim/types';
+import { canPresentFreeholdGate } from '../ui/hud/housing/housing_view';
 import { t } from '../ui/i18n';
 import { tSim } from '../ui/sim_i18n';
 import type { IWorld } from '../world_api';
@@ -42,6 +47,7 @@ export interface PickInteractionHud {
   openQuestDialog(npcId: number): void;
   openDelveBoard(npcId: number): void;
   openMailbox(): void;
+  openFreeholdGate(): void;
   showError(text: string): void;
   closeContextMenu(): void;
   requestSpiritHealerResurrect(): void;
@@ -163,6 +169,7 @@ export function hoverCursorKind(
 
 /** Resolve the client-side range for a lootable object before dispatch or approach. */
 export function objectInteractionRange(entity: Pick<Entity, 'templateId'>): number {
+  if (entity.templateId === FREEHOLD_GATE_TEMPLATE_ID) return FREEHOLD_GATE_INTERACT_RANGE;
   if (entity.templateId === EASTBROOK_NOTICEBOARD_TEMPLATE_ID) {
     return EASTBROOK_NOTICEBOARD_INTERACTION_RADIUS;
   }
@@ -238,13 +245,20 @@ export function handlePickedEntity(
     // players: right-click only targets — the interaction menu lives on the
     // target portrait (right-click it), like classic-MMO unit frames
     if (e.kind === 'object') {
-      if (world.player.dead) {
+      if (
+        world.player.dead &&
+        !(e.templateId === FREEHOLD_GATE_TEMPLATE_ID && canPresentFreeholdGate(world.player))
+      ) {
         hud.showError(tSim('error.cantWhileDead'));
         return false;
       }
       if (d > objectInteractionRange(e)) {
         hud.showError(t('questUi.errors.tooFar'));
         return false;
+      }
+      if (e.templateId === FREEHOLD_GATE_TEMPLATE_ID) {
+        hud.openFreeholdGate();
+        return true;
       }
       if (e.templateId === 'dungeon_door' && e.dungeonId) return world.enterDungeon(e.dungeonId);
       if (e.templateId === 'dungeon_exit') return world.leaveDungeon();
@@ -328,12 +342,19 @@ export function handlePickedEntity(
   } else if (button === 0) {
     hud.closeContextMenu();
     if (e.kind === 'object') {
-      if (world.player.dead) {
+      if (
+        world.player.dead &&
+        !(e.templateId === FREEHOLD_GATE_TEMPLATE_ID && canPresentFreeholdGate(world.player))
+      ) {
         hud.showError(tSim('error.cantWhileDead'));
         return false;
       }
       const d = dist2d(world.player.pos, e.pos);
       if (d > objectInteractionRange(e)) return false;
+      if (e.templateId === FREEHOLD_GATE_TEMPLATE_ID) {
+        hud.openFreeholdGate();
+        return true;
+      }
       if (e.templateId === 'dungeon_door' && e.dungeonId) return world.enterDungeon(e.dungeonId);
       if (e.templateId === 'dungeon_exit') return world.leaveDungeon();
       if (e.templateId === 'mailbox') {

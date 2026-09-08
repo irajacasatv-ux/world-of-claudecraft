@@ -11,6 +11,8 @@
 
 export const pending: Record<string, readonly string[]> = {
   "es": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -25,6 +27,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -53,6 +56,8 @@ export const pending: Record<string, readonly string[]> = {
     "poi.thornpeak_heights.7"
   ],
   "es_ES": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -67,6 +72,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -95,6 +101,8 @@ export const pending: Record<string, readonly string[]> = {
     "poi.thornpeak_heights.7"
   ],
   "fr_FR": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -109,6 +117,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -137,6 +146,8 @@ export const pending: Record<string, readonly string[]> = {
     "poi.thornpeak_heights.7"
   ],
   "fr_CA": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -151,6 +162,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -180,6 +192,8 @@ export const pending: Record<string, readonly string[]> = {
   ],
   "en_CA": [],
   "it_IT": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -194,6 +208,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -221,6 +236,8 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "de_DE": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -235,6 +252,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -263,11 +281,14 @@ export const pending: Record<string, readonly string[]> = {
     "poi.thornpeak_heights.7"
   ],
   "zh_CN": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameBagRange",
     "error.clearItemNameWentOffline",
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -294,11 +315,14 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "zh_TW": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameBagRange",
     "error.clearItemNameWentOffline",
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -325,11 +349,14 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "ko_KR": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameBagRange",
     "error.clearItemNameWentOffline",
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -356,11 +383,14 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "ja_JP": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameBagRange",
     "error.clearItemNameWentOffline",
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -387,6 +417,8 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "pt_BR": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -401,6 +433,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -429,11 +462,14 @@ export const pending: Record<string, readonly string[]> = {
     "poi.thornpeak_heights.7"
   ],
   "ru_RU": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameBagRange",
     "error.clearItemNameWentOffline",
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -460,6 +496,8 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "cs_CZ": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -474,6 +512,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -502,6 +541,8 @@ export const pending: Record<string, readonly string[]> = {
     "poi.thornpeak_heights.7"
   ],
   "nl_NL": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -516,6 +557,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -544,6 +586,8 @@ export const pending: Record<string, readonly string[]> = {
     "poi.thornpeak_heights.7"
   ],
   "pl_PL": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -558,6 +602,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -585,6 +630,8 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "id_ID": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -599,6 +646,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -626,6 +674,8 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "tr_TR": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -640,6 +690,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -667,6 +718,8 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "sv_SE": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -681,6 +734,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -708,6 +762,8 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "vi_VN": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -722,6 +778,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",
@@ -749,6 +806,8 @@ export const pending: Record<string, readonly string[]> = {
     "nav.marketMetrics"
   ],
   "da_DK": [
+    "dungeon.freehold_cottage",
+    "dungeon.freehold_inn_room",
     "error.clearItemNameAllLiteral",
     "error.clearItemNameBagIndex",
     "error.clearItemNameBagPair",
@@ -763,6 +822,7 @@ export const pending: Record<string, readonly string[]> = {
     "error.itemNameClearFailed",
     "loadFailure.forbiddenDetail",
     "loadFailure.forbiddenTitle",
+    "location.kind.freehold",
     "marketMetrics.autoRefresh",
     "marketMetrics.bucketCompost",
     "marketMetrics.bucketCores",

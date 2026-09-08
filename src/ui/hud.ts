@@ -454,7 +454,13 @@ import { LockpickController } from './hud/delve/lockpick_controller';
 import { RiteController } from './hud/delve/rite_controller';
 import { FiestaController } from './hud/fiesta/fiesta_controller';
 import { GuildBoardWindow } from './hud/guild_board';
-import { furnishingItemTooltip } from './hud/housing';
+import {
+  FreeholdGatePrompt,
+  freeholdGateRoot,
+  furnishingItemTooltip,
+  handleFreeholdEvent,
+  hearthKeyTooltipLines,
+} from './hud/housing';
 import { LootRollController } from './hud/loot/loot_roll_controller';
 import { lootSettingsView } from './hud/loot/loot_settings_view';
 import { renderLootSettingsWindow } from './hud/loot/loot_settings_window';
@@ -512,18 +518,14 @@ import { handleFarmEvent } from './hud/professions/farm_event_feedback';
 import { FarmPressAffordanceController } from './hud/professions/farm_press_affordance_controller';
 import { PlantSheetWindow } from './hud/professions/farming_plant_sheet_window';
 import { feastTooltipLines } from './hud/professions/feast_tooltip_view';
+import { handleGatheringDenial } from './hud/professions/gathering_denial_feedback';
 import { GatheringGoalController } from './hud/professions/gathering_goal_controller';
 import { gatheringProfessionNameKey } from './hud/professions/gathering_profession_name';
 import {
   handleGatherResult,
   handleHarvestResult,
 } from './hud/professions/gathering_result_feedback';
-import {
-  buildGatheringProficiencyRows,
-  gatherDeniedLineKey,
-  gatherDowngradeLineKey,
-  gatherToolNoNodeKey,
-} from './hud/professions/gathering_view';
+import { buildGatheringProficiencyRows } from './hud/professions/gathering_view';
 import { HarvestJournalWindow } from './hud/professions/harvest_journal_window';
 import { HarvestPreferenceController } from './hud/professions/harvest_preference_controller';
 import { learnedProfessionMessage } from './hud/professions/learned_profession_name';
@@ -3637,6 +3639,9 @@ export class Hud {
         // Route through the painter: focus returns (WCAG 2.2 AA), clock disposed.
         this.harvestJournalWindow.close();
         break;
+      case 'freehold-gate-window':
+        this.freeholdGatePrompt.close();
+        break;
       case 'plant-sheet-window':
         // Route through the painter so focus returns to the opener (WCAG 2.2 AA).
         this.plantSheetWindow.close();
@@ -5435,6 +5440,13 @@ export class Hud {
     ...this.windowFocus('#harvest-journal-window'),
     onVisibilityChange: () => this.syncAnyWindowOpenState(),
   });
+  private readonly freeholdGatePrompt = new FreeholdGatePrompt({
+    root: freeholdGateRoot,
+    world: () => this.sim,
+    closeOthers: () => this.closeOtherWindows('#freehold-gate-window'),
+    ...this.windowFocus('#freehold-gate-window'),
+    onVisibilityChange: () => this.syncAnyWindowOpenState(),
+  });
   // The plant sheet painter (farming_plant_sheet_view.ts core + its painter):
   // the bed-verbs plant window. Cold, paint-on-open; farm events feed it.
   private readonly plantSheetWindow = new PlantSheetWindow({
@@ -6692,6 +6704,7 @@ export class Hud {
       );
     }
     html += feastTooltipLines(item);
+    html += hearthKeyTooltipLines(item);
     // Quest story block (related quest, progress, rules, orphaned). Replaces the
     // old plain "Quest Item" desc that doubled the kind line.
     if (questModel) html += this.questItemTooltipStoryHtml(questModel);
@@ -7052,6 +7065,7 @@ export class Hud {
     this.lootWindow.relocalize();
     this.harvestJournalWindow.relocalize();
     this.plantSheetWindow.relocalize();
+    this.freeholdGatePrompt.relocalize();
     // The Perfecting window's repaint signature is ids/ranks/counts, all
     // text-independent, so a language switch alone never moves it; the arm
     // forces one rebuild (self-gated on its own open check).
@@ -11384,6 +11398,7 @@ export class Hud {
   }
 
   handleEvents(events: SimEvent[]): void {
+    this.freeholdGatePrompt?.reconcile();
     const sim = this.sim;
     // Book of Deeds unlocks batch across the whole drain (handleDeedUnlocks):
     // banners coalesce to the last unlock, retro back-credits collapse into
@@ -12102,45 +12117,11 @@ export class Hud {
           // the whole command (extracted beside gatherResult above).
           handleHarvestResult(ev, this);
           break;
-        case 'gatherDenied': {
-          // Tool-tier denial (Professions 2.0): an error toast ONLY.
-          // No loot line, no cue, no other state (the grant-hub double-log
-          // trap); the sim event is text-free, so the pure core resolves the
-          // key off surface + professionId + requiredTier (tier 1 = no tool
-          // owned at all, #2343) plus the R22 wield arm (wieldProficiency
-          // present = a covering tool is owned, only the counter is short),
-          // and the numbers interpolate.
-          this.showError(
-            t(
-              gatherDeniedLineKey(
-                ev.surface,
-                ev.professionId,
-                ev.requiredTier,
-                ev.wieldProficiency,
-              ),
-              {
-                tier: formatNumber(ev.requiredTier, { maximumFractionDigits: 0 }),
-                skill: formatNumber(ev.wieldProficiency ?? 0, { maximumFractionDigits: 0 }),
-              },
-            ),
-          );
+        case 'gatherDenied':
+        case 'gatherToolNoNode':
+        case 'gatherDowngrade':
+          handleGatheringDenial(ev, this);
           break;
-        }
-        case 'gatherToolNoNode': {
-          // Bag-clicked gathering tool with nothing in reach (#2343): an
-          // error toast ONLY, the gatherDenied pattern above; the sim event
-          // is text-free, so the pure core resolves the key off professionId.
-          this.showError(t(gatherToolNoNodeKey(ev.professionId)));
-          break;
-        }
-        case 'gatherDowngrade': {
-          // Full-bag signed-grant downgrade (Professions 2.0): a
-          // toast ONLY, the gatherDenied pattern above. No loot line, no cue,
-          // no other state (the grant-hub double-log trap); the sim event is
-          // text-free, so the pure core resolves the key off lost + surface.
-          this.showError(t(gatherDowngradeLineKey(ev.lost, ev.surface)));
-          break;
-        }
         case 'disenchantResult': {
           // Enchanting disenchant outcome (Professions 2.0): text-free,
           // so enchanting_view.ts maps the event to its key + sink and the
@@ -12312,6 +12293,10 @@ export class Hud {
           audio.fishReel();
           break;
         }
+        case 'freeholdDenied':
+          handleFreeholdEvent(ev, this);
+          this.freeholdGatePrompt.notifyDenied(ev);
+          break;
         case 'farmPlanted':
         case 'farmHarvested':
         case 'farmWithered':
@@ -15903,10 +15888,11 @@ export class Hud {
   }
 
   // The shared reconnect hook preserves market browse resync and retires any
-  // unconfirmed Perfecting exchange without replaying its mutation.
+  // unconfirmed Perfecting or home entry without replaying its mutation.
   resyncAfterReconnect(): void {
     this.marketWindow.onReconnected();
     this.perfectingWindow?.onReconnected();
+    this.freeholdGatePrompt?.onReconnected();
   }
 
   openMailbox(): void {
@@ -16034,6 +16020,10 @@ export class Hud {
   // The Harvest Journal keybind entry (the professions row opens it directly).
   toggleHarvestJournal(): void {
     this.harvestJournalWindow.toggle();
+  }
+
+  openFreeholdGate(): void {
+    this.freeholdGatePrompt.open();
   }
 
   // The bed choice route: planting and deliberate crop harvesting.

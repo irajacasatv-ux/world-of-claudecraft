@@ -171,6 +171,8 @@ describe('socialDot', () => {
     expect(socialDot(false, 'combat')).toBe('off');
     expect(socialDot(true, undefined)).toBe('online');
     expect(socialDot(true, 'dungeon')).toBe('dungeon');
+    expect(socialDot(true, 'freehold')).toBe('freehold');
+    expect(socialDot(false, 'freehold')).toBe('off');
   });
 });
 

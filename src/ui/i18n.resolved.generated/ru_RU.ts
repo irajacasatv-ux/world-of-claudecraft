@@ -327,6 +327,52 @@ export const ru_RU: EnTranslations = {
   },
   "hudChrome": {
     "housing": {
+      "common": {
+        "close": "Закрыть",
+        "cancel": "Отмена",
+        "back": "Назад",
+        "retry": "Повторить",
+        "loading": "Загрузка вашего дома...",
+        "pending": "Ожидание подтверждения...",
+        "reconnecting": "Переподключение. Ваш сохранённый дом в безопасности.",
+        "readOnly": "Только просмотр",
+        "unavailable": "Сейчас это недоступно.",
+        "unknown": "Неизвестно",
+        "selected": "Выбрано: {name}",
+        "closeAria": "Закрыть {window}"
+      },
+      "denied": {
+        "unavailable": "Этот дом сейчас недоступен. Повторите попытку позже.",
+        "busy": "Этот дом используется в другом месте или ещё открывается. Повторите попытку чуть позже.",
+        "permission": "Здесь это использовать нельзя.",
+        "condition": "Восстановите состояние дома, чтобы использовать это удобство.",
+        "dead": "Это нельзя делать после смерти.",
+        "combat": "Это нельзя делать в бою.",
+        "cooldown": "Ключ от очага ещё восстанавливается.",
+        "instanced": "Это нельзя использовать внутри отдельного подземелья.",
+        "match": "Это нельзя использовать во время матча."
+      },
+      "gate": {
+        "title": "Выбор дома",
+        "own": "Мой дом",
+        "visit": "В гости к другу",
+        "name": "Имя персонажа",
+        "namePlaceholder": "Введите имя персонажа",
+        "nameRequired": "Введите имя персонажа, которого хотите посетить.",
+        "homeChoice": "Выберите свой дом",
+        "lookup": "Найти дом",
+        "lookupPending": "Поиск дома друга...",
+        "lookupChanged": "Найдите дом этого персонажа, прежде чем входить.",
+        "result": "Дом персонажа {name}",
+        "enter": "Войти",
+        "loading": "Открываем дверь...",
+        "marker": "Врата вольных владений",
+        "interact": "Выбрать дом"
+      },
+      "hearthKey": {
+        "tooltip": "Возвращает вас домой. Нельзя использовать в бою, после смерти, в тюрьме, внутри отдельного подземелья или во время матча.",
+        "destination": "Место назначения: {home}"
+      },
       "furnishing": {
         "footprint": "Footprint: {width} by {depth} cells.",
         "decorCost": "Decor cost: {cost}.",
@@ -3984,6 +4030,7 @@ export const ru_RU: EnTranslations = {
       }
     },
     "social": {
+      "statusFreehold": "В вольном владении",
       "lastSeen": "Последний вход: {when}",
       "lastSeenNever": "никогда",
       "ignoredTab": "Игнорируемые",
@@ -14391,6 +14438,9 @@ export const ru_RU: EnTranslations = {
       "voidbound_grimoire": {
         "name": "Скованный Пустотой гримуар"
       },
+      "hearth_key": {
+        "name": "Ключ от очага"
+      },
       "masters_field_forge": {
         "name": "Походная кузня мастера"
       },
@@ -21034,6 +21084,7 @@ export const ru_RU: EnTranslations = {
     "delveRiteShrineCandleInteract": "Святилище свечи: нажмите F, чтобы коснуться",
     "delveRiteShrineReedInteract": "Святилище тростника: нажмите F, чтобы коснуться",
     "delveRiteShrineSkullInteract": "Святилище черепа: нажмите F, чтобы коснуться",
+    "freeholdGateName": "Врата вольных владений",
     "mailboxName": "Почтовый ящик",
     "noticeboardName": "Доска объявлений",
     "farmPatchName": "Грядки",

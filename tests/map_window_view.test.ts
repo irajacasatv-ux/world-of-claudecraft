@@ -2186,3 +2186,28 @@ describe('building footprint corners', () => {
     });
   });
 });
+
+describe('Freehold gate map navigation', () => {
+  it.each(['sim', 'client'] as const)(
+    'includes the live nonlootable gate and withholds distant gates on %s',
+    (shape) => {
+      const world = makeOverworldWorld(shape);
+      const gate = {
+        id: 991,
+        kind: 'object',
+        templateId: 'freehold_gate',
+        lootable: false,
+        pos: { x: world.player.pos.x + 2, y: 0, z: world.player.pos.z },
+      };
+      (world.entities as Map<number, unknown>).set(gate.id, gate);
+      const model = buildOverworldMapModel(input(world, 1));
+      expect(model.navigation.filter((marker) => marker.kind === 'freehold-gate')).toHaveLength(1);
+      gate.pos.x = world.player.pos.x + 81;
+      expect(
+        buildOverworldMapModel(input(world, 1)).navigation.filter(
+          (marker) => marker.kind === 'freehold-gate',
+        ),
+      ).toHaveLength(0);
+    },
+  );
+});

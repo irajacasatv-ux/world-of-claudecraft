@@ -24,6 +24,12 @@ function ent(over: Record<string, unknown>): Entity {
 }
 
 describe('entityDisplayName', () => {
+  it('names the Freehold Gate by its catalog key instead of an incoming wire name', () => {
+    expect(
+      entityDisplayName(ent({ kind: 'object', templateId: 'freehold_gate', name: 'stale name' })),
+    ).toBe('Freehold Gate');
+  });
+
   it('names a WILD mob by its template, never by the wire name', () => {
     const wolf = ent({ kind: 'mob', templateId: 'forest_wolf', name: 'raw wire name' });
     expect(entityDisplayName(wolf)).toBe(MOBS.forest_wolf.name);

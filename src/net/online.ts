@@ -2861,8 +2861,8 @@ export class ClientWorld extends ReconWireState implements IWorld {
           w.f,
           this.mouselookFacing,
         );
-        this.dungeonEntrySeq = entryFacing.entrySeq;
-        this.mouselookFacing = entryFacing.inputFacing;
+        ({ entrySeq: this.dungeonEntrySeq, inputFacing: this.mouselookFacing } = entryFacing);
+        e.dungeonEntrySeq = entryFacing.entrySeq ?? undefined;
         if (entryFacing.forceFacing) {
           this.moveInput.turnLeft = false;
           this.moveInput.turnRight = false;
