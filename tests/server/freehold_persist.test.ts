@@ -157,7 +157,7 @@ interface HarnessOptions {
   /** Override the LIVE record's plot identity, for the cases that model a
    *  record the store did not install: a fresh seed standing where a loaded
    *  house used to be. */
-  livePlotId?: string;
+  livePlotId?: string | (() => string);
   acquirePermit?: (signal: AbortSignal) => Promise<{ release(): void } | null>;
   enqueue?: <T>(key: string, signal: AbortSignal, write: () => Promise<T>) => Promise<T>;
 }
@@ -177,16 +177,18 @@ function harness(options: HarnessOptions = {}) {
   const deadlines: DeadlineJob[] = [];
   const permitSignals: AbortSignal[] = [];
   const ownedBytesSeen: number[] = [];
-  const stamped: string[] = [];
   // The LIVE record's plot identity, modelled the way the server maintains it:
   // a row load installs the row's state (so the record carries the row's id), a
   // fresh account seeds the pending placeholder, and a committed write stamps
   // the minted id onto the record. Without this the harness would serialize
   // documents whose identity the real sim could never produce, and the store's
   // identity seal would fire on fixtures rather than on the race it guards.
-  let livePlotId: string =
-    options.livePlotId ??
-    (options.rowLoad?.kind === 'row' ? options.rowLoad.row.plotId : PENDING_FREEHOLD_PLOT_ID);
+  const fallbackPlotId =
+    options.rowLoad?.kind === 'row' ? options.rowLoad.row.plotId : PENDING_FREEHOLD_PLOT_ID;
+  const livePlotIdNow = (): string =>
+    typeof options.livePlotId === 'function'
+      ? options.livePlotId()
+      : (options.livePlotId ?? fallbackPlotId);
   const fifo = createKeyedSerialWriter<string>();
   let nowMs = 10_000;
   let minted = 0;
@@ -234,7 +236,7 @@ function harness(options: HarnessOptions = {}) {
       const doc = serialize(ownerKey);
       // The identity is the LIVE RECORD's, never the fixture's: a case that
       // wants to model a mismatched record says so by overriding the port.
-      return doc === null ? null : { ...doc, plotId: livePlotId };
+      return doc === null ? null : { ...doc, plotId: livePlotIdNow() };
     },
     liveRev(ownerKey: string): number | null {
       calls.push('liveRev');
@@ -247,12 +249,6 @@ function harness(options: HarnessOptions = {}) {
     },
     hasLive(ownerKey: string): boolean {
       return options.hasLive ? options.hasLive(ownerKey) : false;
-    },
-    stampPlotId(ownerKey: string, plotId: string): boolean {
-      stamped.push(`${ownerKey}:${plotId}`);
-      if (livePlotId !== PENDING_FREEHOLD_PLOT_ID) return false;
-      livePlotId = plotId;
-      return true;
     },
     enabled(): boolean {
       return options.enabled ? options.enabled() : true;
@@ -318,7 +314,6 @@ function harness(options: HarnessOptions = {}) {
     deadlines,
     permitSignals,
     ownedBytesSeen,
-    stamped,
     setNow(ms: number): void {
       nowMs = ms;
     },
@@ -2080,24 +2075,70 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().leaveCaptures).toBe(1);
   });
 
-  it('never stamps a record the write did not come from', async () => {
-    // THE SIXTH PATH TO A LOST HOUSE, and the subtlest: the stamp is what gives
-    // a record the row's durable identity, and identity is the only thing the
-    // write seal can tell records apart by. A write serving from its capture
-    // runs after the record was evicted; a join landing inside its round trip
-    // seeds a fresh default. Stamping THAT hands an empty Inn Room the manor's
-    // identity, the seal stops firing, and the next sweep writes the default
-    // over the row with every counter reading healthy.
+  it('keeps writing for a fresh account whose write served from its capture', async () => {
+    // The case that killed the previous two designs. A brand-new account's
+    // record carries the pending stand-in for its whole first session, because
+    // nothing writes an identity into the sim, and a stand-in is
+    // indistinguishable from a fresh seed BY IDENTITY. So the entry must
+    // remember the identity its own record carried, not the row's: an entry
+    // that remembered the row's minted name would refuse its own record on the
+    // second write of every new account.
     let live = true;
+    let granted = 0;
+    const permit = deferred<{ release(): void } | null>();
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      serialize: () =>
+        live ? persistedFixture({ plotId: PENDING_FREEHOLD_PLOT_ID, rev: 6 }) : null,
+      hasLive: () => live,
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 1 ? { release: () => {} } : await permit.promise;
+      },
+      writeRow: async (input) => ({
+        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+        durableRev: '1',
+      }),
+    });
+    void h.store.flushAndRelease(OWNER_KEY);
+    await tick(10);
+    live = false;
+    permit.resolve({ release: () => {} });
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+
+    // The rejoin is handed the capture, so the record it installs IS the
+    // document just written, stand-in identity and all.
+    live = true;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.store.saveAllDirty();
+    await tick(30);
+    // Not quiesced, and it keeps writing.
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+  });
+
+  it('still refuses a record seeded while the write was in flight', async () => {
+    // The mirror, and the hazard the seal exists for. Here the record that
+    // exists at commit time is a FRESH SEED of a row that already holds a
+    // house, so writing it would put an empty Inn Room over real furnishings.
+    let live = true;
+    let seeded = false;
     let granted = 0;
     const permit = deferred<{ release(): void } | null>();
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => (live ? persistedFixture({ rev: 6 }) : null),
+      serialize: () =>
+        !live
+          ? null
+          : seeded
+            ? persistedFixture({ plotId: PENDING_FREEHOLD_PLOT_ID, layout: [], rev: 0 })
+            : persistedFixture({ rev: 6 }),
       hasLive: () => live,
-      // The write parks on the gate, which is what puts the eviction BEFORE it
-      // samples its document.
+      // The record's identity follows the record: the real house while it is
+      // the real house, the stand-in once a default has been seeded over it.
+      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : ROW_PLOT_ID),
       acquirePermit: async () => {
         granted += 1;
         return granted === 1 ? { release: () => {} } : await permit.promise;
@@ -2106,35 +2147,25 @@ describe('a leaving session never loses its last edits to a queue', () => {
     });
     void h.store.flushAndRelease(OWNER_KEY);
     await tick(10);
-    // removePlayer evicts while the write is still parked, so the write will
-    // serve from its capture.
     live = false;
     permit.resolve({ release: () => {} });
-    await tick(20);
-    // The join lands and seeds a default while the row write is in flight.
-    live = true;
-    await tick(40);
-    expect(h.writeCount()).toBe(1);
-    // The stamp must NOT have gone out: this write served from its capture, so
-    // whatever record exists now is not the one it wrote.
-    expect(h.stamped).toEqual([]);
-  });
-
-  it('DOES stamp when the document came from the live record', async () => {
-    // The anti-vacuity arm. Without it the case above would pass on a store
-    // that had simply stopped stamping, which would leave a fresh account's
-    // record carrying the pending identity for its whole first session.
-    const h = await loadedStore({
-      rowLoad: { kind: 'absent' },
-      serialize: () => persistedFixture({ plotId: PENDING_FREEHOLD_PLOT_ID, rev: 1 }),
-      writeRow: async () => ({ kind: 'inserted', durableRev: '1' }),
-    });
-    h.store.markDirty(OWNER_KEY);
-    h.store.save(OWNER_KEY);
     await tick(30);
     expect(h.writeCount()).toBe(1);
-    expect(h.stamped).toHaveLength(1);
-    expect(h.stamped[0]).toContain('plot:minted');
+
+    // A join seeds a DEFAULT rather than adopting anything, and holds the entry.
+    live = true;
+    seeded = true;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    // The entry was collected when its write settled clean, so retain re-reads
+    // it; the sweep must run after that read lands.
+    await tick(30);
+    h.store.saveAllDirty();
+    await tick(30);
+    // The absence of a second write IS the assertion: the row keeps the house.
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.store.stats().entries).toBe(1);
+    expect(h.store.stats().dirty).toBe(1);
   });
 
   it('keeps the capture when the handshake that read it never joins', async () => {

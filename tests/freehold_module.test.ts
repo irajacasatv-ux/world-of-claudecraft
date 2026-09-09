@@ -22,7 +22,6 @@ import {
   PENDING_FREEHOLD_PLOT_ID,
   serializeFreehold,
 } from '../src/sim/freehold';
-import { stampFreeholdPlotId } from '../src/sim/freehold/state';
 import type { FreeholdPlotId, FreeholdView } from '../src/sim/freehold/types';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
@@ -255,43 +254,6 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
     const freeholds = new Map<string, FreeholdState>();
     return { ctx: { freeholds, freeholdsEnabled } as unknown as SimContext, freeholds };
   };
-
-  describe('stampFreeholdPlotId teaches a seeded record its durable identity', () => {
-    it('replaces the pending stand-in and bumps NO revision', () => {
-      // The record a fresh join seeds has no way to know what a row it has
-      // never read is called. Once the durable side knows, the record has to be
-      // told, or nothing downstream can tell a record that came from a row from
-      // one that was seeded a moment ago. The revision must NOT move: the plot
-      // id is presentation-only, so a bump would make the durable sweep see
-      // movement it caused itself and write again on every pass.
-      const { ctx, freeholds } = fakeCtx();
-      const seeded = ensureFreeholdRecord(ctx, 'acct:1');
-      if (!seeded) throw new Error('expected a seeded record');
-      expect(seeded.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
-      const revBefore = seeded.rev;
-
-      expect(stampFreeholdPlotId(ctx, 'acct:1', asFreeholdPlotId('plot:9f3a1c'))).toBe(true);
-      expect(freeholds.get('acct:1')?.plotId).toBe('plot:9f3a1c');
-      expect(freeholds.get('acct:1')?.rev).toBe(revBefore);
-    });
-
-    it('never overwrites an identity a record already has', () => {
-      // A record whose id is already durable is one this has nothing to teach,
-      // and overwriting it would let a later write rename a live plot.
-      const { ctx } = fakeCtx();
-      ensureFreeholdRecord(ctx, 'acct:1');
-      expect(stampFreeholdPlotId(ctx, 'acct:1', asFreeholdPlotId('plot:first'))).toBe(true);
-      expect(stampFreeholdPlotId(ctx, 'acct:1', asFreeholdPlotId('plot:second'))).toBe(false);
-      expect(ctx.freeholds.get('acct:1')?.plotId).toBe('plot:first');
-    });
-
-    it('refuses an owner with no record, and refuses the stand-in as a value', () => {
-      const { ctx } = fakeCtx();
-      expect(stampFreeholdPlotId(ctx, 'acct:missing', asFreeholdPlotId('plot:x'))).toBe(false);
-      ensureFreeholdRecord(ctx, 'acct:1');
-      expect(stampFreeholdPlotId(ctx, 'acct:1', PENDING_FREEHOLD_PLOT_ID)).toBe(false);
-    });
-  });
 
   it('defaultFreeholdState is the free tier-0 Inn Room, exactly', () => {
     expect(defaultFreeholdState('acct:1', asFreeholdPlotId('plot-1'))).toEqual({

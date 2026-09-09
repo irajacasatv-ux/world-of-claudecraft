@@ -124,10 +124,8 @@ carries an opaque plot id only.
   alike) and writes through the one tier writer. `dev_commands.ts` keeps only
   the thin chat arm and its `[dev]` dev-channel text.
 - THE ONE-WRITER RULES: `state.ts` is the only file that writes
-  `ctx.freeholds` (`loadFreehold`, `ensureFreeholdRecord`, `evictFreehold`, the
-  join/leave hooks over them, and `stampFreeholdPlotId`, which teaches a seeded
-  record the durable identity its row already carries and moves NO revision
-  because the plot id is presentation-only) or a record's `tier`
+  `ctx.freeholds` (`loadFreehold`, `ensureFreeholdRecord`, `evictFreehold` and
+  the join/leave hooks over them) or a record's `tier`
   (`setFreeholdTier`,
   pinned by a source scan in `tests/freehold_dev_grant.test.ts`), and
   `applyFreeholdOwnerStamp` there is the only writer of the host owner stamp

@@ -44,8 +44,8 @@ import {
   type PersistedFreehold,
   persistedFreeholdFromState,
 } from '../src/sim/freehold/persisted';
-import { loadFreehold, serializeFreehold, stampFreeholdPlotId } from '../src/sim/freehold/state';
-import { asFreeholdPlotId, FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
+import { loadFreehold, serializeFreehold } from '../src/sim/freehold/state';
+import { FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
 import { pool } from './db';
 import {
@@ -254,9 +254,6 @@ export interface FreeholdPersistPorts {
    *  holds no live record, and the write is skipped entirely. */
   serialize(ownerKey: string): PersistedFreehold | null;
   hasLive(ownerKey: string): boolean;
-  /** Teach the live record the durable identity its row carries, once the
-   *  durable side knows it. Answers false when there is nothing to teach. */
-  stampPlotId(ownerKey: string, plotId: string): boolean;
   /** Whether this realm serves housing at all. The store never reads the
    *  environment itself; the composition root binds this to the sim's own
    *  flag. A DARK realm must issue no durable read of any kind, which is why
@@ -1028,29 +1025,26 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     generation: number,
     snapshotAtMs: number,
     written: PersistedFreehold,
-    fromLive: boolean,
+    /** The identity the LIVE RECORD carried when this write sampled it. */
+    persistedPlotId: string,
   ): boolean {
     if (result.kind === 'inserted' || result.kind === 'updated') {
       counters.writes++;
       entry.durableRev = result.durableRev;
-      // `written` IS the document as sent, identity included, because runWrite
-      // builds it that way. The entry therefore agrees with the row from the
-      // first insert, and that agreement is the comparison standing between a
-      // rejoin race and a wiped house.
-      entry.state = written;
-      // ...and the LIVE record learns it too, so the three agree from here on.
+      // THE ENTRY REMEMBERS THE RECORD'S IDENTITY, NOT THE ROW'S. Two different
+      // identities are in play and each belongs where it is: the ROW receives
+      // `entry.plotId`, because that is its durable public name, while the
+      // entry's cached state keeps the identity the LIVE RECORD carried,
+      // because the only thing that state is compared against is a live record.
       //
-      // ONLY when this document CAME from the live record. The stamp lands on
-      // whatever record exists at commit time, and that is not always the one
-      // the write came from: a write that served from its leave capture ran
-      // after the record was evicted, and a join landing inside its round trip
-      // seeds a fresh default. Stamping there hands the empty default the row's
-      // durable identity, which is the only discriminator the seal below has,
-      // so the next sweep writes an empty Inn Room over a real house and the
-      // compare-and-swap accepts it with every counter reading healthy. That is
-      // exactly the invisible loss the seal exists to prevent, reached through
-      // the seal's own input.
-      if (fromLive) ports.stampPlotId(entry.ownerKey, entry.plotId);
+      // That is what lets the seal below tell "this is the record I have been
+      // writing" from "this is a default somebody seeded", without the store
+      // ever having to write an identity into the sim. A fresh account's record
+      // legitimately carries the pending stand-in for its whole first session,
+      // and a stand-in is indistinguishable from a fresh seed by identity
+      // alone, so an entry that remembered the ROW's name instead would refuse
+      // its own record on the second write of every new account.
+      entry.state = { ...written, plotId: persistedPlotId };
       entry.writeErrors = 0;
       if (entry.committedGeneration < generation) entry.committedGeneration = generation;
       // Every edit that survived this write arrived at or after the snapshot,
@@ -1201,9 +1195,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         expectedDurableRev: entry.durableRev,
       });
       counters.writeMsTotal += Math.max(0, ports.nowMs() - writeStartMs);
-      // `live !== null` says the document came from the record the sim is
-      // serving, which is what makes stamping it safe. See applyWriteResult.
-      return applyWriteResult(entry, result, generation, snapshotAtMs, document, live !== null);
+      return applyWriteResult(entry, result, generation, snapshotAtMs, document, persisted.plotId);
     } finally {
       permit.release();
     }
@@ -1858,8 +1850,6 @@ export function createGameFreeholdPersistStore(deps: {
       return state === null ? null : persistedFreeholdFromState(state);
     },
     hasLive: (ownerKey) => deps.sim.ctx.freeholds.has(ownerKey),
-    stampPlotId: (ownerKey, plotId) =>
-      stampFreeholdPlotId(deps.sim.ctx, ownerKey, asFreeholdPlotId(plotId)),
     enabled: () => deps.sim.ctx.freeholdsEnabled,
     liveRev: (ownerKey) => deps.sim.ctx.freeholds.get(ownerKey)?.rev ?? null,
     mintPlotId: () => mintFreeholdPlotId(),
