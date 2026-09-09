@@ -549,6 +549,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   const owesWork = (entry: FreeholdPersistEntry): boolean =>
     entry.running ||
     entry.pending ||
+    // Redundant TODAY, and kept deliberately: a deferred entry is always dirty
+    // and unblocked, so the clause below already covers it, and no behaviour
+    // test can isolate this one. The two conditions are equal only by the
+    // current arming rules, and this is the clause that says what the deferred
+    // set means rather than what today's arithmetic happens to imply.
     deferredWrites.has(entry) ||
     (isDirty(entry) && !blocked(entry));
 

@@ -1810,6 +1810,34 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(leaving?.wireRev).toBe(6);
   });
 
+  it('drops the capture once the write it was taken for has settled', async () => {
+    // A capture that outlived its write is a document held for the life of the
+    // entry, and one that could be re-sent for a LATER session whose record
+    // happens to be gone at the moment its write runs. The live record always
+    // wins, so nothing stale can shadow an edit, but the capture must still not
+    // survive its own write.
+    let evicted = false;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => (evicted ? null : persistedFixture({ rev: 6 })),
+      writeRow: async () => ({ kind: 'updated', durableRev: '6' }),
+    });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+
+    // The record is gone and the entry is dirty again. With the capture
+    // correctly cleared there is nothing to send, and the store SAYS so.
+    evicted = true;
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().writesWithoutRecord).toBe(1);
+  });
+
   it('never lets a captured document shadow a later live edit', async () => {
     // A live record always wins. If the capture could outrank it, a rejoining
     // session's edits would be silently replaced by the previous session's.
