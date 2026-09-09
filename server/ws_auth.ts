@@ -473,8 +473,20 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
             const bankBonus = await bankBonusForAccount(accountId);
             // Read beside the bank bonus, for the same reason and on the same
             // arm: before the lease acquire so the lease-held window stays
-            // tight. Unlike the bank bonus this one cannot fail the handshake.
-            const freehold = await freeholdForAccount(accountId);
+            // tight. Unlike the bank bonus this one NEVER fails the handshake,
+            // and the catch is what makes that a fact rather than a claim about
+            // the callee. A durable housing read is not worth a refused login:
+            // undefined installs nothing, so the player joins on the sim's
+            // default record with the store still holding the entry unloaded,
+            // which is exactly the state in which no write goes out. The real
+            // row on disk is never overwritten by a realm that failed to read
+            // it.
+            let freehold: LoadedFreehold | undefined;
+            try {
+              freehold = await freeholdForAccount(accountId);
+            } catch (err) {
+              console.error('freehold durable read failed; joining unloaded:', err);
+            }
             leaseNonce = randomUUID();
             const leased = await acquireCharacterLease(character.id, accountId, leaseNonce);
             if (!leased) {

@@ -77,6 +77,26 @@ export const FREEHOLD_PERSIST_PERMIT_WAIT_MS = 15_000;
  *  this session and its row is untouched. */
 export const FREEHOLD_PERSIST_MAX_ACTIVE_LOADS = 4;
 
+/**
+ * The zero-reference entry sweep is MARK AND SWEEP over two passes, so an
+ * entry lives at least one full AUTOSAVE_SECONDS period after its last
+ * reference goes away rather than being collected the instant it has none.
+ *
+ * It exists because a reference is not guaranteed. The handshake reads the
+ * durable row BEFORE it acquires the character lease, and five refusals sit
+ * between the two (a lease already held, no such character, a forced rename, a
+ * throwing character read, and the max-online-characters cap). Every one of
+ * them returns without ever reaching retain(), so the entry that read created
+ * had no other removal path and stayed for the life of the process, holding a
+ * parsed record. A double login is routine, so the map grew toward one entry
+ * per distinct account that ever hit one.
+ *
+ * The marked entry is also the STALE one on a multi-realm deployment: preload
+ * replays a loaded entry rather than re-reading, so an abandoned entry would
+ * serve an old house for every later login on this process.
+ */
+export const FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES = 2;
+
 /** How many write passes one flushAndRelease will wait through. A committed
  *  write that finds fresh edits re-arms exactly once, so two passes is the
  *  normal ceiling; the bound is here so a pathological re-arm cannot hold a
@@ -215,7 +235,21 @@ interface FreeholdPersistEntry {
   refs: number;
   dirtyGeneration: number;
   committedGeneration: number;
+  /** The generation the RUNNING write sampled its document at, so a second
+   *  write is armed only for edits that write cannot already be carrying.
+   *  Infinity while a write is queued but has not sampled yet: the sample
+   *  happens after the permit wait, so everything before it is covered. */
+  snapshotGeneration: number;
+  /** The live revision the RUNNING write is carrying, or null before it has
+   *  sampled. The sweep's dirty detector compares the live record against the
+   *  last COMMITTED state, which stays behind for as long as a write is in
+   *  flight, so without this a second sweep re-detects the very edit the
+   *  running write is already carrying. */
+  snapshotRev: number | null;
   dirtySinceMs: number;
+  /** True once a sweep pass has seen this entry with no session references.
+   *  The next pass collects it; anything that gives it work clears the mark. */
+  orphanMarked: boolean;
   running: boolean;
   pending: boolean;
   chain: Promise<void> | null;
@@ -273,6 +307,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     const liveRev = ports.liveRev(entry.ownerKey);
     if (liveRev === null) return false;
     if (entry.state !== null && liveRev === entry.state.rev) return false;
+    // entry.state only advances at COMMIT, so while a write is in flight it
+    // still names the pre-edit revision and every sweep would re-detect the
+    // same edit. Compare against what the running write is actually carrying.
+    if (entry.running && entry.snapshotRev !== null && liveRev === entry.snapshotRev) return false;
     entry.dirtyGeneration++;
     if (entry.dirtySinceMs === 0) entry.dirtySinceMs = ports.nowMs();
     return true;
@@ -306,7 +344,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       refs: 0,
       dirtyGeneration: 0,
       committedGeneration: 0,
+      snapshotGeneration: Number.POSITIVE_INFINITY,
+      snapshotRev: null,
       dirtySinceMs: 0,
+      orphanMarked: false,
       running: false,
       pending: false,
       chain: null,
@@ -321,6 +362,37 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   function maybeRemove(entry: FreeholdPersistEntry): void {
     if (entry.refs > 0 || entry.running || entry.pending) return;
     if (live(entry)) entries.delete(entry.ownerKey);
+  }
+
+  /**
+   * Collect entries no session refers to any more. MARK AND SWEEP rather than
+   * immediate removal: preload resolves before the join calls retain(), so an
+   * entry legitimately sits at zero references for the width of a handshake,
+   * and removing it there would hand the joining session a fresh unloaded entry
+   * that can never write. One pass marks, the next collects.
+   *
+   * Nothing dirty, running, pending or mid-load is ever collected: those are
+   * the states in which the entry still owes a durable write or is about to be
+   * filled in. A collected entry loses only cached knowledge, and the next
+   * login reads the row again.
+   */
+  function sweepOrphans(): void {
+    for (const entry of [...entries.values()]) {
+      if (entry.refs > 0 || entry.running || entry.pending || isDirty(entry)) {
+        entry.orphanMarked = false;
+        continue;
+      }
+      // A load still in flight will call ensureEntry again when it lands.
+      if (entry.accountId > 0 && inFlightLoads.has(entry.accountId)) {
+        entry.orphanMarked = false;
+        continue;
+      }
+      if (!entry.orphanMarked) {
+        entry.orphanMarked = true;
+        continue;
+      }
+      if (live(entry)) entries.delete(entry.ownerKey);
+    }
   }
 
   function snapshotOf(
@@ -650,7 +722,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // the document that goes to the row.
       const snapshotAtMs = ports.nowMs();
       const generation = entry.dirtyGeneration;
+      entry.snapshotGeneration = generation;
       const persisted = ports.serialize(entry.ownerKey);
+      if (persisted !== null) entry.snapshotRev = persisted.rev;
       // The owner holds no live record any more. Writing here would put a
       // default over a real row, which is invariant 1.
       if (persisted === null) return false;
@@ -714,6 +788,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   function launch(entry: FreeholdPersistEntry): void {
     entry.running = true;
     entry.pending = false;
+    // Nothing sampled yet, and the sample happens AFTER the permit wait, so
+    // every edit that exists between here and there is already covered.
+    entry.snapshotGeneration = Number.POSITIVE_INFINITY;
+    entry.snapshotRev = null;
     const enqueuedAtMs = ports.nowMs();
     // Never aborted: coalescing is the generation, not a cancelled queue
     // entry, and there is at most one queued write per key at a time.
@@ -751,7 +829,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   function arm(entry: FreeholdPersistEntry): void {
     if (blocked(entry)) return;
     if (entry.running) {
-      entry.pending = true;
+      // ONLY for an edit the running write cannot be carrying. The running
+      // write samples its document after the permit wait, so it already covers
+      // everything that existed when it was armed; a bare `pending = true`
+      // here re-sent that identical document, bumped a second durable
+      // revision and touched updated_at for nothing. Shutdown made it routine:
+      // saveFreeholds arms every dirty owner, then freeholdPersistIdle arms
+      // every one of them again while the first writes are still on the gate,
+      // doubling the durable work inside the drain deadline.
+      if (entry.dirtyGeneration > entry.snapshotGeneration) entry.pending = true;
       return;
     }
     launch(entry);
@@ -789,6 +875,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       for (const entry of entries.values()) {
         if (noteRevisionMoved(entry) || isDirty(entry)) arm(entry);
       }
+      // Same pass, because this is the store's only periodic hook: an entry
+      // whose session went away without a leave has no other removal path.
+      sweepOrphans();
     },
 
     async flushAndRelease(ownerKey: string): Promise<void> {
@@ -817,7 +906,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // session's retain must be able to land before the old session's
     // release completes.
     retain(ownerKey: string): void {
-      ensureEntry(ownerKey, 0).refs++;
+      const entry = ensureEntry(ownerKey, 0);
+      entry.refs++;
+      entry.orphanMarked = false;
     },
 
     idle(deadlineMs: number): Promise<boolean> {

@@ -25,6 +25,7 @@ import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_FLUSH_MAX_PASSES,
   FREEHOLD_PERSIST_MAX_ACTIVE_LOADS,
+  FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES,
   FREEHOLD_PERSIST_PERMIT_WAIT_MS,
   FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS,
   type FreeholdPersistPorts,
@@ -630,12 +631,23 @@ describe('write coalescing', () => {
         return { kind: 'updated', durableRev: String(served) };
       },
     });
-    for (let i = 0; i < 1000; i++) {
+    // Five hundred marks BEFORE the running write samples its document. All of
+    // them are covered by that one write, so none of them earns a second.
+    for (let i = 0; i < 500; i++) {
       h.store.markDirty(OWNER_KEY);
       h.store.save(OWNER_KEY);
     }
     await tick();
     expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().running).toBe(1);
+    expect(h.store.stats().pending).toBe(0);
+
+    // Five hundred more AFTER it sampled. Those are real later edits, and they
+    // cost exactly ONE pending write between them, never five hundred.
+    for (let i = 0; i < 500; i++) {
+      h.store.markDirty(OWNER_KEY);
+      h.store.save(OWNER_KEY);
+    }
     const midFlight = h.store.stats();
     expect(midFlight.running).toBe(1);
     // A pending write only ever exists behind a running one, which is why the
@@ -955,6 +967,100 @@ describe('the stale compare-and-swap quiesce', () => {
   });
 });
 
+describe('one edit is one durable write, however many arms land on it', () => {
+  // A durable write is not free: it rewrites both content columns, burns a
+  // compare-and-swap revision and touches updated_at. Re-sending the SAME
+  // document because a second arm arrived while the first write was in flight
+  // doubles all of that, and shutdown makes it routine rather than rare
+  // (saveFreeholds arms every dirty owner, then freeholdPersistIdle arms every
+  // one of them again while those writes are still queued on the gate). Each
+  // case here drives one real edit through a DIFFERENT arming sequence and
+  // asserts one writeRow, and the last case proves the coalescer still lets a
+  // genuinely later edit through.
+
+  /** A loaded store whose single write is held open, so every case can arm
+   *  again while the first write is genuinely still running. */
+  async function heldWriteStore() {
+    let rev = 7;
+    const gate = deferred<FreeholdUpsertResult>();
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async () => await gate.promise,
+    });
+    return {
+      h,
+      gate,
+      edit(next: number): void {
+        rev = next;
+      },
+    };
+  }
+
+  it('writes once across the shutdown sequence: a sweep, then the idle drain', async () => {
+    const { h, gate, edit } = await heldWriteStore();
+    edit(8);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+
+    // The write is still out on the gate. This is exactly what server/main.ts
+    // does next, and it must not queue a second copy of the same document.
+    const drained = h.store.idle(5_000);
+    await tick(10);
+    gate.resolve({ kind: 'updated', durableRev: '8' });
+    await tick(40);
+    expect(await drained).toBe(true);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes.map((w) => w.wireRev)).toEqual([8]);
+  });
+
+  it('writes once across two overlapping sweeps', async () => {
+    const { h, gate, edit } = await heldWriteStore();
+    edit(8);
+    h.store.saveAllDirty();
+    await tick(30);
+    h.store.saveAllDirty();
+    await tick(10);
+    gate.resolve({ kind: 'updated', durableRev: '8' });
+    await tick(40);
+    expect(h.writeCount()).toBe(1);
+  });
+
+  it('writes once across a sweep and the leaving flush', async () => {
+    const { h, gate, edit } = await heldWriteStore();
+    edit(8);
+    h.store.saveAllDirty();
+    await tick(30);
+    const left = h.store.flushAndRelease(OWNER_KEY);
+    await tick(10);
+    gate.resolve({ kind: 'updated', durableRev: '8' });
+    await left;
+    await tick(20);
+    expect(h.writeCount()).toBe(1);
+  });
+
+  it('still writes a SECOND time for an edit that arrives after the snapshot', async () => {
+    // The anti-vacuity arm. Without it every case above would pass on a store
+    // that had simply stopped coalescing a second write into existence at all,
+    // which would silently drop the last edit of every session.
+    const { h, gate, edit } = await heldWriteStore();
+    edit(8);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+
+    // A real, later edit while the first write is out.
+    edit(9);
+    h.store.saveAllDirty();
+    await tick(10);
+    gate.resolve({ kind: 'updated', durableRev: '8' });
+    await tick(40);
+    expect(h.writes.map((w) => w.wireRev)).toEqual([8, 9]);
+  });
+});
+
 describe('the save path refuses what the load path would refuse', () => {
   // WRITABLE IMPLIES READABLE. Without this, a realm can mint a row past its
   // own load ceilings and then hold that account read-only forever, from a row
@@ -1163,6 +1269,79 @@ describe('reference counting and eviction', () => {
     await h.store.flushAndRelease(OWNER_KEY);
     await tick();
     expect(h.writeCount()).toBe(0);
+  });
+});
+
+describe('an abandoned preload does not leak an entry', () => {
+  // The handshake reads the durable row BEFORE it acquires the character lease,
+  // and several refusals sit between the two. Every one of them returns without
+  // reaching retain(), so a preload that is never retained had no removal path
+  // at all: the entry stayed for the life of the process holding a parsed
+  // record, and preload REPLAYS a loaded entry rather than re-reading, so on a
+  // multi-realm deployment it would serve a stale house at every later login.
+
+  function sweep(h: Harness, passes: number): void {
+    for (let i = 0; i < passes; i++) h.store.saveAllDirty();
+  }
+
+  it('collects a preloaded entry that no session ever retained', async () => {
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    await h.store.preload(ACCOUNT_ID);
+    expect(h.store.stats().entries).toBe(1);
+    sweep(h, FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES);
+    await tick(10);
+    expect(h.store.stats().entries).toBe(0);
+    // No write went out for it: a collected entry owes nothing.
+    expect(h.writeCount()).toBe(0);
+  });
+
+  it('does not collect on the first pass, so a join between preload and retain is safe', async () => {
+    // The mark pass is the whole reason this is two passes: preload resolves
+    // before game.join calls retain, and an entry removed in that window would
+    // be replaced by a fresh UNLOADED one that can never write.
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    await h.store.preload(ACCOUNT_ID);
+    sweep(h, 1);
+    expect(h.store.stats().entries).toBe(1);
+    h.store.retain(OWNER_KEY);
+    sweep(h, FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES + 2);
+    expect(h.store.stats().entries).toBe(1);
+  });
+
+  it('never collects a retained, a dirty or a writing entry', async () => {
+    const gate = deferred<FreeholdUpsertResult>();
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => await gate.promise,
+    });
+    // Retained: survives any number of passes.
+    sweep(h, 6);
+    expect(h.store.stats().entries).toBe(1);
+
+    // Dirty and then writing: still survives, even with the reference dropped.
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(10);
+    expect(h.store.stats().running).toBe(1);
+    sweep(h, 6);
+    expect(h.store.stats().entries).toBe(1);
+    gate.resolve({ kind: 'updated', durableRev: '8' });
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+  });
+
+  it('leaves the immediate removal path alone: a real leave still removes at once', async () => {
+    // The contrast case. A session that actually leaves is removed by
+    // flushAndRelease on the spot, with no sweep involved, so the sweep is
+    // only ever collecting entries no leave will ever come for. Without this
+    // arm the cases above could pass on a store that had quietly moved every
+    // eviction onto a thirty-second delay.
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    await h.store.preload(ACCOUNT_ID);
+    h.store.retain(OWNER_KEY);
+    expect(h.store.stats().entries).toBe(1);
+    await h.store.flushAndRelease(OWNER_KEY);
+    expect(h.store.stats().entries).toBe(0);
   });
 });
 

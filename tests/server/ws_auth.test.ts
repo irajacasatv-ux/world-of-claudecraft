@@ -1308,6 +1308,117 @@ describe('createWsAuth: bank bonus stamp', () => {
   });
 });
 
+describe('createWsAuth: durable freehold stamp', () => {
+  // The twin of the bank-bonus pair above, and for the same three reasons: the
+  // read happens on the FRESH arm only, it is keyed by the resolved account id,
+  // and its answer rides the join meta so addPlayer installs the durable record
+  // instead of the sim's default. The third claim is the one unique to housing:
+  // a failed durable read must never refuse a login, because a realm that could
+  // not read the row must still not write over it.
+  const loadedAnswer = {
+    accountId: 1,
+    plotIndex: 0,
+    plotId: 'plot:wsauthfixture01',
+    durableRev: '4',
+    state: {
+      version: 1,
+      plotId: 'plot:wsauthfixture01',
+      tier: 'cottage',
+      layout: [{ placementId: 1, itemId: 'oak_chair', x: 1.5, y: 0, z: -2.25, yaw: 0 }],
+      trophies: [],
+      condition: 91,
+      visitPolicy: 'friends',
+      rev: 12,
+    },
+    hearthReadyAtMs: 1_700_000_000_000,
+    hearthRevision: '3',
+    hold: null,
+  };
+
+  it('reads the durable plot once, keyed by account, and stamps it into the join meta', async () => {
+    const { ws, game, deps, req } = setup();
+    deps.freeholdForAccount = vi.fn(async () => loadedAnswer);
+    const { authenticateWebSocket } = createWsAuth(deps);
+    await authenticateWebSocket(asWs(ws), authRaw(), req);
+
+    expect(deps.freeholdForAccount).toHaveBeenCalledTimes(1);
+    expect(deps.freeholdForAccount).toHaveBeenCalledWith(1);
+    const joinMeta = (game.join as any).mock.calls[0][7] as { freehold?: unknown };
+    expect(joinMeta.freehold).toEqual(loadedAnswer);
+  });
+
+  it('reads the durable plot BEFORE the character lease is acquired', async () => {
+    // The lease-held window is the thing being kept tight: a durable read
+    // inside it would hold another session out of the character for the whole
+    // of a background-gate wait.
+    const order: string[] = [];
+    const { ws, deps, req } = setup();
+    deps.freeholdForAccount = vi.fn(async () => {
+      order.push('freehold');
+      return loadedAnswer;
+    });
+    deps.acquireCharacterLease = vi.fn(async () => {
+      order.push('lease');
+      return true;
+    });
+    const { authenticateWebSocket } = createWsAuth(deps);
+    await authenticateWebSocket(asWs(ws), authRaw(), req);
+    expect(order).toEqual(['freehold', 'lease']);
+  });
+
+  it('never reads the durable plot on the resume arm', async () => {
+    const { ws, game, deps, req } = setup();
+    game.hasSessionForCharacter = vi.fn(() => true);
+    const { authenticateWebSocket } = createWsAuth(deps);
+    await authenticateWebSocket(asWs(ws), authRaw(), req);
+
+    expect(game.join).toHaveBeenCalledTimes(1);
+    expect(deps.freeholdForAccount).not.toHaveBeenCalled();
+    const joinMeta = (game.join as any).mock.calls[0][7] as { freehold?: unknown };
+    expect(joinMeta.freehold).toBeUndefined();
+  });
+
+  it('joins with NO durable record when the read throws, instead of refusing the login', async () => {
+    // The decisive arm. A thrown durable read used to propagate and refuse the
+    // handshake; a housing row is never worth a refused login, and the store
+    // that receives an unloaded entry writes nothing, so the real row survives.
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      const { ws, game, deps, req } = setup();
+      deps.freeholdForAccount = vi.fn(async () => {
+        throw new Error('durable housing read failed');
+      });
+      const { authenticateWebSocket } = createWsAuth(deps);
+      await authenticateWebSocket(asWs(ws), authRaw(), req);
+
+      expect(game.join).toHaveBeenCalledTimes(1);
+      const joinMeta = (game.join as any).mock.calls[0][7] as { freehold?: unknown };
+      expect(joinMeta.freehold).toBeUndefined();
+      // No {t:'error'} frame went out: the handshake completed.
+      expect(
+        ws.send.mock.calls.map((call: unknown[]) => JSON.parse(String(call[0])).t as string),
+      ).not.toContain('error');
+      expect(errors).toHaveBeenCalledTimes(1);
+    } finally {
+      errors.mockRestore();
+    }
+  });
+
+  it('still refuses the login when the BANK BONUS read throws, so the arms differ on purpose', async () => {
+    // The contrast case. Without it the arm above could be passing because
+    // nothing on this path can refuse a handshake at all.
+    const { ws, game, deps, req } = setup();
+    deps.bankBonusForAccount = vi.fn(async () => {
+      throw new Error('bank bonus read failed');
+    });
+    const { authenticateWebSocket } = createWsAuth(deps);
+    await expect(authenticateWebSocket(asWs(ws), authRaw(), req)).rejects.toThrow(
+      'bank bonus read failed',
+    );
+    expect(game.join).not.toHaveBeenCalled();
+  });
+});
+
 describe('createWsAuth: authored look on the join meta', () => {
   // The `appearance` column is JSONB the server re-broadcasts to every player in
   // view, so it is bounded on the way IN (the redesign route) and re-validated
