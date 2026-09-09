@@ -127,3 +127,85 @@ unreviewed code; its findings are folded in below rather than kept apart.
       message while the housing UI is dark, and an operator watching the `held` measure is the
       only observer this release has.
 - Nit-15 (database-performance) a hearth constant stood in for a plot revision. Same as N3.
+
+## FIX-ROUND FINDINGS (the fresh lane, which read the fix round as unreviewed code)
+
+Five reviewers read `b2aeb46da2..f5dd9a3a44` and found three ways a real house could
+still be lost. All three are closed in 23ffc92983 and e4b029d65d, and the terminal
+state they share is now a counter rather than something only reading finds.
+
+- X1 BLOCKING (security). The hasLive-but-not-loaded read widened a window in which a
+  freshly seeded default could be compare-and-swapped over a real row. A leave drops
+  the store entry while the sim record is still live, so a rejoin landing between them
+  reads the row, learns a durable revision, and is handed a default once the old
+  session's removePlayer evicts. Because the CAS never touches plot_id, the loss left
+  the identity intact and was invisible in the key. FIXED: a write refuses a live
+  record still carrying the unassigned plot id when the entry has a durable revision,
+  or one whose identity is not the one the entry loaded.
+- X2 BLOCKING (security, database-performance). A write deferred by the local cap, or
+  one whose leave deadline expired, ran after eviction, serialized to null and wrote
+  nothing: the leaving session's last edits were silently gone, with no counter.
+  Reproduced by the database reviewer at both arms. FIXED: the document is captured
+  before the wait.
+- X3 BLOCKING (database-performance). The first fix for X2 cleared that capture at the
+  top of `settle`, so a RE-ARMED write inherited nothing and lost the last edit anyway.
+  FIXED: the clear moved to the non-rearm branch, and its own lifetime is pinned by a
+  test proved decisive by removing it.
+- X4 BLOCKING (architecture, tests). `freeholdWriteRefusal` enforced only the three
+  ceilings while the loader had gained the positional-number codec rule, so eight
+  document classes were writable and unreadable. FIXED: the save path runs the same row
+  predicates and the same identity sets, through a new `identitySets()` port so the two
+  cannot be declared twice and drift. A property test over eleven document classes
+  replaced the three named cases.
+- X5 BLOCKING (architecture, tests). The two removal paths disagreed about what counts
+  as owing work; either disagreement drops a save. FIXED: one `owesWork` predicate, and
+  a blocked entry is collected rather than kept forever.
+- X6 BLOCKING (tests). `revFromBigintText` had no coverage AND its comment was wrong:
+  normalizeFreehold REPAIRS an out-of-range revision to zero, so a row whose wire_rev
+  outgrew a JS number loaded writable at zero and the next save wrote that zero over
+  the larger stored value. FIXED: such a row is HELD.
+- X7 BLOCKING (database-performance). `FREEHOLD_STORED_DETOAST_GATE_BYTES` was
+  calibrated from `pg_column_size` on an UNSTORED expression, which reports the
+  uncompressed datum, not what the gate reads. Every number in its comment was wrong
+  and the gate did not catch the case the comment cited. FIXED: re-measured against a
+  stored column (2199 for the maximal record, 32827 incompressible, 97932 uncompressed
+  ceiling), lowered to 131072, and pinned by an on-disk calibration arm that the
+  existing incompressible-fixture test could never have caught.
+- X8 BLOCKING (tests). The constants pin omitted the three constants this work added,
+  and every other use of them was a self-comparison. FIXED: literals for all ten.
+- X9 BLOCKING (tests). Nothing pinned WHICH permit budget the login path spends; the
+  refusal message names the number either way. FIXED: the test reads the deadline off
+  the AbortSignal the store handed the gate.
+- X10 SHOULD-FIX (database-performance). The measure expression was rendered about 2.6
+  times per row because the planner inlines the LATERAL into three output expressions.
+  FIXED: an `OFFSET 0` optimization barrier, measured 35.4 ms to 13.7 ms at 4.88 MB.
+- X11 SHOULD-FIX (database-performance). The orphan sweep could collect an entry a live
+  handshake still needed, leaving `retain` to yield a permanently write-blocked entry
+  with no hold, no counter and no log. FIXED: `retain` re-reads when it finds an entry
+  that is not loaded.
+- X12 SHOULD-FIX (security). A thrown write counted toward the quiesce run forever, so
+  three blips hours apart quiesced a healthy owner. FIXED: a five-minute window.
+- X13 SHOULD-FIX (security). `ports.error(msg, err)` printed the whole pg error, and a
+  23514 puts `Failing row contains (...)` in `detail`. FIXED: code, constraint and
+  message only.
+- X14 SHOULD-FIX (architecture, tests). The hearth-clock source scan omitted `src/sim`
+  and `headless`, so a third writer added inside the sim would have passed both arms of
+  a describe titled "exactly two writers, both in the sim". FIXED.
+- X15 SHOULD-FIX (architecture). `server/game.ts` sat 63 lines under its ceiling after
+  the extraction. FIXED: both ceilings lowered to the measured counts (9920, 4605).
+- X16 SHOULD-FIX (architecture, tests). `installLoadedFreehold`'s two structural guards
+  were coupled, so a malformed clock also skipped the plot. FIXED: independent, and the
+  skip is now safe because X1's identity seal refuses the write it used to enable.
+- X17 NITS, all applied: the misleading `finiteNumber` alias, the over-permissive
+  version detail shape, the wire-cadence module's widened export surface, the missing
+  barrel note for the hearth clock's second writer, the general (not fixture-specific)
+  stored-ceiling margin now pinned as arithmetic, the unfiltered `pg_tables` assertion
+  that flaked under a concurrent tenant, the metrics negative pin with no positive
+  control, the `schema_version` validator disagreeing with its INT column, the
+  re-entrant deferred pump, and the two constants the implementation never read.
+- X18 RULED, no change warranted: two clauses cannot be isolated by any behaviour test
+  because they sit behind a same-state filter (`drainCheck`'s deferred check, and the
+  deferred clause in `owesWork`). Both are kept with a comment saying they are equal to
+  their neighbours only by today's arithmetic. The non-HOT update cost of a plot save
+  is recorded and negligible, and `freeholdsForExport`'s missing bound is pre-existing
+  and out of this scope.

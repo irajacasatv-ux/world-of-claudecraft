@@ -777,11 +777,17 @@ For off-box safety, sync the directory to S3 occasionally:
 - The housing persistence store publishes three families, split by what an alert
   rule needs. `woc_freehold_persist` is a GAUGE of occupancy: `entries`, `dirty`,
   `running`, `pending`, `held`, `quiesced`, `oldest_dirty_age_ms` and
-  `max_write_bytes`. `woc_freehold_persist_total` is a COUNTER of cumulative
-  work: loads, writes, their failures, stale compare-and-swap refusals, the
-  permit and queue waits, the statement durations those waits exclude, and total
-  bytes written. `woc_freehold_load_failures_total` splits load failures by
-  `kind`. Three of these are worth an alert. A rising `quiesced` means the
+  `max_write_bytes`, plus `active_writes` and `deferred_writes` for the store's
+  own write admission cap. `woc_freehold_persist_total` is a COUNTER of
+  cumulative work: loads, writes, their failures, stale compare-and-swap
+  refusals, the permit and queue waits, the statement durations those waits
+  exclude, total bytes written, `pre_gate_refusals` (rows refused on their
+  on-disk size before anything was rendered) and `writes_without_record`.
+  `woc_freehold_load_failures_total` splits load failures by `kind`. Four of
+  these are worth an alert. `writes_without_record` counts a write that reached
+  the statement with no document to send, which is the terminal state of every
+  way this store has ever lost a save; it should be flat at zero, and any
+  sustained increase means edits are being dropped silently. A rising `quiesced` means the
   durable revision moved under this realm, which on a single-realm deployment
   should be impossible and on a multi-realm one means two processes are writing
   the same rows. A rising `held` means accounts whose rows this build cannot
