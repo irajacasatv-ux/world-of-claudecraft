@@ -774,6 +774,20 @@ For off-box safety, sync the directory to S3 occasionally:
   sustained rate means either a modified client probing dark housing or, once
   the UI ships, a realm that forgot `FREEHOLDS_ENABLED`. It is label-free, and
   it under-counts jailed sessions (the jail check answers first).
+- The housing persistence store publishes three families, split by what an alert
+  rule needs. `woc_freehold_persist` is a GAUGE of occupancy: `entries`, `dirty`,
+  `running`, `pending`, `held`, `quiesced`, `oldest_dirty_age_ms` and
+  `max_write_bytes`. `woc_freehold_persist_total` is a COUNTER of cumulative
+  work: loads, writes, their failures, stale compare-and-swap refusals, the
+  permit and queue waits, the statement durations those waits exclude, and total
+  bytes written. `woc_freehold_load_failures_total` splits load failures by
+  `kind`. Three of these are worth an alert. A rising `quiesced` means the
+  durable revision moved under this realm, which on a single-realm deployment
+  should be impossible and on a multi-realm one means two processes are writing
+  the same rows. A rising `held` means accounts whose rows this build cannot
+  read, which is the recovery contract's case. A growing `oldest_dirty_age_ms`
+  means edits are not reaching disk. All three are counts and milliseconds only:
+  no account id, owner key or plot id reaches any series.
 - `FREEHOLDS_ENABLED` defaults off, is read live as the strict '1', and
   production never enables it before the release gates in
   docs/freeholds/state.md "Tracked release and handoff gates" are signed
