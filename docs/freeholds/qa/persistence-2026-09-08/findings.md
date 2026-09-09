@@ -1,7 +1,13 @@
 # 07 findings ledger (every finding, every reviewer, applied or ruled)
 
 Status key: FIXED (with the commit that did it) / RULED (reviewed, no change warranted,
-with the reason). Nothing is OPEN: the round is closed.
+with the reason).
+
+THE ROUND IS NOT CLOSED. Six fix rounds have run and FIVE of the six introduced a defect
+worse than one they closed, each caught by a fresh reviewer and never by the round's own
+green tests. The sixth, `45f7d41508`, has not been reviewed by anyone. An earlier version
+of this line declared the round closed after the third; that was wrong three times over
+and is corrected here rather than quietly amended.
 
 Nine reviewers were dispatched and nine reported: migration-safety, database-performance,
 privacy-security, server-hot-path, architecture, cross-platform-sync, test-coverage,
@@ -311,3 +317,58 @@ was reviewed on that assumption. It had.
   load-bearing CLEAN by the reviewer, since it is what stops a client-facing counter
   going backwards permanently, and it would be easy for a later reader to "simplify"
   into the loader's repair. Recorded so nobody does.
+
+## FOURTH, FIFTH AND SIXTH FIX ROUNDS
+
+The pattern did not stop at three. Each of these was found by a reviewer reading the round
+before it, with an executed proof rather than an argument.
+
+- W1 BLOCKING (correctness), round four. "The newer document wins" compared two revisions
+  that are not on one timeline: a rejoin replay RESTARTS the record's revision from the last
+  committed value, which this packet's own test establishes. Preferring the capture therefore
+  discarded the REJOINING session's edits, the mirror of the bug it was written to fix.
+  Reproduced: ten furnishings placed after a rejoin, then a sweep writing the pre-leave
+  document over them. FIXED in 6e8e681a2b, above the contest rather than inside it: an
+  outstanding capture outranks the entry's committed state AT THE JOIN, so a returning player
+  is handed the house they logged out of, and the write path returns to the one rule that is
+  decidable, the live record wins whenever there is one.
+- W2 BLOCKING (correctness), round five. Releasing the capture at the READ was itself a
+  lost-save path. The handshake reads before it takes the character lease, and five exits sit
+  between them; none creates a live record, so a capture released at the read vanished with
+  nothing holding the edits. The sharpest is a lease already held, because a reconnect after a
+  dropped socket is the very event that produced the capture. Proved: a handshake that never
+  joins, four sweeps, zero writes, four counted against the measure this module documents as
+  the terminal state of every lost-save path. FIXED in 17b216b252: the handover is two-phase,
+  the read offers and mutates nothing, and `retain` confirms.
+- W3 BLOCKING (correctness), round five's own fix. `hasLive` confirms A record, not THIS one.
+  `installLoadedFreehold` has four early returns and `loadFreehold` is load-once on top of
+  them, while `retain` runs on every join and knows none of it; the reachable case is the
+  same-account character swap, where the record `retain` sees belongs to the previous session
+  and removePlayer is allowed to evict it afterwards. FIXED in 91d93d1f95 by comparing the
+  live revision to the captured one, which fails closed.
+- W4 BLOCKING (correctness), round six, the sixth distinct path to a lost house. The plot-id
+  stamp lands on whatever record exists at COMMIT time, not the record the write came from. A
+  write serving from its capture runs after eviction, and a join landing inside its round trip
+  seeds a default; stamping there gives the empty default the row's durable identity, which is
+  the only discriminator the write seal has. The seal then stops firing and the next sweep
+  writes an empty tier-0 Inn Room over a real house, with the plot identity unchanged and
+  every counter reading healthy. FIXED in 45f7d41508 by stamping only a document that came
+  from the live record. The reviewer's alternative guard was rejected on their own advice: it
+  closes this path but would quiesce a healthy brand-new account.
+- W5 SHOULD-FIX, round four. `leave_captures` never returned to zero, because a second leave
+  over a surviving capture held one document and counted two. It is the only stated bound on a
+  measured 66 MiB retention, and a bound that cannot read zero is not one. FIXED.
+- W6 SHOULD-FIX, round four. The capture was cleared on any non-rearm settle, and the
+  null-permit arm returns false WITHOUT quiescing, so an entry could settle uncommitted,
+  unblocked and still dirty with its capture gone. FIXED: it survives while the entry owes the
+  write.
+- W7 SHOULD-FIX, rounds four and five: the write seal validated the live record's identity
+  while the row received a different one; the in-flight-load guard was on one removal path
+  only; the bounded error wrapper was applied to this module's own programming errors,
+  discarding their stacks; and the plot-identity charset's fourth copy had no pin. All FIXED.
+- W8 PROCESS, recorded because it is the finding that matters most. Two of the tests written
+  for these fixes were NOT decisive until a mutation pass showed they passed against the
+  mutant, and the harness itself modelled an impossible state (its two liveness ports could
+  disagree, where the server reads one map). A green suite proved nothing here on five
+  separate occasions. Every guard in this subsystem is now mutation-checked in both
+  directions, and the ones no behaviour test can isolate say so instead of pretending.
