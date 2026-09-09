@@ -25,6 +25,7 @@ import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_FLUSH_MAX_PASSES,
   FREEHOLD_PERSIST_LEAVE_FLUSH_MS,
+  FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE,
   FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
   FREEHOLD_PERSIST_MAX_ACTIVE_LOADS,
   FREEHOLD_PERSIST_MAX_ACTIVE_WRITES,
@@ -153,6 +154,10 @@ interface HarnessOptions {
   writeRow?: (input: FreeholdUpsert) => Promise<FreeholdUpsertResult>;
   hasLive?: (ownerKey: string) => boolean;
   enabled?: () => boolean;
+  /** Override the LIVE record's plot identity, for the cases that model a
+   *  record the store did not install: a fresh seed standing where a loaded
+   *  house used to be. */
+  livePlotId?: string;
   acquirePermit?: (signal: AbortSignal) => Promise<{ release(): void } | null>;
   enqueue?: <T>(key: string, signal: AbortSignal, write: () => Promise<T>) => Promise<T>;
 }
@@ -172,6 +177,16 @@ function harness(options: HarnessOptions = {}) {
   const deadlines: DeadlineJob[] = [];
   const permitSignals: AbortSignal[] = [];
   const ownedBytesSeen: number[] = [];
+  const stamped: string[] = [];
+  // The LIVE record's plot identity, modelled the way the server maintains it:
+  // a row load installs the row's state (so the record carries the row's id), a
+  // fresh account seeds the pending placeholder, and a committed write stamps
+  // the minted id onto the record. Without this the harness would serialize
+  // documents whose identity the real sim could never produce, and the store's
+  // identity seal would fire on fixtures rather than on the race it guards.
+  let livePlotId: string =
+    options.livePlotId ??
+    (options.rowLoad?.kind === 'row' ? options.rowLoad.row.plotId : PENDING_FREEHOLD_PLOT_ID);
   const fifo = createKeyedSerialWriter<string>();
   let nowMs = 10_000;
   let minted = 0;
@@ -216,7 +231,10 @@ function harness(options: HarnessOptions = {}) {
     },
     serialize(ownerKey: string): PersistedFreehold | null {
       calls.push('serialize');
-      return serialize(ownerKey);
+      const doc = serialize(ownerKey);
+      // The identity is the LIVE RECORD's, never the fixture's: a case that
+      // wants to model a mismatched record says so by overriding the port.
+      return doc === null ? null : { ...doc, plotId: livePlotId };
     },
     liveRev(ownerKey: string): number | null {
       calls.push('liveRev');
@@ -226,6 +244,12 @@ function harness(options: HarnessOptions = {}) {
     },
     hasLive(ownerKey: string): boolean {
       return options.hasLive ? options.hasLive(ownerKey) : false;
+    },
+    stampPlotId(ownerKey: string, plotId: string): boolean {
+      stamped.push(`${ownerKey}:${plotId}`);
+      if (livePlotId !== PENDING_FREEHOLD_PLOT_ID) return false;
+      livePlotId = plotId;
+      return true;
     },
     enabled(): boolean {
       return options.enabled ? options.enabled() : true;
@@ -291,6 +315,7 @@ function harness(options: HarnessOptions = {}) {
     deadlines,
     permitSignals,
     ownedBytesSeen,
+    stamped,
     setNow(ms: number): void {
       nowMs = ms;
     },
@@ -1679,6 +1704,10 @@ describe('a write may only carry the record this entry actually loaded', () => {
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 9 }), repaired: [] },
+      // The live record is a FRESH SEED, not the house the entry loaded: this
+      // is the state a rejoin lands in when the old session's removePlayer
+      // evicts after the new session's read.
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
       serialize: () => seeded,
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
@@ -1696,6 +1725,7 @@ describe('a write may only carry the record this entry actually loaded', () => {
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      livePlotId: 'plot:someoneelse',
       serialize: () => foreign,
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
@@ -1719,6 +1749,33 @@ describe('a write may only carry the record this entry actually loaded', () => {
     expect(h.store.stats().quiesced).toBe(0);
   });
 
+  it('keeps writing after the FIRST insert for an account that had no row', async () => {
+    // The regression this seal could most easily cause. After the insert the
+    // entry has a durable revision, and the live record is still the sim's
+    // seeded default, so a seal that keyed on the unassigned plot id alone
+    // would quiesce every account on its SECOND save, forever.
+    let rev = 1;
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      serialize: () =>
+        persistedFixture({ plotId: PENDING_FREEHOLD_PLOT_ID, layout: [], trophies: [], rev }),
+      writeRow: async (input) => ({
+        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+        durableRev: '1',
+      }),
+    });
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+
+    rev = 2;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.writeCount()).toBe(2);
+  });
+
   it('still writes a seeded default when there is NO durable row to lose', async () => {
     // The first write for an account that has never written is the seeded
     // default, under a freshly minted identity, and it is insert-only. The seal
@@ -1734,6 +1791,108 @@ describe('a write may only carry the record this entry actually loaded', () => {
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].expectedDurableRev).toBeNull();
+  });
+});
+
+describe('a leaving session may borrow the write reserve', () => {
+  it('starts a leaver immediately at the ordinary cap, rather than queueing it', async () => {
+    // The leave write is the LAST chance for those edits; every background
+    // write it would otherwise queue behind has a next sweep to catch it.
+    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => {
+        const gate = deferred<FreeholdUpsertResult>();
+        gates.push(gate);
+        return await gate.promise;
+      },
+    });
+    for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES; i++) {
+      const key = `account:${OTHER_ACCOUNT_ID + i}`;
+      h.store.retain(key, OTHER_ACCOUNT_ID + i);
+      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      h.store.markDirty(key);
+      h.store.save(key);
+    }
+    await tick(20);
+    expect(h.store.stats().running).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
+
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID);
+    h.store.markDirty(OWNER_KEY);
+    void h.store.flushAndRelease(OWNER_KEY);
+    await tick(20);
+    // Running, not deferred, even though the ordinary cap is full.
+    expect(h.store.stats().running).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 1);
+    expect(h.store.stats().deferredWrites).toBe(0);
+    for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
+    await tick(40);
+  });
+
+  it('actually waits when its write is DEFERRED, instead of returning at once', async () => {
+    // A deferred entry has no chain, and treating a null chain as "nothing to
+    // wait for" returned a mass disconnect's every logout in milliseconds:
+    // none of the deadline's budget was spent and every entry stayed resident.
+    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => {
+        const gate = deferred<FreeholdUpsertResult>();
+        gates.push(gate);
+        return await gate.promise;
+      },
+    });
+    const saturated = FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE;
+    for (let i = 0; i < saturated; i++) {
+      const key = `account:${OTHER_ACCOUNT_ID + i}`;
+      h.store.retain(key, OTHER_ACCOUNT_ID + i);
+      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      h.store.markDirty(key);
+      h.store.save(key);
+    }
+    await tick(20);
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID);
+    h.store.markDirty(OWNER_KEY);
+
+    let released = false;
+    const leaving = h.store.flushAndRelease(OWNER_KEY).then(() => {
+      released = true;
+    });
+    await tick(30);
+    // Deferred, and still waiting: it has not written and has not given up.
+    expect(h.store.stats().deferredWrites).toBeGreaterThan(0);
+    expect(released).toBe(false);
+
+    // A slot frees; the leaver's own write then runs and the wait ends.
+    gates[0].resolve({ kind: 'updated', durableRev: '9' });
+    await tick(40);
+    for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
+    await tick(40);
+    await leaving;
+    expect(released).toBe(true);
+    expect(h.writes.some((w) => w.accountId === ACCOUNT_ID)).toBe(true);
+  });
+
+  it('counts an outstanding capture, so the retained memory is a series', async () => {
+    // Each capture is a second full record on top of the entry's own, held
+    // until the write lands. At the approved row ceiling a thousand dirty
+    // logouts retain tens of megabytes, which should not need a heap dump.
+    const gate = deferred<FreeholdUpsertResult>();
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => persistedFixture({ rev: 6 }),
+      writeRow: async () => await gate.promise,
+    });
+    expect(h.store.stats().leaveCaptures).toBe(0);
+    void h.store.flushAndRelease(OWNER_KEY);
+    await tick(10);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    gate.resolve({ kind: 'updated', durableRev: '6' });
+    await tick(40);
+    // Released with the write, never held for the life of the entry.
+    expect(h.store.stats().leaveCaptures).toBe(0);
   });
 });
 
@@ -1779,39 +1938,6 @@ describe('a leaving session never loses its last edits to a queue', () => {
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].wireRev).toBe(6);
-  });
-
-  it('writes the captured document when the local write cap deferred it', async () => {
-    // Saturate the cap with other owners' writes, then leave.
-    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
-    const { h, evict } = await leavingStore(async () => {
-      const gate = deferred<FreeholdUpsertResult>();
-      gates.push(gate);
-      return await gate.promise;
-    });
-    for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES; i++) {
-      const key = `account:${OTHER_ACCOUNT_ID + i}`;
-      h.store.retain(key);
-      await h.store.preload(OTHER_ACCOUNT_ID + i);
-      h.store.markDirty(key);
-      h.store.save(key);
-    }
-    await tick(20);
-    expect(h.store.stats().running).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
-
-    await h.store.flushAndRelease(OWNER_KEY);
-    // Evicted the moment leave returns, before the deferred write ever starts.
-    evict();
-    const before = h.writeCount();
-    for (let round = 0; round < 20 && gates.length > 0; round++) {
-      for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
-      await tick(30);
-    }
-    // The leaving owner's write really ran, and carried its real revision
-    // rather than serializing to nothing.
-    expect(h.writeCount()).toBeGreaterThan(before);
-    const leaving = h.writes.find((w) => w.accountId === ACCOUNT_ID);
-    expect(leaving?.wireRev).toBe(6);
   });
 
   it('drops the capture once the write it was taken for has settled', async () => {
@@ -2000,39 +2126,12 @@ describe('nothing removes an entry that still owes a durable write', () => {
   // BOTH removal paths, one predicate. They used to differ, and either
   // difference drops a save: maybeRemove checked the deferred set but not
   // dirtiness, and the orphan sweep checked dirtiness but not the deferred set.
-
-  it('keeps a DEFERRED entry whose session has left, and writes it when a slot frees', async () => {
-    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
-    const h = harness({
-      rowLoad: { kind: 'row', row: rowFixture() },
-      writeRow: async () => {
-        const gate = deferred<FreeholdUpsertResult>();
-        gates.push(gate);
-        return await gate.promise;
-      },
-    });
-    for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES; i++) {
-      const key = `account:${OTHER_ACCOUNT_ID + i}`;
-      h.store.retain(key, OTHER_ACCOUNT_ID + i);
-      await h.store.preload(OTHER_ACCOUNT_ID + i);
-      h.store.markDirty(key);
-      h.store.save(key);
-    }
-    await tick(20);
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.preload(ACCOUNT_ID);
-    h.store.markDirty(OWNER_KEY);
-    await h.store.flushAndRelease(OWNER_KEY);
-
-    // Deferred, unreferenced, and STILL HERE: a removal now would drop the
-    // write entirely, because the pump's liveness check would then skip it.
-    expect(h.store.stats().entries).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 1);
-    for (let round = 0; round < 20 && gates.length > 0; round++) {
-      for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
-      await tick(30);
-    }
-    expect(h.writes.some((w) => w.accountId === ACCOUNT_ID)).toBe(true);
-  });
+  //
+  // A DEFERRED, zero-reference entry is unreachable now that a leaving write
+  // borrows the reserve and therefore always starts, so the deferred clause in
+  // the shared predicate has no behaviour test and is kept for what it says
+  // rather than for what today's arming rules imply. What IS reachable, and
+  // what these cases drive, is an entry left dirty by a refused permit.
 
   it('keeps a DIRTY, unreferenced, NOT running entry across every sweep', async () => {
     // The dirty arm on its own. The older case had a dirty entry that was also

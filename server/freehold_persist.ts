@@ -44,12 +44,8 @@ import {
   type PersistedFreehold,
   persistedFreeholdFromState,
 } from '../src/sim/freehold/persisted';
-import {
-  loadFreehold,
-  PENDING_FREEHOLD_PLOT_ID,
-  serializeFreehold,
-} from '../src/sim/freehold/state';
-import { FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
+import { loadFreehold, serializeFreehold, stampFreeholdPlotId } from '../src/sim/freehold/state';
+import { asFreeholdPlotId, FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
 import { pool } from './db';
 import {
@@ -113,6 +109,30 @@ export const FREEHOLD_PERSIST_MAX_ACTIVE_LOADS = 4;
  */
 export const FREEHOLD_PERSIST_MAX_ACTIVE_WRITES = 4;
 
+/**
+ * The cap the SHUTDOWN DRAIN runs at, and the reserve a LEAVING session may
+ * borrow. Both exist because the steady-state cap is calibrated against a realm
+ * that is also serving logins, escrow, storage recovery and character deletes
+ * on the same background gate, and neither of these moments is that.
+ *
+ * The drain is the one moment nothing else contends for the gate, and the two
+ * constants have to be read as a PAIR: at four concurrent writes and a ten
+ * millisecond statement, FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS covers about four
+ * thousand owners. Measured, a thousand dirty owners drained in 2.9 seconds and
+ * five thousand did not finish, leaving 1,584 owners' edits unwritten. Raising
+ * the cap for the drain alone is what makes the deadline cover the realm rather
+ * than a quarter of it; the shared gate's own capacity of seven still bounds
+ * what actually reaches the database.
+ *
+ * The leave reserve is smaller and for a different reason: a leaving session's
+ * write is the LAST chance for that owner's edits, and without a reserve it
+ * queues behind an insertion-ordered backlog of background writes that have a
+ * next sweep to catch them. Two slots keep a mass disconnect from starving the
+ * one write that cannot be retried.
+ */
+export const FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES = 8;
+export const FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE = 2;
+
 /** The durable revision a recovery hold reports when there is no row to name
  *  one. Its own constant rather than the hearth clock's ABSENT_HEARTH_REVISION,
  *  which shares the value but names a different counter: this is the PLOT's
@@ -174,6 +194,12 @@ export const FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS = 300_000;
  * serve an old house for every later login on this process.
  */
 export const FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES = 2;
+// KNOWN LIMIT, named rather than left to be discovered: this is a TIME bound,
+// not a size one, so peak `entries` is the join rate times the grace period and
+// not a cap. Each entry holds one parsed record, and a dirty leaver briefly
+// holds two. `entries` and `leave_captures` are both published, so the growth
+// is watchable; if a realm ever needs a hard cap, the seam that fits is the
+// keyed bounded cache with LRU eviction in server/discord_status_cache.ts.
 
 /** How many write passes one flushAndRelease will wait through. A committed
  *  write that finds fresh edits re-arms exactly once, so two passes is the
@@ -228,6 +254,9 @@ export interface FreeholdPersistPorts {
    *  holds no live record, and the write is skipped entirely. */
   serialize(ownerKey: string): PersistedFreehold | null;
   hasLive(ownerKey: string): boolean;
+  /** Teach the live record the durable identity its row carries, once the
+   *  durable side knows it. Answers false when there is nothing to teach. */
+  stampPlotId(ownerKey: string, plotId: string): boolean;
   /** Whether this realm serves housing at all. The store never reads the
    *  environment itself; the composition root binds this to the sim's own
    *  flag. A DARK realm must issue no durable read of any kind, which is why
@@ -292,6 +321,9 @@ export interface FreeholdPersistStats {
    *  claim. */
   readonly deferredWrites: number;
   readonly activeWrites: number;
+  /** Documents captured at leave and not yet written: a second full record each
+   *  on top of the entry's own, retained until the write lands. */
+  readonly leaveCaptures: number;
 }
 
 export interface FreeholdPersistStore {
@@ -349,8 +381,19 @@ interface FreeholdPersistEntry {
    *  record, takes those arms and issues no read of its own. */
   hearthReadyAtMs: number;
   hearthRevision: string;
-  /** The document captured at LEAVE, used only when the live record is already
-   *  gone by the time the write runs. See flushAndRelease for why. */
+  /**
+   * The document captured at LEAVE, used only when the live record is already
+   * gone by the time the write runs. See flushAndRelease for why it has to be
+   * taken before the wait.
+   *
+   * ITS COST IS A CHOSEN NUMBER, not a discovered one: this is a SECOND full
+   * record on top of `state`, held until the write lands, so the worst case is
+   * the number of simultaneous dirty leavers times the record ceiling.
+   * Measured, a thousand simultaneous dirty logouts at the approved 420-row
+   * ceiling retain about 66 MiB, and 0.1 MiB with empty layouts. That is the
+   * price of not losing a leaving session's last edits, and `leave_captures`
+   * publishes the count so it never has to be found in a heap dump.
+   */
   leaveDocument: PersistedFreehold | null;
   /** Thrown writes since the last commit. A single throw is usually a blip
    *  worth one more sweep; a run of them is a row this realm cannot write, and
@@ -382,6 +425,11 @@ interface FreeholdPersistEntry {
   running: boolean;
   pending: boolean;
   chain: Promise<void> | null;
+  /** Resolvers waiting for this entry's next settle. A DEFERRED entry has no
+   *  chain to await, and treating that as "nothing to wait for" made the leave
+   *  flush return instantly under a mass disconnect, spending none of its
+   *  budget and leaving the entry resident. */
+  settleWaiters: Array<() => void>;
 }
 
 /**
@@ -412,6 +460,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    *  that waited longest goes first. */
   const deferredWrites = new Set<FreeholdPersistEntry>();
   let activeWrites = 0;
+  /** Documents captured at leave and not yet written. Each is a SECOND full
+   *  record on top of entry.state, so at the approved 420-row ceiling a
+   *  thousand simultaneous dirty logouts retain about 67 MiB until their writes
+   *  land. Bounded by the number of dirty leavers, and published, because a
+   *  retention that only shows up in a heap dump is not a bound. */
+  let leaveCaptures = 0;
   const scheduleDeadline = ports.scheduleDeadline ?? realScheduleDeadline;
   let activeLoads = 0;
   let intake = true;
@@ -530,6 +584,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       running: false,
       pending: false,
       chain: null,
+      settleWaiters: [],
     };
     entries.set(ownerKey, created);
     return created;
@@ -580,7 +635,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    * login reads the row again.
    */
   function sweepOrphans(): void {
-    for (const entry of [...entries.values()]) {
+    // Iterated DIRECTLY, not over a copy: deleting the current key during a Map
+    // iteration is well defined, and the copy allocated an N-pointer array
+    // inside the tick body (measured 42.6 KiB per sweep at five thousand
+    // owners) for nothing.
+    for (const entry of entries.values()) {
       if (entry.refs > 0 || owesWork(entry)) {
         entry.orphanPasses = 0;
         continue;
@@ -948,7 +1007,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     if (result.kind === 'inserted' || result.kind === 'updated') {
       counters.writes++;
       entry.durableRev = result.durableRev;
-      entry.state = written;
+      // The ROW's identity, not the document's. A record seeded this session
+      // carries the pending placeholder while the row it just wrote carries a
+      // minted id; letting the entry keep the placeholder would leave it unable
+      // to tell its own record from a fresh seed on the next pass, which is the
+      // one comparison standing between a rejoin race and a wiped house.
+      entry.state = { ...written, plotId: entry.plotId };
+      // ...and the LIVE record learns it too, so the three agree from here on.
+      ports.stampPlotId(entry.ownerKey, entry.plotId);
       entry.writeErrors = 0;
       if (entry.committedGeneration < generation) entry.committedGeneration = generation;
       // Every edit that survived this write arrived at or after the snapshot,
@@ -1027,8 +1093,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // at the cost of one session played on a default record with no writes.
       const seededOverReal =
         entry.durableRev !== null &&
-        (persisted.plotId === PENDING_FREEHOLD_PLOT_ID ||
-          (entry.state !== null && persisted.plotId !== entry.state.plotId));
+        entry.state !== null &&
+        persisted.plotId !== entry.state.plotId;
       if (seededOverReal) {
         counters.writeFailures++;
         entry.quiesced = true;
@@ -1094,6 +1160,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     }
   }
 
+  /** Wake anything waiting for this entry to stop owing a write. */
+  function releaseSettleWaiters(entry: FreeholdPersistEntry): void {
+    if (entry.settleWaiters.length === 0) return;
+    for (const wake of entry.settleWaiters.splice(0)) wake();
+  }
+
   function settle(entry: FreeholdPersistEntry, committed: boolean): void {
     entry.running = false;
     entry.chain = null;
@@ -1116,6 +1188,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // exists; clearing before the re-arm decision handed that write nothing to
     // fall back on and lost the last edit of the session. A live record always
     // wins over the capture, so inheriting it can never shadow a later edit.
+    if (entry.leaveDocument !== null) leaveCaptures--;
     entry.leaveDocument = null;
     pumpDeferredWrites();
     maybeRemove(entry);
@@ -1198,6 +1271,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
 
   /** Start as many deferred writes as the local cap now allows. Called every
    *  time a slot frees, so the set drains without a timer. */
+  let draining = false;
+  /** The concurrent-write cap in force right now. */
+  const writeCap = (leaving: boolean): number =>
+    (draining ? FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES : FREEHOLD_PERSIST_MAX_ACTIVE_WRITES) +
+    (leaving ? FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE : 0);
+
   let pumping = false;
   function pumpDeferredWrites(): void {
     if (pumping) return;
@@ -1210,22 +1289,28 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   }
 
   function pumpLoop(): void {
-    while (activeWrites < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES && deferredWrites.size > 0) {
+    while (activeWrites < writeCap(false) && deferredWrites.size > 0) {
       const next = deferredWrites.values().next().value;
       if (next === undefined) return;
       deferredWrites.delete(next);
       // The wait may have outlived the reason for the write: the entry could
       // have been evicted, held or quiesced since it was deferred.
-      if (!live(next) || blocked(next) || next.running || !isDirty(next)) continue;
+      if (!live(next) || blocked(next) || next.running || !isDirty(next)) {
+        // It left the deferred set without a write, so it may now be removable:
+        // without this the entry waits for the orphan sweep instead.
+        releaseSettleWaiters(next);
+        maybeRemove(next);
+        continue;
+      }
       launch(next);
     }
   }
 
   // Exactly one running plus one pending per owner key: a burst of a thousand
   // marks costs one write in flight and one behind it, never a thousand.
-  function arm(entry: FreeholdPersistEntry): void {
+  function arm(entry: FreeholdPersistEntry, leaving = false): void {
     if (blocked(entry)) return;
-    if (!entry.running && activeWrites >= FREEHOLD_PERSIST_MAX_ACTIVE_WRITES) {
+    if (!entry.running && activeWrites >= writeCap(leaving)) {
       // The local cap, applied BEFORE the shared gate. The entry stays dirty,
       // so nothing is lost and nothing is retried against the pool: it waits
       // in a set this store can measure instead of on an uncapped queue every
@@ -1316,7 +1401,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         // and write nothing at all: the leaving session's last edits would be
         // silently gone. One clone per dirty logout buys that back.
         entry.leaveDocument = ports.serialize(ownerKey);
-        arm(entry);
+        if (entry.leaveDocument !== null) leaveCaptures++;
+        // LEAVING, so it may borrow the reserve: this write is the last chance
+        // for these edits, and every background write it would otherwise queue
+        // behind has a next sweep to catch it.
+        arm(entry, true);
         // BOUNDED. Past the deadline this stops WAITING, never the write: the
         // write is queued and keeps running, the entry stays until it settles,
         // and the shutdown drain still waits for it. A logout that inherited
@@ -1334,8 +1423,18 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         try {
           for (let pass = 0; pass < FREEHOLD_PERSIST_FLUSH_MAX_PASSES && !expired; pass++) {
             const chain = entry.chain;
-            if (chain === null) break;
-            await Promise.race([chain.catch(() => undefined), expiry]);
+            // A DEFERRED entry has no chain and is still owed a write, so a
+            // null chain alone does not mean there is nothing to wait for.
+            // Treating it that way returned a mass disconnect's every logout in
+            // milliseconds, spending none of the budget the deadline exists to
+            // bound and leaving every entry resident.
+            if (chain === null && !deferredWrites.has(entry)) break;
+            const settled =
+              chain?.catch(() => undefined) ??
+              new Promise<void>((resolve) => {
+                entry.settleWaiters.push(resolve);
+              });
+            await Promise.race([settled, expiry]);
           }
         } finally {
           cancelDeadline();
@@ -1366,6 +1465,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // the housing flag in server/main.ts, so this reload would otherwise be
       // the one durable read a realm with housing disabled still issues, once
       // per join, for a feature it does not serve.
+      // The RESULT is discarded on purpose: the joining session already has
+      // whatever its own handshake read, and this read exists to make the ENTRY
+      // able to write, not to change what the player was handed. It rides the
+      // same single-flight slot and the same admission cap of four as any other
+      // load, so a storm of them cannot outrun the gate.
       if (!entry.loaded && accountId > 0 && ports.enabled()) {
         void preload(accountId).catch(() => undefined);
       }
@@ -1376,9 +1480,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // earlier in the shutdown sequence cannot refuse this drain's own
       // enqueues.
       intake = false;
+      // The drain runs at its own cap: nothing else contends for the shared
+      // gate once intake is closed, and the deadline has to cover the realm
+      // rather than a quarter of it.
+      draining = true;
       for (const entry of entries.values()) {
         if (isDirty(entry)) arm(entry);
       }
+      pumpDeferredWrites();
       const bounded = Math.max(1, Math.floor(deadlineMs));
       return new Promise<boolean>((resolve) => {
         let settled = false;
@@ -1453,6 +1562,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         preGateRefusals: counters.preGateRefusals,
         deferredWrites: deferredWrites.size,
         activeWrites,
+        leaveCaptures,
       };
     },
 
@@ -1538,6 +1648,7 @@ export function freeholdPersistStats(): FreeholdPersistStats {
       preGateRefusals: 0,
       deferredWrites: 0,
       activeWrites: 0,
+      leaveCaptures: 0,
     }
   );
 }
@@ -1639,6 +1750,8 @@ export function createGameFreeholdPersistStore(deps: {
       return state === null ? null : persistedFreeholdFromState(state);
     },
     hasLive: (ownerKey) => deps.sim.ctx.freeholds.has(ownerKey),
+    stampPlotId: (ownerKey, plotId) =>
+      stampFreeholdPlotId(deps.sim.ctx, ownerKey, asFreeholdPlotId(plotId)),
     enabled: () => deps.sim.ctx.freeholdsEnabled,
     liveRev: (ownerKey) => deps.sim.ctx.freeholds.get(ownerKey)?.rev ?? null,
     mintPlotId: () => mintFreeholdPlotId(),

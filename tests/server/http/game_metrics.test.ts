@@ -2060,6 +2060,7 @@ describe('the housing persistence families', () => {
     preGateRefusals: 62,
     deferredWrites: 17,
     activeWrites: 18,
+    leaveCaptures: 19,
   };
   const housingSource = (): GameStateSource => stubSource({ freeholdPersist: () => stats });
 
@@ -2084,6 +2085,7 @@ describe('the housing persistence families', () => {
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'max_write_bytes')).toBe('52');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'deferred_writes')).toBe('17');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'active_writes')).toBe('18');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'leave_captures')).toBe('19');
     // No cumulative total rides the gauge: rate() over a gauge gets no
     // counter-reset handling, so a realm restart would read as a rate artifact.
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'writes')).toBeUndefined();
@@ -2127,6 +2129,27 @@ describe('the housing persistence families', () => {
         new RegExp(`^${WOC_FREEHOLD_LOAD_FAILURES_TOTAL}\\{kind="unadmitted"\\} (\\d+)$`, 'm'),
       ),
     ).toBe('15');
+  });
+
+  it('reads the store ONCE per scrape, not once per family', async () => {
+    // freeholdPersist() walks every entry and allocates, and three families
+    // need it, so an unmemoized read did that work three times per hit.
+    let reads = 0;
+    const registry = new Registry();
+    registerGameStateMetrics(
+      registry,
+      stubSource({
+        freeholdPersist: () => {
+          reads += 1;
+          return stats;
+        },
+      }),
+    );
+    await registry.metrics();
+    expect(reads).toBe(1);
+    // ...and the memo is per SCRAPE, never longer: the next hit reads again.
+    await registry.metrics();
+    expect(reads).toBe(2);
   });
 
   it('re-reads the store at every scrape rather than sampling once', async () => {

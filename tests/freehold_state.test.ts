@@ -672,9 +672,13 @@ describe('persistedFreeholdBytes measures the saved text in UTF-8 bytes', () => 
     // \\uD83C escape, so the saved text never carries one and both measures see
     // the same ASCII. The measure still has to agree on it.
     const lone = loadedState(norm(corrupt({ layout: [layoutRow({ itemId: 'a\ud83c' })] })));
-    expect(persistedFreeholdBytes(lone)).toBe(
-      new TextEncoder().encode(JSON.stringify(lone)).length,
-    );
+    const canonical = JSON.stringify(lone);
+    // Both halves pinned to a LITERAL as well as to each other, because the
+    // measure is now an encode and comparing an encode against an encode is a
+    // self-comparison that would survive any change to what is measured.
+    expect(canonical).toContain('a\\ud83c');
+    expect(persistedFreeholdBytes(lone)).toBe(new TextEncoder().encode(canonical).length);
+    expect(persistedFreeholdBytes(lone)).toBe(canonical.length);
   });
 });
 

@@ -36,7 +36,7 @@ import { type ClientSession, GameServer } from '../server/game';
 import { groundHeight } from '../src/sim/world';
 import { broadcast, type FakeClient, fakeWs, joinServer, lastSnap } from './helpers/bare_client';
 
-// Mirrors MARKET_WIRE_HZ = 4 / MARKET_BROWSE_REFRESH_TICKS in server/game.ts.
+// Mirrors MARKET_WIRE_HZ = 4 / MARKET_BROWSE_REFRESH_TICKS in server/wire_cadence.ts.
 const MARKET_WIRE_INTERVAL_TICKS = 5;
 const MARKET_BROWSE_REFRESH_TICKS = 40;
 

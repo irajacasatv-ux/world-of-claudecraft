@@ -550,6 +550,25 @@ export interface GameStateSource {
  * methods never throw: a metric write must never break the path it measures, so
  * each increment is guarded exactly like the attack-signal sink.
  */
+/**
+ * ONE housing read per scrape, shared by the three families that need it.
+ * `freeholdPersist()` walks every entry and allocates a stats object with a
+ * copy of the by-kind tally, and prom-client calls each family's collect()
+ * separately, so the unmemoized form did that three times per `/metrics` hit
+ * (measured about 0.3 ms at five thousand entries). The memo is cleared on a
+ * microtask: every collect() in one pass is synchronous, so the window is
+ * exactly one scrape and no value can go stale between scrapes.
+ */
+let housingScrape: FreeholdPersistStats | null = null;
+function housingStats(source: GameStateSource): FreeholdPersistStats {
+  if (housingScrape) return housingScrape;
+  housingScrape = source.freeholdPersist();
+  queueMicrotask(() => {
+    housingScrape = null;
+  });
+  return housingScrape;
+}
+
 export function registerGameStateMetrics(
   registry: Registry,
   source: GameStateSource,
@@ -670,7 +689,7 @@ export function registerGameStateMetrics(
     labelNames: ['measure'],
     registers: [registry],
     collect() {
-      const state = source.freeholdPersist();
+      const state = housingStats(source);
       this.set({ measure: 'entries' }, state.entries);
       this.set({ measure: 'dirty' }, state.dirty);
       this.set({ measure: 'running' }, state.running);
@@ -679,6 +698,8 @@ export function registerGameStateMetrics(
       // is "the durable revision moved under this realm", which is the one
       // condition the compare-and-swap fence exists to detect and the strongest
       // available signal that a second process is writing these rows.
+      // Counted INDEPENDENTLY over the same entries, so an entry that is both
+      // appears in both and the two must not be summed on a panel.
       this.set({ measure: 'held' }, state.held);
       this.set({ measure: 'quiesced' }, state.quiesced);
       this.set({ measure: 'oldest_dirty_age_ms' }, state.oldestDirtyAgeMs);
@@ -690,6 +711,10 @@ export function registerGameStateMetrics(
       // unobservable set makes that claim unfalsifiable in production.
       this.set({ measure: 'active_writes' }, state.activeWrites);
       this.set({ measure: 'deferred_writes' }, state.deferredWrites);
+      // Each capture is a SECOND full record retained until its write lands, so
+      // a retention that would otherwise only appear in a heap dump is a series
+      // an operator can watch.
+      this.set({ measure: 'leave_captures' }, state.leaveCaptures);
     },
   });
 
@@ -700,7 +725,7 @@ export function registerGameStateMetrics(
     registers: [registry],
     collect() {
       this.reset();
-      const state = source.freeholdPersist();
+      const state = housingStats(source);
       this.inc({ measure: 'loads' }, state.loads);
       this.inc({ measure: 'load_failures' }, state.loadFailures);
       this.inc({ measure: 'writes' }, state.writes);
@@ -731,7 +756,7 @@ export function registerGameStateMetrics(
     registers: [registry],
     collect() {
       this.reset();
-      const byKind = source.freeholdPersist().loadFailuresByKind;
+      const byKind = housingStats(source).loadFailuresByKind;
       for (const [kind, count] of Object.entries(byKind)) this.inc({ kind }, count);
     },
   });

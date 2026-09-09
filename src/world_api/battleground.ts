@@ -138,7 +138,7 @@ export interface BgInfo {
   // at BG_LADDER_SIZE. Rides INSIDE this key rather than a facet member of its
   // own, exactly as the arena ships its live ladders inside `arenaInfo`: the
   // ClientWorld mirror is then free (the whole key is assigned from the wire).
-  // Cadence: the `bg` key refreshes at BG_WIRE_HZ (server/game.ts) plus the
+  // Cadence: the `bg` key refreshes at BG_WIRE_HZ (server/wire_cadence.ts) plus the
   // BG_WIRE_RESET_EVENTS that force a send. A ladder row only ever MOVES at
   // endBgMatch, and `bgEnd` is one of those reset events, so the ten fighters
   // whose ratings just changed see the new order on the very next snapshot;

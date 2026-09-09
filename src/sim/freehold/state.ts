@@ -162,6 +162,37 @@ export function ensureFreeholdRecord(ctx: SimContext, ownerKey: string): Freehol
  *  when the owner holds no record or the tier is not an authored row of the
  *  content tier table (so `lodge` and later stay refused until their rooms
  *  land). Bumps the record revision; never touches layout or trophies. */
+/**
+ * Give a live record the durable identity its row already carries.
+ *
+ * The record a fresh join seeds carries PENDING_FREEHOLD_PLOT_ID, because the
+ * sim has no way to know what a row it has never read is called. Once the
+ * durable side DOES know, the live record has to be told, or the two disagree
+ * for the rest of the session: the row says `plot:9f3a1c` and the record says
+ * `plot:unassigned`, and nothing downstream can tell a record that came from a
+ * row from one that was seeded a moment ago.
+ *
+ * It does NOT bump the revision, and must not. The plot id is presentation-only
+ * (see FreeholdPlotId): no sim rule branches on it, so changing it changes no
+ * behaviour, and bumping the revision here would make the durable sweep see
+ * movement it caused itself and write again on every pass.
+ *
+ * Refuses to REPLACE a real identity: only the pending placeholder is
+ * overwritten. A record whose id is already durable is one this function has
+ * nothing to teach.
+ */
+export function stampFreeholdPlotId(
+  ctx: SimContext,
+  ownerKey: string,
+  plotId: FreeholdPlotId,
+): boolean {
+  const state = ctx.freeholds.get(ownerKey);
+  if (!state || state.plotId !== PENDING_FREEHOLD_PLOT_ID) return false;
+  if (plotId === PENDING_FREEHOLD_PLOT_ID) return false;
+  state.plotId = plotId;
+  return true;
+}
+
 export function setFreeholdTier(ctx: SimContext, ownerKey: string, tier: FreeholdTier): boolean {
   const state = ctx.freeholds.get(ownerKey);
   if (!state || freeholdTierById(tier) === undefined) return false;
