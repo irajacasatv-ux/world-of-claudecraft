@@ -72,7 +72,7 @@ A server is CAPABLE when all of the following hold.
    (one record, or null). The existing character-state projector reads only
    `characters.state` and cannot reach a normalized table; it must not be asked to.
 4. It honors the account Hearth authority through `loadFreeholdHearth` and
-   `advanceFreeholdHearthOnClient`. The private `fhold/myFreehold.hearthKeyReadyAtMs`
+   `advanceFreeholdHearthOnClient`. The PLANNED private `fhold/myFreehold.hearthKeyReadyAtMs`
    and `hearthKeyRevision` values are committed UI mirrors. A mirror never authorizes.
    MARKER, so a reader does not mistake this for a shipped path: only
    `loadFreeholdHearth` has a production caller in this release. The advance is
@@ -84,7 +84,8 @@ A server is CAPABLE when all of the following hold.
 5. It registers the store with `registerFreeholdPersistStore` and drains it with
    `freeholdPersistIdle` in the shutdown closure, in the slot section 8 fixes.
 6. It treats both tables as keep-forever. Neither appears in
-   [../../server/retention_sweep.ts](../../server/retention_sweep.ts); the plot table
+   [../../server/retention_sweep.ts](../../server/retention_sweep.ts), whose swept-table
+   list is declared in [../../server/main.ts](../../server/main.ts); the plot table
    is bounded plots per account and the reverse foreign-key account cascade is its only
    removal path. The obligation is a keep-forever comment at the DDL plus an absence
    assertion in
@@ -151,11 +152,14 @@ must never do.
 | pre-07 | An account with no row in either table, the shape an old release leaves behind | `freeholdForAccount` answers `{ kind: 'absent' }` and `loadFreeholdHearth` answers `{ kind: 'absent' }`, which reads as `ABSENT_FREEHOLD_HEARTH` (ready, revision `0`). The account keeps its in-memory tier-0 Inn Room record, and the first durable write is insert-only (`FreeholdUpsert.expectedDurableRev` null) | Create a second default record, mint a `plot_id` for an account that has never written, report absence as a repair, or write anything at all on a read |
 | future | A row whose `schema_version` exceeds `FREEHOLD_PERSIST_VERSION`, or one whose `tier` or `visit_policy` is outside the accepted vocabulary, or one carrying a `plot_index` above `FREEHOLD_PRIMARY_PLOT_INDEX` while only the primary index is admitted | The two causes answer DIFFERENTLY, and the difference is which layer saw the row. A forward version, tier or visit policy reaches `normalizeFreehold`, which answers `{ kind: 'unsupported' }` with the reason `version`, `tier` or `visit_policy`; the SQL reader never inspects those columns. Only the stranded `plot_index` is `{ kind: 'unadmitted' }`, because the slot is the one thing the reader itself admits. The store turns either into a `FreeholdRecoveryHold`, and `installLoadedFreehold` installs the hold in place of a state, so the record is read-only | Rewrite, downgrade, drop, normalize or re-encode the row; let an autosave overwrite it; reinterpret an unsupported shape as absence; or treat an unknown stored identifier as invalid input to be filtered away |
 | populated | A legal current row at the measured maximum: `FREEHOLD_MAX_LAYOUT_ROWS` layout rows and `FREEHOLD_MAX_TROPHY_ROWS` trophies, with identifiers at `FREEHOLD_MAX_ID_LENGTH` and a `plot_id` at `FREEHOLD_PLOT_ID_MAX_LEN` matching `FREEHOLD_PLOT_ID_RE` | Loads unchanged and round-trips through `persistedFreeholdFromState` and `freeholdStateFromPersisted` without loss. Repairs are confined to the scalar set `FreeholdRepairedField` (`condition`, `rev`, `version`) and are reported in `FreeholdLoadResult.repaired` | Truncate, reorder or de-duplicate rows to make the maximum fit; repair a field it did not actually change; or let one scalar repair disturb any unrelated field |
-| oversized | A row whose measured bytes exceed `FREEHOLD_MAX_STORED_BYTES` in the reader, or `FREEHOLD_MAX_OWNED_BYTES` in the sim | `freeholdForAccount` answers `{ kind: 'oversize', bytes, limit }` and `normalizeFreehold` refuses the same way. The two refuse at DIFFERENT depths, stated plainly rather than claimed alike: the reader refuses before the content columns cross the wire, so nothing is parsed at all, while the sim's ceiling is measured on the canonical JSON of an already-built candidate, which means the row counts are checked before any allocation but the byte check itself follows the build. The row counts are what bound that build, and they are checked first. The store installs a hold and the operator sees only a bounded, redacted diagnostic | Parse or allocate the oversized content in order to decide; write a truncated replacement; clear the row; or require the bounded diagnostic to carry the oversized original |
+| oversized | A row past `FREEHOLD_STORED_DETOAST_GATE_BYTES` on disk, or whose measured bytes exceed `FREEHOLD_MAX_STORED_BYTES` in the reader, or `FREEHOLD_MAX_OWNED_BYTES` in the sim | `freeholdForAccount` answers `{ kind: 'oversize', bytes, limit }` and `normalizeFreehold` refuses the same way. The two refuse at DIFFERENT depths, stated plainly rather than claimed alike: the reader refuses before the content columns cross the wire, so nothing is parsed at all, while the sim's ceiling is measured on the canonical JSON of an already-built candidate, which means the row counts are checked before any allocation but the byte check itself follows the build. The row counts are what bound that build, and they are checked first. The store installs a hold and the operator sees only a bounded, redacted diagnostic | Parse or allocate the oversized content in order to decide; write a truncated replacement; clear the row; or require the bounded diagnostic to carry the oversized original |
 
-Two rules cut across all four. Every operator diagnostic goes through
-`freeholdLoadDiagnostic`, which carries a kind and a bounded detail and no player
-data, and no caller builds a detail of its own. And a hold is a REFUSAL TO WRITE,
+Two rules cut across all four. Every diagnostic derived from ROW CONTENT goes
+through `freeholdLoadDiagnostic`, which carries a kind and a bounded detail and no
+player data. The save path's own refusals and the store's operational lines are
+built where they are raised, from this codebase's own literals rather than from a
+row, and a database error reaches a log through a wrapper that keeps only its
+code, its constraint and its message. And a hold is a REFUSAL TO WRITE,
 never a refusal to serve: the account keeps playing, and only its housing writes
 quiesce.
 
@@ -288,9 +292,10 @@ because the codec refuses a number whose JSON text carries an exponent; without 
 an all-exponential record would pass the canonical ceiling and store at nearly six times
 its size.
 
-Enforcement is TWO-LAYER, and each layer bounds what it can actually see. SQL applies
-`FREEHOLD_MAX_STORED_BYTES` through an `octet_length` bound that nulls the content columns
-before any deep parse can reach them. The sim applies `FREEHOLD_MAX_OWNED_BYTES` through
+Enforcement is THREE-STAGE, and each stage bounds what it can actually see. SQL applies a
+cheap ON-DISK pre-gate first (`FREEHOLD_STORED_DETOAST_GATE_BYTES`, read from the TOAST
+pointer header without detoasting), then `FREEHOLD_MAX_STORED_BYTES` through an
+`octet_length` bound that nulls the content columns before any deep parse can reach them. The sim applies `FREEHOLD_MAX_OWNED_BYTES` through
 `persistedFreeholdBytes`, on load and, through `freeholdWriteRefusal`, before every save:
 a document past any load ceiling is never written, so a row this realm produces is always
 a row this realm can read back. The executed proof of the pair is the maximal-record round

@@ -111,8 +111,9 @@ Command outcomes, all executed in this worktree:
   private schema dropped afterwards: **2 files, 29 tests passed**, confirmed EXECUTED
   rather than skipped (the same command with `TEST_DATABASE_URL` unset skips all of
   them, which is how the arming was proved).
-- Monolith ratchet: `server/game.ts` 9,920 and `server/db.ts` 4,605, both under their
-  ceilings, paid for by three behaviour-preserving extractions rather than by a raise.
+- Monolith ratchet: `server/game.ts` 9,920 and `server/db.ts` 4,605, both sitting EXACTLY AT
+  their ceilings with zero slack, paid for by three behaviour-preserving extractions and
+  then lowered to the measured counts rather than banked as headroom.
   `server/wire_cadence.ts` was verified a MOVE by diffing it against
   `git show b2aeb46da2:server/game.ts`.
 

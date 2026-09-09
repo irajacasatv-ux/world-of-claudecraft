@@ -103,7 +103,10 @@ export const FREEHOLD_MAX_ID_LENGTH = 64;
  *    plinth, 3 for a condition inside 0..100, 16 for a revision).
  *  - measured canonical JSON: 101,139 bytes.
  *  - rounded UP to the next whole 1024: 101,376 (99 KiB), which leaves 237
- *    bytes of slack, less than the 232 one worst-case layout row costs.
+ *    bytes of slack. That is MORE than the 232 one worst-case layout row
+ *    costs, which is why the ordering fixtures go two rows over rather than
+ *    one: a one-over record still fits under the byte bound and would make the
+ *    "rows are checked before bytes" claim vacuous.
  * The rounding is the only slack; the maximal fixture proves the ceiling
  * admits it and the one-over fixture proves the next row does not.
  *
@@ -138,9 +141,10 @@ export const FREEHOLD_MAX_OWNED_BYTES = 101_376;
  *  - rounded UP to the next whole 1024: 106,496 (104 KiB).
  *
  * The `numeric` half is the reason the codec rule below refuses a number whose
- * JSON text carries an exponent: 5e-324 is fourteen bytes of JSON and three
- * hundred and thirty five bytes stored, so an all-exponential record passes the
- * canonical ceiling and stores at nearly six times its size. Refusing the
+ * JSON text carries an exponent: 5e-324 is SIX bytes of JSON and three hundred
+ * and twenty six bytes stored, a factor of fifty-four on one value, so an
+ * all-exponential record passes the canonical ceiling and stores at many times
+ * its size. Refusing the
  * exponent at the codec keeps this constant a fixed 5.1 percent above its
  * sibling instead of an unbounded multiple of it.
  *
@@ -151,12 +155,12 @@ export const FREEHOLD_MAX_OWNED_BYTES = 101_376;
  *
  * THE MARGIN IS GENERAL, NOT FIXTURE-SPECIFIC, which is what makes the property
  * true for every record rather than for the one this file measures. The minimal
- * canonical wrapper around the two content arrays is 96 bytes, so any admitted
- * record's content columns are at most 101,376 - 96 = 101,280 bytes of
+ * canonical wrapper around the two content arrays is 100 bytes, so any admitted
+ * record's content columns are at most 101,376 - 100 = 101,276 bytes of
  * canonical JSON; the largest separator expansion jsonb can add is fixed by the
  * row ceilings at 420 * 11 + 419 + 32 * 3 + 31 = 5,166 bytes; and
- * 101,280 + 5,166 = 106,446, which is 50 bytes under this constant. That
- * fifty-byte margin is thin enough that a new field on the wrapper would eat
+ * 101,276 + 5,166 = 106,442, which is 54 bytes under this constant. That
+ * margin is thin enough that a new field on the wrapper would eat
  * it, so the arithmetic is pinned in tests/freehold_state.test.ts rather than
  * left as a comment.
  */

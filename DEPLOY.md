@@ -775,10 +775,13 @@ For off-box safety, sync the directory to S3 occasionally:
   the UI ships, a realm that forgot `FREEHOLDS_ENABLED`. It is label-free, and
   it under-counts jailed sessions (the jail check answers first).
 - The housing persistence store publishes three families, split by what an alert
-  rule needs. `woc_freehold_persist` is a GAUGE of occupancy: `entries`, `dirty`,
-  `running`, `pending`, `held`, `quiesced`, `oldest_dirty_age_ms` and
-  `max_write_bytes`, plus `active_writes` and `deferred_writes` for the store's
-  own write admission cap. `woc_freehold_persist_total` is a COUNTER of
+  rule needs. `woc_freehold_persist` is a GAUGE of occupancy: `entries` (every entry,
+  including the reference-only one a join creates before any read) and `loaded`
+  (those that finished a durable read, and so the only ones that can write, zero
+  on a dark realm), then `dirty`, `running`, `pending`, `held`, `quiesced`,
+  `oldest_dirty_age_ms`, `max_write_bytes`, `leave_captures` (documents held for
+  a leaving session until its write lands), and `active_writes` with
+  `deferred_writes` for the store's own write admission cap. `woc_freehold_persist_total` is a COUNTER of
   cumulative work: loads, writes, their failures, stale compare-and-swap
   refusals, the permit and queue waits, the statement durations those waits
   exclude, total bytes written, `pre_gate_refusals` (rows refused on their
@@ -792,8 +795,9 @@ For off-box safety, sync the directory to S3 occasionally:
   should be impossible and on a multi-realm one means two processes are writing
   the same rows. A rising `held` means accounts whose rows this build cannot
   read, which is the recovery contract's case. A growing `oldest_dirty_age_ms`
-  means edits are not reaching disk. All three are counts and milliseconds only:
-  no account id, owner key or plot id reaches any series.
+  means edits are not reaching disk. Every measure on all three families is a
+  count, a byte total or a millisecond total: no account id, owner key or plot
+  id reaches any series.
 - `FREEHOLDS_ENABLED` defaults off, is read live as the strict '1', and
   production never enables it before the release gates in
   docs/freeholds/state.md "Tracked release and handoff gates" are signed

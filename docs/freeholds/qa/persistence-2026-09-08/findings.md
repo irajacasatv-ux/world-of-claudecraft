@@ -11,7 +11,8 @@ and is corrected here rather than quietly amended.
 
 Nine reviewers were dispatched and nine reported: migration-safety, database-performance,
 privacy-security, server-hot-path, architecture, cross-platform-sync, test-coverage,
-frontend-seam and qa-checklist. Their reports are the sibling files in this directory.
+frontend-seam and qa-checklist. EIGHT of them left a report file in this directory; the
+qa-checklist gate reported inline across two chunks and has no file.
 A SECOND, FRESH review lane then read the fix round itself, because a fix round is
 unreviewed code; its findings are folded in below rather than kept apart.
 
@@ -228,8 +229,9 @@ worse than the one it closed. That is the reason the rule exists.
   next save and every later edit of that first session was dropped with a misleading
   "the live record is not the record this entry loaded". Found by the implementer and
   confirmed independently by a reviewer reproducing it against the same commit.
-  FIXED in 2f298c24a1 by the correction both arrived at: the entry records the document
-  as ACTUALLY WRITTEN, and a new sanctioned sim writer `stampFreeholdPlotId` teaches the
+  FIXED across 23ffc92983 (the identity seal) and 2f298c24a1 (the sim-side stamp and its
+  tests) by the correction both arrived at: the entry records the document as ACTUALLY
+  WRITTEN, and a new sanctioned sim writer `stampFreeholdPlotId` teaches the
   live record the same identity, so the row, the entry and the record agree from the
   first insert. The seal's standalone stand-in clause is gone.
 - Y2 SHOULD-FIX (hot path). The shutdown drain's deadline had never been derived against
@@ -281,7 +283,10 @@ was reviewed on that assumption. It had.
 - Z2 SHOULD-FIX (correctness, claim scope). "A live record always wins" was not the
   right rule: a rejoin inside the deferral window reinstalls the entry's last COMMITTED
   state, which is the pre-leave revision, so the leaving session's edits were silently
-  rolled back to it. FIXED: the newer document wins, with the live record winning ties,
+  rolled back to it. FIXED AT THE TIME by a revision comparison, which W1 below then showed
+  to be wrong and replaced; the rule now is that the live record wins whenever there is one
+  and the leaver's edits are preserved by handing the capture to the rejoin. Historical:
+  the newer document wins, with the live record winning ties,
   which keeps the original guarantee that a capture cannot shadow a later edit. The
   first test written for this was NOT decisive (the write sampled before the rejoin);
   it was rebuilt around a held permit and then killed the mutant.

@@ -87,7 +87,8 @@ carries an opaque plot id only.
   a login alone never creates an entry). Harmless while
   the clock is inert (nothing writes the durable row in this release), but the
   release that lights the realm participant owes the eviction, and the source
-  scan above forbids a `.delete(` outside this directory, so the fix belongs
+  scan in `tests/freehold_module.test.ts` forbids a `.delete(` outside this
+  directory, so the fix belongs
   here beside the two writers.
   The realm's `freeholdKeyAdmission` participant refuses until 07a supplies
   durable account authority; an isolated ready value never authorizes it.
@@ -123,8 +124,11 @@ carries an opaque plot id only.
   alike) and writes through the one tier writer. `dev_commands.ts` keeps only
   the thin chat arm and its `[dev]` dev-channel text.
 - THE ONE-WRITER RULES: `state.ts` is the only file that writes
-  `ctx.freeholds` (`loadFreehold`, `ensureFreeholdRecord`, `evictFreehold` and
-  the join/leave hooks over them) or a record's `tier` (`setFreeholdTier`,
+  `ctx.freeholds` (`loadFreehold`, `ensureFreeholdRecord`, `evictFreehold`, the
+  join/leave hooks over them, and `stampFreeholdPlotId`, which teaches a seeded
+  record the durable identity its row already carries and moves NO revision
+  because the plot id is presentation-only) or a record's `tier`
+  (`setFreeholdTier`,
   pinned by a source scan in `tests/freehold_dev_grant.test.ts`), and
   `applyFreeholdOwnerStamp` there is the only writer of the host owner stamp
   on `PlayerMeta` (called once, from `addPlayer`, through
@@ -177,7 +181,8 @@ carries an opaque plot id only.
   persistence slice: `server/freehold_persist.ts` retains on the join path and
   releases on leave, and `releaseFreeholdOnLeave` evicts at the last
   same-key session out. The table itself is KEEP-FOREVER and deliberately
-  absent from `server/retention_sweep.ts`: it is bounded at a small number of
+  absent from the swept-table list `server/main.ts` hands
+  `server/retention_sweep.ts`: it is bounded at a small number of
   plots per account and never grows per event, session or day, so the reverse
   foreign-key account cascade is its only removal path. That absence is pinned
   in `tests/server/main_retention_wiring.test.ts`, beside the same decision for
@@ -205,8 +210,12 @@ carries an opaque plot id only.
   ceiling before the result is returned, and every ceiling is content-derived
   and recorded in `docs/freeholds/content-numbers-workbook.md` section H.
 - `load_report.ts` is the bounded diagnostic leaf beside it, the
-  `professions/farm_load_report.ts` shape: one dev-channel English line per
-  load, carrying COUNTS AND CLASSIFICATION ONLY. It must never carry an owner
+  `professions/farm_load_report.ts` shape. It owns NO log call of its own: it
+  returns a bounded diagnostic or null, and `server/freehold_persist.ts` is its
+  one caller, putting the line on its own warn port so the store stays
+  driveable from a Vitest. An absent row and a clean load both answer null, so
+  an ordinary boot says nothing. What it does carry is COUNTS AND
+  CLASSIFICATION ONLY. It must never carry an owner
   key, an account id, a plot id or an item id, and must never echo a corrupt
   string back: an over-long identifier echoed into a log is the same unbounded
   bytes problem wearing a log costume.
@@ -287,5 +296,8 @@ carries an opaque plot id only.
   `tests/freehold_offline_default.test.ts` (the default record, the dark host,
   the save, the paired evict), `tests/freehold_dev_grant.test.ts` (the
   permission matrix, the chat arm, the one tier writer), the `freehold_claim`
-  parity scenario, and `tests/sim_context.test.ts` (the `freeholds` live view
-  and the `freeholdsEnabled` / `freeholdDevGrantEnabled` read-throughs).
+  parity scenario, `tests/freehold_state.test.ts` (the durable record: the
+  five load arms, the two measured byte ceilings and their fixtures, the
+  save-path refusal and the writable-implies-readable property), and
+  `tests/sim_context.test.ts` (the `freeholds` live view and the
+  `freeholdsEnabled` / `freeholdDevGrantEnabled` read-throughs).
