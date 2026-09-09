@@ -306,6 +306,12 @@ interface FreeholdPersistEntry {
    *  so it is its own flag with the same write-blocking force. */
   quiesced: boolean;
   quiesceWarned: boolean;
+  /** The durable Hearth clock this entry read, remembered so the REPLAY arms of
+   *  preload report the clock they learned rather than a cold one. A second
+   *  character of the same account, or a rejoin after the sim evicted the live
+   *  record, takes those arms and issues no read of its own. */
+  hearthReadyAtMs: number;
+  hearthRevision: string;
   /** Thrown writes since the last commit. A single throw is usually a blip
    *  worth one more sweep; a run of them is a row this realm cannot write, and
    *  retrying it every sweep forever is a loop against the pool. */
@@ -435,6 +441,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       hold: null,
       quiesced: false,
       quiesceWarned: false,
+      hearthReadyAtMs: 0,
+      hearthRevision: ABSENT_HEARTH_REVISION,
       writeErrors: 0,
       refs: 0,
       dirtyGeneration: 0,
@@ -500,8 +508,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       plotId: entry.plotId,
       durableRev: entry.durableRev,
       state,
-      hearthReadyAtMs: 0,
-      hearthRevision: ABSENT_HEARTH_REVISION,
+      // The clock this entry LEARNED, never a hard-coded cold one. These are
+      // the replay arms: they issue no read, so reporting 0 here would tell a
+      // second character of the same account that the shared Hearth cooldown is
+      // ready when the read that took it said otherwise.
+      hearthReadyAtMs: entry.hearthReadyAtMs,
+      hearthRevision: entry.hearthRevision,
       hold: entry.hold,
     };
   }
@@ -604,6 +616,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     const rowLoad = await ports.readRow(accountId, FREEHOLD_MAX_STORED_BYTES);
     const hearth = await readHearth(accountId);
     const entry = ensureEntry(ownerKey, accountId);
+    // Remembered on the entry, not only returned: every later replay of this
+    // entry has to answer with the same clock, and none of them reads again.
+    entry.hearthReadyAtMs = hearth.readyAtMs;
+    entry.hearthRevision = hearth.revision;
 
     if (rowLoad.kind === 'absent') {
       // No durable row: the sim's default record IS the truth, and this store
@@ -1046,6 +1062,13 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   return {
     preload,
 
+    // markDirty and save are the store's EXPLICIT dirty seam and have no
+    // production caller in this release. The revision sweep below is the only
+    // detector that runs, which is safe exactly because every sanctioned
+    // mutator of a FreeholdState bumps its revision, and that coupling is
+    // pinned by a source scan in tests/freehold_module.test.ts rather than left
+    // to a future author to remember. The furnishing placement writer is the
+    // caller these are here for; until it lands they are driven only by tests.
     markDirty(ownerKey: string): void {
       const entry = entries.get(ownerKey);
       // Nothing is loaded for this owner, so there is nothing to persist and

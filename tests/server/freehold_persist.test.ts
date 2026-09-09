@@ -399,6 +399,43 @@ describe('preload admission', () => {
     expect(again.durableRev).toBe('7');
   });
 
+  it('replays the HEARTH CLOCK it learned, never a cold one', async () => {
+    // The replay arms issue no read of their own, so a hard-coded zero here
+    // would tell a second character of the same account that the shared travel
+    // cooldown is ready when the read that took it said otherwise. The clock is
+    // account-wide precisely so a second character cannot double the budget.
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      hearthLoad: { kind: 'state', state: { readyAtMs: 1_700_000_000_000, revision: '4' } },
+    });
+    h.store.retain(OWNER_KEY);
+    const first = await h.store.preload(ACCOUNT_ID);
+    expect(first.hearthReadyAtMs).toBe(1_700_000_000_000);
+
+    const rejoin = await h.store.preload(ACCOUNT_ID);
+    expect(h.calls.filter((call) => call === 'readHearth')).toHaveLength(1);
+    expect(rejoin.hearthReadyAtMs).toBe(1_700_000_000_000);
+    expect(rejoin.hearthRevision).toBe('4');
+  });
+
+  it('replays the hearth clock on the already-live arm too', async () => {
+    let liveNow = false;
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      hearthLoad: { kind: 'state', state: { readyAtMs: 1_700_000_000_000, revision: '4' } },
+      hasLive: () => liveNow,
+    });
+    h.store.retain(OWNER_KEY);
+    await h.store.preload(ACCOUNT_ID);
+    liveNow = true;
+    const second = await h.store.preload(ACCOUNT_ID);
+    // No state, because the live record is the truth; but the clock is a
+    // separate durable fact and this arm must not report it cold.
+    expect(second.state).toBeNull();
+    expect(second.hearthReadyAtMs).toBe(1_700_000_000_000);
+    expect(second.hearthRevision).toBe('4');
+  });
+
   it('refuses rather than falls through when the permit is refused', async () => {
     const h = harness({ acquirePermit: async () => null });
     const loaded = await h.store.preload(ACCOUNT_ID);
