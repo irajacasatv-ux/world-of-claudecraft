@@ -284,7 +284,14 @@ export interface FreeholdPersistPorts {
  *  read by an operator dashboard and a metrics endpoint that are not entitled
  *  to player identity. */
 export interface FreeholdPersistStats {
+  /** EVERY entry the store holds, including the reference-only placeholders a
+   *  join creates before any read. On a dark realm that is one per online
+   *  account and nothing else, so this measure alone must never be read as
+   *  "records this realm is persisting": `loaded` is that number. */
   readonly entries: number;
+  /** Entries that have finished a durable read, and so the only ones that can
+   *  write. Zero on a dark realm however many entries exist. */
+  readonly loaded: number;
   readonly dirty: number;
   readonly running: number;
   readonly pending: number;
@@ -1524,6 +1531,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       let pending = 0;
       let held = 0;
       let quiesced = 0;
+      let loaded = 0;
       let oldestDirtyAtMs = 0;
       for (const entry of entries.values()) {
         if (isDirty(entry)) dirty++;
@@ -1531,6 +1539,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         if (entry.pending) pending++;
         if (entry.hold !== null) held++;
         if (entry.quiesced) quiesced++;
+        if (entry.loaded) loaded++;
         if (
           entry.dirtySinceMs > 0 &&
           (oldestDirtyAtMs === 0 || entry.dirtySinceMs < oldestDirtyAtMs)
@@ -1540,6 +1549,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       }
       return {
         entries: entries.size,
+        loaded,
         dirty,
         running,
         pending,
@@ -1626,6 +1636,7 @@ export function freeholdPersistStats(): FreeholdPersistStats {
   return (
     registered?.stats() ?? {
       entries: 0,
+      loaded: 0,
       dirty: 0,
       running: 0,
       pending: 0,

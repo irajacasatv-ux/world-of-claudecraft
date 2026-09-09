@@ -685,12 +685,13 @@ export function registerGameStateMetrics(
 
   new Gauge({
     name: WOC_FREEHOLD_PERSIST,
-    help: 'Housing persistence store OCCUPANCY by fixed measure: loaded entries, dirty and in-flight work, recovery holds, compare-and-swap quiesces, the age of the oldest unwritten edit and the largest write seen. Counts and bytes only, never player identity. Cumulative totals are on woc_freehold_persist_total.',
+    help: 'Housing persistence store OCCUPANCY by fixed measure. `entries` counts EVERY entry including the reference-only placeholder a join creates before any read, so on a realm with housing disabled it tracks online accounts and nothing else; `loaded` is the number that have finished a durable read and can therefore write, and is zero on such a realm. Then dirty and in-flight work, recovery holds, compare-and-swap quiesces (counted independently of holds, so the two must not be summed), the age of the oldest unwritten edit, outstanding leave captures and the largest write seen. Counts and bytes only, never player identity. Cumulative totals are on woc_freehold_persist_total.',
     labelNames: ['measure'],
     registers: [registry],
     collect() {
       const state = housingStats(source);
       this.set({ measure: 'entries' }, state.entries);
+      this.set({ measure: 'loaded' }, state.loaded);
       this.set({ measure: 'dirty' }, state.dirty);
       this.set({ measure: 'running' }, state.running);
       this.set({ measure: 'pending' }, state.pending);

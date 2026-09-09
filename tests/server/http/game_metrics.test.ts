@@ -2038,6 +2038,7 @@ describe('the housing persistence families', () => {
   // measures share a value, so a swapped pair fails.
   const stats = {
     entries: 11,
+    loaded: 10,
     dirty: 12,
     running: 13,
     pending: 14,
@@ -2073,6 +2074,11 @@ describe('the housing persistence families', () => {
     const text = await registry.metrics();
     expect(text).toContain(`# TYPE ${WOC_FREEHOLD_PERSIST} gauge`);
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'entries')).toBe('11');
+    // Apart from `entries`, and never equal to it in the fixture: a dark realm
+    // holds one reference-only entry per online account and loads none of
+    // them, so a reader who takes `entries` for "records this realm persists"
+    // reads a climbing number on a realm that stores nothing.
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'loaded')).toBe('10');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'dirty')).toBe('12');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'running')).toBe('13');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'pending')).toBe('14');

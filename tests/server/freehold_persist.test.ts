@@ -2268,7 +2268,11 @@ describe('an entry that went missing under a live session is re-read, not left b
     expect(h.store.stats().loads).toBe(0);
     // The entry still exists and is still write-blocked, which is what a dark
     // realm's store costs: one map entry per online account, removed on leave.
+    // It is NOT loaded, and the two are separate measures precisely so an
+    // operator scraping a dark realm cannot read a climbing entry count as
+    // records this realm is persisting.
     expect(h.store.stats().entries).toBe(1);
+    expect(h.store.stats().loaded).toBe(0);
   });
 
   it('costs no extra read on an ordinary join, where the entry IS loaded', async () => {
