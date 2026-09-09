@@ -56,6 +56,9 @@ import {
   WOC_FISHING_EMPTY_HOOKS_TOTAL,
   WOC_FISHING_GOT_AWAYS_TOTAL,
   WOC_FISHING_KOI_TOTAL,
+  WOC_FREEHOLD_LOAD_FAILURES_TOTAL,
+  WOC_FREEHOLD_PERSIST,
+  WOC_FREEHOLD_PERSIST_TOTAL,
   WOC_FREEHOLD_REFUSED_TOTAL,
   WOC_GATHER_HARVESTS_TOTAL,
   WOC_GENERAL_CHAT_QUOTA_CACHE_ACCOUNTS,
@@ -2025,5 +2028,123 @@ describe('registerGameStateMetrics: Thornhollow Fields match outcomes', () => {
     expect(
       bgValue(text, WOC_BATTLEGROUND_DURATION_SECONDS_TOTAL, 'ending="caps",composition="solo"'),
     ).toBe('0');
+  });
+});
+
+describe('the housing persistence families', () => {
+  // EVERY MEASURE GETS A DISTINCT VALUE. The default stub answers with the
+  // empty-store fallback, where every number is zero, so a mapping test built
+  // on it would pass with the labels wired to each other's fields. Here no two
+  // measures share a value, so a swapped pair fails.
+  const stats = {
+    entries: 11,
+    dirty: 12,
+    running: 13,
+    pending: 14,
+    held: 15,
+    quiesced: 16,
+    loads: 21,
+    loadFailures: 22,
+    loadFailuresByKind: { oversize: 7, unadmitted: 15 },
+    writes: 23,
+    writeFailures: 24,
+    staleWrites: 25,
+    permitWaitMsTotal: 31,
+    queueWaitMsTotal: 32,
+    writeMsTotal: 33,
+    loadMsTotal: 34,
+    oldestDirtyAgeMs: 41,
+    writeBytesTotal: 51,
+    maxWriteBytes: 52,
+  };
+  const housingSource = (): GameStateSource => stubSource({ freeholdPersist: () => stats });
+
+  const labelled = (text: string, family: string, measure: string): string | undefined =>
+    sampleValue(text, new RegExp(`^${family}\\{measure="${measure}"\\} (\\d+)$`, 'm'));
+
+  it('publishes OCCUPANCY on a gauge, by measure', async () => {
+    const registry = new Registry();
+    registerGameStateMetrics(registry, housingSource());
+    const text = await registry.metrics();
+    expect(text).toContain(`# TYPE ${WOC_FREEHOLD_PERSIST} gauge`);
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'entries')).toBe('11');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'dirty')).toBe('12');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'running')).toBe('13');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'pending')).toBe('14');
+    // Held and quiesced are SEPARATE measures: a rising quiesce count means a
+    // writer this realm does not know about is touching these rows, which is
+    // the one condition the durable revision fence exists to detect.
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'held')).toBe('15');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'quiesced')).toBe('16');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'oldest_dirty_age_ms')).toBe('41');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'max_write_bytes')).toBe('52');
+    // No cumulative total rides the gauge: rate() over a gauge gets no
+    // counter-reset handling, so a realm restart would read as a rate artifact.
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'writes')).toBeUndefined();
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'last_write_bytes')).toBeUndefined();
+  });
+
+  it('publishes CUMULATIVE totals on a counter, by measure', async () => {
+    const registry = new Registry();
+    registerGameStateMetrics(registry, housingSource());
+    const text = await registry.metrics();
+    expect(text).toContain(`# TYPE ${WOC_FREEHOLD_PERSIST_TOTAL} counter`);
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'loads')).toBe('21');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'load_failures')).toBe('22');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'writes')).toBe('23');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'write_failures')).toBe('24');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'stale_writes')).toBe('25');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'permit_wait_ms')).toBe('31');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'queue_wait_ms')).toBe('32');
+    // The statement durations the two wait totals deliberately exclude.
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'write_ms')).toBe('33');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'load_ms')).toBe('34');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'write_bytes')).toBe('51');
+  });
+
+  it('splits load failures by hold kind, because the kind IS the response', async () => {
+    const registry = new Registry();
+    registerGameStateMetrics(registry, housingSource());
+    const text = await registry.metrics();
+    expect(text).toContain(`# TYPE ${WOC_FREEHOLD_LOAD_FAILURES_TOTAL} counter`);
+    expect(
+      sampleValue(
+        text,
+        new RegExp(`^${WOC_FREEHOLD_LOAD_FAILURES_TOTAL}\\{kind="oversize"\\} (\\d+)$`, 'm'),
+      ),
+    ).toBe('7');
+    expect(
+      sampleValue(
+        text,
+        new RegExp(`^${WOC_FREEHOLD_LOAD_FAILURES_TOTAL}\\{kind="unadmitted"\\} (\\d+)$`, 'm'),
+      ),
+    ).toBe('15');
+  });
+
+  it('re-reads the store at every scrape rather than sampling once', async () => {
+    // A collect() that captured its numbers at registration would freeze the
+    // whole family at boot, which is worse than not having it.
+    let entries = 1;
+    const registry = new Registry();
+    registerGameStateMetrics(
+      registry,
+      stubSource({ freeholdPersist: () => ({ ...stats, entries }) }),
+    );
+    expect(labelled(await registry.metrics(), WOC_FREEHOLD_PERSIST, 'entries')).toBe('1');
+    entries = 9;
+    expect(labelled(await registry.metrics(), WOC_FREEHOLD_PERSIST, 'entries')).toBe('9');
+  });
+
+  it('carries no owner key, account id or plot id on any housing series', async () => {
+    const registry = new Registry();
+    registerGameStateMetrics(registry, housingSource());
+    const housing = (await registry.metrics())
+      .split('\n')
+      .filter((line) => line.startsWith('woc_freehold'));
+    expect(housing.length).toBeGreaterThan(0);
+    for (const line of housing) {
+      expect(line).not.toContain('account:');
+      expect(line).not.toContain('plot:');
+    }
   });
 });

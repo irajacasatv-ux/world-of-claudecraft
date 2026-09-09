@@ -109,6 +109,8 @@ import {
 // construction). Provide a dummy URL so the dynamic imports below do not throw.
 process.env.DATABASE_URL ||= 'postgres://test:test@127.0.0.1:5433/wocc_phase1_test';
 
+import { stripComments } from '../helpers/strip_comments';
+
 const read = (rel: string): string => fs.readFileSync(path.resolve(process.cwd(), rel), 'utf8');
 const count = (haystack: string, needle: string): number => haystack.split(needle).length - 1;
 // A raw-source .toContain() is comment-gameable: commenting the pinned line out
@@ -1111,7 +1113,10 @@ describe('no consolidated tunable literal is duplicated at a call site', () => {
     // (a characters.state projector). Each table exports through its own
     // delegated loader, the accountAttributionForExport shape, and both are
     // keep-forever, which makes this export the only readback an owner has.
-    const exportBody = bodyOf(dbSrc, 'export async function exportAccountData');
+    // COMMENTS STRIPPED. A raw-source .toContain() is comment-gameable: a
+    // commented-out loader leaves its own text sitting in the comment, so the
+    // pin stays green while the owner's only readback of their house is dead.
+    const exportBody = stripComments(bodyOf(dbSrc, 'export async function exportAccountData'));
     expect(exportBody).toContain('freeholdsForExport(pool, accountId)');
     expect(exportBody).toContain('freeholdHearthForExport(pool, accountId)');
     expect(exportBody).toContain('freeholds,');

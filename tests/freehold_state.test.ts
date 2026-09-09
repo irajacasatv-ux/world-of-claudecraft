@@ -1039,6 +1039,56 @@ describe('freeholdLoadDiagnostic carries counts and classification only', () => 
   });
 });
 
+describe('the two deliberate admissions the preservation rule buys', () => {
+  it('admits an EMPTY item id and an empty trophy id, preserving the rest of the record', () => {
+    // Deliberate, and stated in boundedId: an empty id is bounded and names
+    // nothing, and refusing it would put a whole owner's record into read-only
+    // recovery over a field that costs two bytes. Without this fixture the
+    // admission is indistinguishable from a refusal nobody wrote a test for.
+    const withEmptyItem = norm(corrupt({ layout: [layoutRow({ itemId: '' })] }));
+    const state = loadedState(withEmptyItem);
+    expect(state.layout).toHaveLength(1);
+    expect(state.layout[0].itemId).toBe('');
+    // The rest of the row is untouched: an admission is not a repair.
+    expect(state.layout[0].placementId).toBe(1);
+    expect(repairsOf(withEmptyItem)).toEqual([]);
+
+    const withEmptyTrophy = loadedState(norm(corrupt({ trophies: [trophyRow({ trophyId: '' })] })));
+    expect(withEmptyTrophy.trophies[0].trophyId).toBe('');
+  });
+
+  it('refuses the id ONE character past the ceiling, so the admission is not a missing check', () => {
+    // The contrast arm. Without it the case above would also pass on a loader
+    // that had no id bound at all.
+    const overLong = 'i'.repeat(FREEHOLD_MAX_ID_LENGTH + 1);
+    expect(norm(corrupt({ layout: [layoutRow({ itemId: overLong })] }))).toEqual({
+      kind: 'malformed',
+      detail: 'layout_row:0:item_id',
+    });
+  });
+
+  it('measures a record it cannot serialize as INFINITELY large, never as zero', () => {
+    // A record JSON cannot serialize is corrupt by definition on a jsonb row.
+    // Zero would make it the SMALLEST record there is, so it would sail under
+    // every byte ceiling and be written; infinity refuses it at each one.
+    // The fault has to sit inside a field the canonical serializer READS: a
+    // stray extra key is dropped by construction, so it would prove nothing.
+    // A layout array that contains itself is the smallest honest example.
+    const selfReferential: unknown[] = [];
+    selfReferential.push(selfReferential);
+    const broken = { ...loadedState(norm(row())), layout: selfReferential };
+    const bytes = persistedFreeholdBytes(broken as unknown as PersistedFreehold);
+    expect(bytes).toBe(Number.POSITIVE_INFINITY);
+    expect(bytes).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES);
+    // And the save-path refusal agrees, which is the consequence that matters.
+    expect(freeholdWriteRefusal(broken as unknown as PersistedFreehold)).toEqual({
+      kind: 'oversize',
+      bytes: Number.POSITIVE_INFINITY,
+      limit: FREEHOLD_MAX_OWNED_BYTES,
+    });
+  });
+});
+
 describe('a diagnostic names the fault and carries no player data', () => {
   // The bound is the ONLY thing between a corrupt row and a log line, so each
   // case drives a real refusal and then asserts on both halves: the fault is

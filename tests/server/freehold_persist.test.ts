@@ -128,6 +128,7 @@ interface HarnessOptions {
   writeRow?: (input: FreeholdUpsert) => Promise<FreeholdUpsertResult>;
   hasLive?: (ownerKey: string) => boolean;
   acquirePermit?: (signal: AbortSignal) => Promise<{ release(): void } | null>;
+  enqueue?: <T>(key: string, signal: AbortSignal, write: () => Promise<T>) => Promise<T>;
 }
 
 interface DeadlineJob {
@@ -208,6 +209,7 @@ function harness(options: HarnessOptions = {}) {
     },
     enqueue<T>(key: string, signal: AbortSignal, write: () => Promise<T>): Promise<T> {
       calls.push('enqueue');
+      if (options.enqueue) return options.enqueue(key, signal, write);
       return fifo.enqueueCancellable(key, signal, write);
     },
     nowMs(): number {
@@ -1439,6 +1441,92 @@ describe('a durable answer no repeat can fix stops the writes', () => {
     expect(again.state).toBeNull();
     // And no second read went out: the entry is still loaded, just untrusted.
     expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(0);
+  });
+});
+
+describe('the coalescer, the drain and the age report at their stated edges', () => {
+  it('treats a revision that went BACKWARDS as movement, not as clean', () => {
+    // Documented and load-bearing: a backwards revision is an older record
+    // reloaded into a live slot, and the row should follow the record this
+    // realm is actually serving. A `<=` comparison would call it clean and
+    // leave the row showing a house the player is no longer in.
+    return (async () => {
+      let rev = 8;
+      const h = await loadedStore({
+        rowLoad: { kind: 'row', row: rowFixture() },
+        normalized: { kind: 'loaded', state: persistedFixture({ rev: 8 }), repaired: [] },
+        serialize: () => persistedFixture({ rev }),
+        writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
+      });
+      h.store.saveAllDirty();
+      await tick(20);
+      expect(h.writeCount()).toBe(0);
+
+      rev = 7;
+      h.store.saveAllDirty();
+      await tick(30);
+      expect(h.writeCount()).toBe(1);
+      expect(h.writes[0].wireRev).toBe(7);
+    })();
+  });
+
+  it('reports the OLDEST dirty age, not the newest or the last one seen', () => {
+    return (async () => {
+      const h = await loadedStore();
+      h.store.retain(OTHER_OWNER_KEY);
+      await h.store.preload(OTHER_ACCOUNT_ID);
+
+      h.setNow(20_000);
+      h.store.markDirty(OWNER_KEY);
+      h.setNow(26_000);
+      h.store.markDirty(OTHER_OWNER_KEY);
+      h.setNow(30_000);
+      // Two dirty entries, six seconds apart: the report must be the older
+      // one's age. A single-entry test cannot tell "oldest" from "any".
+      expect(h.store.stats().dirty).toBe(2);
+      expect(h.store.stats().oldestDirtyAgeMs).toBe(10_000);
+    })();
+  });
+
+  it('answers two concurrent drains, not just the one that asked first', () => {
+    // drainWaiters is a SET rather than a single promise for exactly this: the
+    // shutdown path and a test harness can both be waiting, and a second
+    // waiter overwriting the first would leave it pending forever.
+    return (async () => {
+      const gate = deferred<FreeholdUpsertResult>();
+      const h = await loadedStore({ writeRow: async () => await gate.promise });
+      h.store.markDirty(OWNER_KEY);
+      h.store.save(OWNER_KEY);
+      await tick(10);
+
+      const first = h.store.idle(60_000);
+      const second = h.store.idle(60_000);
+      gate.resolve({ kind: 'updated', durableRev: '2' });
+      expect(await first).toBe(true);
+      expect(await second).toBe(true);
+    })();
+  });
+
+  it('survives a synchronously throwing enqueue without leaving the entry running', () => {
+    // The catch around the enqueue call itself, not around the write it
+    // schedules. An entry left `running` after a throw can never be removed,
+    // never re-armed, and stalls every drain until its deadline.
+    return (async () => {
+      const h = await loadedStore({
+        enqueue: () => {
+          throw new Error('the keyed writer refused the enqueue');
+        },
+      });
+      h.store.markDirty(OWNER_KEY);
+      h.store.save(OWNER_KEY);
+      await tick(20);
+      expect(h.writeCount()).toBe(0);
+      expect(h.store.stats().writeFailures).toBe(1);
+      expect(h.store.stats().running).toBe(0);
+      expect(h.errors.join(' ')).toContain('could not be queued');
+      // And the drain still answers immediately rather than at its deadline.
+      expect(await h.store.idle(60_000)).toBe(true);
+    })();
   });
 });
 
