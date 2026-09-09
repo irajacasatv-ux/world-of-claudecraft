@@ -89,6 +89,7 @@ import { inertVaultConsumptionAdmission } from '../../src/sim/sim_context';
 import { FreeholdGatePrompt } from '../../src/ui/hud/housing/gate_prompt_controller';
 import { COMMAND_FACETS, type CommandName } from '../../src/world_api';
 import { bareClient, broadcast, fakeWs, joinServer, lastSnap } from '../helpers/bare_client';
+import { methodBody } from '../helpers/method_body';
 
 type HousingCommand = (typeof FREEHOLD_WIRE_COMMANDS)[number];
 
@@ -931,20 +932,36 @@ describe('the owner key: minted server-side from the session account (D15)', () 
 
   it('game.ts stamps the key from the join accountId at exactly one addPlayer call', () => {
     const src = codeOnly(repoFile('server/game.ts'));
-    const stamp = 'freeholdOwnerKey: freeholdOwnerKeyForAccount(accountId),';
-    expect(src.split(stamp).length - 1, 'the stamp appears exactly once').toBe(1);
-    // The stamp sits INSIDE the sim.addPlayer call of join, keyed on join's
-    // own accountId parameter (the authenticated session), never on a meta
-    // field a client-supplied join payload could shape.
-    const call = src.indexOf('this.sim.addPlayer(');
+    // The join derives the key ONCE, from its own accountId parameter (the
+    // authenticated session), into a local the three call sites below share.
+    // The persistence work gave it a name because retain, addPlayer and the
+    // failure release all need the same value; what must not change is where
+    // that value comes from. A key read off a meta field a client-supplied join
+    // payload could shape would let a caller claim another account's house.
+    const derive = 'const freeholdOwnerKey = freeholdOwnerKeyForAccount(accountId);';
+    expect(src.split(derive).length - 1, 'derived exactly once, from accountId').toBe(1);
+
+    const joinBody = methodBody(src, '  join(');
+    const derived = joinBody.indexOf(derive);
+    const call = joinBody.indexOf('this.sim.addPlayer(');
+    expect(derived, 'the derivation sits in join').toBeGreaterThanOrEqual(0);
     expect(call, 'the addPlayer call').toBeGreaterThanOrEqual(0);
-    expect(balancedCall(src, call + 'this.sim.addPlayer'.length)).toContain(stamp);
+    expect(derived, 'derived before it is used').toBeLessThan(call);
+    // The stamp itself is the shared local, passed by shorthand.
+    expect(balancedCall(joinBody, call + 'this.sim.addPlayer'.length)).toContain(
+      'freeholdOwnerKey,',
+    );
     expect(src.replace(/\s+/g, ' ')).toContain(
       "import { dispatchFreeholdCommand, freeholdOwnerKeyForAccount, refusedFreeholdCommand, refusedJailedTravelCommand, } from './freehold_wire';",
     );
-    // No other spelling of the stamp exists (a second, differently keyed
-    // stamp would let two call sites disagree on the owner).
-    expect(src.split('freeholdOwnerKey:').length - 1).toBe(1);
+    // NO OTHER SPELLING of the stamp: a second, differently keyed one would let
+    // two call sites disagree about who owns the plot. The only other use of
+    // the deriver in this file is the leave path, which keys on the SESSION's
+    // account rather than a join parameter, and is named here so it cannot be
+    // mistaken for a second stamp.
+    expect(src.split('freeholdOwnerKey:').length - 1, 'no property-form stamp').toBe(0);
+    expect(src.split('freeholdOwnerKeyForAccount(').length - 1, 'two call sites only').toBe(2);
+    expect(src).toContain('freeholdOwnerKeyForAccount(session.accountId)');
   });
 
   it('the stamped key is the session account, observed live: one account, two characters, one key', () => {
