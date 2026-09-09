@@ -8,12 +8,26 @@
 // the second freehold (D67) shares this single row precisely so a second home
 // cannot double the travel budget.
 //
-// The client's freeholdKeyReadyAtMs mirror is a committed UI value and never
-// an authorization: every accepted remote entry re-reads and advances this row
-// inside the entry transaction, under the account participant lock, so a
-// cached or forged client value cannot buy a trip.
+// The client's freeholdKeyReadyAtMs mirror is a committed UI value and never an
+// authorization. The rule this module exists to serve is that every accepted
+// remote entry re-reads and advances this row inside the entry transaction,
+// under the account participant lock, so a cached or forged client value cannot
+// buy a trip.
 //
-// TWO INVARIANTS a future reader must not break:
+// STATED AS THE RULE, NOT AS SHIPPED BEHAVIOR, because it is not performed yet.
+// `advanceFreeholdHearthOnClient` below has ZERO production callers in this
+// release: the realm admission participant that would call it is the 07a work,
+// and until then `freeholdKeyAdmission` refuses outright rather than consulting
+// this row. So nothing writes account_freehold_hearth in a shipped realm,
+// `loadFreeholdHearth` answers `absent` for every account, and the isolated
+// per-Sim clock in src/sim/freehold/hearth_key.ts is the only cooldown a player
+// meets. The advance is written, proved against real PostgreSQL and reachable
+// by nothing. It is here rather than in 07a because the capability the rollout
+// contract names is the whole PAIR: a release that reads the clock but cannot
+// advance it is not capable, and enabling housing on one would hand out a free
+// travel at every relogin.
+//
+// TWO INVARIANTS a future reader must not break WHEN THAT CALLER LANDS:
 //   1. ONE clock reading per accepted entry, taken from the DATABASE, after
 //      the account participant lock. now() is the transaction timestamp on
 //      purpose: two statements inside one accepted entry can never disagree

@@ -31,6 +31,26 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
+07 (bounded persistence and stable plot identity) is **BUILT, local**, 2026-09-08,
+with its implementation-round review closed and its paired QA still owed
+(`phase-07-qa.md`). Planning for 07 was settled long before this; BUILT is the new
+fact, and the two words are not interchangeable in this ledger.
+
+Every owned plot now survives a restart under one stable public identity, with
+bounded load and save work and a stated mixed-release recovery contract.
+Cross-record transfers stay dark until 07a. Sixteen commits
+`627a59a73c..c0b2891173` (four delivery, one format rider, then eleven applying
+review findings). Nine COVERAGE reviewers reported and a fresh five-lane round
+then read the fix round itself, because a fix round is unreviewed code; every
+finding, including every nit, is applied or ruled with a reason in
+[the ledger](qa/persistence-2026-09-08/findings.md), beside the nine reports.
+
+The two facts an operator needs before enabling anything are in
+[the rollout contract](persistence-rollout-contract.md): what a release must be
+able to do before housing is lit on any process sharing one DATABASE_URL, and
+what an INCAPABLE release does against a populated database. Production stays
+disabled and every release gate below stays unsigned.
+
 06 (interiors, Eastbrook gate and Hearth Key) is **COMPLETE INCLUDING ITS PAIRED
 QA: PASS, local**, 2026-09-08. The audit found and fixed 37 distinct findings: 36 source/capture findings and
 DOC01, the final execution-ledger wording correction. Including that nit, zero remain open or deferred. The original delivery ends at
@@ -42,6 +62,78 @@ Current receipts are [QA overview](qa/interiors-2026-09-08/README.md),
 [fresh final review](qa/interiors-2026-09-08/reviews/fresh-fix-review.md).
 The prior implementation-only receipts at `67281f8ed4` remain historical; this
 paired QA supersedes their current gate, capture and source-seal counts.
+
+### 07 built receipt (implementation round, 2026-09-08)
+
+What it actually does, in the order the code runs it. The handshake reads the
+account's durable plot and its Hearth clock on the FRESH-JOIN arm only, before the
+character lease so the lease-held window stays tight, bounded by its own 5,000 ms
+permit wait rather than the background write's 15,000 ms. A read that throws logs
+and joins the player with NOTHING installed, because the entry that never loaded is
+write-blocked, which is exactly the state in which the real row on disk cannot be
+overwritten by a realm that failed to read it. `game.join` installs the durable
+record BEFORE `addPlayer` seeds a default. The periodic flush sweeps every loaded
+owner once per AUTOSAVE_SECONDS, reading ONE integer per owner (the live record's
+revision) and cloning nothing unless a write actually goes out. Writes coalesce to
+one running plus one pending per owner key, take a local admission cap of four so a
+mass-login sweep cannot put a thousand waiters on the shared background gate, and
+fence on `durable_rev` so a writer this realm does not know about can never be
+clobbered. Logout flushes with its own short deadline: it gives up the WAIT, never
+the write.
+
+PRESERVATION IS THE INVARIANT, and it is one-directional. Only genuine ABSENCE
+resolves to the free tier-0 Inn Room. An unsupported, malformed, oversized or
+unadmitted row is preserved byte-identical and the account is write-blocked for the
+session, playing normally on whatever the sim holds. Every failure mode reachable in
+review pointed at "the owner loses an edit" or "the owner is held read-only", never
+at "the owner's furnishings are overwritten".
+
+Two byte ceilings, both MEASURED, because they bound two different texts. jsonb is
+not a byte copy of what was sent: it re-renders every object with a space after each
+colon and comma, and stores every number as `numeric` in full positional form. The
+maximal legal record is 101,139 bytes of canonical JSON, and its two content columns
+measure 100,866 canonical against 106,032 as `octet_length(col::text)`. Handing the
+canonical ceiling to the SQL bound would have classified the largest record this
+realm may WRITE as oversize forever. The codec refuses any number whose JSON text
+carries an exponent, which is what keeps the gap a fixed 5.1 percent rather than an
+unbounded multiple (`5e-324` is fourteen bytes of JSON and three hundred and
+thirty-five bytes stored). `freeholdWriteRefusal` applies all three load ceilings
+before every write, so writable implies readable. The executed proof is a
+real-PostgreSQL round trip of the maximal record in
+`tests/server/freehold_db.pg.test.ts`.
+
+Command outcomes, all executed in this worktree:
+
+- `npx tsc --noEmit`: exit 0.
+- The named 14-file battery: **14 files passed, 642 tests passed, 3 skipped**.
+- The dev-bridge battery (7 files, PRIOR 05 re-verified): **249 passed**.
+- Both PostgreSQL-armed suites against the disposable `npm run db:up` instance, in a
+  private schema dropped afterwards: **2 files, 29 tests passed**, confirmed EXECUTED
+  rather than skipped (the same command with `TEST_DATABASE_URL` unset skips all of
+  them, which is how the arming was proved).
+- Monolith ratchet: `server/game.ts` 9,920 and `server/db.ts` 4,605, both under their
+  ceilings, paid for by three behaviour-preserving extractions rather than by a raise.
+  `server/wire_cadence.ts` was verified a MOVE by diffing it against
+  `git show b2aeb46da2:server/game.ts`.
+
+Review: nine COVERAGE reviewers (migration-safety, database-performance,
+privacy-security, server-hot-path, architecture, cross-platform-sync, test-coverage,
+frontend-seam, qa-checklist), then a FRESH five-lane round over the fix round itself.
+Findings were applied, not filtered: the ledger records each with the commit that
+applied it or the reason it was ruled. Two blocking defects were found and closed, the
+larger of which (the two-measurement byte ceiling) was independently re-measured
+against PostgreSQL 16 rather than taken on the reviewer's number, and turned out to
+matter for a different reason than the reviewer gave.
+
+WHAT IS STILL OWED, so it is not mistaken for done. The paired QA
+(`phase-07-qa.md`) has not run. `advanceFreeholdHearthOnClient` is written, proved
+against real PostgreSQL and reachable by NOTHING: the realm admission participant
+that would call it is 07a, so no shipped realm writes `account_freehold_hearth` and
+the isolated per-Sim clock is the only cooldown a player meets today. `markDirty` and
+`save` are the store's explicit dirty seam and have no production caller either; the
+revision sweep is the only detector that runs, and the coupling that makes that safe
+is now pinned by a source scan. A write-blocked hold has no player-facing surface.
+Every release gate below stays UNSIGNED and production stays disabled.
 
 ### 06 accepted runtime and shared-gate receipt
 
@@ -222,9 +314,12 @@ was generated in this QA.
 
 ### Current next step
 
+07 is BUILT locally (2026-09-08) with its implementation-round review closed. Its
+paired QA has NOT run. Next run:
+`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-07-qa.md`.
+
 06 is complete including its paired QA (PASS, local, 2026-09-08, reviewed source
-tip `957a93b05b`). Next run:
-`/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds/docs/freeholds/phase-07-persistence.md`.
+tip `957a93b05b`).
 
 Previous phase 03 (`phase-03-content-tiers-and-basics.md`): COMPLETE INCLUDING QA,
 verdict PASS locally on 2026-09-07. All 39 distinct completion-round findings
@@ -1492,6 +1587,7 @@ only and never declares its remaining deliverables or paired QA complete.
 | 04 (complete, paired QA PASS) | `src/sim/content/freehold/{furnishing_recipes,furnishing_patterns}.ts`; `src/sim/freehold/crafted_availability.ts`; `src/sim/professions/{recipe_visibility,train_recipe}.ts`; `src/net/item_copy_anchor_wire.ts`; `server/world_hello.ts`; crafted economy/geometry producers under `scripts/freeholds/`; `tests/{furnishing_recipes,furnishing_pattern_items,furnishing_crafting,freehold_crafted_availability,freehold_crafted_presentation,freehold_crafted_art,recipe_visibility}.test.ts`; accepted calibration evidence and `crafted-content-art-2026-09-07/catalog-verification.json`; current census in `scripts/item_art_audit.mjs`; accepted final runtime evidence; `crafted-qa-reconciled-2026-09-07/` paired QA evidence | existing `cfg` gains optional `freeholdsEnabled`; existing `recipeList` reflects host availability through `ctx.freeholdsEnabled` on Sim | none | `hello.freeholdsEnabled` mirrors host availability; existing commands retained; ten output and three pattern ItemDefs | none | none | thirteen `entities.items.<id>.name` leaves listed below; `hearth_first_crafts` name in all eighteen base Reliquary locale tables and full desc in five non-Latin tables; changed `guide.reliquaryPage.catalogBody` and `guide.profPages.craftProse.armorcrafting.ladderBody`; English plus five M16 item/guide fills |
 | 05 (complete, paired QA PASS) | `src/sim/content/freehold/dungeons.ts`; `src/sim/freehold/{owner_key,instance,dev_grant}.ts`; extractions `src/sim/combat/effective_stats.ts` (sim.ts 11876 to 11857), `server/entity_wire_variant.ts` (game.ts 10234 to 10202), `src/game/browser_fullscreen.ts` (main.ts 11308 to 11269); `src/game/freehold_dev_bootstrap.ts`; `scripts/lib/freehold_dev_authorization.{mjs,d.mts}` (the dev-only Vite loopback bridge, admitted in `vite.config.ts` through `freeholdDevAuthorizationEnabled(process.env)` only); tests `freehold_instance`, `freehold_instance_online`, `freehold_offline_default`, `freehold_dev_grant`, `freehold_dev_authorization`, `freehold_dev_bootstrap`, `freehold_dungeon_defs`, `effective_stats`, `browser_fullscreen`, `server/entity_wire_variant`, `server/freehold_dev_grant_boot`; golden `tests/parity/golden/freehold_claim.json`; `tests/fixtures/terrain_height_parity.v1.f64le.gz` re-minted as a byte-prefix extension (owner rooms append last) | none new: `freeholdEnter`/`freeholdLeave` lit on both hosts, `myFreehold`/`freeholdLayout` still null until 08a; `DungeonDef.claimKey?: 'party' \| 'owner'`; `PlayerMeta.freeholdOwnerKey` (host stamp: `account:<id>` online, absent offline and resolved `entity:<pid>` by `freeholdKeyFor`; META_EXCLUDE); `SimConfig`/`SimContext.freeholdDevGrantEnabled` (read-only, nonpersisted, default false); `setFreeholdTier` the ONE tier writer, `ensureFreeholdRecord`/`loadFreehold` insert only on a lit host, `releaseFreeholdOnLeave` evicts at the last same-key session out | `freeholdDenied { pid, reason }`, reasons APPEND-ONLY in this order: `no_freehold`, `locked`, `cooldown`, `visitors_full`, `not_friend`, `dead`, `combat`, `busy` (05 fires no_freehold, dead, combat, busy; locked is 12's amenity lockout; cooldown 06; visitors_full and not_friend 18); `dead` has ONE exception, the corpse run (a released ghost whose corpse is bound to one of its own live owner claims is admitted to that room and resurrects at the entrance; every other dead body refuses); a record whose tier is outside the union answers `no_freehold` to a living enter, never a throw (a bound ghost still runs to its body's room); a leave from outside any owner room is a silent no-op, not a denial, and any player inside a live owner claim may leave; 05 had no client handler (06 now adds the keyed feedback; old clients drop it safely; historical 05 behavior: a dark REALM refused above the switch with `commandOutcome` false and NO event, while a dark OFFLINE world emitted `freeholdDenied no_freehold`; 06 supersedes the realm arm with requester-only keyed `freeholdDenied`, and its controller ignores generic command errors) | dungeon ids `freehold_inn_room` (index 15, origin x 119200) and `freehold_cottage` (index 16, origin x 119800), `spawns: []`, no objects, `overworldDoor: false`, `guideVisible: false`, `suggestedPlayers: 1`, historical 05 `interior: 'crypt'` (replaced by the authored 06 layouts in the row below), historical doorPos `{ x: -14, z: -92 }` north of the Eastbrook mailbox surround (leaving and the saved-inside rejoin both drop 4 yd south, at -14, -96, on open quay ground: the 05 QA moved the door from z -96, whose drop at z -100 sat inside the mailbox's blocked footprint, and pinned the drop unblocked with zero depenetration on every test seed; 06 now derives the gate from the canonical Eastbrook service at the same coordinates; current verification is pending); `freehold_enter`/`freehold_leave` LIT behind the unchanged dark gate; `freehold_enter` jail-blocked; HEAVY_SELF_CMDS unchanged (decision in `server/heavy_self.ts`: no heavy self field moves until 08a's `fhold` key); a malformed account id is refused by `planJoin` with `not authenticated` | none | none: the record and the grant are in-memory facts (D81); 07 persists the record under the same owner-key identity and the placeholder `plot:unassigned` plotId is replaced by 07's public id | `entities.dungeons.freehold_inn_room.{name,enterText,leaveText}` and `entities.dungeons.freehold_cottage.{...}`: English plus the five non-Latin fills (ja rows use the plain past like the newest rooms), the 16 Latin locales pending; the glossary housing note names both ids as common nouns; `[dev]` grant lines are dev-channel English |
 | 06 (complete, paired QA PASS; 37 found and fixed) | `src/sim/content/freehold/{layouts,items}.ts`; `src/sim/freehold/{gate_rules,entry_context,gate,hearth_key}.ts`; `src/sim/world_object_bootstrap.ts`; `src/render/freehold/` interior shell/dressing and shared pure resolver leaves; `src/ui/hud/housing/` gate view/painter/feedback/key tooltip; `src/sim/instances/{owner_claim_occupancy,owner_arrival}.ts`; `server/{instance_presence,instance_scan_tick_stats}.ts`; `scripts/freehold_interior_route.mjs`, `scripts/lib/pr_shot_freeholds.mjs`, `scripts/freehold_capture_receipt.mjs`, `scripts/freehold_key_capture.mjs`; focused arrival, renderer-lifecycle, real browser input and character/bank persistence regressions; `docs/freeholds/qa/interiors-2026-09-08/`; `docs/freeholds/generate-ux-manifests.mjs` | Existing `freeholdEnter` confirms an actual nearby gate, granting only a character-wide missing key (carried and personal bank); `freeholdLeave` remains the live owner-room exit. `ItemUse { type: 'freeholdEnter' }` routes a permanent Hearth Key through `useHearthKey`; no new housing command. Sim/SimContext private `freeholdKeyReadyAtMs` map and injected `freeholdKeyAdmission`; `myFreehold`/`freeholdLayout` remain null until 08a. `instanceScanCounters` exposes current-tick claimed-slot/owner-roster/owner-claim-test counts | Append-only `freeholdDenied` suffix `instanced`, `match`; key emits `cooldown` and shared context refusals. Jailed gate/key dispatch emits one personal `busy` denial before Sim entry. Dark realm admission now emits requester-only keyed `freeholdDenied`; the housing controller ignores generic command errors, so the historical 05 command-outcome-only toast plan no longer applies. Existing `dungeonEntrySeq` self-wire value now also updates the online player entity after entry-facing resolution; it is arrival identity only, never permission to replay welcome/audio/camera | Owner ids/indexes unchanged; interiors now `inn_room`/`cottage`, empty-room entry `(0,-4)`, exit `(0,-6)`, facing 0; deterministic body-safe owner arrival resolves before claim/travel effects and refuses saturated approaches without side effects; `freehold_gate` is an alive nonlootable `object`, `objectItemId: null`, at canonical Eastbrook service `(-14,-92)`, semantic marker `freehold-gate`; default exit/rejoin drop `(-14,-96)`. New item `hearth_key`, tool, permanent/soulbound/noMarketList/noDiscard, sellValue 0. Presence status `freehold` on both shared unions, shared leaf for roster/who and relay (`Freehold` only), admin kind/labels and bounded client perf class | none new | none: real character JSON/bank restore regressions preserve a single key and safe exterior reload. The isolated `3_600_000` ms key clock uses `ctx.lockoutNowMs()` and is not serialized, transferable plot state or durable online authority. Realm `freeholdKeyAdmission` refuses until 07/07a. O(1) `ctx.freeholds.size` read feeds `freeholdRecords` heartbeat; no record-map scan or database call added. Heavy inventory self refresh occurs only after an actual grant changes the actor wire revision | Existing 38 planned owner-06 housing keys implemented; exact M16 fills retained and fifteen nonqualifying additions removed; semantic gate and Hearth item labels; separate social `/who` and admin type/room labels. Shot targets `freehold-gate`, `freehold-inn`, `freehold-cottage`, each desktop/compact/tablet: 9 variants, 18 retained before/after PNG paths; all 18 current PNGs independent visual QA PASS with exact bytes, 42 source and seven harness seals matching acceptance.json; twenty presentation fixtures and eight actual-key images separately accepted with explicit evidence limits. Planned manifests: 557 housing keys, 742 variants, 339 Wave A |
+| 07 (BUILT, implementation-round review closed; paired QA owed) | `server/{freehold_db,freehold_hearth_db,freehold_persist,wire_cadence,client_perf_reports_db,bot_detection_snapshot}.ts`; `src/sim/freehold/{persisted,load_report}.ts`; `tests/helpers/maximal_freehold.ts`; `docs/freeholds/persistence-rollout-contract.md`; `docs/freeholds/qa/persistence-2026-09-08/` (nine reports plus the closed ledger); tests `server/freehold_db`, `server/freehold_db.pg`, `server/freehold_hearth_db`, `server/freehold_hearth_db.pg`, `server/freehold_persist`, `freehold_state`, and the new arms in `server/ws_auth`, `server/http/game_metrics`, `server/periodic_save_flush`, `server/tunables`, `freehold_module`. Extractions paid the ratchet: `server/wire_cadence.ts` (game.ts 9983 to 9920), `server/client_perf_reports_db.ts` and `server/bot_detection_snapshot.ts` (db.ts), `isInJailRoom` into `src/sim/jail.ts` | none new: `myFreehold`/`freeholdLayout` stay null until 08a. `SimContext.freeholds` is loaded from the durable row BEFORE `addPlayer` seeds a default, because `loadFreehold` and `ensureFreeholdRecord` are both load-once and a load after the seed is a silent no-op that would discard the owner's real plot. `mergeFreeholdKeyReadyAt` is the second and last sanctioned writer of `ctx.freeholdKeyReadyAtMs`, forward only | none new | no new command, no new self key. `PlayerMeta` carries `freehold?: LoadedFreehold` from the handshake into `game.join`; a thrown durable read joins the player with nothing installed rather than refusing the login, which is exactly the state in which no write goes out | none new | **`account_freeholds`** (PRIMARY KEY `(account_id, plot_index)`, UNIQUE `plot_id`, no third index because `account_id` leads the key and the FK cascade probes that prefix) and **`account_freehold_hearth`** (`account_id` PK, FK CASCADE). Both KEEP-FOREVER, both absent from the retention sweep with an absence pin, both on `POST /api/account/export`. Shape-only CHECKs; the `plot_id` charset CHECK is the one deliberate policy CHECK and the DDL names the explicit ALTER a widening release owes. Compare-and-swap on `durable_rev`, carried as exact bigint TEXT. `schema_version` is written by the writer on both statements, never left to the column DEFAULT. Measured ceilings: `FREEHOLD_MAX_LAYOUT_ROWS` 420, `FREEHOLD_MAX_TROPHY_ROWS` 32, `FREEHOLD_MAX_ID_LENGTH` 64, `FREEHOLD_MAX_OWNED_BYTES` 101376 (canonical JSON, measured 101139), `FREEHOLD_MAX_STORED_BYTES` 106496 (jsonb text, measured 106032), `FREEHOLD_STORED_DETOAST_GATE_BYTES` 262144, `FREEHOLD_ACCOUNT_PLOT_READ_LIMIT` 2 | none: every diagnostic on this path is DEV-CHANNEL English and bounded by `freeholdLoadDiagnostic`, which admits a closed list of fault SHAPES and replaces anything else with `unclassified`. A held row has NO player-facing surface in this release, recorded in the rollout contract as a gap the release that lights housing up inherits. New operator series `woc_freehold_persist` (gauge), `woc_freehold_persist_total` (counter) and `woc_freehold_load_failures_total` (by hold kind), all identity-free and documented in DEPLOY.md |
 | 16 (planned) | `steward_panel_*`, charter card | none | | | reads 15's POST `/api/freehold/quote` and GET `/api/freehold/operation/:operationId` | | `charter.feeDetails`, `charter.quoteExpiry`, `charter.terms`, `charter.section`, `charter.reference`, `charter.supportReview`; window id `steward-window` |
 | 17 (planned) | `trophy_case_view.ts`, `trophy_case_window.ts` | `placeTrophy`, `clearPlinth`; SimContext `ctx.freeholdAccountSources` | | `place_trophy`, `clear_plinth` | | | `denied.trophyUnavailable`; window id `trophy-case-window` |
 | 25 (planned) | | none | | | | | `build.surface`, `build.freeRotate`, `build.movesChildren`, `denied.supportFull`, `denied.invalidTransform`; shot target `housing-build-advanced` (38 variants) |
@@ -1782,7 +1878,7 @@ question. Never present unsigned drafts as legal/platform/service acceptance.
 | Optional deed territories and irreversible authority | ../prd/woc/freehold-deed-service-contract.md and freehold-territory-authority-schedule.md; 37/38, checked 39 and 44b | Service/legal/Fernando sign supported territories, per-asset powers and transfer/irreversible-operation policy before optional deed activation. Unknown eligibility refuses new operations; accepted operation recovery remains required. |
 | Approved numerical rows | content-numbers-workbook.md and content-manifest.md; each named producer; the four-week measured report at NEW FUTURE docs/freeholds/ledger-calibration-report.md and the every-second-release budget review at NEW FUTURE docs/freeholds/housing-budget-review.md, both created by 20 and extended by later closes | Fernando owns gameplay target acceptance and the service owns prices. Exact trial derivations, rounding, source and measured calibration/signature precede runtime activation; no missing quantity is guessed. |
 | Accepted development content; production calibration unsigned | content-trial-2026-09-07/acceptance.md and revalidation.md supersede the historical content-source-freeze-2026-09-07.md for development; CAL-LEDGER-A, CAL-VENDOR-A, CAL-DECOR-A/B and MEASURE-SPACE retain named final acceptance | Fernando accepted the measured trial on 2026-09-07. CONTENT/UPKEEP/ECONOMY QA still produce final Ledger calibration for Fernando/service approval; CONTENT/ART and ART/CORE retain final vendor, decor, room/model/LOW approval. Production remains disabled. |
-| Source calendar, lifecycle and rollout capability | Future persistence-rollout-contract.md, lifecycle-policy-binding.md, lifecycle-db-contract.md and upkeep-calendar-db-contract.md from 07/07b/13a | Named service/operations/DB owners accept account source/reset-policy assignment, immutable history/finality, bounds, capable-release rollout/rollback and actual PG proof before upkeep activation. |
+| Source calendar, lifecycle and rollout capability | persistence-rollout-contract.md EXISTS as of 07 and is **UNSIGNED**; lifecycle-policy-binding.md, lifecycle-db-contract.md and upkeep-calendar-db-contract.md are still owed by 07b/13a | Named service/operations/DB owners accept account source/reset-policy assignment, immutable history/finality, bounds, capable-release rollout/rollback and actual PG proof before upkeep activation. 07 supplies the capability and quiescence half with executed PostgreSQL proof and the measured bounds; publishing it is not signing it, and no owner has accepted it. `reset_policy_id` does not exist in code, so every 07 row is written `unbound_no_history` and a serving realm cannot infer a calendar from a row that never claimed one. |
 | Final assets and image replacement | art-brief.md/content-manifest.md and per-wave final-asset proof; final 44a icon/image replacement | Codex asset sessions use existing intake/provenance/export/compile/LOW/screenshot gates. No placeholder is counted as a final shipping asset; final 44a rechecks all feature-created icons/images before 44b. |
 | Runtime safety and distribution | 01 strict live FREEHOLDS_ENABLED gate; 37 FREEHOLD_DEEDS_ENABLED (default off, requires freeholdsEnabled); 38 NEW allowSerializedCollectibles policy switch (default off, beside allowMounts/allowMechChromas in server/woc_market_routes.ts); 14 seven-distribution capability matrix; every priced implementation and QA | Packet owners prove dark route/command/catalog behavior, complete forbidden submodel absence and independently approved management flow before activation. |
 
