@@ -44,7 +44,11 @@ import {
   type PersistedFreehold,
   persistedFreeholdFromState,
 } from '../src/sim/freehold/persisted';
-import { loadFreehold, serializeFreehold } from '../src/sim/freehold/state';
+import {
+  loadFreehold,
+  PENDING_FREEHOLD_PLOT_ID,
+  serializeFreehold,
+} from '../src/sim/freehold/state';
 import { FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
 import { pool } from './db';
@@ -1129,10 +1133,28 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // durable revision, and is then handed a freshly seeded default when the
       // old session's removePlayer finally evicts. Refusing preserves the row,
       // at the cost of one session played on a default record with no writes.
+      //
+      // TWO TESTS, because identity alone has a blind window. A brand-new
+      // account's record legitimately carries the stand-in identity for its
+      // whole first session, and so does a freshly seeded default, so between
+      // that account's first insert and its first reload the two are
+      // indistinguishable by name. The second test closes exactly that window
+      // without needing a name: a PRISTINE default carries no information at
+      // all, so refusing to write one over a row can never lose anything, and
+      // an entry that knows more than a pristine default is an entry whose
+      // record has diverged from one.
+      const pristineSeed =
+        persisted.plotId === PENDING_FREEHOLD_PLOT_ID &&
+        persisted.rev === 0 &&
+        persisted.layout.length === 0 &&
+        persisted.trophies.length === 0;
+      const entryKnowsMore =
+        entry.state !== null &&
+        (entry.state.rev > 0 || entry.state.layout.length > 0 || entry.state.trophies.length > 0);
       const seededOverReal =
         entry.durableRev !== null &&
         entry.state !== null &&
-        persisted.plotId !== entry.state.plotId;
+        (persisted.plotId !== entry.state.plotId || (pristineSeed && entryKnowsMore));
       if (seededOverReal) {
         counters.writeFailures++;
         entry.quiesced = true;

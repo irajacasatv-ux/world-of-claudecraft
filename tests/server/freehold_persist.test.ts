@@ -2168,6 +2168,118 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().dirty).toBe(1);
   });
 
+  it('refuses a pristine seed over a FRESH account that has since furnished', async () => {
+    // The blind window identity alone cannot close. A brand-new account's
+    // record carries the stand-in name for its whole first session, and so does
+    // a freshly seeded default, so between that account's first insert and its
+    // first reload the two have the same name. What separates them is that a
+    // pristine default knows NOTHING: no revision, no layout, no trophies.
+    let seeded = false;
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      serialize: () =>
+        seeded
+          ? persistedFixture({ layout: [], trophies: [], rev: 0 })
+          : persistedFixture({ rev: 4 }),
+      writeRow: async (input) => ({
+        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+        durableRev: '1',
+      }),
+    });
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].layoutJson).not.toBe('[]');
+
+    // Evicted, then a rejoin seeds an empty default under the SAME stand-in
+    // name. The row already holds this account's furnishings.
+    seeded = true;
+    h.store.saveAllDirty();
+    await tick(30);
+    // The absence of a second write IS the assertion.
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+  });
+
+  it('refuses a pristine seed over an account that differs ONLY by revision', async () => {
+    // The revision half of "knows more", on its own. An account can have moved
+    // its record without placing anything (a tier grant bumps the revision and
+    // touches no row), so a test that only ever differs by CONTENT would leave
+    // that account unprotected.
+    let seeded = false;
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      serialize: () => persistedFixture({ layout: [], trophies: [], rev: seeded ? 0 : 3 }),
+      writeRow: async (input) => ({
+        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+        durableRev: '1',
+      }),
+    });
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(3);
+
+    seeded = true;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+  });
+
+  it('still writes an ESTABLISHED account that emptied its own house', async () => {
+    // The other side of the pristine test, and the reason it requires the
+    // stand-in name. A player who removes every furnishing leaves a record that
+    // looks exactly like a seed except for its identity, and refusing that
+    // would make "remove everything" the one edit that can never be saved.
+    let emptied = false;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () =>
+        emptied
+          ? persistedFixture({ layout: [], trophies: [], rev: 0 })
+          : persistedFixture({ rev: 5 }),
+      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
+    });
+    emptied = true;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].layoutJson).toBe('[]');
+    expect(h.store.stats().quiesced).toBe(0);
+  });
+
+  it('still writes a fresh account whose record is LEGITIMATELY still empty', async () => {
+    // The anti-vacuity arm, and the reason the test is "knows more" rather than
+    // "is a default". An account that has written once and changed nothing has
+    // a record identical to a pristine seed, and writing it loses nothing, so
+    // refusing there would quiesce a healthy account for no gain.
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      serialize: () => persistedFixture({ layout: [], trophies: [], rev: 0 }),
+      writeRow: async (input) => ({
+        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+        durableRev: '1',
+      }),
+    });
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(2);
+    expect(h.store.stats().quiesced).toBe(0);
+  });
+
   it('keeps the capture when the handshake that read it never joins', async () => {
     // preload runs BEFORE the character lease, and a lease already held, no
     // such character, a forced rename, a throwing character read and a refused
