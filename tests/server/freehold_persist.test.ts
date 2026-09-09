@@ -175,6 +175,12 @@ function harness(options: HarnessOptions = {}) {
       calls.push('serialize');
       return serialize(ownerKey);
     },
+    liveRev(ownerKey: string): number | null {
+      calls.push('liveRev');
+      // The cheap probe answers from the SAME record serialize() would clone,
+      // so a test that moves the fixture's revision moves both.
+      return serialize(ownerKey)?.rev ?? null;
+    },
     hasLive(ownerKey: string): boolean {
       return options.hasLive ? options.hasLive(ownerKey) : false;
     },
@@ -736,6 +742,44 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
     expect(h.writeCount()).toBe(1);
   });
 
+  it('reads ONE integer per loaded owner and clones nothing when nothing moved', async () => {
+    // This probe runs synchronously inside the 20 Hz loop body, so its cost is
+    // tick cost. Cloning every loaded record here to read one revision put
+    // O(owners x layout rows) of copying and garbage on one tick every thirty
+    // seconds: measured in tens of milliseconds at five thousand owners against
+    // a fifty millisecond budget. The clean sweep must touch serialize ZERO
+    // times; only a write may clone.
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
+      serialize: () => persistedFixture({ rev: 7 }),
+    });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.calls.filter((call) => call === 'liveRev')).toHaveLength(1);
+    expect(h.calls.filter((call) => call === 'serialize')).toHaveLength(0);
+    expect(h.writeCount()).toBe(0);
+  });
+
+  it('arms a write when the live revision moved BACKWARDS, not only forwards', async () => {
+    // A backwards revision is a reload of an older record into a live slot, and
+    // the row must follow the record this realm is actually serving. Pinned
+    // because the forward arm alone would let an equality-to-inequality edit
+    // pass unnoticed.
+    let rev = 7;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async () => ({ kind: 'updated', durableRev: '2' }),
+    });
+    rev = 6;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
+  });
+
   it('never probes a write-blocked entry, so a held row stays untouched', async () => {
     const h = await loadedStore({
       rowLoad: {
@@ -754,6 +798,7 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
     // The probe itself is skipped, not just the write: a blocked entry may not
     // write, so knowing it moved buys nothing and costs a serialize per sweep.
     expect(h.calls.filter((call) => call === 'serialize')).toHaveLength(0);
+    expect(h.calls.filter((call) => call === 'liveRev')).toHaveLength(0);
     expect(h.store.stats().held).toBe(1);
   });
 

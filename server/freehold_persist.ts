@@ -125,6 +125,11 @@ export interface FreeholdPersistPorts {
    *  holds no live record, and the write is skipped entirely. */
   serialize(ownerKey: string): PersistedFreehold | null;
   hasLive(ownerKey: string): boolean;
+  /** The live record's own revision, or null when the owner holds none. A
+   *  CHEAP read: the periodic sweep asks every loaded owner this question on
+   *  every pass, so it must not clone anything. serialize() is the expensive
+   *  answer and belongs inside the write, where its result is actually used. */
+  liveRev(ownerKey: string): number | null;
   mintPlotId(): string;
   acquirePermit(signal: AbortSignal): Promise<{ release(): void } | null>;
   enqueue<T>(key: string, signal: AbortSignal, write: () => Promise<T>): Promise<T>;
@@ -246,8 +251,16 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    * that exists today, and the development grant reaches the record through
    * it), so a live revision that has left the last written one behind IS the
    * edit. Callers that want promptness still call markDirty; this closes the
-   * gap for a writer that has no server-side hook, and it costs one serialize
-   * per LOADED owner per sweep, never a query.
+   * gap for a writer that has no server-side hook.
+   *
+   * It reads ONE INTEGER per loaded owner, never a clone. That is not a
+   * micro-optimization: this runs synchronously inside the 20 Hz loop body
+   * (runPeriodicSaveFlush is documented as having to return synchronously), so
+   * cloning every loaded record here would put O(owners x layout rows) of
+   * copying and garbage on one tick every thirty seconds. Measured at the
+   * approved 420-row ceiling, the clone shape cost tens of milliseconds per
+   * sweep at five thousand owners against a fifty millisecond tick budget.
+   * serialize() stays inside runWrite, where the result is the thing written.
    *
    * A blocked entry is never probed: it must not write, so knowing it moved
    * buys nothing. A revision that went BACKWARDS is treated as movement too:
@@ -256,9 +269,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    */
   const noteRevisionMoved = (entry: FreeholdPersistEntry): boolean => {
     if (blocked(entry)) return false;
-    const live = ports.serialize(entry.ownerKey);
-    if (live === null) return false;
-    if (entry.state !== null && live.rev === entry.state.rev) return false;
+    const liveRev = ports.liveRev(entry.ownerKey);
+    if (liveRev === null) return false;
+    if (entry.state !== null && liveRev === entry.state.rev) return false;
     entry.dirtyGeneration++;
     if (entry.dirtySinceMs === 0) entry.dirtySinceMs = ports.nowMs();
     return true;
@@ -1004,6 +1017,7 @@ export function createGameFreeholdPersistStore(deps: {
       return state === null ? null : persistedFreeholdFromState(state);
     },
     hasLive: (ownerKey) => deps.sim.ctx.freeholds.has(ownerKey),
+    liveRev: (ownerKey) => deps.sim.ctx.freeholds.get(ownerKey)?.rev ?? null,
     mintPlotId: () => mintFreeholdPlotId(),
     // No gate means no admission control on this host, not an unbounded wait.
     acquirePermit: gate
