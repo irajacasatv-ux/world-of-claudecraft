@@ -33,9 +33,10 @@
 
 import { FREEHOLD_TIER_IDS } from '../src/sim/content/freehold';
 import {
-  FREEHOLD_MAX_OWNED_BYTES,
+  FREEHOLD_MAX_STORED_BYTES,
   type FreeholdLoadResult,
   freeholdStateFromPersisted,
+  freeholdWriteRefusal,
   normalizeFreehold,
   type PersistedFreehold,
   persistedFreeholdFromState,
@@ -410,7 +411,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   async function classify(accountId: number, ownerKey: string): Promise<LoadedFreehold> {
     // One permit covers both reads, so they run in sequence: two concurrent
     // queries would be two pool checkouts against one admission.
-    const rowLoad = await ports.readRow(accountId, FREEHOLD_MAX_OWNED_BYTES);
+    // The STORED ceiling, not the canonical one: the SQL bound measures the
+    // text PostgreSQL renders back out of jsonb, which is wider than the JSON
+    // that went in. Handing it FREEHOLD_MAX_OWNED_BYTES would refuse the
+    // maximal record this realm is allowed to write.
+    const rowLoad = await ports.readRow(accountId, FREEHOLD_MAX_STORED_BYTES);
     const hearth = await readHearth(accountId);
     const entry = ensureEntry(ownerKey, accountId);
 
@@ -649,6 +654,25 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // The owner holds no live record any more. Writing here would put a
       // default over a real row, which is invariant 1.
       if (persisted === null) return false;
+      // WRITABLE IMPLIES READABLE. A document past any load ceiling would mint
+      // a row this realm can never read back, so it quiesces the owner instead:
+      // the row on disk stays the last one that WAS readable, and a record this
+      // size only grows, so retrying it every sweep would be a loop against the
+      // pool rather than a recovery.
+      const refusal = freeholdWriteRefusal(persisted);
+      if (refusal !== null) {
+        counters.writeFailures++;
+        entry.quiesced = true;
+        if (!entry.quiesceWarned) {
+          entry.quiesceWarned = true;
+          const measure =
+            refusal.kind === 'oversize' ? `${refusal.bytes} bytes` : `${refusal.rows} rows`;
+          ports.error(
+            `freehold plot index ${entry.plotIndex} write refused (${refusal.kind}): ${measure} past the limit of ${refusal.limit}; no further writes go out for this owner`,
+          );
+        }
+        return false;
+      }
       const layoutJson = JSON.stringify(persisted.layout);
       const trophiesJson = JSON.stringify(persisted.trophies);
       counters.lastWriteBytes = Buffer.byteLength(layoutJson) + Buffer.byteLength(trophiesJson);

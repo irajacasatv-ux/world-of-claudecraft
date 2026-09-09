@@ -36,9 +36,13 @@ import {
 } from '../../server/freehold_persist';
 import { createKeyedSerialWriter } from '../../server/serial_writer';
 import {
+  FREEHOLD_MAX_LAYOUT_ROWS,
   FREEHOLD_MAX_OWNED_BYTES,
+  FREEHOLD_MAX_STORED_BYTES,
+  FREEHOLD_MAX_TROPHY_ROWS,
   type FreeholdLoadResult,
   type PersistedFreehold,
+  persistedFreeholdBytes,
 } from '../../src/sim/freehold/persisted';
 import type { SimContext } from '../../src/sim/sim_context';
 import { methodBody } from '../helpers/method_body';
@@ -298,7 +302,12 @@ describe('preload admission', () => {
     expect(h.calls).toEqual([]);
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(h.calls).toEqual(['permit', 'readRow', 'readHearth', 'release']);
-    expect(h.ownedBytesSeen).toEqual([FREEHOLD_MAX_OWNED_BYTES]);
+    // The STORED ceiling reaches SQL, never the canonical one. The two are
+    // pinned as DIFFERENT numbers here, so a future edit that collapses them
+    // back into one fails this line rather than silently making every maximal
+    // record unreadable.
+    expect(h.ownedBytesSeen).toEqual([FREEHOLD_MAX_STORED_BYTES]);
+    expect(FREEHOLD_MAX_STORED_BYTES).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES);
     expect(loaded.accountId).toBe(ACCOUNT_ID);
     expect(h.store.stats().loads).toBe(1);
   });
@@ -943,6 +952,139 @@ describe('the stale compare-and-swap quiesce', () => {
     expect(h.writeCount()).toBe(1);
     expect(h.store.stats().writeFailures).toBe(1);
     expect(h.store.stats().running).toBe(0);
+  });
+});
+
+describe('the save path refuses what the load path would refuse', () => {
+  // WRITABLE IMPLIES READABLE. Without this, a realm can mint a row past its
+  // own load ceilings and then hold that account read-only forever, from a row
+  // it produced itself. Every case here asserts the ABSENCE of a writeRow call:
+  // the refusal has to happen before the statement, not after it.
+
+  /** A 64-CHARACTER id that is 192 BYTES. Legal by the id-length rule, which
+   *  counts characters, and the reason the byte ceiling exists at all. */
+  const wideId = String.fromCharCode(0x65e5).repeat(64);
+
+  function oversizePersisted(): PersistedFreehold {
+    return persistedFixture({
+      layout: Array.from({ length: FREEHOLD_MAX_LAYOUT_ROWS }, (_unused, i) => ({
+        placementId: i,
+        itemId: wideId,
+        x: -0.0000012345678901234567,
+        y: -0.0000012345678901234567,
+        z: -0.0000012345678901234567,
+        yaw: -0.0000012345678901234567,
+      })),
+      rev: 8,
+    });
+  }
+
+  async function refusingStore(persisted: PersistedFreehold) {
+    return await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
+      serialize: () => persisted,
+      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
+    });
+  }
+
+  it('is not vacuous: the oversize fixture really is over the byte ceiling with legal row counts', () => {
+    const doc = oversizePersisted();
+    expect(doc.layout).toHaveLength(FREEHOLD_MAX_LAYOUT_ROWS);
+    expect(doc.trophies.length).toBeLessThanOrEqual(FREEHOLD_MAX_TROPHY_ROWS);
+    expect(persistedFreeholdBytes(doc)).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES);
+  });
+
+  it('writes nothing for a document past the byte ceiling and quiesces the owner', async () => {
+    const h = await refusingStore(oversizePersisted());
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(0);
+    expect(h.calls).not.toContain('writeRow');
+    expect(h.store.stats().writeFailures).toBe(1);
+    expect(h.errors).toHaveLength(1);
+    expect(h.errors[0]).toContain('oversize');
+    expect(h.errors[0]).toContain(String(FREEHOLD_MAX_OWNED_BYTES));
+    // The identity of the owner never reaches the message.
+    expect(h.errors[0]).not.toContain(String(ACCOUNT_ID));
+  });
+
+  it('does not retry the refused document on the next sweep', async () => {
+    const h = await refusingStore(oversizePersisted());
+    h.store.saveAllDirty();
+    await tick(30);
+    h.store.saveAllDirty();
+    await tick(30);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(0);
+    // One warning, not one per sweep: a quiesced owner is reported once.
+    expect(h.errors).toHaveLength(1);
+  });
+
+  it('writes nothing for a document past the layout row ceiling', async () => {
+    const overLong = persistedFixture({
+      layout: Array.from({ length: FREEHOLD_MAX_LAYOUT_ROWS + 1 }, (_unused, i) => ({
+        placementId: i,
+        itemId: 'oak_chair',
+        x: 0,
+        y: 0,
+        z: 0,
+        yaw: 0,
+      })),
+      rev: 8,
+    });
+    const h = await refusingStore(overLong);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(0);
+    expect(h.errors[0]).toContain('layout_over_ceiling');
+    expect(h.errors[0]).toContain(String(FREEHOLD_MAX_LAYOUT_ROWS + 1));
+  });
+
+  it('writes nothing for a document past the trophy row ceiling', async () => {
+    const overLong = persistedFixture({
+      trophies: Array.from({ length: FREEHOLD_MAX_TROPHY_ROWS + 1 }, (_unused, i) => ({
+        plinth: i,
+        trophyId: 'skull_of_something',
+      })),
+      rev: 8,
+    });
+    const h = await refusingStore(overLong);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(0);
+    expect(h.errors[0]).toContain('trophies_over_ceiling');
+  });
+
+  it('reports the row ceiling first for a document that breaks both', async () => {
+    const both = persistedFixture({
+      layout: Array.from({ length: FREEHOLD_MAX_LAYOUT_ROWS + 1 }, (_unused, i) => ({
+        placementId: i,
+        itemId: wideId,
+        x: -0.0000012345678901234567,
+        y: -0.0000012345678901234567,
+        z: -0.0000012345678901234567,
+        yaw: -0.0000012345678901234567,
+      })),
+      rev: 8,
+    });
+    // Genuinely both, so the ordering claim is not vacuous.
+    expect(persistedFreeholdBytes(both)).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES);
+    const h = await refusingStore(both);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.errors[0]).toContain('layout_over_ceiling');
+    expect(h.errors[0]).not.toContain('oversize');
+  });
+
+  it('still writes a document inside every ceiling', async () => {
+    // The anti-vacuity arm: the same harness, one legal document, one write.
+    const h = await refusingStore(persistedFixture({ rev: 8 }));
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().writeFailures).toBe(0);
   });
 });
 

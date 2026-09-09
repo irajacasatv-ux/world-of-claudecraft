@@ -45,6 +45,16 @@ export const FREEHOLD_PRIMARY_PLOT_INDEX = 0;
 
 /** One slot of headroom past the admitted one, so an account whose ONLY row
  *  sits at an unadmitted index is SEEN rather than read as absence. */
+/** The stored-column length ceilings this table enforces, SHAPE ONLY and
+ *  deliberately far above every authored identity (the longest shipped tier id
+ *  and visit policy are a fraction of these). They are exported because the
+ *  worst-case record fixture has to be INSERTABLE: a maximal record the sim
+ *  admits but PostgreSQL refuses with a 23514 would make the byte-ceiling proof
+ *  unrunnable, and the mismatch would surface as a save that fails only in
+ *  production. tests/server/freehold_db.pg.test.ts pins the fixture to these. */
+export const FREEHOLD_TIER_COLUMN_MAX_LENGTH = 64;
+export const FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH = 32;
+
 export const FREEHOLD_ACCOUNT_PLOT_READ_LIMIT = 2;
 
 /** An explicitly unbound row: no upkeep-derived day or week stamp, no credit.
@@ -126,10 +136,10 @@ CREATE TABLE IF NOT EXISTS "__woc_freehold_schema__".account_freeholds (
   -- SHAPE ONLY, never the authored tier set: a tier this build does not admit
   -- must still READ BACK, so recovery can preserve it instead of erasing a home.
   CONSTRAINT account_freeholds_tier_shape
-    CHECK (tier <> '' AND length(tier) <= 64),
+    CHECK (tier <> '' AND length(tier) <= ${FREEHOLD_TIER_COLUMN_MAX_LENGTH}),
   -- Shape only, same reason: an unadmitted policy must survive a readback.
   CONSTRAINT account_freeholds_visit_policy_shape
-    CHECK (visit_policy <> '' AND length(visit_policy) <= 32),
+    CHECK (visit_policy <> '' AND length(visit_policy) <= ${FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH}),
   -- Shape only: the upkeep writer owns this vocabulary, not this table.
   CONSTRAINT account_freeholds_upkeep_binding_shape
     CHECK (upkeep_binding <> '' AND length(upkeep_binding) <= 32),

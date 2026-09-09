@@ -11,6 +11,21 @@
 // and its statements, not the core schema, and the production parents exist
 // long before ensureSchema reaches this module.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  FREEHOLD_MAX_LAYOUT_ROWS,
+  FREEHOLD_MAX_OWNED_BYTES,
+  FREEHOLD_MAX_STORED_BYTES,
+  FREEHOLD_MAX_TROPHY_ROWS,
+  normalizeFreehold,
+  persistedFreeholdBytes,
+} from '../../src/sim/freehold/persisted';
+import {
+  MAXIMAL_FREEHOLD_OPTS,
+  MAXIMAL_FREEHOLD_POLICY,
+  MAXIMAL_FREEHOLD_REV,
+  MAXIMAL_FREEHOLD_TIER,
+  maximalLegalFreeholdRecord,
+} from '../helpers/maximal_freehold';
 import { checkRelationUsesPartialIndex, rootPlanFromExplainRow } from '../helpers/pg_plan';
 
 const url = process.env.TEST_DATABASE_URL ?? '';
@@ -564,6 +579,83 @@ d('account_freeholds against real PostgreSQL', () => {
     expect(exported[0].plot_id).toBe(PLOT_ID);
     expect(exported[0].upkeep_binding).toBe(db.FREEHOLD_UPKEEP_BINDING_UNBOUND);
     expect(await db.freeholdsForExport(pool, 2)).toEqual([]);
+  });
+
+  it('round-trips the maximal legal record through jsonb and reads it back as a row', async () => {
+    // THE DECISIVE PROOF that writable implies readable. jsonb is not a byte
+    // copy of the text that went in: it re-renders every object with a space
+    // after each colon and each comma, and it stores every JSON number as
+    // `numeric`. So the SQL bound measures a WIDER text than the canonical JSON
+    // FREEHOLD_MAX_OWNED_BYTES bounds, and handing the canonical number to the
+    // read would classify the largest record this realm is allowed to write as
+    // permanently oversize. Only an executed round trip can settle that.
+    const admitted = normalizeFreehold(maximalLegalFreeholdRecord(), MAXIMAL_FREEHOLD_OPTS);
+    if (admitted.kind !== 'loaded') throw new Error(`fixture refused: ${admitted.kind}`);
+    const state = admitted.state;
+
+    // The fixture's identities sit exactly at the STORED column ceilings, so a
+    // future widening of either constant without a re-measure fails here.
+    expect(MAXIMAL_FREEHOLD_TIER.length).toBe(db.FREEHOLD_TIER_COLUMN_MAX_LENGTH);
+    expect(MAXIMAL_FREEHOLD_POLICY.length).toBe(db.FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH);
+
+    await db.upsertFreehold(pool, {
+      accountId,
+      plotIndex: db.FREEHOLD_PRIMARY_PLOT_INDEX,
+      plotId: state.plotId,
+      tier: state.tier,
+      layoutJson: JSON.stringify(state.layout),
+      trophiesJson: JSON.stringify(state.trophies),
+      condition: state.condition,
+      visitPolicy: state.visitPolicy,
+      wireRev: state.rev,
+      expectedDurableRev: null,
+    });
+
+    // What PostgreSQL actually stores, measured the way the read bound measures
+    // it. The unit suite computes this same number from the canonical JSON plus
+    // the separators jsonb re-renders; this is the executed half of that pair.
+    const stored = await storedRow(accountId);
+    const storedBytes = Number(stored?.layout_bytes ?? 0) + Number(stored?.trophies_bytes ?? 0);
+    expect(storedBytes).toBe(106_032);
+    expect(storedBytes).toBeGreaterThan(persistedFreeholdBytes(state));
+    expect(storedBytes).toBeLessThanOrEqual(FREEHOLD_MAX_STORED_BYTES);
+
+    // The bound the store actually passes ADMITS it.
+    const load = await db.freeholdForAccount(pool, accountId, FREEHOLD_MAX_STORED_BYTES);
+    if (load.kind !== 'row') throw new Error(`expected a row, got ${load.kind}`);
+    expect((load.row.layout as unknown[]).length).toBe(FREEHOLD_MAX_LAYOUT_ROWS);
+    expect((load.row.trophies as unknown[]).length).toBe(FREEHOLD_MAX_TROPHY_ROWS);
+
+    // And every worst-case number survives the numeric round trip EXACTLY, so
+    // the positional codec rule is proved against the engine rather than
+    // asserted: a coordinate that came back re-rendered would change the
+    // record's bytes on the next save and drift the ceiling.
+    expect(load.row.layout).toEqual(state.layout);
+    expect(load.row.trophies).toEqual(state.trophies);
+    expect(load.row.wireRev).toBe(String(MAXIMAL_FREEHOLD_REV));
+
+    // The regression witness: the CANONICAL ceiling refuses this row. If a
+    // future edit hands FREEHOLD_MAX_OWNED_BYTES back to the SQL read, the
+    // maximal record becomes permanently unreadable, and this arm says so.
+    const wrongBound = await db.freeholdForAccount(pool, accountId, FREEHOLD_MAX_OWNED_BYTES);
+    expect(wrongBound.kind).toBe('oversize');
+
+    // Re-normalizing what came back off disk loads again: the record survives a
+    // full write, store, read, normalize cycle without crossing a ceiling.
+    const reloaded = normalizeFreehold(
+      {
+        version: load.row.schemaVersion,
+        plotId: load.row.plotId,
+        tier: load.row.tier,
+        layout: load.row.layout,
+        trophies: load.row.trophies,
+        condition: load.row.condition,
+        visitPolicy: load.row.visitPolicy,
+        rev: Number(load.row.wireRev),
+      },
+      MAXIMAL_FREEHOLD_OPTS,
+    );
+    expect(reloaded.kind).toBe('loaded');
   });
 
   it('reaches the primary key for the account read, never a sequential scan', async () => {

@@ -21,10 +21,12 @@ import {
   FREEHOLD_MAX_ID_LENGTH,
   FREEHOLD_MAX_LAYOUT_ROWS,
   FREEHOLD_MAX_OWNED_BYTES,
+  FREEHOLD_MAX_STORED_BYTES,
   FREEHOLD_MAX_TROPHY_ROWS,
   FREEHOLD_PERSIST_VERSION,
   type FreeholdLoadResult,
   freeholdStateFromPersisted,
+  freeholdWriteRefusal,
   type NormalizeFreeholdOptions,
   normalizeFreehold,
   type PersistedFreehold,
@@ -32,6 +34,16 @@ import {
   persistedFreeholdFromState,
 } from '../src/sim/freehold/persisted';
 import { asFreeholdPlotId, type FreeholdState } from '../src/sim/freehold/types';
+import {
+  MAXIMAL_FREEHOLD_CONDITION,
+  MAXIMAL_FREEHOLD_COORD,
+  MAXIMAL_FREEHOLD_OPTS,
+  MAXIMAL_FREEHOLD_POLICY,
+  MAXIMAL_FREEHOLD_REV,
+  MAXIMAL_FREEHOLD_TIER,
+  maximalLegalFreeholdRecord,
+  worstCaseIntegerIds,
+} from './helpers/maximal_freehold';
 
 // The authored identities arrive as VALUES, exactly like the farm allowlists:
 // the leaf imports no content table, so these unit arms never depend on shipped
@@ -648,67 +660,13 @@ describe('persistedFreeholdBytes measures the saved text in UTF-8 bytes', () => 
 });
 
 // The maximal legal record and the one-over record: the two witnesses for the
-// measured FREEHOLD_MAX_OWNED_BYTES ceiling, published here as named
-// deliverables. Both are built from the worst legal case of every field rather
-// than a comfortable middle, because a ceiling proved with a friendly fixture
-// is not proved at all.
-const MAX_TIER = 't'.repeat(FREEHOLD_MAX_ID_LENGTH);
-const MAX_POLICY = 'v'.repeat(FREEHOLD_MAX_ID_LENGTH);
-
-/** The longest JSON text a finite double takes is 25 characters; the longest an
- *  INTEGER double takes is 24 (-1.7976931348623157e+308, which
- *  `Number.isInteger` accepts, so a placement id may legally be one). */
-const WORST_COORD = -0.0000012345678901234567;
-const WORST_CONDITION = 0.0000012345678901234567;
-const WORST_REV = Number.MAX_VALUE;
-
-/** `count` DISTINCT integer ids whose JSON text is the longest an integer can
- *  take, walked one unit in the last place at a time down from -MAX_VALUE.
- *  Distinctness matters: duplicates would be refused by the loader, so the
- *  worst case has to be both maximal in text and legal in identity. */
-function worstCaseIntegerIds(count: number): number[] {
-  const bits = new BigUint64Array(1);
-  const doubles = new Float64Array(bits.buffer);
-  doubles[0] = -Number.MAX_VALUE;
-  const out: number[] = [];
-  while (out.length < count) {
-    const value = doubles[0];
-    if (JSON.stringify(value).length === 24) out.push(value);
-    bits[0] -= 1n;
-  }
-  return out;
-}
-
-function maximalLegalRecord(
-  layoutRows: number = FREEHOLD_MAX_LAYOUT_ROWS,
-): Record<string, unknown> {
-  const id = 'i'.repeat(FREEHOLD_MAX_ID_LENGTH);
-  return {
-    version: FREEHOLD_PERSIST_VERSION,
-    plotId: 'p'.repeat(FREEHOLD_MAX_ID_LENGTH),
-    tier: MAX_TIER,
-    layout: worstCaseIntegerIds(layoutRows).map((placementId) => ({
-      placementId,
-      itemId: id,
-      x: WORST_COORD,
-      y: WORST_COORD,
-      z: WORST_COORD,
-      yaw: WORST_COORD,
-    })),
-    trophies: worstCaseIntegerIds(FREEHOLD_MAX_TROPHY_ROWS).map((plinth) => ({
-      plinth,
-      trophyId: id,
-    })),
-    condition: WORST_CONDITION,
-    visitPolicy: MAX_POLICY,
-    rev: WORST_REV,
-  };
-}
-
-const maximalOpts = {
-  validTierIds: new Set([MAX_TIER]) as ReadonlySet<string>,
-  validVisitPolicies: new Set([MAX_POLICY]) as ReadonlySet<string>,
-};
+// measured FREEHOLD_MAX_OWNED_BYTES ceiling. The fixture itself lives in
+// tests/helpers/maximal_freehold.ts because tests/server/freehold_db.pg.test.ts
+// round-trips the SAME document through real PostgreSQL to prove the stored
+// ceiling; two copies would drift, and the drift lands as an account this realm
+// can write and then never read.
+const maximalLegalRecord = maximalLegalFreeholdRecord;
+const maximalOpts = MAXIMAL_FREEHOLD_OPTS;
 
 describe('the measured byte ceiling, proved by the maximal and one-over records', () => {
   it('generates distinct worst-case ids at the longest legal integer text', () => {
@@ -719,11 +677,16 @@ describe('the measured byte ceiling, proved by the maximal and one-over records'
     expect(new Set(ids).size).toBe(FREEHOLD_MAX_LAYOUT_ROWS);
     for (const id of ids) {
       expect(Number.isInteger(id)).toBe(true);
-      expect(JSON.stringify(id)).toHaveLength(24);
+      expect(JSON.stringify(id)).toHaveLength(17);
     }
-    expect(JSON.stringify(WORST_COORD)).toHaveLength(25);
-    expect(JSON.stringify(WORST_CONDITION)).toHaveLength(24);
-    expect(JSON.stringify(WORST_REV)).toHaveLength(23);
+    expect(JSON.stringify(MAXIMAL_FREEHOLD_COORD)).toHaveLength(25);
+    expect(JSON.stringify(MAXIMAL_FREEHOLD_CONDITION)).toHaveLength(3);
+    expect(JSON.stringify(MAXIMAL_FREEHOLD_REV)).toHaveLength(16);
+    // The two identities sit at their STORED column ceilings, which is what
+    // makes the record insertable and so round-trippable; the pg suite pins
+    // both against the DDL's own constants.
+    expect(MAXIMAL_FREEHOLD_TIER).toHaveLength(FREEHOLD_MAX_ID_LENGTH);
+    expect(MAXIMAL_FREEHOLD_POLICY).toHaveLength(32);
   });
 
   it('loads the maximal legal record, and its measured bytes sit just under the ceiling', () => {
@@ -740,7 +703,7 @@ describe('the measured byte ceiling, proved by the maximal and one-over records'
     expect(bytes).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES - 1024);
     expect(FREEHOLD_MAX_OWNED_BYTES % 1024).toBe(0);
     // The measured number the workbook records.
-    expect(bytes).toBe(104_363);
+    expect(bytes).toBe(101_139);
   });
 
   it('refuses the one-over record: one layout row past the ceiling', () => {
@@ -765,15 +728,131 @@ describe('the measured byte ceiling, proved by the maximal and one-over records'
     );
   });
 
+  it('derives the stored ceiling from the canonical one plus the separators jsonb re-renders', () => {
+    // FREEHOLD_MAX_STORED_BYTES bounds a DIFFERENT text from its sibling: what
+    // PostgreSQL renders back out of jsonb, which prints a space after every
+    // colon and every comma. The arithmetic is computed here and the same
+    // number is re-measured against a real server in
+    // tests/server/freehold_db.pg.test.ts, so neither side can drift alone.
+    const state = loadedState(norm(maximalLegalRecord(), maximalOpts));
+    const contentJson = JSON.stringify(state.layout).length + JSON.stringify(state.trophies).length;
+    expect(contentJson).toBe(100_866);
+    // A layout row has six keys (six colons, five commas) and a trophy row two
+    // (two colons, one comma); each array adds one comma per gap.
+    const separators =
+      FREEHOLD_MAX_LAYOUT_ROWS * 11 +
+      (FREEHOLD_MAX_LAYOUT_ROWS - 1) +
+      FREEHOLD_MAX_TROPHY_ROWS * 3 +
+      (FREEHOLD_MAX_TROPHY_ROWS - 1);
+    expect(separators).toBe(5_166);
+    const stored = contentJson + separators;
+    expect(stored).toBe(106_032);
+    // The same two-sided rounding claim the canonical ceiling carries, and the
+    // ordering that makes the pair correct: the stored bound must ADMIT the
+    // maximal legal record, or a row this realm writes is one it cannot read.
+    expect(FREEHOLD_MAX_STORED_BYTES).toBeGreaterThanOrEqual(stored);
+    expect(FREEHOLD_MAX_STORED_BYTES - stored).toBeLessThan(1024);
+    expect(FREEHOLD_MAX_STORED_BYTES % 1024).toBe(0);
+    expect(FREEHOLD_MAX_STORED_BYTES).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES);
+  });
+
   it('checks the row ceiling BEFORE the byte ceiling, so malformed wins over oversize', () => {
-    const oneOver = maximalLegalRecord(FREEHOLD_MAX_LAYOUT_ROWS + 1);
-    // The same record IS genuinely oversize: it is bigger than the maximal one,
-    // which already sits within 1024 bytes of the ceiling. So this case really
-    // does satisfy both arms, and the ordering claim is not vacuous.
-    expect(persistedFreeholdBytes(oneOver as unknown as PersistedFreehold)).toBeGreaterThan(
+    // TWO rows over, not one: the maximal record sits 237 bytes under the
+    // rounded ceiling and one worst-case layout row is 232 bytes, so a
+    // one-over record is genuinely still inside the byte bound and would make
+    // this ordering claim vacuous. Two rows clears it.
+    const over = maximalLegalRecord(FREEHOLD_MAX_LAYOUT_ROWS + 2);
+    expect(persistedFreeholdBytes(over as unknown as PersistedFreehold)).toBeGreaterThan(
       FREEHOLD_MAX_OWNED_BYTES,
     );
-    expect(norm(oneOver, maximalOpts).kind).toBe('malformed');
+    expect(norm(over, maximalOpts)).toEqual({
+      kind: 'malformed',
+      detail: `layout_over_ceiling:${FREEHOLD_MAX_LAYOUT_ROWS + 2}`,
+    });
+  });
+});
+
+describe('freeholdWriteRefusal: the save path refuses exactly what the load path refuses', () => {
+  // WRITABLE IMPLIES READABLE. Each case asserts BOTH halves against the SAME
+  // document, so the coupling cannot rot from one side: if a future edit
+  // loosens the loader, the paired assertion here fails rather than letting the
+  // save path mint a row that comes back held.
+  const maximalState = (): PersistedFreehold =>
+    loadedState(norm(maximalLegalRecord(), maximalOpts));
+
+  it('passes the maximal legal record, which the loader also admits', () => {
+    const state = maximalState();
+    expect(freeholdWriteRefusal(state)).toBeNull();
+    expect(norm(maximalLegalRecord(), maximalOpts).kind).toBe('loaded');
+  });
+
+  it('refuses one layout row past the ceiling, the way the loader calls it malformed', () => {
+    const state = maximalState();
+    const over: PersistedFreehold = {
+      ...state,
+      layout: [...state.layout, state.layout[0]],
+    };
+    expect(freeholdWriteRefusal(over)).toEqual({
+      kind: 'layout_over_ceiling',
+      rows: FREEHOLD_MAX_LAYOUT_ROWS + 1,
+      limit: FREEHOLD_MAX_LAYOUT_ROWS,
+    });
+    expect(norm(maximalLegalRecord(FREEHOLD_MAX_LAYOUT_ROWS + 1), maximalOpts)).toEqual({
+      kind: 'malformed',
+      detail: `layout_over_ceiling:${FREEHOLD_MAX_LAYOUT_ROWS + 1}`,
+    });
+  });
+
+  it('refuses one trophy past the ceiling', () => {
+    const state = maximalState();
+    const over: PersistedFreehold = {
+      ...state,
+      trophies: [...state.trophies, state.trophies[0]],
+    };
+    expect(freeholdWriteRefusal(over)).toEqual({
+      kind: 'trophies_over_ceiling',
+      rows: FREEHOLD_MAX_TROPHY_ROWS + 1,
+      limit: FREEHOLD_MAX_TROPHY_ROWS,
+    });
+  });
+
+  it('refuses a byte-oversize document with the same bytes and limit the loader reports', () => {
+    const state = maximalState();
+    const bytes = persistedFreeholdBytes(state);
+    expect(freeholdWriteRefusal(state, bytes - 1)).toEqual({
+      kind: 'oversize',
+      bytes,
+      limit: bytes - 1,
+    });
+    expect(norm(maximalLegalRecord(), { ...maximalOpts, maxOwnedBytes: bytes - 1 })).toEqual({
+      kind: 'oversize',
+      bytes,
+      limit: bytes - 1,
+    });
+    // Inclusive on both sides, checked together so neither drifts.
+    expect(freeholdWriteRefusal(state, bytes)).toBeNull();
+  });
+
+  it('checks rows before bytes, so a document that breaks both names the row cause', () => {
+    const state = maximalState();
+    // Two rows over, for the same anti-vacuity reason as the loader's ordering
+    // case: one row does not clear the rounding slack.
+    const both: PersistedFreehold = {
+      ...state,
+      layout: [...state.layout, state.layout[0], state.layout[1]],
+    };
+    expect(persistedFreeholdBytes(both)).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES);
+    expect(freeholdWriteRefusal(both)?.kind).toBe('layout_over_ceiling');
+  });
+
+  it('defaults to the canonical ceiling, not the stored one', () => {
+    // Passing the wider stored bound here would let the save path emit a record
+    // the loader refuses, which is the exact inversion this function prevents.
+    const state = maximalState();
+    const bytes = persistedFreeholdBytes(state);
+    expect(freeholdWriteRefusal({ ...state, condition: 100 })).toBeNull();
+    expect(bytes).toBeLessThanOrEqual(FREEHOLD_MAX_OWNED_BYTES);
+    expect(freeholdWriteRefusal(state, FREEHOLD_MAX_OWNED_BYTES)).toBeNull();
   });
 });
 
@@ -873,17 +952,17 @@ describe('freeholdLoadDiagnostic carries counts and classification only', () => 
       kind: 'malformed',
       detail: 'plot_id_shape',
     });
-    expect(freeholdLoadDiagnostic({ kind: 'oversize', bytes: 200_000, limit: 104_448 })).toEqual({
+    expect(freeholdLoadDiagnostic({ kind: 'oversize', bytes: 200_000, limit: 65_536 })).toEqual({
       kind: 'oversize',
-      detail: 'bytes:200000:limit:104448',
+      detail: 'bytes:200000:limit:65536',
     });
     expect(
       freeholdLoadDiagnostic({
         kind: 'oversize',
         bytes: Number.POSITIVE_INFINITY,
-        limit: 104_448,
+        limit: 65_536,
       }),
-    ).toEqual({ kind: 'oversize', detail: 'bytes:na:limit:104448' });
+    ).toEqual({ kind: 'oversize', detail: 'bytes:na:limit:65536' });
   });
 
   it('replaces a detail it does not recognize instead of echoing it', () => {

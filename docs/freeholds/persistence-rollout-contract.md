@@ -233,19 +233,39 @@ The settled symbols, their values, and where each value comes from.
 | Identifier length | `FREEHOLD_MAX_ID_LENGTH` | 64 | The longest approved content identifier a layout or trophy row may carry, checked before decode |
 | Public plot id length | `FREEHOLD_PLOT_ID_MAX_LEN` | 64 | The shared opaque public identity limit already pinned in [../../server/freehold_wire.ts](../../server/freehold_wire.ts), matched by `FREEHOLD_PLOT_ID_RE` |
 | Account read rows | `FREEHOLD_ACCOUNT_PLOT_READ_LIMIT` | 2 | The approved two-plot account cap, read WIDER than the writer admits so a forward row is preserved rather than filtered away |
-| Owned bytes per plot | `FREEHOLD_MAX_OWNED_BYTES` | 104448 | Measured, see below |
+| Owned bytes per plot, canonical JSON | `FREEHOLD_MAX_OWNED_BYTES` | 101376 | Measured, see below |
+| Owned bytes per plot, as stored | `FREEHOLD_MAX_STORED_BYTES` | 106496 | Measured against PostgreSQL 16, see below |
 
-The byte ceiling is a MEASURED value. It is taken from the maximal legal canonical JSON
-fixture, encoded UTF-8, and rounded up to the next whole 1024. Both that maximal legal
-fixture and a one-over refusal fixture are published in
-[../../tests/freehold_state.test.ts](../../tests/freehold_state.test.ts). Enforcement is
-TWO-LAYER: the row is refused in SQL by an `octet_length` bound that nulls the content
-columns before any deep parse can reach them, and the same ceiling is re-checked in the
-sim, through `persistedFreeholdBytes`, before mutation and before save.
+Both byte ceilings are MEASURED values, and they are TWO DIFFERENT MEASUREMENTS of one
+record rather than one number used twice. The maximal legal fixture, and the two-over
+refusal fixture beside it, are published in
+[../../tests/helpers/maximal_freehold.ts](../../tests/helpers/maximal_freehold.ts) and
+driven from [../../tests/freehold_state.test.ts](../../tests/freehold_state.test.ts).
 
-The measurement: the maximal legal record serializes to 104363 UTF-8 bytes through the
-exact serializer the save path uses, and the published ceiling is that value rounded up
-to the next whole 1024.
+`FREEHOLD_MAX_OWNED_BYTES` bounds the CANONICAL JSON the sim serializes: the maximal
+legal record measures 101139 UTF-8 bytes through the exact serializer the save path uses,
+rounded up to 101376.
+
+`FREEHOLD_MAX_STORED_BYTES` bounds what PostgreSQL renders back out of jsonb, which is
+what the SQL `octet_length` measure actually sees. jsonb is not a byte copy of the text
+that went in: it re-renders every object with a space after each colon and each comma,
+and it stores every JSON number as `numeric`, which always prints positionally. The same
+record's two content columns measure 100866 bytes as canonical JSON and 106032 bytes as
+stored text, so the stored ceiling is 106496. The gap is fixed rather than unbounded only
+because the codec refuses a number whose JSON text carries an exponent; without that rule
+an all-exponential record would pass the canonical ceiling and store at nearly six times
+its size.
+
+Enforcement is TWO-LAYER, and each layer bounds what it can actually see. SQL applies
+`FREEHOLD_MAX_STORED_BYTES` through an `octet_length` bound that nulls the content columns
+before any deep parse can reach them. The sim applies `FREEHOLD_MAX_OWNED_BYTES` through
+`persistedFreeholdBytes`, on load and, through `freeholdWriteRefusal`, before every save:
+a document past any load ceiling is never written, so a row this realm produces is always
+a row this realm can read back. The executed proof of the pair is the maximal-record round
+trip in
+[../../tests/server/freehold_db.pg.test.ts](../../tests/server/freehold_db.pg.test.ts),
+which writes the maximal record, reads it back as a row at the stored bound, and asserts
+that the canonical bound refuses the very same row.
 
 Query and plan evidence: produced by two real-Postgres suites, both executed armed
 against PostgreSQL 16 on 2026-09-08.

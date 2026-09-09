@@ -94,22 +94,62 @@ export const FREEHOLD_MAX_ID_LENGTH = 64;
  *  - the two ladder inputs: the largest approved decorBudget (420) divided by
  *    the smallest approved positive decorCost (1) gives FREEHOLD_MAX_LAYOUT_ROWS;
  *    the largest approved plinth count (32) gives FREEHOLD_MAX_TROPHY_ROWS.
- *  - the maximal LEGAL record: 420 layout rows and 32 trophies, every id at
- *    FREEHOLD_MAX_ID_LENGTH characters, the plot id, tier and visit policy at
- *    that same length, and every numeric field at the longest JSON text its
- *    domain admits (25 characters for a coordinate, 24 for an integer
- *    placement id or plinth, 24 for a condition inside 0..100, 23 for a
- *    non-negative integer revision).
- *  - measured canonical JSON: 104,363 bytes.
- *  - rounded UP to the next whole 1024: 104,448 (102 KiB).
+ *  - the maximal LEGAL record: 420 layout rows and 32 trophies, every id and
+ *    the plot id and the tier at FREEHOLD_MAX_ID_LENGTH characters, the visit
+ *    policy at the 32 its stored column admits (a longer one is refused by
+ *    PostgreSQL, so it is not a legal worst case), and every numeric field at
+ *    the longest JSON text its domain admits GIVEN THE POSITIONAL CODEC RULE
+ *    below (25 characters for a coordinate, 17 for an integer placement id or
+ *    plinth, 3 for a condition inside 0..100, 16 for a revision).
+ *  - measured canonical JSON: 101,139 bytes.
+ *  - rounded UP to the next whole 1024: 101,376 (99 KiB), which leaves 237
+ *    bytes of slack, less than the 232 one worst-case layout row costs.
  * The rounding is the only slack; the maximal fixture proves the ceiling
  * admits it and the one-over fixture proves the next row does not.
  *
  * The measure is BYTES, not characters, so a record whose ids are legal in
  * length but multi-byte in UTF-8 refuses here rather than riding every save
  * forever. That is the point of measuring the serialized form.
+ *
+ * This ceiling bounds the CANONICAL JSON only. What PostgreSQL stores is a
+ * different, longer text: see FREEHOLD_MAX_STORED_BYTES.
  */
-export const FREEHOLD_MAX_OWNED_BYTES = 104_448;
+export const FREEHOLD_MAX_OWNED_BYTES = 101_376;
+
+/**
+ * The byte ceiling the SQL read compares against, MEASURED against real
+ * PostgreSQL and deliberately LARGER than FREEHOLD_MAX_OWNED_BYTES, because the
+ * two bound two different texts.
+ *
+ * FREEHOLD_MAX_OWNED_BYTES bounds the canonical JSON this module serializes.
+ * The read bound in server/freehold_db.ts measures
+ * `octet_length(layout::text)`, which is the text PostgreSQL renders back OUT
+ * of jsonb. jsonb is not a byte copy of the text that went in: it re-renders
+ * every object with a space after each colon and each comma, and it stores
+ * every JSON number as `numeric`, which always prints in full positional form.
+ *
+ * Measured on postgres:16-alpine (the `npm run db:up` instance), the maximal
+ * legal record's two content columns:
+ *  - canonical JSON: 100,866 bytes.
+ *  - rendered back out of jsonb: 106,032 bytes, 5,166 bytes wider. That number
+ *    is exactly the re-rendered separators: 420 layout rows at eleven
+ *    (six colons, five commas) plus 419 array commas, and 32 trophy rows at
+ *    three plus 31 array commas.
+ *  - rounded UP to the next whole 1024: 106,496 (104 KiB).
+ *
+ * The `numeric` half is the reason the codec rule below refuses a number whose
+ * JSON text carries an exponent: 5e-324 is fourteen bytes of JSON and three
+ * hundred and thirty five bytes stored, so an all-exponential record passes the
+ * canonical ceiling and stores at nearly six times its size. Refusing the
+ * exponent at the codec keeps this constant a fixed 5.1 percent above its
+ * sibling instead of an unbounded multiple of it.
+ *
+ * Handing FREEHOLD_MAX_OWNED_BYTES to the stored measure would classify the
+ * maximal legal record this realm can WRITE as `oversize` on its next read:
+ * writable would not imply readable and the row would be held forever. Every
+ * caller of freeholdForAccount passes THIS constant.
+ */
+export const FREEHOLD_MAX_STORED_BYTES = 106_496;
 
 /** Condition is a 0..100 scale (13 owns the rules); 100 is intact. */
 const FULL_CONDITION = 100;
@@ -243,10 +283,43 @@ function onlyKnownFields(value: Record<string, unknown>, known: ReadonlySet<stri
   return true;
 }
 
-const finiteNumber = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value);
+/**
+ * A persisted number must be finite AND print POSITIONALLY, meaning its own
+ * JSON text carries no exponent.
+ *
+ * This is a CODEC rule, not a gameplay one, and it is the rule that keeps the
+ * two places this record is measured in agreement. The durable store renders
+ * JSON numbers as `numeric` and prints them in full positional form, so an
+ * exponential double expands enormously on the way to disk: 5e-324 is fourteen
+ * bytes of JSON text and three hundred and thirty five bytes stored, and
+ * -1.7976931348623157e308 is twenty four bytes of JSON and three hundred and
+ * ten stored. Measured whole, the worst exponential record is 98734 bytes of
+ * canonical JSON and 584380 bytes stored, a factor of nearly six.
+ *
+ * That divergence is what would let a record pass the content ceiling on the
+ * way in and fail the storage bound on the way back, permanently, so refusing
+ * the exponent is what makes "anything this code writes, this code can read
+ * back" true rather than hopeful. Positional numbers store as the same digits
+ * they print, so the stored form differs from the canonical form only by the
+ * one space the store inserts after each colon and comma, which is bounded per
+ * row and measured.
+ *
+ * The admitted range is exactly the range JavaScript prints without an
+ * exponent: zero, and magnitudes from 1e-6 up to just under 1e21. Nothing in
+ * the approved geometry needs a value outside it (the measured placement pitch
+ * is half a yard and yaw snaps to fifteen degrees), and a value outside it is
+ * preserved read-only rather than repaired, like every other unsupported shape.
+ */
+const positionalNumber = (value: unknown): value is number => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return false;
+  const text = JSON.stringify(value);
+  return typeof text === 'string' && !text.includes('e') && !text.includes('E');
+};
 
-const integerNumber = (value: unknown): value is number => Number.isInteger(value);
+const finiteNumber = (value: unknown): value is number => positionalNumber(value);
+
+const integerNumber = (value: unknown): value is number =>
+  Number.isSafeInteger(value) && positionalNumber(value);
 
 /** A stored identity: a string within the character ceiling. An EMPTY id is
  *  admitted on purpose. It is bounded, it names nothing, and refusing it would
@@ -392,7 +465,12 @@ export function normalizeFreehold(
   const rawCondition = record.condition;
   let condition = FULL_CONDITION;
   if (finiteNumber(rawCondition)) {
-    condition = Math.min(FULL_CONDITION, Math.max(0, rawCondition));
+    // Clamped AND rounded. The rounding is not tidiness: the durable column is
+    // an integer and the writer refuses a non-integer outright, so a fractional
+    // condition admitted here would load cleanly and then make every later save
+    // throw. The loader's admission policy and the writer's validation have to
+    // be the same predicate, or a legal load manufactures an unwritable record.
+    condition = Math.round(Math.min(FULL_CONDITION, Math.max(0, rawCondition)));
     if (condition !== rawCondition) repaired.push('condition');
   } else {
     // A condition that is not a number at all is repaired to INTACT, never to
@@ -400,6 +478,9 @@ export function normalizeFreehold(
     repaired.push('condition');
   }
   const rawRev = record.rev;
+  // integerNumber is a SAFE-integer test, for the same reason the condition is
+  // rounded: the writer refuses anything else, so admitting it here would build
+  // a record that can never be saved.
   const rev = integerNumber(rawRev) && rawRev >= 0 ? rawRev : 0;
   if (rev !== rawRev) repaired.push('rev');
   // Anything at or below this binary's version normalizes UP to it, because
@@ -556,4 +637,46 @@ export function persistedFreeholdBytes(persisted: PersistedFreehold): number {
   }
   if (typeof text !== 'string') return Number.POSITIVE_INFINITY;
   return utf8ByteLength(text);
+}
+
+/** Why the save path refused a document, in the same vocabulary the load path
+ *  uses so an operator reading a warn line and an operator reading a hold see
+ *  one classification, not two. */
+export type FreeholdWriteRefusal =
+  | { readonly kind: 'layout_over_ceiling'; readonly rows: number; readonly limit: number }
+  | { readonly kind: 'trophies_over_ceiling'; readonly rows: number; readonly limit: number }
+  | { readonly kind: 'oversize'; readonly bytes: number; readonly limit: number };
+
+/**
+ * The save-path twin of the three load-path ceilings. A document this answers
+ * non-null for is one normalizeFreehold would refuse, so writing it would produce
+ * a row this realm can never read back: the account would come up held and
+ * write-blocked forever, from a row this very realm produced.
+ *
+ * WRITABLE IMPLIES READABLE is the whole rule, and it only holds if both sides
+ * check the same three things in the same order: rows before bytes, so a
+ * record that is both too long and too big reports the cause a writer can act
+ * on. The ordering is the same one normalizeFreehold applies.
+ */
+export function freeholdWriteRefusal(
+  persisted: PersistedFreehold,
+  maxOwnedBytes: number = FREEHOLD_MAX_OWNED_BYTES,
+): FreeholdWriteRefusal | null {
+  if (persisted.layout.length > FREEHOLD_MAX_LAYOUT_ROWS) {
+    return {
+      kind: 'layout_over_ceiling',
+      rows: persisted.layout.length,
+      limit: FREEHOLD_MAX_LAYOUT_ROWS,
+    };
+  }
+  if (persisted.trophies.length > FREEHOLD_MAX_TROPHY_ROWS) {
+    return {
+      kind: 'trophies_over_ceiling',
+      rows: persisted.trophies.length,
+      limit: FREEHOLD_MAX_TROPHY_ROWS,
+    };
+  }
+  const bytes = persistedFreeholdBytes(persisted);
+  if (bytes > maxOwnedBytes) return { kind: 'oversize', bytes, limit: maxOwnedBytes };
+  return null;
 }
