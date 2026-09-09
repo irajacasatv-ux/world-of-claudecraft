@@ -148,6 +148,17 @@ export const FREEHOLD_MAX_OWNED_BYTES = 101_376;
  * maximal legal record this realm can WRITE as `oversize` on its next read:
  * writable would not imply readable and the row would be held forever. Every
  * caller of freeholdForAccount passes THIS constant.
+ *
+ * THE MARGIN IS GENERAL, NOT FIXTURE-SPECIFIC, which is what makes the property
+ * true for every record rather than for the one this file measures. The minimal
+ * canonical wrapper around the two content arrays is 96 bytes, so any admitted
+ * record's content columns are at most 101,376 - 96 = 101,280 bytes of
+ * canonical JSON; the largest separator expansion jsonb can add is fixed by the
+ * row ceilings at 420 * 11 + 419 + 32 * 3 + 31 = 5,166 bytes; and
+ * 101,280 + 5,166 = 106,446, which is 50 bytes under this constant. That
+ * fifty-byte margin is thin enough that a new field on the wrapper would eat
+ * it, so the arithmetic is pinned in tests/freehold_state.test.ts rather than
+ * left as a comment.
  */
 export const FREEHOLD_MAX_STORED_BYTES = 106_496;
 
@@ -316,8 +327,6 @@ const positionalNumber = (value: unknown): value is number => {
   return typeof text === 'string' && !text.includes('e') && !text.includes('E');
 };
 
-const finiteNumber = (value: unknown): value is number => positionalNumber(value);
-
 const integerNumber = (value: unknown): value is number =>
   Number.isSafeInteger(value) && positionalNumber(value);
 
@@ -346,10 +355,10 @@ function layoutRowsFault(rows: readonly unknown[]): string | null {
     if (!integerNumber(placementId)) return `layout_row:${i}:placement_id`;
     if (placementIds.has(placementId)) return `layout_row:${i}:duplicate_placement_id`;
     placementIds.add(placementId);
-    if (!finiteNumber(row.x)) return `layout_row:${i}:x`;
-    if (!finiteNumber(row.y)) return `layout_row:${i}:y`;
-    if (!finiteNumber(row.z)) return `layout_row:${i}:z`;
-    if (!finiteNumber(row.yaw)) return `layout_row:${i}:yaw`;
+    if (!positionalNumber(row.x)) return `layout_row:${i}:x`;
+    if (!positionalNumber(row.y)) return `layout_row:${i}:y`;
+    if (!positionalNumber(row.z)) return `layout_row:${i}:z`;
+    if (!positionalNumber(row.yaw)) return `layout_row:${i}:yaw`;
   }
   return null;
 }
@@ -474,7 +483,7 @@ export function normalizeFreehold(
   const repaired: FreeholdRepairedField[] = [];
   const rawCondition = record.condition;
   let condition = FULL_CONDITION;
-  if (finiteNumber(rawCondition)) {
+  if (positionalNumber(rawCondition)) {
     // Clamped AND rounded. The rounding is not tidiness: the durable column is
     // an integer and the writer refuses a non-integer outright, so a fractional
     // condition admitted here would load cleanly and then make every later save
@@ -655,7 +664,21 @@ export function persistedFreeholdBytes(persisted: PersistedFreehold): number {
 export type FreeholdWriteRefusal =
   | { readonly kind: 'layout_over_ceiling'; readonly rows: number; readonly limit: number }
   | { readonly kind: 'trophies_over_ceiling'; readonly rows: number; readonly limit: number }
-  | { readonly kind: 'oversize'; readonly bytes: number; readonly limit: number };
+  | { readonly kind: 'oversize'; readonly bytes: number; readonly limit: number }
+  /** A field the LOADER would refuse: the same bounded detail normalizeFreehold
+   *  would have produced, so the two sides speak one vocabulary. */
+  | { readonly kind: 'malformed'; readonly detail: string }
+  | { readonly kind: 'unsupported'; readonly detail: string };
+
+/** The realm identity sets, so the writer can refuse a tier or a policy the
+ *  loader would not admit. Optional because a caller with no sets can still
+ *  check everything else; the store passes the same two sets it hands
+ *  normalizeFreehold, which is what makes the two sides agree. */
+export interface FreeholdWriteRefusalOptions {
+  readonly validTierIds?: ReadonlySet<string>;
+  readonly validVisitPolicies?: ReadonlySet<string>;
+  readonly maxOwnedBytes?: number;
+}
 
 /**
  * The save-path twin of the three load-path ceilings. A document this answers
@@ -670,8 +693,9 @@ export type FreeholdWriteRefusal =
  */
 export function freeholdWriteRefusal(
   persisted: PersistedFreehold,
-  maxOwnedBytes: number = FREEHOLD_MAX_OWNED_BYTES,
+  opts: FreeholdWriteRefusalOptions = {},
 ): FreeholdWriteRefusal | null {
+  const maxOwnedBytes = opts.maxOwnedBytes ?? FREEHOLD_MAX_OWNED_BYTES;
   if (persisted.layout.length > FREEHOLD_MAX_LAYOUT_ROWS) {
     return {
       kind: 'layout_over_ceiling',
@@ -685,6 +709,45 @@ export function freeholdWriteRefusal(
       rows: persisted.trophies.length,
       limit: FREEHOLD_MAX_TROPHY_ROWS,
     };
+  }
+  // THE SAME ROW PREDICATES THE LOADER RUNS, not a second, smaller set of them.
+  // The ceilings above are only three of the checks normalizeFreehold applies:
+  // it also refuses a coordinate whose JSON text carries an exponent, a
+  // placement id past the safe-integer range, a duplicate placement id, an
+  // over-long identity and a row carrying an unknown field. A writer that
+  // enforced only the ceilings would accept a document the loader refuses, and
+  // "writable implies readable" would be a comment rather than a property.
+  const layoutFault = layoutRowsFault(persisted.layout);
+  if (layoutFault) return { kind: 'malformed', detail: layoutFault };
+  const trophyFault = trophyRowsFault(persisted.trophies);
+  if (trophyFault) return { kind: 'malformed', detail: trophyFault };
+  if (!FREEHOLD_PLOT_ID_SHAPE.test(persisted.plotId)) {
+    return { kind: 'malformed', detail: 'plot_id_shape' };
+  }
+  if (!integerNumber(persisted.version) || persisted.version < 1) {
+    return { kind: 'malformed', detail: 'version_shape' };
+  }
+  if (persisted.version > FREEHOLD_PERSIST_VERSION) {
+    return { kind: 'unsupported', detail: `version:${persisted.version}` };
+  }
+  if (!boundedId(persisted.tier) || (opts.validTierIds && !opts.validTierIds.has(persisted.tier))) {
+    return { kind: 'unsupported', detail: 'tier:not_admitted' };
+  }
+  if (
+    !boundedId(persisted.visitPolicy) ||
+    (opts.validVisitPolicies && !opts.validVisitPolicies.has(persisted.visitPolicy))
+  ) {
+    return { kind: 'unsupported', detail: 'visit_policy:not_admitted' };
+  }
+  if (
+    !integerNumber(persisted.condition) ||
+    persisted.condition < 0 ||
+    persisted.condition > FULL_CONDITION
+  ) {
+    return { kind: 'malformed', detail: 'condition_shape' };
+  }
+  if (!integerNumber(persisted.rev) || persisted.rev < 0) {
+    return { kind: 'malformed', detail: 'rev_shape' };
   }
   const bytes = persistedFreeholdBytes(persisted);
   if (bytes > maxOwnedBytes) return { kind: 'oversize', bytes, limit: maxOwnedBytes };

@@ -1450,7 +1450,15 @@ const MONOLITHS: MonolithRow[] = [
     // 10291). Exact merged count, zero slack: any further growth reds again.
     // Lowered after extracting travel guards and instance presence; measured after formatting.
     // Gate inventory marking moved to its sibling; unused imports removed.
-    ceiling: 9983,
+    // LOWERED 9983 -> 9920 at the freeholds bounded-persistence work: the
+    // per-readout wire cadence table (every WIRE_HZ, its derived interval, the
+    // three prompt-command sets and the bg reset-event set) moved WHOLE to
+    // server/wire_cadence.ts, verified byte-identical against the pre-move
+    // source, paying for the durable install, the store retain and release, and
+    // the housing sweep's tick-profiler sample. The four names other modules
+    // already imported from here are re-exported so no call site moved.
+    // Measured with wc -l < server/game.ts after biome. Exact count, zero slack.
+    ceiling: 9920,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1747,7 +1755,13 @@ const MONOLITHS: MonolithRow[] = [
     // reach it directly), unlike createCharacterCapped's pure re-export.
     // Exact count, zero slack.
     // Mount skins: bank the coordinator extraction at its measured size.
-    ceiling: 4744,
+    // LOWERED 4744 -> 4605 at the freeholds bounded-persistence work: the
+    // client performance report CRUD moved whole to
+    // server/client_perf_reports_db.ts (verified byte-identical against the
+    // pre-move source by diff), which paid for the two housing loaders on the
+    // account export. Measured with wc -l < server/db.ts after biome. Exact
+    // count, zero slack.
+    ceiling: 4605,
     seam: 'a domain <domain>_db.ts module with its own *_SCHEMA (server/CLAUDE.md)',
   },
   {

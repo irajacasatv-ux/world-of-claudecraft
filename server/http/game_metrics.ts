@@ -685,6 +685,11 @@ export function registerGameStateMetrics(
       // A high-water mark, not a last sample: at a thousand owners a scrape of
       // "the most recent write's size" names nothing an operator can act on.
       this.set({ measure: 'max_write_bytes' }, state.maxWriteBytes);
+      // The store's own admission cap, and what is waiting behind it. The cap
+      // claims the surplus waits in a bounded set this store owns; an
+      // unobservable set makes that claim unfalsifiable in production.
+      this.set({ measure: 'active_writes' }, state.activeWrites);
+      this.set({ measure: 'deferred_writes' }, state.deferredWrites);
     },
   });
 
@@ -709,6 +714,13 @@ export function registerGameStateMetrics(
       this.inc({ measure: 'write_ms' }, state.writeMsTotal);
       this.inc({ measure: 'load_ms' }, state.loadMsTotal);
       this.inc({ measure: 'write_bytes' }, state.writeBytesTotal);
+      // ALERT ON THIS ONE. A write that reached the statement with no document
+      // to send is the terminal state of every lost-save path this store has
+      // had, and each of those was found by reading rather than by watching.
+      this.inc({ measure: 'writes_without_record' }, state.writesWithoutRecord);
+      // Which arm of the oversize refusal fired: the on-disk pre-gate, where no
+      // text length was ever measured, or the measured byte bound.
+      this.inc({ measure: 'pre_gate_refusals' }, state.preGateRefusals);
     },
   });
 

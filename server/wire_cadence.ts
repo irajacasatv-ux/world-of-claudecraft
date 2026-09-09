@@ -3,7 +3,9 @@
 //
 // MOVED OUT OF server/game.ts UNCHANGED. Every value, comment and named
 // residual below is the one that shipped there; this file adds only the DT
-// import and the exports the coordinator re-exports. It is a declarative table
+// import and an `export` on the names the coordinator actually imports. The
+// rest stay module-private exactly as they were, because a move that widens a
+// module's public surface is not only a move. It is a declarative table
 // with one responsibility (cadence policy), so it belongs beside the
 // coordinator rather than inside it, and a reader looking for "how often does
 // the market browse rebuild" now has one place to look.
@@ -13,13 +15,13 @@
 
 import { DT } from '../src/sim/types';
 
-export const ARENA_WIRE_HZ = 0.1;
+const ARENA_WIRE_HZ = 0.1;
 export const ARENA_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * ARENA_WIRE_HZ)));
 // Thornhollow Fields `bg` self key: 1 Hz covers the in-match clocks (wave respawn,
 // match cap, carrier vulnerability) that tick by whole seconds; queue and match
 // transitions force a fresh readout via lastBgWireTick resets (the arena
 // staleness fix), and the flag/score events ride the event queue instantly.
-export const BG_WIRE_HZ = 1;
+const BG_WIRE_HZ = 1;
 export const BG_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * BG_WIRE_HZ)));
 // Personal battleground events that change the throttled `bg` readout the
 // moment they land (found/start/flag plays/result/queue churn).
@@ -48,7 +50,7 @@ export const BG_RESPAWN_EVENT = 'respawn';
 // whole-second clocks (queue wait, proposal countdown), so 2 Hz keeps the
 // window live without re-serializing it at 20 Hz. The shared `dfb` board rides
 // the same cadence and only re-sends when a listing actually changes.
-export const DF_WIRE_HZ = 2;
+const DF_WIRE_HZ = 2;
 export const DF_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * DF_WIRE_HZ)));
 // World Market browse readout cadence. The browse view is a filter + page over
 // the whole listing book, the single most expensive per-viewer read in
@@ -60,7 +62,7 @@ export const DF_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * DF_WIRE_H
 // query object identity) skips the rebuild entirely while nothing changed;
 // MARKET_BROWSE_REFRESH_TICKS is its staleness backstop, the heavy-gate
 // refresh idea applied here.
-export const MARKET_WIRE_HZ = 4;
+const MARKET_WIRE_HZ = 4;
 export const MARKET_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * MARKET_WIRE_HZ)));
 export const MARKET_BROWSE_REFRESH_TICKS = 40;
 export const MARKET_WIRE_PROMPT_CMDS = new Set<string>([
@@ -81,7 +83,7 @@ export const MARKET_WIRE_PROMPT_CMDS = new Set<string>([
 // polling sim.commissionOrderBoardRev (viewer-independent: the projection is
 // a pure function of board plus pid), and a staleness backstop. The viewer's
 // OWN commission commands re-arm the gate for next-snapshot feedback.
-export const CORDER_WIRE_HZ = 4;
+const CORDER_WIRE_HZ = 4;
 export const CORDER_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * CORDER_WIRE_HZ)));
 export const CORDER_BOARD_REFRESH_TICKS = 40;
 export const CORDER_WIRE_PROMPT_CMDS = new Set<string>([
@@ -111,7 +113,7 @@ export const CORDER_WIRE_PROMPT_CMDS = new Set<string>([
 // viewer's OWN mail commands re-arm the gate so their take/delete/read
 // feedback still lands on the next snapshot. The always-streamed O(1) `mailU`
 // envelope count is deliberately NOT gated.
-export const MAIL_WIRE_HZ = 4;
+const MAIL_WIRE_HZ = 4;
 export const MAIL_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * MAIL_WIRE_HZ)));
 export const MAIL_REFRESH_TICKS = 40;
 export const MAIL_WIRE_PROMPT_CMDS = new Set<string>([

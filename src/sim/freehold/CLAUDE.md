@@ -80,7 +80,13 @@ carries an opaque plot id only.
   forward-only rule would then live in as many places as there are hosts, so
   nothing outside this directory may write it. It is outside the serialized
   plot and retained until that isolated Sim is discarded, so leaving or
-  changing tier cannot reset it.
+  changing tier cannot reset it. KNOWN GAP, named so 07a inherits it rather
+  than discovering it: the map has no eviction path, so a long-lived realm
+  accumulates one entry per account that ever used a Hearth Key. Harmless while
+  the clock is inert (nothing writes the durable row in this release), but the
+  release that lights the realm participant owes the eviction, and the source
+  scan above forbids a `.delete(` outside this directory, so the fix belongs
+  here beside the two writers.
   The realm's `freeholdKeyAdmission` participant refuses until 07a supplies
   durable account authority; an isolated ready value never authorizes it.
   This participant is not another feature flag and does not block physical

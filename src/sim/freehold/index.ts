@@ -23,6 +23,12 @@ export {
   type FreeholdDevGrantOutcome,
   type FreeholdDevGrantResult,
 } from './dev_grant';
+// mergeFreeholdKeyReadyAt is deliberately NOT here. It is one of exactly two
+// writers of the Sim-owned hearth clock map, and the forward-only rule it
+// carries is the reason nothing outside this directory may write that map: a
+// name on the barrel invites a host to call it, and a host calling it is the
+// third writer the rule exists to prevent. server/freehold_persist.ts imports
+// it by path, under a source scan that holds the count at two.
 export {
   FREEHOLD_GATE_INTERACT_RANGE,
   FREEHOLD_GATE_TEMPLATE_ID,

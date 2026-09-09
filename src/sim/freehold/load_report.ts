@@ -50,8 +50,12 @@ const KNOWN_DETAILS: readonly RegExp[] = [
   /^(?:layout|trophy)_row:\d{1,10}:[a-z_]{1,30}$/,
   /^not_admitted$/,
   /^repaired:(?:condition|rev|version)(?:,(?:condition|rev|version)){0,2}$/,
-  // A record version, the one number that reaches a detail as text.
-  /^-?\d[\d.]{0,20}(?:e[+-]\d{1,3})?$/,
+  // A record version, the one number that reaches a detail as text. Narrowed to
+  // what the producer can actually emit: normalizeFreehold reports a version
+  // only after integerNumber has admitted it, so it is always a positive
+  // positional safe integer, and a bound wider than its producer is a bound
+  // that is not doing its job.
+  /^\d{1,16}$/,
 ];
 
 const UNCLASSIFIED = 'unclassified';

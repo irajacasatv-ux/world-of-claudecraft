@@ -62,29 +62,37 @@ export const FREEHOLD_TIER_COLUMN_MAX_LENGTH = 64;
  * It exists because the authoritative measure cannot be cheap:
  * `octet_length(layout::text)` has to fully detoast the column and render the
  * whole value to text BEFORE the comparison can happen, so on its own it bounds
- * the CLIENT, never the server. Measured on postgres:16-alpine, the account
- * read costs roughly ten microseconds of database CPU per KB of stored JSON
- * text: 1.5 ms at the legal 420-row maximum, 58.5 ms at a 5.3 MB row, 242 ms at
- * 25 MB, 524 ms at 51 MB, each paid while holding one background permit and one
- * pool client on a box where PostgreSQL and the game loop share four cores. The
- * recovery machinery exists precisely because oversized rows CAN reach disk (a
- * later release with a bigger decor budget writes one, then the realm rolls
- * back to this build), so that cost is reachable.
+ * the CLIENT, never the server. Measured on postgres:16-alpine, the same
+ * account read costs 0.96 ms at the maximal legal row, 84.7 ms at a 7.2 MB
+ * rendered row and 412 ms at a 36 MB one, each paid while holding one
+ * background permit and one pool client on a box where PostgreSQL and the game
+ * loop share four cores. The recovery machinery exists precisely because
+ * oversized rows CAN reach disk (a later release with a bigger decor budget
+ * writes one, then the realm rolls back to this build), so that cost is
+ * reachable.
  *
- * 262144 is two and a half times the maximal legal record's own measured disk
- * size (97932 bytes: the record barely compresses, and realistic housing data
- * measured 1.06x to 1.08x text-to-disk), so nothing near a legal row is ever
- * misclassified and a row from a wider future release is refused for the price
- * of a header read.
+ * WHERE 131072 COMES FROM, measured against a STORED column rather than a
+ * parameterized expression, which is the only thing the gate can actually read:
+ *  - the maximal legal record's two content columns measure 2,199 bytes on
+ *    disk, because its worst-case ids repeat and pglz compresses them 48x;
+ *  - a genuinely INCOMPRESSIBLE legal record measures 32,827 bytes on disk;
+ *  - the theoretical ceiling for any legal row is its UNCOMPRESSED datum size,
+ *    97,932 bytes, since TOAST compression can only shrink it.
+ * So 131072 sits above the largest on-disk size a legal row can ever take, with
+ * a third of that again as margin, and no legal row is ever refused unmeasured.
  *
- * What it is NOT: a hard bound on the detoast. pg_column_size reports the
- * COMPRESSED size, so a deliberately hyper-compressible blob could still sit
- * under this gate and render to far more text. That row cannot come from this
- * codebase, whose own save path refuses anything past the content ceilings, and
- * `octet_length` stays the authoritative measure below the gate. This is a
+ * WHAT IT IS NOT: a bound on the detoast. pg_column_size reports the COMPRESSED
+ * size, and the compression ratio is unbounded, so a deliberately
+ * hyper-compressible blob can sit under any threshold and still render to
+ * megabytes. There is no value of this constant that closes that, which is why
+ * it is calibrated to be the smallest one that is SAFE rather than the largest
+ * one that seems strict. Such a row cannot come from this codebase, whose save
+ * path refuses anything past the content ceilings; `octet_length` stays the
+ * authoritative measure below the gate; and the read renders it once rather
+ * than three times (see the OFFSET 0 barrier in the statement). This is a
  * pathology short-circuit, not a second ceiling.
  */
-export const FREEHOLD_STORED_DETOAST_GATE_BYTES = 262_144;
+export const FREEHOLD_STORED_DETOAST_GATE_BYTES = 131_072;
 export const FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH = 32;
 
 export const FREEHOLD_ACCOUNT_PLOT_READ_LIMIT = 2;
@@ -286,6 +294,13 @@ export type FreeholdRowLoad =
 // FREEHOLD_STORED_DETOAST_GATE_BYTES for what the gate does and does not
 // promise.
 //
+// OFFSET 0 is an OPTIMIZATION BARRIER, not decoration. Without it the planner
+// flattens the LATERAL into the target list and inlines `owned_bytes` into all
+// three output expressions, so the render runs once for the measure and once
+// inside each of the two content CASEs: measured 35.4 ms against 13.6 ms for a
+// single render at 4.88 MB of text. The barrier makes it 13.7 ms, one render,
+// and it is exactly the residual the pre-gate above exists to bound.
+//
 // The explicit LIMIT is the last part of the same promise: a corrupted account
 // can never turn one boot read into an unbounded scan.
 const FREEHOLD_ACCOUNT_READ_SQL = `SELECT f.plot_index,
@@ -297,21 +312,23 @@ const FREEHOLD_ACCOUNT_READ_SQL = `SELECT f.plot_index,
        f.condition,
        f.visit_policy,
        f.upkeep_binding,
-       d.disk_bytes,
+       b.disk_bytes,
        b.owned_bytes,
        CASE WHEN b.owned_bytes <= $2 THEN f.layout ELSE NULL END AS layout,
        CASE WHEN b.owned_bytes <= $2 THEN f.trophies ELSE NULL END AS trophies
   FROM account_freeholds f
   LEFT JOIN LATERAL (
-    SELECT COALESCE(pg_column_size(f.layout), 0)
-         + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes
-  ) d ON true
-  LEFT JOIN LATERAL (
-    SELECT CASE
-             WHEN d.disk_bytes > ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL
-             ELSE COALESCE(octet_length(f.layout::text), 0)
-                + COALESCE(octet_length(f.trophies::text), 0)
-           END AS owned_bytes
+    SELECT disk_bytes, owned_bytes FROM (
+      SELECT COALESCE(pg_column_size(f.layout), 0)
+           + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes,
+             CASE
+               WHEN COALESCE(pg_column_size(f.layout), 0)
+                  + COALESCE(pg_column_size(f.trophies), 0)
+                    > ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL
+               ELSE COALESCE(octet_length(f.layout::text), 0)
+                  + COALESCE(octet_length(f.trophies::text), 0)
+             END AS owned_bytes
+    ) m OFFSET 0
   ) b ON true
  WHERE f.account_id = $1
  ORDER BY f.plot_index

@@ -201,8 +201,12 @@ d('account_freeholds against real PostgreSQL', () => {
     // a silently destroyed production table.
     const where = await pool.query('SELECT current_schema() AS s');
     expect(where.rows[0].s).toBe(SCHEMA);
+    // Scoped to THIS schema. An unfiltered catalog query fails whenever any
+    // other tenant of the same development database holds a table of the same
+    // name, which turns an unrelated concurrent session into a red suite.
     const owner = await pool.query(
-      "SELECT schemaname FROM pg_tables WHERE tablename = 'account_freeholds'",
+      `SELECT schemaname FROM pg_tables
+        WHERE tablename = 'account_freeholds' AND schemaname = current_schema()`,
     );
     expect(owner.rows.map((r: { schemaname: string }) => r.schemaname)).toEqual([SCHEMA]);
   });
@@ -760,6 +764,52 @@ d('account_freeholds against real PostgreSQL', () => {
       [accountId],
     );
     expect(Number(after.rows[0].rows)).toBe(4_000);
+  });
+
+  it('measures the on-disk size the detoast gate is calibrated against', async () => {
+    // ANTI-VACUITY FOR THE CONSTANT ITSELF. The pre-gate case above uses a
+    // deliberately incompressible fixture, so it proves the mechanism and can
+    // never catch a mis-calibrated threshold. This measures what the gate
+    // actually reads for real rows, against a STORED column rather than a
+    // parameterized expression: pg_column_size on an unstored jsonb value
+    // reports the UNCOMPRESSED datum, which is a different number and was the
+    // source of an earlier wrong calibration.
+    const admitted = normalizeFreehold(maximalLegalFreeholdRecord(), MAXIMAL_FREEHOLD_OPTS);
+    if (admitted.kind !== 'loaded') throw new Error(`fixture refused: ${admitted.kind}`);
+    const state = admitted.state;
+    await db.upsertFreehold(pool, {
+      accountId,
+      plotIndex: db.FREEHOLD_PRIMARY_PLOT_INDEX,
+      plotId: state.plotId,
+      tier: state.tier,
+      layoutJson: JSON.stringify(state.layout),
+      trophiesJson: JSON.stringify(state.trophies),
+      condition: state.condition,
+      visitPolicy: state.visitPolicy,
+      wireRev: state.rev,
+      schemaVersion: 1,
+      expectedDurableRev: null,
+    });
+    const stored = await pool.query(
+      `SELECT pg_column_size(layout) + pg_column_size(trophies) AS disk,
+              pg_column_size($2::jsonb) + pg_column_size($3::jsonb) AS uncompressed
+         FROM ${SCHEMA}.account_freeholds WHERE account_id = $1`,
+      [accountId, JSON.stringify(state.layout), JSON.stringify(state.trophies)],
+    );
+    const disk = Number(stored.rows[0].disk);
+    const uncompressed = Number(stored.rows[0].uncompressed);
+
+    // The two are wildly different, which is the whole point of measuring the
+    // stored one: this record's worst-case ids repeat, so pglz compresses it by
+    // more than an order of magnitude.
+    expect(uncompressed).toBeGreaterThan(disk * 10);
+    // The gate must sit above the UNCOMPRESSED size, since TOAST compression
+    // can only shrink a datum: that is what makes it impossible for a legal row
+    // to be refused unmeasured, however badly it happens to compress.
+    expect(db.FREEHOLD_STORED_DETOAST_GATE_BYTES).toBeGreaterThan(uncompressed);
+    // And the record still reads back as a row, so the gate never fires on it.
+    const load = await db.freeholdForAccount(pool, accountId, FREEHOLD_MAX_STORED_BYTES);
+    expect(load.kind).toBe('row');
   });
 
   it('round-trips the maximal legal record through jsonb and reads it back as a row', async () => {

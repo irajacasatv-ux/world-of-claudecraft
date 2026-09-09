@@ -237,6 +237,10 @@ describe('the account read', () => {
     expect(folded).toContain(
       'ELSE COALESCE(octet_length(f.layout::text), 0) + COALESCE(octet_length(f.trophies::text), 0) END AS owned_bytes',
     );
+    // OFFSET 0 is an optimization BARRIER: without it the planner inlines the
+    // measure into all three output expressions and renders the text three
+    // times, which is the residual the pre-gate exists to bound.
+    expect(folded).toContain('OFFSET 0');
     expect(folded).toContain('LEFT JOIN LATERAL');
     expect(folded).toContain('CASE WHEN b.owned_bytes <= $2 THEN f.layout ELSE NULL END AS layout');
     expect(folded).toContain(
@@ -247,11 +251,13 @@ describe('the account read', () => {
     // the whole point, and it must never stand in for the authoritative
     // measure, because it reports the COMPRESSED size.
     expect(folded).toContain(
-      'SELECT COALESCE(pg_column_size(f.layout), 0) + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes',
+      'COALESCE(pg_column_size(f.layout), 0) + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes',
     );
-    expect(folded).toContain(`WHEN d.disk_bytes > ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL`);
-    // The gate sits above the maximal legal record's own measured disk size, so
-    // no legal row is ever refused without a measure.
+    expect(folded).toContain(`> ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL`);
+    // The gate sits above the UNCOMPRESSED datum size of the maximal legal
+    // record (97932 bytes), which is the theoretical ceiling for any legal
+    // row's on-disk size because TOAST compression can only shrink it. So no
+    // legal row is ever refused unmeasured, however badly it compresses.
     expect(FREEHOLD_STORED_DETOAST_GATE_BYTES).toBeGreaterThan(97_932);
     expect(folded).not.toContain('pg_column_size(f.layout) +\n');
     // Both bigints leave the database as text and are never cast in SQL either.

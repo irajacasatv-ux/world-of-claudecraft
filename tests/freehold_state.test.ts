@@ -775,6 +775,29 @@ describe('the measured byte ceiling, proved by the maximal and one-over records'
     expect(FREEHOLD_MAX_STORED_BYTES).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES);
   });
 
+  it('leaves room for EVERY admissible record, not only the one measured above', () => {
+    // The general argument, pinned. A fixture proves one point; the property
+    // has to hold for every record the canonical ceiling admits. The minimal
+    // wrapper around the two content arrays bounds how much of that ceiling the
+    // content itself can use, and the row ceilings bound how much jsonb can add
+    // in separators, so the worst admissible record is computable rather than
+    // searched for.
+    const wrapperBytes = JSON.stringify({
+      ...loadedState(norm(maximalLegalRecord(), maximalOpts)),
+      layout: [],
+      trophies: [],
+    }).length;
+    expect(wrapperBytes).toBeGreaterThan(0);
+    const maxContentJson = FREEHOLD_MAX_OWNED_BYTES - wrapperBytes;
+    const maxSeparators =
+      FREEHOLD_MAX_LAYOUT_ROWS * 11 +
+      (FREEHOLD_MAX_LAYOUT_ROWS - 1) +
+      FREEHOLD_MAX_TROPHY_ROWS * 3 +
+      (FREEHOLD_MAX_TROPHY_ROWS - 1);
+    // No record the canonical ceiling admits can render past the stored one.
+    expect(maxContentJson + maxSeparators).toBeLessThanOrEqual(FREEHOLD_MAX_STORED_BYTES);
+  });
+
   it('checks the row ceiling BEFORE the byte ceiling, so malformed wins over oversize', () => {
     // TWO rows over, not one: the maximal record sits 237 bytes under the
     // rounded ceiling and one worst-case layout row is 232 bytes, so a
@@ -838,7 +861,7 @@ describe('freeholdWriteRefusal: the save path refuses exactly what the load path
   it('refuses a byte-oversize document with the same bytes and limit the loader reports', () => {
     const state = maximalState();
     const bytes = persistedFreeholdBytes(state);
-    expect(freeholdWriteRefusal(state, bytes - 1)).toEqual({
+    expect(freeholdWriteRefusal(state, { maxOwnedBytes: bytes - 1 })).toEqual({
       kind: 'oversize',
       bytes,
       limit: bytes - 1,
@@ -849,7 +872,7 @@ describe('freeholdWriteRefusal: the save path refuses exactly what the load path
       limit: bytes - 1,
     });
     // Inclusive on both sides, checked together so neither drifts.
-    expect(freeholdWriteRefusal(state, bytes)).toBeNull();
+    expect(freeholdWriteRefusal(state, { maxOwnedBytes: bytes })).toBeNull();
   });
 
   it('checks rows before bytes, so a document that breaks both names the row cause', () => {
@@ -864,6 +887,69 @@ describe('freeholdWriteRefusal: the save path refuses exactly what the load path
     expect(freeholdWriteRefusal(both)?.kind).toBe('layout_over_ceiling');
   });
 
+  it('holds the PROPERTY, not just the ceilings: writable implies readable', () => {
+    // THE TITLE'S ACTUAL CLAIM, tested as a property over documents rather than
+    // as three named cases. The ceilings were only three of the checks the
+    // loader applies: it also refuses an exponential coordinate, a placement id
+    // past the safe-integer range, a duplicate placement id, an over-long
+    // identity, an unadmitted tier or policy, an off-charset plot id and a
+    // forward version. A writer enforcing only the ceilings accepted every one
+    // of those, so this realm could produce a row it would then hold forever.
+    const state = maximalState();
+    const cases: ReadonlyArray<readonly [string, PersistedFreehold]> = [
+      ['exponential coordinate', { ...state, layout: [{ ...state.layout[0], x: 1e-7 }] }],
+      ['huge coordinate', { ...state, layout: [{ ...state.layout[0], x: 1e21 }] }],
+      ['unsafe placement id', { ...state, layout: [{ ...state.layout[0], placementId: 2 ** 53 }] }],
+      ['duplicate placement id', { ...state, layout: [state.layout[0], { ...state.layout[0] }] }],
+      [
+        'over-long item id',
+        {
+          ...state,
+          layout: [{ ...state.layout[0], itemId: 'i'.repeat(FREEHOLD_MAX_ID_LENGTH + 1) }],
+        },
+      ],
+      ['unadmitted tier', { ...state, tier: 'lodge' }],
+      ['unadmitted visit policy', { ...state, visitPolicy: 'nobody' }],
+      ['off-charset plot id', { ...state, plotId: 'plot/9f3a1c' }],
+      ['forward version', { ...state, version: FREEHOLD_PERSIST_VERSION + 1 }],
+    ];
+    for (const [name, doc] of cases) {
+      const refusal = freeholdWriteRefusal(doc, maximalOpts);
+      // Every one of these must be refused by the WRITER. If it is not, the
+      // property is false and this realm can produce a row it cannot read.
+      expect(refusal, `${name} must be refused by the save path`).not.toBeNull();
+      // And the loader agrees, which is what makes each refusal the right one
+      // rather than an arbitrary extra rule.
+      const roundTripped = JSON.parse(JSON.stringify(doc));
+      expect(norm(roundTripped, maximalOpts).kind, `${name} load`).not.toBe('loaded');
+    }
+  });
+
+  it('is stricter than the loader on the two scalars the loader REPAIRS', () => {
+    // Deliberately asymmetric, in the safe direction. The loader repairs a
+    // negative revision and a fractional condition and still answers loaded, so
+    // neither would break writable-implies-readable. The writer refuses them
+    // anyway: a save is the one place a canonical document can be guaranteed,
+    // and writing a value the loader will silently rewrite means the row and
+    // the record disagree from the moment it lands.
+    const state = maximalState();
+    for (const doc of [
+      { ...state, rev: -1 },
+      { ...state, condition: 12.5 },
+    ]) {
+      expect(freeholdWriteRefusal(doc, maximalOpts)).not.toBeNull();
+      const loaded = norm(JSON.parse(JSON.stringify(doc)), maximalOpts);
+      expect(loaded.kind).toBe('loaded');
+      expect(repairsOf(loaded).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('is not vacuous: a legal document passes BOTH sides', () => {
+    const state = maximalState();
+    expect(freeholdWriteRefusal(state, maximalOpts)).toBeNull();
+    expect(norm(JSON.parse(JSON.stringify(state)), maximalOpts).kind).toBe('loaded');
+  });
+
   it('defaults to the canonical ceiling, not the stored one', () => {
     // Passing the wider stored bound here would let the save path emit a record
     // the loader refuses, which is the exact inversion this function prevents.
@@ -871,7 +957,7 @@ describe('freeholdWriteRefusal: the save path refuses exactly what the load path
     const bytes = persistedFreeholdBytes(state);
     expect(freeholdWriteRefusal({ ...state, condition: 100 })).toBeNull();
     expect(bytes).toBeLessThanOrEqual(FREEHOLD_MAX_OWNED_BYTES);
-    expect(freeholdWriteRefusal(state, FREEHOLD_MAX_OWNED_BYTES)).toBeNull();
+    expect(freeholdWriteRefusal(state, { maxOwnedBytes: FREEHOLD_MAX_OWNED_BYTES })).toBeNull();
   });
 });
 
@@ -1081,11 +1167,12 @@ describe('the two deliberate admissions the preservation rule buys', () => {
     expect(bytes).toBe(Number.POSITIVE_INFINITY);
     expect(bytes).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES);
     // And the save-path refusal agrees, which is the consequence that matters.
-    expect(freeholdWriteRefusal(broken as unknown as PersistedFreehold)).toEqual({
-      kind: 'oversize',
-      bytes: Number.POSITIVE_INFINITY,
-      limit: FREEHOLD_MAX_OWNED_BYTES,
-    });
+    // And the save path refuses it, though on the ROW predicate rather than the
+    // byte one: a document the serializer cannot measure cannot pass the row
+    // checks either, which run first. Both answers are a refusal, which is what
+    // the property needs; the point of the measure returning infinity is that
+    // it can never be the SMALLEST record there is and sail under a ceiling.
+    expect(freeholdWriteRefusal(broken as unknown as PersistedFreehold)?.kind).toBe('malformed');
   });
 });
 

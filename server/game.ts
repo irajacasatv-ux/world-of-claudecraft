@@ -3203,7 +3203,7 @@ export class GameServer {
     // fire-and-forget leave above) cannot drop the entry under the new session.
     const freeholdOwnerKey = freeholdOwnerKeyForAccount(accountId);
     installLoadedFreehold(this.sim.ctx, accountId, meta.freehold);
-    this.freeholdPersist.retain(freeholdOwnerKey);
+    this.freeholdPersist.retain(freeholdOwnerKey, accountId);
     let pid: number;
     try {
       pid = this.sim.addPlayer(cls, name, {

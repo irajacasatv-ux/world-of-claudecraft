@@ -2056,6 +2056,10 @@ describe('the housing persistence families', () => {
     oldestDirtyAgeMs: 41,
     writeBytesTotal: 51,
     maxWriteBytes: 52,
+    writesWithoutRecord: 61,
+    preGateRefusals: 62,
+    deferredWrites: 17,
+    activeWrites: 18,
   };
   const housingSource = (): GameStateSource => stubSource({ freeholdPersist: () => stats });
 
@@ -2078,6 +2082,8 @@ describe('the housing persistence families', () => {
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'quiesced')).toBe('16');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'oldest_dirty_age_ms')).toBe('41');
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'max_write_bytes')).toBe('52');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'deferred_writes')).toBe('17');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST, 'active_writes')).toBe('18');
     // No cumulative total rides the gauge: rate() over a gauge gets no
     // counter-reset handling, so a realm restart would read as a rate artifact.
     expect(labelled(text, WOC_FREEHOLD_PERSIST, 'writes')).toBeUndefined();
@@ -2100,6 +2106,8 @@ describe('the housing persistence families', () => {
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'write_ms')).toBe('33');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'load_ms')).toBe('34');
     expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'write_bytes')).toBe('51');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'writes_without_record')).toBe('61');
+    expect(labelled(text, WOC_FREEHOLD_PERSIST_TOTAL, 'pre_gate_refusals')).toBe('62');
   });
 
   it('splits load failures by hold kind, because the kind IS the response', async () => {
@@ -2136,6 +2144,24 @@ describe('the housing persistence families', () => {
   });
 
   it('carries no owner key, account id or plot id on any housing series', async () => {
+    // WITH A POSITIVE CONTROL, because every label value on this family is a
+    // fixed literal or a closed-union hold kind, so the negative assertion
+    // alone cannot fail and would pass on a scan that read nothing. The one
+    // label whose value is not a literal is the hold kind, and it comes from a
+    // Record whose keys go straight onto the series: feeding it an identity
+    // proves the scan would see one.
+    const leaky = new Registry();
+    registerGameStateMetrics(
+      leaky,
+      stubSource({
+        freeholdPersist: () => ({ ...stats, loadFailuresByKind: { 'account:1234': 5 } }),
+      }),
+    );
+    const leakyLines = (await leaky.metrics())
+      .split('\n')
+      .filter((line) => line.startsWith('woc_freehold'));
+    expect(leakyLines.some((line) => line.includes('account:'))).toBe(true);
+
     const registry = new Registry();
     registerGameStateMetrics(registry, housingSource());
     const housing = (await registry.metrics())

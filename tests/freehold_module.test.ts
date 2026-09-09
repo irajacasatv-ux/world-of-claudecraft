@@ -439,7 +439,12 @@ describe('the hearth clock map has exactly two writers, both in the sim', () => 
     // rule, and a host that reaches into the Map itself would be a second place
     // it has to be implemented and kept correct. The server installs its
     // durable clock through mergeFreeholdKeyReadyAt instead.
-    const roots = ['server', 'src/net', 'src/game', 'src/ui', 'src/render'];
+    // src/sim IS scanned, with hearth_key.ts itself exempted. Leaving the sim
+    // out was the gap: the claim is "exactly two writers, both in the sim", and
+    // a third writer added in sim.ts or another freehold leaf would have passed
+    // both arms of this describe.
+    const roots = ['server', 'src/sim', 'src/net', 'src/game', 'src/ui', 'src/render', 'headless'];
+    const exempt = join(__dirname, '..', 'src', 'sim', 'freehold', 'hearth_key.ts');
     for (const root of roots) {
       const dir = join(__dirname, '..', root);
       const stack = [dir];
@@ -452,6 +457,7 @@ describe('the hearth clock map has exactly two writers, both in the sim', () => 
             continue;
           }
           if (!item.name.endsWith('.ts')) continue;
+          if (full === exempt) continue;
           const text = stripComments(readFileSync(full, 'utf8'));
           expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.set\(/);
           expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.delete\(/);
