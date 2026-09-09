@@ -63,11 +63,23 @@ import { createKeyedSerialWriter } from './serial_writer';
  *  forever is a hung realm restart. */
 export const FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS = 10_000;
 
-/** The bound on every wait for a shared background permit, load and write
- *  alike. server/background_db_gate.ts keeps its waiter list UNCAPPED, so a
- *  caller that queues without a bounded signal is the thing that grows without
- *  limit under a stalled pool. */
-export const FREEHOLD_PERSIST_PERMIT_WAIT_MS = 15_000;
+/** The bound on a BACKGROUND WRITE's wait for a shared background permit.
+ *  server/background_db_gate.ts keeps its waiter list UNCAPPED, so a caller
+ *  that queues without a bounded signal is the thing that grows without limit
+ *  under a stalled pool. The login path has its own, shorter bound below. */
+export const FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS = 15_000;
+
+/**
+ * The LOGIN-path bound, deliberately shorter than the write one, because the
+ * handshake awaits this read: every other bound on that path is shorter too
+ * (DB_POOL_CONNECT_TIMEOUT_MS is 5,000), and a joining player must not sit
+ * fifteen seconds waiting for a permit to read two small rows. The local
+ * admission cap already makes an early answer safe: it is a HOLD, not a
+ * failure, so the account joins on its live record and simply does not write.
+ * The two are separate constants on purpose; merging them puts a background
+ * write's budget on a player's login.
+ */
+export const FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS = 5_000;
 
 /** Local concurrency cap on durable loads, applied BEFORE the shared permit
  *  (the guild-bank lazy loader's admission cap). Past the cap a load is
@@ -76,6 +88,23 @@ export const FREEHOLD_PERSIST_PERMIT_WAIT_MS = 15_000;
  *  because it is write-blocked, so the account simply gets no durable house
  *  this session and its row is untouched. */
 export const FREEHOLD_PERSIST_MAX_ACTIVE_LOADS = 4;
+
+/**
+ * The local admission cap on CONCURRENT WRITES, the twin of the load cap above
+ * and for a sharper reason: the keyed serial writer serializes per OWNER KEY,
+ * so a thousand owners are a thousand independent FIFOs racing for one shared
+ * background permit, and server/background_db_gate.ts keeps its waiter list
+ * UNCAPPED. Bounding each WAIT does not bound the waiter COUNT. Measured, the
+ * first sweep after a mass login queued 993 simultaneous waiters at gate
+ * capacity 7, each with its own abort timer, and every other named producer
+ * (storage-purchase recovery, escrow, character delete) queued behind them.
+ *
+ * Deferring a write is free in a way deferring a load is not: the entry stays
+ * dirty and the next sweep picks it up, and the shutdown drain keeps pumping
+ * the deferred set until it empties or the deadline fires. So the surplus waits
+ * HERE, in a bounded set this store owns, rather than on a shared queue.
+ */
+export const FREEHOLD_PERSIST_MAX_ACTIVE_WRITES = 4;
 
 /**
  * The zero-reference entry sweep is MARK AND SWEEP over two passes, so an
@@ -157,7 +186,6 @@ export interface FreeholdPersistPorts {
   nowMs(): number;
   warn(message: string): void;
   error(message: string, err?: unknown): void;
-  recordLoadFailure?(kind: string): void;
   /** The ONE timer the store owns: the shutdown drain deadline. Injected so
    *  tests drive it without a wall clock; the module-edge default below is the
    *  only setTimeout in this file. */
@@ -173,16 +201,27 @@ export interface FreeholdPersistStats {
   readonly dirty: number;
   readonly running: number;
   readonly pending: number;
+  /** Entries held by a RECOVERY hold: a row this build could not interpret. */
   readonly held: number;
+  /** Entries quiesced by a durable answer no repeat can fix, which is the one
+   *  condition the compare-and-swap fence exists to detect. Kept apart from
+   *  `held` because a rising quiesce count means a second writer is touching
+   *  these rows, and merging the two hides exactly that. */
+  readonly quiesced: number;
   readonly loads: number;
   readonly loadFailures: number;
+  /** The same total, split by the hold kind that caused it. */
+  readonly loadFailuresByKind: Readonly<Record<string, number>>;
   readonly writes: number;
   readonly writeFailures: number;
   readonly staleWrites: number;
   readonly permitWaitMsTotal: number;
   readonly queueWaitMsTotal: number;
+  readonly writeMsTotal: number;
+  readonly loadMsTotal: number;
   readonly oldestDirtyAgeMs: number;
-  readonly lastWriteBytes: number;
+  readonly writeBytesTotal: number;
+  readonly maxWriteBytes: number;
 }
 
 export interface FreeholdPersistStore {
@@ -258,6 +297,12 @@ interface FreeholdPersistEntry {
 export function createFreeholdPersistStore(ports: FreeholdPersistPorts): FreeholdPersistStore {
   const entries = new Map<string, FreeholdPersistEntry>();
   const inFlightLoads = new Map<number, Promise<LoadedFreehold>>();
+  /** Owners that wanted a write while the local write cap was full. They stay
+   *  DIRTY, so nothing is lost: they are launched as slots free, and by the
+   *  next sweep if the process is still up. Insertion-ordered, so the owner
+   *  that waited longest goes first. */
+  const deferredWrites = new Set<FreeholdPersistEntry>();
+  let activeWrites = 0;
   const scheduleDeadline = ports.scheduleDeadline ?? realScheduleDeadline;
   let activeLoads = 0;
   let intake = true;
@@ -268,12 +313,22 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   const counters = {
     loads: 0,
     loadFailures: 0,
+    loadFailuresByKind: {} as Record<string, number>,
     writes: 0,
     writeFailures: 0,
     staleWrites: 0,
     permitWaitMsTotal: 0,
     queueWaitMsTotal: 0,
-    lastWriteBytes: 0,
+    // The two durations the wait totals deliberately exclude: a durable write
+    // that has become slow is pinning a gate permit AND a pool client, and
+    // without these it is visible only indirectly, as OTHER work's waits rising.
+    writeMsTotal: 0,
+    loadMsTotal: 0,
+    // A TOTAL plus a high-water mark rather than a last-sample gauge: at a
+    // thousand owners a scrape samples one arbitrary write, which says nothing
+    // about the size distribution or about growth toward the byte ceiling.
+    writeBytesTotal: 0,
+    maxWriteBytes: 0,
   };
 
   const isDirty = (entry: FreeholdPersistEntry): boolean =>
@@ -360,7 +415,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   // nothing pending. Any one of them alone keeps the entry, which is what lets
   // a visitor hold an offline owner's plot loaded.
   function maybeRemove(entry: FreeholdPersistEntry): void {
-    if (entry.refs > 0 || entry.running || entry.pending) return;
+    if (entry.refs > 0 || entry.running || entry.pending || deferredWrites.has(entry)) return;
     if (live(entry)) entries.delete(entry.ownerKey);
   }
 
@@ -420,7 +475,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     entry.hold = hold;
     entry.plotIndex = hold.plotIndex;
     counters.loadFailures++;
-    ports.recordLoadFailure?.(hold.kind);
+    // Per KIND, because the four causes demand four different operator
+    // responses: unreadable rows are a data incident, a full admission cap is
+    // a login-storm capacity signal, a missing permit is pool saturation, and
+    // a thrown read is a database fault. One conflated number names none of
+    // them.
+    counters.loadFailuresByKind[hold.kind] = (counters.loadFailuresByKind[hold.kind] ?? 0) + 1;
     ports.warn(
       `freehold plot index ${hold.plotIndex} held (${hold.kind}): ${hold.detail}; the durable row is left untouched`,
     );
@@ -518,7 +578,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         entry,
         {
           kind: 'oversize',
-          detail: `${rowLoad.bytes} owned bytes over the ${rowLoad.limit} byte limit`,
+          // Two different measures, named as such: past the on-disk pre-gate
+          // the stored text was never rendered, so reporting a text length
+          // there would be a number nothing took.
+          detail: rowLoad.detoastRefused
+            ? `${rowLoad.diskBytes} on-disk bytes past the pre-gate, so the ${rowLoad.limit} byte stored limit was never measured`
+            : `${rowLoad.bytes} owned bytes over the ${rowLoad.limit} byte limit`,
           plotIndex: rowLoad.plotIndex,
           durableRev: rowLoad.durableRev,
         },
@@ -609,7 +674,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     try {
       const permitStartMs = ports.nowMs();
       const permit = await ports.acquirePermit(
-        AbortSignal.timeout(FREEHOLD_PERSIST_PERMIT_WAIT_MS),
+        AbortSignal.timeout(FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS),
       );
       counters.permitWaitMsTotal += Math.max(0, ports.nowMs() - permitStartMs);
       // A null permit is a refusal. Running the read anyway is exactly the
@@ -618,12 +683,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         return refuse(
           accountId,
           ownerKey,
-          `no background permit within ${FREEHOLD_PERSIST_PERMIT_WAIT_MS} ms`,
+          `no background permit within ${FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS} ms`,
         );
       }
+      const loadStartMs = ports.nowMs();
       try {
         return await classify(accountId, ownerKey);
       } finally {
+        counters.loadMsTotal += Math.max(0, ports.nowMs() - loadStartMs);
         permit.release();
       }
     } catch (err) {
@@ -707,12 +774,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // evicted while this write sat in the FIFO.
     if (!live(entry) || blocked(entry)) return false;
     const permitStartMs = ports.nowMs();
-    const permit = await ports.acquirePermit(AbortSignal.timeout(FREEHOLD_PERSIST_PERMIT_WAIT_MS));
+    const permit = await ports.acquirePermit(
+      AbortSignal.timeout(FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS),
+    );
     counters.permitWaitMsTotal += Math.max(0, ports.nowMs() - permitStartMs);
     if (!permit) {
       counters.writeFailures++;
       ports.warn(
-        `freehold plot index ${entry.plotIndex} write got no background permit within ${FREEHOLD_PERSIST_PERMIT_WAIT_MS} ms`,
+        `freehold plot index ${entry.plotIndex} write got no background permit within ${FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS} ms`,
       );
       return false;
     }
@@ -749,7 +818,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       }
       const layoutJson = JSON.stringify(persisted.layout);
       const trophiesJson = JSON.stringify(persisted.trophies);
-      counters.lastWriteBytes = Buffer.byteLength(layoutJson) + Buffer.byteLength(trophiesJson);
+      const writeBytes = Buffer.byteLength(layoutJson) + Buffer.byteLength(trophiesJson);
+      counters.writeBytesTotal += writeBytes;
+      if (writeBytes > counters.maxWriteBytes) counters.maxWriteBytes = writeBytes;
+      const writeStartMs = ports.nowMs();
       const result = await ports.writeRow({
         accountId: entry.accountId,
         plotIndex: entry.plotIndex,
@@ -762,6 +834,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         wireRev: persisted.rev,
         expectedDurableRev: entry.durableRev,
       });
+      counters.writeMsTotal += Math.max(0, ports.nowMs() - writeStartMs);
       return applyWriteResult(entry, result, generation, snapshotAtMs, persisted);
     } finally {
       permit.release();
@@ -771,6 +844,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   function settle(entry: FreeholdPersistEntry, committed: boolean): void {
     entry.running = false;
     entry.chain = null;
+    activeWrites--;
     // Clear ONLY what the write actually committed: an edit that landed while
     // the write was out is still dirty here, and re-arms exactly one more
     // write. A write that did NOT commit never re-arms itself, so a failing
@@ -778,14 +852,19 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     const rearm = entry.pending || (committed && isDirty(entry));
     entry.pending = false;
     if (rearm && live(entry) && !blocked(entry)) {
+      // Straight back into the slot this write just freed, so a re-arm is
+      // never pushed behind the deferred set it was already ahead of.
       launch(entry);
       return;
     }
+    pumpDeferredWrites();
     maybeRemove(entry);
     drainCheck();
   }
 
   function launch(entry: FreeholdPersistEntry): void {
+    deferredWrites.delete(entry);
+    activeWrites++;
     entry.running = true;
     entry.pending = false;
     // Nothing sampled yet, and the sample happens AFTER the permit wait, so
@@ -819,8 +898,24 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       ports.error(`freehold plot index ${entry.plotIndex} write could not be queued:`, err);
       entry.running = false;
       entry.chain = null;
+      activeWrites--;
+      pumpDeferredWrites();
       maybeRemove(entry);
       drainCheck();
+    }
+  }
+
+  /** Start as many deferred writes as the local cap now allows. Called every
+   *  time a slot frees, so the set drains without a timer. */
+  function pumpDeferredWrites(): void {
+    while (activeWrites < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES && deferredWrites.size > 0) {
+      const next = deferredWrites.values().next().value;
+      if (next === undefined) return;
+      deferredWrites.delete(next);
+      // The wait may have outlived the reason for the write: the entry could
+      // have been evicted, held or quiesced since it was deferred.
+      if (!live(next) || blocked(next) || next.running || !isDirty(next)) continue;
+      launch(next);
     }
   }
 
@@ -828,6 +923,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   // marks costs one write in flight and one behind it, never a thousand.
   function arm(entry: FreeholdPersistEntry): void {
     if (blocked(entry)) return;
+    if (!entry.running && activeWrites >= FREEHOLD_PERSIST_MAX_ACTIVE_WRITES) {
+      // The local cap, applied BEFORE the shared gate. The entry stays dirty,
+      // so nothing is lost and nothing is retried against the pool: it waits
+      // in a set this store can measure instead of on an uncapped queue every
+      // other named background producer has to sit behind.
+      deferredWrites.add(entry);
+      return;
+    }
     if (entry.running) {
       // ONLY for an edit the running write cannot be carrying. The running
       // write samples its document after the permit wait, so it already covers
@@ -845,6 +948,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
 
   function drainCheck(): void {
     if (drainWaiters.size === 0) return;
+    // A deferred write is owed work exactly like a pending one.
+    if (deferredWrites.size > 0) return;
     for (const entry of entries.values()) {
       if (entry.running || entry.pending) return;
     }
@@ -954,12 +1059,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       let running = 0;
       let pending = 0;
       let held = 0;
+      let quiesced = 0;
       let oldestDirtyAtMs = 0;
       for (const entry of entries.values()) {
         if (isDirty(entry)) dirty++;
         if (entry.running) running++;
         if (entry.pending) pending++;
-        if (isHeld(entry)) held++;
+        if (entry.hold !== null) held++;
+        if (entry.quiesced) quiesced++;
         if (
           entry.dirtySinceMs > 0 &&
           (oldestDirtyAtMs === 0 || entry.dirtySinceMs < oldestDirtyAtMs)
@@ -973,15 +1080,20 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         running,
         pending,
         held,
+        quiesced,
         loads: counters.loads,
         loadFailures: counters.loadFailures,
+        loadFailuresByKind: { ...counters.loadFailuresByKind },
         writes: counters.writes,
         writeFailures: counters.writeFailures,
         staleWrites: counters.staleWrites,
         permitWaitMsTotal: counters.permitWaitMsTotal,
         queueWaitMsTotal: counters.queueWaitMsTotal,
+        writeMsTotal: counters.writeMsTotal,
+        loadMsTotal: counters.loadMsTotal,
         oldestDirtyAgeMs: oldestDirtyAtMs === 0 ? 0 : Math.max(0, ports.nowMs() - oldestDirtyAtMs),
-        lastWriteBytes: counters.lastWriteBytes,
+        writeBytesTotal: counters.writeBytesTotal,
+        maxWriteBytes: counters.maxWriteBytes,
       };
     },
 
@@ -1049,15 +1161,20 @@ export function freeholdPersistStats(): FreeholdPersistStats {
       running: 0,
       pending: 0,
       held: 0,
+      quiesced: 0,
       loads: 0,
       loadFailures: 0,
+      loadFailuresByKind: {},
       writes: 0,
       writeFailures: 0,
       staleWrites: 0,
       permitWaitMsTotal: 0,
       queueWaitMsTotal: 0,
+      writeMsTotal: 0,
+      loadMsTotal: 0,
       oldestDirtyAgeMs: 0,
-      lastWriteBytes: 0,
+      writeBytesTotal: 0,
+      maxWriteBytes: 0,
     }
   );
 }

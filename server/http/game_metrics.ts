@@ -121,8 +121,20 @@ export const WOC_WS_CONNECTIONS = 'woc_ws_connections';
 export const WOC_SIM_ENTITIES = 'woc_sim_entities';
 export const WOC_FREEHOLD_RECORDS = 'woc_freehold_records';
 
-/** Housing persistence store occupancy and work, by fixed measure. */
+/** Housing persistence store OCCUPANCY, by fixed measure: values that go up
+ *  and down. The cumulative totals live on the counter family below, because
+ *  rate() and increase() over a gauge get no counter-reset handling and every
+ *  realm restart would read as a rate artifact. */
 export const WOC_FREEHOLD_PERSIST = 'woc_freehold_persist';
+
+/** Housing persistence store CUMULATIVE totals, by fixed measure. */
+export const WOC_FREEHOLD_PERSIST_TOTAL = 'woc_freehold_persist_total';
+
+/** Housing durable LOAD FAILURES by hold kind. Separate from the totals family
+ *  because it carries a second label, and because the kind is the whole point:
+ *  an unreadable row, a full local admission cap, a missing background permit
+ *  and a thrown read need four different operator responses. */
+export const WOC_FREEHOLD_LOAD_FAILURES_TOTAL = 'woc_freehold_load_failures_total';
 
 /** Achieved sim ticks per wall-clock second (target is 20 Hz). */
 export const WOC_SIM_TICK_HZ = 'woc_sim_tick_hz';
@@ -654,7 +666,7 @@ export function registerGameStateMetrics(
 
   new Gauge({
     name: WOC_FREEHOLD_PERSIST,
-    help: 'Housing persistence store by fixed measure: loaded entries, dirty and in-flight work, write-blocked holds, and the cumulative admission and queue waits. Counters only, never player identity.',
+    help: 'Housing persistence store OCCUPANCY by fixed measure: loaded entries, dirty and in-flight work, recovery holds, compare-and-swap quiesces, the age of the oldest unwritten edit and the largest write seen. Counts and bytes only, never player identity. Cumulative totals are on woc_freehold_persist_total.',
     labelNames: ['measure'],
     registers: [registry],
     collect() {
@@ -663,16 +675,52 @@ export function registerGameStateMetrics(
       this.set({ measure: 'dirty' }, state.dirty);
       this.set({ measure: 'running' }, state.running);
       this.set({ measure: 'pending' }, state.pending);
+      // Apart, deliberately. `held` is "this row could not be read"; `quiesced`
+      // is "the durable revision moved under this realm", which is the one
+      // condition the compare-and-swap fence exists to detect and the strongest
+      // available signal that a second process is writing these rows.
       this.set({ measure: 'held' }, state.held);
-      this.set({ measure: 'loads' }, state.loads);
-      this.set({ measure: 'load_failures' }, state.loadFailures);
-      this.set({ measure: 'writes' }, state.writes);
-      this.set({ measure: 'write_failures' }, state.writeFailures);
-      this.set({ measure: 'stale_writes' }, state.staleWrites);
-      this.set({ measure: 'permit_wait_ms_total' }, state.permitWaitMsTotal);
-      this.set({ measure: 'queue_wait_ms_total' }, state.queueWaitMsTotal);
+      this.set({ measure: 'quiesced' }, state.quiesced);
       this.set({ measure: 'oldest_dirty_age_ms' }, state.oldestDirtyAgeMs);
-      this.set({ measure: 'last_write_bytes' }, state.lastWriteBytes);
+      // A high-water mark, not a last sample: at a thousand owners a scrape of
+      // "the most recent write's size" names nothing an operator can act on.
+      this.set({ measure: 'max_write_bytes' }, state.maxWriteBytes);
+    },
+  });
+
+  new Counter({
+    name: WOC_FREEHOLD_PERSIST_TOTAL,
+    help: 'Housing persistence store CUMULATIVE totals by fixed measure: loads, writes, failures, stale compare-and-swap refusals, the admission and queue waits, the statement durations those waits deliberately exclude, and total bytes written. A Counter rather than a Gauge so rate() and increase() get counter-reset handling across a realm restart.',
+    labelNames: ['measure'],
+    registers: [registry],
+    collect() {
+      this.reset();
+      const state = source.freeholdPersist();
+      this.inc({ measure: 'loads' }, state.loads);
+      this.inc({ measure: 'load_failures' }, state.loadFailures);
+      this.inc({ measure: 'writes' }, state.writes);
+      this.inc({ measure: 'write_failures' }, state.writeFailures);
+      this.inc({ measure: 'stale_writes' }, state.staleWrites);
+      this.inc({ measure: 'permit_wait_ms' }, state.permitWaitMsTotal);
+      this.inc({ measure: 'queue_wait_ms' }, state.queueWaitMsTotal);
+      // The statement itself, which the two wait totals exclude: a durable
+      // write that has become slow pins a gate permit AND a pool client, and
+      // without this it shows up only as OTHER work's waits rising.
+      this.inc({ measure: 'write_ms' }, state.writeMsTotal);
+      this.inc({ measure: 'load_ms' }, state.loadMsTotal);
+      this.inc({ measure: 'write_bytes' }, state.writeBytesTotal);
+    },
+  });
+
+  new Counter({
+    name: WOC_FREEHOLD_LOAD_FAILURES_TOTAL,
+    help: 'Housing durable load failures by hold kind. The kind is the operator response: an unreadable row is a data incident that needs the recovery contract, a full admission cap is a login-storm capacity signal, a missing background permit is pool or gate saturation, and a thrown read is a database fault.',
+    labelNames: ['kind'],
+    registers: [registry],
+    collect() {
+      this.reset();
+      const byKind = source.freeholdPersist().loadFailuresByKind;
+      for (const [kind, count] of Object.entries(byKind)) this.inc({ kind }, count);
     },
   });
 

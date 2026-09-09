@@ -189,19 +189,23 @@ describe('the coordinator does not regrow its own calls beside the runner', () =
       'this.saveMarket(sample)',
       'this.saveMail(sample)',
       'this.saveRifts(sample)',
+      'this.saveFreeholds(sample)',
     ]) {
       expect(body, call).toContain(call);
     }
     // saveAll takes a reason, not a sample: its cost is the per-character FIFO's,
     // which is measured where those writes are enqueued, not here.
     expect(body).toContain("this.saveAll('autosave')");
-    // saveFreeholds takes NEITHER. It only ENQUEUES onto the housing store's
-    // own keyed FIFO and performs no synchronous write, so there is no window
-    // for the sample to attribute. That store's cost is reported through its
-    // own counters instead (freeholdPersistStats: queue wait, permit wait,
-    // dirty age, bytes, and the failure and stale-write counts), which
-    // server/main.ts publishes on the game-state metrics source.
-    expect(body).toContain('this.saveFreeholds()');
-    expect(body).not.toContain('this.saveFreeholds(sample)');
+    // saveFreeholds DOES take the sample, and it is the one on this list whose
+    // whole body is synchronous: saveAllDirty walks every loaded owner, probes
+    // each one's live revision and arms the writes, then returns, so all of
+    // that lands inside one 20 Hz tick. Measured at a thousand owners it runs
+    // from 0.44 ms with empty layouts to 15.69 ms at the approved 420-row
+    // ceiling, against a fifty millisecond budget, producing zero writes in
+    // steady state. Without the sample that is an unexplained
+    // thirty-second-periodic tick spike with no lap naming it.
+    expect(body).not.toContain('this.saveFreeholds()');
+    const freeholdBody = methodBody(game, '  async saveFreeholds(');
+    expect(freeholdBody).toContain('this.onSaveMs(');
   });
 });

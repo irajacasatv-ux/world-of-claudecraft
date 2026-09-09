@@ -15,6 +15,7 @@ import {
   FREEHOLD_PLOT_ID_RE,
   FREEHOLD_PRIMARY_PLOT_INDEX,
   FREEHOLD_SCHEMA,
+  FREEHOLD_STORED_DETOAST_GATE_BYTES,
   FREEHOLD_UPKEEP_BINDING_UNBOUND,
   type FreeholdUpsert,
   freeholdForAccount,
@@ -62,6 +63,7 @@ function readRow(over: Record<string, unknown> = {}): Record<string, unknown> {
     condition: 91,
     visit_policy: 'friends',
     upkeep_binding: FREEHOLD_UPKEEP_BINDING_UNBOUND,
+    disk_bytes: 480,
     owned_bytes: 512,
     layout: [{ placementId: 1, itemId: 'chair', x: 0, y: 0, z: 0, yaw: 0 }],
     trophies: [{ plinth: 0, trophyId: 'skull' }],
@@ -225,18 +227,29 @@ describe('the account read', () => {
     expect(folded).toContain('LIMIT 2');
     expect(folded).toContain('ORDER BY f.plot_index LIMIT 2');
     expect(folded).toContain('WHERE f.account_id = $1');
-    // The bound is measured once per row in SQL, on the UNCOMPRESSED text form,
-    // and it nulls BOTH content columns past the bound so an oversized row
-    // never crosses the wire into a deep parse.
+    // The AUTHORITATIVE bound is measured once per row in SQL, on the
+    // UNCOMPRESSED text form, and it nulls BOTH content columns past the bound
+    // so an oversized row never crosses the wire into a deep parse.
     expect(folded).toContain(
-      'SELECT COALESCE(octet_length(f.layout::text), 0) + COALESCE(octet_length(f.trophies::text), 0) AS owned_bytes',
+      'ELSE COALESCE(octet_length(f.layout::text), 0) + COALESCE(octet_length(f.trophies::text), 0) END AS owned_bytes',
     );
     expect(folded).toContain('LEFT JOIN LATERAL');
     expect(folded).toContain('CASE WHEN b.owned_bytes <= $2 THEN f.layout ELSE NULL END AS layout');
     expect(folded).toContain(
       'CASE WHEN b.owned_bytes <= $2 THEN f.trophies ELSE NULL END AS trophies',
     );
-    expect(folded).not.toContain('pg_column_size');
+    // AHEAD of it, the cheap on-disk pre-gate. pg_column_size appears in the
+    // gate ONLY: it reads the TOAST pointer header without detoasting, which is
+    // the whole point, and it must never stand in for the authoritative
+    // measure, because it reports the COMPRESSED size.
+    expect(folded).toContain(
+      'SELECT COALESCE(pg_column_size(f.layout), 0) + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes',
+    );
+    expect(folded).toContain(`WHEN d.disk_bytes > ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL`);
+    // The gate sits above the maximal legal record's own measured disk size, so
+    // no legal row is ever refused without a measure.
+    expect(FREEHOLD_STORED_DETOAST_GATE_BYTES).toBeGreaterThan(97_932);
+    expect(folded).not.toContain('pg_column_size(f.layout) +\n');
     // Both bigints leave the database as text and are never cast in SQL either.
     expect(folded).toContain('f.durable_rev::text AS durable_rev');
     expect(folded).toContain('f.wire_rev::text AS wire_rev');
@@ -280,6 +293,31 @@ describe('the account read', () => {
       durableRev: '7',
       bytes: 9001,
       limit: 4096,
+      detoastRefused: false,
+      diskBytes: 480,
+    });
+  });
+
+  it('classifies a row past the on-disk pre-gate as oversize with NO measured text length', async () => {
+    // Past the gate the stored text was never rendered, so there is no text
+    // length to report and the refusal says so instead of inventing one. This
+    // is the arm that keeps a multi-megabyte row from costing hundreds of
+    // milliseconds of database CPU on a login.
+    const cap = makeCapture([
+      {
+        rows: [readRow({ owned_bytes: null, disk_bytes: 5_000_000, layout: null, trophies: null })],
+      },
+    ]);
+    const load = await freeholdForAccount(cap.db, 42, 4096);
+    expect(load).toEqual({
+      kind: 'oversize',
+      plotIndex: 0,
+      plotId: PLOT_ID,
+      durableRev: '7',
+      bytes: 0,
+      limit: 4096,
+      detoastRefused: true,
+      diskBytes: 5_000_000,
     });
   });
 

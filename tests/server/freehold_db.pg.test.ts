@@ -581,6 +581,100 @@ d('account_freeholds against real PostgreSQL', () => {
     expect(await db.freeholdsForExport(pool, 2)).toEqual([]);
   });
 
+  it('refuses a row past the on-disk pre-gate WITHOUT rendering it to text', async () => {
+    // The cost this gate exists to stop is real and reachable: the recovery
+    // contract's own rollback case is a later release writing a row this build
+    // then has to read. octet_length must fully DETOAST the column and render
+    // the whole value before the authoritative bound can be applied, so without
+    // a pre-gate the bound protects the client and not the database, at roughly
+    // ten microseconds of database CPU per KB of stored text, on a login, while
+    // holding one background permit and one pool client.
+    //
+    // Deterministic pseudo-random ids, so the row genuinely does not compress:
+    // a compressible fixture would understate its own on-disk size and could
+    // pass this test while never crossing the gate.
+    let seed = 123_456_789;
+    const nextId = (): string => {
+      let out = '';
+      while (out.length < 64) {
+        seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648;
+        out += seed.toString(36);
+      }
+      return out.slice(0, 64);
+    };
+    const huge = Array.from({ length: 4_000 }, (_unused, i) => ({
+      placementId: i,
+      itemId: nextId(),
+      x: -0.0000012345678901234567,
+      y: -0.0000012345678901234567,
+      z: -0.0000012345678901234567,
+      yaw: -0.0000012345678901234567,
+    }));
+    // Written through raw SQL on purpose: upsertFreehold is not the path that
+    // produces such a row, a wider future release is.
+    await pool.query(
+      RAW_INSERT,
+      RAW_INSERT_VALUES({ layout: JSON.stringify(huge), trophies: '[]' }),
+    );
+
+    const stored = await pool.query(
+      `SELECT pg_column_size(layout) + pg_column_size(trophies) AS disk,
+              octet_length(layout::text) + octet_length(trophies::text) AS text
+         FROM ${SCHEMA}.account_freeholds WHERE account_id = $1`,
+      [accountId],
+    );
+    const disk = Number(stored.rows[0].disk);
+    const text = Number(stored.rows[0].text);
+    // Anti-vacuity for the fixture: it must really be past the gate, and its
+    // text form must really be far bigger than the stored ceiling, or the case
+    // proves nothing.
+    expect(disk).toBeGreaterThan(db.FREEHOLD_STORED_DETOAST_GATE_BYTES);
+    expect(text).toBeGreaterThan(FREEHOLD_MAX_STORED_BYTES);
+
+    const capture = recorder(pool);
+    const load = await db.freeholdForAccount(capture.db, accountId, FREEHOLD_MAX_STORED_BYTES);
+    if (load.kind !== 'oversize') throw new Error(`expected oversize, got ${load.kind}`);
+    // The decisive assertion: NO text length was measured, because none was
+    // rendered. A refusal that reported a number here would have paid for it.
+    expect(load.detoastRefused).toBe(true);
+    expect(load.bytes).toBe(0);
+    expect(load.diskBytes).toBe(disk);
+
+    // And the executed plans agree. The module's own statement touches far
+    // fewer buffers than the same statement with the gate removed, because the
+    // removed-gate form has to read the TOAST pages to build the text.
+    const gatedPlan = await pool.query(
+      `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${capture.calls[0].text}`,
+      capture.calls[0].values,
+    );
+    const ungatedPlan = await pool.query(
+      `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
+       SELECT COALESCE(octet_length(f.layout::text), 0) AS owned_bytes
+         FROM ${SCHEMA}.account_freeholds f WHERE f.account_id = $1`,
+      [accountId],
+    );
+    const buffersOf = (res: { rows: Record<string, unknown>[] }): number => {
+      const walk = (node: Record<string, unknown>): number => {
+        let total =
+          Number(node['Shared Hit Blocks'] ?? 0) + Number(node['Shared Read Blocks'] ?? 0);
+        for (const child of (node.Plans as Record<string, unknown>[] | undefined) ?? []) {
+          total += walk(child);
+        }
+        return total;
+      };
+      return walk(rootPlanFromExplainRow(res.rows[0]) as unknown as Record<string, unknown>);
+    };
+    expect(buffersOf(gatedPlan)).toBeLessThan(buffersOf(ungatedPlan));
+
+    // Refusing to read is not a licence to alter: the row is still there.
+    const after = await pool.query(
+      `SELECT jsonb_array_length(layout) AS rows FROM ${SCHEMA}.account_freeholds
+        WHERE account_id = $1`,
+      [accountId],
+    );
+    expect(Number(after.rows[0].rows)).toBe(4_000);
+  });
+
   it('round-trips the maximal legal record through jsonb and reads it back as a row', async () => {
     // THE DECISIVE PROOF that writable implies readable. jsonb is not a byte
     // copy of the text that went in: it re-renders every object with a space

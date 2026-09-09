@@ -53,6 +53,38 @@ export const FREEHOLD_PRIMARY_PLOT_INDEX = 0;
  *  unrunnable, and the mismatch would surface as a save that fails only in
  *  production. tests/server/freehold_db.pg.test.ts pins the fixture to these. */
 export const FREEHOLD_TIER_COLUMN_MAX_LENGTH = 64;
+
+/**
+ * The ON-DISK pre-gate for the account read, in the post-TOAST bytes
+ * pg_column_size reports, which it reads from the TOAST pointer header without
+ * detoasting anything.
+ *
+ * It exists because the authoritative measure cannot be cheap:
+ * `octet_length(layout::text)` has to fully detoast the column and render the
+ * whole value to text BEFORE the comparison can happen, so on its own it bounds
+ * the CLIENT, never the server. Measured on postgres:16-alpine, the account
+ * read costs roughly ten microseconds of database CPU per KB of stored JSON
+ * text: 1.5 ms at the legal 420-row maximum, 58.5 ms at a 5.3 MB row, 242 ms at
+ * 25 MB, 524 ms at 51 MB, each paid while holding one background permit and one
+ * pool client on a box where PostgreSQL and the game loop share four cores. The
+ * recovery machinery exists precisely because oversized rows CAN reach disk (a
+ * later release with a bigger decor budget writes one, then the realm rolls
+ * back to this build), so that cost is reachable.
+ *
+ * 262144 is two and a half times the maximal legal record's own measured disk
+ * size (97932 bytes: the record barely compresses, and realistic housing data
+ * measured 1.06x to 1.08x text-to-disk), so nothing near a legal row is ever
+ * misclassified and a row from a wider future release is refused for the price
+ * of a header read.
+ *
+ * What it is NOT: a hard bound on the detoast. pg_column_size reports the
+ * COMPRESSED size, so a deliberately hyper-compressible blob could still sit
+ * under this gate and render to far more text. That row cannot come from this
+ * codebase, whose own save path refuses anything past the content ceilings, and
+ * `octet_length` stays the authoritative measure below the gate. This is a
+ * pathology short-circuit, not a second ceiling.
+ */
+export const FREEHOLD_STORED_DETOAST_GATE_BYTES = 262_144;
 export const FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH = 32;
 
 export const FREEHOLD_ACCOUNT_PLOT_READ_LIMIT = 2;
@@ -210,8 +242,17 @@ export type FreeholdRowLoad =
       readonly plotIndex: number;
       readonly plotId: string;
       readonly durableRev: string;
+      /** The MEASURED stored text length, or 0 when the row was refused on its
+       *  on-disk size before anything was rendered (see detoastRefused). */
       readonly bytes: number;
       readonly limit: number;
+      /** True when the on-disk pre-gate refused the row without rendering it,
+       *  so `bytes` is unmeasured and `diskBytes` carries what WAS measured. A
+       *  refusal that reports a number it never took is worse than one that
+       *  says which number it has. */
+      readonly detoastRefused: boolean;
+      /** The post-TOAST on-disk size of the two content columns. */
+      readonly diskBytes: number;
     }
   | {
       readonly kind: 'unadmitted';
@@ -221,14 +262,26 @@ export type FreeholdRowLoad =
       readonly detail: string;
     };
 
-// ONE round trip for the whole account. The bound is measured IN SQL, the
-// server/db.ts loadGuildBankRow way: a LATERAL computes the UNCOMPRESSED
-// serialized size once per row (octet_length of the text form, never
-// pg_column_size, which reports the post-TOAST compressed size and would let a
-// highly compressible multi-megabyte blob slip under the bound), and the two
-// content columns come back NULL past it, so an oversized row never crosses the
-// wire into a deep parse. The explicit LIMIT is the second half of that promise:
-// a corrupted account can never turn one boot read into an unbounded scan.
+// ONE round trip for the whole account, bounded TWICE and in that order.
+//
+// The authoritative bound is measured IN SQL the server/db.ts loadGuildBankRow
+// way: a LATERAL computes the UNCOMPRESSED serialized size once per row
+// (octet_length of the text form, never pg_column_size, which reports the
+// post-TOAST COMPRESSED size and would let a highly compressible multi-megabyte
+// blob slip under the bound), and the two content columns come back NULL past
+// it, so an oversized row never crosses the wire into a deep parse.
+//
+// Ahead of it sits a CHEAP on-disk pre-gate, because octet_length is not free
+// on the server side: it must fully detoast the column and render it to text
+// before the comparison can happen, so on its own it bounds the client and not
+// the database. pg_column_size reads the TOAST pointer header instead. Past the
+// gate the measured size comes back NULL, which the reader classifies as
+// oversize WITHOUT ever having rendered the value. See
+// FREEHOLD_STORED_DETOAST_GATE_BYTES for what the gate does and does not
+// promise.
+//
+// The explicit LIMIT is the last part of the same promise: a corrupted account
+// can never turn one boot read into an unbounded scan.
 const FREEHOLD_ACCOUNT_READ_SQL = `SELECT f.plot_index,
        f.plot_id,
        f.schema_version,
@@ -238,13 +291,21 @@ const FREEHOLD_ACCOUNT_READ_SQL = `SELECT f.plot_index,
        f.condition,
        f.visit_policy,
        f.upkeep_binding,
+       d.disk_bytes,
        b.owned_bytes,
        CASE WHEN b.owned_bytes <= $2 THEN f.layout ELSE NULL END AS layout,
        CASE WHEN b.owned_bytes <= $2 THEN f.trophies ELSE NULL END AS trophies
   FROM account_freeholds f
   LEFT JOIN LATERAL (
-    SELECT COALESCE(octet_length(f.layout::text), 0)
-         + COALESCE(octet_length(f.trophies::text), 0) AS owned_bytes
+    SELECT COALESCE(pg_column_size(f.layout), 0)
+         + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes
+  ) d ON true
+  LEFT JOIN LATERAL (
+    SELECT CASE
+             WHEN d.disk_bytes > ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL
+             ELSE COALESCE(octet_length(f.layout::text), 0)
+                + COALESCE(octet_length(f.trophies::text), 0)
+           END AS owned_bytes
   ) b ON true
  WHERE f.account_id = $1
  ORDER BY f.plot_index
@@ -323,7 +384,23 @@ export async function freeholdForAccount(
     };
   }
 
-  const bytes = Number(primary.owned_bytes) || 0;
+  const diskBytes = Number(primary.disk_bytes) || 0;
+  // NULL is the on-disk pre-gate's answer: the row was too large to render, so
+  // there is no measured text length and none was paid for.
+  const measured = primary.owned_bytes;
+  if (measured === null || measured === undefined) {
+    return {
+      kind: 'oversize',
+      plotIndex: Number(primary.plot_index),
+      plotId: String(primary.plot_id),
+      durableRev: readBigintText(primary.durable_rev, 'durable_rev'),
+      bytes: 0,
+      limit: maxOwnedBytes,
+      detoastRefused: true,
+      diskBytes,
+    };
+  }
+  const bytes = Number(measured) || 0;
   if (bytes > maxOwnedBytes) {
     return {
       kind: 'oversize',
@@ -332,6 +409,8 @@ export async function freeholdForAccount(
       durableRev: readBigintText(primary.durable_rev, 'durable_rev'),
       bytes,
       limit: maxOwnedBytes,
+      detoastRefused: false,
+      diskBytes,
     };
   }
   return { kind: 'row', row: toFreeholdRow(accountId, primary) };

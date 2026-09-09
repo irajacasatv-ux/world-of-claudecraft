@@ -24,10 +24,12 @@ import type { FreeholdHearthLoad } from '../../server/freehold_hearth_db';
 import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_FLUSH_MAX_PASSES,
+  FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
   FREEHOLD_PERSIST_MAX_ACTIVE_LOADS,
+  FREEHOLD_PERSIST_MAX_ACTIVE_WRITES,
   FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES,
-  FREEHOLD_PERSIST_PERMIT_WAIT_MS,
   FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS,
+  FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS,
   type FreeholdPersistPorts,
   type FreeholdPersistStore,
   freeholdPersistIdle,
@@ -138,7 +140,6 @@ function harness(options: HarnessOptions = {}) {
   const writes: FreeholdUpsert[] = [];
   const warnings: string[] = [];
   const errors: string[] = [];
-  const loadFailures: string[] = [];
   const deadlines: DeadlineJob[] = [];
   const permitSignals: AbortSignal[] = [];
   const ownedBytesSeen: number[] = [];
@@ -216,9 +217,6 @@ function harness(options: HarnessOptions = {}) {
     error(message: string): void {
       errors.push(message);
     },
-    recordLoadFailure(kind: string): void {
-      loadFailures.push(kind);
-    },
     scheduleDeadline(callback: () => void, ms: number): () => void {
       const job: DeadlineJob = { ms, fire: callback, cancelled: false, fired: false };
       deadlines.push(job);
@@ -236,7 +234,6 @@ function harness(options: HarnessOptions = {}) {
     writes,
     warnings,
     errors,
-    loadFailures,
     deadlines,
     permitSignals,
     ownedBytesSeen,
@@ -282,7 +279,7 @@ afterEach(() => {
 describe('freehold persist constants', () => {
   it('pins the three bounds the contract names', () => {
     expect(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS).toBe(10_000);
-    expect(FREEHOLD_PERSIST_PERMIT_WAIT_MS).toBe(15_000);
+    expect(FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS).toBe(15_000);
     expect(FREEHOLD_PERSIST_MAX_ACTIVE_LOADS).toBe(4);
     expect(FREEHOLD_PERSIST_FLUSH_MAX_PASSES).toBe(4);
   });
@@ -369,9 +366,10 @@ describe('preload admission', () => {
     // never become an unadmitted query.
     expect(h.calls).toEqual(['permit']);
     expect(loaded.hold?.kind).toBe('unadmitted');
-    expect(loaded.hold?.detail).toContain(String(FREEHOLD_PERSIST_PERMIT_WAIT_MS));
-    expect(h.loadFailures).toEqual(['unadmitted']);
+    expect(loaded.hold?.detail).toContain(String(FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS));
     expect(h.store.stats().loadFailures).toBe(1);
+    // Split by kind, because the four causes want four operator responses.
+    expect(h.store.stats().loadFailuresByKind).toEqual({ unadmitted: 1 });
   });
 
   it('reads the row when the permit is granted (the other arm)', async () => {
@@ -508,6 +506,8 @@ describe('preload classification', () => {
           durableRev: '9',
           bytes: 300_000,
           limit: FREEHOLD_MAX_OWNED_BYTES,
+          detoastRefused: false,
+          diskBytes: 200_000,
         },
       },
       kind: 'oversize',
@@ -548,7 +548,7 @@ describe('preload classification', () => {
       expect(loaded.hold?.detail).toContain(holdCase.detail);
       expect(loaded.state).toBeNull();
       expect(h.store.stats().held).toBe(1);
-      expect(h.loadFailures).toEqual([holdCase.kind]);
+      expect(h.store.stats().loadFailuresByKind).toEqual({ [holdCase.kind]: 1 });
 
       // Every write door, tried in turn. The absence of a writeRow call is the
       // assertion: the durable row keeps the owner's possessions.
@@ -810,6 +810,8 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
         durableRev: '4',
         bytes: 1,
         limit: 0,
+        detoastRefused: false,
+        diskBytes: 200_000,
       },
       serialize: () => persistedFixture({ rev: 999 }),
     });
@@ -904,7 +906,7 @@ describe('the FIFO and the permit', () => {
     await tick(30);
     expect(h.writeCount()).toBe(0);
     expect(h.store.stats().writeFailures).toBe(1);
-    expect(h.warnings.join(' ')).toContain(String(FREEHOLD_PERSIST_PERMIT_WAIT_MS));
+    expect(h.warnings.join(' ')).toContain(String(FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS));
   });
 });
 
@@ -918,7 +920,12 @@ describe('the stale compare-and-swap quiesce', () => {
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.store.stats().staleWrites).toBe(1);
-    expect(h.store.stats().held).toBe(1);
+    // Quiesced, NOT held. The two are separate measures because a rising
+    // quiesce count means a writer this realm does not know about is touching
+    // these rows, which is exactly what the fence exists to surface, and a
+    // recovery hold means something else entirely.
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.store.stats().held).toBe(0);
 
     for (let i = 0; i < 5; i++) {
       h.store.markDirty(OWNER_KEY);
@@ -1272,6 +1279,115 @@ describe('reference counting and eviction', () => {
   });
 });
 
+describe('the local write admission cap', () => {
+  // The keyed serial writer serializes per OWNER KEY, so a thousand owners are
+  // a thousand independent FIFOs racing for one shared background permit, and
+  // that gate's waiter list is UNCAPPED. Bounding each WAIT does not bound the
+  // waiter COUNT: the first sweep after a mass login would queue one waiter per
+  // owner, each with its own abort timer, and every other named producer would
+  // sit behind them. The surplus waits here instead.
+
+  /** `count` loaded owners in ONE store, each with its own key. */
+  async function manyOwners(count: number, writeRow: () => Promise<FreeholdUpsertResult>) {
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow,
+      serialize: (ownerKey: string) => persistedFixture({ rev: revs.get(ownerKey) ?? 5 }),
+    });
+    const revs = new Map<string, number>();
+    for (let i = 0; i < count; i++) {
+      const account = ACCOUNT_ID + i;
+      const key = `account:${account}`;
+      revs.set(key, 5);
+      h.store.retain(key);
+      await h.store.preload(account);
+    }
+    return { h, revs };
+  }
+
+  it('never runs more than the cap at once, and drains everything anyway', async () => {
+    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
+    let peak = 0;
+    let inFlight = 0;
+    const { h, revs } = await manyOwners(40, async () => {
+      inFlight++;
+      peak = Math.max(peak, inFlight);
+      const gate = deferred<FreeholdUpsertResult>();
+      gates.push(gate);
+      const result = await gate.promise;
+      inFlight--;
+      return result;
+    });
+    for (const key of revs.keys()) {
+      revs.set(key, 6);
+      h.store.markDirty(key);
+      h.store.save(key);
+    }
+    await tick(30);
+    expect(peak).toBeLessThanOrEqual(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
+
+    // Release everything, pumping as slots free, and prove no owner was lost.
+    for (let round = 0; round < 60 && gates.length > 0; round++) {
+      for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
+      await tick(30);
+    }
+    expect(peak).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
+    expect(h.writeCount()).toBe(40);
+    expect(h.store.stats().dirty).toBe(0);
+  });
+
+  it('leaves a deferred owner DIRTY, so the next sweep still owes it a write', async () => {
+    // The safety half. A deferred write that quietly cleared its dirty flag
+    // would lose the edit forever; the whole reason deferring is safe is that
+    // the entry keeps owing the write.
+    const gate = deferred<FreeholdUpsertResult>();
+    const { h, revs } = await manyOwners(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 3, async () => {
+      return await gate.promise;
+    });
+    for (const key of revs.keys()) {
+      revs.set(key, 6);
+      h.store.markDirty(key);
+      h.store.save(key);
+    }
+    await tick(30);
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
+    expect(h.store.stats().dirty).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 3);
+    // Nothing lost and nothing double-queued: the deferred owners are still
+    // dirty and still uncounted as running.
+    expect(h.store.stats().running).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
+  });
+
+  it('does not answer the shutdown drain while writes are still deferred', async () => {
+    // A drain that ignored the deferred set would report success with edits
+    // still unwritten, which is the exact lie a drain exists to prevent.
+    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
+    const { h, revs } = await manyOwners(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 2, async () => {
+      const gate = deferred<FreeholdUpsertResult>();
+      gates.push(gate);
+      return await gate.promise;
+    });
+    for (const key of revs.keys()) {
+      revs.set(key, 6);
+      h.store.markDirty(key);
+      h.store.save(key);
+    }
+    await tick(30);
+    let drained: boolean | null = null;
+    void h.store.idle(60_000).then((value) => {
+      drained = value;
+    });
+    await tick(20);
+    expect(drained).toBeNull();
+
+    for (let round = 0; round < 20 && gates.length > 0; round++) {
+      for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
+      await tick(30);
+    }
+    expect(drained).toBe(true);
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 2);
+  });
+});
+
 describe('an abandoned preload does not leak an entry', () => {
   // The handshake reads the durable row BEFORE it acquires the character lease,
   // and several refusals sit between the two. Every one of them returns without
@@ -1485,12 +1601,21 @@ describe('stats', () => {
     expect(json).not.toContain(ROW_PLOT_ID);
     expect(json).not.toContain('plot:');
     expect(json).not.toContain('account:');
-    for (const value of Object.values(h.store.stats())) {
+    const stats = h.store.stats();
+    for (const [measure, value] of Object.entries(stats)) {
+      if (measure === 'loadFailuresByKind') continue;
       expect(typeof value).toBe('number');
+    }
+    // The one non-scalar measure, checked on both halves: its KEYS are hold
+    // kinds from a closed vocabulary and its values are counts, so no identity
+    // can ride in on either side.
+    for (const [kind, count] of Object.entries(stats.loadFailuresByKind)) {
+      expect(['unsupported', 'malformed', 'oversize', 'unadmitted']).toContain(kind);
+      expect(typeof count).toBe('number');
     }
   });
 
-  it('reports the dirty age from the store clock and the last write size', async () => {
+  it('reports the dirty age from the store clock and the write byte totals', async () => {
     const h = await loadedStore();
     h.setNow(20_000);
     h.store.markDirty(OWNER_KEY);
@@ -1501,9 +1626,15 @@ describe('stats', () => {
     const after = h.store.stats();
     expect(after.oldestDirtyAgeMs).toBe(0);
     expect(after.writes).toBe(1);
-    expect(after.lastWriteBytes).toBeGreaterThan(0);
+    // A total and a high-water mark, never a last sample: one arbitrary write's
+    // size at a thousand owners tells an operator nothing about the
+    // distribution or about growth toward the byte ceiling.
+    expect(after.writeBytesTotal).toBeGreaterThan(0);
+    expect(after.maxWriteBytes).toBe(after.writeBytesTotal);
     expect(after.permitWaitMsTotal).toBeGreaterThanOrEqual(0);
     expect(after.queueWaitMsTotal).toBeGreaterThanOrEqual(0);
+    expect(after.writeMsTotal).toBeGreaterThanOrEqual(0);
+    expect(after.loadMsTotal).toBeGreaterThanOrEqual(0);
   });
 });
 
