@@ -126,7 +126,11 @@ export async function loadFreeholdHearth(
   if (readyAtMs === null || revision === null) {
     return {
       kind: 'unsupported',
-      detail: `account ${accountId} hearth counters are not non-negative bigint text`,
+      // CLASSIFIES, never identifies. Every detail on this module's refusals is
+      // logged verbatim by the persistence store's warn port, and that channel
+      // holds the same identity-free rule as the counters beside it: an
+      // operator dashboard is entitled to know WHAT refused, not WHOSE.
+      detail: 'hearth counters are not non-negative bigint text',
     };
   }
   return { kind: 'state', state: { readyAtMs, revision } };
@@ -209,13 +213,13 @@ export async function advanceFreeholdHearthOnClient(
   }
   const account = await client.query(FREEHOLD_HEARTH_ACCOUNT_LOCK_SQL, [accountId]);
   if ((account.rows?.length ?? 0) === 0) {
-    return { kind: 'unsupported', detail: `account ${accountId} is absent` };
+    return { kind: 'unsupported', detail: 'the account row is absent' };
   }
   await client.query(FREEHOLD_HEARTH_INIT_SQL, [accountId]);
   const read = await client.query(FREEHOLD_HEARTH_READ_FOR_UPDATE_SQL, [accountId]);
   const row = read.rows?.[0];
   if (row === undefined) {
-    return { kind: 'unsupported', detail: `account ${accountId} hearth row vanished under lock` };
+    return { kind: 'unsupported', detail: 'the hearth row vanished under lock' };
   }
   const readyAtMs = bigintText(row.ready_at_ms);
   const revision = bigintText(row.revision);
@@ -223,7 +227,7 @@ export async function advanceFreeholdHearthOnClient(
   if (readyAtMs === null || revision === null || nowMs === null) {
     return {
       kind: 'unsupported',
-      detail: `account ${accountId} hearth read is not non-negative bigint text`,
+      detail: 'the hearth read is not non-negative bigint text',
     };
   }
   // BigInt, never Number: the comparison that decides a trip must not depend
@@ -242,7 +246,7 @@ export async function advanceFreeholdHearthOnClient(
   if (nextReadyAtMs === null || nextRevision === null) {
     return {
       kind: 'unsupported',
-      detail: `account ${accountId} hearth advance returned no usable row`,
+      detail: 'the hearth advance returned no usable row',
     };
   }
   return { kind: 'advanced', readyAtMs: nextReadyAtMs, revision: nextRevision, nowMs };

@@ -29,11 +29,14 @@ interface Captured {
   values: unknown[] | undefined;
 }
 
-function makeCapture(results: { rows?: Record<string, unknown>[] }[] = []) {
+/** Queued results, in statement order. An Error in the queue is THROWN by that
+ *  statement, so a case can drive the database's own constraint violations. */
+function makeCapture(results: ({ rows?: Record<string, unknown>[] } | Error)[] = []) {
   const calls: Captured[] = [];
   const query = async (text: string, values?: unknown[]) => {
     calls.push({ text, values });
     const next = results.shift() ?? {};
+    if (next instanceof Error) throw next;
     const rows = next.rows ?? [];
     return { rows, rowCount: rows.length };
   };
@@ -81,6 +84,7 @@ const VALID_UPSERT: FreeholdUpsert = {
   condition: 100,
   visitPolicy: 'closed',
   wireRev: 3,
+  schemaVersion: 1,
   expectedDurableRev: '4',
 };
 
@@ -399,6 +403,15 @@ describe('the compare-and-swap upsert', () => {
     expect(folded).toContain('ON CONFLICT (account_id, plot_index) DO NOTHING');
     expect(folded).not.toContain('DO UPDATE');
     expect(folded).toContain('RETURNING durable_rev::text AS durable_rev');
+    // The COLUMN LIST, pinned to a literal in the always-on tier: the ordering
+    // of the values below is only meaningful against the columns they fill, and
+    // a silent reorder would write every field into the wrong column.
+    expect(folded).toContain(
+      '(account_id, plot_index, plot_id, tier, layout, trophies, condition, visit_policy, wire_rev, schema_version)',
+    );
+    expect(folded).toContain(
+      'VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9::bigint, $10)',
+    );
     expect(cap.calls[0].values).toEqual([
       42,
       0,
@@ -409,7 +422,36 @@ describe('the compare-and-swap upsert', () => {
       100,
       'closed',
       '3',
+      1,
     ]);
+  });
+
+  it('diagnoses a plot identity collision as a conflict rather than throwing', async () => {
+    // ON CONFLICT (account_id, plot_index) does NOT absorb a plot_id unique
+    // violation: the minted identity collided with another account's row. The
+    // caller's response is the same as for any other conflict, so it must be
+    // classified rather than surfacing as an unexplained database fault.
+    const collision = Object.assign(new Error('duplicate key value'), {
+      code: '23505',
+      constraint: 'account_freeholds_plot_id',
+    });
+    const cap = makeCapture([collision]);
+    expect(await upsertFreehold(cap.db, { ...VALID_UPSERT, expectedDurableRev: null })).toEqual({
+      kind: 'conflict',
+      detail: 'the minted plot identity is already in use by another row',
+    });
+    // One statement: a collision is diagnosed by the error, never by a probe.
+    expect(cap.calls).toHaveLength(1);
+  });
+
+  it('never turns another database fault into a conflict', async () => {
+    // The contrast arm. Swallowing an unrelated error as "conflict" would hide
+    // a real fault behind a routine-looking classification forever.
+    const fault = Object.assign(new Error('connection terminated'), { code: '57P01' });
+    const cap = makeCapture([fault]);
+    await expect(
+      upsertFreehold(cap.db, { ...VALID_UPSERT, expectedDurableRev: null }),
+    ).rejects.toThrow('connection terminated');
   });
 
   it('diagnoses a conflicting insert as stale, with the winner revision', async () => {
@@ -444,7 +486,7 @@ describe('the compare-and-swap upsert', () => {
     const result = await upsertFreehold(cap.db, VALID_UPSERT);
     expect(result).toEqual({ kind: 'updated', durableRev: '5' });
     expect(cap.calls).toHaveLength(1);
-    expect(cap.calls[0].values).toEqual([42, 0, '4', 'cottage', '[]', '[]', 100, 'closed', '3']);
+    expect(cap.calls[0].values).toEqual([42, 0, '4', 'cottage', '[]', '[]', 100, 'closed', '3', 1]);
   });
 
   it('fences on the exact revision and writes NOTHING the upkeep writer owns', async () => {
@@ -465,6 +507,12 @@ describe('the compare-and-swap upsert', () => {
     expect(setClause).toContain('condition = $7');
     expect(setClause).toContain('visit_policy = $8');
     expect(setClause).toContain('wire_rev = $9::bigint');
+    // schema_version IS written. The writer is the only party that knows which
+    // shape it just serialized, and the column is what a later or EARLIER build
+    // reads to decide whether it may interpret the row at all. Left to the
+    // column DEFAULT, a release writing shape 2 would leave every row claiming
+    // shape 1 and a rollback would accept documents it cannot read.
+    expect(setClause).toContain('schema_version = $10');
 
     // THE SET LIST IS THE INVARIANT. The plot save is not the upkeep writer and
     // must never clear a bound checkpoint or a granted credit, and the plot
@@ -474,7 +522,6 @@ describe('the compare-and-swap upsert', () => {
     expect(setClause).not.toContain('upkeep_credit');
     expect(setClause).not.toContain('upkeep_binding');
     expect(setClause).not.toContain('plot_id');
-    expect(setClause).not.toContain('schema_version');
     expect(setClause).not.toContain('created_at');
   });
 

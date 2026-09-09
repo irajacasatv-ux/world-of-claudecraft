@@ -28,6 +28,7 @@ import {
   FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
   FREEHOLD_PERSIST_MAX_ACTIVE_LOADS,
   FREEHOLD_PERSIST_MAX_ACTIVE_WRITES,
+  FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
   FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES,
   FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS,
   FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS,
@@ -344,13 +345,39 @@ describe('preload admission', () => {
     expect(a.plotId).toBe('plot:minted1');
   });
 
-  it('short circuits with zero database work when the record is already live', async () => {
-    const h = harness({ hasLive: () => true });
+  it('installs nothing when the record is already live, but still learns the row', async () => {
+    // A second character of the same account is joining, so the LIVE record is
+    // the truth and the answer carries no state either way. The read still has
+    // to happen: without it the entry never learns its plot id or its durable
+    // revision, and an entry that never loaded is write-blocked for the whole
+    // session, so the owner would play, furnish, and have every edit silently
+    // discarded at logout.
+    const h = harness({ hasLive: () => true, rowLoad: { kind: 'row', row: rowFixture() } });
     const loaded = await h.store.preload(ACCOUNT_ID);
-    expect(h.calls).toEqual([]);
-    expect(h.store.stats().loads).toBe(0);
+    expect(h.calls).toContain('readRow');
     expect(loaded.state).toBeNull();
     expect(loaded.hold).toBeNull();
+    // Learned, so the session can write: identity and fence both present.
+    expect(loaded.plotId).toBe(ROW_PLOT_ID);
+    expect(loaded.durableRev).toBe('7');
+  });
+
+  it('short circuits with zero database work once the entry has already loaded', async () => {
+    // The other half: the read happens ONCE. A third character joining the same
+    // account must not re-read the row.
+    let liveNow = false;
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      hasLive: () => liveNow,
+    });
+    h.store.retain(OWNER_KEY);
+    await h.store.preload(ACCOUNT_ID);
+    h.calls.length = 0;
+    liveNow = true;
+    const again = await h.store.preload(ACCOUNT_ID);
+    expect(h.calls).toEqual([]);
+    expect(again.state).toBeNull();
+    expect(again.durableRev).toBe('7');
   });
 
   it('does read the row when nothing is live (the other arm of the short circuit)', async () => {
@@ -1283,10 +1310,129 @@ describe('reference counting and eviction', () => {
   });
 
   it('leaves a clean entry alone on the leave path', async () => {
-    const h = await loadedStore();
+    // Clean means what the SWEEP means by clean: the live record's revision
+    // matches the last written one. Rewriting an unchanged document on every
+    // logout would burn a durable revision per leave.
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => persistedFixture({ rev: 5 }),
+    });
     await h.store.flushAndRelease(OWNER_KEY);
     await tick();
     expect(h.writeCount()).toBe(0);
+  });
+
+  it('flushes a record that moved since the last sweep, with no markDirty call', async () => {
+    // THE LAST WINDOW. A tier change made between the final sweep and the
+    // logout bumps only the record's revision; a leave path testing markDirty
+    // alone would drop it, and there is no next sweep to catch it.
+    let rev = 5;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
+    });
+    rev = 6;
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(20);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
+  });
+});
+
+describe('a durable answer no repeat can fix stops the writes', () => {
+  it('quiesces after a run of thrown writes, and not before', async () => {
+    // A stale or refused answer quiesces on the FIRST reply, because no repeat
+    // can change it. A thrown write might be a connection blip, so it gets a
+    // few chances; without any bound a row this realm genuinely cannot write is
+    // retried on every sweep for the life of the process.
+    let rev = 7;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async () => {
+        throw new Error('connection terminated unexpectedly');
+      },
+    });
+    for (let attempt = 1; attempt < FREEHOLD_PERSIST_MAX_WRITE_ERRORS; attempt++) {
+      rev += 1;
+      h.store.saveAllDirty();
+      await tick(30);
+      expect(h.writeCount()).toBe(attempt);
+      // Still trying: the entry is not quiesced yet.
+      expect(h.store.stats().quiesced).toBe(0);
+    }
+    rev += 1;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS);
+    expect(h.store.stats().quiesced).toBe(1);
+
+    // And it really stops: every later sweep costs nothing.
+    for (let i = 0; i < 5; i++) {
+      rev += 1;
+      h.store.saveAllDirty();
+      await tick(30);
+    }
+    expect(h.writeCount()).toBe(FREEHOLD_PERSIST_MAX_WRITE_ERRORS);
+  });
+
+  it('resets the error run on a commit, so a blip never accumulates across a session', async () => {
+    // Without the reset, three unrelated blips spread over hours would quiesce
+    // a perfectly healthy owner.
+    let rev = 7;
+    let fail = true;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async () => {
+        if (fail) throw new Error('connection terminated unexpectedly');
+        return { kind: 'updated', durableRev: String(rev) };
+      },
+    });
+    for (let i = 0; i < FREEHOLD_PERSIST_MAX_WRITE_ERRORS - 1; i++) {
+      rev += 1;
+      h.store.saveAllDirty();
+      await tick(30);
+    }
+    fail = false;
+    rev += 1;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.store.stats().quiesced).toBe(0);
+
+    // The run is back to zero: two more throws still do not quiesce.
+    fail = true;
+    for (let i = 0; i < FREEHOLD_PERSIST_MAX_WRITE_ERRORS - 1; i++) {
+      rev += 1;
+      h.store.saveAllDirty();
+      await tick(30);
+    }
+    expect(h.store.stats().quiesced).toBe(0);
+  });
+
+  it('never replays a quiesced entry as if its house were current', async () => {
+    // A quiesced entry has NO hold, and it is exactly the entry whose knowledge
+    // is known to be stale: the durable revision moved under this realm, which
+    // is what the fence exists to detect. Replaying it on a rejoin would
+    // install a house another writer has already replaced.
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => ({ kind: 'stale', durableRev: '99' }),
+    });
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.store.stats().quiesced).toBe(1);
+
+    const again = await h.store.preload(ACCOUNT_ID);
+    expect(again.state).toBeNull();
+    // And no second read went out: the entry is still loaded, just untrusted.
+    expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(0);
   });
 });
 

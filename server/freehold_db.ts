@@ -150,7 +150,13 @@ CREATE TABLE IF NOT EXISTS "__woc_freehold_schema__".account_freeholds (
   CONSTRAINT account_freeholds_plot_index_shape
     CHECK (plot_index >= 0),
   -- The shared opaque public identity charset: what the wire admits and what
-  -- mintFreeholdPlotId is required to produce.
+  -- mintFreeholdPlotId is required to produce. This one IS a policy rather than
+  -- a shape, unlike its siblings, and it is frozen here on purpose: the charset
+  -- is the wire's own permanent contract, so widening it is a wire change
+  -- before it is a schema change. CREATE TABLE IF NOT EXISTS never revisits an
+  -- inline constraint, so a release that does widen the wire owes an explicit
+  -- named ALTER TABLE ... DROP CONSTRAINT / ADD CONSTRAINT in its own DDL; it
+  -- cannot be relaxed by editing the line above.
   CONSTRAINT account_freeholds_plot_id_charset
     CHECK (plot_id ~ '^[A-Za-z0-9_:-]{1,64}$'),
   -- A row always declares which persisted shape it was written in.
@@ -426,6 +432,15 @@ export interface FreeholdUpsert {
   readonly condition: number;
   readonly visitPolicy: string;
   readonly wireRev: number;
+  /** The persisted SHAPE this document was written in. Written explicitly on
+   *  every save rather than left to the column DEFAULT, because the column is
+   *  what a LATER build reads to decide whether it can interpret the row at
+   *  all. Left to the default, a future release writing shape 2 would leave
+   *  every row claiming shape 1, and a rollback to a shape-1 build would accept
+   *  a document it cannot read: the forward-version refusal would be inert
+   *  exactly when it is the only thing standing between a rollback and a
+   *  misread house. */
+  readonly schemaVersion: number;
   /** The durable revision this save is fencing on, or null for insert-only
    *  (the first write for this account and slot). */
   readonly expectedDurableRev: string | null;
@@ -442,8 +457,9 @@ export type FreeholdUpsertResult =
 // finds a row has lost a race with another writer, and overwriting there would
 // silently discard whatever that writer built.
 const FREEHOLD_INSERT_SQL = `INSERT INTO account_freeholds
-    (account_id, plot_index, plot_id, tier, layout, trophies, condition, visit_policy, wire_rev)
-VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9::bigint)
+    (account_id, plot_index, plot_id, tier, layout, trophies, condition, visit_policy, wire_rev,
+     schema_version)
+VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9::bigint, $10)
 ON CONFLICT (account_id, plot_index) DO NOTHING
 RETURNING durable_rev::text AS durable_rev`;
 
@@ -451,11 +467,16 @@ RETURNING durable_rev::text AS durable_rev`;
 // caller read, so a stale session can never clobber a newer save (the
 // server/maps_db.ts updateMapIfVersion shape, on a bigint fence).
 //
-// THE SET LIST IS THE INVARIANT. plot_id, schema_version, created_at,
-// upkeep_binding, upkeep_checkpoint and upkeep_credit are ABSENT on purpose:
-// the plot save is not the upkeep writer and must never clear a bound
-// checkpoint or a granted credit, and the plot identity is minted once and
-// never re-minted. Anything added to this SET needs its own writer's consent.
+// THE SET LIST IS THE INVARIANT. plot_id, created_at, upkeep_binding,
+// upkeep_checkpoint and upkeep_credit are ABSENT on purpose: the plot save is
+// not the upkeep writer and must never clear a bound checkpoint or a granted
+// credit, and the plot identity is minted once and never re-minted. Anything
+// added to this SET needs its own writer's consent.
+//
+// schema_version IS present, and has to be: the writer is the only party that
+// knows which shape it just serialized, and the column is what a later or
+// EARLIER build reads to decide whether it may interpret the row. Leaving it to
+// the column DEFAULT would make every row claim shape 1 forever.
 const FREEHOLD_CAS_UPDATE_SQL = `UPDATE account_freeholds
    SET tier = $4,
        layout = $5::jsonb,
@@ -463,6 +484,7 @@ const FREEHOLD_CAS_UPDATE_SQL = `UPDATE account_freeholds
        condition = $7,
        visit_policy = $8,
        wire_rev = $9::bigint,
+       schema_version = $10,
        durable_rev = durable_rev + 1,
        updated_at = now()
  WHERE account_id = $1 AND plot_index = $2 AND durable_rev = $3::bigint
@@ -501,6 +523,22 @@ function requireUpsertInput(input: FreeholdUpsert): void {
   if (!Number.isSafeInteger(input.wireRev) || input.wireRev < 0) {
     throw new TypeError('freehold wireRev must be a non-negative safe integer');
   }
+  if (!Number.isSafeInteger(input.schemaVersion) || input.schemaVersion < 1) {
+    throw new TypeError('freehold schemaVersion must be a positive safe integer');
+  }
+  // The two stored-column ceilings, checked HERE rather than left to the DDL,
+  // for the same reason as every other refusal in this function: a value the
+  // CHECK would refuse raises 23514 and aborts the caller's whole transaction.
+  if (input.tier.length > FREEHOLD_TIER_COLUMN_MAX_LENGTH) {
+    throw new TypeError(
+      `freehold tier must be at most ${FREEHOLD_TIER_COLUMN_MAX_LENGTH} characters`,
+    );
+  }
+  if (input.visitPolicy.length > FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH) {
+    throw new TypeError(
+      `freehold visitPolicy must be at most ${FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH} characters`,
+    );
+  }
   if (input.expectedDurableRev !== null && !/^[0-9]+$/.test(input.expectedDurableRev)) {
     throw new TypeError('freehold expectedDurableRev must be null or exact bigint text');
   }
@@ -526,10 +564,22 @@ export async function upsertFreehold(
     input.condition,
     input.visitPolicy,
     String(input.wireRev),
+    input.schemaVersion,
   ];
 
   if (input.expectedDurableRev === null) {
-    const res = await db.query(FREEHOLD_INSERT_SQL, content);
+    const res = await insertFreeholdRow(db, content);
+    if (res === null) {
+      // A plot_id unique violation, which ON CONFLICT (account_id, plot_index)
+      // does NOT absorb: the minted identity collided with another account's
+      // row. Diagnosed rather than thrown, because the caller's response is the
+      // same as for any other conflict (hold this owner, write nothing) and an
+      // unclassified throw would read as a database fault instead.
+      return {
+        kind: 'conflict',
+        detail: 'the minted plot identity is already in use by another row',
+      };
+    }
     const inserted = (res.rows ?? [])[0];
     if (inserted !== undefined) {
       return { kind: 'inserted', durableRev: readBigintText(inserted.durable_rev, 'durable_rev') };
@@ -558,6 +608,7 @@ export async function upsertFreehold(
     input.condition,
     input.visitPolicy,
     String(input.wireRev),
+    input.schemaVersion,
   ]);
   const updated = (res.rows ?? [])[0];
   if (updated !== undefined) {
@@ -566,6 +617,23 @@ export async function upsertFreehold(
   const current = await currentDurableRev(db, input);
   if (current === null) return { kind: 'missing' };
   return { kind: 'stale', durableRev: current };
+}
+
+/** The insert, with the ONE constraint violation it can raise that is a
+ *  diagnosis rather than a fault turned into a null. Every other error
+ *  propagates: a fault must not be reported as a conflict. */
+async function insertFreeholdRow(
+  db: FreeholdQueryable,
+  content: unknown[],
+): Promise<{ rows?: Record<string, unknown>[] } | null> {
+  try {
+    return await db.query(FREEHOLD_INSERT_SQL, content);
+  } catch (err) {
+    const constraint = (err as { constraint?: unknown }).constraint;
+    const code = (err as { code?: unknown }).code;
+    if (code === '23505' && constraint === 'account_freeholds_plot_id') return null;
+    throw err;
+  }
 }
 
 async function currentDurableRev(

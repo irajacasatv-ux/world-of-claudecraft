@@ -367,6 +367,87 @@ d('account_freeholds against real PostgreSQL', () => {
     ).resolves.toBeDefined();
   });
 
+  it('classifies that same collision as a conflict when it comes through the writer', async () => {
+    // The arm above proves the DATABASE refuses. This one proves the MODULE
+    // turns the refusal into a classification the store can act on, because
+    // ON CONFLICT (account_id, plot_index) does not absorb a plot_id violation
+    // and an unclassified throw would read as a database fault.
+    await pool.query(RAW_INSERT, RAW_INSERT_VALUES({ account_id: 1 }));
+    const result = await db.upsertFreehold(pool, {
+      accountId: 2,
+      plotIndex: db.FREEHOLD_PRIMARY_PLOT_INDEX,
+      plotId: PLOT_ID,
+      tier: 'cottage',
+      layoutJson: '[]',
+      trophiesJson: '[]',
+      condition: 100,
+      visitPolicy: 'closed',
+      wireRev: 1,
+      schemaVersion: 1,
+      expectedDurableRev: null,
+    });
+    expect(result).toEqual({
+      kind: 'conflict',
+      detail: 'the minted plot identity is already in use by another row',
+    });
+    // Nothing landed for the losing account.
+    const rows = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM ${SCHEMA}.account_freeholds WHERE account_id = 2`,
+    );
+    expect(rows.rows[0].n).toBe(0);
+  });
+
+  it('writes the schema version the caller declared, on the insert and on the save', async () => {
+    // The column is what a later or EARLIER build reads to decide whether it
+    // may interpret the row. Left to the column DEFAULT it would claim shape 1
+    // forever, and a rollback would accept documents it cannot read. Version 2
+    // here is deliberately NOT the current one: a test that wrote 1 could not
+    // tell an explicit write from the default.
+    const base = {
+      accountId,
+      plotIndex: db.FREEHOLD_PRIMARY_PLOT_INDEX,
+      plotId: PLOT_ID,
+      tier: 'cottage',
+      layoutJson: '[]',
+      trophiesJson: '[]',
+      condition: 100,
+      visitPolicy: 'closed',
+      wireRev: 1,
+    };
+    const inserted = await db.upsertFreehold(pool, {
+      ...base,
+      schemaVersion: 2,
+      expectedDurableRev: null,
+    });
+    if (inserted.kind !== 'inserted') throw new Error(`expected inserted, got ${inserted.kind}`);
+    const afterInsert = await pool.query(
+      `SELECT schema_version FROM ${SCHEMA}.account_freeholds WHERE account_id = $1`,
+      [accountId],
+    );
+    expect(afterInsert.rows[0].schema_version).toBe(2);
+
+    // And the compare-and-swap save carries it too, so a row cannot keep
+    // claiming the shape it was FIRST written in.
+    const saved = await db.upsertFreehold(pool, {
+      ...base,
+      wireRev: 2,
+      schemaVersion: 3,
+      expectedDurableRev: inserted.durableRev,
+    });
+    expect(saved.kind).toBe('updated');
+    const afterSave = await pool.query(
+      `SELECT schema_version FROM ${SCHEMA}.account_freeholds WHERE account_id = $1`,
+      [accountId],
+    );
+    expect(afterSave.rows[0].schema_version).toBe(3);
+
+    // And the reader hands that version straight back, so the forward-version
+    // refusal has a real value to act on.
+    const load = await db.freeholdForAccount(pool, accountId, FREEHOLD_MAX_STORED_BYTES);
+    if (load.kind !== 'row') throw new Error(`expected a row, got ${load.kind}`);
+    expect(load.row.schemaVersion).toBe(3);
+  });
+
   it('inserts, reads back, and advances the durable revision', async () => {
     const insert = recorder(pool);
     const inserted = await db.upsertFreehold(insert.db, {
@@ -379,6 +460,7 @@ d('account_freeholds against real PostgreSQL', () => {
       condition: 88,
       visitPolicy: 'friends',
       wireRev: 4,
+      schemaVersion: 1,
       expectedDurableRev: null,
     });
     expect(inserted).toEqual({ kind: 'inserted', durableRev: '1' });
@@ -410,6 +492,7 @@ d('account_freeholds against real PostgreSQL', () => {
       condition: 70,
       visitPolicy: 'open',
       wireRev: 5,
+      schemaVersion: 1,
       expectedDurableRev: load.row.durableRev,
     });
     expect(updated).toEqual({ kind: 'updated', durableRev: '2' });
@@ -425,6 +508,7 @@ d('account_freeholds against real PostgreSQL', () => {
       condition: 10,
       visitPolicy: 'closed',
       wireRev: 99,
+      schemaVersion: 1,
       expectedDurableRev: load.row.durableRev,
     });
     expect(stale).toEqual({ kind: 'stale', durableRev: '2' });
@@ -444,6 +528,7 @@ d('account_freeholds against real PostgreSQL', () => {
       condition: 70,
       visitPolicy: 'open',
       wireRev: 1,
+      schemaVersion: 1,
       expectedDurableRev: '1',
     });
     expect(missing).toEqual({ kind: 'missing' });
@@ -467,6 +552,7 @@ d('account_freeholds against real PostgreSQL', () => {
         condition: 50,
         visitPolicy: 'closed',
         wireRev: 1,
+        schemaVersion: 1,
         expectedDurableRev: '1',
       });
       const winner = await db.upsertFreehold(winnerClient, save('manor'));
@@ -541,6 +627,7 @@ d('account_freeholds against real PostgreSQL', () => {
       condition: 100,
       visitPolicy: 'closed',
       wireRev: 1,
+      schemaVersion: 1,
       expectedDurableRev: null,
     });
     const before = await storedRow(accountId);
@@ -702,6 +789,7 @@ d('account_freeholds against real PostgreSQL', () => {
       condition: state.condition,
       visitPolicy: state.visitPolicy,
       wireRev: state.rev,
+      schemaVersion: 1,
       expectedDurableRev: null,
     });
 

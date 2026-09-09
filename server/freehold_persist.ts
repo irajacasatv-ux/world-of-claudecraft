@@ -131,6 +131,14 @@ export const FREEHOLD_ABSENT_DURABLE_REV = '0';
  */
 export const FREEHOLD_PERSIST_LEAVE_FLUSH_MS = 2_000;
 
+/** Consecutive THROWN writes for one owner before the store stops trying. A
+ *  stale or refused write already quiesces on the first answer, because those
+ *  are answers no repeat can change; a thrown one might be a connection blip,
+ *  so it gets a second and a third chance before the same treatment. Without a
+ *  bound, a row this realm genuinely cannot write is retried on every sweep for
+ *  the life of the process. */
+export const FREEHOLD_PERSIST_MAX_WRITE_ERRORS = 3;
+
 /**
  * The zero-reference entry sweep is MARK AND SWEEP over two passes, so an
  * entry lives at least one full AUTOSAVE_SECONDS period after its last
@@ -296,6 +304,10 @@ interface FreeholdPersistEntry {
    *  so it is its own flag with the same write-blocking force. */
   quiesced: boolean;
   quiesceWarned: boolean;
+  /** Thrown writes since the last commit. A single throw is usually a blip
+   *  worth one more sweep; a run of them is a row this realm cannot write, and
+   *  retrying it every sweep forever is a loop against the pool. */
+  writeErrors: number;
   refs: number;
   dirtyGeneration: number;
   committedGeneration: number;
@@ -421,6 +433,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       hold: null,
       quiesced: false,
       quiesceWarned: false,
+      writeErrors: 0,
       refs: 0,
       dirtyGeneration: 0,
       committedGeneration: 0,
@@ -541,6 +554,20 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     }
   }
 
+  /** The wire revision arrives as EXACT bigint text, because a bigint that has
+   *  already been through a JS number is a value nothing can trust. The
+   *  persisted document holds a number, so the narrowing has to happen
+   *  somewhere; it happens HERE, once, and refuses instead of rounding. NaN is
+   *  the deliberate answer: normalizeFreehold's integer predicate refuses it,
+   *  so the row is preserved read-only and the account is write-blocked, which
+   *  is the correct treatment for a row this build cannot represent. Silently
+   *  rounding it would fence every later save against a revision that never
+   *  existed. */
+  function revFromBigintText(text: string): number {
+    const value = Number(text);
+    return Number.isSafeInteger(value) ? value : Number.NaN;
+  }
+
   // The durable row is turned back into the document normalizeFreehold admits.
   // The row reader owns the column shapes; this is the one place the two meet.
   function rowDocument(row: {
@@ -561,7 +588,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       trophies: row.trophies,
       condition: row.condition,
       visitPolicy: row.visitPolicy,
-      rev: Number(row.wireRev),
+      rev: revFromBigintText(row.wireRev),
     };
   }
 
@@ -733,23 +760,41 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // the truth and there is nothing to read. state null so the caller
     // installs nothing over it.
     if (ports.hasLive(ownerKey)) {
-      const known = entry ?? ensureEntry(ownerKey, accountId);
-      known.accountId = accountId;
-      return Promise.resolve(snapshotOf(known, null));
+      if (entry?.loaded) {
+        entry.accountId = accountId;
+        return Promise.resolve(snapshotOf(entry, null));
+      }
+      // The live record is still the truth and must not be overwritten by a
+      // read, so the answer below carries no state either way. But WITHOUT the
+      // read this entry never learns its plot id or its durable revision, and
+      // an entry that never loaded is write-blocked for the whole session: the
+      // owner would play, furnish, and have every edit discarded at logout with
+      // nothing reported. So read, then answer with no state.
+      return beginLoad(accountId, ownerKey).then((loaded) => ({ ...loaded, state: null }));
     }
     // Load-once, like loadFreehold: a re-preload replays what the entry knows
     // (so a rejoin after the sim evicted the record re-installs the real
     // house) and never mints a second plot id or reads the row twice.
     if (entry?.loaded) {
       entry.accountId = accountId;
-      return Promise.resolve(snapshotOf(entry, entry.hold === null ? entry.state : null));
+      // blocked(), not `hold === null`. A QUIESCED entry has no hold and yet is
+      // exactly the entry whose knowledge is known to be stale: the durable
+      // revision moved under this realm, which is what the fence exists to
+      // detect. Replaying its state would install a house another writer has
+      // already replaced, as if it were current.
+      return Promise.resolve(snapshotOf(entry, blocked(entry) ? null : entry.state));
     }
+    return beginLoad(accountId, ownerKey);
+  }
+
+  /** The single-flight durable read. Two joins of one account collapse onto one
+   *  load, and the slot is identity-guarded so a load started after ours is
+   *  never unregistered by ours. */
+  function beginLoad(accountId: number, ownerKey: string): Promise<LoadedFreehold> {
     const existing = inFlightLoads.get(accountId);
     if (existing) return existing;
     let tracked!: Promise<LoadedFreehold>;
     tracked = loadOnce(accountId, ownerKey).finally(() => {
-      // Identity-guarded: only clear the slot while it still holds THIS
-      // promise, so a load started after ours is never unregistered by ours.
       if (inFlightLoads.get(accountId) === tracked) inFlightLoads.delete(accountId);
     });
     inFlightLoads.set(accountId, tracked);
@@ -767,6 +812,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       counters.writes++;
       entry.durableRev = result.durableRev;
       entry.state = written;
+      entry.writeErrors = 0;
       if (entry.committedGeneration < generation) entry.committedGeneration = generation;
       // Every edit that survived this write arrived at or after the snapshot,
       // so the snapshot instant is the exact lower bound on their age.
@@ -857,6 +903,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         condition: persisted.condition,
         visitPolicy: persisted.visitPolicy,
         wireRev: persisted.rev,
+        // The shape THIS document was serialized in, from the document itself:
+        // the writer is the only party that knows it, and a later or earlier
+        // build reads the column to decide whether it may interpret the row.
+        schemaVersion: persisted.version,
         expectedDurableRev: entry.durableRev,
       });
       counters.writeMsTotal += Math.max(0, ports.nowMs() - writeStartMs);
@@ -905,7 +955,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         .enqueue(entry.ownerKey, controller.signal, () => runWrite(entry, enqueuedAtMs))
         .catch((err: unknown) => {
           counters.writeFailures++;
+          entry.writeErrors++;
           ports.error(`freehold plot index ${entry.plotIndex} write failed:`, err);
+          if (entry.writeErrors >= FREEHOLD_PERSIST_MAX_WRITE_ERRORS && !entry.quiesced) {
+            entry.quiesced = true;
+            entry.quiesceWarned = true;
+            ports.error(
+              `freehold plot index ${entry.plotIndex} quiesced after ${entry.writeErrors} thrown writes; no further writes go out for this owner`,
+            );
+          }
           return false;
         })
         .then((committed) => {
@@ -1015,7 +1073,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       if (!entry) return;
       // A held entry flushes NOTHING. The leave path still drops its
       // reference, so the entry can be evicted and re-read on a later join.
-      if (!blocked(entry) && (isDirty(entry) || entry.running || entry.pending)) {
+      // The SAME dirty test the periodic sweep uses, not a weaker one: a tier
+      // change made since the last sweep bumps only the record's revision, so
+      // an isDirty-only check here would drop the whole last window of edits at
+      // logout, which is precisely when there is no next sweep to catch them.
+      const moved = noteRevisionMoved(entry);
+      if (!blocked(entry) && (moved || isDirty(entry) || entry.running || entry.pending)) {
         // arm() directly rather than save(), so a closed intake (a shutdown
         // already under way) still lets a leaving session write out its last
         // edits. A clean entry is left alone: rewriting an unchanged document
