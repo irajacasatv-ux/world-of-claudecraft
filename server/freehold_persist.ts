@@ -446,7 +446,16 @@ interface FreeholdPersistEntry {
  * `Failing row contains (...)` in `detail`, and a 23505 puts the conflicting
  * key value there. On a write path that is an account id and row content in a
  * console, which is exactly what src/sim/freehold/load_report.ts exists to
- * prevent. Only the three fields that CLASSIFY survive.
+ * prevent.
+ *
+ * Applied ONLY where a pg error can actually arrive: the row read, the hearth
+ * read and the write. A throw out of this module's own code is a programming
+ * bug whose stack is the useful part, and bounding it there would hide the line.
+ *
+ * `message` is kept because it is what makes a line readable, and it is NOT a
+ * pure classification: a few SQLSTATEs embed a parameter in it. Every parameter
+ * this module sends is JSON it generated itself, so nothing player-authored can
+ * ride out that way today; it is the field to watch if that ever changes.
  */
 function boundedDatabaseError(err: unknown): Record<string, unknown> {
   if (typeof err !== 'object' || err === null) return { message: String(err) };
@@ -615,6 +624,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    */
   const owesWork = (entry: FreeholdPersistEntry): boolean =>
     entry.running ||
+    // A durable read in flight will call ensureEntry again when it lands, so
+    // removing the entry now only resurrects it at zero references, which is
+    // the same "entry went missing under a live session" class that retain's
+    // reload exists to repair. It belongs in the SHARED predicate, or the
+    // unification is only half true.
+    (entry.accountId > 0 && inFlightLoads.has(entry.accountId)) ||
     entry.pending ||
     // Redundant TODAY, and kept deliberately: a deferred entry is always dirty
     // and unblocked, so the clause below already covers it, and no behaviour
@@ -648,11 +663,6 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // owners) for nothing.
     for (const entry of entries.values()) {
       if (entry.refs > 0 || owesWork(entry)) {
-        entry.orphanPasses = 0;
-        continue;
-      }
-      // A load still in flight will call ensureEntry again when it lands.
-      if (entry.accountId > 0 && inFlightLoads.has(entry.accountId)) {
         entry.orphanPasses = 0;
         continue;
       }
@@ -1014,12 +1024,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     if (result.kind === 'inserted' || result.kind === 'updated') {
       counters.writes++;
       entry.durableRev = result.durableRev;
-      // The ROW's identity, not the document's. A record seeded this session
-      // carries the pending placeholder while the row it just wrote carries a
-      // minted id; letting the entry keep the placeholder would leave it unable
-      // to tell its own record from a fresh seed on the next pass, which is the
-      // one comparison standing between a rejoin race and a wiped house.
-      entry.state = { ...written, plotId: entry.plotId };
+      // `written` IS the document as sent, identity included, because runWrite
+      // builds it that way. The entry therefore agrees with the row from the
+      // first insert, and that agreement is the comparison standing between a
+      // rejoin race and a wiped house.
+      entry.state = written;
       // ...and the LIVE record learns it too, so the three agree from here on.
       ports.stampPlotId(entry.ownerKey, entry.plotId);
       entry.writeErrors = 0;
@@ -1074,11 +1083,16 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const generation = entry.dirtyGeneration;
       entry.snapshotGeneration = generation;
       const live = ports.serialize(entry.ownerKey);
-      // The live record is gone, which on the leave path is EXPECTED: the
-      // session that owned it has left and the sim evicted it. The document
-      // captured at leave stands in, and only there: a live record always wins,
-      // so a captured document can never shadow a later edit.
-      const persisted = live ?? entry.leaveDocument;
+      // THE NEWER DOCUMENT WINS, with the live record winning ties. The capture
+      // stands in when the record is gone, which on the leave path is expected.
+      // It also stands in when the live record is OLDER: a rejoin inside the
+      // deferral window replays the entry's last COMMITTED state, which is the
+      // pre-leave revision, so a strict live-always-wins rule silently rolled
+      // the leaving session's edits back to it. Ties go to the live record, so
+      // a capture can still never shadow an edit made after it.
+      const captured = entry.leaveDocument;
+      const persisted =
+        live === null ? captured : captured !== null && captured.rev > live.rev ? captured : live;
       if (persisted !== null) entry.snapshotRev = persisted.rev;
       // No live record and nothing captured. Writing here would put a default
       // over a real row, which is invariant 1.
@@ -1120,7 +1134,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // pool rather than a recovery.
       // The SAME identity sets the loader is bound to, so the two sides refuse
       // the same documents rather than nearly the same ones.
-      const refusal = freeholdWriteRefusal(persisted, ports.identitySets());
+      // The document AS SENT, so the refusal validates the identity that lands
+      // on disk rather than the one the live record happens to carry.
+      const document: PersistedFreehold = { ...persisted, plotId: entry.plotId };
+      const refusal = freeholdWriteRefusal(document, ports.identitySets());
       if (refusal !== null) {
         counters.writeFailures++;
         entry.quiesced = true;
@@ -1138,8 +1155,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         }
         return false;
       }
-      const layoutJson = JSON.stringify(persisted.layout);
-      const trophiesJson = JSON.stringify(persisted.trophies);
+      const layoutJson = JSON.stringify(document.layout);
+      const trophiesJson = JSON.stringify(document.trophies);
       const writeBytes = Buffer.byteLength(layoutJson) + Buffer.byteLength(trophiesJson);
       counters.writeBytesTotal += writeBytes;
       if (writeBytes > counters.maxWriteBytes) counters.maxWriteBytes = writeBytes;
@@ -1148,20 +1165,20 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         accountId: entry.accountId,
         plotIndex: entry.plotIndex,
         plotId: entry.plotId,
-        tier: persisted.tier,
+        tier: document.tier,
         layoutJson,
         trophiesJson,
-        condition: persisted.condition,
-        visitPolicy: persisted.visitPolicy,
-        wireRev: persisted.rev,
+        condition: document.condition,
+        visitPolicy: document.visitPolicy,
+        wireRev: document.rev,
         // The shape THIS document was serialized in, from the document itself:
         // the writer is the only party that knows it, and a later or earlier
         // build reads the column to decide whether it may interpret the row.
-        schemaVersion: persisted.version,
+        schemaVersion: document.version,
         expectedDurableRev: entry.durableRev,
       });
       counters.writeMsTotal += Math.max(0, ports.nowMs() - writeStartMs);
-      return applyWriteResult(entry, result, generation, snapshotAtMs, persisted);
+      return applyWriteResult(entry, result, generation, snapshotAtMs, document);
     } finally {
       permit.release();
     }
@@ -1189,14 +1206,22 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       launch(entry);
       return;
     }
-    // Cleared HERE and not above, so a RE-ARMED write inherits the capture. A
+    releaseSettleWaiters(entry);
+    // Cleared HERE and not above, so a RE-ARMED write inherits the capture: a
     // write launched out of settle samples its document after its own permit
-    // wait, which is past the point where the leaving session's record still
-    // exists; clearing before the re-arm decision handed that write nothing to
-    // fall back on and lost the last edit of the session. A live record always
-    // wins over the capture, so inheriting it can never shadow a later edit.
-    if (entry.leaveDocument !== null) leaveCaptures--;
-    entry.leaveDocument = null;
+    // wait, past the point where the leaving session's record still exists.
+    //
+    // And only when the entry no longer OWES the write. The null-permit arm of
+    // runWrite returns false WITHOUT quiescing, so an entry can settle
+    // uncommitted, unblocked and still dirty; dropping its capture there left
+    // the next sweep to re-arm a write whose record removePlayer had already
+    // evicted, and the leaving session's edits were gone for good. Gate
+    // saturation produces both that timeout and the deferral the capture exists
+    // for, so the two arms are adjacent rather than exotic.
+    if (!owesWork(entry) && entry.leaveDocument !== null) {
+      leaveCaptures--;
+      entry.leaveDocument = null;
+    }
     pumpDeferredWrites();
     maybeRemove(entry);
     drainCheck();
@@ -1204,6 +1229,8 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
 
   function launch(entry: FreeholdPersistEntry): void {
     deferredWrites.delete(entry);
+    // A leaving flush parked on this entry has something to await again.
+    releaseSettleWaiters(entry);
     activeWrites++;
     entry.running = true;
     entry.pending = false;
@@ -1248,7 +1275,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           try {
             settle(entry, committed);
           } catch (err) {
-            ports.error('freehold write settle failed:', boundedDatabaseError(err));
+            // RAW: a throw out of settle is a programming bug, not a database
+            // answer, and reducing it to three pg fields drops the stack that
+            // would name the line.
+            ports.error('freehold write settle failed:', err);
             // The slot was already released inside settle, so the deferred set
             // and any waiting drain must still be served: otherwise a drain
             // waits out its whole deadline for work that is finished.
@@ -1258,20 +1288,18 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         });
     } catch (err) {
       counters.writeFailures++;
-      ports.error(
-        `freehold plot index ${entry.plotIndex} write could not be queued:`,
-        boundedDatabaseError(err),
-      );
+      // RAW, for the same reason: a throwing enqueue is this process failing,
+      // not PostgreSQL answering.
+      ports.error(`freehold plot index ${entry.plotIndex} write could not be queued:`, err);
       entry.running = false;
       entry.chain = null;
       activeWrites--;
       maybeRemove(entry);
       drainCheck();
-      // NOT pumpDeferredWrites() here: this catch runs INSIDE the pump's own
-      // loop, so calling it would re-enter once per deferred entry and put the
-      // whole set on the stack. Returning lets that loop's next iteration do
-      // the work, which it will, because the slot was just released.
-      if (pumping) return;
+      // This catch can run INSIDE the pump's own loop, and pumpDeferredWrites
+      // latches on `pumping`, so the call below is a no-op there and the loop's
+      // next iteration does the work instead. It matters on the other path,
+      // where launch was reached from arm and no pump is running.
       pumpDeferredWrites();
     }
   }

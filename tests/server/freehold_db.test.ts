@@ -7,6 +7,8 @@
 // SHORT set list, the in-SQL byte bound and its LIMIT) and every classification
 // arm the two statements can produce. Each anchor is a contiguous clause, never
 // a lone keyword, and never a constant compared against its own import.
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   FREEHOLD_ACCOUNT_PLOT_READ_LIMIT,
@@ -23,6 +25,7 @@ import {
   mintFreeholdPlotId,
   upsertFreehold,
 } from '../../server/freehold_db';
+import { stripComments } from '../helpers/strip_comments';
 
 interface Captured {
   text: string;
@@ -259,7 +262,12 @@ describe('the account read', () => {
     // row's on-disk size because TOAST compression can only shrink it. So no
     // legal row is ever refused unmeasured, however badly it compresses.
     expect(FREEHOLD_STORED_DETOAST_GATE_BYTES).toBeGreaterThan(97_932);
-    expect(folded).not.toContain('pg_column_size(f.layout) +\n');
+    // pg_column_size appears in the GATE only, once. It must never stand in for
+    // the authoritative measure, because it reports the COMPRESSED size, and it
+    // must not be spelled out twice: the barrier below names it once so the
+    // toast header is read a single time.
+    expect(count(folded, 'pg_column_size(f.layout)')).toBe(1);
+    expect(folded).not.toContain('octet_length(f.layout::text)) AS owned_bytes');
     // Both bigints leave the database as text and are never cast in SQL either.
     expect(folded).toContain('f.durable_rev::text AS durable_rev');
     expect(folded).toContain('f.wire_rev::text AS wire_rev');
@@ -329,6 +337,36 @@ describe('the account read', () => {
       detoastRefused: true,
       diskBytes: 5_000_000,
     });
+  });
+
+  it('holds all FOUR copies of the plot identity charset to one rule', () => {
+    // The charset lives in four places: the wire's own regex, this module's
+    // FREEHOLD_PLOT_ID_RE, the DDL CHECK, and normalizeFreehold's shape test.
+    // Three of them had a pin and the fourth did not, so widening the charset
+    // later would red three tests, the author would update three literals, and
+    // the loader would then mark every newly minted id malformed and
+    // write-block the account. One rule, one assertion.
+    // The CHARACTER CLASS is the shared rule; the wire bounds length with its
+    // own OPAQUE_ID_MAX_LEN rather than a quantifier, so the two halves are
+    // asserted separately.
+    const CHARSET = '[A-Za-z0-9_:-]';
+    const BOUNDED = `${CHARSET}{1,64}`;
+    const wire = stripComments(
+      readFileSync(resolve(process.cwd(), 'server/freehold_wire.ts'), 'utf8'),
+    );
+    const sim = stripComments(
+      readFileSync(resolve(process.cwd(), 'src/sim/freehold/persisted.ts'), 'utf8'),
+    );
+    const ddl = codeOnly(freeholdSchema('public'));
+    expect(FREEHOLD_PLOT_ID_RE.source).toBe(`^${BOUNDED}$`);
+    expect(wire, 'server/freehold_wire.ts').toContain(`${CHARSET}+`);
+    expect(sim, 'src/sim/freehold/persisted.ts').toContain(BOUNDED);
+    expect(ddl, 'the DDL CHECK').toContain(BOUNDED);
+    // Anti-vacuity: the class really is what admits and refuses.
+    expect(FREEHOLD_PLOT_ID_RE.test('plot:9f3a1c')).toBe(true);
+    expect(FREEHOLD_PLOT_ID_RE.test('plot/9f3a1c')).toBe(false);
+    expect(FREEHOLD_PLOT_ID_RE.test('plot.9f3a1c')).toBe(false);
+    expect(FREEHOLD_PLOT_ID_RE.test('plot=')).toBe(false);
   });
 
   it('never reads a stranded unadmitted slot as absence', async () => {

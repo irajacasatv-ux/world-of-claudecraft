@@ -319,15 +319,16 @@ const FREEHOLD_ACCOUNT_READ_SQL = `SELECT f.plot_index,
   FROM account_freeholds f
   LEFT JOIN LATERAL (
     SELECT disk_bytes, owned_bytes FROM (
-      SELECT COALESCE(pg_column_size(f.layout), 0)
-           + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes,
+      SELECT d.disk_bytes,
              CASE
-               WHEN COALESCE(pg_column_size(f.layout), 0)
-                  + COALESCE(pg_column_size(f.trophies), 0)
-                    > ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL
+               WHEN d.disk_bytes > ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL
                ELSE COALESCE(octet_length(f.layout::text), 0)
                   + COALESCE(octet_length(f.trophies::text), 0)
              END AS owned_bytes
+        FROM (
+          SELECT COALESCE(pg_column_size(f.layout), 0)
+               + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes
+        ) d
     ) m OFFSET 0
   ) b ON true
  WHERE f.account_id = $1

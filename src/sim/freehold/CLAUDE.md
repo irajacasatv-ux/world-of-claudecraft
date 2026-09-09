@@ -82,7 +82,9 @@ carries an opaque plot id only.
   plot and retained until that isolated Sim is discarded, so leaving or
   changing tier cannot reset it. KNOWN GAP, named so 07a inherits it rather
   than discovering it: the map has no eviction path, so a long-lived realm
-  accumulates one entry per account that ever used a Hearth Key. Harmless while
+  accumulates one entry per account that has actually USED a Hearth Key since
+  boot (not one per login: the durable merge returns early on a zero clock, so
+  a login alone never creates an entry). Harmless while
   the clock is inert (nothing writes the durable row in this release), but the
   release that lights the realm participant owes the eviction, and the source
   scan above forbids a `.delete(` outside this directory, so the fix belongs

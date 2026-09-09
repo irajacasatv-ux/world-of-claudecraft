@@ -45,6 +45,13 @@ export interface FreeholdLoadDiagnostic {
  */
 const KNOWN_DETAILS: readonly RegExp[] = [
   /^(?:not_an_object|prototype_shape|prototype_key|unknown_field|plot_id_shape|version_shape)$/,
+  // The SAVE path's own refusals. They reach a log through the store's error
+  // port rather than through this reporter today, but "the two sides speak one
+  // vocabulary" has to be true of the bound as well as of the checks, or a
+  // later routing change turns every one of them into `unclassified`.
+  /^(?:condition_shape|rev_shape|wire_rev_shape)$/,
+  /^(?:tier|visit_policy):not_admitted$/,
+  /^version:\d{1,16}$/,
   /^(?:layout|trophies)_not_an_array$/,
   /^(?:layout|trophies)_over_ceiling:\d{1,10}$/,
   /^(?:layout|trophy)_row:\d{1,10}:[a-z_]{1,30}$/,

@@ -1968,6 +1968,76 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().writesWithoutRecord).toBe(1);
   });
 
+  it('keeps the capture when a write FAILED without quiescing', async () => {
+    // The null-permit arm returns false without quiescing, so the entry settles
+    // uncommitted, unblocked and still dirty. Dropping its capture there left
+    // the next sweep to re-arm a write whose record removePlayer had already
+    // evicted, and the leaving session's edits were gone for good. Gate
+    // saturation is what produces BOTH that timeout and the deferral the
+    // capture exists for, so these two arms sit next to each other.
+    let granted = 0;
+    let evicted = false;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => (evicted ? null : persistedFixture({ rev: 6 })),
+      acquirePermit: async () => {
+        granted += 1;
+        // The load gets its permit; the FIRST write does not; later ones do.
+        return granted === 2 ? null : { release: () => {} };
+      },
+      writeRow: async () => ({ kind: 'updated', durableRev: '6' }),
+    });
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().writeFailures).toBe(1);
+    // Still dirty, still unblocked, and STILL HOLDING its document.
+    expect(h.store.stats().dirty).toBe(1);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+
+    evicted = true;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
+    expect(h.store.stats().writesWithoutRecord).toBe(0);
+  });
+
+  it('prefers the NEWER document when a rejoin replayed an older record', async () => {
+    // A rejoin inside the deferral window reinstalls the entry's last COMMITTED
+    // state, which is the pre-leave revision. A strict live-always-wins rule
+    // then wrote that older document and rolled the leaving session's edits
+    // back, silently. Ties still go to the live record, so a capture can never
+    // shadow an edit made after it.
+    let liveRev = 6;
+    let granted = 0;
+    const permit = deferred<{ release(): void } | null>();
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => persistedFixture({ rev: liveRev }),
+      acquirePermit: async () => {
+        granted += 1;
+        // The load already took its permit; the leave write waits on this one,
+        // which is what puts the rejoin BEFORE the write samples its document.
+        return granted === 1 ? { release: () => {} } : await permit.promise;
+      },
+      writeRow: async () => ({ kind: 'updated', durableRev: '6' }),
+    });
+    void h.store.flushAndRelease(OWNER_KEY);
+    await tick(10);
+    expect(h.writeCount()).toBe(0);
+
+    // The rejoin replays the entry's last COMMITTED state, which is older than
+    // the edits the leaving session captured.
+    liveRev = 5;
+    permit.resolve({ release: () => {} });
+    await tick(40);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
+  });
+
   it('never lets a captured document shadow a later live edit', async () => {
     // A live record always wins. If the capture could outrank it, a rejoining
     // session's edits would be silently replaced by the previous session's.
