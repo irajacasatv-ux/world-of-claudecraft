@@ -1422,6 +1422,8 @@ describe('S3: every sim.ts emit is recognized (drift guard)', () => {
     // literal added to any of them lands inside the gate, per this file's
     // new-sim-module convention.
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/instance.ts'), 'utf8'),
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/persisted.ts'), 'utf8'),
+    fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/load_report.ts'), 'utf8'),
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/owner_key.ts'), 'utf8'),
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/dev_grant.ts'), 'utf8'),
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/state.ts'), 'utf8'),

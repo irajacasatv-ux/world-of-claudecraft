@@ -36,7 +36,29 @@ export {
   freeholdDescriptorFor,
   leaveFreehold,
 } from './instance';
+export {
+  type FreeholdLoadDiagnostic,
+  freeholdLoadDiagnostic,
+  warnFreeholdLoad,
+} from './load_report';
 export { type FreeholdOwnerStampSlice, freeholdKeyFor, freeholdOwnerKeyOfMeta } from './owner_key';
+export {
+  FREEHOLD_MAX_ID_LENGTH,
+  FREEHOLD_MAX_LAYOUT_ROWS,
+  FREEHOLD_MAX_OWNED_BYTES,
+  FREEHOLD_MAX_TROPHY_ROWS,
+  FREEHOLD_PERSIST_VERSION,
+  type FreeholdLoadResult,
+  type FreeholdRepairedField,
+  freeholdStateFromPersisted,
+  type NormalizeFreeholdOptions,
+  normalizeFreehold,
+  type PersistedFreehold,
+  type PersistedFreeholdLayoutRow,
+  type PersistedFreeholdTrophy,
+  persistedFreeholdBytes,
+  persistedFreeholdFromState,
+} from './persisted';
 export { shouldSpawnSurfaceNpc } from './should_spawn_npc';
 // applyFreeholdOwnerStamp stays OFF the barrel: seedFreeholdOnJoin is its one
 // caller and the direct tests import state.ts, so no consumer outside the
@@ -75,4 +97,4 @@ export type {
   FreeholdView,
   FreeholdVisitPolicy,
 } from './types';
-export { asFreeholdPlotId } from './types';
+export { asFreeholdPlotId, FREEHOLD_VISIT_POLICIES } from './types';

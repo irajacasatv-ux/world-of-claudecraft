@@ -160,14 +160,43 @@ carries an opaque plot id only.
   drop). It must stay pure: no SQL, no rng, no clock; the server owns rows.
   Retention: the map is keyed by owner and grows with every load, so the
   first `loadFreehold` caller pairs with `evictFreehold` at account or
-  character unload in the same change, and the table's prune registers in
-  `server/retention_sweep.ts` when its DDL lands.
+  character unload in the same change. That pairing landed with the
+  persistence slice: `server/freehold_persist.ts` retains on the join path and
+  releases on leave, and `releaseFreeholdOnLeave` evicts at the last
+  same-key session out. The table itself is KEEP-FOREVER and deliberately
+  absent from `server/retention_sweep.ts`: it is bounded at a small number of
+  plots per account and never grows per event, session or day, so the reverse
+  foreign-key account cascade is its only removal path. That absence is pinned
+  in `tests/server/main_retention_wiring.test.ts`, beside the same decision for
+  `bank_ledger`.
   DETERMINISM, before anyone iterates it: `ctx.freeholds` is a `Map`, so it
   walks in INSERTION order, and once 07 feeds it that order is host-dependent
   (server: per-account login arrival; offline: one record; headless: whatever
   the env seeds). Sim code that iterates the map MUST sort by owner key first.
   Relying on Map order forks the three hosts on one seed, and it is the kind
   of fork the parity gate only catches once a record actually exists.
+- `persisted.ts` owns the durable SHAPE and the versioned load. It is the one
+  place that decides what a stored plot means: `normalizeFreehold` classifies a
+  durable value into five arms (absent, loaded with the list of safely repaired
+  known scalars, unsupported, malformed, oversize),
+  `persistedFreeholdFromState` projects the live record down to the durable
+  subset, `freeholdStateFromPersisted` rebuilds it, and
+  `persistedFreeholdBytes` measures what the save path would write. THE
+  PRESERVATION RULE, which is the reason this file exists: only genuinely
+  ABSENT data resolves to the free Inn Room default. Unsupported, malformed and
+  oversize content is never repaired, never dropped and never re-read as
+  absence; it stays on disk exactly as it is and the account is write-blocked,
+  because the owner's furnishings are in that row and nothing else holds a
+  second copy. It is pure: no clock, no rng, no server import. The row-count
+  and string-length ceilings are checked BEFORE any deep allocation, the byte
+  ceiling before the result is returned, and every ceiling is content-derived
+  and recorded in `docs/freeholds/content-numbers-workbook.md` section H.
+- `load_report.ts` is the bounded diagnostic leaf beside it, the
+  `professions/farm_load_report.ts` shape: one dev-channel English line per
+  load, carrying COUNTS AND CLASSIFICATION ONLY. It must never carry an owner
+  key, an account id, a plot id or an item id, and must never echo a corrupt
+  string back: an over-long identifier echoed into a log is the same unbounded
+  bytes problem wearing a log costume.
 - `commands.ts` owns one exported body per wire command, shaped
   `(ctx, pid, ...args)`. Each resolves the caller in-module through
   `ctx.resolve(pid)` the way `professions/enchanting.ts`,

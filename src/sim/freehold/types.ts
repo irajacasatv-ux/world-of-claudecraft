@@ -46,6 +46,40 @@ export type FreeholdTier = 'inn_room' | 'cottage' | 'lodge' | 'manor' | 'keep' |
 /** Who may enter a freehold besides its owner (18 owns the admission rules). */
 export type FreeholdVisitPolicy = 'closed' | 'friends' | 'open';
 
+/** The same three policies as a runtime set, for the load-side admission check
+ *  (a durable value outside it is preserved read-only, never repaired). Frozen
+ *  through a facade because freezing a Set cannot disable its mutators, the
+ *  FREEHOLD_TIER_IDS shape. */
+const VISIT_POLICIES = new Set<string>(['closed', 'friends', 'open']);
+export const FREEHOLD_VISIT_POLICIES: ReadonlySet<string> = Object.freeze({
+  get size(): number {
+    return VISIT_POLICIES.size;
+  },
+  has(id: string): boolean {
+    return VISIT_POLICIES.has(id);
+  },
+  entries(): SetIterator<[string, string]> {
+    return VISIT_POLICIES.entries();
+  },
+  keys(): SetIterator<string> {
+    return VISIT_POLICIES.keys();
+  },
+  values(): SetIterator<string> {
+    return VISIT_POLICIES.values();
+  },
+  forEach(
+    callbackfn: (value: string, value2: string, set: ReadonlySet<string>) => void,
+    thisArg?: unknown,
+  ): void {
+    VISIT_POLICIES.forEach((id) => {
+      callbackfn.call(thisArg, id, id, FREEHOLD_VISIT_POLICIES);
+    });
+  },
+  [Symbol.iterator](): SetIterator<string> {
+    return VISIT_POLICIES[Symbol.iterator]();
+  },
+});
+
 /** One placed furnishing: the exact item copy at a position and heading (08). */
 export interface FreeholdLayoutRow {
   placementId: number;

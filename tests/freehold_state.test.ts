@@ -1,0 +1,1003 @@
+// The durable freehold record: what one persisted plot row means, pinned arm
+// by arm (src/sim/freehold/persisted.ts and its dev-channel reporter
+// src/sim/freehold/load_report.ts).
+//
+// The suite is built on the tests/professions_farming_state.test.ts idiom: ONE
+// shared valid fixture, spread with a SINGLE override per case, so a refusal
+// can only be blamed on the one dimension that case corrupted. The two rules it
+// exists to defend are the ones a future change is most likely to break:
+// nothing but `undefined` and `null` is absence, and no arm ever drops an owned
+// row. A record this binary cannot interpret is preserved on disk and reported
+// read-only instead.
+//
+// The maximal legal record and the one-over record are NAMED DELIVERABLES and
+// live here (maximalLegalRecord below): they are the witnesses for the measured
+// FREEHOLD_MAX_OWNED_BYTES ceiling, and the byte number they prove is the one
+// docs/freeholds/content-numbers-workbook.md records.
+
+import { describe, expect, it, vi } from 'vitest';
+import { freeholdLoadDiagnostic, warnFreeholdLoad } from '../src/sim/freehold/load_report';
+import {
+  FREEHOLD_MAX_ID_LENGTH,
+  FREEHOLD_MAX_LAYOUT_ROWS,
+  FREEHOLD_MAX_OWNED_BYTES,
+  FREEHOLD_MAX_TROPHY_ROWS,
+  FREEHOLD_PERSIST_VERSION,
+  type FreeholdLoadResult,
+  freeholdStateFromPersisted,
+  type NormalizeFreeholdOptions,
+  normalizeFreehold,
+  type PersistedFreehold,
+  persistedFreeholdBytes,
+  persistedFreeholdFromState,
+} from '../src/sim/freehold/persisted';
+import { asFreeholdPlotId, type FreeholdState } from '../src/sim/freehold/types';
+
+// The authored identities arrive as VALUES, exactly like the farm allowlists:
+// the leaf imports no content table, so these unit arms never depend on shipped
+// content and a retired identity stays a caller-side fact.
+const TIERS: ReadonlySet<string> = new Set(['inn_room', 'cottage']);
+const POLICIES: ReadonlySet<string> = new Set(['closed', 'friends', 'open']);
+
+const norm = (raw: unknown, over: Partial<NormalizeFreeholdOptions> = {}): FreeholdLoadResult =>
+  normalizeFreehold(raw, { validTierIds: TIERS, validVisitPolicies: POLICIES, ...over });
+
+const PLOT_ID = 'plot:9f3a1c';
+const BED_ID = 'furnishing_oak_bed';
+const RUG_ID = 'furnishing_rug_small';
+const TROPHY_ID = 'trophy_gnarlroot_head';
+
+const layoutRow = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
+  placementId: 1,
+  itemId: BED_ID,
+  x: 1.5,
+  y: 0,
+  z: -2.25,
+  yaw: 3.125,
+  ...over,
+});
+
+const trophyRow = (over: Record<string, unknown> = {}): Record<string, unknown> => ({
+  plinth: 0,
+  trophyId: TROPHY_ID,
+  ...over,
+});
+
+/** The one VALID durable value, fresh on every call so no case can leak a
+ *  mutation into the next one. */
+const row = (): Record<string, unknown> => ({
+  version: FREEHOLD_PERSIST_VERSION,
+  plotId: PLOT_ID,
+  tier: 'cottage',
+  layout: [layoutRow(), layoutRow({ placementId: 2, itemId: RUG_ID, x: -4, y: 0, z: 0.5, yaw: 0 })],
+  trophies: [trophyRow()],
+  condition: 88,
+  visitPolicy: 'friends',
+  rev: 7,
+});
+
+/** One corrupt dimension per case, and nothing else moved. */
+const corrupt = (over: Record<string, unknown>): Record<string, unknown> => ({ ...row(), ...over });
+
+const without = (over: string): Record<string, unknown> => {
+  const value = row();
+  delete value[over];
+  return value;
+};
+
+function loadedState(result: FreeholdLoadResult): PersistedFreehold {
+  if (result.kind !== 'loaded') {
+    throw new Error(`expected a loaded record, got ${result.kind}`);
+  }
+  return result.state;
+}
+
+function repairsOf(result: FreeholdLoadResult): readonly string[] {
+  if (result.kind !== 'loaded') {
+    throw new Error(`expected a loaded record, got ${result.kind}`);
+  }
+  return result.repaired;
+}
+
+/** Every repair case asserts this: the content and the scalars the case did NOT
+ *  touch come back exactly as written. A repair that widened to a second field
+ *  would be invisible without it. */
+function expectContentSurvives(state: PersistedFreehold): void {
+  expect(state.plotId).toBe('plot:9f3a1c');
+  expect(state.tier).toBe('cottage');
+  expect(state.visitPolicy).toBe('friends');
+  expect(state.layout).toEqual([
+    { placementId: 1, itemId: 'furnishing_oak_bed', x: 1.5, y: 0, z: -2.25, yaw: 3.125 },
+    { placementId: 2, itemId: 'furnishing_rug_small', x: -4, y: 0, z: 0.5, yaw: 0 },
+  ]);
+  expect(state.trophies).toEqual([{ plinth: 0, trophyId: 'trophy_gnarlroot_head' }]);
+}
+
+describe('normalizeFreehold: the valid record and the anti-vacuity controls', () => {
+  it('loads the shared fixture whole, with nothing repaired', () => {
+    const result = norm(row());
+    // A fresh literal, never the fixture object: an assertion against the value
+    // it was built from is a self-comparison that survives any loader bug.
+    expect(result).toEqual({
+      kind: 'loaded',
+      state: {
+        version: 1,
+        plotId: 'plot:9f3a1c',
+        tier: 'cottage',
+        layout: [
+          { placementId: 1, itemId: 'furnishing_oak_bed', x: 1.5, y: 0, z: -2.25, yaw: 3.125 },
+          { placementId: 2, itemId: 'furnishing_rug_small', x: -4, y: 0, z: 0.5, yaw: 0 },
+        ],
+        trophies: [{ plinth: 0, trophyId: 'trophy_gnarlroot_head' }],
+        condition: 88,
+        visitPolicy: 'friends',
+        rev: 7,
+      },
+      repaired: [],
+    });
+  });
+
+  it('the corruption helper really corrupts, and only in the named dimension', () => {
+    const base = row();
+    const bad = corrupt({ plotId: 'plot/9f3a1c' });
+    // Anti-vacuity in both directions: the base really is legal, the override
+    // really did change the one field, and the loader really refuses it. A
+    // helper that silently returned the base would pass every malformed case
+    // below without ever testing anything.
+    expect(bad.plotId).not.toEqual(base.plotId);
+    expect(bad.tier).toEqual(base.tier);
+    expect(bad.layout).toEqual(base.layout);
+    expect(norm(base).kind).toBe('loaded');
+    expect(norm(bad).kind).toBe('malformed');
+  });
+
+  it('never mutates the durable value it was handed, on any arm', () => {
+    for (const value of [
+      row(),
+      corrupt({ version: 2 }),
+      corrupt({ tier: 'lodge' }),
+      corrupt({ condition: 150 }),
+      corrupt({ layout: [layoutRow({ placementId: 1.5 })] }),
+    ]) {
+      const before = JSON.stringify(value);
+      norm(value);
+      expect(JSON.stringify(value)).toBe(before);
+    }
+  });
+});
+
+describe('normalizeFreehold: absence is ONLY undefined and null', () => {
+  it('reads undefined and null as absent (pre-feature data)', () => {
+    expect(norm(undefined)).toEqual({ kind: 'absent' });
+    expect(norm(null)).toEqual({ kind: 'absent' });
+  });
+
+  it('reads nothing else as absent, not even an empty object or an empty string', () => {
+    // The load-bearing half: only `absent` lets the caller seed a fresh tier-0
+    // default, so anything else that resolved to absence would seed one OVER a
+    // real owner's possessions.
+    for (const value of [{}, '', 0, false, [], 'null']) {
+      expect(norm(value).kind, JSON.stringify(value) ?? 'undefined').not.toBe('absent');
+    }
+  });
+});
+
+describe('normalizeFreehold: malformed, one corrupt dimension per case', () => {
+  const cases: readonly (readonly [string, unknown, string])[] = [
+    ['a number', 42, 'not_an_object'],
+    ['a string', 'plot', 'not_an_object'],
+    ['a boolean', true, 'not_an_object'],
+    ['an array', [row()], 'not_an_object'],
+    ['a class instance (an exotic prototype)', new Map(), 'prototype_shape'],
+    ['a missing plot id', without('plotId'), 'plot_id_shape'],
+    ['a non-string plot id', corrupt({ plotId: 42 }), 'plot_id_shape'],
+    ['a plot id outside the wire charset', corrupt({ plotId: 'plot/9f3a1c' }), 'plot_id_shape'],
+    ['an empty plot id', corrupt({ plotId: '' }), 'plot_id_shape'],
+    [
+      'a plot id one character over the ceiling',
+      corrupt({ plotId: 'p'.repeat(FREEHOLD_MAX_ID_LENGTH + 1) }),
+      'plot_id_shape',
+    ],
+    ['an unknown container field', corrupt({ ownerKey: 'account:42' }), 'unknown_field'],
+    ['a non-array layout', corrupt({ layout: { 0: layoutRow() } }), 'layout_not_an_array'],
+    ['a missing layout', without('layout'), 'layout_not_an_array'],
+    ['a non-array trophy list', corrupt({ trophies: 'none' }), 'trophies_not_an_array'],
+    ['a missing trophy list', without('trophies'), 'trophies_not_an_array'],
+    ['a null layout row', corrupt({ layout: [null] }), 'layout_row:0:not_an_object'],
+    ['a scalar layout row', corrupt({ layout: [layoutRow(), 5] }), 'layout_row:1:not_an_object'],
+    [
+      'an unknown layout field',
+      corrupt({ layout: [layoutRow({ scale: 2 })] }),
+      'layout_row:0:unknown_field',
+    ],
+    [
+      'a non-string item id',
+      corrupt({ layout: [layoutRow({ itemId: 7 })] }),
+      'layout_row:0:item_id',
+    ],
+    [
+      'an over-length item id',
+      corrupt({ layout: [layoutRow({ itemId: 'i'.repeat(FREEHOLD_MAX_ID_LENGTH + 1) })] }),
+      'layout_row:0:item_id',
+    ],
+    [
+      'a non-integer placement id',
+      corrupt({ layout: [layoutRow({ placementId: 1.5 })] }),
+      'layout_row:0:placement_id',
+    ],
+    [
+      'a non-finite placement id',
+      corrupt({ layout: [layoutRow({ placementId: Number.NaN })] }),
+      'layout_row:0:placement_id',
+    ],
+    [
+      'a duplicate placement id',
+      corrupt({ layout: [layoutRow(), layoutRow({ itemId: RUG_ID })] }),
+      'layout_row:1:duplicate_placement_id',
+    ],
+    ['a non-finite x', corrupt({ layout: [layoutRow({ x: Number.NaN })] }), 'layout_row:0:x'],
+    [
+      'a non-finite y',
+      corrupt({ layout: [layoutRow({ y: Number.POSITIVE_INFINITY })] }),
+      'layout_row:0:y',
+    ],
+    ['a non-number z', corrupt({ layout: [layoutRow({ z: '0' })] }), 'layout_row:0:z'],
+    ['a missing yaw', corrupt({ layout: [layoutRow({ yaw: undefined })] }), 'layout_row:0:yaw'],
+    ['a null trophy row', corrupt({ trophies: [null] }), 'trophy_row:0:not_an_object'],
+    [
+      'an unknown trophy field',
+      corrupt({ trophies: [trophyRow({ tint: 'gold' })] }),
+      'trophy_row:0:unknown_field',
+    ],
+    [
+      'a non-string trophy id',
+      corrupt({ trophies: [trophyRow({ trophyId: 3 })] }),
+      'trophy_row:0:trophy_id',
+    ],
+    [
+      'an over-length trophy id',
+      corrupt({ trophies: [trophyRow({ trophyId: 't'.repeat(FREEHOLD_MAX_ID_LENGTH + 1) })] }),
+      'trophy_row:0:trophy_id',
+    ],
+    [
+      'a non-integer plinth',
+      corrupt({ trophies: [trophyRow({ plinth: 0.5 })] }),
+      'trophy_row:0:plinth',
+    ],
+    [
+      'a duplicate plinth',
+      corrupt({ trophies: [trophyRow(), trophyRow({ trophyId: 'trophy_other' })] }),
+      'trophy_row:1:duplicate_plinth',
+    ],
+  ];
+
+  for (const [name, value, detail] of cases) {
+    it(`refuses ${name}`, () => {
+      expect(norm(value)).toEqual({ kind: 'malformed', detail });
+    });
+  }
+
+  it('names the OFFENDING row index, not a constant', () => {
+    // Every indexed detail above would pass a loader that always said 0.
+    expect(norm(corrupt({ layout: [layoutRow(), layoutRow({ placementId: 9, z: '0' })] }))).toEqual(
+      { kind: 'malformed', detail: 'layout_row:1:z' },
+    );
+    expect(
+      norm(corrupt({ trophies: [trophyRow(), trophyRow({ plinth: 1, trophyId: 5 })] })),
+    ).toEqual({ kind: 'malformed', detail: 'trophy_row:1:trophy_id' });
+  });
+
+  it('refuses more layout rows than the ceiling admits, and admits exactly the ceiling', () => {
+    const atCeiling = Array.from({ length: FREEHOLD_MAX_LAYOUT_ROWS }, (_, i) =>
+      layoutRow({ placementId: i }),
+    );
+    expect(norm(corrupt({ layout: atCeiling })).kind).toBe('loaded');
+    expect(norm(corrupt({ layout: [...atCeiling, layoutRow({ placementId: -1 })] }))).toEqual({
+      kind: 'malformed',
+      detail: 'layout_over_ceiling:421',
+    });
+  });
+
+  it('refuses more trophies than the ceiling admits, and admits exactly the ceiling', () => {
+    const atCeiling = Array.from({ length: FREEHOLD_MAX_TROPHY_ROWS }, (_, i) =>
+      trophyRow({ plinth: i }),
+    );
+    expect(norm(corrupt({ trophies: atCeiling })).kind).toBe('loaded');
+    expect(norm(corrupt({ trophies: [...atCeiling, trophyRow({ plinth: -1 })] }))).toEqual({
+      kind: 'malformed',
+      detail: 'trophies_over_ceiling:33',
+    });
+  });
+
+  it('admits a plot id, an item id and a trophy id at exactly the character ceiling', () => {
+    // The other arm of every over-length case above: the ceiling is inclusive,
+    // so a legal id at the boundary is not quietly refused.
+    const state = loadedState(
+      norm(
+        corrupt({
+          plotId: 'p'.repeat(FREEHOLD_MAX_ID_LENGTH),
+          layout: [layoutRow({ itemId: 'i'.repeat(FREEHOLD_MAX_ID_LENGTH) })],
+          trophies: [trophyRow({ trophyId: 't'.repeat(FREEHOLD_MAX_ID_LENGTH) })],
+        }),
+      ),
+    );
+    expect(state.plotId).toHaveLength(64);
+    expect(state.layout[0].itemId).toHaveLength(64);
+    expect(state.trophies[0].trophyId).toHaveLength(64);
+  });
+
+  it('refuses a JSON.parse prototype-key row and leaves Object.prototype unpolluted', () => {
+    // JSON.parse gives an ordinary prototype and an OWN `__proto__` key, so the
+    // prototype test alone would admit this one.
+    const polluting = JSON.parse(
+      JSON.stringify(row()).replace('{', '{"__proto__":{"freeholdPolluted":true},'),
+    );
+    expect(Object.hasOwn(polluting, '__proto__')).toBe(true);
+    expect(norm(polluting)).toEqual({ kind: 'malformed', detail: 'prototype_key' });
+    expect(({} as Record<string, unknown>).freeholdPolluted).toBeUndefined();
+    expect(Object.hasOwn(Object.prototype, 'freeholdPolluted')).toBe(false);
+  });
+
+  it('refuses a prototype-key layout row the same way', () => {
+    const pollutingRow = JSON.parse('{"__proto__":{"freeholdRowPolluted":true},"placementId":1}');
+    expect(norm(corrupt({ layout: [pollutingRow] }))).toEqual({
+      kind: 'malformed',
+      detail: 'layout_row:0:prototype_key',
+    });
+    expect(({} as Record<string, unknown>).freeholdRowPolluted).toBeUndefined();
+  });
+});
+
+describe('normalizeFreehold: unsupported is NOT absence', () => {
+  // Each case asserts kind !== 'absent' explicitly, because absence is the ONE
+  // arm that lets a caller seed a fresh tier-0 default: a forward or retired
+  // identity read as absence would put a new empty house over a real owner's
+  // possessions. Each also proves the durable value is preserved for a later
+  // binary to recover, which is the other half of "never drop owned content".
+  it('preserves a forward version', () => {
+    const raw = corrupt({ version: FREEHOLD_PERSIST_VERSION + 1 });
+    const snapshot = JSON.stringify(raw);
+    const result = norm(raw);
+    expect(result).toEqual({ kind: 'unsupported', reason: 'version', detail: '2' });
+    expect(result.kind).not.toBe('absent');
+    expect(JSON.stringify(raw)).toBe(snapshot);
+  });
+
+  it('preserves a tier this binary does not admit', () => {
+    // `lodge` is a real ladder rung whose rooms have not landed: the authored
+    // table refuses it today and admits it later, and the owner's furnishings
+    // must survive the gap untouched.
+    const raw = corrupt({ tier: 'lodge' });
+    const snapshot = JSON.stringify(raw);
+    const result = norm(raw);
+    expect(result).toEqual({ kind: 'unsupported', reason: 'tier', detail: 'not_admitted' });
+    expect(result.kind).not.toBe('absent');
+    expect(JSON.stringify(raw)).toBe(snapshot);
+  });
+
+  it('preserves a visit policy this binary does not admit', () => {
+    const raw = corrupt({ visitPolicy: 'guild' });
+    const snapshot = JSON.stringify(raw);
+    const result = norm(raw);
+    expect(result).toEqual({ kind: 'unsupported', reason: 'visit_policy', detail: 'not_admitted' });
+    expect(result.kind).not.toBe('absent');
+    expect(JSON.stringify(raw)).toBe(snapshot);
+  });
+
+  it('reads a non-string tier or policy as unsupported, never as a repairable scalar', () => {
+    expect(norm(corrupt({ tier: 7 }))).toEqual({
+      kind: 'unsupported',
+      reason: 'tier',
+      detail: 'not_admitted',
+    });
+    expect(norm(corrupt({ visitPolicy: null }))).toEqual({
+      kind: 'unsupported',
+      reason: 'visit_policy',
+      detail: 'not_admitted',
+    });
+  });
+
+  it('judges the version BEFORE this binary imposes its own shape on the row', () => {
+    // A forward row is free to carry fields and row shapes this binary has
+    // never seen. Judging it as malformed would report the wrong recovery.
+    const forward = {
+      ...corrupt({ version: 9 }),
+      dyeSlots: [{ slot: 0, dye: 'crimson' }],
+    };
+    expect(norm(forward)).toEqual({ kind: 'unsupported', reason: 'version', detail: '9' });
+  });
+
+  it('does not treat a version at or below this binary as unsupported', () => {
+    expect(norm(corrupt({ version: FREEHOLD_PERSIST_VERSION })).kind).toBe('loaded');
+    expect(norm(corrupt({ version: 0 })).kind).toBe('loaded');
+  });
+});
+
+describe('normalizeFreehold: the three safely repaired scalars, and nothing else', () => {
+  it('clamps a condition above the scale and leaves every other field alone', () => {
+    const result = norm(corrupt({ condition: 150 }));
+    const state = loadedState(result);
+    expect(state.condition).toBe(100);
+    expect(repairsOf(result)).toEqual(['condition']);
+    expect(state.rev).toBe(7);
+    expect(state.version).toBe(1);
+    expectContentSurvives(state);
+  });
+
+  it('clamps a condition below the scale and leaves every other field alone', () => {
+    const result = norm(corrupt({ condition: -5 }));
+    const state = loadedState(result);
+    expect(state.condition).toBe(0);
+    expect(repairsOf(result)).toEqual(['condition']);
+    expect(state.rev).toBe(7);
+    expect(state.version).toBe(1);
+    expectContentSurvives(state);
+  });
+
+  it('repairs a condition that is not a number at all to INTACT, never to zero', () => {
+    // A corrupt scalar must not be able to ruin a house nobody neglected.
+    for (const broken of [without('condition'), corrupt({ condition: '88' })]) {
+      const result = norm(broken);
+      const state = loadedState(result);
+      expect(state.condition).toBe(100);
+      expect(repairsOf(result)).toEqual(['condition']);
+      expect(state.rev).toBe(7);
+      expectContentSurvives(state);
+    }
+  });
+
+  it('leaves a condition inside the scale exactly as written', () => {
+    const state = loadedState(norm(corrupt({ condition: 0 })));
+    expect(state.condition).toBe(0);
+    expect(norm(corrupt({ condition: 0 })).kind).toBe('loaded');
+    expect(repairsOf(norm(corrupt({ condition: 100 })))).toEqual([]);
+  });
+
+  it('floors a negative revision and leaves every other field alone', () => {
+    const result = norm(corrupt({ rev: -3 }));
+    const state = loadedState(result);
+    expect(state.rev).toBe(0);
+    expect(repairsOf(result)).toEqual(['rev']);
+    expect(state.condition).toBe(88);
+    expect(state.version).toBe(1);
+    expectContentSurvives(state);
+  });
+
+  it('floors a non-integer or missing revision and leaves every other field alone', () => {
+    for (const broken of [corrupt({ rev: 2.5 }), without('rev'), corrupt({ rev: 'seven' })]) {
+      const result = norm(broken);
+      const state = loadedState(result);
+      expect(state.rev).toBe(0);
+      expect(repairsOf(result)).toEqual(['rev']);
+      expect(state.condition).toBe(88);
+      expectContentSurvives(state);
+    }
+  });
+
+  it('defaults a missing version (the legacy row) and leaves every other field alone', () => {
+    const result = norm(without('version'));
+    const state = loadedState(result);
+    expect(state.version).toBe(1);
+    expect(repairsOf(result)).toEqual(['version']);
+    expect(state.condition).toBe(88);
+    expect(state.rev).toBe(7);
+    expectContentSurvives(state);
+  });
+
+  it('defaults a non-number version the same way', () => {
+    const result = norm(corrupt({ version: 'one' }));
+    expect(loadedState(result).version).toBe(1);
+    expect(repairsOf(result)).toEqual(['version']);
+    expectContentSurvives(loadedState(result));
+  });
+
+  it('reports all three repairs in the declared order when a row needs all three', () => {
+    const raw = corrupt({ condition: 150, rev: -1 });
+    delete raw.version;
+    const result = norm(raw);
+    expect(repairsOf(result)).toEqual(['condition', 'rev', 'version']);
+    expectContentSurvives(loadedState(result));
+  });
+
+  it('repairs NOTHING on a clean record', () => {
+    expect(repairsOf(norm(row()))).toEqual([]);
+  });
+});
+
+describe('the state projection and its fixed point', () => {
+  const liveState = (): FreeholdState => ({
+    ownerKey: 'account:42',
+    plotId: asFreeholdPlotId(PLOT_ID),
+    tier: 'cottage',
+    layout: [
+      { placementId: 1, itemId: BED_ID, x: 1.5, y: 0, z: -2.25, yaw: 3.125 },
+      { placementId: 2, itemId: RUG_ID, x: -4, y: 0, z: 0.5, yaw: 0 },
+    ],
+    trophies: [{ plinth: 0, trophyId: TROPHY_ID }],
+    condition: 88,
+    conditionStampDay: 19_000,
+    ledgerPaidThroughDay: 19_007,
+    ledgerPrepaidWeeks: 3,
+    visitPolicy: 'friends',
+    isDecorating: true,
+    rev: 7,
+  });
+
+  it('projects exactly the durable subset, in the canonical field order', () => {
+    const persisted = persistedFreeholdFromState(liveState());
+    expect(Object.keys(persisted)).toEqual([
+      'version',
+      'plotId',
+      'tier',
+      'layout',
+      'trophies',
+      'condition',
+      'visitPolicy',
+      'rev',
+    ]);
+    // The four fields the durable row must never carry, named one at a time so
+    // a widened projection cannot hide behind a passing key-list assertion.
+    const carried = persisted as unknown as Record<string, unknown>;
+    expect(carried.ownerKey).toBeUndefined();
+    expect(carried.isDecorating).toBeUndefined();
+    expect(carried.conditionStampDay).toBeUndefined();
+    expect(carried.ledgerPaidThroughDay).toBeUndefined();
+    expect(carried.ledgerPrepaidWeeks).toBeUndefined();
+  });
+
+  it('rebuilds a live record with the unbound zero defaults and no build presence', () => {
+    const persisted = persistedFreeholdFromState(liveState());
+    expect(freeholdStateFromPersisted(persisted, 'account:77')).toEqual({
+      ownerKey: 'account:77',
+      plotId: 'plot:9f3a1c',
+      tier: 'cottage',
+      layout: [
+        { placementId: 1, itemId: 'furnishing_oak_bed', x: 1.5, y: 0, z: -2.25, yaw: 3.125 },
+        { placementId: 2, itemId: 'furnishing_rug_small', x: -4, y: 0, z: 0.5, yaw: 0 },
+      ],
+      trophies: [{ plinth: 0, trophyId: 'trophy_gnarlroot_head' }],
+      condition: 88,
+      conditionStampDay: 0,
+      ledgerPaidThroughDay: 0,
+      ledgerPrepaidWeeks: 0,
+      visitPolicy: 'friends',
+      isDecorating: false,
+      rev: 7,
+    });
+  });
+
+  it('is a FIXED POINT: persisted -> state -> persisted returns the same record', () => {
+    const persisted = loadedState(norm(row()));
+    const back = persistedFreeholdFromState(freeholdStateFromPersisted(persisted, 'account:42'));
+    expect(back).toEqual(persisted);
+    // The canonical KEY ORDER survives too, which is what makes the byte
+    // measure and the saved text stable across a round trip.
+    expect(JSON.stringify(back)).toBe(JSON.stringify(persisted));
+  });
+
+  it('is a fixed point the other way too: state -> persisted -> state', () => {
+    const state = freeholdStateFromPersisted(loadedState(norm(row())), 'account:42');
+    const back = freeholdStateFromPersisted(persistedFreeholdFromState(state), 'account:42');
+    expect(back).toEqual(state);
+  });
+
+  it('deep-copies both row arrays in both directions', () => {
+    const state = liveState();
+    const persisted = persistedFreeholdFromState(state);
+    state.layout[0].x = 999;
+    state.layout.push({ placementId: 3, itemId: BED_ID, x: 0, y: 0, z: 0, yaw: 0 });
+    state.trophies[0].trophyId = 'trophy_swapped';
+    expect(persisted.layout).toHaveLength(2);
+    expect(persisted.layout[0].x).toBe(1.5);
+    expect(persisted.trophies[0].trophyId).toBe('trophy_gnarlroot_head');
+
+    const rebuilt = freeholdStateFromPersisted(persisted, 'account:42');
+    rebuilt.layout[0].x = -777;
+    rebuilt.trophies.pop();
+    expect(persisted.layout[0].x).toBe(1.5);
+    expect(persisted.trophies).toHaveLength(1);
+  });
+
+  it('never aliases the durable value it normalized', () => {
+    const raw = row();
+    const state = loadedState(norm(raw));
+    (raw.layout as Record<string, unknown>[])[0].x = 999;
+    expect(state.layout[0].x).toBe(1.5);
+  });
+});
+
+describe('persistedFreeholdBytes measures the saved text in UTF-8 bytes', () => {
+  it('agrees with an encoder on the canonical JSON the save path writes', () => {
+    const persisted = loadedState(norm(row()));
+    const canonical = JSON.stringify({
+      version: persisted.version,
+      plotId: persisted.plotId,
+      tier: persisted.tier,
+      layout: persisted.layout,
+      trophies: persisted.trophies,
+      condition: persisted.condition,
+      visitPolicy: persisted.visitPolicy,
+      rev: persisted.rev,
+    });
+    expect(persistedFreeholdBytes(persisted)).toBe(new TextEncoder().encode(canonical).length);
+  });
+
+  it('counts BYTES, not characters, for multi-byte and astral ids', () => {
+    const ascii = loadedState(norm(corrupt({ layout: [layoutRow({ itemId: 'aaaa' })] })));
+    const accented = loadedState(norm(corrupt({ layout: [layoutRow({ itemId: 'aaaé' })] })));
+    const astral = loadedState(norm(corrupt({ layout: [layoutRow({ itemId: 'aaa\u{1f3e0}' })] })));
+    expect(persistedFreeholdBytes(accented)).toBe(persistedFreeholdBytes(ascii) + 1);
+    // One astral character is two UTF-16 units and four UTF-8 bytes, so the
+    // saved text grows by four while the JSON string grows by two.
+    expect(persistedFreeholdBytes(astral)).toBe(persistedFreeholdBytes(ascii) + 3);
+    for (const state of [ascii, accented, astral]) {
+      const canonical = JSON.stringify(state);
+      expect(persistedFreeholdBytes(state)).toBe(new TextEncoder().encode(canonical).length);
+    }
+  });
+
+  it('agrees with an encoder on a lone surrogate, which JSON escapes into ASCII', () => {
+    // Well-formed JSON.stringify turns a lone surrogate into a six-character
+    // \\uD83C escape, so the saved text never carries one and both measures see
+    // the same ASCII. The measure still has to agree on it.
+    const lone = loadedState(norm(corrupt({ layout: [layoutRow({ itemId: 'a\ud83c' })] })));
+    expect(persistedFreeholdBytes(lone)).toBe(
+      new TextEncoder().encode(JSON.stringify(lone)).length,
+    );
+  });
+});
+
+// The maximal legal record and the one-over record: the two witnesses for the
+// measured FREEHOLD_MAX_OWNED_BYTES ceiling, published here as named
+// deliverables. Both are built from the worst legal case of every field rather
+// than a comfortable middle, because a ceiling proved with a friendly fixture
+// is not proved at all.
+const MAX_TIER = 't'.repeat(FREEHOLD_MAX_ID_LENGTH);
+const MAX_POLICY = 'v'.repeat(FREEHOLD_MAX_ID_LENGTH);
+
+/** The longest JSON text a finite double takes is 25 characters; the longest an
+ *  INTEGER double takes is 24 (-1.7976931348623157e+308, which
+ *  `Number.isInteger` accepts, so a placement id may legally be one). */
+const WORST_COORD = -0.0000012345678901234567;
+const WORST_CONDITION = 0.0000012345678901234567;
+const WORST_REV = Number.MAX_VALUE;
+
+/** `count` DISTINCT integer ids whose JSON text is the longest an integer can
+ *  take, walked one unit in the last place at a time down from -MAX_VALUE.
+ *  Distinctness matters: duplicates would be refused by the loader, so the
+ *  worst case has to be both maximal in text and legal in identity. */
+function worstCaseIntegerIds(count: number): number[] {
+  const bits = new BigUint64Array(1);
+  const doubles = new Float64Array(bits.buffer);
+  doubles[0] = -Number.MAX_VALUE;
+  const out: number[] = [];
+  while (out.length < count) {
+    const value = doubles[0];
+    if (JSON.stringify(value).length === 24) out.push(value);
+    bits[0] -= 1n;
+  }
+  return out;
+}
+
+function maximalLegalRecord(
+  layoutRows: number = FREEHOLD_MAX_LAYOUT_ROWS,
+): Record<string, unknown> {
+  const id = 'i'.repeat(FREEHOLD_MAX_ID_LENGTH);
+  return {
+    version: FREEHOLD_PERSIST_VERSION,
+    plotId: 'p'.repeat(FREEHOLD_MAX_ID_LENGTH),
+    tier: MAX_TIER,
+    layout: worstCaseIntegerIds(layoutRows).map((placementId) => ({
+      placementId,
+      itemId: id,
+      x: WORST_COORD,
+      y: WORST_COORD,
+      z: WORST_COORD,
+      yaw: WORST_COORD,
+    })),
+    trophies: worstCaseIntegerIds(FREEHOLD_MAX_TROPHY_ROWS).map((plinth) => ({
+      plinth,
+      trophyId: id,
+    })),
+    condition: WORST_CONDITION,
+    visitPolicy: MAX_POLICY,
+    rev: WORST_REV,
+  };
+}
+
+const maximalOpts = {
+  validTierIds: new Set([MAX_TIER]) as ReadonlySet<string>,
+  validVisitPolicies: new Set([MAX_POLICY]) as ReadonlySet<string>,
+};
+
+describe('the measured byte ceiling, proved by the maximal and one-over records', () => {
+  it('generates distinct worst-case ids at the longest legal integer text', () => {
+    // Anti-vacuity for the generator itself: a fixture that quietly emitted
+    // short or repeated ids would understate the worst case it exists to prove.
+    const ids = worstCaseIntegerIds(FREEHOLD_MAX_LAYOUT_ROWS);
+    expect(ids).toHaveLength(FREEHOLD_MAX_LAYOUT_ROWS);
+    expect(new Set(ids).size).toBe(FREEHOLD_MAX_LAYOUT_ROWS);
+    for (const id of ids) {
+      expect(Number.isInteger(id)).toBe(true);
+      expect(JSON.stringify(id)).toHaveLength(24);
+    }
+    expect(JSON.stringify(WORST_COORD)).toHaveLength(25);
+    expect(JSON.stringify(WORST_CONDITION)).toHaveLength(24);
+    expect(JSON.stringify(WORST_REV)).toHaveLength(23);
+  });
+
+  it('loads the maximal legal record, and its measured bytes sit just under the ceiling', () => {
+    const result = norm(maximalLegalRecord(), maximalOpts);
+    const state = loadedState(result);
+    expect(result.kind).toBe('loaded');
+    expect(state.layout).toHaveLength(FREEHOLD_MAX_LAYOUT_ROWS);
+    expect(state.trophies).toHaveLength(FREEHOLD_MAX_TROPHY_ROWS);
+    const bytes = persistedFreeholdBytes(state);
+    // The constant is the measured worst case rounded UP to the next whole
+    // 1024, so it must ADMIT the worst case and sit less than 1024 above it. A
+    // constant chosen by feel would fail one side or the other.
+    expect(bytes).toBeLessThanOrEqual(FREEHOLD_MAX_OWNED_BYTES);
+    expect(bytes).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES - 1024);
+    expect(FREEHOLD_MAX_OWNED_BYTES % 1024).toBe(0);
+    // The measured number the workbook records.
+    expect(bytes).toBe(104_363);
+  });
+
+  it('refuses the one-over record: one layout row past the ceiling', () => {
+    const oneOver = maximalLegalRecord(FREEHOLD_MAX_LAYOUT_ROWS + 1);
+    expect(norm(oneOver, maximalOpts)).toEqual({
+      kind: 'malformed',
+      detail: 'layout_over_ceiling:421',
+    });
+  });
+
+  it('refuses a record whose bytes pass the ceiling while every row count is legal', () => {
+    const maximal = loadedState(norm(maximalLegalRecord(), maximalOpts));
+    const bytes = persistedFreeholdBytes(maximal);
+    expect(norm(maximalLegalRecord(), { ...maximalOpts, maxOwnedBytes: bytes - 1 })).toEqual({
+      kind: 'oversize',
+      bytes,
+      limit: bytes - 1,
+    });
+    // The boundary is inclusive: a record measuring exactly the limit loads.
+    expect(norm(maximalLegalRecord(), { ...maximalOpts, maxOwnedBytes: bytes }).kind).toBe(
+      'loaded',
+    );
+  });
+
+  it('checks the row ceiling BEFORE the byte ceiling, so malformed wins over oversize', () => {
+    const oneOver = maximalLegalRecord(FREEHOLD_MAX_LAYOUT_ROWS + 1);
+    // The same record IS genuinely oversize: it is bigger than the maximal one,
+    // which already sits within 1024 bytes of the ceiling. So this case really
+    // does satisfy both arms, and the ordering claim is not vacuous.
+    expect(persistedFreeholdBytes(oneOver as unknown as PersistedFreehold)).toBeGreaterThan(
+      FREEHOLD_MAX_OWNED_BYTES,
+    );
+    expect(norm(oneOver, maximalOpts).kind).toBe('malformed');
+  });
+});
+
+describe('the ceilings are checked before the loader reads a single row', () => {
+  /** Layout rows whose every field is an enumerable getter, so a read of any
+   *  value is counted. Object.keys does not fire them, which is exactly the
+   *  point: the name and count checks are free, the value reads are not. */
+  function countingRows(count: number, counter: { reads: number }): Record<string, unknown>[] {
+    const rows: Record<string, unknown>[] = [];
+    for (let i = 0; i < count; i++) {
+      const source = layoutRow({ placementId: i });
+      const probe: Record<string, unknown> = {};
+      for (const key of Object.keys(source)) {
+        Object.defineProperty(probe, key, {
+          enumerable: true,
+          configurable: true,
+          get: () => {
+            counter.reads++;
+            return source[key];
+          },
+        });
+      }
+      rows.push(probe);
+    }
+    return rows;
+  }
+
+  it('reads the rows when the count is legal (the positive control)', () => {
+    const counter = { reads: 0 };
+    const result = norm(corrupt({ layout: countingRows(FREEHOLD_MAX_LAYOUT_ROWS, counter) }));
+    expect(result.kind).toBe('loaded');
+    expect(counter.reads).toBeGreaterThan(0);
+  });
+
+  it('reads NO row when the count is one over the ceiling', () => {
+    const counter = { reads: 0 };
+    const result = norm(corrupt({ layout: countingRows(FREEHOLD_MAX_LAYOUT_ROWS + 1, counter) }));
+    expect(result).toEqual({ kind: 'malformed', detail: 'layout_over_ceiling:421' });
+    // No mapping, no cloning, no measuring: the ceiling refused the record
+    // before the loader did any work proportional to it.
+    expect(counter.reads).toBe(0);
+  });
+
+  it('reads no trophy row when the trophy count is one over the ceiling', () => {
+    const counter = { reads: 0 };
+    const trophies = Array.from({ length: FREEHOLD_MAX_TROPHY_ROWS + 1 }, (_, i) => {
+      const source = trophyRow({ plinth: i });
+      const probe: Record<string, unknown> = {};
+      for (const key of Object.keys(source)) {
+        Object.defineProperty(probe, key, {
+          enumerable: true,
+          configurable: true,
+          get: () => {
+            counter.reads++;
+            return source[key];
+          },
+        });
+      }
+      return probe;
+    });
+    expect(norm(corrupt({ trophies }))).toEqual({
+      kind: 'malformed',
+      detail: 'trophies_over_ceiling:33',
+    });
+    expect(counter.reads).toBe(0);
+  });
+});
+
+describe('freeholdLoadDiagnostic carries counts and classification only', () => {
+  it('says nothing about an absent row or a clean load', () => {
+    expect(freeholdLoadDiagnostic({ kind: 'absent' })).toBeNull();
+    expect(freeholdLoadDiagnostic(norm(row()))).toBeNull();
+  });
+
+  it('names the repairs of a repaired load', () => {
+    const raw = corrupt({ condition: 150, rev: -1 });
+    delete raw.version;
+    expect(freeholdLoadDiagnostic(norm(raw))).toEqual({
+      kind: 'loaded',
+      detail: 'repaired:condition,rev,version',
+    });
+  });
+
+  it('names the reason of an unsupported row without echoing the row', () => {
+    expect(freeholdLoadDiagnostic(norm(corrupt({ tier: 'lodge' })))).toEqual({
+      kind: 'unsupported',
+      detail: 'tier:not_admitted',
+    });
+    expect(freeholdLoadDiagnostic(norm(corrupt({ version: 4 })))).toEqual({
+      kind: 'unsupported',
+      detail: 'version:4',
+    });
+  });
+
+  it('names the fault of a malformed row and the measure of an oversize one', () => {
+    expect(freeholdLoadDiagnostic(norm(corrupt({ plotId: 'plot/x' })))).toEqual({
+      kind: 'malformed',
+      detail: 'plot_id_shape',
+    });
+    expect(freeholdLoadDiagnostic({ kind: 'oversize', bytes: 200_000, limit: 104_448 })).toEqual({
+      kind: 'oversize',
+      detail: 'bytes:200000:limit:104448',
+    });
+    expect(
+      freeholdLoadDiagnostic({
+        kind: 'oversize',
+        bytes: Number.POSITIVE_INFINITY,
+        limit: 104_448,
+      }),
+    ).toEqual({ kind: 'oversize', detail: 'bytes:na:limit:104448' });
+  });
+
+  it('replaces a detail it does not recognize instead of echoing it', () => {
+    // The bound is a POSITIVE shape test, so a widened producer cannot smuggle
+    // a plot id, an owner key or a megabyte of junk into a log line through it.
+    expect(freeholdLoadDiagnostic({ kind: 'malformed', detail: `plot_id=${PLOT_ID}` })).toEqual({
+      kind: 'malformed',
+      detail: 'unclassified',
+    });
+    expect(freeholdLoadDiagnostic({ kind: 'malformed', detail: 'x'.repeat(5_000) })).toEqual({
+      kind: 'malformed',
+      detail: 'unclassified',
+    });
+    expect(
+      freeholdLoadDiagnostic({
+        kind: 'unsupported',
+        reason: 'tier',
+        detail: 'lodge_of_account:42',
+      }),
+    ).toEqual({ kind: 'unsupported', detail: 'tier:unclassified' });
+    // A bare identity is the exact shape the bound exists to refuse: it is
+    // short, lower case and innocent-looking, and a charset test alone would
+    // have passed it straight into the log.
+    expect(freeholdLoadDiagnostic({ kind: 'malformed', detail: PLOT_ID })).toEqual({
+      kind: 'malformed',
+      detail: 'unclassified',
+    });
+    expect(freeholdLoadDiagnostic({ kind: 'malformed', detail: BED_ID })).toEqual({
+      kind: 'malformed',
+      detail: 'unclassified',
+    });
+  });
+
+  it('passes every detail the loader actually produces through unchanged', () => {
+    // The other half of the bound: an allowlist that quietly replaced a real
+    // fault would make every diagnostic above read `unclassified`.
+    const produced: readonly FreeholdLoadResult[] = [
+      norm(42),
+      norm(new Map()),
+      norm(corrupt({ plotId: 'plot/x' })),
+      norm(corrupt({ ownerKey: 'account:42' })),
+      norm(corrupt({ layout: 'none' })),
+      norm(corrupt({ trophies: 'none' })),
+      norm(corrupt({ layout: [layoutRow({ itemId: 5 })] })),
+      norm(corrupt({ trophies: [trophyRow({ plinth: 0.5 })] })),
+      norm(corrupt({ condition: 150 })),
+      norm(corrupt({ version: 3 })),
+      norm(corrupt({ tier: 'lodge' })),
+    ];
+    for (const result of produced) {
+      const diagnostic = freeholdLoadDiagnostic(result);
+      expect(diagnostic, result.kind).not.toBeNull();
+      expect(diagnostic?.detail, result.kind).not.toContain('unclassified');
+    }
+  });
+});
+
+describe('warnFreeholdLoad emits one dev-channel line and no player data', () => {
+  it('emits exactly one line for a refused record, carrying no identity from it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      warnFreeholdLoad(norm(corrupt({ tier: 'lodge' })), 0);
+      expect(warn).toHaveBeenCalledTimes(1);
+      const line = String(warn.mock.calls[0][0]);
+      expect(line).toContain('freehold plot 0');
+      expect(line).toContain('unsupported');
+      expect(line).toContain('tier:not_admitted');
+      // The three identities a log line must never carry.
+      expect(line).not.toContain(PLOT_ID);
+      expect(line).not.toContain(BED_ID);
+      expect(line).not.toContain(TROPHY_ID);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('carries no item id even when the fault was found inside a row', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const overLong = 'i'.repeat(FREEHOLD_MAX_ID_LENGTH + 1);
+      warnFreeholdLoad(norm(corrupt({ layout: [layoutRow({ itemId: overLong })] })), 1);
+      expect(warn).toHaveBeenCalledTimes(1);
+      const line = String(warn.mock.calls[0][0]);
+      expect(line).toContain('malformed');
+      expect(line).toContain('layout_row:0:item_id');
+      expect(line).not.toContain(overLong);
+      expect(line).not.toContain(PLOT_ID);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('says nothing at all for an absent row or a clean load', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      warnFreeholdLoad({ kind: 'absent' }, 0);
+      warnFreeholdLoad(norm(row()), 0);
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('emits one line for a repaired load, naming the repairs and nothing else', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      warnFreeholdLoad(norm(corrupt({ condition: 150 })), 0);
+      expect(warn).toHaveBeenCalledTimes(1);
+      const line = String(warn.mock.calls[0][0]);
+      expect(line).toContain('loaded');
+      expect(line).toContain('repaired:condition');
+      expect(line).not.toContain(PLOT_ID);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+});
