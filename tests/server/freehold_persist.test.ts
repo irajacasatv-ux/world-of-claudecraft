@@ -489,7 +489,9 @@ describe('preload classification', () => {
     });
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(loaded.hold).toBeNull();
-    expect(h.warnings.join(' ')).toContain('condition, rev');
+    // The line comes from the sim's own reporter, in its vocabulary, so the
+    // bound on what may reach a log lives in one place.
+    expect(h.warnings.join(' ')).toContain('repaired:condition,rev');
   });
 
   const holdCases: ReadonlyArray<{
@@ -502,19 +504,23 @@ describe('preload classification', () => {
       name: 'an unsupported document',
       options: {
         rowLoad: { kind: 'row', row: rowFixture() },
-        normalized: { kind: 'unsupported', reason: 'tier', detail: 'lodge' },
+        // The detail the real normalizer produces for an unadmitted tier. A
+        // raw tier id here would be a fixture the sim never emits, and the
+        // reporter's positive shape bound would replace it, which is the point:
+        // row content does not reach a log.
+        normalized: { kind: 'unsupported', reason: 'tier', detail: 'not_admitted' },
       },
       kind: 'unsupported',
-      detail: 'tier: lodge',
+      detail: 'tier:not_admitted',
     },
     {
       name: 'a malformed document',
       options: {
         rowLoad: { kind: 'row', row: rowFixture() },
-        normalized: { kind: 'malformed', detail: 'layout is not an array' },
+        normalized: { kind: 'malformed', detail: 'layout_not_an_array' },
       },
       kind: 'malformed',
-      detail: 'layout is not an array',
+      detail: 'layout_not_an_array',
     },
     {
       name: 'a document over the owned-bytes ceiling',
@@ -523,7 +529,7 @@ describe('preload classification', () => {
         normalized: { kind: 'oversize', bytes: 200_000, limit: FREEHOLD_MAX_OWNED_BYTES },
       },
       kind: 'oversize',
-      detail: '200000 bytes',
+      detail: 'bytes:200000:limit:',
     },
     {
       name: 'a document that normalizes to absent',
@@ -1879,7 +1885,11 @@ describe('installLoadedFreehold', () => {
     expect(ctx.freeholds.size).toBe(0);
   });
 
-  it('installs nothing for a held load', () => {
+  it('installs no PLOT for a held load, but keeps the durable hearth clock', () => {
+    // The clock is a separate durable fact. An account whose plot row cannot be
+    // read still has a Hearth cooldown, and dropping it because the plot was
+    // held would hand that account a free travel on every login, on exactly the
+    // accounts already in a recovery state.
     const ctx = fakeCtx();
     installLoadedFreehold(
       ctx,
@@ -1890,7 +1900,18 @@ describe('installLoadedFreehold', () => {
       }),
     );
     expect(ctx.freeholds.size).toBe(0);
-    expect(ctx.freeholdKeyReadyAtMs.size).toBe(0);
+    expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(90_000);
+  });
+
+  it('keeps the durable hearth clock when the account has no plot row at all', () => {
+    const ctx = fakeCtx();
+    installLoadedFreehold(
+      ctx,
+      ACCOUNT_ID,
+      loadedFixture({ state: null, durableRev: null, hearthReadyAtMs: 90_000 }),
+    );
+    expect(ctx.freeholds.size).toBe(0);
+    expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(90_000);
   });
 
   it('installs nothing when there is no load at all', () => {

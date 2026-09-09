@@ -415,9 +415,19 @@ export function normalizeFreehold(
   const record = raw as Record<string, unknown>;
 
   // Version FIRST, before this binary's shape is imposed on the row at all.
+  //
+  // A version that is present but NOT a positive integer is malformed, not
+  // legacy. The absent-version arm exists for rows written before the field
+  // did; a row carrying '2', true or an object was written by something, and
+  // treating it as legacy would normalize it UP to this shape and load a
+  // document no released binary produced. Refusing preserves it read-only,
+  // which is the correct treatment for a row this build cannot place.
   const rawVersion = record.version;
-  if (finiteNumber(rawVersion) && rawVersion > FREEHOLD_PERSIST_VERSION) {
-    return { kind: 'unsupported', reason: 'version', detail: `${rawVersion}` };
+  if (rawVersion !== undefined) {
+    if (!integerNumber(rawVersion) || rawVersion < 1) return malformed('version_shape');
+    if (rawVersion > FREEHOLD_PERSIST_VERSION) {
+      return { kind: 'unsupported', reason: 'version', detail: `${rawVersion}` };
+    }
   }
 
   if (!onlyKnownFields(record, CONTAINER_FIELDS)) return malformed('unknown_field');

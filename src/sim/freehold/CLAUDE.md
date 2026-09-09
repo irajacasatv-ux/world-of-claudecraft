@@ -73,9 +73,14 @@ carries an opaque plot id only.
   combat, authoritative match membership, instance regions and jail visits.
   The selected live owner claim is a silent no-op before clock/admission.
   The isolated clock is a Sim-owned `freeholdKeyReadyAtMs` account map, read
-  against `lockoutNowMs` only on commands and updated only after successful
-  remote entry. It is outside the serialized plot and retained until that
-  isolated Sim is discarded, so leaving or changing tier cannot reset it.
+  against `lockoutNowMs` only on commands. It has exactly TWO writers, both in
+  this directory: `useHearthKey` after a successful remote entry, and
+  `mergeFreeholdKeyReadyAt`, which installs a durable clock FORWARD ONLY. A
+  host that reached into the Map itself would be a third writer, and the
+  forward-only rule would then live in as many places as there are hosts, so
+  nothing outside this directory may write it. It is outside the serialized
+  plot and retained until that isolated Sim is discarded, so leaving or
+  changing tier cannot reset it.
   The realm's `freeholdKeyAdmission` participant refuses until 07a supplies
   durable account authority; an isolated ready value never authorizes it.
   This participant is not another feature flag and does not block physical

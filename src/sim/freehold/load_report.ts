@@ -1,9 +1,15 @@
 // Dev-channel visibility for a durable freehold read, the counting half of the
 // pair persisted.ts opens (the professions/farm_load_report.ts precedent: a
-// pure reporter beside a pure persistence leaf, plus ONE console.warn at the
-// load site). A record this binary refuses is preserved on disk and invisible
-// by design, so an operator reading server logs is the only person who can see
-// that an owner's plot went read-only.
+// pure reporter beside a pure persistence leaf). A record this binary refuses
+// is preserved on disk and invisible by design, so an operator reading server
+// logs is the only person who can see that an owner's plot went read-only.
+//
+// The ONE caller is server/freehold_persist.ts, which turns every diagnostic
+// into a line on its own warn port rather than a bare console call, so the
+// store stays driveable from a Vitest with no console capture. This module
+// deliberately does NOT own a log call of its own: a second, unused dev channel
+// beside the one the store actually uses is how a bound stops being the only
+// way to a log.
 //
 // THE INVARIANT THIS FILE EXISTS TO HOLD: a diagnostic carries COUNTS AND
 // CLASSIFICATION ONLY. No owner key, no account id, no plot id, no item id, no
@@ -38,7 +44,7 @@ export interface FreeholdLoadDiagnostic {
  * tests/freehold_state.test.ts catches the omission.
  */
 const KNOWN_DETAILS: readonly RegExp[] = [
-  /^(?:not_an_object|prototype_shape|prototype_key|unknown_field|plot_id_shape)$/,
+  /^(?:not_an_object|prototype_shape|prototype_key|unknown_field|plot_id_shape|version_shape)$/,
   /^(?:layout|trophies)_not_an_array$/,
   /^(?:layout|trophies)_over_ceiling:\d{1,10}$/,
   /^(?:layout|trophy)_row:\d{1,10}:[a-z_]{1,30}$/,
@@ -90,22 +96,4 @@ export function freeholdLoadDiagnostic(result: FreeholdLoadResult): FreeholdLoad
         detail: `bytes:${boundedCount(result.bytes)}:limit:${boundedCount(result.limit)}`,
       };
   }
-}
-
-/**
- * The ONE dev-channel line per durable read, emitted at the load site. At most
- * one console.warn per call and none at all for an absent row or a clean load,
- * so a realm booting thousands of accounts logs exactly as many lines as it has
- * records worth an operator's attention.
- *
- * `plotIndex` is the account-local slot (0 today, 1 once a second plot is
- * admitted), never an account id and never a plot identity: it is what an
- * operator needs to find the row, and it says nothing about who owns it.
- */
-export function warnFreeholdLoad(result: FreeholdLoadResult, plotIndex: number): void {
-  const diagnostic = freeholdLoadDiagnostic(result);
-  if (!diagnostic) return;
-  console.warn(
-    `[load] freehold plot ${boundedCount(plotIndex)}: ${diagnostic.kind} (${diagnostic.detail})`,
-  );
 }

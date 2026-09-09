@@ -16,7 +16,7 @@
 // docs/freeholds/content-numbers-workbook.md records.
 
 import { describe, expect, it, vi } from 'vitest';
-import { freeholdLoadDiagnostic, warnFreeholdLoad } from '../src/sim/freehold/load_report';
+import { freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
 import {
   FREEHOLD_MAX_ID_LENGTH,
   FREEHOLD_MAX_LAYOUT_ROWS,
@@ -421,7 +421,24 @@ describe('normalizeFreehold: unsupported is NOT absence', () => {
 
   it('does not treat a version at or below this binary as unsupported', () => {
     expect(norm(corrupt({ version: FREEHOLD_PERSIST_VERSION })).kind).toBe('loaded');
-    expect(norm(corrupt({ version: 0 })).kind).toBe('loaded');
+  });
+
+  it('refuses a version that is present but not a positive integer', () => {
+    // The absent-version arm exists for rows written before the field did. A
+    // row carrying 0, a string, a boolean or an object was written by
+    // SOMETHING, and normalizing it up to this shape would load a document no
+    // released binary produced. Refusing preserves it read-only instead.
+    for (const version of [0, -1, 1.5, 'one', true, {}, []]) {
+      expect(norm(corrupt({ version })), `version ${JSON.stringify(version)}`).toEqual({
+        kind: 'malformed',
+        detail: 'version_shape',
+      });
+    }
+    // The absent arm still loads, so the refusal above is about PRESENCE of a
+    // bad value, never about the legacy row it exists to admit.
+    const legacy = corrupt({});
+    delete legacy.version;
+    expect(norm(legacy).kind).toBe('loaded');
   });
 });
 
@@ -496,8 +513,10 @@ describe('normalizeFreehold: the three safely repaired scalars, and nothing else
     expectContentSurvives(state);
   });
 
-  it('defaults a non-number version the same way', () => {
-    const result = norm(corrupt({ version: 'one' }));
+  it('reports the legacy absent version as a repair, and loads', () => {
+    const raw = corrupt({});
+    delete raw.version;
+    const result = norm(raw);
     expect(loadedState(result).version).toBe(1);
     expect(repairsOf(result)).toEqual(['version']);
     expectContentSurvives(loadedState(result));
@@ -1020,63 +1039,54 @@ describe('freeholdLoadDiagnostic carries counts and classification only', () => 
   });
 });
 
-describe('warnFreeholdLoad emits one dev-channel line and no player data', () => {
-  it('emits exactly one line for a refused record, carrying no identity from it', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      warnFreeholdLoad(norm(corrupt({ tier: 'lodge' })), 0);
-      expect(warn).toHaveBeenCalledTimes(1);
-      const line = String(warn.mock.calls[0][0]);
-      expect(line).toContain('freehold plot 0');
-      expect(line).toContain('unsupported');
-      expect(line).toContain('tier:not_admitted');
-      // The three identities a log line must never carry.
-      expect(line).not.toContain(PLOT_ID);
-      expect(line).not.toContain(BED_ID);
-      expect(line).not.toContain(TROPHY_ID);
-    } finally {
-      warn.mockRestore();
-    }
+describe('a diagnostic names the fault and carries no player data', () => {
+  // The bound is the ONLY thing between a corrupt row and a log line, so each
+  // case drives a real refusal and then asserts on both halves: the fault is
+  // named, and none of the three identities a row can carry appears.
+  const detailOf = (result: FreeholdLoadResult): string =>
+    freeholdLoadDiagnostic(result)?.detail ?? '';
+
+  it('names the fault for a refused record, carrying no identity from it', () => {
+    const diagnostic = freeholdLoadDiagnostic(norm(corrupt({ tier: 'lodge' })));
+    expect(diagnostic?.kind).toBe('unsupported');
+    expect(diagnostic?.detail).toContain('tier:not_admitted');
+    const line = JSON.stringify(diagnostic);
+    expect(line).not.toContain(PLOT_ID);
+    expect(line).not.toContain(BED_ID);
+    expect(line).not.toContain(TROPHY_ID);
   });
 
   it('carries no item id even when the fault was found inside a row', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      const overLong = 'i'.repeat(FREEHOLD_MAX_ID_LENGTH + 1);
-      warnFreeholdLoad(norm(corrupt({ layout: [layoutRow({ itemId: overLong })] })), 1);
-      expect(warn).toHaveBeenCalledTimes(1);
-      const line = String(warn.mock.calls[0][0]);
-      expect(line).toContain('malformed');
-      expect(line).toContain('layout_row:0:item_id');
-      expect(line).not.toContain(overLong);
-      expect(line).not.toContain(PLOT_ID);
-    } finally {
-      warn.mockRestore();
-    }
+    const overLong = 'i'.repeat(FREEHOLD_MAX_ID_LENGTH + 1);
+    const diagnostic = freeholdLoadDiagnostic(
+      norm(corrupt({ layout: [layoutRow({ itemId: overLong })] })),
+    );
+    expect(diagnostic?.kind).toBe('malformed');
+    expect(diagnostic?.detail).toBe('layout_row:0:item_id');
+    expect(JSON.stringify(diagnostic)).not.toContain(overLong);
+    expect(JSON.stringify(diagnostic)).not.toContain(PLOT_ID);
   });
 
   it('says nothing at all for an absent row or a clean load', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      warnFreeholdLoad({ kind: 'absent' }, 0);
-      warnFreeholdLoad(norm(row()), 0);
-      expect(warn).not.toHaveBeenCalled();
-    } finally {
-      warn.mockRestore();
-    }
+    // Silence is the contract: an ordinary boot logs nothing, so a line in the
+    // log always means something happened.
+    expect(freeholdLoadDiagnostic({ kind: 'absent' })).toBeNull();
+    expect(freeholdLoadDiagnostic(norm(row()))).toBeNull();
   });
 
-  it('emits one line for a repaired load, naming the repairs and nothing else', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      warnFreeholdLoad(norm(corrupt({ condition: 150 })), 0);
-      expect(warn).toHaveBeenCalledTimes(1);
-      const line = String(warn.mock.calls[0][0]);
-      expect(line).toContain('loaded');
-      expect(line).toContain('repaired:condition');
-      expect(line).not.toContain(PLOT_ID);
-    } finally {
-      warn.mockRestore();
-    }
+  it('names the repairs on a repaired load, and nothing else', () => {
+    const diagnostic = freeholdLoadDiagnostic(norm(corrupt({ condition: 150 })));
+    expect(diagnostic?.kind).toBe('loaded');
+    expect(diagnostic?.detail).toBe('repaired:condition');
+    expect(JSON.stringify(diagnostic)).not.toContain(PLOT_ID);
+  });
+
+  it('replaces a detail its shape list does not name, rather than passing it through', () => {
+    // Fails closed: a producer that adds a fault adds its shape here, and until
+    // it does the operator loses one detail and the log leaks nothing.
+    expect(detailOf({ kind: 'malformed', detail: `looks_fine_${PLOT_ID}` })).toBe('unclassified');
+    expect(detailOf({ kind: 'malformed', detail: 'layout_row:0:item_id' })).toBe(
+      'layout_row:0:item_id',
+    );
   });
 });

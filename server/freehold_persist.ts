@@ -32,6 +32,8 @@
 //    fall-through to doing the work unadmitted.
 
 import { FREEHOLD_TIER_IDS } from '../src/sim/content/freehold';
+import { mergeFreeholdKeyReadyAt } from '../src/sim/freehold/hearth_key';
+import { freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
 import {
   FREEHOLD_MAX_STORED_BYTES,
   type FreeholdLoadResult,
@@ -660,8 +662,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     const normalized = ports.normalize(rowDocument(row));
     if (normalized.kind === 'loaded') {
       if (normalized.repaired.length > 0) {
+        // Through the sim's own reporter, so the bound that decides what may
+        // reach a log lives in ONE place. Hand-building the line here would
+        // route around it.
+        const repaired = freeholdLoadDiagnostic(normalized);
         ports.warn(
-          `freehold plot index ${row.plotIndex} repaired ${normalized.repaired.join(', ')} on load`,
+          `freehold plot index ${row.plotIndex} loaded with ${repaired?.detail ?? 'repairs'}`,
         );
       }
       entry.loaded = true;
@@ -682,14 +688,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       };
     }
 
-    const detail =
-      normalized.kind === 'unsupported'
-        ? `${normalized.reason}: ${normalized.detail}`
-        : normalized.kind === 'oversize'
-          ? `${normalized.bytes} bytes over the ${normalized.limit} byte limit`
-          : normalized.kind === 'malformed'
-            ? normalized.detail
-            : 'a durable row normalized to absent';
+    // The DETAIL comes from the sim's reporter, never from this module. Its
+    // whole job is a POSITIVE shape bound on what may reach a log, and a
+    // hand-built string here would pass a corrupt row's own text straight
+    // through it, which is the unbounded-bytes problem wearing a log costume.
+    const diagnostic = freeholdLoadDiagnostic(normalized);
+    const detail = diagnostic?.detail ?? 'a durable row normalized to absent';
     const kind: FreeholdRecoveryHold['kind'] =
       normalized.kind === 'unsupported'
         ? 'unsupported'
@@ -1312,15 +1316,22 @@ export function installLoadedFreehold(
   accountId: number,
   loaded: LoadedFreehold | undefined,
 ): void {
-  if (!loaded || loaded.hold !== null || loaded.state === null) return;
+  // A STRUCTURAL guard, not a type assertion. This value arrives on a spread
+  // meta bag that crosses a module boundary, and every field below is read
+  // straight into sim state; a bag that lost its shape would install a record
+  // with undefined fields rather than refusing.
+  if (!loaded || typeof loaded !== 'object') return;
+  if (typeof loaded.hearthReadyAtMs !== 'number') return;
   const ownerKey = freeholdOwnerKeyForAccount(accountId);
+  // The CLOCK FIRST, and unconditionally. It is a separate durable fact from
+  // the plot: an account whose plot row is held, or absent entirely, still has
+  // a Hearth cooldown, and dropping it because the plot could not be installed
+  // hands that account a free travel on every login. The forward-only merge
+  // itself belongs to the sim, which owns the Map.
+  mergeFreeholdKeyReadyAt(ctx, ownerKey, loaded.hearthReadyAtMs);
+  if (loaded.hold !== null || loaded.state === null) return;
+  if (typeof loaded.state !== 'object') return;
   loadFreehold(ctx, ownerKey, freeholdStateFromPersisted(loaded.state, ownerKey));
-  const readyAtMs = loaded.hearthReadyAtMs;
-  if (!Number.isFinite(readyAtMs) || readyAtMs <= 0) return;
-  const liveReadyAtMs = ctx.freeholdKeyReadyAtMs.get(ownerKey) ?? 0;
-  // Only ever forward: a durable clock behind the live one is a stale read,
-  // and moving the cooldown backwards would hand out a free travel.
-  if (readyAtMs > liveReadyAtMs) ctx.freeholdKeyReadyAtMs.set(ownerKey, readyAtMs);
 }
 
 /**

@@ -16,6 +16,14 @@
  *  construction site; retrofitting it after 05, 07 and 08a have producers would
  *  cost a migration. */
 declare const freeholdPlotIdBrand: unique symbol;
+/**
+ * PRESENTATION ONLY. The plot id is the opaque public identity a client echoes
+ * back on build-presence and visit frames, and nothing else: no sim rule may
+ * branch on it, no admission may test it, and no lookup may key on it. The
+ * OWNER KEY is the identity every sim rule uses. Two plots differing only in
+ * this string must behave identically, which is what makes it safe to generate,
+ * safe to show and safe to change.
+ */
 export type FreeholdPlotId = string & { readonly [freeholdPlotIdBrand]: true };
 
 /** Build an opaque plot identity from a raw string (a database row, a fixture,
@@ -43,14 +51,21 @@ export function asFreeholdPlotId(raw: string): FreeholdPlotId {
 /** The one freehold ladder; the Inn Room is tier 0 and free for every account. */
 export type FreeholdTier = 'inn_room' | 'cottage' | 'lodge' | 'manor' | 'keep' | 'citadel';
 
+/** The policy list, declared ONCE. The union below is derived from it and the
+ *  runtime set is built from it, so a fourth policy cannot be added to one and
+ *  forgotten in the other: adding it here widens the type and the admission
+ *  check together, and leaving it out of either is a compile error rather than
+ *  a durable value the loader silently refuses. */
+const VISIT_POLICY_IDS = ['closed', 'friends', 'open'] as const;
+
 /** Who may enter a freehold besides its owner (18 owns the admission rules). */
-export type FreeholdVisitPolicy = 'closed' | 'friends' | 'open';
+export type FreeholdVisitPolicy = (typeof VISIT_POLICY_IDS)[number];
 
 /** The same three policies as a runtime set, for the load-side admission check
  *  (a durable value outside it is preserved read-only, never repaired). Frozen
  *  through a facade because freezing a Set cannot disable its mutators, the
  *  FREEHOLD_TIER_IDS shape. */
-const VISIT_POLICIES = new Set<string>(['closed', 'friends', 'open']);
+const VISIT_POLICIES = new Set<string>(VISIT_POLICY_IDS);
 export const FREEHOLD_VISIT_POLICIES: ReadonlySet<string> = Object.freeze({
   get size(): number {
     return VISIT_POLICIES.size;

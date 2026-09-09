@@ -3201,16 +3201,27 @@ export class GameServer {
     // after the seed is a silent no-op that discards the owner's real plot. The
     // retain is synchronous here so a same-account character swap (the
     // fire-and-forget leave above) cannot drop the entry under the new session.
+    const freeholdOwnerKey = freeholdOwnerKeyForAccount(accountId);
     installLoadedFreehold(this.sim.ctx, accountId, meta.freehold);
-    this.freeholdPersist.retain(freeholdOwnerKeyForAccount(accountId));
-    const pid = this.sim.addPlayer(cls, name, {
-      state: state ?? undefined,
-      characterId,
-      bankBonus: meta.bankBonus,
-      freeholdOwnerKey: freeholdOwnerKeyForAccount(accountId),
-      appearance: meta.appearance ?? null,
-      tutorialGreetingSent: state === null,
-    });
+    this.freeholdPersist.retain(freeholdOwnerKey);
+    let pid: number;
+    try {
+      pid = this.sim.addPlayer(cls, name, {
+        state: state ?? undefined,
+        characterId,
+        bankBonus: meta.bankBonus,
+        freeholdOwnerKey,
+        appearance: meta.appearance ?? null,
+        tutorialGreetingSent: state === null,
+      });
+    } catch (err) {
+      // The retain is paired with the leave a COMPLETED join guarantees. A
+      // throw here means there is no session to leave, so the reference would
+      // be held for the life of the process and the entry could never be
+      // collected. Release it and let the failure propagate unchanged.
+      void this.freeholdPersist.flushAndRelease(freeholdOwnerKey);
+      throw err;
+    }
     const player = this.sim.entities.get(pid);
     if (player) {
       player.petSpecialCommandsSupported = meta.petSpecialWireVersion === PET_SPECIAL_WIRE_VERSION;

@@ -36,32 +36,16 @@ export {
   freeholdDescriptorFor,
   leaveFreehold,
 } from './instance';
-export {
-  type FreeholdLoadDiagnostic,
-  freeholdLoadDiagnostic,
-  warnFreeholdLoad,
-} from './load_report';
+
 export { type FreeholdOwnerStampSlice, freeholdKeyFor, freeholdOwnerKeyOfMeta } from './owner_key';
-export {
-  FREEHOLD_MAX_ID_LENGTH,
-  FREEHOLD_MAX_LAYOUT_ROWS,
-  FREEHOLD_MAX_OWNED_BYTES,
-  FREEHOLD_MAX_STORED_BYTES,
-  FREEHOLD_MAX_TROPHY_ROWS,
-  FREEHOLD_PERSIST_VERSION,
-  type FreeholdLoadResult,
-  type FreeholdRepairedField,
-  type FreeholdWriteRefusal,
-  freeholdStateFromPersisted,
-  freeholdWriteRefusal,
-  type NormalizeFreeholdOptions,
-  normalizeFreehold,
-  type PersistedFreehold,
-  type PersistedFreeholdLayoutRow,
-  type PersistedFreeholdTrophy,
-  persistedFreeholdBytes,
-  persistedFreeholdFromState,
-} from './persisted';
+// The DURABLE PERSISTENCE LEAF is deliberately almost absent from this list.
+// Its ceilings, its loader, its reporter and its refusal predicate have exactly
+// one consumer each, server/freehold_persist.ts, which imports them by path;
+// re-exporting them here would put a server-facing vocabulary on the surface
+// every UI and sim caller reads, for no consumer. Only the projection down to
+// the durable subset crosses the barrel, because a caller with a live record
+// legitimately wants it without knowing where the row is written.
+export { type PersistedFreehold, persistedFreeholdFromState } from './persisted';
 export { shouldSpawnSurfaceNpc } from './should_spawn_npc';
 // applyFreeholdOwnerStamp stays OFF the barrel: seedFreeholdOnJoin is its one
 // caller and the direct tests import state.ts, so no consumer outside the

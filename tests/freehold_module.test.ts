@@ -432,6 +432,44 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
   });
 });
 
+describe('the hearth clock map has exactly two writers, both in the sim', () => {
+  it('is written nowhere outside src/sim/freehold/', () => {
+    // The forward-only rule ("a durable clock behind the live one is a stale
+    // read, and moving the cooldown backwards hands out a free travel") is one
+    // rule, and a host that reaches into the Map itself would be a second place
+    // it has to be implemented and kept correct. The server installs its
+    // durable clock through mergeFreeholdKeyReadyAt instead.
+    const roots = ['server', 'src/net', 'src/game', 'src/ui', 'src/render'];
+    for (const root of roots) {
+      const dir = join(__dirname, '..', root);
+      const stack = [dir];
+      while (stack.length > 0) {
+        const at = stack.pop() as string;
+        for (const item of readdirSync(at, { withFileTypes: true })) {
+          const full = join(at, item.name);
+          if (item.isDirectory()) {
+            stack.push(full);
+            continue;
+          }
+          if (!item.name.endsWith('.ts')) continue;
+          const text = stripComments(readFileSync(full, 'utf8'));
+          expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.set\(/);
+          expect(text, full).not.toMatch(/freeholdKeyReadyAtMs\s*\.delete\(/);
+        }
+      }
+    }
+  });
+
+  it('names both sanctioned writers, so the claim is not vacuous', () => {
+    const src = stripComments(
+      readFileSync(join(__dirname, '..', 'src', 'sim', 'freehold', 'hearth_key.ts'), 'utf8'),
+    );
+    expect(src.match(/freeholdKeyReadyAtMs\.set\(/g) ?? []).toHaveLength(2);
+    expect(src).toContain('export function useHearthKey');
+    expect(src).toContain('export function mergeFreeholdKeyReadyAt');
+  });
+});
+
 describe('every durable field write bumps the record revision', () => {
   // THE COUPLING THE PERIODIC SWEEP DEPENDS ON. server/freehold_persist.ts
   // detects a moved record by comparing the live record's `rev` against the
