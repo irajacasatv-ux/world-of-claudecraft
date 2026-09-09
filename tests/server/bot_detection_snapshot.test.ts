@@ -180,9 +180,7 @@ describe('the game.ts side of the extraction', () => {
     const game = codeOnly(
       readFileSync(new URL('../../server/game.ts', import.meta.url), 'utf8'),
     ).replace(/\s+/g, ' ');
-    expect(game).toContain(
-      "import { botDetectionSnapshotFor } from './bot_detection_snapshot';",
-    );
+    expect(game).toContain("import { botDetectionSnapshotFor } from './bot_detection_snapshot';");
     // The coordinator still consumes it (a dead import would let a re-inlined
     // copy hide beside it), and hands the pid rather than the session.
     expect(game).toContain('botDetectionSnapshotFor(this.sim, session.pid, now)');
