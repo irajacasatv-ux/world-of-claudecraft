@@ -25,6 +25,7 @@ import type { FreeholdPlotId, FreeholdView } from '../src/sim/freehold/types';
 import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { SimEvent } from '../src/sim/types';
+import { stripComments } from './helpers/strip_comments';
 
 const makeSim = () => new Sim({ seed: 1, playerClass: 'warrior' });
 // A source-free event the drain control queues by hand; emit pushes it as is.
@@ -428,6 +429,70 @@ describe('freehold/state.ts record lifecycle (the guild-bank idiom)', () => {
     expect(lit.freeholds.has('acct:1')).toBe(true);
     expect(ensureFreeholdRecord(lit.ctx, 'acct:2')?.ownerKey).toBe('acct:2');
     expect(lit.freeholds.size).toBe(2);
+  });
+});
+
+describe('every durable field write bumps the record revision', () => {
+  // THE COUPLING THE PERIODIC SWEEP DEPENDS ON. server/freehold_persist.ts
+  // detects a moved record by comparing the live record's `rev` against the
+  // last written one, and it is the ONLY dirty detector that runs in this
+  // build: markDirty and save have no production caller. So a future mutator
+  // that writes `layout`, `trophies`, `tier`, `condition` or `visitPolicy`
+  // WITHOUT bumping `rev` is invisible to the sweep, every edit it makes is
+  // silently lost at logout, and oldest_dirty_age_ms reads 0 the whole time
+  // because the entry never became dirty.
+  //
+  // Cheap to pin here, expensive to discover from a player's missing
+  // furnishings, which is why it is pinned before the furnishing writer lands
+  // rather than after.
+  const DURABLE_FIELDS = ['layout', 'trophies', 'tier', 'condition', 'visitPolicy'] as const;
+
+  /** Exported function bodies of state.ts, comments stripped, keyed by name. */
+  function exportedBodies(): Map<string, string> {
+    const src = stripComments(
+      readFileSync(join(__dirname, '..', 'src', 'sim', 'freehold', 'state.ts'), 'utf8'),
+    );
+    const bodies = new Map<string, string>();
+    const starts = [...src.matchAll(/^export function (\w+)\(/gm)];
+    for (let i = 0; i < starts.length; i++) {
+      const from = starts[i].index ?? 0;
+      const to = i + 1 < starts.length ? (starts[i + 1].index ?? src.length) : src.length;
+      bodies.set(starts[i][1], src.slice(from, to));
+    }
+    return bodies;
+  }
+
+  it('finds the exported functions it means to check', () => {
+    // Anti-vacuity for the scanner: an extractor that silently matched nothing
+    // would pass this whole block forever.
+    const bodies = exportedBodies();
+    expect(bodies.size).toBeGreaterThanOrEqual(8);
+    expect(bodies.has('setFreeholdTier')).toBe(true);
+    expect(bodies.get('setFreeholdTier')).toContain('state.tier = tier');
+  });
+
+  it('bumps rev in the same function as any durable field write', () => {
+    // The two functions that legitimately write durable fields WITHOUT a bump:
+    // one builds the record from nothing and the other installs a record read
+    // off the durable row, and in both cases the revision arrives with the
+    // document rather than being advanced past it. Anything else is a mutator.
+    const CONSTRUCTORS = new Set(['defaultFreeholdState', 'freeholdStateFromPersisted']);
+    for (const [name, body] of exportedBodies()) {
+      if (CONSTRUCTORS.has(name)) continue;
+      const writesDurable = DURABLE_FIELDS.some((field) =>
+        new RegExp(`\\.${field}\\s*(=[^=]|\\.push\\(|\\.splice\\(|\\.pop\\(|\\.shift\\()`).test(
+          body,
+        ),
+      );
+      if (!writesDurable) continue;
+      expect(body, `${name} writes a durable field`).toMatch(/\brev\s*(\+= 1|\+\+|= )/);
+    }
+  });
+
+  it('is not vacuous: the one sanctioned mutator today IS caught by the scan', () => {
+    const body = exportedBodies().get('setFreeholdTier') ?? '';
+    expect(body).toMatch(/\.tier\s*=[^=]/);
+    expect(body).toContain('state.rev += 1');
   });
 });
 

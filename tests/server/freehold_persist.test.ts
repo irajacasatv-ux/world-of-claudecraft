@@ -24,6 +24,7 @@ import type { FreeholdHearthLoad } from '../../server/freehold_hearth_db';
 import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_FLUSH_MAX_PASSES,
+  FREEHOLD_PERSIST_LEAVE_FLUSH_MS,
   FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
   FREEHOLD_PERSIST_MAX_ACTIVE_LOADS,
   FREEHOLD_PERSIST_MAX_ACTIVE_WRITES,
@@ -218,7 +219,17 @@ function harness(options: HarnessOptions = {}) {
       errors.push(message);
     },
     scheduleDeadline(callback: () => void, ms: number): () => void {
-      const job: DeadlineJob = { ms, fire: callback, cancelled: false, fired: false };
+      const job: DeadlineJob = {
+        ms,
+        // Recorded, so "the deadline never fired" is a fact a case can assert
+        // rather than a field nothing ever writes.
+        fire: () => {
+          job.fired = true;
+          callback();
+        },
+        cancelled: false,
+        fired: false,
+      };
       deadlines.push(job);
       return () => {
         job.cancelled = true;
@@ -1276,6 +1287,58 @@ describe('reference counting and eviction', () => {
     await h.store.flushAndRelease(OWNER_KEY);
     await tick();
     expect(h.writeCount()).toBe(0);
+  });
+});
+
+describe('the leaving flush is bounded', () => {
+  it('stops waiting at its own deadline without cancelling the write', async () => {
+    // Under gate saturation a logout used to inherit the background write's
+    // whole budget: the permit wait plus a statement timeout, times up to four
+    // re-arm passes. Every leaving session would block for tens of seconds,
+    // GameServer.leave would back up and character leases would be released
+    // late, so reconnects wait out the lease. Giving up the WAIT is not giving
+    // up the WRITE.
+    const gate = deferred<FreeholdUpsertResult>();
+    const h = await loadedStore({ writeRow: async () => await gate.promise });
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(10);
+    expect(h.writeCount()).toBe(1);
+
+    let released = false;
+    const leaving = h.store.flushAndRelease(OWNER_KEY).then(() => {
+      released = true;
+    });
+    await tick(20);
+    // Still blocked: nothing has fired the deadline yet.
+    expect(released).toBe(false);
+
+    const deadline = h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS);
+    expect(deadline).toBeDefined();
+    deadline?.fire();
+    await leaving;
+    expect(released).toBe(true);
+
+    // The write was NOT cancelled and the entry was NOT dropped: it is still
+    // running, so the row still gets the owner's last edits.
+    expect(h.store.stats().running).toBe(1);
+    expect(h.store.stats().entries).toBe(1);
+    gate.resolve({ kind: 'updated', durableRev: '8' });
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    // And only once it settled did the entry go.
+    expect(h.store.stats().entries).toBe(0);
+  });
+
+  it('cancels its deadline when the write lands first, leaving no timer behind', async () => {
+    const h = await loadedStore();
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await h.store.flushAndRelease(OWNER_KEY);
+    const leaveDeadlines = h.deadlines.filter((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS);
+    expect(leaveDeadlines).toHaveLength(1);
+    expect(leaveDeadlines[0].cancelled).toBe(true);
+    expect(leaveDeadlines[0].fired).toBe(false);
   });
 });
 

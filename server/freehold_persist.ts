@@ -106,6 +106,31 @@ export const FREEHOLD_PERSIST_MAX_ACTIVE_LOADS = 4;
  */
 export const FREEHOLD_PERSIST_MAX_ACTIVE_WRITES = 4;
 
+/** The durable revision a recovery hold reports when there is no row to name
+ *  one. Its own constant rather than the hearth clock's ABSENT_HEARTH_REVISION,
+ *  which shares the value but names a different counter: this is the PLOT's
+ *  compare-and-swap fence. Dev-channel only, but a field named for the wrong
+ *  counter is how a later reader learns the wrong model. */
+export const FREEHOLD_ABSENT_DURABLE_REV = '0';
+
+/**
+ * How long GameServer.leave waits for a leaving session's last durable write
+ * before it stops blocking on it.
+ *
+ * Without a bound, leave inherits the background write's whole budget: the
+ * permit wait plus a statement bounded by DB_STATEMENT_TIMEOUT_MS, and
+ * FREEHOLD_PERSIST_FLUSH_MAX_PASSES re-arms can extend it further. Under gate
+ * saturation, which is exactly the mass-disconnect case, every leaving session
+ * would block for tens of seconds, GameServer.leave would back up, and
+ * character leases would be released late, so reconnects wait out the lease.
+ *
+ * Giving up the WAIT is not giving up the WRITE: the write is already queued
+ * and keeps running, the entry stays in the store until it settles, and the
+ * shutdown drain still waits for it. All this bounds is how long a logout
+ * blocks.
+ */
+export const FREEHOLD_PERSIST_LEAVE_FLUSH_MS = 2_000;
+
 /**
  * The zero-reference entry sweep is MARK AND SWEEP over two passes, so an
  * entry lives at least one full AUTOSAVE_SECONDS period after its last
@@ -659,7 +684,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         kind: 'unadmitted',
         detail,
         plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
-        durableRev: ABSENT_HEARTH_REVISION,
+        durableRev: FREEHOLD_ABSENT_DURABLE_REV,
       },
       { readyAtMs: 0, revision: ABSENT_HEARTH_REVISION },
     );
@@ -996,10 +1021,28 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         // edits. A clean entry is left alone: rewriting an unchanged document
         // on every logout would burn a durable revision per leave.
         arm(entry);
-        for (let pass = 0; pass < FREEHOLD_PERSIST_FLUSH_MAX_PASSES; pass++) {
-          const chain = entry.chain;
-          if (chain === null) break;
-          await chain.catch(() => undefined);
+        // BOUNDED. Past the deadline this stops WAITING, never the write: the
+        // write is queued and keeps running, the entry stays until it settles,
+        // and the shutdown drain still waits for it. A logout that inherited
+        // the background write's full budget would back up GameServer.leave
+        // under gate saturation and release character leases late.
+        let expired = false;
+        let onExpiry!: () => void;
+        const expiry = new Promise<void>((resolve) => {
+          onExpiry = resolve;
+        });
+        const cancelDeadline = scheduleDeadline(() => {
+          expired = true;
+          onExpiry();
+        }, FREEHOLD_PERSIST_LEAVE_FLUSH_MS);
+        try {
+          for (let pass = 0; pass < FREEHOLD_PERSIST_FLUSH_MAX_PASSES && !expired; pass++) {
+            const chain = entry.chain;
+            if (chain === null) break;
+            await Promise.race([chain.catch(() => undefined), expiry]);
+          }
+        } finally {
+          cancelDeadline();
         }
       }
       entry.refs = Math.max(0, entry.refs - 1);
