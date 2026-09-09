@@ -2080,6 +2080,63 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().leaveCaptures).toBe(1);
   });
 
+  it('never stamps a record the write did not come from', async () => {
+    // THE SIXTH PATH TO A LOST HOUSE, and the subtlest: the stamp is what gives
+    // a record the row's durable identity, and identity is the only thing the
+    // write seal can tell records apart by. A write serving from its capture
+    // runs after the record was evicted; a join landing inside its round trip
+    // seeds a fresh default. Stamping THAT hands an empty Inn Room the manor's
+    // identity, the seal stops firing, and the next sweep writes the default
+    // over the row with every counter reading healthy.
+    let live = true;
+    let granted = 0;
+    const permit = deferred<{ release(): void } | null>();
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => (live ? persistedFixture({ rev: 6 }) : null),
+      hasLive: () => live,
+      // The write parks on the gate, which is what puts the eviction BEFORE it
+      // samples its document.
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 1 ? { release: () => {} } : await permit.promise;
+      },
+      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
+    });
+    void h.store.flushAndRelease(OWNER_KEY);
+    await tick(10);
+    // removePlayer evicts while the write is still parked, so the write will
+    // serve from its capture.
+    live = false;
+    permit.resolve({ release: () => {} });
+    await tick(20);
+    // The join lands and seeds a default while the row write is in flight.
+    live = true;
+    await tick(40);
+    expect(h.writeCount()).toBe(1);
+    // The stamp must NOT have gone out: this write served from its capture, so
+    // whatever record exists now is not the one it wrote.
+    expect(h.stamped).toEqual([]);
+  });
+
+  it('DOES stamp when the document came from the live record', async () => {
+    // The anti-vacuity arm. Without it the case above would pass on a store
+    // that had simply stopped stamping, which would leave a fresh account's
+    // record carrying the pending identity for its whole first session.
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      serialize: () => persistedFixture({ plotId: PENDING_FREEHOLD_PLOT_ID, rev: 1 }),
+      writeRow: async () => ({ kind: 'inserted', durableRev: '1' }),
+    });
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.stamped).toHaveLength(1);
+    expect(h.stamped[0]).toContain('plot:minted');
+  });
+
   it('keeps the capture when the handshake that read it never joins', async () => {
     // preload runs BEFORE the character lease, and a lease already held, no
     // such character, a forced rename, a throwing character read and a refused

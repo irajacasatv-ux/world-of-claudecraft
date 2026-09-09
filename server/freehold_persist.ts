@@ -1028,6 +1028,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     generation: number,
     snapshotAtMs: number,
     written: PersistedFreehold,
+    fromLive: boolean,
   ): boolean {
     if (result.kind === 'inserted' || result.kind === 'updated') {
       counters.writes++;
@@ -1038,7 +1039,18 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // rejoin race and a wiped house.
       entry.state = written;
       // ...and the LIVE record learns it too, so the three agree from here on.
-      ports.stampPlotId(entry.ownerKey, entry.plotId);
+      //
+      // ONLY when this document CAME from the live record. The stamp lands on
+      // whatever record exists at commit time, and that is not always the one
+      // the write came from: a write that served from its leave capture ran
+      // after the record was evicted, and a join landing inside its round trip
+      // seeds a fresh default. Stamping there hands the empty default the row's
+      // durable identity, which is the only discriminator the seal below has,
+      // so the next sweep writes an empty Inn Room over a real house and the
+      // compare-and-swap accepts it with every counter reading healthy. That is
+      // exactly the invisible loss the seal exists to prevent, reached through
+      // the seal's own input.
+      if (fromLive) ports.stampPlotId(entry.ownerKey, entry.plotId);
       entry.writeErrors = 0;
       if (entry.committedGeneration < generation) entry.committedGeneration = generation;
       // Every edit that survived this write arrived at or after the snapshot,
@@ -1189,7 +1201,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         expectedDurableRev: entry.durableRev,
       });
       counters.writeMsTotal += Math.max(0, ports.nowMs() - writeStartMs);
-      return applyWriteResult(entry, result, generation, snapshotAtMs, document);
+      // `live !== null` says the document came from the record the sim is
+      // serving, which is what makes stamping it safe. See applyWriteResult.
+      return applyWriteResult(entry, result, generation, snapshotAtMs, document, live !== null);
     } finally {
       permit.release();
     }
