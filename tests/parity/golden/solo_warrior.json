@@ -10,14 +10,14 @@
     "base mobSwing (mob swings the player)",
     "rollLoot via mob death (L1, ~5876/6036)"
   ],
-  "draws": 313,
-  "drawDigest": "bd98ebf6",
+  "draws": 309,
+  "drawDigest": "f78161ea",
   "frames": [
     {
       "tick": 0,
       "time": 0,
       "nextId": 999,
-      "state": "06cbf5e3",
+      "state": "7402a6ff",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -46,6 +46,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
@@ -164,7 +165,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 1000,
-      "state": "54196638",
+      "state": "4753febc",
       "events": "7d951bad",
       "rng": {
         "draws": 7,
@@ -175,7 +176,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 1000,
-      "state": "209848d2",
+      "state": "ab2afc9a",
       "events": "741638a5",
       "rng": {
         "draws": 7,
@@ -186,7 +187,7 @@
       "tick": 60,
       "time": 3,
       "nextId": 1000,
-      "state": "fa18e912",
+      "state": "968a885a",
       "events": "80105553",
       "rng": {
         "draws": 174,
@@ -197,11 +198,11 @@
       "tick": 72,
       "time": 3.6,
       "nextId": 1000,
-      "state": "d52ddcb9",
+      "state": "64e6bb1f",
       "events": "7e876716",
       "rng": {
-        "draws": 267,
-        "digest": "ec09b258"
+        "draws": 263,
+        "digest": "d3f0124f"
       },
       "label": "kill",
       "players": [
@@ -226,6 +227,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
@@ -440,11 +442,11 @@
       "tick": 76,
       "time": 3.8,
       "nextId": 1000,
-      "state": "004a0da1",
+      "state": "4401a695",
       "events": "ffd1bba2",
       "rng": {
-        "draws": 313,
-        "digest": "bd98ebf6"
+        "draws": 309,
+        "digest": "f78161ea"
       },
       "label": "final",
       "players": [
@@ -469,6 +471,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {

@@ -23,6 +23,9 @@ import { audio } from '../../game/audio';
 import { ITEMS } from '../../sim/data';
 import type { ArmorType } from '../../sim/types';
 import type { IWorld } from '../../world_api';
+import { buddyCosmeticDisplayName, buddyDisplayName } from '../buddy_event_lines';
+import { craftNameText } from '../craft_name_view';
+import { deedName } from '../deed_i18n';
 import { markDialogRoot } from '../dialog_root';
 import { itemDisplayName, itemSetBonusField, tEntity } from '../entity_i18n';
 import { esc } from '../esc';
@@ -30,7 +33,14 @@ import { formatMoney, formatNumber, type TranslationKey, t } from '../i18n';
 import type { PainterHostPresentation } from '../painter_host';
 import { svgIcon } from '../ui_icons';
 import { itemIconImgHtml } from '../unknown_item_icon';
-import type { CollectionDropSource, CollectionItemFacts } from './collection_sources';
+import type {
+  BuddyCosmeticFacts,
+  BuddySourceFacts,
+  CollectionBossDropSource,
+  CollectionDropSource,
+  CollectionItemFacts,
+  CollectionVendorSource,
+} from './collection_sources';
 import {
   buildCollectionsView,
   COLLECTIONS_TABS,
@@ -67,6 +77,16 @@ export interface CollectionsWindowDeps extends PainterHostPresentation {
   ownedBuddyKeys(): ReadonlySet<string>;
   ownedMountKeys(): ReadonlySet<string>;
   ownedItemIds(): ReadonlySet<string>;
+  /** The rest of the buddy collection (IWorldBuddies): unlocked looks, the
+   *  worn look per buddy, the boss-roll wins pending their reveal, and the
+   *  buddy currently out (the entity mirror's buddyKey, '' for none). */
+  ownedBuddyCosmetics(): ReadonlySet<string>;
+  equippedBuddyCosmetics(): Readonly<Record<string, string>>;
+  pendingBuddyKeys(): ReadonlySet<string>;
+  activeBuddyKey(): string;
+  /** The two buddy commands the pane sends; the world re-validates both. */
+  summonBuddy(key: string): void;
+  equipBuddyCosmetic(key: string, cosmeticId: string | null): void;
   /** key -> renderer visual key for mount rows (src/render/mount_visuals.ts). */
   buddyVisualKeys(): Readonly<Partial<Record<string, string>>>;
   mountVisualKeys(): Readonly<Partial<Record<string, string>>>;
@@ -250,6 +270,9 @@ export class CollectionsWindow {
   private collections(): CollectionsView {
     return buildCollectionsView({
       ownedBuddyKeys: this.deps.ownedBuddyKeys(),
+      ownedBuddyCosmetics: this.deps.ownedBuddyCosmetics(),
+      equippedBuddyCosmetics: this.deps.equippedBuddyCosmetics(),
+      pendingBuddyKeys: this.deps.pendingBuddyKeys(),
       ownedMountKeys: this.deps.ownedMountKeys(),
       ownedItemIds: this.deps.ownedItemIds(),
       buddyVisualKeys: this.deps.buddyVisualKeys(),
@@ -271,6 +294,10 @@ export class CollectionsWindow {
       this.tab,
       selectedKey,
       view.buddies.filter((row) => row.owned).length,
+      view.buddies.filter((row) => row.pending).length,
+      this.deps.activeBuddyKey(),
+      this.deps.ownedBuddyCosmetics().size,
+      this.deps.equippedBuddyCosmetics(),
       view.mounts.filter((row) => row.owned).length,
       view.setGroups.reduce((sum, group) => sum + group.sets.length, 0),
       [...this.exchangePrices].sort(),
@@ -356,10 +383,12 @@ export class CollectionsWindow {
       .map((row) => {
         const state = row.owned
           ? 'hudChrome.collections.state.owned'
-          : row.obtainable
-            ? 'hudChrome.collections.state.notOwned'
-            : 'hudChrome.collections.state.unavailable';
-        const name = row.itemId ? itemDisplayName(ITEMS[row.itemId]) : row.name;
+          : row.pending
+            ? 'hudChrome.collections.state.pending'
+            : row.obtainable
+              ? 'hudChrome.collections.state.notOwned'
+              : 'hudChrome.collections.state.unavailable';
+        const name = this.entryName(row);
         return `
         <button type="button" role="listitem" data-key="${esc(row.key)}"
           class="col-row${row.key === selectedKey ? ' active' : ''}${row.obtainable ? '' : ' col-locked'}">
@@ -411,25 +440,6 @@ export class CollectionsWindow {
       return `<p class="col-note">${esc(t('hudChrome.collections.detail.noItem'))}</p>`;
     }
     const lines: string[] = [];
-    if (facts.globalDrop) {
-      lines.push(
-        this.line(
-          'hudChrome.collections.detail.dropLabel',
-          t('hudChrome.collections.detail.globalDrop', {
-            chance: pct(facts.globalDrop.chance),
-            count: num(facts.globalDrop.poolSize),
-          }),
-        ),
-      );
-    }
-    if (facts.fishingDrop !== null) {
-      lines.push(
-        this.line(
-          'hudChrome.collections.detail.dropLabel',
-          t('hudChrome.collections.detail.fishingDrop', { chance: pct(facts.fishingDrop) }),
-        ),
-      );
-    }
     for (const drop of facts.drops) {
       lines.push(
         this.line(
@@ -495,17 +505,193 @@ export class CollectionsWindow {
     return `<p class="col-line"><span class="col-line-label">${esc(t(label))}</span><span class="col-line-value">${esc(value)}</span></p>`;
   }
 
+  /** A buddy row is named after the companion itself (the follower's mob
+   *  name, the same key its nameplate reads); a mount row after its reins. */
+  private entryName(row: CollectionEntryView): string {
+    if (row.buddyFacts) return buddyDisplayName(row.key);
+    return row.itemId ? itemDisplayName(ITEMS[row.itemId]) : row.name;
+  }
+
   private entryDetailHtml(rows: readonly CollectionEntryView[], selectedKey: string): string {
     const row = rows.find((candidate) => candidate.key === selectedKey);
     if (!row) return '';
-    const name = row.itemId ? itemDisplayName(ITEMS[row.itemId]) : row.name;
+    const name = this.entryName(row);
     const loreKey = BUDDY_LORE[row.key];
     const lore = loreKey ? `<p class="col-lore">${esc(t(loreKey))}</p>` : '';
     return `
       <div class="col-preview" data-preview="${esc(row.visualKey ?? '')}" data-tint="${row.tint}"></div>
       <h3 class="col-detail-name q-${esc(row.quality)}">${esc(name)}</h3>
+      ${row.buddyFacts ? this.buddyActionHtml(row) : ''}
       ${lore}
-      ${this.factsHtml(row.facts)}`;
+      ${row.buddyFacts ? this.buddyFactsHtml(row.buddyFacts) : this.factsHtml(row.facts)}
+      ${row.buddyFacts ? this.looksHtml(row) : ''}`;
+  }
+
+  /** Summon or dismiss the selected companion: one button, only for a
+   *  collected buddy. The label follows the entity mirror (which buddy is out). */
+  private buddyActionHtml(row: CollectionEntryView): string {
+    if (!row.owned) return '';
+    const out = this.deps.activeBuddyKey() === row.key;
+    return `<button type="button" class="btn col-action" data-summon="${esc(row.key)}">${esc(
+      t(out ? 'hudChrome.collections.actions.dismiss' : 'hudChrome.collections.actions.summon'),
+    )}</button>`;
+  }
+
+  private vendorLines(vendors: readonly CollectionVendorSource[], label: TranslationKey): string[] {
+    return vendors.map((vendor) => {
+      const price =
+        vendor.currency === 'gold'
+          ? formatMoney(vendor.price)
+          : t(
+              vendor.currency === 'honor'
+                ? 'hudChrome.collections.detail.honorPrice'
+                : 'hudChrome.collections.detail.marksPrice',
+              { amount: num(vendor.price) },
+            );
+      return this.line(
+        label,
+        t('hudChrome.collections.detail.vendor', {
+          npc: vendor.npcName,
+          location: vendor.zoneName,
+          price,
+        }),
+      );
+    });
+  }
+
+  private bossDropLine(drop: CollectionBossDropSource): string {
+    const key: TranslationKey = drop.heroicOnly
+      ? 'hudChrome.collections.source.bossDropHeroicOnly'
+      : drop.heroicChance !== null
+        ? 'hudChrome.collections.source.bossDropWithHeroic'
+        : 'hudChrome.collections.source.bossDrop';
+    return this.line(
+      'hudChrome.collections.source.bossLabel',
+      t(key, {
+        mob: tEntity({ kind: 'mob', id: drop.bossId, field: 'name' }),
+        location: drop.location,
+        chance: pct(drop.chance),
+        heroicChance: drop.heroicChance === null ? '' : pct(drop.heroicChance),
+      }),
+    );
+  }
+
+  /** The companion's sources: per-player boss rolls, the deed, the token's
+   *  vendors. No bind or sell line: a companion is a collection flag, never a
+   *  bag item. */
+  private buddyFactsHtml(facts: BuddySourceFacts): string {
+    const lines: string[] = facts.bossDrops.map((drop) => this.bossDropLine(drop));
+    if (facts.bossDrops.length > 0) {
+      lines.push(`<p class="col-note">${esc(t('hudChrome.collections.source.rollNote'))}</p>`);
+    }
+    if (facts.deedId) {
+      lines.push(
+        this.line(
+          'hudChrome.collections.source.deedLabel',
+          t('hudChrome.collections.source.deed', { deed: deedName(facts.deedId) }),
+        ),
+      );
+    }
+    if (facts.token) {
+      lines.push(
+        ...this.vendorLines(facts.token.vendors, 'hudChrome.collections.detail.vendorLabel'),
+      );
+    }
+    if (lines.length === 0) {
+      lines.push(
+        this.line(
+          'hudChrome.collections.detail.dropLabel',
+          t('hudChrome.collections.detail.noSource'),
+        ),
+      );
+    }
+    return lines.join('');
+  }
+
+  private lookSourceLines(facts: BuddyCosmeticFacts): string[] {
+    const lines: string[] = [];
+    for (const challenge of facts.challenges) {
+      const mob = tEntity({ kind: 'mob', id: challenge.bossId, field: 'name' });
+      lines.push(
+        this.line(
+          'hudChrome.collections.source.challengeLabel',
+          challenge.kind === 'speed'
+            ? t('hudChrome.collections.source.challengeSpeed', {
+                mob,
+                seconds: num(challenge.amount),
+              })
+            : t('hudChrome.collections.source.challengeDps', { mob, dps: num(challenge.amount) }),
+        ),
+      );
+    }
+    if (facts.deedId) {
+      lines.push(
+        this.line(
+          'hudChrome.collections.source.deedLabel',
+          t('hudChrome.collections.source.deed', { deed: deedName(facts.deedId) }),
+        ),
+      );
+    }
+    if (facts.craft) {
+      lines.push(
+        this.line(
+          'hudChrome.collections.source.craftLabel',
+          t('hudChrome.collections.source.craft', {
+            item: itemDisplayName(ITEMS[facts.craft.itemId]),
+            profession: craftNameText(facts.craft.professionId),
+          }),
+        ),
+      );
+    }
+    lines.push(...this.vendorLines(facts.vendors, 'hudChrome.collections.detail.vendorLabel'));
+    if (facts.grantOnly) {
+      lines.push(
+        this.line(
+          'hudChrome.collections.source.grantLabel',
+          t('hudChrome.collections.source.grantOnly'),
+        ),
+      );
+    }
+    if (lines.length === 0) {
+      lines.push(
+        this.line(
+          'hudChrome.collections.detail.dropLabel',
+          t('hudChrome.collections.detail.noSource'),
+        ),
+      );
+    }
+    return lines;
+  }
+
+  /** The looks authored for the selected companion, each with its state, its
+   *  sources, and a Wear/Remove control once unlocked (collected buddy only). */
+  private looksHtml(row: CollectionEntryView): string {
+    const rows = row.looks
+      .map((look) => {
+        const state = look.worn
+          ? 'hudChrome.collections.looks.worn'
+          : look.owned
+            ? 'hudChrome.collections.looks.unlocked'
+            : 'hudChrome.collections.looks.locked';
+        const control =
+          look.owned && row.owned
+            ? look.worn
+              ? `<button type="button" class="btn col-action" data-unwear="${esc(row.key)}">${esc(t('hudChrome.collections.actions.remove'))}</button>`
+              : `<button type="button" class="btn col-action" data-wear="${esc(look.id)}" data-wear-key="${esc(row.key)}">${esc(t('hudChrome.collections.actions.wear'))}</button>`
+            : '';
+        return `
+        <li class="col-look${look.owned ? ' col-owned' : ' col-locked'}">
+          <span class="col-swatch" style="--col-swatch: #${look.tint.toString(16).padStart(6, '0')}" aria-hidden="true"></span>
+          <span class="col-row-name">${esc(buddyCosmeticDisplayName(look.id))}</span>
+          <span class="col-row-state">${esc(t(state as TranslationKey))}</span>
+          ${control}
+          ${this.lookSourceLines(look.facts).join('')}
+        </li>`;
+      })
+      .join('');
+    return `
+      <h4 class="col-group-head">${esc(t('hudChrome.collections.looks.title'))}</h4>
+      ${rows ? `<ul class="col-looks">${rows}</ul>` : `<p class="col-note">${esc(t('hudChrome.collections.looks.none'))}</p>`}`;
   }
 
   private setDetailHtml(sets: readonly CollectionSetView[], selectedKey: string): string {
@@ -607,6 +793,31 @@ export class CollectionsWindow {
       const item = ITEMS[row.dataset.item ?? ''];
       if (!item) continue;
       this.deps.attachTooltip(row, () => this.deps.itemTooltip(item));
+    }
+    // The buddy commands: summon/dismiss the selected companion, wear or
+    // remove a look. Server-authoritative: the next snapshot repaints the pane.
+    root.querySelector<HTMLElement>('[data-summon]')?.addEventListener('click', (ev) => {
+      const key = (ev.currentTarget as HTMLElement).dataset.summon ?? '';
+      if (!key) return;
+      audio.click();
+      this.deps.summonBuddy(key);
+    });
+    for (const button of root.querySelectorAll<HTMLElement>('[data-wear]')) {
+      button.addEventListener('click', () => {
+        const id = button.dataset.wear ?? '';
+        const key = button.dataset.wearKey ?? '';
+        if (!id || !key) return;
+        audio.click();
+        this.deps.equipBuddyCosmetic(key, id);
+      });
+    }
+    for (const button of root.querySelectorAll<HTMLElement>('[data-unwear]')) {
+      button.addEventListener('click', () => {
+        const key = button.dataset.unwear ?? '';
+        if (!key) return;
+        audio.click();
+        this.deps.equipBuddyCosmetic(key, null);
+      });
     }
     root.querySelector('[data-close]')?.addEventListener('click', () => this.close());
     const preview = root.querySelector<HTMLElement>('[data-preview]');

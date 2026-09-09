@@ -529,6 +529,11 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
                 ),
               },
             );
+            // Buddy grants queued while the character was offline (the admin
+            // grant endpoint's offline arm) land now, fresh-join arm only: a
+            // resume never re-reads the queue. Fire-and-forget; the drain owns
+            // its own logging and never fails the handshake.
+            if (!('error' in result)) void game.drainBuddyGrants(result);
           } finally {
             // Decrement on every fresh-arm exit path (join completed, lease refused,
             // or a thrown DB error): a successful join is now counted by

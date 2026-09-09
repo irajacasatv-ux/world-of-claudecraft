@@ -26,6 +26,8 @@
 // render/ui/game/net/DOM/Three, no Math.random/Date.now), so it runs unchanged
 // in Node, the browser, and the headless RL env.
 
+import { grantBuddy, grantBuddyCosmetic } from './buddies';
+import { BUDDY_COSMETIC_DEED_REWARDS, BUDDY_DEED_REWARDS } from './content/buddy_sources';
 import { DEED_ORDER, DEEDS, DEEDS_ERA } from './content/deeds';
 import { GATHERING_PROFESSION_IDS } from './content/professions';
 import { pointsSpent } from './content/talents';
@@ -658,6 +660,14 @@ export function grantDeed(
     pid: meta.entityId,
     ...(opts?.retro ? { retro: true } : {}),
   });
+  // Achievement pets and looks (content/buddy_sources.ts): a deed that names
+  // a companion or a cosmetic grants it on the same call, retro grants
+  // included (a character who earned the deed before the pet existed gets it
+  // at their next login). Both grants are idempotent and draw no rng.
+  const buddyReward = BUDDY_DEED_REWARDS[deedId];
+  if (buddyReward) grantBuddy(ctx, meta.entityId, buddyReward);
+  const lookReward = BUDDY_COSMETIC_DEED_REWARDS[deedId];
+  if (lookReward) grantBuddyCosmetic(ctx, meta.entityId, lookReward);
   // Horizons titles score catalogRankOwned. Live grant of a title relic can
   // cross a Curator threshold; keep display rank and zero-Renown bridges aligned
   // without waiting for join retro. The rank bridges for ranks 2 to 4 are

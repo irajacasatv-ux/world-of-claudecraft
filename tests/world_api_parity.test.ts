@@ -441,6 +441,11 @@ export const IWORLD_MEMBERS = [
   { name: 'mountRaceView', kind: 'method' }, // read-returning
   // --- cosmetic buddies (IWorldBuddies) ---
   { name: 'ownedBuddies', kind: 'method' }, // read-returning
+  { name: 'ownedBuddyCosmetics', kind: 'method' }, // read-returning
+  { name: 'equippedBuddyCosmetics', kind: 'method' }, // read-returning
+  { name: 'pendingBuddies', kind: 'method' }, // read-returning
+  { name: 'summonBuddy', kind: 'method' },
+  { name: 'equipBuddyCosmetic', kind: 'method' },
   { name: 'toggleBuddy', kind: 'method' },
   { name: 'setBuddyAutoloot', kind: 'method' },
   // --- Dungeon Finder facet (IWorldDungeonFinder) ---
@@ -666,9 +671,9 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // even when the total agrees. Only running the suite says what these
     // numbers really are; never reconcile them by arithmetic in the diff (the
     // numbers below were set from a suite run, not from this narrative).
-    expect(IWORLD_MEMBERS.length).toBe(346);
+    expect(IWORLD_MEMBERS.length).toBe(351);
     expect(DATA_MEMBERS.length).toBe(95);
-    expect(METHOD_MEMBERS.length).toBe(251);
+    expect(METHOD_MEMBERS.length).toBe(256);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -800,10 +805,12 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'enterDungeon',
       'entities',
       'equipBag',
+      'equipBuddyCosmetic',
       'equipItem',
       'equipItemToSlot',
       'equipment',
       'equipmentInstances',
+      'equippedBuddyCosmetics',
       'feedPet',
       'forfeitCardDuel',
       'friendAdd',
@@ -894,6 +901,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'nodeRespawnSeconds',
       'openCommissionOrder',
       'ownedBuddies',
+      'ownedBuddyCosmetics',
       'ownedMounts',
       'partyAccept',
       'partyDecline',
@@ -903,6 +911,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'partyLeave',
       'partyPromote',
       'partyTradeMsRemaining',
+      'pendingBuddies',
       'petAttack',
       'petSpecial',
       'petSpecialCommandsSupported',
@@ -986,6 +995,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'stationPlacements',
       'stopAutoAttack',
       'submitLootRoll',
+      'summonBuddy',
       'switchLoadout',
       'tabTarget',
       'tabTargetPrev',
@@ -1210,8 +1220,10 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'enterDelve',
       'enterDungeon',
       'equipBag',
+      'equipBuddyCosmetic',
       'equipItem',
       'equipItemToSlot',
+      'equippedBuddyCosmetics',
       'feedPet',
       'forfeitCardDuel',
       'friendAdd',
@@ -1282,6 +1294,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'nodeRespawnSeconds',
       'openCommissionOrder',
       'ownedBuddies',
+      'ownedBuddyCosmetics',
       'ownedMounts',
       'partyAccept',
       'partyDecline',
@@ -1290,6 +1303,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'partyLeave',
       'partyPromote',
       'partyTradeMsRemaining',
+      'pendingBuddies',
       'petAttack',
       'petSpecial',
       'petTaunt',
@@ -1352,6 +1366,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'startTutorial',
       'stopAutoAttack',
       'submitLootRoll',
+      'summonBuddy',
       'switchLoadout',
       'tabTarget',
       'tabTargetPrev',
@@ -1874,6 +1889,11 @@ type _ExhaustMounts = AssertNever<Exclude<keyof IWorldMounts, (typeof FACET_MOUN
 
 const FACET_BUDDIES = [
   'ownedBuddies',
+  'ownedBuddyCosmetics',
+  'equippedBuddyCosmetics',
+  'pendingBuddies',
+  'summonBuddy',
+  'equipBuddyCosmetic',
   'toggleBuddy',
   'setBuddyAutoloot',
 ] as const satisfies readonly (keyof IWorldBuddies)[];
@@ -2039,8 +2059,8 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(346);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(346);
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(351);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(351);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

@@ -349,6 +349,13 @@ import type { PerfCaptureResult, PerfCaptureStatus } from './perf_capture_types'
 
 export type { PerfCaptureResult, PerfCaptureStatus } from './perf_capture_types';
 
+import {
+  applyBuddyGrantToSim,
+  type BuddyGrant,
+  dispatchBuddyCommand,
+  drainPendingBuddyGrants,
+  emitBuddySelfKeys,
+} from './buddy_wire';
 import { recordFtueDeath, recordFtueQuest, recordLevelUp } from './progress_events';
 import { eventLeadDayKey, resetDayKey } from './raid_reset';
 import { REALM, REALM_PUBLIC_ORIGIN, REALM_RESET_TIME_ZONE } from './realm';
@@ -6147,6 +6154,28 @@ export class GameServer {
     return 'ok';
   }
 
+  // Buddy grant (owner plan 2026-09-09): attach a companion or unlock a look
+  // on a LIVE character through the sim's own grant path, the channel the
+  // monthly ladder / top-parse / zodiac awards land through. Offline targets
+  // are queued by the admin handler (server/db.ts buddy grants) and drained
+  // at the character's next join (drainPendingBuddyGrants).
+  adminGrantBuddy(characterId: number, grant: BuddyGrant): 'ok' | 'offline' | 'already_owned' {
+    const session = this.sessionByCharacterId(characterId);
+    if (!session) return 'offline';
+    if (!applyBuddyGrantToSim(this.sim, session.pid, grant)) return 'already_owned';
+    void this.saveCharacter(session).catch((err) =>
+      console.error(`grant-buddy save failed for ${session.name}:`, err),
+    );
+    return 'ok';
+  }
+
+  /** Join-time drain of the grants queued while this character was offline. */
+  drainBuddyGrants(session: ClientSession): Promise<void> {
+    return drainPendingBuddyGrants(this.sim, session.pid, session.characterId, session.name, () =>
+      this.saveCharacter(session),
+    );
+  }
+
   // R35 GM restore: re-mint a lost tool-effect slot row on a LIVE character.
   // The sim action owns validation, tool-rarity charge sizing, and the
   // success event the player sees; it is server-admin-only by design (the
@@ -7133,17 +7162,13 @@ export class GameServer {
       case 'mount_toggle':
         sim.toggleMountFor(pid);
         break;
-      // Cosmetic buddies: dismiss-only (summoning a specific one is an item
-      // use, routed through use_item -> summonBuddyItem). The Sim re-validates
-      // ownership; the entity mirror `bud` field carries the result.
+      // Cosmetic buddies (server/buddy_wire.ts): the Sim re-validates every
+      // key and ownership; the entity mirror and the self keys carry results.
       case 'buddy_toggle':
-        sim.toggleBuddyFor(pid);
-        break;
-      // Buddy autoloot: a preference flip, settable with no buddy out. The
-      // errand itself (walking to the player's own corpses and looting them)
-      // is entirely server-side, in the Sim tick.
+      case 'buddy_summon':
+      case 'buddy_cosmetic':
       case 'buddy_autoloot':
-        if (typeof msg.on === 'boolean') sim.setBuddyAutolootFor(pid, msg.on);
+        dispatchBuddyCommand(sim, pid, command, msg);
         break;
       // Riding lesson: the Sim re-validates everything (level, range, quest
       // state, fee, session state).
@@ -9270,11 +9295,8 @@ export class GameServer {
       // flag, not the modulo, is what carries correctness here. Wire key
       // `mntOwn`.
       maybe('mntOwn', this.sim.ownedMountsFor(anchorSession.pid));
-      // The owned buddy collection (IWorldBuddies.ownedBuddies): every buddy
-      // whose whistle sits in bags or bank. Same inputs/gating story as
-      // mntOwn above (bags heavy-gated, bank writes marked dirty). Wire key
-      // `budOwn`.
-      maybe('budOwn', this.sim.ownedBuddiesFor(anchorSession.pid));
+      // The buddy collection (IWorldBuddies), four keys (server/buddy_wire.ts).
+      emitBuddySelfKeys(this.sim, anchorSession.pid, maybe);
       maybe('buyback', meta.vendorBuyback);
       maybe('equip', meta.equipment);
       maybe('einst', meta.equipmentInstance);

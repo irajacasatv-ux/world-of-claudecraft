@@ -44,6 +44,7 @@ import {
   lockCharacterSaveEffectAccountsOnClient as lockSaveEffectAccounts,
   writeBankLedgerSaveEffectsOnClient,
 } from './bank_ledger_save_effects_db';
+import { BUDDY_GRANTS_SCHEMA } from './buddy_grants_db';
 import { deleteOwnedCharacterRow } from './character_delete_db';
 import {
   configureLifetimeXpRankCache,
@@ -1397,6 +1398,7 @@ export async function ensureSchema(): Promise<void> {
     // Both FK-reference accounts(id), so they run after SCHEMA. Applied
     // unconditionally (idempotent), like the other schema modules.
     await client.query(MAPS_SCHEMA);
+    await client.query(BUDDY_GRANTS_SCHEMA); // offline buddy grants, after SCHEMA
     await client.query(USER_ASSETS_SCHEMA);
     // Audit trail for the map/asset moderation actions above (unpublish,
     // block, unblock). FK-references accounts(id), so it runs after SCHEMA.

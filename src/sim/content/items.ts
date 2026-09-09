@@ -414,22 +414,21 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     noDiscard: true,
     sellValue: 0,
   },
-  // Cosmetic buddy whistle. Owning the item IS owning the buddy (src/sim/
-  // buddies.ts buddyOwned); it stays valid from the bank too, and it
-  // transfers like any other unbound item, exactly like mount reins but with
-  // no riding-skill gate (the buddy has zero gameplay effect).
-  //
-  // Every whistle in this file is DISCARDABLE and sells to any vendor for a
-  // flat 5g (2026-09-04 owner call): no noDiscard, no noVendorSell, one
-  // sellValue across the roster whatever the rarity, so a duplicate a player
-  // does not want is bag space back rather than a permanent passenger.
-  // Selling one gives the buddy up, exactly as discarding it does; that is
-  // the same trade mount reins already make.
+  // Buddy whistles are GRANT TOKENS (owner plan 2026-09-09): using one
+  // attaches the companion to the character and consumes it (src/sim/
+  // buddies.ts useBuddyToken); ownership is the character's collection flag,
+  // never the item. Every whistle is SOULBOUND and listed by NO loot table:
+  // companions are won per player off bosses or earned through deeds
+  // (content/buddy_sources.ts), and a whistle only exists so a prestige
+  // vendor, a letter or an admin grant can hand one over. A duplicate token is
+  // refused unconsumed, and every whistle still sells for a flat 5g so an
+  // unwanted duplicate is bag space back rather than a permanent passenger.
   whistle_ember_fox: {
     id: 'whistle_ember_fox',
     name: 'Ember Fox Whistle',
     kind: 'buddy',
     buddy: 'ember_fox',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -438,6 +437,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Moss Hare Whistle',
     kind: 'buddy',
     buddy: 'moss_hare',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -452,6 +452,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Frog Whistle',
     kind: 'buddy',
     buddy: 'frog',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -460,6 +461,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Crimson Claw Crab Whistle',
     kind: 'buddy',
     buddy: 'crimson_claw_crab',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -468,6 +470,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Golden Sentinel Whistle',
     kind: 'buddy',
     buddy: 'golden_sentinel',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -476,6 +479,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Nightfang Whistle',
     kind: 'buddy',
     buddy: 'nightfang',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -484,6 +488,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Tuskhorn Boar Whistle',
     kind: 'buddy',
     buddy: 'tuskhorn_boar',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -492,6 +497,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Emerald Wolf Whistle',
     kind: 'buddy',
     buddy: 'emerald_wolf',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -500,6 +506,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Tiger Whistle',
     kind: 'buddy',
     buddy: 'tiger',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -508,6 +515,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Cate Coin Whistle',
     kind: 'buddy',
     buddy: 'cate_coin',
+    soulbound: true,
     quality: 'rare',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -516,6 +524,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Alon Whistle',
     kind: 'buddy',
     buddy: 'alon',
+    soulbound: true,
     quality: 'rare',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -524,6 +533,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Trollface Whistle',
     kind: 'buddy',
     buddy: 'trollface',
+    soulbound: true,
     quality: 'rare',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -532,6 +542,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Ansem Whistle',
     kind: 'buddy',
     buddy: 'ansem',
+    soulbound: true,
     quality: 'epic',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -540,6 +551,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Triple T Whistle',
     kind: 'buddy',
     buddy: 'triple_t',
+    soulbound: true,
     quality: 'epic',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -548,6 +560,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Kekius Whistle',
     kind: 'buddy',
     buddy: 'kekius',
+    soulbound: true,
     quality: 'rare',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -556,6 +569,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Solbot Whistle',
     kind: 'buddy',
     buddy: 'solbot',
+    soulbound: true,
     quality: 'rare',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -564,6 +578,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Frostfire Whistle',
     kind: 'buddy',
     buddy: 'frostfire',
+    soulbound: true,
     quality: 'uncommon',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -572,26 +587,23 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Rocky Whistle',
     kind: 'buddy',
     buddy: 'rocky',
+    soulbound: true,
     quality: 'uncommon',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
-  // The three currency-vendor rares. Unlike every whistle above, these have a
-  // NAMED source rather than the global rare drop (global_drops.ts holds rare
-  // and epic at chance 0), so each one is priced in the currency of the vendor
-  // that carries it: honor at the Warfare stores, Heroic Marks at the
-  // Quartermaster (the marks price lives with the rest of that stock in
-  // content/heroic_vendor.ts), and gold at Armorer Hode.
-  //
-  // All three are TRADEABLE (2026-09-04 owner call): none binds, so a
-  // companion earned with honor or Heroic Marks can be sold on, gifted or
-  // listed like any other whistle. That does open a route from a prestige
-  // currency to gold through the market, which the earlier bind existed to
-  // close; the owner call is that a collectible should change hands.
+  // The two prestige-currency companions, the only whistles a vendor still
+  // sells: honor at the Warfare stores (Proud Grunt, the "honour-bought pet"
+  // the ladder cosmetic hangs off) and Heroic Marks at the Quartermaster
+  // (Loot Goblin; the marks price lives with that stock in
+  // content/heroic_vendor.ts). Penny Goldspark lost her 1000g row: no
+  // companion is sold for plain gold any more (mounts fill that space), so
+  // she has no source until one is authored.
   whistle_proud_grunt: {
     id: 'whistle_proud_grunt',
     name: 'Proud Grunt Whistle',
     kind: 'buddy',
     buddy: 'proud_grunt',
+    soulbound: true,
     quality: 'rare',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
     priceHonor: 20_000,
@@ -601,6 +613,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Loot Goblin Whistle',
     kind: 'buddy',
     buddy: 'loot_goblin',
+    soulbound: true,
     quality: 'rare',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -609,19 +622,18 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Penny Goldspark Whistle',
     kind: 'buddy',
     buddy: 'penny_goldspark',
+    soulbound: true,
     quality: 'rare',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
-    buyValue: 10_000_000, // 1000g
   },
-  // The common beast tier plus the one common undead. Common is the widest
-  // global drop tier (loot/global_drops.ts, 1.5% a kill split across the whole
-  // tier), so these seven ride the same acquisition every other common whistle
-  // does and need no vendor row of their own.
+  // The common beast tier plus the one common undead. Their sources (a deed,
+  // a boss, or none yet) live in content/buddy_sources.ts.
   whistle_stag: {
     id: 'whistle_stag',
     name: 'Stag Whistle',
     kind: 'buddy',
     buddy: 'stag',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -630,6 +642,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Alpaca Whistle',
     kind: 'buddy',
     buddy: 'alpaca',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -638,6 +651,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Bull Whistle',
     kind: 'buddy',
     buddy: 'bull',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -646,6 +660,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Spider Whistle',
     kind: 'buddy',
     buddy: 'spider',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -654,6 +669,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Raptor Whistle',
     kind: 'buddy',
     buddy: 'raptor',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -662,6 +678,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Skeleton Whistle',
     kind: 'buddy',
     buddy: 'skeleton',
+    soulbound: true,
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -673,6 +690,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Crystal Lich Whistle',
     kind: 'buddy',
     buddy: 'crystal_lich',
+    soulbound: true,
     quality: 'epic',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -684,6 +702,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Forgemaw The Molten Whistle',
     kind: 'buddy',
     buddy: 'forgemaw',
+    soulbound: true,
     quality: 'epic',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -695,6 +714,7 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Crystal Tide Whistle',
     kind: 'buddy',
     buddy: 'crystal_tide',
+    soulbound: true,
     quality: 'rare',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
@@ -703,21 +723,45 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     name: 'Phantom Whistle',
     kind: 'buddy',
     buddy: 'phantom',
+    soulbound: true,
     quality: 'uncommon',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
-  // Epic, and NOT OBTAINABLE yet (2026-09-08 owner request): no mob table
-  // lists it, no vendor stocks it, and the global epic tier sits at chance 0
-  // (loot/global_drops.ts), so being an epic is not itself a source. Nothing
-  // else has to change to keep it that way: a source is added the day it is
-  // authored. Tradable like every other whistle, so it is not soulbound.
+  // Epic, the world-boss companion (content/buddy_sources.ts: Thunzharr).
   whistle_emberfall_phoenix: {
     id: 'whistle_emberfall_phoenix',
     name: 'Emberfall Phoenix Whistle',
     kind: 'buddy',
     buddy: 'emberfall_phoenix',
+    soulbound: true,
     quality: 'epic',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
+  },
+  // Buddy COSMETIC tokens (content/buddy_cosmetics.ts): using one unlocks the
+  // look for the character and consumes it (src/sim/buddies.ts
+  // useBuddyCosmeticToken). These two are the item-borne sources: a crafted
+  // look (content/recipes.ts recipe_charm_stag_acorn, eating the fine logs
+  // of three different woods) and a store look (Armorer Hode, plain gold).
+  // Challenge, deed and ladder looks never pass through an item. Soulbound:
+  // a look is earned or bought by the character who wears it.
+  charm_stag_acorn: {
+    id: 'charm_stag_acorn',
+    name: 'Acorn Crown Charm',
+    kind: 'buddy_cosmetic',
+    cosmetic: 'stag_acorn',
+    soulbound: true,
+    quality: 'rare',
+    sellValue: 50_000, // 5g, same flat price as a whistle
+  },
+  charm_stag_gilded: {
+    id: 'charm_stag_gilded',
+    name: 'Gilded Charm',
+    kind: 'buddy_cosmetic',
+    cosmetic: 'stag_gilded',
+    soulbound: true,
+    quality: 'rare',
+    sellValue: 50_000, // 5g, same flat price as a whistle
+    buyValue: 5_000_000, // 500g
   },
   // Developer-only, same treatment as the tank above: no acquisition path, so
   // it stays soulbound rather than tradable. Use /dev give reins_rickshaw_mount

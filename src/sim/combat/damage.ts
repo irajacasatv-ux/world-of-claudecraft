@@ -23,6 +23,8 @@
 // `src/sim`-pure: no DOM/Three/render/ui/game/net imports, no Math.random/Date.now
 // (enforced by tests/architecture.test.ts).
 
+import { recordBossDamageForBuddies, resolveBuddyChallenges } from '../buddy_challenges';
+import { rollBossBuddyDrops } from '../buddy_drops';
 import { computeTalentModifiers } from '../content/talents';
 import { ABILITIES, DELVES, GROUP_XP_BONUS, ITEMS, MOBS } from '../data';
 import * as deedsMod from '../deeds';
@@ -1103,6 +1105,9 @@ export function dealDamage(
   // persisted lifetime damage counters beside the session RewardCounters
   // below, plus encounter participant tracking for the roster tasks.
   if (source) deedsMod.onDamageDealtForDeeds(ctx, source, target, amount, crit, kind);
+  // Boss-pet cosmetic challenges (src/sim/buddy_challenges.ts): the attempt
+  // clock and per-player damage on the few bosses that carry one. Zero rng.
+  recordBossDamageForBuddies(ctx, source, target, amount);
 
   // Thornhollow Fields assists: remember who softened a player before the blow
   // that finishes them. Only real damage on a live player counts, and the
@@ -1779,6 +1784,15 @@ export function handleDeath(
     // even without player credit so the owning group cannot dodge the lockout;
     // only the participation snapshot above receives marks.
     lockNormalDungeonResetOnBossKill(ctx, e);
+    // Boss pets and their challenge looks (content/buddy_sources.ts): one
+    // independent roll per credited player, never a corpse item, then the
+    // speed/dps looks for the same roster. World bosses roll on the
+    // never-pruned contributor roster below instead. Draws rng ONLY for a
+    // boss that carries a companion row.
+    if (!template?.worldBoss) {
+      rollBossBuddyDrops(ctx, e, heroicRewardRecipients, rewardInstance ?? null);
+      resolveBuddyChallenges(ctx, e, heroicRewardRecipients);
+    }
     ctx.awardHeroicMarks(e, heroicRewardRecipients);
     // A bossExitPortal dungeon opens its far-end exit the moment the final
     // boss falls (both difficulties; no-op everywhere else).
@@ -1791,6 +1805,8 @@ export function handleDeath(
     // damaged the boss, so it rolls outside the credited-player block above.
     if (worldBossContribs) {
       ctx.rollWorldBossLoot(e, worldBossContribs);
+      rollBossBuddyDrops(ctx, e, worldBossContribs, null);
+      resolveBuddyChallenges(ctx, e, worldBossContribs);
       // World-boss deeds ride the same never-pruned contributor roster.
       deedsMod.onWorldBossKilledForDeeds(ctx, e, worldBossContribs);
     }

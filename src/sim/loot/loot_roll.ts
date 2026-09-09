@@ -54,7 +54,6 @@ import type {
 } from '../types';
 import { dist2d, PARTY_XP_RANGE } from '../types';
 import { bopPartyTradeInstance } from './bop_trade_window';
-import { buddyWhistlesOfQuality, GLOBAL_BUDDY_DROP_TIERS } from './global_drops';
 import { isTapGroupMember, LOOT_FFA_DELAY } from './loot_ffa';
 
 // How long (seconds) a need-greed roll stays open before it auto-resolves. Sole
@@ -354,19 +353,9 @@ export function rollLoot(
       }
     }
   }
-  // Global buddy-whistle drop (src/sim/loot/global_drops.ts, 2026-08-28 owner
-  // request): independent of this mob's own table, every kill also rolls one
-  // chance per whistle rarity tier for a random buddy of that quality. Rolled
-  // dead LAST, after every per-mob and heroic-only draw above, and every tier
-  // always draws its chance() regardless of hits or an empty pool, so the
-  // draw COUNT here never depends on the buddy catalog's size, only adding
-  // or removing a TIER reshapes the parity goldens, not adding a new buddy.
-  for (const tier of GLOBAL_BUDDY_DROP_TIERS) {
-    if (!ctx.rng.chance(tier.chance)) continue;
-    const pool = buddyWhistlesOfQuality(tier.quality);
-    if (pool.length === 0) continue;
-    items.push({ itemId: ctx.rng.pick(pool), count: 1 });
-  }
+  // Buddies are deliberately NOT corpse loot: the per-player companion roll
+  // rides the boss death site instead (src/sim/buddy_drops.ts, content/
+  // buddy_sources.ts), so no kill anywhere draws for one here.
   if (copper > 0 || items.length > 0) {
     if (items.some((slot) => ITEMS[slot.itemId]?.soulbound)) {
       mob.lootPartyTradeEligibility = {

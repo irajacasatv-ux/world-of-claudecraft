@@ -67,8 +67,9 @@ const KIND_RANK: Record<ItemKind, number> = {
   tool: 8,
   mount: 9,
   buddy: 10,
-  junk: 11,
-  quest: 12,
+  buddy_cosmetic: 11,
+  junk: 12,
+  quest: 13,
 };
 const TRASH_RANK = 13; // any poor-quality item, regardless of kind
 // The two defensive tails are DISTINCT ranks on purpose (comparator

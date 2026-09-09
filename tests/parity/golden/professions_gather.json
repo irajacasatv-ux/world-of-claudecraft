@@ -21,7 +21,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 999,
-      "state": "06cbf5e3",
+      "state": "7402a6ff",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -50,6 +50,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
@@ -168,7 +169,7 @@
       "tick": 51,
       "time": 2.55,
       "nextId": 999,
-      "state": "4758e07b",
+      "state": "8216561b",
       "events": "5f103aaf",
       "rng": {
         "draws": 2,
@@ -197,6 +198,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
@@ -358,9 +360,9 @@
     {
       "tick": 104,
       "time": 5.2,
-      "nextId": 999,
-      "state": "200e5846",
-      "events": "49aac4cd",
+      "nextId": 1000,
+      "state": "dce861a1",
+      "events": "b965e178",
       "rng": {
         "draws": 4,
         "digest": "49d036fe"
@@ -388,6 +390,12 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {
+            "last": "stag",
+            "owned": [
+              "stag"
+            ]
+          },
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
@@ -515,6 +523,7 @@
           ],
           "blockChance": 0.05,
           "blockValue": 6,
+          "buddyKey": "stag",
           "castTotal": 2.35,
           "combatTimer": 104.2,
           "comboUntil": -1,
@@ -569,8 +578,8 @@
     {
       "tick": 500,
       "time": 25,
-      "nextId": 999,
-      "state": "79f46e9d",
+      "nextId": 1000,
+      "state": "2a7c8c6c",
       "events": "063d4d9b",
       "rng": {
         "draws": 18,
@@ -580,8 +589,8 @@
     {
       "tick": 1000,
       "time": 50,
-      "nextId": 999,
-      "state": "194fb687",
+      "nextId": 1000,
+      "state": "7be69058",
       "events": "83b064a9",
       "rng": {
         "draws": 38,
@@ -591,8 +600,8 @@
     {
       "tick": 1500,
       "time": 75,
-      "nextId": 999,
-      "state": "039447e5",
+      "nextId": 1000,
+      "state": "0c5c38ce",
       "events": "2e33d1f6",
       "rng": {
         "draws": 58,
@@ -602,8 +611,8 @@
     {
       "tick": 2000,
       "time": 100,
-      "nextId": 999,
-      "state": "edddff36",
+      "nextId": 1000,
+      "state": "c633f60f",
       "events": "82386e4d",
       "rng": {
         "draws": 78,
@@ -613,8 +622,8 @@
     {
       "tick": 2500,
       "time": 125,
-      "nextId": 999,
-      "state": "ead1bf9f",
+      "nextId": 1000,
+      "state": "bb9852fa",
       "events": "c32f03f9",
       "rng": {
         "draws": 96,
@@ -624,8 +633,8 @@
     {
       "tick": 3000,
       "time": 150,
-      "nextId": 999,
-      "state": "fea53e31",
+      "nextId": 1000,
+      "state": "d03c05a8",
       "events": "82386e4d",
       "rng": {
         "draws": 116,
@@ -635,8 +644,8 @@
     {
       "tick": 3500,
       "time": 175,
-      "nextId": 999,
-      "state": "5082e148",
+      "nextId": 1000,
+      "state": "a8430c4b",
       "events": "99cbaa30",
       "rng": {
         "draws": 136,
@@ -646,8 +655,8 @@
     {
       "tick": 4000,
       "time": 200,
-      "nextId": 999,
-      "state": "d75d5571",
+      "nextId": 1000,
+      "state": "f0063630",
       "events": "089db9bd",
       "rng": {
         "draws": 156,
@@ -657,8 +666,8 @@
     {
       "tick": 4500,
       "time": 225,
-      "nextId": 999,
-      "state": "ecb744df",
+      "nextId": 1000,
+      "state": "ae40037a",
       "events": "01f10e1e",
       "rng": {
         "draws": 176,
@@ -668,8 +677,8 @@
     {
       "tick": 5000,
       "time": 250,
-      "nextId": 999,
-      "state": "8e4f835e",
+      "nextId": 1000,
+      "state": "c809b2c1",
       "events": "b9040aa9",
       "rng": {
         "draws": 194,
@@ -679,8 +688,8 @@
     {
       "tick": 5206,
       "time": 260.3,
-      "nextId": 999,
-      "state": "4d6e4a08",
+      "nextId": 1000,
+      "state": "b3e75f9b",
       "events": "6b261455",
       "rng": {
         "draws": 204,
@@ -709,6 +718,12 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {
+            "last": "stag",
+            "owned": [
+              "stag"
+            ]
+          },
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
@@ -867,6 +882,7 @@
           ],
           "blockChance": 0.05,
           "blockValue": 6,
+          "buddyKey": "stag",
           "castTotal": 2.5,
           "combatTimer": 359.3,
           "comboUntil": -1,
@@ -921,8 +937,8 @@
     {
       "tick": 5208,
       "time": 260.4,
-      "nextId": 999,
-      "state": "4cfbeb07",
+      "nextId": 1000,
+      "state": "a2dbb6b2",
       "events": "741638a5",
       "rng": {
         "draws": 204,
@@ -951,6 +967,12 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {
+            "last": "stag",
+            "owned": [
+              "stag"
+            ]
+          },
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
@@ -1109,6 +1131,7 @@
           ],
           "blockChance": 0.05,
           "blockValue": 6,
+          "buddyKey": "stag",
           "castTotal": 2.5,
           "combatTimer": 359.4,
           "comboUntil": -1,

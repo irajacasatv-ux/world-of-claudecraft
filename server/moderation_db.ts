@@ -66,6 +66,9 @@ export const MODERATION_ACTIONS = [
   // folded into the stored reason text.
   'restore_item',
   'restore_slot',
+  // Buddy grants (server/buddy_wire.ts): the seasonal award channel. Same
+  // shape as the restores: value minted onto a character, reason required.
+  'grant_buddy',
   // The Cheater mark (src/sim/moderation/). Punitive and visible to every player
   // in range, so the reason is REQUIRED on both arms: who branded an account, for
   // how long, and why has to be recoverable long after the tag has worn off.
@@ -1313,7 +1316,7 @@ export async function forceCharacterRename(input: {
 export async function recordProfessionsRestore(input: {
   characterId: number;
   adminAccountId: number;
-  action: 'restore_item' | 'restore_slot';
+  action: 'restore_item' | 'restore_slot' | 'grant_buddy';
   detail: string;
   reason: unknown;
 }): Promise<{ accountId: number }> {

@@ -3456,7 +3456,86 @@ export const ko_KR: EnTranslations = {
       "state": {
         "owned": "수집함",
         "notOwned": "수집 안 함",
-        "unavailable": "아직 획득 불가"
+        "unavailable": "아직 획득 불가",
+        "pending": "무언가가 당신을 따라옵니다"
+      },
+      "presenceDefault": "무언가가 당신을 지켜보는 기척이 느껴집니다.",
+      "revealed": "{name}이(가) 당신을 따르기로 했습니다.",
+      "cosmeticUnlocked": "{name}의 새로운 모습: {look}.",
+      "presence": {
+        "ember_fox": "작고 따뜻한 무언가가 당신 뒤를 살금살금 따라오고 있습니다.",
+        "moss_hare": "이탄 속의 바스락 소리가 당신의 발걸음에 맞춰 따라옵니다.",
+        "frog": "당신이 한 걸음 내디딜 때마다 축축한 개구리 울음이 답합니다.",
+        "crimson_claw_crab": "시야 바로 밖에서 무언가가 딸깍거리며 종종걸음칩니다.",
+        "golden_sentinel": "풀숲에서 희미한 금빛 반짝임이 당신을 지켜봅니다.",
+        "nightfang": "보이지 않는 곳에서 소리 없는 발이 따라옵니다.",
+        "tuskhorn_boar": "콧김과 발구름 소리. 고집 센 무언가가 당신을 따라옵니다.",
+        "emerald_wolf": "덤불 속에서 초록 눈이 깜빡이더니 따라옵니다.",
+        "tiger": "시야 가장자리에서 줄무늬가 움직입니다.",
+        "cate_coin": "당신 것이 아닌 동전이 희미하게 울리는 소리가 들립니다.",
+        "alon": "누군가 지켜보며 조용히 인정해 주는 느낌이 듭니다.",
+        "trollface": "당신 뒤 어딘가에서 무언가가 씩 웃고 있습니다.",
+        "ansem": "문과 어둠의 속삭임이 당신을 따라옵니다.",
+        "triple_t": "발소리 하나가 있어야 할 곳에 셋이 울립니다.",
+        "kekius": "억눌린 웃음소리가 길을 따라 당신을 쫓아옵니다.",
+        "solbot": "부드러운 째깍 소리가 당신의 보폭에 맞춰 울립니다.",
+        "frostfire": "증기와 서리가 당신의 뒤에서 소용돌이칩니다.",
+        "rocky": "바람도 없는데 뒤에서 자갈이 움직입니다.",
+        "proud_grunt": "당신 뒤 어딘가에서 군화가 차렷 자세로 발을 구릅니다.",
+        "loot_goblin": "무언가가 당신의 동전을 소곤소곤 세고 있습니다.",
+        "penny_goldspark": "당신 것이 아닌 주머니에서 작은 도구들이 짤랑거립니다.",
+        "stag": "뿔 달린 그림자가 당신의 길 위에 드리웁니다.",
+        "alpaca": "털북숭이에 느긋한 무언가가 함께 가기로 했습니다.",
+        "bull": "낮은 콧김이 당신 뒤의 먼지를 일으킵니다.",
+        "spider": "거미줄 한 가닥이 당신의 어깨를 스칩니다.",
+        "raptor": "재빠른 발톱이 당신 뒤꿈치의 돌 위를 톡톡 두드립니다.",
+        "skeleton": "마른 뼈가 당신의 걸음에 맞춰 덜그럭거립니다.",
+        "crystal_lich": "잔해에서 차가운 웅웅거림이 피어오르고, 그것이 당신을 지켜봅니다.",
+        "forgemaw": "용광로의 열기가 아직 당신을 떠나지 않았습니다. 무언가가 그것과 함께 걸어 나왔습니다.",
+        "crystal_tide": "바닷물 한 방울이 당신의 낚싯줄에서 떨어지기를 거부합니다.",
+        "phantom": "당신 뒤의 공기가 조금 지나치게 고요합니다.",
+        "emberfall_phoenix": "재에 묻은 불처럼 은근한 온기가 당신의 등 뒤에 내려앉습니다."
+      },
+      "cosmetic": {
+        "crystal_lich_frostbound": "서리결속",
+        "crystal_lich_voltaic": "전광",
+        "forgemaw_ashen": "잿빛",
+        "forgemaw_whitehot": "백열",
+        "stag_acorn": "도토리 왕관",
+        "stag_gilded": "금박",
+        "moss_hare_verdant": "신록",
+        "proud_grunt_warlord": "전쟁군주"
+      },
+      "actions": {
+        "summon": "소환",
+        "dismiss": "해제",
+        "wear": "착용",
+        "remove": "벗기기"
+      },
+      "looks": {
+        "title": "모습",
+        "unlocked": "해금됨",
+        "locked": "잠김",
+        "worn": "착용 중",
+        "none": "이 동료에게는 아직 준비된 모습이 없습니다"
+      },
+      "source": {
+        "bossLabel": "보스 펫",
+        "bossDrop": "{mob} ({location}), 처치 시 플레이어마다 {chance}%",
+        "bossDropWithHeroic": "{mob} ({location}), 플레이어마다 {chance}%, 영웅 난이도 {heroicChance}%",
+        "bossDropHeroicOnly": "{mob} ({location}), 영웅 난이도 전용, 플레이어마다 {chance}%",
+        "rollNote": "모든 플레이어가 각자 굴립니다. 파티원 때문에 기회를 잃는 일은 없습니다.",
+        "deedLabel": "획득 조건",
+        "deed": "업적: {deed}",
+        "challengeLabel": "도전",
+        "challengeSpeed": "전투 시작 후 {seconds}초 안에 {mob} 처치",
+        "challengeDps": "전투 내내 {mob}에게 초당 {dps}의 피해를 입히기",
+        "craftLabel": "제작",
+        "craft": "{item} ({profession} 제작법)",
+        "grantLabel": "수여",
+        "grantOnly": "시즌 보상: 월간 순위표 및 최고 기록 보상",
+        "tokenLabel": "토큰",
+        "token": "{item}, 한 번 사용하면 동료가 따라옵니다"
       },
       "buddyLore": {
         "ember_fox": "이스트브룩 골짜기의 산울타리에서 온 암여우로, 겨울 덤불 사이로 비치는 숯빛 붉은 털에서 이름을 얻었다. 그곳 사냥꾼들은 몇 세대 전에 새끼 잡기를 포기하고, 대신 먹이를 내놓기 시작했다.",
@@ -9874,6 +9953,7 @@ export const ko_KR: EnTranslations = {
       "bag": "가방",
       "mount": "탈것",
       "buddy": "버디",
+      "buddyCosmetic": "동료 외형",
       "skin": "스킨"
     },
     "stats": {
@@ -13503,6 +13583,12 @@ export const ko_KR: EnTranslations = {
       },
       "whistle_emberfall_phoenix": {
         "name": "잿불낙하 불사조의 호루라기"
+      },
+      "charm_stag_acorn": {
+        "name": "도토리 왕관 부적"
+      },
+      "charm_stag_gilded": {
+        "name": "금박 부적"
       },
       "lastflame_core": {
         "name": "마지막 불꽃의 핵"

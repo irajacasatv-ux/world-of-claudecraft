@@ -2316,6 +2316,7 @@ const UI_DOM_MODULES = [
   'src/ui/hud/vendor/crucible_vendor_window.ts',
   'src/ui/hud/vendor/train_window.ts',
   'src/ui/hud/vendor/unbind_window.ts',
+  'src/ui/hud/buddy_menu.ts',
   'src/ui/hud/vendor/vendor_window.ts',
   'src/ui/hud/vendor/warfare_vendor_window.ts',
   'src/ui/hud/woc_trade/woc_trade_controller.ts',

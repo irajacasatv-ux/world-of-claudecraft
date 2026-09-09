@@ -4,6 +4,7 @@
 // supply them.
 
 import type { SavedBankState } from './bank';
+import type { SavedBuddyCollection } from './buddies';
 import type { SavedLoadout, TalentAllocation } from './content/talents';
 import type { SavedCooldowns } from './cooldown_persist';
 import type { SavedDeedStats } from './deeds';
@@ -286,6 +287,12 @@ export interface CharacterState {
   // The Reliquary (JSONB; optional, written only when non-empty so pre-system
   // saves load cleanly and stay byte-equal until the system engages).
   reliquary?: SavedReliquaryState;
+  // The buddy collection (src/sim/buddies.ts): owned companions, unlocked
+  // cosmetics, the worn look per buddy, pending boss-roll wins, and the last
+  // summoned key. Optional, written only when non-empty so pre-buddy saves
+  // load cleanly and stay byte-equal. Ids are re-validated against the
+  // catalog on load (a removed companion loads as absent).
+  buddies?: SavedBuddyCollection;
 }
 
 export interface PetState {

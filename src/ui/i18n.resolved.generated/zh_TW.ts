@@ -3456,7 +3456,86 @@ export const zh_TW: EnTranslations = {
       "state": {
         "owned": "已收集",
         "notOwned": "未收集",
-        "unavailable": "尚無法獲得"
+        "unavailable": "尚無法獲得",
+        "pending": "有什麼在跟著你"
+      },
+      "presenceDefault": "你感覺到有什麼在注視著你。",
+      "revealed": "{name}決定跟隨你。",
+      "cosmeticUnlocked": "{name}的新外觀：{look}。",
+      "presence": {
+        "ember_fox": "有個溫暖的小東西正輕手輕腳地跟在你身後。",
+        "moss_hare": "泥炭裡的一陣窸窣聲與你的腳步保持著同步。",
+        "frog": "你每走一步，就有一聲濕漉漉的蛙鳴回應。",
+        "crimson_claw_crab": "視線之外有什麼東西喀嗒作響地爬來爬去。",
+        "golden_sentinel": "草叢中有一抹微弱的金光在注視著你。",
+        "nightfang": "無聲的腳爪在你看不見的地方尾隨。",
+        "tuskhorn_boar": "一聲哼鼻、一記跺腳：有個倔強的傢伙正跟著你。",
+        "emerald_wolf": "灌木叢中一雙綠眼睛眨了眨，然後跟了上來。",
+        "tiger": "你的視野邊緣有條紋在晃動。",
+        "cate_coin": "你聽到一枚不屬於你的硬幣發出微弱的響聲。",
+        "alon": "你感到被注視著，還被默默地讚許著。",
+        "trollface": "在你身後的某處，有什麼東西正咧嘴笑著。",
+        "ansem": "關於門與黑暗的低語跟隨著你。",
+        "triple_t": "本該只有一個腳步聲的地方，響起了三個。",
+        "kekius": "一聲壓抑的笑聲沿著路尾隨著你。",
+        "solbot": "一陣輕柔的滴答聲與你的步伐合拍。",
+        "frostfire": "蒸汽與寒霜在你身後盤旋。",
+        "rocky": "你身後的碎石在沒有風的情況下移動了。",
+        "proud_grunt": "你身後某處，一隻軍靴跺腳立正。",
+        "loot_goblin": "有什麼東西正小聲數著你的錢幣。",
+        "penny_goldspark": "不屬於你的口袋裡，小工具叮噹作響。",
+        "stag": "一道長著鹿角的影子橫過你的路。",
+        "alpaca": "有個毛茸茸、不慌不忙的傢伙決定跟你走。",
+        "bull": "一聲低沉的喘息揚起了你身後的塵土。",
+        "spider": "一縷蛛絲拂過你的肩膀。",
+        "raptor": "你腳跟後有敏捷的爪子在石頭上嗒嗒作響。",
+        "skeleton": "乾枯的骨頭隨著你的腳步喀喀作響。",
+        "crystal_lich": "一陣寒冷的嗡鳴從殘骸中升起，它正注視著你。",
+        "forgemaw": "熔爐的熱度還沒有離開你。有什麼東西隨之走了出來。",
+        "crystal_tide": "一滴海水拒絕從你的釣線上落下。",
+        "phantom": "你身後的空氣靜得有些過分。",
+        "emberfall_phoenix": "一股如同封火般的暖意落在你的背後。"
+      },
+      "cosmetic": {
+        "crystal_lich_frostbound": "霜縛",
+        "crystal_lich_voltaic": "雷光",
+        "forgemaw_ashen": "灰燼",
+        "forgemaw_whitehot": "白熱",
+        "stag_acorn": "橡果之冠",
+        "stag_gilded": "鍍金",
+        "moss_hare_verdant": "青翠",
+        "proud_grunt_warlord": "戰爭領主"
+      },
+      "actions": {
+        "summon": "召喚",
+        "dismiss": "解散",
+        "wear": "穿戴",
+        "remove": "卸下"
+      },
+      "looks": {
+        "title": "外觀",
+        "unlocked": "已解鎖",
+        "locked": "未解鎖",
+        "worn": "穿戴中",
+        "none": "這個夥伴還沒有可用的外觀"
+      },
+      "source": {
+        "bossLabel": "首領寵物",
+        "bossDrop": "{mob}（{location}），每次擊殺每位玩家{chance}%",
+        "bossDropWithHeroic": "{mob}（{location}），每位玩家{chance}%，英雄難度{heroicChance}%",
+        "bossDropHeroicOnly": "{mob}（{location}），僅限英雄難度，每位玩家{chance}%",
+        "rollNote": "每位玩家單獨擲骰；不會有人因隊友而失去機會。",
+        "deedLabel": "獲取途徑",
+        "deed": "功績：{deed}",
+        "challengeLabel": "挑戰",
+        "challengeSpeed": "在開怪後{seconds}秒內擊敗{mob}",
+        "challengeDps": "在整場戰鬥中對{mob}保持每秒{dps}點傷害",
+        "craftLabel": "製作",
+        "craft": "{item}（{profession}配方）",
+        "grantLabel": "頒發",
+        "grantOnly": "賽季獎勵：每月天梯與最高戰鬥記錄獎勵",
+        "tokenLabel": "憑證",
+        "token": "{item}，使用一次即可讓夥伴跟隨"
       },
       "buddyLore": {
         "ember_fox": "出自東溪谷樹籬間的母狐，得名於冬日枯叢中透出的炭紅皮毛。那裡的獵人幾代之前就不再打幼崽的主意，改成替牠們留下食物。",
@@ -9874,6 +9953,7 @@ export const zh_TW: EnTranslations = {
       "bag": "背包",
       "mount": "坐騎",
       "buddy": "夥伴",
+      "buddyCosmetic": "夥伴外觀",
       "skin": "外觀"
     },
     "stats": {
@@ -13503,6 +13583,12 @@ export const zh_TW: EnTranslations = {
       },
       "whistle_emberfall_phoenix": {
         "name": "燼落鳳凰的哨子"
+      },
+      "charm_stag_acorn": {
+        "name": "橡果之冠護符"
+      },
+      "charm_stag_gilded": {
+        "name": "鍍金護符"
       },
       "lastflame_core": {
         "name": "末焰之核"

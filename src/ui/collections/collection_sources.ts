@@ -1,29 +1,41 @@
 // Where a collectible comes from, DERIVED from the live content tables rather
 // than authored twice.
 //
-// The Collections window has to answer four questions about every buddy, mount
-// and item set in the game: where does it drop, who sells it, is it tradeable
-// or soulbound, and what does a vendor pay for it. Every one of those answers
+// The Collections window has to answer, for every buddy, look, mount and item
+// set in the game: where does it come from, who sells it, is it tradeable or
+// soulbound, and what does a vendor pay for it. Every one of those answers
 // already exists somewhere in src/sim/content (a mob's loot table, an NPC's
-// vendorItems, the Heroic Quartermaster's marks stock, the global whistle drop
-// tiers, the ItemDef's own soulbound/sellValue fields). Authoring a second copy
-// of it for the UI would rot on the first content change, so this module reads
-// the merged tables and reports what it finds. An item nothing points at
+// vendorItems, the Heroic Quartermaster's marks stock, the buddy source tables,
+// the ItemDef's own soulbound/sellValue fields). Authoring a second copy of it
+// for the UI would rot on the first content change, so this module reads the
+// merged tables and reports what it finds. A collectible nothing points at
 // reports as UNOBTAINABLE, which is a real answer the window shows: the catalog
 // deliberately carries buddies and mounts with no source assigned yet.
 //
+// Buddies are NOT items (src/sim/buddies.ts): a companion's sources are the
+// per-player boss rolls and the deed that grants it (content/buddy_sources.ts),
+// plus the vendor that sells its grant TOKEN where one still does. A look's
+// sources are its boss challenges, its deed, the recipe that crafts its token,
+// the vendor that sells one, or the seasonal grant channel.
+//
 // Pure and DOM-free (tests/collections_sources.test.ts drives it directly), and
 // it holds no per-frame state: the catalog is static content, so the whole
-// derivation is memoized once per item id on first ask.
+// derivation is memoized once per id on first ask.
 
+import type { BuddyKey } from '../../sim/content/buddies';
+import { type BuddyCosmeticDef, buddyCosmeticDef } from '../../sim/content/buddy_cosmetics';
+import {
+  BUDDY_COSMETIC_GRANT_ONLY,
+  type BuddyCosmeticChallenge,
+  buddyBossDropsOf,
+  buddyCosmeticChallengesOf,
+  buddyCosmeticDeedOf,
+  buddyDeedOf,
+} from '../../sim/content/buddy_sources';
 import { HEROIC_BOSS_LOOT } from '../../sim/content/heroic_loot';
 import { HEROIC_VENDOR_STOCK } from '../../sim/content/heroic_vendor';
+import { ALL_RECIPES } from '../../sim/content/recipes';
 import { DUNGEONS, ITEMS, MOBS, NPCS, zoneAt } from '../../sim/data';
-import {
-  buddyWhistlesOfQuality,
-  FISHING_BUDDY_DROP,
-  GLOBAL_BUDDY_DROP_TIERS,
-} from '../../sim/loot/global_drops';
 import type { ItemDef } from '../../sim/types';
 
 /** What a vendor charges. Gold is copper; honor and marks are their own
@@ -57,15 +69,6 @@ export interface CollectionDropSource {
   heroicOnly: boolean;
 }
 
-export interface CollectionGlobalDropSource {
-  /** The item quality whose global tier this item rides. */
-  quality: string;
-  /** 0..1 per-kill chance for the TIER (shared with every item in it). */
-  chance: number;
-  /** How many items share the tier, so the window can say "one of N". */
-  poolSize: number;
-}
-
 export interface CollectionItemFacts {
   itemId: string;
   /** English item name; the window localizes through the item i18n catalog. */
@@ -77,21 +80,70 @@ export interface CollectionItemFacts {
   sellValue: number | null;
   vendors: CollectionVendorSource[];
   drops: CollectionDropSource[];
-  /** Set when the item rides a global drop tier (the buddy whistles). Null
-   *  while the tier is held at chance 0, which is how a withheld tier reads as
-   *  "no source" rather than as a 0% drop the player could chase forever. */
-  globalDrop: CollectionGlobalDropSource | null;
-  /** The share of every landed catch that lands this whistle instead of a
-   *  fish, for the one companion the water gives up (loot/global_drops.ts
-   *  FISHING_BUDDY_DROP). Null for everything else, which is everything else.
-   *  A number rather than a source record: fishing has no mob and no vendor to
-   *  name, and "anywhere" is the whole of its location. */
-  fishingDrop: number | null;
   /** False when nothing in the game grants this item today. */
   obtainable: boolean;
 }
 
+/** One per-player boss roll for a companion (content/buddy_sources.ts). */
+export interface CollectionBossDropSource {
+  bossId: string;
+  bossName: string;
+  /** The dungeon the boss stands in, or its zone for a world boss. */
+  location: string;
+  chance: number;
+  heroicChance: number | null;
+  heroicOnly: boolean;
+}
+
+/** Everything the buddy tab needs about one companion's sources. */
+export interface BuddySourceFacts {
+  key: BuddyKey;
+  bossDrops: CollectionBossDropSource[];
+  /** The deed that grants it, or null. The window localizes the name. */
+  deedId: string | null;
+  /** The grant token's item facts (its vendors), or null when no token exists. */
+  token: CollectionItemFacts | null;
+  obtainable: boolean;
+}
+
+export interface CollectionChallengeSource {
+  bossId: string;
+  bossName: string;
+  location: string;
+  kind: BuddyCosmeticChallenge['kind'];
+  /** Seconds for a 'speed' task, damage per second for a 'dps' task. */
+  amount: number;
+}
+
+export interface CollectionCraftSource {
+  recipeId: string;
+  professionId: string;
+  /** The token item the recipe produces. */
+  itemId: string;
+}
+
+/** Everything the looks list needs about one cosmetic's sources. */
+export interface BuddyCosmeticFacts {
+  id: string;
+  buddy: BuddyKey;
+  /** Canonical English name; the window localizes through hudChrome.collections.cosmetic. */
+  name: string;
+  tint: number;
+  challenges: CollectionChallengeSource[];
+  deedId: string | null;
+  craft: CollectionCraftSource | null;
+  /** Vendors selling the look's token, where one exists. */
+  vendors: CollectionVendorSource[];
+  /** The token item id, when the look has one. */
+  tokenItemId: string | null;
+  /** True for a look only the seasonal grant channel hands out. */
+  grantOnly: boolean;
+  obtainable: boolean;
+}
+
 const cache = new Map<string, CollectionItemFacts>();
+const buddyCache = new Map<string, BuddySourceFacts>();
+const cosmeticCache = new Map<string, BuddyCosmeticFacts>();
 
 function zoneNameAt(x: number, z: number): string {
   return zoneAt(x, z).name;
@@ -174,27 +226,6 @@ function dropsFor(itemId: string): CollectionDropSource[] {
   return found;
 }
 
-/** Buddy whistles only: the tier this quality rides, when it can actually
- *  drop. A tier held at chance 0 (epic today) reports null, and so does a
- *  whistle the tier's pool withholds -- the Crystal Tide, which fishing owns
- *  outright. Both the membership test and the count come from the roller's
- *  own pool rather than a second sweep over ITEMS, so the line can never claim
- *  a source the loot table would not actually pay. */
-function globalDropFor(def: ItemDef): CollectionGlobalDropSource | null {
-  if (def.kind !== 'buddy') return null;
-  const quality = def.quality ?? 'common';
-  const tier = GLOBAL_BUDDY_DROP_TIERS.find((t) => t.quality === quality);
-  if (!tier || tier.chance <= 0) return null;
-  const pool = buddyWhistlesOfQuality(quality);
-  if (!pool.includes(def.id)) return null;
-  return { quality, chance: tier.chance, poolSize: pool.length };
-}
-
-/** The catch share, for the one whistle fishing hands out. */
-function fishingDropFor(itemId: string): number | null {
-  return itemId === FISHING_BUDDY_DROP.itemId ? FISHING_BUDDY_DROP.chance : null;
-}
-
 /** Everything the Collections window needs about one collectible's item. */
 export function collectionItemFacts(itemId: string): CollectionItemFacts | null {
   const cached = cache.get(itemId);
@@ -203,8 +234,6 @@ export function collectionItemFacts(itemId: string): CollectionItemFacts | null 
   if (!def) return null;
   const vendors = vendorsFor(itemId, def);
   const drops = dropsFor(itemId);
-  const globalDrop = globalDropFor(def);
-  const fishingDrop = fishingDropFor(itemId);
   const facts: CollectionItemFacts = {
     itemId,
     name: def.name,
@@ -215,17 +244,117 @@ export function collectionItemFacts(itemId: string): CollectionItemFacts | null 
     sellValue: def.noVendorSell === true || !def.sellValue ? null : def.sellValue,
     vendors,
     drops,
-    globalDrop,
-    fishingDrop,
-    obtainable:
-      vendors.length > 0 || drops.length > 0 || globalDrop !== null || fishingDrop !== null,
+    obtainable: vendors.length > 0 || drops.length > 0,
   };
   cache.set(itemId, facts);
   return facts;
 }
 
-/** Drop the memo. Only the tests need this (they swap the active world
- *  content, which re-resolves zones and NPCs under the same item ids). */
+/** A boss's place: its dungeon, or the zone it stands in for a world boss. */
+function bossLocation(bossId: string): string {
+  const dungeon = dungeonOf(bossId);
+  if (dungeon) return dungeon;
+  return '';
+}
+
+/** The grant-token item for a companion, resolved from the item table rather
+ *  than an id convention (the whistle record names the buddy). */
+export function buddyTokenItemId(key: string): string | null {
+  for (const def of Object.values(ITEMS)) {
+    if (def.kind === 'buddy' && def.buddy === key) return def.id;
+  }
+  return null;
+}
+
+/** The token item for a look, if a recipe or vendor hands one out. */
+export function buddyCosmeticTokenItemId(cosmeticId: string): string | null {
+  for (const def of Object.values(ITEMS)) {
+    if (def.kind === 'buddy_cosmetic' && def.cosmetic === cosmeticId) return def.id;
+  }
+  return null;
+}
+
+/** Everything the buddy tab needs about one companion's sources. */
+export function buddySourceFacts(key: BuddyKey): BuddySourceFacts {
+  const cached = buddyCache.get(key);
+  if (cached) return cached;
+  const bossDrops: CollectionBossDropSource[] = buddyBossDropsOf(key).map((row) => ({
+    bossId: row.bossId,
+    bossName: MOBS[row.bossId]?.name ?? row.bossId,
+    location: bossLocation(row.bossId),
+    chance: row.chance,
+    heroicChance: row.heroicChance ?? null,
+    heroicOnly: row.heroicOnly === true,
+  }));
+  const deedId = buddyDeedOf(key);
+  const tokenId = buddyTokenItemId(key);
+  const token = tokenId ? collectionItemFacts(tokenId) : null;
+  const facts: BuddySourceFacts = {
+    key,
+    bossDrops,
+    deedId,
+    token,
+    // A token nothing sells is not a source: the companion is obtainable only
+    // through a boss, a deed, or a vendor that still stocks its whistle.
+    obtainable: bossDrops.length > 0 || deedId !== null || (token?.vendors.length ?? 0) > 0,
+  };
+  buddyCache.set(key, facts);
+  return facts;
+}
+
+function craftSourceFor(tokenItemId: string | null): CollectionCraftSource | null {
+  if (!tokenItemId) return null;
+  const recipe = ALL_RECIPES.find((r) => r.resultItemId === tokenItemId);
+  return recipe
+    ? { recipeId: recipe.id, professionId: recipe.professionId, itemId: tokenItemId }
+    : null;
+}
+
+/** Everything the looks list needs about one cosmetic's sources. Null for an
+ *  unknown id. */
+export function buddyCosmeticFacts(cosmeticId: string): BuddyCosmeticFacts | null {
+  const cached = cosmeticCache.get(cosmeticId);
+  if (cached) return cached;
+  const def: BuddyCosmeticDef | null = buddyCosmeticDef(cosmeticId);
+  if (!def) return null;
+  const challenges: CollectionChallengeSource[] = buddyCosmeticChallengesOf(def.id).map((row) => ({
+    bossId: row.bossId,
+    bossName: MOBS[row.bossId]?.name ?? row.bossId,
+    location: bossLocation(row.bossId),
+    kind: row.kind,
+    amount: row.kind === 'speed' ? row.seconds : row.dps,
+  }));
+  const deedId = buddyCosmeticDeedOf(def.id);
+  const tokenItemId = buddyCosmeticTokenItemId(def.id);
+  const token = tokenItemId ? collectionItemFacts(tokenItemId) : null;
+  const craft = craftSourceFor(tokenItemId);
+  const grantOnly = BUDDY_COSMETIC_GRANT_ONLY.has(def.id);
+  const facts: BuddyCosmeticFacts = {
+    id: def.id,
+    buddy: def.buddy,
+    name: def.name,
+    tint: def.tint,
+    challenges,
+    deedId,
+    craft,
+    vendors: token?.vendors ?? [],
+    tokenItemId,
+    grantOnly,
+    obtainable:
+      challenges.length > 0 ||
+      deedId !== null ||
+      craft !== null ||
+      (token?.vendors.length ?? 0) > 0 ||
+      grantOnly,
+  };
+  cosmeticCache.set(def.id, facts);
+  return facts;
+}
+
+/** Drop the memos. Only the tests need this (they swap the active world
+ *  content, which re-resolves zones and NPCs under the same ids). */
 export function resetCollectionSourceCache(): void {
   cache.clear();
+  buddyCache.clear();
+  cosmeticCache.clear();
 }

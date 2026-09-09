@@ -1,6 +1,7 @@
-import { buddyItemId, buddyOwned } from './buddies';
+import { attachPendingBuddy, grantBuddy, grantBuddyCosmetic } from './buddies';
 import { applyCourserDaze } from './combat/hunter_shared';
 import { BUDDY_KEYS } from './content/buddies';
+import { BUDDY_COSMETIC_IDS } from './content/buddy_cosmetics';
 import { DEV_KIT_ROLES, devKitRole } from './content/dev_kit_roles';
 import { MOUNT_KEYS } from './content/mounts';
 import { GATHERING_PROFESSIONS } from './content/professions';
@@ -274,23 +275,49 @@ export function handleDevChat(
     return null;
   }
 
+  // /dev buddies: collect every companion and every look outright.
   if (/^\/(?:dev\s+buddi?es?|devbuddi?es?)\s*$/i.test(raw)) {
-    const meta = ctx.players.get(pid);
-    if (meta) {
-      let granted = 0;
-      for (const key of BUDDY_KEYS) {
-        if (buddyOwned(meta, key)) continue;
-        const itemId = buddyItemId(key);
-        if (!itemId) continue;
-        ctx.addItem(itemId, 1, pid);
-        granted += 1;
-      }
-      emitDevLog(
-        ctx,
-        pid,
-        `[dev] Granted ${granted} buddy whistles (${BUDDY_KEYS.length} owned). Use a whistle from your bags to summon.`,
-      );
+    let granted = 0;
+    for (const key of BUDDY_KEYS) if (grantBuddy(ctx, pid, key)) granted += 1;
+    let looks = 0;
+    for (const id of BUDDY_COSMETIC_IDS) if (grantBuddyCosmetic(ctx, pid, id)) looks += 1;
+    emitDevLog(
+      ctx,
+      pid,
+      `[dev] Collected ${granted} buddies and ${looks} looks (${BUDDY_KEYS.length} in the catalog). Summon one from the Hunting pane.`,
+    );
+    return null;
+  }
+  // /dev buddy <key>: stage ONE companion as a boss-roll win at your feet, so
+  // the presence line and the walk-away reveal can be watched end to end.
+  const buddyMatch = /^\/dev\s+buddy\s+([a-z_]+)\s*$/i.exec(raw);
+  if (buddyMatch) {
+    const e = ctx.entities.get(pid);
+    const key = buddyMatch[1].toLowerCase();
+    if (!e || !(BUDDY_KEYS as readonly string[]).includes(key)) {
+      emitDevLog(ctx, pid, `[dev] Unknown buddy key: ${key}`);
+      return null;
     }
+    const staged = attachPendingBuddy(ctx, pid, key, 'world', { x: e.pos.x, z: e.pos.z });
+    emitDevLog(
+      ctx,
+      pid,
+      staged
+        ? `[dev] ${key} is watching you. Walk 80 yards away and it will reveal itself.`
+        : `[dev] ${key} is already collected or already pending.`,
+    );
+    return null;
+  }
+  // /dev buddylook <id>: unlock one cosmetic outright.
+  const lookMatch = /^\/dev\s+buddylook\s+([a-z_]+)\s*$/i.exec(raw);
+  if (lookMatch) {
+    const id = lookMatch[1].toLowerCase();
+    const unlocked = grantBuddyCosmetic(ctx, pid, id);
+    emitDevLog(
+      ctx,
+      pid,
+      unlocked ? `[dev] Unlocked look ${id}.` : `[dev] Unknown or owned look: ${id}`,
+    );
     return null;
   }
 
@@ -948,7 +975,7 @@ export function handleDevChat(
   if (/^\/dev(?:\s|$)/i.test(raw)) {
     ctx.error(
       pid,
-      'Dev commands: /dev gui, /dev level, /dev tp, /dev spawn, /dev despawn, /dev killtarget, /dev give, /dev kit, /dev mounts, /dev buddies, /dev mountquest, /dev gold, /dev quest, /dev quests, /dev attune, /dev mobilestation, /dev gather, /dev bot, /dev vendor, /dev bg, /dev bis, /dev lfg, /dev portal [seed] [level] [C|B|A|S] [infernal|random], /dev cascade, /dev sandbox, /dev smite, /dev god, /dev noaggro, /dev immortal, /dev ignivarraid [boss], /dev varkhulraid [normal|heroic], /dev heal, /dev hp <1-100>, /dev resource, /dev cooldowns, /dev revive, /dev combatreset, /dev daze, /dev fear, /dev dungeon, /dev raid, /dev kill',
+      'Dev commands: /dev gui, /dev level, /dev tp, /dev spawn, /dev despawn, /dev killtarget, /dev give, /dev kit, /dev mounts, /dev buddies, /dev buddy <key>, /dev buddylook <id>, /dev mountquest, /dev gold, /dev quest, /dev quests, /dev attune, /dev mobilestation, /dev gather, /dev bot, /dev vendor, /dev bg, /dev bis, /dev lfg, /dev portal [seed] [level] [C|B|A|S] [infernal|random], /dev cascade, /dev sandbox, /dev smite, /dev god, /dev noaggro, /dev immortal, /dev ignivarraid [boss], /dev varkhulraid [normal|heroic], /dev heal, /dev hp <1-100>, /dev resource, /dev cooldowns, /dev revive, /dev combatreset, /dev daze, /dev fear, /dev dungeon, /dev raid, /dev kill',
     );
     return null;
   }

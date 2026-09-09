@@ -9,14 +9,14 @@
     "acceptQuest -> finalizeQuestAccept -> onInventoryChangedForQuests",
     "turnInQuest (xp + copper reward)"
   ],
-  "draws": 73,
-  "drawDigest": "4c7da107",
+  "draws": 40,
+  "drawDigest": "73f698f7",
   "frames": [
     {
       "tick": 0,
       "time": 0,
       "nextId": 999,
-      "state": "06cbf5e3",
+      "state": "7402a6ff",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -45,6 +45,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
@@ -163,7 +164,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 999,
-      "state": "bb4fed50",
+      "state": "f8478906",
       "events": "eb7e007f",
       "rng": {
         "draws": 0,
@@ -192,6 +193,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
@@ -326,11 +328,11 @@
       "tick": 8,
       "time": 0.4,
       "nextId": 1007,
-      "state": "c56b5416",
+      "state": "45e43a2a",
       "events": "e2bb6ab0",
       "rng": {
-        "draws": 73,
-        "digest": "4c7da107"
+        "draws": 40,
+        "digest": "73f698f7"
       },
       "label": "quest-ready",
       "players": [
@@ -355,6 +357,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {
@@ -520,11 +523,11 @@
       "tick": 8,
       "time": 0.4,
       "nextId": 1007,
-      "state": "cc46f459",
+      "state": "948e7d85",
       "events": "b05dc40b",
       "rng": {
-        "draws": 73,
-        "digest": "4c7da107"
+        "draws": 40,
+        "digest": "73f698f7"
       },
       "label": "quest-turned-in",
       "players": [
@@ -549,6 +552,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "copper": 75,
@@ -706,11 +710,11 @@
       "tick": 10,
       "time": 0.5,
       "nextId": 1007,
-      "state": "da8f5296",
+      "state": "16e70e04",
       "events": "741638a5",
       "rng": {
-        "draws": 73,
-        "digest": "4c7da107"
+        "draws": 40,
+        "digest": "73f698f7"
       },
       "label": "final",
       "players": [
@@ -735,6 +739,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "copper": 75,

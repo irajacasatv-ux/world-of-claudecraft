@@ -3456,7 +3456,86 @@ export const ja_JP: EnTranslations = {
       "state": {
         "owned": "収集済み",
         "notOwned": "未収集",
-        "unavailable": "まだ入手不可"
+        "unavailable": "まだ入手不可",
+        "pending": "何かが付いてきている"
+      },
+      "presenceDefault": "何かに見られている気がする。",
+      "revealed": "{name}があなたに付いていくことに決めた。",
+      "cosmeticUnlocked": "{name}の新しい姿：{look}。",
+      "presence": {
+        "ember_fox": "小さく温かい何かが、あなたの後ろをそっと歩いている。",
+        "moss_hare": "泥炭の中のかさかさという音が、あなたの歩みに合わせて続く。",
+        "frog": "あなたの一歩ごとに、湿った鳴き声が応える。",
+        "crimson_claw_crab": "視界の端で、何かがカチカチと音を立てて走り回る。",
+        "golden_sentinel": "草むらから、かすかな金色の光がこちらを見ている。",
+        "nightfang": "見えないところを、音のない足が付いてくる。",
+        "tuskhorn_boar": "鼻息とひづめの音。頑固な何かがあなたを追ってくる。",
+        "emerald_wolf": "下草の中で緑の目が瞬き、そして付いてくる。",
+        "tiger": "視界の端で縞模様が動く。",
+        "cate_coin": "自分のものではない硬貨の、かすかな音が聞こえる。",
+        "alon": "見られている。そして、静かに認められている気がする。",
+        "trollface": "あなたの後ろのどこかで、何かがにやりと笑っている。",
+        "ansem": "扉と闇のささやきがあなたに付いてくる。",
+        "triple_t": "一つのはずの足音が、三つ聞こえる。",
+        "kekius": "押し殺した笑い声が道の上であなたを追ってくる。",
+        "solbot": "柔らかな時を刻む音が、あなたの歩幅に合わせて鳴る。",
+        "frostfire": "蒸気と霜があなたの後ろで渦を巻く。",
+        "rocky": "風もないのに、後ろで小石が動く。",
+        "proud_grunt": "あなたの後ろのどこかで、軍靴が気をつけの音を鳴らす。",
+        "loot_goblin": "何かがあなたの硬貨をぼそぼそと数えている。",
+        "penny_goldspark": "自分のものではないポケットで、小さな道具がかちゃかちゃ鳴る。",
+        "stag": "角のある影が、あなたの道に落ちる。",
+        "alpaca": "毛むくじゃらで急がない何かが、一緒に来ることに決めたようだ。",
+        "bull": "低い鼻息が、あなたの後ろの土埃を舞い上げる。",
+        "spider": "一筋の糸があなたの肩をかすめる。",
+        "raptor": "すばやい爪が、あなたのかかとのそばで石を鳴らす。",
+        "skeleton": "乾いた骨があなたの歩みに合わせてかたかた鳴る。",
+        "crystal_lich": "残骸から冷たいうなりが立ちのぼり、それがあなたを見ている。",
+        "forgemaw": "炉の熱がまだあなたから離れない。何かがそれと共に歩き出た。",
+        "crystal_tide": "海のひとしずくが、あなたの釣り糸から落ちようとしない。",
+        "phantom": "あなたの後ろの空気が、ほんの少し静かすぎる。",
+        "emberfall_phoenix": "埋み火のような温もりが、あなたの背に落ち着く。"
+      },
+      "cosmetic": {
+        "crystal_lich_frostbound": "霜縛り",
+        "crystal_lich_voltaic": "雷光",
+        "forgemaw_ashen": "灰燼",
+        "forgemaw_whitehot": "白熱",
+        "stag_acorn": "どんぐりの冠",
+        "stag_gilded": "金箔",
+        "moss_hare_verdant": "新緑",
+        "proud_grunt_warlord": "ウォーロード"
+      },
+      "actions": {
+        "summon": "呼び出す",
+        "dismiss": "下がらせる",
+        "wear": "着せる",
+        "remove": "外す"
+      },
+      "looks": {
+        "title": "姿",
+        "unlocked": "解放済み",
+        "locked": "未解放",
+        "worn": "着用中",
+        "none": "この相棒にはまだ姿が用意されていない"
+      },
+      "source": {
+        "bossLabel": "ボスのペット",
+        "bossDrop": "{mob}（{location}）、討伐ごとにプレイヤー各自{chance}%",
+        "bossDropWithHeroic": "{mob}（{location}）、プレイヤー各自{chance}%、ヒロイックでは{heroicChance}%",
+        "bossDropHeroicOnly": "{mob}（{location}）、ヒロイック限定、プレイヤー各自{chance}%",
+        "rollNote": "判定はプレイヤーごとに別々に行われ、パーティメンバーに機会を奪われることはない。",
+        "deedLabel": "入手条件",
+        "deed": "功績「{deed}」",
+        "challengeLabel": "チャレンジ",
+        "challengeSpeed": "戦闘開始から{seconds}秒以内に{mob}を倒す",
+        "challengeDps": "戦闘を通して{mob}に毎秒{dps}のダメージを与える",
+        "craftLabel": "製作",
+        "craft": "{item}（{profession}のレシピ）",
+        "grantLabel": "授与",
+        "grantOnly": "シーズン報酬：月間ラダーとトップパース報酬",
+        "tokenLabel": "トークン",
+        "token": "{item}、一度使うと相棒が付いてくる"
       },
       "buddyLore": {
         "ember_fox": "イーストブルック渓谷の生け垣から来た雌狐。冬枯れの茂みごしに覗く炭のように赤い毛からその名がついた。土地の罠師たちは何世代も前に子狐を狙うのをやめ、代わりに餌を置くようになった。",
@@ -9874,6 +9953,7 @@ export const ja_JP: EnTranslations = {
       "bag": "バッグ",
       "mount": "マウント",
       "buddy": "バディ",
+      "buddyCosmetic": "相棒の姿",
       "skin": "スキン"
     },
     "stats": {
@@ -13503,6 +13583,12 @@ export const ja_JP: EnTranslations = {
       },
       "whistle_emberfall_phoenix": {
         "name": "エンバーフォール・フェニックスの笛"
+      },
+      "charm_stag_acorn": {
+        "name": "どんぐりの冠のお守り"
+      },
+      "charm_stag_gilded": {
+        "name": "金箔のお守り"
       },
       "lastflame_core": {
         "name": "最後の炎の核"

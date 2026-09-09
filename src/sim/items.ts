@@ -25,7 +25,7 @@ import {
   equipBag as equipBagCmd,
   stackSizeOf,
 } from './bags';
-import { summonBuddyItem } from './buddies';
+import { useBuddyCosmeticToken, useBuddyToken } from './buddies';
 import { isRawCookingCatch } from './content/items';
 import { ITEMS, NPCS } from './data';
 import { markItemDiscovered } from './deeds';
@@ -982,10 +982,13 @@ export function useItem(
     // the item, so removing it here would delete the mount.
     summonMountItem(ctx, meta.entityId, def.mount);
   } else if (def.kind === 'buddy') {
-    // Whistles work like reins: clicking one (bags or an action-bar slot)
-    // summons THAT buddy, or dismisses it if already out. Whistles are never
-    // consumed: buddyOwned() derives ownership from holding the item.
-    summonBuddyItem(ctx, meta.entityId, def.buddy);
+    // A whistle is a grant TOKEN: using it attaches the companion to the
+    // character and consumes the token (a duplicate is refused unconsumed).
+    // Summoning an owned buddy is a Hunting-window command, not an item use.
+    useBuddyToken(ctx, meta.entityId, itemId);
+  } else if (def.kind === 'buddy_cosmetic') {
+    // Same shape for a look: unlock it for the character, consume the token.
+    useBuddyCosmeticToken(ctx, meta.entityId, itemId);
   }
 }
 

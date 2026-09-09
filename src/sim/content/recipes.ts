@@ -1632,8 +1632,32 @@ export const BAG_RECIPES: ProfessionRecipeRecord[] = [
 // every recipe, common, tool, and combo alike: see PR #1209 review, a combo
 // recipe omitted from recipeList was unreachable in normal play; the same
 // applies to the tool recipes de-stubbed here (#1135's crafted base tools).
+// Buddy cosmetic charms (content/buddy_cosmetics.ts): a crafted LOOK for an
+// achievement pet. The recipe eats the fine logs of three different woods,
+// the "acorns from across the map" shape of the owner plan: rare gathered
+// materials, one from each region's timber, into one charm. Station-bound at
+// the toolworks and skill-gated like the tool recipes.
+export const BUDDY_CHARM_RECIPES: ProfessionRecipeRecord[] = [
+  {
+    id: 'recipe_charm_stag_acorn',
+    professionId: 'leatherworking',
+    resultItemId: 'charm_stag_acorn',
+    resultCount: 1,
+    reagents: [
+      { itemId: 'fine_ironbark_log', count: 3 },
+      { itemId: 'fine_ashwood_log', count: 3 },
+      { itemId: 'fine_elderwood_log', count: 3 },
+    ],
+    skillReq: 75,
+    itemLevelBudget: 20,
+    level: 20,
+    stationType: 'toolworks',
+  },
+];
+
 export const ALL_RECIPES: ProfessionRecipeRecord[] = [
   ...COMMON_RECIPES,
+  ...BUDDY_CHARM_RECIPES,
   ...TOOL_RECIPES,
   ...ROD_RECIPES,
   ...TOOL_EFFECT_RECIPES,

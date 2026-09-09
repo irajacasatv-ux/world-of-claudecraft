@@ -910,7 +910,8 @@ export type ItemKind =
   | 'elixir'
   | 'bag'
   | 'mount'
-  | 'buddy';
+  | 'buddy'
+  | 'buddy_cosmetic';
 
 interface BaseItemDef {
   id: string;
@@ -1200,7 +1201,10 @@ export interface HeldOffhandItemDef extends BaseItemDef {
 }
 
 export interface OtherItemDef extends BaseItemDef {
-  kind: Exclude<ItemKind, 'armor' | 'weapon' | 'held_offhand' | 'mount' | 'buddy'>;
+  kind: Exclude<
+    ItemKind,
+    'armor' | 'weapon' | 'held_offhand' | 'mount' | 'buddy' | 'buddy_cosmetic'
+  >;
   armorType?: never;
 }
 
@@ -1218,17 +1222,27 @@ export interface MountItemDef extends BaseItemDef {
   weapon?: never;
 }
 
-// A collectible buddy summon-whistle. Owning the item IS owning the buddy:
-// while it sits in the player's bags or bank, the catalog buddy it names is
-// summonable (src/sim/buddies.ts buddyOwned), exactly like a mount's reins
-// but with no riding-skill gate and no stat effect. Not soulbound by default:
-// ownership transfers with the item (trade, mail, market, guild bank), and the
-// two currency-bought companions are the only ones that set the flag. Every
-// whistle is discardable and vendor-sellable, so parting with one (either way)
-// gives the buddy up.
+// A buddy GRANT TOKEN (a whistle). Using it attaches the named companion to
+// the character (src/sim/buddies.ts useBuddyToken) and consumes the token;
+// ownership is the per-character collection flag, never the item. Soulbound
+// and never listed by any loot table: a whistle is the channel a vendor, a
+// letter or an admin grant uses to hand a companion over, nothing more. A
+// token for a companion the player already has is refused unconsumed.
 export interface BuddyItemDef extends BaseItemDef {
   kind: 'buddy';
   buddy: BuddyKey;
+  armorType?: never;
+  weapon?: never;
+}
+
+// A buddy COSMETIC token: using it unlocks the named look for the character
+// (src/sim/buddies.ts useBuddyCosmeticToken) and consumes the token. This is
+// how a crafted look (a recipe result) and a store look (a vendor row) reach
+// the wardrobe; challenge, deed and admin unlocks skip the item entirely.
+export interface BuddyCosmeticItemDef extends BaseItemDef {
+  kind: 'buddy_cosmetic';
+  /** content/buddy_cosmetics.ts id. */
+  cosmetic: string;
   armorType?: never;
   weapon?: never;
 }
@@ -1240,7 +1254,8 @@ export type ItemDef =
   | HeldOffhandItemDef
   | OtherItemDef
   | MountItemDef
-  | BuddyItemDef;
+  | BuddyItemDef
+  | BuddyCosmeticItemDef;
 
 // Per-instance item payload (#1165). Additive and OPTIONAL: most items stay plain
 // {itemId, count} with no instance payload (fungible, market-listable). A slot
@@ -7069,6 +7084,16 @@ export type SimEvent = { pid?: number } & (
   // (professions/attunement_events.ts). Personal (pid = the celebrant) and
   // text-free: the client renders its own localized line off `pairId`.
   | { type: 'attuned'; pid: number; pairId: string }
+  // Buddy companions (src/sim/buddies.ts, content/buddy_sources.ts). All
+  // three are personal and text-free: the client renders a localized chat
+  // line off the id. `buddyPresence` fires when a boss roll attaches a
+  // PENDING companion ("you feel a presence watching you"); `buddyRevealed`
+  // when a companion becomes owned (the zone-out reveal, a deed grant, a
+  // token use, an admin grant); `buddyCosmeticUnlocked` when a look unlocks
+  // (a challenge, a deed, a token, a grant).
+  | { type: 'buddyPresence'; pid: number; key: string }
+  | { type: 'buddyRevealed'; pid: number; key: string }
+  | { type: 'buddyCosmeticUnlocked'; pid: number; cosmeticId: string }
   // Attunement celebration, zone broadcast (Professions 2.0): the soft
   // zone-wide copy of an attunement, one per overworld player currently in the
   // celebrant's zone INCLUDING the celebrant, `pid` being the RECIPIENT (the

@@ -179,6 +179,7 @@ import {
 } from './banner_queue';
 import { blockLandingLogKey } from './block_landing_feedback_core';
 import { BootcampOverlay } from './bootcamp';
+import { buddyEventLogArgs } from './buddy_event_lines';
 import { CalendarWindow } from './calendar_window';
 import { CardDuelWindow } from './card_duel_window';
 import { CastBarPainter, type CastBarPaintInput } from './cast_bar_painter';
@@ -202,7 +203,7 @@ import { ClaudiumLauncherBalance } from './claudium_launcher_balance_core';
 import { createClaudiumPurchaseFacet } from './claudium_purchase_bridge';
 import { type ClaudiumRail, type ClaudiumSnapshot, ClaudiumWindow } from './claudium_window';
 import { formatClockTime } from './clock';
-import { buildCollectionsWindow, collectionsPreviewOptions } from './collections/collections_host';
+import { CollectionsWindow, collectionsPreviewOptions, collectionsWindowDeps } from './collections';
 import { CombatAnnouncer } from './combat_announcer';
 import {
   auraApplyCue,
@@ -473,6 +474,7 @@ import {
   buildBgTimeWarningView,
 } from './hud/battleground';
 import { BgProposalPopup } from './hud/battleground/battleground_proposal_popup';
+import { openBuddyMenu as openBuddyMenuPopup } from './hud/buddy_menu';
 import { ChatAnnouncer } from './hud/chat/chat_announcer';
 import { chatChannelColor } from './hud/chat/chat_channels';
 import { ChatGeometryController } from './hud/chat/chat_geometry_controller';
@@ -519,7 +521,7 @@ import { RiftMapPainter } from './hud/rift';
 import { RiftFloorTrackerController } from './hud/rift/rift_floor_tracker_controller';
 import { StanceBarController } from './hud/stance';
 import { closeOpenTouchMenu } from './hud/tap_menu';
-import { buddyMenuHtml, targetFrameMenuKind } from './hud/target_frame_menu';
+import { targetFrameMenuKind } from './hud/target_frame_menu';
 import { dismissBuyQuantityPrompts } from './hud/vendor/buy_quantity_prompt_window';
 import { buildCrucibleVendorView } from './hud/vendor/crucible_vendor_view';
 import { renderCrucibleVendorWindow } from './hud/vendor/crucible_vendor_window';
@@ -3475,7 +3477,7 @@ export class Hud {
   // the viewport in that same space, keeping `reserveRight`/`reserveBottom`
   // author px clear so the popup never spills off-screen. minTop pins it below
   // the top edge. Z=1 (default uiScale) leaves the math identical to before.
-  private placePopupAt(
+  placePopupAt(
     el: HTMLElement,
     x: number,
     y: number,
@@ -3497,7 +3499,7 @@ export class Hud {
   // on a short landscape phone; getBoundingClientRect reflects the laid-out box (so it
   // is reliable even on the first open, where an offset read can still be stale), and
   // this only ever moves the popup UP/LEFT, never past the top/left edge.
-  private keepPopupOnScreen(el: HTMLElement): void {
+  keepPopupOnScreen(el: HTMLElement): void {
     const clamp = () => {
       const z = getUiScale();
       const r = el.getBoundingClientRect();
@@ -5395,19 +5397,21 @@ export class Hud {
   // one's source, derived in src/ui/collections/. Its whole deps bag is built
   // there (collections_host.ts); the idle preview rides the SHARED turntable, so
   // the window adds no second WebGL context.
-  private readonly collectionsWindow = buildCollectionsWindow({
-    ...this.presentationBag,
-    root: () => $('#collections-window'),
-    world: () => this.sim,
-    closeOthers: () => this.closeOtherWindows('#collections-window'),
-    ...this.windowFocus('#collections-window'),
-    mountPreview: (container, previewKey, kind, tint) =>
-      this.mountSharedPreview(
-        container,
-        collectionsPreviewOptions(previewKey, this.sim.cfg.playerClass, kind, tint),
-      ),
-    exchangeClient: () => this.wocMarketHooks?.client ?? null,
-  });
+  private readonly collectionsWindow = new CollectionsWindow(
+    collectionsWindowDeps({
+      ...this.presentationBag,
+      root: () => $('#collections-window'),
+      world: () => this.sim,
+      closeOthers: () => this.closeOtherWindows('#collections-window'),
+      ...this.windowFocus('#collections-window'),
+      mountPreview: (container, previewKey, kind, tint) =>
+        this.mountSharedPreview(
+          container,
+          collectionsPreviewOptions(previewKey, this.sim.cfg.playerClass, kind, tint),
+        ),
+      exchangeClient: () => this.wocMarketHooks?.client ?? null,
+    }),
+  );
 
   // Dungeon Finder (cold window; docs/prd/dungeon-finder.md). Composes the
   // shared presentation bag for loot icons/tooltips and a narrow map hook for
@@ -12253,6 +12257,11 @@ export class Hud {
           // executes it.
           this.handleProfessionEvent(ev);
           break;
+        case 'buddyPresence':
+        case 'buddyRevealed':
+        case 'buddyCosmeticUnlocked':
+          this.log(...buddyEventLogArgs(ev));
+          break;
         case 'gatherResult': {
           // Harvest feedback line (Professions 2.0), colored by rolled
           // material rarity. Identical on every graphics tier (player feedback
@@ -18288,16 +18297,7 @@ export class Hud {
    *  of the HUD reads buddyKey, so the row offers the flip the SERVER would
    *  make; the write is server-authoritative and lands on the next snapshot. */
   openBuddyMenu(name: string, x: number, y: number): void {
-    const el = $('#ctx-menu');
-    el.classList.remove(CTX_MENU_PICKER_CLASS);
-    const armed = this.sim.entities.get(this.sim.playerId)?.buddyAutoloot === true;
-    el.innerHTML = buddyMenuHtml(name, armed);
-    el.style.display = 'block';
-    this.placePopupAt(el, x, y, 170, 240);
-    this.keepPopupOnScreen(el);
-    this.bindContextMenuActions((act) => {
-      if (act === 'autoloot') this.sim.setBuddyAutoloot(!armed);
-    });
+    openBuddyMenuPopup(this, this.sim, name, x, y);
   }
 
   private openChatPlayerContextMenu(
@@ -18386,7 +18386,7 @@ export class Hud {
     });
   }
 
-  private bindContextMenuActions(onActivate: (act: string) => void): void {
+  bindContextMenuActions(onActivate: (act: string) => void): void {
     const el = $('#ctx-menu');
     el.querySelectorAll<HTMLElement>('.ctx-item').forEach((item) => {
       item.setAttribute('role', 'button');

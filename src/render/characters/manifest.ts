@@ -169,8 +169,10 @@ export interface VisualDef {
    *  separate from `weaponSlots` so mainhand cosmetics cannot overwrite a live
    *  shield or second weapon. */
   offhandSlot?: number;
-  /** material tint: explicit color, 'entity' (use e.color), or none */
-  tint?: number | 'entity';
+  /** material tint: explicit color, 'entity' (use e.color), 'cosmetic' (use
+   *  e.color ONLY when it is not the 0xffffff default, so a baked-texture rig
+   *  keeps its authored look until a buddy cosmetic dyes it), or none */
+  tint?: number | 'entity' | 'cosmetic';
   /** lerp amount toward the tint (default 0.4) */
   tintStrength?: number;
   /** u/s at which the walk/run cycles look right (timeScale matching) */
@@ -2289,28 +2291,39 @@ export const VISUALS: Record<string, VisualDef> = {
     tint: 'entity',
     tintStrength: 0.25,
   },
-  // epic, the Nythraxis raid drop. Its own GLB with baked crystal textures, so
-  // no tint, and the shipped Idle/Walk pair is already on the buddy convention.
+  // epic, the Nythraxis raid pet. Its own GLB with baked crystal textures:
+  // `tint: 'cosmetic'` keeps the authored look until a buddy cosmetic dyes
+  // the entity (content/buddy_cosmetics.ts), and the shipped Idle/Walk pair
+  // is already on the buddy convention.
   buddy_crystal_lich: {
     url: `${BUDDIES_DIR}/crystal_lich.glb`,
     height: 0.9,
     clips: BUDDY_CLIPS,
+    tint: 'cosmetic',
+    tintStrength: 0.5,
   },
-  // epic, the heroic Crucible drop. Baked molten texture, so no tint.
+  // rare, the Master Angler deed pet. Baked texture, cosmetic-only dye.
   buddy_crystal_tide: {
     url: `${BUDDIES_DIR}/crystal_tide.glb`,
     height: 0.8,
     clips: BUDDY_CLIPS,
+    tint: 'cosmetic',
+    tintStrength: 0.5,
   },
   buddy_phantom: {
     url: `${BUDDIES_DIR}/phantom.glb`,
     height: 0.8,
     clips: BUDDY_CLIPS,
+    tint: 'cosmetic',
+    tintStrength: 0.5,
   },
+  // epic, the heroic Crucible pet. Baked molten texture, cosmetic-only dye.
   buddy_forgemaw: {
     url: `${BUDDIES_DIR}/forgemaw.glb`,
     height: 0.85,
     clips: BUDDY_CLIPS,
+    tint: 'cosmetic',
+    tintStrength: 0.5,
     // The rig is authored facing -Z, so without this it heels the owner
     // back-to-front: chest toward the camera while its owner walks away.
     yaw: Math.PI,

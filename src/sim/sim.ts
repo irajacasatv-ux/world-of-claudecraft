@@ -41,11 +41,8 @@ import {
 } from './bank';
 import * as bankSocketsMod from './bank_sockets';
 import { extractTradableCopyImpl, grantTradableCopyImpl } from './broker_custody';
-import {
-  ownedBuddies as ownedBuddiesImpl,
-  setBuddyAutoloot as setBuddyAutolootImpl,
-  toggleBuddy as toggleBuddyImpl,
-} from './buddies';
+import * as buddiesMod from './buddies';
+import { revealBuddiesOnJoin, updateBuddyReveals } from './buddy_drops';
 import { campSpawnOffset } from './camp_scatter';
 import type { CharacterState, PetState } from './character_state';
 
@@ -827,6 +824,7 @@ import {
   SUNDER_ARMOR_PCT_PER_STACK,
   steadyAngleTo,
   swingMissChance,
+  TICK_RATE,
   type Vec3,
   virtualLevel,
   type WeaponSkinLoadout,
@@ -1705,6 +1703,11 @@ export interface PlayerMeta {
   // marks, capped recent. Item ownership stays on deedStats.itemsDiscovered;
   // this field is omit-empty on serialize and never a second full discovery set.
   reliquary: ReliquaryState;
+  // The buddy collection (src/sim/buddies.ts): owned companions, unlocked
+  // cosmetics, the worn look per buddy, and the boss-roll wins still pending
+  // their reveal. Persisted (character_state.ts `buddies`); the ACTIVE buddy
+  // stays a session-only entity field (Entity.buddyKey), like the mount.
+  buddies: buddiesMod.BuddyCollection;
 }
 
 // Away-from-keyboard / do-not-disturb presence. `afk` still delivers whispers
@@ -2846,6 +2849,7 @@ export class Sim {
       activeBorder: null,
       renown: 0,
       reliquary: freshReliquaryState(),
+      buddies: buddiesMod.freshBuddyCollection(),
     };
     // A fresh character sets out provisioned (class-defined starter rations);
     // a saved character loads its own bags from savedState below.
@@ -3286,6 +3290,7 @@ export class Sim {
       }
       meta.deedStats = restoreDeedStats(s.deedStats);
       meta.reliquary = restoreReliquaryState(s.reliquary);
+      meta.buddies = buddiesMod.restoreBuddyCollection(s.buddies);
       deedsMod.unionLegacyMilestones(meta);
       deedsMod.recomputeRenown(meta);
       // The saved title re-applies through the same validator the setter
@@ -3441,6 +3446,9 @@ export class Sim {
     deedsMod.evaluateDeedsFor(this.ctx, meta, player, true);
     this.deedDirtyPids.delete(player.id);
     this.deedDirtyKeys.delete(player.id);
+    // A boss pet left pending by a logout reveals now when the player stands
+    // outside; inside, the 1 Hz sweep reveals it on the way out.
+    revealBuddiesOnJoin(this.ctx, player.id);
     return player.id;
   }
 
@@ -4103,6 +4111,11 @@ export class Sim {
         const reliquary = serializeReliquaryState(meta.reliquary);
         return reliquary ? { reliquary } : {};
       })(),
+      // Buddy collection: absent while empty, same zero-default omission.
+      ...(() => {
+        const buddies = buddiesMod.serializeBuddyCollection(meta.buddies);
+        return buddies ? { buddies } : {};
+      })(),
     };
     // Retire expired BoP party-trade metadata at the existing per-character
     // persistence boundary. This keeps saved JSON compact without adding a
@@ -4180,25 +4193,67 @@ export class Sim {
    *  rides primaryId. Rules live in src/sim/buddies.ts. Summoning a specific
    *  buddy is not here: it is an item use (useItem -> summonBuddyItem). */
   toggleBuddyFor(pid: number): boolean {
-    return toggleBuddyImpl(this.ctx, pid);
+    return buddiesMod.toggleBuddy(this.ctx, pid);
   }
 
   /** The owned subset of the buddy catalog for a player (the server wire path). */
   ownedBuddiesFor(pid: number): BuddyKey[] {
     const meta = this.players.get(pid);
-    return meta ? ownedBuddiesImpl(meta) : [];
+    return meta ? buddiesMod.ownedBuddies(meta) : [];
   }
 
   /** Per-pid buddy autoloot toggle (the server command path); the IWorld member
    *  below rides primaryId. Rules live in src/sim/buddies.ts, the per-tick
    *  errand it arms in src/sim/pet/buddy_autoloot.ts. */
   setBuddyAutolootFor(pid: number, enabled: boolean): boolean {
-    return setBuddyAutolootImpl(this.ctx, pid, enabled);
+    return buddiesMod.setBuddyAutoloot(this.ctx, pid, enabled);
+  }
+
+  // The rest of the per-pid buddy surface (server wire + commands + grants);
+  // every rule lives in src/sim/buddies.ts, these are the thin delegates.
+  summonBuddyFor(pid: number, key: string): boolean {
+    return buddiesMod.summonBuddy(this.ctx, pid, key);
+  }
+  equipBuddyCosmeticFor(pid: number, key: string, cosmeticId: string | null): boolean {
+    return buddiesMod.equipBuddyCosmetic(this.ctx, pid, key, cosmeticId);
+  }
+  grantBuddyFor(pid: number, key: string): boolean {
+    return buddiesMod.grantBuddy(this.ctx, pid, key);
+  }
+  grantBuddyCosmeticFor(pid: number, cosmeticId: string): boolean {
+    return buddiesMod.grantBuddyCosmetic(this.ctx, pid, cosmeticId);
+  }
+  ownedBuddyCosmeticsFor(pid: number): string[] {
+    const meta = this.players.get(pid);
+    return meta ? buddiesMod.ownedBuddyCosmetics(meta) : [];
+  }
+  equippedBuddyCosmeticsFor(pid: number): Record<string, string> {
+    const meta = this.players.get(pid);
+    return meta ? buddiesMod.equippedBuddyCosmetics(meta) : {};
+  }
+  pendingBuddiesFor(pid: number): BuddyKey[] {
+    const meta = this.players.get(pid);
+    return meta ? buddiesMod.pendingBuddies(meta) : [];
   }
 
   // --- IWorldBuddies ---
   ownedBuddies(): readonly BuddyKey[] {
     return this.ownedBuddiesFor(this.primaryId);
+  }
+  ownedBuddyCosmetics(): readonly string[] {
+    return this.ownedBuddyCosmeticsFor(this.primaryId);
+  }
+  equippedBuddyCosmetics(): Readonly<Record<string, string>> {
+    return this.equippedBuddyCosmeticsFor(this.primaryId);
+  }
+  pendingBuddies(): readonly BuddyKey[] {
+    return this.pendingBuddiesFor(this.primaryId);
+  }
+  summonBuddy(key: BuddyKey): void {
+    this.summonBuddyFor(this.primaryId, key);
+  }
+  equipBuddyCosmetic(key: BuddyKey, cosmeticId: string | null): void {
+    this.equipBuddyCosmeticFor(this.primaryId, key, cosmeticId);
   }
   toggleBuddy(): void {
     this.toggleBuddyFor(this.primaryId);
@@ -6224,6 +6279,9 @@ export class Sim {
     // same-tick delayed-event results, and because it draws ZERO rng (pure
     // predicate checks over dirty players plus a 1 Hz proximity sweep) its
     // position cannot fork the draw order (the Vale Cup tail precedent).
+    // Pending boss-pet reveals (src/sim/buddy_drops.ts): a 1 Hz position
+    // sweep that draws no rng, so it sits beside the deeds evaluator.
+    if (this.tickCount % TICK_RATE === 0) updateBuddyReveals(this.ctx);
     deedsMod.updateDeeds(this.ctx);
     lap?.('deeds');
 

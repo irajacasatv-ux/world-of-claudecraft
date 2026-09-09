@@ -77,8 +77,8 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // the v0.40.0 sync merge brings the release side's one new pair with it.
 // Both arms added a command (ours buddy_toggle, upstream its raid set), so
 // these were re-measured on the merged tree at the 47c1aacaae resolution.
-const EXPECTED_SEND_COUNT = 208;
-const EXPECTED_DISPATCH_COUNT = 221;
+const EXPECTED_SEND_COUNT = 211;
+const EXPECTED_DISPATCH_COUNT = 224;
 const EXPECTED_DISPATCH_ONLY_COUNT = 13;
 
 // The chat sub-channel routing switch (server/game.ts `switch

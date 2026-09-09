@@ -487,16 +487,27 @@ describe('/dev bg (Thornhollow Fields force-start)', () => {
     expect(sim.bgMatchFor(sim.playerId)).toBeNull();
   });
 
-  it('/dev buddies grants every catalog whistle, skipping ones already owned', () => {
+  it('/dev buddies collects every catalog companion and look outright, no items involved', () => {
     const sim = devSim();
     const meta = sim.players.get(sim.playerId);
     if (!meta) throw new Error('missing player meta');
-    sim.addItem('whistle_ember_fox', 1, sim.playerId); // already owned before the command
 
     sim.chat('/dev buddies');
 
     expect(sim.ownedBuddies().length).toBe(BUDDY_KEYS.length);
-    // The already-owned whistle was not duplicated.
-    expect(meta.inventory.filter((s) => s.itemId === 'whistle_ember_fox')).toHaveLength(1);
+    expect(sim.ownedBuddyCosmetics().length).toBeGreaterThan(0);
+    expect(meta.inventory.some((s) => s.itemId.startsWith('whistle_'))).toBe(false);
+  });
+
+  it('/dev buddy <key> stages one companion as a boss-roll win that reveals on the walk away', () => {
+    const sim = devSim();
+    const meta = sim.players.get(sim.playerId);
+    if (!meta) throw new Error('missing player meta');
+    sim.chat('/dev buddy skeleton');
+    expect(meta.buddies.pending.map((p) => p.key)).toEqual(['skeleton']);
+    expect(sim.ownedBuddies()).toEqual([]);
+    sim.player.pos.x += 100;
+    for (let i = 0; i < 25 && !sim.ownedBuddies().includes('skeleton'); i++) sim.tick();
+    expect(sim.ownedBuddies()).toEqual(['skeleton']);
   });
 });

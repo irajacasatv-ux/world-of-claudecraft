@@ -3456,7 +3456,86 @@ export const da_DK: EnTranslations = {
       "state": {
         "owned": "Collected",
         "notOwned": "Not collected",
-        "unavailable": "Not obtainable yet"
+        "unavailable": "Not obtainable yet",
+        "pending": "A presence follows you"
+      },
+      "presenceDefault": "You feel a presence watching you.",
+      "revealed": "{name} has decided to follow you.",
+      "cosmeticUnlocked": "New look for {name}: {look}.",
+      "presence": {
+        "ember_fox": "Something small and warm is padding along behind you.",
+        "moss_hare": "A rustle in the peat keeps pace with your steps.",
+        "frog": "A wet croak answers every step you take.",
+        "crimson_claw_crab": "Something clicks and scuttles just out of sight.",
+        "golden_sentinel": "A faint gilded glint watches from the grass.",
+        "nightfang": "Silent paws follow where you cannot see.",
+        "tuskhorn_boar": "A snort and a stamp: something stubborn is trailing you.",
+        "emerald_wolf": "Green eyes blink in the undergrowth, then follow.",
+        "tiger": "Stripes shift at the edge of your vision.",
+        "cate_coin": "You hear the faint ring of a coin that is not yours.",
+        "alon": "You feel watched, and quietly approved of.",
+        "trollface": "Somewhere behind you, something is grinning.",
+        "ansem": "A whisper of doors and darkness follows you.",
+        "triple_t": "Three footsteps fall where there should be one.",
+        "kekius": "A stifled laugh trails you down the road.",
+        "solbot": "A soft ticking keeps time with your stride.",
+        "frostfire": "Steam and frost swirl in your wake.",
+        "rocky": "Pebbles shift behind you with no wind to move them.",
+        "proud_grunt": "A boot stamps to attention somewhere behind you.",
+        "loot_goblin": "Something is counting your coins under its breath.",
+        "penny_goldspark": "Tiny tools clink in a pocket that is not yours.",
+        "stag": "A shadow with antlers falls across your path.",
+        "alpaca": "Something woolly and unhurried has decided to come along.",
+        "bull": "A low huff of breath stirs the dust behind you.",
+        "spider": "A thread of silk brushes your shoulder.",
+        "raptor": "Quick claws tick over stone at your heels.",
+        "skeleton": "Dry bones rattle in step with yours.",
+        "crystal_lich": "A cold hum rises from the wreckage, and it is watching you.",
+        "forgemaw": "The heat of the forge has not left you. Something walked out with it.",
+        "crystal_tide": "A drop of the sea refuses to fall from your line.",
+        "phantom": "The air behind you is a shade too still.",
+        "emberfall_phoenix": "A warmth like a banked fire settles at your back."
+      },
+      "cosmetic": {
+        "crystal_lich_frostbound": "Frostbound",
+        "crystal_lich_voltaic": "Voltaic",
+        "forgemaw_ashen": "Ashen",
+        "forgemaw_whitehot": "White-Hot",
+        "stag_acorn": "Acorn Crown",
+        "stag_gilded": "Gilded",
+        "moss_hare_verdant": "Verdant",
+        "proud_grunt_warlord": "Warlord"
+      },
+      "actions": {
+        "summon": "Summon",
+        "dismiss": "Dismiss",
+        "wear": "Wear",
+        "remove": "Remove"
+      },
+      "looks": {
+        "title": "Looks",
+        "unlocked": "Unlocked",
+        "locked": "Locked",
+        "worn": "Worn",
+        "none": "No looks authored for this companion yet"
+      },
+      "source": {
+        "bossLabel": "Boss pet",
+        "bossDrop": "{mob} ({location}), {chance}% per player per kill",
+        "bossDropWithHeroic": "{mob} ({location}), {chance}% per player, {heroicChance}% on Heroic",
+        "bossDropHeroicOnly": "{mob} ({location}), Heroic only, {chance}% per player",
+        "rollNote": "Every player rolls separately; nobody loses a roll to a party member.",
+        "deedLabel": "Earned by",
+        "deed": "The deed {deed}",
+        "challengeLabel": "Challenge",
+        "challengeSpeed": "Defeat {mob} within {seconds} seconds of the pull",
+        "challengeDps": "Deal {dps} damage per second to {mob} across the fight",
+        "craftLabel": "Crafted",
+        "craft": "{item} ({profession} recipe)",
+        "grantLabel": "Awarded",
+        "grantOnly": "Seasonal award: the monthly ladder and top-parse rewards",
+        "tokenLabel": "Token",
+        "token": "{item}, used once to attach the companion"
       },
       "buddyLore": {
         "ember_fox": "A vixen out of the Eastbrook Vale hedgerows, named for the coal-red coat that shows through winter scrub. The trappers there gave up on the kits generations ago and started leaving food out instead.",
@@ -9874,6 +9953,7 @@ export const da_DK: EnTranslations = {
       "bag": "Taske",
       "mount": "Ridedyr",
       "buddy": "Buddy",
+      "buddyCosmetic": "Buddy cosmetic",
       "skin": "Skin"
     },
     "stats": {
@@ -13503,6 +13583,12 @@ export const da_DK: EnTranslations = {
       },
       "whistle_emberfall_phoenix": {
         "name": "Emberfall Phoenix Whistle"
+      },
+      "charm_stag_acorn": {
+        "name": "Acorn Crown Charm"
+      },
+      "charm_stag_gilded": {
+        "name": "Gilded Charm"
       },
       "lastflame_core": {
         "name": "Den sidste flammes kerne"

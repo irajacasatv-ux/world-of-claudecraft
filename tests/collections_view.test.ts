@@ -40,10 +40,16 @@ describe('collections view model', () => {
     const view = buildCollectionsView(EMPTY);
     const rows = [...view.buddies, ...view.mounts];
     // Whatever the current content is, the flag must agree with the derivation:
-    // a row is obtainable exactly when its item really has a source.
-    for (const row of rows) {
+    // a mount row is obtainable exactly when its reins really have a source,
+    // a buddy row exactly when the companion's own source table says so.
+    for (const row of view.mounts) {
       expect(row.obtainable, row.key).toBe(row.facts?.obtainable ?? false);
     }
+    for (const row of view.buddies) {
+      expect(row.obtainable, row.key).toBe(row.buddyFacts?.obtainable ?? false);
+    }
+    // Penny Goldspark lost her gold row and has no source yet: still listed.
+    expect(view.buddies.find((b) => b.key === 'penny_goldspark')?.obtainable).toBe(false);
     // And the row still carries a name and a preview key either way, so an
     // unobtainable entry renders as a real, greyed-out catalog entry.
     expect(rows.every((row) => row.name.length > 0)).toBe(true);
@@ -63,14 +69,40 @@ describe('collections view model', () => {
     }
   });
 
-  it('reflects ownership from the viewer bag/bank item ids', () => {
+  it('reflects ownership from the viewer collection, and pending from the boss-roll wins', () => {
     const view = buildCollectionsView({
       ...EMPTY,
-      ownedBuddyKeys: new Set(['penny_goldspark']),
+      ownedBuddyKeys: new Set(['stag']),
+      pendingBuddyKeys: new Set(['stag', 'phantom']),
     });
-    const penny = view.buddies.find((b) => b.key === 'penny_goldspark');
-    expect(penny?.owned).toBe(true);
+    const stag = view.buddies.find((b) => b.key === 'stag');
+    expect(stag?.owned).toBe(true);
+    expect(stag?.pending).toBe(false); // owned wins over a stale pending flag
+    expect(view.buddies.find((b) => b.key === 'phantom')?.pending).toBe(true);
     expect(view.buddies.filter((b) => b.owned)).toHaveLength(1);
+  });
+
+  it('lists every authored look under its companion, with unlock and worn state', () => {
+    const view = buildCollectionsView({
+      ...EMPTY,
+      ownedBuddyKeys: new Set(['stag']),
+      ownedBuddyCosmetics: new Set(['stag_gilded']),
+      equippedBuddyCosmetics: { stag: 'stag_gilded' },
+    });
+    const stag = view.buddies.find((b) => b.key === 'stag')!;
+    const ids = stag.looks.map((look) => look.id);
+    expect(ids).toContain('stag_gilded');
+    expect(ids).toContain('stag_acorn');
+    const gilded = stag.looks.find((look) => look.id === 'stag_gilded')!;
+    expect(gilded.owned).toBe(true);
+    expect(gilded.worn).toBe(true);
+    // The worn look dyes the preview.
+    expect(stag.tint).toBe(gilded.tint);
+    const acorn = stag.looks.find((look) => look.id === 'stag_acorn')!;
+    expect(acorn.owned).toBe(false);
+    expect(acorn.facts.craft?.recipeId).toBe('recipe_charm_stag_acorn');
+    // A companion with no look authored carries an empty list, never undefined.
+    expect(view.buddies.find((b) => b.key === 'frog')?.looks).toEqual([]);
   });
 
   it('groups epic-or-better sets by armor type then primary stat, and admits nothing below epic', () => {

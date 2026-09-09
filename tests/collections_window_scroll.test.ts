@@ -10,8 +10,8 @@
 // this — a source-text guard cannot tell a preserved offset from a lost one.
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CollectionsWindow } from '../src/ui/collections/collections_window';
 import type { CollectionsWindowDeps } from '../src/ui/collections/collections_window';
+import { CollectionsWindow } from '../src/ui/collections/collections_window';
 
 vi.mock('../src/game/audio', () => ({ audio: { click: () => {} } }));
 
@@ -29,6 +29,12 @@ function makeWindow(): CollectionsWindow {
     restoreFocus: () => {},
     mountPreview: () => {},
     ownedBuddyKeys: () => new Set(),
+    ownedBuddyCosmetics: () => new Set(),
+    equippedBuddyCosmetics: () => ({}),
+    pendingBuddyKeys: () => new Set(),
+    activeBuddyKey: () => '',
+    summonBuddy: () => {},
+    equipBuddyCosmetic: () => {},
     ownedMountKeys: () => new Set(),
     ownedItemIds: () => new Set(),
     buddyVisualKeys: () => ({}),

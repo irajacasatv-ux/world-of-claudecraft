@@ -1,18 +1,28 @@
 export {
+  type BuddyCosmeticFacts,
+  type BuddySourceFacts,
+  buddyCosmeticFacts,
+  buddySourceFacts,
+  type CollectionBossDropSource,
   type CollectionCurrency,
   type CollectionDropSource,
-  type CollectionGlobalDropSource,
   type CollectionItemFacts,
   type CollectionVendorSource,
   collectionItemFacts,
   resetCollectionSourceCache,
 } from './collection_sources';
 export {
+  type CollectionsHost,
+  collectionsPreviewOptions,
+  collectionsWindowDeps,
+} from './collections_host';
+export {
   buildCollectionsView,
   COLLECTION_ARMOR_TYPES,
   COLLECTION_SET_STATS,
   COLLECTIONS_TABS,
   type CollectionEntryView,
+  type CollectionLookView,
   type CollectionSetGroupView,
   type CollectionSetPieceView,
   type CollectionSetStat,

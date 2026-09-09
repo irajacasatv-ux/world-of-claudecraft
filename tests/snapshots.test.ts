@@ -4844,7 +4844,10 @@ const ALL_DELTA_KEYS = [
   'bg',
   'blk',
   'bpsl',
+  'budCos',
+  'budEq',
   'budOwn',
+  'budPend',
   'buyback',
   'bval',
   'cardDuel',
@@ -4966,7 +4969,10 @@ const TERSE_TO_IWORLD: Record<string, string> = {
   bags: 'bags',
   bank: 'bankInfo',
   blk: 'blockChance',
+  budCos: 'ownedBuddyCosmetics',
+  budEq: 'equippedBuddyCosmetics',
   budOwn: 'ownedBuddies',
+  budPend: 'pendingBuddies',
   buyback: 'vendorBuyback',
   bval: 'blockValue',
   cds: 'cooldowns',
@@ -5960,9 +5966,10 @@ describe('delta-key contract pins (anti-drift)', () => {
     // per-tick change; dualWielding rides no key of its own, it is always
     // exactly offhandWeapon !== null, so the client derives it), for 90.
     // 90 upstream keys plus our own budOwn, measured on the merged tree when
-    // the 47c1aacaae conflict markers were resolved.
-    expect(ALL_DELTA_KEYS).toHaveLength(91);
-    expect(new Set(ALL_DELTA_KEYS).size).toBe(91);
+    // the 47c1aacaae conflict markers were resolved; the buddy acquisition
+    // rework then adds budCos, budEq and budPend (server/buddy_wire.ts), for 94.
+    expect(ALL_DELTA_KEYS).toHaveLength(94);
+    expect(new Set(ALL_DELTA_KEYS).size).toBe(94);
     expect([...ALL_DELTA_KEYS]).toEqual([...ALL_DELTA_KEYS].sort());
   });
 
@@ -6051,8 +6058,9 @@ describe('delta-key contract pins (anti-drift)', () => {
     // Storage Phase 2 then adds bpsl, vault, and cvault, for 87. The
     // maybeSerialized arm of the scrape then surfaces the two capability-gated
     // direct emits, auras and de, for 89. The off-hand bar adds offhandWeapon,
-    // for 90.
-    expect(scraped.size).toBe(91);
+    // for 90. budOwn makes 91, and the buddy collection's budCos, budEq and
+    // budPend (server/buddy_wire.ts) make 94.
+    expect(scraped.size).toBe(94);
     expect([...scraped].sort()).toEqual([...ALL_DELTA_KEYS].sort());
   });
 

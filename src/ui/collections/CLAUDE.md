@@ -9,9 +9,9 @@ button beside the PvP launcher (`#mm-collections`) or the `collections` keybind.
 
 | Module | What it is |
 |---|---|
-| `collection_sources.ts` | **The derivation.** Given an item id, reports its vendors, its drop tables, its global whistle tier, its bind state and its vendor sell value, read from the live content tables. Pure, memoized per item id. |
-| `collections_view.ts` | The pure view model: the three tabs as rows, plus the set grouping (armour type, then primary stat). DOM-free, i18n-free, and free of any `src/render` import. |
-| `collections_window.ts` | The thin DOM painter and the window's view-state (tab, selection, render-skip signature, focus return). |
+| `collection_sources.ts` | **The derivation.** For an item id: its vendors, its drop tables, its bind state and its vendor sell value. For a buddy key (`buddySourceFacts`): the per-player boss rolls, the deed, and the grant token's vendors (`src/sim/content/buddy_sources.ts`). For a look id (`buddyCosmeticFacts`): its challenges, deed, crafting recipe, token vendors, and whether it is a seasonal grant. All read from the live content tables. Pure, memoized per id. |
+| `collections_view.ts` | The pure view model: the three tabs as rows (a buddy row carries its collection state, its pending boss-roll flag, its own sources and its looks), plus the set grouping (armour type, then primary stat). DOM-free, i18n-free, and free of any `src/render` import. |
+| `collections_window.ts` | The thin DOM painter and the window's view-state (tab, selection, render-skip signature, focus return). The buddy pane's two commands (summon/dismiss, wear/remove a look) go out through `IWorldBuddies`; the server re-validates both. |
 | `collections_host.ts` | The construction bag Hud hands the window, plus the two things that need the render and net layers: the visual-key maps and the Exchange price lookup. |
 
 ## The rules that keep this window honest
@@ -37,6 +37,8 @@ button beside the PvP launcher (`#mm-collections`) or the `collections` keybind.
 - **Say which state you are in.** "No listings", "shown at the Merchant" and
   "not available on this client" are three different answers and the pane keeps
   them apart. A blank or a stale figure is never acceptable on a price row.
+
+Buddies are a per-character collection, never an item (`src/sim/buddies.ts`; design: `docs/design/buddy-acquisition.md`): the buddy tab reads ownership, looks, and pending wins off `IWorldBuddies`, and names each row after the companion itself rather than its grant token.
 
 Pinned by `tests/collections_sources.test.ts`, `tests/collections_view.test.ts`,
 `tests/collections_window.test.ts` and `tests/collections_exchange_price.test.ts`.

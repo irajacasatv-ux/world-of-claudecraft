@@ -28,7 +28,7 @@
       "tick": 3,
       "time": 0.15,
       "nextId": 1001,
-      "state": "df349e78",
+      "state": "c9fe6ae8",
       "events": "2c90ce12",
       "rng": {
         "draws": 2,
@@ -56,6 +56,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
@@ -131,6 +132,7 @@
             ]
           },
           "bgRating": 1500,
+          "buddies": {},
           "cls": "mage",
           "companionUpgrades": {},
           "counters": {},

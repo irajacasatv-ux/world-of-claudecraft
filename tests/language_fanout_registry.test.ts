@@ -148,6 +148,7 @@ const FANOUT_ARMS: readonly string[] = [
   'this.updateReliquaryTracker|',
   'this.charWindow.renderIfOpen|',
   'this.arenaWindow.relocalize|',
+  'this.collectionsWindow.relocalize|',
   'this.dungeonFinderWindow.relocalize|',
   'this.dungeonFinderProposalPopup.relocalize|',
   'this.bgProposalPopup.relocalize|',
@@ -221,6 +222,12 @@ interface AnsweredSurface extends GatedModule {
 }
 
 const ANSWERED: readonly AnsweredSurface[] = [
+  {
+    file: 'collections/collections_window.ts',
+    memos: ['lastSig', 'paintedTab'],
+    answer: 'this.collectionsWindow.relocalize',
+    why: 'one signature over the tab, the selection, the ownership counts, the pending wins, the active buddy, the looks and the exchange prices, so every localized label and source line on the Hunting pane would sit in the old locale until a collection count moved',
+  },
   {
     file: 'hud/battleground/battleground_scoreboard_painter.ts',
     memos: ['lastSig'],

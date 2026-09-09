@@ -14,16 +14,12 @@ import type { WocMarketClient } from '../../net/woc_market_sdk';
 import { mobVisualKey } from '../../render/characters/manifest';
 import type { PreviewFramingName } from '../../render/characters/preview_framing';
 import { MOUNT_VISUAL_SPECS } from '../../render/mount_visuals';
-import { BUDDY_KEYS } from '../../sim/content/buddies';
+import { BUDDY_KEYS, type BuddyKey } from '../../sim/content/buddies';
 import { buddyTemplateId } from '../../sim/content/buddy_mobs';
 import type { PlayerClass } from '../../sim/types';
 import type { IWorld } from '../../world_api';
 import type { PainterHostPresentation } from '../painter_host';
-import {
-  type CollectionPreviewKind,
-  CollectionsWindow,
-  type CollectionsWindowDeps,
-} from './collections_window';
+import type { CollectionPreviewKind, CollectionsWindowDeps } from './collections_window';
 
 /** mount key -> renderer visual key, flattened once at module load. Built here
  *  rather than in collections_view.ts so the view core keeps its no-render-import
@@ -152,6 +148,17 @@ export function collectionsWindowDeps(host: CollectionsHost): CollectionsWindowD
     restoreFocus: host.restoreFocus,
     mountPreview: host.mountPreview,
     ownedBuddyKeys: () => new Set<string>(host.world().ownedBuddies()),
+    ownedBuddyCosmetics: () => new Set<string>(host.world().ownedBuddyCosmetics()),
+    equippedBuddyCosmetics: () => host.world().equippedBuddyCosmetics(),
+    pendingBuddyKeys: () => new Set<string>(host.world().pendingBuddies()),
+    // The entity mirror is the one authority for "which buddy is out", for
+    // the local player exactly as for anyone else (src/world_api/buddies.ts).
+    activeBuddyKey: () => {
+      const world = host.world();
+      return world.entities.get(world.playerId)?.buddyKey ?? '';
+    },
+    summonBuddy: (key) => host.world().summonBuddy(key as BuddyKey),
+    equipBuddyCosmetic: (key, id) => host.world().equipBuddyCosmetic(key as BuddyKey, id),
     ownedMountKeys: () => new Set<string>(host.world().ownedMounts()),
     ownedItemIds: () =>
       new Set<string>([
@@ -170,9 +177,4 @@ export function collectionsWindowDeps(host: CollectionsHost): CollectionsWindowD
       return client ? exchangeLowestCentsFor(client, itemIds) : null;
     },
   };
-}
-
-/** One call for the coordinator: build the window on its host bag. */
-export function buildCollectionsWindow(host: CollectionsHost): CollectionsWindow {
-  return new CollectionsWindow(collectionsWindowDeps(host));
 }

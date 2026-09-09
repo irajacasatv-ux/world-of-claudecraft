@@ -85,12 +85,21 @@ export function buddyOf(ctx: SimContext, ownerId: number): Entity | null {
 
 /** Spawns `key`'s buddy for `owner`, replacing any buddy it already has out.
  *  Zero-stat, zero-loot, never hostile: nothing ever targets it. */
-export function spawnBuddyEntity(ctx: SimContext, owner: Entity, key: BuddyKey): void {
+export function spawnBuddyEntity(
+  ctx: SimContext,
+  owner: Entity,
+  key: BuddyKey,
+  /** The worn cosmetic's dye (src/sim/buddies.ts buddyWornTint); null keeps
+   *  the template's own color. Carried as the entity color, so the ordinary
+   *  `c` wire field and the renderer's entity tint path do the rest. */
+  tint: number | null = null,
+): void {
   const existing = buddyOf(ctx, owner.id);
   if (existing) ctx.dropEntity(existing.id);
   const template = MOBS[buddyTemplateId(key)];
   if (!template) return;
   const buddy = createMob(ctx.nextId++, template, owner.level, buddyFollowTarget(owner));
+  if (tint !== null) buddy.color = tint;
   buddy.ownerId = owner.id;
   buddy.hostile = false;
   buddy.aiState = 'idle';

@@ -51,6 +51,11 @@ export const ADMIN_ROUTE_PERMISSIONS: readonly AdminRouteRule[] = [
     pattern: /^\/admin\/api\/moderation\/characters\/(\d+)\/restore-slot$/,
     permission: 'moderation.act',
   },
+  {
+    method: 'POST',
+    pattern: /^\/admin\/api\/moderation\/characters\/(\d+)\/grant-buddy$/,
+    permission: 'moderation.act',
+  },
   { method: 'GET', pattern: '/admin/api/guilds', permission: 'accounts.read' },
   { method: 'GET', pattern: /^\/admin\/api\/guilds\/(\d+)$/, permission: 'accounts.read' },
   {

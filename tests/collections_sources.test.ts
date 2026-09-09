@@ -1,16 +1,16 @@
-// The Collections window's source derivation (src/ui/collections/
-// collection_sources.ts): the facts it reports must come from the live content
-// tables, never from a second authored copy. Each case below picks a
-// collectible whose source is stated somewhere else in the repo and checks the
-// derivation agrees with THAT, so a content move (a vendor restocked, a drop
-// retuned, a tier withheld) reds here instead of quietly showing a player the
-// wrong place to farm.
-
 import { beforeEach, describe, expect, it } from 'vitest';
+import { BUDDY_KEYS } from '../src/sim/content/buddies';
+import { BUDDY_COSMETICS } from '../src/sim/content/buddy_cosmetics';
+import {
+  BUDDY_BOSS_DROPS,
+  BUDDY_COSMETIC_CHALLENGES,
+  BUDDY_DEED_REWARDS,
+} from '../src/sim/content/buddy_sources';
 import { HEROIC_VENDOR_STOCK } from '../src/sim/content/heroic_vendor';
 import { ITEMS, NPCS } from '../src/sim/data';
-import { GLOBAL_BUDDY_DROP_TIERS } from '../src/sim/loot/global_drops';
 import {
+  buddyCosmeticFacts,
+  buddySourceFacts,
   collectionItemFacts,
   resetCollectionSourceCache,
 } from '../src/ui/collections/collection_sources';
@@ -24,73 +24,109 @@ describe('collection source derivation', () => {
     expect(collectionItemFacts('no_such_item_id')).toBeNull();
   });
 
-  it('derives the honor vendor, its zone and its price for the Proud Grunt whistle', () => {
+  it('derives the honor vendor, its zone and its price for the Proud Grunt token', () => {
     const facts = collectionItemFacts('whistle_proud_grunt');
     expect(facts?.obtainable).toBe(true);
     expect(facts?.drops).toEqual([]);
-    // Vendor-only (loot/global_drops.ts WITHHELD_FROM_GLOBAL_POOL): the
-    // counter is the ONLY route, so no global-drop line may appear beside it.
-    // The window reads the roller's own pool for this, so a line here would
-    // mean a kill really could award it.
-    expect(facts?.globalDrop).toBeNull();
     expect(facts?.vendors).toHaveLength(1);
     const vendor = facts?.vendors[0];
     expect(vendor?.npcId).toBe('warmarshal_draven_kole');
     expect(vendor?.currency).toBe('honor');
     expect(vendor?.price).toBe(ITEMS.whistle_proud_grunt.priceHonor);
-    // Zone comes from the NPC's own authored position, not a second table.
     expect(vendor?.zoneName.length).toBeGreaterThan(0);
-    // Tradeable like every other whistle (nothing in the roster binds any
-    // more), and it sells to a vendor for the flat 5g.
-    expect(facts?.tradeable).toBe(true);
+    // A token binds: the companion is the character's, never the market's.
+    expect(facts?.tradeable).toBe(false);
     expect(facts?.sellValue).toBe(50_000);
+    // And the companion row reads the same vendor through its token.
+    const buddy = buddySourceFacts('proud_grunt');
+    expect(buddy.token?.vendors[0]?.npcId).toBe('warmarshal_draven_kole');
+    expect(buddy.obtainable).toBe(true);
   });
 
-  it('derives the marks price for the Loot Goblin whistle from the quartermaster stock', () => {
+  it('derives the marks price for the Loot Goblin token from the quartermaster stock', () => {
     const facts = collectionItemFacts('whistle_loot_goblin');
     const vendor = facts?.vendors.find((v) => v.currency === 'marks');
     const offer = HEROIC_VENDOR_STOCK.find((o) => o.itemId === 'whistle_loot_goblin');
     expect(vendor?.price).toBe(offer?.marks);
     expect(NPCS[vendor?.npcId ?? ''].heroicVendor).toBe(true);
-    expect(facts?.tradeable).toBe(true);
   });
 
-  it('derives the gold price for the Penny Goldspark whistle, and keeps it tradeable', () => {
+  it('Penny Goldspark has no gold row any more and reports as unobtainable', () => {
     const facts = collectionItemFacts('whistle_penny_goldspark');
-    const vendor = facts?.vendors.find((v) => v.currency === 'gold');
-    expect(vendor?.npcId).toBe('armorer_hode');
-    expect(vendor?.price).toBe(ITEMS.whistle_penny_goldspark.buyValue);
-    expect(facts?.tradeable).toBe(true);
+    expect(facts?.vendors).toEqual([]);
+    expect(facts?.obtainable).toBe(false);
+    expect(buddySourceFacts('penny_goldspark').obtainable).toBe(false);
   });
 
-  it('gives all three vendor companions a counter and no drop at all', () => {
-    for (const itemId of [
-      'whistle_proud_grunt',
-      'whistle_loot_goblin',
-      'whistle_penny_goldspark',
-    ]) {
-      const facts = collectionItemFacts(itemId);
-      expect(facts?.vendors.length, itemId).toBe(1);
-      expect(facts?.drops, itemId).toEqual([]);
-      expect(facts?.globalDrop, itemId).toBeNull();
-      expect(facts?.fishingDrop, itemId).toBeNull();
-      // Still obtainable: the counter is a real source, and the window must
-      // not fall through to "no source in the game yet".
-      expect(facts?.obtainable, itemId).toBe(true);
+  it('derives the per-player boss rolls for a boss pet, with the heroic rate and gate', () => {
+    const lich = buddySourceFacts('crystal_lich');
+    expect(lich.bossDrops).toHaveLength(1);
+    expect(lich.bossDrops[0].bossId).toBe('nythraxis_scourge_of_thornpeak');
+    expect(lich.bossDrops[0].bossName.length).toBeGreaterThan(0);
+    expect(lich.bossDrops[0].location.length).toBeGreaterThan(0);
+    expect(lich.bossDrops[0].chance).toBe(0.005);
+    expect(lich.bossDrops[0].heroicChance).toBe(0.01);
+    expect(lich.bossDrops[0].heroicOnly).toBe(false);
+    expect(lich.deedId).toBeNull();
+    expect(lich.obtainable).toBe(true);
+    const forge = buddySourceFacts('forgemaw');
+    expect(forge.bossDrops).toHaveLength(2);
+    expect(forge.bossDrops.every((d) => d.heroicOnly)).toBe(true);
+  });
+
+  it('derives the deed for an achievement pet, and the table agrees', () => {
+    const stag = buddySourceFacts('stag');
+    expect(stag.deedId).toBe('prog_logging_100');
+    expect(BUDDY_DEED_REWARDS.prog_logging_100).toBe('stag');
+    expect(stag.bossDrops).toEqual([]);
+    expect(stag.obtainable).toBe(true);
+  });
+
+  it('every companion the tables name is obtainable, and every other one says so honestly', () => {
+    const sourced = new Set<string>([
+      ...BUDDY_BOSS_DROPS.map((row) => row.key),
+      ...Object.values(BUDDY_DEED_REWARDS),
+      'proud_grunt',
+      'loot_goblin',
+    ]);
+    for (const key of BUDDY_KEYS) {
+      expect(buddySourceFacts(key).obtainable, key).toBe(sourced.has(key));
     }
   });
 
-  it('reports the global whistle tier for a common buddy and nothing for a withheld tier', () => {
-    const common = GLOBAL_BUDDY_DROP_TIERS.find((t) => t.quality === 'common');
-    const facts = collectionItemFacts('whistle_frog');
-    expect(ITEMS.whistle_frog.quality ?? 'common').toBe('common');
-    expect(facts?.globalDrop?.chance).toBe(common?.chance);
-    expect(facts?.globalDrop?.poolSize).toBeGreaterThan(1);
-    // An epic buddy sits on a tier held at 0, so it reports no global drop at
-    // all: the window must not offer a chase that can never pay out.
-    const epic = collectionItemFacts('whistle_ansem');
-    expect(ITEMS.whistle_ansem.quality).toBe('epic');
-    expect(epic?.globalDrop).toBeNull();
+  it('derives a look’s challenge, deed, craft, vendor and grant sources', () => {
+    const frost = buddyCosmeticFacts('crystal_lich_frostbound');
+    expect(frost?.challenges).toHaveLength(1);
+    expect(frost?.challenges[0].kind).toBe('speed');
+    expect(frost?.challenges[0].amount).toBe(
+      BUDDY_COSMETIC_CHALLENGES.find((c) => c.cosmeticId === 'crystal_lich_frostbound')!.kind ===
+        'speed'
+        ? 300
+        : -1,
+    );
+    expect(frost?.obtainable).toBe(true);
+    const acorn = buddyCosmeticFacts('stag_acorn');
+    expect(acorn?.craft?.recipeId).toBe('recipe_charm_stag_acorn');
+    expect(acorn?.craft?.professionId).toBe('leatherworking');
+    expect(acorn?.tokenItemId).toBe('charm_stag_acorn');
+    expect(acorn?.vendors).toEqual([]);
+    const gilded = buddyCosmeticFacts('stag_gilded');
+    expect(gilded?.vendors[0]?.npcId).toBe('armorer_hode');
+    expect(gilded?.vendors[0]?.currency).toBe('gold');
+    expect(gilded?.craft).toBeNull();
+    const warlord = buddyCosmeticFacts('proud_grunt_warlord');
+    expect(warlord?.grantOnly).toBe(true);
+    expect(warlord?.obtainable).toBe(true);
+    expect(warlord?.challenges).toEqual([]);
+    const verdant = buddyCosmeticFacts('moss_hare_verdant');
+    expect(verdant?.deedId).toBe('prog_master_gatherer');
+    expect(buddyCosmeticFacts('no_such_look')).toBeNull();
+  });
+
+  it('every authored look is obtainable one way or another', () => {
+    for (const id of Object.keys(BUDDY_COSMETICS)) {
+      expect(buddyCosmeticFacts(id)?.obtainable, id).toBe(true);
+    }
   });
 
   it('derives a heroic-only mount drop with its boss, dungeon and authored chance', () => {
@@ -102,10 +138,13 @@ describe('collection source derivation', () => {
     expect(facts?.obtainable).toBe(true);
   });
 
-  it('memoizes per item id, so the window can ask once per row per frame', () => {
-    const first = collectionItemFacts('whistle_penny_goldspark');
-    expect(collectionItemFacts('whistle_penny_goldspark')).toBe(first);
+  it('memoizes per id, so the window can ask once per row per frame', () => {
+    const first = collectionItemFacts('whistle_proud_grunt');
+    expect(collectionItemFacts('whistle_proud_grunt')).toBe(first);
+    const buddy = buddySourceFacts('stag');
+    expect(buddySourceFacts('stag')).toBe(buddy);
     resetCollectionSourceCache();
-    expect(collectionItemFacts('whistle_penny_goldspark')).not.toBe(first);
+    expect(collectionItemFacts('whistle_proud_grunt')).not.toBe(first);
+    expect(buddySourceFacts('stag')).not.toBe(buddy);
   });
 });

@@ -31,6 +31,7 @@
 // sibling targeting module are imported directly (already pure); everything that
 // touches not-yet-extracted Sim state routes through the seam.
 
+import { resetBuddyChallenge } from '../buddy_challenges';
 import { hasUnbreakableMovementLock } from '../combat/cc';
 import { YUMI_TEMPLATE_ID } from '../content/yumi';
 import { DUNGEON_X_THRESHOLD, MOBS } from '../data';
@@ -1510,6 +1511,7 @@ export function resetEvadingMob(ctx: SimContext, mob: Entity): void {
   ctx.despawnSummonedAdds(mob);
   // An evade ends the attempt; the deed window re-arms.
   deedsMod.resetDeedEncounter(ctx, mob);
+  resetBuddyChallenge(mob);
   mob.firedSummons = 0;
   mob.enraged = false;
   mob.healedThisPull = false;

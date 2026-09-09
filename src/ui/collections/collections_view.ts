@@ -8,12 +8,20 @@
 // window opens and cheap enough to rebuild on a tab switch.
 
 import { BUDDIES, BUDDY_KEYS, type BuddyKey, type BuddyKind } from '../../sim/content/buddies';
+import { buddyCosmeticsFor } from '../../sim/content/buddy_cosmetics';
 import { BUDDY_MOBS, buddyTemplateId } from '../../sim/content/buddy_mobs';
 import { MOUNTS, type MountKey } from '../../sim/content/mounts';
 import { ITEM_SETS, ITEMS } from '../../sim/data';
 import { itemLevel } from '../../sim/item_level';
 import type { ArmorType, ItemDef } from '../../sim/types';
-import { type CollectionItemFacts, collectionItemFacts } from './collection_sources';
+import {
+  type BuddyCosmeticFacts,
+  type BuddySourceFacts,
+  buddyCosmeticFacts,
+  buddySourceFacts,
+  type CollectionItemFacts,
+  collectionItemFacts,
+} from './collection_sources';
 
 export type CollectionsTabId = 'buddies' | 'mounts' | 'sets';
 
@@ -88,11 +96,33 @@ export interface CollectionEntryView {
    *  baked textures, and the whole colour on a shared animal or skeleton rig,
    *  which is exactly how the world draws it. */
   tint: number;
-  /** True when the viewer owns the granting item. */
+  /** True when the viewer has collected it (a buddy: the character's
+   *  collection flag; a mount: the reins item). */
   owned: boolean;
+  /** Buddy rows only: a boss-roll win the player has read the presence line
+   *  for and not yet revealed. Always false for a mount. */
+  pending: boolean;
   /** False when nothing in the game grants this entry today; the window says
    *  so rather than hiding the row. */
   obtainable: boolean;
+  /** Buddy rows only: the companion's own sources (boss rolls, deed, token
+   *  vendors). Null for a mount, whose sources ride `facts`. */
+  buddyFacts: BuddySourceFacts | null;
+  /** Buddy rows only: the looks authored for this companion, catalog order. */
+  looks: CollectionLookView[];
+}
+
+/** One cosmetic (look) row under a buddy. */
+export interface CollectionLookView {
+  id: string;
+  /** Canonical English name; the painter localizes. */
+  name: string;
+  tint: number;
+  /** Unlocked for this character. */
+  owned: boolean;
+  /** Currently worn on the buddy. */
+  worn: boolean;
+  facts: BuddyCosmeticFacts;
 }
 
 /** The primary stat an epic set is itemized around. 'mixed' is a real answer
@@ -233,14 +263,66 @@ function entryFor(
     petKind,
     tint,
     owned: ownedKeys.has(key),
+    pending: false,
     obtainable: facts?.obtainable ?? false,
+    buddyFacts: null,
+    looks: [],
+  };
+}
+
+/** A buddy row: the mount shape plus the collection-flag ownership, the
+ *  pending state, the companion's own sources and its looks. */
+function buddyEntryFor(key: BuddyKey, input: CollectionsViewInput): CollectionEntryView {
+  const base = entryFor(
+    key,
+    BUDDIES[key].name,
+    buddyItemId(key),
+    // Resolved by the host through the same lookup the world draws a buddy
+    // with, so the preview can never drift from the follower (two buddies
+    // share an animal rig rather than shipping one of their own).
+    input.buddyVisualKeys[key] ?? null,
+    input.ownedBuddyKeys,
+    buddyKindOf(key),
+    BUDDY_MOBS[buddyTemplateId(key)]?.color ?? 0xffffff,
+  );
+  const buddyFacts = buddySourceFacts(key);
+  const worn = input.equippedBuddyCosmetics?.[key] ?? null;
+  const looks: CollectionLookView[] = buddyCosmeticsFor(key).flatMap((def) => {
+    const facts = buddyCosmeticFacts(def.id);
+    if (!facts) return [];
+    return [
+      {
+        id: def.id,
+        name: def.name,
+        tint: def.tint,
+        owned: input.ownedBuddyCosmetics?.has(def.id) ?? false,
+        worn: worn === def.id,
+        facts,
+      },
+    ];
+  });
+  return {
+    ...base,
+    // The worn look's dye replaces the follower's own color in the preview,
+    // exactly as spawnBuddyEntity does on the live entity.
+    tint: looks.find((look) => look.worn)?.tint ?? base.tint,
+    pending: !base.owned && (input.pendingBuddyKeys?.has(key) ?? false),
+    obtainable: buddyFacts.obtainable,
+    buddyFacts,
+    looks,
   };
 }
 
 export interface CollectionsViewInput {
-  /** Buddy keys the viewer owns (IWorld.ownedBuddies): ownership IS the whistle
-   *  sitting in bags or bank, which the sim already resolves for both worlds. */
+  /** Buddy keys the viewer has collected (IWorld.ownedBuddies): the
+   *  character's own collection flag, resolved by the sim for both worlds. */
   ownedBuddyKeys: ReadonlySet<string>;
+  /** Unlocked look ids (IWorld.ownedBuddyCosmetics). */
+  ownedBuddyCosmetics?: ReadonlySet<string>;
+  /** The worn look per buddy key (IWorld.equippedBuddyCosmetics). */
+  equippedBuddyCosmetics?: Readonly<Record<string, string>>;
+  /** Boss-roll wins pending their reveal (IWorld.pendingBuddies). */
+  pendingBuddyKeys?: ReadonlySet<string>;
   /** Mount keys the viewer owns (IWorld.ownedMounts), same model as above. */
   ownedMountKeys: ReadonlySet<string>;
   /** Item ids the viewer carries or wears, for the set tab's per-piece marks.
@@ -253,20 +335,7 @@ export interface CollectionsViewInput {
 }
 
 export function buildCollectionsView(input: CollectionsViewInput): CollectionsView {
-  const buddies = BUDDY_KEYS.map((key) =>
-    entryFor(
-      key,
-      BUDDIES[key].name,
-      buddyItemId(key),
-      // Resolved by the host through the same lookup the world draws a buddy
-      // with, so the preview can never drift from the follower (two buddies
-      // share an animal rig rather than shipping one of their own).
-      input.buddyVisualKeys[key] ?? null,
-      input.ownedBuddyKeys,
-      buddyKindOf(key),
-      BUDDY_MOBS[buddyTemplateId(key)]?.color ?? 0xffffff,
-    ),
-  );
+  const buddies = BUDDY_KEYS.map((key) => buddyEntryFor(key, input));
   // The tab reads kind first, then rarity, then catalog order: a collector
   // scans for the purple in their group, and the stable third key keeps two
   // whistles of one rarity from swapping places between renders.

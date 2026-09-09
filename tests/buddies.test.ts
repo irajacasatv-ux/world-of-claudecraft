@@ -15,13 +15,23 @@ vi.mock('../server/db', () => ({
 }));
 
 import {
+  attachPendingBuddy,
   buddyItemId,
   buddyOwned,
+  equipBuddyCosmetic,
+  grantBuddy,
+  grantBuddyCosmetic,
   ownedBuddies,
-  summonBuddyItem,
+  restoreBuddyCollection,
+  revealPendingBuddies,
+  serializeBuddyCollection,
+  summonBuddy,
   toggleBuddy,
+  useBuddyCosmeticToken,
+  useBuddyToken,
 } from '../src/sim/buddies';
 import { BUDDIES, BUDDY_KEYS, buddyDef, normalizeBuddyKey } from '../src/sim/content/buddies';
+import { BUDDY_COSMETICS } from '../src/sim/content/buddy_cosmetics';
 import { buddyTemplateId } from '../src/sim/content/buddy_mobs';
 import { MOBS } from '../src/sim/data';
 import { createMob } from '../src/sim/entity';
@@ -35,9 +45,8 @@ import {
 } from '../src/sim/pet/buddy_ai';
 import { BUDDY_LOOT_RANGE, buddyLootTarget } from '../src/sim/pet/buddy_autoloot';
 import { petOf } from '../src/sim/pet/pet_commands';
-import type { PlayerMeta } from '../src/sim/sim';
 import { Sim } from '../src/sim/sim';
-import { dist2d, type Entity, INTERACT_RANGE, type Vec3 } from '../src/sim/types';
+import { dist2d, type Entity, INTERACT_RANGE, type SimEvent, type Vec3 } from '../src/sim/types';
 import { VENDOR_TEST_WORLD } from './sim_shared';
 
 function makeWorld() {
@@ -50,15 +59,19 @@ function join(sim: Sim): number {
   return pid;
 }
 
+function drain(sim: Sim, type: SimEvent['type']): SimEvent[] {
+  return sim.tick().filter((ev) => ev.type === type);
+}
+
 describe('buddy catalog', () => {
   it('every BuddyDef.key matches its own record key', () => {
     for (const [key, def] of Object.entries(BUDDIES)) expect(def.key).toBe(key);
   });
 
-  it('every catalog buddy has exactly one whistle item, and it names the buddy back', () => {
+  it('every catalog buddy has exactly one grant token, and it names the buddy back', () => {
     for (const key of BUDDY_KEYS) {
       const itemId = buddyItemId(key);
-      expect(itemId, `${key} has no whistle item`).not.toBeNull();
+      expect(itemId, `${key} has no whistle token`).not.toBeNull();
     }
   });
 
@@ -70,129 +83,322 @@ describe('buddy catalog', () => {
     expect(normalizeBuddyKey(null)).toBe('');
     expect(normalizeBuddyKey(undefined)).toBe('');
   });
+
+  it('every cosmetic names a catalog buddy', () => {
+    for (const [id, def] of Object.entries(BUDDY_COSMETICS)) {
+      expect(def.id).toBe(id);
+      expect(buddyDef(def.buddy), `${id} -> ${def.buddy}`).not.toBeNull();
+    }
+  });
 });
 
-describe('buddy ownership: item-borne, bags or bank', () => {
-  it('a fresh player owns nothing; a buddy only while its whistle is held', () => {
+describe('buddy ownership: a per-character collection flag, never an item', () => {
+  it('a fresh player owns nothing; a grant attaches the companion in catalog order', () => {
     const sim = makeWorld();
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
     expect(ownedBuddies(meta)).toEqual([]);
     expect(buddyOwned(meta, 'ember_fox')).toBe(false);
 
-    sim.addItem('whistle_ember_fox', 1, pid);
-    expect(buddyOwned(meta, 'ember_fox')).toBe(true);
-    expect(ownedBuddies(meta)).toEqual(['ember_fox']);
-
-    sim.addItem('whistle_moss_hare', 1, pid);
+    expect(grantBuddy(sim.ctx, pid, 'moss_hare')).toBe(true);
+    expect(grantBuddy(sim.ctx, pid, 'ember_fox')).toBe(true);
     expect(ownedBuddies(meta)).toEqual(['ember_fox', 'moss_hare']); // catalog order
+    expect(buddyOwned(meta, 'ember_fox')).toBe(true);
   });
 
-  it('a whistle parked in the bank still counts (bags OR bank)', () => {
+  it('a whistle in the bags does NOT own the buddy any more', () => {
     const sim = makeWorld();
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
+    sim.addItem('whistle_ember_fox', 1, pid);
+    expect(buddyOwned(meta, 'ember_fox')).toBe(false);
     meta.bank.inventory.push({ itemId: 'whistle_moss_hare', count: 1 });
-    expect(buddyOwned(meta, 'moss_hare')).toBe(true);
-    expect(ownedBuddies(meta)).toContain('moss_hare');
+    expect(buddyOwned(meta, 'moss_hare')).toBe(false);
   });
 
-  it('unknown keys are never owned', () => {
+  it('a grant is idempotent, announces once, and summons the companion', () => {
     const sim = makeWorld();
     const pid = join(sim);
     const meta = sim.players.get(pid)!;
+    const before = meta.wireRev;
+    expect(grantBuddy(sim.ctx, pid, 'ember_fox')).toBe(true);
+    expect(grantBuddy(sim.ctx, pid, 'ember_fox')).toBe(false);
+    expect(meta.wireRev).toBe(before + 1);
+    const revealed = drain(sim, 'buddyRevealed');
+    expect(revealed).toHaveLength(1);
+    expect(revealed[0]).toMatchObject({ type: 'buddyRevealed', pid, key: 'ember_fox' });
+    expect(sim.entities.get(pid)!.buddyKey).toBe('ember_fox');
+    expect(buddyOf(sim.ctx, pid)?.templateId).toBe(buddyTemplateId('ember_fox'));
+  });
+
+  it('unknown keys are never owned or granted', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    const meta = sim.players.get(pid)!;
+    expect(grantBuddy(sim.ctx, pid, 'not_a_buddy')).toBe(false);
     expect(buddyOwned(meta, 'not_a_buddy')).toBe(false);
   });
 });
 
-describe('summonBuddyItem: click the whistle to summon, click again to dismiss', () => {
-  it('summons an owned buddy instantly, with no channel', () => {
+describe('grant tokens: a whistle attaches the companion and is consumed', () => {
+  it('using the whistle grants the buddy and removes the token', () => {
     const sim = makeWorld();
     const pid = join(sim);
+    const meta = sim.players.get(pid)!;
     sim.addItem('whistle_ember_fox', 1, pid);
-    expect(summonBuddyItem(sim.ctx, pid, 'ember_fox')).toBe(true);
+    useItem(sim.ctx, 'whistle_ember_fox', pid);
+    expect(buddyOwned(meta, 'ember_fox')).toBe(true);
+    expect(meta.inventory.some((s) => s.itemId === 'whistle_ember_fox')).toBe(false);
     expect(sim.entities.get(pid)!.buddyKey).toBe('ember_fox');
   });
 
-  it('clicking the active buddy’s whistle dismisses it', () => {
+  it('a duplicate token is refused and NOT consumed', () => {
     const sim = makeWorld();
     const pid = join(sim);
+    const meta = sim.players.get(pid)!;
+    grantBuddy(sim.ctx, pid, 'ember_fox');
+    sim.tick();
     sim.addItem('whistle_ember_fox', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
-    expect(summonBuddyItem(sim.ctx, pid, 'ember_fox')).toBe(true);
+    expect(useBuddyToken(sim.ctx, pid, 'whistle_ember_fox')).toBe(false);
+    expect(meta.inventory.some((s) => s.itemId === 'whistle_ember_fox')).toBe(true);
+    const errors = drain(sim, 'error');
+    expect(
+      errors.some((ev) => 'text' in ev && ev.text === 'You already have that companion.'),
+    ).toBe(true);
+  });
+
+  it('a cosmetic charm unlocks the look and is consumed; a duplicate is refused unconsumed', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    const meta = sim.players.get(pid)!;
+    sim.addItem('charm_stag_gilded', 1, pid);
+    useItem(sim.ctx, 'charm_stag_gilded', pid);
+    expect(meta.buddies.cosmetics.has('stag_gilded')).toBe(true);
+    expect(meta.inventory.some((s) => s.itemId === 'charm_stag_gilded')).toBe(false);
+    sim.addItem('charm_stag_gilded', 1, pid);
+    expect(useBuddyCosmeticToken(sim.ctx, pid, 'charm_stag_gilded')).toBe(false);
+    expect(meta.inventory.some((s) => s.itemId === 'charm_stag_gilded')).toBe(true);
+  });
+});
+
+describe('summonBuddy: pick a collected buddy, pick it again to dismiss', () => {
+  it('summons an owned buddy instantly, with no channel', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    grantBuddy(sim.ctx, pid, 'ember_fox');
+    toggleBuddy(sim.ctx, pid);
+    expect(summonBuddy(sim.ctx, pid, 'ember_fox')).toBe(true);
+    expect(sim.entities.get(pid)!.buddyKey).toBe('ember_fox');
+  });
+
+  it('summoning the active buddy dismisses it', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    grantBuddy(sim.ctx, pid, 'ember_fox');
+    expect(summonBuddy(sim.ctx, pid, 'ember_fox')).toBe(true);
     expect(sim.entities.get(pid)!.buddyKey).toBe('');
   });
 
   it('swapping straight to a different owned buddy is instant, no dismiss step', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    sim.addItem('whistle_moss_hare', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
-    expect(summonBuddyItem(sim.ctx, pid, 'moss_hare')).toBe(true);
+    grantBuddy(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'moss_hare');
+    summonBuddy(sim.ctx, pid, 'ember_fox');
+    expect(summonBuddy(sim.ctx, pid, 'moss_hare')).toBe(true);
     expect(sim.entities.get(pid)!.buddyKey).toBe('moss_hare');
   });
 
-  it('refuses an unowned buddy and leaves the current one untouched', () => {
+  it('refuses an uncollected buddy with the collection refusal, and leaves the current one', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    expect(summonBuddyItem(sim.ctx, pid, 'ember_fox')).toBe(false);
+    expect(summonBuddy(sim.ctx, pid, 'ember_fox')).toBe(false);
     expect(sim.entities.get(pid)!.buddyKey).toBe('');
+    const errors = drain(sim, 'error');
+    expect(
+      errors.some((ev) => 'text' in ev && ev.text === "You haven't collected that companion."),
+    ).toBe(true);
   });
 
   it('an unknown catalog key is refused', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    expect(summonBuddyItem(sim.ctx, pid, 'not_a_buddy')).toBe(false);
-  });
-
-  it('routes through useItem for kind "buddy" (bags/action-bar click)', () => {
-    const sim = makeWorld();
-    const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    useItem(sim.ctx, 'whistle_ember_fox', pid);
-    expect(sim.entities.get(pid)!.buddyKey).toBe('ember_fox');
-  });
-
-  it('the whistle is never consumed by summoning (ownership derives from holding it)', () => {
-    const sim = makeWorld();
-    const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
-    const meta = sim.players.get(pid)!;
-    expect(meta.inventory.some((s) => s.itemId === 'whistle_ember_fox')).toBe(true);
+    expect(summonBuddy(sim.ctx, pid, 'not_a_buddy')).toBe(false);
   });
 });
 
-describe('toggleBuddy: dismiss-only, for a keybind/button with no item in hand', () => {
-  it('dismisses the active buddy', () => {
+describe('toggleBuddy: dismiss, or bring the last summoned one back', () => {
+  it('dismisses the active buddy, then re-summons the same one', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'ember_fox');
     expect(toggleBuddy(sim.ctx, pid)).toBe(true);
     expect(sim.entities.get(pid)!.buddyKey).toBe('');
+    expect(toggleBuddy(sim.ctx, pid)).toBe(true);
+    expect(sim.entities.get(pid)!.buddyKey).toBe('ember_fox');
   });
 
-  it('does nothing when no buddy is out (no implicit "selected buddy")', () => {
+  it('does nothing with nothing collected', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
     expect(toggleBuddy(sim.ctx, pid)).toBe(false);
     expect(sim.entities.get(pid)!.buddyKey).toBe('');
   });
 });
 
+describe('cosmetics: unlock, wear, and the dye on the follower', () => {
+  it('unlocks once, announces once, and refuses an unknown id', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    expect(grantBuddyCosmetic(sim.ctx, pid, 'stag_gilded')).toBe(true);
+    expect(grantBuddyCosmetic(sim.ctx, pid, 'stag_gilded')).toBe(false);
+    expect(grantBuddyCosmetic(sim.ctx, pid, 'no_such_look')).toBe(false);
+    const unlocked = drain(sim, 'buddyCosmeticUnlocked');
+    expect(unlocked).toHaveLength(1);
+    expect(unlocked[0]).toMatchObject({ pid, cosmeticId: 'stag_gilded' });
+  });
+
+  it('wears a look only on a collected buddy it was authored for, and only when unlocked', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    const meta = sim.players.get(pid)!;
+    // Not collected yet.
+    grantBuddyCosmetic(sim.ctx, pid, 'stag_gilded');
+    expect(equipBuddyCosmetic(sim.ctx, pid, 'stag', 'stag_gilded')).toBe(false);
+    grantBuddy(sim.ctx, pid, 'stag');
+    grantBuddy(sim.ctx, pid, 'moss_hare');
+    // Wrong buddy for the look.
+    expect(equipBuddyCosmetic(sim.ctx, pid, 'moss_hare', 'stag_gilded')).toBe(false);
+    // Not unlocked.
+    expect(equipBuddyCosmetic(sim.ctx, pid, 'stag', 'stag_acorn')).toBe(false);
+    expect(equipBuddyCosmetic(sim.ctx, pid, 'stag', 'stag_gilded')).toBe(true);
+    expect(meta.buddies.equipped.get('stag')).toBe('stag_gilded');
+    expect(equipBuddyCosmetic(sim.ctx, pid, 'stag', null)).toBe(true);
+    expect(meta.buddies.equipped.has('stag')).toBe(false);
+    expect(equipBuddyCosmetic(sim.ctx, pid, 'stag', null)).toBe(false);
+  });
+
+  it('the worn look re-spawns the live follower with the cosmetic dye as its color', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    grantBuddy(sim.ctx, pid, 'stag');
+    grantBuddyCosmetic(sim.ctx, pid, 'stag_gilded');
+    const plain = buddyOf(sim.ctx, pid)!;
+    expect(plain.color).toBe(MOBS[buddyTemplateId('stag')].color);
+    equipBuddyCosmetic(sim.ctx, pid, 'stag', 'stag_gilded');
+    const dyed = buddyOf(sim.ctx, pid)!;
+    expect(dyed.id).not.toBe(plain.id);
+    expect(dyed.color).toBe(BUDDY_COSMETICS.stag_gilded.tint);
+    equipBuddyCosmetic(sim.ctx, pid, 'stag', null);
+    expect(buddyOf(sim.ctx, pid)!.color).toBe(MOBS[buddyTemplateId('stag')].color);
+  });
+});
+
+describe('pending companions: the boss-roll win before its reveal', () => {
+  it('attaches once with a presence line, and a reveal makes it owned and summoned', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    const meta = sim.players.get(pid)!;
+    expect(attachPendingBuddy(sim.ctx, pid, 'skeleton', 'world', { x: 1, z: 2 })).toBe(true);
+    expect(attachPendingBuddy(sim.ctx, pid, 'skeleton', 'world', { x: 1, z: 2 })).toBe(false);
+    expect(meta.buddies.pending).toEqual([{ key: 'skeleton', source: 'world', x: 1, z: 2 }]);
+    expect(buddyOwned(meta, 'skeleton')).toBe(false);
+    const presence = drain(sim, 'buddyPresence');
+    expect(presence).toHaveLength(1);
+    expect(presence[0]).toMatchObject({ pid, key: 'skeleton' });
+
+    expect(revealPendingBuddies(sim.ctx, pid, () => false)).toEqual([]);
+    expect(revealPendingBuddies(sim.ctx, pid)).toEqual(['skeleton']);
+    expect(meta.buddies.pending).toEqual([]);
+    expect(buddyOwned(meta, 'skeleton')).toBe(true);
+    expect(sim.entities.get(pid)!.buddyKey).toBe('skeleton');
+    expect(drain(sim, 'buddyRevealed')).toHaveLength(1);
+  });
+
+  it('an owned companion never goes pending again', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    grantBuddy(sim.ctx, pid, 'skeleton');
+    expect(attachPendingBuddy(sim.ctx, pid, 'skeleton', 'instance', { x: 0, z: 0 })).toBe(false);
+  });
+});
+
+describe('persistence: the collection round-trips through the character save', () => {
+  it('serializes absent while empty, and restores exactly what was saved', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    const meta = sim.players.get(pid)!;
+    expect(serializeBuddyCollection(meta.buddies)).toBeNull();
+    grantBuddy(sim.ctx, pid, 'stag');
+    grantBuddyCosmetic(sim.ctx, pid, 'stag_gilded');
+    equipBuddyCosmetic(sim.ctx, pid, 'stag', 'stag_gilded');
+    attachPendingBuddy(sim.ctx, pid, 'phantom', 'instance', { x: 3, z: 4 });
+    const saved = serializeBuddyCollection(meta.buddies)!;
+    expect(saved).toEqual({
+      owned: ['stag'],
+      cosmetics: ['stag_gilded'],
+      equipped: { stag: 'stag_gilded' },
+      pending: [{ key: 'phantom', source: 'instance', x: 3, z: 4 }],
+      last: 'stag',
+    });
+    const restored = restoreBuddyCollection(JSON.parse(JSON.stringify(saved)));
+    expect([...restored.owned]).toEqual(['stag']);
+    expect([...restored.cosmetics]).toEqual(['stag_gilded']);
+    expect(restored.equipped.get('stag')).toBe('stag_gilded');
+    expect(restored.pending).toEqual([{ key: 'phantom', source: 'instance', x: 3, z: 4 }]);
+    expect(restored.last).toBe('stag');
+  });
+
+  it('drops ids the catalog no longer carries, and a worn look that no longer fits', () => {
+    const restored = restoreBuddyCollection({
+      owned: ['stag', 'retired_buddy'],
+      cosmetics: ['stag_gilded', 'no_such_look'],
+      equipped: { stag: 'no_such_look', moss_hare: 'moss_hare_verdant' },
+      pending: [
+        { key: 'stag', source: 'world' },
+        { key: 'gone', source: 'world' },
+      ],
+      last: 'retired_buddy',
+    });
+    expect([...restored.owned]).toEqual(['stag']);
+    expect([...restored.cosmetics]).toEqual(['stag_gilded']);
+    expect(restored.equipped.size).toBe(0);
+    // An owned companion is never also pending.
+    expect(restored.pending).toEqual([]);
+    expect(restored.last).toBe('');
+  });
+
+  it('rides Sim.serializeCharacter and comes back through addPlayer', () => {
+    const sim = makeWorld();
+    const pid = join(sim);
+    grantBuddy(sim.ctx, pid, 'stag');
+    grantBuddyCosmetic(sim.ctx, pid, 'stag_gilded');
+    const state = sim.serializeCharacter(pid)!;
+    expect(state.buddies).toEqual({ owned: ['stag'], cosmetics: ['stag_gilded'], last: 'stag' });
+    const again = makeWorld();
+    const pid2 = again.addPlayer('warrior', 'Owner', { state });
+    again.tick();
+    expect(again.ownedBuddiesFor(pid2)).toEqual(['stag']);
+    expect(again.ownedBuddyCosmeticsFor(pid2)).toEqual(['stag_gilded']);
+  });
+});
+
 describe('IWorldBuddies facade (offline Sim)', () => {
-  it('ownedBuddies() and toggleBuddy() ride the primary player', () => {
+  it('the collection reads and the two commands ride the primary player', () => {
     const sim = new Sim({ seed: 42, playerClass: 'warrior', world: VENDOR_TEST_WORLD });
     sim.tick();
     const pid = sim.player.id;
-    sim.addItem('whistle_ember_fox', 1, pid);
-    expect(sim.ownedBuddies()).toEqual(['ember_fox']);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'stag');
+    grantBuddyCosmetic(sim.ctx, pid, 'stag_gilded');
+    expect(sim.ownedBuddies()).toEqual(['stag']);
+    expect(sim.ownedBuddyCosmetics()).toEqual(['stag_gilded']);
+    expect(sim.pendingBuddies()).toEqual([]);
+    sim.equipBuddyCosmetic('stag', 'stag_gilded');
+    expect(sim.equippedBuddyCosmetics()).toEqual({ stag: 'stag_gilded' });
     sim.toggleBuddy();
     expect(sim.entities.get(pid)!.buddyKey).toBe('');
+    sim.summonBuddy('stag');
+    expect(sim.entities.get(pid)!.buddyKey).toBe('stag');
   });
 });
 
@@ -200,8 +406,7 @@ describe('buddy entity: real, server-simulated, heels like a hunter pet', () => 
   it('spawns a real owned, non-hostile mob entity on summon', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'ember_fox');
     const buddy = buddyOf(sim.ctx, pid);
     expect(buddy).not.toBeNull();
     expect(buddy!.kind).toBe('mob');
@@ -211,34 +416,24 @@ describe('buddy entity: real, server-simulated, heels like a hunter pet', () => 
     expect(isBuddyMob(buddy!)).toBe(true);
   });
 
-  it('re-clicking the active whistle despawns the entity, not just the flag', () => {
+  it('dismissing despawns the entity, not just the flag', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'ember_fox');
     const buddy = buddyOf(sim.ctx, pid)!;
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
+    summonBuddy(sim.ctx, pid, 'ember_fox');
     expect(buddyOf(sim.ctx, pid)).toBeNull();
     expect(sim.entities.has(buddy.id)).toBe(false);
-  });
-
-  it('toggleBuddy despawns the entity too', () => {
-    const sim = makeWorld();
-    const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
-    expect(toggleBuddy(sim.ctx, pid)).toBe(true);
-    expect(buddyOf(sim.ctx, pid)).toBeNull();
   });
 
   it('swapping to a different buddy despawns the old entity and spawns the new one', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    sim.addItem('whistle_moss_hare', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'moss_hare');
+    summonBuddy(sim.ctx, pid, 'ember_fox');
     const first = buddyOf(sim.ctx, pid)!;
-    summonBuddyItem(sim.ctx, pid, 'moss_hare');
+    summonBuddy(sim.ctx, pid, 'moss_hare');
     const second = buddyOf(sim.ctx, pid)!;
     expect(second.id).not.toBe(first.id);
     expect(sim.entities.has(first.id)).toBe(false);
@@ -248,19 +443,11 @@ describe('buddy entity: real, server-simulated, heels like a hunter pet', () => 
   it('heels back onto its right-and-back offset after the owner walks away', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'ember_fox');
     const owner = sim.entities.get(pid)!;
     owner.pos.x += 20;
     for (let i = 0; i < 120; i++) sim.tick();
     const buddy = buddyOf(sim.ctx, pid)!;
-    // petFollow (pet_ai.ts) stops closing once within PET_FOLLOW_DISTANCE
-    // (3.5yd) of the offset target itself, not of the owner's own tile, so
-    // the assertion measures against that same target. Computed here
-    // directly from owner.pos/owner.facing and the exported offset
-    // constants, NOT by calling buddyFollowTarget, so a regression that
-    // zeroed the offset in that function would still fail this assertion
-    // instead of silently matching its own (also-broken) output.
     const sinF = Math.sin(owner.facing);
     const cosF = Math.cos(owner.facing);
     const targetX = owner.pos.x - BUDDY_FOLLOW_RIGHT * cosF - BUDDY_FOLLOW_BACK * sinF;
@@ -268,29 +455,14 @@ describe('buddy entity: real, server-simulated, heels like a hunter pet', () => 
     const dx = buddy.pos.x - targetX;
     const dz = buddy.pos.z - targetZ;
     expect(Math.sqrt(dx * dx + dz * dz)).toBeLessThan(3.6);
-    // And the offset is genuinely non-zero: this fails if the heel target
-    // ever collapses back onto the owner's own tile.
     expect(Math.hypot(targetX - owner.pos.x, targetZ - owner.pos.z)).toBeGreaterThan(1);
   });
 
   it('never registers as the owner’s combat pet (petOf stays null)', () => {
     const sim = makeWorld();
     const pid = join(sim);
-    sim.addItem('whistle_ember_fox', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'ember_fox');
     expect(petOf(sim.ctx, pid)).toBeNull();
-  });
-});
-
-// PlayerMeta cast guard, mirroring tests/mounts.test.ts: ownedBuddies must be
-// strict about its containers instead of silently under-reporting the
-// collection.
-describe('ownedBuddies refuses a meta with no containers', () => {
-  it('throws instead of reporting no buddies', () => {
-    const noBags = { bank: { inventory: [] } } as unknown as PlayerMeta;
-    expect(() => ownedBuddies(noBags)).toThrow(TypeError);
-    const noBank = { inventory: [] } as unknown as PlayerMeta;
-    expect(() => ownedBuddies(noBank)).toThrow(TypeError);
   });
 });
 
@@ -317,8 +489,7 @@ describe('buddy autoloot', () => {
   }
 
   function summonFox(sim: Sim, pid: number): Entity {
-    sim.addItem('whistle_ember_fox', 1, pid);
-    summonBuddyItem(sim.ctx, pid, 'ember_fox');
+    grantBuddy(sim.ctx, pid, 'ember_fox');
     return buddyOf(sim.ctx, pid)!;
   }
 
@@ -342,7 +513,12 @@ describe('buddy autoloot', () => {
     const pid = join(sim);
     const owner = sim.entities.get(pid)!;
     const buddy = summonFox(sim, pid);
-    const corpse = corpseAt(sim, 90001, { x: owner.pos.x + 15, y: owner.pos.y, z: owner.pos.z }, pid);
+    const corpse = corpseAt(
+      sim,
+      90001,
+      { x: owner.pos.x + 15, y: owner.pos.y, z: owner.pos.z },
+      pid,
+    );
     sim.setBuddyAutolootFor(pid, true);
     const before = sim.countItem('wolf_fang', pid);
     for (let i = 0; i < 200 && sim.entities.get(corpse.id)?.loot; i++) sim.tick();
@@ -411,7 +587,12 @@ describe('buddy autoloot', () => {
     const pid = join(sim);
     const owner = sim.entities.get(pid)!;
     const buddy = summonFox(sim, pid);
-    const corpse = corpseAt(sim, 90005, { x: owner.pos.x + 8, y: owner.pos.y, z: owner.pos.z }, pid);
+    const corpse = corpseAt(
+      sim,
+      90005,
+      { x: owner.pos.x + 8, y: owner.pos.y, z: owner.pos.z },
+      pid,
+    );
     for (let i = 0; i < 200; i++) sim.tick();
     expect(corpse.loot?.items[0]?.count).toBe(1);
     expect(dist2d(buddy.pos, buddyFollowTarget(owner))).toBeLessThan(3.6);

@@ -31,6 +31,7 @@
 // resetNythraxisEncounter, the rng/emit/grid/players/entities/cfg primitives) routes
 // through the seam, all of which still resolve on Sim.
 
+import { resetBuddyChallenge } from '../buddy_challenges';
 import { MOBS } from '../data';
 import * as deedsMod from '../deeds';
 import { resetIgnivarEncounter } from '../encounters/ignivar';
@@ -90,6 +91,7 @@ export function respawnMob(ctx: SimContext, mob: Entity): void {
   despawnSummonedAdds(ctx, mob);
   // A respawn ends the attempt; the deed window re-arms.
   deedsMod.resetDeedEncounter(ctx, mob);
+  resetBuddyChallenge(mob);
   // The respawn reuses the entity id: an UNCREDITED death (untapped, or a
   // non-player kill) skips the credited-kill taint consumption, so drop any
   // kill-order taint here or the fresh mender spawns pre-denied. Respawn only:

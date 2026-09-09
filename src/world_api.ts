@@ -553,6 +553,8 @@ export const COMMAND_NAMES = [
   'mount_toggle',
   'buddy_toggle',
   'buddy_autoloot',
+  'buddy_summon',
+  'buddy_cosmetic',
   'mount_train_begin',
   'mount_train_answer',
   'mount_train_abort',
@@ -1024,11 +1026,17 @@ export const COMMAND_FACETS = {
   // learn_riding: purchase the riding skill from Marla (80g, once). No snapshot
   // field; the result rides the ridingTrained snapshot delta (mntRtd).
   learn_riding: 'IWorldMounts',
-  // IWorldBuddies: cosmetic followers, dismiss-only toggle (snake_case wire
-  // string, by design, mirroring mount_toggle). The active buddy is a
-  // self-snapshot read (terse `bud`, no send, untagged); summoning one is an
-  // item use (use_item), not a buddy command.
+  // IWorldBuddies: cosmetic followers (snake_case wire strings, by design,
+  // mirroring mount_toggle). The active buddy is a self-snapshot read (terse
+  // `bud`, no send, untagged); the collection reads (ownedBuddies,
+  // ownedBuddyCosmetics, equippedBuddyCosmetics, pendingBuddies) ride the
+  // self snapshot too (budOwn/budCos/budEq/budPend, untagged).
   buddy_toggle: 'IWorldBuddies',
+  // buddy_summon: summon/dismiss a specific collected buddy (the Hunting
+  // window's button); the entity mirror `bud` carries the result.
+  buddy_summon: 'IWorldBuddies',
+  // buddy_cosmetic: wear a look on a collected buddy; the result rides `budEq`.
+  buddy_cosmetic: 'IWorldBuddies',
   // buddy_autoloot: enable/disable the buddy's loot errand (snake_case wire
   // string, same family as buddy_toggle). The result rides the same self
   // snapshot the toggle does (terse `budal`, no send, untagged).

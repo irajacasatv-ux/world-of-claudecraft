@@ -1293,11 +1293,11 @@ export const ZONE3_NPCS: Record<string, NpcDef> = {
       'highwatch_wallshield',
       'craghorn_staff',
       'icevein_dirk',
-      // Penny Goldspark, the 1000g companion: the one buddy whistle sold for
-      // plain gold at the top of the level range, so gold has a cosmetic sink
-      // that is not gear. Hode keeps her because the forge row is where a
-      // player with that much gold already stands.
-      'whistle_penny_goldspark',
+      // The store look for the Stag companion (content/buddy_cosmetics.ts
+      // stag_gilded): a buddy COSMETIC sold for plain gold, the cosmetic sink
+      // that is not gear. No companion itself is sold for gold (owner plan:
+      // mounts fill that space; buddies are earned).
+      'charm_stag_gilded',
     ],
     greeting: 'Forge is hot and the grindstone is turning. If it cuts, I sell it.',
   },

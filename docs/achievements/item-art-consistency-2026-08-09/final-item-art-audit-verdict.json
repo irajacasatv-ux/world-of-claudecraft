@@ -5,7 +5,7 @@
     "baselineCommit": "aee195551b5aef628eb7a72192117d7e3079818e",
     "branch": "feature/placeholder-art-completion-v036",
     "shippingDirectory": "public/ui/items",
-    "itemArtFilesReviewed": 1072,
+    "itemArtFilesReviewed": 1074,
     "liveItemDefinitions": 1087,
     "generatedHeroicDefinitions": 64,
     "heroicDefinitionsWithOwnWebp": 48,
@@ -404,7 +404,7 @@
   },
   "visualVerdict": {
     "status": "pass",
-    "passCount": 1072,
+    "passCount": 1074,
     "passIds": [
       "abyssal_loop",
       "abysswrought_band",
@@ -503,6 +503,8 @@
       "captains_crest",
       "caravan_quilted_vest",
       "caravan_warden_dirk",
+      "charm_stag_acorn",
+      "charm_stag_gilded",
       "chipped_tusk",
       "choir_blessed_spaulders",
       "choirmothers_casque",
@@ -1483,7 +1485,7 @@
     "watch": [],
     "rejectCount": 0,
     "reject": [],
-    "summary": "All 1072 shipping item-art files pass the visual contract: 817 reviewed in the 2026-08-09 campaign (documented retries included), plus the five class-overhaul integration additions owner-reviewed and passed on 2026-08-10, plus the Dawnhold posy addition (project-authored vector illustration) owner-reviewed and passed on 2026-08-12, plus the two Proving Shore prop renders (rendered from their own shipped world models) owner-reviewed and passed on 2026-08-17, plus the three pearl-detour icons (generated via the OpenAI proving-shore-mother-of-pearl-2026-08-20 batch) owner-reviewed and passed on 2026-08-20, plus the Proving Shore Passing Stone render (rendered from its own shipped world model by the same deterministic pipeline as the 2026-08-17 pair) added on 2026-08-22, machine-checked and awaiting owner visual review, plus the nine Crucible raid weapon icons (generated via the OpenAI crucible-raid-weapons-2026-08-28 batch) added on 2026-08-28, machine-checked and awaiting owner visual review, plus the two Ignivar legendary drop renders (varkhul_forgebreaker and varkhul_emberward, rendered from their own shipped held-weapon models by the deterministic weapon-still pipeline) added on 2026-08-28, machine-checked and awaiting owner visual review, plus the 192 Crucible set-piece, sigil, and off-set icons (generated via the OpenAI crucible-set-icons-2026-08-29 batch) added on 2026-08-29, machine-checked and awaiting owner visual review, plus the Core of the Last Flame reagent icon (staged early from the crucible-raid-professions-2026-08-28 batch) added on 2026-08-30, machine-checked and awaiting owner visual review, plus the seven bank-storage painted bags (implementation-agent reviewed and passed on 2026-08-26, joined at the v0.41.0 base sync), All 830 shipping item-art files pass the visual contract: 817 reviewed in the 2026-08-09 campaign (documented retries included), plus the five class-overhaul integration additions owner-reviewed and passed on 2026-08-10, plus the Dawnhold posy addition (project-authored vector illustration) owner-reviewed and passed on 2026-08-12, plus the two Proving Shore prop renders (rendered from their own shipped world models) owner-reviewed and passed on 2026-08-17, plus the three pearl-detour icons (generated via the OpenAI proving-shore-mother-of-pearl-2026-08-20 batch) owner-reviewed and passed on 2026-08-20, plus the Proving Shore Passing Stone render (rendered from its own shipped world model by the same deterministic pipeline as the 2026-08-17 pair) added on 2026-08-22, machine-checked and awaiting owner visual review, plus the Bonebound Rickshaw reins icon (generated under woc-item-icon-v1 from a user-directed prompt, its own provenance recorded against its mapping.json owner) owner-reviewed against the regenerated mount contact sheet and passed on 2026-08-21. The 31 buddy-whistle icons (rendered from the shipped buddy GLB models by scripts/assets/render_buddy_item_icons.mjs) joined the catalog when the buddy branch merged the v0.41.3 line on 2026-09-04 (the 29th, whistle_forgemaw, rendered on 2026-09-05 for the heroic-Crucible companion; the 30th and 31st, whistle_crystal_tide and whistle_phantom, rendered on 2026-09-06 for the fishing catch and the uncommon elemental), machine-checked and awaiting owner visual review."
+    "summary": "All 1074 shipping item-art files pass the visual contract: 817 reviewed in the 2026-08-09 campaign (documented retries included), plus the five class-overhaul integration additions owner-reviewed and passed on 2026-08-10, plus the Dawnhold posy addition (project-authored vector illustration) owner-reviewed and passed on 2026-08-12, plus the two Proving Shore prop renders (rendered from their own shipped world models) owner-reviewed and passed on 2026-08-17, plus the three pearl-detour icons (generated via the OpenAI proving-shore-mother-of-pearl-2026-08-20 batch) owner-reviewed and passed on 2026-08-20, plus the Proving Shore Passing Stone render (rendered from its own shipped world model by the same deterministic pipeline as the 2026-08-17 pair) added on 2026-08-22, machine-checked and awaiting owner visual review, plus the nine Crucible raid weapon icons (generated via the OpenAI crucible-raid-weapons-2026-08-28 batch) added on 2026-08-28, machine-checked and awaiting owner visual review, plus the two Ignivar legendary drop renders (varkhul_forgebreaker and varkhul_emberward, rendered from their own shipped held-weapon models by the deterministic weapon-still pipeline) added on 2026-08-28, machine-checked and awaiting owner visual review, plus the 192 Crucible set-piece, sigil, and off-set icons (generated via the OpenAI crucible-set-icons-2026-08-29 batch) added on 2026-08-29, machine-checked and awaiting owner visual review, plus the Core of the Last Flame reagent icon (staged early from the crucible-raid-professions-2026-08-28 batch) added on 2026-08-30, machine-checked and awaiting owner visual review, plus the seven bank-storage painted bags (implementation-agent reviewed and passed on 2026-08-26, joined at the v0.41.0 base sync), All 830 shipping item-art files pass the visual contract: 817 reviewed in the 2026-08-09 campaign (documented retries included), plus the five class-overhaul integration additions owner-reviewed and passed on 2026-08-10, plus the Dawnhold posy addition (project-authored vector illustration) owner-reviewed and passed on 2026-08-12, plus the two Proving Shore prop renders (rendered from their own shipped world models) owner-reviewed and passed on 2026-08-17, plus the three pearl-detour icons (generated via the OpenAI proving-shore-mother-of-pearl-2026-08-20 batch) owner-reviewed and passed on 2026-08-20, plus the Proving Shore Passing Stone render (rendered from its own shipped world model by the same deterministic pipeline as the 2026-08-17 pair) added on 2026-08-22, machine-checked and awaiting owner visual review, plus the Bonebound Rickshaw reins icon (generated under woc-item-icon-v1 from a user-directed prompt, its own provenance recorded against its mapping.json owner) owner-reviewed against the regenerated mount contact sheet and passed on 2026-08-21. The 31 buddy-whistle icons (rendered from the shipped buddy GLB models by scripts/assets/render_buddy_item_icons.mjs) joined the catalog when the buddy branch merged the v0.41.3 line on 2026-09-04 (the 29th, whistle_forgemaw, rendered on 2026-09-05 for the heroic-Crucible companion; the 30th and 31st, whistle_crystal_tide and whistle_phantom, rendered on 2026-09-06 for the fishing catch and the uncommon elemental), machine-checked and awaiting owner visual review. The two buddy charm icons (charm_stag_acorn and charm_stag_gilded, deterministic re-tints of the Stag whistle still by scripts/assets/render_buddy_charm_icons.mjs) joined the catalog with the buddy acquisition rework on 2026-09-09, machine-checked and awaiting owner visual review."
   },
   "nonVisualContentWatch": [
     {
@@ -3386,6 +3388,6 @@
         "format": "png"
       }
     ],
-    "shippingCatalogSha256": "530718faa990f8412f0fdf3e64ab8720e81d3758ead8c45817dfaf5ff7380b45"
+    "shippingCatalogSha256": "89e113dc30082a618759806868807dedc35db8ae13088d6ffbb88c5ae9ba5bc1"
   }
 }

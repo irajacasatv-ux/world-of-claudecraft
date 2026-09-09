@@ -497,7 +497,12 @@ const MONOLITHS: MonolithRow[] = [
     // architecture itself mandates — the per-pid one the server calls and the
     // IWorld member the client calls — and the widened buddies.ts import. There
     // is no seam that lets a new IWorld command skip this file. Exact count.
-    ceiling: 12369,
+    // Re-pinned 2026-09-09 by the buddy acquisition rework: the per-character
+    // buddy collection's persistence, the seven per-pid delegates and the six
+    // IWorldBuddies facade members must live on Sim (the seam rules), while
+    // every rule moved to src/sim/buddies.ts, buddy_drops.ts and
+    // buddy_challenges.ts. Nothing else grew.
+    ceiling: 12427,
     seam: 'a sim system module behind SimContext (src/sim/CLAUDE.md)',
   },
   {
@@ -633,7 +638,10 @@ const MONOLITHS: MonolithRow[] = [
     // the command switch (which delegates straight into the Sim) and one
     // omitted-when-false identity field. Both are this file's own dispatch
     // spine, not logic that could live in a sibling. Exact count.
-    ceiling: 10613,
+    // Re-pinned 2026-09-09 by the buddy acquisition rework: the dispatch arm,
+    // the self-key emitter and the grant delegates are one-liners into
+    // server/buddy_wire.ts; the residual is the delegates themselves.
+    ceiling: 10635,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -707,7 +715,10 @@ const MONOLITHS: MonolithRow[] = [
     // member that sends it and the one line that mirrors `budal` off the
     // snapshot. Thin-consumer wiring with no branch-owned extraction available.
     // Exact count.
-    ceiling: 5713,
+    // Re-pinned 2026-09-09 by the buddy acquisition rework: the mirror decode
+    // lives in src/net/buddy_wire.ts; the residual is the six IWorldBuddies
+    // facade members, three lines each by the formatter.
+    ceiling: 5724,
     seam: 'a src/net sibling module (the refactor/net-online split is the template)',
   },
   {
@@ -759,7 +770,9 @@ const MONOLITHS: MonolithRow[] = [
     // Re-pinned to the exact merged count of the OSSBrain v0.41.0 base
     // merge: both parents had already ratcheted for their own work, so
     // the composite is the honest size. Exact count, zero slack.
-    ceiling: 5145,
+    // Re-pinned 2026-09-09: one import and one ensureSchema line for the
+    // buddy grants domain module (server/buddy_grants_db.ts owns its SQL).
+    ceiling: 5147,
     seam: 'a domain <domain>_db.ts module with its own *_SCHEMA (server/CLAUDE.md)',
   },
   {
