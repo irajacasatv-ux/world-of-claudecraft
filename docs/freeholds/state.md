@@ -2221,3 +2221,68 @@ and 19 owns final GLBs. All remain unsigned and separate from the shell/gate evi
   release's issue #3784 rework (the widened `conflictingResetLock` and
   `mismatchedClaimDifficulty` arms and the new normal-difficulty raid lockout arm keyed on
   the DAILY/WEEKLY room sets) and found none reachable for an owner room.
+
+### 07 persistence pre-flight facts (measured 2026-09-08, before any 07 edit)
+
+Recorded before dependent code was written, because several premises the 07 planning
+text carries had already gone stale on this tree.
+
+- **Base.** PR 3872 is MERGED at `6111e6d206`. `origin/release/v0.42.0` at `57a2ced3bd`
+  is already an ancestor of the branch tip `c18facd4cc` through merge `6540713541`, and a
+  fresh `git fetch origin --prune` moved no release ref. The 07 file's "while PR 3872 is
+  open merge origin/feature/masterwrought" arm is DEAD; the release arm applies and the
+  dependency block is retired (D69). No new merge was needed, so no release-merge audit
+  and no `pnpm install` were owed.
+- **Monolith ceilings, re-measured at `c18facd4cc` (`wc -l` against
+  `tests/monolith_budget.test.ts`). EVERY tracked row is at ZERO slack**, so do not budget
+  against any remembered literal: `src/ui/hud.ts` 18436, `src/render/renderer.ts` 12844,
+  `src/sim/sim.ts` 11737, `src/main.ts` 11216, `server/game.ts` 9983, `src/net/online.ts`
+  5604, `src/sim/world.ts` 5188, `src/game/music.ts` 4850, `server/db.ts` 4744,
+  `src/render/foliage.ts` 3969, `server/woc_market.ts` 3945, `src/sim/colliders.ts` 2518.
+  The two files 07 must wire (`server/db.ts` and `server/game.ts`) are both at zero, so
+  each owes a behavior-preserving extraction plus a lowered, remeasured ceiling in the
+  same change. The suite also fails any tracked file sitting more than 400 lines under its
+  ceiling, so an extraction must re-pin close to the new size.
+- **`bankBonusForAccount` does NOT return `characterCount`.** The 07 file and its QA both
+  say "the release branch widens the return to include characterCount". It does not, on
+  either arm: `server/ws_auth.ts` declares
+  `(accountId: number) => Promise<{ bonusSlots: number; sources: BankBonusSource[] }>` and
+  `server/main.ts` binds the one-liner
+  `bankBonusForAccount: async (id) => computeBankBonus(await bankBonusFactsForAccount(id)),`,
+  byte-identical on `origin/release/v0.42.0`. The only `characterCount` beside this
+  callback is a stale fixture literal in `tests/action_bar_layout_persistence_game.test.ts`
+  that type-checks only through a trailing `as unknown as` cast. Copy the one-liner shape;
+  do not plan against the widened return.
+- **The dev bridge's affirmative body is `{"authorized":true}`,** not
+  `{"freeholdDevGrantEnabled":true}` as the 07 text says. `freeholdDevGrantEnabled` is the
+  `SimConfig` and `SimContext` field name, never the wire key. Changing the shipped payload
+  would red `tests/freehold_dev_authorization.test.ts` and
+  `tests/freehold_dev_bootstrap.test.ts`; the divergence is recorded, not repaired.
+- **The Vite composition is a conditional spread, not an `enabled:` expression.**
+  `vite.config.ts` carries
+  `...(freeholdDevAuthorizationEnabled(process.env) ? [freeholdDevAuthorizationPlugin({ enabled: true })] : [])`,
+  pinned by both a text pin and an AST pin, and the config may never spell
+  `ALLOW_DEV_COMMANDS` or the endpoint path. Behaviorally identical to the 07 text,
+  literally different.
+- **The reset-policy half of D84 does not exist in code.** `resetDayKey`
+  (`server/raid_reset.ts`), `emberWeekAnchorOf`
+  (`src/sim/professions/masterwrought_materials.ts`) and `REALM_RESET_TIME_ZONE`
+  (`server/realm.ts`, exactly four code read sites) all exist. `reset_policy_id`,
+  `resetPolicyId`, `calendarId`, `ledgerWeekOf` and `src/sim/realm_week.ts` return ZERO
+  hits across `src/ server/ tests/ headless/ scripts/`. 07 is therefore the first code
+  that would carry a reset-policy identity and has no resolver to call, which is why its
+  initial rows are `unbound_no_history` with no upkeep-derived day or week stamp; 13/13a
+  own the bound upkeep migration and the resolver.
+- **The live record's day fields are the wrong type for D84 and must not be persisted as
+  calendar facts.** `FreeholdState.conditionStampDay` and `ledgerPaidThroughDay` are
+  `number`, documented as `utcDay`, and seeded `0` by `defaultFreeholdState`. D84 requires
+  the realm-day `resetDay` string vocabulary. 07 persists neither as a day fact: the
+  durable row carries an explicit unbound upkeep binding instead.
+- **`account_freeholds` is keep-forever, which supersedes the 01-era prune expectation.**
+  Gotcha (f) said the first `loadFreehold` caller "registers the table prune in
+  `server/retention_sweep.ts` with the DDL". The 07 file states the table is bounded plots
+  per account and keep-forever, so there is nothing to prune: the reverse-FK account
+  cascade is the only removal path. The obligation becomes an explicit keep-forever
+  comment at the DDL plus an absence assertion in
+  `tests/server/main_retention_wiring.test.ts`, the shape that file already uses for
+  `bank_ledger` and the storage receipts.

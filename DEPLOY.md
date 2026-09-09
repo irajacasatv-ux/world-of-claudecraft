@@ -781,6 +781,19 @@ For off-box safety, sync the directory to S3 occasionally:
   a change, because the realm Sim boots with the value
   (`server/sim_boot_config.ts`); only the wire verdict and the status route
   read it live.
+- Enabling `FREEHOLDS_ENABLED` starts writing two account-scoped tables,
+  `account_freeholds` (`server/freehold_db.ts`) and `account_freehold_hearth`
+  (`server/freehold_hearth_db.ts`). Their DDL is applied unconditionally at
+  every boot, like every other schema module, so the tables exist before the
+  feature is enabled. Both are bounded per account and deliberately
+  KEEP-FOREVER: they carry no retention window, they are absent from the
+  nightly sweep on purpose (each plot row IS a player's built home, and the
+  Hearth row is the shared-account travel cooldown authority), the account
+  foreign-key cascade is their only removal path, and both ride
+  `POST /api/account/export`. Rolling back to a release that predates them
+  leaves the rows intact but unmaintained and unexported, so turn the flag OFF
+  before rolling back: docs/freeholds/persistence-rollout-contract.md is the
+  capability and quiescence contract.
 - **Community test profile**: on a disposable public test realm, set
   `PROVISION_TEST_ACCOUNTS=1` in the host `.env`, then restart the game
   container. The flag gives newly created accounts nine level-20 characters,

@@ -516,6 +516,26 @@ history. Save coalescing remains one running plus one pending dirty generation;
 byte-bounded pending state, durable receipts and account/guild authority fences are
 specified separately from the user's cosmetic layout capacity.
 
+### 07 persistence bounds (measured 2026-09-08)
+
+The first rows MEASURE-BOUNDS carries. Every value here is derived or measured,
+never chosen, and every one is enforced and proved by a published fixture.
+
+| Bound | Exported symbol | Value | Derivation | Proof |
+|---|---|---|---|---|
+| Layout rows per plot | `FREEHOLD_MAX_LAYOUT_ROWS` (`src/sim/freehold/persisted.ts`) | 420 | The mathematical upper envelope of section A's tier ladder: the largest approved decor budget, Citadel 420, divided by the smallest approved positive `decorCost` in `src/sim/content/freehold/furnishings.ts`, which is 1. | `tests/freehold_state.test.ts` maximal legal fixture loads; a one-over fixture is refused before any deep allocation |
+| Trophy rows per plot | `FREEHOLD_MAX_TROPHY_ROWS` | 32 | The largest approved plinth count on the same ladder, Citadel. | same suite |
+| Identity and item id characters | `FREEHOLD_MAX_ID_LENGTH` | 64 | The shared opaque public identity limit already pinned by `server/freehold_wire.ts` (`OPAQUE_ID_MAX_LEN`). The longest approved authored furnishing id today is 25 characters, so the published bound is the schema limit rather than the content one. | cross-pinned in `tests/freehold_module.test.ts` and re-pinned by the 64 and 65 character fixtures |
+| Owned bytes per plot | `FREEHOLD_MAX_OWNED_BYTES` | 104448 | MEASURED, then rounded up to the next whole 1024. The maximal legal record (420 layout rows, 32 trophies, every id at 64 characters, every numeric field at its longest legal JSON text) serializes to 104363 UTF-8 bytes through the exact serializer the save path uses. | the maximal legal and one-over fixtures in `tests/freehold_state.test.ts`; enforced in SQL by an `octet_length` bound that nulls the content columns before any deep parse (`server/freehold_db.ts`), and re-checked in the sim before mutation and save |
+| Plots read per account | `FREEHOLD_ACCOUNT_PLOT_READ_LIMIT` (`server/freehold_db.ts`) | 2 | The approved two-plot account cap. The read is deliberately WIDER than the writer admits (index 0 only until the second-home work), so a row written by a newer release is preserved and reported rather than filtered away as absence. | `tests/server/freehold_db.test.ts` unadmitted-index arm |
+| Save coalescing | one running plus one pending | unchanged | R36, restated above. | `tests/server/freehold_persist.test.ts` burst arm: a thousand marks cost one running plus one pending write |
+
+Query and plan evidence for these shapes is produced by
+`tests/server/freehold_db.pg.test.ts` and `tests/server/freehold_hearth_db.pg.test.ts`
+against real PostgreSQL. Neither housing table is on the retention sweep: both are
+bounded per account and keep-forever, so the finite-growth question is answered by
+the account cascade rather than by an aging predicate.
+
 ## I. UX and art constants
 
 Every UX constant is imported by label from state Content numbers, including shared
