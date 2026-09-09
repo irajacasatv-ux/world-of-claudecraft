@@ -2071,8 +2071,73 @@ describe('a leaving session never loses its last edits to a queue', () => {
     const rejoin = await h.store.preload(ACCOUNT_ID);
     expect(rejoin.state?.rev).toBe(6);
     expect(rejoin.state?.condition).toBe(42);
-    // Adopted, therefore released: a live record now carries those edits and
-    // the write path must prefer that record and nothing else.
+    // OFFERED, not yet released. The handshake that read it can still die
+    // before it ever creates a live record, and five exits sit between this
+    // call and the join, so the capture stays until something confirms.
+    expect(h.store.stats().leaveCaptures).toBe(1);
+  });
+
+  it('keeps the capture when the handshake that read it never joins', async () => {
+    // preload runs BEFORE the character lease, and a lease already held, no
+    // such character, a forced rename, a throwing character read and a refused
+    // join all return without ever creating a record. `alreadyInWorld` is the
+    // sharpest: a reconnect after a dropped socket is the very event that
+    // produced the capture. Releasing at the read lost the edits outright.
+    let granted = 0;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => persistedFixture({ rev: 6 }),
+      // No live record ever exists in this case, which is the point.
+      hasLive: () => false,
+      // The load takes a permit, the LEAVE write is refused one (which is what
+      // leaves the capture outstanding), and the sweep after it gets one.
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 2 ? null : { release: () => {} };
+      },
+      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
+    });
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(20);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+
+    // The handshake reads, then dies before the join.
+    await h.store.preload(ACCOUNT_ID);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+
+    // The next sweep still has the document, so the edits reach the row.
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
+    expect(h.store.stats().writesWithoutRecord).toBe(0);
+  });
+
+  it('releases the capture only once retain confirms a live record', async () => {
+    let live = false;
+    let granted = 0;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => persistedFixture({ rev: 6 }),
+      hasLive: () => live,
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 1 ? { release: () => {} } : null;
+      },
+    });
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(20);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+
+    // retain BEFORE the install: nothing to confirm, so nothing is released.
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+
+    // ...and after, when a live record genuinely carries those edits.
+    live = true;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
     expect(h.store.stats().leaveCaptures).toBe(0);
   });
 

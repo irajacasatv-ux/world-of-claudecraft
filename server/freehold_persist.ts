@@ -1003,7 +1003,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // out, and would then overwrite the capture on the next sweep. Handing it
       // over is also what RELEASES it: once a live record carries those edits,
       // the write path must prefer that record and nothing else.
-      return Promise.resolve(snapshotOf(entry, blocked(entry) ? null : adoptCapture(entry)));
+      return Promise.resolve(snapshotOf(entry, blocked(entry) ? null : offerCapture(entry)));
     }
     return beginLoad(accountId, ownerKey);
   }
@@ -1195,15 +1195,24 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     }
   }
 
-  /** Hand a rejoining session the capture if one is outstanding, and release
-   *  it: the capture exists only for the window with NO live record, and a
-   *  session that has just adopted it is about to create one. */
-  function adoptCapture(entry: FreeholdPersistEntry): PersistedFreehold | null {
-    const captured = entry.leaveDocument;
-    if (captured === null) return entry.state;
-    leaveCaptures--;
-    entry.leaveDocument = null;
-    return captured;
+  /**
+   * Offer a rejoining session the capture if one is outstanding, WITHOUT
+   * releasing it. Two-phase on purpose.
+   *
+   * Releasing here was a lost-save path of its own. `preload` runs on the
+   * handshake BEFORE the character lease, and five exits sit between the two:
+   * a lease already held, no such character, a forced rename, a throwing
+   * character read, and a refused join. None of them ever creates a live
+   * record, so a capture released here vanished with nothing holding the edits,
+   * and `alreadyInWorld` is the sharpest of them because a reconnect after a
+   * dropped socket is the very event that produced the capture.
+   *
+   * `retain` is the confirmation, and it is synchronous on the same tick as the
+   * install. Until it comes, the capture stays and a sweep can still write it,
+   * which is the outcome that keeps the edits.
+   */
+  function offerCapture(entry: FreeholdPersistEntry): PersistedFreehold | null {
+    return entry.leaveDocument ?? entry.state;
   }
 
   /** Wake anything waiting for this entry to stop owing a write. */
@@ -1514,6 +1523,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const entry = ensureEntry(ownerKey, accountId);
       entry.refs++;
       entry.orphanPasses = 0;
+      // THE CONFIRMATION HALF of the capture handover. A live record now exists
+      // for this owner and carries the leaving session's edits, so the stand-in
+      // has done its job. Releasing here rather than at the read is what makes
+      // a handshake that dies before the join keep its capture, and it is safe
+      // because the write path prefers the live record whenever there is one.
+      if (entry.leaveDocument !== null && ports.hasLive(ownerKey)) {
+        leaveCaptures--;
+        entry.leaveDocument = null;
+      }
       // AN UNLOADED ENTRY HERE IS A LOST ONE. retain runs at the end of a
       // handshake whose preload already ran, so the store should have a loaded
       // entry for this owner. If it does not, something removed it in between:
