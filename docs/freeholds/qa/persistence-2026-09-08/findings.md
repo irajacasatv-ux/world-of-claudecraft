@@ -258,3 +258,56 @@ worse than the one it closed. That is the reason the rule exists.
 - Y8 SELF-FOUND while acting on Y6's neighbour: the lost-entry reload added in the first
   round would have issued a durable read per join ON A DARK REALM, where the join path's
   own preload is gated. FIXED in 97011ac1c7 before any reviewer reached it.
+
+## THIRD FIX-ROUND FINDINGS (the second round was read the same way, and had the same result)
+
+Two rounds in a row had introduced a defect worse than one they closed, so the second
+was reviewed on that assumption. It had.
+
+- Z1 SHOULD-FIX, blocking-adjacent (correctness). The leave capture was cleared on ANY
+  non-rearm settle, and the null-permit arm of a write returns false WITHOUT quiescing,
+  so an entry could settle uncommitted, unblocked and still dirty with its capture
+  dropped. The next sweep then re-armed a write whose record removePlayer had already
+  evicted, and the leaving session's edits were gone for good. Gate saturation is the
+  single condition that produces both that timeout and the deferral the capture was
+  built for, so the two arms are adjacent rather than exotic. FIXED: the capture
+  survives while the entry still owes the write.
+- Z2 SHOULD-FIX (correctness, claim scope). "A live record always wins" was not the
+  right rule: a rejoin inside the deferral window reinstalls the entry's last COMMITTED
+  state, which is the pre-leave revision, so the leaving session's edits were silently
+  rolled back to it. FIXED: the newer document wins, with the live record winning ties,
+  which keeps the original guarantee that a capture cannot shadow a later edit. The
+  first test written for this was NOT decisive (the write sampled before the rejoin);
+  it was rebuilt around a held permit and then killed the mutant.
+- Z3 SHOULD-FIX (correctness). The write seal's plot-identity check tested the live
+  record's id while the row received `entry.plotId`, so the one shape check underwriting
+  writable-implies-readable for the identity column was validating a different value
+  from the one that lands. FIXED: `runWrite` builds the document AS SENT once and every
+  consumer, refusal included, reads that.
+- Z4 SHOULD-FIX (correctness). `owesWork` claimed to be the one shared predicate while
+  `sweepOrphans` still carried an in-flight-load guard `maybeRemove` did not, so an
+  entry with a durable read in flight could still be removed and resurrected at zero
+  references. That is the same "entry went missing under a live session" class that
+  retain's reload repairs, seen from the other end. FIXED: the guard moved into the
+  shared predicate.
+- Z5 SHOULD-FIX (security). `boundedDatabaseError` was applied to throws out of this
+  module's own code, discarding the stack that would name the line. FIXED: it applies
+  only at the three sites where a pg error can arrive, and the docstring stops claiming
+  `message` is a pure classification field.
+- Z6 SHOULD-FIX (cross-platform-sync). The plot identity charset has four copies and
+  only three had a pin, so widening it later would red three tests, the author would
+  update three literals, and the loader would then mark every newly minted id malformed
+  and write-block the account. FIXED, with refusal cases so the pin is not vacuous.
+  The same reviewer's other finding, the minted id never reaching the live record, was
+  already closed by stampFreeholdPlotId.
+- Z7 NITS, all applied: a byte-ceiling comment called a measurement on one fixture a
+  theoretical ceiling; an assertion that could never fail (a newline sought in
+  whitespace-collapsed text) became an occurrence count; the pre-gate expression was
+  spelled out twice; the reporter's vocabulary did not cover the details the writer now
+  emits; a re-entrancy comment described a hazard its own latch already closed; and the
+  hearth clock's documented growth was one entry per account that has USED a key, not
+  one per login.
+- Z8 RULED, no change: `wire_rev_shape` holding rather than repairing was flagged as a
+  load-bearing CLEAN by the reviewer, since it is what stops a client-facing counter
+  going backwards permanently, and it would be easy for a later reader to "simplify"
+  into the loader's repair. Recorded so nobody does.
