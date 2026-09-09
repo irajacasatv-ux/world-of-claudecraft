@@ -1523,12 +1523,22 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const entry = ensureEntry(ownerKey, accountId);
       entry.refs++;
       entry.orphanPasses = 0;
-      // THE CONFIRMATION HALF of the capture handover. A live record now exists
-      // for this owner and carries the leaving session's edits, so the stand-in
-      // has done its job. Releasing here rather than at the read is what makes
-      // a handshake that dies before the join keep its capture, and it is safe
-      // because the write path prefers the live record whenever there is one.
-      if (entry.leaveDocument !== null && ports.hasLive(ownerKey)) {
+      // THE CONFIRMATION HALF of the capture handover, and it confirms THIS
+      // DOCUMENT rather than the existence of some record.
+      //
+      // A bare presence test was not enough. installLoadedFreehold has four
+      // early returns (no bag, a hold, a null state, a bag that lost its shape)
+      // and loadFreehold is load-once on top of that, while retain runs on
+      // every join and knows none of it. The reachable case is the same-account
+      // character swap: preload's already-live arm never offers the capture at
+      // all, the install returns early, and the record retain sees belongs to
+      // the PREVIOUS session, which removePlayer is explicitly allowed to evict
+      // afterwards. The capture was dropped over edits that reached nothing.
+      //
+      // Comparing the live revision to the captured one fails CLOSED: a skipped
+      // install leaves the revision where it was, so the capture survives to
+      // the next sweep, which is the outcome that keeps the edits.
+      if (entry.leaveDocument !== null && ports.liveRev(ownerKey) === entry.leaveDocument.rev) {
         leaveCaptures--;
         entry.leaveDocument = null;
       }

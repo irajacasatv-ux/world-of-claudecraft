@@ -239,7 +239,10 @@ function harness(options: HarnessOptions = {}) {
     liveRev(ownerKey: string): number | null {
       calls.push('liveRev');
       // The cheap probe answers from the SAME record serialize() would clone,
-      // so a test that moves the fixture's revision moves both.
+      // so a test that moves the fixture's revision moves both. It also agrees
+      // with hasLive, because in the server both read one map: a case that says
+      // nothing is live must not be handed a revision.
+      if (options.hasLive && !options.hasLive(ownerKey)) return null;
       return serialize(ownerKey)?.rev ?? null;
     },
     hasLive(ownerKey: string): boolean {
@@ -2084,12 +2087,14 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // sharpest: a reconnect after a dropped socket is the very event that
     // produced the capture. Releasing at the read lost the edits outright.
     let granted = 0;
+    let live = true;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
       serialize: () => persistedFixture({ rev: 6 }),
-      // No live record ever exists in this case, which is the point.
-      hasLive: () => false,
+      // Live while the session is leaving (which is what lets the capture be
+      // taken), then gone, which is what removePlayer does right after.
+      hasLive: () => live,
       // The load takes a permit, the LEAVE write is refused one (which is what
       // leaves the capture outstanding), and the sweep after it gets one.
       acquirePermit: async () => {
@@ -2101,6 +2106,8 @@ describe('a leaving session never loses its last edits to a queue', () => {
     await h.store.flushAndRelease(OWNER_KEY);
     await tick(20);
     expect(h.store.stats().leaveCaptures).toBe(1);
+    // removePlayer evicts the record the instant the leave returns.
+    live = false;
 
     // The handshake reads, then dies before the join.
     await h.store.preload(ACCOUNT_ID);
@@ -2114,29 +2121,45 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().writesWithoutRecord).toBe(0);
   });
 
-  it('releases the capture only once retain confirms a live record', async () => {
-    let live = false;
+  it('releases the capture only when the live record CARRIES it', async () => {
+    // A bare "is anything live" test was not enough. installLoadedFreehold has
+    // four early returns and loadFreehold is load-once on top of them, while
+    // retain runs on every join and knows none of that. The reachable case is
+    // the same-account character swap, where the record retain sees belongs to
+    // the PREVIOUS session and removePlayer is explicitly allowed to evict it
+    // afterwards. Comparing revisions fails closed instead.
+    let live = true;
+    let liveRev = 5;
     let granted = 0;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: 6 }),
+      serialize: () => persistedFixture({ rev: liveRev }),
       hasLive: () => live,
       acquirePermit: async () => {
         granted += 1;
         return granted === 1 ? { release: () => {} } : null;
       },
     });
+    liveRev = 6;
     await h.store.flushAndRelease(OWNER_KEY);
     await tick(20);
     expect(h.store.stats().leaveCaptures).toBe(1);
+    live = false;
 
-    // retain BEFORE the install: nothing to confirm, so nothing is released.
+    // No record at all: nothing to confirm.
     h.store.retain(OWNER_KEY, ACCOUNT_ID);
     expect(h.store.stats().leaveCaptures).toBe(1);
 
-    // ...and after, when a live record genuinely carries those edits.
+    // A record exists but is NOT the offered document: the same-account swap,
+    // where the install was skipped and this record is the other session's.
     live = true;
+    liveRev = 5;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+
+    // ...and now it genuinely carries those edits.
+    liveRev = 6;
     h.store.retain(OWNER_KEY, ACCOUNT_ID);
     expect(h.store.stats().leaveCaptures).toBe(0);
   });
