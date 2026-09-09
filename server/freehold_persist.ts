@@ -228,6 +228,11 @@ export interface FreeholdPersistPorts {
    *  holds no live record, and the write is skipped entirely. */
   serialize(ownerKey: string): PersistedFreehold | null;
   hasLive(ownerKey: string): boolean;
+  /** Whether this realm serves housing at all. The store never reads the
+   *  environment itself; the composition root binds this to the sim's own
+   *  flag. A DARK realm must issue no durable read of any kind, which is why
+   *  the only read this store starts on its own consults it. */
+  enabled(): boolean;
   /** The live record's own revision, or null when the owner holds none. A
    *  CHEAP read: the periodic sweep asks every loaded owner this question on
    *  every pass, so it must not clone anything. serialize() is the expensive
@@ -1357,7 +1362,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // and no log, and every edit the player makes would be discarded at
       // logout. So re-read instead. The read is single-flight and load-once, so
       // a normal join, where the entry IS loaded, costs nothing.
-      if (!entry.loaded && accountId > 0) {
+      // ...but never on a DARK realm. The join path's own preload is gated on
+      // the housing flag in server/main.ts, so this reload would otherwise be
+      // the one durable read a realm with housing disabled still issues, once
+      // per join, for a feature it does not serve.
+      if (!entry.loaded && accountId > 0 && ports.enabled()) {
         void preload(accountId).catch(() => undefined);
       }
     },
@@ -1630,6 +1639,7 @@ export function createGameFreeholdPersistStore(deps: {
       return state === null ? null : persistedFreeholdFromState(state);
     },
     hasLive: (ownerKey) => deps.sim.ctx.freeholds.has(ownerKey),
+    enabled: () => deps.sim.ctx.freeholdsEnabled,
     liveRev: (ownerKey) => deps.sim.ctx.freeholds.get(ownerKey)?.rev ?? null,
     mintPlotId: () => mintFreeholdPlotId(),
     // No gate means no admission control on this host, not an unbounded wait.

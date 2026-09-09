@@ -152,6 +152,7 @@ interface HarnessOptions {
   serialize?: (ownerKey: string) => PersistedFreehold | null;
   writeRow?: (input: FreeholdUpsert) => Promise<FreeholdUpsertResult>;
   hasLive?: (ownerKey: string) => boolean;
+  enabled?: () => boolean;
   acquirePermit?: (signal: AbortSignal) => Promise<{ release(): void } | null>;
   enqueue?: <T>(key: string, signal: AbortSignal, write: () => Promise<T>) => Promise<T>;
 }
@@ -225,6 +226,9 @@ function harness(options: HarnessOptions = {}) {
     },
     hasLive(ownerKey: string): boolean {
       return options.hasLive ? options.hasLive(ownerKey) : false;
+    },
+    enabled(): boolean {
+      return options.enabled ? options.enabled() : true;
     },
     mintPlotId(): string {
       minted += 1;
@@ -2151,6 +2155,21 @@ describe('an entry that went missing under a live session is re-read, not left b
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].expectedDurableRev).toBe('7');
+  });
+
+  it('issues NO read at all on a dark realm, however the entry got lost', async () => {
+    // The join path's preload is gated on the housing flag in server/main.ts,
+    // so this reload would otherwise be the one durable read a realm with
+    // housing disabled still issues, once per join, for a feature it does not
+    // serve. A dark realm must touch the database not at all.
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() }, enabled: () => false });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await tick(20);
+    expect(h.calls).toEqual([]);
+    expect(h.store.stats().loads).toBe(0);
+    // The entry still exists and is still write-blocked, which is what a dark
+    // realm's store costs: one map entry per online account, removed on leave.
+    expect(h.store.stats().entries).toBe(1);
   });
 
   it('costs no extra read on an ordinary join, where the entry IS loaded', async () => {
