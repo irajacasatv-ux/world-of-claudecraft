@@ -84,6 +84,15 @@ export const BUDDY_COSMETICS: Record<string, BuddyCosmeticDef> = {
     name: 'Verdant',
     tint: 0x3fbf5a,
   },
+  // -- The test look (owner request 2026-09-09): the Frog dyed sapphire, to
+  // prove the cosmetic dye end to end on a baked-texture rig. Grant-only for
+  // now (`/dev buddylook frog_sapphire`, or the admin grant endpoint).
+  frog_sapphire: {
+    id: 'frog_sapphire',
+    buddy: 'frog',
+    name: 'Sapphire Frog',
+    tint: 0x2f5fd8,
+  },
   // -- Ladder/parse rewards: GRANT-only (admin grant endpoint, the monthly
   // PvP ladder and top-parse awards that an out-of-game job hands out). ----
   proud_grunt_warlord: {

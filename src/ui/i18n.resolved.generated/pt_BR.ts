@@ -3504,7 +3504,8 @@ export const pt_BR: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const pt_BR: EnTranslations = {
       "bordersSection": "Molduras",
       "bordersNone": "Sem moldura",
       "bordersEmpty": "Conquiste um feito que dê moldura para desbloquear esta estante.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Feito realizado: {name}",
       "unlockedTitleHint": "Novo título conquistado: {title}. Escolha-o no Livro dos Feitos.",
       "unlockedBorderHint": "Nova moldura conquistada: {name}. Use-a pelo Livro dos Feitos.",

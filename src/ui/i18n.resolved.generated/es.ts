@@ -3504,7 +3504,8 @@ export const es: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const es: EnTranslations = {
       "bordersSection": "Bordes",
       "bordersNone": "Sin borde",
       "bordersEmpty": "Consigue una gesta que otorgue borde para desbloquear este estante.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Gesta lograda: {name}",
       "unlockedTitleHint": "Nuevo título conseguido: {title}. Elígelo en el Libro de Gestas.",
       "unlockedBorderHint": "Nuevo borde conseguido: {name}. Lúcelo desde el Libro de Gestas.",

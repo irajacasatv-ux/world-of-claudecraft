@@ -3504,7 +3504,8 @@ export const en_XA: EnTranslations = {
         "stag_acorn": "[Áçóŕñ Çŕóŵñ]",
         "stag_gilded": "[Ĝíļðéð]",
         "moss_hare_verdant": "[Ʋéŕðáñţ]",
-        "proud_grunt_warlord": "[Ŵáŕļóŕð]"
+        "proud_grunt_warlord": "[Ŵáŕļóŕð]",
+        "frog_sapphire": "[Šáþþĥíŕé Ƒŕóĝ]"
       },
       "actions": {
         "summon": "[Šúɱɱóñ]",
@@ -4518,7 +4519,7 @@ export const en_XA: EnTranslations = {
       "watchFull": "[Ŵáţçĥļíšţ ƒúļļ ({cap} ɱáẋ)]",
       "watchAria": "[Ŵáţçĥ {name} óñ ţĥé ĤÚÐ ţŕáçķéŕ]",
       "unwatchAria": "[Šţóþ ŵáţçĥíñĝ {name}]",
-      "cosmeticsSection": "[Ţíţļéš áñð Ɓóŕðéŕš]",
+      "cosmeticsSection": "[Ţíţļéš, Ɓóŕðéŕš áñð Ɓúððíéš]",
       "titlesSection": "[Ţíţļéš]",
       "titlesAria": "[Çĥóóšé ýóúŕ ðíšþļáýéð ţíţļé]",
       "titlesNone": "[Ñó Ţíţļé]",
@@ -4526,6 +4527,14 @@ export const en_XA: EnTranslations = {
       "bordersSection": "[Ɓóŕðéŕš]",
       "bordersNone": "[Ñó Ɓóŕðéŕ]",
       "bordersEmpty": "[Éáŕñ á ƀóŕðéŕ-ƀéáŕíñĝ ðééð ţó úñļóçķ ţĥíš šĥéļƒ.]",
+      "buddiesSection": "[Ɓúððíéš]",
+      "buddiesNone": "[Ñó Ɓúððý]",
+      "buddiesEmpty": "[Çóļļéçţ á çóɱþáñíóñ ţó šúɱɱóñ íţ ƒŕóɱ ţĥíš šĥéļƒ.]",
+      "buddyDragHint": "[Ðŕáĝ óñţó ýóúŕ áçţíóñ ƀáŕ]",
+      "looksSection": "[Ɓúððý Ļóóķš]",
+      "looksNone": "[Óŵñ Ļóóķ]",
+      "looksNoBuddy": "[Šúɱɱóñ á çóɱþáñíóñ ţó çĥóóšé íţš ļóóķ ĥéŕé.]",
+      "looksEmpty": "[Ţĥíš çóɱþáñíóñ ĥáš ñó ļóóķš úñļóçķéð ýéţ.]",
       "unlockedBanner": "[Ðééð áççóɱþļíšĥéð: {name}]",
       "unlockedTitleHint": "[Ñéŵ ţíţļé éáŕñéð: {title}. Çĥóóšé íţ íñ ţĥé Ɓóóķ óƒ Ðééðš.]",
       "unlockedBorderHint": "[Ñéŵ ƀóŕðéŕ éáŕñéð: {name}. Ŵéáŕ íţ ƒŕóɱ ţĥé Ɓóóķ óƒ Ðééðš.]",

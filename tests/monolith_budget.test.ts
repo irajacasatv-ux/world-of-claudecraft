@@ -290,7 +290,7 @@ const MONOLITHS: MonolithRow[] = [
     // here is the thin opener that places the popup and binds its rows, which
     // needs Hud's own private popup helpers. Exact count: any further growth
     // reds again.
-    ceiling: 18956,
+    ceiling: 18973, // buddy summon slots: castSlot/tooltip/icon/drop arms + deeds drag channel
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {

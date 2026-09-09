@@ -3504,7 +3504,8 @@ export const id_ID: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const id_ID: EnTranslations = {
       "bordersSection": "Bingkai",
       "bordersNone": "Tanpa bingkai",
       "bordersEmpty": "Raih sebuah jasa yang memberi bingkai untuk membuka rak ini.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Jasa terukir: {name}",
       "unlockedTitleHint": "Gelar baru diraih: {title}. Pilih di Kitab Jasa.",
       "unlockedBorderHint": "Bingkai baru diraih: {name}. Kenakan lewat Kitab Jasa.",

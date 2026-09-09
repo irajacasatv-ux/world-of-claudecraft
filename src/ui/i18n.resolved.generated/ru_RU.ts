@@ -3504,7 +3504,8 @@ export const ru_RU: EnTranslations = {
         "stag_acorn": "Желудёвый венец",
         "stag_gilded": "Позолоченный",
         "moss_hare_verdant": "Зелёный",
-        "proud_grunt_warlord": "Полководец"
+        "proud_grunt_warlord": "Полководец",
+        "frog_sapphire": "Сапфировая лягушка"
       },
       "actions": {
         "summon": "Призвать",
@@ -4518,7 +4519,7 @@ export const ru_RU: EnTranslations = {
       "watchFull": "Список отслеживания полон (не более {cap})",
       "watchAria": "Следить за деянием {name} на экране",
       "unwatchAria": "Перестать следить за деянием {name}",
-      "cosmeticsSection": "Звания и рамки",
+      "cosmeticsSection": "Звания, рамки и спутники",
       "titlesSection": "Звания",
       "titlesAria": "Выберите отображаемое звание",
       "titlesNone": "Без звания",
@@ -4526,6 +4527,14 @@ export const ru_RU: EnTranslations = {
       "bordersSection": "Рамки",
       "bordersNone": "Без рамки",
       "bordersEmpty": "Получите деяние с рамкой, чтобы открыть эту полку.",
+      "buddiesSection": "Спутники",
+      "buddiesNone": "Без спутника",
+      "buddiesEmpty": "Соберите спутника, чтобы призывать его отсюда.",
+      "buddyDragHint": "Перетащите на панель действий",
+      "looksSection": "Облики спутника",
+      "looksNone": "Собственный облик",
+      "looksNoBuddy": "Призовите спутника, чтобы выбрать его облик здесь.",
+      "looksEmpty": "У этого спутника пока нет открытых обликов.",
       "unlockedBanner": "Деяние совершено: {name}",
       "unlockedTitleHint": "Новое звание: {title}. Выберите его в Книге деяний.",
       "unlockedBorderHint": "Новая рамка: {name}. Наденьте её в Книге деяний.",

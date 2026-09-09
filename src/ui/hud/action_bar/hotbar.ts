@@ -6,7 +6,13 @@ import {
 import { abilitiesKnownAt } from '../../../sim/data';
 import type { AbilityDef, PlayerClass } from '../../../sim/types';
 
-export type HotbarAction = { type: 'ability'; id: string } | { type: 'item'; id: string } | null;
+export type HotbarAction =
+  | { type: 'ability'; id: string }
+  | { type: 'item'; id: string }
+  // A collected buddy companion by key: the slot summons it (the mounts-as-items
+  // precedent, minus the item, since a buddy is a collection flag).
+  | { type: 'buddy'; id: string }
+  | null;
 
 export interface HotbarStorage {
   getItem(key: string): string | null;
@@ -93,10 +99,15 @@ export function encodeStoredHotbarAction(action: HotbarAction): string | null {
   return action === null ? null : encodeHotbarAction(action);
 }
 
+/** `buddyExists` gates the buddy arm the way the other two gate theirs. It
+ *  defaults to accepting any key: the STORED-layout callers keep an unknown
+ *  companion inert rather than destroying the slot (the keepsStoredItemId
+ *  rule), while the drag/drop reader passes the collection predicate. */
 export function parseHotbarAction(
   value: unknown,
   abilityExists: (id: string) => boolean,
   itemExists: (id: string) => boolean,
+  buddyExists: (id: string) => boolean = () => true,
 ): Exclude<HotbarAction, null> | null {
   if (!value || typeof value !== 'object') return null;
   const action = value as { type?: unknown; id?: unknown };
@@ -104,6 +115,7 @@ export function parseHotbarAction(
   if (action.type === 'ability' && abilityExists(action.id))
     return { type: 'ability', id: action.id };
   if (action.type === 'item' && itemExists(action.id)) return { type: 'item', id: action.id };
+  if (action.type === 'buddy' && buddyExists(action.id)) return { type: 'buddy', id: action.id };
   return null;
 }
 
@@ -227,6 +239,19 @@ export function placeItemOnSlot(
   const next = actions.slice();
   if (targetIndex < 0 || targetIndex >= next.length) return next;
   next[targetIndex] = { type: 'item', id: itemId };
+  return next;
+}
+
+/** Place a collected buddy on a slot. Like an item, a buddy may sit on any
+ *  number of slots (no dedupe): a summon slot is a shortcut, not a binding. */
+export function placeBuddyOnSlot(
+  actions: readonly HotbarAction[],
+  key: string,
+  targetIndex: number,
+): HotbarAction[] {
+  const next = actions.slice();
+  if (targetIndex < 0 || targetIndex >= next.length) return next;
+  next[targetIndex] = { type: 'buddy', id: key };
   return next;
 }
 
@@ -365,7 +390,8 @@ export function applyLoadoutBar(
     const v = normalizedBar[i];
     if (typeof v === 'string' && abilityExists(v)) return { type: 'ability' as const, id: v };
     const existing = current[i];
-    return existing?.type === 'item' ? existing : null;
+    // Items and buddies are not part of a talent loadout: a switch keeps them.
+    return existing?.type === 'item' || existing?.type === 'buddy' ? existing : null;
   });
 }
 

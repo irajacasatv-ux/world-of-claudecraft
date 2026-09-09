@@ -3504,7 +3504,8 @@ export const fr_FR: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const fr_FR: EnTranslations = {
       "bordersSection": "Bordures",
       "bordersNone": "Aucune bordure",
       "bordersEmpty": "Accomplissez un haut fait donnant une bordure pour débloquer cette étagère.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Haut fait accompli: {name}",
       "unlockedTitleHint": "Nouveau titre obtenu: {title}. Choisissez-le dans le Livre des hauts faits.",
       "unlockedBorderHint": "Nouvelle bordure obtenue : {name}. Portez-la depuis le Livre des hauts faits.",

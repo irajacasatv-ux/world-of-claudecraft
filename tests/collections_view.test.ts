@@ -102,7 +102,18 @@ describe('collections view model', () => {
     expect(acorn.owned).toBe(false);
     expect(acorn.facts.craft?.recipeId).toBe('recipe_charm_stag_acorn');
     // A companion with no look authored carries an empty list, never undefined.
-    expect(view.buddies.find((b) => b.key === 'frog')?.looks).toEqual([]);
+    expect(view.buddies.find((b) => b.key === 'moss_hare')?.looks.map((l) => l.id)).toEqual([
+      'moss_hare_verdant',
+    ]);
+    expect(view.buddies.find((b) => b.key === 'proud_grunt')?.looks.map((l) => l.id)).toEqual([
+      'proud_grunt_warlord',
+    ]);
+    // The frog's one look is grant-only (the Sapphire Frog test dye).
+    expect(view.buddies.find((b) => b.key === 'frog')?.looks.map((l) => l.id)).toEqual([
+      'frog_sapphire',
+    ]);
+    const bare = view.buddies.find((b) => b.looks.length === 0);
+    expect(bare).toBeDefined();
   });
 
   it('groups epic-or-better sets by armor type then primary stat, and admits nothing below epic', () => {

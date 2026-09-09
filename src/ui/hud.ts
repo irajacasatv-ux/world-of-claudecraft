@@ -54,6 +54,7 @@ import { resolveActionReplacement } from '../sim/combat/action_replacement';
 import { resolveColdsightAbilityForSpec } from '../sim/combat/hunter_coldsight';
 import { resolveHunterSharedAbilityForTalents } from '../sim/combat/hunter_shared';
 import { warriorParryChance } from '../sim/combat/warrior_hit_table';
+import type { BuddyKey } from '../sim/content/buddies';
 import { DEEDS } from '../sim/content/deeds';
 import { HEROIC_MARK_ITEM_ID } from '../sim/content/dungeon_difficulty';
 import { HEROIC_VENDOR_STOCK } from '../sim/content/heroic_vendor';
@@ -179,7 +180,7 @@ import {
 } from './banner_queue';
 import { blockLandingLogKey } from './block_landing_feedback_core';
 import { BootcampOverlay } from './bootcamp';
-import { buddyEventLogArgs } from './buddy_event_lines';
+import { buddyDisplayName, buddyEventLogArgs } from './buddy_event_lines';
 import { CalendarWindow } from './calendar_window';
 import { CardDuelWindow } from './card_duel_window';
 import { CastBarPainter, type CastBarPaintInput } from './cast_bar_painter';
@@ -204,6 +205,7 @@ import { createClaudiumPurchaseFacet } from './claudium_purchase_bridge';
 import { type ClaudiumRail, type ClaudiumSnapshot, ClaudiumWindow } from './claudium_window';
 import { formatClockTime } from './clock';
 import { CollectionsWindow, collectionsPreviewOptions, collectionsWindowDeps } from './collections';
+import { buddyTokenItemId } from './collections/collection_sources';
 import { CombatAnnouncer } from './combat_announcer';
 import {
   auraApplyCue,
@@ -406,6 +408,7 @@ import {
   type ActionBarWorldInput,
   ATTACK_ICON_KEY,
   actionBarCooldownRemaining,
+  BUDDY_ICON_PREFIX,
   createActionBarView,
   EMPTY_ICON_KEY,
   ITEM_ICON_PREFIX,
@@ -445,9 +448,16 @@ import {
   loadoutKnownAbilityIds,
   parseHotbarAction,
   placeAbilityOnSlot,
+  placeBuddyOnSlot,
   placeItemOnSlot,
   swapHotbarSlots,
 } from './hud/action_bar/hotbar';
+import {
+  acceptAttackDrag,
+  type HotbarActionExists,
+  readDraggedAction,
+  writeDraggedAction,
+} from './hud/action_bar/hotbar_drag';
 import { itemInBagsLine } from './hud/action_bar/item_bags_line_core';
 import {
   clampMobilePage,
@@ -5299,6 +5309,10 @@ export class Hud {
     consumePeek: () => this.peekGuard.consume(),
     ...this.windowFocus('#deeds-window'),
     onWatchChanged: () => this.updateDeedTracker(),
+    setDragAction: (action) => {
+      this.dragAction = action ? { action, sourceIndex: null } : null;
+    },
+    clearActionDropTargets: () => this.clearActionDropTargets(),
   });
   // Professions window painter (professions_view.ts core + the composed
   // profession_identity_view model + professions_window.ts painter): the
@@ -5605,7 +5619,9 @@ export class Hud {
       const ability = this.abilityForSlot(slot);
       if (ability) return abilityDisplayName(ability.def);
       const item = this.itemForSlot(slot);
-      return item ? itemDisplayName(item) : null;
+      if (item) return itemDisplayName(item);
+      const buddy = this.buddyForSlot(slot);
+      return buddy ? buddyDisplayName(buddy) : null;
     },
     refreshKeybindLabels: () => this.refreshKeybindLabels(),
     beginActionBarKeybindMode: () => this.beginActionBarKeybindMode(),
@@ -7284,6 +7300,11 @@ export class Hud {
     return action?.type === 'item' ? (ITEMS[action.id] ?? null) : null;
   }
 
+  private buddyForSlot(barSlot: number): string | null {
+    const action = this.actionForSlot(barSlot);
+    return action?.type === 'buddy' ? action.id : null;
+  }
+
   private inventoryCount(itemId: string): number {
     return this.sim.inventory.reduce(
       (total, slot) => total + (slot.itemId === itemId ? slot.count : 0),
@@ -7396,8 +7417,8 @@ export class Hud {
   // holds the action, so a pad press gets the SAME semantics a key press does
   // (reticle, empower charge, mouseover cast, the auto-attack QoL) rather than a
   // second cast path that would drift from it; the release edge is releaseCrossHotbarAction.
-  pressCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
-    if (action.id === CROSS_HOTBAR_ATTACK_ID || action.type === 'item') {
+  pressCrossHotbarAction(action: { type: 'ability' | 'item' | 'buddy'; id: string }): void {
+    if (action.id === CROSS_HOTBAR_ATTACK_ID || action.type !== 'ability') {
       this.castCrossHotbarAction(action);
       return;
     }
@@ -7413,7 +7434,7 @@ export class Hud {
     this.castCrossHotbarAction(action);
   }
 
-  releaseCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
+  releaseCrossHotbarAction(action: { type: 'ability' | 'item' | 'buddy'; id: string }): void {
     this.empowerHold.releaseAction(action, this.sim, (slot) => this.flashActionSlot(slot));
   }
 
@@ -7421,7 +7442,7 @@ export class Hud {
   // the action bar, so the slot lookup almost always hits; an action arranged onto
   // the pad and nowhere else falls back to a plain cast (position abilities keep
   // the reticle via the ability-id aim identity) or the shared item-use seam.
-  castCrossHotbarAction(action: { type: 'ability' | 'item'; id: string }): void {
+  castCrossHotbarAction(action: { type: 'ability' | 'item' | 'buddy'; id: string }): void {
     // Attack is the fixed slot-0 toggle, not something the sim can cast by id.
     if (action.id === CROSS_HOTBAR_ATTACK_ID) {
       this.activateFixedAttackSlot();
@@ -7454,6 +7475,10 @@ export class Hud {
       return;
     }
     if (this.tradeOpen) return;
+    if (action.type === 'buddy') {
+      this.sim.summonBuddy(action.id as BuddyKey);
+      return;
+    }
     if (this.isHotbarItemId(action.id)) {
       this.useHotbarItem(action.id);
       return;
@@ -7572,6 +7597,10 @@ export class Hud {
       if (this.tradeOpen) return;
       this.useHotbarItem(action.id);
       this.flashActionSlot(barSlot);
+    } else if (action?.type === 'buddy') {
+      // The sim re-validates the collection; the slot is only the shortcut.
+      this.sim.summonBuddy(action.id as BuddyKey);
+      this.flashActionSlot(barSlot);
     }
   }
 
@@ -7637,49 +7666,25 @@ export class Hud {
     window.setTimeout(() => btn.classList.remove('used'), 180);
   }
 
-  private writeDraggedAction(dt: DataTransfer | null, action: Exclude<HotbarAction, null>): void {
-    if (!dt) return;
-    dt.setData(HOTBAR_ACTION_MIME, encodeHotbarAction(action));
-    dt.setData('text/plain', action.id);
+  /** What a dropped payload can resolve to here (hotbar_drag.ts readDraggedAction). */
+  private hotbarActionExists(): HotbarActionExists {
+    return {
+      ability: (id) => this.sim.known.some((k) => k.def.id === id),
+      item: (id) => this.isHotbarItemId(id),
+      buddy: (id) => (this.sim.ownedBuddies() as readonly string[]).includes(id),
+    };
   }
 
-  private readDraggedAction(dt: DataTransfer | null): Exclude<HotbarAction, null> | null {
-    if (!dt) return null;
-    const raw = dt.getData(HOTBAR_ACTION_MIME);
-    if (!raw) return null;
-    let parsed: unknown = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      return null;
-    }
-    return parseHotbarAction(
-      parsed,
-      (id) => this.sim.known.some((k) => k.def.id === id),
-      (id) => this.isHotbarItemId(id),
-    );
-  }
-
-  // Attack is accepted only by slot 0, its fixed destination. The pure disposition
-  // keeps that behavior testable and lets every other slot reject the drag truthfully.
   private tryAcceptAttackDrag(
     e: DragEvent,
     btn: HTMLButtonElement,
     slot: number,
     phase: 'over' | 'drop',
-  ): boolean {
-    const disposition = attackDragDisposition(e.dataTransfer?.types, slot, phase);
-    if (disposition === 'ignore') return false;
-    e.preventDefault();
-    if (phase === 'over') {
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-      btn.classList.toggle('drop-target', disposition === 'highlight');
-    } else {
-      btn.classList.remove('drop-target');
+  ) {
+    return acceptAttackDrag(e, btn, slot, phase, () => {
       this.optionsHooks?.settings.set('showAttackButton', true);
       this.hideTooltip();
-    }
-    return true;
+    });
   }
 
   private actionBarsLocked(): boolean {
@@ -7759,6 +7764,8 @@ export class Hud {
         if (item) {
           return this.itemTooltip(item) + itemInBagsLine(this.inventoryCount(item.id)) + clearHint;
         }
+        const buddy = this.buddyForSlot(slot);
+        if (buddy) return `<b>${esc(buddyDisplayName(buddy))}</b>${clearHint}`;
         return `<div class="tt-sub">${esc(t('abilityUi.actionBar.emptySlot'))}<br>${esc(t('abilityUi.actionBar.clearHint'))}</div>`;
       });
       if (slot >= 1) {
@@ -7785,14 +7792,15 @@ export class Hud {
             return;
           }
           this.dragAction = { action, sourceIndex: slot - 1 };
-          this.writeDraggedAction(e.dataTransfer, action);
+          writeDraggedAction(e.dataTransfer, action);
           if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
           this.hideTooltip();
         });
         btn.addEventListener('dragover', (e) => {
           if (!isActionBarEditAllowed(this.actionBarsLocked(), 'drop')) return;
           if (this.tryAcceptAttackDrag(e, btn, slot, 'over')) return;
-          const dragged = this.dragAction?.action ?? this.readDraggedAction(e.dataTransfer);
+          const dragged =
+            this.dragAction?.action ?? readDraggedAction(e.dataTransfer, this.hotbarActionExists());
           if (!dragged) return;
           if (!this.actionBarController.isAssignableAction(dragged)) return;
           if (this.dragAction?.sourceIndex === slot - 1) return;
@@ -7801,7 +7809,7 @@ export class Hud {
             e.dataTransfer.dropEffect =
               this.dragAction?.sourceIndex === null &&
               !this.dragAction?.sourceAttackSlot &&
-              dragged.type === 'item'
+              dragged.type !== 'ability'
                 ? 'copy'
                 : 'move';
           btn.classList.add('drop-target');
@@ -7813,7 +7821,7 @@ export class Hud {
           e.preventDefault();
           btn.classList.remove('drop-target');
           const dragged = this.dragAction ?? {
-            action: this.readDraggedAction(e.dataTransfer),
+            action: readDraggedAction(e.dataTransfer, this.hotbarActionExists()),
             sourceIndex: null,
             sourceAttackSlot: false,
           };
@@ -7830,6 +7838,8 @@ export class Hud {
             this.hotbarActions = placeAbilityOnSlot(this.hotbarActions, action.id, slot - 1);
           } else if (action.type === 'item' && this.isHotbarItemId(action.id)) {
             this.hotbarActions = placeItemOnSlot(this.hotbarActions, action.id, slot - 1);
+          } else if (action.type === 'buddy') {
+            this.hotbarActions = placeBuddyOnSlot(this.hotbarActions, action.id, slot - 1);
           }
           if (dragged.sourceAttackSlot) {
             this.attackSlotAction = null;
@@ -7887,7 +7897,7 @@ export class Hud {
             sourceIndex: null,
             sourceAttackSlot: true,
           };
-          this.writeDraggedAction(e.dataTransfer, action);
+          writeDraggedAction(e.dataTransfer, action);
           if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
           this.hideTooltip();
         });
@@ -7897,7 +7907,8 @@ export class Hud {
           if (this.tryAcceptAttackDrag(e, btn, slot, 'over')) return;
           if (this.attackSlotIsAttack()) return;
           if (this.dragAction?.sourceAttackSlot) return;
-          const dragged = this.dragAction?.action ?? this.readDraggedAction(e.dataTransfer);
+          const dragged =
+            this.dragAction?.action ?? readDraggedAction(e.dataTransfer, this.hotbarActionExists());
           if (!dragged) return;
           if (!this.actionBarController.isAssignableAction(dragged)) return;
           e.preventDefault();
@@ -7911,7 +7922,7 @@ export class Hud {
           btn.classList.remove('drop-target');
           if (this.attackSlotIsAttack()) return;
           const dragged = this.dragAction ?? {
-            action: this.readDraggedAction(e.dataTransfer),
+            action: readDraggedAction(e.dataTransfer, this.hotbarActionExists()),
             sourceIndex: null,
             sourceAttackSlot: false,
           };
@@ -7968,6 +7979,7 @@ export class Hud {
             hasAction: () => this.actionForSlot(i) !== null,
             ability: () => (i === 0 && this.attackSlotIsAttack() ? null : this.abilityForSlot(i)),
             item: () => this.itemForSlot(i),
+            buddy: () => this.buddyForSlot(i),
             keybindLabel: () => keyCapLabel(this.keybinds.primaryLabel(slotKey)),
           };
         }),
@@ -7976,6 +7988,7 @@ export class Hud {
         t,
         abilityName: abilityDisplayName,
         itemName: itemDisplayName,
+        buddyName: buddyDisplayName,
         slotLabel: (i) => formatAbilityNumber(i + 1),
         formatCount: (n) => formatNumber(n, { maximumFractionDigits: 0 }),
       },
@@ -8148,6 +8161,10 @@ export class Hud {
     if (iconKey === ATTACK_ICON_KEY) return `url(${iconDataUrl('ability', 'attack')})`;
     if (iconKey.startsWith(ITEM_ICON_PREFIX)) {
       return `url(${iconDataUrl('item', iconKey.slice(ITEM_ICON_PREFIX.length))})`;
+    }
+    if (iconKey.startsWith(BUDDY_ICON_PREFIX)) {
+      const token = buddyTokenItemId(iconKey.slice(BUDDY_ICON_PREFIX.length));
+      return token ? `url(${iconDataUrl('item', token)})` : '';
     }
     return `url(${iconDataUrl('ability', iconKey.slice(ABILITY_ICON_PREFIX.length))})`;
   }

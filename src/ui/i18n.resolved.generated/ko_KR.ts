@@ -3504,7 +3504,8 @@ export const ko_KR: EnTranslations = {
         "stag_acorn": "도토리 왕관",
         "stag_gilded": "금박",
         "moss_hare_verdant": "신록",
-        "proud_grunt_warlord": "전쟁군주"
+        "proud_grunt_warlord": "전쟁군주",
+        "frog_sapphire": "사파이어 개구리"
       },
       "actions": {
         "summon": "소환",
@@ -4518,7 +4519,7 @@ export const ko_KR: EnTranslations = {
       "watchFull": "추적 목록이 가득 찼습니다 (최대 {cap}개)",
       "watchAria": "HUD 추적기에서 {name} 추적",
       "unwatchAria": "{name} 추적 중지",
-      "cosmeticsSection": "칭호와 테두리",
+      "cosmeticsSection": "칭호, 테두리, 동료",
       "titlesSection": "칭호",
       "titlesAria": "표시할 칭호 선택",
       "titlesNone": "칭호 없음",
@@ -4526,6 +4527,14 @@ export const ko_KR: EnTranslations = {
       "bordersSection": "테두리",
       "bordersNone": "테두리 없음",
       "bordersEmpty": "테두리가 걸린 업적을 획득하면 이 선반이 열립니다.",
+      "buddiesSection": "동료",
+      "buddiesNone": "동료 없음",
+      "buddiesEmpty": "동료를 모으면 여기서 소환할 수 있습니다.",
+      "buddyDragHint": "행동 단축바로 끌어다 놓기",
+      "looksSection": "동료 외형",
+      "looksNone": "기본 외형",
+      "looksNoBuddy": "동료를 소환하면 여기서 외형을 고를 수 있습니다.",
+      "looksEmpty": "이 동료는 아직 해금된 외형이 없습니다.",
       "unlockedBanner": "업적 달성: {name}",
       "unlockedTitleHint": "새 칭호 획득: {title}. 업적의 서에서 선택할 수 있습니다.",
       "unlockedBorderHint": "새 테두리 획득: {name}. 업적의 서에서 착용할 수 있습니다.",

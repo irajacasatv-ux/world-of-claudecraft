@@ -3504,7 +3504,8 @@ export const zh_TW: EnTranslations = {
         "stag_acorn": "橡果之冠",
         "stag_gilded": "鍍金",
         "moss_hare_verdant": "青翠",
-        "proud_grunt_warlord": "戰爭領主"
+        "proud_grunt_warlord": "戰爭領主",
+        "frog_sapphire": "藍寶石蛙"
       },
       "actions": {
         "summon": "召喚",
@@ -4518,7 +4519,7 @@ export const zh_TW: EnTranslations = {
       "watchFull": "追蹤清單已滿（最多 {cap} 項）",
       "watchAria": "在介面追蹤器中追蹤{name}",
       "unwatchAria": "停止追蹤{name}",
-      "cosmeticsSection": "頭銜與邊框",
+      "cosmeticsSection": "頭銜、邊框與夥伴",
       "titlesSection": "頭銜",
       "titlesAria": "選擇要展示的頭銜",
       "titlesNone": "無頭銜",
@@ -4526,6 +4527,14 @@ export const zh_TW: EnTranslations = {
       "bordersSection": "邊框",
       "bordersNone": "無邊框",
       "bordersEmpty": "獲得帶邊框的功績後即可解鎖此欄。",
+      "buddiesSection": "夥伴",
+      "buddiesNone": "無夥伴",
+      "buddiesEmpty": "收集一個夥伴，即可從此處召喚。",
+      "buddyDragHint": "拖到你的動作條上",
+      "looksSection": "夥伴外觀",
+      "looksNone": "原本外觀",
+      "looksNoBuddy": "召喚一個夥伴後在此選擇牠的外觀。",
+      "looksEmpty": "這個夥伴還沒有解鎖任何外觀。",
       "unlockedBanner": "達成功績：{name}",
       "unlockedTitleHint": "獲得新頭銜：{title}。可在功績之書中選用。",
       "unlockedBorderHint": "獲得新邊框：{name}。可在功績之書中佩戴。",

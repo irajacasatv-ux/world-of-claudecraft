@@ -115,7 +115,7 @@ export const CROSS_HOTBAR_EXPANDED_SET = 1;
 
 /** One cross-hotbar cell: the ability or item on it, or nothing. Structurally the
  *  HUD's HotbarAction, redeclared here so this pure game core owns no UI import. */
-export type CrossHotbarAction = { type: 'ability' | 'item'; id: string } | null;
+export type CrossHotbarAction = { type: 'ability' | 'item' | 'buddy'; id: string } | null;
 
 /** Per set, the sixteen actions the cross hotbar casts.
  *
@@ -154,7 +154,7 @@ export function seedCrossHotbarLayout(
   const flat: CrossHotbarAction[] = [];
   for (const action of barActions) flat.push(action ?? null);
   const already = new Set(
-    flat.filter((a): a is { type: 'ability' | 'item'; id: string } => a !== null).map((a) => a.id),
+    flat.filter((a): a is Exclude<CrossHotbarAction, null> => a !== null).map((a) => a.id),
   );
   for (const id of extras) {
     if (already.has(id)) continue;

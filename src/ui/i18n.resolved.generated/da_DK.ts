@@ -3504,7 +3504,8 @@ export const da_DK: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const da_DK: EnTranslations = {
       "bordersSection": "Rammer",
       "bordersNone": "Ingen ramme",
       "bordersEmpty": "Udfør en bedrift, der giver en ramme, for at låse denne hylde op.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Bedrift fuldbragt: {name}",
       "unlockedTitleHint": "Ny titel opnået: {title}. Vælg den i Bedrifternes Bog.",
       "unlockedBorderHint": "Ny ramme optjent: {name}. Bær den fra Bedrifternes Bog.",

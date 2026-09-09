@@ -46,6 +46,13 @@ function makeWindow(state: WorldState): { w: DeedsWindow; el: HTMLElement } {
         activeTitle: state.activeTitle,
         deedsRarity: async () => null,
         deedsRecent: async () => null,
+        ownedBuddies: () => [],
+        ownedBuddyCosmetics: () => [],
+        equippedBuddyCosmetics: () => ({}),
+        summonBuddy: () => {},
+        equipBuddyCosmetic: () => {},
+        entities: new Map(),
+        playerId: 1,
         setActiveTitle: (id: string | null) => {
           state.activeTitle = id;
         },
@@ -62,6 +69,8 @@ function makeWindow(state: WorldState): { w: DeedsWindow; el: HTMLElement } {
     captureFocus: () => null,
     restoreFocus: () => {},
     onWatchChanged: () => {},
+    setDragAction: () => {},
+    clearActionDropTargets: () => {},
     itemIcon: () => '',
     moneyHtml: () => '',
     itemTooltip: () => '',

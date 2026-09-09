@@ -2122,10 +2122,14 @@ export const VISUALS: Record<string, VisualDef> = {
   // models/buddies/ joins STREAMED_URL_PREFIXES (assets.ts) so the
   // constrained iOS profile carves them out of the boot gate and streams
   // them in after first frame, same as the creature family.
+  // Baked texture; `tint: 'cosmetic'` keeps it until a look dyes the entity
+  // (the Sapphire Frog, content/buddy_cosmetics.ts).
   buddy_frog: {
     url: `${BUDDIES_DIR}/frog.glb`,
     height: 0.35,
     clips: BUDDY_CLIPS,
+    tint: 'cosmetic',
+    tintStrength: 0.6,
   },
   buddy_crimson_claw_crab: {
     url: `${BUDDIES_DIR}/crimson_claw_crab.glb`,

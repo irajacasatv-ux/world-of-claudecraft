@@ -1,3 +1,4 @@
+import { buddyDef } from '../../../sim/content/buddies';
 import { ABILITIES, ITEMS } from '../../../sim/data';
 import type { PlayerClass } from '../../../sim/types';
 import type { ActionBarLayout } from '../../../world_api/action_bar';
@@ -354,6 +355,10 @@ export class ActionBarController {
 
   isAssignableAction(action: Exclude<HotbarAction, null>): boolean {
     if (action.type === 'item') return this.isHotbarItemId(action.id);
+    // A buddy slot is assignable for any catalog companion; ownership is the
+    // sim's to re-validate at summon time, and the drag sources only offer
+    // collected ones.
+    if (action.type === 'buddy') return buddyDef(action.id) !== null;
     return (
       this.deps.knownAbilityIds().includes(action.id) && this.isAbilityPlacementAllowed(action.id)
     );

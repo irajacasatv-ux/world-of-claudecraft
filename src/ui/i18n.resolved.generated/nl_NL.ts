@@ -3504,7 +3504,8 @@ export const nl_NL: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const nl_NL: EnTranslations = {
       "bordersSection": "Randen",
       "bordersNone": "Geen rand",
       "bordersEmpty": "Verricht een daad die een rand schenkt om deze plank te ontgrendelen.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Daad volbracht: {name}",
       "unlockedTitleHint": "Nieuwe titel behaald: {title}. Kies hem in het Boek der Daden.",
       "unlockedBorderHint": "Nieuwe rand verdiend: {name}. Draag hem via het Boek der Daden.",

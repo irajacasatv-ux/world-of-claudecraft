@@ -99,7 +99,7 @@ export interface GamepadCallbacks {
   // Cast what a cross-hotbar cell holds. The bar owns its own actions, so this is
   // an ability or item id rather than an action-bar slot: IWorld.castAbility is
   // deliberately id-based so the client never depends on slot semantics.
-  onCrossHotbarCast?(action: { type: 'ability' | 'item'; id: string }): void;
+  onCrossHotbarCast?(action: { type: 'ability' | 'item' | 'buddy'; id: string }): void;
   onCastRelease?(hold: PadCastHold): void;
   // Edit mode opened, closed, or picked something up. `carriedFrom` is the cell an
   // action was lifted off, for the gap the bar draws where it used to be; `carried`

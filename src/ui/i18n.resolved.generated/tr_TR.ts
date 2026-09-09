@@ -3504,7 +3504,8 @@ export const tr_TR: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const tr_TR: EnTranslations = {
       "bordersSection": "Çerçeveler",
       "bordersNone": "Çerçeve yok",
       "bordersEmpty": "Bu rafı açmak için çerçeve veren bir yiğitlik başar.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Yiğitlik kazanıldı: {name}",
       "unlockedTitleHint": "Yeni unvan kazanıldı: {title}. Yiğitlikler Kitabı'ndan seçebilirsin.",
       "unlockedBorderHint": "Yeni çerçeve kazanıldı: {name}. Yiğitlikler Kitabı'ndan tak.",

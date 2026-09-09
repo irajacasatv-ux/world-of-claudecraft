@@ -51,6 +51,13 @@ function makeWindow(
         activeTitle: state.activeTitle,
         deedsRarity: async () => null,
         deedsRecent: async () => state.recent,
+        ownedBuddies: () => [],
+        ownedBuddyCosmetics: () => [],
+        equippedBuddyCosmetics: () => ({}),
+        summonBuddy: () => {},
+        equipBuddyCosmetic: () => {},
+        entities: new Map(),
+        playerId: 1,
         setActiveTitle: (id: string | null) => {
           state.activeTitle = id;
         },
@@ -66,6 +73,8 @@ function makeWindow(
     captureFocus: () => null,
     restoreFocus: () => {},
     onWatchChanged: () => {},
+    setDragAction: () => {},
+    clearActionDropTargets: () => {},
     itemIcon: () => '',
     moneyHtml: () => '',
     itemTooltip: () => '',

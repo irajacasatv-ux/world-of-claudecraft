@@ -3504,7 +3504,8 @@ export const zh_CN: EnTranslations = {
         "stag_acorn": "橡果之冠",
         "stag_gilded": "镀金",
         "moss_hare_verdant": "青翠",
-        "proud_grunt_warlord": "战争领主"
+        "proud_grunt_warlord": "战争领主",
+        "frog_sapphire": "蓝宝石蛙"
       },
       "actions": {
         "summon": "召唤",
@@ -4518,7 +4519,7 @@ export const zh_CN: EnTranslations = {
       "watchFull": "追踪列表已满（最多 {cap} 项）",
       "watchAria": "在界面追踪器中追踪{name}",
       "unwatchAria": "停止追踪{name}",
-      "cosmeticsSection": "头衔与边框",
+      "cosmeticsSection": "头衔、边框与伙伴",
       "titlesSection": "头衔",
       "titlesAria": "选择要展示的头衔",
       "titlesNone": "无头衔",
@@ -4526,6 +4527,14 @@ export const zh_CN: EnTranslations = {
       "bordersSection": "边框",
       "bordersNone": "无边框",
       "bordersEmpty": "获得带边框的功绩后即可解锁此栏。",
+      "buddiesSection": "伙伴",
+      "buddiesNone": "无伙伴",
+      "buddiesEmpty": "收集一个伙伴，即可从此处召唤。",
+      "buddyDragHint": "拖到你的动作条上",
+      "looksSection": "伙伴外观",
+      "looksNone": "原本外观",
+      "looksNoBuddy": "召唤一个伙伴后在此选择它的外观。",
+      "looksEmpty": "这个伙伴还没有解锁任何外观。",
       "unlockedBanner": "达成功绩：{name}",
       "unlockedTitleHint": "获得新头衔：{title}。可在功绩之书中选用。",
       "unlockedBorderHint": "获得新边框：{name}。可在功绩之书中佩戴。",

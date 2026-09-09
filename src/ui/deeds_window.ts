@@ -8,9 +8,13 @@
 // imports Hud and never hardcodes the window id).
 
 import { audio } from '../game/audio';
+import type { BuddyKey } from '../sim/content/buddies';
+import { buddyCosmeticDef } from '../sim/content/buddy_cosmetics';
 import { DEED_ORDER, DEEDS } from '../sim/content/deeds';
 import { DEEDS_RECENT_CAP } from '../sim/deeds';
 import type { DeedsRarity, IWorld } from '../world_api';
+import { buddyCosmeticDisplayName, buddyDisplayName } from './buddy_event_lines';
+import { buddyTokenItemId } from './collections/collection_sources';
 import {
   borderAccent,
   DEED_HERALDRY_ATTR,
@@ -40,6 +44,7 @@ import { markDialogRoot } from './dialog_root';
 import { poiMarkLabel } from './entity_i18n';
 import { esc } from './esc';
 import { focusedWithin } from './focus_restore';
+import { BUDDY_DRAG_ATTR, endBuddyDrag, startBuddyDrag } from './hud/action_bar/buddy_drag';
 import {
   formatDateTime,
   formatList,
@@ -49,7 +54,7 @@ import {
   type TranslationKey,
   t,
 } from './i18n';
-import { iconDataUrl } from './icons';
+import { iconDataUrl, itemImageUrl } from './icons';
 import type { PainterHostPresentation } from './painter_host';
 import { svgIcon } from './ui_icons';
 
@@ -97,6 +102,8 @@ export function refocusSelector(active: Element | null): string | null {
     'data-watch',
     'data-title',
     'data-border-pick',
+    'data-buddy-pick',
+    'data-look-pick',
     'data-recent',
   ]) {
     const value = active.getAttribute(attr);
@@ -131,6 +138,10 @@ export interface DeedsWindowDeps extends PainterHostPresentation {
   restoreFocus(target: HTMLElement | null): void;
   /** The watch set changed: repaint the HUD deed tracker now. */
   onWatchChanged(): void;
+  /** The action bar's live drag channel (the spellbook's pair), for the
+   *  buddy shelf's drag-to-bar grips. */
+  setDragAction(action: { type: 'buddy'; id: string } | null): void;
+  clearActionDropTargets(): void;
 }
 
 export class DeedsWindow {
@@ -322,6 +333,10 @@ export class DeedsWindow {
       earnedCount: world.deedsEarned.size,
       activeTitle: world.activeTitle,
       activeBorder: world.activeBorder,
+      activeBuddy: this.activeBuddyKey(),
+      ownedBuddyCount: world.ownedBuddies().length,
+      activeLook: world.equippedBuddyCosmetics()[this.activeBuddyKey()] ?? null,
+      ownedLookCount: world.ownedBuddyCosmetics().length,
       filter: this.filter,
       search: this.search,
       category: this.category,
@@ -445,6 +460,10 @@ export class DeedsWindow {
       renown: world.renown,
       activeTitle: world.activeTitle,
       activeBorder: world.activeBorder,
+      ownedBuddies: world.ownedBuddies(),
+      activeBuddy: this.activeBuddyKey(),
+      ownedBuddyLooks: new Set(world.ownedBuddyCosmetics()),
+      equippedBuddyLooks: world.equippedBuddyCosmetics(),
       deeds: DEEDS,
       order: DEED_ORDER,
       category: this.category,
@@ -679,8 +698,67 @@ export class DeedsWindow {
         label: (id) => (id === null ? t('hudChrome.deeds.bordersNone') : deedName(id)),
         decorate: (id, label) => this.borderOptionInner(id, label),
       }) +
-      `<div class="deeds-border-preview-slot">${this.borderPreviewHtml(activeBorder)}</div>`
+      `<div class="deeds-border-preview-slot">${this.borderPreviewHtml(activeBorder)}</div>` +
+      this.buddyShelfHtml(model)
     );
+  }
+
+  /** The summoned buddy's key ('' for none): the entity mirror is the one
+   *  authority for "which buddy is out", local or remote. */
+  private activeBuddyKey(): string {
+    const world = this.deps.world();
+    return world.entities.get(world.playerId)?.buddyKey ?? '';
+  }
+
+  /** The buddy shelf beside the worn cosmetics: the collected companions
+   *  (pick one to summon it, pick it again or None to dismiss), each option
+   *  also a drag source for the action bar, then the looks unlocked for the
+   *  one that is out. Both groups reuse the title option button. */
+  private buddyShelfHtml(model: DeedsViewModel): string {
+    const active = model.buddies.find((option) => option.active)?.id ?? null;
+    return (
+      this.pickerGroupHtml({
+        cls: 'deeds-buddies',
+        pickAttr: 'data-buddy-pick',
+        headingKey: 'hudChrome.deeds.buddiesSection',
+        emptyKey: 'hudChrome.deeds.buddiesEmpty',
+        options: model.buddies,
+        label: (id) => (id === null ? t('hudChrome.deeds.buddiesNone') : buddyDisplayName(id)),
+        decorate: (id, label) => this.buddyOptionInner(id, label),
+      }) +
+      this.pickerGroupHtml({
+        cls: 'deeds-buddy-looks',
+        pickAttr: 'data-look-pick',
+        headingKey: 'hudChrome.deeds.looksSection',
+        emptyKey: active === null ? 'hudChrome.deeds.looksNoBuddy' : 'hudChrome.deeds.looksEmpty',
+        options: model.buddyLooks,
+        label: (id) =>
+          id === null ? t('hudChrome.deeds.looksNone') : buddyCosmeticDisplayName(id),
+        decorate: (id, label) => this.lookOptionInner(id, label),
+      })
+    );
+  }
+
+  /** The whistle still as the companion's icon, the name, and the drag grip
+   *  the action bar accepts (src/ui/hud/action_bar drag payload `buddy:<key>`). */
+  private buddyOptionInner(id: string | null, label: string): string {
+    const name = esc(label);
+    if (!id)
+      return `<span class="deed-buddy-icon deed-buddy-icon-empty" aria-hidden="true"></span>${name}`;
+    const tokenId = buddyTokenItemId(id);
+    const icon = tokenId
+      ? `<img class="deed-buddy-icon" src="${esc(itemImageUrl(tokenId))}" alt="" draggable="false">`
+      : `<span class="deed-buddy-icon deed-buddy-icon-empty" aria-hidden="true"></span>`;
+    return `${icon}${name}<span class="deed-buddy-drag" ${BUDDY_DRAG_ATTR}="${esc(id)}" draggable="true" title="${esc(t('hudChrome.deeds.buddyDragHint'))}" aria-label="${esc(t('hudChrome.deeds.buddyDragHint'))}">${svgIcon('menu')}</span>`;
+  }
+
+  private lookOptionInner(id: string | null, label: string): string {
+    const name = esc(label);
+    const tint = id === null ? null : buddyCosmeticDef(id)?.tint;
+    if (tint === null || tint === undefined) {
+      return `<span class="deed-look-swatch deed-look-swatch-empty" aria-hidden="true"></span>${name}`;
+    }
+    return `<span class="deed-look-swatch" aria-hidden="true" style="--deed-look-swatch: #${tint.toString(16).padStart(6, '0')}"></span>${name}`;
   }
 
   /** Canonical seal plus a small material sample and the existing deed name.
@@ -852,6 +930,49 @@ export class DeedsWindow {
         // No optimistic local copy: the facet echoes the accepted change (the
         // offline sim synchronously, the mirror on the snapshot echo).
         this.deps.world().setActiveTitle(id === '' ? null : id);
+        audio.click();
+        this.render();
+      });
+    }
+    for (const btn of el.querySelectorAll<HTMLElement>('[data-buddy-pick]')) {
+      btn.addEventListener('click', () => {
+        if (this.deps.consumePeek()) {
+          this.deps.hideTooltip();
+          return;
+        }
+        const id = btn.dataset.buddyPick ?? '';
+        const active = this.activeBuddyKey();
+        // summonBuddy toggles: the active key dismisses, another key swaps.
+        // None dismisses whatever is out; with nothing out it is a no-op.
+        if (id === '') {
+          if (active !== '') this.deps.world().summonBuddy(active as BuddyKey);
+        } else {
+          this.deps.world().summonBuddy(id as BuddyKey);
+        }
+        audio.click();
+        this.render();
+      });
+    }
+    for (const grip of el.querySelectorAll<HTMLElement>(`[${BUDDY_DRAG_ATTR}]`)) {
+      // The grip is a drag source only: a click on it must not also pick.
+      grip.addEventListener('click', (ev) => ev.stopPropagation());
+      grip.addEventListener('dragstart', (ev) => {
+        const key = grip.getAttribute(BUDDY_DRAG_ATTR) ?? '';
+        if (!key) return;
+        startBuddyDrag(ev, key, this.deps);
+      });
+      grip.addEventListener('dragend', () => endBuddyDrag(this.deps));
+    }
+    for (const btn of el.querySelectorAll<HTMLElement>('[data-look-pick]')) {
+      btn.addEventListener('click', () => {
+        if (this.deps.consumePeek()) {
+          this.deps.hideTooltip();
+          return;
+        }
+        const active = this.activeBuddyKey();
+        if (active === '') return;
+        const id = btn.dataset.lookPick ?? '';
+        this.deps.world().equipBuddyCosmetic(active as BuddyKey, id === '' ? null : id);
         audio.click();
         this.render();
       });

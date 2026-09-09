@@ -3504,7 +3504,8 @@ export const cs_CZ: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const cs_CZ: EnTranslations = {
       "bordersSection": "Rámečky",
       "bordersNone": "Bez rámečku",
       "bordersEmpty": "Vykonej skutek, který dává rámeček, a odemkneš tuto polici.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Skutek vykonán: {name}",
       "unlockedTitleHint": "Získán nový titul: {title}. Zvol si ho v Knize skutků.",
       "unlockedBorderHint": "Získán nový rámeček: {name}. Nasadíš si jej v Knize skutků.",

@@ -3504,7 +3504,8 @@ export const sv_SE: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const sv_SE: EnTranslations = {
       "bordersSection": "Ramar",
       "bordersNone": "Ingen ram",
       "bordersEmpty": "Utför en bedrift som ger en ram för att låsa upp den här hyllan.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Bedrift fullbordad: {name}",
       "unlockedTitleHint": "Ny titel förtjänad: {title}. Välj den i Bedrifternas bok.",
       "unlockedBorderHint": "Ny ram förtjänad: {name}. Bär den via Bedrifternas bok.",

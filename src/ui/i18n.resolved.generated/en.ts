@@ -3504,7 +3504,8 @@ export const en: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4518,7 +4519,7 @@ export const en: EnTranslations = {
       "watchFull": "Watchlist full ({cap} max)",
       "watchAria": "Watch {name} on the HUD tracker",
       "unwatchAria": "Stop watching {name}",
-      "cosmeticsSection": "Titles and Borders",
+      "cosmeticsSection": "Titles, Borders and Buddies",
       "titlesSection": "Titles",
       "titlesAria": "Choose your displayed title",
       "titlesNone": "No Title",
@@ -4526,6 +4527,14 @@ export const en: EnTranslations = {
       "bordersSection": "Borders",
       "bordersNone": "No Border",
       "bordersEmpty": "Earn a border-bearing deed to unlock this shelf.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Deed accomplished: {name}",
       "unlockedTitleHint": "New title earned: {title}. Choose it in the Book of Deeds.",
       "unlockedBorderHint": "New border earned: {name}. Wear it from the Book of Deeds.",

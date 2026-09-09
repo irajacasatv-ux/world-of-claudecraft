@@ -134,7 +134,10 @@ export const BUDDY_COSMETIC_DEED_REWARDS: Readonly<Record<string, string>> = {
  *  boss and spec, the zodiac/gemstone seasonal rewards) through the admin
  *  grant endpoint. Listed so the Hunting pane can say "seasonal reward"
  *  instead of "not obtainable". */
-export const BUDDY_COSMETIC_GRANT_ONLY: ReadonlySet<string> = new Set(['proud_grunt_warlord']);
+export const BUDDY_COSMETIC_GRANT_ONLY: ReadonlySet<string> = new Set([
+  'proud_grunt_warlord',
+  'frog_sapphire',
+]);
 
 /** How far a player has to walk from an open-world boss kill before a pending
  *  companion from it reveals itself. Instance kills reveal on the zone-out. */

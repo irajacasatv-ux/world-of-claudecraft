@@ -3504,7 +3504,8 @@ export const de_DE: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const de_DE: EnTranslations = {
       "bordersSection": "Rahmen",
       "bordersNone": "Kein Rahmen",
       "bordersEmpty": "Vollbringe eine Tat mit Rahmenbelohnung, um dieses Regal freizuschalten.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Tat vollbracht: {name}",
       "unlockedTitleHint": "Neuer Titel errungen: {title}. Wähle ihn im Buch der Taten.",
       "unlockedBorderHint": "Neuer Rahmen errungen: {name}. Trage ihn über das Buch der Taten.",

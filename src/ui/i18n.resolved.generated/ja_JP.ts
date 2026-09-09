@@ -3504,7 +3504,8 @@ export const ja_JP: EnTranslations = {
         "stag_acorn": "どんぐりの冠",
         "stag_gilded": "金箔",
         "moss_hare_verdant": "新緑",
-        "proud_grunt_warlord": "ウォーロード"
+        "proud_grunt_warlord": "ウォーロード",
+        "frog_sapphire": "サファイアの蛙"
       },
       "actions": {
         "summon": "呼び出す",
@@ -4518,7 +4519,7 @@ export const ja_JP: EnTranslations = {
       "watchFull": "追跡リストが満杯です（最大 {cap} 件）",
       "watchAria": "{name}をHUDトラッカーで追跡",
       "unwatchAria": "{name}の追跡をやめる",
-      "cosmeticsSection": "称号と枠飾り",
+      "cosmeticsSection": "称号、枠、相棒",
       "titlesSection": "称号",
       "titlesAria": "表示する称号を選択",
       "titlesNone": "称号なし",
@@ -4526,6 +4527,14 @@ export const ja_JP: EnTranslations = {
       "bordersSection": "枠飾り",
       "bordersNone": "枠飾りなし",
       "bordersEmpty": "枠飾り付きの功績を獲得するとこの棚が解放されます。",
+      "buddiesSection": "相棒",
+      "buddiesNone": "相棒なし",
+      "buddiesEmpty": "相棒を集めると、ここから呼び出せる。",
+      "buddyDragHint": "アクションバーへドラッグ",
+      "looksSection": "相棒の姿",
+      "looksNone": "元の姿",
+      "looksNoBuddy": "相棒を呼び出すと、ここで姿を選べる。",
+      "looksEmpty": "この相棒にはまだ解放された姿がない。",
       "unlockedBanner": "功績達成: {name}",
       "unlockedTitleHint": "新しい称号を獲得: {title}。功績の書で選択できます。",
       "unlockedBorderHint": "新しい枠飾りを獲得: {name}。功績の書で着用できます。",

@@ -4737,6 +4737,7 @@ export const hudChromeStrings = {
       stag_gilded: 'Gilded',
       moss_hare_verdant: 'Verdant',
       proud_grunt_warlord: 'Warlord',
+      frog_sapphire: 'Sapphire Frog',
     },
     actions: {
       summon: 'Summon',
@@ -6379,7 +6380,7 @@ export const hudChromeStrings = {
     // then one heading, group label, None option and empty line per picker.
     // Border options are named by their DEED (a border reward carries a slug,
     // never player-facing display text of its own).
-    cosmeticsSection: 'Titles and Borders',
+    cosmeticsSection: 'Titles, Borders and Buddies',
     titlesSection: 'Titles',
     // UNRENDERED since the picker groups took their accessible name from the
     // visible headings (aria-labelledby); kept because the shipped locale
@@ -6390,6 +6391,17 @@ export const hudChromeStrings = {
     bordersSection: 'Borders',
     bordersNone: 'No Border',
     bordersEmpty: 'Earn a border-bearing deed to unlock this shelf.',
+    // The buddy shelf (owner request 2026-09-09): pick a collected companion
+    // to summon it, drag one onto the action bar, and dress the one that is
+    // out in an unlocked look.
+    buddiesSection: 'Buddies',
+    buddiesNone: 'No Buddy',
+    buddiesEmpty: 'Collect a companion to summon it from this shelf.',
+    buddyDragHint: 'Drag onto your action bar',
+    looksSection: 'Buddy Looks',
+    looksNone: 'Own Look',
+    looksNoBuddy: 'Summon a companion to choose its look here.',
+    looksEmpty: 'This companion has no looks unlocked yet.',
     unlockedBanner: 'Deed accomplished: {name}',
     unlockedTitleHint: 'New title earned: {title}. Choose it in the Book of Deeds.',
     // The border sibling. It names the DEED rather than a reward text, since a

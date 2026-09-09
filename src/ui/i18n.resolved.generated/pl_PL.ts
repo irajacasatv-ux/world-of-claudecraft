@@ -3504,7 +3504,8 @@ export const pl_PL: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const pl_PL: EnTranslations = {
       "bordersSection": "Obramowania",
       "bordersNone": "Brak obramowania",
       "bordersEmpty": "Dokonaj czynu przyznającego obramowanie, aby odblokować tę półkę.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Czyn dokonany: {name}",
       "unlockedTitleHint": "Zdobyto nowy tytuł: {title}. Wybierz go w Księdze Czynów.",
       "unlockedBorderHint": "Zdobyto nowe obramowanie: {name}. Załóż je w Księdze Czynów.",

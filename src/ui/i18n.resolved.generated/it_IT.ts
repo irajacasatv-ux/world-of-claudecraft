@@ -3504,7 +3504,8 @@ export const it_IT: EnTranslations = {
         "stag_acorn": "Acorn Crown",
         "stag_gilded": "Gilded",
         "moss_hare_verdant": "Verdant",
-        "proud_grunt_warlord": "Warlord"
+        "proud_grunt_warlord": "Warlord",
+        "frog_sapphire": "Sapphire Frog"
       },
       "actions": {
         "summon": "Summon",
@@ -4526,6 +4527,14 @@ export const it_IT: EnTranslations = {
       "bordersSection": "Bordi",
       "bordersNone": "Nessun bordo",
       "bordersEmpty": "Compi un'impresa che concede un bordo per sbloccare questo scaffale.",
+      "buddiesSection": "Buddies",
+      "buddiesNone": "No Buddy",
+      "buddiesEmpty": "Collect a companion to summon it from this shelf.",
+      "buddyDragHint": "Drag onto your action bar",
+      "looksSection": "Buddy Looks",
+      "looksNone": "Own Look",
+      "looksNoBuddy": "Summon a companion to choose its look here.",
+      "looksEmpty": "This companion has no looks unlocked yet.",
       "unlockedBanner": "Impresa compiuta: {name}",
       "unlockedTitleHint": "Nuovo titolo ottenuto: {title}. Sceglilo nel Libro delle Imprese.",
       "unlockedBorderHint": "Nuovo bordo ottenuto: {name}. Indossalo dal Libro delle Imprese.",
