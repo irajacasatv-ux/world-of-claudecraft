@@ -74,6 +74,13 @@ A server is CAPABLE when all of the following hold.
 4. It honors the account Hearth authority through `loadFreeholdHearth` and
    `advanceFreeholdHearthOnClient`. The private `fhold/myFreehold.hearthKeyReadyAtMs`
    and `hearthKeyRevision` values are committed UI mirrors. A mirror never authorizes.
+   MARKER, so a reader does not mistake this for a shipped path: only
+   `loadFreeholdHearth` has a production caller in this release. The advance is
+   written, tested against real PostgreSQL and reachable by nothing, because the realm
+   participant that would call it is the 07a work. It is listed here because the
+   capability the contract names is the whole pair: a release that reads the clock but
+   cannot advance it is not capable, and enabling housing on one would hand out a free
+   travel on every relogin.
 5. It registers the store with `registerFreeholdPersistStore` and drains it with
    `freeholdPersistIdle` in the shutdown closure, in the slot section 8 fixes.
 6. It treats both tables as keep-forever. Neither appears in
@@ -142,14 +149,39 @@ must never do.
 | Class | Fixture | What the current release does | What it must NEVER do |
 |---|---|---|---|
 | pre-07 | An account with no row in either table, the shape an old release leaves behind | `freeholdForAccount` answers `{ kind: 'absent' }` and `loadFreeholdHearth` answers `{ kind: 'absent' }`, which reads as `ABSENT_FREEHOLD_HEARTH` (ready, revision `0`). The account keeps its in-memory tier-0 Inn Room record, and the first durable write is insert-only (`FreeholdUpsert.expectedDurableRev` null) | Create a second default record, mint a `plot_id` for an account that has never written, report absence as a repair, or write anything at all on a read |
-| future | A row whose `schema_version` exceeds `FREEHOLD_PERSIST_VERSION`, or one carrying a `plot_index` above `FREEHOLD_PRIMARY_PLOT_INDEX` while only the primary index is admitted, or one whose `tier` or `visit_policy` is outside the accepted vocabulary | `freeholdForAccount` answers `{ kind: 'unadmitted' }`; `normalizeFreehold` answers `{ kind: 'unsupported' }` with the reason `version`, `tier` or `visit_policy`. The store turns either into a `FreeholdRecoveryHold`, and `installLoadedFreehold` installs the hold in place of a state, so the record is read-only | Rewrite, downgrade, drop, normalize or re-encode the row; let an autosave overwrite it; reinterpret an unsupported shape as absence; or treat an unknown stored identifier as invalid input to be filtered away |
+| future | A row whose `schema_version` exceeds `FREEHOLD_PERSIST_VERSION`, or one whose `tier` or `visit_policy` is outside the accepted vocabulary, or one carrying a `plot_index` above `FREEHOLD_PRIMARY_PLOT_INDEX` while only the primary index is admitted | The two causes answer DIFFERENTLY, and the difference is which layer saw the row. A forward version, tier or visit policy reaches `normalizeFreehold`, which answers `{ kind: 'unsupported' }` with the reason `version`, `tier` or `visit_policy`; the SQL reader never inspects those columns. Only the stranded `plot_index` is `{ kind: 'unadmitted' }`, because the slot is the one thing the reader itself admits. The store turns either into a `FreeholdRecoveryHold`, and `installLoadedFreehold` installs the hold in place of a state, so the record is read-only | Rewrite, downgrade, drop, normalize or re-encode the row; let an autosave overwrite it; reinterpret an unsupported shape as absence; or treat an unknown stored identifier as invalid input to be filtered away |
 | populated | A legal current row at the measured maximum: `FREEHOLD_MAX_LAYOUT_ROWS` layout rows and `FREEHOLD_MAX_TROPHY_ROWS` trophies, with identifiers at `FREEHOLD_MAX_ID_LENGTH` and a `plot_id` at `FREEHOLD_PLOT_ID_MAX_LEN` matching `FREEHOLD_PLOT_ID_RE` | Loads unchanged and round-trips through `persistedFreeholdFromState` and `freeholdStateFromPersisted` without loss. Repairs are confined to the scalar set `FreeholdRepairedField` (`condition`, `rev`, `version`) and are reported in `FreeholdLoadResult.repaired` | Truncate, reorder or de-duplicate rows to make the maximum fit; repair a field it did not actually change; or let one scalar repair disturb any unrelated field |
-| oversized | A row whose measured bytes exceed `FREEHOLD_MAX_OWNED_BYTES` | `freeholdForAccount` answers `{ kind: 'oversize', bytes, limit }` and `normalizeFreehold` refuses the same way, both BEFORE deep allocation, mutation or decode. The store installs a hold and the operator sees only a bounded, redacted diagnostic | Parse or allocate the oversized content in order to decide; write a truncated replacement; clear the row; or require the bounded diagnostic to carry the oversized original |
+| oversized | A row whose measured bytes exceed `FREEHOLD_MAX_STORED_BYTES` in the reader, or `FREEHOLD_MAX_OWNED_BYTES` in the sim | `freeholdForAccount` answers `{ kind: 'oversize', bytes, limit }` and `normalizeFreehold` refuses the same way. The two refuse at DIFFERENT depths, stated plainly rather than claimed alike: the reader refuses before the content columns cross the wire, so nothing is parsed at all, while the sim's ceiling is measured on the canonical JSON of an already-built candidate, which means the row counts are checked before any allocation but the byte check itself follows the build. The row counts are what bound that build, and they are checked first. The store installs a hold and the operator sees only a bounded, redacted diagnostic | Parse or allocate the oversized content in order to decide; write a truncated replacement; clear the row; or require the bounded diagnostic to carry the oversized original |
 
-Two rules cut across all four. Operator diagnostics go through
-`freeholdLoadDiagnostic` and `warnFreeholdLoad`, which carry a kind and a bounded
-detail and no player data. And a hold is a REFUSAL TO WRITE, never a refusal to serve:
-the account keeps playing, and only its housing writes quiesce.
+Two rules cut across all four. Every operator diagnostic goes through
+`freeholdLoadDiagnostic`, which carries a kind and a bounded detail and no player
+data, and no caller builds a detail of its own. And a hold is a REFUSAL TO WRITE,
+never a refusal to serve: the account keeps playing, and only its housing writes
+quiesce.
+
+A hold has NO PLAYER-FACING SURFACE in this release, and that is a deliberate gap
+rather than an oversight. An owner whose row is held sees the free tier-0 Inn Room
+with none of their furnishings and no explanation, and nothing they do will save.
+The alternative, a message about a durable read, is not something this release has
+the vocabulary for: the housing UI is dark, so there is nowhere to put it. The
+surface is owed by the release that lights housing up, and it is named here so that
+release inherits the obligation rather than discovering it. Until then, the only
+observer is an operator watching `woc_freehold_persist{measure="held"}`.
+
+### The development tier grant is now DURABLE
+
+Stated plainly because it changes what a dev command costs. `devGrantFreeholdTier`
+reaches the live record through `setFreeholdTier`, which bumps the record revision,
+and the periodic sweep writes any record whose revision has moved. So on a realm with
+housing enabled, a `/dev` tier grant is no longer a session-local convenience: it is
+written to `account_freeholds` and survives every later login, on whatever account the
+grant was aimed at.
+
+That is the correct behavior for a grant that reaches the one sanctioned tier writer,
+and it is exactly why `ALLOW_DEV_COMMANDS=1` must never be set in production: before
+this release the blast radius of a stray grant was one session, and now it is an
+account's durable record. Nothing here relaxes that rule, and nothing about housing
+adds a new way to reach the grant; the dev command gate is unchanged.
 
 ## 5. Source binding
 
