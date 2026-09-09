@@ -209,3 +209,52 @@ state they share is now a counter rather than something only reading finds.
   their neighbours only by today's arithmetic. The non-HOT update cost of a plot save
   is recorded and negligible, and `freeholdsForExport`'s missing bound is pre-existing
   and out of this scope.
+
+## SECOND FIX-ROUND FINDINGS (the fresh lane read its own predecessor)
+
+The first fix round was itself reviewed, and one of its fixes had introduced a defect
+worse than the one it closed. That is the reason the rule exists.
+
+- Y1 BLOCKING (correctness, independently reproduced). The identity seal added for X1
+  quiesced EVERY BRAND-NEW ACCOUNT on its second write. An absent-row account's first
+  write is insert-only and correct; afterwards the entry held a durable revision while
+  the live record still carried the unassigned plot id, so the seal fired on the very
+  next save and every later edit of that first session was dropped with a misleading
+  "the live record is not the record this entry loaded". Found by the implementer and
+  confirmed independently by a reviewer reproducing it against the same commit.
+  FIXED in 2f298c24a1 by the correction both arrived at: the entry records the document
+  as ACTUALLY WRITTEN, and a new sanctioned sim writer `stampFreeholdPlotId` teaches the
+  live record the same identity, so the row, the entry and the record agree from the
+  first insert. The seal's standalone stand-in clause is gone.
+- Y2 SHOULD-FIX (hot path). The shutdown drain's deadline had never been derived against
+  the write cap: at four concurrent writes and a ten millisecond statement it covers
+  about four thousand owners, and five thousand dirty owners left 1,584 unwritten.
+  FIXED: the drain runs at its own cap, since it is the one moment nothing else contends
+  for the shared gate, and the two constants are documented as the pair they are.
+  Re-measured by the reviewer at 6,944 ms for five thousand.
+- Y3 SHOULD-FIX (hot path). The leave flush returned in milliseconds under a mass
+  disconnect, spending none of its budget, because a deferred entry has no chain and a
+  null chain read as "nothing to wait for". A reserve alone did not fix it (it raised
+  writes issued from 8 to 10 out of 1000). FIXED: the wait observes the deferred set.
+- Y4 SHOULD-FIX (hot path). `utf8ByteLength` was a hand-rolled per-character loop whose
+  comment justified counting over encoding to avoid allocating a second copy. Measured,
+  that was backwards: twelve times slower than TextEncoder for a byte-identical answer,
+  and 36 percent of every write's codec cost. FIXED, and its pin, which compared an
+  encode against an encode, now carries a literal too.
+- Y5 SHOULD-FIX (hot path). The eager leave capture retains about 66 MiB per thousand
+  furnished leavers. The retention is required for correctness, so it is BOUNDED AND
+  PUBLISHED rather than removed: the worst case is stated where the field is declared
+  and `leave_captures` is a series.
+- Y6 SHOULD-FIX (qa-checklist). The occupancy gauge called `entries` "loaded entries",
+  and it is not: a join creates a reference-only entry before any read, so on a realm
+  with housing disabled that number tracks online accounts and nothing else. FIXED:
+  `loaded` is its own measure, zero on a dark realm however many entries exist.
+- Y7 NITS, all applied: the metrics scrape read the store once per family rather than
+  once per scrape; the orphan sweep copied the entry map every pass; `pumpLoop`'s skip
+  arm left a dropped entry for the sweep instead of removing it; two comment anchors
+  still named the cadence table's vacated home; the held and quiesced measures are
+  counted independently and must not be summed; and the entry map's time-based eviction
+  has no size bound, which is recorded with the seam that would provide one.
+- Y8 SELF-FOUND while acting on Y6's neighbour: the lost-entry reload added in the first
+  round would have issued a durable read per join ON A DARK REALM, where the join path's
+  own preload is gated. FIXED in 97011ac1c7 before any reviewer reached it.
