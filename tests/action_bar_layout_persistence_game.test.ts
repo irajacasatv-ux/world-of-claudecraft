@@ -481,6 +481,21 @@ describe('the auth handshake: a queued write that settles between the row reads 
       acquireCharacterLease: async () => true,
       releaseCharacterLease: async () => {},
       bankBonusForAccount: async () => ({ bonusSlots: 0, sources: [], characterCount: 1 }),
+      freeholdForAccount: async () => ({
+        accountId: 1,
+        plotIndex: 0,
+        plotId: '',
+        durableRev: null,
+        state: null,
+        hearthReadyAtMs: 0,
+        hearthRevision: '0',
+        hold: {
+          kind: 'unadmitted' as const,
+          detail: 'test host holds no persistence store',
+          plotIndex: 0,
+          durableRev: '0',
+        },
+      }),
     } as unknown as Parameters<typeof createWsAuth>[0];
   }
 

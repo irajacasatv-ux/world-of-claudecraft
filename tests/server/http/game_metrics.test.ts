@@ -20,6 +20,7 @@ import {
   ROD_FEE_RECIPE_IDS,
   rodFeeForRecipe,
 } from '../../../server/fishing_telemetry';
+import { freeholdPersistStats } from '../../../server/freehold_persist';
 import {
   type GameStateSource,
   registerGameStateMetrics,
@@ -108,6 +109,7 @@ function stubSource(overrides: Partial<GameStateSource> = {}): GameStateSource {
     wsConnections: () => 5,
     simEntities: () => 42,
     freeholdRecords: () => 6,
+    freeholdPersist: () => freeholdPersistStats(),
     simTickHz: () => 20,
     savePendingKeys: () => 6,
     escrowGateInFlight: () => 2,

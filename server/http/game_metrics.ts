@@ -77,6 +77,7 @@ import {
   ROD_FEE_RECIPE_IDS,
   rodFeeForRecipe,
 } from '../fishing_telemetry';
+import type { FreeholdPersistStats } from '../freehold_persist';
 import { OFFLINE_FENCE_WRITERS, offlineFenceRefusals } from '../offline_fence_refusals';
 import { wocAuthGuardCacheStats } from '../woc_auth_guard_cache';
 import {
@@ -119,6 +120,9 @@ export const WOC_WS_CONNECTIONS = 'woc_ws_connections';
 /** Active entities in the authoritative sim (players, mobs, projectiles, ...). */
 export const WOC_SIM_ENTITIES = 'woc_sim_entities';
 export const WOC_FREEHOLD_RECORDS = 'woc_freehold_records';
+
+/** Housing persistence store occupancy and work, by fixed measure. */
+export const WOC_FREEHOLD_PERSIST = 'woc_freehold_persist';
 
 /** Achieved sim ticks per wall-clock second (target is 20 Hz). */
 export const WOC_SIM_TICK_HZ = 'woc_sim_tick_hz';
@@ -429,6 +433,7 @@ export interface GameStateSource {
   simEntities(): number;
   /** Live in-memory owner records, read without querying storage. */
   freeholdRecords(): number;
+  freeholdPersist(): FreeholdPersistStats;
   /** Achieved sim Hz, or null while the rate meter is still warming up. */
   simTickHz(): number | null;
   /** Character-save FIFO keys with a queued or running write. */
@@ -644,6 +649,30 @@ export function registerGameStateMetrics(
     registers: [registry],
     collect() {
       this.set(source.escrowGateInFlight());
+    },
+  });
+
+  new Gauge({
+    name: WOC_FREEHOLD_PERSIST,
+    help: 'Housing persistence store by fixed measure: loaded entries, dirty and in-flight work, write-blocked holds, and the cumulative admission and queue waits. Counters only, never player identity.',
+    labelNames: ['measure'],
+    registers: [registry],
+    collect() {
+      const state = source.freeholdPersist();
+      this.set({ measure: 'entries' }, state.entries);
+      this.set({ measure: 'dirty' }, state.dirty);
+      this.set({ measure: 'running' }, state.running);
+      this.set({ measure: 'pending' }, state.pending);
+      this.set({ measure: 'held' }, state.held);
+      this.set({ measure: 'loads' }, state.loads);
+      this.set({ measure: 'load_failures' }, state.loadFailures);
+      this.set({ measure: 'writes' }, state.writes);
+      this.set({ measure: 'write_failures' }, state.writeFailures);
+      this.set({ measure: 'stale_writes' }, state.staleWrites);
+      this.set({ measure: 'permit_wait_ms_total' }, state.permitWaitMsTotal);
+      this.set({ measure: 'queue_wait_ms_total' }, state.queueWaitMsTotal);
+      this.set({ measure: 'oldest_dirty_age_ms' }, state.oldestDirtyAgeMs);
+      this.set({ measure: 'last_write_bytes' }, state.lastWriteBytes);
     },
   });
 

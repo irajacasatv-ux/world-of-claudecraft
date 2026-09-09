@@ -133,6 +133,21 @@ function setup() {
     // meta. The default returns an empty grant so every existing case reaches game.join
     // unchanged; the stamp/resume branches are pinned in the bank-bonus block below.
     bankBonusForAccount: vi.fn(async () => ({ bonusSlots: 0, sources: [] })),
+    freeholdForAccount: vi.fn(async () => ({
+      accountId: 1,
+      plotIndex: 0,
+      plotId: '',
+      durableRev: null,
+      state: null,
+      hearthReadyAtMs: 0,
+      hearthRevision: '0',
+      hold: {
+        kind: 'unadmitted' as const,
+        detail: 'test host holds no persistence store',
+        plotIndex: 0,
+        durableRev: '0',
+      },
+    })),
     isConnectionRefused: vi.fn(() => false),
     bufferHandshakeMessages,
     requestMetadata: vi.fn(() => ({ ip: '1.2.3.4', userAgent: 'ua' })),
@@ -179,6 +194,7 @@ function expectNoAdmissionWork({ deps, game }: ReturnType<typeof setup>): void {
   expect(deps.acquireCharacterLease).not.toHaveBeenCalled();
   expect(deps.releaseCharacterLease).not.toHaveBeenCalled();
   expect(deps.bankBonusForAccount).not.toHaveBeenCalled();
+  expect(deps.freeholdForAccount).not.toHaveBeenCalled();
   expect(game.isIpBlocked).not.toHaveBeenCalled();
   expect(game.countIpSessions).not.toHaveBeenCalled();
   expect(game.hasSessionForCharacter).not.toHaveBeenCalled();

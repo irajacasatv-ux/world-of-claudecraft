@@ -18,6 +18,8 @@ import {
   enterFreehold,
   evictFreehold,
   type FreeholdTier,
+  persistedFreeholdFromState,
+  serializeFreehold,
   setFreeholdTier,
 } from '../src/sim/freehold';
 import { Sim } from '../src/sim/sim';
@@ -351,5 +353,65 @@ describe('setFreeholdTier is the SOLE tier writer (source scan)', () => {
     const body = state.slice(start, end === -1 ? undefined : end);
     expect(body).toContain('state.tier = tier;');
     expect(state.replace(body, '')).not.toMatch(/\.tier\s*=[^=]/);
+  });
+});
+
+describe('the persisted projection of a granted tier', () => {
+  // The development grant reaches the record through the ONE tier setter and
+  // nothing else, so what a persistence sweep would write is exactly what the
+  // setter produced. These arms pin that the projection follows the setter,
+  // that the revision it bumps is the movement signal a sweep reads, and that
+  // the grant never reaches the character blob, which is CHARACTER state while
+  // a freehold is ACCOUNT state.
+  it('projects the granted tier and the bumped revision, and nothing else moves', () => {
+    const sim = makeSim(true, true);
+    const key = keyOf(sim);
+    const before = persistedFreeholdFromState(serializeFreehold(sim.ctx, key) as never);
+    expect(before.tier).toBe('inn_room');
+
+    expect(devGrantFreeholdTier(sim.ctx, sim.primaryId, 'cottage')).toEqual({
+      outcome: 'granted',
+      tier: 'cottage',
+    });
+    const after = persistedFreeholdFromState(serializeFreehold(sim.ctx, key) as never);
+    expect(after.tier).toBe('cottage');
+    // The revision is what a periodic sweep compares against the last written
+    // one, so it must have MOVED, by exactly one.
+    expect(after.rev).toBe(before.rev + 1);
+    // And a tier grant moves nothing else: the owner's furnishings, trophies,
+    // condition and visit policy are untouched.
+    expect(after.layout).toEqual(before.layout);
+    expect(after.trophies).toEqual(before.trophies);
+    expect(after.condition).toBe(before.condition);
+    expect(after.visitPolicy).toBe(before.visitPolicy);
+    expect(after.plotId).toBe(before.plotId);
+  });
+
+  it('carries no owner key into the durable projection', () => {
+    // The account identity keys the ROW, so repeating it inside the owned
+    // content would put an internal key in a blob that later travels with a
+    // sold plot.
+    const sim = makeSim(true, true);
+    devGrantFreeholdTier(sim.ctx, sim.primaryId, 'cottage');
+    const projected = persistedFreeholdFromState(serializeFreehold(sim.ctx, keyOf(sim)) as never);
+    expect(Object.keys(projected)).not.toContain('ownerKey');
+    expect(JSON.stringify(projected)).not.toContain(keyOf(sim));
+  });
+
+  it('writes nothing housing into the character blob, granted or refused', () => {
+    for (const granting of [true, false]) {
+      const sim = makeSim(true, granting);
+      devGrantFreeholdTier(sim.ctx, sim.primaryId, 'cottage');
+      const json = JSON.stringify(sim.serializeCharacter(sim.primaryId));
+      expect(json, `granting=${granting}`).not.toMatch(/freehold|cottage|inn_room/i);
+      expect(json, `granting=${granting}`).not.toContain(keyOf(sim));
+    }
+  });
+
+  it('answers null for an evicted owner, which the persistence caller reads as skip', () => {
+    const sim = makeSim(true, true);
+    const key = keyOf(sim);
+    evictFreehold(sim.ctx, key);
+    expect(serializeFreehold(sim.ctx, key)).toBeNull();
   });
 });

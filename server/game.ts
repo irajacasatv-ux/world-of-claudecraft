@@ -24,8 +24,7 @@ import { parseItemCopyAnchor } from '../src/sim/item_copy_anchor';
 import { itemInstancePayloadsEqual } from '../src/sim/item_instance_merge';
 import {
   isInJailCage,
-  JAIL_CENTER,
-  JAIL_OUTER_HALF,
+  isInJailRoom,
   JAIL_VISITOR_POS,
   type JailState,
   jailCageSpawn,
@@ -129,12 +128,12 @@ import {
 } from './bank_vault_ledger_guard';
 import { dispatchBankCommand, emitBankSelfKeys } from './bank_wire';
 import { reportBgOutcomes } from './battleground_telemetry';
+import { botDetectionSnapshotFor } from './bot_detection_snapshot';
 import type {
   BotDetector,
   BotTrackingContext,
   ConfigApplyResult,
   ConfigField,
-  SessionRuntimeSnapshot,
   SuspiciousPlayer,
 } from './bot_detector/contract';
 import {
@@ -243,6 +242,13 @@ import { assembleEventsFrame, filterRoutableEvents, serializeEventFragments } fr
 import { buildEventPidIndex, forEachSelectedEventIndex } from './event_pid_index';
 import { appendFarmPlotsWire, dispatchFarmingCommand } from './farming_commands';
 import { fishingBandLabel, isKoi, isRodFeeRecipe } from './fishing_telemetry';
+import {
+  createGameFreeholdPersistStore,
+  type FreeholdPersistStore,
+  installLoadedFreehold,
+  type LoadedFreehold,
+  registerFreeholdPersistStore,
+} from './freehold_persist';
 import {
   dispatchFreeholdCommand,
   freeholdOwnerKeyForAccount,
@@ -1549,6 +1555,7 @@ export class GameServer {
   readonly social: SocialService;
   private readonly paidGuildCreation: PaidGuildCreationCoordinator;
   private readonly guildBankLazyLoader: GuildBankLazyLoader;
+  private readonly freeholdPersist: FreeholdPersistStore;
   // Guilds whose bank is CLOSED because a guild-delete is in flight (the
   // window from the empty-bank guard passing through the guilds DELETE
   // cascade and its post-commit hooks): bank ops for these guilds are refused
@@ -1856,6 +1863,8 @@ export class GameServer {
       error: (message, error) => console.error(message, ...(error === undefined ? [] : [error])),
       nowMs: Date.now,
     });
+    this.freeholdPersist = createGameFreeholdPersistStore({ sim: this.sim, backgroundDbGate });
+    registerFreeholdPersistStore(this.freeholdPersist);
     this.moderation = new ModerationService(this.moderationHost(), {
       recordAction: (input) => recordInGameAction(input),
       mute: (input) => muteAccountChat(input),
@@ -2681,6 +2690,7 @@ export class GameServer {
       saveMarket: () => this.saveMarket(sample),
       saveMail: () => this.saveMail(sample),
       saveRifts: () => this.saveRifts(sample),
+      saveFreeholds: () => this.saveFreeholds(),
       pruneIdleGuards: () => this.bankVaultLedgerGuardCoordinator.pruneIdle(),
       heartbeatLeases: () => heartbeatCharacterLeases(),
     });
@@ -2705,7 +2715,7 @@ export class GameServer {
       this.applyModeratorJailGate(session);
       if (session.jailVisit) {
         const entity = this.sim.entities.get(session.pid);
-        if (!entity || entity.dead || !this.isInJailRoom(entity.pos)) {
+        if (!entity || entity.dead || !isInJailRoom(entity.pos)) {
           this.exitJailVisit(session, false);
         }
         continue;
@@ -2736,13 +2746,6 @@ export class GameServer {
     if (!entity || entity.dead || entity.ghost) return;
     const target = jailGateTeleport(entity.pos);
     if (target) this.teleportSessionEntity(session, target);
-  }
-
-  private isInJailRoom(pos: { x: number; z: number }): boolean {
-    return (
-      Math.abs(pos.x - JAIL_CENTER.x) <= JAIL_OUTER_HALF &&
-      Math.abs(pos.z - JAIL_CENTER.z) <= JAIL_OUTER_HALF
-    );
   }
 
   // Protocol-level WS liveness sweep, every WS_KEEPALIVE_PING_MS. Two jobs:
@@ -2787,6 +2790,7 @@ export class GameServer {
 
   stop(): void {
     this.guildBankLazyLoader.stop();
+    this.freeholdPersist.stop();
     if (this.interval) clearInterval(this.interval);
     if (this.holderTierInterval) clearInterval(this.holderTierInterval);
     if (this.playtimeInterval) clearInterval(this.playtimeInterval);
@@ -3160,44 +3164,12 @@ export class GameServer {
         session.botTrackingContext,
         now,
         true,
-        this.captureBotDetectionSnapshot(session, now),
+        botDetectionSnapshotFor(this.sim, session.pid, now),
       );
       if (action === 'kick') {
         void this.kickSession(session, 'rejected by server', 'disconnected');
       }
     }
-  }
-
-  private captureBotDetectionSnapshot(
-    session: ClientSession,
-    capturedAt: number,
-  ): SessionRuntimeSnapshot | null {
-    const e = this.sim.entities.get(session.pid);
-    if (!e) return null;
-    const instance = this.sim.instanceInfoAt(e.pos);
-    return {
-      capturedAt,
-      simTime: this.sim.time,
-      x: e.pos.x,
-      z: e.pos.z,
-      facing: e.facing,
-      dead: e.dead,
-      inCombat: e.inCombat,
-      targetId: e.targetId,
-      instanceSlot: instance?.slot ?? null,
-      instanceDungeonId: instance?.dungeonId ?? null,
-      level: e.level,
-      classId: e.templateId,
-      hp: e.hp,
-      maxHp: e.maxHp,
-      resource: e.resource,
-      maxResource: e.maxResource,
-      resourceType: e.resourceType,
-      autoAttack: e.autoAttack,
-      followTargetId: e.followTargetId,
-      moveSpeed: e.moveSpeed,
-      onGround: e.onGround,
-    };
   }
 
   private clearStaleInputs(): void {
@@ -3276,6 +3248,9 @@ export class GameServer {
         // normalized at write. Stamped onto the world entity so it rides the
         // identity wire (`app`) to every client in view.
         appearance?: Record<string, unknown> | null;
+        // The account's durable plot and Hearth clock, preloaded on the
+        // FRESH-JOIN arm only (server/ws_auth.ts, beside bankBonus).
+        freehold?: LoadedFreehold;
       } = {},
   ): ClientSession | { error: string } {
     // Anti-bot: cap simultaneous online characters per account. Accounts can
@@ -3309,6 +3284,13 @@ export class GameServer {
     for (const s of linkdeadOthers) {
       void this.leave(s, 'replaced by a new character login');
     }
+    // The durable record goes in through the ONE load path BEFORE addPlayer's
+    // seed: loadFreehold and ensureFreeholdRecord are both load-once, so a load
+    // after the seed is a silent no-op that discards the owner's real plot. The
+    // retain is synchronous here so a same-account character swap (the
+    // fire-and-forget leave above) cannot drop the entry under the new session.
+    installLoadedFreehold(this.sim.ctx, accountId, meta.freehold);
+    this.freeholdPersist.retain(freeholdOwnerKeyForAccount(accountId));
     const pid = this.sim.addPlayer(cls, name, {
       state: state ?? undefined,
       characterId,
@@ -3915,6 +3897,11 @@ export class GameServer {
     this.sessionsByCharacterId.delete(session.characterId);
     this.guildBookHolders.dropSession(session);
     storageRecovery.offline(session.characterId);
+    // Flush this account's plot while the record is still live: removePlayer
+    // below evicts it once the last session sharing the owner key leaves, and
+    // serializeFreehold then answers null. Before the lease release for the
+    // same reason the lease sits below the character flush.
+    await this.freeholdPersist.flushAndRelease(freeholdOwnerKeyForAccount(session.accountId));
     // Release the per-character load lease so a fresh login (here or on another
     // process) can reload the character without waiting out the TTL. Order
     // matters: only after saveCharacterOnLeave has awaited above, so the lease
@@ -5075,6 +5062,14 @@ export class GameServer {
       await this.persistRifts(sample);
     } catch (err) {
       console.error('failed to save shared Rift state:', err);
+    }
+  }
+
+  async saveFreeholds(): Promise<void> {
+    try {
+      this.freeholdPersist.saveAllDirty();
+    } catch (err) {
+      console.error('failed to save freehold plots:', err);
     }
   }
 

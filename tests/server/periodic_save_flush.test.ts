@@ -35,6 +35,7 @@ function fakeWrites(over: Partial<PeriodicSaveWrites> = {}) {
     saveMarket: vi.fn(track('saveMarket')),
     saveMail: vi.fn(track('saveMail')),
     saveRifts: vi.fn(track('saveRifts')),
+    saveFreeholds: vi.fn(track('saveFreeholds')),
     heartbeatLeases: vi.fn(track('heartbeatLeases')),
     pruneIdleGuards: vi.fn(() => {
       calls.push('pruneIdleGuards');
@@ -73,6 +74,7 @@ describe('runPeriodicSaveFlush', () => {
       'heartbeatLeases',
       'pruneIdleGuards',
       'saveCharacters',
+      'saveFreeholds',
       'saveMail',
       'saveMarket',
       'saveRifts',
@@ -88,6 +90,7 @@ describe('runPeriodicSaveFlush', () => {
       saveMarket: vi.fn(never),
       saveMail: vi.fn(never),
       saveRifts: vi.fn(never),
+      saveFreeholds: vi.fn(never),
       heartbeatLeases: vi.fn(never),
     });
     // Returns void, synchronously, with every write still pending.
@@ -161,7 +164,13 @@ describe('the coordinator does not regrow its own calls beside the runner', () =
     // Anchor: the method still gates on the autosave interval. Without this a
     // renamed or gutted method would satisfy every count below with zeroes.
     expect(body).toContain('AUTOSAVE_SECONDS');
-    for (const call of ['this.saveAll(', 'this.saveMarket(', 'this.saveMail(', 'this.saveRifts(']) {
+    for (const call of [
+      'this.saveAll(',
+      'this.saveMarket(',
+      'this.saveMail(',
+      'this.saveRifts(',
+      'this.saveFreeholds(',
+    ]) {
       expect(body.split(call).length - 1, `${call} in flushPeriodicSaves`).toBe(1);
     }
   });
@@ -186,5 +195,13 @@ describe('the coordinator does not regrow its own calls beside the runner', () =
     // saveAll takes a reason, not a sample: its cost is the per-character FIFO's,
     // which is measured where those writes are enqueued, not here.
     expect(body).toContain("this.saveAll('autosave')");
+    // saveFreeholds takes NEITHER. It only ENQUEUES onto the housing store's
+    // own keyed FIFO and performs no synchronous write, so there is no window
+    // for the sample to attribute. That store's cost is reported through its
+    // own counters instead (freeholdPersistStats: queue wait, permit wait,
+    // dirty age, bytes, and the failure and stale-write counts), which
+    // server/main.ts publishes on the game-state metrics source.
+    expect(body).toContain('this.saveFreeholds()');
+    expect(body).not.toContain('this.saveFreeholds(sample)');
   });
 });

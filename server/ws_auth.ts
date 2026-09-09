@@ -31,6 +31,7 @@ import type {
   CharacterRow,
   TokenScope,
 } from './db';
+import type { LoadedFreehold } from './freehold_persist';
 import type { GameServer } from './game';
 import { noteClientFrame } from './keepalive_sweep';
 import { negotiateMovementWireVersion } from './movement_wire_version';
@@ -151,6 +152,13 @@ export interface WsAuthDeps {
   bankBonusForAccount: (
     accountId: number,
   ) => Promise<{ bonusSlots: number; sources: BankBonusSource[] }>;
+  // The account's durable freehold plot and its shared Hearth clock, read on
+  // the FRESH-JOIN arm only (a resume keeps the live record, which is the
+  // truth). Bounded and single-flight inside the persistence store, and it
+  // never rejects: an admission refusal or an unreadable row comes back as a
+  // write-blocked hold, so a database problem costs the player their housing
+  // for that session rather than the handshake.
+  freeholdForAccount: (accountId: number) => Promise<LoadedFreehold>;
 }
 
 export interface WsAuthHandlers {
@@ -179,6 +187,7 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
     acquireCharacterLease,
     releaseCharacterLease,
     bankBonusForAccount,
+    freeholdForAccount,
   } = deps;
 
   // Character ids whose lease-acquire-through-join section is in flight in THIS
@@ -462,6 +471,10 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
             // Computed BEFORE the lease acquire so the lease-held window stays tight; a bare
             // await means a DB error fails the handshake exactly like a getCharacter failure.
             const bankBonus = await bankBonusForAccount(accountId);
+            // Read beside the bank bonus, for the same reason and on the same
+            // arm: before the lease acquire so the lease-held window stays
+            // tight. Unlike the bank bonus this one cannot fail the handshake.
+            const freehold = await freeholdForAccount(accountId);
             leaseNonce = randomUUID();
             const leased = await acquireCharacterLease(character.id, accountId, leaseNonce);
             if (!leased) {
@@ -529,6 +542,7 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
                 hotbarLayout: queuedHotbarLayout ?? admittedCharacter.hotbar_layout ?? null,
                 leaseNonce,
                 bankBonus,
+                freehold,
                 mutedUntil: moderation.mutedUntil,
                 reason: moderation.reason,
                 chatStrikes: moderation.strikes,

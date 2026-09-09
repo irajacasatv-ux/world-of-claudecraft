@@ -325,6 +325,30 @@ describe('retention sweep wiring in server/main.ts', () => {
     expect(MAIN_RAW).toContain('bank_ledger is deliberately ABSENT from this table list');
   });
 
+  it('neither housing table is placed on the retention sweep', () => {
+    // account_freeholds and account_freehold_hearth are keep-forever by
+    // decision, and neither is on the sweep. This is the shape the bank_ledger
+    // case above uses: a sweep arm for either table would delete a player's
+    // built home or reset the shared-account Hearth cooldown to ready, so the
+    // absence has to be PINNED rather than left to reviewer memory. The exact
+    // table-array order pin above is the second guard: a { name:
+    // 'account_freeholds' } entry reds that one too.
+    expect(MAIN).not.toContain("name: 'account_freeholds'");
+    expect(MAIN).not.toContain("name: 'account_freehold_hearth'");
+    // The prefix form also catches pruneFreeholdsBatch and friends.
+    expect(MAIN).not.toContain('pruneFreehold');
+    expect(MAIN).not.toContain('freeholdRetentionDays');
+    expect(MAIN).not.toContain('DELETE FROM account_freeholds');
+    expect(MAIN).not.toContain('DELETE FROM account_freehold_hearth');
+    // And the reason survives next to the list, so the asymmetry reads as a
+    // decision rather than an omission. RAW, like the bank_ledger pin: the
+    // subject IS a comment, and MAIN is comment-stripped.
+    expect(MAIN_RAW).toContain('account_freeholds is deliberately ABSENT from this table list');
+    expect(MAIN_RAW).toContain(
+      'account_freehold_hearth is deliberately ABSENT for the same reason',
+    );
+  });
+
   it('the login recovery kick is armed BEFORE the socket can deliver a command', () => {
     // server/ws_auth.ts arms the provisional gold-rail hold synchronously on a
     // fresh join, and the whole point is that it happens before the message

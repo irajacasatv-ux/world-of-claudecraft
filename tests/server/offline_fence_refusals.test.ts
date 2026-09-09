@@ -8,8 +8,10 @@
 // tests/server/pbe_boost_save_fence.test.ts for the roster save), because a
 // counter that only its own unit test increments proves nothing about the
 // production path.
+
 import { Registry } from 'prom-client';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { freeholdPersistStats } from '../../server/freehold_persist';
 import type { GameStateSource } from '../../server/http/game_metrics';
 import {
   registerGameStateMetrics,
@@ -116,6 +118,7 @@ function inertSource(): GameStateSource {
     accountsOnline: () => 0,
     wsConnections: () => 0,
     freeholdRecords: () => 0,
+    freeholdPersist: () => freeholdPersistStats(),
     simEntities: () => 0,
     simTickHz: () => 0,
     savePendingKeys: () => 0,

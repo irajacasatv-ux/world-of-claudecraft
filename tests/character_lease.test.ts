@@ -178,6 +178,10 @@ describe('shutdown wiring (source pin)', () => {
     const ledgerDrain = src.indexOf('await bankLedgerIdle(BANK_LEDGER_SHUTDOWN_DRAIN_MS)');
     const deedsDrain = src.indexOf('await deedRecordsIdle()');
     const unstuckDrain = src.indexOf('await stopUnstuckRecords(UNSTUCK_RECORD_SHUTDOWN_DRAIN_MS)');
+    const freeholdEnqueue = src.indexOf('await game.saveFreeholds()');
+    const freeholdDrain = src.indexOf(
+      'await freeholdPersistIdle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS)',
+    );
     const poolEnd = src.indexOf('await pool.end()');
     // The shutdown save runs FIRST, while this process still holds every lease:
     // the saves are lease-fenced (a holder + nonce EXISTS inside the UPDATE), so
@@ -192,6 +196,15 @@ describe('shutdown wiring (source pin)', () => {
     expect(sweep).toBeGreaterThan(ledgerDrain);
     expect(sweep).toBeGreaterThan(deedsDrain);
     expect(sweep).toBeGreaterThan(unstuckDrain);
+    // Housing rides the same window and for the same reason. The enqueue comes
+    // after the shutdown save (a plot save serializes the live record, so the
+    // record must still be there), and the BOUNDED drain comes before the
+    // sweep: once the leases drop a replacement process can load the same
+    // account's plot and write it, and a save still pending here would land on
+    // top of that with older content.
+    expect(freeholdEnqueue).toBeGreaterThan(saveAll);
+    expect(freeholdDrain).toBeGreaterThan(freeholdEnqueue);
+    expect(sweep).toBeGreaterThan(freeholdDrain);
     expect(poolEnd).toBeGreaterThan(sweep);
   });
 });

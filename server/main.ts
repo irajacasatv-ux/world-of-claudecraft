@@ -257,6 +257,14 @@ import {
 import { pruneDiscordOAuthStates, pruneDiscordPendingLogins } from './discord_db';
 import { emailAccountCreated } from './email';
 import { stopEpicMirror } from './epic/mirror';
+import { freeholdsEnabled } from './freehold_config';
+import {
+  FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS,
+  freeholdPersistIdle,
+  freeholdPersistStats,
+  freeholdPreloadForAccount,
+  freeholdPreloadUnavailable,
+} from './freehold_persist';
 import { GameServer } from './game';
 import {
   closeGeneralChatQuotaPool,
@@ -3805,6 +3813,14 @@ export async function startServer(): Promise<http.Server> {
     acquireCharacterLease,
     releaseCharacterLease,
     bankBonusForAccount: async (id) => computeBankBonus(await bankBonusFactsForAccount(id)),
+    // Read LIVE per fresh join, so a dark realm pays no durable housing query
+    // at all. Dark answers a HOLD, never an absence: an absence would invite the
+    // store to generate an identity and persist an empty default over a row this
+    // realm never read.
+    freeholdForAccount: (id) =>
+      freeholdsEnabled(process.env)
+        ? freeholdPreloadForAccount(id)
+        : Promise.resolve(freeholdPreloadUnavailable(id, 'housing is disabled on this realm')),
   });
   wsAuth.attachUpgrade(server, wss);
 
@@ -3822,6 +3838,7 @@ export async function startServer(): Promise<http.Server> {
     wsConnections: () => wss.clients.size,
     simEntities: () => game.sim.entities.size,
     freeholdRecords: () => game.sim.ctx.freeholds.size,
+    freeholdPersist: () => freeholdPersistStats(),
     simTickHz: () => game.simTickHz(),
     savePendingKeys: () => game.characterSaveQueues.pendingKeys(),
     escrowGateInFlight: () => wocEscrowGate.stats().inFlight,
@@ -3966,6 +3983,19 @@ export async function startServer(): Promise<http.Server> {
     // is bounded (LIMIT 50, a backward index scan) and cached per guild, so it
     // does not scale with table size, but it is no longer true that nothing
     // reads this table hot.
+    // account_freeholds is deliberately ABSENT from this table list: it is
+    // kept FOREVER. It does not grow per event or per session; it is bounded at
+    // a small number of plots per ACCOUNT, and each row IS the player's built
+    // home, the tier they were granted plus their layout and trophies, and any
+    // unsupported or oversized owned content held read-only beside its bounded
+    // recovery diagnostic. Deleting one destroys possessions, so the reverse
+    // foreign-key account cascade is the only removal path, and a subject-access
+    // export reads the rows back through server/freehold_db.ts freeholdsForExport.
+    // account_freehold_hearth is deliberately ABSENT for the same reason: one
+    // row per ACCOUNT, never per character and never per entry, holding
+    // ready_at_ms and a monotonic revision. It is the Hearth Key cooldown
+    // AUTHORITY, so pruning a row would hand every character on that account a
+    // free ready key; its export loader is freeholdHearthForExport.
     tables: [
       { name: 'chat_logs', pruneBatch: (n) => pruneChatLogsBatch(config.chatLogRetentionDays, n) },
       marketSoldVolumeRetentionTable(pool),
@@ -4216,6 +4246,7 @@ export async function startServer(): Promise<http.Server> {
     await game.saveMarket();
     await game.saveMail();
     await game.saveRifts();
+    await game.saveFreeholds();
     await game.endAllPlaySessions();
     // Drain any bank_ledger writes still queued on the FIFO tail BEFORE the lease
     // sweep: once the leases drop, a replacement process can load the same character
@@ -4256,6 +4287,14 @@ export async function startServer(): Promise<http.Server> {
     // to skip that sweep. A dropped observation on a hard shutdown is acceptable.
     const soldVolumeDrained = await soldVolumeWriterIdle(MARKET_SOLD_VOLUME_SHUTDOWN_DRAIN_MS);
     if (!soldVolumeDrained) console.warn('market sold-volume drain deadline reached');
+    // Stop admitting new per-plot saves and drain the running-plus-pending set
+    // to a finite deadline, BEFORE the lease sweep below. Once the leases drop,
+    // a replacement process can load the same account's plot and write it; a
+    // save still pending here would then land on top with older content. The
+    // deadline lives inside freeholdPersistIdle, which also flips intake, so a
+    // GameServer.stop() earlier in this closure cannot refuse the enqueue above.
+    const freeholdsDrained = await freeholdPersistIdle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
+    if (!freeholdsDrained) console.warn('freehold persistence drain deadline reached');
     // Stop accepted /unstuck report intake and drain only to a finite deadline.
     // Per-query timeouts bound an active write; deadline expiry aborts retry
     // delays and drops queued telemetry before the shared pool closes.

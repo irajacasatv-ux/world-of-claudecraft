@@ -8,7 +8,9 @@
 // registry and scrapes it once. Default process metrics stay off to keep the
 // test hermetic; their nodejs_*/process_* namespace cannot collide with the
 // woc_*/http_* names asserted here.
+
 import { describe, expect, it } from 'vitest';
+import { freeholdPersistStats } from '../../../server/freehold_persist';
 import {
   registerBusinessMetrics,
   WOC_PLAYER_ACCOUNTS_CREATED,
@@ -30,6 +32,7 @@ function stubSource(): GameStateSource {
     accountsOnline: () => 0,
     wsConnections: () => 0,
     freeholdRecords: () => 0,
+    freeholdPersist: () => freeholdPersistStats(),
     simEntities: () => 0,
     simTickHz: () => 20,
     savePendingKeys: () => 0,

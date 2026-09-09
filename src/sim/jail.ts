@@ -70,6 +70,18 @@ export function isInJailCage(pos: { x: number; z: number }): boolean {
   );
 }
 
+// The jail ROOM bound, the outer shell the cage sits inside (the jail-visit gate
+// in server/game.ts). A moderator visiting a prisoner is inside the room and
+// outside the cage, so the two bounds are separate checks against one centre.
+// Moved here whole from server/game.ts to heal the monolith ratchet; it is the
+// byte-for-byte sibling of isInJailCage with the outer half-extent.
+export function isInJailRoom(pos: { x: number; z: number }): boolean {
+  return (
+    Math.abs(pos.x - JAIL_CENTER.x) <= JAIL_OUTER_HALF &&
+    Math.abs(pos.z - JAIL_CENTER.z) <= JAIL_OUTER_HALF
+  );
+}
+
 export const JAIL_BLOCKERS: BlockerDef[] = [
   segment(
     JAIL_CENTER.x - JAIL_OUTER_HALF,

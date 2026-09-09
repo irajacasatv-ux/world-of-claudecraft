@@ -101,6 +101,21 @@ function makeDeps(opts: { joinResult?: any; hasSession?: boolean; acquireResult?
     acquireCharacterLease: acquireSpy,
     releaseCharacterLease: releaseSpy,
     bankBonusForAccount: bankBonusSpy,
+    freeholdForAccount: vi.fn(async () => ({
+      accountId: 1,
+      plotIndex: 0,
+      plotId: '',
+      durableRev: null,
+      state: null,
+      hearthReadyAtMs: 0,
+      hearthRevision: '0',
+      hold: {
+        kind: 'unadmitted' as const,
+        detail: 'test host holds no persistence store',
+        plotIndex: 0,
+        durableRev: '0',
+      },
+    })),
     characterCountForAccount: vi.fn(async () => 1),
   };
   return {

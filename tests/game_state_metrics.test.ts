@@ -10,6 +10,7 @@
 
 import { Registry } from 'prom-client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { freeholdPersistStats } from '../server/freehold_persist';
 
 // Mock the db layer so no Postgres is needed (mirrors tests/snapshots.test.ts).
 vi.mock('../server/db', () => ({
@@ -107,6 +108,7 @@ function sourceOver(server: GameServer): GameStateSource {
     accountsOnline: () => server.liveAccountIds().size,
     wsConnections: () => server.clients.size,
     freeholdRecords: () => 0,
+    freeholdPersist: () => freeholdPersistStats(),
     simEntities: () => server.sim.entities.size,
     simTickHz: () => server.simTickHz(),
     savePendingKeys: () => server.characterSaveQueues.pendingKeys(),

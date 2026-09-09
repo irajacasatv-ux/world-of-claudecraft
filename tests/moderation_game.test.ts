@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const moderation = vi.hoisted(() => ({
@@ -43,7 +44,16 @@ vi.mock('../server/moderation_db', () => moderation);
 import { saveCharacterState } from '../server/db';
 import { type ClientSession, GameServer } from '../server/game';
 import { BUILTIN_WORLD, setActiveWorldContent } from '../src/sim/data';
-import { isInJailCage, JAIL_GATE, JAIL_VISITOR_POS, jailGateTeleport } from '../src/sim/jail';
+import {
+  isInJailCage,
+  isInJailRoom,
+  JAIL_CAGE_HALF,
+  JAIL_CENTER,
+  JAIL_GATE,
+  JAIL_OUTER_HALF,
+  JAIL_VISITOR_POS,
+  jailGateTeleport,
+} from '../src/sim/jail';
 import { ARENA_MIN_LEVEL } from '../src/sim/social/arena';
 
 // Moderation acts on player sessions and the fixed jail cage; ambient camps,
@@ -1001,5 +1011,43 @@ describe('server-side teleports end a live profession session', () => {
       if (saved === undefined) delete process.env.ALLOW_DEV_COMMANDS;
       else process.env.ALLOW_DEV_COMMANDS = saved;
     }
+  });
+});
+
+describe('the jail room bound (moved out of server/game.ts)', () => {
+  // isInJailRoom is the OUTER shell the cage sits inside, so the two bounds
+  // must disagree for exactly the band between them: that band is where a
+  // visiting moderator legitimately stands. A single bound would either eject
+  // the visitor or admit an escapee, so both arms are pinned here.
+  it('admits the visitor stance, which is outside the cage and inside the room', () => {
+    expect(isInJailCage(JAIL_VISITOR_POS)).toBe(false);
+    expect(isInJailRoom(JAIL_VISITOR_POS)).toBe(true);
+  });
+
+  it('admits the cage itself and refuses beyond the outer wall, on both axes', () => {
+    expect(isInJailRoom({ x: JAIL_CENTER.x, z: JAIL_CENTER.z })).toBe(true);
+    expect(isInJailRoom({ x: JAIL_CENTER.x + JAIL_CAGE_HALF, z: JAIL_CENTER.z })).toBe(true);
+    expect(isInJailRoom({ x: JAIL_CENTER.x + JAIL_OUTER_HALF, z: JAIL_CENTER.z })).toBe(true);
+    expect(isInJailRoom({ x: JAIL_CENTER.x + JAIL_OUTER_HALF + 0.01, z: JAIL_CENTER.z })).toBe(
+      false,
+    );
+    expect(isInJailRoom({ x: JAIL_CENTER.x, z: JAIL_CENTER.z + JAIL_OUTER_HALF })).toBe(true);
+    expect(isInJailRoom({ x: JAIL_CENTER.x, z: JAIL_CENTER.z - JAIL_OUTER_HALF - 0.01 })).toBe(
+      false,
+    );
+  });
+
+  it('is the outer bound, not the cage bound (the two constants really differ)', () => {
+    expect(JAIL_OUTER_HALF).toBeGreaterThan(JAIL_CAGE_HALF);
+    const betweenTheWalls = { x: JAIL_CENTER.x + JAIL_CAGE_HALF + 1, z: JAIL_CENTER.z };
+    expect(isInJailCage(betweenTheWalls)).toBe(false);
+    expect(isInJailRoom(betweenTheWalls)).toBe(true);
+  });
+
+  it('is the one the coordinator calls, and game.ts declares none of it', () => {
+    const game = readFileSync(new URL('../server/game.ts', import.meta.url), 'utf8');
+    expect(game).toContain('isInJailRoom(entity.pos)');
+    expect(game).not.toContain('private isInJailRoom');
+    expect(game).not.toContain('JAIL_OUTER_HALF');
   });
 });

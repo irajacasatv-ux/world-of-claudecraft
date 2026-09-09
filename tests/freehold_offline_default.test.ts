@@ -221,6 +221,69 @@ describe('the character save', () => {
     expect(`${json}${ACCOUNT}`).toContain(ACCOUNT);
     expect(`${json} freehold`).toMatch(/freehold/i);
   });
+
+  it('persists nothing on an offline host, granted tier or not (the persistence-absent arm)', () => {
+    // The offline and headless hosts hold the full housing module and no
+    // durable backend at all: every serializeCharacter caller lives in server/
+    // and a fresh offline Sim is a fresh world on every entry. So a development
+    // grant is a fixture, never an entitlement: it must not reach the character
+    // blob, and a NEW Sim must come back at the free Inn Room.
+    const granting = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      freeholdsEnabled: true,
+      devCommands: true,
+      freeholdDevGrantEnabled: true,
+      world: SLIM_WORLD,
+    });
+    const pid = granting.primaryId;
+    const key = freeholdKeyFor(granting.ctx, pid);
+    expect(devGrantFreeholdTier(granting.ctx, pid, 'cottage')).toEqual({
+      outcome: 'granted',
+      tier: 'cottage',
+    });
+    expect(granting.freeholds.get(key)?.tier).toBe('cottage');
+    const saved = granting.serializeCharacter(pid);
+    const json = JSON.stringify(saved);
+    expect(json).not.toMatch(/freehold|cottage|inn_room/i);
+    expect(json).not.toContain(String(PENDING_FREEHOLD_PLOT_ID));
+    expect(json).not.toContain(key);
+    // Positive control: the scan is live on the very words it just cleared.
+    expect(`${json} cottage`).toMatch(/cottage/i);
+
+    // A fresh Sim built from that save is back at tier 0, and the permission
+    // itself is off by default, so nothing about the grant survived.
+    const reloaded = new Sim({
+      seed: 7,
+      playerClass: 'warrior',
+      freeholdsEnabled: true,
+      world: SLIM_WORLD,
+    });
+    const reloadedPid = reloaded.addPlayer('warrior', 'Aaa', { state: saved ?? undefined });
+    expect(reloaded.freeholds.get(freeholdKeyFor(reloaded.ctx, reloadedPid))?.tier).toBe(
+      'inn_room',
+    );
+    expect(reloaded.ctx.freeholdDevGrantEnabled).toBe(false);
+    expect(devGrantFreeholdTier(reloaded.ctx, reloadedPid, 'cottage')).toEqual({
+      outcome: 'unauthorized',
+    });
+  });
+
+  it('keeps the Inn Room record when the development authorization fails', () => {
+    // Authorization failing is not a reason to hold no record: 05 owns the
+    // default and 07 persists it unchanged, so a refused grant must leave the
+    // free Inn Room exactly as the seed made it, tier and revision included.
+    const sim = litSim();
+    const pid = sim.primaryId;
+    const key = freeholdKeyFor(sim.ctx, pid);
+    const before = { ...(sim.freeholds.get(key) as FreeholdState) };
+    expect(devGrantFreeholdTier(sim.ctx, pid, 'cottage')).toEqual({ outcome: 'unauthorized' });
+    const after = sim.freeholds.get(key) as FreeholdState;
+    expect(after.tier).toBe('inn_room');
+    expect(after.rev).toBe(before.rev);
+    expect(after.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(JSON.stringify(sim.serializeCharacter(pid))).not.toMatch(/freehold/i);
+  });
 });
 
 describe('removePlayer', () => {

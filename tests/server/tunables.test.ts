@@ -789,6 +789,7 @@ describe('no consolidated tunable literal is duplicated at a call site', () => {
   const unstuckRecordsSrc = read('server/unstuck_records.ts');
   const retentionSrc = read('server/play_session_retention_db.ts');
   const bankLedgerSrc = read('server/bank_ledger.ts');
+  const clientPerfDbSrc = read('server/client_perf_reports_db.ts');
 
   // Slice a function BODY: from its declaration to the next top-level export,
   // so a neighbor's match can never satisfy a body that lost its own.
@@ -1105,6 +1106,19 @@ describe('no consolidated tunable literal is duplicated at a call site', () => {
     expect(wrappedRead).toContain('playtime_seconds');
     expect(wrappedRead).toContain('FROM accounts');
     expect(wrappedRead).toContain('WHERE id = $1');
+    // Housing is account-linked personal data in its OWN normalized tables, so
+    // the subject-access export cannot reach it through projectAccountExportState
+    // (a characters.state projector). Each table exports through its own
+    // delegated loader, the accountAttributionForExport shape, and both are
+    // keep-forever, which makes this export the only readback an owner has.
+    const exportBody = bodyOf(dbSrc, 'export async function exportAccountData');
+    expect(exportBody).toContain('freeholdsForExport(pool, accountId)');
+    expect(exportBody).toContain('freeholdHearthForExport(pool, accountId)');
+    expect(exportBody).toContain('freeholds,');
+    expect(exportBody).toContain('freeholdHearth,');
+    // The loaders own their SQL; db.ts must not grow a second copy of it.
+    expect(exportBody).not.toContain('FROM account_freeholds');
+    expect(exportBody).not.toContain('FROM account_freehold_hearth');
     // The retention prunes are deliberately NOT heavy call sites anymore: each call
     // is one bounded DELETE batch on the default allowance, and the sweep drives
     // iteration. Batching is what makes the default safe; re-wrapping would be a
@@ -1112,9 +1126,12 @@ describe('no consolidated tunable literal is duplicated at a call site', () => {
     expect(bodyOf(dbSrc, 'export async function pruneChatLogsBatch')).not.toContain(
       'runWithStatementTimeout',
     );
-    expect(bodyOf(dbSrc, 'export async function pruneClientPerfReportsBatch')).not.toContain(
-      'runWithStatementTimeout',
-    );
+    // Moved whole out of db.ts to server/client_perf_reports_db.ts (the monolith
+    // ratchet); the batching contract it carries is unchanged, so the pin follows
+    // the body rather than the file.
+    expect(
+      bodyOf(clientPerfDbSrc, 'export async function pruneClientPerfReportsBatch'),
+    ).not.toContain('runWithStatementTimeout');
   });
 
   it('the play-session retention prunes stay batched on the default allowance', () => {

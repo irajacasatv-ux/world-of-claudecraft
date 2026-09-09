@@ -141,6 +141,7 @@ vi.mock('../server/bank_ledger_growth_budget', async (importOriginal) => {
 });
 
 import {
+  BANK_LEDGER_GROWTH_BUDGET_SCHEMA,
   bankLedgerGrowthBudgetReadbackSql,
   observeBankLedgerGrowthBudget,
 } from '../server/bank_ledger_growth_budget';
@@ -488,6 +489,63 @@ describe('ensureSchema wires every schema module at boot', () => {
     const applied = h.calls.join('\n');
     expect(applied).toContain('CREATE TABLE IF NOT EXISTS content_moderation_actions');
     expect(applied).toContain('CREATE INDEX IF NOT EXISTS content_moderation_actions_resource');
+  });
+
+  it('applies the two housing schemas after accounts and characters, before the growth budget', async () => {
+    // Same defined-but-unwired hazard as the DISCORD_SCHEMA lesson: deleting
+    // either ensureSchema line must fail HERE. Ordering is pinned by index
+    // rather than containment, because both tables FK-reference accounts(id):
+    // hoisted above SCHEMA they would apply cleanly on every existing database
+    // and die only on a FRESH one, with `relation "accounts" does not exist`.
+    await ensureSchema();
+    const findIndex = (needle: string): number => h.calls.findIndex((c) => c.includes(needle));
+    const accountsIndex = findIndex('CREATE TABLE IF NOT EXISTS accounts');
+    const charactersIndex = findIndex('CREATE TABLE IF NOT EXISTS characters');
+    const plotIndex = findIndex('.account_freeholds (');
+    const hearthIndex = findIndex('.account_freehold_hearth (');
+    const growthIndex = h.calls.indexOf(BANK_LEDGER_GROWTH_BUDGET_SCHEMA);
+    const commitIndex = h.calls.indexOf('COMMIT');
+    expect(accountsIndex).toBeGreaterThanOrEqual(0);
+    expect(charactersIndex).toBeGreaterThanOrEqual(0);
+    expect(plotIndex).toBeGreaterThan(accountsIndex);
+    expect(plotIndex).toBeGreaterThan(charactersIndex);
+    expect(hearthIndex).toBeGreaterThan(accountsIndex);
+    // The growth budget stays the FINAL fragment (it locks the ledger while it
+    // seeds an exact row count, so nothing else may wait behind it), and both
+    // housing fragments land before COMMIT.
+    expect(growthIndex).toBeGreaterThan(plotIndex);
+    expect(growthIndex).toBeGreaterThan(hearthIndex);
+    expect(commitIndex).toBeGreaterThan(growthIndex);
+  });
+
+  it('applies the housing schemas idempotently, with guarded DDL only', async () => {
+    // ensureSchema re-runs at EVERY boot, so a second boot must issue the same
+    // guarded statements and nothing destructive. Both fragments are static
+    // constants, so the two boots must be byte-identical.
+    await ensureSchema();
+    const firstBoot = [...h.calls];
+    h.calls.length = 0;
+    await ensureSchema();
+    expect(h.calls).toEqual(firstBoot);
+    const housing = h.calls.filter(
+      (c) => c.includes('.account_freeholds (') || c.includes('.account_freehold_hearth ('),
+    );
+    expect(housing).toHaveLength(2);
+    for (const ddl of housing) {
+      expect(ddl).not.toMatch(/\b(?:DROP TABLE|TRUNCATE|ALTER COLUMN)\b/i);
+      expect(ddl).not.toMatch(/ADD COLUMN (?!IF NOT EXISTS)/i);
+      expect(ddl).not.toMatch(/CREATE (?:UNIQUE )?INDEX (?!CONCURRENTLY )?(?!IF NOT EXISTS)/i);
+    }
+    // The stable identities the whole feature keys on, pinned as literals so a
+    // rename is a deliberate, visible edit rather than a silent data loss.
+    const plot = housing.find((c) => c.includes('.account_freeholds (')) as string;
+    expect(plot).toContain('PRIMARY KEY (account_id, plot_index)');
+    expect(plot).toContain('CREATE UNIQUE INDEX IF NOT EXISTS account_freeholds_plot_id');
+    expect(plot).toContain('REFERENCES accounts(id) ON DELETE CASCADE');
+    const hearth = housing.find((c) => c.includes('.account_freehold_hearth (')) as string;
+    expect(hearth).toContain(
+      'account_id INT PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE',
+    );
   });
 
   it('applies the client-perf schema after the accounts and characters tables, before COMMIT', async () => {

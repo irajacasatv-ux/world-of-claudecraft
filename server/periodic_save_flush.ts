@@ -61,6 +61,10 @@ export interface PeriodicSaveWrites {
   saveMail(): Promise<void>;
   /** The shared Rift world state. */
   saveRifts(): Promise<void>;
+  /** Every loaded housing plot whose owner-keyed record moved since its last
+   *  save. Coalesced per owner by the persistence store, so a slow write cannot
+   *  stack with the next one thirty seconds later. */
+  saveFreeholds(): Promise<void>;
   /** Heartbeat this process's character load leases so none lapses under a peer. */
   heartbeatLeases(): Promise<void>;
   /** Drop idle bank-vault ledger guard state. Synchronous, and not a write. */
@@ -79,6 +83,7 @@ export const PERIODIC_SAVE_WRITE_NAMES = [
   'saveMarket',
   'saveMail',
   'saveRifts',
+  'saveFreeholds',
   'pruneIdleGuards',
   'heartbeatLeases',
 ] as const satisfies readonly (keyof PeriodicSaveWrites)[];
