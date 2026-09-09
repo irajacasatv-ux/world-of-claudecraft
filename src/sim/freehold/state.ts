@@ -177,7 +177,7 @@ export function ensureFreeholdRecord(ctx: SimContext, ownerKey: string): Freehol
  * behaviour, and bumping the revision here would make the durable sweep see
  * movement it caused itself and write again on every pass.
  *
- * Refuses to REPLACE a real identity: only the pending placeholder is
+ * Refuses to REPLACE a real identity: only the pending stand-in value is
  * overwritten. A record whose id is already durable is one this function has
  * nothing to teach.
  */
