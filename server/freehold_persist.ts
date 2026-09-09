@@ -995,7 +995,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // revision moved under this realm, which is what the fence exists to
       // detect. Replaying its state would install a house another writer has
       // already replaced, as if it were current.
-      return Promise.resolve(snapshotOf(entry, blocked(entry) ? null : entry.state));
+      //
+      // An outstanding LEAVE CAPTURE outranks `entry.state`, which only ever
+      // advances at commit. The capture is the previous session's last edits,
+      // still unwritten; replaying the committed state instead would show the
+      // returning player a house missing everything they did before logging
+      // out, and would then overwrite the capture on the next sweep. Handing it
+      // over is also what RELEASES it: once a live record carries those edits,
+      // the write path must prefer that record and nothing else.
+      return Promise.resolve(snapshotOf(entry, blocked(entry) ? null : adoptCapture(entry)));
     }
     return beginLoad(accountId, ownerKey);
   }
@@ -1083,16 +1091,19 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const generation = entry.dirtyGeneration;
       entry.snapshotGeneration = generation;
       const live = ports.serialize(entry.ownerKey);
-      // THE NEWER DOCUMENT WINS, with the live record winning ties. The capture
-      // stands in when the record is gone, which on the leave path is expected.
-      // It also stands in when the live record is OLDER: a rejoin inside the
-      // deferral window replays the entry's last COMMITTED state, which is the
-      // pre-leave revision, so a strict live-always-wins rule silently rolled
-      // the leaving session's edits back to it. Ties go to the live record, so
-      // a capture can still never shadow an edit made after it.
-      const captured = entry.leaveDocument;
-      const persisted =
-        live === null ? captured : captured !== null && captured.rev > live.rev ? captured : live;
+      // THE LIVE RECORD WINS WHENEVER ONE EXISTS. The capture stands in only
+      // for the window where there is none, which is what it was taken for: a
+      // leave, then eviction, then this write.
+      //
+      // A revision comparison was tried here and was WRONG. `rev` restarts from
+      // the last committed value when a rejoin replays the entry's state, so
+      // the capture's revision and the live record's are counters on two
+      // different timelines and "newer" is not decidable from them: preferring
+      // the capture lost the REJOINING session's edits, which is the mirror of
+      // the bug it was meant to fix. The leaver's edits are preserved a level
+      // up instead, by handing the capture to the rejoin (see preload), so by
+      // the time a live record exists again it already carries them.
+      const persisted = live ?? entry.leaveDocument;
       if (persisted !== null) entry.snapshotRev = persisted.rev;
       // No live record and nothing captured. Writing here would put a default
       // over a real row, which is invariant 1.
@@ -1182,6 +1193,17 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     } finally {
       permit.release();
     }
+  }
+
+  /** Hand a rejoining session the capture if one is outstanding, and release
+   *  it: the capture exists only for the window with NO live record, and a
+   *  session that has just adopted it is about to create one. */
+  function adoptCapture(entry: FreeholdPersistEntry): PersistedFreehold | null {
+    const captured = entry.leaveDocument;
+    if (captured === null) return entry.state;
+    leaveCaptures--;
+    entry.leaveDocument = null;
+    return captured;
   }
 
   /** Wake anything waiting for this entry to stop owing a write. */
@@ -1435,6 +1457,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         // removePlayer has evicted the record, and would then serialize to null
         // and write nothing at all: the leaving session's last edits would be
         // silently gone. One clone per dirty logout buys that back.
+        // Released BEFORE reassigning: a second leave over a surviving capture
+        // holds one document and used to count two, and the gauge that is this
+        // retention's only stated bound then ratcheted upward and never read
+        // zero again.
+        if (entry.leaveDocument !== null) leaveCaptures--;
         entry.leaveDocument = ports.serialize(ownerKey);
         if (entry.leaveDocument !== null) leaveCaptures++;
         // LEAVING, so it may borrow the reserve: this write is the last chance

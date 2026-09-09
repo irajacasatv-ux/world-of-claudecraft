@@ -1734,6 +1734,41 @@ describe('a write may only carry the record this entry actually loaded', () => {
     expect(h.writeCount()).toBe(0);
   });
 
+  it('builds the document AS SENT once, and refuses THAT (source pin)', () => {
+    // The row receives `entry.plotId`, never the live record's, so the refusal
+    // has to run on the document that lands rather than on the one the sim
+    // happens to hold. There is no behaviour test for this today: the identity
+    // seal above already refuses every live record whose identity differs, so
+    // the two objects can only diverge in ways that seal catches first. What
+    // remains is the byte measure and any future field, and a structural pin is
+    // the honest tool for a difference nothing can yet observe.
+    const body = methodBody(
+      stripComments(readFileSync(SOURCE_PATH, 'utf8')),
+      '  async function runWrite(',
+    );
+    expect(body).toContain(
+      'const document: PersistedFreehold = { ...persisted, plotId: entry.plotId };',
+    );
+    expect(body).toContain('freeholdWriteRefusal(document,');
+    // Every field the row receives reads the built document, so a later field
+    // cannot quietly take the live record's value instead.
+    for (const field of [
+      'JSON.stringify(document.layout)',
+      'JSON.stringify(document.trophies)',
+      'tier: document.tier',
+      'condition: document.condition',
+      'visitPolicy: document.visitPolicy',
+      'wireRev: document.rev',
+      'schemaVersion: document.version',
+    ]) {
+      expect(body, field).toContain(field);
+    }
+    // ...and the SEAL still reads the LIVE record, which is the whole point of
+    // keeping two names: comparing the document against entry.state would be
+    // comparing a value with itself.
+    expect(body).toContain('persisted.plotId !== entry.state.plotId');
+  });
+
   it('still writes the record it DID load, so the seal is not just a stopped writer', async () => {
     // The anti-vacuity arm. Without it every case above would pass on a store
     // that had simply stopped writing.
@@ -2004,12 +2039,47 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().writesWithoutRecord).toBe(0);
   });
 
-  it('prefers the NEWER document when a rejoin replayed an older record', async () => {
-    // A rejoin inside the deferral window reinstalls the entry's last COMMITTED
-    // state, which is the pre-leave revision. A strict live-always-wins rule
-    // then wrote that older document and rolled the leaving session's edits
-    // back, silently. Ties still go to the live record, so a capture can never
-    // shadow an edit made after it.
+  it('hands an outstanding capture to a REJOIN, rather than replaying a staler state', async () => {
+    // The leaver's unwritten edits live only in the capture. `entry.state`
+    // advances at COMMIT, so replaying it would show the returning player a
+    // house missing everything they did before logging out, and the next sweep
+    // would then write that older record over the capture.
+    //
+    // A revision comparison in the write path was tried for this and was wrong:
+    // `rev` restarts from the last committed value on a replay, so the two
+    // counters are on different timelines and preferring the capture there lost
+    // the REJOINING session's edits instead. Handing it over at the join is
+    // what makes both survive.
+    let granted = 0;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => persistedFixture({ rev: 6, condition: 42 }),
+      // The load takes its permit; the leave write is refused one, which is
+      // what leaves the capture outstanding.
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 1 ? { release: () => {} } : null;
+      },
+    });
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(20);
+    // The write was refused a permit, so the capture is still outstanding.
+    expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+
+    const rejoin = await h.store.preload(ACCOUNT_ID);
+    expect(rejoin.state?.rev).toBe(6);
+    expect(rejoin.state?.condition).toBe(42);
+    // Adopted, therefore released: a live record now carries those edits and
+    // the write path must prefer that record and nothing else.
+    expect(h.store.stats().leaveCaptures).toBe(0);
+  });
+
+  it('writes the LIVE record, never a capture, once a record exists again', async () => {
+    // The mirror of the case above. After a rejoin the live record is the only
+    // authority; writing a capture over it would put the row out of step with
+    // the house the player is standing in, and the next sweep would undo it.
     let liveRev = 6;
     let granted = 0;
     const permit = deferred<{ release(): void } | null>();
@@ -2019,23 +2089,46 @@ describe('a leaving session never loses its last edits to a queue', () => {
       serialize: () => persistedFixture({ rev: liveRev }),
       acquirePermit: async () => {
         granted += 1;
-        // The load already took its permit; the leave write waits on this one,
-        // which is what puts the rejoin BEFORE the write samples its document.
         return granted === 1 ? { release: () => {} } : await permit.promise;
       },
-      writeRow: async () => ({ kind: 'updated', durableRev: '6' }),
+      writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
     });
     void h.store.flushAndRelease(OWNER_KEY);
     await tick(10);
     expect(h.writeCount()).toBe(0);
 
-    // The rejoin replays the entry's last COMMITTED state, which is older than
-    // the edits the leaving session captured.
-    liveRev = 5;
+    // The rejoining session edits, so the live record is ahead of the capture.
+    liveRev = 15;
     permit.resolve({ release: () => {} });
     await tick(40);
     expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].wireRev).toBe(6);
+    expect(h.writes[0].wireRev).toBe(15);
+  });
+
+  it('the gauge returns to zero, so the retention it bounds is falsifiable', async () => {
+    // A second leave over a surviving capture holds ONE document and used to
+    // count two, so the gauge ratcheted upward and never read zero again. It is
+    // this retention's only stated bound, and a bound that cannot read zero is
+    // not one.
+    let granted = 0;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => persistedFixture({ rev: 6 }),
+      acquirePermit: async () => {
+        granted += 1;
+        return granted === 1 ? { release: () => {} } : null;
+      },
+    });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(20);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+    // A SECOND leave while the first capture is still outstanding.
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(20);
+    expect(h.store.stats().leaveCaptures).toBe(1);
   });
 
   it('never lets a captured document shadow a later live edit', async () => {
@@ -2232,6 +2325,32 @@ describe('nothing removes an entry that still owes a durable write', () => {
     await tick(20);
     expect(h.store.stats().entries).toBe(1);
     expect(h.store.stats().dirty).toBe(1);
+  });
+
+  it('keeps an entry whose durable READ is still in flight', async () => {
+    // A load in flight will call ensureEntry again when it lands, so removing
+    // the entry now only resurrects it at zero references, which is the same
+    // "entry went missing under a live session" class that retain's reload
+    // exists to repair. Both removal paths have to know that, which is why the
+    // guard lives in the shared predicate rather than in one of them.
+    const gate = deferred<FreeholdRowLoad>();
+    const h = harness({ readRow: async () => await gate.promise });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    const loading = h.store.preload(ACCOUNT_ID);
+    await tick(10);
+    // The session goes away while the read is still out.
+    await h.store.flushAndRelease(OWNER_KEY);
+    expect(h.store.stats().entries).toBe(1);
+    // ...and the sweep leaves it alone too, for the same reason.
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
+    expect(h.store.stats().entries).toBe(1);
+
+    gate.resolve({ kind: 'row', row: rowFixture() });
+    await loading;
+    await tick(20);
+    expect(h.store.stats().loaded).toBe(1);
   });
 
   it('DOES collect a blocked entry, dirty or not, since it can never write', async () => {
