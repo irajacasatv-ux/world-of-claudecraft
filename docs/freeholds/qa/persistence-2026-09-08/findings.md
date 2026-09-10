@@ -3,14 +3,16 @@
 Status key: FIXED (with the commit that did it) / RULED (reviewed, no change warranted,
 with the reason).
 
-THE ROUND IS NOT CLOSED, AND THE VERDICT IS FAIL. FIFTEEN fix rounds have now run and
-THIRTEEN of the fifteen introduced a defect worse than one they closed, each caught by a
+THE ROUND IS NOT CLOSED, AND THE VERDICT IS FAIL. SIXTEEN fix rounds have now run and
+FOURTEEN of the sixteen introduced a defect worse than one they closed, each caught by a
 fresh reviewer, by the gate, or by a mutant, and NEVER by the round's own green tests.
 ROUND FIFTEEN is the round that executed the four settled rulings, and the fresh read
 that opened it found 36 findings including one BLOCKING, in code fourteen rounds and a
-green gate had already been over: see ROUND FIFTEEN at the end of this file. Its own fix
-round was then read by a second fresh lane, on the standing assumption that a fix round
-is unreviewed code.
+green gate had already been over. ROUND SIXTEEN is six fresh lanes over round fifteen
+itself: 30 findings, three BLOCKING, and TWO of those three were defects round fifteen
+had introduced, one of them a money-conservation regression on the leave path and one of
+them the eighth path re-opened from the other side. Both sections are at the end of this
+file, and the second is why the first is not the last word.
 Round fourteen is the sharpest instance: round thirteen shipped a fix whose CLAIM WAS
 WIDER THAN ITS EVIDENCE, citing two measured SQLSTATEs that both leave the connection
 usable as proof about every clock fault, so its own probe could not see the case it was
@@ -1384,3 +1386,134 @@ passed (N)` line is quoted in the verdict rather than summarized.
   refusing the login instead of running uncapped (1).
 - The capture bookkeeping, one mutant, control `Tests 190 passed (190)`, KILLED:
   restoring `retain`'s inline capture clear (1 failed).
+
+## ROUND SIXTEEN: THE RULINGS ROUND WAS READ FRESH, AND IT HAD DONE IT AGAIN
+
+Round fifteen executed the four settled rulings and was then handed to six fresh
+lanes on the standing assumption that a fix round is unreviewed code. They found
+30 findings, THREE of them BLOCKING, and TWO of the three were defects round
+fifteen had introduced. Sixteen for sixteen.
+
+Every finding was verified by three lenses (does it reproduce, was it
+pre-existing or round-introduced, is the claim wider than the evidence). 27 of 30
+survived; the three that did not are judged below rather than dropped.
+
+### The two the round introduced
+
+- S1 BLOCKING (teardown). Moving the four registrations into leave()'s `finally`
+  meant that on a SETTLEMENT THROW a session was dropped from both guild-book
+  indexes without its unflushed ops ever being reverted, because
+  `reconcileOwnGuildBooks` was the settlement's last statement and a throw skips
+  it. That leaves uncommitted money deltas on the LIVE book with nothing left to
+  converge them: no mark for the disband guard to fail closed on, no session for
+  the settle gate to count, and no session for the quarantine paths to find. The
+  next officer's op on that guild then serializes the live book and commits
+  deltas whose character half never landed, so one deposit becomes two, which is
+  the Phase 3 QA dupe shape verbatim. Before the round nothing was dropped on a
+  throw, so this is strictly a regression it created. FIXED: the revert runs in
+  the `finally`, FIRST, above both drops. It is idempotent (the first pass
+  deletes every id it was handed, so a second call is handed an empty list and
+  does nothing) and it cannot throw (the extraction gave it a per-guild catch).
+- S2 BLOCKING (identity). RULING 1 CLOSED THE EIGHTH PATH FROM ONE SIDE ONLY, and
+  round fifteen's own two other fixes re-opened it from the other.
+  `installLoadedFreehold` returns early on ANY hold, so a record seeded while its
+  own load was refused never learns a name. Before this round that cost nothing,
+  because an admission hold set `entry.loaded` and the entry stayed blocked all
+  session. Ruling 2 made it re-readable, and the login cap deliberately left its
+  entry for the in-flight read to fill, so for the first time an entry could be
+  held at login and WRITABLE afterwards with no install ever having run. The
+  store then minted a name for the row, `applyWriteResult` cached the LIVE
+  record's stand-in, and the seal's name comparison was inert BY VALUE EQUALITY
+  for the life of that entry, which is the eighth path arrived at from the other
+  side. Reported independently by three of the six lanes.
+  FIXED where the store can decide it: `classify`'s absent arm REFUSES to name a
+  row for a record it did not install. A live record carrying the stand-in gets
+  an `unnamed_record` hold, terminal for that entry, and no row is created at
+  all. Nothing is lost, because there was no row; the next login builds a fresh
+  entry whose install runs before the seed. NOT closed by stamping the identity
+  onto the live record, which is the form ruling 1 forbids and refuted.
+- S3 SHOULD-FIX (teardown). `storageRecovery.offline` is CHARACTER-keyed and was
+  moved into the `finally` without the identity guard its neighbour got, so on a
+  same-account swap it marked a LIVE character offline: that character's
+  gold-rail ordering hold and its recovery-drive hold are released and it becomes
+  a capacity-eviction candidate. The other two registrations are keyed by session
+  identity and cannot reach a sibling, which is why only these two are guarded.
+
+### What else the read found, all applied
+
+- S4 SHOULD-FIX. `no_budget` was added to the kind list and forgotten in the
+  repairable set, under a docblock claiming the set was "derived from the list
+  below rather than re-typed, so a kind cannot be added to one and forgotten in
+  the other". It was three hand-typed literals, and the very commit that wrote
+  that sentence falsified it. DERIVED BY SUBTRACTION now: everything that is not
+  a data cause and not the ordering cause is a capacity cause, so a kind added
+  later lands in exactly one group by construction.
+- S5 SHOULD-FIX. Only one of the three repairable kinds was pinned: deleting
+  `cap_full` and `read_threw` from the set left the suite green. All of them are
+  driven now, each through the port fault that produces it, and the set's exact
+  membership is pinned.
+- S6 SHOULD-FIX. The three flipped seal cases assert the fix BY FIXTURE: each
+  hardcodes the live identity to its post-fix value, so reverting ruling 1's
+  install left all three green and the eighth path's whole regression protection
+  was one unit case in another describe. A case now couples the two through the
+  REAL sim: it installs, reads the identity back off `ctx.freeholds`, evicts,
+  reseeds through `ensureFreeholdRecord`, and asserts the seal refuses. Reverting
+  the install reds it on its first assertion.
+- S7 SHOULD-FIX. The harness's `livePlotId` contradicted its own `hasLive`:
+  production reads both off ONE map, so no record means no identity, and the
+  harness answered an identity for an owner it also said was not live. The ONE
+  case covering the identity-adoption fix depended on that impossible state.
+  Bound strictly to the liveness predicate now, and adoption is re-pinned on the
+  state it actually exists for, a second character joining over a live record.
+- S8 SHOULD-FIX. Raising the emptied-house fixture from revision zero to six,
+  which the un-gating forced, took with it the ONLY pin on the `standInSeed &&`
+  conjunct of `pristineSeed`: deleting that conjunct left the whole suite green.
+- S9 SHOULD-FIX. THE SEAL HAD NO SUITE OF ITS OWN, and a comment written in the
+  same round promised one. `tests/server/freehold_write_seal.test.ts` now drives
+  every arm with literals, including the totality of `entryKnowsMore` dimension
+  by dimension, and each of the four arms dies to its own mutant.
+- S10 SHOULD-FIX. The budget-cap case detected only `entry.hold`, so a refusal
+  that stamped `entry.loaded` was green, and a stamped `loaded` is exactly what
+  stops the repair arm ever reaching that entry again.
+- S11 SHOULD-FIX. DEPLOY.md kept "held counts entries under ANY recovery hold"
+  while the same paragraph added a kind that books no hold at all: the whole-load
+  cap leaves the entry untouched by design, so `no_budget` can climb with `held`
+  flat. Both caveats are now stated, together with the fact that this series
+  counts REFUSALS and not logins, so one login can book more than one.
+- S12 SHOULD-FIX. The clock and timer source scan read only the store file, so
+  the four modules that came off it could each have gained a `Date.now` or a
+  second timer unseen. It walks all six now, with a floor proving the file list
+  is not stale.
+- S13 NITS, all applied: the extracted revert's call-site census named a caller
+  that does not exist and undercounted by one, and the coordinator's own copy of
+  it was stale the same way; the C23 scope document named the DOM-free view core
+  as a paint sink and counted table rows as sinks; two source comments and one
+  test comment asserted a totality that did not hold until S2 landed; the losing
+  promise of the budget race now keeps a no-op handler, because being wrong about
+  whether it can reject costs the realm process.
+- S14 REFUTED by two of three lenses, JUDGED HERE. (a) "the budget race leaves an
+  unhandled rejection": the premise is right that nothing handled it and the
+  lenses are right that `preloadWithin` does not reject, so the handler is added
+  as cheap insurance rather than as a defect. (b) "COMMIT ANSWERS TO NEITHER
+  SERVER-SIDE BOUND is wider than its evidence": the lenses refuted it, and THE
+  REVIEWER WAS RIGHT ANYWAY. Both probes had LOWERED the bound, so neither tested
+  a session-level `statement_timeout` binding the commit work, and this packet's
+  signature failure is exactly a claim shipped wider than its probe. A THIRD
+  PROBE settled it rather than an argument: session-level `statement_timeout` at
+  300 ms, no SET LOCAL at all, COMMIT ran 2,007 ms and committed. The claim
+  stands and is now measured both ways. (c) "budgetRefusal answers a READY clock":
+  correctly refuted, the merge is forward-only so a zero is inert, and every
+  other hold answers the same cold clock.
+
+### The mutation pass over this round's own fixes
+
+Six mutants, against a proved control of `Tests 217 passed (217)`, ALL KILLED:
+the unnamed-record refusal removed (1 failed), the same refusal inverted so it
+admits the stand-in and refuses a real name (4), the repairable set widened to
+every kind (3), the terminal set losing the ordering kind (2), the leave revert
+dropped from the finally (1), and the storage hook losing its identity guard (1).
+Four more over the seal's own new suite, each arm in turn, all killed:
+`standInSeed &&` deleted (1), `revisionRegressed` dropped (2), `pristineSeed`
+dropped (1), `foreignIdentity` dropped (2). And two survivors from the earlier
+composition-root pass were closed and re-killed: a live-identity binding replaced
+by a constant, and the clock read's inner catch removed.
