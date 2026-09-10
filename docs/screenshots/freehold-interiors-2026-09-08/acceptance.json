@@ -13,7 +13,7 @@
       },
       {
         "path": "scripts/pr_shot_targets.mjs",
-        "sha256": "f36281433789f29bb1db3bb3a7164b9b0f5a83f3b69fd8540c63c9fcd134007c"
+        "sha256": "da144c183465f91d2e80255d1aa5286686081182bd41a7b9c8e9f974aa2ece75"
       },
       {
         "path": "scripts/pr_screenshots.mjs",
@@ -260,11 +260,11 @@
     },
     {
       "path": "src/styles/components.css",
-      "sha256": "a373fc6c01e7bbe313e9a23644cc96a23342498cc0eaf2c82727bccacce2c43d"
+      "sha256": "c0d065f0d8fee4dd3c7a939dd66de27e85d3ee3e56379abe3469028235b3d56f"
     },
     {
       "path": "src/styles/hud.mobile.css",
-      "sha256": "c06187a1423dd63c353f62f40dcf0eafac800e0d19984a4030f6cc92a3686db2"
+      "sha256": "ccbf8ae9ed86976889f5c77877e66c786e38145a963a6780bfc1d01498b52fe8"
     },
     {
       "path": "scripts/lib/freehold_capture_notices.mjs",
@@ -276,7 +276,7 @@
     },
     {
       "path": "scripts/pr_shot_targets.mjs",
-      "sha256": "f36281433789f29bb1db3bb3a7164b9b0f5a83f3b69fd8540c63c9fcd134007c"
+      "sha256": "da144c183465f91d2e80255d1aa5286686081182bd41a7b9c8e9f974aa2ece75"
     },
     {
       "path": "scripts/pr_screenshots.mjs",

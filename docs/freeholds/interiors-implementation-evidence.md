@@ -67,7 +67,20 @@ verified the retained artifact/source digests and index matches, plus the real p
 All 18 refreshed images passed independent direct visual review, and retained PNG bytes
 match the reviewed producer files. The final capture refresh passed all 50 capture,
 raw-integrity, route and CI-cone checks.
-The retained record fingerprints 31 source inputs and four identical baseline harness files.
+The retained record fingerprints 42 source inputs and four identical baseline harness files.
+An earlier version of this line said 31, which no count in the record supports.
+
+THREE OF THOSE FINGERPRINTS WERE RE-MINTED at the 2026-09-10 sync, and the digest
+verification above is therefore true of the record as it stands rather than of the
+one that was reviewed. The `release/v0.43.0` merge changed `src/styles/components.css`,
+`src/styles/hud.mobile.css` and `scripts/pr_shot_targets.mjs` and left `acceptance.json`
+pinned to the branch parent's digests, which left `tests/freehold_capture_contract.test.ts`
+RED on the merged tree. The captures were NOT re-shot, and the evidence for that judgement
+is recorded rather than asserted: every selector the two stylesheets changed is scoped to
+`.corpse-harvest-btn`, `#harvest-preference-window`, `.harvest-preference-*` or `.soc-*`,
+none of which appears in a freehold gate prompt or interior view, and the script change is
+one ADDITIVE capture target (`guild-roster-expand`) that alters no existing route. A release
+that touches a selector these captures can actually reach owes a re-shoot, not a re-hash.
 
 The final renderer lifecycle batch passed 35 tests. Friend-state composition passed 176
 tests, and the final themed-control batch passed 45 tests with TypeScript and Biome clean.
