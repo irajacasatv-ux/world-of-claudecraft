@@ -955,6 +955,23 @@ ROUND THIRTEEN INTRODUCED. The pattern holds at fourteen for fourteen.
   docblock still saying "two leave-path callers" after round thirteen routed five
   sites through it.
 
+- Y8 NITS, from the reviewer's truncated tail, which arrived after the rest was
+  already applied. The clock-swallow needle carried the trailing comma of biome's
+  MULTI-LINE object form, so a reformat that fitted the literal on one line would
+  have turned the pin red with no behaviour change; it matches in pieces now, and
+  two further mutants confirm it still dies when the catch is removed and when it
+  is moved onto the row read instead. The thrown-clock case is decisive ONLY
+  through its log assertion, because the normalizer falls through to the same zero
+  and the same revision, so the two value assertions cannot tell a deleted
+  cold-clock path from a working one; that is now written beside the line rather
+  than left for a trimmer to discover. A fixture carried a stray discriminant that
+  is not part of the port's shape. A comment claimed the two arms were compared
+  with each other when the loop asserts fixed literals on each, which is stronger,
+  and comparing them would pass if both regressed the same way. And the rollout
+  contract still gave the store file's line count as a number that was already
+  stale when written; it cites the ratchet row now, which is the anchor rule the
+  rest of that document follows.
+
 WHAT THE ROUND CONFIRMED rather than found. The guild-book routing HOLDS: the
 callee puts `guildBookHolders.resync` and the `reconcile` counter inside the loop
 over the ids it is handed, so an empty set is zero iterations and no side effect
