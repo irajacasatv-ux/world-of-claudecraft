@@ -23,10 +23,12 @@ import type {
 import type { FreeholdHearthLoad } from '../../server/freehold_hearth_db';
 import {
   createFreeholdPersistStore,
+  FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
   FREEHOLD_PERSIST_FLUSH_MAX_PASSES,
   FREEHOLD_PERSIST_LEAVE_FLUSH_MS,
   FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE,
   FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
+  FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
   FREEHOLD_PERSIST_MAX_ACTIVE_LOADS,
   FREEHOLD_PERSIST_MAX_ACTIVE_WRITES,
   FREEHOLD_PERSIST_MAX_WRITE_ERRORS,
@@ -385,6 +387,25 @@ describe('freehold persist constants', () => {
     expect(FREEHOLD_PERSIST_MAX_WRITE_ERRORS).toBe(3);
     expect(FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS).toBe(300_000);
     expect(FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES).toBe(2);
+    // THE TWO THIS BLOCK USED TO OMIT, under a title that claims every bound.
+    // The drain cap was referenced by no test at all, so dropping the drain arm
+    // of writeCap entirely was invisible; the leave reserve appeared only as
+    // `MAX_ACTIVE_WRITES + LEAVE_WRITE_RESERVE`, which is the self-comparison
+    // this block's own comment forbids.
+    expect(FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES).toBe(8);
+    expect(FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE).toBe(2);
+    expect(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS).toBe(2_000);
+    // The drain runs ABOVE the steady-state cap, which is the whole reason it
+    // has a constant of its own: at the steady cap the ten-second deadline
+    // covers about a quarter of a realm.
+    expect(FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES).toBeGreaterThan(
+      FREEHOLD_PERSIST_MAX_ACTIVE_WRITES,
+    );
+    // And the login statement bound stays under the login PERMIT bound, so the
+    // statement can never be the dominant term on a handshake.
+    expect(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS).toBeLessThan(
+      FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
+    );
     // The login path's budget must stay SHORTER than the background write's.
     // They were one constant once, and merging them again would put a
     // background write's fifteen seconds on a player's handshake.
@@ -457,9 +478,13 @@ describe('preload admission', () => {
     const h = harness({ readRow: async () => await gate.promise });
     const first = h.store.preload(ACCOUNT_ID);
     const second = h.store.preload(ACCOUNT_ID);
-    expect(first).toBe(second);
     gate.resolve({ kind: 'absent' });
     const [a, b] = await Promise.all([first, second]);
+    // THE PROPERTY, not the promise identity. preload is async, so each call
+    // returns its own wrapper around the one in-flight load; what single-flight
+    // means is that the two callers get the SAME ANSWER off ONE read, which is
+    // what these three assertions say. An identity check on the returned
+    // promises would go red on a wrapper that changed nothing.
     expect(a).toBe(b);
     expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(1);
     expect(h.store.stats().loads).toBe(1);
@@ -570,11 +595,13 @@ describe('preload admission', () => {
     // The absence of a row read is the whole point: a refused permit must
     // never become an unadmitted query.
     expect(h.calls).toEqual(['permit']);
-    expect(loaded.hold?.kind).toBe('unadmitted');
+    // ITS OWN KIND, not the row-level one. A missing permit is pool or gate
+    // saturation and an operator's response to it is nothing like the response
+    // to a row this build cannot read; they shared one label until this round.
+    expect(loaded.hold?.kind).toBe('no_permit');
     expect(loaded.hold?.detail).toContain(String(FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS));
     expect(h.store.stats().loadFailures).toBe(1);
-    // Split by kind, because the four causes want four operator responses.
-    expect(h.store.stats().loadFailuresByKind).toEqual({ unadmitted: 1 });
+    expect(h.store.stats().loadFailuresByKind).toEqual({ no_permit: 1 });
   });
 
   it('reads the row when the permit is granted (the other arm)', async () => {
@@ -609,8 +636,11 @@ describe('preload admission', () => {
     );
     const permitsBefore = h.calls.filter((call) => call === 'permit').length;
     const refused = await h.store.preload(ACCOUNT_ID + FREEHOLD_PERSIST_MAX_ACTIVE_LOADS);
-    expect(refused.hold?.kind).toBe('unadmitted');
+    // A login storm filling the local cap is a CAPACITY signal, and it must not
+    // read as the row-level stranded-slot cause.
+    expect(refused.hold?.kind).toBe('cap_full');
     expect(refused.hold?.detail).toContain('cap');
+    expect(h.store.stats().loadFailuresByKind).toEqual({ cap_full: 1 });
     // The cap sits BEFORE the shared permit, so the refused load never asked
     // the gate for one.
     expect(h.calls.filter((call) => call === 'permit')).toHaveLength(permitsBefore);
@@ -752,14 +782,19 @@ describe('preload classification', () => {
       options: {
         rowLoad: {
           kind: 'unadmitted',
-          plotIndex: 0,
+          plotIndex: 1,
           plotId: ROW_PLOT_ID,
           durableRev: '9',
-          detail: 'two rows claim one account slot',
+          detail: 'plot_index 1 is outside the admitted slot 0',
         },
       },
       kind: 'unadmitted',
-      detail: 'two rows claim one account slot',
+      // THE REAL PRODUCER'S TEXT, not a hand-written stand-in.
+      // server/freehold_db.ts builds this string, and it reaches a log through
+      // the store's warn port, so the shape bound in
+      // src/sim/freehold/load_report.ts has to admit it. A fixture that invented
+      // its own prose proved the bound admitted the fixture, not the producer.
+      detail: 'plot_index 1 is outside the admitted slot 0',
     },
     {
       name: 'a row read that threw',
@@ -768,7 +803,7 @@ describe('preload classification', () => {
           throw new Error('connection reset');
         },
       },
-      kind: 'unadmitted',
+      kind: 'read_threw',
       detail: 'threw',
     },
   ];
@@ -802,6 +837,29 @@ describe('preload classification', () => {
       expect(h.writes).toEqual([]);
     });
   }
+
+  it('replaces an unadmitted detail the log vocabulary does not name', async () => {
+    // The bound is a POSITIVE shape test and it is applied where the producer
+    // lives outside this module. A row reader that started interpolating a plot
+    // id, an item id or a row's own text into its detail would have printed it
+    // verbatim on the store's warn port; it now reads `unclassified`, which
+    // costs an operator one detail and leaks nothing.
+    const h = harness({
+      rowLoad: {
+        kind: 'unadmitted',
+        plotIndex: 1,
+        plotId: ROW_PLOT_ID,
+        durableRev: '4',
+        detail: 'plot plot:secret-name-9f3a for account 918273 is stranded',
+      },
+    });
+    h.store.retain(OWNER_KEY);
+    const loaded = await h.store.preload(ACCOUNT_ID);
+    expect(loaded.hold?.kind).toBe('unadmitted');
+    expect(loaded.hold?.detail).toBe('unclassified');
+    expect(h.warnings.join(' ')).not.toContain('secret-name-9f3a');
+    expect(h.warnings.join(' ')).not.toContain(String(ACCOUNT_ID));
+  });
 
   it('writes for a load that was NOT held (the contrast arm)', async () => {
     const h = await loadedStore();
@@ -1733,8 +1791,14 @@ describe('the coalescer, the drain and the age report at their stated edges', ()
       expect(h.store.stats().writeFailures).toBe(1);
       expect(h.store.stats().running).toBe(0);
       expect(h.errors.join(' ')).toContain('could not be queued');
-      // And the drain still answers immediately rather than at its deadline.
-      expect(await h.store.idle(60_000)).toBe(true);
+      // And the drain still answers IMMEDIATELY rather than at its deadline,
+      // but it answers FALSE: nothing is running, pending or deferred, so there
+      // is nothing left to wait for, and the entry is still dirty and unblocked
+      // with nobody to re-arm it. Answering true here would report a clean drain
+      // over an owner's unwritten edits.
+      expect(await h.store.idle(60_000)).toBe(false);
+      expect(h.deadlines.some((job) => job.fired)).toBe(false);
+      expect(h.store.stats().dirty).toBe(1);
     })();
   });
 });
@@ -2525,6 +2589,135 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // The absence of a second write IS the assertion: without it the row would
     // take layoutJson '[]' at wireRev 1 over a house stored at wireRev 7.
     expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors[0]).toContain('identity');
+  });
+
+  it('KNOWN DEFECT: writes an empty default over a MINTED account whose reseed caught up', async () => {
+    // THE EIGHTH PATH, pinned AS IT BEHAVES so a fix flips a red test rather
+    // than discovering the behaviour, exactly like the case below. Carried in
+    // docs/freeholds/persistence-rollout-contract.md section 8a.
+    //
+    // The seal's first test is INERT for an entry that minted its own row.
+    // `applyWriteResult` caches the identity the LIVE RECORD carried, nothing
+    // teaches a live record its minted name, so that entry's cached name IS the
+    // stand-in; a freshly seeded default carries the same literal, the two are
+    // equal, and the name comparison is false by value equality. The two
+    // continuity tests are then the whole seal and both are revision-shaped, so
+    // a reseed whose revision has CAUGHT UP satisfies neither.
+    //
+    // Reachability today is dev-grant-only, in the same sense V1 and U1 were:
+    // setFreeholdTier is the one live-record mutator this release ships. It
+    // becomes ordinary the moment the furnishing writer lands.
+    let seeded = false;
+    const house = persistedFixture({ tier: 'cottage', condition: 91, rev: 7 });
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      serialize: () =>
+        seeded
+          ? // The reseeded default, edited past the entry's committed revision.
+            persistedFixture({
+              tier: 'inn_room',
+              layout: [],
+              trophies: [],
+              condition: 100,
+              visitPolicy: 'closed',
+              rev: 9,
+            })
+          : house,
+      writeRow: async (input) => ({
+        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+        durableRev: '2',
+      }),
+    });
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].layoutJson).not.toBe('[]');
+
+    seeded = true;
+    h.store.saveAllDirty();
+    await tick(30);
+    // THE DEFECT, asserted. A second write goes out carrying the empty default,
+    // over a row that holds the house, under the SAME minted plot id, with no
+    // quiesce and no error line. When the fix lands this case goes red on the
+    // write count and the assertions below become the refusal.
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].layoutJson).toBe('[]');
+    expect(h.writes[1].trophiesJson).toBe('[]');
+    expect(h.writes[1].tier).toBe('inn_room');
+    expect(h.writes[1].plotId).toBe(h.writes[0].plotId);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+  });
+
+  it('KNOWN DEFECT: the same write lands when the reseed EQUALS the committed revision', async () => {
+    // The neighbouring case, because the escape threshold is `>=` and not `>`.
+    // Written separately so a fix that only moves the boundary is still red.
+    let seeded = false;
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      serialize: () =>
+        seeded
+          ? persistedFixture({
+              tier: 'inn_room',
+              layout: [],
+              trophies: [],
+              condition: 100,
+              visitPolicy: 'closed',
+              rev: 7,
+            })
+          : persistedFixture({ tier: 'cottage', condition: 91, rev: 7 }),
+      writeRow: async (input) => ({
+        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+        durableRev: '2',
+      }),
+    });
+    h.store.saveAllDirty();
+    await tick(30);
+    seeded = true;
+    h.store.markDirty(OWNER_KEY);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].layoutJson).toBe('[]');
+    expect(h.store.stats().quiesced).toBe(0);
+  });
+
+  it('REFUSES the same reseed for a ROW-LOADED entry, which is why this is about the MINT', async () => {
+    // The contrast arm, and the reason the two KNOWN DEFECT cases above are
+    // about the entry that minted its own row rather than about the seal in
+    // general. Identical shape, one difference: this entry loaded a ROW, so its
+    // cached name is the row's and the seeded default's stand-in differs from
+    // it. The name comparison fires and the house survives.
+    let seeded = false;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7' }) },
+      normalized: {
+        kind: 'loaded',
+        state: persistedFixture({ tier: 'cottage', condition: 91, rev: 7 }),
+        repaired: [],
+      },
+      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : ROW_PLOT_ID),
+      serialize: () =>
+        seeded
+          ? persistedFixture({
+              tier: 'inn_room',
+              layout: [],
+              trophies: [],
+              condition: 100,
+              visitPolicy: 'closed',
+              rev: 9,
+            })
+          : persistedFixture({ tier: 'cottage', condition: 91, rev: 7 }),
+      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
+    });
+    seeded = true;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(0);
     expect(h.store.stats().quiesced).toBe(1);
     expect(h.errors[0]).toContain('identity');
   });
@@ -3473,8 +3666,12 @@ describe('the bounded drain', () => {
     await tick();
     expect(h.store.stats().writeFailures).toBe(1);
     // The entry never committed, so it is still dirty and the drain flushes it
-    // once more. The rejection is absorbed both times: idle still answers.
-    await expect(h.store.idle(5_000)).resolves.toBe(true);
+    // once more. The rejection is absorbed both times: idle still ANSWERS, and
+    // it answers FALSE, because the second rejection leaves the same edits
+    // unwritten and unblocked. It answers at once rather than at its deadline:
+    // nothing is running, pending or deferred, so there is nothing to wait for.
+    await expect(h.store.idle(5_000)).resolves.toBe(false);
+    expect(h.deadlines.some((job) => job.fired)).toBe(false);
     expect(h.writeCount()).toBe(2);
     expect(h.store.stats().writeFailures).toBe(2);
   });
@@ -3793,21 +3990,29 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // after addPlayer is a silent no-op that discards the owner's real plot and
     // leaves them standing in an empty Inn Room, which the next sweep would
     // then write over their furnishings. This ordering is the whole guard.
+    // BOTH HALVES, in the two files they now live in. The coordinator binds
+    // before the seed; the binding module does install-then-retain inside that
+    // one call. Splitting the assertion is what keeps it decisive after the
+    // extraction: an ordering pin on the coordinator alone would pass however
+    // the binding module ordered its two statements.
     const body = methodBody(GAME, '  join(');
-    const install = body.indexOf('installLoadedFreehold(this.sim.ctx, accountId, meta.freehold)');
-    const retain = body.indexOf('this.freeholdPersist.retain(');
+    const bind = body.indexOf('bindFreeholdOnJoin(');
     const addPlayer = body.indexOf('this.sim.addPlayer(');
-    expect(install).toBeGreaterThan(-1);
-    expect(retain).toBeGreaterThan(-1);
+    expect(bind).toBeGreaterThan(-1);
     expect(addPlayer).toBeGreaterThan(-1);
-    expect(install).toBeLessThan(addPlayer);
+    expect(bind).toBeLessThan(addPlayer);
     // The retain is SYNCHRONOUS on the join path and ahead of the seed, so a
     // same-account character swap (whose fire-and-forget leave releases the old
     // session) can never drop the entry under the arriving one. It carries the
     // account id, which is what lets the store re-read a row whose entry went
     // away between the handshake's preload and here.
-    expect(retain).toBeLessThan(addPlayer);
-    expect(body).toContain('this.freeholdPersist.retain(freeholdOwnerKey, accountId)');
+    const binding = stripComments(readFileSync('server/freehold_session_binding.ts', 'utf8'));
+    const install = binding.indexOf('installLoadedFreehold(ctx, accountId, loaded)');
+    const retain = binding.indexOf('store.retain(ownerKey, accountId)');
+    expect(install).toBeGreaterThan(-1);
+    expect(retain).toBeGreaterThan(install);
+    // And it is SYNCHRONOUS: an async binding would let the seed land first.
+    expect(binding).not.toContain('export async function bindFreeholdOnJoin');
   });
 
   it('releases the store reference if the seed throws, so no reference leaks', () => {
@@ -3818,25 +4023,65 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // reachable from a unit test of this store.
     const body = methodBody(GAME, '  join(');
     const addPlayer = body.indexOf('this.sim.addPlayer(');
-    const release = body.indexOf('this.freeholdPersist.flushAndRelease(freeholdOwnerKey)');
+    const release = body.indexOf('releaseFreeholdBinding(this.freeholdPersist, freeholdOwnerKey)');
     expect(release).toBeGreaterThan(addPlayer);
     // ...and it is inside a catch, not a second unconditional release.
     const between = body.slice(addPlayer, release);
     expect(between).toContain('catch');
+    // AND THE WHOLE WINDOW, not addPlayer alone. A dozen throwable calls sit
+    // between the seed and the `clients.set` that makes this session leavable,
+    // and a throw in any of them leaks the same reference and leaves a seeded
+    // record with no removePlayer to evict it, both for the process lifetime.
+    const guarded = body.indexOf('let joined = false;');
+    const closed = body.indexOf('joined = true;');
+    const finallyRelease = body.indexOf(
+      'releaseFreeholdBinding(this.freeholdPersist, freeholdOwnerKey)',
+      release + 1,
+    );
+    expect(guarded).toBeGreaterThan(addPlayer);
+    expect(closed).toBeGreaterThan(guarded);
+    expect(finallyRelease).toBeGreaterThan(closed);
+    expect(body.slice(closed, finallyRelease)).toContain('finally');
+    // The record the seed inserted is taken back out with it, or nothing evicts it.
+    expect(body.slice(finallyRelease)).toContain('this.sim.removePlayer(pid)');
+    expect(body.indexOf('this.clients.set(pid, session)')).toBeLessThan(closed);
   });
 
   it('flushes the plot after the character save and before the record is evicted', () => {
     // removePlayer reaches releaseFreeholdOnLeave, which evicts once the last
     // session sharing the owner key leaves; serializeFreehold then answers null
     // and a flush placed after it writes nothing, silently.
+    // ACROSS BOTH HALVES, because the leave path is now a settlement inside a
+    // try and three release lines inside its finally. The character save is in
+    // the settlement; the plot flush, the lease release and removePlayer are in
+    // the finally, in that order.
     const body = methodBody(GAME, '  async leave(session: ClientSession, _reason: string)');
-    const characterSave = body.indexOf('this.saveCharacterOnLeave(');
-    const plotFlush = body.indexOf('this.freeholdPersist.flushAndRelease(');
+    const settle = body.indexOf('await this.settleLeavingSession(session)');
+    const guard = body.indexOf('} finally {');
+    const plotFlush = body.indexOf('flushFreeholdBinding(this.freeholdPersist,');
     const removePlayer = body.indexOf('this.sim.removePlayer(');
     const leaseRelease = body.indexOf('releaseCharacterLease(');
+    const settlement = methodBody(GAME, '  private async settleLeavingSession(');
+    const characterSave = settlement.indexOf('await saveLeavingCharacter({');
     expect(characterSave).toBeGreaterThan(-1);
-    expect(plotFlush).toBeGreaterThan(characterSave);
+    expect(settle).toBeGreaterThan(-1);
+    expect(guard).toBeGreaterThan(settle);
+    expect(plotFlush).toBeGreaterThan(guard);
     expect(removePlayer).toBeGreaterThan(plotFlush);
+    // AND ALL THREE RUN ON EVERY EXIT. All three callers invoke leave() as
+    // `void this.leave(...)` with no catch, so a rejection in the settlement
+    // used to skip the store release, the lease release and removePlayer
+    // permanently: a pinned entry, a record nothing evicts, and a character
+    // lease held to its TTL.
+    // NOTHING between the settlement and the guard: the try holds that one call,
+    // so every statement that can reject is inside it.
+    expect(body.slice(settle, guard).replace(/\s+/g, ' ').trim()).toBe(
+      'await this.settleLeavingSession(session);',
+    );
+    // The key is READ off the session, never re-derived: deriving it here would
+    // put freeholdOwnerKeyForAccount's throw above all three lines.
+    expect(body).toContain('const freeholdOwnerKey = session.freeholdOwnerKey;');
+    expect(body).not.toContain('freeholdOwnerKeyForAccount(');
     // And inside this process's lease window: once the lease drops, a
     // replacement process can load the same account's plot and write it.
     expect(leaseRelease).toBeGreaterThan(plotFlush);
@@ -3868,11 +4113,304 @@ describe('the coordinator side of the wiring (source pins)', () => {
     expect(MAIN).toContain('freeholdsEnabled(process.env)');
     expect(MAIN).toContain('freeholdPreloadForAccount(id)');
     expect(MAIN).toContain('freeholdPreloadUnavailable(id,');
-    const dep = MAIN.indexOf('freeholdForAccount: (id) =>');
-    const gate = MAIN.indexOf('freeholdsEnabled(process.env)', dep);
-    const preload = MAIN.indexOf('freeholdPreloadForAccount(id)', dep);
-    expect(dep).toBeGreaterThan(-1);
-    expect(gate).toBeGreaterThan(dep);
-    expect(preload).toBeGreaterThan(gate);
+    // THE CONTIGUOUS CLAUSE, not three index comparisons. Both call forms sit
+    // after the gate text whichever arm each one occupies, so an ordering pin
+    // passes with the two arms SWAPPED: a lit realm answering every join with a
+    // hold, and a dark realm issuing a durable read per join, both green.
+    // Verified by applying that exact swap to this file's own text and re-running
+    // the old arithmetic. This reads the ternary itself, the way the DDL CHECK
+    // pins in tests/server/freehold_db.test.ts read theirs.
+    const clause = MAIN.replace(/\s+/g, ' ');
+    expect(clause).toContain(
+      'freeholdForAccount: (id) => freeholdsEnabled(process.env) ' +
+        '? freeholdPreloadForAccount(id) ' +
+        ': Promise.resolve(freeholdPreloadUnavailable(id,',
+    );
+  });
+});
+
+describe('the gaps a mutation pass over the store found', () => {
+  it('a HOLD marks the entry loaded, which is what makes it terminal', async () => {
+    // MUTATION GAP. Removing `entry.loaded = true` from holdResult left 507
+    // tests green: `blocked()` answers true either way, so no behaviour changed
+    // in any existing case. The measure and the repair arm do change, and this
+    // is the surface the carried gate on capacity refusals would move, so the
+    // current behaviour is pinned rather than left for that change to discover.
+    const h = harness({ acquirePermit: async () => null });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    const loaded = await h.store.preload(ACCOUNT_ID);
+    expect(loaded.hold?.kind).toBe('no_permit');
+    // LOADED, and held. `loaded` is what retain's lost-entry repair consults, so
+    // an admission refusal is TERMINAL for the life of the entry: a later retain
+    // will not re-read it.
+    expect(h.store.stats().loaded).toBe(1);
+    expect(h.store.stats().held).toBe(1);
+    h.calls.length = 0;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await tick(20);
+    expect(h.calls).toEqual([]);
+  });
+
+  it('a DEFERRED leaver waits, and the pump then prefers it over the queue', async () => {
+    // MUTATION GAP, and the case that named it did not reach it. Dropping the
+    // deferred-set clause from the flush wait left the suite green, because the
+    // case titled "actually waits when its write is DEFERRED" saturates with
+    // MAX + RESERVE background writes, which `save()` arms at the NON-leaving
+    // cap: four launch, two defer, and the leaver then arms at the leaving cap
+    // against four actives and LAUNCHES. Its write was never deferred.
+    //
+    // This one defers a leaver for real, by filling the LEAVING cap with two
+    // earlier leavers, and proves both halves: the flush does not return while
+    // its write sits in the deferred set, and the pump prefers it over the
+    // background writes queued ahead of it. Before the pump honored the reserve,
+    // a leaver that missed the arm-time window was re-admitted at the NON-leaving
+    // cap in insertion order, behind every background write already queued, and
+    // spent its whole deadline with the write unlanded.
+    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => {
+        const gate = deferred<FreeholdUpsertResult>();
+        gates.push(gate);
+        return await gate.promise;
+      },
+    });
+    const leaver = async (offset: number): Promise<void> => {
+      const key = `account:${OTHER_ACCOUNT_ID + offset}`;
+      h.store.retain(key, OTHER_ACCOUNT_ID + offset);
+      await h.store.preload(OTHER_ACCOUNT_ID + offset);
+      h.store.markDirty(key);
+      void h.store.flushAndRelease(key);
+      await tick(20);
+    };
+    // Four background writes fill the ordinary cap and four more queue behind it.
+    for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 4; i++) {
+      const key = `account:${OTHER_ACCOUNT_ID + i}`;
+      h.store.retain(key, OTHER_ACCOUNT_ID + i);
+      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      h.store.markDirty(key);
+      h.store.save(key);
+    }
+    await tick(20);
+    expect(h.store.stats().activeWrites).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
+    expect(h.store.stats().deferredWrites).toBe(4);
+
+    // Two leavers borrow the whole reserve at arm time.
+    for (let i = 0; i < FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE; i++) await leaver(500 + i);
+    const leavingCap = FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE;
+    expect(h.store.stats().activeWrites).toBe(leavingCap);
+
+    // The third leaver has no reserve left and is DEFERRED.
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID);
+    h.store.markDirty(OWNER_KEY);
+    let released = false;
+    const leaving = h.store.flushAndRelease(OWNER_KEY).then(() => {
+      released = true;
+    });
+    await tick(30);
+    expect(h.store.stats().leaveCaptures).toBeGreaterThan(0);
+    // It has not written and it has not given up: this is the assertion the
+    // deferred-set clause in the flush wait exists for.
+    expect(h.writes.some((write) => write.accountId === ACCOUNT_ID)).toBe(false);
+    expect(released).toBe(false);
+
+    // One slot frees. The LEAVER goes next, not the oldest background entry.
+    const writesBefore = h.writes.length;
+    gates[0].resolve({ kind: 'updated', durableRev: '9' });
+    await tick(40);
+    const started = h.writes.slice(writesBefore);
+    expect(started.length).toBeGreaterThan(0);
+    expect(started[0].accountId).toBe(ACCOUNT_ID);
+
+    for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
+    await tick(60);
+    for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
+    await tick(60);
+    await leaving;
+    expect(released).toBe(true);
+  });
+
+  it('the drain runs ABOVE the steady-state cap, which is the constant it has for it', async () => {
+    // FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES was observable by nothing:
+    // dropping the `draining ?` arm of writeCap entirely left every case green,
+    // including the drain's own, which asserts only that idle() stays unresolved
+    // and that all the writes eventually land. Both are true at any cap.
+    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      writeRow: async () => {
+        const gate = deferred<FreeholdUpsertResult>();
+        gates.push(gate);
+        return await gate.promise;
+      },
+    });
+    const owners = FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES + 3;
+    for (let i = 0; i < owners; i++) {
+      const key = `account:${OTHER_ACCOUNT_ID + i}`;
+      h.store.retain(key, OTHER_ACCOUNT_ID + i);
+      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      h.store.markDirty(key);
+    }
+    // NOT armed before the drain: the drain arms them itself, so the cap in
+    // force is the drain's own.
+    const drained = h.store.idle(60_000);
+    await tick(40);
+    expect(h.store.stats().activeWrites).toBe(FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES);
+    for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
+    await tick(60);
+    for (const gate of gates.splice(0)) gate.resolve({ kind: 'updated', durableRev: '9' });
+    await tick(60);
+    await expect(drained).resolves.toBe(true);
+    expect(h.writeCount()).toBe(owners);
+  });
+
+  it('measures the codec and the two wait totals as EXACT advances of the store clock', async () => {
+    // The four millisecond totals were asserted only with toBeGreaterThanOrEqual(0),
+    // which every accumulation already guarantees through its own Math.max(0, ...),
+    // so deleting all four accumulations left the suite green. maxWriteBytes was
+    // compared against writeBytesTotal after exactly ONE write, which is the one
+    // sample count where a total, a high-water mark and a last-sample gauge are
+    // the same number.
+    // The clock is advanced INSIDE each bracket, so both totals are exact
+    // advances rather than whatever a real clock happened to do: 40 ms inside
+    // the codec (the serialize call sits in it) and 700 ms inside the statement.
+    let h!: Harness;
+    h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      serialize: () => {
+        h.setNow(10_040);
+        return persistedFixture();
+      },
+      writeRow: async () => {
+        h.setNow(10_740);
+        return { kind: 'updated', durableRev: '9' };
+      },
+    });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID);
+    h.setNow(10_000);
+    const afterLoad = h.store.stats();
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    const after = h.store.stats();
+    // The statement bracket and the codec bracket are DIFFERENT spans and both
+    // move: write_ms is the statement, codec_ms is the serialize, clone and
+    // refusal walk that sit between the permit and it. EXACT, because a
+    // greater-than-or-equal-to-zero assertion is true of a deleted accumulation.
+    expect(after.codecMsTotal - afterLoad.codecMsTotal).toBe(40);
+    expect(after.writeMsTotal - afterLoad.writeMsTotal).toBe(700);
+    // The high-water mark is a MARK, not the total: a second, larger write moves
+    // both, and a smaller one after it moves only the total.
+    expect(after.maxWriteBytes).toBe(after.writeBytesTotal);
+    const first = after.maxWriteBytes;
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    const twice = h.store.stats();
+    expect(twice.writeBytesTotal).toBe(first * 2);
+    expect(twice.maxWriteBytes).toBe(first);
+  });
+
+  it('stops owing a write that has no record and no capture, instead of re-arming forever', async () => {
+    // MUTATION GAP that no behaviour case could reach through the store's own
+    // arming rules, which is the honest reason it had none: markDirty has no
+    // production caller, the revision probe cannot dirty an entry with no live
+    // record, and GameServer.leave always flushes while the record is still
+    // live. So it is driven through the ports directly, which is what the
+    // furnishing writer will make ordinary.
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      hasLive: () => false,
+      serialize: () => null,
+    });
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    // The write reached its permit, found nothing to send, and issued no
+    // statement.
+    expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().writesWithoutRecord).toBe(1);
+    // AND IT STOPPED OWING IT. Without the generation advance the entry stays
+    // dirty, every later sweep re-arms the same empty write and spends a permit
+    // on it, and owesWork keeps the entry resident for the life of the process.
+    expect(h.store.stats().dirty).toBe(0);
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.store.stats().writesWithoutRecord).toBe(1);
+    // Nothing is owed, nothing is referenced: the entry is collectable again.
+    await h.store.flushAndRelease(OWNER_KEY);
+    expect(h.store.stats().entries).toBe(0);
+  });
+
+  it('refuses an owner key and an account id that name different accounts', async () => {
+    const h = harness();
+    expect(() => h.store.retain('account:1', ACCOUNT_ID)).toThrow(/different accounts/);
+    // The matching pair is admitted, so the guard is not a stopped door.
+    expect(() => h.store.retain(OWNER_KEY, ACCOUNT_ID)).not.toThrow();
+  });
+
+  it('installs nothing from an answer that names a different account', () => {
+    const ctx = fakeCtx();
+    installLoadedFreehold(ctx, ACCOUNT_ID, {
+      accountId: OTHER_ACCOUNT_ID,
+      plotIndex: 0,
+      plotId: ROW_PLOT_ID,
+      durableRev: '7',
+      state: persistedFixture(),
+      hearthReadyAtMs: 5_000,
+      hearthRevision: '3',
+      hold: null,
+    });
+    expect(ctx.freeholds.size).toBe(0);
+    expect(ctx.freeholdKeyReadyAtMs.size).toBe(0);
+    // The same answer under its OWN account installs, so the guard is decisive.
+    installLoadedFreehold(ctx, OTHER_ACCOUNT_ID, {
+      accountId: OTHER_ACCOUNT_ID,
+      plotIndex: 0,
+      plotId: ROW_PLOT_ID,
+      durableRev: '7',
+      state: persistedFixture(),
+      hearthReadyAtMs: 5_000,
+      hearthRevision: '3',
+      hold: null,
+    });
+    expect(ctx.freeholds.size).toBe(1);
+  });
+
+  it('resets the orphan grace on every preload arm that touches an existing entry', async () => {
+    // The grace exists because preload resolves before the join calls retain, so
+    // an entry sits at zero references for the width of a handshake. It counted
+    // from the last RETAIN, not the last touch, so a handshake wider than one
+    // sweep interval lost its entry anyway and the session was write-blocked.
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    await h.store.preload(ACCOUNT_ID);
+    expect(h.store.stats().entries).toBe(1);
+    // One sweep marks it.
+    h.store.saveAllDirty();
+    expect(h.store.stats().entries).toBe(1);
+    // A second preload, which is what a slow or retried handshake does, touches
+    // the entry again and the mark restarts.
+    await h.store.preload(ACCOUNT_ID);
+    h.store.saveAllDirty();
+    expect(h.store.stats().entries).toBe(1);
+    // Without a touch, two consecutive sweeps collect it.
+    h.store.saveAllDirty();
+    expect(h.store.stats().entries).toBe(0);
+  });
+
+  it('releases a retained capture on the removal paths, so the gauge can read zero', async () => {
+    // leave_captures is the ONLY published bound on that retention, and a bound
+    // that can only climb is not one. Neither removal path cleared the document
+    // or its count; only settle, retain and a second flush did.
+    const h = await loadedStore({ rowLoad: { kind: 'row', row: rowFixture() } });
+    h.store.markDirty(OWNER_KEY);
+    await h.store.flushAndRelease(OWNER_KEY);
+    await tick(30);
+    // The write landed and settle released it, which is the ordinary path.
+    expect(h.store.stats().leaveCaptures).toBe(0);
+    expect(h.store.stats().entries).toBe(0);
   });
 });

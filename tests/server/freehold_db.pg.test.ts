@@ -10,6 +10,7 @@
 // account-owned characters table): this suite proves the account_freeholds DDL
 // and its statements, not the core schema, and the production parents exist
 // long before ensureSchema reaches this module.
+import { randomBytes } from 'node:crypto';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   FREEHOLD_MAX_LAYOUT_ROWS,
@@ -670,6 +671,69 @@ d('account_freeholds against real PostgreSQL', () => {
     expect(exported[0].plot_id).toBe(PLOT_ID);
     expect(exported[0].upkeep_binding).toBe(db.FREEHOLD_UPKEEP_BINDING_UNBOUND);
     expect(await db.freeholdsForExport(pool, 2)).toEqual([]);
+  });
+
+  it('bounds the export in rows and in bytes, and omits nothing', async () => {
+    // The export was the one read in this file with neither a LIMIT nor a byte
+    // gate, while the account read's LIMIT of 2 is justified in this same file
+    // against exactly that hazard, and it is the read that runs on a REQUEST.
+    // Two claims, both executed: the row bound holds, and a row past the on-disk
+    // pre-gate keeps its identity and every scalar column while its content
+    // comes back null rather than being rendered into the request path.
+    const accountId = 1;
+    const incompressible = (i: number, n: number): unknown[] =>
+      Array.from({ length: n }, (_, k) => ({
+        placementId: i * 10_000 + k,
+        itemId: `x${(i * 10_000 + k).toString(36)}${randomBytes(20).toString('hex')}`.slice(0, 64),
+        x: 1 + k / 8,
+        y: 2 + k / 8,
+        z: 3 + k / 8,
+        yaw: 0.25,
+      }));
+    // One ordinary row in the admitted slot, one huge row in a later slot: the
+    // export must render the first and report the second rather than skip it.
+    await pool.query(
+      `INSERT INTO account_freeholds
+         (account_id, plot_index, plot_id, tier, layout, trophies, condition, visit_policy, wire_rev)
+       VALUES ($1, 0, $2, 'inn_room', $3::jsonb, '[]'::jsonb, 100, 'closed', 1)`,
+      [accountId, PLOT_ID, JSON.stringify(incompressible(0, 3))],
+    );
+    const strandedId = `${PLOT_ID}-stranded`;
+    await pool.query(
+      `INSERT INTO account_freeholds
+         (account_id, plot_index, plot_id, tier, layout, trophies, condition, visit_policy, wire_rev)
+       VALUES ($1, 1, $2, 'inn_room', $3::jsonb, '[]'::jsonb, 100, 'closed', 2)`,
+      [accountId, strandedId, JSON.stringify(incompressible(1, 9_000))],
+    );
+    const disk = await pool.query(
+      `SELECT plot_index, pg_column_size(layout) + pg_column_size(trophies) AS bytes
+         FROM account_freeholds WHERE account_id = $1 ORDER BY plot_index`,
+      [accountId],
+    );
+    // The fixture really does straddle the gate, or the assertions below prove
+    // nothing: the small row is under it and the big one is past it.
+    expect(Number(disk.rows[0].bytes)).toBeLessThan(db.FREEHOLD_EXPORT_DETOAST_GATE_BYTES);
+    expect(Number(disk.rows[1].bytes)).toBeGreaterThan(db.FREEHOLD_EXPORT_DETOAST_GATE_BYTES);
+
+    const exported = await db.freeholdsForExport(pool, accountId);
+    expect(exported).toHaveLength(2);
+    // The ordinary row rides out whole.
+    expect(exported[0].plot_id).toBe(PLOT_ID);
+    expect((exported[0].layout as unknown[]).length).toBe(3);
+    // The oversized one is REPORTED, never omitted: identity, both revisions and
+    // every scalar column survive, and its measured on-disk size stands in for
+    // the content this read refused to render.
+    expect(exported[1].plot_id).toBe(strandedId);
+    expect(exported[1].plot_index).toBe(1);
+    expect(String(exported[1].wire_rev)).toBe('2');
+    expect(exported[1].tier).toBe('inn_room');
+    expect(exported[1].upkeep_binding).toBe(db.FREEHOLD_UPKEEP_BINDING_UNBOUND);
+    expect(exported[1].layout).toBeNull();
+    expect(exported[1].trophies).toBeNull();
+    expect(Number(exported[1].disk_bytes)).toBeGreaterThan(db.FREEHOLD_EXPORT_DETOAST_GATE_BYTES);
+    // And the row bound is a real LIMIT rather than a comment.
+    expect(db.FREEHOLD_EXPORT_ROW_LIMIT).toBe(20);
+    expect(db.FREEHOLD_EXPORT_ROW_LIMIT).toBeGreaterThan(db.FREEHOLD_ACCOUNT_PLOT_READ_LIMIT);
   });
 
   it('refuses a row past the on-disk pre-gate WITHOUT rendering it to text', async () => {
