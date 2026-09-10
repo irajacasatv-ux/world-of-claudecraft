@@ -4236,7 +4236,6 @@ describe('the combined login port, which is what the server actually binds', () 
   it('is preferred over the two-port pair, and reads the same byte ceiling', async () => {
     const h = harness({
       readDurables: async (_accountId, _maxOwnedBytes) => ({
-        kind: 'absent' as const,
         row: { kind: 'absent' as const },
         hearth: { kind: 'absent' as const },
       }),
@@ -4270,6 +4269,10 @@ describe('the combined login port, which is what the server actually binds', () 
     // THE CLOCK IS COLD, and the failure is reported rather than swallowed silently.
     expect(loaded.hearthReadyAtMs).toBe(0);
     expect(loaded.hearthRevision).toBe('0');
+    // DO NOT TRIM THE NEXT LINE. It is the only assertion here that kills a
+    // mutant deleting coldHearth: normalizeHearthLoad falls through to the same
+    // zero and the same '0', so the two values above cannot tell them apart, and
+    // the log is the only evidence that the failure was noticed at all.
     expect(h.errors.join(' ')).toContain('freehold hearth clock read failed');
   });
 
@@ -4298,8 +4301,9 @@ describe('the combined login port, which is what the server actually binds', () 
     // combined arm's clock outside the `try` the fallback arm had, so a payload
     // that threw inside normalizeHearth answered a cold clock on one host and
     // held the whole login on the other. Which port a host binds must not decide
-    // whether an account can write this session. Driven through both arms with
-    // one payload and compared.
+    // whether an account can write this session. ONE payload through BOTH arms,
+    // and each arm asserted against fixed literals rather than against the other:
+    // comparing the two would pass if both regressed the same way.
     const malformed = { kind: 'state', state: null } as unknown as FreeholdHearthLoad;
     const viaPair = await harness({
       rowLoad: { kind: 'row', row: rowFixture({ durableRev: '2' }) },
@@ -4380,7 +4384,12 @@ describe('the composition root that binds the combined port (source pins)', () =
     // port cannot satisfy this.
     const hearthAt = durables.indexOf('loadFreeholdHearth({ query }');
     const clockOnly = durables.slice(hearthAt, durables.indexOf('};', hearthAt));
-    expect(clockOnly).toContain(".catch((error: unknown) => ({ kind: 'threw' as const, error, }))");
+    // Matched in PIECES rather than as one literal: the collapsed text carries
+    // the trailing comma of biome's multi-line form, so a reformat that fits the
+    // object on one line would red this pin without changing any behaviour.
+    expect(clockOnly).toContain('.catch(');
+    expect(clockOnly).toContain('(error: unknown)');
+    expect(clockOnly).toContain("kind: 'threw' as const");
     // The ROW read is NOT caught inside the transaction: its rejection must
     // reach the outer guard, which decides by whether a row was captured.
     const rowAt = durables.indexOf('row = await freeholdForAccount({ query }');

@@ -660,8 +660,12 @@ indefinitely. Offline and headless the same item works. Intentional per the 07a 
 named in the source, so it is rollout-gating: either do not grant the key while admission is
 hard-false, or give the refusal its own reason token and catalog line.
 
-`server/freehold_persist.ts` IS 2,295 LINES AND IS NOW ON THE MONOLITH RATCHET at that exact
-count, which forbids the next line without granting any slack. WHETHER IT SHOULD BE SPLIT,
+`server/freehold_persist.ts` IS ON THE MONOLITH RATCHET at its exact measured count, which
+forbids the next line without granting any slack. The row opened at 2,343 and has since been
+LOWERED to 2,319, paid by moving the composition root to `server/freehold_persist_wiring.ts`
+and the clock normalizer to `server/freehold_hearth_load.ts`; an earlier version of this
+paragraph named 2,295, a count that was already stale when written. Cite the row, not a
+number here, which is the anchor rule this document is otherwise written to. WHETHER IT SHOULD BE SPLIT,
 and along which seam, is a maintainer decision this contract does not take. The ratchet also
 has no admission rule of its own: nothing adds a file to it, so the next monolith to form is
 untracked until someone notices.
