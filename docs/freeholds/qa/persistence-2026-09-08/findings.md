@@ -1042,14 +1042,18 @@ At tip `29b1f85307`, with `TEST_DATABASE_URL` armed from the main checkout.
 A GREEN GATE IS WHERE THIS ROUND STARTED, not where it finished. The gate was green
 at round twelve's tip too, and round thirteen still found six things.
 
-## THE FOUR RULINGS THIS QA OWES THE MAINTAINER, with the evidence and a recommendation
+## THE FOUR RULINGS: THE WORD IS GIVEN, 2026-09-10
 
-Each is a decision, not work, and each was left open on purpose. Nothing below was
-implemented; the behaviour each describes is pinned as it currently behaves.
+ALL FOUR ARE DECIDED, and every one landed on the recommendation. Six further scope
+decisions were settled in the same sitting and are recorded below the four. Nothing here
+is implemented yet: the behaviour each ruling describes is still pinned as it currently
+behaves, and the next session executes them. The evidence and the reasoning are kept
+verbatim under each ruling, because a decision without its evidence is unreviewable.
 
 ### RULING 1, C1 plus C22 plus the EIGHTH PATH: teach the live record its minted identity
 
-RECOMMEND TAKING IT, in the SAFE form, as one change.
+DECIDED: TAKE IT, in the SAFE form, AS ONE CHANGE. Steps 1 to 5 below are the executable
+specification. This closes the packet's blocking finding.
 1. In `installLoadedFreehold`, on the ABSENT arm ONLY (`hold === null && state === null &&
    durableRev === null`, with a `plotId` that matches the wire charset), install a default
    record carrying `loaded.plotId` through the existing `loadFreehold`. It is load-once and
@@ -1082,7 +1086,7 @@ because it write-blocks the development tier grant.
 
 ### RULING 2, C2: an admission-class refusal is a TERMINAL hold
 
-RECOMMEND the reviewer's smaller correction, with a caveat this QA measured. Do not set
+DECIDED: TAKE the reviewer's smaller correction, with the caveat this QA measured. Do not set
 `loaded` for the three admission kinds (`cap_full`, `no_permit`, `read_threw`), so `retain`'s
 lost-entry repair arm can re-read them; leave `unadmitted`, `unsupported`, `malformed` and
 `oversize` terminal, because those are DATA causes and a repeat cannot change them. The
@@ -1093,7 +1097,9 @@ a test rather than passing silently.
 
 ### RULING 3, C3: the entries map has no size bound
 
-RECOMMEND recording the derived ceiling rather than adopting a cache. The measured facts:
+DECIDED: RECORD THE DERIVED CEILING. No cache, and therefore no eviction policy, because
+an eviction policy here is a decision about whose unwritten edits may be dropped and
+nothing has asked for one. The measured facts:
 one ordinary sweep at five thousand dirty owners leaves 4,996 deferred and uncollectable
 until their writes land, and that clears in about 14.5 seconds at the measured 345 writes per
 second, inside the interval. The cliff is about ten thousand three hundred concurrently dirty
@@ -1105,7 +1111,7 @@ an eviction is allowed to drop.
 
 ### RULING 4, the policy half of C5: the two admission caps sum past the shared gate
 
-RECOMMEND stating the overcommit as accepted, with the arithmetic, rather than sharing one
+DECIDED: STATE THE OVERCOMMIT AS ACCEPTED, with the arithmetic, rather than sharing one
 budget. The load cap of four and the write cap of four are independent against a gate of
 seven, and the store was measured holding all seven. Sharing one budget couples a login's
 read to a sweep's writes, which is the coupling the two constants were split to avoid; the
@@ -1113,3 +1119,38 @@ honest alternative is to say in the contract that housing may hold up to seven o
 permits in steady state and eight during a drain, and to alert on `permit_wait_ms` for the
 other producers behind it. The peak-concurrency pin the database reviewer asked for should be
 written against whichever answer is taken, not before.
+
+## THE SIX SCOPE DECISIONS SETTLED WITH THE RULINGS, 2026-09-10
+
+Decided in the same sitting, and binding on the next session in the same way.
+
+- **C23, the player-facing surface for a write-blocked hold: SCOPED NEXT, BUILT SEPARATELY.**
+  The next session designs it and writes the `t()` keys and the contract entry; a later
+  session builds and captures it. The reason for the split is diff shape rather than
+  priority: the identity fix touches the sim's load path and the surface touches the HUD,
+  and merging them makes one reviewable change into two unreviewable halves. The next
+  session's scoping output must name the exact keys, the render sink each one goes to, and
+  which of the seven load-failure kinds the player is told apart, because a surface that
+  says "something went wrong" for all seven is not worth a string.
+- **The section 8a login budget gate: CLOSE IT.** Cap the WHOLE preload against the
+  handshake's remaining budget, so an overrunning login is refused rather than joining
+  behind a closed socket with a character lease taken. Lowering the statement bound instead
+  was considered and rejected: it does not bound BEGIN, SET LOCAL or COMMIT, which are three
+  of the five statements and answer to the pool session default, so it narrows the number
+  without closing the gate.
+- **Offline and headless plot identity: ACCEPT AND DOCUMENT THE DIVERGENCE.** Online mints
+  unique ids; offline and headless keep the single literal stand-in. Record it in this
+  contract and in `src/sim/freehold/CLAUDE.md` so the phase that makes `plotId` load-bearing
+  as a key knows it must supply a minter for those hosts FIRST. No sim change now, and no
+  minter improvised: anything minting ids inside `src/sim/` must draw from `Rng`, never a
+  clock and never `Math.random`.
+- **Review: A FRESH READ OF THE WHOLE PACKET FIRST**, `dd4c869a2b..HEAD` end to end, before
+  any new code is written, with the guild-book routing and the combined login port first.
+  Twelve of the fourteen rounds introduced a defect worse than one they closed and not one
+  was caught by the round's own green tests, so the correct prior is that this packet is
+  still wrong. The fix round that follows gets its own separate fresh review.
+- **Scope: THE FOUR RULINGS PLUS THE LOGIN BUDGET GATE, THEN STOP.** C23 is scoped, not
+  built. Nothing else in C1 to C23 is open: the rest is either closed in this packet or was
+  a maintainer decision, and all of those are now settled.
+- **Delivery: STAY LOCAL.** Commit on `feature/freeholds`, run the gate, report. No push, no
+  pull request, no merge, whatever the result.
