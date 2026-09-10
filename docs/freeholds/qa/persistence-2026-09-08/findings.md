@@ -800,6 +800,91 @@ not, and a set of pin defects the round's own widening had not reached.
   instead: exactly one production decision reads `hasLive`, five cases model the
   combination the server cannot produce, and no conclusion is falsified by it.
 
+## ROUND THIRTEEN: THE LATE REVIEWER'S TAIL, AND A MEASUREMENT THAT REFUTED ITS OWN DOCBLOCK
+
+The fresh reviewer of round twelve's fix delivered its findings in pieces. Three
+landed after that round had closed, and all three were real.
+
+- X1 SHOULD-FIX. Round twelve bounded the two login reads by wrapping EACH in
+  `runWithStatementTimeout`, which is a transaction helper, not a timeout
+  decorator: `pool.connect`, `BEGIN`, `SET LOCAL`, the statement, `COMMIT`. The
+  right bound was bought at four times the network cost, on the one path where a
+  player is waiting: eight round trips on two checked-out clients, each held
+  across four statements. Closed with an optional combined `readDurables` port
+  bound to ONE wrapper over both statements, five round trips on one client. The
+  two-port `readRow` / `readHearth` pair stays as the fallback for a host with no
+  transaction seam. IT IS ALSO THE ARM EVERY UNIT TEST DRIVES, so the production
+  arm is covered only by the real-PostgreSQL evidence in X3; that asymmetry is
+  named here rather than left for a later reader to discover.
+- X2 NIT AS FILED, PAID AS A DEFECT. The reviewer noticed the coordinator's
+  monolith ceiling had gone 9920 to 9916 and back to 9920 inside this packet,
+  with the last commit calling 9920 "its unchanged ceiling". Traced across all
+  thirteen commits, that is exactly what happened: the extraction round lowered
+  the row to 9916, and the review round that followed spent those four lines
+  again restoring the private leave-save delegate W1 required, then put the row
+  back and recorded the raise as a non-event. Against the floor this packet had
+  already set, it was a raise, and the rule forbids one whatever the inherited
+  number was. Paid rather than re-recorded, in two behaviour-identical moves: the
+  leave flush's swallowed rejection moved into the binding module that owns the
+  retain-release pairing, and the three copies of the guild-book reconcile guard
+  now route through the one private method that already existed for it, whose own
+  empty check duplicated the loop it calls. The row lands at 9914, six under what
+  the packet inherited and two under its own floor, and the ledger comment now
+  records the whole walk including the middle.
+- X3 SHOULD-FIX, found while verifying X1 rather than reported by anyone. Sharing
+  one transaction across the two reads creates a failure mode neither read had
+  alone: a hearth fault would abort the transaction and take the plot row with it,
+  turning a clock fault into a plot HOLD and inverting the deliberate asymmetry
+  (the plot fails closed, the clock fails open). The port therefore carries a
+  thrown hearth read as a VALUE, not a rejection. Proved against the dev database
+  rather than assumed: with the second statement failing under a caught handler,
+  the first statement's already-returned rows survive, and the trailing `COMMIT`
+  answers a ROLLBACK tag WITHOUT throwing, for a relation error (SQLSTATE 42P01)
+  and for a statement timeout (57014) alike.
+- X4 SHOULD-FIX, the same probe refuting the docblock that motivated X1. The
+  constant's own comment and section 8a of the contract both asserted the
+  pre-fix arithmetic and both still ASKED FOR the port-shape change that had just
+  landed. Worse, `SET LOCAL statement_timeout` bounds each statement SEPARATELY at
+  READ COMMITTED: two 300 ms sleeps under a 400 ms bound both completed, 612 ms
+  elapsed. So the pair's bound is 2 x 2,000, not 2,000. The corrected worst case
+  is 5,000 (one pool checkout) + 2 x 2,000 = 9,000 ms against a 10,000 ms
+  handshake, down from 19,000. Nine against ten is a MARGIN, NOT A BOUND: the cap
+  on the whole preload against the handshake's remaining budget still does not
+  exist, so section 8a's gate is narrowed to its budget half and STAYS OPEN for
+  the release.
+
+- X5 SHOULD-FIX, found by this session while verifying X1 rather than reported.
+  `readLoginPair` was written as two returns, and the combined arm normalized the
+  clock payload OUTSIDE the `try` the fallback arm had. A payload that throws
+  inside `normalizeHearth` therefore answered a cold clock on a host binding the
+  two-port pair and HELD THE WHOLE LOGIN on a host binding the combined port,
+  which write-blocks that account for the session. Which port a host binds must
+  not decide that. Both shapes now run one path: the row read outside the guard,
+  where its rejection still becomes a hold, and everything clock-shaped inside it.
+  Pinned by driving one malformed payload through BOTH arms and comparing, and
+  the pin is decisive: restoring the two-return shape reds it.
+- X6 SHOULD-FIX, A SURVIVING MUTANT. The combined port had no test of any kind,
+  because every case in the suite drives the fallback pair, and the composition
+  root has none either because nothing imports it (it binds the real pool at
+  module scope). Removing the wiring's clock swallow, which is the ONE property
+  that makes a shared transaction safe, left all 180 cases green, and `tsc` stays
+  silent because dropping that arm only NARROWS the value against the port's
+  declared union. Closed with four behaviour cases over the combined port and
+  three source pins over the binding. FOUR MUTANTS over the wiring, each against
+  a proved control of `Tests 183 passed (183)`: the swallow removed (KILLED, 1
+  failed), the row read swallowed too (KILLED, 1 failed), the clock read moved
+  off the transaction onto the pool (KILLED, 2 failed), and one wrapper per read,
+  which is the original X1 defect (KILLED, 3 failed). A first attempt at the
+  third mutant did not apply, its unmutated run is NOT counted as a result, and
+  it was re-run correctly.
+
+The extraction that paid for X1: the composition root moved WHOLE to
+`server/freehold_persist_wiring.ts`, taking every SQL import with it. The store
+file now names its ports and nothing supplies them, which is the property that
+lets a Vitest drive the whole lifecycle with no database and no GameServer. Its
+row drops 2343 to 2319, twenty-four under its opening count despite seventy lines
+of new logic.
+
 ## THE FOUR RULINGS THIS QA OWES THE MAINTAINER, with the evidence and a recommendation
 
 Each is a decision, not work, and each was left open on purpose. Nothing below was
