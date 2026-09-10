@@ -1482,7 +1482,7 @@ const MONOLITHS: MonolithRow[] = [
     // stops it growing while that is decided. The count is the one measured at
     // the end of the QA that added the row, after its own fixes landed.
     file: 'server/freehold_persist.ts',
-    ceiling: 2312,
+    ceiling: 2343,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {

@@ -4458,10 +4458,17 @@ describe('the gaps a mutation pass over the store found', () => {
     expect(h.store.stats().entries).toBe(0);
   });
 
-  it('releases a retained capture on the removal paths, so the gauge can read zero', async () => {
-    // leave_captures is the ONLY published bound on that retention, and a bound
-    // that can only climb is not one. Neither removal path cleared the document
-    // or its count; only settle, retain and a second flush did.
+  it('releases a retained capture on the ordinary flush, so the gauge reads zero', async () => {
+    // WHAT THIS ACTUALLY PROVES, said plainly. It drives one ordinary flush, and
+    // `settle`'s own `!owesWork` release runs first, so `maybeRemove` finds the
+    // document already null and the delete-site call added beside it is a no-op
+    // here. That release predates this round in inline form, so this case pins
+    // pre-existing behaviour: the gauge returns to zero on the ordinary path.
+    //
+    // The delete-site calls are DEFENSIVE and no test reaches them; the argument
+    // that nothing can is in releaseCapture's own docblock. An earlier version
+    // of this comment claimed neither removal path cleared the document, which
+    // read as a repair for a defect that was never reachable.
     const h = await loadedStore({ rowLoad: { kind: 'row', row: rowFixture() } });
     h.store.markDirty(OWNER_KEY);
     await h.store.flushAndRelease(OWNER_KEY);

@@ -557,6 +557,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    *  next sweep if the process is still up. Insertion-ordered, so the owner
    *  that waited longest goes first. */
   const deferredWrites = new Set<FreeholdPersistEntry>();
+  /** The SUBSET of deferredWrites holding a leave capture, kept so the pump can
+   *  prefer a leaver in O(1) rather than scanning the whole deferred set on
+   *  every admission. Scanning made the shutdown drain quadratic in the deferred
+   *  count: `pumpLoop` asks twice per settle, once to admit and once to discover
+   *  the cap is full, and at five thousand deferred owners that is millions of
+   *  iterations to answer a question the insertion order used to answer at once.
+   *  Every deferredWrites mutation below keeps this in step. */
+  const deferredLeavers = new Set<FreeholdPersistEntry>();
   let activeWrites = 0;
   /** Documents captured at leave and not yet written. Each is a SECOND full
    *  record on top of entry.state, so at the approved 420-row ceiling a
@@ -764,12 +772,23 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   /** Drop a retained leave document and its accounting together. `leave_captures`
    *  is the ONLY published bound on that retention, and a bound that can only
    *  climb is not one: an entry deleted while it still held a capture would take
-   *  the document with it and leave the gauge one higher forever. Called from
-   *  both delete sites, so no removal path can abandon either half. */
+   *  the document with it and leave the gauge one higher forever.
+   *
+   *  AT BOTH DELETE SITES, AND DEFENSIVELY THERE. No sequence has been built
+   *  that reaches either delete holding a capture, and the argument is short:
+   *  `flushAndRelease` captures only for an unblocked entry, every route from
+   *  there to `!owesWork(entry)` runs through `settle`, which releases first,
+   *  and a deferred entry cannot become blocked while deferred because `blocked`
+   *  only flips inside a running write and `arm` never defers a running one. The
+   *  calls stay because the coincidence is a property of three separate rules
+   *  and this makes it a guarantee, but they are not repairs and no test can
+   *  reach them. */
   function releaseCapture(entry: FreeholdPersistEntry): void {
     if (entry.leaveDocument === null) return;
     leaveCaptures--;
     entry.leaveDocument = null;
+    // It is no longer a leaver, whatever set it is still sitting in.
+    deferredLeavers.delete(entry);
   }
 
   function maybeRemove(entry: FreeholdPersistEntry): void {
@@ -1625,7 +1644,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   }
 
   function launch(entry: FreeholdPersistEntry): void {
-    deferredWrites.delete(entry);
+    undefer(entry);
     // A leaving flush parked on this entry has something to await again.
     releaseSettleWaiters(entry);
     activeWrites++;
@@ -1734,12 +1753,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    *  set and the pump then re-admits it at writeCap(false), behind every
    *  background write already queued. */
   function nextDeferred(): FreeholdPersistEntry | undefined {
-    let first: FreeholdPersistEntry | undefined;
-    for (const entry of deferredWrites) {
-      if (first === undefined) first = entry;
-      if (entry.leaveDocument !== null) return entry;
-    }
-    return first;
+    const leaver = deferredLeavers.values().next().value;
+    if (leaver !== undefined) return leaver;
+    return deferredWrites.values().next().value;
+  }
+
+  /** Both sets, together, so the subset can never outlive its superset. */
+  function undefer(entry: FreeholdPersistEntry): void {
+    deferredWrites.delete(entry);
+    deferredLeavers.delete(entry);
   }
 
   function pumpLoop(): void {
@@ -1748,7 +1770,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       if (next === undefined) return;
       // The leaver may borrow the reserve here exactly as `arm` lets it.
       if (activeWrites >= writeCap(next.leaveDocument !== null)) return;
-      deferredWrites.delete(next);
+      undefer(next);
       // The wait may have outlived the reason for the write: the entry could
       // have been evicted, held or quiesced since it was deferred.
       if (!live(next) || blocked(next) || next.running || !isDirty(next)) {
@@ -1772,6 +1794,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // in a set this store can measure instead of on an uncapped queue every
       // other named background producer has to sit behind.
       deferredWrites.add(entry);
+      // A leaver's write is the last chance for those edits, so the pump must be
+      // able to find it without walking the backlog it is queued behind.
+      if (entry.leaveDocument !== null) deferredLeavers.add(entry);
       return;
     }
     if (entry.running) {
@@ -1891,6 +1916,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         // for these edits, and every background write it would otherwise queue
         // behind has a next sweep to catch it.
         arm(entry, true);
+        // The capture may have been taken after an earlier arm already deferred
+        // this entry, so the leaver subset is reconciled here as well as at the
+        // deferral itself.
+        if (entry.leaveDocument !== null && deferredWrites.has(entry)) {
+          deferredLeavers.add(entry);
+        }
         // BOUNDED. Past the deadline this stops WAITING, never the write: the
         // write is queued and keeps running, the entry stays until it settles,
         // and the shutdown drain still waits for it. A logout that inherited
