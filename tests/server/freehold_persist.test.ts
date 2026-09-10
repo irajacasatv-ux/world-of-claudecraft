@@ -165,6 +165,11 @@ interface HarnessOptions {
   livePlotId?: string | (() => string);
   acquirePermit?: (signal: AbortSignal) => Promise<{ release(): void } | null>;
   enqueue?: <T>(key: string, signal: AbortSignal, write: () => Promise<T>) => Promise<T>;
+  /** The COMBINED login port, which the real server binds and the two-port pair
+   *  above only stands in for. Off by default so every existing case keeps
+   *  driving the fallback; the cases that pass it are the only coverage the
+   *  production arm has. */
+  readDurables?: FreeholdPersistPorts['readDurables'];
 }
 
 interface DeadlineJob {
@@ -247,6 +252,16 @@ function harness(options: HarnessOptions = {}) {
       calls.push('readHearth');
       return await readHearth(accountId);
     },
+    ...(options.readDurables
+      ? {
+          readDurables: async (accountId: number, maxOwnedBytes: number) => {
+            calls.push('readDurables');
+            ownedBytesSeen.push(maxOwnedBytes);
+            // biome-ignore lint/style/noNonNullAssertion: guarded by the spread.
+            return await options.readDurables!(accountId, maxOwnedBytes);
+          },
+        }
+      : {}),
     async writeRow(input: FreeholdUpsert): Promise<FreeholdUpsertResult> {
       calls.push('writeRow');
       writes.push(input);
@@ -4183,6 +4198,158 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // reload; a live process.env read here disagreed with all of them across an
     // in-process flag flip. The live read belongs to the wire and the route.
     expect(clause).not.toContain('freeholdForAccount: (id) => freeholdsEnabled(process.env)');
+  });
+});
+
+describe('the combined login port, which is what the server actually binds', () => {
+  // EVERY OTHER CASE IN THIS FILE DRIVES THE FALLBACK. The two-port readRow and
+  // readHearth pair is what the harness binds by default and what the store calls
+  // on a host with no transaction seam; the real server binds readDurables, one
+  // bounded transaction over both statements. A suite that never drives the
+  // production arm cannot notice the two disagreeing, which is exactly what they
+  // did before this block existed.
+  it('is preferred over the two-port pair, and reads the same byte ceiling', async () => {
+    const h = harness({
+      readDurables: async (_accountId, _maxOwnedBytes) => ({
+        kind: 'absent' as const,
+        row: { kind: 'absent' as const },
+        hearth: { kind: 'absent' as const },
+      }),
+    });
+    const loaded = await h.store.preload(ACCOUNT_ID);
+    // ONE read, not three: the pair must not run beside the combined port.
+    expect(h.calls).toEqual(['permit', 'readDurables', 'release']);
+    expect(h.ownedBytesSeen).toEqual([FREEHOLD_MAX_STORED_BYTES]);
+    // And a genuinely absent row still resolves to absence, which is the ONE
+    // case allowed to become the free tier-0 default.
+    expect(loaded.hold).toBeNull();
+    expect(loaded.state).toBeNull();
+    expect(loaded.durableRev).toBeNull();
+  });
+
+  it('carries a THROWN clock as a value: the clock goes cold, the plot does not hold', async () => {
+    // The whole reason the port's hearth field is a union rather than a rejection.
+    // On one shared transaction a rejecting clock read would roll the row back
+    // with it, turning a clock fault into a write-blocking hold on the house.
+    const h = harness({
+      readDurables: async () => ({
+        row: { kind: 'row' as const, row: rowFixture({ durableRev: '4' }) },
+        hearth: { kind: 'threw' as const, error: new Error('clock read exploded') },
+      }),
+    });
+    const loaded = await h.store.preload(ACCOUNT_ID);
+    // THE PLOT LANDED. Not a hold, not an absence: the row's own state.
+    expect(loaded.hold).toBeNull();
+    expect(loaded.state).not.toBeNull();
+    expect(loaded.durableRev).toBe('4');
+    // THE CLOCK IS COLD, and the failure is reported rather than swallowed silently.
+    expect(loaded.hearthReadyAtMs).toBe(0);
+    expect(loaded.hearthRevision).toBe('0');
+    expect(h.errors.join(' ')).toContain('freehold hearth clock read failed');
+  });
+
+  it('answers a HOLD when the ROW half rejects, exactly as the two-port pair does', async () => {
+    // The asymmetry stated in one place: the plot fails CLOSED, the clock fails
+    // open. A rejecting port takes the row with it, and loadOnce turns that into
+    // a hold, so nothing is written over a row this host could not read.
+    const h = harness({
+      readDurables: async () => {
+        throw new Error('row read exploded');
+      },
+    });
+    const loaded = await h.store.preload(ACCOUNT_ID);
+    expect(loaded.hold?.kind).toBe('read_threw');
+    expect(loaded.state).toBeNull();
+    // WRITE-BLOCKED for the session, which is invariant 1.
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(20);
+    expect(h.writes).toEqual([]);
+  });
+
+  it('resolves a malformed clock payload the SAME WAY on both port shapes', async () => {
+    // THE DIVERGENCE THIS CASE EXISTS FOR. readLoginPair used to normalize the
+    // combined arm's clock outside the `try` the fallback arm had, so a payload
+    // that threw inside normalizeHearth answered a cold clock on one host and
+    // held the whole login on the other. Which port a host binds must not decide
+    // whether an account can write this session. Driven through both arms with
+    // one payload and compared.
+    const malformed = { kind: 'state', state: null } as unknown as FreeholdHearthLoad;
+    const viaPair = await harness({
+      rowLoad: { kind: 'row', row: rowFixture({ durableRev: '2' }) },
+      readHearth: async () => malformed,
+    }).store.preload(ACCOUNT_ID);
+    const viaCombined = await harness({
+      readDurables: async () => ({
+        row: { kind: 'row' as const, row: rowFixture({ durableRev: '2' }) },
+        hearth: malformed,
+      }),
+    }).store.preload(ACCOUNT_ID);
+    // Neither holds, both land the plot, both start the clock cold.
+    for (const loaded of [viaPair, viaCombined]) {
+      expect(loaded.hold).toBeNull();
+      expect(loaded.durableRev).toBe('2');
+      expect(loaded.hearthReadyAtMs).toBe(0);
+      expect(loaded.hearthRevision).toBe('0');
+    }
+  });
+});
+
+describe('the composition root that binds the combined port (source pins)', () => {
+  // A SURVIVING MUTANT PUT THIS BLOCK HERE. Removing the `.catch` below left all
+  // 180 cases green, and `tsc` stays silent because dropping the `threw` arm only
+  // NARROWS the value against the port's declared union. Nothing in this suite
+  // imports the wiring module (it binds the real pool at module scope), so the
+  // one property that makes a shared transaction safe had no coverage of any
+  // kind. These are structural pins, which is the honest tool for a binding whose
+  // real behaviour needs a live pool; the transaction semantics they rest on were
+  // measured against PostgreSQL and are recorded in section 8a of the rollout
+  // contract.
+  const WIRING = stripComments(readFileSync('server/freehold_persist_wiring.ts', 'utf8'));
+
+  it('puts BOTH login statements inside ONE bounded transaction', () => {
+    const flat = WIRING.replace(/\s+/g, ' ');
+    // One wrapper, not one per read: two wrappers is the defect this replaced.
+    expect(flat.split('runWithStatementTimeout(').length - 1).toBe(1);
+    const wrapper = flat.indexOf('runWithStatementTimeout(');
+    const row = flat.indexOf('freeholdForAccount({ query }', wrapper);
+    const hearth = flat.indexOf('loadFreeholdHearth({ query }', wrapper);
+    // BOTH on the transaction's own `query`, never on the pool: a statement sent
+    // to `pool` runs on a different client and escapes the bound entirely.
+    expect(row).toBeGreaterThan(wrapper);
+    expect(hearth).toBeGreaterThan(wrapper);
+    expect(flat).toContain('FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS');
+  });
+
+  it('swallows the CLOCK read and never the ROW read', () => {
+    const flat = WIRING.replace(/\s+/g, ' ');
+    // THE CLOCK FAILS OPEN. Without this catch a clock fault rejects the shared
+    // transaction and takes the already-read row with it, so an account whose
+    // Hearth row is unreadable is write-blocked out of its house: a clock fault
+    // promoted into a plot hold, which inverts the store's stated asymmetry.
+    const hearth = flat.indexOf('loadFreeholdHearth({ query }');
+    expect(hearth).toBeGreaterThan(-1);
+    const after = flat.slice(hearth);
+    expect(after.slice(0, after.indexOf('}),'))).toContain(
+      ".catch((error: unknown) => ({ kind: 'threw' as const, error, })",
+    );
+    // THE PLOT FAILS CLOSED. The row read must NOT be caught here: loadOnce is
+    // what turns its rejection into a hold, and a hold is what stops an empty
+    // default being written over a row this host could not read.
+    const row = flat.indexOf('row: await freeholdForAccount({ query }');
+    expect(row).toBeGreaterThan(-1);
+    expect(flat.slice(row, flat.indexOf(',', flat.indexOf(')', row)))).not.toContain('.catch');
+  });
+
+  it('keeps the two-port fallback bound beside it, unwrapped', () => {
+    // The pair every case above drives. It is deliberately UNBOUNDED (a host with
+    // no transaction seam has nowhere to put the bound), and it must keep
+    // existing: the store's ports are its declared surface, and deleting the pair
+    // would make the optional port mandatory without saying so.
+    expect(WIRING).toContain('readRow: (accountId, maxOwnedBytes) =>');
+    expect(WIRING).toContain('readHearth: (accountId) =>');
+    expect(WIRING).toContain('readDurables: (accountId, maxOwnedBytes) =>');
   });
 });
 

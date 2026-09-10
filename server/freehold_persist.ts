@@ -934,25 +934,25 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
 
   /** The two login reads, on one client when the host offers one. The row half
    *  is allowed to throw, because loadOnce turns that into a HOLD; the clock
-   *  half is not, because a clock this store cannot read starts cold. */
+   *  half is not, because a clock this store cannot read starts cold.
+   *  ONE PATH FOR BOTH PORT SHAPES, deliberately: written as two returns, the
+   *  combined arm normalized outside a `try` the fallback arm had, so a malformed
+   *  clock payload failed OPEN on one host and held the whole login on the other.
+   *  Which port a host binds must not decide that. */
   async function readLoginPair(
     accountId: number,
   ): Promise<{ rowLoad: FreeholdRowLoad; hearth: { readyAtMs: number; revision: string } }> {
-    if (ports.readDurables) {
-      const both = await ports.readDurables(accountId, FREEHOLD_MAX_STORED_BYTES);
+    const both = ports.readDurables
+      ? await ports.readDurables(accountId, FREEHOLD_MAX_STORED_BYTES)
+      : { row: await ports.readRow(accountId, FREEHOLD_MAX_STORED_BYTES), hearth: null };
+    try {
+      const load = both.hearth ?? (await ports.readHearth(accountId));
       return {
         rowLoad: both.row,
-        hearth:
-          both.hearth.kind === 'threw'
-            ? coldHearth(both.hearth.error)
-            : normalizeHearth(both.hearth),
+        hearth: load.kind === 'threw' ? coldHearth(load.error) : normalizeHearth(load),
       };
-    }
-    const rowLoad = await ports.readRow(accountId, FREEHOLD_MAX_STORED_BYTES);
-    try {
-      return { rowLoad, hearth: normalizeHearth(await ports.readHearth(accountId)) };
     } catch (err) {
-      return { rowLoad, hearth: coldHearth(err) };
+      return { rowLoad: both.row, hearth: coldHearth(err) };
     }
   }
 
