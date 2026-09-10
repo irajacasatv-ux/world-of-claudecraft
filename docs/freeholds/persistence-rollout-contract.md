@@ -486,23 +486,38 @@ now run through the `runWithStatementTimeout` seam at
 5,000 + 2 x (5,000 + 15,000) = 45,000 ms down to 5,000 + 2 x (5,000 + 2,000) = 19,000 ms.
 THE PORT-SHAPE HALF HAS SINCE LANDED. The optional `readDurables` port, bound in
 `server/freehold_persist_wiring.ts`, puts both statements on ONE checked-out client, so the
-pair pays one pool checkout instead of two: 5,000 + 2 x 2,000 = 9,000 ms. The two-port
-`readRow` / `readHearth` pair stays as the fallback for a host with no transaction seam,
-and is the arm every unit test drives, so the production arm is exercised only by the
-real-PostgreSQL evidence below. A thrown hearth read is carried across that port as a
-VALUE rather than a rejection, so a clock fault cannot roll the transaction back and take
-the plot row with it: measured on the dev database, a second statement failing under a
-caught handler (SQLSTATE 42P01, and 57014 for a statement timeout) leaves the first
-statement's already-returned rows intact and the trailing COMMIT returns a ROLLBACK tag
-without throwing.
+pair pays one pool checkout instead of two. The two-port `readRow` / `readHearth` pair
+stays as the bounded fallback for a host with no transaction seam, and is the arm every
+unit test drives, so the production arm is exercised only by the structural pins and the
+real-PostgreSQL evidence here.
 
-WHAT REMAINS is the budget half. `SET LOCAL statement_timeout` bounds each statement
-SEPARATELY at READ COMMITTED, measured: two 300 ms sleeps under a 400 ms bound both
-completed, 612 ms elapsed. So 9,000 against the handshake's 10,000 is a margin, not a
-bound. There is still no cap on the WHOLE preload against the handshake's remaining
-budget, and past the auth timer `rejectHandshake` closes the socket while this chain keeps
-running, acquires a character lease and joins, leaving a linkdead session and a retained
-store entry. THIS GATE STAYS OPEN for the release.
+A CLOCK FAULT MUST NOT BECOME A PLOT HOLD, and the first attempt at that was narrower than
+it claimed. A thrown hearth read is carried across the port as a VALUE rather than a
+rejection. Measured on the dev database: a second statement failing under a caught handler
+leaves the first statement's already-returned rows intact and the trailing COMMIT returns a
+ROLLBACK tag without throwing, for SQLSTATE 42P01 and for 57014 alike. BOTH OF THOSE LEAVE
+THE CONNECTION USABLE, which is why COMMIT survives, and an earlier version of this
+paragraph generalized from them to every clock fault. A fault that KILLS the connection
+(backend crash, restart, dropped socket) makes that COMMIT reject, and an inner catch on
+the hearth promise cannot see it, so the port rejected and the account was held and
+write-blocked for a fault in the clock. The guard is now around the WHOLE transaction: the
+row is captured as it is read, and a later rejection with a row in hand is answered as a
+thrown clock, while a rejection with no row in hand is rethrown so the plot still fails
+closed.
+
+WHAT REMAINS is the budget half, and it is WIDER than this section previously said.
+`SET LOCAL statement_timeout` bounds each statement SEPARATELY at READ COMMITTED (measured:
+two 300 ms sleeps under a 400 ms bound both completed, 612 ms elapsed), and BEGIN and
+SET LOCAL both execute BEFORE the lowered bound is in force, so they and the trailing
+COMMIT are bounded only by the pool session default of 15,000 ms. A floor on the worst case
+is therefore 5,000 + 2 x 15,000 + 3 x 2,000 = 41,000 ms, not the 9,000 an earlier version of
+this paragraph gave, which counted the two reads and omitted five statements; the 19,000 it
+replaced had the same omission. Two separate transactions were about 78,000, so the port
+change roughly halves the figure and stands on its own merits. It is NOT a bound on the
+login. There is still no cap on the WHOLE preload against the handshake's remaining budget,
+and past the auth timer `rejectHandshake` closes the socket while this chain keeps running,
+acquires a character lease and joins, leaving a linkdead session and a retained store entry.
+THIS GATE STAYS OPEN for the release, undiminished.
 
 THE EXPORT READ WAS UNBOUNDED. CLOSED at the persistence QA: `freeholdsForExport` now
 carries `FREEHOLD_EXPORT_ROW_LIMIT` (20, WIDENED rather than copied from the account read's

@@ -558,9 +558,10 @@ export interface GameStateSource {
  * separately, so the unmemoized form did that three times per `/metrics` hit.
  * Re-measured rather than restated: one walk costs 0.018 ms at five thousand
  * entries and 0.055 ms at twenty thousand, so the unmemoized form was about
- * 0.055 ms at five thousand rather than the 0.3 ms this block used to claim. The memo is cleared on a
- * microtask: every collect() in one pass is synchronous, so the window is
- * exactly one scrape and no value can go stale between scrapes.
+ * 0.055 ms at five thousand rather than the 0.3 ms this block used to claim.
+ * The memo is cleared on a microtask: every collect() in one pass is
+ * synchronous, so the window is exactly one scrape and no value can go stale
+ * between scrapes.
  */
 // KEYED ON THE SOURCE, not on nothing. The memo is module-global, so two
 // registries built over DIFFERENT GameStateSources and scraped inside one

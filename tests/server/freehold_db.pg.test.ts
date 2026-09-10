@@ -742,6 +742,55 @@ d('account_freeholds against real PostgreSQL', () => {
     expect(db.FREEHOLD_EXPORT_ROW_LIMIT).toBeGreaterThan(db.FREEHOLD_ACCOUNT_PLOT_READ_LIMIT);
   });
 
+  it('TRUNCATES past the row limit and says so, rather than trailing off', async () => {
+    // THE MARKER SHIPPED UNEXERCISED. The row bound was pinned only as a constant
+    // value and as SQL text, so nothing had ever inserted a twenty-first row and
+    // the marker branch had no executed coverage at all. It is unreachable on a
+    // shipped account (the approved ladder is at most two plots against a limit
+    // of twenty) and it exists for the corrupt account this export is FOR, which
+    // is exactly the case no fixture would produce by accident.
+    const accountId = 1;
+    const overflow = db.FREEHOLD_EXPORT_ROW_LIMIT + 1;
+    for (let plotIndex = 0; plotIndex < overflow; plotIndex += 1) {
+      await pool.query(
+        `INSERT INTO account_freeholds
+           (account_id, plot_index, plot_id, tier, layout, trophies, condition, visit_policy, wire_rev)
+         VALUES ($1, $2, $3, 'inn_room', '[]'::jsonb, '[]'::jsonb, 100, 'closed', 1)`,
+        [accountId, plotIndex, `${PLOT_ID}-over-${plotIndex}`],
+      );
+    }
+    const exported = await db.freeholdsForExport(pool, accountId);
+    // THE LIMIT HELD: twenty rows, not twenty-one, plus one marker.
+    expect(exported).toHaveLength(db.FREEHOLD_EXPORT_ROW_LIMIT + 1);
+    const marker = exported[exported.length - 1];
+    expect(marker.truncated).toBe(true);
+    expect(marker.limit).toBe(db.FREEHOLD_EXPORT_ROW_LIMIT);
+    // And it is a MARKER, not a plot wearing a flag: an exporter that read it as
+    // a row would hand the owner a plot with no identity.
+    expect(marker.plot_id).toBeUndefined();
+    // Every row before it is a real plot, in plot_index order, and none of them
+    // carries the flag.
+    for (let i = 0; i < db.FREEHOLD_EXPORT_ROW_LIMIT; i += 1) {
+      expect(exported[i].plot_index).toBe(i);
+      expect(exported[i].truncated).toBeUndefined();
+    }
+    // THE CONTRAST ARM, or the count above proves only that a limit exists. One
+    // row short of the bound returns no marker, so the branch is keyed to
+    // reaching the limit rather than fired on every export.
+    const under = 2;
+    for (let plotIndex = 0; plotIndex < db.FREEHOLD_EXPORT_ROW_LIMIT - 1; plotIndex += 1) {
+      await pool.query(
+        `INSERT INTO account_freeholds
+           (account_id, plot_index, plot_id, tier, layout, trophies, condition, visit_policy, wire_rev)
+         VALUES ($1, $2, $3, 'inn_room', '[]'::jsonb, '[]'::jsonb, 100, 'closed', 1)`,
+        [under, plotIndex, `${PLOT_ID}-under-${plotIndex}`],
+      );
+    }
+    const short = await db.freeholdsForExport(pool, under);
+    expect(short).toHaveLength(db.FREEHOLD_EXPORT_ROW_LIMIT - 1);
+    expect(short.some((row) => row.truncated === true)).toBe(false);
+  });
+
   it('refuses a row past the on-disk pre-gate WITHOUT rendering it to text', async () => {
     // The cost this gate exists to stop is real and reachable: the recovery
     // contract's own rollback case is a later release writing a row this build

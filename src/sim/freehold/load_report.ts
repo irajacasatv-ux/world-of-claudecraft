@@ -83,8 +83,6 @@ const UNCLASSIFIED = 'unclassified';
 export const boundedFreeholdDetail = (detail: string): string =>
   KNOWN_DETAILS.some((shape) => shape.test(detail)) ? detail : UNCLASSIFIED;
 
-const boundedDetail = boundedFreeholdDetail;
-
 /** Format a count for a log line without trusting it to be a sane number: a
  *  measured byte count is a number this process computed, but a hand-built
  *  result is not, and an infinite or fractional one has no place in a log. */
@@ -109,13 +107,19 @@ export function freeholdLoadDiagnostic(result: FreeholdLoadResult): FreeholdLoad
       // The repair names are this module's own vocabulary, never row content,
       // and they still pass the same bound so one widened producer cannot make
       // this the leaky arm.
-      return { kind: 'loaded', detail: boundedDetail(`repaired:${result.repaired.join(',')}`) };
+      return {
+        kind: 'loaded',
+        detail: boundedFreeholdDetail(`repaired:${result.repaired.join(',')}`),
+      };
     case 'unsupported':
       // The reason is a closed union of this package's own literals, so it is
       // safe to print whole; only the detail beside it comes from a row.
-      return { kind: 'unsupported', detail: `${result.reason}:${boundedDetail(result.detail)}` };
+      return {
+        kind: 'unsupported',
+        detail: `${result.reason}:${boundedFreeholdDetail(result.detail)}`,
+      };
     case 'malformed':
-      return { kind: 'malformed', detail: boundedDetail(result.detail) };
+      return { kind: 'malformed', detail: boundedFreeholdDetail(result.detail) };
     case 'oversize':
       return {
         kind: 'oversize',
