@@ -90,4 +90,9 @@ export type {
   FreeholdView,
   FreeholdVisitPolicy,
 } from './types';
-export { asFreeholdPlotId, FREEHOLD_VISIT_POLICIES } from './types';
+// FREEHOLD_VISIT_POLICIES is deliberately NOT re-exported here. It is the same
+// server-facing durable vocabulary as the persistence leaf above, its one
+// consumer (server/freehold_persist.ts) imports it from ./types by path, and
+// putting it on the barrel would place it on the surface every UI and sim
+// caller reads for no consumer.
+export { asFreeholdPlotId } from './types';

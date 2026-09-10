@@ -127,6 +127,7 @@ export async function loadFreeholdHearth(
   db: FreeholdQueryable,
   accountId: number,
 ): Promise<FreeholdHearthLoad> {
+  requireHearthAccountId(accountId);
   const res = await db.query(
     `SELECT ready_at_ms::text AS ready_at_ms, revision::text AS revision
        FROM account_freehold_hearth
@@ -214,11 +215,24 @@ export const FREEHOLD_HEARTH_ADVANCE_SQL = `UPDATE account_freehold_hearth
  * initialization, locking read of the counters plus the single epoch, then
  * either a refusal that writes NOTHING or the monotone update.
  */
+/** The same structural refusal server/freehold_db.ts runs on every entry point,
+ *  and for the same reason: a non-integer sent anyway raises 22P02 and aborts
+ *  the CALLER's whole transaction, where a throw here costs it nothing it had
+ *  not already broken. Unreachable from today's one production caller, which
+ *  builds an owner key from the id first, and load-bearing for the 07a
+ *  admission participant, which will run inside someone else's transaction. */
+function requireHearthAccountId(accountId: number): void {
+  if (!Number.isSafeInteger(accountId) || accountId <= 0) {
+    throw new RangeError('freehold hearth accountId must be a positive safe integer');
+  }
+}
+
 export async function advanceFreeholdHearthOnClient(
   client: FreeholdQueryable,
   accountId: number,
   cooldownMs: number,
 ): Promise<FreeholdHearthAdvance> {
+  requireHearthAccountId(accountId);
   if (!Number.isSafeInteger(cooldownMs) || cooldownMs < 0) {
     return {
       kind: 'unsupported',

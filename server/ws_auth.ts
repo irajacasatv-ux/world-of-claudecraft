@@ -485,6 +485,15 @@ export function createWsAuth(deps: WsAuthDeps): WsAuthHandlers {
             try {
               freehold = await freeholdForAccount(accountId);
             } catch (err) {
+              // RAW, and it is the one console site on the housing path the
+              // store's bounded-error wrapper does not cover. It is deliberate:
+              // every database throw on this path is already caught inside the
+              // store and converted to a hold through boundedDatabaseError, so
+              // nothing reaching here is a pg error carrying row content in
+              // `detail`. What CAN reach here is a programming fault (a
+              // malformed account id, a throwing mint), and for those the stack
+              // is the useful part. The guarantee rests on preload never
+              // re-throwing a database error, which is why it is written down.
               console.error('freehold durable read failed; joining unloaded:', err);
             }
             leaseNonce = randomUUID();
