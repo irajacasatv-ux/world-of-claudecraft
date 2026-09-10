@@ -482,14 +482,27 @@ handshake does have a deadline of its own: `AUTH_TIMEOUT_MS` is 10,000 ms
 (`server/ws_auth.ts`), and the preload runs after auth, moderation, cosmetics, the
 character read and the bank-bonus read have already spent from it. Both login-path queries
 now run through the `runWithStatementTimeout` seam at
-`FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS` (2,000 ms), which takes the worst case from
+`FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS` (2,000 ms), which took the worst case from
 5,000 + 2 x (5,000 + 15,000) = 45,000 ms down to 5,000 + 2 x (5,000 + 2,000) = 19,000 ms.
-WHAT REMAINS is the residual and the consequence past it: 19,000 still exceeds the
-handshake's 10,000, and past the auth timer `rejectHandshake` closes the socket while this
-chain keeps running, acquires a character lease and joins, leaving a linkdead session and a
-retained store entry. Closing it needs both reads on ONE checked-out client and a cap on
-the whole preload against the handshake's remaining budget, which is a port-shape change
-rather than a constant.
+THE PORT-SHAPE HALF HAS SINCE LANDED. The optional `readDurables` port, bound in
+`server/freehold_persist_wiring.ts`, puts both statements on ONE checked-out client, so the
+pair pays one pool checkout instead of two: 5,000 + 2 x 2,000 = 9,000 ms. The two-port
+`readRow` / `readHearth` pair stays as the fallback for a host with no transaction seam,
+and is the arm every unit test drives, so the production arm is exercised only by the
+real-PostgreSQL evidence below. A thrown hearth read is carried across that port as a
+VALUE rather than a rejection, so a clock fault cannot roll the transaction back and take
+the plot row with it: measured on the dev database, a second statement failing under a
+caught handler (SQLSTATE 42P01, and 57014 for a statement timeout) leaves the first
+statement's already-returned rows intact and the trailing COMMIT returns a ROLLBACK tag
+without throwing.
+
+WHAT REMAINS is the budget half. `SET LOCAL statement_timeout` bounds each statement
+SEPARATELY at READ COMMITTED, measured: two 300 ms sleeps under a 400 ms bound both
+completed, 612 ms elapsed. So 9,000 against the handshake's 10,000 is a margin, not a
+bound. There is still no cap on the WHOLE preload against the handshake's remaining
+budget, and past the auth timer `rejectHandshake` closes the socket while this chain keeps
+running, acquires a character lease and joins, leaving a linkdead session and a retained
+store entry. THIS GATE STAYS OPEN for the release.
 
 THE EXPORT READ WAS UNBOUNDED. CLOSED at the persistence QA: `freeholdsForExport` now
 carries `FREEHOLD_EXPORT_ROW_LIMIT` (20, WIDENED rather than copied from the account read's

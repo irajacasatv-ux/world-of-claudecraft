@@ -99,15 +99,15 @@ export const FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS = 5_000;
  * when the difference binds, and the handshake is the one place a slow read is
  * paid by a player rather than by a sweep.
  *
- * THE RESIDUAL IS STATED RATHER THAN CLOSED. Each read still pays its own pool
- * checkout (DB_POOL_CONNECT_TIMEOUT_MS, 5,000) and they run in sequence under
- * one permit, so the worst case is 5,000 + 2 x (5,000 + 2,000) = 19,000 ms
- * against a 10,000 ms handshake. Past the auth timer the socket is closed while
- * this chain keeps running, takes a character lease and joins, which is carried
- * as a named gate in docs/freeholds/persistence-rollout-contract.md section 8a.
- * Closing it needs both reads on ONE checked-out client and a cap on the whole
- * preload against the handshake's remaining budget, which is a port-shape change
- * rather than a constant.
+ * PER STATEMENT, NOT PER LOGIN. The combined port (readDurables, bound in
+ * server/freehold_persist_wiring.ts) puts both reads on ONE checked-out client,
+ * but SET LOCAL bounds each separately: measured on the dev database, two 300 ms
+ * sleeps under a 400 ms bound both completed, 612 ms elapsed. Worst case 5,000
+ * (DB_POOL_CONNECT_TIMEOUT_MS) + 2 x 2,000 = 9,000 ms against a 10,000 ms
+ * handshake, down from 19,000 when each read took its own checkout. Nine against
+ * ten is not slack: what is still missing is a cap on the WHOLE preload against
+ * the handshake's remaining budget, without which an overrunning login has its
+ * socket closed while the chain runs on, takes a lease and joins. Section 8a.
  */
 export const FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS = 2_000;
 
