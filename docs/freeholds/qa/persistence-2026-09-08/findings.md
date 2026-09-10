@@ -733,3 +733,75 @@ probe written from scratch against `createFreeholdPersistStore`.
   comparison is TOTAL" rests on a premise that is false for a minted-row entry, which is Q1.
   A seventh clause was ruled rather than pinned: `entry.durableRev !== null` is equal to
   `entry.state !== null` by today's arithmetic, because all three writers set both together.
+
+## THE FOUR RULINGS THIS QA OWES THE MAINTAINER, with the evidence and a recommendation
+
+Each is a decision, not work, and each was left open on purpose. Nothing below was
+implemented; the behaviour each describes is pinned as it currently behaves.
+
+### RULING 1, C1 plus C22 plus the EIGHTH PATH: teach the live record its minted identity
+
+RECOMMEND TAKING IT, in the SAFE form, as one change.
+1. In `installLoadedFreehold`, on the ABSENT arm ONLY (`hold === null && state === null &&
+   durableRev === null`, with a `plotId` that matches the wire charset), install a default
+   record carrying `loaded.plotId` through the existing `loadFreehold`. It is load-once and
+   already honors the dark-realm flag, so `addPlayer`'s `ensureFreeholdRecord` then returns
+   it untouched. No new sim writer, no stamp function, no post-hoc mutation, and neither
+   `src/main.ts` nor `server/game.ts` is touched.
+2. Do NOT stamp onto a record that is already live. That form rewrites a freshly seeded
+   default's identity to the minted name, which kills the name comparison and, through
+   `standInSeed`, both continuity arms at once. It is a new path to the same loss, traced by
+   the parity reader.
+3. In the SAME change, un-gate `revisionRegressed` from `standInSeed`: after the fix no
+   online record carries the stand-in, so the revision discriminator would otherwise be dead
+   for the same-account character swap. This half needs its OWN executed proof, because `rev`
+   restarts from the last committed value on a rejoin replay, which is what made W1's
+   revision comparison wrong.
+4. Two existing pins flip with it and must be planned rather than discovered:
+   `tests/server/freehold_persist.test.ts` "installs nothing for an absent load", and the
+   KNOWN DEFECT cases.
+5. Offline and headless are untouched, which WIDENS the host divergence from session two
+   onward to session one onward: every offline world keeps the one literal stand-in while
+   online identities are unique. If 08a intends `plotId` to be a key, those hosts need a
+   minter of their own.
+What it closes: C1, C22, V6 and the eighth path, and it makes the name comparison TOTAL for
+every entry class rather than for row-loaded entries only.
+Why this QA did not take it: its safe and unsafe forms differ by one line and one of them is
+a new data-loss path, and its companion un-gating needs an executed proof of its own. The
+alternative interim is a fourth heuristic in the same boolean expression, which is what the
+last four rounds each tried, and the specific one proposed this round was refuted here
+because it write-blocks the development tier grant.
+
+### RULING 2, C2: an admission-class refusal is a TERMINAL hold
+
+RECOMMEND the reviewer's smaller correction, with a caveat this QA measured. Do not set
+`loaded` for the three admission kinds (`cap_full`, `no_permit`, `read_threw`), so `retain`'s
+lost-entry repair arm can re-read them; leave `unadmitted`, `unsupported`, `malformed` and
+`oversize` terminal, because those are DATA causes and a repeat cannot change them. The
+caveat: `entry.loaded` is also what `preload`'s replay arms and `blocked()` read, so the
+change must keep the entry write-blocked while it is unrepaired. The current behaviour is
+now pinned (a mutation pass showed removing the flag left 507 tests green), so the fix flips
+a test rather than passing silently.
+
+### RULING 3, C3: the entries map has no size bound
+
+RECOMMEND recording the derived ceiling rather than adopting a cache. The measured facts:
+one ordinary sweep at five thousand dirty owners leaves 4,996 deferred and uncollectable
+until their writes land, and that clears in about 14.5 seconds at the measured 345 writes per
+second, inside the interval. The cliff is about ten thousand three hundred concurrently dirty
+owners per sweep, which is the write cap divided by the statement latency times the autosave
+period. Below it the map is self-limiting; above it nothing collects. If a hard cap is wanted
+anyway, the seam the file already names is the keyed bounded cache with LRU eviction in
+`server/discord_status_cache.ts`, and the decision it forces is which owner's unwritten edits
+an eviction is allowed to drop.
+
+### RULING 4, the policy half of C5: the two admission caps sum past the shared gate
+
+RECOMMEND stating the overcommit as accepted, with the arithmetic, rather than sharing one
+budget. The load cap of four and the write cap of four are independent against a gate of
+seven, and the store was measured holding all seven. Sharing one budget couples a login's
+read to a sweep's writes, which is the coupling the two constants were split to avoid; the
+honest alternative is to say in the contract that housing may hold up to seven of seven
+permits in steady state and eight during a drain, and to alert on `permit_wait_ms` for the
+other producers behind it. The peak-concurrency pin the database reviewer asked for should be
+written against whichever answer is taken, not before.
