@@ -3,12 +3,13 @@
 Status key: FIXED (with the commit that did it) / RULED (reviewed, no change warranted,
 with the reason).
 
-THE ROUND IS NOT CLOSED, AND THE VERDICT IS FAIL. THIRTEEN fix rounds have now run and
-ELEVEN of the thirteen introduced a defect worse than one they closed, each caught by a
+THE ROUND IS NOT CLOSED, AND THE VERDICT IS FAIL. FOURTEEN fix rounds have now run and
+TWELVE of the fourteen introduced a defect worse than one they closed, each caught by a
 fresh reviewer, by the gate, or by a mutant, and NEVER by the round's own green tests.
-Round thirteen is itself no exception: three of its six findings were defects the twelfth
-round's own fix introduced or left, and two more were found only by mutating code no test
-imported. An earlier version of this line declared the round closed after the third; that
+Round fourteen is the sharpest instance: round thirteen shipped a fix whose CLAIM WAS
+WIDER THAN ITS EVIDENCE, citing two measured SQLSTATEs that both leave the connection
+usable as proof about every clock fault, so its own probe could not see the case it was
+cited for. An earlier version of this line declared the round closed after the third; that
 was wrong three times over. A later version said six rounds with the sixth unreviewed, and
 a later one said nine; each was true when written and went stale within two commits. All
 are corrected here rather than quietly amended.
@@ -893,16 +894,88 @@ lets a Vitest drive the whole lifecycle with no database and no GameServer. Its
 row drops 2343 to 2319, twenty-four under its opening count despite seventy lines
 of new logic.
 
-## WHAT ROUND THIRTEEN DID NOT GET, AND WHY THAT MATTERS
+## ROUND FOURTEEN: THE REVIEWS ARRIVED LATE, AND ROUND THIRTEEN HAD DONE IT AGAIN
 
-ROUND THIRTEEN'S OWN FIX IS UNREVIEWED BY A FRESH READER. Four fresh lanes were
-dispatched over it and all four went idle without their reports reaching this
-session; one of them had already delivered findings earlier in the same session,
-so the channel worked and then stopped. Nothing was received and nothing is
-claimed. Two of the three findings this round closed came from a lane whose
-earlier output DID arrive and was truncated mid-list, and its remaining item was
-requested three times and never landed, so an unknown number of findings against
-round twelve are still outstanding.
+All four fresh lanes delivered after round thirteen had been written up as
+unreviewed. Every one of their findings was real, and TWO OF THEM WERE DEFECTS
+ROUND THIRTEEN INTRODUCED. The pattern holds at fourteen for fourteen.
+
+- Y1 SHOULD-FIX, the round's own regression, and the sharpest kind: THE FIX'S
+  CLAIM WAS WIDER THAN ITS EVIDENCE. Round thirteen's `.catch` covered only
+  `loadFreeholdHearth`'s promise, not the `COMMIT` that `runWithStatementTimeout`
+  issues afterwards. The two SQLSTATEs measured (42P01, 57014) both leave the
+  connection USABLE, which is exactly why COMMIT answered a ROLLBACK tag in the
+  probe; the probe therefore could not see the case it was cited for. A clock
+  fault that KILLS the connection (backend crash, restart, dropped socket) makes
+  COMMIT reject, the helper rethrow and the port reject, so `loadOnce` answers a
+  hold and the account is write-blocked FOR A FAULT IN THE CLOCK, on the one path
+  the two-port pair answers with a cold clock and a normal login. Not a breach of
+  the one invariant, since a hold preserves the row, but the opposite of what the
+  commit and the contract said. Closed by guarding the WHOLE transaction: the row
+  is captured as it is read, a later rejection with a row in hand is a thrown
+  clock, a rejection with no row is rethrown so the plot still fails closed.
+- Y2 SHOULD-FIX, also round thirteen's. Extracting the composition root SILENTLY
+  DROPPED the statement bound off both two-port fallback ports, leaving them on
+  the pool's 15,000 ms session default against a 10,000 ms handshake, while the
+  new file header claimed the move changed nothing. Dead on this host, and the
+  declared fallback surface every unit test drives. Both wrappers restored and
+  the header corrected.
+- Y3 SHOULD-FIX. `readLoginPair` branched on the hearth VALUE
+  (`both.hearth ?? await ports.readHearth(...)`) rather than on which port the
+  host bound, which is precisely the coupling the merge existed to remove and, on
+  the real host, a second read outside the transaction. Branches on the port now.
+- Y4 SHOULD-FIX, the arithmetic. 9,000 ms was never the worst case: `BEGIN` and
+  `SET LOCAL` both execute BEFORE the lowered bound is in force, so they and the
+  trailing `COMMIT` answer to the pool session default. The floor is 5,000 +
+  2 x 15,000 + 3 x 2,000 = 41,000 ms; two transactions were about 78,000. The
+  change halves it and stands, but "nine against ten is a margin" was the sentence
+  used to narrow section 8a's gate, and against 41,000 there is no margin. The
+  19,000 it replaced carried the same omission, so this is an older habit than the
+  rewrite. Section 8a's gate is restored undiminished.
+- Y5 SHOULD-FIX, three pin defects in round thirteen's own new pins. The clock
+  swallow pin's window ended at `}),` which does not match `})),`, so it ran 740
+  characters past the hearth read through seven later ports and an identical catch
+  on any of them would have satisfied it. The fallback pin's title claimed a bound
+  it never asserted, and its comment called the pair "deliberately UNBOUNDED",
+  enshrining Y2 as intentional. And `flushFreeholdBinding`'s never-rejects
+  property, moved into that module by round thirteen, had no pin at all: if a
+  later edit drops it the rejection escapes the leave's `finally` above the lease
+  release and `removePlayer`, which is invariant 1 territory. All three closed,
+  and FOUR mutants over the new guards are KILLED against a proved control of
+  `Tests 184 passed (184)`: the rethrow removed, the outer catch removed, the
+  fallback unbound again, and the flush swallow dropped.
+- Y6 SHOULD-FIX. The export row bound was pinned only as a constant and as SQL
+  text, so nothing had ever inserted a twenty-first row and the truncation marker
+  shipped with no executed coverage. One PostgreSQL case now inserts past the
+  limit and asserts the count, the marker's shape, that it carries no plot
+  identity an exporter could read as a plot, and a contrast arm one row short
+  that returns no marker.
+- Y7 NITS. A leftover private alias for a name that had become exported; a
+  re-measurement spliced mid-sentence into a comment without rewrapping; and a
+  docblock still saying "two leave-path callers" after round thirteen routed five
+  sites through it.
+
+WHAT THE ROUND CONFIRMED rather than found. The guild-book routing HOLDS: the
+callee puts `guildBookHolders.resync` and the `reconcile` counter inside the loop
+over the ids it is handed, so an empty set is zero iterations and no side effect
+became reachable or unreachable. The flush swallow HOLDS, because
+`flushAndRelease` is declared async so no synchronous throw bypasses the attached
+catch. The merged reader's fallback arm HOLDS. The four new behaviour cases are
+not vacuous. Both ceilings HOLD at their lowered values.
+
+## WHAT ROUND THIRTEEN DID NOT GET AT THE TIME, AND WHAT ARRIVED AFTERWARDS
+
+SUPERSEDED IN PART, kept because the sequence is the point. When round thirteen
+was written up, four fresh lanes had been dispatched over it and all four had
+gone idle without their reports reaching this session, so it was recorded as
+unreviewed and nothing was claimed. THE REPORTS THEN ARRIVED, late and in one
+batch, and round fourteen above is what they found: seven findings, two of them
+defects round thirteen had introduced. Two reports were still truncated mid-list
+and their tails were requested; an unknown number of findings remains outstanding.
+
+The reason for recording it this way rather than quietly folding it in: a round
+that declares itself unreviewed and then turns out to have been wrong is the
+ordinary case on this branch, not the exception.
 
 WHY THAT IS NOT A FORMALITY HERE. Eleven of the thirteen rounds introduced a
 defect worse than one they closed, and not one of those was caught by the round's
