@@ -40,6 +40,7 @@ import {
   FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS,
   FREEHOLD_PERSIST_WRITE_ERROR_WINDOW_MS,
   FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS,
+  FREEHOLD_RETRYABLE_HOLD_KINDS,
   type FreeholdPersistPorts,
   type FreeholdPersistStore,
   type LoadedFreehold,
@@ -48,6 +49,7 @@ import {
   freeholdPersistIdle,
   registerFreeholdPersistStore,
 } from '../../server/freehold_persist_registry';
+import { seedWouldLandOnRealRow } from '../../server/freehold_write_seal';
 import { createKeyedSerialWriter } from '../../server/serial_writer';
 import {
   FREEHOLD_MAX_LAYOUT_ROWS,
@@ -57,8 +59,14 @@ import {
   type FreeholdLoadResult,
   type PersistedFreehold,
   persistedFreeholdBytes,
+  persistedFreeholdFromState,
 } from '../../src/sim/freehold/persisted';
-import { defaultFreeholdState, PENDING_FREEHOLD_PLOT_ID } from '../../src/sim/freehold/state';
+import {
+  defaultFreeholdState,
+  ensureFreeholdRecord,
+  evictFreehold,
+  PENDING_FREEHOLD_PLOT_ID,
+} from '../../src/sim/freehold/state';
 import type { SimContext } from '../../src/sim/sim_context';
 import { methodBody } from '../helpers/method_body';
 import { stripComments } from '../helpers/strip_comments';
@@ -307,10 +315,16 @@ function harness(options: HarnessOptions = {}) {
       return doc === null ? null : { ...doc, plotId: livePlotIdNow() };
     },
     livePlotId(ownerKey: string): string | null {
-      // The SAME record serialize() would clone, so a case that overrides the
-      // live identity moves both. Null when nothing is live, exactly as the
-      // production binding reads it off ctx.freeholds.
-      if (options.hasLive && !options.hasLive(ownerKey)) return null;
+      // BOUND TO hasLive, STRICTLY, because production reads both off ONE map
+      // (`deps.sim.ctx.freeholds.get(ownerKey)`): no record means no identity,
+      // and a harness that answered an identity for an owner it also says is
+      // not live models a state the server cannot produce. The looser form,
+      // which only consulted hasLive when a case supplied one, left the
+      // identity-adoption arm covered by exactly that impossible state.
+      //
+      // The default is FALSE, like hasLive's, so a case that wants a live
+      // identity says `hasLive: () => true` and means it.
+      if (!(options.hasLive ? options.hasLive(ownerKey) : false)) return null;
       return serialize(ownerKey) === null ? null : livePlotIdNow();
     },
     liveRev(ownerKey: string): number | null {
@@ -507,13 +521,39 @@ describe('freehold persist constants', () => {
     expect(loadDeadline).toBeLessThan(writeDeadline);
   });
 
-  it('keeps every clock and timer behind a port', () => {
-    const source = stripComments(readFileSync(SOURCE_PATH, 'utf8'));
-    expect(source).not.toMatch(/Date\.now\(/);
-    expect(source).not.toMatch(/Math\.random\(/);
-    // The one sanctioned timer is the module-edge default deadline scheduler.
-    expect(source.match(/setTimeout\(/g) ?? []).toHaveLength(1);
-    expect(source).toContain('const realScheduleDeadline');
+  it('keeps every clock and timer behind a port, in EVERY file the store split into', () => {
+    // ACROSS THE WHOLE STORE, not one file. Three modules came off this file and
+    // each of them is driveable from a Vitest for exactly this reason; a scan
+    // pinned to SOURCE_PATH would have let a fresh clock or timer land in any of
+    // them. The composition root is deliberately NOT on this list: binding
+    // Date.now to the store's nowMs port is its whole job.
+    const files = [
+      SOURCE_PATH,
+      'server/freehold_write_seal.ts',
+      'server/freehold_install.ts',
+      'server/freehold_persist_registry.ts',
+      'server/freehold_hearth_load.ts',
+      'server/freehold_load_outcome.ts',
+    ];
+    let timers = 0;
+    for (const file of files) {
+      const source = stripComments(readFileSync(file, 'utf8'));
+      expect(source, file).not.toMatch(/Date\.now\(/);
+      expect(source, file).not.toMatch(/Math\.random\(/);
+      expect(source, file).not.toMatch(/performance\.now\(/);
+      timers += (source.match(/setTimeout\(/g) ?? []).length;
+    }
+    // The one sanctioned timer in all five is the module-edge default deadline
+    // scheduler, and it lives in the store itself.
+    expect(timers).toBe(1);
+    expect(stripComments(readFileSync(SOURCE_PATH, 'utf8'))).toContain(
+      'const realScheduleDeadline',
+    );
+    // AND THE WALKER WALKED: a file list that went stale by a rename would read
+    // as a clean bill of health, so every entry must exist and be non-trivial.
+    for (const file of files) {
+      expect(readFileSync(file, 'utf8').length, file).toBeGreaterThan(400);
+    }
   });
 });
 
@@ -560,14 +600,71 @@ describe('preload admission', () => {
     const third = await h.store.preload(ACCOUNT_ID);
     expect(h.store.stats().loads).toBe(2);
     expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(2);
-    // ONE IDENTITY PER OWNER, not per entry. The mint is per entry, and an entry
+    // With no record live, the second load mints a fresh identity, which is the
+    // ordinary shape: adoption is pinned on its own below, where a record IS
+    // live, because that is the only state it exists for.
+    expect(a.plotId).toBe('plot:minted1');
+    expect(third.plotId).toBe('plot:minted2');
+  });
+
+  it('ADOPTS the live record identity rather than minting a second one for the row', async () => {
+    // ONE IDENTITY PER OWNER, not per entry. The mint is per ENTRY, and an entry
     // the orphan sweep collects between a preload and its retain is recreated
     // empty: minting again there gives the ROW a second identity while the
     // record installed from the first one keeps answering to the first, for the
     // life of that session, which the write seal then reads as two different
     // records and quiesces the account over.
-    expect(a.plotId).toBe('plot:minted1');
-    expect(third.plotId).toBe('plot:minted1');
+    //
+    // A LIVE RECORD IS THE PRECONDITION, so hasLive says so: production reads
+    // the identity and the liveness off ONE map, and an entry that finds no
+    // record has nothing to adopt.
+    // ROW_PLOT_ID rather than MINTED_PLOT_ID, deliberately: MINTED_PLOT_ID is the
+    // same literal the harness's FIRST mint produces, so adopting it and minting
+    // it are indistinguishable and the assertion below would be vacuous.
+    const h = harness({
+      rowLoad: { kind: 'absent' },
+      hasLive: () => true,
+      livePlotId: ROW_PLOT_ID,
+    });
+    const loaded = await h.store.preload(ACCOUNT_ID);
+    expect(loaded.plotId).toBe(ROW_PLOT_ID);
+    // AND NOTHING WAS MINTED. The harness's mint is monotonic and its first
+    // answer is plot:minted1, which is what an unconditional mint would show.
+    expect(loaded.plotId).not.toBe('plot:minted1');
+    expect(h.store.stats().loadFailures).toBe(0);
+  });
+
+  it('REFUSES to name a row for a record it did not install', async () => {
+    // THE OTHER HALF, and a defect this round's own fixes created. A live record
+    // carrying the STAND-IN was seeded WITHOUT an install, because
+    // installLoadedFreehold returns early on any hold, and loadFreehold is
+    // load-once, so nothing can ever teach that record the name a row would be
+    // created under. Minting one anyway inserts a row whose own record never
+    // learns its name; applyWriteResult then caches the record's stand-in and
+    // the seal's name comparison is inert BY VALUE EQUALITY for the life of that
+    // entry, which is the eighth path arrived at from the other side.
+    //
+    // Both new arms produce this state: an admission hold whose entry ruling 2
+    // now leaves re-readable, and the whole-preload cap's in-flight read landing
+    // behind its refusal. It is refused once, here, rather than in each.
+    const h = harness({
+      rowLoad: { kind: 'absent' },
+      hasLive: () => true,
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+    });
+    const loaded = await h.store.preload(ACCOUNT_ID);
+    expect(loaded.hold?.kind).toBe('unnamed_record');
+    expect(loaded.state).toBeNull();
+    expect(loaded.durableRev).toBeNull();
+    // TERMINAL, because nothing in this session can rename a load-once record.
+    // The NEXT login builds a fresh entry whose install runs before the seed.
+    expect(h.store.stats().loaded).toBe(1);
+    expect(h.store.stats().held).toBe(1);
+    // AND NOTHING IS WRITTEN, so the account that has no row still has none.
+    h.store.markDirty(OWNER_KEY);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(0);
   });
 
   it('installs nothing when the record is already live, but still learns the row', async () => {
@@ -1973,8 +2070,8 @@ describe('a write may only carry the record this entry actually loaded', () => {
     // keeping two names: comparing the document against entry.state would be
     // comparing a value with itself, because `document` carries entry.plotId by
     // construction. The seal moved to server/freehold_write_seal.ts, so what is
-    // pinned here is WHICH VALUE runWrite hands it; the comparison itself is
-    // pinned in that module's own suite.
+    // pinned here is WHICH VALUE runWrite hands it; every arm of the comparison
+    // itself is driven directly in tests/server/freehold_write_seal.test.ts.
     expect(body).toContain('seedWouldLandOnRealRow(persisted, entry)');
     expect(body).not.toContain('seedWouldLandOnRealRow(document');
     const seal = stripComments(readFileSync('server/freehold_write_seal.ts', 'utf8'));
@@ -2447,9 +2544,13 @@ describe('a leaving session never loses its last edits to a queue', () => {
         state: persistedFixture({ plotId: MINTED_PLOT_ID, rev: 6 }),
         repaired: [],
       },
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
-      serialize: () =>
-        live ? persistedFixture({ plotId: PENDING_FREEHOLD_PLOT_ID, rev: 6 }) : null,
+      // THE MINTED NAME, not the stand-in. A record that is live while its own
+      // load is still running carries whatever the install gave it, and after
+      // the identity fix that is the minted id. A record carrying the STAND-IN
+      // at this point would be one seeded WITHOUT an install, which the absent
+      // arm now refuses to name a row for at all.
+      livePlotId: MINTED_PLOT_ID,
+      serialize: () => (live ? persistedFixture({ rev: 6 }) : null),
       hasLive: () => live,
       acquirePermit: async () => {
         granted += 1;
@@ -3914,7 +4015,11 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(answer.hold?.kind).toBe('no_budget');
     expect(answer.state).toBeNull();
     // The DURABLE ROW IS LEFT UNTOUCHED, which is what a hold means here:
-    // installLoadedFreehold installs nothing for it and every write is blocked.
+    // installLoadedFreehold installs nothing for it. The account is NOT then
+    // write-blocked for the session, and that difference is the defect this
+    // round's own fresh read found: the in-flight read fills the entry, so the
+    // store's absent arm has to refuse to name a row for a record no install
+    // ever reached ('REFUSES to name a row for a record it did not install').
     expect(answer.durableRev).toBeNull();
     expect(h.store.stats().loadFailuresByKind).toEqual({ no_budget: 1 });
     expect(h.warnings.some((line) => line.includes('no_budget'))).toBe(true);
@@ -3939,8 +4044,13 @@ describe('the WHOLE preload is capped against the login budget', () => {
     await tick(20);
     fireBudget(h);
     expect((await loading).hold?.kind).toBe('no_budget');
-    // Nothing held, nothing loaded, because the refusal wrote nothing at all.
+    // NOTHING WRITTEN ON THE ENTRY AT ALL, which is three separate facts: no
+    // hold, no `loaded`, and no failure booked against the entry. Asserting the
+    // hold alone left a refusal that stamped `loaded` green, and a stamped
+    // `loaded` is what stops the repair arm ever reaching this entry again.
     expect(h.store.stats().held).toBe(0);
+    expect(h.store.stats().loaded).toBe(0);
+    expect(h.store.stats().entries).toBe(1);
 
     // The read lands afterwards and the entry becomes writable, exactly as it
     // would have if the login had waited.
@@ -4281,6 +4391,39 @@ describe('installLoadedFreehold', () => {
       );
       expect(ctx.freeholds.size, bad).toBe(0);
     }
+  });
+
+  it('COUPLES the install to the seal: a reseed over an INSTALLED identity is refused', () => {
+    // THE COUPLING THE THREE FLIPPED SEAL CASES DO NOT HAVE. Each of those sets
+    // the live identity by fixture, so reverting the install arm leaves all
+    // three green and the eighth path's whole regression protection is one unit
+    // case in another describe. This one derives BOTH identities from the real
+    // sim: the record the install created, and the record ensureFreeholdRecord
+    // seeds after an eviction. Revert the install and it reds on the first line.
+    const ctx = fakeCtx();
+    installLoadedFreehold(
+      ctx,
+      ACCOUNT_ID,
+      loadedFixture({ state: null, durableRev: null, plotId: MINTED_PLOT_ID }),
+    );
+    const installed = ctx.freeholds.get(OWNER_KEY);
+    expect(installed, 'the absent arm must install a record').toBeDefined();
+    if (!installed) return;
+    // What applyWriteResult would cache after a commit: the LIVE record's
+    // identity, with the content the session went on to build.
+    const committed = persistedFreeholdFromState({ ...installed, tier: 'cottage', rev: 7 });
+    expect(committed.plotId).toBe(MINTED_PLOT_ID);
+
+    // The record is evicted at the last session out and reseeded on the next
+    // join with no install in front of it, which is the window the seal exists
+    // for. Its revision then catches up, which is what defeats both continuity
+    // arms and leaves the name comparison as the only thing standing.
+    evictFreehold(ctx, OWNER_KEY);
+    const reseeded = ensureFreeholdRecord(ctx, OWNER_KEY);
+    expect(reseeded?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    if (!reseeded) return;
+    const seedDoc = persistedFreeholdFromState({ ...reseeded, rev: 9 });
+    expect(seedWouldLandOnRealRow(seedDoc, { state: committed, durableRev: '2' })).toBe(true);
   });
 
   it('installs nothing on the absent arm of a DARK host', () => {
@@ -4652,12 +4795,31 @@ describe('the coordinator side of the wiring (source pins)', () => {
     expect(body.indexOf('this.sessionsByCharacterId.delete(session.characterId)')).toBeLessThan(
       body.indexOf('flushFreeholdBinding(this.freeholdPersist,'),
     );
-    // IDENTITY-GUARDED. A same-account character swap sets the new session
-    // before the old one's fire-and-forget leave arrives here, so an unguarded
-    // delete evicts the live session's own registration.
+    // IDENTITY-GUARDED, AND THE GUARD COVERS BOTH CHARACTER-KEYED CALLS. A
+    // same-account character swap sets the new session before the old one's
+    // fire-and-forget leave arrives here, so an unguarded delete evicts the live
+    // session's own registration, and an unguarded storageRecovery.offline marks
+    // a LIVE character offline: it drops that character's gold-rail ordering
+    // hold and its recovery-drive hold and makes it a capacity-eviction
+    // candidate. The other two are keyed by session identity and cannot reach a
+    // sibling, which is why only these two are guarded.
     expect(body).toContain(
-      'if (this.sessionsByCharacterId.get(session.characterId) === session) {',
+      'const stillMine = this.sessionsByCharacterId.get(session.characterId) === session;',
     );
+    expect(body).toContain(
+      'if (stillMine) this.sessionsByCharacterId.delete(session.characterId);',
+    );
+    expect(body).toContain('if (stillMine) storageRecovery.offline(session.characterId);');
+    // THE REVERT RUNS FIRST, above both index drops. Dropping a session from
+    // them without reverting its unflushed ops strands uncommitted money deltas
+    // on the live book: no mark for the disband guard, no session for the settle
+    // gate, and the next officer's op serializes that book and commits them.
+    const revert = body.indexOf('this.reconcileOwnGuildBooks(session)');
+    expect(revert).toBeGreaterThan(guard);
+    expect(revert).toBeLessThan(body.indexOf('this.guildBookHolders.dropSession(session)'));
+    // AND NOWHERE ELSE ON THE LEAVE PATH: left in the settlement as well, the
+    // throw path is fixed and the healthy path reverts twice.
+    expect(settlement).not.toContain('this.reconcileOwnGuildBooks(session)');
   });
 
   it('registers the store once and tears its timers down with the coordinator', () => {
@@ -5005,6 +5167,53 @@ describe('the gaps a mutation pass over the store found', () => {
     // refused account still replayed the hold. The four fixture classes sanction
     // a terminal hold for a DATA cause, where a repeat read cannot change the
     // answer, and none of them sanctions one for a capacity cause.
+    // EVERY KIND IN THE SET, not one of them: the set is what holdResult reads,
+    // so a case that drives only no_permit leaves deleting cap_full and
+    // read_threw from it green. Each is produced by a different port fault.
+    expect([...FREEHOLD_RETRYABLE_HOLD_KINDS].sort()).toEqual([
+      'cap_full',
+      'no_budget',
+      'no_permit',
+      'read_threw',
+    ]);
+    for (const kind of ['cap_full', 'no_permit', 'read_threw'] as const) {
+      const faulted = harness({
+        rowLoad: { kind: 'row', row: rowFixture() },
+        acquirePermit:
+          kind === 'no_permit'
+            ? async () => null
+            : kind === 'read_threw'
+              ? async () => ({ release: () => {} })
+              : undefined,
+        readRow:
+          kind === 'read_threw'
+            ? async () => {
+                throw new Error('the read threw');
+              }
+            : undefined,
+      });
+      if (kind === 'cap_full') {
+        // The local admission cap is filled by holding four loads open.
+        const held = deferred<FreeholdRowLoad>();
+        const capped = harness({ readRow: async () => await held.promise });
+        const parked = Array.from({ length: FREEHOLD_PERSIST_MAX_ACTIVE_LOADS }, (_, i) =>
+          capped.store.preload(OTHER_ACCOUNT_ID + i),
+        );
+        await tick(20);
+        const refused = await capped.store.preload(ACCOUNT_ID);
+        expect(refused.hold?.kind, kind).toBe('cap_full');
+        expect(capped.store.stats().loaded, kind).toBe(0);
+        held.resolve({ kind: 'absent' });
+        await Promise.all(parked);
+        continue;
+      }
+      const answer = await faulted.store.preload(ACCOUNT_ID);
+      expect(answer.hold?.kind, kind).toBe(kind);
+      // NOT loaded, which is the whole of ruling 2: the repair arm consults it.
+      expect(faulted.store.stats().loaded, kind).toBe(0);
+      expect(faulted.store.stats().held, kind).toBe(1);
+    }
+
     let refuse = true;
     const h = harness({
       acquirePermit: async () => (refuse ? null : { release: () => {} }),

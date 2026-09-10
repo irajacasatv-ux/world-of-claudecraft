@@ -173,10 +173,18 @@ export function seedWouldLandOnRealRow(
   // teaches a live record its minted name, so that entry's cached name IS
   // the stand-in and a reseeded default carries the same literal. That was the
   // EIGHTH path to an empty tier-0 Inn Room landing on a real house, and it is
-  // CLOSED: installLoadedFreehold now installs the minted identity on the
-  // ABSENT arm, so an online record answers to its own name from its first
-  // session and this comparison is TOTAL for every entry class, not only for
-  // entries that loaded a row. The stand-in survives on the offline and
+  // CLOSED at the source rather than here: installLoadedFreehold installs the
+  // minted identity on the ABSENT arm, so an online record answers to its own
+  // name from its first session.
+  //
+  // WHAT MAKES THAT TOTAL is a second refusal, and it is worth naming because
+  // the first version of the fix was NOT total and a fresh reader found it.
+  // installLoadedFreehold returns early on any HOLD, so a record seeded while
+  // its own load was refused never gets a name, and an entry that then loads or
+  // mints one puts this comparison back to comparing a stand-in with a stand-in.
+  // classify's absent arm refuses to name a row for such a record at all
+  // (`unnamed_record`), which is what keeps every entry that CAN write to a
+  // record whose name it knows. The stand-in survives on the offline and
   // headless hosts, which have no store and no minter, and that divergence is
   // recorded in docs/freeholds/persistence-rollout-contract.md section 8a and
   // in src/sim/freehold/CLAUDE.md.

@@ -59,6 +59,12 @@ export function installLoadedFreehold(
   // row answer to one identity from the FIRST session rather than from the
   // second.
   //
+  // IT IS HALF OF WHAT CLOSES IT, and the other half is in the store: this arm
+  // runs only when the load ANSWERED, and it returns early below on any hold, so
+  // a record seeded while its own load was refused is never named here. The
+  // store's absent arm refuses to create a row for such a record at all, which
+  // is what stops the seal falling back to comparing a stand-in with a stand-in.
+  //
   // WHAT IT CLOSES. The write seal's name comparison was INERT for an entry that
   // minted its own row: `applyWriteResult` caches the identity the live record
   // carried, that identity was the stand-in, and a freshly seeded default

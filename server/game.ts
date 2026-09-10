@@ -299,6 +299,7 @@ import {
 } from './guild_bank_state';
 import {
   GuildBookHolderIndex,
+  markGuildBookDirty,
   requestGuildBookFlush,
   revertOwnGuildBookOps as revertGuildBookWork,
 } from './guild_book_holders';
@@ -3793,27 +3794,36 @@ export class GameServer {
       await this.settleLeavingSession(session);
     } finally {
       // ON EVERY EXIT, INCLUDING A THROW: all three callers fire leave() with no
-      // catch, so a rejection above used to skip these lines forever.
-      //
-      // THE FOUR REGISTRATIONS GO FIRST, because they are what makes the
+      // catch, so a rejection in the settlement used to skip these lines
+      // forever. THE REGISTRATIONS GO FIRST, because they are what makes the
       // character RE-ENTERABLE and they used to sit at the END of the
-      // settlement. A rejection there (a final save that exhausts its five
-      // attempts, then a guild-book revert that faults) left
-      // sessionsByCharacterId still mapping the character while the releases
-      // below ran, so planJoin answered 'character already in world' for every
-      // later login for the life of the process, takeOverCharacter reported
-      // success and changed nothing, and every whisper, mail and party lookup
-      // kept resolving to the dead session. Round eleven moved the three
-      // releases here for the same reason and left these behind.
-      // IDENTITY-GUARDED because a same-account swap sets the new session
-      // before the old one's fire-and-forget leave arrives here. The flush
-      // swallows its own rejection, in the module that owns the pairing.
-      if (this.sessionsByCharacterId.get(session.characterId) === session) {
-        this.sessionsByCharacterId.delete(session.characterId);
-      }
+      // settlement: a rejection there left sessionsByCharacterId still mapping
+      // the character while the releases below ran, so planJoin answered
+      // 'character already in world' for every later login for the life of the
+      // process, takeOverCharacter reported success and changed nothing, and
+      // every whisper, mail and party lookup kept resolving to the dead
+      // session. Round eleven moved the three releases here for the same reason
+      // and left these behind.
+      //
+      // THE REVERT GOES FIRST OF ALL, above both index drops. Dropping a session from
+      // them WITHOUT reverting its unflushed ops strands uncommitted deltas on
+      // the LIVE book: no mark for the disband guard, no session for the settle
+      // gate, and the next officer's op serializes that book and commits them,
+      // which is money created. Safe to run twice, because the first pass
+      // deletes every id it was handed and the extracted body cannot throw.
+      //
+      // IDENTITY-GUARDED, and the guard covers BOTH CHARACTER-KEYED calls: a
+      // same-account swap sets the new session before the old one's
+      // fire-and-forget leave arrives here, and marking that character offline
+      // would drop a LIVE session's recovery holds. The other two are keyed by
+      // session identity and cannot reach a sibling. The flush swallows its own
+      // rejection, in the module that owns the pairing.
+      this.reconcileOwnGuildBooks(session);
+      const stillMine = this.sessionsByCharacterId.get(session.characterId) === session;
+      if (stillMine) this.sessionsByCharacterId.delete(session.characterId);
       this.guildBookHolders.dropSession(session);
       session.bankLedgerJournal.outbox.discard();
-      storageRecovery.offline(session.characterId);
+      if (stillMine) storageRecovery.offline(session.characterId);
       await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
       // Release the per-character load lease so a fresh login (here or on another
       // process) can reload the character without waiting out the TTL. Order
@@ -3851,9 +3861,10 @@ export class GameServer {
     );
   }
 
-  /** Undo this session's own guild-book work: FIVE callers, two on the leave path
-   *  and three quarantine paths that used to repeat it inline. No empty check,
-   *  because the callee loops the ids it is handed. */
+  /** Undo this session's own guild-book work. FIVE callers: leave()'s finally,
+   *  the leave save's exhausted-retry arm, the ledger-projection quarantine, the
+   *  fence-out and the takeover sweep. No empty check, because the callee loops
+   *  the ids it is handed, which is what makes the finally's call idempotent. */
   private reconcileOwnGuildBooks(session: ClientSession): void {
     this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
   }
@@ -3892,12 +3903,6 @@ export class GameServer {
     // otherwise teardown could race the durable guild and fee verdict.
     await session.guildCreateSettlement;
     await this.saveCharacterOnLeave(session);
-    // Whatever book work this session still holds can never commit now: it has
-    // no save left. saveLeavingCharacter's exhausted-retry arm already cleared
-    // its own marks, so this is a no-op there. The four REGISTRATIONS that used
-    // to follow it moved into leave()'s finally, because a fault anywhere above
-    // this line skipped them and stranded the character.
-    this.reconcileOwnGuildBooks(session);
   }
 
   /** A post-mutation ledger projection failure makes the live character
@@ -4593,12 +4598,6 @@ export class GameServer {
     }
   }
 
-  // Schedule a guild's book for the next fenced escrow save of this session.
-  private markGuildBankDirty(session: ClientSession, guildId: number): void {
-    session.dirtyGuildBanks.set(guildId, (session.dirtyGuildBanks.get(guildId) ?? 0) + 1);
-    this.guildBookHolders.touch(session, guildId);
-  }
-
   /** Undo this session's own unflushed guild-book work. The rule, its five
    *  call sites and its never-throws property live beside the holder index in
    *  server/guild_book_holders.ts, where a Vitest can drive them with no
@@ -4679,7 +4678,8 @@ export class GameServer {
         sendPlayerNotice: (text) => this.sendChatNotice(session, text),
         bankLedgerNeedsSave: () => bankLedgerJournalNeedsSave(session.bankLedgerJournal.outbox),
         scheduleBankLedgerHighWaterSave: () => this.scheduleBankLedgerHighWaterSave(session),
-        markGuildBankDirty: (guildId) => this.markGuildBankDirty(session, guildId),
+        markGuildBankDirty: (guildId) =>
+          markGuildBookDirty(this.guildBookHolders, session, guildId),
         // The unsettled gate's inputs: every OTHER holder's cached
         // contribution on this book (a departing session's included, its
         // leave flush has not committed yet), and the flush a refusal fires.

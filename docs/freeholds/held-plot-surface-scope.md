@@ -35,10 +35,14 @@ bounded for a log, not written for a reader.
 
 ## What the player is told apart, and what they are not
 
-There are EIGHT load-failure kinds. Telling a player all eight apart would be
-eight strings for a distinction they cannot act on, and telling them nothing
+There are NINE load-failure kinds. Telling a player all nine apart would be
+nine strings for a distinction they cannot act on, and telling them nothing
 would be one string that says "something went wrong", which is not worth a
 string at all. The split is by WHAT THE PLAYER CAN DO:
+
+There are NINE kinds, and the ninth (`unnamed_record`, the ordering cause) reads
+as RETRY to a player: the next login builds a fresh entry whose durable read runs
+before the record is seeded, which is exactly the thing a relog fixes.
 
 | kind | group | what the player can do |
 |---|---|---|
@@ -50,6 +54,7 @@ string at all. The split is by WHAT THE PLAYER CAN DO:
 | `unsupported` | REPORT | the same |
 | `malformed` | REPORT | the same |
 | `oversize` | REPORT | the same |
+| `unnamed_record` | RETRY | nothing now; the next login reads before the record is seeded |
 
 TWO GROUPS, and they line up exactly with the repairable and terminal split
 ruling 2 introduced, which is not a coincidence: the repairable kinds are the
@@ -65,14 +70,17 @@ locale at release.
 
 | key | English | render sink |
 |---|---|---|
-| `hudChrome.housing.held.bannerRetry` | Your home could not be opened right now. Nothing has been lost. Try again in a moment. | the housing window's own banner row, a static element in `src/ui/hud/housing/housing_view.ts`, painted from the view core |
-| `hudChrome.housing.held.bannerReport` | Your home could not be opened, and this one will not clear on its own. Nothing has been lost, and no changes you make now will be saved. | the same banner row |
-| `hudChrome.housing.held.readOnlyBadge` | Read only | REUSE `hudChrome.housing.common.readOnly`, which already exists and already says this; a second key for one word is drift |
+| `hudChrome.housing.held.bannerRetry` | Your home could not be opened right now. Nothing has been lost. Try again in a moment. | a banner row in the housing window's PAINTER. There is no housing window module yet: `src/ui/hud/housing/housing_view.ts` is the DOM-free view core (its sibling `gate_prompt_painter.ts` is where that family's markup lives), so the release that builds this owes a `housing_painter.ts` beside it and the banner's text belongs there, chosen by a view-core field. |
+| `hudChrome.housing.held.bannerReport` | Your home could not be opened, and this one will not clear on its own. Nothing has been lost, and no changes you make now will be saved. | the same banner row, same painter |
+| (no new key) | Read only | REUSE `hudChrome.housing.common.readOnly`, which already exists and already says this; a second key for one word is drift. Listed here so the badge is not forgotten, not as a key to add. |
 | `hudChrome.housing.held.editRefused` | Your home is read only until it opens. Nothing you do now will be saved. | `host.showError` through `handleFreeholdEvent`, the sink the ten `freeholdDenied` reasons already use, on any placement or policy command attempted while held |
 | `hudChrome.housing.held.tooltip` | This is not your saved home. Your home is on the server and is not being changed. | the Hearth Key item tooltip (`src/ui/hud/housing/hearth_key_tooltip.ts`), appended while held |
 | `hudChrome.housing.held.gateAria` | Your home is read only right now | the gate prompt's `aria-label`, through the painter in `gate_prompt_painter.ts` |
 
-SIX SINKS, FIVE NEW KEYS. `readOnly` is reused rather than duplicated.
+FOUR SINKS, FIVE NEW KEYS, and the two counts differ on purpose: the two banner
+strings share one sink and `readOnlyBadge` names no sink of its own, because it
+is the existing `common.readOnly` reused rather than duplicated. Counting table
+rows as sinks is how a scope document promises a surface it has not designed.
 
 WHAT NONE OF THEM SAYS. No key names a kind, a plot index, a revision, a byte
 count or an account. The player is told the state and what it costs them; the

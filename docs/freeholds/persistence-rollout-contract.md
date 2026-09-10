@@ -430,7 +430,9 @@ in [the findings ledger](qa/persistence-2026-09-08/findings.md). An item marked
 CLOSED is closed in code with a test; the rest are gates on housing activation
 rather than notes. Nothing here is a signature and nothing here grants activation.
 
-CAPACITY REFUSALS WERE TERMINAL. CLOSED at the rulings round. A load refused
+CAPACITY REFUSALS WERE TERMINAL. CLOSED at the rulings round, and the fresh read
+of that round found the close had opened something else, which is closed with it
+and recorded below under the identity gate. A load refused
 because the local admission cap was full, because no background permit arrived
 inside the login bound, or because the read threw, no longer sets `entry.loaded`,
 so `preload`'s replay arms and `retain`'s lost-entry repair both re-read it
@@ -532,7 +534,11 @@ every published figure got wrong in the same direction. Measured on PostgreSQL 1
 with a DEFERRABLE INITIALLY DEFERRED constraint trigger putting two seconds of
 work inside the commit itself: under `SET LOCAL statement_timeout = 300` the
 COMMIT ran 2,008 ms and COMMITTED, against a control at the session default that
-took the same 2,008 ms. Its only ceiling is the driver's own `query_timeout`
+took the same 2,008 ms. MEASURED BOTH WAYS, because a reviewer pointed out that
+the claim was otherwise wider than its evidence: both probes had LOWERED the
+bound, so neither tested a session-level `statement_timeout` binding the commit
+work. A third probe set the SESSION value to 300 ms with no SET LOCAL at all, and
+that COMMIT ran 2,007 ms and committed too. Its only ceiling is the driver's own `query_timeout`
 (`DB_QUERY_TIMEOUT_MS`), measured to reject a COMMIT at its deadline with a
 client-side read timeout carrying no SQLSTATE. So the floor is
 5,000 (`DB_POOL_CONNECT_TIMEOUT_MS`) + 2 x 15,000 (`DB_STATEMENT_TIMEOUT_MS`, for
@@ -600,11 +606,16 @@ NULL for every row it can produce. The release that starts writing them owes the
 the same pre-gate and measure the two content columns carry.
 
 THE FOUR LOAD-FAILURE CAUSES WERE ONE LABEL. CLOSED at the persistence QA, and
-there are EIGHT kinds now, not seven: the rulings round added `no_budget` for the
-whole-preload cap. Read them as two groups. FOUR are DATA incidents and their
-hold is terminal (`unadmitted` for the row-level stranded slot, `unsupported`,
-`malformed`, `oversize`); FOUR are CAPACITY causes and their hold is repairable
-(`cap_full`, `no_permit`, `read_threw`, `no_budget`). A host with no store answers
+there are NINE kinds now, not seven: the rulings round added `no_budget` for the
+whole-preload cap and `unnamed_record` for the ordering refusal below. Read them
+as three groups. FOUR are DATA incidents and their hold is terminal (`unadmitted`
+for the row-level stranded slot, `unsupported`, `malformed`, `oversize`); FOUR are
+CAPACITY causes and their hold is repairable (`cap_full`, `no_permit`,
+`read_threw`, `no_budget`); ONE is neither (`unnamed_record`), terminal for a
+reason of its own. The repairable set is DERIVED by subtraction from the kind
+list, so a kind added later lands in exactly one group by construction; an earlier
+version claimed that derivation while spelling three literals, and the very commit
+that wrote it added a kind the set did not know about. A host with no store answers
 the same hold SHAPE through `freeholdPreloadUnavailable` but books no counter at
 all, so it never reaches the series. DEPLOY.md carries the corrected reading.
 
@@ -655,7 +666,23 @@ minted name, kills the name comparison and, through `standInSeed`, both
 continuity arms with it, and is a new path to the same loss. It was refuted with
 evidence rather than argued away.
 
-TWO THINGS LANDED WITH IT. `revisionRegressed` is un-gated from `standInSeed`,
+A THIRD REFUSAL LANDED WITH IT, and it exists because the two changes above
+RE-OPENED this gate from the other side. `installLoadedFreehold` is the only thing
+that teaches a live record its minted name, and it returns early on ANY hold.
+Ruling 2 made an admission hold re-readable and the budget cap left its entry
+untouched for its in-flight read to fill, so for the first time an entry could be
+held at login and WRITABLE afterwards with no install ever having run: the record
+kept the stand-in, the store minted a name for the row, the entry cached the
+record's stand-in at the first commit, and the seal's name comparison was inert by
+value equality for the life of that entry, which is the eighth path arrived at
+from the other side. Found by the fresh read of the fix round, not by its own
+green tests. So `classify`'s absent arm now REFUSES to name a row for a record it
+did not install: a live record carrying the stand-in gets an `unnamed_record`
+hold, terminal for that entry, and no row is created at all. Nothing is lost by
+it, because there was no row, and the next login builds a fresh entry whose
+install runs before the seed.
+
+TWO OTHER THINGS LANDED WITH IT. `revisionRegressed` is un-gated from `standInSeed`,
 because after the fix no ONLINE record carries the stand-in and the discriminator
 would otherwise be dead for the same-account character swap; it has its own
 executed proof, including the arm that matters most, that a rejoin replay AT the

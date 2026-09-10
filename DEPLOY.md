@@ -793,7 +793,7 @@ For off-box safety, sync the directory to S3 occasionally:
   exclude, total bytes written, `pre_gate_refusals` (rows refused on their
   on-disk size before anything was rendered) and `writes_without_record`.
   `woc_freehold_load_failures_total` splits load failures by `kind`, and every
-  one of the EIGHT kinds is its own diagnosis rather than one label. FOUR are
+  one of the NINE kinds is its own diagnosis rather than one label. FOUR are
   DATA incidents, where the same row answers the same way every time and the
   hold is terminal for the session: `unadmitted` is the row-level stranded slot,
   `unsupported` a row in a shape this build cannot read, `malformed` a row whose
@@ -802,10 +802,23 @@ For off-box safety, sync the directory to S3 occasionally:
   repairable: `cap_full` is a login storm filling the store's own admission cap,
   `no_permit` is pool or gate saturation, `read_threw` is a database fault, and
   `no_budget` is a login whose WHOLE durable read ran past its budget while every
-  individual step stayed inside its own bound. A host with no store answers the
-  `unadmitted` hold SHAPE but books no counter at all, so it never reaches this
-  series. Read the two groups differently: a sustained data-kind rate is rows to
-  investigate, a sustained capacity-kind rate is a realm to give more headroom. The series worth an alert are named one
+  individual step stayed inside its own bound. ONE is neither: `unnamed_record`
+  means the sim already held a record for that owner when the read landed, so
+  nothing can teach it the identity a row would be created under, and the store
+  refuses to create one. It is terminal, it is expected in the wake of a burst of
+  capacity refusals, and it means those accounts played a session without a
+  durable row rather than that anything was lost. A host with no store answers
+  the `unadmitted` hold SHAPE but books no counter at all, so it never reaches
+  this series. Read the groups differently: a sustained data-kind rate is rows to
+  investigate, a sustained capacity-kind rate is a realm to give more headroom.
+
+  COUNT REFUSALS, NOT LOGINS. This series counts every refusal, and one login can
+  book more than one: a capacity hold is repairable, so a later join re-reads and
+  a realm that is still saturated books a second refusal for the same account,
+  and a login refused on the whole-preload budget books `no_budget` while the read
+  it stopped waiting for goes on to book its own outcome. That is the honest
+  reading of a per-refusal counter and it is not double counting, but an alert
+  threshold derived from a login rate has to allow for it. The series worth an alert are named one
   by one below rather than counted, because a bare count is a number a later
   edit makes wrong without touching anything it describes.
   `writes_without_record` counts a write that held a
@@ -820,10 +833,14 @@ For off-box safety, sync the directory to S3 occasionally:
   writable-implies-readable refusal, and a run of thrown writes. `held` counts
   entries under ANY recovery hold, DATA or CAPACITY: read
   `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
-  read from a login storm that filled the admission cap. `loaded` and `held`
-  no longer sum to `entries` for a capacity hold: an admission-class refusal
-  leaves the entry UNLOADED on purpose, so a later join re-reads it instead of
-  replaying the refusal, and it stays write-blocked until one succeeds. A growing `oldest_dirty_age_ms`
+  read from a login storm that filled the admission cap. TWO CAVEATS on reading
+  it against the kind series. `loaded` and `held` no longer sum to `entries` for
+  a capacity hold: an admission-class refusal leaves the entry UNLOADED on
+  purpose, so a later join re-reads it instead of replaying the refusal, and it
+  stays write-blocked until one succeeds. And `no_budget` books a kind WITHOUT
+  ever booking a hold: the whole-preload cap refuses the login's read while
+  deliberately leaving the entry untouched, so that kind can climb with `held`
+  flat, which is the correct reading and not a lost update. A growing `oldest_dirty_age_ms`
   means edits are not reaching disk. `deferred_writes` and `permit_wait_ms` are
   the two LEADING indicators of the capacity gates section 8a carries: a
   deferred set that does not return to zero between sweeps means the store's own

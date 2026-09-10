@@ -84,6 +84,8 @@ const KNOWN_DETAILS: readonly RegExp[] = [
   // reaches the warn port without passing through this reporter like the four
   // above it.
   /^no durable answer within \d{1,10} ms$/,
+  // The ordering refusal on classify's absent arm, same route, fixed prose.
+  /^the live record was seeded before this load landed$/,
   /^repaired:(?:condition|rev|version)(?:,(?:condition|rev|version)){0,2}$/,
   // A record version, the one number that reaches a detail as text. Narrowed to
   // what the producer can actually emit: normalizeFreehold reports a version

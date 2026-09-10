@@ -231,6 +231,16 @@ function settle<S extends GuildBookFlushSession>(
   if (again && session.dirtyGuildBanks.size > 0) requestGuildBookFlush(session, save);
 }
 
+/** Mark a guild's book dirty for this session's next fenced escrow save: bump
+ *  the session's own count and index it. Beside `touch`, which is the half it
+ *  exists to pair with, so the count and the index can never be bumped apart. */
+export function markGuildBookDirty<
+  S extends GuildBookHolderSession & { dirtyGuildBanks: Map<number, number> },
+>(index: GuildBookHolderIndex<S>, session: S, guildId: number): void {
+  session.dirtyGuildBanks.set(guildId, (session.dirtyGuildBanks.get(guildId) ?? 0) + 1);
+  index.touch(session, guildId);
+}
+
 /** The MUTABLE slice the revert below writes, kept apart from
  *  `GuildBookHolderSession` above, which is deliberately read-only: the index
  *  OBSERVES a session's book work, and this undoes it. */
@@ -249,10 +259,14 @@ export interface GuildBookRevertSim {
 /**
  * Undo one session's own unflushed guild-book work, moved here from the
  * coordinator so it can be driven by a Vitest with neither a GameServer nor a
- * Sim. Five call sites reach it (the leave path's two, the fence-out, the
- * teardown sweep and the escrow-refusal quarantine) and none of them checks for
- * an empty id list, because this loop is the check: no ids means no revert, no
- * resync, no counter and no log.
+ * Sim. SIX call sites reach it through the coordinator's two private wrappers,
+ * counted rather than described because an earlier version of this line named a
+ * census that did not match the tree: the leave path's teardown, the leave
+ * save's exhausted-retry arm, the ledger-projection quarantine, the fence-out,
+ * the takeover sweep, and the admin guild-bank purge, plus
+ * server/guild_bank_escrow_refusal.ts through an injected port. None of them
+ * checks for an empty id list, because this loop is the check: no ids means no
+ * revert, no resync, no counter and no log.
  *
  * When this session's escrow can never commit again, its guild-book mutations
  * remain in the LIVE book while the character half rolled back (a same-account

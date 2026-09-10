@@ -74,6 +74,11 @@ import {
   type FreeholdHearthReading,
   normalizeHearthLoad,
 } from './freehold_hearth_load';
+import {
+  FREEHOLD_RETRYABLE_HOLD_KINDS,
+  type FreeholdRecoveryHold,
+  type LoadedFreehold,
+} from './freehold_load_outcome';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
 import { seedWouldLandOnRealRow } from './freehold_write_seal';
 
@@ -302,78 +307,18 @@ export const FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES = 2;
  *  normal ceiling; the bound is here so a pathological re-arm cannot hold a
  *  leaving session open. */
 export const FREEHOLD_PERSIST_FLUSH_MAX_PASSES = 4;
-
-/**
- * Every reason a durable load can refuse, as a VALUE so a consumer can walk it.
- *
- * The metrics family that labels on this kind used to key its series on
- * whatever the by-kind tally happened to contain, which made its bounded-label
- * promise a property of the union type rather than of anything at runtime. It
- * now walks this list (the server/offline_fence_refusals.ts OFFLINE_FENCE_WRITERS
- * shape), so a widened producer cannot grow the series set on its own and a
- * kind that has never fired reads zero rather than being absent.
- */
-/** The load-failure kinds a LATER READ CAN CHANGE THE ANSWER TO, and so the ones
- *  whose hold is repairable rather than terminal. All three are admission
- *  causes: the store's own cap was full, no background permit arrived inside the
- *  login bound, or the read threw. The four kinds NOT here (`unadmitted`,
- *  `unsupported`, `malformed`, `oversize`) are data causes, where the same row
- *  produces the same answer every time and replaying the hold is the honest
- *  outcome. Derived from the list below rather than re-typed, so a kind cannot
- *  be added to one and forgotten in the other. */
-export const FREEHOLD_RETRYABLE_HOLD_KINDS: ReadonlySet<string> = new Set([
-  'cap_full',
-  'no_permit',
-  'read_threw',
-]);
-
-export const FREEHOLD_LOAD_FAILURE_KINDS = [
-  'unsupported',
-  'malformed',
-  'oversize',
-  // The genuinely ROW-LEVEL cause: the SQL reader saw rows for this account and
-  // none of them sits in the admitted slot. It is a data incident.
-  'unadmitted',
-  // The three ADMISSION causes, split out because the metric's own help text
-  // promises an operator four different responses and one label cannot give
-  // them: a full local cap is a login-storm capacity signal, a missing permit is
-  // pool or gate saturation, and a thrown read is a database fault. A host with
-  // no store answers the same hold SHAPE but books no counter at all, so it is
-  // deliberately absent from this list.
-  'cap_full',
-  'no_permit',
-  'read_threw',
-  // The WHOLE-PRELOAD cap: every step answered inside its own bound and the sum
-  // of them did not, so an operator seeing this is seeing a login that ran past
-  // FREEHOLD_PERSIST_LOGIN_BUDGET_MS rather than any one step timing out.
-  'no_budget',
-] as const;
-
-/** Why an account's durable row must not be written this session. `kind` is the
- *  classification the load produced; `detail` is dev-channel prose. */
-export interface FreeholdRecoveryHold {
-  /** Derived from the list above, so the two can never drift apart. */
-  readonly kind: (typeof FREEHOLD_LOAD_FAILURE_KINDS)[number];
-  readonly detail: string;
-  readonly plotIndex: number;
-  readonly durableRev: string;
-}
-
-/** One account's durable answer, as the join path consumes it. `state` null
- *  with `hold` null means NO durable row exists: the caller keeps the default
- *  record the sim seeds, and this store persists it under the freshly minted
- *  plot id. `hold` non-null means install nothing and write nothing. */
-export interface LoadedFreehold {
-  readonly accountId: number;
-  readonly plotIndex: number;
-  readonly plotId: string;
-  /** Null when no durable row exists yet, so the first write is insert-only. */
-  readonly durableRev: string | null;
-  readonly state: PersistedFreehold | null;
-  readonly hearthReadyAtMs: number;
-  readonly hearthRevision: string;
-  readonly hold: FreeholdRecoveryHold | null;
-}
+// THE LOAD-OUTCOME VOCABULARY (the failure kinds, which of them are repairable,
+// FreeholdRecoveryHold and LoadedFreehold) moved WHOLE to
+// server/freehold_load_outcome.ts. None of it needs this file: it is the shape
+// the join path consumes and the metric series walks. RE-EXPORTED rather than
+// repointed at a dozen call sites, because the store IS where a reader looks for
+// them and a type-only hop costs nothing at runtime.
+export {
+  FREEHOLD_LOAD_FAILURE_KINDS,
+  FREEHOLD_RETRYABLE_HOLD_KINDS,
+  type FreeholdRecoveryHold,
+  type LoadedFreehold,
+} from './freehold_load_outcome';
 
 /** Every side effect the store has. Nothing here touches a pool, a Sim or a
  *  session directly, which is what lets one Vitest drive the whole lifecycle. */
@@ -1140,14 +1085,41 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // second identity while the record installed from the first one keeps
       // answering to the first, for the life of that session. The record's
       // identity is the one every consumer already sees and the one the wire
-      // echoes back, so the row adopts it. The stand-in is not an identity, and
-      // an identity the wire would refuse is not one either.
+      // echoes back, so the row adopts it.
+      //
+      // A STAND-IN IS NOT AN IDENTITY TO ADOPT, AND IT IS NOT ONE TO MINT OVER
+      // EITHER. A live record carrying the stand-in was seeded WITHOUT an
+      // install (installLoadedFreehold returns early on any hold), and
+      // loadFreehold is load-once, so nothing can ever teach that record the
+      // name a row would be created under. Minting one anyway is the state
+      // ruling 1 exists to remove, arrived at from the other side: the row would
+      // carry a name its own record never learns, applyWriteResult would cache
+      // the record's stand-in, and the seal's name comparison would be inert by
+      // value equality for the life of that entry, which is the eighth path.
+      // Both new arms produce this state (an admission hold whose entry is now
+      // re-read, and the whole-preload cap's in-flight read landing behind its
+      // refusal), so it is refused HERE, once, rather than guarded in each.
+      //
+      // TERMINAL for this entry, because nothing in the session can change it,
+      // and harmless: there is no row, so nothing is preserved or lost by
+      // refusing. The NEXT login builds a fresh entry whose install runs before
+      // the seed, and it is named from the start.
+      const liveName = ports.livePlotId(ownerKey);
+      if (liveName === PENDING_FREEHOLD_PLOT_ID) {
+        return holdResult(
+          entry,
+          {
+            kind: 'unnamed_record',
+            detail: 'the live record was seeded before this load landed',
+            plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
+            durableRev: FREEHOLD_ABSENT_DURABLE_REV,
+          },
+          hearth,
+        );
+      }
       if (entry.plotId === '') {
-        const live = ports.livePlotId(ownerKey);
         entry.plotId =
-          live !== null && live !== PENDING_FREEHOLD_PLOT_ID && freeholdPlotIdAdmitted(live)
-            ? live
-            : ports.mintPlotId();
+          liveName !== null && freeholdPlotIdAdmitted(liveName) ? liveName : ports.mintPlotId();
       }
       entry.durableRev = null;
       entry.state = null;
@@ -1449,8 +1421,18 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       return await preloadWithin(accountId);
     }
     try {
-      const answer = await Promise.race([preloadWithin(accountId), overrun]);
-      return answer === 'no-budget' ? budgetRefusal(accountId) : answer;
+      // THE LOSING PROMISE KEEPS A HANDLER. `preloadWithin` is designed not to
+      // reject (loadOnce catches every fault and answers a hold), but a
+      // rejection that arrives AFTER the deadline has already answered would be
+      // unhandled, and the cost of being wrong about that is the realm process.
+      // The catch is a no-op because the answer has already been decided.
+      const load = preloadWithin(accountId);
+      const answer = await Promise.race([load, overrun]);
+      if (answer === 'no-budget') {
+        void load.catch(() => undefined);
+        return budgetRefusal(accountId);
+      }
+      return answer;
     } finally {
       try {
         cancel();

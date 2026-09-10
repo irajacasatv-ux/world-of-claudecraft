@@ -1519,8 +1519,14 @@ const MONOLITHS: MonolithRow[] = [
     // a SimContext and one load answer; and the process-wide REGISTRY handle to
     // server/freehold_persist_registry.ts, a module variable and four total
     // functions over it. Net 58 under the row despite the new logic.
+    // LOWERED AGAIN, 2261 -> 2243, by the fresh review of that round: closing the
+    // path its own fixes re-opened (a live record seeded WITHOUT an install can
+    // never be named, so the absent arm refuses to create a row for one) is paid
+    // by a FOURTH extraction, the load-outcome vocabulary to
+    // server/freehold_load_outcome.ts, which the metric series walks and the
+    // join path installs and neither of which wants the store.
     file: 'server/freehold_persist.ts',
-    ceiling: 2261,
+    ceiling: 2243,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {
