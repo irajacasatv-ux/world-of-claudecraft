@@ -523,22 +523,45 @@ describe('every durable field write bumps the record revision', () => {
   function exportedBodies(): Map<string, string> {
     const dir = join(__dirname, '..', 'src', 'sim', 'freehold');
     const bodies = new Map<string, string>();
-    for (const file of readdirSync(dir)
-      .filter((name) => name.endsWith('.ts'))
-      .sort()) {
-      const src = stripComments(readFileSync(join(dir, file), 'utf8'));
+    // RECURSIVE: a module added under a subdirectory was invisible to the walk
+    // entirely, and the directory listing pin below would only red on the new
+    // directory NAME, which the cheapest response is to add to the list.
+    const tsFiles = (root: string, prefix = ''): string[] =>
+      readdirSync(root, { withFileTypes: true })
+        .flatMap((entry) =>
+          entry.isDirectory()
+            ? tsFiles(join(root, entry.name), `${prefix}${entry.name}/`)
+            : entry.name.endsWith('.ts')
+              ? [`${prefix}${entry.name}`]
+              : [],
+        )
+        .sort();
+    for (const file of tsFiles(dir)) {
+      const src = stripComments(readFileSync(join(dir, ...file.split('/')), 'utf8'));
       // EVERY exported callable shape, not `export function` alone: an
       // `export const f = () => {}` or an `export async function` mutator was
       // invisible to this walk entirely.
       const starts = [...src.matchAll(/^export (?:async function|function|const) (\w+)\s*[(=]/gm)];
       for (let i = 0; i < starts.length; i++) {
         const from = starts[i].index ?? 0;
-        const to = i + 1 < starts.length ? (starts[i + 1].index ?? src.length) : src.length;
-        bodies.set(`${file}:${starts[i][1]}`, src.slice(from, to));
+        const next = i + 1 < starts.length ? (starts[i + 1].index ?? src.length) : src.length;
+        // TO ITS OWN CLOSING BRACE, not to the next export. A slice that ran to
+        // the next export made an exempted CONSTRUCTOR exempt every private
+        // helper that followed it: `defaultFreeholdState` swallowed
+        // `cloneFreeholdState`, which runs on every load and every serialize,
+        // and `freeholdStateFromPersisted` swallowed the canonical JSON encoder.
+        // The remainder is kept as its own body so nothing falls out of the scan.
+        const body = src.slice(from, next);
+        const close = body.indexOf('\n}');
+        const end = close === -1 ? body.length : close + 2;
+        bodies.set(`${file}:${starts[i][1]}`, body.slice(0, end));
+        const rest = body.slice(end);
+        if (rest.trim().length > 0) bodies.set(`${file}:${starts[i][1]} <tail>`, rest);
       }
       // The file's HEAD, everything above its first export, so a module-private
       // helper declared before them is not in no body at all. persisted.ts's
-      // first export is four hundred lines in.
+      // first export is four hundred lines in. Its <tail> siblings above do the
+      // same for a helper declared BETWEEN two exports.
       const head = starts.length > 0 ? src.slice(0, starts[0].index ?? 0) : src;
       if (head.trim().length > 0) bodies.set(`${file}:<module head>`, head);
     }
@@ -564,6 +587,15 @@ describe('every durable field write bumps the record revision', () => {
     // Tight enough to notice the scan silently losing a file: the directory
     // exports 43 bodies today, and a bound of 20 would survive losing half of
     // them. The two key pins below are the real control; this is the coarse one.
+    // EVERY .ts FILE IN THE DIRECTORY is represented, which a numeric floor
+    // cannot say: a floor of 40 against 43 tolerated losing three single-export
+    // files outright.
+    const scanned = new Set([...bodies.keys()].map((key) => key.split(':')[0]));
+    const onDisk = readdirSync(join(__dirname, '..', 'src', 'sim', 'freehold'))
+      .filter((name) => name.endsWith('.ts'))
+      .sort();
+    expect([...scanned].sort()).toEqual(onDisk);
+    expect(onDisk.length).toBeGreaterThan(10);
     expect(bodies.size).toBeGreaterThanOrEqual(40);
     expect(bodies.has('state.ts:setFreeholdTier')).toBe(true);
     expect(bodies.has('commands.ts:placeFurnishing')).toBe(true);
@@ -571,6 +603,38 @@ describe('every durable field write bumps the record revision', () => {
     // The walk really does reach an arrow export and a module head, so the two
     // widenings above are not decoration.
     expect(bodies.has('persisted.ts:<module head>')).toBe(true);
+  });
+
+  it('is the ONLY file that writes the live record map, as its header claims', () => {
+    // src/sim/freehold/state.ts states "THIS IS THE ONLY FILE THAT WRITES
+    // ctx.freeholds". The Hearth clock map gets a seven-root scan with a named
+    // exemption; the record map, which the whole write seal reasons about, had
+    // none, so a `ctx.freeholds.set(key, { ...record, layout: [] })` added in
+    // sim.ts was invisible to every scan in the tree.
+    const roots = ['server', 'src/sim', 'src/net', 'src/game', 'src/ui', 'src/render', 'headless'];
+    const offenders: string[] = [];
+    const walk = (root: string): void => {
+      for (const entry of readdirSync(root, { withFileTypes: true })) {
+        const full = join(root, entry.name);
+        if (entry.isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (!entry.name.endsWith('.ts')) continue;
+        if (full.endsWith(join('src', 'sim', 'freehold', 'state.ts'))) continue;
+        const src = stripComments(readFileSync(full, 'utf8'));
+        if (/freeholds\s*\.\s*(?:set|delete|clear)\s*\(/.test(src)) offenders.push(full);
+      }
+    };
+    for (const root of roots) walk(join(__dirname, '..', root));
+    expect(offenders).toEqual([]);
+    // ANTI-VACUITY: the exempt file really does carry all three writers, so a
+    // scan that stopped matching would red here rather than pass empty.
+    const owner = stripComments(
+      readFileSync(join(__dirname, '..', 'src', 'sim', 'freehold', 'state.ts'), 'utf8'),
+    );
+    expect(owner.split('ctx.freeholds.set(').length - 1).toBe(2);
+    expect(owner.split('ctx.freeholds.delete(').length - 1).toBe(1);
   });
 
   it('bumps rev in the same function as any durable field write', () => {
@@ -588,7 +652,10 @@ describe('every durable field write bumps the record revision', () => {
     // WITH the document rather than being advanced past it. A body that stopped
     // being a constructor and stayed on this list would carry the exemption with
     // it, so each one has to still return a freshly built record.
+    // AND ONLY THE EXPORT ITSELF IS EXEMPT: its trailing private helpers are
+    // scanned under a `<tail>` key, so the exemption cannot widen silently.
     for (const name of CONSTRUCTORS) {
+      expect([...exportedBodies().keys()], `${name} still exists`).toContain(name);
       const body = exportedBodies().get(name) ?? '';
       expect(body, `${name} is on the constructor exemption list`).not.toBe('');
       expect(body, `${name} builds a record rather than mutating one`).toMatch(/return\s*\{/);

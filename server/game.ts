@@ -3224,7 +3224,7 @@ export class GameServer {
     }
     // THE WHOLE WINDOW, not addPlayer alone: a throw before `clients.set` leaks
     // the reference and the tracking context, whose pairs live in a leave a
-    // failed join never reaches. Hoisted for the guard.
+    // failed join never reaches.
     let session!: ClientSession;
     let initialLevel = 1;
     let joined = false;
@@ -3434,7 +3434,6 @@ export class GameServer {
       joined = true; // From here a leave can run and owns the release.
     } finally {
       if (!joined) {
-        // removePlayer is idempotent and reaches releaseFreeholdOnLeave.
         releaseFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
         if (botTrackingContext) this.botDetector.releaseTrackingContext(botTrackingContext);
         this.sim.removePlayer(pid);
@@ -3779,13 +3778,17 @@ export class GameServer {
     if (session.left || !this.clients.has(session.pid)) return;
     // Read, never re-derived: a derivation here throws above both releases.
     const freeholdOwnerKey = session.freeholdOwnerKey;
+    // MARKED LEFT BEFORE THE GUARD OPENS: these two make a second leave() a
+    // no-op, and the `finally` below runs on any throw out of the settlement, so
+    // below it a throw tore the session down while it was still re-enterable.
+    session.left = true;
+    this.clients.delete(session.pid);
     try {
       await this.settleLeavingSession(session);
     } finally {
       // ON EVERY EXIT, INCLUDING A THROW: all three callers fire leave() with no
       // catch, so a rejection above used to skip these three lines forever. The
-      // flush is CAUGHT like the lease release: a throw there must not take the
-      // other two down with it.
+      // flush is CAUGHT like the lease release below it.
       await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey).catch((err) =>
         console.error('freehold leave flush failed:', err),
       );
@@ -3813,10 +3816,10 @@ export class GameServer {
     // already disconnected, so there is no one to show their own notice to.
   }
 
-  /** The final character AND World Market save, retried; the policy is
-   *  server/leave_character_save.ts, and two suites drive this method directly.
-   *  withMarket because a Market escrow STRADDLES the two while the autosave
-   *  persists the market only every thirty seconds. */
+  /** The final character AND Market save, retried (leave_character_save.ts);
+   *  two suites drive this method directly. withMarket because a Market escrow
+   *  STRADDLES the two and the autosave persists the market only every thirty
+   *  seconds, so a bags-only flush tears it in half. */
   private async saveCharacterOnLeave(session: ClientSession): Promise<void> {
     await saveLeavingCharacter(
       session.name,
@@ -3832,17 +3835,14 @@ export class GameServer {
     }
   }
 
-  /** Everything a leaving session settles BEFORE its releases, so leave() runs
-   *  its three release lines in a `finally`. */
+  /** Everything a leaving session settles before its three releases. */
   private async settleLeavingSession(session: ClientSession): Promise<void> {
     if (session.spectating) this.exitSpectate(session, false);
     if (session.jailVisit) this.exitJailVisit(session, false);
     this.cancelAndRecordUnstuck(session);
-    session.left = true;
     // Release only the session binding. The account-keyed token state remains
     // cached until it has naturally refilled, so reconnect cannot reset it.
     session.bankVaultLedgerGuard.release();
-    this.clients.delete(session.pid);
     if (![...this.clients.values()].some((live) => live.accountId === session.accountId)) {
       this.generalChatQuota.forgetAccount(session.accountId);
     }

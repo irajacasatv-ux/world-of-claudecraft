@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 import {
   FREEHOLD_ACCOUNT_PLOT_READ_LIMIT,
   FREEHOLD_EXPORT_DETOAST_GATE_BYTES,
+  FREEHOLD_EXPORT_MAX_RENDERED_BYTES,
   FREEHOLD_EXPORT_ROW_LIMIT,
   FREEHOLD_PLOT_ID_MAX_LEN,
   FREEHOLD_PLOT_ID_PREFIX,
@@ -680,12 +681,18 @@ describe('the subject-access export statement', () => {
     expect(folded).toContain(
       'COALESCE(pg_column_size(f.layout), 0) + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes',
     );
+    expect(folded).toContain(`> ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES} THEN NULL`);
+    // AND THE AUTHORITATIVE MEASURE BEHIND IT. The pre-gate reads the COMPRESSED
+    // size, so on its own it bounds nothing: the content columns must be gated
+    // on the rendered length, which is itself NULL when the pre-gate refused.
     expect(folded).toContain(
-      `CASE WHEN b.disk_bytes <= ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES} THEN f.layout ELSE NULL END AS layout`,
+      `CASE WHEN b.owned_bytes <= ${FREEHOLD_EXPORT_MAX_RENDERED_BYTES} THEN f.layout ELSE NULL END AS layout`,
     );
     expect(folded).toContain(
-      `CASE WHEN b.disk_bytes <= ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES} THEN f.trophies ELSE NULL END AS trophies`,
+      `CASE WHEN b.owned_bytes <= ${FREEHOLD_EXPORT_MAX_RENDERED_BYTES} THEN f.trophies ELSE NULL END AS trophies`,
     );
+    expect(FREEHOLD_EXPORT_MAX_RENDERED_BYTES).toBe(425_984);
+    expect(folded).toContain('OFFSET 0');
     // Stable order, and the account scoped by a bound parameter rather than by
     // interpolation.
     expect(folded).toContain('WHERE f.account_id = $1');

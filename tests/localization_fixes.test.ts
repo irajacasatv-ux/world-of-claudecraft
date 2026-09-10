@@ -1433,6 +1433,16 @@ describe('S3: every sim.ts emit is recognized (drift guard)', () => {
       'utf8',
     ),
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/freehold/should_spawn_npc.ts'), 'utf8'),
+    // WHOLE-DIRECTORY SWEEP, the same treatment src/sim/professions,
+    // src/sim/social and src/sim/interactions get below. The hand-written
+    // enumeration above covered nine of fifteen modules and could not keep the
+    // promise its own comment makes: hearth_key.ts, entry_context.ts, gate.ts,
+    // gate_rules.ts, index.ts and types.ts were outside the gate, and two of
+    // them were changed by the persistence work. entry_context.ts and gate.ts
+    // are refusal-decision modules, which is exactly where a first player
+    // sentence lands. The per-file entries are kept for their history notes;
+    // re-scanning a file only repeats a candidate, it cannot hide one.
+    socialSourceUnder(path.resolve(process.cwd(), 'src/sim/freehold')),
     fs.readFileSync(path.resolve(process.cwd(), 'src/sim/combat/effective_stats.ts'), 'utf8'),
     socialSrc,
     // Whole-directory sweep (the phase 18 whole-branch review): EVERY

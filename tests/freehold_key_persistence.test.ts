@@ -75,7 +75,19 @@ function allKeys(value: unknown): string[] {
   return Object.entries(value).flatMap(([key, nested]) => [key, ...allKeys(nested)]);
 }
 
+/** A negative key scan is only a scan if the walker actually walks. Both
+ *  assertions below read `allKeys(...).filter(...)` and expect an empty array,
+ *  which a walker that returned nothing would satisfy forever. */
+function expectWalkerSees(blob: unknown, key: string): void {
+  expect(allKeys(blob)).toContain(key);
+}
+
 function expectNoSessionHousing(character: CharacterState, plot: FreeholdState) {
+  // THE CONTROL FIRST. Both scans below are `filter(...) -> []`, which a walker
+  // that returned nothing satisfies forever; these two say the walker really
+  // reaches into each blob.
+  expectWalkerSees(character, 'level');
+  expectWalkerSees(plot, 'plotId');
   for (const blob of [character, plot]) {
     expect(JSON.stringify(blob)).not.toContain('3601000');
     expect(

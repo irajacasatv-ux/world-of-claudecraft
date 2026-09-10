@@ -731,6 +731,12 @@ d('account_freeholds against real PostgreSQL', () => {
     expect(exported[1].layout).toBeNull();
     expect(exported[1].trophies).toBeNull();
     expect(Number(exported[1].disk_bytes)).toBeGreaterThan(db.FREEHOLD_EXPORT_DETOAST_GATE_BYTES);
+    // The pre-gate refused to render, so the AUTHORITATIVE measure is null too:
+    // that is what tells a reader the size shown is the COMPRESSED one. The gate
+    // alone bounds nothing, because the compression ratio is unbounded.
+    expect(exported[1].owned_bytes).toBeNull();
+    // The ordinary row DID render, so its authoritative measure is a number.
+    expect(Number(exported[0].owned_bytes)).toBeGreaterThan(0);
     // And the row bound is a real LIMIT rather than a comment.
     expect(db.FREEHOLD_EXPORT_ROW_LIMIT).toBe(20);
     expect(db.FREEHOLD_EXPORT_ROW_LIMIT).toBeGreaterThan(db.FREEHOLD_ACCOUNT_PLOT_READ_LIMIT);

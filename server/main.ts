@@ -3817,8 +3817,18 @@ export async function startServer(): Promise<http.Server> {
     // at all. Dark answers a HOLD, never an absence: an absence would invite the
     // store to generate an identity and persist an empty default over a row this
     // realm never read.
+    // THE SIM'S OWN FLAG, not a second live env read. Every other consumer of
+    // this decision reads the boot snapshot: the store's enabled() port, both
+    // record inserters, and retain's lost-entry reload. Reading process.env here
+    // made the login read and the repair read disagree across an in-process flag
+    // flip, in both directions: raised, two durable round trips per login on a
+    // realm that seeds no record and can never write; lowered, the login answers
+    // a hold while retain still reloads, so every joining account is silently
+    // write-blocked and lands in `quiesced`, where DEPLOY.md tells the operator
+    // to read a second realm writing the same rows. The live read stays on the
+    // wire verdict and the status route, where it is the stated design.
     freeholdForAccount: (id) =>
-      freeholdsEnabled(process.env)
+      game.sim.ctx.freeholdsEnabled
         ? freeholdPreloadForAccount(id)
         : Promise.resolve(freeholdPreloadUnavailable(id, 'housing is disabled on this realm')),
   });
@@ -4301,7 +4311,13 @@ export async function startServer(): Promise<http.Server> {
     // deadline lives inside freeholdPersistIdle, which also flips intake, so a
     // GameServer.stop() earlier in this closure cannot refuse the enqueue above.
     const freeholdsDrained = await freeholdPersistIdle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
-    if (!freeholdsDrained) console.warn('freehold persistence drain deadline reached');
+    if (!freeholdsDrained) {
+      // TWO CAUSES, one answer. False means either the deadline expired with
+      // work still in flight, or the drain finished at once and found an owner
+      // still dirty and unblocked with nobody left to re-arm it (a write that
+      // failed without quiescing). Both mean edits did not reach disk.
+      console.warn('freehold persistence drain did not complete: edits may be unwritten');
+    }
     // Stop accepted /unstuck report intake and drain only to a finite deadline.
     // Per-query timeouts bound an active write; deadline expiry aborts retry
     // delays and drops queued telemetry before the shared pool closes.

@@ -729,6 +729,21 @@ export const FREEHOLD_EXPORT_ROW_LIMIT = 20;
  *  own bound is justified against in this file. */
 export const FREEHOLD_EXPORT_DETOAST_GATE_BYTES = FREEHOLD_STORED_DETOAST_GATE_BYTES;
 
+/** The AUTHORITATIVE bound behind that pre-gate, and the reason the pre-gate
+ *  alone is not one. pg_column_size reports the COMPRESSED size and the
+ *  compression ratio is unbounded, so a row under the gate can still render to
+ *  megabytes: at this file's own measured 48x pglz ratio, 131072 compressed
+ *  bytes is about 6.3 MB of text on a request path holding one pool client. The
+ *  account read pairs its pre-gate with an octet_length measure for exactly this
+ *  reason; the export now does too. Wider than the account read's stored ceiling
+ *  because the export must hand back rows this build refuses to LOAD, including
+ *  the oversize class recovery exists for; four times the stored bound covers
+ *  every row a later release with a bigger decor budget could plausibly write
+ *  while still turning a corrupt row into a reported one. A LITERAL rather than
+ *  an import of FREEHOLD_MAX_STORED_BYTES: this module deliberately imports
+ *  nothing from the sim leaf, and 425984 is four times that constant's 106496. */
+export const FREEHOLD_EXPORT_MAX_RENDERED_BYTES = 425_984;
+
 /** The subject-access read (exportAccountData): every persisted plot row this
  *  account owns, in stable plot_index order, or an empty array when it owns
  *  none. Keep-forever rows, so this is the owner's ONLY readback of them, and
@@ -740,18 +755,19 @@ export const FREEHOLD_EXPORT_DETOAST_GATE_BYTES = FREEHOLD_STORED_DETOAST_GATE_B
  *  account read's `LIMIT 2` is justified in this same file against exactly that
  *  hazard, and it is the read that runs on a REQUEST. Two things it therefore
  *  does NOT promise, stated rather than implied:
- *   * past FREEHOLD_EXPORT_ROW_LIMIT rows the answer is TRUNCATED. The limit is
- *     twenty against an approved ladder of at most two plots, so no shipped
- *     account can reach it, and a row count equal to the limit is the signal
- *     that one might have.
- *   * a row past the on-disk pre-gate comes back with `layout` and `trophies`
- *     NULL and its measured `disk_bytes` in their place. The row itself, its
- *     identity, both revisions and every scalar column are present, so the owner
- *     can see the plot exists and how large its content is; the content itself
- *     is not rendered into the request path.
- *  Whether a truncated or content-suppressed export owes the payload an explicit
- *  marker beyond `disk_bytes` is a subject-access question this file does not
- *  answer; it is carried in the rollout contract. */
+ *   * past FREEHOLD_EXPORT_ROW_LIMIT rows the answer is TRUNCATED, and it says
+ *     so: a truncated read appends one `{ truncated: true }` marker row rather
+ *     than trailing off, because an export that quietly stops is worse than one
+ *     that stops and says it did. The limit is twenty against an approved ladder
+ *     of at most two plots, so no shipped account can reach it.
+ *   * a row whose content is too large to render comes back with `layout` and
+ *     `trophies` NULL and its two measured sizes in their place. The row itself,
+ *     its identity, both revisions and every scalar column are present, so the
+ *     owner can see the plot exists and how large its content is; the content is
+ *     not rendered into the request path. TWO measures, not one, because the
+ *     cheap pre-gate reads the COMPRESSED size and the compression ratio is
+ *     unbounded: `owned_bytes` is the authoritative rendered length and it is
+ *     itself NULL when the pre-gate refused to render at all. */
 export async function freeholdsForExport(
   db: Pool,
   accountId: number,
@@ -761,19 +777,37 @@ export async function freeholdsForExport(
             condition, visit_policy, upkeep_binding,
             upkeep_checkpoint, upkeep_credit, created_at, updated_at,
             b.disk_bytes,
-            CASE WHEN b.disk_bytes <= ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES}
+            b.owned_bytes,
+            CASE WHEN b.owned_bytes <= ${FREEHOLD_EXPORT_MAX_RENDERED_BYTES}
                  THEN f.layout ELSE NULL END AS layout,
-            CASE WHEN b.disk_bytes <= ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES}
+            CASE WHEN b.owned_bytes <= ${FREEHOLD_EXPORT_MAX_RENDERED_BYTES}
                  THEN f.trophies ELSE NULL END AS trophies
        FROM account_freeholds f
        LEFT JOIN LATERAL (
-         SELECT COALESCE(pg_column_size(f.layout), 0)
-              + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes
+         SELECT disk_bytes, owned_bytes FROM (
+           SELECT d.disk_bytes,
+                  CASE
+                    WHEN d.disk_bytes > ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES} THEN NULL
+                    ELSE COALESCE(octet_length(f.layout::text), 0)
+                       + COALESCE(octet_length(f.trophies::text), 0)
+                  END AS owned_bytes
+             FROM (
+               SELECT COALESCE(pg_column_size(f.layout), 0)
+                    + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes
+             ) d
+         ) m OFFSET 0
        ) b ON true
       WHERE f.account_id = $1
       ORDER BY f.plot_index
       LIMIT ${FREEHOLD_EXPORT_ROW_LIMIT}`,
     [accountId],
   );
-  return res.rows;
+  const rows = res.rows;
+  // SAY SO WHEN IT STOPS. Reaching the limit exactly is indistinguishable from
+  // having exactly that many rows, and the account that reaches it is the
+  // corrupt one this export exists to serve.
+  if (rows.length === FREEHOLD_EXPORT_ROW_LIMIT) {
+    rows.push({ truncated: true, limit: FREEHOLD_EXPORT_ROW_LIMIT });
+  }
+  return rows;
 }

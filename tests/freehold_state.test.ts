@@ -15,7 +15,7 @@
 // FREEHOLD_MAX_OWNED_BYTES ceiling, and the byte number they prove is the one
 // docs/freeholds/content-numbers-workbook.md records.
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
 import {
   FREEHOLD_MAX_ID_LENGTH,

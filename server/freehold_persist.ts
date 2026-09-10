@@ -1691,6 +1691,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       entry.running = false;
       entry.chain = null;
       activeWrites--;
+      // A leaving flush parked on this entry has nothing left to await: every
+      // other exit from an armed write wakes them, and this one did not, so a
+      // parked leaver spent its whole deadline on a write that had already
+      // finished failing.
+      releaseSettleWaiters(entry);
       maybeRemove(entry);
       drainCheck();
       // This catch can run INSIDE the pump's own loop, and pumpDeferredWrites
@@ -1833,13 +1838,17 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     },
 
     saveAllDirty(): void {
+      // THE SWEEP RUNS EVEN WITH INTAKE CLOSED, and above the guard rather than
+      // below it. This is the store's only periodic hook, so an entry whose
+      // session went away without a leave has no other removal path, and
+      // `idle()` closes intake one way and `stop()` deliberately does not reopen
+      // it: leaving the sweep behind the guard retired the entries map's only
+      // time bound for any store that outlives a drain.
+      sweepOrphans();
       if (!intake) return;
       for (const entry of entries.values()) {
         if (noteRevisionMoved(entry) || isDirty(entry)) arm(entry);
       }
-      // Same pass, because this is the store's only periodic hook: an entry
-      // whose session went away without a leave has no other removal path.
-      sweepOrphans();
     },
 
     async flushAndRelease(ownerKey: string): Promise<void> {
@@ -1867,9 +1876,17 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         // holds one document and used to count two, and the gauge that is this
         // retention's only stated bound then ratcheted upward and never read
         // zero again.
-        if (entry.leaveDocument !== null) leaveCaptures--;
-        entry.leaveDocument = ports.serialize(ownerKey);
-        if (entry.leaveDocument !== null) leaveCaptures++;
+        // ONLY WHEN THERE IS SOMETHING TO REPLACE IT WITH. A null answer means
+        // the record is already gone, which is the exact window the capture
+        // exists for, so overwriting with it would discard the very edits it
+        // holds. Released before reassigning, because a second leave over a
+        // surviving capture holds one document and used to count two.
+        const captured = ports.serialize(ownerKey);
+        if (captured !== null) {
+          if (entry.leaveDocument !== null) leaveCaptures--;
+          entry.leaveDocument = captured;
+          leaveCaptures++;
+        }
         // LEAVING, so it may borrow the reserve: this write is the last chance
         // for these edits, and every background write it would otherwise queue
         // behind has a next sweep to catch it.

@@ -194,12 +194,28 @@ function harness(options: HarnessOptions = {}) {
   // sim could never produce, and the store's seal would fire on fixtures rather
   // than on the race it guards.
   //
-  // KNOWN GAP in the bag below, stated rather than left to be discovered: by
+  // KNOWN GAP in the bag below, now bounded rather than merely stated. By
   // default `hasLive()` answers false while `serialize()` still returns a
-  // document, so most cases here run on a liveness state the server cannot
-  // produce (it reads one map for both). No mutant has been shown to pass
-  // because of it, but it makes preload's already-live arm unreachable unless a
-  // case overrides `hasLive` explicitly.
+  // document, so most cases run on a liveness state the server cannot produce
+  // (it reads one map for both).
+  //
+  // ITS EXACT SCOPE, measured rather than feared. Only ONE production decision
+  // reads `hasLive`: preload's already-live arm. `liveRev` and `serialize` are
+  // the other two liveness reads and this bag keeps them mutually consistent,
+  // because both derive from the case's own `serialize`. So the divergence
+  // reaches exactly one branch, and only on a SECOND preload, since the first
+  // legitimately runs before addPlayer seeds anything. Four cases pass `hasLive`
+  // and do exercise that arm, both sub-arms. Five model a rejoin through the
+  // combination the server cannot produce; each conclusion still holds for the
+  // production sub-case it describes, and what the gap costs is DISCRIMINATION,
+  // not correctness: none of those five can notice a regression in the
+  // already-live arm.
+  //
+  // DERIVING hasLive FROM serialize WAS TRIED AND REVERTED. It is the right
+  // shape and it reds four cases that model a COLD join with the default
+  // document, which would have to be rewritten to keep saying what they say.
+  // That is a suite-wide change, not a fix, and it is recorded here rather than
+  // taken at the end of an audit.
   const fallbackPlotId =
     options.rowLoad?.kind === 'row' ? options.rowLoad.row.plotId : PENDING_FREEHOLD_PLOT_ID;
   const livePlotIdNow = (): string =>
@@ -395,6 +411,7 @@ describe('freehold persist constants', () => {
     expect(FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES).toBe(8);
     expect(FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE).toBe(2);
     expect(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS).toBe(2_000);
+    expect(FREEHOLD_MAX_STORED_BYTES).toBe(106_496);
     // The drain runs ABOVE the steady-state cap, which is the whole reason it
     // has a constant of its own: at the steady cap the ten-second deadline
     // covers about a quarter of a realm.
@@ -2995,31 +3012,21 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.writes[0].wireRev).toBe(15);
   });
 
-  it('the gauge returns to zero, so the retention it bounds is falsifiable', async () => {
-    // A second leave over a surviving capture holds ONE document and used to
-    // count two, so the gauge ratcheted upward and never read zero again. It is
-    // this retention's only stated bound, and a bound that cannot read zero is
-    // not one.
-    let granted = 0;
-    const h = await loadedStore({
-      rowLoad: { kind: 'row', row: rowFixture() },
-      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
-      serialize: () => persistedFixture({ rev: 6 }),
-      acquirePermit: async () => {
-        granted += 1;
-        return granted === 1 ? { release: () => {} } : null;
-      },
-    });
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.flushAndRelease(OWNER_KEY);
-    await tick(20);
-    expect(h.store.stats().leaveCaptures).toBe(1);
-    // A SECOND leave while the first capture is still outstanding.
-    h.store.retain(OWNER_KEY, ACCOUNT_ID);
-    await h.store.flushAndRelease(OWNER_KEY);
-    await tick(20);
-    expect(h.store.stats().leaveCaptures).toBe(1);
-  });
+  // DELETED at the persistence QA and replaced by this note. It was titled "the
+  // gauge returns to zero, so the retention it bounds is falsifiable" and its
+  // body asserted one, then one again, and never zero: a strictly weaker copy of
+  // "counts ONE capture when a second leave lands over a surviving one" above,
+  // which drives the same two leaves over one held write and DOES assert the
+  // return to zero. A case whose title names an assertion it does not make is
+  // worse than no case.
+  // A case titled "the gauge returns to zero, so the retention it bounds is
+  // falsifiable" stood here and was DELETED at the persistence QA: its body
+  // asserted one, then one again, and never zero. It was a strictly weaker copy
+  // of "counts ONE capture when a second leave lands over a surviving one"
+  // above, which drives the same two leaves over one held write and DOES assert
+  // the return to zero, and of "releases a retained capture on the removal
+  // paths, so the gauge can read zero" below. A case whose title names an
+  // assertion it does not make is worse than no case.
 
   it('never lets a captured document shadow a later live edit', async () => {
     // A live record always wins. If the capture could outrank it, a rejoining
@@ -4060,9 +4067,19 @@ describe('the coordinator side of the wiring (source pins)', () => {
     const addPlayer = body.indexOf('this.sim.addPlayer(');
     const release = body.indexOf('releaseFreeholdBinding(this.freeholdPersist, freeholdOwnerKey)');
     expect(release).toBeGreaterThan(addPlayer);
-    // ...and it is inside a catch, not a second unconditional release.
-    const between = body.slice(addPlayer, release);
-    expect(between).toContain('catch');
+    // INSIDE THE CATCH BLOCK, not merely after it. A slice-contains-catch test
+    // is satisfied by a release moved out to just past the closing brace, and
+    // that release runs on every SUCCESSFUL join: refs drops to zero while the
+    // player is online, the orphan sweep collects the entry, and the session's
+    // edits are discarded at logout with no hold and no counter. This reads the
+    // block itself: from `catch (err) {` to the release there is no closing
+    // brace, so the release is still inside it.
+    const catchAt = body.indexOf('catch (err) {', addPlayer);
+    expect(catchAt).toBeGreaterThan(addPlayer);
+    expect(catchAt).toBeLessThan(release);
+    expect(body.slice(catchAt + 'catch (err) {'.length, release)).not.toContain('}');
+    // Exactly two releases in the whole join: the catch, and the guard below.
+    expect(body.split('releaseFreeholdBinding(').length - 1).toBe(2);
     // AND THE WHOLE WINDOW, not addPlayer alone. A dozen throwable calls sit
     // between the seed and the `clients.set` that makes this session leavable,
     // and a throw in any of them leaks the same reference and leaves a seeded
@@ -4145,7 +4162,7 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // The realm flag is read LIVE per fresh join. Dark must answer a HOLD: an
     // absence would invite the store to generate an identity and persist an
     // empty default over a row this realm never read.
-    expect(MAIN).toContain('freeholdsEnabled(process.env)');
+    expect(MAIN).toContain('game.sim.ctx.freeholdsEnabled');
     expect(MAIN).toContain('freeholdPreloadForAccount(id)');
     expect(MAIN).toContain('freeholdPreloadUnavailable(id,');
     // THE CONTIGUOUS CLAUSE, not three index comparisons. Both call forms sit
@@ -4157,10 +4174,15 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // pins in tests/server/freehold_db.test.ts read theirs.
     const clause = MAIN.replace(/\s+/g, ' ');
     expect(clause).toContain(
-      'freeholdForAccount: (id) => freeholdsEnabled(process.env) ' +
+      'freeholdForAccount: (id) => game.sim.ctx.freeholdsEnabled ' +
         '? freeholdPreloadForAccount(id) ' +
         ': Promise.resolve(freeholdPreloadUnavailable(id,',
     );
+    // ONE SOURCE for the join path's decision. The store's own port reads
+    // ctx.freeholdsEnabled, and so do both record inserters and retain's repair
+    // reload; a live process.env read here disagreed with all of them across an
+    // in-process flag flip. The live read belongs to the wire and the route.
+    expect(clause).not.toContain('freeholdForAccount: (id) => freeholdsEnabled(process.env)');
   });
 });
 

@@ -220,6 +220,19 @@ describe('the pinned statements', () => {
     // would let a stale caller replay. Neither may appear.
     expect(FREEHOLD_HEARTH_ADVANCE_SQL).not.toContain('LEAST');
     expect(FREEHOLD_HEARTH_ADVANCE_SQL).not.toContain('revision = $');
+    // THE SET LIST EXACTLY, the way the plot compare-and-swap pins its own. A
+    // contains-plus-two-negatives shape is satisfied by an ADDED column, and
+    // this statement is the one an accepted entry commits inside someone else's
+    // transaction, so a column that arrived here without its writer's consent
+    // would ride out with it.
+    const setClause = FREEHOLD_HEARTH_ADVANCE_SQL.slice(
+      FREEHOLD_HEARTH_ADVANCE_SQL.indexOf('SET '),
+      FREEHOLD_HEARTH_ADVANCE_SQL.indexOf('WHERE '),
+    );
+    const assigned = [...setClause.matchAll(/(\w+)\s*=/g)]
+      .map((match) => match[1])
+      .filter((name) => name !== 'GREATEST');
+    expect(assigned).toEqual(['ready_at_ms', 'revision', 'updated_at']);
   });
 });
 
