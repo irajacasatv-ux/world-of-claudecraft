@@ -181,11 +181,23 @@ function harness(options: HarnessOptions = {}) {
   const permitSignals: AbortSignal[] = [];
   const ownedBytesSeen: number[] = [];
   // The LIVE record's plot identity, modelled the way the server maintains it:
-  // a row load installs the row's state (so the record carries the row's id), a
-  // fresh account seeds the pending placeholder, and a committed write stamps
-  // the minted id onto the record. Without this the harness would serialize
-  // documents whose identity the real sim could never produce, and the store's
-  // identity seal would fire on fixtures rather than on the race it guards.
+  // a row load installs the row's state (so the record carries the row's id),
+  // and a fresh account seeds the pending stand-in and KEEPS IT for the whole
+  // session, because nothing writes an identity into the sim. An earlier
+  // version of this comment said a committed write stamps the minted id onto
+  // the record; that stamp was deleted, and the comment outliving it is what
+  // hid a live defect (a fresh account whose entry re-read its own row was
+  // quiesced for its whole session) behind a harness that looked faithful.
+  // Without this the harness would serialize documents whose identity the real
+  // sim could never produce, and the store's seal would fire on fixtures rather
+  // than on the race it guards.
+  //
+  // KNOWN GAP in the bag below, stated rather than left to be discovered: by
+  // default `hasLive()` answers false while `serialize()` still returns a
+  // document, so most cases here run on a liveness state the server cannot
+  // produce (it reads one map for both). No mutant has been shown to pass
+  // because of it, but it makes preload's already-live arm unreachable unless a
+  // case overrides `hasLive` explicitly.
   const fallbackPlotId =
     options.rowLoad?.kind === 'row' ? options.rowLoad.row.plotId : PENDING_FREEHOLD_PLOT_ID;
   const livePlotIdNow = (): string =>
@@ -713,6 +725,29 @@ describe('preload classification', () => {
       detail: '300000 owned bytes',
     },
     {
+      // THE OTHER ARM of the same refusal, which had no store-level case at
+      // all. Past the on-disk pre-gate the stored text was never rendered, so
+      // there is no measured length and reporting one would be a number nobody
+      // took: the detail has to name the DISK bytes and the limit that was
+      // never measured, and the refusal counts separately because the two mean
+      // different things to an operator.
+      name: 'a row refused on its on-disk size before anything was rendered',
+      options: {
+        rowLoad: {
+          kind: 'oversize',
+          plotIndex: 0,
+          plotId: ROW_PLOT_ID,
+          durableRev: '9',
+          bytes: 0,
+          limit: FREEHOLD_MAX_STORED_BYTES,
+          detoastRefused: true,
+          diskBytes: 4_000_000,
+        },
+      },
+      kind: 'oversize',
+      detail: '4000000 on-disk bytes past the pre-gate',
+    },
+    {
       name: 'a row the reader would not admit',
       options: {
         rowLoad: {
@@ -748,6 +783,13 @@ describe('preload classification', () => {
       expect(loaded.state).toBeNull();
       expect(h.store.stats().held).toBe(1);
       expect(h.store.stats().loadFailuresByKind).toEqual({ [holdCase.kind]: 1 });
+      // The pre-gate refusal is counted SEPARATELY from the measured one, in
+      // both directions, because the two mean different things to an operator:
+      // one says the row was too large to look at, the other says it was
+      // measured and refused.
+      const preGate = holdCase.options.rowLoad;
+      const refusedOnDisk = preGate?.kind === 'oversize' && preGate.detoastRefused;
+      expect(h.store.stats().preGateRefusals).toBe(refusedOnDisk ? 1 : 0);
 
       // Every write door, tried in turn. The absence of a writeRow call is the
       // assertion: the durable row keeps the owner's possessions.
@@ -1040,13 +1082,22 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
   });
 
   it('treats a record that vanished from the live map as nothing to write', async () => {
+    // Including the null-revision guard in the sweep's own probe: without it
+    // every pass over a loaded entry whose record is gone marks it dirty and
+    // arms a write that can only ever land in `writes_without_record`.
     // serializeFreehold answers null when the owner holds no live record, and
     // the contract is to SKIP: a default written over a real row destroys the
     // owner's furnishings, and nothing in this realm holds a second copy.
     const h = await loadedStore({ serialize: () => null });
     h.store.saveAllDirty();
+    h.store.saveAllDirty();
     await tick(30);
     expect(h.writeCount()).toBe(0);
+    // The sweep did not even ARM one: without the null-revision guard the entry
+    // would be marked dirty on every pass and each armed write would reach the
+    // statement with no document to send.
+    expect(h.store.stats().writesWithoutRecord).toBe(0);
+    expect(h.store.stats().dirty).toBe(0);
   });
 });
 
@@ -1417,7 +1468,12 @@ describe('reference counting and eviction', () => {
     expect(h.store.stats().pending).toBe(0);
   });
 
-  it('keeps the entry while a write is still running (running alone)', async () => {
+  it('keeps the entry while a write is still running', async () => {
+    // NOT "running alone", which is what this used to claim. The entry is also
+    // dirty throughout, and a mutation pass shows the dirty clause is what
+    // carries the assertion: dropping `entry.running` from `owesWork` leaves
+    // this green. Three of that predicate's five clauses are redundant under
+    // today's arming rules, and the predicate says so where it is declared.
     let served = 0;
     const h = await loadedStore({
       writeRow: async () => {

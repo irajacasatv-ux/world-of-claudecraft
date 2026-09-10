@@ -574,6 +574,17 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    * buys nothing. A revision that went BACKWARDS is treated as movement too:
    * that is a reload of an older record into a live slot, and the row should
    * follow the record this realm is actually serving.
+   *
+   * DETECTION IS NOT ADMISSION, and the two answers differ for one case. This
+   * probe says a backwards revision is a CHANGE worth looking at; the write
+   * seal in runWrite then decides whether that particular record may land, and
+   * for a record still carrying the stand-in plot identity it says no, because
+   * a stand-in record whose revision fell below the entry's last committed one
+   * is a freshly seeded default rather than a reload. A record carrying a real
+   * plot name still goes backwards onto the row exactly as this comment says.
+   * Written down because the two rationales read as contradictory otherwise,
+   * and a later reader reconciling them by relaxing the seal would reopen the
+   * seventh path to an empty default over a real house.
    */
   const noteRevisionMoved = (entry: FreeholdPersistEntry): boolean => {
     if (blocked(entry)) return false;
@@ -699,6 +710,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // owners) for nothing.
     for (const entry of entries.values()) {
       if (entry.refs > 0 || owesWork(entry)) {
+        // UNFALSIFIABLE, and kept: no behaviour test isolates this reset,
+        // because every path out of "owes work" at zero references removes the
+        // entry through maybeRemove on the spot, and retain resets the count
+        // itself for the referenced case. It states that the grace period
+        // counts CONSECUTIVE passes rather than passes in total, which is what
+        // the constant beside it means; dropping it would leave the count a
+        // lifetime tally that collects an entry a whole grace period early the
+        // first time one becomes collectable by some future path.
         entry.orphanPasses = 0;
         continue;
       }
