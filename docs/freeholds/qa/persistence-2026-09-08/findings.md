@@ -734,6 +734,72 @@ probe written from scratch against `createFreeholdPersistStore`.
   A seventh clause was ruled rather than pinned: `entry.durableRev !== null` is equal to
   `entry.state !== null` by today's arithmetic, because all three writers set both together.
 
+## ROUND TWELVE: THE FIX ROUND WAS READ TWICE AND HAD DONE IT AGAIN, TWICE
+
+Two fresh reviewers read the fix round as unreviewed code, and four of the nine
+audit lanes delivered late. Between them they found one regression the round
+introduced and had already been caught by the gate, one it introduced and had
+not, and a set of pin defects the round's own widening had not reached.
+
+- W1 BLOCKING, caught by the GATE rather than by a reviewer. The round deleted the
+  private leave-save method and four live call sites reach it through an any-cast
+  accessor, which `tsc` cannot see: ten tests went red across two suites,
+  including the whole money-conservation property sweep. Restored as a thin
+  delegate, and the extracted module now carries the behaviour test it never had:
+  the retry ladder, its backoff cap and the exhausted-retry reconciliation had no
+  test that imported them at all.
+- W2 SHOULD-FIX, a regression the round introduced and nothing caught. `leave()`
+  guards on `session.left || !clients.has(pid)`, and BOTH of those were set inside
+  the settlement, below three throwable calls, while the new `finally` runs on any
+  throw out of it. A throw there tore the session's resources down while the
+  session was still re-enterable, so a later leave passed the guard and ran the
+  whole teardown a second time, double-releasing one retain and collecting the
+  entry out from under a live sibling session. Before the round a throw there left
+  everything intact. Both statements now close the guard before the window opens.
+- W3 SHOULD-FIX. The export's new byte gate was the COMPRESSED pre-gate with
+  nothing behind it, which that constant's own docblock twenty lines above says is
+  not a bound: at the file's measured 48x ratio a row under it renders about
+  6.3 MB into a request path holding one pool client. The authoritative rendered
+  measure now sits behind the pre-gate exactly as the account read's does, and a
+  truncated export appends a marker row instead of trailing off.
+- W4 SHOULD-FIX. The join's new guard repaired two of the three resources it
+  covers and left the bot tracking context held for the process lifetime; the
+  leave's flush was the one unguarded statement inside the guard that exists so a
+  throw cannot skip the other two; and the extraction had speculated a helper
+  nothing imports. All three closed.
+- W5 SHOULD-FIX, from the store lanes. A leave that found no live record DESTROYED
+  the capture it was standing in for, which is the exact window the capture exists
+  for. A synchronously throwing enqueue woke no settle waiter, so a parked leaver
+  spent its whole deadline on a write that had already finished failing. Closing
+  intake retired the ORPHAN SWEEP with it, because the sweep runs inside the
+  arming pass, so any store that outlives a drain loses the entries map's only
+  time bound.
+- W6 SHOULD-FIX. The join path read a LIVE `process.env` housing flag while the
+  store's own port, both record inserters and the repair reload all read the boot
+  snapshot. An in-process flip disagreed with itself in both directions: raised,
+  two unbudgeted durable reads per login on a realm that seeds no record and can
+  never write; lowered, every joining account silently write-blocked into
+  `quiesced`, which DEPLOY.md tells an operator to read as a second realm writing
+  the same rows. One source now.
+- W7 SHOULD-FIX, the pin defects the round's own widening did not reach. A body
+  slice ran to the NEXT export, so an exempted constructor exempted every private
+  helper after it, including `cloneFreeholdState`, which runs on every load and
+  every serialize; proved by planting a durable write there and watching the scan
+  go red. The walk did not recurse, so a module under a subdirectory was invisible.
+  The exported-body floor tolerated losing three single-export files. The record
+  map had no sole-writer scan despite its header claiming one. The i18n drift guard
+  enumerated nine of fifteen modules by hand, including neither refusal-decision
+  module. The catch pin was satisfied by a release moved OUT of the catch, which
+  would release on every SUCCESSFUL join. The hearth advance pinned its SET list
+  from one side only. Two negative key scans had no control that the walker walks.
+  One case's title named an assertion its body never made.
+- W8 RECORDED, not taken. Deriving the harness's `hasLive` from `serialize` is the
+  right shape and reds four cases that model a COLD join with the default
+  document, which would have to be rewritten to keep saying what they say. That is
+  a suite-wide change rather than a fix, and the gap is now BOUNDED in the harness
+  instead: exactly one production decision reads `hasLive`, five cases model the
+  combination the server cannot produce, and no conclusion is falsified by it.
+
 ## THE FOUR RULINGS THIS QA OWES THE MAINTAINER, with the evidence and a recommendation
 
 Each is a decision, not work, and each was left open on purpose. Nothing below was
