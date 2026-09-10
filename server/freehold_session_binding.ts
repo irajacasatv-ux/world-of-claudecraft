@@ -77,10 +77,20 @@ export function releaseFreeholdBinding(store: FreeholdBindingStore, ownerKey: st
  * released, for the same reason the lease sits below the character flush: once
  * the lease drops, another process may load the same account's plot and write
  * it.
+ *
+ * NEVER REJECTS. It runs inside the leave's `finally`, above a lease release and
+ * a removePlayer that must happen regardless, and every caller of leave() fires
+ * it with no catch. The swallow lives here rather than at the call site because
+ * the release half is this module's invariant, not the coordinator's, and a
+ * caller that forgot the catch would strand the entry and the seeded record for
+ * the life of the process. Nothing is lost: a failed flush leaves the entry
+ * dirty in the store and the shutdown drain still waits for it.
  */
 export async function flushFreeholdBinding(
   store: FreeholdBindingStore,
   ownerKey: string,
 ): Promise<void> {
-  await store.flushAndRelease(ownerKey);
+  await store
+    .flushAndRelease(ownerKey)
+    .catch((err) => console.error('freehold leave flush failed:', err));
 }

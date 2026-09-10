@@ -1457,18 +1457,29 @@ const MONOLITHS: MonolithRow[] = [
     // source, paying for the durable install, the store retain and release, and
     // the housing sweep's tick-profiler sample. The four names other modules
     // already imported from here are re-exported so no call site moved.
-    // HELD at 9920 through the persistence QA, which is the point of the rule.
-    // That round added three guards: the join releases its store reference, its
-    // bot tracking context and the seeded player on a throw anywhere before
-    // `clients.set` rather than on an addPlayer throw alone, and the leave runs
-    // its store release, lease release and removePlayer in a `finally` so a
-    // rejection in the settlement cannot skip all three for the life of the
-    // process. Every line of that was paid for by moving the leave-path save
-    // with its retry policy and the contests a leaver forfeits WHOLE to
+    // LOWERED 9920 -> 9914 at the persistence QA, in two steps, and the middle
+    // of that walk is recorded because a reviewer caught it being described as a
+    // non-event. First 9920 -> 9916: the leave-path save with its retry policy
+    // and the contests a leaver forfeits moved WHOLE to
     // server/leave_character_save.ts, and the join's install-then-retain binding
-    // to server/freehold_session_binding.ts. The ceiling was NOT raised.
+    // to server/freehold_session_binding.ts, which paid for three guards (the
+    // join releases its store reference, its bot tracking context and the seeded
+    // player on a throw anywhere before `clients.set` rather than on an
+    // addPlayer throw alone; the leave runs its store release, lease release and
+    // removePlayer in a `finally` so a rejection in the settlement cannot skip
+    // all three for the life of the process). Then the QA's own review round
+    // spent those four lines again, restoring the private leave-save delegate
+    // four test call sites reach through a private accessor, and put the row
+    // back to 9920 describing it as unchanged. It was not unchanged: against the
+    // floor this packet had already set, 9920 is a RAISE, and the rule forbids
+    // one whatever the inherited number was. Paid back and then some rather than
+    // recorded: the leave flush's swallow moved into the binding module that
+    // owns the retain-release pairing, and the three copies of the guild-book
+    // reconcile guard now route through the one private method that already
+    // existed for it, whose own empty check was redundant with the loop it
+    // calls. Six under the inherited ceiling, two under this packet's own floor.
     // Measured with wc -l < server/game.ts after biome. Exact count, zero slack.
-    ceiling: 9920,
+    ceiling: 9914,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1481,8 +1492,16 @@ const MONOLITHS: MonolithRow[] = [
     // docs/freeholds/persistence-rollout-contract.md section 8a; this row only
     // stops it growing while that is decided. The count is the one measured at
     // the end of the QA that added the row, after its own fixes landed.
+    // LOWERED 2343 -> 2319 in that same QA's last round, which added the
+    // combined login read (one bounded transaction over both durable reads
+    // instead of one wrapper each) and paid for it by moving the composition
+    // root WHOLE to server/freehold_persist_wiring.ts. That took every SQL
+    // import with it, so the store file now names its ports and nothing
+    // supplies them, which is what lets a Vitest drive the whole lifecycle with
+    // no database. Net 24 under the row's opening count despite 70 lines of new
+    // logic. Measured with wc -l after biome. Exact count, zero slack.
     file: 'server/freehold_persist.ts',
-    ceiling: 2343,
+    ceiling: 2319,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {
