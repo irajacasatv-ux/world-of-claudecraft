@@ -19,7 +19,7 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 998,
+      "nextId": 1006,
       "state": "5bc471b0",
       "events": "741638a5",
       "rng": {
@@ -33,9 +33,9 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 999,
-      "state": "7bdf3e49",
-      "events": "7209817c",
+      "nextId": 1007,
+      "state": "1044ac87",
+      "events": "cb3d1c5e",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -66,6 +66,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -80,7 +81,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 998,
+          "entityId": 1006,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -88,6 +89,9 @@
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -108,7 +112,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -123,7 +128,7 @@
               "name": "Battle Stance",
               "remaining": 3600,
               "school": "physical",
-              "sourceId": 998
+              "sourceId": 1006
             }
           ],
           "blockChance": 0.05,
@@ -137,7 +142,7 @@
           "fiveSecondRule": 99,
           "healPower": 5,
           "hp": 100,
-          "id": 998,
+          "id": 1006,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -181,9 +186,9 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 999,
-      "state": "80c969dc",
-      "events": "b0818f07",
+      "nextId": 1007,
+      "state": "f1455f59",
+      "events": "80d0cb97",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -205,7 +210,13 @@
             "inventory": [
               {
                 "count": 20,
-                "itemId": "copper_ore"
+                "itemId": "copper_ore",
+                "materialSources": [
+                  {
+                    "count": 20,
+                    "source": {}
+                  }
+                ]
               },
               {
                 "count": 1,
@@ -224,6 +235,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -243,7 +255,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 998,
+          "entityId": 1006,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -251,6 +263,9 @@
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -271,7 +286,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -286,7 +302,7 @@
               "name": "Battle Stance",
               "remaining": 3600,
               "school": "physical",
-              "sourceId": 998
+              "sourceId": 1006
             }
           ],
           "blockChance": 0.05,
@@ -300,7 +316,7 @@
           "fiveSecondRule": 99,
           "healPower": 5,
           "hp": 100,
-          "id": 998,
+          "id": 1006,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -344,9 +360,9 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 999,
-      "state": "c487538e",
-      "events": "4136c8c0",
+      "nextId": 1007,
+      "state": "7888f283",
+      "events": "c4c55ff9",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -368,7 +384,13 @@
             "inventory": [
               {
                 "count": 20,
-                "itemId": "copper_ore"
+                "itemId": "copper_ore",
+                "materialSources": [
+                  {
+                    "count": 20,
+                    "source": {}
+                  }
+                ]
               },
               {
                 "count": 1,
@@ -387,6 +409,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -406,7 +429,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 998,
+          "entityId": 1006,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -414,6 +437,9 @@
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -494,7 +520,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -509,7 +536,7 @@
               "name": "Battle Stance",
               "remaining": 3600,
               "school": "physical",
-              "sourceId": 998
+              "sourceId": 1006
             }
           ],
           "blockChance": 0.05,
@@ -523,7 +550,7 @@
           "fiveSecondRule": 99,
           "healPower": 5,
           "hp": 100,
-          "id": 998,
+          "id": 1006,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -567,8 +594,8 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 999,
-      "state": "f7bca5e6",
+      "nextId": 1007,
+      "state": "9ad1317f",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -606,6 +633,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -625,7 +653,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 998,
+          "entityId": 1006,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -633,6 +661,9 @@
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -701,7 +732,13 @@
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             }
           ],
           "mailWelcomed": true,
@@ -717,7 +754,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -732,7 +770,7 @@
               "name": "Battle Stance",
               "remaining": 3600,
               "school": "physical",
-              "sourceId": 998
+              "sourceId": 1006
             }
           ],
           "blockChance": 0.05,
@@ -746,7 +784,7 @@
           "fiveSecondRule": 99,
           "healPower": 5,
           "hp": 100,
-          "id": 998,
+          "id": 1006,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -790,9 +828,9 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 999,
-      "state": "f7bca5e6",
-      "events": "455dd154",
+      "nextId": 1007,
+      "state": "9ad1317f",
+      "events": "c5127e69",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -829,6 +867,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -848,7 +887,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 998,
+          "entityId": 1006,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -856,6 +895,9 @@
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -924,7 +966,13 @@
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             }
           ],
           "mailWelcomed": true,
@@ -940,7 +988,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -955,7 +1004,7 @@
               "name": "Battle Stance",
               "remaining": 3600,
               "school": "physical",
-              "sourceId": 998
+              "sourceId": 1006
             }
           ],
           "blockChance": 0.05,
@@ -969,7 +1018,7 @@
           "fiveSecondRule": 99,
           "healPower": 5,
           "hp": 100,
-          "id": 998,
+          "id": 1006,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1013,9 +1062,9 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 999,
-      "state": "a9e09f08",
-      "events": "5e20a8f5",
+      "nextId": 1007,
+      "state": "03fc23f5",
+      "events": "bb79ffff",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -1052,6 +1101,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -1071,7 +1121,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 998,
+          "entityId": 1006,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -1079,6 +1129,9 @@
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -1095,55 +1148,133 @@
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             }
           ],
           "mailWelcomed": true,
@@ -1159,7 +1290,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -1174,7 +1306,7 @@
               "name": "Battle Stance",
               "remaining": 3600,
               "school": "physical",
-              "sourceId": 998
+              "sourceId": 1006
             }
           ],
           "blockChance": 0.05,
@@ -1188,7 +1320,7 @@
           "fiveSecondRule": 99,
           "healPower": 5,
           "hp": 100,
-          "id": 998,
+          "id": 1006,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1232,8 +1364,8 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 999,
-      "state": "7b391184",
+      "nextId": 1007,
+      "state": "a5ce38c9",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1265,6 +1397,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -1284,7 +1417,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 998,
+          "entityId": 1006,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -1292,6 +1425,9 @@
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -1308,55 +1444,133 @@
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 1,
@@ -1376,7 +1590,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -1391,7 +1606,7 @@
               "name": "Battle Stance",
               "remaining": 3600,
               "school": "physical",
-              "sourceId": 998
+              "sourceId": 1006
             }
           ],
           "blockChance": 0.05,
@@ -1405,7 +1620,7 @@
           "fiveSecondRule": 99,
           "healPower": 5,
           "hp": 100,
-          "id": 998,
+          "id": 1006,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -1449,9 +1664,9 @@
     {
       "tick": 2,
       "time": 0.1,
-      "nextId": 999,
-      "state": "f1e4fad7",
-      "events": "56d39a45",
+      "nextId": 1007,
+      "state": "c724ab3c",
+      "events": "bfa11aec",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -1482,6 +1697,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -1507,7 +1723,7 @@
           ],
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 998,
+          "entityId": 1006,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -1515,6 +1731,9 @@
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -1531,55 +1750,133 @@
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 20,
-              "itemId": "copper_ore"
+              "itemId": "copper_ore",
+              "materialSources": [
+                {
+                  "count": 20,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 1,
@@ -1600,7 +1897,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -1615,7 +1913,7 @@
               "name": "Battle Stance",
               "remaining": 3599.9,
               "school": "physical",
-              "sourceId": 998
+              "sourceId": 1006
             }
           ],
           "blockChance": 0.05,
@@ -1629,7 +1927,7 @@
           "fiveSecondRule": 99.1,
           "healPower": 5,
           "hp": 100,
-          "id": 998,
+          "id": 1006,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",

@@ -31,9 +31,21 @@ describe('buddy tokens: soulbound, consumed on use, never loot', () => {
 
   it('keeps the flat 5g vendor value so an unwanted duplicate is bag space back', () => {
     for (const item of [...whistles, ...charms]) {
+      expect(item.noDiscard, `${item.id} noDiscard`).toBeUndefined();
+      if ((item.priceHonor ?? 0) > 0) {
+        // Honor purchases are final (the Warfare doctrine): the honor whistle
+        // sells back for nothing and the vendor refuses it.
+        expect(item.sellValue, `${item.id} sellValue`).toBe(0);
+        expect(item.noVendorSell, `${item.id} noVendorSell`).toBe(true);
+        continue;
+      }
+      if (item.kind === 'buddy_cosmetic' && item.id === 'charm_stag_acorn') {
+        // The crafted charm vendors below its fifteen logs (recipe_economy).
+        expect(item.sellValue, `${item.id} sellValue`).toBe(200);
+        continue;
+      }
       expect(item.sellValue, `${item.id} sellValue`).toBe(50_000);
       expect(item.noVendorSell, `${item.id} noVendorSell`).toBeUndefined();
-      expect(item.noDiscard, `${item.id} noDiscard`).toBeUndefined();
     }
   });
 

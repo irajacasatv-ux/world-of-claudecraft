@@ -60,6 +60,8 @@ export const BUDDY_ICON_BATCH = [
   { itemId: 'whistle_skeleton', glb: 'public/models/chars/enemies/skeleton_minion.glb' },
   // The epic Nythraxis drop, from its own GLB.
   { itemId: 'whistle_crystal_lich', glb: 'public/models/buddies/crystal_lich.glb' },
+  // The world-boss companion (content/buddy_sources.ts: Thunzharr).
+  { itemId: 'whistle_emberfall_phoenix', glb: 'public/models/buddies/emberfall_phoenix.glb' },
   // The epic heroic-Crucible drop, from its own GLB.
   { itemId: 'whistle_forgemaw', glb: 'public/models/buddies/forgemaw.glb' },
   // The fishing catch and the green elemental, both from their own GLBs.

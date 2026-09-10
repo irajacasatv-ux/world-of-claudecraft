@@ -9,13 +9,13 @@
     "augment wave: fiestaPickOffers + arenaAugmentPick (fiestaAugments on meta + augmentOffer/Chosen events)",
     "multi-player meta"
   ],
-  "draws": 1175,
-  "drawDigest": "a357421c",
+  "draws": 1178,
+  "drawDigest": "c7cc1a3a",
   "frames": [
     {
       "tick": 0,
       "time": 0,
-      "nextId": 998,
+      "nextId": 1006,
       "state": "5bc471b0",
       "events": "741638a5",
       "rng": {
@@ -29,9 +29,9 @@
     {
       "tick": 25,
       "time": 1.25,
-      "nextId": 1002,
-      "state": "b0635b0e",
-      "events": "0eccbde3",
+      "nextId": 1010,
+      "state": "59e1fda0",
+      "events": "ee4ebe83",
       "rng": {
         "draws": 0,
         "digest": "811c9dc5"
@@ -40,9 +40,9 @@
     {
       "tick": 50,
       "time": 2.5,
-      "nextId": 1002,
-      "state": "40a4cd2b",
-      "events": "09d1db15",
+      "nextId": 1010,
+      "state": "aad39b95",
+      "events": "1bd60145",
       "rng": {
         "draws": 66,
         "digest": "383a5306"
@@ -51,9 +51,9 @@
     {
       "tick": 75,
       "time": 3.75,
-      "nextId": 1002,
-      "state": "6f2a888f",
-      "events": "556cc9b7",
+      "nextId": 1010,
+      "state": "738c9517",
+      "events": "cc883821",
       "rng": {
         "draws": 247,
         "digest": "6b3f31b5"
@@ -62,9 +62,9 @@
     {
       "tick": 100,
       "time": 5,
-      "nextId": 1002,
-      "state": "b2b69a2a",
-      "events": "033a46fd",
+      "nextId": 1010,
+      "state": "7c29c648",
+      "events": "a4509c69",
       "rng": {
         "draws": 485,
         "digest": "b0986e30"
@@ -73,34 +73,34 @@
     {
       "tick": 125,
       "time": 6.25,
-      "nextId": 1002,
-      "state": "22154b45",
-      "events": "19e44103",
+      "nextId": 1010,
+      "state": "bea8fecb",
+      "events": "3abfaa21",
       "rng": {
-        "draws": 755,
-        "digest": "c2a9f447"
+        "draws": 756,
+        "digest": "b0eecf8d"
       }
     },
     {
       "tick": 150,
       "time": 7.5,
-      "nextId": 1002,
-      "state": "0e72995e",
+      "nextId": 1010,
+      "state": "98e8b448",
       "events": "741638a5",
       "rng": {
-        "draws": 1040,
-        "digest": "07193096"
+        "draws": 1041,
+        "digest": "4a68f71a"
       }
     },
     {
       "tick": 163,
       "time": 8.15,
-      "nextId": 1002,
-      "state": "9f49324f",
-      "events": "6ca92b72",
+      "nextId": 1010,
+      "state": "17f9f63f",
+      "events": "940cfa12",
       "rng": {
-        "draws": 1175,
-        "digest": "a357421c"
+        "draws": 1178,
+        "digest": "c7cc1a3a"
       },
       "label": "final",
       "players": [
@@ -130,6 +130,7 @@
           "counters": {
             "kills": 1
           },
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {
@@ -145,7 +146,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 998,
+          "entityId": 1006,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -159,6 +160,9 @@
             }
           },
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "honor": 20,
           "inventory": [
@@ -189,7 +193,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         },
         {
           "activeLoadout": -1,
@@ -215,6 +220,7 @@
           "cls": "mage",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -228,7 +234,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 999,
+          "entityId": 1007,
           "equipment": {
             "chest": "apprentice_robe",
             "mainhand": "gnarled_staff"
@@ -241,6 +247,9 @@
             }
           },
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -273,7 +282,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         },
         {
           "activeLoadout": -1,
@@ -301,6 +311,7 @@
           "counters": {
             "deaths": 1
           },
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -313,7 +324,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 1000,
+          "entityId": 1008,
           "equipment": {
             "chest": "footpad_jerkin",
             "mainhand": "rusty_dagger",
@@ -330,6 +341,9 @@
             }
           },
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -358,7 +372,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         },
         {
           "activeLoadout": -1,
@@ -384,6 +399,7 @@
           "cls": "hunter",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -396,7 +412,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 1001,
+          "entityId": 1009,
           "equipment": {
             "chest": "footpad_jerkin",
             "mainhand": "rusty_hatchet"
@@ -409,6 +425,9 @@
             }
           },
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -437,7 +456,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -452,7 +472,7 @@
               "name": "Battle Stance",
               "remaining": 3591.9,
               "school": "physical",
-              "sourceId": 998
+              "sourceId": 1006
             }
           ],
           "blockChance": 0.05,
@@ -465,7 +485,7 @@
           "fiveSecondRule": 107.15,
           "healPower": 5,
           "hp": 822,
-          "id": 998,
+          "id": 1006,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",
@@ -514,7 +534,7 @@
           "fiveSecondRule": 107.15,
           "healPower": 41,
           "hp": 418,
-          "id": 999,
+          "id": 1007,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",
@@ -554,7 +574,7 @@
         },
         {
           "aiState": "idle",
-          "attackPower": 160,
+          "attackPower": 185,
           "combatTimer": 99.05,
           "comboUntil": -1,
           "critChance": 0.211,
@@ -565,7 +585,7 @@
           "fiveSecondRule": 107.15,
           "healPower": 6,
           "hp": 510,
-          "id": 1000,
+          "id": 1008,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",
@@ -623,7 +643,7 @@
           "fiveSecondRule": 107.15,
           "healPower": 16,
           "hp": 783,
-          "id": 1001,
+          "id": 1009,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",

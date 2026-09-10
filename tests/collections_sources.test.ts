@@ -36,7 +36,8 @@ describe('collection source derivation', () => {
     expect(vendor?.zoneName.length).toBeGreaterThan(0);
     // A token binds: the companion is the character's, never the market's.
     expect(facts?.tradeable).toBe(false);
-    expect(facts?.sellValue).toBe(50_000);
+    // Honor purchases are final: no vendor buys the honor whistle back.
+    expect(facts?.sellValue).toBeNull();
     // And the companion row reads the same vendor through its token.
     const buddy = buddySourceFacts('proud_grunt');
     expect(buddy.token?.vendors[0]?.npcId).toBe('warmarshal_draven_kole');

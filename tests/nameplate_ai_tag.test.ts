@@ -148,6 +148,7 @@ function harness(
     showOwnNameplate: options.showOwnNameplate ?? (() => false),
     showPlayerNameplates: () => true,
     showPetNames: () => false,
+    nameplateDotScale: () => 0,
     isHostilePlayer: options.isHostilePlayer ?? (() => false),
   });
   return { painter, layer };
@@ -463,6 +464,11 @@ describe('batched canvas nameplate state', () => {
     const object = entity({ id: 3, kind: 'object', templateId: 'delve_locked_chest' });
     const boss = entity({ id: 4, kind: 'mob', templateId: 'gorrak', hostile: true });
     const elite = entity({ id: 6, kind: 'mob', templateId: 'mogger', hostile: true });
+    // A real corpse, not just the `lootable` flag: the satchel answers
+    // corpseIndicatorFor, so the body has to still be inside its corpse window
+    // (corpseTimer > 0) and hold ordinary loot THIS viewer may take. The
+    // harness viewer is pid 1 and is the tapper here, so the shared copper is
+    // theirs while the owner lock is still running.
     const corpse = entity({
       id: 5,
       kind: 'mob',
@@ -470,6 +476,10 @@ describe('batched canvas nameplate state', () => {
       hostile: true,
       dead: true,
       lootable: true,
+      corpseTimer: 30,
+      tappedById: 1,
+      lootFfaTimer: 60,
+      loot: { copper: 25, items: [] },
     });
     const { painter } = harness([questNpc, object, boss, elite, corpse]);
 

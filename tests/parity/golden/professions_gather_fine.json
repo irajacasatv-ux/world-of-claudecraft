@@ -17,8 +17,8 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 999,
-      "state": "7402a6ff",
+      "nextId": 1007,
+      "state": "68adaf6f",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -51,6 +51,7 @@
           "cls": "warrior",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -64,7 +65,7 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 994,
+          "entityId": 999,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -72,6 +73,9 @@
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -92,7 +96,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -107,7 +112,7 @@
               "name": "Battle Stance",
               "remaining": 3600,
               "school": "physical",
-              "sourceId": 994
+              "sourceId": 999
             }
           ],
           "blockChance": 0.05,
@@ -121,7 +126,7 @@
           "fiveSecondRule": 99,
           "healPower": 5,
           "hp": 100,
-          "id": 994,
+          "id": 999,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -165,9 +170,9 @@
     {
       "tick": 51,
       "time": 2.55,
-      "nextId": 999,
-      "state": "3ba6ecdf",
-      "events": "d733fe17",
+      "nextId": 1007,
+      "state": "020e84f8",
+      "events": "24dfb052",
       "rng": {
         "draws": 2,
         "digest": "00a2a78c"
@@ -201,6 +206,7 @@
           "counters": {
             "xpGained": 36
           },
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -234,7 +240,7 @@
           ],
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 994,
+          "entityId": 999,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -244,6 +250,9 @@
           "gatheringProficiency": {
             "herbalism": 40,
             "mining": 70.5
+          },
+          "harvestPreference": {
+            "kind": "all"
           },
           "heroicDaily": {},
           "inventory": [
@@ -261,7 +270,13 @@
             },
             {
               "count": 2,
-              "itemId": "fine_iron_ore"
+              "itemId": "fine_iron_ore",
+              "materialSources": [
+                {
+                  "count": 2,
+                  "source": {}
+                }
+              ]
             }
           ],
           "lifetimeXp": 36,
@@ -282,6 +297,7 @@
           "vault": {
             "stock": {}
           },
+          "wyrmfallDaily": {},
           "xp": 36
         }
       ],
@@ -297,7 +313,7 @@
               "name": "Battle Stance",
               "remaining": 3597.45,
               "school": "physical",
-              "sourceId": 994
+              "sourceId": 999
             }
           ],
           "blockChance": 0.05,
@@ -312,7 +328,7 @@
           "fiveSecondRule": 101.55,
           "healPower": 5,
           "hp": 100,
-          "id": 994,
+          "id": 999,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -356,9 +372,9 @@
     {
       "tick": 104,
       "time": 5.2,
-      "nextId": 999,
-      "state": "5d695042",
-      "events": "bb07630f",
+      "nextId": 1007,
+      "state": "2eef6c7b",
+      "events": "d213ac5c",
       "rng": {
         "draws": 4,
         "digest": "49d036fe"
@@ -392,6 +408,7 @@
           "counters": {
             "xpGained": 72
           },
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -426,7 +443,7 @@
           ],
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 994,
+          "entityId": 999,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -436,6 +453,9 @@
           "gatheringProficiency": {
             "herbalism": 40,
             "mining": 70.75
+          },
+          "harvestPreference": {
+            "kind": "all"
           },
           "heroicDaily": {},
           "inventory": [
@@ -453,14 +473,25 @@
             },
             {
               "count": 2,
-              "itemId": "fine_iron_ore"
+              "itemId": "fine_iron_ore",
+              "materialSources": [
+                {
+                  "count": 2,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 2,
-              "instance": {
-                "signer": "Adventurer"
-              },
-              "itemId": "iron_ore"
+              "itemId": "iron_ore",
+              "materialSources": [
+                {
+                  "count": 2,
+                  "source": {
+                    "signer": "Adventurer"
+                  }
+                }
+              ]
             }
           ],
           "lifetimeXp": 72,
@@ -482,6 +513,7 @@
           "vault": {
             "stock": {}
           },
+          "wyrmfallDaily": {},
           "xp": 72
         }
       ],
@@ -497,7 +529,7 @@
               "name": "Battle Stance",
               "remaining": 3594.8,
               "school": "physical",
-              "sourceId": 994
+              "sourceId": 999
             }
           ],
           "blockChance": 0.05,
@@ -512,7 +544,7 @@
           "fiveSecondRule": 104.2,
           "healPower": 5,
           "hp": 100,
-          "id": 994,
+          "id": 999,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -556,9 +588,9 @@
     {
       "tick": 157,
       "time": 7.85,
-      "nextId": 999,
-      "state": "84a369cf",
-      "events": "9d263a5d",
+      "nextId": 1007,
+      "state": "a07fc9c4",
+      "events": "6deec87c",
       "rng": {
         "draws": 6,
         "digest": "1272a77a"
@@ -592,6 +624,7 @@
           "counters": {
             "xpGained": 108
           },
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -628,7 +661,7 @@
           ],
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 994,
+          "entityId": 999,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -638,6 +671,9 @@
           "gatheringProficiency": {
             "herbalism": 41,
             "mining": 70.75
+          },
+          "harvestPreference": {
+            "kind": "all"
           },
           "heroicDaily": {},
           "inventory": [
@@ -655,21 +691,37 @@
             },
             {
               "count": 2,
-              "itemId": "fine_iron_ore"
+              "itemId": "fine_iron_ore",
+              "materialSources": [
+                {
+                  "count": 2,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 2,
-              "instance": {
-                "signer": "Adventurer"
-              },
-              "itemId": "iron_ore"
+              "itemId": "iron_ore",
+              "materialSources": [
+                {
+                  "count": 2,
+                  "source": {
+                    "signer": "Adventurer"
+                  }
+                }
+              ]
             },
             {
               "count": 2,
-              "instance": {
-                "signer": "Adventurer"
-              },
-              "itemId": "goldleaf_herb"
+              "itemId": "goldleaf_herb",
+              "materialSources": [
+                {
+                  "count": 2,
+                  "source": {
+                    "signer": "Adventurer"
+                  }
+                }
+              ]
             }
           ],
           "lifetimeXp": 108,
@@ -692,6 +744,7 @@
           "vault": {
             "stock": {}
           },
+          "wyrmfallDaily": {},
           "xp": 108
         }
       ],
@@ -707,7 +760,7 @@
               "name": "Battle Stance",
               "remaining": 3592.15,
               "school": "physical",
-              "sourceId": 994
+              "sourceId": 999
             }
           ],
           "blockChance": 0.05,
@@ -722,7 +775,7 @@
           "fiveSecondRule": 106.85,
           "healPower": 5,
           "hp": 100,
-          "id": 994,
+          "id": 999,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -766,8 +819,8 @@
     {
       "tick": 159,
       "time": 7.95,
-      "nextId": 999,
-      "state": "a844a52e",
+      "nextId": 1007,
+      "state": "f2b47b4d",
       "events": "741638a5",
       "rng": {
         "draws": 6,
@@ -802,6 +855,7 @@
           "counters": {
             "xpGained": 108
           },
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -838,7 +892,7 @@
           ],
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 994,
+          "entityId": 999,
           "equipment": {
             "chest": "recruit_tunic",
             "mainhand": "worn_sword",
@@ -848,6 +902,9 @@
           "gatheringProficiency": {
             "herbalism": 41,
             "mining": 70.75
+          },
+          "harvestPreference": {
+            "kind": "all"
           },
           "heroicDaily": {},
           "inventory": [
@@ -865,21 +922,37 @@
             },
             {
               "count": 2,
-              "itemId": "fine_iron_ore"
+              "itemId": "fine_iron_ore",
+              "materialSources": [
+                {
+                  "count": 2,
+                  "source": {}
+                }
+              ]
             },
             {
               "count": 2,
-              "instance": {
-                "signer": "Adventurer"
-              },
-              "itemId": "iron_ore"
+              "itemId": "iron_ore",
+              "materialSources": [
+                {
+                  "count": 2,
+                  "source": {
+                    "signer": "Adventurer"
+                  }
+                }
+              ]
             },
             {
               "count": 2,
-              "instance": {
-                "signer": "Adventurer"
-              },
-              "itemId": "goldleaf_herb"
+              "itemId": "goldleaf_herb",
+              "materialSources": [
+                {
+                  "count": 2,
+                  "source": {
+                    "signer": "Adventurer"
+                  }
+                }
+              ]
             }
           ],
           "lifetimeXp": 108,
@@ -902,6 +975,7 @@
           "vault": {
             "stock": {}
           },
+          "wyrmfallDaily": {},
           "xp": 108
         }
       ],
@@ -917,7 +991,7 @@
               "name": "Battle Stance",
               "remaining": 3592.05,
               "school": "physical",
-              "sourceId": 994
+              "sourceId": 999
             }
           ],
           "blockChance": 0.05,
@@ -932,7 +1006,7 @@
           "fiveSecondRule": 106.95,
           "healPower": 5,
           "hp": 100,
-          "id": 994,
+          "id": 999,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",

@@ -58,7 +58,7 @@ Sources, all derived for the Hunting window:
 |---|---|---|
 | Challenge | `BUDDY_COSMETIC_CHALLENGES` | Resolved at the boss's death for every credited player (`src/sim/buddy_challenges.ts`). `speed`: kill within N seconds of the attempt's first damage. `dps`: the player's own damage on the boss over the attempt meets a rate. Both re-arm on evade or respawn. |
 | Deed | `BUDDY_COSMETIC_DEED_REWARDS` | Same hook as achievement pets. |
-| Crafted | a recipe whose result is a `buddy_cosmetic` token | The Acorn Crown recipe eats the fine logs of three different woods (the "acorns from across the map" shape). Using the charm unlocks the look. |
+| Crafted | a recipe whose result is a `buddy_cosmetic` token | The Acorn Crown recipe eats the logs of three different woods, gathered in three regions (the "acorns from across the map" shape); a leatherworking craft at the tannery, learned from the master there. Using the charm unlocks the look. |
 | Store | a vendor row for a `buddy_cosmetic` token | Gilded Charm at Armorer Hode for plain gold. Honor or marks prices use the same item fields. |
 | Seasonal award | `BUDDY_COSMETIC_GRANT_ONLY` | Nothing in the game hands it out; the admin grant endpoint does (below). |
 

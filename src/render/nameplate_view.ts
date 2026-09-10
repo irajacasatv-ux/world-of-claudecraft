@@ -19,6 +19,7 @@
 // idiom elsewhere in src/render.
 
 import { isBuddyMob } from '../sim/pet/buddy_ai';
+import { isFeastTemplateId } from '../sim/professions/feast';
 import type { Entity } from '../sim/types';
 import { INTERACT_RANGE } from '../sim/types';
 import { comboPipsFor } from './nameplate_combo';
@@ -148,6 +149,16 @@ export function nameplatePlanInto(
     e.templateId === 'delve_bell_rope_pulled';
   const delveInteractNear = isDelveInteract && d2 <= (INTERACT_RANGE + 1) * (INTERACT_RANGE + 1);
   const isBuddyPet = isBuddyMob(e);
+  // The placed harvest feast (Phase 12): labels like the delve interactables,
+  // and like every object plate it carries no hp bar (the flag-family object
+  // treatment). The pad is INTERACT_RANGE + 1, the delve-family hysteresis
+  // band: the plate shows one yard PAST the bite's own INTERACT_RANGE gate
+  // (consumeFeastAction denies strictly beyond it with the merged not-found
+  // frame, farmDenied 'feast_expired', since masterwrought Phase 18), so the
+  // title is already up as a player walks into eating range and never
+  // flickers at the exact boundary.
+  const feastNear =
+    isFeastTemplateId(e.templateId) && d2 <= (INTERACT_RANGE + 1) * (INTERACT_RANGE + 1);
 
   out.hidden =
     (isSelf && !hasOverheadEmote && !showOwnNameplate) ||
@@ -159,7 +170,7 @@ export function nameplatePlanInto(
     (isBuddyPet && !showPetNames) ||
     (!standIn &&
       (d2 > NAMEPLATE_RANGE_SQ ||
-        (e.kind === 'object' && !isDoor && !delveInteractNear) ||
+        (e.kind === 'object' && !isDoor && !delveInteractNear && !feastNear) ||
         (!isBuddyPet && !showNameplates && e.kind === 'mob' && !e.dead) ||
         (!showPlayerNameplates && e.kind === 'player' && !isSelf && e.id !== player.targetId)));
   out.noHealthBar = isBuddyPet;

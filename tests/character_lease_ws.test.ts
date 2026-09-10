@@ -65,6 +65,7 @@ function makeDeps(opts: { joinResult?: any; hasSession?: boolean; acquireResult?
     countIpSessions: () => 0,
     hasSessionForCharacter: hasSessionSpy,
     join: joinSpy,
+    drainBuddyGrants: vi.fn(async () => {}),
     clients: { size: 1 },
     // Consumed by the mid-handshake death re-check on a socket that died
     // during the awaits; a live-socket fixture never reaches it.
@@ -77,6 +78,9 @@ function makeDeps(opts: { joinResult?: any; hasSession?: boolean; acquireResult?
       resolve: (moderation: unknown) => moderation,
       release: vi.fn(),
     })),
+    // The fresh-join arm asks the action-bar store for a still-queued document
+    // before its post-lease reload; this file has nothing queued.
+    hotbarLayouts: { pending: () => null },
   };
   const deps: any = {
     game,

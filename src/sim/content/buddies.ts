@@ -251,6 +251,15 @@ export const BUDDIES: Record<BuddyKey, BuddyDef> = {
   },
 };
 
+// Enumerated art debt (the src/ui/icons.ts ITEM_ART_PENDING ledger): the
+// Emberfall Phoenix whistle has no committed icon yet. Its icon renders from
+// the phoenix GLB like every other whistle (scripts/assets/
+// render_buddy_item_icons.mjs), but that lane needs KTX-Software's `ktx` on
+// PATH to decompress the model first, which the machine that authored the
+// phoenix did not have. Empty this list in the same change that commits the
+// render; tests/item_icons.test.ts pins the membership.
+export const BUDDY_ART_PENDING_ITEM_IDS: readonly string[] = ['whistle_emberfall_phoenix'];
+
 /** Catalog order: declaration order. */
 export const BUDDY_KEYS = Object.keys(BUDDIES) as readonly BuddyKey[];
 

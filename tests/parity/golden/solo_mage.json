@@ -14,8 +14,8 @@
     {
       "tick": 0,
       "time": 0,
-      "nextId": 999,
-      "state": "9e272224",
+      "nextId": 1007,
+      "state": "9830d2d3",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -48,6 +48,7 @@
           "cls": "mage",
           "companionUpgrades": {},
           "counters": {},
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {},
@@ -61,13 +62,16 @@
           },
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 994,
+          "entityId": 999,
           "equipment": {
             "chest": "apprentice_robe",
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -92,7 +96,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -108,7 +113,7 @@
           "fiveSecondRule": 99,
           "healPower": 13,
           "hp": 54,
-          "id": 994,
+          "id": 999,
           "kind": "player",
           "level": 1,
           "lootFfaTimer": "Infinity",
@@ -152,9 +157,9 @@
     {
       "tick": 20,
       "time": 1,
-      "nextId": 1000,
-      "state": "fc5b9b82",
-      "events": "cde12e22",
+      "nextId": 1008,
+      "state": "1f8142a0",
+      "events": "52ebe2fd",
       "rng": {
         "draws": 2,
         "digest": "a1c65985"
@@ -163,9 +168,9 @@
     {
       "tick": 40,
       "time": 2,
-      "nextId": 1000,
-      "state": "89cac28b",
-      "events": "93b43192",
+      "nextId": 1008,
+      "state": "ff07e696",
+      "events": "75ee4af1",
       "rng": {
         "draws": 2,
         "digest": "a1c65985"
@@ -174,9 +179,9 @@
     {
       "tick": 60,
       "time": 3,
-      "nextId": 1000,
-      "state": "a05011d5",
-      "events": "a3c3c83c",
+      "nextId": 1008,
+      "state": "9951ed35",
+      "events": "407e36d3",
       "rng": {
         "draws": 136,
         "digest": "e230e6f0"
@@ -185,9 +190,9 @@
     {
       "tick": 80,
       "time": 4,
-      "nextId": 1000,
-      "state": "7621686c",
-      "events": "69b35b96",
+      "nextId": 1008,
+      "state": "7d255876",
+      "events": "72a03612",
       "rng": {
         "draws": 304,
         "digest": "1b76d31b"
@@ -196,9 +201,9 @@
     {
       "tick": 100,
       "time": 5,
-      "nextId": 1000,
-      "state": "0c860be7",
-      "events": "30d173ba",
+      "nextId": 1008,
+      "state": "eb819158",
+      "events": "350effeb",
       "rng": {
         "draws": 507,
         "digest": "7cc40d26"
@@ -207,9 +212,9 @@
     {
       "tick": 120,
       "time": 6,
-      "nextId": 1000,
-      "state": "1245e0dc",
-      "events": "b42a06f7",
+      "nextId": 1008,
+      "state": "c711c4b3",
+      "events": "2983b814",
       "rng": {
         "draws": 714,
         "digest": "ff11f95b"
@@ -218,8 +223,8 @@
     {
       "tick": 128,
       "time": 6.4,
-      "nextId": 1000,
-      "state": "9fdb1c01",
+      "nextId": 1008,
+      "state": "0d2ba4ca",
       "events": "741638a5",
       "rng": {
         "draws": 797,
@@ -255,6 +260,7 @@
             "damageDealt": 88,
             "damageTaken": 16
           },
+          "craftDaily": {},
           "craftSkills": {},
           "deedStats": {
             "counters": {
@@ -284,13 +290,16 @@
           ],
           "delveClears": {},
           "delveDaily": {},
-          "entityId": 994,
+          "entityId": 999,
           "equipment": {
             "chest": "apprentice_robe",
             "mainhand": "gnarled_staff"
           },
           "equipmentInstance": {},
           "gatheringProficiency": {},
+          "harvestPreference": {
+            "kind": "all"
+          },
           "heroicDaily": {},
           "inventory": [
             {
@@ -317,7 +326,8 @@
           "townFocus": {},
           "vault": {
             "stock": {}
-          }
+          },
+          "wyrmfallDaily": {}
         }
       ],
       "entities": [
@@ -325,7 +335,7 @@
           "aiState": "idle",
           "attackPower": 10,
           "castRemaining": 1.7,
-          "castTargetId": 999,
+          "castTargetId": 1007,
           "castTotal": 2.5,
           "castingAbility": "frostbolt",
           "combatTimer": 0.55,
@@ -339,7 +349,7 @@
           "gcdRemaining": 0.7,
           "healPower": 26,
           "hp": 49984,
-          "id": 994,
+          "id": 999,
           "inCombat": true,
           "kind": "player",
           "level": 10,
@@ -371,7 +381,7 @@
             "sta": 23,
             "str": 10
           },
-          "targetId": 999,
+          "targetId": 1007,
           "templateId": "mage",
           "weapon": {
             "max": 6,
@@ -380,7 +390,7 @@
           }
         },
         {
-          "aggroTargetId": 994,
+          "aggroTargetId": 999,
           "aiState": "attack",
           "auras": [
             {
@@ -390,7 +400,7 @@
               "name": "Cinderbolt",
               "remaining": 2.2,
               "school": "fire",
-              "sourceId": 994,
+              "sourceId": 999,
               "tickInterval": 2,
               "tickTimer": 0.2,
               "value": 1
@@ -402,7 +412,7 @@
               "name": "Rimelance",
               "remaining": 4.6,
               "school": "frost",
-              "sourceId": 994,
+              "sourceId": 999,
               "value": 0.6
             }
           ],
@@ -417,7 +427,7 @@
           "fiveSecondRule": 99,
           "hostile": true,
           "hp": 8912,
-          "id": 999,
+          "id": 1007,
           "inCombat": true,
           "kind": "mob",
           "leashAnchor": {
@@ -446,11 +456,11 @@
             "armor": 40
           },
           "swingTimer": 1.45,
-          "tappedById": 994,
+          "tappedById": 999,
           "templateId": "forest_wolf",
           "threat": [
             [
-              994,
+              999,
               89
             ]
           ],
