@@ -43,8 +43,6 @@ export const FREEHOLD_PLOT_ID_RE = /^[A-Za-z0-9_:-]{1,64}$/;
  *  bounds plot_index only at zero); policy does not. */
 export const FREEHOLD_PRIMARY_PLOT_INDEX = 0;
 
-/** One slot of headroom past the admitted one, so an account whose ONLY row
- *  sits at an unadmitted index is SEEN rather than read as absence. */
 /** The stored-column length ceilings this table enforces, SHAPE ONLY and
  *  deliberately far above every authored identity (the longest shipped tier id
  *  and visit policy are a fraction of these). They are exported because the
@@ -99,13 +97,30 @@ export const FREEHOLD_TIER_COLUMN_MAX_LENGTH = 64;
  * pathology short-circuit, not a second ceiling.
  */
 export const FREEHOLD_STORED_DETOAST_GATE_BYTES = 131_072;
+
+/** The visit-policy half of the pair FREEHOLD_TIER_COLUMN_MAX_LENGTH documents
+ *  above, on the same reasoning: shape only, far above every authored policy,
+ *  and exported so the worst-case fixture stays insertable. */
 export const FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH = 32;
 
+/** One slot of headroom past the admitted one, so an account whose ONLY row
+ *  sits at an unadmitted index is SEEN rather than read as absence. This
+ *  docblock used to sit two declarations above the constant it describes, so
+ *  the invariant it states had no hover text and its neighbour wore the wrong
+ *  one. */
 export const FREEHOLD_ACCOUNT_PLOT_READ_LIMIT = 2;
 
 /** An explicitly unbound row: no upkeep-derived day or week stamp, no credit.
  *  The DDL's last CHECK is what makes that a fact rather than a convention. */
 export const FREEHOLD_UPKEEP_BINDING_UNBOUND = 'unbound_no_history';
+
+/** The two NARROW integer columns' own ranges, so the writer refuses what the
+ *  column would refuse. plot_index is SMALLINT and schema_version is INT; a
+ *  value past either raises 22003 in the database and aborts the CALLER's whole
+ *  transaction, which is the failure every refusal in requireUpsertInput exists
+ *  to prevent. */
+export const FREEHOLD_PLOT_INDEX_COLUMN_MAX = 32_767;
+export const FREEHOLD_SCHEMA_VERSION_COLUMN_MAX = 2_147_483_647;
 
 /**
  * The freehold plot DDL, applied by ensureSchema (server/db.ts) at every boot
@@ -543,8 +558,19 @@ const FREEHOLD_CURRENT_REV_SQL = `SELECT durable_rev::text AS durable_rev
  *  throw here costs the caller nothing it had not already broken. */
 function requireUpsertInput(input: FreeholdUpsert): void {
   requireAccountId(input.accountId);
-  if (!Number.isSafeInteger(input.plotIndex) || input.plotIndex < 0) {
-    throw new TypeError('freehold plotIndex must be a non-negative safe integer');
+  // BOUNDED AT THE COLUMN, not just at zero. plot_index is SMALLINT and
+  // schema_version is INT: a value past either raises 22003 and aborts the
+  // caller's whole transaction, which is exactly what this function's header
+  // promises cannot happen. Unreachable from today's one writer, which uses the
+  // primary slot, and load-bearing for the second-slot writer the ladder owes.
+  if (
+    !Number.isSafeInteger(input.plotIndex) ||
+    input.plotIndex < 0 ||
+    input.plotIndex > FREEHOLD_PLOT_INDEX_COLUMN_MAX
+  ) {
+    throw new TypeError(
+      `freehold plotIndex must be an integer between 0 and ${FREEHOLD_PLOT_INDEX_COLUMN_MAX}`,
+    );
   }
   if (typeof input.plotId !== 'string' || !FREEHOLD_PLOT_ID_RE.test(input.plotId)) {
     throw new TypeError('freehold plotId must match the opaque plot id charset');
@@ -555,8 +581,28 @@ function requireUpsertInput(input: FreeholdUpsert): void {
   if (typeof input.visitPolicy !== 'string' || input.visitPolicy === '') {
     throw new TypeError('freehold visitPolicy must be a non-empty string');
   }
-  if (typeof input.layoutJson !== 'string' || typeof input.trophiesJson !== 'string') {
-    throw new TypeError('freehold layoutJson and trophiesJson must be serialized strings');
+  // AND THEY HAVE TO BE JSON ARRAYS. A string that is not parseable raises
+  // 22P02 on the ::jsonb cast and one that parses to an object or a scalar
+  // raises 23514 on the two array CHECKs; both abort the caller's transaction,
+  // and both are refusals this function claims to make before a byte is sent.
+  // Parsed rather than pattern-matched, because the DDL's own test is
+  // jsonb_typeof and nothing cheaper answers the same question.
+  for (const [name, json] of [
+    ['layoutJson', input.layoutJson],
+    ['trophiesJson', input.trophiesJson],
+  ] as const) {
+    if (typeof json !== 'string') {
+      throw new TypeError('freehold layoutJson and trophiesJson must be serialized strings');
+    }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(json);
+    } catch {
+      throw new TypeError(`freehold ${name} must be parseable JSON`);
+    }
+    if (!Array.isArray(parsed)) {
+      throw new TypeError(`freehold ${name} must serialize a JSON array`);
+    }
   }
   if (!Number.isSafeInteger(input.condition) || input.condition < 0 || input.condition > 100) {
     throw new TypeError('freehold condition must be an integer between 0 and 100');
@@ -564,8 +610,14 @@ function requireUpsertInput(input: FreeholdUpsert): void {
   if (!Number.isSafeInteger(input.wireRev) || input.wireRev < 0) {
     throw new TypeError('freehold wireRev must be a non-negative safe integer');
   }
-  if (!Number.isSafeInteger(input.schemaVersion) || input.schemaVersion < 1) {
-    throw new TypeError('freehold schemaVersion must be a positive safe integer');
+  if (
+    !Number.isSafeInteger(input.schemaVersion) ||
+    input.schemaVersion < 1 ||
+    input.schemaVersion > FREEHOLD_SCHEMA_VERSION_COLUMN_MAX
+  ) {
+    throw new TypeError(
+      `freehold schemaVersion must be an integer between 1 and ${FREEHOLD_SCHEMA_VERSION_COLUMN_MAX}`,
+    );
   }
   // The two stored-column ceilings, checked HERE rather than left to the DDL,
   // for the same reason as every other refusal in this function: a value the
@@ -737,11 +789,22 @@ export const FREEHOLD_EXPORT_DETOAST_GATE_BYTES = FREEHOLD_STORED_DETOAST_GATE_B
  *  account read pairs its pre-gate with an octet_length measure for exactly this
  *  reason; the export now does too. Wider than the account read's stored ceiling
  *  because the export must hand back rows this build refuses to LOAD, including
- *  the oversize class recovery exists for; four times the stored bound covers
- *  every row a later release with a bigger decor budget could plausibly write
- *  while still turning a corrupt row into a reported one. A LITERAL rather than
- *  an import of FREEHOLD_MAX_STORED_BYTES: this module deliberately imports
- *  nothing from the sim leaf, and 425984 is four times that constant's 106496. */
+ *  the oversize class recovery exists for. A LITERAL rather than an import of
+ *  FREEHOLD_MAX_STORED_BYTES: this module deliberately imports nothing from the
+ *  sim leaf, and 425984 is four times that constant's 106496.
+ *
+ *  WHICH BOUND ACTUALLY BINDS, corrected here rather than left as the claim
+ *  that four times the stored ceiling covers everything. The two measures are
+ *  in different units and the pre-gate is the CHEAP one, so for COMPRESSIBLE
+ *  content this rendered bound binds and the widening is real, while for
+ *  INCOMPRESSIBLE content the pre-gate binds first at 131072 on-disk bytes and
+ *  this constant is never reached. That is deliberate and it is the trade the
+ *  pre-gate exists to make: without it an incompressible row is measured by
+ *  detoasting it, which is the cost being avoided. THE RESIDUAL, named rather
+ *  than implied: an incompressible row above the pre-gate comes back with its
+ *  identity, both revisions, every scalar column and its measured on-disk size,
+ *  and NOT its content, on the owner's only readback of it. It is carried as a
+ *  named limit in docs/freeholds/persistence-rollout-contract.md section 8a. */
 export const FREEHOLD_EXPORT_MAX_RENDERED_BYTES = 425_984;
 
 /** The subject-access read (exportAccountData): every persisted plot row this
@@ -755,11 +818,16 @@ export const FREEHOLD_EXPORT_MAX_RENDERED_BYTES = 425_984;
  *  account read's `LIMIT 2` is justified in this same file against exactly that
  *  hazard, and it is the read that runs on a REQUEST. Two things it therefore
  *  does NOT promise, stated rather than implied:
- *   * past FREEHOLD_EXPORT_ROW_LIMIT rows the answer is TRUNCATED, and it says
- *     so: a truncated read appends one `{ truncated: true }` marker row rather
- *     than trailing off, because an export that quietly stops is worse than one
- *     that stops and says it did. The limit is twenty against an approved ladder
- *     of at most two plots, so no shipped account can reach it.
+ *   * AT OR past FREEHOLD_EXPORT_ROW_LIMIT rows the answer may be TRUNCATED,
+ *     and it says so: a read that comes back holding the limit appends one
+ *     `{ truncated: true }` marker row rather than trailing off, because an
+ *     export that quietly stops is worse than one that stops and says it did.
+ *     AT the limit exactly the marker is an OVER-REPORT, and deliberately: a
+ *     read of exactly twenty rows is indistinguishable from a read that stopped
+ *     at twenty, and saying "there may be more" about an account that has
+ *     exactly twenty is the safe direction on an account's only readback. The
+ *     limit is twenty against an approved ladder of at most two plots, so no
+ *     shipped account can reach it.
  *   * a row whose content is too large to render comes back with `layout` and
  *     `trophies` NULL and its two measured sizes in their place. The row itself,
  *     its identity, both revisions and every scalar column are present, so the
@@ -772,9 +840,20 @@ export async function freeholdsForExport(
   db: Pool,
   accountId: number,
 ): Promise<Record<string, unknown>[]> {
+  // THE SAME STRUCTURAL REFUSAL every other entry point in this module runs.
+  // It was the one that skipped it, and it is the one that runs on a REQUEST:
+  // a non-integer sent anyway raises 22P02 and aborts whatever transaction the
+  // export composition is holding.
+  requireAccountId(accountId);
   const res = await db.query(
     `SELECT plot_index, plot_id, schema_version, durable_rev, wire_rev, tier,
             condition, visit_policy, upkeep_binding,
+            -- THE TWO UPKEEP COLUMNS ARE JSONB AND ARE SELECTED RAW, past both
+            -- bounds above, which is safe only because of the DDL: 07a is the
+            -- release that starts writing them, this build writes NULL, and
+            -- the unbound-carries-no-upkeep CHECK holds them NULL for every row
+            -- this build can produce. The release that writes them owes them
+            -- the same pre-gate and measure the two content columns carry.
             upkeep_checkpoint, upkeep_credit, created_at, updated_at,
             b.disk_bytes,
             b.owned_bytes,

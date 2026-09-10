@@ -93,7 +93,17 @@ export const FREEHOLD_MAX_ID_LENGTH = 64;
  *  COLUMN has rather than the bound identities share. Without it a policy id
  *  past 32 would be admitted by both the loader and the writer, and then throw
  *  out of requireUpsertInput on every save until the owner quiesced on a run of
- *  thrown writes, which reads as a database fault rather than as a refusal. */
+ *  thrown writes, which reads as a database fault rather than as a refusal.
+ *
+ *  AN UNLINKED COPY, and named as one. This file is a sim leaf and must not
+ *  import a server module, so the number is duplicated rather than shared, the
+ *  way the plot-identity charset is. What keeps the two together is a pin, not
+ *  the compiler: tests/server/freehold_db.test.ts asserts this constant and
+ *  server/freehold_db.ts's FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH are equal, so
+ *  widening the column without widening this one goes red. Widening THIS one
+ *  alone is the direction that matters: it would admit a policy the column
+ *  refuses, and every save would then throw out of requireUpsertInput until the
+ *  owner quiesced on a run of thrown writes. */
 export const FREEHOLD_MAX_VISIT_POLICY_LENGTH = 32;
 
 /**

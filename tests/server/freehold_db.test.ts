@@ -22,6 +22,7 @@ import {
   FREEHOLD_SCHEMA,
   FREEHOLD_STORED_DETOAST_GATE_BYTES,
   FREEHOLD_UPKEEP_BINDING_UNBOUND,
+  FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH,
   type FreeholdUpsert,
   freeholdForAccount,
   freeholdSchema,
@@ -29,6 +30,7 @@ import {
   mintFreeholdPlotId,
   upsertFreehold,
 } from '../../server/freehold_db';
+import { FREEHOLD_MAX_VISIT_POLICY_LENGTH } from '../../src/sim/freehold/persisted';
 import { stripComments } from '../helpers/strip_comments';
 
 interface Captured {
@@ -350,6 +352,25 @@ describe('the account read', () => {
     });
   });
 
+  it("holds the visit-policy column ceiling and the sim leaf's copy of it to one number", () => {
+    // TWO UNLINKED LITERALS. src/sim/freehold/persisted.ts is a sim leaf and may
+    // not import a server module, so it carries its own 32 and the write
+    // refusal applies it. Nothing in the type system holds them together: widen
+    // the COLUMN alone and the sim refuses a policy the database would take;
+    // widen the SIM alone and every save throws out of requireUpsertInput until
+    // the owner quiesces on a run of thrown writes, which reads to an operator
+    // as a database fault rather than as a refusal.
+    expect(FREEHOLD_MAX_VISIT_POLICY_LENGTH).toBe(FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH);
+    // Pinned to the literal too, so a change that moves BOTH is still a
+    // deliberate one and not a silent drift.
+    expect(FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH).toBe(32);
+    // And the DDL really enforces it, so the pair is not two numbers agreeing
+    // about a rule the database does not have.
+    expect(fold(codeOnly(FREEHOLD_SCHEMA))).toContain(
+      `length(visit_policy) <= ${FREEHOLD_VISIT_POLICY_COLUMN_MAX_LENGTH}`,
+    );
+  });
+
   it('holds all FOUR copies of the plot identity charset to one rule', () => {
     // The charset lives in four places: the wire's own regex, this module's
     // FREEHOLD_PLOT_ID_RE, the DDL CHECK, and normalizeFreehold's shape test.
@@ -612,6 +633,23 @@ describe('the compare-and-swap upsert', () => {
       { field: 'visitPolicy', patch: { visitPolicy: '' }, message: /visitPolicy/ },
       { field: 'layoutJson', patch: { layoutJson: 5 }, message: /layoutJson/ },
       { field: 'trophiesJson', patch: { trophiesJson: null }, message: /trophiesJson/ },
+      // A STRING IS NOT ENOUGH. The two columns are JSONB with a
+      // jsonb_typeof = 'array' CHECK apiece, so unparseable text raises 22P02
+      // on the cast and a parseable object or scalar raises 23514, and either
+      // aborts the CALLER's whole transaction. This function's header promises
+      // every structural refusal happens before a byte is sent.
+      { field: 'layoutJson unparseable', patch: { layoutJson: '{' }, message: /parseable JSON/ },
+      { field: 'layoutJson object', patch: { layoutJson: '{"a":1}' }, message: /JSON array/ },
+      { field: 'trophiesJson scalar', patch: { trophiesJson: '7' }, message: /JSON array/ },
+      // THE TWO NARROW INTEGER COLUMNS. plot_index is SMALLINT and
+      // schema_version is INT; past either the database raises 22003, which is
+      // the same aborted transaction by another code.
+      { field: 'plotIndex past SMALLINT', patch: { plotIndex: 32_768 }, message: /plotIndex/ },
+      {
+        field: 'schemaVersion past INT',
+        patch: { schemaVersion: 2_147_483_648 },
+        message: /schemaVersion/,
+      },
       { field: 'condition', patch: { condition: 101 }, message: /condition/ },
       { field: 'wireRev', patch: { wireRev: -1 }, message: /wireRev/ },
       // Anything but exact digits would raise 22P02 at $3::bigint and abort the
@@ -661,6 +699,39 @@ describe('mintFreeholdPlotId', () => {
 });
 
 describe('the subject-access export statement', () => {
+  it('refuses a bad account id before touching the database', async () => {
+    // It was the ONE entry point in this module without the structural refusal
+    // every sibling runs, and it is the one that runs on a REQUEST: a
+    // non-integer sent anyway raises 22P02 and aborts whatever transaction the
+    // export composition holds.
+    for (const bad of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+      const cap = makeCapture();
+      await expect(freeholdsForExport(cap.db as never, bad), String(bad)).rejects.toThrow(
+        /accountId/,
+      );
+      expect(cap.calls, `${bad} must be refused before any SQL is sent`).toHaveLength(0);
+    }
+  });
+
+  it('appends the truncation marker AT the limit, and not one row short of it', async () => {
+    // THE BOUNDARY, which the real-PostgreSQL arm inserts past but never sits
+    // on. The marker fires on `rows.length === LIMIT`, so exactly-at-the-limit
+    // is an over-report, deliberately: a read holding twenty rows cannot tell
+    // an account that has twenty from one that was cut off at twenty.
+    const full = Array.from({ length: FREEHOLD_EXPORT_ROW_LIMIT }, (_, i) => ({ plot_index: i }));
+    const atLimit = makeCapture([{ rows: full }]);
+    const rows = await freeholdsForExport(atLimit.db as never, 7);
+    expect(rows).toHaveLength(FREEHOLD_EXPORT_ROW_LIMIT + 1);
+    expect(rows[rows.length - 1]).toEqual({ truncated: true, limit: FREEHOLD_EXPORT_ROW_LIMIT });
+    // And the marker carries NO plot identity an exporter could read as a plot.
+    expect(Object.keys(rows[rows.length - 1])).toEqual(['truncated', 'limit']);
+
+    const short = makeCapture([{ rows: full.slice(0, FREEHOLD_EXPORT_ROW_LIMIT - 1) }]);
+    const shortRows = await freeholdsForExport(short.db as never, 7);
+    expect(shortRows).toHaveLength(FREEHOLD_EXPORT_ROW_LIMIT - 1);
+    expect(shortRows.some((row) => 'truncated' in row)).toBe(false);
+  });
+
   it('carries both bounds in the statement, not only in the docblock', async () => {
     // The one statement this round rewrote by hand was the one with no text
     // assertion: its only coverage was the real-PostgreSQL suite, which skips
