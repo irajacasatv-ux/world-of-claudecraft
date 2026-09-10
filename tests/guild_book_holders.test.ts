@@ -9,6 +9,7 @@ import {
   GUILD_BOOK_FLUSH_FAN_OUT_MAX,
   GuildBookHolderIndex,
   requestGuildBookFlush,
+  revertOwnGuildBookOps,
 } from '../server/guild_book_holders';
 import { type GuildBankOpDelta, guildBankDeltaIdentityKey } from '../src/sim/guild_bank';
 
@@ -35,6 +36,7 @@ interface FakeSession {
   left: boolean;
   dirtyGuildBanks: Map<number, number>;
   unflushedGuildBankOps: Map<number, GuildBankOpDelta[]>;
+  guildBankDeficitSkips: Map<number, number>;
   guildBookFlushInFlight: boolean;
   guildBookFlushRearm: boolean;
 }
@@ -42,6 +44,7 @@ interface FakeSession {
 function session(name: string): FakeSession {
   return {
     name,
+    guildBankDeficitSkips: new Map(),
     escrowQuarantined: false,
     left: false,
     dirtyGuildBanks: new Map(),
@@ -282,5 +285,110 @@ describe('requestGuildBookFlush: one in flight, one re-arm', () => {
     quarantined.dirtyGuildBanks.set(9, 1);
     requestGuildBookFlush(quarantined, never);
     expect(never).not.toHaveBeenCalled();
+  });
+});
+
+describe('revertOwnGuildBookOps, the coordinator method this module now owns', () => {
+  // IT HAD NO TEST AT ALL while it lived on the coordinator: five call sites,
+  // two of them inside a leaving session's teardown, replaying money deltas
+  // backward onto a live book. It is here so a Vitest can drive it with neither
+  // a GameServer nor a Sim.
+  const revertSim = () => {
+    const reverted: { guildId: number; deltas: readonly GuildBankOpDelta[] }[] = [];
+    return {
+      reverted,
+      revertGuildBankDeltas(guildId: number, deltas: readonly GuildBankOpDelta[]): void {
+        reverted.push({ guildId, deltas });
+      },
+    };
+  };
+
+  it('undoes exactly the ids it is handed, and clears all three marks for each', () => {
+    const index = new GuildBookHolderIndex<FakeSession>();
+    const dead = session('officer');
+    dead.dirtyGuildBanks.set(7, 2);
+    dead.dirtyGuildBanks.set(9, 1);
+    dead.unflushedGuildBankOps.set(7, [deposit('ore', 5)]);
+    dead.unflushedGuildBankOps.set(9, [withdraw('ore', 3)]);
+    dead.guildBankDeficitSkips.set(7, 1);
+    index.touch(dead, 7);
+    index.touch(dead, 9);
+    const sim = revertSim();
+
+    revertOwnGuildBookOps(index, sim, dead, [7]);
+
+    expect(sim.reverted).toEqual([{ guildId: 7, deltas: [deposit('ore', 5)] }]);
+    // Guild 7's three marks are gone; guild 9's are untouched.
+    expect(dead.dirtyGuildBanks.has(7)).toBe(false);
+    expect(dead.unflushedGuildBankOps.has(7)).toBe(false);
+    expect(dead.guildBankDeficitSkips.has(7)).toBe(false);
+    expect(dead.dirtyGuildBanks.get(9)).toBe(1);
+    expect(dead.unflushedGuildBankOps.get(9)).toEqual([withdraw('ore', 3)]);
+  });
+
+  it('does NOTHING at all for an empty id list, which is why no caller guards', () => {
+    // THE EQUIVALENCE the routing rests on. Five call sites share this function
+    // and the private empty check that used to sit in front of one of them was
+    // deleted on the argument that the loop is the check. Asserted rather than
+    // argued: no revert, no resync, no counter.
+    const index = new GuildBookHolderIndex<FakeSession>();
+    const resync = vi.spyOn(index, 'resync');
+    const dead = session('officer');
+    dead.dirtyGuildBanks.set(7, 1);
+    dead.unflushedGuildBankOps.set(7, [deposit('ore', 5)]);
+    const sim = revertSim();
+
+    revertOwnGuildBookOps(index, sim, dead, []);
+
+    expect(sim.reverted).toEqual([]);
+    expect(resync).not.toHaveBeenCalled();
+    expect(dead.dirtyGuildBanks.get(7)).toBe(1);
+    expect(dead.unflushedGuildBankOps.get(7)).toEqual([deposit('ore', 5)]);
+    resync.mockRestore();
+  });
+
+  it('resyncs a guild whose log is already empty, without replaying anything', () => {
+    const index = new GuildBookHolderIndex<FakeSession>();
+    const resync = vi.spyOn(index, 'resync');
+    const dead = session('officer');
+    dead.dirtyGuildBanks.set(7, 1);
+    const sim = revertSim();
+
+    revertOwnGuildBookOps(index, sim, dead, [7]);
+
+    expect(sim.reverted).toEqual([]);
+    expect(resync).toHaveBeenCalledTimes(1);
+    expect(dead.dirtyGuildBanks.has(7)).toBe(false);
+    resync.mockRestore();
+  });
+
+  it('NEVER THROWS, and still undoes the guilds after the one that faulted', () => {
+    // Two of its callers run inside a leaving session's teardown and one of
+    // those is inside a catch, so a throw here rejected out of the settlement
+    // and stranded the character. Stopping at the first fault would also leave
+    // the remaining guilds' ops live with no session left to converge them.
+    const index = new GuildBookHolderIndex<FakeSession>();
+    const dead = session('officer');
+    for (const guildId of [7, 9]) {
+      dead.dirtyGuildBanks.set(guildId, 1);
+      dead.unflushedGuildBankOps.set(guildId, [deposit('ore', guildId)]);
+    }
+    const reverted: number[] = [];
+    const sim = {
+      revertGuildBankDeltas(guildId: number): void {
+        if (guildId === 7) throw new Error('book revert faulted');
+        reverted.push(guildId);
+      },
+    };
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    expect(() => revertOwnGuildBookOps(index, sim, dead, [7, 9])).not.toThrow();
+
+    expect(reverted).toEqual([9]);
+    // The faulted guild's marks are still cleared: this session can never save
+    // again, so leaving them would keep the disband guard watching a dead one.
+    expect(dead.dirtyGuildBanks.size).toBe(0);
+    expect(errors).toHaveBeenCalledTimes(1);
+    errors.mockRestore();
   });
 });

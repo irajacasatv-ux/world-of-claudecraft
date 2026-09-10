@@ -301,7 +301,11 @@ import {
   type GuildBankWriteResult,
   loadGuildBanksIntoSim,
 } from './guild_bank_state';
-import { GuildBookHolderIndex, requestGuildBookFlush } from './guild_book_holders';
+import {
+  GuildBookHolderIndex,
+  requestGuildBookFlush,
+  revertOwnGuildBookOps as revertGuildBookWork,
+} from './guild_book_holders';
 import { createPaidGuildWithLeaderAtomic } from './guild_create_db';
 import { buyGuildRosterPageAtomic } from './guild_roster_page_db';
 import { guildRosterTransport } from './guild_roster_transport';
@@ -3431,7 +3435,13 @@ export class GameServer {
       if (session.jailed) this.teleportJailedSession(session);
       this.ipSessionCounts.set(sessionIp, (this.ipSessionCounts.get(sessionIp) ?? 0) + 1);
       this.clients.set(pid, session);
-      joined = true; // From here a leave can run and owns the release.
+      // From here a leave owns the release, because the session is in
+      // `clients`. THE RESIDUAL: the tail below runs outside this guard, and a
+      // synchronous throw there rejects the handshake with no message handler
+      // attached, so nothing schedules that leave (the keepalive reaper skips a
+      // socket that is not OPEN). Every statement in that tail is a map write or
+      // a voided, caught promise today.
+      joined = true;
     } finally {
       if (!joined) {
         releaseFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
@@ -3787,8 +3797,27 @@ export class GameServer {
       await this.settleLeavingSession(session);
     } finally {
       // ON EVERY EXIT, INCLUDING A THROW: all three callers fire leave() with no
-      // catch, so a rejection above used to skip these three lines forever. The
-      // flush swallows its own rejection, in the module that owns the pairing.
+      // catch, so a rejection above used to skip these lines forever.
+      //
+      // THE FOUR REGISTRATIONS GO FIRST, because they are what makes the
+      // character RE-ENTERABLE and they used to sit at the END of the
+      // settlement. A rejection there (a final save that exhausts its five
+      // attempts, then a guild-book revert that faults) left
+      // sessionsByCharacterId still mapping the character while the releases
+      // below ran, so planJoin answered 'character already in world' for every
+      // later login for the life of the process, takeOverCharacter reported
+      // success and changed nothing, and every whisper, mail and party lookup
+      // kept resolving to the dead session. Round eleven moved the three
+      // releases here for the same reason and left these behind.
+      // IDENTITY-GUARDED because a same-account swap sets the new session
+      // before the old one's fire-and-forget leave arrives here. The flush
+      // swallows its own rejection, in the module that owns the pairing.
+      if (this.sessionsByCharacterId.get(session.characterId) === session) {
+        this.sessionsByCharacterId.delete(session.characterId);
+      }
+      this.guildBookHolders.dropSession(session);
+      session.bankLedgerJournal.outbox.discard();
+      storageRecovery.offline(session.characterId);
       await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
       // Release the per-character load lease so a fresh login (here or on another
       // process) can reload the character without waiting out the TTL. Order
@@ -3869,12 +3898,10 @@ export class GameServer {
     await this.saveCharacterOnLeave(session);
     // Whatever book work this session still holds can never commit now: it has
     // no save left. saveLeavingCharacter's exhausted-retry arm already cleared
-    // its own marks, so this is a no-op there.
+    // its own marks, so this is a no-op there. The four REGISTRATIONS that used
+    // to follow it moved into leave()'s finally, because a fault anywhere above
+    // this line skipped them and stranded the character.
     this.reconcileOwnGuildBooks(session);
-    session.bankLedgerJournal.outbox.discard();
-    this.sessionsByCharacterId.delete(session.characterId);
-    this.guildBookHolders.dropSession(session);
-    storageRecovery.offline(session.characterId);
   }
 
   /** A post-mutation ledger projection failure makes the live character
@@ -4576,42 +4603,12 @@ export class GameServer {
     this.guildBookHolders.touch(session, guildId);
   }
 
-  // When this session's escrow can never commit again, its guild-book
-  // mutations remain in the LIVE book while the character half rolled back
-  // (fence-out: a same-account takeover) or never landed (the leave flush
-  // exhausted its retries). SYNCHRONOUS and unconditional: replay exactly this
-  // session's own unflushed deltas BACKWARD onto the live book, leaving every
-  // other session's unflushed ops untouched.
-  //
-  // There is deliberately no evict-and-reload arm any more, and no
-  // cross-session dirty scan to choose between arms. Under the escrow root fix
-  // a session's payload contains only its own deltas, so a dead session's ops
-  // are in NO other session's payload and durable truth can never have been
-  // advanced by them: reloading the row would restore state that is either
-  // identical (a no-op) or another officer's newer work (destroying it).
-  //
-  // EVERY unflushed delta is undone, with no exceptions to reason about: a
-  // save either commits both halves or commits neither, so an unflushed delta
-  // never has a durable character half behind it.
-  private revertOwnGuildBookOps(dead: ClientSession, guildIds: number[]): void {
-    for (const guildId of guildIds) {
-      const log = dead.unflushedGuildBankOps.get(guildId) ?? [];
-      dead.dirtyGuildBanks.delete(guildId);
-      dead.unflushedGuildBankOps.delete(guildId);
-      dead.guildBankDeficitSkips.delete(guildId);
-      this.guildBookHolders.resync(dead);
-      if (log.length === 0) continue;
-      // Counted per GUILD, the unit the remedy applies to: reaching this at
-      // all means a session that can never commit again held unflushed book
-      // ops, the shape the Phase 3 QA dupe lived in. This is the ONE reconcile
-      // site under the escrow root fix (the fence-out, the exhausted leave
-      // flush, the teardown sweep, and the escrow-refusal quarantine all land
-      // here), so the counter lives here rather than at four call sites. A
-      // guild whose log is already empty is a bookkeeping no-op, not an
-      // incident, and is not counted.
-      gameMetricsCounters().guildBankIncident('reconcile');
-      this.sim.revertGuildBankDeltas(guildId, log);
-    }
+  /** Undo this session's own unflushed guild-book work. The rule, its five
+   *  call sites and its never-throws property live beside the holder index in
+   *  server/guild_book_holders.ts, where a Vitest can drive them with no
+   *  GameServer: this is the binding, not the decision. */
+  private revertOwnGuildBookOps(dead: ClientSession, guildIds: readonly number[]): void {
+    revertGuildBookWork(this.guildBookHolders, this.sim, dead, guildIds);
   }
 
   // How many consecutive escrow REFUSALS one session tolerates for one guild

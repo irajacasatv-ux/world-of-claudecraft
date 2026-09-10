@@ -76,6 +76,34 @@ describe('the leaving character save', () => {
     // The character is named in the dev-channel line, never the account.
     expect(lines.join(' ')).not.toContain('account');
   });
+
+  it('never throws even when the RECONCILE ITSELF faults, which is the arm the stub hid', async () => {
+    // "Never throws" was stated in the header and proved with a non-throwing
+    // stub. The one callback this function invokes runs INSIDE the catch on the
+    // exhausted-retry arm, so a fault in the backward book replay rejected out
+    // of a leaving session's settlement, which is the single most expensive
+    // place on the leave path for a rejection to land: it skipped the
+    // registrations that make the character re-enterable.
+    const save = vi.fn(async () => {
+      throw new Error('db down');
+    });
+    const reconcile = vi.fn(() => {
+      throw new Error('book revert faulted');
+    });
+    const lines: string[] = [];
+    const errors = vi
+      .spyOn(console, 'error')
+      .mockImplementation((message: unknown) => void lines.push(String(message)));
+    await expect(saveLeavingCharacter('Ashwen', save, reconcile)).resolves.toBeUndefined();
+    errors.mockRestore();
+    expect(reconcile).toHaveBeenCalledTimes(1);
+    // The fault is REPORTED, not swallowed silently: it names the character and
+    // not the account, like every other line this module writes.
+    const reported = lines.filter((line) => line.includes('reconcile on leave failed'));
+    expect(reported).toHaveLength(1);
+    expect(reported[0]).toContain('Ashwen');
+    expect(lines.join(' ')).not.toContain('account');
+  });
 });
 
 describe('the contests a leaver forfeits', () => {

@@ -54,7 +54,18 @@ export async function saveLeavingCharacter(
         // permanently unflushable: the live book is ahead of durable truth with
         // no session left to converge it, and the disband guard (which scans
         // session marks) loses sight of it the moment this session tears down.
-        reconcileGuildBooks();
+        //
+        // GUARDED, because this callback runs INSIDE the catch and the header
+        // above promises this function never throws. Unguarded, a fault in the
+        // backward replay turned an exhausted save into a rejection out of the
+        // leaving session's settlement, which is the one place a rejection is
+        // most expensive. The callee has its own per-guild guard; this is the
+        // seal on the property this module states.
+        try {
+          reconcileGuildBooks();
+        } catch (reconcileErr) {
+          console.error(`guild book reconcile on leave failed for ${name}:`, reconcileErr);
+        }
         return;
       }
       const retryMs = leaveSaveRetryMs(attempt);

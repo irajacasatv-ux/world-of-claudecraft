@@ -36,6 +36,7 @@ import {
   sumContributions,
   type UnsettledGuildBook,
 } from './guild_bank_settle_gate';
+import { gameMetricsCounters } from './http/game_signals';
 
 /** The slice of a live session the index reads (structural, so GameServer's
  *  ClientSession satisfies it without the type dragging the whole class in). */
@@ -228,4 +229,80 @@ function settle<S extends GuildBookFlushSession>(
   const again = session.guildBookFlushRearm;
   session.guildBookFlushRearm = false;
   if (again && session.dirtyGuildBanks.size > 0) requestGuildBookFlush(session, save);
+}
+
+/** The MUTABLE slice the revert below writes, kept apart from
+ *  `GuildBookHolderSession` above, which is deliberately read-only: the index
+ *  OBSERVES a session's book work, and this undoes it. */
+export interface GuildBookRevertSession extends GuildBookHolderSession {
+  readonly dirtyGuildBanks: Map<number, number>;
+  readonly unflushedGuildBankOps: Map<number, GuildBankOpDelta[]>;
+  readonly guildBankDeficitSkips: Map<number, number>;
+}
+
+/** The sim surface the revert touches: one call, named rather than the whole
+ *  Sim, so this module cannot grow into a second coordinator. */
+export interface GuildBookRevertSim {
+  revertGuildBankDeltas(guildId: number, deltas: readonly GuildBankOpDelta[]): void;
+}
+
+/**
+ * Undo one session's own unflushed guild-book work, moved here from the
+ * coordinator so it can be driven by a Vitest with neither a GameServer nor a
+ * Sim. Five call sites reach it (the leave path's two, the fence-out, the
+ * teardown sweep and the escrow-refusal quarantine) and none of them checks for
+ * an empty id list, because this loop is the check: no ids means no revert, no
+ * resync, no counter and no log.
+ *
+ * When this session's escrow can never commit again, its guild-book mutations
+ * remain in the LIVE book while the character half rolled back (a same-account
+ * takeover fenced it out) or never landed (the leave flush exhausted its
+ * retries). SYNCHRONOUS and unconditional: replay exactly this session's own
+ * unflushed deltas BACKWARD onto the live book, leaving every other session's
+ * unflushed ops untouched.
+ *
+ * There is deliberately no evict-and-reload arm any more, and no cross-session
+ * dirty scan to choose between arms. Under the escrow root fix a session's
+ * payload contains only its own deltas, so a dead session's ops are in NO other
+ * session's payload and durable truth can never have been advanced by them:
+ * reloading the row would restore state that is either identical (a no-op) or
+ * another officer's newer work (destroying it).
+ *
+ * EVERY unflushed delta is undone, with no exceptions to reason about: a save
+ * either commits both halves or commits neither, so an unflushed delta never
+ * has a durable character half behind it.
+ *
+ * NEVER THROWS, and that is load-bearing rather than tidy. Two of its callers
+ * run inside a leaving session's teardown, one of them from inside a catch, and
+ * a throw there skipped the registrations that make the character re-enterable.
+ * A guild whose backward replay faults is logged and the remaining guilds are
+ * still undone, because stopping at the first fault would strand the rest of
+ * this session's book work with no session left to converge it.
+ */
+export function revertOwnGuildBookOps<S extends GuildBookRevertSession>(
+  index: GuildBookHolderIndex<S>,
+  sim: GuildBookRevertSim,
+  dead: S,
+  guildIds: readonly number[],
+): void {
+  for (const guildId of guildIds) {
+    const log = dead.unflushedGuildBankOps.get(guildId) ?? [];
+    dead.dirtyGuildBanks.delete(guildId);
+    dead.unflushedGuildBankOps.delete(guildId);
+    dead.guildBankDeficitSkips.delete(guildId);
+    index.resync(dead);
+    if (log.length === 0) continue;
+    // Counted per GUILD, the unit the remedy applies to: reaching this at all
+    // means a session that can never commit again held unflushed book ops, the
+    // shape the Phase 3 QA dupe lived in. This is the ONE reconcile site under
+    // the escrow root fix, so the counter lives here rather than at five call
+    // sites. A guild whose log is already empty is a bookkeeping no-op, not an
+    // incident, and is not counted.
+    gameMetricsCounters().guildBankIncident('reconcile');
+    try {
+      sim.revertGuildBankDeltas(guildId, log);
+    } catch (err) {
+      console.error(`guild book revert failed for guild ${guildId}; its ops stay live:`, err);
+    }
+  }
 }
