@@ -56,10 +56,17 @@ before the record is seeded, which is exactly the thing a relog fixes.
 | `oversize` | REPORT | the same |
 | `unnamed_record` | RETRY | nothing now; the next login reads before the record is seeded |
 
-TWO GROUPS, and they line up exactly with the repairable and terminal split
-ruling 2 introduced, which is not a coincidence: the repairable kinds are the
-ones a later read can fix, which is the same thing as the ones a player's relog
-can fix. A third message would be a distinction with no action behind it.
+TWO GROUPS, and they are NOT the repairable and terminal split ruling 2
+introduced. An earlier version of this paragraph said they lined up exactly, and
+its own table eleven lines above falsified it: `unnamed_record` is TERMINAL in
+`FREEHOLD_TERMINAL_HOLD_KINDS` and reads as RETRY to a player, because what a
+later read cannot fix within one session a fresh login can. Deriving the player
+group from the runtime set would therefore tell the one player a relog reliably
+helps that their home will not clear on its own, and send them to report a
+non-incident. The player split is its own decision: RETRY is every kind a relog
+can clear (the four capacity kinds plus the ordering one), REPORT is the four
+DATA kinds, where the same row answers the same way every time. A third message
+would be a distinction with no action behind it.
 
 ## The keys
 

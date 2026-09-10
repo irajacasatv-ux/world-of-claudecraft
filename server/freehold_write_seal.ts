@@ -87,6 +87,14 @@ export function seedWouldLandOnRealRow(
   // trophies alone left tier, condition and visit policy out, which made
   // the arm silently depend on every tier change also bumping the revision:
   // true today, and a property enforced in another file.
+  // AND ITS `rev` DIMENSION IS ABSORBED, measured rather than assumed. This arm
+  // is only ever read under `pristineSeed`, which requires `persisted.rev === 0`,
+  // so `entry.state.rev > 0` is exactly `revisionRegressed` there, and that is a
+  // separate disjunct of the same expression. Deleting it leaves this file's own
+  // suite and the store's green. It is kept for totality over the persisted
+  // shape, and named here so the next reader does not write a case that reaches
+  // it through the other disjunct and believe the dimension is covered; one such
+  // case existed and is corrected in tests/server/freehold_write_seal.test.ts.
   const entryKnowsMore =
     entry.state !== null &&
     (entry.state.rev > 0 ||

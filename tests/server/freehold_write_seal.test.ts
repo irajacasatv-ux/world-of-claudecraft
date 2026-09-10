@@ -123,7 +123,6 @@ describe('the SECOND arm: a pristine seed against an entry that knows more', () 
     const pristine = seed();
     expect(seedWouldLandOnRealRow(pristine, entry(seed()))).toBe(false);
     for (const [label, known] of [
-      ['rev', seed({ rev: 1 })],
       ['layout', seed({ layout: doc().layout })],
       ['trophies', seed({ trophies: doc().trophies })],
       ['tier', seed({ tier: 'cottage' })],
@@ -132,6 +131,57 @@ describe('the SECOND arm: a pristine seed against an entry that knows more', () 
     ] as const) {
       expect(seedWouldLandOnRealRow(pristine, entry(known)), label).toBe(true);
     }
+    // THE `rev` DIMENSION IS DELIBERATELY NOT IN THAT TABLE, and its absence is
+    // the finding rather than an omission. `pristineSeed` already requires
+    // `persisted.rev === 0`, so under it `entry.state.rev > 0` is exactly
+    // `revisionRegressed`, which is a separate disjunct of the same expression:
+    // the dimension is ABSORBED and no behaviour case can isolate it. Measured,
+    // not argued: deleting `entry.state.rev > 0` leaves this whole suite and the
+    // store's green. It was in the table above and passed through the OTHER
+    // disjunct, which is a case passing for the wrong reason under a comment
+    // claiming each dimension is asserted on its own. The redundancy is stated
+    // here and in the source instead.
+    expect(seedWouldLandOnRealRow(seed(), entry(seed({ rev: 1 })))).toBe(true);
+    // And with the revision arm's own subject removed, the entry knowing more by
+    // revision ALONE is not what refuses it: an entry at revision zero whose only
+    // difference is a tier still refuses, and one identical in every dimension
+    // does not. Those two are the table's real anti-vacuity pair.
+    expect(seedWouldLandOnRealRow(seed(), entry(seed({ rev: 0, tier: 'cottage' })))).toBe(true);
+    expect(seedWouldLandOnRealRow(seed(), entry(seed({ rev: 0 })))).toBe(false);
+  });
+
+  it('admits a stand-in record that has MOVED, which is what rev zero is guarding', () => {
+    // KILLS the `persisted.rev === 0` conjunct of pristineSeed, which nothing
+    // reached: dropping it left the whole suite green. A fresh account's record
+    // legitimately carries the stand-in, and the moment it takes a tier grant it
+    // is at revision one with an empty house. That is a real edit, not a seed,
+    // and refusing it would make the first thing a new owner does the one edit
+    // that can never be saved.
+    const granted = seed({ rev: 1, tier: 'cottage' });
+    expect(seedWouldLandOnRealRow(granted, entry(seed({ rev: 0 })))).toBe(false);
+    // The SAME document at revision zero is a seed, and is refused, so the pair
+    // differs in exactly the conjunct under test.
+    expect(
+      seedWouldLandOnRealRow(seed({ tier: 'inn_room' }), entry(seed({ rev: 0, tier: 'cottage' }))),
+    ).toBe(true);
+  });
+
+  it.each([
+    ['layout', { layout: doc().layout }],
+    ['trophies', { trophies: doc().trophies }],
+  ])('admits a stand-in record carrying %s at revision zero', (_label, content) => {
+    // KILLS the `layout` and `trophies` conjuncts, which nothing reached either.
+    // This arm reads the CONTENT directly precisely so it survives a writer that
+    // places a furnishing and forgets to bump the revision, which is the one
+    // state where the revision tests cannot see the edit. A record holding real
+    // content is not a seed whatever its revision says, so it must be admitted.
+    const placed = seed({ ...content, rev: 0 });
+    expect(seedWouldLandOnRealRow(placed, entry(seed({ rev: 0, tier: 'cottage' })))).toBe(false);
+    // Strip the content back out and the same entry refuses it, so the pair
+    // differs in exactly the conjunct under test.
+    expect(seedWouldLandOnRealRow(seed({ rev: 0 }), entry(seed({ rev: 0, tier: 'cottage' })))).toBe(
+      true,
+    );
   });
 });
 

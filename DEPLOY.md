@@ -834,10 +834,15 @@ For off-box safety, sync the directory to S3 occasionally:
   entries under ANY recovery hold, DATA or CAPACITY: read
   `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
   read from a login storm that filled the admission cap. TWO CAVEATS on reading
-  it against the kind series. `loaded` and `held` no longer sum to `entries` for
-  a capacity hold: an admission-class refusal leaves the entry UNLOADED on
-  purpose, so a later join re-reads it instead of replaying the refusal, and it
-  stays write-blocked until one succeeds. And `no_budget` books a kind WITHOUT
+  it against the kind series. `loaded` and `held` do not sum to `entries` for a
+  TERMINAL hold: a data-class refusal leaves the entry LOADED, which is what
+  makes the hold terminal, while also counting it held, so one entry is counted
+  twice. A CAPACITY hold is the one that does sum: an admission-class refusal
+  leaves the entry UNLOADED on purpose, so a later join re-reads it instead of
+  replaying the refusal, and it stays write-blocked until one succeeds. An
+  earlier version of this sentence named the two the wrong way round, which read
+  a double-counted terminal hold as normal and a correct capacity reading as the
+  anomaly. And `no_budget` books a kind WITHOUT
   ever booking a hold: the whole-preload cap refuses the login's read while
   deliberately leaving the entry untouched, so that kind can climb with `held`
   flat, which is the correct reading and not a lost update. A growing `oldest_dirty_age_ms`
