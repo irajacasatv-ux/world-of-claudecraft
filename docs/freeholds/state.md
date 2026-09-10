@@ -31,9 +31,16 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 ## Current phase
 
-07 (bounded persistence and stable plot identity) is **BUILT, local**, 2026-09-08,
-with its implementation-round review closed and its paired QA still owed
-(`phase-07-qa.md`). Planning for 07 was settled long before this; BUILT is the new
+07 (bounded persistence and stable plot identity) is **BUILT, local, and its paired
+QA FAILED**, 2026-09-10. The QA ran to completion, applied every finding it could,
+and returns FAIL on ONE blocking item whose fix is a ruling this packet reserved:
+the EIGHTH path to an empty tier-0 Inn Room landing on a real house, reproduced
+three times and pinned as it behaves. Four rulings are owed before 07 can close,
+and 07a must not start on top of an open data-loss path. The gate is GREEN at
+`57ca95cb29` (all 12 steps, PostgreSQL armed), which is the point: a green suite
+was never the question here.
+
+Its implementation-round review is closed. Planning for 07 was settled long before this; BUILT is the new
 fact, and the two words are not interchangeable in this ledger.
 
 Every owned plot now survives a restart under one stable public identity, with
