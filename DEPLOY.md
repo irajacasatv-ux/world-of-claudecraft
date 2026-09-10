@@ -761,7 +761,13 @@ For off-box safety, sync the directory to S3 occasionally:
   only here, the values live in deployment secrets).
 - **Never** set `ALLOW_DEV_COMMANDS=1` in production: it enables the full
   `/dev` cheat set (the level/teleport cheats the test bots use, plus item
-  grants, mob spawns, instance teleports, and the dev command GUI).
+  grants, mob spawns, instance teleports, and the dev command GUI). With
+  housing enabled its blast radius is larger than it used to be: a `/dev`
+  freehold tier grant reaches the record through the one sanctioned tier
+  writer, which bumps the record revision, and the periodic housing sweep then
+  writes the granted tier to `account_freeholds`. A stray grant used to die
+  with the session; it now survives every later login on that account, and
+  setting the flag back to `0` does not undo it.
 - `RIFT_FORGE_ENABLED` is a kill switch, not an opt-in: the Rift forge wire
   commands (upgrade/socket at the Riftwright) are open by default. Set it to
   `0` (or `false`, `off`, `no`) to pause the forge on a realm
@@ -814,7 +820,10 @@ For off-box safety, sync the directory to S3 occasionally:
   nightly sweep on purpose (each plot row IS a player's built home, and the
   Hearth row is the shared-account travel cooldown authority), the account
   foreign-key cascade is their only removal path, and both ride
-  `POST /api/account/export`. Rolling back to a release that predates them
+  `POST /api/account/export`. Read that removal path exactly: the
+  player-facing account removal is a SOFT delete that leaves the `accounts`
+  row in place, so it fires no cascade and these rows survive it, the same way
+  `characters` does. Erasure needs a real `DELETE FROM accounts`. Rolling back to a release that predates them
   leaves the rows intact but unmaintained and unexported, so turn the flag OFF
   before rolling back: docs/freeholds/persistence-rollout-contract.md is the
   capability and quiescence contract.

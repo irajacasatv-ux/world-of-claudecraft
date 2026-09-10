@@ -3991,6 +3991,13 @@ export async function startServer(): Promise<http.Server> {
     // recovery diagnostic. Deleting one destroys possessions, so the reverse
     // foreign-key account cascade is the only removal path, and a subject-access
     // export reads the rows back through server/freehold_db.ts freeholdsForExport.
+    // SAID PRECISELY, because "the cascade is the only removal path" is easy to
+    // read as "erasure is covered" and it is not: the player-facing account
+    // removal (handleAccountDeactivate in server/account.ts) is a SOFT delete
+    // that never deletes the accounts row, so it fires no cascade and these
+    // rows persist. That is the same posture `characters` already has, and it
+    // is the posture, not a housing decision; the housing rows are simply the
+    // first new keep-forever account-scoped tables added under it.
     // account_freehold_hearth is deliberately ABSENT for the same reason: one
     // row per ACCOUNT, never per character and never per entry, holding
     // ready_at_ms and a monotonic revision. It is the Hearth Key cooldown
