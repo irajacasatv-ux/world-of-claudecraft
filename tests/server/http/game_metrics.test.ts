@@ -20,7 +20,10 @@ import {
   ROD_FEE_RECIPE_IDS,
   rodFeeForRecipe,
 } from '../../../server/fishing_telemetry';
-import { freeholdPersistStats } from '../../../server/freehold_persist';
+import {
+  FREEHOLD_LOAD_FAILURE_KINDS,
+  freeholdPersistStats,
+} from '../../../server/freehold_persist';
 import {
   type GameStateSource,
   registerGameStateMetrics,
@@ -2172,24 +2175,40 @@ describe('the housing persistence families', () => {
     expect(labelled(await registry.metrics(), WOC_FREEHOLD_PERSIST, 'entries')).toBe('9');
   });
 
-  it('carries no owner key, account id or plot id on any housing series', async () => {
-    // WITH A POSITIVE CONTROL, because every label value on this family is a
-    // fixed literal or a closed-union hold kind, so the negative assertion
-    // alone cannot fail and would pass on a scan that read nothing. The one
-    // label whose value is not a literal is the hold kind, and it comes from a
-    // Record whose keys go straight onto the series: feeding it an identity
-    // proves the scan would see one.
+  it('refuses an identity-keyed tally rather than putting it on a series', async () => {
+    // The by-kind family used to key its series on whatever the tally
+    // contained, so an identity that reached the Record reached the scrape.
+    // It now walks FREEHOLD_LOAD_FAILURE_KINDS, so the same hostile tally is
+    // dropped: the four fixed kinds are emitted reading zero and nothing else
+    // appears at all.
     const leaky = new Registry();
     registerGameStateMetrics(
       leaky,
       stubSource({
-        freeholdPersist: () => ({ ...stats, loadFailuresByKind: { 'account:1234': 5 } }),
+        freeholdPersist: () => ({
+          ...stats,
+          loadFailuresByKind: { 'account:1234': 5, unsupported: 2 },
+        }),
       }),
     );
     const leakyLines = (await leaky.metrics())
       .split('\n')
-      .filter((line) => line.startsWith('woc_freehold'));
-    expect(leakyLines.some((line) => line.includes('account:'))).toBe(true);
+      .filter((line) => line.startsWith(WOC_FREEHOLD_LOAD_FAILURES_TOTAL));
+    // THE POSITIVE CONTROL is now on the SCAN rather than on the producer,
+    // because no producer can put an identity on a series any more: the same
+    // predicate, applied to a line that does carry one, must answer true.
+    expect(
+      [...leakyLines, `${WOC_FREEHOLD_LOAD_FAILURES_TOTAL}{kind="account:1234"} 5`].some((line) =>
+        line.includes('account:'),
+      ),
+    ).toBe(true);
+    expect(leakyLines.some((line) => line.includes('account:'))).toBe(false);
+    // Every kind, every scrape, and the legitimate one still carries its count.
+    for (const kind of FREEHOLD_LOAD_FAILURE_KINDS) {
+      expect(leakyLines.some((line) => line.includes(`kind="${kind}"`))).toBe(true);
+    }
+    expect(leakyLines).toContain(`${WOC_FREEHOLD_LOAD_FAILURES_TOTAL}{kind="unsupported"} 2`);
+    expect(leakyLines).toContain(`${WOC_FREEHOLD_LOAD_FAILURES_TOTAL}{kind="malformed"} 0`);
 
     const registry = new Registry();
     registerGameStateMetrics(registry, housingSource());

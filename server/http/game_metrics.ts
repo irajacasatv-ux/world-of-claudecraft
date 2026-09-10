@@ -78,6 +78,7 @@ import {
   rodFeeForRecipe,
 } from '../fishing_telemetry';
 import type { FreeholdPersistStats } from '../freehold_persist';
+import { FREEHOLD_LOAD_FAILURE_KINDS } from '../freehold_persist';
 import { OFFLINE_FENCE_WRITERS, offlineFenceRefusals } from '../offline_fence_refusals';
 import { wocAuthGuardCacheStats } from '../woc_auth_guard_cache';
 import {
@@ -559,14 +560,22 @@ export interface GameStateSource {
  * microtask: every collect() in one pass is synchronous, so the window is
  * exactly one scrape and no value can go stale between scrapes.
  */
-let housingScrape: FreeholdPersistStats | null = null;
+// KEYED ON THE SOURCE, not on nothing. The memo is module-global, so two
+// registries built over DIFFERENT GameStateSources and scraped inside one
+// microtask would have served the first source's numbers to the second. One
+// process has one registry, so that is a test-only hazard today; the key costs
+// one reference compare and makes it structurally impossible.
+let housingScrape: {
+  readonly source: GameStateSource;
+  readonly stats: FreeholdPersistStats;
+} | null = null;
 function housingStats(source: GameStateSource): FreeholdPersistStats {
-  if (housingScrape) return housingScrape;
-  housingScrape = source.freeholdPersist();
+  if (housingScrape && housingScrape.source === source) return housingScrape.stats;
+  housingScrape = { source, stats: source.freeholdPersist() };
   queueMicrotask(() => {
     housingScrape = null;
   });
-  return housingScrape;
+  return housingScrape.stats;
 }
 
 export function registerGameStateMetrics(
@@ -757,8 +766,15 @@ export function registerGameStateMetrics(
     registers: [registry],
     collect() {
       this.reset();
+      // THE FIXED VOCABULARY, walked, rather than the map's own keys. The
+      // sibling WOC_OFFLINE_FENCE_REFUSALS_TOTAL above makes the same call for
+      // the same reason: keying on whatever the producer happens to emit makes
+      // the label cardinality a property of a type rather than of this file,
+      // and a widened producer would grow the series set silently. Every kind
+      // is emitted every scrape, so a kind that has never fired reads zero
+      // instead of being absent.
       const byKind = housingStats(source).loadFailuresByKind;
-      for (const [kind, count] of Object.entries(byKind)) this.inc({ kind }, count);
+      for (const kind of FREEHOLD_LOAD_FAILURE_KINDS) this.inc({ kind }, byKind[kind] ?? 0);
     },
   });
 
