@@ -492,28 +492,52 @@ describe('every durable field write bumps the record revision', () => {
   // rather than after.
   const DURABLE_FIELDS = ['layout', 'trophies', 'tier', 'condition', 'visitPolicy'] as const;
 
-  /** Exported function bodies of state.ts, comments stripped, keyed by name. */
+  /**
+   * Exported function bodies across the WHOLE directory, comments stripped,
+   * keyed by `file:name`.
+   *
+   * The directory rather than state.ts alone, which is where this scan started
+   * and where it was already too narrow. commands.ts holds eight inert bodies
+   * explicitly reserved for the furnishing writers, so the one file the next
+   * mutator is going to land in was the one file the coupling was not checked
+   * in. The `.tier =` sole-writer scan in tests/freehold_dev_grant.test.ts
+   * already walks this directory; this now matches it.
+   */
   function exportedBodies(): Map<string, string> {
-    const src = stripComments(
-      readFileSync(join(__dirname, '..', 'src', 'sim', 'freehold', 'state.ts'), 'utf8'),
-    );
+    const dir = join(__dirname, '..', 'src', 'sim', 'freehold');
     const bodies = new Map<string, string>();
-    const starts = [...src.matchAll(/^export function (\w+)\(/gm)];
-    for (let i = 0; i < starts.length; i++) {
-      const from = starts[i].index ?? 0;
-      const to = i + 1 < starts.length ? (starts[i + 1].index ?? src.length) : src.length;
-      bodies.set(starts[i][1], src.slice(from, to));
+    for (const file of readdirSync(dir)
+      .filter((name) => name.endsWith('.ts'))
+      .sort()) {
+      const src = stripComments(readFileSync(join(dir, file), 'utf8'));
+      const starts = [...src.matchAll(/^export function (\w+)\(/gm)];
+      for (let i = 0; i < starts.length; i++) {
+        const from = starts[i].index ?? 0;
+        const to = i + 1 < starts.length ? (starts[i + 1].index ?? src.length) : src.length;
+        bodies.set(`${file}:${starts[i][1]}`, src.slice(from, to));
+      }
     }
     return bodies;
+  }
+
+  /** The bodies keyed by bare name, for the cases that name one function. */
+  function bodyOf(name: string): string {
+    for (const [key, body] of exportedBodies()) {
+      if (key.endsWith(`:${name}`)) return body;
+    }
+    return '';
   }
 
   it('finds the exported functions it means to check', () => {
     // Anti-vacuity for the scanner: an extractor that silently matched nothing
     // would pass this whole block forever.
     const bodies = exportedBodies();
-    expect(bodies.size).toBeGreaterThanOrEqual(8);
-    expect(bodies.has('setFreeholdTier')).toBe(true);
-    expect(bodies.get('setFreeholdTier')).toContain('state.tier = tier');
+    // The directory, not one file: the count is well past state.ts's own, and
+    // the reserved furnishing writers in commands.ts are inside it.
+    expect(bodies.size).toBeGreaterThanOrEqual(20);
+    expect(bodies.has('state.ts:setFreeholdTier')).toBe(true);
+    expect(bodies.has('commands.ts:placeFurnishing')).toBe(true);
+    expect(bodyOf('setFreeholdTier')).toContain('state.tier = tier');
   });
 
   it('bumps rev in the same function as any durable field write', () => {
@@ -521,7 +545,11 @@ describe('every durable field write bumps the record revision', () => {
     // one builds the record from nothing and the other installs a record read
     // off the durable row, and in both cases the revision arrives with the
     // document rather than being advanced past it. Anything else is a mutator.
-    const CONSTRUCTORS = new Set(['defaultFreeholdState', 'freeholdStateFromPersisted']);
+    const CONSTRUCTORS = new Set([
+      'state.ts:defaultFreeholdState',
+      'persisted.ts:freeholdStateFromPersisted',
+      'persisted.ts:persistedFreeholdFromState',
+    ]);
     for (const [name, body] of exportedBodies()) {
       if (CONSTRUCTORS.has(name)) continue;
       const writesDurable = DURABLE_FIELDS.some((field) =>
@@ -535,7 +563,7 @@ describe('every durable field write bumps the record revision', () => {
   });
 
   it('is not vacuous: the one sanctioned mutator today IS caught by the scan', () => {
-    const body = exportedBodies().get('setFreeholdTier') ?? '';
+    const body = bodyOf('setFreeholdTier');
     expect(body).toMatch(/\.tier\s*=[^=]/);
     expect(body).toContain('state.rev += 1');
   });
