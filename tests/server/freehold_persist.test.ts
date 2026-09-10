@@ -4850,6 +4850,22 @@ describe('the composition root that binds the combined port (source pins)', () =
     expect(durables).not.toContain('loadFreeholdHearth(pool');
   });
 
+  it('binds the two LIVE-RECORD probes to the sim map, not to a constant', () => {
+    // A SURVIVING MUTANT closed. Replacing this binding with `() => null` left
+    // every case in this file green, because they all supply their own port: the
+    // store's behaviour is covered and the BINDING is not, which is the whole
+    // reason this describe block exists. The probe is what keeps a recreated
+    // entry from minting a SECOND identity for a row the live record already
+    // answers to, so a binding that answers null silently restores that defect
+    // on the one host nothing here executes.
+    const live = binding('livePlotId', 'mintPlotId').replace(/\s+/g, ' ');
+    expect(live).toContain('deps.sim.ctx.freeholds.get(ownerKey)?.plotId ?? null');
+    // Beside its sibling, which the same mutation class reaches: both read the
+    // SAME map, so a case that moves one record moves both probes.
+    const rev = binding('liveRev', 'livePlotId').replace(/\s+/g, ' ');
+    expect(rev).toContain('deps.sim.ctx.freeholds.get(ownerKey)?.rev ?? null');
+  });
+
   it('EXECUTES the login policy: both reads answer, the clock lands with the row', async () => {
     // The first case that runs this code at all. Every earlier pin over the
     // combined port was source text, because the composition root binds the
@@ -4871,15 +4887,34 @@ describe('the composition root that binds the combined port (source pins)', () =
     expect(got.hearth).toEqual({ kind: 'state', state: { readyAtMs: '90000', revision: '4' } });
   });
 
-  it('EXECUTES the login policy: the CLOCK fails open and the row still lands', async () => {
+  it('EXECUTES the login policy: the CLOCK fails open WITHOUT aborting the transaction', async () => {
+    // A SURVIVING MUTANT closed. The first version of this case asserted only the
+    // answer, and the answer is the same either way: with the inner catch
+    // removed the clock's throw propagates out of the callback, the outer guard
+    // sees a captured row and rebuilds the identical `threw` value. What DOES
+    // differ is the transaction: without the catch the helper rolls it back and
+    // rethrows for a fault in a read that fails OPEN by design, which is the
+    // asymmetry this module exists to keep. So the case asserts the callback
+    // RESOLVED, which is the property the catch actually buys.
     const boom = new Error('hearth read failed');
+    let callbackSettled: 'resolved' | 'rejected' | 'pending' = 'pending';
     const got = await readLoginDurables<'db'>(
-      async (run) => await run('db'),
+      async (run) => {
+        try {
+          const answer = await run('db');
+          callbackSettled = 'resolved';
+          return answer;
+        } catch (err) {
+          callbackSettled = 'rejected';
+          throw err;
+        }
+      },
       async () => ({ kind: 'row', row: rowFixture() }),
       async () => {
         throw boom;
       },
     );
+    expect(callbackSettled).toBe('resolved');
     expect(got.row.kind).toBe('row');
     expect(got.hearth).toEqual({ kind: 'threw', error: boom });
   });
