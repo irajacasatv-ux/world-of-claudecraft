@@ -63,6 +63,9 @@ const SOURCE_PATH = 'server/freehold_persist.ts';
 const ACCOUNT_ID = 918_273;
 const OWNER_KEY = `account:${ACCOUNT_ID}`;
 const ROW_PLOT_ID = 'plot:rowfixture91';
+// The identity a fresh account's own insert mints, distinct from the row
+// fixture's, for the cases that model an entry re-reading the row it wrote.
+const MINTED_PLOT_ID = 'plot:minted1';
 const OTHER_ACCOUNT_ID = 604_513;
 const OTHER_OWNER_KEY = `account:${OTHER_ACCOUNT_ID}`;
 
@@ -1927,6 +1930,94 @@ describe('a leaving session may borrow the write reserve', () => {
     // Released with the write, never held for the life of the entry.
     expect(h.store.stats().leaveCaptures).toBe(0);
   });
+
+  it('counts ONE capture when a second leave lands over a surviving one', async () => {
+    // The gauge is the only stated bound on this retention, and a bound that
+    // cannot read zero is not one. A second leave over a surviving capture
+    // holds ONE document and used to count TWO, so the series ratcheted upward
+    // and never came back down. Two leaves, one write held open across both.
+    const gate = deferred<FreeholdUpsertResult>();
+    let rev = 6;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async () => await gate.promise,
+    });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    void h.store.flushAndRelease(OWNER_KEY);
+    await tick(10);
+    expect(h.store.stats().leaveCaptures).toBe(1);
+
+    // The same owner leaves again while the first write is still on the gate.
+    rev = 7;
+    void h.store.flushAndRelease(OWNER_KEY);
+    await tick(10);
+    // ONE document is retained, so the gauge reads one. Counting the two
+    // captures rather than the one retained document is what made it ratchet.
+    expect(h.store.stats().leaveCaptures).toBe(1);
+
+    gate.resolve({ kind: 'updated', durableRev: '9' });
+    await tick(60);
+    // And it returns to zero, which is the property the ratchet destroyed.
+    expect(h.store.stats().leaveCaptures).toBe(0);
+  });
+
+  it('takes no capture at all for a HELD entry, so a hold retains nothing', async () => {
+    // A held entry flushes nothing, and "nothing" has to include the eager
+    // clone: taking a capture it can never write would retain a second full
+    // record per held logout, on exactly the accounts already in recovery.
+    const h = await loadedStore({
+      rowLoad: {
+        kind: 'oversize',
+        plotIndex: 0,
+        plotId: ROW_PLOT_ID,
+        durableRev: '4',
+        bytes: 200_000,
+        limit: FREEHOLD_MAX_STORED_BYTES,
+        detoastRefused: false,
+        diskBytes: 8_000,
+      },
+    });
+    expect(h.store.stats().held).toBe(1);
+    // DIRTY as well as held, which is the state that separates the two arms:
+    // markDirty has no hold test of its own, so a held entry can carry a dirty
+    // generation, and it is only there that dropping the `!blocked` guard
+    // changes anything.
+    h.store.markDirty(OWNER_KEY);
+    expect(h.store.stats().dirty).toBe(1);
+    h.calls.length = 0;
+    await h.store.flushAndRelease(OWNER_KEY);
+    expect(h.store.stats().leaveCaptures).toBe(0);
+    // The absence of the clone IS the assertion: no serialize, and no write.
+    expect(h.calls).not.toContain('serialize');
+    expect(h.calls).not.toContain('writeRow');
+  });
+
+  it('never even enqueues a write for a held entry', async () => {
+    // The FIRST of the three layers of the same gate, pinned on its own. arm()
+    // refuses before the keyed FIFO, so a held owner costs no queue slot and no
+    // background permit. Without this the write would be enqueued and refused a
+    // layer later, which is the same row outcome and a different cost.
+    const h = await loadedStore({
+      rowLoad: {
+        kind: 'unadmitted',
+        plotIndex: 3,
+        plotId: ROW_PLOT_ID,
+        durableRev: '4',
+        detail: 'plot_index 3 is outside the admitted slot 0',
+      },
+    });
+    expect(h.store.stats().held).toBe(1);
+    h.calls.length = 0;
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.calls).not.toContain('enqueue');
+    expect(h.calls).not.toContain('permit');
+    expect(h.writeCount()).toBe(0);
+  });
 });
 
 describe('a leaving session never loses its last edits to a queue', () => {
@@ -2111,11 +2202,21 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // document just written, stand-in identity and all.
     live = true;
     h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    // AWAITED, because without it this case proved nothing. The settle
+    // collected the entry, so `retain` recreates it UNLOADED and starts the
+    // lost-entry reload; a sweep run before that read lands skips a blocked
+    // entry and issues no write at all, and the two assertions below then held
+    // on a store that had attempted nothing. Both mutants this case exists to
+    // catch (the entry remembering the row's identity, either way round) left
+    // it green.
+    await tick(30);
     h.store.saveAllDirty();
     await tick(30);
-    // Not quiesced, and it keeps writing.
+    // Not quiesced, and it really does keep writing.
     expect(h.store.stats().quiesced).toBe(0);
     expect(h.errors).toEqual([]);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].wireRev).toBe(6);
   });
 
   it('still refuses a record seeded while the write was in flight', async () => {
@@ -2277,6 +2378,139 @@ describe('a leaving session never loses its last edits to a queue', () => {
     h.store.save(OWNER_KEY);
     await tick(30);
     expect(h.writeCount()).toBe(2);
+    expect(h.store.stats().quiesced).toBe(0);
+  });
+
+  it('refuses a seed the returning player has ALREADY TOUCHED', async () => {
+    // THE SEVENTH PATH, and the one the pristine test does not reach. A seed
+    // stops being pristine the instant the returning player does anything: one
+    // tier grant today, one furnishing once that writer lands. The record is
+    // then a stand-in identity at revision one standing against an entry that
+    // committed revision seven, both other tests pass, and the empty default is
+    // compare-and-swapped over the real house with plot_id untouched.
+    //
+    // What separates them is that the revision REGRESSED. Every sanctioned
+    // writer only increments, and every install this store offers a rejoin
+    // carries at least the revision the entry last committed, so a stand-in
+    // record below that has to be a different record.
+    let seeded = false;
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      serialize: () =>
+        seeded
+          ? // The fresh default, then ONE edit on top of it: not pristine any more.
+            persistedFixture({ tier: 'cottage', layout: [], trophies: [], rev: 1 })
+          : persistedFixture({ tier: 'cottage', rev: 7 }),
+      writeRow: async (input) => ({
+        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+        durableRev: '2',
+      }),
+    });
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(7);
+    expect(h.writes[0].layoutJson).not.toBe('[]');
+
+    seeded = true;
+    h.store.saveAllDirty();
+    await tick(30);
+    // The absence of a second write IS the assertion: without it the row would
+    // take layoutJson '[]' at wireRev 1 over a house stored at wireRev 7.
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors[0]).toContain('identity');
+  });
+
+  it('keeps writing for a fresh account whose entry RE-READS the row it wrote', async () => {
+    // THE MIRROR OF THE SEAL, and a defect in its own right: refusing too much
+    // costs an account its whole session just as surely as refusing too little
+    // costs it its house.
+    //
+    // Nothing teaches a live record its minted name, so a first-session record
+    // carries the stand-in for as long as it lives. If that account's store
+    // entry is then dropped and RE-READ from the row it just inserted (retain's
+    // lost-entry reload, or a second character joining), entry.state comes back
+    // carrying the ROW's name while the same live record still carries the
+    // stand-in. A name comparison alone quiesces there, and every edit the
+    // player makes for the rest of the session is discarded at logout.
+    let inserted = false;
+    let rev = 4;
+    const h = harness({
+      readRow: async (): Promise<FreeholdRowLoad> =>
+        inserted
+          ? { kind: 'row', row: rowFixture({ plotId: MINTED_PLOT_ID, wireRev: String(rev) }) }
+          : { kind: 'absent' },
+      normalized: {
+        kind: 'loaded',
+        state: persistedFixture({ plotId: MINTED_PLOT_ID, rev: 4 }),
+        repaired: [],
+      },
+      // The record is live throughout, and never learns the minted name.
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      hasLive: () => true,
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async (input) => {
+        inserted = true;
+        return {
+          kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+          durableRev: '1',
+        };
+      },
+    });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].plotId).toBe(MINTED_PLOT_ID);
+
+    // The entry goes away and is re-read from the row it just wrote, while the
+    // very same record is still online.
+    await h.store.flushAndRelease(OWNER_KEY);
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
+    expect(h.store.stats().entries).toBe(0);
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await h.store.preload(ACCOUNT_ID);
+    await tick(30);
+
+    // The player keeps playing. Every later edit must still reach the row.
+    rev = 9;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].wireRev).toBe(9);
+  });
+
+  it('still writes a stand-in record whose revision only CLIMBS', async () => {
+    // The anti-vacuity arm for the regression test, and the reason it compares
+    // against the entry's own committed revision rather than refusing every
+    // stand-in record. A brand-new account edits its house all session under
+    // the stand-in name, and every one of those writes must land.
+    let rev = 3;
+    const h = await loadedStore({
+      rowLoad: { kind: 'absent' },
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async (input) => ({
+        kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
+        durableRev: String(rev),
+      }),
+    });
+    for (const next of [4, 5, 6]) {
+      h.store.saveAllDirty();
+      await tick(30);
+      rev = next;
+    }
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(4);
+    expect(h.writes.map((write) => write.wireRev)).toEqual([3, 4, 5, 6]);
     expect(h.store.stats().quiesced).toBe(0);
   });
 
@@ -2473,10 +2707,20 @@ describe('the store refuses what it cannot represent, rather than repairing it',
     expect(loaded.state).not.toBeNull();
   });
 
-  it('never writes for an entry that was held while its write sat in the queue', async () => {
-    // The post-queue re-check. A write enqueued before its entry was held,
-    // quiesced or evicted must not run: that is a direct invariant-1 violation,
-    // since the entry no longer knows the row it would be fencing on.
+  it('never writes for an entry that was quiesced while its write sat in the queue', async () => {
+    // WHAT THIS PINS, stated exactly, because it used to claim more. The arm it
+    // actually reaches is `settle`'s re-arm gate: the pending write is never
+    // launched once the running one quiesces the entry. It does NOT reach
+    // `runWrite`'s post-queue `blocked()` re-check, which a mutation pass
+    // proved: removing that re-check leaves this case green, because the write
+    // it guards is never enqueued in the first place.
+    //
+    // That re-check is kept as the third layer of the same gate (arm refuses,
+    // runWrite re-checks, flushAndRelease refuses), and removing ALL THREE does
+    // fail this suite. No behaviour test can isolate the middle one, because
+    // nothing outside a write result can block an entry and every re-arm path
+    // is already gated. Said here rather than left for the next reader to
+    // rediscover as a passing test that proves nothing.
     const gate = deferred<FreeholdUpsertResult>();
     let served = 0;
     const h = await loadedStore({
@@ -3060,18 +3304,42 @@ describe('the bounded drain', () => {
     expect(h.store.stats().writeFailures).toBe(2);
   });
 
+  it('drains an owner whose RECORD MOVED with no markDirty call', async () => {
+    // The drain uses the SAME detector as the periodic sweep and the leave
+    // flush, because the revision probe is the only dirty detector with a
+    // production caller in this release: an isDirty-only drain could not see an
+    // edit at all. It was correct before this only by the shutdown ORDERING in
+    // server/main.ts, which is a property of another file.
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      // The record moved. Nothing called markDirty, which is exactly the
+      // production shape: markDirty has no production caller.
+      serialize: () => persistedFixture({ rev: 6 }),
+      writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
+    });
+    expect(h.store.stats().dirty).toBe(0);
+    await expect(h.store.idle(5_000)).resolves.toBe(true);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(6);
+  });
+
   it('closes intake, and still lets a leaving session flush', async () => {
     const h = await loadedStore();
     expect(await h.store.idle(5_000)).toBe(true);
+    // The drain itself writes whatever it found moved, so the arms below are
+    // measured against that baseline rather than against zero.
+    const drained = h.writeCount();
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     h.store.saveAllDirty();
     await tick(30);
-    expect(h.writeCount()).toBe(0);
+    // Intake is closed: neither door adds a write.
+    expect(h.writeCount()).toBe(drained);
 
     await h.store.flushAndRelease(OWNER_KEY);
     await tick(30);
-    expect(h.writeCount()).toBe(1);
+    expect(h.writeCount()).toBe(drained + 1);
   });
 
   it('stop() cancels the deadline without closing intake', async () => {

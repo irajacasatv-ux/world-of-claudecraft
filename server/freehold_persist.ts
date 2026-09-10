@@ -44,6 +44,12 @@ import {
   type PersistedFreehold,
   persistedFreeholdFromState,
 } from '../src/sim/freehold/persisted';
+// BY PATH, like the persistence leaf and the hearth clock above, and for the
+// same reason those two give in src/sim/freehold/index.ts: this module is the
+// server-side durable consumer, so it reaches the leaf it needs rather than
+// pulling the directory's whole public surface into a server graph. Named here
+// because these three ARE on the barrel, so without a reason a later reader
+// cannot tell the deliberate exception from drift.
 import {
   loadFreehold,
   PENDING_FREEHOLD_PLOT_ID,
@@ -78,9 +84,13 @@ export const FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS = 15_000;
 
 /**
  * The LOGIN-path bound, deliberately shorter than the write one, because the
- * handshake awaits this read: every other bound on that path is shorter too
- * (DB_POOL_CONNECT_TIMEOUT_MS is 5,000), and a joining player must not sit
- * fifteen seconds waiting for a permit to read two small rows. The local
+ * handshake awaits this read: it is bounded at the same 5,000 as
+ * DB_POOL_CONNECT_TIMEOUT_MS rather than SHORTER than it (an earlier version of
+ * this line claimed shorter, and the two numbers are equal), and a joining
+ * player must not sit fifteen seconds waiting for a permit to read two small
+ * rows. Under gate saturation this still stalls a handshake for a full five
+ * seconds before answering a hold, which is carried as a named gate in
+ * docs/freeholds/persistence-rollout-contract.md rather than tuned here. The local
  * admission cap already makes an early answer safe: it is a HOLD, not a
  * failure, so the account joins on its live record and simply does not write.
  * The two are separate constants on purpose; merging them puts a background
@@ -217,10 +227,28 @@ export const FREEHOLD_PERSIST_FLUSH_MAX_PASSES = 4;
  *  Vitest needs no database module in its runtime graph. */
 const ABSENT_HEARTH_REVISION = '0';
 
+/**
+ * Every reason a durable load can refuse, as a VALUE so a consumer can walk it.
+ *
+ * The metrics family that labels on this kind used to key its series on
+ * whatever the by-kind tally happened to contain, which made its bounded-label
+ * promise a property of the union type rather than of anything at runtime. It
+ * now walks this list (the server/offline_fence_refusals.ts OFFLINE_FENCE_WRITERS
+ * shape), so a widened producer cannot grow the series set on its own and a
+ * kind that has never fired reads zero rather than being absent.
+ */
+export const FREEHOLD_LOAD_FAILURE_KINDS = [
+  'unsupported',
+  'malformed',
+  'oversize',
+  'unadmitted',
+] as const;
+
 /** Why an account's durable row must not be written this session. `kind` is the
  *  classification the load produced; `detail` is dev-channel prose. */
 export interface FreeholdRecoveryHold {
-  readonly kind: 'unsupported' | 'malformed' | 'oversize' | 'unadmitted';
+  /** Derived from the list above, so the two can never drift apart. */
+  readonly kind: (typeof FREEHOLD_LOAD_FAILURE_KINDS)[number];
   readonly detail: string;
   readonly plotIndex: number;
   readonly durableRev: string;
@@ -398,7 +426,7 @@ interface FreeholdPersistEntry {
    * record on top of `state`, held until the write lands, so the worst case is
    * the number of simultaneous dirty leavers times the record ceiling.
    * Measured, a thousand simultaneous dirty logouts at the approved 420-row
-   * ceiling retain about 66 MiB, and 0.1 MiB with empty layouts. That is the
+   * ceiling retain 66.2 MiB, and 0.29 MiB with empty layouts. That is the
    * price of not losing a leaving session's last edits, and `leave_captures`
    * publishes the count so it never has to be found in a heap dump.
    */
@@ -479,7 +507,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   let activeWrites = 0;
   /** Documents captured at leave and not yet written. Each is a SECOND full
    *  record on top of entry.state, so at the approved 420-row ceiling a
-   *  thousand simultaneous dirty logouts retain about 67 MiB until their writes
+   *  thousand simultaneous dirty logouts retain 66.2 MiB until their writes
    *  land. Bounded by the number of dirty leavers, and published, because a
    *  retention that only shows up in a heap dump is not a bound. */
   let leaveCaptures = 0;
@@ -622,6 +650,18 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    *
    * A BLOCKED entry owes nothing: it is held or quiesced and may not write, so
    * keeping it dirty forever would be a leak rather than a rescue.
+   *
+   * THREE OF THE FIVE CLAUSES ARE REDUNDANT TODAY, not one, and a mutation pass
+   * establishes which: dropping `running`, `pending` or the deferred set alone
+   * leaves the suite green, while dropping the in-flight-load clause or the
+   * dirty clause fails it. All three are redundant for the same reason, that
+   * today's arming rules make an entry that is running, pending or deferred
+   * also dirty and unblocked, so the last clause already covers them. They are
+   * kept, and named here rather than one of them, because each says what its
+   * own state MEANS rather than what the current arithmetic happens to imply,
+   * and because the equality is a property of arm() that arm() does not
+   * declare. An earlier version of this comment claimed only the deferred
+   * clause was in that position; it was three.
    */
   const owesWork = (entry: FreeholdPersistEntry): boolean =>
     entry.running ||
@@ -632,11 +672,6 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // unification is only half true.
     (entry.accountId > 0 && inFlightLoads.has(entry.accountId)) ||
     entry.pending ||
-    // Redundant TODAY, and kept deliberately: a deferred entry is always dirty
-    // and unblocked, so the clause below already covers it, and no behaviour
-    // test can isolate this one. The two conditions are equal only by the
-    // current arming rules, and this is the clause that says what the deferred
-    // set means rather than what today's arithmetic happens to imply.
     deferredWrites.has(entry) ||
     (isDirty(entry) && !blocked(entry));
 
@@ -808,6 +843,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       entry.loaded = true;
       entry.hold = null;
       entry.plotIndex = FREEHOLD_PRIMARY_PLOT_INDEX;
+      // MINT ONCE, and unreachable defence rather than a live guard: classify
+      // runs at most once per entry (beginLoad is single-flight per account and
+      // every later preload replays a loaded entry), so nothing today can reach
+      // this line twice for one entry. A mutation pass confirms it: minting
+      // unconditionally leaves the suite green. It stays because the alternative
+      // failure is a second identity on a row that already has one, and it is
+      // named here so a later reader does not delete it as dead weight or write
+      // a test around a state the store cannot produce.
       if (entry.plotId === '') entry.plotId = ports.mintPlotId();
       entry.durableRev = null;
       entry.state = null;
@@ -1029,26 +1072,25 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     generation: number,
     snapshotAtMs: number,
     written: PersistedFreehold,
-    /** The identity the LIVE RECORD carried when this write sampled it. */
-    persistedPlotId: string,
   ): boolean {
     if (result.kind === 'inserted' || result.kind === 'updated') {
       counters.writes++;
       entry.durableRev = result.durableRev;
-      // THE ENTRY REMEMBERS THE RECORD'S IDENTITY, NOT THE ROW'S. Two different
-      // identities are in play and each belongs where it is: the ROW receives
-      // `entry.plotId`, because that is its durable public name, while the
-      // entry's cached state keeps the identity the LIVE RECORD carried,
-      // because the only thing that state is compared against is a live record.
+      // THE DOCUMENT AS SENT, identity included, so `entry.state` means
+      // exactly what its declaration says: the state known to match the durable
+      // row. ONE identity is cached, the row's.
       //
-      // That is what lets the seal below tell "this is the record I have been
-      // writing" from "this is a default somebody seeded", without the store
-      // ever having to write an identity into the sim. A fresh account's record
-      // legitimately carries the pending stand-in for its whole first session,
-      // and a stand-in is indistinguishable from a fresh seed by identity
-      // alone, so an entry that remembered the ROW's name instead would refuse
-      // its own record on the second write of every new account.
-      entry.state = { ...written, plotId: persistedPlotId };
+      // It used to cache the LIVE RECORD's identity instead, because the seal
+      // compared the two names directly and a fresh account's record carries
+      // the stand-in for its whole first session, so caching the row's name
+      // refused that account's own record on its second write. The seal no
+      // longer compares names for a stand-in record at all (it judges those by
+      // continuity), which removes the reason for the second identity: with the
+      // exemption in place, caching the record's name instead of the row's is
+      // no longer observable by any test, and an axis nothing can distinguish
+      // is an axis a later reader will reason from wrongly. Removed rather than
+      // left as unfalsifiable machinery.
+      entry.state = { ...written };
       entry.writeErrors = 0;
       if (entry.committedGeneration < generation) entry.committedGeneration = generation;
       // Every edit that survived this write arrived at or after the snapshot,
@@ -1134,27 +1176,106 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // old session's removePlayer finally evicts. Refusing preserves the row,
       // at the cost of one session played on a default record with no writes.
       //
-      // TWO TESTS, because identity alone has a blind window. A brand-new
+      // THREE TESTS, because identity alone has a blind window. A brand-new
       // account's record legitimately carries the stand-in identity for its
       // whole first session, and so does a freshly seeded default, so between
       // that account's first insert and its first reload the two are
-      // indistinguishable by name. The second test closes exactly that window
-      // without needing a name: a PRISTINE default carries no information at
-      // all, so refusing to write one over a row can never lose anything, and
-      // an entry that knows more than a pristine default is an entry whose
-      // record has diverged from one.
+      // indistinguishable by name.
+      const standInSeed = persisted.plotId === PENDING_FREEHOLD_PLOT_ID;
+      // The second test refuses an UNTOUCHED seed without needing a name: a
+      // PRISTINE default carries no information at all, so refusing to write
+      // one over a row can never lose anything, and an entry that knows more
+      // than a pristine default is an entry whose record has diverged from one.
+      //
+      // MEASURED, so nobody has to guess what it is still for: for every state
+      // the sim can currently produce it is SUBSUMED by the third test below,
+      // and removing it leaves the suite green. It is kept because the two are
+      // not independent in the way that matters. Both lean on every content
+      // writer bumping the record revision; the third test reads only that
+      // revision, so a writer that adds a furnishing and forgets the bump is
+      // invisible to it, while this one sees the content directly. It is the
+      // net under the one coupling the third test cannot check for itself.
       const pristineSeed =
-        persisted.plotId === PENDING_FREEHOLD_PLOT_ID &&
+        standInSeed &&
         persisted.rev === 0 &&
         persisted.layout.length === 0 &&
         persisted.trophies.length === 0;
+      // TOTAL over the persisted shape, and expressed against `persisted`
+      // rather than against the sim's default constants. This arm is only ever
+      // read when `pristineSeed` holds, so `persisted` IS the pristine default
+      // standing in front of the entry, and "knows more" is exactly "differs
+      // from it in any field a row carries". Enumerating rev, layout and
+      // trophies alone left tier, condition and visit policy out, which made
+      // the arm silently depend on every tier change also bumping the revision:
+      // true today, and a property enforced in another file.
       const entryKnowsMore =
         entry.state !== null &&
-        (entry.state.rev > 0 || entry.state.layout.length > 0 || entry.state.trophies.length > 0);
+        (entry.state.rev > 0 ||
+          entry.state.layout.length > 0 ||
+          entry.state.trophies.length > 0 ||
+          entry.state.tier !== persisted.tier ||
+          entry.state.condition !== persisted.condition ||
+          entry.state.visitPolicy !== persisted.visitPolicy);
+      // The third test closes the REST of it, and it is the one the other two
+      // miss. A seed stops being pristine the instant the returning player
+      // touches it: one tier grant, or one furnishing once that writer lands,
+      // and the record is a stand-in identity at revision one standing against
+      // an entry that committed revision seven. Both other tests pass, the
+      // empty default is compare-and-swapped over the real house, and because
+      // the swap never touches plot_id the loss is invisible in the key.
+      //
+      // A REGRESSED REVISION IS THE DISCRIMINATOR, and it is decidable where
+      // "newer" is not. Every sanctioned writer of a live record only ever
+      // increments its revision (the coupling is pinned by a source scan in
+      // tests/freehold_module.test.ts), and every install this store offers a
+      // rejoin carries at least the revision the entry last committed, so a
+      // live record BELOW that has to be a different record. It is checked only
+      // under the stand-in identity because a record carrying any other name is
+      // already refused by the first test.
+      //
+      // WHICH DIMENSIONS A TEST CAN ISOLATE, measured rather than assumed. Only
+      // the identity and revision dimensions of the two tests above can be
+      // killed by a behaviour case; the layout, trophies, tier, condition and
+      // visit-policy dimensions cannot, because reaching them needs a record
+      // that carries content at revision zero and no sanctioned writer produces
+      // one (every writer of a live record bumps its revision). They are kept
+      // for TOTALITY over the persisted shape, so this seal stops depending on
+      // that coupling holding in a file it does not own, and they are listed
+      // here rather than pinned by a case that models a state the sim cannot
+      // reach. That is the failure this packet already recorded once.
+      const revisionRegressed = entry.state !== null && persisted.rev < entry.state.rev;
+      // THE FIRST TEST JUDGES A NAME ONLY WHEN THERE IS ONE, and this is the
+      // correction that lets the other two carry the stand-in case alone.
+      //
+      // A bare `persisted.plotId !== entry.state.plotId` quiesced a healthy
+      // fresh account for the rest of its session, which is the Y1 failure
+      // seen from the other end. Nothing teaches a live record its minted name,
+      // so a first-session record carries the stand-in for as long as it lives;
+      // but if that account's store entry is dropped and RE-READ from the row
+      // it just inserted (retain's lost-entry reload, or a second character
+      // joining on preload's already-live-but-unloaded arm), `entry.state`
+      // comes back carrying the ROW's minted name while the same live record
+      // still carries the stand-in. The names differ, nothing is wrong, and the
+      // account was write-blocked with a misleading "the live record is not the
+      // record this entry loaded".
+      //
+      // A STAND-IN IS THE ABSENCE OF A NAME, not a different one, so it is
+      // judged by CONTINUITY instead: pristine-and-the-entry-knows-more, or a
+      // regressed revision. A record carrying any OTHER name is a different
+      // record by construction and is still refused outright.
+      // GUARDED ON ITS OWN, not by the chain below. This clause used to live
+      // inside `seededOverReal`'s `&&` chain, behind `entry.state !== null`;
+      // hoisting it to a name took it out from behind that guard, and an entry
+      // with no cached state (every account's very first write) would have
+      // dereferenced null. It does not today only because such a record always
+      // carries the stand-in name and `!standInSeed` short-circuits first,
+      // which is a coincidence of another rule rather than a guard.
+      const foreignIdentity =
+        entry.state !== null && !standInSeed && persisted.plotId !== entry.state.plotId;
       const seededOverReal =
         entry.durableRev !== null &&
         entry.state !== null &&
-        (persisted.plotId !== entry.state.plotId || (pristineSeed && entryKnowsMore));
+        (foreignIdentity || (pristineSeed && entryKnowsMore) || (standInSeed && revisionRegressed));
       if (seededOverReal) {
         counters.writeFailures++;
         entry.quiesced = true;
@@ -1217,7 +1338,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         expectedDurableRev: entry.durableRev,
       });
       counters.writeMsTotal += Math.max(0, ports.nowMs() - writeStartMs);
-      return applyWriteResult(entry, result, generation, snapshotAtMs, document, persisted.plotId);
+      return applyWriteResult(entry, result, generation, snapshotAtMs, document);
     } finally {
       permit.release();
     }
@@ -1566,6 +1687,14 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // Comparing the live revision to the captured one fails CLOSED: a skipped
       // install leaves the revision where it was, so the capture survives to
       // the next sweep, which is the outcome that keeps the edits.
+      //
+      // AND A REVISION IS ALL IT CAN COMPARE. Adding the plot identity beside it
+      // was considered and REJECTED as ineffective, not as too costly: the two
+      // records that can be confused here are the previous session's and the
+      // newly installed one, both belong to the SAME owner, and two records of
+      // one account always carry the same identity (the stand-in for a fresh
+      // account, the row's minted id for a loaded one). An identity compare
+      // separates nothing this one does not.
       if (entry.leaveDocument !== null && ports.liveRev(ownerKey) === entry.leaveDocument.rev) {
         leaveCaptures--;
         entry.leaveDocument = null;
@@ -1602,8 +1731,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // gate once intake is closed, and the deadline has to cover the realm
       // rather than a quarter of it.
       draining = true;
+      // THE SAME DETECTOR THE OTHER TWO ENTRY POINTS USE, not a weaker one.
+      // saveAllDirty and flushAndRelease both probe the live revision first,
+      // and the revision sweep is the ONLY dirty detector with a production
+      // caller in this release, so an isDirty-only drain could not see an edit
+      // at all. It was correct only by the shutdown ORDERING in server/main.ts
+      // (game.stop, then saveFreeholds, then this), which is a property of
+      // another file and not of the drain.
       for (const entry of entries.values()) {
-        if (isDirty(entry)) arm(entry);
+        if (noteRevisionMoved(entry) || isDirty(entry)) arm(entry);
       }
       pumpDeferredWrites();
       const bounded = Math.max(1, Math.floor(deadlineMs));
