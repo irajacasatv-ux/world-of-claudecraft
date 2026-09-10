@@ -198,6 +198,16 @@ const FULL_CONDITION = 100;
  *  scanning, not a walk of the whole string. */
 const FREEHOLD_PLOT_ID_SHAPE = /^[A-Za-z0-9_:-]{1,64}$/;
 
+/** THE SAME SHAPE, as a predicate, so a caller outside this file does not need a
+ *  FIFTH copy of the charset to ask the question. The persistence loader is the
+ *  one such caller: it installs a record carrying a plot identity the store
+ *  minted or read, and an identity that does not fit this shape is one the wire
+ *  would refuse at its type boundary with no diagnostic. Exported rather than
+ *  duplicated because the four existing copies are already the reason
+ *  tests/freehold_module.test.ts cross-pins them. */
+export const freeholdPlotIdAdmitted = (plotId: unknown): boolean =>
+  typeof plotId === 'string' && FREEHOLD_PLOT_ID_SHAPE.test(plotId);
+
 /** One placed furnishing as the durable row carries it. */
 export interface PersistedFreeholdLayoutRow {
   readonly placementId: number;

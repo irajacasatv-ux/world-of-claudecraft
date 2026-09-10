@@ -54,7 +54,7 @@ import {
   type PersistedFreehold,
   persistedFreeholdBytes,
 } from '../../src/sim/freehold/persisted';
-import { PENDING_FREEHOLD_PLOT_ID } from '../../src/sim/freehold/state';
+import { defaultFreeholdState, PENDING_FREEHOLD_PLOT_ID } from '../../src/sim/freehold/state';
 import type { SimContext } from '../../src/sim/sim_context';
 import { methodBody } from '../helpers/method_body';
 import { stripComments } from '../helpers/strip_comments';
@@ -222,12 +222,18 @@ function harness(options: HarnessOptions = {}) {
   // document, which would have to be rewritten to keep saying what they say.
   // That is a suite-wide change, not a fix, and it is recorded here rather than
   // taken at the end of an audit.
-  const fallbackPlotId =
-    options.rowLoad?.kind === 'row' ? options.rowLoad.row.plotId : PENDING_FREEHOLD_PLOT_ID;
-  const livePlotIdNow = (): string =>
-    typeof options.livePlotId === 'function'
-      ? options.livePlotId()
-      : (options.livePlotId ?? fallbackPlotId);
+  // THE POST-FIX MODEL. A row load installs the row's state, so the record
+  // carries the row's id; an ABSENT load mints one and installLoadedFreehold now
+  // installs a default carrying it, so the record carries the MINTED id from the
+  // first session rather than the stand-in. The stand-in is what a record seeded
+  // WITHOUT an install carries (addPlayer's ensureFreeholdRecord after an
+  // eviction), which is the case every seal test overrides `livePlotId` to model.
+  const livePlotIdNow = (): string => {
+    if (typeof options.livePlotId === 'function') return options.livePlotId();
+    if (options.livePlotId !== undefined) return options.livePlotId;
+    if (options.rowLoad?.kind === 'row') return options.rowLoad.row.plotId;
+    return minted > 0 ? `plot:minted${minted}` : PENDING_FREEHOLD_PLOT_ID;
+  };
   const fifo = createKeyedSerialWriter<string>();
   let nowMs = 10_000;
   let minted = 0;
@@ -286,6 +292,13 @@ function harness(options: HarnessOptions = {}) {
       // The identity is the LIVE RECORD's, never the fixture's: a case that
       // wants to model a mismatched record says so by overriding the port.
       return doc === null ? null : { ...doc, plotId: livePlotIdNow() };
+    },
+    livePlotId(ownerKey: string): string | null {
+      // The SAME record serialize() would clone, so a case that overrides the
+      // live identity moves both. Null when nothing is live, exactly as the
+      // production binding reads it off ctx.freeholds.
+      if (options.hasLive && !options.hasLive(ownerKey)) return null;
+      return serialize(ownerKey) === null ? null : livePlotIdNow();
     },
     liveRev(ownerKey: string): number | null {
       calls.push('liveRev');
@@ -522,15 +535,25 @@ describe('preload admission', () => {
     expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(1);
     expect(h.store.stats().loads).toBe(1);
 
-    // Drop the entry, then load again: a leaked in-flight slot would replay
-    // the settled promise and its already minted plot id instead of reading.
+    // Drop the entry, then load again: a leaked in-flight slot would replay the
+    // settled promise instead of reading. Counted on the READ, not on the plot
+    // id: the id used to be the proxy here and it no longer distinguishes the
+    // two, because a recreated entry now ADOPTS the live record's identity
+    // rather than minting a second one (see below).
     h.store.retain(OWNER_KEY);
     await h.store.flushAndRelease(OWNER_KEY);
     expect(h.store.stats().entries).toBe(0);
     const third = await h.store.preload(ACCOUNT_ID);
     expect(h.store.stats().loads).toBe(2);
-    expect(third.plotId).toBe('plot:minted2');
+    expect(h.calls.filter((call) => call === 'readRow')).toHaveLength(2);
+    // ONE IDENTITY PER OWNER, not per entry. The mint is per entry, and an entry
+    // the orphan sweep collects between a preload and its retain is recreated
+    // empty: minting again there gives the ROW a second identity while the
+    // record installed from the first one keeps answering to the first, for the
+    // life of that session, which the write seal then reads as two different
+    // records and quiesces the account over.
     expect(a.plotId).toBe('plot:minted1');
+    expect(third.plotId).toBe('plot:minted1');
   });
 
   it('installs nothing when the record is already live, but still learns the row', async () => {
@@ -1114,11 +1137,17 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
     expect(h.writeCount()).toBe(0);
   });
 
-  it('arms a write when the live revision moved BACKWARDS, not only forwards', async () => {
-    // A backwards revision is a reload of an older record into a live slot, and
-    // the row must follow the record this realm is actually serving. Pinned
-    // because the forward arm alone would let an equality-to-inequality edit
-    // pass unnoticed.
+  it('ARMS a write when the live revision moved BACKWARDS, and the seal then refuses it', async () => {
+    // DETECTION IS NOT ADMISSION, and this case is where the two answers part.
+    // The probe treats a backwards revision as movement, because a live record
+    // that is not the one this entry committed is exactly the state worth
+    // looking at; the seal then refuses to write it. The rule this used to pin
+    // (a record carrying a real plot name goes backwards onto the row,
+    // deliberately) is RETIRED: a live revision below the entry's last
+    // committed one means the live record is not the record that commit came
+    // from, and writing it walks the client-facing wire counter backwards
+    // permanently, which is what the loader's own wire_rev_shape hold refuses
+    // on the read side.
     let rev = 7;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
@@ -1129,8 +1158,13 @@ describe('the periodic sweep detects a moved record without a markDirty call', (
     rev = 6;
     h.store.saveAllDirty();
     await tick(30);
-    expect(h.writeCount()).toBe(1);
-    expect(h.writes[0].wireRev).toBe(6);
+    // ARMED: without the backwards arm of the probe nothing would have been
+    // armed at all and the refusal below could never have been reached.
+    expect(h.store.stats().writeFailures).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors[0]).toContain('identity');
+    // AND NOT WRITTEN: the row keeps the revision the entry committed.
+    expect(h.writeCount()).toBe(0);
   });
 
   it('never probes a write-blocked entry, so a held row stays untouched', async () => {
@@ -1746,10 +1780,11 @@ describe('a durable answer no repeat can fix stops the writes', () => {
 
 describe('the coalescer, the drain and the age report at their stated edges', () => {
   it('treats a revision that went BACKWARDS as movement, not as clean', () => {
-    // Documented and load-bearing: a backwards revision is an older record
-    // reloaded into a live slot, and the row should follow the record this
-    // realm is actually serving. A `<=` comparison would call it clean and
-    // leave the row showing a house the player is no longer in.
+    // Documented and load-bearing for the PROBE: a `<=` comparison would call a
+    // backwards revision clean, and the store would never look at a live record
+    // that is not the one it committed. What the probe hands to is the seal,
+    // which refuses the write; this case pins that the probe SAW it, which is
+    // the half a `<=` mutant kills.
     return (async () => {
       let rev = 8;
       const h = await loadedStore({
@@ -1761,12 +1796,15 @@ describe('the coalescer, the drain and the age report at their stated edges', ()
       h.store.saveAllDirty();
       await tick(20);
       expect(h.writeCount()).toBe(0);
+      expect(h.store.stats().writeFailures).toBe(0);
 
       rev = 7;
       h.store.saveAllDirty();
       await tick(30);
-      expect(h.writeCount()).toBe(1);
-      expect(h.writes[0].wireRev).toBe(7);
+      // NOT written, but SEEN: a `<=` probe books no failure at all here.
+      expect(h.writeCount()).toBe(0);
+      expect(h.store.stats().writeFailures).toBe(1);
+      expect(h.store.stats().quiesced).toBe(1);
     })();
   });
 
@@ -2545,13 +2583,21 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // stand-in name. A player who removes every furnishing leaves a record that
     // looks exactly like a seed except for its identity, and refusing that
     // would make "remove everything" the one edit that can never be saved.
+    //
+    // AT A HIGHER REVISION, which is the only shape a real emptying has. The
+    // fixture used to sit at revision ZERO to look as much like a seed as
+    // possible, which modelled a state no sanctioned writer can produce: every
+    // mutator increments, so removing twelve furnishings from a record at five
+    // leaves it at six, not at zero. A revision BELOW the entry's last committed
+    // one is now refused for every entry class, so the old fixture proved the
+    // claim through a state the sim cannot reach.
     let emptied = false;
     const h = await loadedStore({
       rowLoad: { kind: 'row', row: rowFixture() },
       normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
       serialize: () =>
         emptied
-          ? persistedFixture({ layout: [], trophies: [], rev: 0 })
+          ? persistedFixture({ layout: [], trophies: [], rev: 6 })
           : persistedFixture({ rev: 5 }),
       writeRow: async () => ({ kind: 'updated', durableRev: '8' }),
     });
@@ -2632,27 +2678,97 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.errors[0]).toContain('identity');
   });
 
-  it('KNOWN DEFECT: writes an empty default over a MINTED account whose reseed caught up', async () => {
-    // THE EIGHTH PATH, pinned AS IT BEHAVES so a fix flips a red test rather
-    // than discovering the behaviour, exactly like the case below. Carried in
-    // docs/freeholds/persistence-rollout-contract.md section 8a.
+  it('does NOT refuse a rejoin replay at the revision the entry committed', async () => {
+    // THE COMPANION PROOF the identity fix owes, and the direction that made a
+    // revision comparison wrong once before. W1 established that a rejoin replay
+    // RESTARTS the record's revision from the last COMMITTED value, so the
+    // discriminator has to be strictly-below rather than not-above: an entry
+    // that committed seven and is handed a record back at seven is looking at
+    // its own document, not at a different record.
+    let rev = 7;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7' }) },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
+    });
+    // The replay itself: same revision, so the probe sees no movement and only
+    // an explicit mark arms it. It must be WRITTEN, not refused.
+    h.store.markDirty(OWNER_KEY);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.writes[0].wireRev).toBe(7);
+    expect(h.store.stats().quiesced).toBe(0);
+
+    // And the ordinary case after it: the returning player edits, the revision
+    // climbs, and the write lands.
+    rev = 8;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].wireRev).toBe(8);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
+  });
+
+  it('refuses a REGRESSED revision for a ROW-LOADED entry, which the stand-in gate used to hide', async () => {
+    // THE UN-GATING, proved on the entry class it was dead for. The
+    // discriminator used to be checked only under the stand-in identity, on the
+    // reasoning that any other name is already refused by the comparison above.
+    // After the install fix no online record carries the stand-in, so that gate
+    // would have made this arm dead code on the one host it exists for. Its live
+    // case is the same-account character swap: the record the store sees belongs
+    // to the previous session, carries the SAME real plot name, and sits below
+    // the revision this entry committed.
+    let rev = 7;
+    const h = await loadedStore({
+      rowLoad: { kind: 'row', row: rowFixture({ wireRev: '7' }) },
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 7 }), repaired: [] },
+      // The SAME real name throughout, so the name comparison cannot be what
+      // refuses this and only the revision can.
+      livePlotId: ROW_PLOT_ID,
+      serialize: () => persistedFixture({ rev }),
+      writeRow: async () => ({ kind: 'updated', durableRev: '9' }),
+    });
+    h.store.markDirty(OWNER_KEY);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+
+    rev = 6;
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.store.stats().writeFailures).toBe(1);
+  });
+
+  it('REFUSES an empty default over a MINTED account whose reseed caught up', async () => {
+    // THE EIGHTH PATH, CLOSED. This case was pinned AS IT BEHAVED, asserting the
+    // defect, so the fix would flip a red test rather than be discovered; this
+    // is that flip.
     //
-    // The seal's first test is INERT for an entry that minted its own row.
-    // `applyWriteResult` caches the identity the LIVE RECORD carried, nothing
-    // teaches a live record its minted name, so that entry's cached name IS the
-    // stand-in; a freshly seeded default carries the same literal, the two are
-    // equal, and the name comparison is false by value equality. The two
-    // continuity tests are then the whole seal and both are revision-shaped, so
-    // a reseed whose revision has CAUGHT UP satisfies neither.
+    // The seal's name comparison was INERT for an entry that minted its own row:
+    // applyWriteResult caches the identity the LIVE RECORD carried, nothing
+    // taught a live record its minted name, so that entry's cached name WAS the
+    // stand-in and a freshly seeded default carried the same literal. The two
+    // continuity tests were then the whole seal and both are revision-shaped, so
+    // a reseed whose revision had CAUGHT UP satisfied neither and the empty
+    // tier-0 Inn Room was compare-and-swapped over the house.
     //
-    // Reachability today is dev-grant-only, in the same sense V1 and U1 were:
-    // setFreeholdTier is the one live-record mutator this release ships. It
-    // becomes ordinary the moment the furnishing writer lands.
+    // installLoadedFreehold now installs a default carrying the minted identity
+    // on the ABSENT arm, so the live record answers to its own name from the
+    // first session and a RESEED (ensureFreeholdRecord after an eviction, which
+    // has no install in front of it) carries the stand-in. The two differ, and
+    // the name comparison fires.
     let seeded = false;
     const house = persistedFixture({ tier: 'cottage', condition: 91, rev: 7 });
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      // The record's identity: the MINTED one while it is the installed record,
+      // the stand-in once it has been reseeded without an install.
+      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : 'plot:minted1'),
       serialize: () =>
         seeded
           ? // The reseeded default, edited past the entry's committed revision.
@@ -2674,30 +2790,27 @@ describe('a leaving session never loses its last edits to a queue', () => {
     await tick(30);
     expect(h.writeCount()).toBe(1);
     expect(h.writes[0].layoutJson).not.toBe('[]');
+    expect(h.writes[0].plotId).toBe('plot:minted1');
 
     seeded = true;
     h.store.saveAllDirty();
     await tick(30);
-    // THE DEFECT, asserted. A second write goes out carrying the empty default,
-    // over a row that holds the house, under the SAME minted plot id, with no
-    // quiesce and no error line. When the fix lands this case goes red on the
-    // write count and the assertions below become the refusal.
-    expect(h.writeCount()).toBe(2);
-    expect(h.writes[1].layoutJson).toBe('[]');
-    expect(h.writes[1].trophiesJson).toBe('[]');
-    expect(h.writes[1].tier).toBe('inn_room');
-    expect(h.writes[1].plotId).toBe(h.writes[0].plotId);
-    expect(h.store.stats().quiesced).toBe(0);
-    expect(h.errors).toEqual([]);
+    // NO SECOND WRITE. The row keeps the house, and the owner is write-blocked
+    // for the session with an error line rather than losing it silently.
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors[0]).toContain('identity');
   });
 
-  it('KNOWN DEFECT: the same write lands when the reseed EQUALS the committed revision', async () => {
-    // The neighbouring case, because the escape threshold is `>=` and not `>`.
-    // Written separately so a fix that only moves the boundary is still red.
+  it('REFUSES the same reseed when its revision EQUALS the committed one', async () => {
+    // The neighbouring case, because the old escape threshold was `>=` and not
+    // `>`. Kept separate so a future change that only moves a boundary is still
+    // caught: this one is refused by the NAME, with both revisions equal, so it
+    // reaches the seal through a different arm than the case above.
     let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : 'plot:minted1'),
       serialize: () =>
         seeded
           ? persistedFixture({
@@ -2720,9 +2833,9 @@ describe('a leaving session never loses its last edits to a queue', () => {
     h.store.markDirty(OWNER_KEY);
     h.store.saveAllDirty();
     await tick(30);
-    expect(h.writeCount()).toBe(2);
-    expect(h.writes[1].layoutJson).toBe('[]');
-    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.writeCount()).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors[0]).toContain('identity');
   });
 
   it('REFUSES the same reseed for a ROW-LOADED entry, which is why this is about the MINT', async () => {
@@ -2761,25 +2874,24 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.errors[0]).toContain('identity');
   });
 
-  it('KNOWN DEFECT: quiesces a fresh account whose entry re-reads the row it wrote', async () => {
-    // PINNED AS IT BEHAVES, not as it should, so the gate is visible and a fix
-    // flips this case rather than discovering it. Carried in
-    // docs/freeholds/persistence-rollout-contract.md section 8a.
+  it('KEEPS WRITING a fresh account whose entry re-reads the row it wrote', async () => {
+    // THE MIRROR OF THE EIGHTH PATH, and the other half this fix closes. It was
+    // pinned AS IT BEHAVED, asserting a quiesce; this is the flip.
     //
-    // Nothing teaches a live record its minted name, so a first-session record
-    // carries the stand-in for as long as it lives. If that account's store
-    // entry is dropped and RE-READ from the row it just inserted (retain's
-    // lost-entry reload, or a second character joining), entry.state comes back
-    // carrying the ROW's name while the same live record still carries the
-    // stand-in, the names differ, and the account is write-blocked for the rest
-    // of the session with a misleading message.
+    // Nothing used to teach a live record its minted name, so a first-session
+    // record carried the stand-in for as long as it lived. If that account's
+    // store entry was dropped and RE-READ from the row it had just inserted
+    // (retain's lost-entry reload, or a second character joining), entry.state
+    // came back carrying the ROW's name while the same live record still carried
+    // the stand-in, the names differed, and the account was write-blocked for
+    // the rest of its session with a misleading message.
     //
-    // Round nine exempted the stand-in from the name comparison to close this
-    // and REOPENED a data-loss path with it (a seeded default whose revision
-    // climbs past the entry's own is then admitted over a real row), so the
-    // exemption was reverted. Refusing a write costs one session's edits;
-    // admitting a seed costs the house. The real fix is to teach the live
-    // record its minted identity at install, which is a design decision.
+    // Round nine tried to close it by exempting the stand-in from the name
+    // comparison, which REOPENED a data-loss path (a seeded default whose
+    // revision climbs past the entry's own is then admitted over a real row) and
+    // was reverted. The fix is at the source instead: the record is installed
+    // carrying the minted identity, so the re-read entry and the live record
+    // agree and there is nothing for the seal to refuse.
     let inserted = false;
     let rev = 4;
     const h = harness({
@@ -2792,7 +2904,9 @@ describe('a leaving session never loses its last edits to a queue', () => {
         state: persistedFixture({ plotId: MINTED_PLOT_ID, rev: 4 }),
         repaired: [],
       },
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      // The record installed on the absent arm carries the id the store minted,
+      // which is what the harness's mint returns first.
+      livePlotId: MINTED_PLOT_ID,
       hasLive: () => true,
       serialize: () => persistedFixture({ rev }),
       writeRow: async (input) => {
@@ -2821,11 +2935,13 @@ describe('a leaving session never loses its last edits to a queue', () => {
     rev = 9;
     h.store.saveAllDirty();
     await tick(30);
-    // THE DEFECT, asserted: no second write, and the account is quiesced. The
-    // ROW is intact, which is why this is the safe side of the trade.
-    expect(h.writeCount()).toBe(1);
-    expect(h.store.stats().quiesced).toBe(1);
-    expect(h.errors[0]).toContain('identity');
+    // A SECOND WRITE LANDS, carrying the session's later edit, and nothing is
+    // quiesced or logged. The row keeps the same identity throughout.
+    expect(h.writeCount()).toBe(2);
+    expect(h.writes[1].plotId).toBe(MINTED_PLOT_ID);
+    expect(h.writes[1].wireRev).toBe(9);
+    expect(h.store.stats().quiesced).toBe(0);
+    expect(h.errors).toEqual([]);
   });
 
   it('refuses a seed over a ROW that carries content at revision zero', async () => {
@@ -3873,9 +3989,85 @@ describe('installLoadedFreehold', () => {
     expect(record?.isDecorating).toBe(false);
   });
 
-  it('installs nothing for an absent load', () => {
+  it('installs nothing for a load that has NO state but still names a row', () => {
+    // durableRev non-null means a row exists and this answer simply carries no
+    // state for it, which is preload's already-live arm. Installing a default
+    // there would put an empty record over a live one; loadFreehold is
+    // load-once so it would be a no-op anyway, and this says so.
     const ctx = fakeCtx();
     installLoadedFreehold(ctx, ACCOUNT_ID, loadedFixture({ state: null }));
+    expect(ctx.freeholds.size).toBe(0);
+  });
+
+  it('installs a DEFAULT carrying the minted identity when there is no durable row', () => {
+    // THE ABSENT ARM, and the fix for the eighth path. This case used to assert
+    // that nothing at all is installed, and that is exactly what left an online
+    // record answering to the stand-in for its whole first session: the store
+    // minted the identity the row would be inserted under, the record never
+    // learned it, and the write seal's name comparison was then inert BY VALUE
+    // EQUALITY for that entry class, because a freshly reseeded default carries
+    // the same literal.
+    const ctx = fakeCtx();
+    installLoadedFreehold(
+      ctx,
+      ACCOUNT_ID,
+      loadedFixture({ state: null, durableRev: null, plotId: MINTED_PLOT_ID }),
+    );
+    const record = ctx.freeholds.get(OWNER_KEY);
+    expect(record?.plotId).toBe(MINTED_PLOT_ID);
+    // A DEFAULT, and nothing else: the free tier-0 Inn Room at revision zero.
+    expect(record?.tier).toBe('inn_room');
+    expect(record?.layout).toEqual([]);
+    expect(record?.trophies).toEqual([]);
+    expect(record?.condition).toBe(100);
+    expect(record?.visitPolicy).toBe('closed');
+    expect(record?.rev).toBe(0);
+    expect(record?.ownerKey).toBe(OWNER_KEY);
+  });
+
+  it('installs NOTHING over a record that is already live, whatever it carries', () => {
+    // THE SAFE FORM'S DEFINING PROPERTY. The unsafe form stamps the minted
+    // identity onto whatever record exists, which rewrites a freshly SEEDED
+    // default's identity to the minted name and kills the seal's name
+    // comparison and, through the stand-in test, both continuity arms with it.
+    // Going through loadFreehold is what makes that impossible: it is load-once.
+    const ctx = fakeCtx();
+    ctx.freeholds.set(OWNER_KEY, defaultFreeholdState(OWNER_KEY, PENDING_FREEHOLD_PLOT_ID));
+    installLoadedFreehold(
+      ctx,
+      ACCOUNT_ID,
+      loadedFixture({ state: null, durableRev: null, plotId: MINTED_PLOT_ID }),
+    );
+    expect(ctx.freeholds.get(OWNER_KEY)?.plotId).toBe(PENDING_FREEHOLD_PLOT_ID);
+    expect(ctx.freeholds.size).toBe(1);
+  });
+
+  it('installs nothing for an absent load whose identity the WIRE would refuse', () => {
+    // The identity crosses the same spread bag every other field here does, and
+    // one the wire refuses would make every later build-presence frame fail at
+    // the type boundary with no diagnostic at all. An unchecked identity is not
+    // installed and the account falls back to the stand-in, which is what it
+    // had before this arm existed.
+    for (const bad of ['', 'plot/slash', 'plot:' + 'x'.repeat(64)]) {
+      const ctx = fakeCtx();
+      installLoadedFreehold(
+        ctx,
+        ACCOUNT_ID,
+        loadedFixture({ state: null, durableRev: null, plotId: bad }),
+      );
+      expect(ctx.freeholds.size, bad).toBe(0);
+    }
+  });
+
+  it('installs nothing on the absent arm of a DARK host', () => {
+    // loadFreehold honors the flag, so the arm cannot seed a dark realm. Without
+    // this the new install would be the one record inserter that ignores it.
+    const ctx = fakeCtx(false);
+    installLoadedFreehold(
+      ctx,
+      ACCOUNT_ID,
+      loadedFixture({ state: null, durableRev: null, plotId: MINTED_PLOT_ID }),
+    );
     expect(ctx.freeholds.size).toBe(0);
   });
 
@@ -3898,13 +4090,21 @@ describe('installLoadedFreehold', () => {
   });
 
   it('keeps the durable hearth clock when the account has no plot row at all', () => {
+    // The clock is installed on the absent arm too, above the plot entirely, so
+    // an account with no row still carries its Hearth cooldown. The plot half of
+    // this answer now seeds the default that carries the minted identity, which
+    // is a separate claim pinned above; what this case owns is the clock.
     const ctx = fakeCtx();
     installLoadedFreehold(
       ctx,
       ACCOUNT_ID,
-      loadedFixture({ state: null, durableRev: null, hearthReadyAtMs: 90_000 }),
+      loadedFixture({
+        state: null,
+        durableRev: null,
+        plotId: MINTED_PLOT_ID,
+        hearthReadyAtMs: 90_000,
+      }),
     );
-    expect(ctx.freeholds.size).toBe(0);
     expect(ctx.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(90_000);
   });
 

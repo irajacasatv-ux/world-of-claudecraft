@@ -118,6 +118,7 @@ export function createGameFreeholdPersistStore(deps: {
     hasLive: (ownerKey) => deps.sim.ctx.freeholds.has(ownerKey),
     enabled: () => deps.sim.ctx.freeholdsEnabled,
     liveRev: (ownerKey) => deps.sim.ctx.freeholds.get(ownerKey)?.rev ?? null,
+    livePlotId: (ownerKey) => deps.sim.ctx.freeholds.get(ownerKey)?.plotId ?? null,
     mintPlotId: () => mintFreeholdPlotId(),
     // No gate means no admission control on this host, not an unbounded wait.
     acquirePermit: gate

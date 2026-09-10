@@ -108,9 +108,32 @@ export function seedWouldLandOnRealRow(
   // increments its revision (the coupling is pinned by a source scan in
   // tests/freehold_module.test.ts), and every install this store offers a
   // rejoin carries at least the revision the entry last committed, so a
-  // live record BELOW that has to be a different record. It is checked only
-  // under the stand-in identity because a record carrying any other name is
-  // already refused by the first test.
+  // live record BELOW that has to be a different record.
+  //
+  // UN-GATED FROM THE STAND-IN, and that is the companion the install fix owes.
+  // It used to be checked only under the stand-in identity, on the reasoning
+  // that a record carrying any other name is already refused by the first test.
+  // After the fix no ONLINE record carries the stand-in at all, so leaving the
+  // gate on would have made this discriminator dead code on the one host it is
+  // for, and its live case is the same-account character swap, where the record
+  // the store sees belongs to the previous session. Un-gated it is checked for
+  // every entry class.
+  //
+  // WHY THAT IS SAFE AGAINST W1, which is the finding that made a revision
+  // comparison wrong once before. W1 compared a CAPTURE's revision with a live
+  // record's, and those are counters on two different timelines because a rejoin
+  // replay RESTARTS the record's revision from the last committed value. This
+  // compares the LIVE record with the entry's own last COMMITTED document, which
+  // is one timeline: every install this store offers a rejoin carries at least
+  // the committed revision, and every sanctioned mutator only increments.
+  //
+  // WHAT IT NEWLY REFUSES, named rather than discovered: a leave capture
+  // strictly older than the last committed write, offered to a rejoin as the
+  // install source, puts the live revision below the entry's. Refusing there
+  // loses nothing (the capture is superseded by definition) and the row
+  // survives, but it does book a write failure and quiesce an entry that is
+  // already about to be collected. It was reachable for a stand-in-named entry
+  // before this change and is reachable for every entry class after it.
   //
   // WHICH DIMENSIONS A TEST CAN ISOLATE, measured rather than assumed. For a
   // ROW-LOADED entry only the identity and revision dimensions can be killed
@@ -148,37 +171,27 @@ export function seedWouldLandOnRealRow(
   // carries the stand-in. It is INERT for an entry that MINTED its own row:
   // `applyWriteResult` caches the identity the LIVE RECORD carried, nothing
   // teaches a live record its minted name, so that entry's cached name IS
-  // the stand-in and a reseeded default carries the same literal. The two
-  // are equal, this comparison is false by value equality, and the two
-  // continuity tests below are the whole seal. Both are revision-shaped, so
-  // a reseeded default whose revision has CAUGHT UP satisfies neither and
-  // the empty tier-0 default lands on the house. That is the EIGHTH path,
-  // reproduced against this store and pinned AS IT BEHAVES in a case named
-  // KNOWN DEFECT, and it is carried as an open gate in
-  // docs/freeholds/persistence-rollout-contract.md section 8a. Its fix is
-  // the same design decision the paragraph below already owes: teach the
-  // live record its minted identity AT INSTALL, on the ABSENT arm only,
-  // which makes this comparison total for every entry class. Do not close it
-  // by adding a fourth clause here; four rounds have each tried that.
+  // the stand-in and a reseeded default carries the same literal. That was the
+  // EIGHTH path to an empty tier-0 Inn Room landing on a real house, and it is
+  // CLOSED: installLoadedFreehold now installs the minted identity on the
+  // ABSENT arm, so an online record answers to its own name from its first
+  // session and this comparison is TOTAL for every entry class, not only for
+  // entries that loaded a row. The stand-in survives on the offline and
+  // headless hosts, which have no store and no minter, and that divergence is
+  // recorded in docs/freeholds/persistence-rollout-contract.md section 8a and
+  // in src/sim/freehold/CLAUDE.md.
   //
-  // ROUND NINE EXEMPTED THE STAND-IN HERE AND IT WAS REVERTED, because the
-  // exemption is a data-loss hole: for an entry that loaded a ROW, its
-  // cached name is the row's, a freshly seeded default carries the stand-in,
-  // and skipping the comparison left only the continuity tests below. Those
-  // catch a seed whose revision is BELOW the entry's, and a returning player
-  // needs only `entry.state.rev + 1` edits inside one sweep interval to
-  // carry it above, at which point the empty tier-0 default is
-  // compare-and-swapped over the house. Executed against the real store both
-  // ways: refused without the exemption, written with it.
-  //
-  // The exemption existed to stop a healthy fresh account being quiesced
-  // when its entry re-reads the row it inserted (the live record still
-  // carries the stand-in while the re-read entry now holds the row's name).
-  // That failure is real and is carried as a named gate rather than paid for
-  // in data loss: refusing a write costs one session's edits, admitting a
-  // seed costs the house. Fail closed. The gate's actual fix is to teach the
-  // live record its minted identity at INSTALL, which is a design decision
-  // for the maintainer, not a fourth heuristic in this expression.
+  // ROUND NINE EXEMPTED THE STAND-IN HERE AND IT WAS REVERTED, and the revert
+  // stands: the exemption is a data-loss hole. Skipping the comparison for a
+  // stand-in-named record left only the continuity tests below, and those catch
+  // a seed whose revision is BELOW the entry's, so a returning player needed
+  // only `entry.state.rev + 1` edits inside one sweep interval to carry it above
+  // and the empty default was compare-and-swapped over the house. Executed
+  // against the real store both ways: refused without the exemption, written
+  // with it. The failure the exemption was written for (a fresh account whose
+  // entry re-read the row it had just inserted, holding the row's name against a
+  // live record still holding the stand-in) is what the install fix closes at
+  // its source instead.
   //
   // GUARDED ON ITS OWN, not by the chain below: hoisting this to a name
   // takes it out from behind `entry.state !== null`, and an entry with no
@@ -193,6 +206,6 @@ export function seedWouldLandOnRealRow(
   const seededOverReal =
     entry.durableRev !== null &&
     entry.state !== null &&
-    (foreignIdentity || (pristineSeed && entryKnowsMore) || (standInSeed && revisionRegressed));
+    (foreignIdentity || (pristineSeed && entryKnowsMore) || revisionRegressed);
   return seededOverReal;
 }

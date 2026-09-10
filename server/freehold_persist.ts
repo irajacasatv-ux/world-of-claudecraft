@@ -39,6 +39,7 @@ import {
   FREEHOLD_MAX_STORED_BYTES,
   type FreeholdLoadResult,
   type FreeholdWriteRefusalOptions,
+  freeholdPlotIdAdmitted,
   freeholdStateFromPersisted,
   freeholdWriteRefusal,
   type PersistedFreehold,
@@ -49,7 +50,16 @@ import {
 // pulling the directory's whole public surface into a server graph. Named here
 // because these three ARE on the barrel, so without a reason a later reader
 // cannot tell the deliberate exception from drift.
-import { loadFreehold, PENDING_FREEHOLD_PLOT_ID } from '../src/sim/freehold/state';
+import {
+  defaultFreeholdState,
+  loadFreehold,
+  PENDING_FREEHOLD_PLOT_ID,
+} from '../src/sim/freehold/state';
+// The one sanctioned plot-identity constructor, imported for the one place this
+// module builds a live record: the absent arm's default carries the identity the
+// row will be inserted under, and that value crossed a module boundary as a
+// plain string.
+import { asFreeholdPlotId } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
 import {
   FREEHOLD_PRIMARY_PLOT_INDEX,
@@ -353,6 +363,15 @@ export interface FreeholdPersistPorts {
    *  holds no live record, and the write is skipped entirely. */
   serialize(ownerKey: string): PersistedFreehold | null;
   hasLive(ownerKey: string): boolean;
+  /** The live record's PLOT IDENTITY, or null when no record is live. Beside
+   *  liveRev and for the same kind of reason: the absent arm mints an identity
+   *  for a row that does not exist yet, and it mints PER ENTRY. An entry
+   *  collected by the orphan sweep between a preload and its retain is
+   *  recreated empty, and its repair reload would then mint a SECOND identity
+   *  while the live record installed from the first one still answers to the
+   *  first, permanently for that session. Reading the live identity here is
+   *  what keeps the row and the record answering to one name. */
+  livePlotId(ownerKey: string): string | null;
   /** Whether this realm serves housing at all. The store never reads the
    *  environment itself; the composition root binds this to the sim's own
    *  flag. A DARK realm must issue no durable read of any kind, which is why
@@ -670,20 +689,22 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    * serialize() stays inside runWrite, where the result is the thing written.
    *
    * A blocked entry is never probed: it must not write, so knowing it moved
-   * buys nothing. A revision that went BACKWARDS is treated as movement too:
-   * that is a reload of an older record into a live slot, and the row should
-   * follow the record this realm is actually serving.
+   * buys nothing. A revision that went BACKWARDS is treated as movement too,
+   * because a live record that is not the one this entry committed is exactly
+   * the state worth looking at.
    *
-   * DETECTION IS NOT ADMISSION, and the two answers differ for one case. This
+   * DETECTION IS NOT ADMISSION, and this is the whole reason both exist. This
    * probe says a backwards revision is a CHANGE worth looking at; the write
-   * seal in runWrite then decides whether that particular record may land, and
-   * for a record still carrying the stand-in plot identity it says no, because
-   * a stand-in record whose revision fell below the entry's last committed one
-   * is a freshly seeded default rather than a reload. A record carrying a real
-   * plot name still goes backwards onto the row exactly as this comment says.
-   * Written down because the two rationales read as contradictory otherwise,
-   * and a later reader reconciling them by relaxing the seal would reopen the
-   * seventh path to an empty default over a real house.
+   * seal in runWrite then decides whether that record may LAND, and it says no
+   * for every entry class. An earlier version of this comment said a record
+   * carrying a real plot name still goes backwards onto the row, deliberately,
+   * and that rule is RETIRED rather than quietly dropped: a live revision below
+   * the entry's last committed one means the live record is not the record that
+   * commit came from, since every install a rejoin is offered carries at least
+   * the committed revision and every sanctioned mutator only increments. Writing
+   * it would also walk the client-facing wire counter backwards permanently,
+   * which is the exact harm the loader's own wire_rev_shape hold exists to
+   * prevent on the read side. So the probe arms and the seal refuses.
    */
   const noteRevisionMoved = (entry: FreeholdPersistEntry): boolean => {
     if (blocked(entry)) return false;
@@ -1024,15 +1045,32 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       entry.loaded = true;
       entry.hold = null;
       entry.plotIndex = FREEHOLD_PRIMARY_PLOT_INDEX;
-      // MINT ONCE, and unreachable defence rather than a live guard: classify
-      // runs at most once per entry (beginLoad is single-flight per account and
-      // every later preload replays a loaded entry), so nothing today can reach
-      // this line twice for one entry. A mutation pass confirms it: minting
-      // unconditionally leaves the suite green. It stays because the alternative
-      // failure is a second identity on a row that already has one, and it is
-      // named here so a later reader does not delete it as dead weight or write
-      // a test around a state the store cannot produce.
-      if (entry.plotId === '') entry.plotId = ports.mintPlotId();
+      // MINT ONCE PER ENTRY, and unreachable defence rather than a live guard:
+      // classify runs at most once per entry (beginLoad is single-flight per
+      // account and every later preload replays a loaded entry), so nothing
+      // today can reach this line twice for one entry. A mutation pass
+      // confirms it: minting unconditionally leaves the suite green. It stays
+      // because the alternative failure is a second identity on a row that
+      // already has one, and it is named here so a later reader does not delete
+      // it as dead weight or write a test around a state the store cannot
+      // produce.
+      //
+      // PER ENTRY IS NOT PER OWNER, which is why the live record is consulted
+      // first. An entry the orphan sweep collects between a preload and its
+      // retain is recreated empty by `retain`, and its repair reload lands here
+      // again with a row that is still absent; minting there gives the ROW a
+      // second identity while the record installed from the first one keeps
+      // answering to the first, for the life of that session. The record's
+      // identity is the one every consumer already sees and the one the wire
+      // echoes back, so the row adopts it. The stand-in is not an identity, and
+      // an identity the wire would refuse is not one either.
+      if (entry.plotId === '') {
+        const live = ports.livePlotId(ownerKey);
+        entry.plotId =
+          live !== null && live !== PENDING_FREEHOLD_PLOT_ID && freeholdPlotIdAdmitted(live)
+            ? live
+            : ports.mintPlotId();
+      }
       entry.durableRev = null;
       entry.state = null;
       return {
@@ -2202,6 +2240,46 @@ export function installLoadedFreehold(
   // them means one malformed field costs the owner both.
   if (typeof loaded.hearthReadyAtMs === 'number') {
     mergeFreeholdKeyReadyAt(ctx, ownerKey, loaded.hearthReadyAtMs);
+  }
+  // THE ABSENT ARM: no hold, no state, no durable row. The sim's default record
+  // IS the truth for this account, but the store has already MINTED the identity
+  // the row it is about to insert will carry, and nothing else ever teaches a
+  // live record its own name. Installing a default that carries it here, through
+  // the same load-once path a row install uses, is what makes the record and the
+  // row answer to one identity from the FIRST session rather than from the
+  // second.
+  //
+  // WHAT IT CLOSES. The write seal's name comparison was INERT for an entry that
+  // minted its own row: `applyWriteResult` caches the identity the live record
+  // carried, that identity was the stand-in, and a freshly seeded default
+  // carries the same literal, so the two were equal by value and the comparison
+  // could not fire. The two continuity arms were then the whole seal and both
+  // are revision-shaped, so a reseeded default whose revision had caught up
+  // satisfied neither and an empty tier-0 Inn Room was compare-and-swapped over
+  // a real house with plot_id untouched and no counter moving. That was the
+  // EIGHTH distinct path to violating this subsystem's one invariant. It also
+  // closes the mirror of it, where the same account's entry re-read the row it
+  // had just inserted and the two names then differed for the opposite reason.
+  //
+  // ON THE ABSENT ARM ONLY, and that is the whole difference between the safe
+  // form and the unsafe one. Stamping the minted identity onto whatever record
+  // is already live bypasses load-once and rewrites a freshly SEEDED default's
+  // identity to the minted name, which kills the name comparison and, through
+  // the stand-in test, both continuity arms with it: a new path to the same
+  // loss. loadFreehold is load-once and honors the dark-realm flag, so a record
+  // that already exists is returned untouched and a dark realm installs nothing;
+  // addPlayer's ensureFreeholdRecord then finds this record and leaves it alone.
+  //
+  // THE IDENTITY IS CHECKED, because it crosses the same spread bag every other
+  // field here does and because an identity the wire refuses would make every
+  // later build-presence frame fail at the type boundary with no diagnostic.
+  // An unchecked one is simply not installed, and the account falls back to the
+  // stand-in exactly as it did before this arm existed.
+  if (loaded.hold === null && loaded.state === null && loaded.durableRev === null) {
+    if (freeholdPlotIdAdmitted(loaded.plotId)) {
+      loadFreehold(ctx, ownerKey, defaultFreeholdState(ownerKey, asFreeholdPlotId(loaded.plotId)));
+    }
+    return;
   }
   if (loaded.hold !== null || loaded.state === null) return;
   if (typeof loaded.state !== 'object') {
