@@ -11,6 +11,12 @@ prompt controller, and Freehold event feedback.
   furnishing definition; a maker comes only from the individual copy's signer.
 - `furnishing_tooltip.ts` formats numbers through `formatNumber` and renders
   translated lines through the escaping `tooltipLine` family.
+- `hearth_key_tooltip.ts` composes the Hearth Key's own lines the same way, and
+  `freehold_event_feedback.ts` maps a refusal reason to its catalog line. Both
+  are BARE-NAMED pure cores, so the `_view.ts` and `_core.ts` sweep in
+  `tests/architecture.test.ts` cannot find them: they are registered by hand in
+  `UI_PURE_CORES` and in the `EXPECTED_BARE_NAMED` pin, and a new bare-named
+  core here owes the same two rows or it gets no purity enforcement at all.
 - `Hud.itemTooltip` routes furnishing cards through `furnishingItemTooltip` in
   the barrel. The composer retains identity, authored quality, placement, maker,
   lock, soulbound, party-trade deadline and vendor-value facts. It never composes

@@ -531,11 +531,28 @@ describe('ensureSchema wires every schema module at boot', () => {
       (c) => c.includes('.account_freeholds (') || c.includes('.account_freehold_hearth ('),
     );
     expect(housing).toHaveLength(2);
-    for (const ddl of housing) {
+    for (const raw of housing) {
+      // SQL COMMENTS STRIPPED FIRST. The plot fragment's own comment names the
+      // explicit `ALTER TABLE ... DROP CONSTRAINT` a wire-widening release would
+      // owe, and a denylist that reads prose is gameable in both directions: it
+      // reds on a comment and it goes green on a statement hidden behind one.
+      const ddl = raw.replace(/--[^\n]*/g, '');
+      // A DENYLIST ALONE IS NOT THE CHECK. The filter above matches the CREATE
+      // TABLE line whether or not it carries IF NOT EXISTS, so dropping that
+      // guard left this block green while the SECOND boot of every realm raised
+      // 42P07 inside the advisory-lock transaction and refused to start. The
+      // positive assertion is what closes that.
+      expect(ddl).toMatch(/CREATE TABLE IF NOT EXISTS/);
       expect(ddl).not.toMatch(/\b(?:DROP TABLE|TRUNCATE|ALTER COLUMN)\b/i);
+      expect(ddl).not.toMatch(/\bDROP (?:COLUMN|INDEX|CONSTRAINT)\b/i);
+      expect(ddl).not.toMatch(/\b(?:DELETE FROM|UPDATE)\b/i);
       expect(ddl).not.toMatch(/ADD COLUMN (?!IF NOT EXISTS)/i);
       expect(ddl).not.toMatch(/CREATE (?:UNIQUE )?INDEX (?!CONCURRENTLY )?(?!IF NOT EXISTS)/i);
     }
+    // ...and the stripper is not the escape: the comments really do carry the
+    // words the denylist looks for, so a fragment that stopped stripping would
+    // red rather than pass.
+    expect(housing.join(' ')).toMatch(/--[^\n]*DROP CONSTRAINT/);
     // The stable identities the whole feature keys on, pinned as literals so a
     // rename is a deliberate, visible edit rather than a silent data loss.
     const plot = housing.find((c) => c.includes('.account_freeholds (')) as string;

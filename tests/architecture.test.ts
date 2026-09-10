@@ -568,6 +568,10 @@ const UI_PURE_CORES = [
   'src/ui/hud/professions/gathering_source_view.ts',
   'src/ui/gather_rare_event_feedback.ts',
   'src/ui/gather_tool_tooltip.ts',
+  // The housing pair, bare-named like their tooltip siblings above and so
+  // invisible to the `_view.ts`/`_core.ts` sweep that finds the rest.
+  'src/ui/hud/housing/freehold_event_feedback.ts',
+  'src/ui/hud/housing/hearth_key_tooltip.ts',
   'src/ui/tool_effect_tooltip.ts',
   'src/ui/hud/professions/mobile_station_tooltip.ts',
   // The one line builder those three and recipe_pattern_tooltip_view share
@@ -940,6 +944,8 @@ const BARE_NAMED = [
   'src/ui/gather_rare_event_feedback.ts',
   'src/ui/hud/professions/wellfed_stat_keys.ts',
   'src/ui/gather_tool_tooltip.ts',
+  'src/ui/hud/housing/freehold_event_feedback.ts',
+  'src/ui/hud/housing/hearth_key_tooltip.ts',
   'src/ui/tool_effect_tooltip.ts',
   'src/ui/hud/professions/mobile_station_tooltip.ts',
   'src/ui/known_item.ts',
@@ -2026,6 +2032,8 @@ const EXPECTED_BARE_NAMED = [
   'src/ui/hud/aura_tracks/aura_track_catalog.ts',
   'src/ui/hud/aura_tracks/aura_track_descriptors.ts',
   'src/ui/hud/delve/delve_map.ts',
+  'src/ui/hud/housing/freehold_event_feedback.ts',
+  'src/ui/hud/housing/hearth_key_tooltip.ts',
   'src/ui/hud/professions/learned_profession_name.ts',
   'src/ui/hud/professions/mobile_station_tooltip.ts',
   'src/ui/hud/professions/profession_log_tones.ts',

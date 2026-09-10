@@ -786,18 +786,55 @@ describe('the measured byte ceiling, proved by the maximal and one-over records'
     // content itself can use, and the row ceilings bound how much jsonb can add
     // in separators, so the worst admissible record is computable rather than
     // searched for.
-    const wrapperBytes = JSON.stringify({
-      ...loadedState(norm(maximalLegalRecord(), maximalOpts)),
-      layout: [],
-      trophies: [],
-    }).length;
-    expect(wrapperBytes).toBeGreaterThan(0);
+    // THE MINIMAL WRAPPER, not the maximal fixture's. Computing it from the
+    // maximal record (a 64-character plot id and tier, a 32-character policy, a
+    // three-digit condition and a sixteen-digit revision) makes the wrapper 277
+    // bytes and proves a 231-byte margin; the real worst case is the SHORTEST
+    // admissible wrapper, 101 bytes, and a 55-byte margin. The difference is not
+    // academic: one optional seventh field on a layout row renders two more
+    // separators per row, 840 bytes at the row ceiling, which clears 231 but not
+    // 55, and the maximal fixture would still validate so nothing else would go
+    // red. A record at the canonical ceiling would then store past the stored
+    // one, the account read would answer oversize, and the owner would be
+    // write-blocked on a row this realm itself wrote.
+    const minimalWrapper = {
+      version: 1,
+      // One character each: the shortest identity the loader admits (the empty
+      // id is admitted too, but a one-character id is the shortest a minted or
+      // authored one can be, and the arithmetic wants the smaller of the two).
+      plotId: 'a',
+      tier: 'a',
+      layout: [] as unknown[],
+      trophies: [] as unknown[],
+      condition: 0,
+      visitPolicy: 'a',
+      rev: 0,
+    };
+    const wrapperBytes = JSON.stringify(minimalWrapper).length;
+    expect(wrapperBytes).toBeLessThan(
+      JSON.stringify({
+        ...loadedState(norm(maximalLegalRecord(), maximalOpts)),
+        layout: [],
+        trophies: [],
+      }).length,
+    );
     const maxContentJson = FREEHOLD_MAX_OWNED_BYTES - wrapperBytes;
+    // DERIVED FROM THE FIELD SETS, not two hand-copied numbers. jsonb re-renders
+    // one space after each colon and each comma, so a row costs its own field
+    // count in colons plus that count minus one in commas, and each array adds
+    // one comma per gap. A seventh layout field moves this on its own.
+    const layoutFields = 6;
+    const trophyFields = 2;
+    const separatorsPerRow = (fields: number): number => fields + (fields - 1);
     const maxSeparators =
-      FREEHOLD_MAX_LAYOUT_ROWS * 11 +
+      FREEHOLD_MAX_LAYOUT_ROWS * separatorsPerRow(layoutFields) +
       (FREEHOLD_MAX_LAYOUT_ROWS - 1) +
-      FREEHOLD_MAX_TROPHY_ROWS * 3 +
+      FREEHOLD_MAX_TROPHY_ROWS * separatorsPerRow(trophyFields) +
       (FREEHOLD_MAX_TROPHY_ROWS - 1);
+    // The field counts are the SHAPE's, read off a real row rather than asserted.
+    const sampleRow = loadedState(norm(maximalLegalRecord(), maximalOpts));
+    expect(Object.keys(sampleRow.layout[0]).length).toBe(layoutFields);
+    expect(Object.keys(sampleRow.trophies[0]).length).toBe(trophyFields);
     // No record the canonical ceiling admits can render past the stored one.
     expect(maxContentJson + maxSeparators).toBeLessThanOrEqual(FREEHOLD_MAX_STORED_BYTES);
   });

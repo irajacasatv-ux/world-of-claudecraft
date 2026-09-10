@@ -490,7 +490,24 @@ describe('every durable field write bumps the record revision', () => {
   // Cheap to pin here, expensive to discover from a player's missing
   // furnishings, which is why it is pinned before the furnishing writer lands
   // rather than after.
-  const DURABLE_FIELDS = ['layout', 'trophies', 'tier', 'condition', 'visitPolicy'] as const;
+  // EVERY field a durable row carries, plotId included: the named next change to
+  // this directory is a plotId write (teaching a live record its minted identity
+  // at install), and a scan that cannot see it would let that writer land
+  // without forcing the decision about whether an identity adoption bumps the
+  // revision.
+  const DURABLE_FIELDS = [
+    'layout',
+    'trophies',
+    'tier',
+    'condition',
+    'visitPolicy',
+    'plotId',
+  ] as const;
+  // The fields of a durable ROW, reached through `layout` or `trophies`. A
+  // mutator that moves one furnishing writes none of the names above: it edits a
+  // row already inside the array. `moveFurnishing` is reserved in commands.ts
+  // and that is exactly its shape.
+  const DURABLE_ROW_FIELDS = ['x', 'y', 'z', 'yaw', 'itemId', 'placementId', 'plinth', 'trophyId'];
 
   /**
    * Exported function bodies across the WHOLE directory, comments stripped,
@@ -510,22 +527,32 @@ describe('every durable field write bumps the record revision', () => {
       .filter((name) => name.endsWith('.ts'))
       .sort()) {
       const src = stripComments(readFileSync(join(dir, file), 'utf8'));
-      const starts = [...src.matchAll(/^export function (\w+)\(/gm)];
+      // EVERY exported callable shape, not `export function` alone: an
+      // `export const f = () => {}` or an `export async function` mutator was
+      // invisible to this walk entirely.
+      const starts = [...src.matchAll(/^export (?:async function|function|const) (\w+)\s*[(=]/gm)];
       for (let i = 0; i < starts.length; i++) {
         const from = starts[i].index ?? 0;
         const to = i + 1 < starts.length ? (starts[i + 1].index ?? src.length) : src.length;
         bodies.set(`${file}:${starts[i][1]}`, src.slice(from, to));
       }
+      // The file's HEAD, everything above its first export, so a module-private
+      // helper declared before them is not in no body at all. persisted.ts's
+      // first export is four hundred lines in.
+      const head = starts.length > 0 ? src.slice(0, starts[0].index ?? 0) : src;
+      if (head.trim().length > 0) bodies.set(`${file}:<module head>`, head);
     }
     return bodies;
   }
 
-  /** The bodies keyed by bare name, for the cases that name one function. */
+  /** The bodies keyed by bare name, for the cases that name one function. KEYED
+   *  BY `file:name`, because a suffix match returns the FIRST file that exports
+   *  the name and two files exporting one name would silently collapse onto
+   *  whichever sorts first. */
   function bodyOf(name: string): string {
-    for (const [key, body] of exportedBodies()) {
-      if (key.endsWith(`:${name}`)) return body;
-    }
-    return '';
+    const exact = [...exportedBodies()].filter(([key]) => key.endsWith(`:${name}`));
+    expect(exact.length, `exactly one export named ${name}`).toBe(1);
+    return exact[0][1];
   }
 
   it('finds the exported functions it means to check', () => {
@@ -541,6 +568,9 @@ describe('every durable field write bumps the record revision', () => {
     expect(bodies.has('state.ts:setFreeholdTier')).toBe(true);
     expect(bodies.has('commands.ts:placeFurnishing')).toBe(true);
     expect(bodyOf('setFreeholdTier')).toContain('state.tier = tier');
+    // The walk really does reach an arrow export and a module head, so the two
+    // widenings above are not decoration.
+    expect(bodies.has('persisted.ts:<module head>')).toBe(true);
   });
 
   it('bumps rev in the same function as any durable field write', () => {
@@ -553,15 +583,48 @@ describe('every durable field write bumps the record revision', () => {
       'persisted.ts:freeholdStateFromPersisted',
       'persisted.ts:persistedFreeholdFromState',
     ]);
+    // AND THE EXEMPTION IS PINNED, not asserted. Each of the three builds a
+    // record from nothing or from a durable document, so the revision arrives
+    // WITH the document rather than being advanced past it. A body that stopped
+    // being a constructor and stayed on this list would carry the exemption with
+    // it, so each one has to still return a freshly built record.
+    for (const name of CONSTRUCTORS) {
+      const body = exportedBodies().get(name) ?? '';
+      expect(body, `${name} is on the constructor exemption list`).not.toBe('');
+      expect(body, `${name} builds a record rather than mutating one`).toMatch(/return\s*\{/);
+      expect(body, `${name} takes no live record from the context`).not.toContain(
+        'ctx.freeholds.get(',
+      );
+    }
     for (const [name, body] of exportedBodies()) {
       if (CONSTRUCTORS.has(name)) continue;
-      const writesDurable = DURABLE_FIELDS.some((field) =>
-        new RegExp(`\\.${field}\\s*(=[^=]|\\.push\\(|\\.splice\\(|\\.pop\\(|\\.shift\\()`).test(
-          body,
-        ),
-      );
+      // THE ASSIGNMENT TARGET, not the field name alone. The old detector
+      // matched `.layout =` and four array methods on the field itself, so nine
+      // realistic mutator shapes wrote a durable field and read as clean: an
+      // in-place row edit, an indexed write, a compound assignment, unshift,
+      // sort, reverse, fill, a length truncation and Object.assign onto the
+      // record. `moveFurnishing`, reserved in commands.ts, is the first of those
+      // and the seal's third arm rests on this coupling.
+      const arrayMutators = String.raw`\.(?:push|splice|pop|shift|unshift|sort|reverse|fill|copyWithin)\(`;
+      const writesDurable =
+        DURABLE_FIELDS.some((field) =>
+          new RegExp(
+            String.raw`\.${field}\s*(?:=[^=]|[-+*/]=|${arrayMutators}|\[[^\]]*\]\s*=[^=])`,
+          ).test(body),
+        ) ||
+        // A row reached THROUGH one of the two arrays, then written.
+        (/\.(?:layout|trophies)\b/.test(body) &&
+          DURABLE_ROW_FIELDS.some((field) =>
+            new RegExp(String.raw`\.${field}\s*(?:=[^=]|[-+*/]=)`).test(body),
+          )) ||
+        /Object\.assign\(\s*(?:state|record|live|plot)\b/.test(body);
       if (!writesDurable) continue;
-      expect(body, `${name} writes a durable field`).toMatch(/\brev\s*(\+= 1|\+\+|= )/);
+      // AN ADVANCE, not any assignment. `= ` alone was satisfied by
+      // `const rev = state.rev`, by `state.rev = 0` and by any local named rev,
+      // so a mutator that RESET the revision passed the coupling pin.
+      expect(body, `${name} writes a durable field`).toMatch(
+        /\.rev\s*(?:\+\+|\+= 1|= [^=;]*\.rev\s*\+)/,
+      );
     }
   });
 
@@ -569,6 +632,49 @@ describe('every durable field write bumps the record revision', () => {
     const body = bodyOf('setFreeholdTier');
     expect(body).toMatch(/\.tier\s*=[^=]/);
     expect(body).toContain('state.rev += 1');
+  });
+
+  it('catches the shapes the next writer will use, and refuses a reset', () => {
+    // The detector and the bump matcher, exercised against planted bodies rather
+    // than trusted. Every DETECTED shape below wrote a durable field and read as
+    // CLEAN under the old predicate, and the two REFUSED bumps below satisfied
+    // the old `= ` matcher.
+    const arrayMutators = String.raw`\.(?:push|splice|pop|shift|unshift|sort|reverse|fill|copyWithin)\(`;
+    const detects = (body: string): boolean =>
+      DURABLE_FIELDS.some((field) =>
+        new RegExp(
+          String.raw`\.${field}\s*(?:=[^=]|[-+*/]=|${arrayMutators}|\[[^\]]*\]\s*=[^=])`,
+        ).test(body),
+      ) ||
+      (/\.(?:layout|trophies)\b/.test(body) &&
+        DURABLE_ROW_FIELDS.some((field) =>
+          new RegExp(String.raw`\.${field}\s*(?:=[^=]|[-+*/]=)`).test(body),
+        )) ||
+      /Object\.assign\(\s*(?:state|record|live|plot)\b/.test(body);
+    const advances = (body: string): boolean =>
+      /\.rev\s*(?:\+\+|\+= 1|= [^=;]*\.rev\s*\+)/.test(body);
+
+    for (const body of [
+      'const row = state.layout.find((r) => r.placementId === id); row.x = x; row.yaw = yaw;',
+      'state.layout[i] = next;',
+      'state.condition -= wear;',
+      'state.layout.unshift(row);',
+      'state.layout.sort((a, b) => a.placementId - b.placementId);',
+      'state.trophies[0].trophyId = trophyId;',
+      'Object.assign(state, { tier: next });',
+      'state.plotId = minted;',
+    ]) {
+      expect(detects(body), `should detect: ${body}`).toBe(true);
+    }
+    // A body that touches nothing durable is not dragged in.
+    expect(detects('const n = state.layout.length; return n;')).toBe(false);
+    // The bump has to ADVANCE the record's own revision.
+    expect(advances('state.rev += 1')).toBe(true);
+    expect(advances('state.rev++')).toBe(true);
+    expect(advances('live.rev = state.rev + 1')).toBe(true);
+    expect(advances('const rev = state.rev;')).toBe(false);
+    expect(advances('state.rev = 0;')).toBe(false);
+    expect(advances('state.rev = other.rev;')).toBe(false);
   });
 });
 

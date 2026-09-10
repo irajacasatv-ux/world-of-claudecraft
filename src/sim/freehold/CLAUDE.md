@@ -284,13 +284,23 @@ carries an opaque plot id only.
   sim package at all. Runtime consumers use the barrel, including `sim.ts`,
   recipe acquisition and profession training/crafting, the Heroic Quartermaster
   and the pure presentation consumers of `isFreeholdCraftAvailable`.
-  ONE STATED EXCEPTION, so it reads as a decision rather than as drift:
-  `server/freehold_persist.ts` imports `persisted.ts`, `hearth_key.ts`,
-  `state.ts` and `FREEHOLD_VISIT_POLICIES` from `./types` BY PATH. It is the
-  server-side durable consumer of leaves whose vocabulary nothing else wants,
-  and `FREEHOLD_VISIT_POLICIES` is deliberately off the barrel for that reason:
-  putting a server-facing durable vocabulary on the surface every UI and sim
-  caller reads, for one consumer, is the cost the rule above exists to avoid.
+  TWO STATED EXCEPTIONS, so they read as decisions rather than as drift.
+  FIRST, `server/freehold_persist.ts` imports `persisted.ts`, `hearth_key.ts`,
+  `state.ts`, `load_report.ts` and `FREEHOLD_VISIT_POLICIES` from `./types` BY
+  PATH. It is the server-side durable consumer of leaves whose vocabulary
+  nothing else wants, and `FREEHOLD_VISIT_POLICIES` is deliberately off the
+  barrel for that reason: putting a server-facing durable vocabulary on the
+  surface every UI and sim caller reads, for one consumer, is the cost the rule
+  above exists to avoid. `server/freehold_wire.ts` reaches `gate_rules.ts` the
+  same way, for the one item id its dark-realm and jail gates key on, which the
+  sim dispatches on by use type rather than by id.
+  SECOND, four CLIENT modules import `gate_rules.ts` by path for its value
+  constants: `src/ui/hud/housing/gate_prompt_controller.ts`,
+  `src/ui/hud/housing/hearth_key_tooltip.ts`, `src/game/nearby_interaction.ts`
+  and `src/game/interactions.ts`. Routing those through the barrel would pull
+  `commands.ts`, `instance.ts` and `persisted.ts` into the client bundle for a
+  handful of numbers, so `gate_rules.ts` is licensed here as a client-safe
+  leaf.
 - Design: `docs/prd/woc/freeholds-and-guildhalls-research.md` (the research
   and the decision record it cites).
 - Cover changes in `tests/freehold_module.test.ts` (the dark-host pins: null
