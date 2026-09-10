@@ -67,13 +67,15 @@ export const FREEHOLD_LOAD_FAILURE_KINDS = [
  *  every time and re-reading it spends a permit and a statement on a login path
  *  for nothing. THE ORDERING CAUSE (`unnamed_record`) is terminal for its own
  *  reason: nothing inside one session can rename a load-once record. */
-const FREEHOLD_TERMINAL_HOLD_KINDS: ReadonlySet<string> = new Set([
-  'unadmitted',
-  'unsupported',
-  'malformed',
-  'oversize',
-  'unnamed_record',
-]);
+/** TYPED TO THE LIST, not to `string`. The subtraction below is real derivation
+ *  either way, but with a bare string set the guarantee rested on one assertion
+ *  in the suite: a typo here compiled clean and silently moved a DATA cause into
+ *  the repairable group, which is re-reading an unreadable row on every login
+ *  forever, the regression ruling 2 exists to prevent arrived at from the other
+ *  side. The default direction of a missing entry is still the permissive one,
+ *  which is why the set's exact membership is also pinned. */
+const FREEHOLD_TERMINAL_HOLD_KINDS: ReadonlySet<(typeof FREEHOLD_LOAD_FAILURE_KINDS)[number]> =
+  new Set(['unadmitted', 'unsupported', 'malformed', 'oversize', 'unnamed_record']);
 export const FREEHOLD_RETRYABLE_HOLD_KINDS: ReadonlySet<string> = new Set(
   FREEHOLD_LOAD_FAILURE_KINDS.filter((kind) => !FREEHOLD_TERMINAL_HOLD_KINDS.has(kind)),
 );
@@ -185,5 +187,45 @@ export function freeholdSnapshotOf(
     hearthReadyAtMs: entry.hearthReadyAtMs,
     hearthRevision: entry.hearthRevision,
     hold: entry.hold,
+  };
+}
+
+/** True when this kind's hold is TERMINAL for the entry, which is also what
+ *  decides whether the entry stays `loaded`.
+ *
+ *  `entry.loaded` is what preload's replay arms and retain's lost-entry repair
+ *  consult, so setting it for every kind meant an account refused by a CAPACITY
+ *  blip replayed that refusal for the life of the entry: measured with the
+ *  shared gate saturated, eight of eight logins at one join per second were
+ *  refused and a lone re-join for a refused account still replayed the hold, so
+ *  a momentary stall became a session-long housing outage. The four fixture
+ *  classes in the rollout contract sanction a terminal hold for a DATA cause,
+ *  where a repeat read cannot change the answer, and none of them sanctions one
+ *  for a capacity cause.
+ *
+ *  A REPAIRABLE ENTRY STAYS WRITE-BLOCKED WHILE UNREPAIRED, which is the caveat
+ *  that makes this safe: the store's `blocked()` is `!loaded || isHeld`, so an
+ *  entry with no `loaded` and a hold is blocked by BOTH halves, and nothing
+ *  writes for it until a later read actually succeeds and clears the hold. */
+export const freeholdHoldIsTerminal = (kind: FreeholdRecoveryHold['kind']): boolean =>
+  !FREEHOLD_RETRYABLE_HOLD_KINDS.has(kind);
+
+/** The answer a held load returns. No state and no durable revision, ever: a
+ *  hold means install nothing and write nothing, so the caller keeps whatever
+ *  the sim seeds and the row on disk is left exactly as it was. */
+export function freeholdHoldAnswer(
+  entry: { readonly accountId: number; readonly plotId: string },
+  hold: FreeholdRecoveryHold,
+  hearth: { readonly readyAtMs: number; readonly revision: string },
+): LoadedFreehold {
+  return {
+    accountId: entry.accountId,
+    plotIndex: hold.plotIndex,
+    plotId: entry.plotId,
+    durableRev: null,
+    state: null,
+    hearthReadyAtMs: hearth.readyAtMs,
+    hearthRevision: hearth.revision,
+    hold,
   };
 }

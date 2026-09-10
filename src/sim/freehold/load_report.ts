@@ -84,8 +84,12 @@ const KNOWN_DETAILS: readonly RegExp[] = [
   // reaches the warn port without passing through this reporter like the four
   // above it.
   /^no durable answer within \d{1,10} ms$/,
-  // The ordering refusal on classify's absent arm, same route, fixed prose.
+  // BOTH ordering refusals on classify's absent arm, same route, fixed prose.
+  // The second was added a round after the first and left out of this list,
+  // which is the asymmetry that makes a later reader wrapping that arm for
+  // consistency lose the diagnostic to `unclassified` with nothing failing.
   /^the live record was seeded before this load landed$/,
+  /^the login that asked for this load had already given up on it$/,
   /^repaired:(?:condition|rev|version)(?:,(?:condition|rev|version)){0,2}$/,
   // A record version, the one number that reaches a detail as text. Narrowed to
   // what the producer can actually emit: normalizeFreehold reports a version

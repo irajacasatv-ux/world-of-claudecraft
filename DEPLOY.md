@@ -805,9 +805,15 @@ For off-box safety, sync the directory to S3 occasionally:
   individual step stayed inside its own bound. ONE is neither: `unnamed_record`
   means the sim already held a record for that owner when the read landed, so
   nothing can teach it the identity a row would be created under, and the store
-  refuses to create one. It is terminal, it is expected in the wake of a burst of
-  capacity refusals, and it means those accounts played a session without a
-  durable row rather than that anything was lost. A host with no store answers
+  refuses to create one. It is terminal and expected in the wake of a burst of
+  capacity refusals. NO DURABLE ROW IS LOST, and that is not the same as nothing
+  being lost, which an earlier version of this line said: there is no row to
+  preserve, so the recovery contract is satisfied, but those accounts furnish for
+  a session and lose it at logout with this counter as the only observer. For an
+  account that has no row yet, a capacity hold at login therefore converts to a
+  terminal one on the next read of that session, so a sustained `unnamed_record`
+  rate behind a capacity burst is a housing outage for new owners, not a quiet
+  tail. A host with no store answers
   the `unadmitted` hold SHAPE but books no counter at all, so it never reaches
   this series. Read the groups differently: a sustained data-kind rate is rows to
   investigate, a sustained capacity-kind rate is a realm to give more headroom.

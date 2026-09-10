@@ -1540,8 +1540,15 @@ const MONOLITHS: MonolithRow[] = [
     // with no store and no ports, and two more LoadedFreehold constructors (the
     // budget refusal and the replay projection) to the load-outcome vocabulary
     // that already owns that shape. Net 15 under the row despite the new guard.
+    // LOWERED ONCE MORE, 2228 -> 2215, by the read of THAT fix, which found the
+    // abandonment recorded against the ACCOUNT while the fact belongs to the
+    // CALLER: `beginLoad` is single-flight, so two characters of one account
+    // ride one read, and a flag write-blocked the whole account whenever only
+    // one of them overran. Paid by a SEVENTH and EIGHTH extraction, the waiter
+    // registry to server/freehold_load_waiters.ts and the hold answer plus its
+    // terminal test to the load-outcome vocabulary.
     file: 'server/freehold_persist.ts',
-    ceiling: 2228,
+    ceiling: 2215,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {

@@ -4132,6 +4132,34 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(h.warnings.some((line) => line.includes('already given up'))).toBe(true);
   });
 
+  it('still names a row when a SIBLING login is still waiting on the same read', async () => {
+    // `beginLoad` is single-flight, so two characters of one account ride ONE
+    // read. The refusal above is a property of the CALLER, not of the read, and
+    // a first version recorded it against the ACCOUNT: an account whose two
+    // characters joined together and whose first login overran was then
+    // write-blocked for its whole session, with the second login's install
+    // standing right there ready to name the record. Zero waiters is the test,
+    // and it is exact rather than conservative because classify runs inside the
+    // load promise, before any surviving waiter's own race has resolved.
+    const gate = deferred<FreeholdRowLoad>();
+    const h = harness({ readRow: async () => await gate.promise });
+    const first = h.store.preload(ACCOUNT_ID);
+    const second = h.store.preload(ACCOUNT_ID);
+    await tick(20);
+    // ONLY the first login's budget fires; the second is still waiting.
+    const armed = h.deadlines.filter(
+      (deadline) => deadline.ms === FREEHOLD_PERSIST_LOGIN_BUDGET_MS && !deadline.cancelled,
+    );
+    expect(armed.length).toBe(2);
+    armed[0]?.fire();
+    expect((await first).hold?.kind).toBe('no_budget');
+
+    gate.resolve({ kind: 'absent' });
+    const answer = await second;
+    expect(answer.hold).toBeNull();
+    expect(answer.plotId).toBe(MINTED_PLOT_ID);
+  });
+
   it('still names a row for a login that WAITED for its own read', async () => {
     // The anti-vacuity arm, and the one that keeps the refusal above from being
     // satisfied by a constant: the ordinary absent-row login mints, because its

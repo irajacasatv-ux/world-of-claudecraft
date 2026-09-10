@@ -43,7 +43,14 @@ export function installLoadedFreehold(
   // The CLOCK FIRST, and unconditionally. It is a separate durable fact from
   // the plot: an account whose plot row is held, or absent entirely, still has
   // a Hearth cooldown, and dropping it because the plot could not be installed
-  // hands that account a free travel on every login. The forward-only merge
+  // hands that account a free travel on every login. AND THAT PROTECTION IS
+  // DEFEATED TODAY BY WHAT THE HOLD PATHS SUPPLY, which is worth saying here
+  // rather than leaving the comment reading as a closed case: every refusal
+  // answers a COLD clock whose ready time is zero, and a forward-only merge of
+  // zero leaves the cooldown reading ready, so the free travel this argues
+  // against is exactly what a repeatedly refused login gets. Harmless while
+  // nothing writes the row; recorded as an activation gate in
+  // docs/freeholds/persistence-rollout-contract.md section 8a. The forward-only merge
   // itself belongs to the sim, which owns the Map.
   // INDEPENDENTLY guarded, because they are independent durable facts: a bag
   // that lost its clock must still install the plot, and vice versa. Coupling

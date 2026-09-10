@@ -771,7 +771,7 @@ export function registerGameStateMetrics(
 
   new Counter({
     name: WOC_FREEHOLD_LOAD_FAILURES_TOTAL,
-    help: 'Housing durable load failures by hold kind. The kind is the operator response: an unreadable row is a data incident that needs the recovery contract, a full admission cap is a login-storm capacity signal, a missing background permit is pool or gate saturation, and a thrown read is a database fault.',
+    help: 'Housing durable load failures by hold kind. The kind is the operator response: an unreadable row is a data incident that needs the recovery contract, a full admission cap is a login-storm capacity signal, a missing background permit is pool or gate saturation, a thrown read is a database fault, no_budget is a login whose whole durable read ran past its cap, and unnamed_record is an ordering refusal that follows a burst of the capacity kinds.',
     labelNames: ['kind'],
     registers: [registry],
     collect() {

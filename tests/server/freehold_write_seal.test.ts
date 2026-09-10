@@ -13,8 +13,11 @@
 
 import { describe, expect, it } from 'vitest';
 import { seedWouldLandOnRealRow } from '../../server/freehold_write_seal';
-import type { PersistedFreehold } from '../../src/sim/freehold/persisted';
-import { PENDING_FREEHOLD_PLOT_ID } from '../../src/sim/freehold/state';
+import {
+  type PersistedFreehold,
+  persistedFreeholdFromState,
+} from '../../src/sim/freehold/persisted';
+import { defaultFreeholdState, PENDING_FREEHOLD_PLOT_ID } from '../../src/sim/freehold/state';
 
 const ROW_PLOT_ID = 'plot:rowfixture91';
 const OTHER_PLOT_ID = 'plot:someoneelse';
@@ -36,16 +39,25 @@ function doc(overrides: Partial<PersistedFreehold> = {}): PersistedFreehold {
 }
 
 /** The pristine seed every account starts from: the free tier-0 Inn Room with
- *  nothing placed, at revision zero, carrying the stand-in identity. */
+ *  nothing placed, at revision zero, carrying the stand-in identity.
+ *
+ *  DERIVED FROM THE SIM'S OWN DEFAULT, never re-typed. The arm this fixture
+ *  drives claims totality over the persisted shape, so a fixture spelling the
+ *  tier, condition, visit policy and revision as literals would keep asserting
+ *  totality over a shape the sim had since moved away from, with every case
+ *  still green. */
 function seed(overrides: Partial<PersistedFreehold> = {}): PersistedFreehold {
+  const real = persistedFreeholdFromState(
+    defaultFreeholdState('account:1', PENDING_FREEHOLD_PLOT_ID),
+  );
   return doc({
-    plotId: PENDING_FREEHOLD_PLOT_ID,
-    tier: 'inn_room',
-    layout: [],
-    trophies: [],
-    condition: 100,
-    visitPolicy: 'closed',
-    rev: 0,
+    plotId: real.plotId,
+    tier: real.tier,
+    layout: real.layout,
+    trophies: real.trophies,
+    condition: real.condition,
+    visitPolicy: real.visitPolicy,
+    rev: real.rev,
     ...overrides,
   });
 }

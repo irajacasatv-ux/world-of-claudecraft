@@ -753,6 +753,19 @@ for the trip and gives an operator a signal instead of a silent lifetime lockout
 Related: `now()` is the TRANSACTION timestamp, so a long entry transaction records
 a cooldown that starts at BEGIN and is short by the transaction's duration.
 
+A REFUSED LOGIN HANDS BACK A COLD HEARTH CLOCK, which is READY, and the merge is
+forward-only so nothing later lowers it. `freeholdBudgetRefusal` answers
+`hearthReadyAtMs` 0 and every other refusal passes `COLD_HEARTH`, whose ready
+time is also 0, so on a database slow enough to overrun the login budget the same
+account is handed a ready Hearth on EVERY login. `server/freehold_install.ts`
+argues the opposite in its own comment, that merging the clock unconditionally is
+what stops a held account getting a free travel per login, and that protection is
+defeated by the value every hold path actually supplies. The in-flight read does
+learn the real clock, but only onto the store entry, after the session has been
+answered. Harmless in this build because nothing writes the row and the key is
+refused anyway; it becomes one free travel per slow login the moment 07a starts
+writing. This is a sharper statement of the gate below rather than a second one.
+
 THE HEARTH READ FAILS OPEN WHILE THE PLOT READ OF THE SAME LOAD FAILS CLOSED.
 `readHearth` catches every error and answers a cold clock, and the merge is
 forward-only, so an owner key the sim does not yet hold starts READY. The trigger
@@ -792,7 +805,7 @@ obligation. It is SCOPED at the rulings round and built separately, because the
 identity fix touches the sim's load path and the surface touches the HUD, and
 merging them makes one reviewable change into two unreviewable halves. THE DESIGN
 IS RECORDED IN `docs/freeholds/held-plot-surface-scope.md`: the exact `t()` keys,
-the render sink each one goes to, and which of the eight load-failure kinds the
+the render sink each one goes to, and which load-failure kinds the
 player is told apart. It is a scope document, not an implementation: no key in it
 exists in the catalog yet.
 

@@ -76,12 +76,14 @@ import {
 } from './freehold_hearth_load';
 import {
   FREEHOLD_ABSENT_DURABLE_REV,
-  FREEHOLD_RETRYABLE_HOLD_KINDS,
   type FreeholdRecoveryHold,
   freeholdBudgetRefusal,
+  freeholdHoldAnswer,
+  freeholdHoldIsTerminal,
   type LoadedFreehold,
   freeholdSnapshotOf as snapshotOf,
 } from './freehold_load_outcome';
+import { createFreeholdLoadWaiters } from './freehold_load_waiters';
 import { freeholdRevisionMoved } from './freehold_revision_probe';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
 import { seedWouldLandOnRealRow } from './freehold_write_seal';
@@ -606,14 +608,10 @@ function boundedDatabaseError(err: unknown): Record<string, unknown> {
 export function createFreeholdPersistStore(ports: FreeholdPersistPorts): FreeholdPersistStore {
   const entries = new Map<string, FreeholdPersistEntry>();
   const inFlightLoads = new Map<number, Promise<LoadedFreehold>>();
-  /** Accounts whose LOGIN gave up on the read that is still running for them.
-   *  The whole-preload cap answers `no_budget` and deliberately leaves the read
-   *  in flight to fill the entry, but the answer that read produces reaches NO
-   *  install: `installLoadedFreehold` already returned early on the budget hold.
-   *  classify's absent arm needs that fact, and nothing else in the store can
-   *  tell an abandoned load from an ordinary one. Keyed by account and cleared
-   *  when the load settles, so it can never outlive the read it describes. */
-  const abandonedLoads = new Set<number>();
+  /** Which logins are still waiting on an account's single-flight read, in
+   *  server/freehold_load_waiters.ts with the whole reason attached. classify's
+   *  absent arm asks it whether any install is left to consume its answer. */
+  const loadWaiters = createFreeholdLoadWaiters();
   /** Owners that wanted a write while the local write cap was full. They stay
    *  DIRTY, so nothing is lost: they are launched as slots free, and by the
    *  next sweep if the process is still up. Insertion-ordered, so the owner
@@ -890,45 +888,21 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     hold: FreeholdRecoveryHold,
     hearth: { readyAtMs: number; revision: string },
   ): LoadedFreehold {
-    // LOADED ONLY FOR A DATA CAUSE, which is what makes a hold TERMINAL.
-    // `entry.loaded` is what preload's replay arms and retain's lost-entry
-    // repair consult, so setting it for every kind meant an account refused by
-    // a CAPACITY blip replayed that refusal for the life of the entry: measured
-    // with the shared gate saturated, eight of eight logins at one join per
-    // second were refused and a lone re-join for a refused account still
-    // replayed the hold, so a momentary stall became a session-long housing
-    // outage. The four fixture classes in the rollout contract sanction a
-    // terminal hold for a DATA cause, where a repeat read cannot change the
-    // answer, and none of them sanctions one for a capacity cause.
-    //
-    // IT STAYS WRITE-BLOCKED WHILE UNREPAIRED, which is the caveat that makes
-    // this safe: `blocked()` is `!loaded || isHeld`, so an entry with no
-    // `loaded` and a hold is blocked by BOTH halves, and nothing writes for it
-    // until a later read actually succeeds and clears the hold.
-    entry.loaded = !FREEHOLD_RETRYABLE_HOLD_KINDS.has(hold.kind);
+    // WHICH KINDS LEAVE THE ENTRY LOADED, and why a hold is terminal for some
+    // causes and repairable for others, is in server/freehold_load_outcome.ts
+    // beside the sets it decides from. What stays here is the entry the store
+    // owns, its counters and the operator line.
+    entry.loaded = freeholdHoldIsTerminal(hold.kind);
     entry.hold = hold;
     entry.plotIndex = hold.plotIndex;
     counters.loadFailures++;
-    // Per KIND, because the causes demand different operator responses:
-    // unreadable rows and a stranded plot slot are data incidents, a full
-    // admission cap is a login-storm capacity signal, a missing permit is pool
-    // saturation, and a thrown read is a database fault. They were one label
-    // once; the metric's own help text promised the discrimination the label
-    // could not give.
+    // Per KIND, because the causes demand different operator responses; the
+    // vocabulary module carries the full split.
     counters.loadFailuresByKind[hold.kind] = (counters.loadFailuresByKind[hold.kind] ?? 0) + 1;
     ports.warn(
       `freehold plot index ${hold.plotIndex} held (${hold.kind}): ${hold.detail}; the durable row is left untouched`,
     );
-    return {
-      accountId: entry.accountId,
-      plotIndex: hold.plotIndex,
-      plotId: entry.plotId,
-      durableRev: null,
-      state: null,
-      hearthReadyAtMs: hearth.readyAtMs,
-      hearthRevision: hearth.revision,
-      hold,
-    };
+    return freeholdHoldAnswer(entry, hold, hearth);
   }
 
   /** Normalize one hearth answer, or the absence of one. Total: a clock this
@@ -1023,7 +997,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     const { rowLoad, hearth } = await readLoginPair(accountId);
     // SAMPLED HERE, after the read and before anything is decided: this is the
     // instant the answer's fate is fixed. See the absent arm below.
-    const abandoned = abandonedLoads.has(accountId);
+    const abandoned = loadWaiters.abandoned(accountId);
     const entry = ensureEntry(ownerKey, accountId);
     // Remembered on the entry, not only returned: every later replay of this
     // entry has to answer with the same clock, and none of them reads again.
@@ -1069,10 +1043,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // re-read, and the whole-preload cap's in-flight read landing behind its
       // refusal), so it is refused HERE, once, rather than guarded in each.
       //
-      // TERMINAL for this entry, because nothing in the session can change it,
-      // and harmless: there is no row, so nothing is preserved or lost by
-      // refusing. The NEXT login builds a fresh entry whose install runs before
-      // the seed, and it is named from the start.
+      // TERMINAL for this entry, because nothing in the session can change it.
+      // NO DURABLE ROW IS LOST, which is not the same as costing nothing and was
+      // stated as if it were: there is no row to preserve, so the invariant is
+      // safe, but this session's edits are discarded at logout exactly as any
+      // other hold's are, with a counter as the only observer. That is the trade
+      // ruling 2's repairability is spent on for an account with no row, and it
+      // is the population C23's player-facing surface exists for. The NEXT login
+      // builds a fresh entry whose install runs before the seed, and it is named
+      // from the start.
       //
       // AND THE SAME REFUSAL WHEN THERE IS NO RECORD YET BUT NOBODY IS LEFT TO
       // INSTALL ONE. The test above reads the LIVE RECORD, so it only fires once
@@ -1381,6 +1360,19 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    * that catch after retain had already taken a reference nothing then releases.
    */
   async function preload(accountId: number): Promise<LoadedFreehold> {
+    // REGISTERED FIRST AND RELEASED ON EVERY EXIT, including the uncapped
+    // fallback and any throw: this is the login classify asks about, and a
+    // count that leaked would refuse nothing while a count that never
+    // decremented would refuse everything.
+    loadWaiters.arrived(accountId);
+    try {
+      return await preloadCapped(accountId);
+    } finally {
+      loadWaiters.left(accountId);
+    }
+  }
+
+  async function preloadCapped(accountId: number): Promise<LoadedFreehold> {
     let expired!: () => void;
     const overrun = new Promise<'no-budget'>((resolve) => {
       expired = () => resolve('no-budget');
@@ -1404,13 +1396,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const answer = await Promise.race([load, overrun]);
       if (answer === 'no-budget') {
         void load.catch(() => undefined);
-        // THE READ OUTLIVES ITS CALLER, and classify has to know. Marked only
-        // on the arm that gives up, and only while that read is still running:
-        // `beginLoad` clears it when the load settles, so it can never describe
-        // a later load. Safe against the interleaving where both settle
-        // together, because a load that has already answered has already run
-        // classify, and `Promise.race` then answers with it rather than here.
-        abandonedLoads.add(accountId);
+        // THE READ OUTLIVES THIS CALLER. Nothing is marked here: returning is
+        // what tells classify, because the `finally` above drops this login's
+        // waiter and classify refuses only when the LAST one has gone. A flag
+        // set here instead write-blocked an account for its whole session
+        // whenever a sibling character joined on the same read and did not
+        // overrun, with that sibling's install standing right there.
         return budgetRefusal(accountId);
       }
       return answer;
@@ -1432,10 +1423,6 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     let tracked!: Promise<LoadedFreehold>;
     tracked = loadOnce(accountId, ownerKey).finally(() => {
       if (inFlightLoads.get(accountId) === tracked) inFlightLoads.delete(accountId);
-      // Cleared with the slot it qualifies, and identity-guarded the same way:
-      // an abandonment that outlived its own read would refuse the NEXT login's
-      // perfectly ordinary load.
-      abandonedLoads.delete(accountId);
     });
     inFlightLoads.set(accountId, tracked);
     return tracked;

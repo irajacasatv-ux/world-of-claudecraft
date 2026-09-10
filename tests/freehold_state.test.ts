@@ -1233,9 +1233,14 @@ describe('freeholdLoadDiagnostic carries counts and classification only', () => 
     // WHAT THE LOOP ABOVE CANNOT SEE, and the reason two producers reached an
     // operator log unbounded while the ledger recorded the channel closed: that
     // loop walks normalizeFreehold's own results, so it covers the reporter's
-    // producers and nothing else. FOUR shapes reach a log without passing
-    // through freeholdLoadDiagnostic at all, all four from server/ modules, and
-    // each of them is now wrapped in boundedFreeholdDetail at its call site.
+    // producers and nothing else. Every shape below reaches a log without
+    // passing through freeholdLoadDiagnostic at all, all of them from server/
+    // modules. An earlier version of this list enumerated only the four that
+    // are WRAPPED today, which left the three that are not (the whole-preload
+    // cap's refusal and both of classify's ordering refusals) covered by
+    // nothing: one of them was in fact absent from KNOWN_DETAILS for a whole
+    // round. Whether an arm is wrapped yet is not the question this pin should
+    // ask; whether wrapping it would LOSE the diagnostic is.
     // If a shape here is not in KNOWN_DETAILS, wrapping it does not leak: it
     // silently replaces a real diagnostic with `unclassified`, so this pin is
     // what stops the bound being applied and the diagnostic being lost.
@@ -1250,6 +1255,13 @@ describe('freeholdLoadDiagnostic carries counts and classification only', () => 
       'the minted plot identity is already in use by another row',
       'insert conflicted but no row was present to diagnose',
       'the row vanished',
+      // server/freehold_load_outcome.ts, the whole-preload cap's refusal.
+      'no durable answer within 10000 ms',
+      // server/freehold_persist.ts classify(), BOTH ordering refusals. Neither
+      // is wrapped at its call site today, which is exactly why they belong
+      // here: the next reader to wrap them for consistency must not lose them.
+      'the live record was seeded before this load landed',
+      'the login that asked for this load had already given up on it',
     ];
     for (const detail of fromOutside) {
       expect(boundedFreeholdDetail(detail), detail).toBe(detail);
