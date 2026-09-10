@@ -70,6 +70,38 @@ it closed. They are marked RULING OWED.
 | C22 | OWED, 08a inherits | A fresh account's live record answers to `plot:unassigned` in one session and to its minted id in the next, for timing reasons alone, while `account_freeholds` declares a UNIQUE `plot_id` because a client echoes it back. | architecture. Latent: `freeholdDescriptorFor` has no production caller and the wire is dark. | Closed by C1's fix if C1 is taken. Otherwise 08a inherits it. |
 | C23 | OWED, named gap | A write-blocked hold has NO player-facing surface: the owner sees the free tier-0 Inn Room with none of their furnishings and no explanation. Every item above makes a hold more reachable. | Recorded in the contract's section 4. | The release that lights housing up owes it. That gap and C2/C3 are one obligation. |
 
+### WHERE THE INVENTORY STANDS after the rulings round, 2026-09-10
+
+The four RULING OWED rows and the two scope rows are settled and executed. Read the
+table below as the record of what each row WAS; this is what happened to it.
+
+- **C1, C22 and the eighth path: CLOSED.** `installLoadedFreehold` installs a default
+  carrying the load's own minted identity on the ABSENT arm, through the existing
+  load-once path, so an online record answers to its own name from its first session
+  and the write seal's name comparison is TOTAL for every entry class. The fresh read
+  found the mint was per ENTRY rather than per owner, which the ruling as written did
+  not cover, so the absent arm also adopts a live record's identity when there is one.
+  `revisionRegressed` is un-gated from `standInSeed` in the same change, with its own
+  executed proof. FOUR pins flipped, not the two the ruling anticipated.
+- **C2: CLOSED.** The three admission kinds no longer set `entry.loaded`, so a later
+  join re-reads them; the four data kinds stay terminal. The entry stays write-blocked
+  while unrepaired, which is the caveat the ruling attached.
+- **C3: RECORDED, not built.** The derived ceiling (about ten thousand three hundred
+  concurrently dirty owners per sweep) is in the contract's section 8a with its
+  composition. No cache, and therefore no eviction policy, because an eviction policy
+  here decides whose unwritten edits may be dropped.
+- **C5, policy half: ACCEPTED, with the arithmetic**, in section 8a, and the
+  peak-concurrency pin is written against that answer through the real gate.
+- **C23: SCOPED, built separately**, in
+  [held-plot-surface-scope.md](held-plot-surface-scope.md): the exact keys, the render
+  sink each goes to, and the two groups the player is told apart out of eight kinds.
+- **The section 8a login budget gate: CLOSED**, and the premise it was written on was
+  refuted with a measurement. See the contract and ROUND FIFTEEN in the ledger.
+- **Offline and headless plot identity: ACCEPTED AND DOCUMENTED**, in the contract, in
+  `src/sim/freehold/CLAUDE.md`, in `state.ts` and on the type itself.
+
+C4, C6 to C21 were closed earlier in this phase and their dispositions are unchanged.
+
 ### Runtime proof the database reviewer named as still required
 
 Independent of the rows above, and each one a test rather than an argument: a regression pin
@@ -80,7 +112,17 @@ real `createBackgroundDbGate`; a pin that a dirty entry with no live record and 
 is COLLECTED rather than re-armed; a pin that a leaving entry's write starts ahead of
 background writes already deferred; and a `freehold_db.pg.test.ts` case on an account with
 many rows, one past the pre-gate, asserting the export does not render it. The drain pin
-landed in the verification session; the other five did not.
+landed in the verification session; the export one landed with the Y6 fix and gained its
+boundary arm at the rulings round.
+
+FOUR OF THE SIX HAVE NOW LANDED. The re-read pin came with ruling 2 (an entry refused on
+the cap or the permit is not `loaded`, stays write-blocked, and is re-read on the next
+retain, with a contrast arm proving a DATA hold still replays). The peak-concurrency pin
+came with ruling 4, driven through the real `createBackgroundDbGate`. The leaving-entry
+pin landed with the pump's leaver preference and gained a second arm at the rulings round
+(a rejoin that takes its capture back leaves the leaver subset too). STILL OWED: the pin
+that a dirty entry with no live record and no capture is COLLECTED rather than re-armed,
+which is C4's, and which no production sequence reaches today.
 
 ### Rulings this QA should try to break rather than inherit
 
@@ -100,6 +142,14 @@ the budget: three of the last ten rounds turned a "cannot be reached" into a liv
   moment it is narrowed. Round nine narrowed it, which is how they mattered.
 - A record carrying a REAL plot name still goes backwards onto the row, deliberately;
   only a stand-in-named record is refused on a regressed revision.
+  THIS RULING IS RETIRED at the rulings round, and it is the one the list above asked
+  a later reader to try to break. Un-gating `revisionRegressed` reverses it, and it
+  should be reversed: a live revision below the entry's last committed one means the
+  live record is not the record that commit came from, since every install a rejoin is
+  offered carries at least the committed revision and every sanctioned mutator only
+  increments, and writing it walks the client-facing wire counter backwards
+  permanently, which is exactly the harm the loader's own `wire_rev_shape` hold refuses
+  on the read side. Two behaviour pins encoded the old rule and both flipped.
 
 ### Starter Prompt
 ```

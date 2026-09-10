@@ -422,256 +422,352 @@ rows must go, that is a restore-from-backup decision with a named owner, not a r
 step. The table and column names above are owned by `FREEHOLD_SCHEMA` and
 `FREEHOLD_HEARTH_SCHEMA`; a rename there updates this block in the same change.
 
-## 8a. Named gates this contract carries UNCLOSED
+## 8a. Named gates this contract carries, CLOSED and UNCLOSED
 
-Every item here is a MEASURED finding from the review rounds this artifact went through,
-left open on purpose rather than fixed at the end of a verification session, and each is a
-gate on housing activation rather than a note. None is anonymous: each names what was
-measured and who measured it, and the full detail is in
-[the findings ledger](qa/persistence-2026-09-08/findings.md) under V12. Nothing here is a
-signature and nothing here grants activation.
+Every item here is a MEASURED finding from the review rounds this artifact went
+through. Each names what was measured and who measured it, and the full detail is
+in [the findings ledger](qa/persistence-2026-09-08/findings.md). An item marked
+CLOSED is closed in code with a test; the rest are gates on housing activation
+rather than notes. Nothing here is a signature and nothing here grants activation.
 
-CAPACITY REFUSALS ARE TERMINAL, and they must not be. A load refused because the local
-admission cap was full, or because no background permit arrived inside the login bound, is
-recorded with `entry.loaded` set, so it replays for the life of the entry and `retain`'s
-lost-entry repair arm cannot reach it. A capacity blip therefore becomes a session-long
-housing outage for that account, and a hold has no player-facing surface in this release.
-Measured with the shared gate saturated: 8 of 8 logins at 1 join/s refused, and a lone
-re-join for a refused account still replayed the hold. The four fixture classes in
-section 4 justify a terminal hold for a DATA cause; none of them sanctions one for a
-capacity cause, and this contract does not.
+CAPACITY REFUSALS WERE TERMINAL. CLOSED at the rulings round. A load refused
+because the local admission cap was full, because no background permit arrived
+inside the login bound, or because the read threw, no longer sets `entry.loaded`,
+so `preload`'s replay arms and `retain`'s lost-entry repair both re-read it
+instead of replaying the refusal. Measured before the fix, with the shared gate
+saturated: 8 of 8 logins at 1 join/s refused, and a lone re-join for a refused
+account still replayed the hold. The four DATA kinds (`unadmitted`,
+`unsupported`, `malformed`, `oversize`) stay TERMINAL, because the same row
+answers the same way every time and a repeat read spends a permit and a statement
+on a login path for nothing. The entry stays WRITE-BLOCKED while it is
+unrepaired: `blocked()` is `!loaded || isHeld`, so both halves refuse until a
+later read actually succeeds. One consequence for an operator, recorded in
+DEPLOY.md as well: `loaded` and `held` no longer sum to `entries` for a capacity
+hold.
 
-THE TWO ADMISSION CAPS SUM PAST THE SHARED GATE. The load cap of four and the write cap of
-four are independent counters against a gate whose capacity is seven, and the store was
-measured holding all seven while other named producers queued. The write cap's own
-rationale says the surplus waits in a bounded set this store owns; that is true of writes
-and not of loads, which queue on the shared gate.
+THE TWO ADMISSION CAPS SUM PAST THE SHARED GATE. ACCEPTED, with the arithmetic,
+rather than shared. The load cap of four and the write cap of four are
+independent counters against a gate whose capacity is seven on the shipped pool
+(`backgroundDbCapacity(DB_POOL_MAX_CLIENTS_DEFAULT)`), so housing's own demand is
+8 in steady state and 12 during a drain (the drain raises the write cap to
+eight), against 7. The store was measured holding all seven while other named
+producers queued.
 
-RETENTION UNDER A STALLED GATE IS UNBOUNDED. The `entries` map's stated limit is a TIME
-bound, join rate times grace period. That describes the healthy path only: a write that
-never gets a permit returns without quiescing, so the entry stays dirty, `owesWork` keeps
-it, and neither removal path can collect it. Measured at 96 MiB per five thousand owners at
-the shipped tier ceiling and 660 MiB at the approved one, with the leave capture on top.
-The same shape produces an entry that re-arms every sweep forever with nothing to write
-(twelve sweeps, twelve permits, `writes_without_record` climbing); no production sequence
+The alternative was one shared budget, and it was REJECTED: it couples a player's
+login read to a sweep's writes, which is the coupling the two constants were
+split to avoid, and it would make a saturated write cap refuse logins. So this
+contract states the overcommit instead: HOUSING MAY HOLD UP TO SEVEN OF SEVEN
+PERMITS IN STEADY STATE AND ALL OF THEM DURING A DRAIN, and the other named
+producers wait behind it. What actually bounds concurrency is the GATE, not the
+caps: the caps decide how much work housing offers, the gate decides how much
+runs, and the surplus waits in a bounded set the store owns rather than on an
+uncapped queue. ALERT ON `permit_wait_ms` for the producers behind it; that is
+the leading indicator, and DEPLOY.md names it. The peak-concurrency pin the
+database reviewer asked for is written against THIS answer, driven through the
+real `createBackgroundDbGate`: housing never holds more permits than the gate
+grants, and its own two caps do sum past that capacity.
+
+RETENTION: THE `entries` MAP HAS NO SIZE BOUND, and its DERIVED CEILING is
+recorded here rather than closed with a cache. There is no eviction policy,
+because an eviction policy here is a decision about whose unwritten edits may be
+dropped, and nothing has asked for one.
+
+The stated limit is a TIME bound, join rate times grace period, and that
+describes the healthy path only: `owesWork` is what suspends collection, so a
+dirty entry whose write never gets a permit is kept by both removal paths.
+Measured at 96 MiB per five thousand owners at the shipped tier ceiling and
+660 MiB at the approved one, with the leave capture on top. The same shape
+produces an entry that re-arms every sweep with nothing to write (twelve sweeps,
+twelve permits, `writes_without_record` climbing); no production sequence
 reaching that state has been named.
 
-RETENTION UNDER A HEALTHY SWEEP, not only a stalled gate. The paragraph above described a
-permit refusal; measured, no refusal is needed. One ordinary `saveAllDirty` pass at five
-thousand loaded, unblocked owners leaves `dirty=5000 deferred=4996 active=4`, and every
-deferred entry satisfies `owesWork` through its deferred clause, so neither removal path
-can collect any of them until its write lands. At the measured throughput, about 345
-writes per second at the steady cap, that backlog clears in roughly 14.5 seconds, inside
-the thirty-second interval, so health recovers on its own. The CLIFF is about ten thousand
-three hundred concurrently dirty owners per sweep: past it the deferred set never empties,
-`entries` stops being collectable at all, and `oldest_dirty_age_ms` grows without bound.
-That ceiling is the write cap divided by the statement latency, times the autosave period,
-and it is the number to derive again before a realm is sized past it.
+No refusal is needed to suspend it, either. One ordinary `saveAllDirty` pass at
+five thousand loaded, unblocked owners leaves `dirty=5000 deferred=4996
+active=4`, and every deferred entry satisfies `owesWork` through its deferred
+clause. At the measured throughput, about 345 writes per second at the steady
+cap, that backlog clears in roughly 14.5 seconds, inside the thirty-second
+interval, so health recovers on its own.
 
-THE LEAVE RESERVE WAS TWO SLOTS IN TOTAL. CLOSED at the persistence QA. The reserve is
-still two, but the mechanism that made it worthless is fixed: `pumpLoop` admitted a
-deferred entry at the NON-leaving cap in insertion order, so a leaver that missed the
-arm-time window queued behind every background write already deferred, which is what
-produced the measured 98 of 100 flushes hitting the full deadline. The pump now prefers a
-deferred entry holding a leave capture and admits it at the leaving cap. Every leave still
-adds its bound to `GameServer.leave`, and that bound is now inherited by the character
-takeover path and every moderation kick as well, because both await it.
+THE CEILING, which is the number to derive again before a realm is sized past it:
+about TEN THOUSAND THREE HUNDRED concurrently dirty owners per sweep. It is the
+write cap divided by the statement latency, times the autosave period. Below it
+the map is self-limiting; above it the deferred set never empties, `entries`
+stops being collectable at all, and `oldest_dirty_age_ms` grows without bound. If
+a hard cap is wanted anyway, the seam the file already names is the keyed bounded
+cache with LRU eviction in `server/discord_status_cache.ts`, and the decision it
+forces is which owner's unwritten edits an eviction is allowed to drop.
 
-THE LOGIN READ'S DOMINANT BOUND. PARTLY CLOSED, and its stated measurement was WRONG. The
-handshake does have a deadline of its own: `AUTH_TIMEOUT_MS` is 10,000 ms
-(`server/ws_auth.ts`), and the preload runs after auth, moderation, cosmetics, the
-character read and the bank-bonus read have already spent from it. Both login-path queries
-now run through the `runWithStatementTimeout` seam at
-`FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS` (2,000 ms), which took the worst case from
-5,000 + 2 x (5,000 + 15,000) = 45,000 ms down to 5,000 + 2 x (5,000 + 2,000) = 19,000 ms.
-THE PORT-SHAPE HALF HAS SINCE LANDED. The optional `readDurables` port, bound in
-`server/freehold_persist_wiring.ts`, puts both statements on ONE checked-out client, so the
-pair pays one pool checkout instead of two. The two-port `readRow` / `readHearth` pair
-stays as the bounded fallback for a host with no transaction seam, and is the arm every
-unit test drives, so the production arm is exercised only by the structural pins and the
-real-PostgreSQL evidence here.
+THE LEAVE RESERVE WAS TWO SLOTS IN TOTAL. CLOSED at the persistence QA. The
+reserve is still two, but the mechanism that made it worthless is fixed:
+`pumpLoop` admitted a deferred entry at the NON-leaving cap in insertion order,
+so a leaver that missed the arm-time window queued behind every background write
+already deferred, which is what produced the measured 98 of 100 flushes hitting
+the full deadline. The pump now prefers a deferred entry holding a leave capture
+and admits it at the leaving cap. A SECOND way to defeat it was found at the
+rulings round and closed with it: `retain` cleared a returning owner's capture
+inline instead of through `releaseCapture`, leaving the entry in the leaver
+subset with no capture, at the head of the set the pump reads, priced at the
+non-leaving cap. Every leave still adds its bound to `GameServer.leave`, and that
+bound is now inherited by the character takeover path and every moderation kick
+as well, because both await it.
 
-A CLOCK FAULT MUST NOT BECOME A PLOT HOLD, and the first attempt at that was narrower than
-it claimed. A thrown hearth read is carried across the port as a VALUE rather than a
-rejection. Measured on the dev database: a second statement failing under a caught handler
-leaves the first statement's already-returned rows intact and the trailing COMMIT returns a
-ROLLBACK tag without throwing, for SQLSTATE 42P01 and for 57014 alike. BOTH OF THOSE LEAVE
-THE CONNECTION USABLE, which is why COMMIT survives, and an earlier version of this
-paragraph generalized from them to every clock fault. A fault that KILLS the connection
-(backend crash, restart, dropped socket) makes that COMMIT reject, and an inner catch on
-the hearth promise cannot see it, so the port rejected and the account was held and
-write-blocked for a fault in the clock. The guard is now around the WHOLE transaction: the
-row is captured as it is read, and a later rejection with a row in hand is answered as a
-thrown clock, while a rejection with no row in hand is rethrown so the plot still fails
-closed.
+THE LOGIN READ HAD NO BOUND ON THE WHOLE OF IT. CLOSED at the rulings round, and
+BOTH of the numbers this paragraph used to carry were wrong.
 
-WHAT REMAINS is the budget half, and it is WIDER than this section previously said.
-`SET LOCAL statement_timeout` bounds each statement SEPARATELY at READ COMMITTED (measured:
-two 300 ms sleeps under a 400 ms bound both completed, 612 ms elapsed), and BEGIN and
-SET LOCAL both execute BEFORE the lowered bound is in force, so they and the trailing
-COMMIT are bounded only by the pool session default of 15,000 ms. A floor on the worst case
-is therefore 5,000 + 2 x 15,000 + 3 x 2,000 = 41,000 ms, not the 9,000 an earlier version of
-this paragraph gave, which counted the two reads and omitted five statements; the 19,000 it
-replaced had the same omission. Two separate transactions were about 78,000, so the port
-change roughly halves the figure and stands on its own merits. It is NOT a bound on the
-login. There is still no cap on the WHOLE preload against the handshake's remaining budget,
-and past the auth timer `rejectHandshake` closes the socket while this chain keeps running,
-acquires a character lease and joins, leaving a linkdead session and a retained store entry.
-THIS GATE STAYS OPEN for the release, undiminished.
+The premise first. An earlier version said the handshake has a deadline of its
+own and that the preload spends from it. It does not: `AUTH_TIMEOUT_MS`
+(`server/ws_auth.ts`, 10,000 ms) is cleared SYNCHRONOUSLY by the first-frame
+handler before `authenticateWebSocket` runs, and that file's own docblock says so
+in as many words: it bounds upgrade-to-first-frame only, never the handshake's
+database work. The database reviewer's original finding said the same and this
+document overwrote it.
 
-THE EXPORT READ WAS UNBOUNDED. CLOSED at the persistence QA: `freeholdsForExport` now
-carries `FREEHOLD_EXPORT_ROW_LIMIT` (20, WIDENED rather than copied from the account read's
-2, so a slot this build does not admit is still exported) and the same on-disk pre-gate the
-account read uses. A row past the gate keeps its identity, both revisions and every scalar
-column and reports its measured on-disk size in place of content, so nothing is omitted and
-nothing is normalized. Proved against real PostgreSQL on an account holding one ordinary
-row and one row past the gate.
+Then the arithmetic. `runWithStatementTimeout` issues five statements on one
+checked-out client: BEGIN, SET LOCAL, the two reads, COMMIT. `SET LOCAL
+statement_timeout` bounds each statement separately at READ COMMITTED (measured:
+two 300 ms sleeps under a 400 ms bound both completed, 612 ms elapsed), and BEGIN
+and SET LOCAL both run BEFORE the lowered bound is in force, so both answer to
+the pool session default. AND COMMIT ANSWERS TO NEITHER SERVER-SIDE BOUND, which
+every published figure got wrong in the same direction. Measured on PostgreSQL 16
+with a DEFERRABLE INITIALLY DEFERRED constraint trigger putting two seconds of
+work inside the commit itself: under `SET LOCAL statement_timeout = 300` the
+COMMIT ran 2,008 ms and COMMITTED, against a control at the session default that
+took the same 2,008 ms. Its only ceiling is the driver's own `query_timeout`
+(`DB_QUERY_TIMEOUT_MS`), measured to reject a COMMIT at its deadline with a
+client-side read timeout carrying no SQLSTATE. So the floor is
+5,000 (`DB_POOL_CONNECT_TIMEOUT_MS`) + 2 x 15,000 (`DB_STATEMENT_TIMEOUT_MS`, for
+BEGIN and SET LOCAL) + 2 x 2,000 (the two reads) + 65,000 (`DB_QUERY_TIMEOUT_MS`,
+for COMMIT) = 104,000 ms. The 41,000 this section published priced COMMIT at the
+lowered bound; the prose beside it argued 54,000; the 19,000 and the 9,000 before
+those omitted five statements between them.
 
-THE ACCOUNT READ MEASURED AND SHIPPED THE UNADMITTED SECOND ROW IN FULL. CLOSED at the
-persistence QA. The `LIMIT 2` exists so a stranded slot is SEEN rather than read as absence,
-but the LATERAL's `octet_length` arm and both content CASEs ran for every row it returned,
-and the caller reads content from the primary row alone. Measured at two legal rows,
-167,678 layout bytes crossed into the realm process with half discarded (0.50 ms against
-0.76 ms); at two hyper-compressible rows under the pre-gate the render doubled from 16.9 ms
-to 34.1 ms and produced 11.2 MB, all of it while holding one background permit and one pool
-client. The measure is now nulled for any row outside the admitted slot, which nulls both
-content CASEs with it.
+THE FIX IS A CAP ON THE WHOLE PRELOAD, `FREEHOLD_PERSIST_LOGIN_BUDGET_MS`, and
+not a lower statement bound, which was considered and rejected because it does
+not bound BEGIN, SET LOCAL or COMMIT and so narrows the number without closing
+the gate. It is a STATED CEILING rather than a derived share of a deadline that
+does not exist: 10,000 ms is the wait the product already treats as the most a
+connecting player should spend, and a housing read has no claim on more. What it
+prevents is the chain outliving the socket: past the cap the load is refused, so
+the handshake stops waiting rather than running on to take a character lease and
+join behind a socket that has died, which leaves a linkdead ghost holding a realm
+slot and that lease for the whole grace window while the player's every re-login
+is refused as already in world.
 
-THE FOUR LOAD-FAILURE CAUSES WERE ONE LABEL. CLOSED at the persistence QA, and the claim
-itself was wrong in one particular: a host with no store answers the same hold SHAPE
-through `freeholdPreloadUnavailable` but books no counter at all, so it never reached the
-series. The three causes that did are now their own kinds, `cap_full`, `no_permit` and
-`read_threw`, leaving `unadmitted` for the genuinely row-level stranded slot, and DEPLOY.md
-carries the corrected reading.
+THE LOGIN ITSELF IS NOT REFUSED, and that is deliberate: refusing a login over a
+durable housing read reverses a decision this packet has already taken and
+pinned. The player joins on the sim's default record and no write goes out for
+that account, which is the same failure mode a thrown read already had. The
+refusal books its own metric kind, `no_budget`, and deliberately does NOT touch
+the store entry: the read it gave up waiting for is still in flight behind a
+single-flight slot, and letting it finish and fill the entry is strictly better
+than marking the entry held over a read that then succeeds.
 
-THE WRITE PATH'S CODEC COST IS PAID TWICE, and is now MEASURED. A `codec_ms` counter sits
-beside `write_ms` and brackets everything between the permit and the statement. Re-measured
-per save at the 420-row ceiling: the clone 0.0084 ms, the projection 0.0049 ms, the refusal
-walk plus canonical JSON plus the encode 0.1464 ms, the two column serializations plus the
-byte length 0.0382 ms, 0.1979 ms for the block. The earlier 0.225 ms figure stands on
-magnitude. WHAT REMAINS is the double serialization itself, and the shape the counter now
-exposes: this is UNYIELDING synchronous time between the permit and the statement, about
-0.99 s at five thousand drained owners, which escapes the tick profiler's save lap as well.
+A CLOCK FAULT MUST NOT BECOME A PLOT HOLD, and it took three attempts. A thrown
+hearth read is carried across the port as a VALUE rather than a rejection. The
+guard is around the WHOLE transaction, because an inner catch on the hearth
+promise cannot see the COMMIT the timeout helper issues afterwards, and a clock
+fault that KILLS the connection (backend crash, restart, dropped socket) makes
+that COMMIT reject. AND BOTH HALVES ARE CAPTURED AS THEY ARE READ, which the
+second attempt got wrong: capturing only the row threw away a clock both
+statements had already answered whenever the COMMIT rejected, and substituted the
+cold clock, which reads as READY. The store then remembers that zero on the entry
+and replays it to every later character of the account for the whole session
+without reading again. An UNREADABLE clock starts cold; a clock that was READ does
+not. The policy now lives in `server/freehold_hearth_load.ts` as
+`readLoginDurables`, out of the composition root, because the root binds the real
+pool at module scope: nothing imported it, nothing executed its closures, and the
+one surviving mutant of that round lived there. Five behaviour cases drive it.
 
-THE STORE HOLDS A SECOND COPY OF EVERY ONLINE OWNER'S HOUSE. `entry.state` is a full record
-distinct from the sim's live one, and a dirty leaver briefly holds a third. Measured at
-10,051 bytes per copy at the shipped ceiling and 69,452 at the approved one. Only the leave
-capture is documented today, and the second copy is the larger standing cost.
+THE EXPORT READ WAS UNBOUNDED. CLOSED at the persistence QA: `freeholdsForExport`
+carries `FREEHOLD_EXPORT_ROW_LIMIT` (20, WIDENED rather than copied from the
+account read's 2, so a slot this build does not admit is still exported) and the
+same on-disk pre-gate the account read uses, with an authoritative rendered
+measure behind it. A row past the gate keeps its identity, both revisions and
+every scalar column and reports its measured on-disk size in place of content.
+Proved against real PostgreSQL on an account holding one ordinary row and one row
+past the gate, and at the truncation boundary in both directions.
 
-THE MISSING IDENTITY STAMP IS NOT ONLY A REFUSAL. It is also a WRITE-THROUGH, and that
-is the eighth distinct path to an empty tier-0 Inn Room landing on a real row. For an
-account whose entry MINTED its own row, `applyWriteResult` caches the identity the LIVE
-RECORD carried, which is the stand-in, and a freshly seeded default carries the same
-literal, so the seal's name comparison is inert BY VALUE EQUALITY for that entry class.
-The two continuity arms then have to carry it alone, and both are revision-shaped:
-`pristineSeed` needs `rev === 0` and `revisionRegressed` needs a revision BELOW the
-entry's, so a reseeded default whose revision has caught up satisfies neither. Reproduced
-three times against the real store, including once by this QA from scratch: a row holding
-tier cottage, one furnishing, one trophy, condition 91 and policy friends at wire revision
-7 was compare-and-swapped to an empty Inn Room at wire revision 8 and again at 9, with
-`quiesced` 0, `write_failures` 0, no error line and `plot_id` untouched. Controls at
-revision 0 and 5 both refused, so only the caught-up case escapes. The realized loss on a
-PRODUCTION realm today is zero, because `setFreeholdTier` is the only live-record mutator
-this release ships and its only caller is the development grant; it arms the moment the
-furnishing writer or the Charter tier grant lands. The source's own totality claim is
-narrower than the ruling it was written under: it argues the name comparison is total for
-an entry that loaded a ROW, and never considers the entry whose cached name is the
-stand-in. THE FIX IS THE SAME ONE THE NEXT PARAGRAPH ALREADY OWES.
+TWO RESIDUALS ON THAT READ, named at the rulings round rather than left implied.
+FIRST, the rendered ceiling is only reachable for content that COMPRESSES: for
+incompressible content the on-disk pre-gate binds first at 131,072 bytes and the
+wider bound is never reached, so an incompressible row above the pre-gate comes
+back with its size instead of its content on the owner's ONLY readback of it.
+That is the trade the pre-gate exists to make, because measuring an incompressible
+row means detoasting it, which is the cost being avoided. SECOND, the two upkeep
+JSONB columns are selected RAW, past both bounds. That is safe only because of
+the DDL: this build writes NULL and the unbound-carries-no-upkeep CHECK holds them
+NULL for every row it can produce. The release that starts writing them owes them
+the same pre-gate and measure the two content columns carry.
 
-A FRESH ACCOUNT WHOSE ENTRY RE-READS ITS OWN ROW IS ALSO WRITE-BLOCKED for the rest of that
-session, and that half is a deliberate trade rather than an unexamined gap. Nothing teaches
-a live record its minted public identity, so a first-session record carries the stand-in
-for as long as it lives; if that account's store entry is dropped and re-read from the row
-it just inserted (the lost-entry reload, or a second character joining), the entry now
-holds the row's name while the record still holds the stand-in, the write seal sees two
-different names and refuses. Exempting the stand-in from that comparison was tried and
-REVERTED: it admits a seeded default over a real house as soon as the returning player's
-edits carry its revision past the entry's, which costs the house rather than one session's
-edits. The row survives either way, and the case is pinned as it behaves so a fix flips a
-red test. THE FIX IS A DESIGN DECISION, not a fourth clause in that expression: teach the
-live record its minted identity AT INSTALL, where the store already knows it. Stamping at
-COMMIT time was tried in an earlier round and is wrong for a different reason, recorded as
-W4 in the findings ledger.
+THE FOUR LOAD-FAILURE CAUSES WERE ONE LABEL. CLOSED at the persistence QA, and
+there are EIGHT kinds now, not seven: the rulings round added `no_budget` for the
+whole-preload cap. Read them as two groups. FOUR are DATA incidents and their
+hold is terminal (`unadmitted` for the row-level stranded slot, `unsupported`,
+`malformed`, `oversize`); FOUR are CAPACITY causes and their hold is repairable
+(`cap_full`, `no_permit`, `read_threw`, `no_budget`). A host with no store answers
+the same hold SHAPE through `freeholdPreloadUnavailable` but books no counter at
+all, so it never reaches the series. DEPLOY.md carries the corrected reading.
 
-THE FIX HAS A SAFE FORM AND AN UNSAFE FORM, and they differ by one line. The SAFE form
-installs a default record carrying the load's own minted `plotId` on the ABSENT arm of
-`installLoadedFreehold` only, through the existing `loadFreehold`, which is load-once and
-already honors the dark-realm flag, so `addPlayer`'s `ensureFreeholdRecord` then returns it
-untouched. Every seal arm stays intact under it, because a record seeded after a SKIPPED
-install still carries the stand-in and is still refused by the name comparison. The UNSAFE
-form stamps the minted identity onto whatever record is already live, bypassing load-once;
-that rewrites a freshly seeded default's identity to the minted name, which kills the name
-comparison and, through `standInSeed`, both continuity arms at once, and is a new path to
-the same loss. The safe form also owes a companion in the SAME change: `revisionRegressed`
-must be un-gated from `standInSeed`, because after the fix no online record carries the
-stand-in and the revision discriminator would otherwise be dead for the same-account
-character swap. That half needs its own executed proof, because `rev` restarts from the
-last committed value on a rejoin replay, which is exactly what made W1's revision
-comparison wrong. Two existing pins flip with it and must be planned rather than
-discovered. Offline and headless hosts are untouched, which WIDENS the existing host
-divergence from session two onward to session one onward: every offline world keeps the one
-literal stand-in while online identities are unique, so a later consumer that keys on
-`plotId` is correct online and collides offline.
+THE WRITE PATH'S CODEC COST IS PAID TWICE, and is now MEASURED. A `codec_ms`
+counter sits beside `write_ms` and brackets everything between the permit and the
+statement. Re-measured per save at the 420-row ceiling: the clone 0.0084 ms, the
+projection 0.0049 ms, the refusal walk plus canonical JSON plus the encode
+0.1464 ms, the two column serializations plus the byte length 0.0382 ms, 0.1979 ms
+for the block. The earlier 0.225 ms figure stands on magnitude. WHAT REMAINS is
+the double serialization itself, and the shape the counter now exposes: this is
+UNYIELDING synchronous time between the permit and the statement, about 0.99 s at
+five thousand drained owners, which escapes the tick profiler's save lap as well.
 
-ONE ACCOUNT ONLINE ON TWO REALMS HAS ONE OF THEM WRITE-BLOCKED, SILENTLY. `account_freeholds`
-is keyed `(account_id, plot_index)` with no realm column, and the store is per realm
-PROCESS, while characters are realm-scoped and the session cap is counted in one process's
-own client map. Both handshakes read `durable_rev` 7 and install the same house; the realm
-the player furnishes on wins the compare-and-swap; the other realm's next write fences on 7,
-is diagnosed stale and quiesces for the life of the entry, with only a warn line and the
-`quiesced` gauge. The ROW survives in either ordering, which is the fence doing its job, but
-one session's edits are discarded with no player-facing surface. Recorded here as an
-activation gate rather than fixed: housing rows are account-scoped and shared by every realm
-on one database. If it must be closed, 07a's mutation boundary is where a cross-realm claim
-belongs.
+THE STORE HOLDS A SECOND COPY OF EVERY ONLINE OWNER'S HOUSE. `entry.state` is a
+full record distinct from the sim's live one, and a dirty leaver briefly holds a
+third. Measured at 10,051 bytes per copy at the shipped ceiling and 69,452 at the
+approved one. Only the leave capture is documented in the source today, and the
+second copy is the larger standing cost.
 
-THE ACCOUNT CASCADE HAS NO PRODUCTION CALLER. Both DDL fragments state that the accounts
-`ON DELETE CASCADE` is the only removal path there is, and that is true of the SCHEMA. It is
-not true of the product: the player-facing account removal is a SOFT delete that sets
-`deactivated_at` and leaves the row in place, so it fires no cascade, and the only hard
-`DELETE FROM accounts` in the tree removes a password-less, token-less provisioning loser
-that can never own a plot. Housing rows therefore persist for accounts a player believes are
-deleted. That is a retention and disclosure decision, not a data-loss one, and it is owed an
-explicit answer: follow `account_attribution`'s erase-on-soft-delete precedent, or state that
-housing is keep-forever through a soft delete.
+THE MISSING IDENTITY STAMP. CLOSED at the rulings round, in the SAFE form, as one
+change, and it closes both halves of it.
 
-A FORWARD STEP OF THE DATABASE CLOCK PERMANENTLY BRICKS AN ACCOUNT'S HEARTH KEY. The stated
-monotonicity invariant covers a REGRESSED clock only. In the normal flow `GREATEST` is never
-the binding term, so an accepted advance under an NTP step or a container clock jump writes a
-far-future `ready_at_ms`, and monotonicity then makes it permanent: no statement can lower
-it, absence is the only ready state, the table is exempt from the retention sweep, and the
-account cascade above has no production caller. Owed at 07a, where the caller lands: treat a
-reading past `now_ms` plus the cooldown as corrupt rather than authoritative, which fails
-closed for the trip and gives an operator a signal instead of a silent lifetime lockout.
-Related: `now()` is the TRANSACTION timestamp, so a long entry transaction records a cooldown
-that starts at BEGIN and is short by the transaction's duration.
+It was a WRITE-THROUGH first, and the eighth distinct path to an empty tier-0 Inn
+Room landing on a real row. For an account whose entry MINTED its own row,
+`applyWriteResult` cached the identity the LIVE RECORD carried, which was the
+stand-in, and a freshly seeded default carried the same literal, so the seal's
+name comparison was inert BY VALUE EQUALITY for that entry class. The two
+continuity arms then had to carry it alone and both are revision-shaped, so a
+reseeded default whose revision had caught up satisfied neither. Reproduced three
+times against the real store: a row holding tier cottage, one furnishing, one
+trophy, condition 91 and policy friends at wire revision 7 was
+compare-and-swapped to an empty Inn Room at wire revision 8 and again at 9, with
+`quiesced` 0, `write_failures` 0, no error line and `plot_id` untouched.
 
-THE HEARTH READ FAILS OPEN WHILE THE PLOT READ OF THE SAME LOAD FAILS CLOSED. `readHearth`
-catches every error and answers a cold clock, and the merge is forward-only, so an owner key
-the sim does not yet hold starts READY. The trigger is concrete: the second of the load's two
-sequential pool checkouts times out, or its statement hits its bound, under the same
-saturation the permit bound exists for. Harmless today because nothing writes the row; it
-becomes one free travel per pool blip the moment 07a starts writing rows.
+It was a REFUSAL second, and the mirror of the same gap: a fresh account whose
+store entry was dropped and re-read from the row it had just inserted held the
+row's name against a live record still holding the stand-in, so the seal saw two
+names and write-blocked the account for the rest of its session with a misleading
+line.
 
-THE HEARTH KEY IS GRANTED ONLINE AND PERMANENTLY REFUSED. On a lit realm the Freehold Gate
-grants the key and every use is refused by the realm's hard-false key admission, emitting the
-`busy` denial: "This home is active elsewhere or still opening. Try again shortly.",
-indefinitely. Offline and headless the same item works. Intentional per the 07a plan and
-named in the source, so it is rollout-gating: either do not grant the key while admission is
-hard-false, or give the refusal its own reason token and catalog line.
+THE FIX, in the form that was taken: `installLoadedFreehold` installs a default
+record carrying the load's own minted `plotId` on the ABSENT arm only, through the
+existing `loadFreehold`, which is load-once and already honors the dark-realm
+flag, so `addPlayer`'s `ensureFreeholdRecord` then returns it untouched. The
+UNSAFE form stamps the minted identity onto whatever record is already live,
+bypassing load-once; that rewrites a freshly seeded default's identity to the
+minted name, kills the name comparison and, through `standInSeed`, both
+continuity arms with it, and is a new path to the same loss. It was refuted with
+evidence rather than argued away.
 
-`server/freehold_persist.ts` IS ON THE MONOLITH RATCHET at its exact measured count, which
-forbids the next line without granting any slack. The row opened at 2,343 and has since been
-LOWERED to 2,319, paid by moving the composition root to `server/freehold_persist_wiring.ts`
-and the clock normalizer to `server/freehold_hearth_load.ts`; an earlier version of this
-paragraph named 2,295, a count that was already stale when written. Cite the row, not a
-number here, which is the anchor rule this document is otherwise written to. WHETHER IT SHOULD BE SPLIT,
-and along which seam, is a maintainer decision this contract does not take. The ratchet also
-has no admission rule of its own: nothing adds a file to it, so the next monolith to form is
-untracked until someone notices.
+TWO THINGS LANDED WITH IT. `revisionRegressed` is un-gated from `standInSeed`,
+because after the fix no ONLINE record carries the stand-in and the discriminator
+would otherwise be dead for the same-account character swap; it has its own
+executed proof, including the arm that matters most, that a rejoin replay AT the
+committed revision is not refused. And the MINT was found to be per ENTRY rather
+than per owner: an entry the orphan sweep collects between a preload and its
+retain is recreated empty, and minting again there gave the ROW a second identity
+while the record kept the first. The absent arm now adopts the live record's
+identity when there is one.
 
-A held row still has NO PLAYER-FACING SURFACE, which section 4 already records; every item
-above makes a hold more reachable, so that gap and these are one obligation.
+FOUR EXISTING PINS FLIPPED, not the two that were anticipated. Two of them
+encoded a rule that a record carrying a REAL plot name goes backwards onto the
+row deliberately. That rule is RETIRED rather than dropped: a live revision below
+the entry's last committed one means the live record is not the record that
+commit came from, since every install a rejoin is offered carries at least the
+committed revision and every sanctioned mutator only increments, and writing it
+would walk the client-facing wire counter backwards permanently, which is the
+exact harm the loader's own `wire_rev_shape` hold refuses on the read side. What
+it newly refuses is a superseded leave capture offered to a rejoin as the install
+source: refusing loses nothing, the row survives, and it books a write failure
+and quiesces an entry that is about to be collected anyway.
+
+OFFLINE AND HEADLESS PLOT IDENTITY: THE DIVERGENCE IS ACCEPTED AND DOCUMENTED.
+Online records now answer to a unique minted identity from their first session.
+Offline and headless hosts have no store and no minter, so every record on them
+carries the one literal stand-in, `plot:unassigned`, forever. The fix therefore
+WIDENS an existing divergence from session two onward to session one onward. It
+is harmless while `plotId` is presentation-only, which is what
+`src/sim/freehold/types.ts` says it is, and it is not harmless to a consumer that
+KEYS on it: correct online, colliding offline. THE PHASE THAT MAKES `plotId`
+LOAD-BEARING AS A KEY MUST SUPPLY A MINTER FOR THOSE HOSTS FIRST, and anything
+minting ids inside `src/sim/` must draw from `Rng`, never a clock and never
+`Math.random`. Recorded in `src/sim/freehold/CLAUDE.md` beside the record
+lifecycle so the next author of that directory reads it there.
+
+ONE ACCOUNT ONLINE ON TWO REALMS HAS ONE OF THEM WRITE-BLOCKED, SILENTLY.
+`account_freeholds` is keyed `(account_id, plot_index)` with no realm column, and
+the store is per realm PROCESS, while characters are realm-scoped and the session
+cap is counted in one process's own client map. Both handshakes read `durable_rev`
+7 and install the same house; the realm the player furnishes on wins the
+compare-and-swap; the other realm's next write fences on 7, is diagnosed stale and
+quiesces for the life of the entry, with only a warn line and the `quiesced`
+gauge. The ROW survives in either ordering, which is the fence doing its job, but
+one session's edits are discarded with no player-facing surface. Recorded here as
+an activation gate rather than fixed: housing rows are account-scoped and shared
+by every realm on one database. If it must be closed, 07a's mutation boundary is
+where a cross-realm claim belongs.
+
+THE ACCOUNT CASCADE HAS NO PRODUCTION CALLER. Both DDL fragments state that the
+accounts `ON DELETE CASCADE` is the only removal path there is, and that is true
+of the SCHEMA. It is not true of the product: the player-facing account removal is
+a SOFT delete that sets `deactivated_at` and leaves the row in place, so it fires
+no cascade, and the only hard `DELETE FROM accounts` in the tree removes a
+password-less, token-less provisioning loser that can never own a plot. Housing
+rows therefore persist for accounts a player believes are deleted. That is a
+retention and disclosure decision, not a data-loss one, and it is owed an explicit
+answer: follow `account_attribution`'s erase-on-soft-delete precedent, or state
+that housing is keep-forever through a soft delete.
+
+A FORWARD STEP OF THE DATABASE CLOCK PERMANENTLY BRICKS AN ACCOUNT'S HEARTH KEY.
+The stated monotonicity invariant covers a REGRESSED clock only. In the normal
+flow `GREATEST` is never the binding term, so an accepted advance under an NTP
+step or a container clock jump writes a far-future `ready_at_ms`, and monotonicity
+then makes it permanent: no statement can lower it, absence is the only ready
+state, the table is exempt from the retention sweep, and the account cascade above
+has no production caller. Owed at 07a, where the caller lands: treat a reading past
+`now_ms` plus the cooldown as corrupt rather than authoritative, which fails closed
+for the trip and gives an operator a signal instead of a silent lifetime lockout.
+Related: `now()` is the TRANSACTION timestamp, so a long entry transaction records
+a cooldown that starts at BEGIN and is short by the transaction's duration.
+
+THE HEARTH READ FAILS OPEN WHILE THE PLOT READ OF THE SAME LOAD FAILS CLOSED.
+`readHearth` catches every error and answers a cold clock, and the merge is
+forward-only, so an owner key the sim does not yet hold starts READY. The trigger
+is concrete: the load's pool checkout times out, or a statement hits its bound,
+under the same saturation the permit bound exists for. Harmless today because
+nothing writes the row; it becomes one free travel per pool blip the moment 07a
+starts writing rows. AN `unsupported` CLOCK IS PART OF THIS GATE, corrected at the
+rulings round: the reader's docblock claimed that kind is what stops a damaged row
+granting a trip, and it is not. It is normalized to the cold clock with a WARN,
+which is ready. The kind buys the operator a named warning; refusing the trip
+belongs to the 07a participant, which is the caller that has a trip to refuse.
+
+THE HEARTH KEY IS GRANTED ONLINE AND PERMANENTLY REFUSED. On a lit realm the
+Freehold Gate grants the key and every use is refused by the realm's hard-false
+key admission, emitting the `busy` denial: "This home is active elsewhere or still
+opening. Try again shortly.", indefinitely. Offline and headless the same item
+works. Intentional per the 07a plan and named in the source, so it is
+rollout-gating: either do not grant the key while admission is hard-false, or give
+the refusal its own reason token and catalog line.
+
+`server/freehold_persist.ts` IS ON THE MONOLITH RATCHET at its exact measured
+count, which forbids the next line without granting any slack. Cite the ratchet
+row in `tests/monolith_budget.test.ts`, not a number here, which is the anchor
+rule this document is otherwise written to; the row's own comment carries the
+whole walk, including every lowering and the one raise this packet recorded
+against itself. WHETHER THE FILE SHOULD BE SPLIT, and along which seam, is a
+maintainer decision this contract does not take, though four modules have now
+come off it (`server/freehold_persist_wiring.ts`,
+`server/freehold_write_seal.ts`, `server/freehold_install.ts` and
+`server/freehold_persist_registry.ts`) and each was a seam the file already had.
+The ratchet also has no admission rule of its own: nothing adds a file to it, so
+the next monolith to form is untracked until someone notices.
+
+A HELD ROW STILL HAS NO PLAYER-FACING SURFACE, which section 4 also records. Every
+capacity item above makes a hold more reachable, so that gap and they are one
+obligation. It is SCOPED at the rulings round and built separately, because the
+identity fix touches the sim's load path and the surface touches the HUD, and
+merging them makes one reviewable change into two unreviewable halves. THE DESIGN
+IS RECORDED IN `docs/freeholds/held-plot-surface-scope.md`: the exact `t()` keys,
+the render sink each one goes to, and which of the eight load-failure kinds the
+player is told apart. It is a scope document, not an implementation: no key in it
+exists in the catalog yet.
 
 ## 9. Cross-links
 

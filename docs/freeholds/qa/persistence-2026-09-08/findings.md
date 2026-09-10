@@ -3,9 +3,14 @@
 Status key: FIXED (with the commit that did it) / RULED (reviewed, no change warranted,
 with the reason).
 
-THE ROUND IS NOT CLOSED, AND THE VERDICT IS FAIL. FOURTEEN fix rounds have now run and
-TWELVE of the fourteen introduced a defect worse than one they closed, each caught by a
+THE ROUND IS NOT CLOSED, AND THE VERDICT IS FAIL. FIFTEEN fix rounds have now run and
+THIRTEEN of the fifteen introduced a defect worse than one they closed, each caught by a
 fresh reviewer, by the gate, or by a mutant, and NEVER by the round's own green tests.
+ROUND FIFTEEN is the round that executed the four settled rulings, and the fresh read
+that opened it found 36 findings including one BLOCKING, in code fourteen rounds and a
+green gate had already been over: see ROUND FIFTEEN at the end of this file. Its own fix
+round was then read by a second fresh lane, on the standing assumption that a fix round
+is unreviewed code.
 Round fourteen is the sharpest instance: round thirteen shipped a fix whose CLAIM WAS
 WIDER THAN ITS EVIDENCE, citing two measured SQLSTATEs that both leave the connection
 usable as proof about every clock fault, so its own probe could not see the case it was
@@ -857,6 +862,10 @@ landed after that round had closed, and all three were real.
   READ COMMITTED: two 300 ms sleeps under a 400 ms bound both completed, 612 ms
   elapsed. So the pair's bound is 2 x 2,000, not 2,000. The corrected worst case
   is 5,000 (one pool checkout) + 2 x 2,000 = 9,000 ms against a 10,000 ms
+  [CORRECTED IN ROUND FIFTEEN: every figure in this entry and the next is wrong, and
+  so is the premise. The handshake has no deadline of its own, because
+  AUTH_TIMEOUT_MS is cleared before the database work begins; and COMMIT answers to
+  neither server-side bound, measured, so the floor is 104,000 ms. See ROUND FIFTEEN.]
   handshake, down from 19,000. Nine against ten is a MARGIN, NOT A BOUND: the cap
   on the whole preload against the handshake's remaining budget still does not
   exist, so section 8a's gate is narrowed to its budget half and STAYS OPEN for
@@ -916,7 +925,9 @@ ROUND THIRTEEN INTRODUCED. The pattern holds at fourteen for fourteen.
   clock, a rejection with no row is rethrown so the plot still fails closed.
 - Y2 SHOULD-FIX, also round thirteen's. Extracting the composition root SILENTLY
   DROPPED the statement bound off both two-port fallback ports, leaving them on
-  the pool's 15,000 ms session default against a 10,000 ms handshake, while the
+  the pool's 15,000 ms session default (the "against a 10,000 ms handshake" half of
+  this sentence is CORRECTED IN ROUND FIFTEEN: there is no such handshake bound),
+  while the
   new file header claimed the move changed nothing. Dead on this host, and the
   declared fallback surface every unit test drives. Both wrappers restored and
   the header corrected.
@@ -1154,3 +1165,222 @@ Decided in the same sitting, and binding on the next session in the same way.
   a maintainer decision, and all of those are now settled.
 - **Delivery: STAY LOCAL.** Commit on `feature/freeholds`, run the gate, report. No push, no
   pull request, no merge, whatever the result.
+
+## ROUND FIFTEEN: THE WORD WAS EXECUTED, AND THE FRESH READ FOUND A BLOCKER FIRST
+
+The four rulings and the six scope calls were executed on 2026-09-10. Before any
+of that was written, the whole packet was read fresh by lanes that had not
+written it, `dd4c869a2b..HEAD` end to end, with the guild-book routing and the
+combined login port first, exactly as the scope call required. THAT READ FOUND
+36 FINDINGS, one of them BLOCKING, and it found them in code that fourteen rounds
+and a green gate had already been over. Every finding was adversarially verified
+by three independent lenses (does it reproduce, is it already ruled, is the claim
+wider than the evidence); 35 of 36 survived, and the one that did not is recorded
+below rather than dropped.
+
+The pattern therefore holds at fifteen for fifteen. It is worth saying plainly
+what that now means: the count is not evidence that the reviewers are thorough,
+it is evidence that this subsystem is not yet in a state where a round can be
+trusted on its own.
+
+### The BLOCKING one, and it was not in the store at all
+
+- R1 BLOCKING (teardown). `settleLeavingSession` still ended with FOUR session
+  REGISTRATIONS, below a final save that retries five times and a guild-book
+  revert that can fault. A rejection anywhere above them ran the three releases
+  in leave()'s `finally` and skipped all four, so the character was gone from
+  `clients` and from the sim while `sessionsByCharacterId` STILL MAPPED IT:
+  `planJoin` then answered 'character already in world' for every later login for
+  the life of the process, `takeOverCharacter` found the corpse, reported
+  'taken-over' and changed nothing, and every whisper, mail and party lookup kept
+  resolving to the dead session and sending into a closed socket. Round eleven
+  moved the three RELEASES into that `finally` for exactly this reason and left
+  these behind, and the round-twelve regression that followed was the same shape
+  seen from the other end. FIXED: the four move into the `finally`, ahead of the
+  three awaits, identity-guarded so a same-account swap cannot evict the live
+  session's own registration. PAID FOR BY EXTRACTION, `revertOwnGuildBookOps` to
+  `server/guild_book_holders.ts`, and the coordinator's ceiling LOWERED to 9907.
+
+### What else the fresh read found, all applied
+
+- R2 SHOULD-FIX. `saveLeavingCharacter`'s "never throws" was stated in its header
+  and proved with a stub that could not throw. Its one callback runs INSIDE the
+  catch on the exhausted-retry arm, so a fault in the backward book replay
+  rejected out of the leaving session's settlement, which is the single most
+  expensive place on the leave path for a rejection to land. Guarded, and the
+  extracted revert never throws either: a guild whose replay faults is logged and
+  the guilds behind it are still undone.
+- R3 SHOULD-FIX. `retain` cleared a returning owner's leave capture with two
+  inline lines rather than through `releaseCapture`, so the entry kept its place
+  in `deferredLeavers` with no capture. `nextDeferred` then answered with it on
+  every admission and `pumpLoop` priced it at the NON-leaving cap, so the two
+  reserved slots never reached the genuine leavers queued behind it. That is
+  exactly the starvation 23d2e6741a was written to end, and it falsified
+  `undefer`'s own stated invariant. A case drives it and dies when the inline
+  clear comes back.
+- R4 SHOULD-FIX. The MINT IS PER ENTRY, NOT PER OWNER, and ruling 1 as written
+  does not fix that: an entry the orphan sweep collects between a preload and its
+  retain is recreated empty, and its repair reload mints a SECOND identity while
+  the record installed from the first keeps answering to the first. After ruling
+  1 that is not cosmetic, it is a quiesced session. The absent arm adopts the live
+  record's identity when there is one.
+- R5 SHOULD-FIX. `readDurables`' outer guard captured the ROW as it was read and
+  rebuilt the CLOCK from the outer error, so a COMMIT that rejected after both
+  statements had answered threw away a clock it had already read and reported the
+  cold one, which reads as READY. The store then remembers that zero on the entry
+  and replays it to every later character of the account for the whole session
+  without reading again. Both halves are captured now, and the policy moved out of
+  the composition root into `readLoginDurables`, where five behaviour cases drive
+  it: the root binds the real pool at module scope, so nothing imported it and
+  nothing executed its closures.
+- R6 SHOULD-FIX. `flushAndRelease` gave the reference back after the flush rather
+  than in a `finally`, so a throw from the injected deadline scheduler, the
+  serialize port or the enqueue port held it for the life of the process, with
+  its one production caller swallowing the rejection that would have shown it.
+- R7 SHOULD-FIX (attribution). The guild-book routing and the leave-flush swallow
+  removal are in 0c48e8a3c4, NOT fbcd3298dc as the ledger and that commit's
+  message both said, and 0c48e8a3c4 deleted the swallow ONE COMMIT BEFORE the
+  module gained it: at exactly that commit a `flushAndRelease` rejection escapes
+  leave()'s own `finally` above the lease release and `removePlayer`. HEAD was
+  always correct; the defect is one commit deep and survives any bisect or
+  per-commit audit. Corrected here rather than amended, because a record that
+  misattributes a fix is how the next reader looks in the wrong commit.
+- R8 SHOULD-FIX (docs). The published login floor of 41,000 ms contradicted the
+  statement composition in its own sentence, which argued 54,000. MEASURED rather
+  than argued: see the corrections section below. Both were wrong.
+- R9 SHOULD-FIX (docs). DEPLOY.md told an operator to read the load-failure split
+  as FOUR diagnoses and named four of the seven kinds the series emits, omitting
+  the three data incidents the recovery contract exists for. All eight are named
+  now, in the two groups an operator can act on.
+- R10 SHOULD-FIX (docs). `state.md` named a gate run no other document records,
+  22 commits behind the tip, and no recorded gate covered the last three code
+  commits. Corrected with this round's own run.
+- R11 SHOULD-FIX (tests). The sole-writer scan for the live record map listed
+  seven roots and could not see `src/world_api`, `src/editor`, `src/admin`,
+  `src/guide` or `src/main.ts`, while the claim it enforces is "the ONLY file".
+  Widened to `src`, `server`, `headless` and `bot` whole.
+- R12 SHOULD-FIX (tests). That scan's anti-vacuity control asserted two LITERALS
+  while the scan used a REGEX, so a regex that stopped matching passed the
+  offender list empty and the control still went green: it controlled the file's
+  contents, not the detector. It runs the scan's own predicate now.
+- R13 SHOULD-FIX (tests). The join-teardown pin read the CATCH release as inside
+  its block and left the identical hole open on the FINALLY release one line
+  below, under a comment naming that exact failure mode.
+- R14 SHOULD-FIX (tests). The high-water-mark case drove a second write of the
+  SAME size, which a last-sample gauge satisfies just as well. It drives a
+  smaller write and then a larger one.
+- R15 SHOULD-FIX (db). The export's on-disk pre-gate is STRICTER than its own
+  authoritative rendered bound for incompressible content, so the widening is
+  inert there and the row comes back with its size instead of its content on the
+  owner's only readback. Recorded as a named residual with its reasoning rather
+  than closed by widening the pre-gate, which would defeat what the pre-gate is
+  for.
+- R16 SHOULD-FIX (critic). `boundedFreeholdDetail` was added to cover the log
+  routes that bypass the reporter and was wired at ONE of FOUR, while its own
+  docblock recorded the whole channel as closed. That is the S9 overstatement
+  again. Applied at all four, every shape they emit named in the vocabulary, and
+  the omission the round-trip arm structurally cannot see is pinned separately.
+- R17 SHOULD-FIX (critic). `normalizeHearthLoad` answers the COLD clock, which is
+  READY, for an `unsupported` row, while `loadFreeholdHearth`'s docblock said that
+  kind is what stops a damaged row granting a trip. Both files say what is true
+  now: the kind buys a WARN, and refusing the trip is 07a's job.
+- R18 NITS, all applied: the two upkeep JSONB columns are selected raw past both
+  export bounds (safe only because the DDL holds them NULL in this build, and the
+  release that writes them owes them the same treatment); `requireUpsertInput`
+  did not make the refusals its own header promises for two narrow integer
+  columns and two JSONB ones; `freeholdsForExport` skipped the account-id refusal
+  every sibling runs; a docblock had drifted two declarations from the constant
+  it describes, leaving one invariant undocumented and its neighbour wearing the
+  wrong text; the export docblock stated a truncation rule the function does not
+  implement and the boundary had no case; DEPLOY.md counted its alert-worthy
+  series with a bare literal; a duplicated comment fragment in the capture
+  handover; the by-path exception list in `src/sim/freehold/CLAUDE.md` was stale
+  against two importers the same range added; `FREEHOLD_MAX_VISIT_POLICY_LENGTH`
+  duplicated the column ceiling with nothing pinning them equal;
+  `requireHearthAccountId`'s docblock claimed a hold the combined port can no
+  longer produce; the clock-swallow pin's piecewise match dropped the one thing
+  the old literal proved, that the catch RETURNS the payload carrying the error;
+  the recursive module walk was contradicted by a flat directory listing beside
+  it; the join's `joined = true` comment claimed a leave would run for a tail that
+  is outside the guard.
+- R19 REFUTED by two of three verifiers, and JUDGED HERE rather than dropped:
+  "nothing executes any port closure in the wiring file". The claim is FACTUALLY
+  TRUE and the verifiers refuted it as already recorded, which it is (round
+  thirteen's X6 says so in as many words). It is answered in this round anyway,
+  by moving the login read's POLICY out of that file into a module five behaviour
+  cases drive, and by the mutation pass over the binding that remains.
+- R20 REVIEWED, NO CHANGE. The join tail after the `finally` closes is outside
+  the retain guard, so a synchronous throw there rejects the handshake with no
+  message handler attached and nothing schedules the leave that owns the release.
+  Every statement in that tail is a map write or a voided, caught promise today,
+  and moving the guard would re-indent a hundred and twenty lines for a case
+  nothing can currently reach. The over-claiming comment is corrected to state
+  the residual instead.
+
+### THE CLAIMS THIS ROUND REFUTED WITH A MEASUREMENT
+
+- THE HANDSHAKE HAS NO DEADLINE OF ITS OWN, and section 8a said it does.
+  `AUTH_TIMEOUT_MS` is cleared SYNCHRONOUSLY by the first-frame handler before
+  `authenticateWebSocket` runs; `server/ws_auth.ts`'s own docblock states that it
+  bounds upgrade-to-first-frame only, never the handshake's database work. The
+  database reviewer's ORIGINAL finding (C7) said exactly this and the contract
+  overwrote it with a correction that was itself wrong. The login budget gate is
+  therefore closed with a STATED CEILING rather than a share of a budget that
+  does not exist, and the contract says so.
+- COMMIT ANSWERS TO NEITHER SERVER-SIDE BOUND. Measured on PostgreSQL 16 with a
+  DEFERRABLE INITIALLY DEFERRED constraint trigger putting two seconds of work
+  inside the commit itself: under `SET LOCAL statement_timeout = 300` the COMMIT
+  ran 2,008 ms and COMMITTED, against a control at the session default that took
+  the same 2,008 ms. A second probe on a pool built with `query_timeout: 500`
+  REJECTED the same COMMIT after 501 ms with a client-side read timeout carrying
+  no SQLSTATE. So COMMIT's only ceiling is `DB_QUERY_TIMEOUT_MS`, and the floor
+  on the combined login read is 5,000 + 2 x 15,000 + 2 x 2,000 + 65,000 =
+  104,000 ms. The published 41,000 priced COMMIT at the lowered bound and the
+  prose beside it argued 54,000; the 19,000 and the 9,000 before them omitted
+  five statements between them. FOUR published figures, all wrong, all in the
+  same direction.
+- THE DELIBERATE BACKWARDS WRITE IS RETIRED. `phase-07-qa.md` closed with "a
+  record carrying a REAL plot name still goes backwards onto the row,
+  deliberately", and `noteRevisionMoved`'s docblock said the same. Un-gating
+  `revisionRegressed` reverses it, and it should be reversed: a live revision
+  below the entry's last committed one means the live record is not the record
+  that commit came from, since every install a rejoin is offered carries at least
+  the committed revision and every sanctioned mutator only increments, and
+  writing it walks the client-facing wire counter backwards permanently, which is
+  the exact harm the loader's own `wire_rev_shape` hold refuses on the read side.
+  Two pins encoded the old rule and both flip.
+
+### WHAT THE RULINGS COST THAT THEY DID NOT SAY THEY WOULD
+
+Ruling 1 step 4 named TWO pins that would flip. FOUR did: the two above, plus the
+absent-load install case and one that modelled an established account emptying
+its house at revision ZERO, which no sanctioned writer produces (every mutator
+increments, so emptying a record at five leaves it at six). That fixture proved
+its claim through a state the sim cannot reach; it is repaired rather than
+deleted, because the claim itself is right and worth keeping.
+
+Ruling 2's caveat held exactly as written: `entry.loaded` is also read by
+`preload`'s replay arms and by `blocked()`, and an entry with a hold and no
+`loaded` is blocked by both halves, so nothing writes for it while it is
+unrepaired.
+
+### THE MUTATION PASS
+
+Every guard added or changed was mutated on disk, its owning suite run, the RED
+confirmed, and the file restored by plain file write with the green re-confirmed.
+Each pass ran against a no-op control first, and the control's full `Tests N
+passed (N)` line is quoted in the verdict rather than summarized.
+
+- Ruling 1, four mutants, control `Tests 196 passed (196)`, ALL KILLED: re-gating
+  `revisionRegressed` behind `standInSeed` (3 failed), dropping the absent-arm
+  install (1), minting unconditionally instead of adopting the live identity (1),
+  and installing the stand-in instead of the minted identity (1).
+- Ruling 2, two mutants, control `Tests 197 passed (197)`, BOTH KILLED: every
+  hold terminal again (1 failed), and every hold retryable (1 failed). Both
+  directions, because a one-way pin here is satisfied by a constant.
+- The login budget, four mutants, control `Tests 201 passed (201)`, ALL KILLED:
+  the cap dropped entirely (2 failed), the expiry touching the entry instead of
+  leaving it alone (1), the deadline never cancelled (4), and a scheduler fault
+  refusing the login instead of running uncapped (1).
+- The capture bookkeeping, one mutant, control `Tests 190 passed (190)`, KILLED:
+  restoring `retain`'s inline capture clear (1 failed).

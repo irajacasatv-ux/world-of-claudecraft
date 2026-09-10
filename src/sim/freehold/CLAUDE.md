@@ -185,6 +185,22 @@ carries an opaque plot id only.
   foreign-key account cascade is its only removal path. That absence is pinned
   in `tests/server/main_retention_wiring.test.ts`, beside the same decision for
   `bank_ledger`.
+  THE PLOT IDENTITY DIVERGES BY HOST, accepted and recorded rather than fixed.
+  ONLINE, `server/freehold_install.ts` installs a default carrying the identity
+  the store minted on the ABSENT arm of a durable load, so an online record
+  answers to a unique id from its FIRST session. OFFLINE AND HEADLESS there is no
+  store and no minter, so every record on those hosts carries the one literal
+  stand-in `PENDING_FREEHOLD_PLOT_ID` forever, and two offline records are
+  therefore indistinguishable by `plotId`. That is harmless while the id is
+  PRESENTATION ONLY, which `types.ts` states as a rule: no sim rule may branch on
+  it, no admission may test it, no lookup may key on it. IT IS NOT HARMLESS TO A
+  CONSUMER THAT KEYS ON IT, which would be correct online and colliding offline,
+  so THE PHASE THAT MAKES `plotId` LOAD-BEARING AS A KEY MUST SUPPLY A MINTER FOR
+  THOSE HOSTS FIRST. Anything minting an id inside this directory draws from
+  `Rng`, never a clock and never `Math.random`: an id minted from a clock forks
+  the three hosts on one seed, which is exactly the class of fork the parity gate
+  only catches once a record exists. Carried as a named gate in
+  `docs/freeholds/persistence-rollout-contract.md` section 8a.
   DETERMINISM, before anyone iterates it: `ctx.freeholds` is a `Map`, so it
   walks in INSERTION order, and once 07 feeds it that order is host-dependent
   (server: per-account login arrival; offline: one record; headless: whatever

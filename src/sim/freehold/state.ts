@@ -27,13 +27,17 @@ import {
 
 /** The in-memory stand-in plot identity a FRESHLY SEEDED record carries. A
  *  record installed from a durable row carries the ROW's minted id instead
- *  (freeholdStateFromPersisted, then loadFreehold below), so this is no longer
- *  what every record answers to: it is what a record answers to when nothing
- *  durable has been installed over it, which on the server is a fresh account's
- *  whole first session and on the offline and headless hosts is always. That
- *  split IS the write seal's stand-in case in server/freehold_persist.ts, and
- *  the gap it leaves is carried in
- *  docs/freeholds/persistence-rollout-contract.md section 8a. A fixed literal:
+ *  (freeholdStateFromPersisted, then loadFreehold below), and so does one
+ *  installed on the ABSENT arm of a durable load, which carries the id the store
+ *  minted for the row it is about to insert (server/freehold_install.ts). So
+ *  ONLINE this is what a record answers to only in the window before an install,
+ *  or after an eviction that no install follows, which is precisely the reseeded
+ *  default the write seal exists to refuse (server/freehold_write_seal.ts).
+ *  OFFLINE AND HEADLESS there is no store and no minter, so it is what every
+ *  record answers to, always. That divergence is ACCEPTED and recorded in
+ *  docs/freeholds/persistence-rollout-contract.md section 8a and in this
+ *  directory's CLAUDE.md: a later consumer that keys on plotId owes those hosts
+ *  a minter first. A fixed literal:
  *  it never contains the owner key or an account id (the brand in types.ts keeps
  *  a plain string, and so an owner key, from reaching a plot id by assignment;
  *  the constructor itself is a convention, as types.ts says), and it stays

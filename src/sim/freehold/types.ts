@@ -24,18 +24,16 @@ declare const freeholdPlotIdBrand: unique symbol;
  * this string must behave identically, which is what makes it safe to generate,
  * safe to show and safe to change.
  *
- * OWED WORK, named here because the wire contract and the sim contract disagree
- * and only the sim half is true today. Nothing teaches a LIVE record its minted
- * public identity: the store mints one, writes it to the row, and leaves the
- * record carrying PENDING_FREEHOLD_PLOT_ID for the whole of a fresh account's
- * first session, so the same account's live record answers to the stand-in in
- * one session and to the minted id in the next, for timing reasons alone. That
- * is harmless while nothing publishes the descriptor (the wire is dark and
- * `freeholdDescriptorFor` has no production caller), and it is not harmless
- * afterwards: `account_freeholds` declares a UNIQUE `plot_id` precisely because
- * a client echoes it back, and every fresh account's live record currently
- * answers to the same stand-in. The release that publishes the descriptor owes
- * the assignment. See the persistence rollout contract's carried gates.
+ * WHERE THE IDENTITY COMES FROM, and where it still does not. ONLINE, a record
+ * is installed carrying the row's id, or the id the store minted for the row it
+ * is about to insert (server/freehold_install.ts), so an online record answers
+ * to a unique name from its first session and `account_freeholds`' UNIQUE
+ * `plot_id` means what it says. OFFLINE AND HEADLESS have no store and no
+ * minter, so every record there carries PENDING_FREEHOLD_PLOT_ID and two of them
+ * are indistinguishable by this field. That divergence is ACCEPTED and recorded
+ * in docs/freeholds/persistence-rollout-contract.md section 8a; it is harmless
+ * under the rule above and only under it. A consumer that ever KEYS on this
+ * value owes those two hosts a minter FIRST, drawing from `Rng`, never a clock.
  */
 export type FreeholdPlotId = string & { readonly [freeholdPlotIdBrand]: true };
 
