@@ -14,12 +14,13 @@ import { FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
 import { pool, runWithStatementTimeout } from './db';
 import {
-  type FreeholdRowLoad,
+  type FreeholdQueryable,
   freeholdForAccount,
   mintFreeholdPlotId,
   upsertFreehold,
 } from './freehold_db';
 import { loadFreeholdHearth } from './freehold_hearth_db';
+import { readLoginDurables } from './freehold_hearth_load';
 import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
@@ -95,30 +96,15 @@ export function createGameFreeholdPersistStore(deps: {
     // which port a host binds must not decide it. So the row is captured as it
     // is read, and any later rejection with a row in hand is answered as a
     // thrown CLOCK rather than a failed row.
-    readDurables: async (accountId, maxOwnedBytes) => {
-      let row: FreeholdRowLoad | undefined;
-      try {
-        return await runWithStatementTimeout(
-          FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
-          async (query) => {
-            row = await freeholdForAccount({ query }, accountId, maxOwnedBytes);
-            return {
-              row,
-              hearth: await loadFreeholdHearth({ query }, accountId).catch((error: unknown) => ({
-                kind: 'threw' as const,
-                error,
-              })),
-            };
-          },
-        );
-      } catch (error) {
-        // NO ROW IN HAND means the row read itself failed, or failed before it
-        // answered. Fail CLOSED: rethrow, and the account is held rather than
-        // handed a default over a row this host could not read.
-        if (row === undefined) throw error;
-        return { row, hearth: { kind: 'threw' as const, error } };
-      }
-    },
+    readDurables: (accountId, maxOwnedBytes) =>
+      readLoginDurables<FreeholdQueryable>(
+        (run) =>
+          runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, (query) =>
+            run({ query }),
+          ),
+        (db) => freeholdForAccount(db, accountId, maxOwnedBytes),
+        (db) => loadFreeholdHearth(db, accountId),
+      ),
     writeRow: (input) => upsertFreehold(pool, input),
     // ONE declaration of the realm's identity sets, consumed by BOTH sides.
     // Declaring them twice is how a load that refuses a tier and a save that

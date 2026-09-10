@@ -16,7 +16,7 @@
 // docs/freeholds/content-numbers-workbook.md records.
 
 import { describe, expect, it } from 'vitest';
-import { freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
+import { boundedFreeholdDetail, freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
 import {
   FREEHOLD_MAX_ID_LENGTH,
   FREEHOLD_MAX_LAYOUT_ROWS,
@@ -1226,6 +1226,39 @@ describe('freeholdLoadDiagnostic carries counts and classification only', () => 
       const diagnostic = freeholdLoadDiagnostic(result);
       expect(diagnostic, result.kind).not.toBeNull();
       expect(diagnostic?.detail, result.kind).not.toContain('unclassified');
+    }
+  });
+
+  it('names every detail that reaches a log from OUTSIDE this reporter', () => {
+    // WHAT THE LOOP ABOVE CANNOT SEE, and the reason two producers reached an
+    // operator log unbounded while the ledger recorded the channel closed: that
+    // loop walks normalizeFreehold's own results, so it covers the reporter's
+    // producers and nothing else. FOUR shapes reach a log without passing
+    // through freeholdLoadDiagnostic at all, all four from server/ modules, and
+    // each of them is now wrapped in boundedFreeholdDetail at its call site.
+    // If a shape here is not in KNOWN_DETAILS, wrapping it does not leak: it
+    // silently replaces a real diagnostic with `unclassified`, so this pin is
+    // what stops the bound being applied and the diagnostic being lost.
+    const fromOutside = [
+      // server/freehold_db.ts, the stranded plot slot.
+      'plot_index 3 is outside the admitted slot 0',
+      // server/freehold_persist.ts classify(), both oversize arms.
+      '4194304 on-disk bytes past the pre-gate, so the 106496 byte stored limit was never measured',
+      '131072 owned bytes over the 101376 byte limit',
+      // server/freehold_db.ts upsertFreehold(), both conflict literals, and the
+      // store's own missing-row literal beside them.
+      'the minted plot identity is already in use by another row',
+      'insert conflicted but no row was present to diagnose',
+      'the row vanished',
+    ];
+    for (const detail of fromOutside) {
+      expect(boundedFreeholdDetail(detail), detail).toBe(detail);
+    }
+    // The control, so the loop above is not passing because the bound admits
+    // everything: a plot id and an item id are exactly what a charset test
+    // would wave through, and both must still read as unclassified.
+    for (const leak of ['plot:9f3a1c', 'furnishing_oak_bed', 'account:918273']) {
+      expect(boundedFreeholdDetail(leak), leak).toBe('unclassified');
     }
   });
 });

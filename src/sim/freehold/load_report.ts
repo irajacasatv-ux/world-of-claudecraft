@@ -40,8 +40,15 @@ export interface FreeholdLoadDiagnostic {
  *
  * Fails closed by construction: a fault this list does not name reads as
  * `unclassified`, which costs an operator one detail and leaks nothing. A
- * producer that adds a fault adds its shape here, and the round-trip arm of
- * tests/freehold_state.test.ts catches the omission.
+ * producer that adds a fault adds its shape here.
+ *
+ * WHICH PRODUCERS THE SUITE ACTUALLY WATCHES, stated because an earlier version
+ * of this line claimed all of them. The round-trip arm of
+ * tests/freehold_state.test.ts walks normalizeFreehold's own results, so it sees
+ * the reporter's producers and nothing else; the four shapes that reach a log
+ * from OUTSIDE this module (the SQL reader's unadmitted and oversize details,
+ * the save path's refusal and upsert conflict details) are pinned separately
+ * against `boundedFreeholdDetail` in that same file.
  */
 const KNOWN_DETAILS: readonly RegExp[] = [
   /^(?:not_an_object|prototype_shape|prototype_key|unknown_field|plot_id_shape|version_shape)$/,
@@ -62,6 +69,17 @@ const KNOWN_DETAILS: readonly RegExp[] = [
   // because "the two sides speak one vocabulary" has to be true of the bound as
   // well as of the checks, and the bound is now applied at that site.
   /^plot_index \d{1,10} is outside the admitted slot \d{1,10}$/,
+  // The SQL READER's two OVERSIZE details and the save path's two upsert
+  // CONFLICT details, on the same reasoning and for the same reason they were
+  // missed: the entry above was written for the reader, the bound was applied at
+  // one of its arms only, and the docblock recorded the whole channel as closed.
+  // Both oversize shapes are numbers this codebase measured plus fixed prose;
+  // both conflict shapes are compile-time literals in server/freehold_db.ts.
+  /^\d{1,10} on-disk bytes past the pre-gate, so the \d{1,10} byte stored limit was never measured$/,
+  /^\d{1,10} owned bytes over the \d{1,10} byte limit$/,
+  /^the minted plot identity is already in use by another row$/,
+  /^insert conflicted but no row was present to diagnose$/,
+  /^the row vanished$/,
   /^repaired:(?:condition|rev|version)(?:,(?:condition|rev|version)){0,2}$/,
   // A record version, the one number that reaches a detail as text. Narrowed to
   // what the producer can actually emit: normalizeFreehold reports a version
@@ -74,12 +92,16 @@ const KNOWN_DETAILS: readonly RegExp[] = [
 const UNCLASSIFIED = 'unclassified';
 
 /** The bound itself, EXPORTED, because this reporter is not the only route a
- *  detail takes to a log. server/freehold_persist.ts logs a SQL reader's
- *  unadmitted detail and the save path's own refusal detail through its warn and
- *  error ports without passing either through freeholdLoadDiagnostic, and the
- *  save-path entry in KNOWN_DETAILS above was written for exactly that traffic.
- *  Applying it at those two sites is what makes the bound a property of the
- *  channel rather than of one function. */
+ *  detail takes to a log. server/freehold_persist.ts logs the SQL reader's
+ *  unadmitted and oversize details, and the save path's own refusal and upsert
+ *  conflict details, through its warn and error ports without passing any of
+ *  them through freeholdLoadDiagnostic. FOUR SITES, not the two an earlier
+ *  version of this line named: the bound was applied at the unadmitted arm
+ *  alone while the docblock recorded the whole channel as closed, which is the
+ *  same overstatement the ledger records under S9. Applying it at every one of
+ *  them is what makes the bound a property of the CHANNEL rather than of one
+ *  function, and every shape they emit is named in KNOWN_DETAILS above so
+ *  applying it does not silently turn a real diagnostic into `unclassified`. */
 export const boundedFreeholdDetail = (detail: string): string =>
   KNOWN_DETAILS.some((shape) => shape.test(detail)) ? detail : UNCLASSIFIED;
 

@@ -132,9 +132,15 @@ export type FreeholdHearthLoad =
  *  builds an owner key from the id first, and load-bearing for the 07a
  *  admission participant, which will run inside someone else's transaction.
  *  NOTE the class change it makes: a non-positive id used to run the query and
- *  answer `absent`, which reads as READY; it now throws, and loadOnce converts
- *  that into an unadmitted HOLD, so such an account is write-blocked rather
- *  than handed a free travel. */
+ *  answer `absent`, which reads as READY; it now throws. WHERE THAT THROW LANDS
+ *  DEPENDS ON THE PORT, and only a coincidence keeps the two the same. On the
+ *  two-port fallback the rejection reaches loadOnce, which converts it into an
+ *  unadmitted HOLD. On the COMBINED port the clock read sits inside a `.catch`
+ *  that carries a fault across as a value, so this throw alone would answer a
+ *  cold clock and a normal login; the account is still held only because
+ *  server/freehold_db.ts runs the IDENTICAL predicate on the row read first,
+ *  outside that catch. The 07a participant, which runs inside someone else's
+ *  transaction, is the caller this guard is really for. */
 function requireHearthAccountId(accountId: number): void {
   if (!Number.isSafeInteger(accountId) || accountId <= 0) {
     throw new RangeError('freehold hearth accountId must be a positive safe integer');
@@ -144,8 +150,19 @@ function requireHearthAccountId(accountId: number): void {
 /** One indexed primary-key read, and a READ ONLY one: a missing row is
  *  'absent' (ABSENT_FREEHOLD_HEARTH, ready at revision zero) and is NEVER
  *  created here. A row whose counters do not read back as non-negative BIGINT
- *  text is 'unsupported', never quietly reported as absence, because absence
- *  means ready and a damaged row must not grant a trip. */
+ *  text is 'unsupported' rather than absence.
+ *
+ *  WHAT THAT KIND BUYS, stated exactly, because an earlier version of this line
+ *  claimed it stops a damaged row granting a trip and it does not. This release
+ *  normalizes 'unsupported' to the COLD clock with a WARN
+ *  (server/freehold_hearth_load.ts), which is ready: the store's deliberate
+ *  asymmetry is that the plot fails closed and the clock fails OPEN, and an
+ *  unreadable clock is the case that asymmetry is about. The distinct kind buys
+ *  the operator a named warning that the realm has outgrown a schema it is
+ *  still reading, not a refusal. REFUSING THE TRIP IS 07a's JOB: the admission
+ *  participant that lands there is the caller with a trip to refuse, and it
+ *  must treat 'unsupported' as corrupt rather than as ready. Nothing writes
+ *  this row in this release, so nothing acts on it yet. */
 export async function loadFreeholdHearth(
   db: FreeholdQueryable,
   accountId: number,
