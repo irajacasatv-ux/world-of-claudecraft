@@ -3826,9 +3826,9 @@ export class GameServer {
     );
   }
 
-  /** Undo this session's own guild-book work: two leave-path callers. No empty
-   *  check, because the callee loops the ids it is handed: a second guard here
-   *  only invites the two to disagree. */
+  /** Undo this session's own guild-book work: FIVE callers, two on the leave path
+   *  and three quarantine paths that used to repeat it inline. No empty check,
+   *  because the callee loops the ids it is handed. */
   private reconcileOwnGuildBooks(session: ClientSession): void {
     this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
   }

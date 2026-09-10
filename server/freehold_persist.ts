@@ -58,6 +58,12 @@ import {
   type FreeholdUpsertResult,
 } from './freehold_db';
 import type { FreeholdHearthLoad } from './freehold_hearth_db';
+import {
+  ABSENT_HEARTH_REVISION,
+  COLD_HEARTH,
+  type FreeholdHearthReading,
+  normalizeHearthLoad,
+} from './freehold_hearth_load';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
 
 /** How long the shutdown drain waits for running and pending writes before it
@@ -99,15 +105,19 @@ export const FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS = 5_000;
  * when the difference binds, and the handshake is the one place a slow read is
  * paid by a player rather than by a sweep.
  *
- * PER STATEMENT, NOT PER LOGIN. The combined port (readDurables, bound in
- * server/freehold_persist_wiring.ts) puts both reads on ONE checked-out client,
- * but SET LOCAL bounds each separately: measured on the dev database, two 300 ms
- * sleeps under a 400 ms bound both completed, 612 ms elapsed. Worst case 5,000
- * (DB_POOL_CONNECT_TIMEOUT_MS) + 2 x 2,000 = 9,000 ms against a 10,000 ms
- * handshake, down from 19,000 when each read took its own checkout. Nine against
- * ten is not slack: what is still missing is a cap on the WHOLE preload against
- * the handshake's remaining budget, without which an overrunning login has its
- * socket closed while the chain runs on, takes a lease and joins. Section 8a.
+ * PER STATEMENT, AND IT DOES NOT COVER THE WHOLE TRANSACTION. The combined port
+ * (readDurables, in server/freehold_persist_wiring.ts) puts both reads on ONE
+ * checked-out client, which is the real saving. But SET LOCAL bounds each
+ * statement separately (measured: two 300 ms sleeps under a 400 ms bound both ran,
+ * 612 ms elapsed), AND BEGIN and SET LOCAL both run BEFORE the lowered bound is in
+ * force, so each of those and the trailing COMMIT is bounded only by the pool
+ * session default. A floor on the worst case is 5,000 (DB_POOL_CONNECT_TIMEOUT_MS)
+ * + 2 x 15,000 (DB_STATEMENT_TIMEOUT_MS) + 3 x 2,000 = 41,000 ms against a 10,000
+ * ms handshake. Two transactions were about 78,000, so this roughly halves it and
+ * is worth keeping. An earlier version said 9,000 and called it a margin; it
+ * omitted five statements, as did the 19,000 before it. NOTHING here bounds the
+ * login: that needs a cap on the WHOLE preload against the handshake's remaining
+ * budget, which does not exist. Section 8a's gate stays open, undiminished.
  */
 export const FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS = 2_000;
 
@@ -236,12 +246,6 @@ export const FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES = 2;
  *  normal ceiling; the bound is here so a pathological re-arm cannot hold a
  *  leaving session open. */
 export const FREEHOLD_PERSIST_FLUSH_MAX_PASSES = 4;
-
-/** The revision an absent hearth clock reports, matching ABSENT_FREEHOLD_HEARTH
- *  in server/freehold_hearth_db.ts. Duplicated as a literal on purpose: this
- *  module takes only TYPES from the hearth module, so a fake port bag in a
- *  Vitest needs no database module in its runtime graph. */
-const ABSENT_HEARTH_REVISION = '0';
 
 /**
  * Every reason a durable load can refuse, as a VALUE so a consumer can walk it.
@@ -910,26 +914,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   /** Normalize one hearth answer, or the absence of one. Total: a clock this
    *  store cannot read starts COLD rather than faulting the plot load beside it,
    *  which is a deliberate asymmetry carried as a named gate. */
-  function normalizeHearth(load: FreeholdHearthLoad): { readyAtMs: number; revision: string } {
-    if (load.kind === 'state') {
-      const readyAtMs = Number(load.state.readyAtMs);
-      return {
-        readyAtMs: Number.isFinite(readyAtMs) && readyAtMs > 0 ? readyAtMs : 0,
-        revision: load.state.revision,
-      };
-    }
-    if (load.kind === 'unsupported') {
-      ports.warn(`freehold hearth clock unsupported (${load.detail}); the cooldown starts cold`);
-    }
-    return { readyAtMs: 0, revision: ABSENT_HEARTH_REVISION };
-  }
+  const normalizeHearth = (load: FreeholdHearthLoad): FreeholdHearthReading =>
+    normalizeHearthLoad(load, ports.warn);
 
-  const coldHearth = (err: unknown): { readyAtMs: number; revision: string } => {
+  const coldHearth = (err: unknown): FreeholdHearthReading => {
     ports.error(
       'freehold hearth clock read failed; the cooldown starts cold:',
       boundedDatabaseError(err),
     );
-    return { readyAtMs: 0, revision: ABSENT_HEARTH_REVISION };
+    return COLD_HEARTH;
   };
 
   /** The two login reads, on one client when the host offers one. The row half
@@ -941,12 +934,19 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    *  Which port a host binds must not decide that. */
   async function readLoginPair(
     accountId: number,
-  ): Promise<{ rowLoad: FreeholdRowLoad; hearth: { readyAtMs: number; revision: string } }> {
-    const both = ports.readDurables
-      ? await ports.readDurables(accountId, FREEHOLD_MAX_STORED_BYTES)
+  ): Promise<{ rowLoad: FreeholdRowLoad; hearth: FreeholdHearthReading }> {
+    const combined = ports.readDurables;
+    const both = combined
+      ? await combined(accountId, FREEHOLD_MAX_STORED_BYTES)
       : { row: await ports.readRow(accountId, FREEHOLD_MAX_STORED_BYTES), hearth: null };
     try {
-      const load = both.hearth ?? (await ports.readHearth(accountId));
+      // ON THE PORT, NEVER ON THE VALUE. `both.hearth ?? await readHearth(...)`
+      // sent a combined port answering a nullish clock to the UNSHARED reader,
+      // which is the coupling this merge removes and, on the real host, a second
+      // read outside the transaction. A nullish load throws INTO the catch below
+      // and answers a cold clock, the same as any other unreadable clock.
+      const load = combined ? both.hearth : await ports.readHearth(accountId);
+      if (load === null) throw new Error('the durable port answered no hearth load');
       return {
         rowLoad: both.row,
         hearth: load.kind === 'threw' ? coldHearth(load.error) : normalizeHearth(load),
@@ -1152,7 +1152,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
         durableRev: FREEHOLD_ABSENT_DURABLE_REV,
       },
-      { readyAtMs: 0, revision: ABSENT_HEARTH_REVISION },
+      COLD_HEARTH,
     );
   }
 

@@ -3,15 +3,22 @@
 // sim and the real background gate. It lives beside the store rather than
 // inside it so the store file imports no SQL at all and is defined purely by
 // its port surface, which is what lets a Vitest drive the whole lifecycle with
-// neither a database nor a GameServer. Moved here WHOLE from the tail of
-// server/freehold_persist.ts; nothing in the factory changed.
+// neither a database nor a GameServer. Moved here from the tail of
+// server/freehold_persist.ts. An earlier version of this line claimed the move
+// changed nothing in the factory; a reviewer showed it had silently dropped the
+// statement bound off the two-port fallback, which is restored below.
 import { FREEHOLD_TIER_IDS } from '../src/sim/content/freehold';
 import { normalizeFreehold, persistedFreeholdFromState } from '../src/sim/freehold/persisted';
 import { serializeFreehold } from '../src/sim/freehold/state';
 import { FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
 import { pool, runWithStatementTimeout } from './db';
-import { freeholdForAccount, mintFreeholdPlotId, upsertFreehold } from './freehold_db';
+import {
+  type FreeholdRowLoad,
+  freeholdForAccount,
+  mintFreeholdPlotId,
+  upsertFreehold,
+} from './freehold_db';
 import { loadFreeholdHearth } from './freehold_hearth_db';
 import {
   createFreeholdPersistStore,
@@ -46,11 +53,21 @@ export function createGameFreeholdPersistStore(deps: {
   const writer = createKeyedSerialWriter<string>();
   const gate = deps.backgroundDbGate;
   return createFreeholdPersistStore({
-    // The two-port fallback, UNBOUNDED and unused on this host: the pair below
-    // is what the store actually calls. Kept because the ports are the store's
-    // declared surface and a host without a transaction seam still needs them.
-    readRow: (accountId, maxOwnedBytes) => freeholdForAccount(pool, accountId, maxOwnedBytes),
-    readHearth: (accountId) => loadFreeholdHearth(pool, accountId),
+    // The two-port fallback: unused on THIS host, because readDurables below is
+    // bound and the store prefers it, but still BOUNDED. Extracting this file
+    // dropped these two wrappers and left the pair on the pool's 15,000 ms
+    // session default against a 10,000 ms handshake; that was a regression, not
+    // a decision, and a reviewer caught the header claiming otherwise. Kept
+    // because the ports are the store's declared surface and a host without a
+    // transaction seam still needs them.
+    readRow: (accountId, maxOwnedBytes) =>
+      runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, (query) =>
+        freeholdForAccount({ query }, accountId, maxOwnedBytes),
+      ),
+    readHearth: (accountId) =>
+      runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, (query) =>
+        loadFreeholdHearth({ query }, accountId),
+      ),
     // BOTH LOGIN READS, BOUNDED, ON ONE CHECKED-OUT CLIENT. The bound needs the
     // one seam that can lower the pool's own statement timeout, and that seam is
     // a transaction; wrapping each read separately bought the right bound at
@@ -64,18 +81,44 @@ export function createGameFreeholdPersistStore(deps: {
     // The ROW read may throw: loadOnce turns that into a hold. If it does, this
     // transaction rolls back and the clock is never read, which is the same cold
     // clock the caller would have taken anyway.
-    readDurables: (accountId, maxOwnedBytes) =>
-      runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, async (query) => ({
-        row: await freeholdForAccount({ query }, accountId, maxOwnedBytes),
-        // CAUGHT, not propagated: a rejection here would roll the transaction
-        // back and take the row with it, turning a clock fault into a plot hold.
-        // The store answers a cold clock for a thrown read either way, and this
-        // keeps that identical to the unshared shape.
-        hearth: await loadFreeholdHearth({ query }, accountId).catch((error: unknown) => ({
-          kind: 'threw' as const,
-          error,
-        })),
-      })),
+    //
+    // THE GUARD IS AROUND THE WHOLE TRANSACTION, not around the clock read, and
+    // that distinction is the fix for a real hole. An inner `.catch` sees only
+    // loadFreeholdHearth's own promise; it cannot see the COMMIT that
+    // runWithStatementTimeout issues afterwards. A clock fault that leaves the
+    // connection USABLE (a relation error, a statement timeout) lets COMMIT
+    // answer a ROLLBACK tag and the row lands. A clock fault that KILLS the
+    // connection (backend crash, restart, dropped socket) makes COMMIT reject,
+    // the helper rethrow, and the port reject, which loadOnce turns into a
+    // write-blocking hold on the house for a fault in the clock. The two-port
+    // pair answers that same fault with a cold clock and a normal login, and
+    // which port a host binds must not decide it. So the row is captured as it
+    // is read, and any later rejection with a row in hand is answered as a
+    // thrown CLOCK rather than a failed row.
+    readDurables: async (accountId, maxOwnedBytes) => {
+      let row: FreeholdRowLoad | undefined;
+      try {
+        return await runWithStatementTimeout(
+          FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
+          async (query) => {
+            row = await freeholdForAccount({ query }, accountId, maxOwnedBytes);
+            return {
+              row,
+              hearth: await loadFreeholdHearth({ query }, accountId).catch((error: unknown) => ({
+                kind: 'threw' as const,
+                error,
+              })),
+            };
+          },
+        );
+      } catch (error) {
+        // NO ROW IN HAND means the row read itself failed, or failed before it
+        // answered. Fail CLOSED: rethrow, and the account is held rather than
+        // handed a default over a row this host could not read.
+        if (row === undefined) throw error;
+        return { row, hearth: { kind: 'threw' as const, error } };
+      }
+    },
     writeRow: (input) => upsertFreehold(pool, input),
     // ONE declaration of the realm's identity sets, consumed by BOTH sides.
     // Declaring them twice is how a load that refuses a tier and a save that

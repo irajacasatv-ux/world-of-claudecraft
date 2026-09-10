@@ -4114,6 +4114,31 @@ describe('the coordinator side of the wiring (source pins)', () => {
     expect(body.indexOf('this.clients.set(pid, session)')).toBeLessThan(closed);
   });
 
+  it('gives the reference back even when the flush rejects', () => {
+    // THE SWALLOW MOVED, AND NOTHING PINNED IT. It used to sit at the call site
+    // in server/game.ts and is now in the binding module that owns the pairing,
+    // which is the right home and a place no reader of the leave path will look.
+    // If a later edit drops it, flushAndRelease's rejection escapes the leave's
+    // `finally` ABOVE the lease release and removePlayer, stranding the entry and
+    // the seeded record for the life of the process: invariant 1 territory, and
+    // unreachable from a unit test of this store because every caller is the
+    // coordinator. The old call-site catch was unpinned too, so coverage did not
+    // regress; it was never there.
+    const binding = stripComments(readFileSync('server/freehold_session_binding.ts', 'utf8'));
+    // Sliced by hand: methodBody closes on a two-space brace, and this is a
+    // top-level function whose body closes at column zero.
+    const opens = binding.indexOf('export async function flushFreeholdBinding(');
+    expect(opens).toBeGreaterThan(-1);
+    const body = binding.slice(opens, binding.indexOf('\n}', opens));
+    expect(body).toContain('.flushAndRelease(ownerKey)');
+    expect(body).toContain('.catch(');
+    // And it is the FLUSH that is caught, not something after it: the release is
+    // the half that must happen, so the catch has to sit on that same promise.
+    const flushAt = body.indexOf('.flushAndRelease(ownerKey)');
+    expect(body.slice(flushAt)).toContain('.catch(');
+    expect(body.slice(0, flushAt)).not.toContain('.catch(');
+  });
+
   it('flushes the plot after the character save and before the record is evicted', () => {
     // removePlayer reaches releaseFreeholdOnLeave, which evicts once the last
     // session sharing the owner key leaves; serializeFreehold then answers null
@@ -4297,59 +4322,88 @@ describe('the combined login port, which is what the server actually binds', () 
 });
 
 describe('the composition root that binds the combined port (source pins)', () => {
-  // A SURVIVING MUTANT PUT THIS BLOCK HERE. Removing the `.catch` below left all
+  // A SURVIVING MUTANT PUT THIS BLOCK HERE. Removing the clock swallow left all
   // 180 cases green, and `tsc` stays silent because dropping the `threw` arm only
   // NARROWS the value against the port's declared union. Nothing in this suite
   // imports the wiring module (it binds the real pool at module scope), so the
-  // one property that makes a shared transaction safe had no coverage of any
-  // kind. These are structural pins, which is the honest tool for a binding whose
-  // real behaviour needs a live pool; the transaction semantics they rest on were
+  // properties that make a shared transaction safe had no coverage of any kind.
+  // These are structural pins, which is the honest tool for a binding whose real
+  // behaviour needs a live pool; the transaction semantics they rest on were
   // measured against PostgreSQL and are recorded in section 8a of the rollout
   // contract.
   const WIRING = stripComments(readFileSync('server/freehold_persist_wiring.ts', 'utf8'));
+  /** One port binding's own text, from its key to the next sibling key. Scoping
+   *  matters more than usual here: an earlier version of the swallow pin ran its
+   *  window to the next `}),` and so covered the WHOLE factory tail, which an
+   *  identical catch attached to any other port would have satisfied. */
+  const binding = (key: string, nextKey: string): string => {
+    const at = WIRING.indexOf(`${key}:`);
+    expect(at).toBeGreaterThan(-1);
+    const stop = WIRING.indexOf(`${nextKey}:`, at);
+    expect(stop).toBeGreaterThan(at);
+    return WIRING.slice(at, stop);
+  };
 
   it('puts BOTH login statements inside ONE bounded transaction', () => {
-    const flat = WIRING.replace(/\s+/g, ' ');
-    // One wrapper, not one per read: two wrappers is the defect this replaced.
-    expect(flat.split('runWithStatementTimeout(').length - 1).toBe(1);
-    const wrapper = flat.indexOf('runWithStatementTimeout(');
-    const row = flat.indexOf('freeholdForAccount({ query }', wrapper);
-    const hearth = flat.indexOf('loadFreeholdHearth({ query }', wrapper);
+    const durables = binding('readDurables', 'writeRow').replace(/\s+/g, ' ');
+    // ONE wrapper for the pair, not one per read: two wrappers is the defect
+    // this replaced, and it costs four times the round trips on the login path.
+    expect(durables.split('runWithStatementTimeout(').length - 1).toBe(1);
+    expect(durables).toContain('FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS');
     // BOTH on the transaction's own `query`, never on the pool: a statement sent
     // to `pool` runs on a different client and escapes the bound entirely.
-    expect(row).toBeGreaterThan(wrapper);
-    expect(hearth).toBeGreaterThan(wrapper);
-    expect(flat).toContain('FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS');
+    expect(durables).toContain('freeholdForAccount({ query }');
+    expect(durables).toContain('loadFreeholdHearth({ query }');
+    expect(durables).not.toContain('freeholdForAccount(pool');
+    expect(durables).not.toContain('loadFreeholdHearth(pool');
   });
 
-  it('swallows the CLOCK read and never the ROW read', () => {
-    const flat = WIRING.replace(/\s+/g, ' ');
-    // THE CLOCK FAILS OPEN. Without this catch a clock fault rejects the shared
-    // transaction and takes the already-read row with it, so an account whose
-    // Hearth row is unreadable is write-blocked out of its house: a clock fault
-    // promoted into a plot hold, which inverts the store's stated asymmetry.
-    const hearth = flat.indexOf('loadFreeholdHearth({ query }');
-    expect(hearth).toBeGreaterThan(-1);
-    const after = flat.slice(hearth);
-    expect(after.slice(0, after.indexOf('}),'))).toContain(
-      ".catch((error: unknown) => ({ kind: 'threw' as const, error, })",
-    );
-    // THE PLOT FAILS CLOSED. The row read must NOT be caught here: loadOnce is
-    // what turns its rejection into a hold, and a hold is what stops an empty
-    // default being written over a row this host could not read.
-    const row = flat.indexOf('row: await freeholdForAccount({ query }');
-    expect(row).toBeGreaterThan(-1);
-    expect(flat.slice(row, flat.indexOf(',', flat.indexOf(')', row)))).not.toContain('.catch');
+  it('swallows the CLOCK read and never the ROW read, across the WHOLE transaction', () => {
+    const durables = binding('readDurables', 'writeRow').replace(/\s+/g, ' ');
+    // THE CLOCK FAILS OPEN, and the guard has to be around the transaction, not
+    // around the clock's own promise. An inner catch cannot see the COMMIT that
+    // runWithStatementTimeout issues afterwards, so a clock fault that KILLS the
+    // connection made COMMIT reject, the port reject, and loadOnce answer a
+    // write-blocking hold on the house for a fault in the clock. The row is
+    // captured as it is read and any later rejection with a row in hand is
+    // answered as a thrown CLOCK.
+    expect(durables).toContain('let row: FreeholdRowLoad | undefined');
+    expect(durables).toContain('row = await freeholdForAccount({ query }');
+    expect(durables).toContain("return { row, hearth: { kind: 'threw' as const, error } }");
+    // THE PLOT FAILS CLOSED. With no row in hand the rejection is rethrown, so
+    // loadOnce still turns an unreadable row into a hold and nothing is written
+    // over a row this host could not read. Reading the rethrow itself, because
+    // that one line is the whole difference between the two policies.
+    expect(durables).toContain('if (row === undefined) throw error');
+    // And the inner catch is on the CLOCK read alone. Sliced to the hearth
+    // expression rather than to the next brace, so a catch attached to a later
+    // port cannot satisfy this.
+    const hearthAt = durables.indexOf('loadFreeholdHearth({ query }');
+    const clockOnly = durables.slice(hearthAt, durables.indexOf('};', hearthAt));
+    expect(clockOnly).toContain(".catch((error: unknown) => ({ kind: 'threw' as const, error, }))");
+    // The ROW read is NOT caught inside the transaction: its rejection must
+    // reach the outer guard, which decides by whether a row was captured.
+    const rowAt = durables.indexOf('row = await freeholdForAccount({ query }');
+    expect(durables.slice(rowAt, durables.indexOf(';', rowAt))).not.toContain('.catch');
   });
 
-  it('keeps the two-port fallback bound beside it, unwrapped', () => {
-    // The pair every case above drives. It is deliberately UNBOUNDED (a host with
-    // no transaction seam has nowhere to put the bound), and it must keep
-    // existing: the store's ports are its declared surface, and deleting the pair
-    // would make the optional port mandatory without saying so.
-    expect(WIRING).toContain('readRow: (accountId, maxOwnedBytes) =>');
-    expect(WIRING).toContain('readHearth: (accountId) =>');
-    expect(WIRING).toContain('readDurables: (accountId, maxOwnedBytes) =>');
+  it('keeps the two-port fallback BOUNDED beside it, on the same constant', () => {
+    // The pair every behaviour case in this file drives, and the store's declared
+    // surface for a host with no transaction seam. Extracting the composition
+    // root DROPPED both wrappers and left the pair on the pool's 15,000 ms
+    // session default against a 10,000 ms handshake, while the file header
+    // claimed the move changed nothing. Dead on this host, because readDurables
+    // is bound and the store prefers it, and pinned anyway: a fallback whose
+    // bound silently differs from the real path is worse than no fallback.
+    for (const [key, next] of [
+      ['readRow', 'readHearth'],
+      ['readHearth', 'readDurables'],
+    ] as const) {
+      const body = binding(key, next).replace(/\s+/g, ' ');
+      expect(body).toContain('runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS');
+      expect(body).toContain('({ query }');
+      expect(body).not.toContain('(pool,');
+    }
   });
 });
 
