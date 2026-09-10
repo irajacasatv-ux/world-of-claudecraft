@@ -537,7 +537,8 @@ export function bagTooltipHintKey(
   // exact line the click raises, the way the vendor / market cannot-hints do.
   if (mode.bankOpen) return 'hudChrome.bank.cannotDepositNow';
   if (item.kind === 'furnishing') return '';
-  if (item.kind === 'quest') return 'itemUi.tooltip.clickDestroy';
+  if (item.kind === 'quest')
+    return item.use ? 'itemUi.tooltip.clickUse' : 'itemUi.tooltip.clickDestroy';
   if (item.kind === 'mount') return 'hudChrome.mounts.clickManage';
   if (
     item.kind === 'weapon' ||

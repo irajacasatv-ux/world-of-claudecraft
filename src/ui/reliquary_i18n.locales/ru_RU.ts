@@ -208,6 +208,6 @@ export const table: ReliquaryLocaleTable = {
   },
   conquerors_set_bramblehide: {
     name: 'Тернистая шкура Рутса',
-    desc: 'Полное кожаное семейство Bramblehide.',
+    desc: 'Полный кожаный комплект «Тернистая шкура Рутса».',
   },
 };

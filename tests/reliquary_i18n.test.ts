@@ -44,14 +44,12 @@ import {
 import type { ReliquaryViewInput } from '../src/ui/reliquary_view';
 import { ReliquaryWindow, type ReliquaryWindowDeps } from '../src/ui/reliquary_window';
 
-// These new content pages ship their five M16 name fills at
-// PR tier. All prior page names remain translated in every locale; the full
-// release-tier manifest below still requires every new name and description.
-const M16_NEW_PAGES = new Set([
-  'professions_crucible',
-  'professions_forgebreaker',
-  'hearth_basics',
-]);
+// Pin the two profession pages separately from the 40 original pages.
+// Their names and descriptions are now supplied in every shipped locale.
+const NEW_PROFESSION_PAGES = new Set(['professions_crucible', 'professions_forgebreaker']);
+// Hearth Basics ships its five M16 names at PR tier; the release manifest
+// below still requires its name and description in every locale.
+const M16_NEW_PAGES = new Set(['hearth_basics']);
 const M16_LOCALES = new Set(['zh_CN', 'zh_TW', 'ja_JP', 'ko_KR', 'ru_RU']);
 
 describe('reliquary_i18n English resolution', () => {
@@ -115,7 +113,7 @@ describe('reliquary_i18n English resolution', () => {
   });
 });
 
-describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
+describe('reliquary locale chunks (all shipped locales)', () => {
   type BaseLocale = keyof typeof RELIQUARY_LOCALE_LOADERS;
   const tables = {} as Record<BaseLocale, ReliquaryLocaleTable>;
   // The resolved main-catalog bundles, for the entity-anchor sweep: the page
@@ -193,24 +191,30 @@ describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
 
   it('carries only real catalog page ids, and no empty values', () => {
     for (const lang of tableLocales()) {
-      // Vacuity floor: an emptied chunk would satisfy every for-loop in this
-      // suite silently. Preserve the forty reviewed pages, including
-      // Bramblehide. New content pages carry their M16 names; Latin prose
-      // follows release fill.
-      const namesFilled = M16_LOCALES.has(lang);
-      // The crafted Hearth page ships its name in every locale; all 39 earlier rows remain.
+      // Preserve the 40 original pages plus both profession pages in every
+      // locale. Release fill now includes all names and narrative descriptions.
+      // First Hearth Crafts also ships its name in every locale.
       expect(
         tables[lang].hearth_first_crafts?.name?.trim().length,
         `${lang} crafted Hearth name`,
       ).toBeGreaterThan(0);
       expect(
         Object.keys(tables[lang]).filter(
-          (id) => !M16_NEW_PAGES.has(id) && id !== 'hearth_first_crafts',
+          (id) =>
+            !NEW_PROFESSION_PAGES.has(id) && !M16_NEW_PAGES.has(id) && id !== 'hearth_first_crafts',
         ).length,
         `${lang} original row count`,
       ).toBe(40);
       for (const id of M16_NEW_PAGES) {
-        expect(Object.hasOwn(tables[lang], id), `${lang}.${id}`).toBe(namesFilled);
+        expect(Object.hasOwn(tables[lang], id), `${lang}.${id}`).toBe(M16_LOCALES.has(lang));
+      }
+      for (const id of NEW_PROFESSION_PAGES) {
+        expect(Object.hasOwn(tables[lang], id), `${lang}.${id}`).toBe(true);
+        const description = tables[lang][id]?.desc;
+        expect(description?.trim().length, `${lang}.${id}.desc`).toBeGreaterThan(0);
+        expect(description, `${lang}.${id}.desc must be translated`).not.toBe(
+          RELIQUARY_PAGES_BY_ID[id].desc,
+        );
       }
       for (const [id, entry] of Object.entries(tables[lang])) {
         expect(RELIQUARY_PAGES_BY_ID[id], `${lang}.${id} is not a catalog page`).toBeDefined();
@@ -293,23 +297,14 @@ describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
     }
   });
 
-  // Page NAMES ship for the five non-Latin locales now, because a Latin-script
-  // reader can still parse an English proper noun while a CJK or Cyrillic reader
-  // cannot. That makes NAME coverage a PR-tier contract: this arm runs at both
-  // tiers so a page added without its five fills reds immediately. Page DESCS
-  // and the Latin locale tables are release fill (Phase 22), held to the
-  // release tier by the runIf arm below (the deed-channel shape), which is why
-  // this suite sits on the release-tier suite list in all three places that
-  // list holds (scripts/lib/gate_steps.mjs, the release-i18n job in ci.yml,
-  // and the literal pin in tests/release_i18n_tier_coverage.test.ts).
-  it('covers every manifest NAME row in all five shipped locale tables', () => {
+  it('covers every manifest NAME row with only the new M16 page awaiting release fill', () => {
     const nameRows = reliquaryTranslationManifest().filter((row) => row.field === 'name');
     for (const lang of tableLocales()) {
       const table = tables[lang];
       for (const row of nameRows) {
         const value = table[row.id]?.name;
-        // Existing 39-page translations remain mandatory in every locale.
-        // New content fills M16 now; these pages' Latin names use English until release fill.
+        // Only Hearth Basics awaits Latin name fill. Previously translated
+        // pages, both profession pages, and First Hearth Crafts stay mandatory.
         if (M16_NEW_PAGES.has(row.id) && !M16_LOCALES.has(lang)) {
           expect(value).toBeUndefined();
           continue;
@@ -425,6 +420,14 @@ describe('reliquary locale chunks (the shipped non-Latin fill)', () => {
             value !== undefined && value.trim().length > 0,
             `${lang}.${row.id}.${row.field}`,
           ).toBe(true);
+          // Presence alone cannot distinguish a translation from an English
+          // copy in these chunks, which live outside the pending registry.
+          const comparable = (text: string) =>
+            text.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
+          expect(
+            comparable(value ?? ''),
+            `${lang}.${row.id}.${row.field} must not copy canonical English`,
+          ).not.toBe(comparable(row.source));
         }
       }
     },

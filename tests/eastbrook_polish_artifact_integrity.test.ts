@@ -1359,10 +1359,16 @@ const ACCEPTED_POLISH_V2_METADATA_PATH = path.join(REPO_ROOT, POLISH_SEAL_PATH);
 // Historical images, performance scores and capture identity are unchanged.
 // PR3946: remint the renderer leaf after restoring school-aware resurrection VFX.
 // Existing captures, performance measurements and capture identity are unchanged.
+// v0.42.0 dependency-floor bump (sharp, js-yaml, vitest): the lockfile is a
+// fingerprint input, so every shipping GLB was size-preserving re-minted and this
+// seal follows the swept evidence. No capture was retaken.
+// Freeholds release/v0.43.0 sync: combine the branch's layout and renderer leaves
+// with the release's dependency and GLB fingerprints using the canonical remint.
+// Historical capture identity, pixels, framing and measurements remain unchanged.
 const ACCEPTED_POLISH_V2_METADATA_SHA256 =
-  'c6a83437cf9cf9647697c2c0ec689a8cba2db76614b0ee7d6baa589b5f865832';
+  '9f499ba1e66013ebb236d5a3a6ddbe8e2d1db986b06723ef6e616ae001f982c0';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
-  '7958c5f743cce34eae10b2d500abe6d606b48a04d047e09f7833c9f235ecd324';
+  '3d5043eeba987e05e6c9ba83fb5b4140014afc07826e60ff8a70bb18479cbf6a';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2719,7 +2725,11 @@ describe('Eastbrook polish performance and contact evidence', () => {
       //
       // OSSBrain integration: this digest was recomputed LAST from the
       // canonical re-sealed evidence files. Capture pixels and scores did not change.
-    ).toBe('add548dabe65ba8dd2955cd662f259e55804eba0fdc674c34184d6c9ea91a993');
+      // v0.42.0 dependency-floor bump: recomputed LAST over the swept evidence
+      // after the lockfile-driven GLB re-mint. No capture was retaken.
+      // Freeholds release/v0.43.0 sync: recomputed LAST after combining both
+      // parents' provenance inputs. Historical performance values are unchanged.
+    ).toBe('eabf167a1a3b008ce94cacb15edc4406a1fc9b203d6af03430ac7bdb477564ed');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {

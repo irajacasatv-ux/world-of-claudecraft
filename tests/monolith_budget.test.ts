@@ -459,7 +459,12 @@ const MONOLITHS: MonolithRow[] = [
     // from the merged import block). Exact merged count, zero slack: any further
     // growth reds again.
     // Lowered after extracting gathering denial feedback; measured after formatting.
-    ceiling: 18436,
+    // LOWERED for the coin-icon money readout extraction (moneyHtml moved out
+    // to src/ui/money_html.ts so the social tab's roster confirm shares it);
+    // the coordinator keeps three one-line deps wirings. Composing the release
+    // extraction with Freeholds measures 18425 newline characters, below both
+    // parent pins (18436 / 18461). Exact count, zero slack.
+    ceiling: 18425,
     seam: 'pure view core + thin painter on PainterHost (src/ui/CLAUDE.md)',
   },
   {
