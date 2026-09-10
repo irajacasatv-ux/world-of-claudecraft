@@ -1552,6 +1552,8 @@ integration base; the last recorded sync on this branch was `release/v0.42.0`.
 NO SYNC WAS PERFORMED in these rounds, because the tip was pinned. The next
 session owes the merge-forward that `state.md` requires at every phase start, and
 every count in this section is against the unsynced tree.
+CORRECTED AT ROUND SEVENTEEN: the sync was performed after this paragraph was
+written, in merge `d5e7f423c7`, and it was never gated. See below.
 
 AND THE VERDICT IS STILL FAIL, on the record rather than on an open defect. Every
 finding either round produced is applied, both blocking sets are closed, and the
@@ -1560,3 +1562,283 @@ clean: it has not been read by anyone who did not write it. Sixteen rounds have
 run and fourteen introduced a defect worse than one they closed, so the honest
 prior for the next reader is that this one is wrong too. A green gate is where
 that reading starts.
+
+## ROUND SEVENTEEN: THE UNREVIEWED TAIL WAS READ, AND IT HAD DONE IT AGAIN
+
+Six fresh lanes read `c8bb3d3f31..HEAD` with `5c7e3566ff` first, plus a
+release-merge audit of the sync that had landed in between. The pattern holds at
+SEVENTEEN for SEVENTEEN, and it held twice inside this round: the fresh read
+found a NINTH path to the packet's one invariant, and the read of the fix for it
+found that the fix write-blocked an account it should not have.
+
+### THE SYNC HAD ALREADY HAPPENED, AND IT WAS NEVER GATED
+
+The paragraph above says no sync was performed and that the next session owes it.
+It had been performed: `d5e7f423c7`, merging `origin/release/v0.43.0` at
+`b276778485`, made after that paragraph was written and recorded in no
+`docs/freeholds/` file. `origin/release/v0.43.0` is still the version-newest
+release branch (`git for-each-ref --sort=-v:refname`, which is exactly what
+`resolveSelectBase` sorts by), so the base is correct; `v0.42.1` and `v0.42.2`
+are later patch branches and not the integration base by the gate's own rule.
+
+IT LEFT THE TREE RED. `tests/freehold_capture_contract.test.ts` hashes the 42
+`sourceInputs` of `docs/screenshots/freehold-interiors-2026-09-08/acceptance.json`,
+the merge changed three of those files, and `acceptance.json` is not in the merge
+delta at all, so all three pins still equalled the branch parent's value:
+`src/styles/components.css`, `src/styles/hud.mobile.css` and
+`scripts/pr_shot_targets.mjs`. Re-minted at all FOUR occurrences, because the
+script's digest appears twice (`sourceInputs` and the `producerInputs` filter) and
+replacing one left the suite red.
+
+THE CAPTURES WERE NOT RE-SHOT, and that judgement is recorded with its evidence
+rather than asserted: every selector the two stylesheets changed is scoped to
+`.corpse-harvest-btn`, `#harvest-preference-window`, `.harvest-preference-*` or
+`.soc-*`, none of which appears in a freehold gate prompt or interior view, and
+the script change is one ADDITIVE capture target (`guild-roster-expand`) that
+alters no existing route. A release touching a selector these captures can reach
+owes a re-shoot, not a re-hash.
+
+WHAT ELSE THE MERGE AUDIT FOUND, and it is short. The committed i18n bundles are
+FRESH against the merged catalogs, verified by regenerating both builds into a
+scratch directory through their own `I18N_OUT_DIR` override and diffing (22 UI
+locales plus the pseudo, the admin set, and the flat key union: no differing
+files), so the merge reconciled them by regeneration rather than by taking a
+side. All 21 monolith rows re-measure exactly on the merged tree with zero slack.
+No shard or timing table is in the delta. One new `vi.mock('../server/db')` site
+arrived with the release and passes on the merged tree. No legacy-arm divergence
+and no un-re-bound injected helper; `npx tsc --noEmit` exits 0. THE MERGE TOUCHED
+NO FREEHOLD PERSISTENCE CODE AT ALL: zero paths matching `freehold` or `housing`,
+and exactly one `server/` file (`server/corpse_harvest_inspection.ts`), so the
+code under review is exactly as round sixteen left it. One adjacent non-finding,
+recorded so it is not re-investigated: five wiki titles present in the release
+parent are absent from the merged seed, and that is NOT a merge drop, the merged
+seed is byte-equal to a fresh generator run and those five dungeons carry
+`guideVisible: false` in the release's own content.
+
+### THE NINTH PATH, and the refusal that closed the eighth was not total either
+
+- Q1 BLOCKING (identity). `classify`'s `unnamed_record` refusal reads the LIVE
+  RECORD, so it can only fire once something has been SEEDED, and that made it
+  depend on WHEN the load landed. The whole-preload budget refusal deliberately
+  leaves its read in flight to fill the entry, and the handshake still has
+  `acquireCharacterLease` and `getCharacter` to run below it, two database round
+  trips on the same saturated pool that produced the overrun. The read lands in
+  THAT window, before `bindFreeholdOnJoin` and so before `addPlayer` seeds
+  anything: `livePlotId` answers null rather than the stand-in, the refusal
+  cannot fire, the absent arm mints, and `installLoadedFreehold` then returns
+  early on the budget hold while `ensureFreeholdRecord` seeds the stand-in a
+  moment later. REPRODUCED against the real store, and reproduced independently
+  by a second reader before it was told: entry `loaded` and unheld holding
+  `plot:minted1`, a row INSERTED under that name, `write_failures` 0 and
+  `quiesced` 0, while `applyWriteResult` caches the RECORD's stand-in, so
+  `foreignIdentity` is `PENDING !== PENDING` and the seal's name comparison is
+  inert BY VALUE EQUALITY for the life of that entry. The second reader carried
+  it to the loss itself: a reseeded default at revision six written over the row
+  with `layoutJson '[]'` and `trophiesJson '[]'`. That is the eighth path arrived
+  at from a THIRD side, and both `server/freehold_write_seal.ts` and section 8a
+  claimed `classify` had closed it totally.
+  FIXED: the store now knows which loads its caller abandoned, so the two cases
+  are one rule, mint only for a record this store can name.
+
+- Q2 BLOCKING, and it is the fix for Q1 read fresh. Abandonment was recorded
+  against the ACCOUNT, and `beginLoad` is single-flight per account: two
+  characters of one account joining together ride ONE read, so if the first
+  login overran, the second one's load was refused too and the account took a
+  TERMINAL `unnamed_record` hold for its whole session with a live installer
+  standing right there. Fail-safe rather than a lost row, and still a housing
+  outage manufactured by the guard against one. FIXED: a waiter COUNT in
+  `server/freehold_load_waiters.ts`, and classify refuses only when the LAST
+  login has gone. Exact rather than conservative, because classify runs inside
+  the load promise, before any surviving waiter's own race has resolved.
+
+### THE WRITE-SIDE GUARD: RECOMMENDED, NOT TAKEN, AND ESCALATED
+
+The order-independent statement of the same invariant is a WRITE-side refusal:
+`entry.durableRev === null && persisted.plotId !== entry.plotId` means the first
+row for this entry would be created under a name the record being written does
+not carry, so refuse and quiesce. It was built, it closes Q1 regardless of
+ordering, and a fresh reader attacked it for false positives and found none: on
+every healthy path the install has already put `entry.plotId` INTO the record or
+adopted the live record's identity, so the two are equal by construction, and the
+next login heals it because `preload` replays that same minted `plotId` with
+`state` and `durableRev` both null, which is `installLoadedFreehold`'s absent arm.
+
+IT WAS NOT TAKEN, and the reason is a decision about what the seal is FOR rather
+than a doubt about the guard. It refuses the FIRST insert for any entry whose
+live record carries the stand-in, and that is the exact state five store-level
+seal cases build, so it makes `pristineSeed` and its content dimensions
+unreachable for every entry class rather than only for row-loaded ones. The
+seal's own docblock says those arms exist precisely because the name comparison
+is inert for a minted entry. Removing the last state in which they can fire is a
+maintainer decision, and it is recorded here with the predicate, the evidence and
+the cost so it can be taken deliberately rather than discovered.
+
+### THE HARNESS MODELS A STATE THE SERVER CANNOT PRODUCE, AND IT IS OPEN
+
+- Q3 BLOCKING, NOT FIXED, and it is why this round's verdict is what it is.
+  Round sixteen's S7 bound `livePlotId` strictly to `hasLive` and recorded that
+  "no case depends on a liveness state the server cannot produce". That is FALSE.
+  Production derives all four liveness reads from ONE map and they are mutually
+  equivalent (`hasLive`, `serialize() !== null`, `liveRev() !== null`,
+  `livePlotId() !== null`), and the harness leaves `serialize` and `liveRev`
+  unbound: with `hasLive` defaulting FALSE the loader is told no record is live
+  while the writer is handed a document carrying that record's identity. FIVE
+  seal cases declare a stand-in live identity over an absent row and then assert
+  a first write lands, and `server/freehold_install.ts` is exactly what removes
+  that state. The strict binding of round sixteen survives only because
+  `livePlotId` is read at CLASSIFY time while `serialize` and `liveRev` are read
+  at WRITE time, which is a property of which port is read when, not of the
+  harness modelling one map.
+  WHY IT IS NOT FIXED HERE, stated rather than waived. The faithful repair is a
+  harness that models the two moments a login has, no record at preload and a
+  record afterwards, and every shape of it was measured: binding `hasLive` to
+  `serialize` sends every case down `preloadWithin`'s already-live arm and reds
+  most of the suite, and binding `liveRev` strictly alone reds forty-plus cases,
+  which is the blast radius the reader measured independently. That is a
+  deliberate harness rewrite touching the cases that guard this packet's one
+  invariant, and doing it at the end of a long round is precisely how fifteen of
+  seventeen rounds have gone wrong. The compensation is real but partial: every
+  arm of the seal is now driven decisively by literals in
+  `tests/server/freehold_write_seal.test.ts`, which needs no harness at all.
+
+### WHAT ELSE THE SIX LANES FOUND, all applied
+
+- Q4 SHOULD-FIX (teardown). `revertOwnGuildBookOps` promised it never throws and
+  that a faulting guild leaves the rest undone, and its try wrapped ONE of four
+  statements. `index.resync` and the process-wide incident counter sink sit
+  outside it, and the revert is now the FIRST statement of leave()'s `finally`,
+  so a throw from either aborted the loop AND skipped both index drops, the
+  outbox discard, the lease release and `removePlayer`: the round-fifteen
+  character lockout reached through the round-sixteen fix for it. The guard
+  covers the whole per-guild body now, with the three marks cleared above it so
+  a guild is never revisited. Two cases drive it, one per statement, each
+  asserting the guild AFTER the faulted one is still undone.
+- Q5 SHOULD-FIX (tests). The teardown order pin asserted the revert above ONE of
+  the two index drops while its own sentence claimed both, leaving the character
+  map free to move above it.
+- Q6 SHOULD-FIX (seal coverage). Four sub-expressions of the seal survived
+  mutation in a suite whose comment claims each dimension is asserted on its own.
+  THREE are real gaps and are closed with pairs that differ in exactly the
+  conjunct under test: a stand-in record that has MOVED (a fresh account's tier
+  grant at revision one) kills `persisted.rev === 0`, and a stand-in record
+  carrying layout or trophies at revision zero kills the other two, which is the
+  state the content arm exists for. The FOURTH is unkillable and is documented
+  instead: under `pristineSeed` the document is at revision zero, so
+  `entry.state.rev > 0` is exactly `revisionRegressed`, a separate disjunct of
+  the same expression, and the dimension table's `rev` row passed through THAT
+  disjunct, which is a case passing for the wrong reason under a comment
+  promising the opposite.
+- Q7 SHOULD-FIX (docs). DEPLOY.md stated the gauge caveat backwards. A TERMINAL
+  hold is the one where `loaded` and `held` double-count an entry, because a data
+  refusal leaves it loaded; a CAPACITY hold is the one that still sums. The doc
+  named the summing case as the exception, so an operator read double-counted
+  terminal holds as normal.
+- Q8 SHOULD-FIX (docs). The C23 scope document claimed its two player groups line
+  up exactly with the repairable and terminal split, which its own table eleven
+  lines above falsifies: `unnamed_record` is terminal and reads as RETRY. An
+  implementer deriving the player group from the runtime set would tell the one
+  player a relog reliably helps that their home will not clear on its own.
+- Q9 SHOULD-FIX (channel). The new refusal's detail literal was not in
+  `KNOWN_DETAILS` while its sibling on the same arm was, so a later reader
+  wrapping that arm for consistency would silently lose the diagnostic to
+  `unclassified`. The totality pin enumerated only the shapes that are WRAPPED
+  today, which is what let the asymmetry sit there; it covers every shape a
+  server module emits now, wrapped or not.
+- Q10 SHOULD-FIX (docs and source). Both said the `unnamed_record` refusal costs
+  nothing. No durable ROW is lost, which is not the same thing: for an account
+  with no row a capacity hold at login converts to a terminal one, so those
+  owners furnish for a session and lose it at logout with a counter as the only
+  observer. That is the population C23 exists for.
+- Q11 SHOULD-FIX (activation gate). Every refusal answers a COLD hearth clock
+  whose ready time is zero and the merge is forward-only, so a login slow enough
+  to overrun its budget is handed a READY Hearth every time, which is the outcome
+  `server/freehold_install.ts` argues its unconditional merge prevents. Recorded
+  in section 8a as a sharper statement of the existing fail-open gate and
+  corrected in the source comment. Pre-existing, not introduced this round.
+- Q12 SHOULD-FIX (types). `FREEHOLD_TERMINAL_HOLD_KINDS` was `ReadonlySet<string>`,
+  so the subtraction's guarantee rested on one assertion in the suite: a typo
+  compiled clean and silently moved a DATA cause into the repairable group, which
+  is re-reading an unreadable row on every login forever. Typed to the kind list
+  now, and a typo fails compilation (measured).
+- Q13 SHOULD-FIX (scan). THE EXTRACTIONS RE-OPENED THE STALE-LIST GAP the last
+  round closed. The clock and timer scan hand-typed its file list, so a new
+  sibling was unscanned while every listed file still existed and the
+  anti-staleness floor read clean. Derived from the store's own imports now, with
+  the derivation itself pinned. The by-path importer list in
+  `src/sim/freehold/CLAUDE.md` was stale against THREE importers that three
+  separate extractions added, and is pinned by a derived test.
+- Q14 NITS, all applied: the wrapper's guild-book caller census named the
+  fence-out, which calls the module directly with the ids it carried, and omitted
+  the growth-limit quarantine; the takeover comment described a lifetime lockout
+  for what is a transient; an em dash on the same line; the load-failure
+  counter's help text, which is the string an operator reads in Prometheus, still
+  enumerated four responses for nine kinds; the contract carried a count of eight
+  against its own nine; the interiors evidence record claimed 31 source inputs
+  against a record carrying 42; the seal's pristine fixture spelled the sim's
+  default tier, condition, visit policy and revision as literals instead of
+  deriving them, so its totality claim would stop tracking the shape it is total
+  over.
+
+### THE SIXTH RUNTIME PROOF, SETTLED
+
+`phase-07-qa.md` records C4's pin as STILL OWED. IT LANDED at `4648c4b1e6`,
+before the rulings round, as "stops owing a write that has no record and no
+capture, instead of re-arming forever": it drives the ports directly, asserts the
+write reaches its permit and issues no statement, asserts the entry STOPS being
+dirty so no later sweep re-arms it, and asserts the entry is collected. The row
+is corrected rather than amended.
+
+WHAT WAS ACTUALLY OWED is the other half of C4, whether any production sequence
+reaches that arm, and the answer is NO in this release. The argument, enumerated
+so it can be attacked rather than trusted:
+1. Dirtiness has exactly TWO producers. `markDirty` has no production caller (a
+   whole-tree grep over `server/`, `src/`, `headless/` and `bot/` finds only the
+   unrelated mail index and editor methods of the same name), and
+   `noteRevisionMoved` returns false when `liveRev` is null, so it cannot dirty
+   an entry with no record.
+2. An entry can therefore only become dirty while a live record exists.
+3. The record is dropped only by `releaseFreeholdOnLeave`, reached only from
+   `sim.removePlayer`, which has exactly TWO call sites, and both are preceded on
+   the same path by a `flushAndRelease` for the same owner key: the leave path
+   awaits `flushFreeholdBinding`, which cannot reject, and the join-failure path
+   fires `releaseFreeholdBinding`, whose `flushAndRelease` runs synchronously
+   past its capture before the first await.
+4. `flushAndRelease` captures `ports.serialize(ownerKey)` while the record is
+   still live for any entry that is unblocked and owes a write.
+5. A capture is released only through `releaseCapture`, at three sites, each
+   gated on `!owesWork(entry)`, and `owesWork` includes `isDirty && !blocked`, so
+   a dirty unblocked entry never loses its capture.
+6. A dirty BLOCKED entry cannot reach the arm at all: `runWrite` re-checks
+   `blocked(entry)` after the queue wait and returns before sampling.
+The arm is a bound on a state the furnishing writer will make reachable, exactly
+as its own comment says, and the pin is the right shape for that.
+
+### THE MUTATION PASS
+
+Every guard added or changed was mutated on disk, its owning suite run, the RED
+confirmed, and the file restored by plain file write with the green
+re-confirmed. Each pass ran against a no-op control first and the control's full
+`Tests N passed (N)` line is quoted.
+
+- The ordering refusal, first form (an account flag), four mutants, control
+  `Tests 209 passed (209)`, ALL KILLED: the abandoned arm dropped (1 failed), the
+  stand-in arm dropped (1), the mark never set (1), the mark never cleared (1). A
+  fifth, `abandoned` forced true, killed 46.
+- The ordering refusal, SECOND form (the waiter count), six mutants, control
+  `Tests 210 passed (210)`, ALL KILLED: the abandoned arm dropped (1), the
+  stand-in arm dropped (1), `abandoned` forced true (47), the waiter never
+  registered (47), the waiter never released (1), and the count's own predicate
+  forced false (1). Both directions, because a one-way pin here is satisfied by a
+  constant.
+- The guild-book revert, one mutant, control `Tests 48 passed (48)`, KILLED:
+  narrowing the try back to the sim call alone (1).
+- The by-path importer pin, one mutant, control `Tests 48 passed (48)`, KILLED:
+  one importer name removed from the guide (1).
+- The seal, four mutants over its own suite plus the store's, control
+  `Tests 220 passed (220)`, THREE KILLED AND ONE SURVIVING BY CONSTRUCTION:
+  `persisted.rev === 0` dropped (survived before the new cases, 1 failed after),
+  the layout conjunct dropped (survived, then 1), the trophies conjunct dropped
+  (survived, then 1), and `entry.state.rev > 0` dropped (SURVIVES, and is the
+  absorbed dimension recorded above rather than a gap left open).
+- A type mutant rather than a test mutant, for Q12: a one-character typo in the
+  terminal set now fails `npx tsc --noEmit`, measured both ways.

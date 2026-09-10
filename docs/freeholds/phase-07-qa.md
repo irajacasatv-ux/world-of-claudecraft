@@ -97,6 +97,10 @@ table below as the record of what each row WAS; this is what happened to it.
   sink each goes to, and the two groups the player is told apart out of eight kinds.
 - **The section 8a login budget gate: CLOSED**, and the premise it was written on was
   refuted with a measurement. See the contract and ROUND FIFTEEN in the ledger.
+  AND IT CARRIED A NINTH PATH, found at round seventeen: the cap leaves its read in
+  flight by design, so that read's `classify` can land BEFORE the record is seeded, where
+  the ordering refusal cannot see it. Closed by giving the store the one fact it lacked,
+  which of its loads a caller has abandoned. ROUND SEVENTEEN in the ledger.
 - **Offline and headless plot identity: ACCEPTED AND DOCUMENTED**, in the contract, in
   `src/sim/freehold/CLAUDE.md`, in `state.ts` and on the type itself.
 
@@ -115,14 +119,23 @@ many rows, one past the pre-gate, asserting the export does not render it. The d
 landed in the verification session; the export one landed with the Y6 fix and gained its
 boundary arm at the rulings round.
 
-FOUR OF THE SIX HAVE NOW LANDED. The re-read pin came with ruling 2 (an entry refused on
-the cap or the permit is not `loaded`, stays write-blocked, and is re-read on the next
-retain, with a contrast arm proving a DATA hold still replays). The peak-concurrency pin
-came with ruling 4, driven through the real `createBackgroundDbGate`. The leaving-entry
-pin landed with the pump's leaver preference and gained a second arm at the rulings round
-(a rejoin that takes its capture back leaves the leaver subset too). STILL OWED: the pin
-that a dirty entry with no live record and no capture is COLLECTED rather than re-armed,
-which is C4's, and which no production sequence reaches today.
+ALL SIX HAVE NOW LANDED, and the sixth was owed only on the record. The re-read pin came
+with ruling 2 (an entry refused on the cap or the permit is not `loaded`, stays
+write-blocked, and is re-read on the next retain, with a contrast arm proving a DATA hold
+still replays). The peak-concurrency pin came with ruling 4, driven through the real
+`createBackgroundDbGate`. The leaving-entry pin landed with the pump's leaver preference
+and gained a second arm at the rulings round (a rejoin that takes its capture back leaves
+the leaver subset too).
+
+C4's, the pin that a dirty entry with no live record and no capture is COLLECTED rather
+than re-armed, LANDED AT `4648c4b1e6`, before the rulings round, and this row said it was
+owed for two rounds after that. It drives the ports directly, asserts the write reaches
+its permit and issues no statement, asserts the entry stops being dirty so no later sweep
+re-arms it, and asserts it is then collected. What was actually open is the other half,
+whether any production sequence reaches that arm, and round seventeen settled it: NO in
+this release, through a six-step enumeration written out in the ledger so it can be
+attacked rather than trusted. The arm remains a bound on a state the furnishing writer
+will make reachable, which is what its own comment says it is.
 
 ### Rulings this QA should try to break rather than inherit
 

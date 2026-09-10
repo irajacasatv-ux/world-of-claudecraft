@@ -20,6 +20,13 @@ Only what the next session needs. Update at the end of every phase and QA.
   Earlier syncs `a461924855` and `7f4fe99619` remain historical receipts. Future
   starts fetch with prune and merge the newest `origin/release/**`, then audit any
   non-empty merge. Nothing has been pushed.
+- Current sync (2026-09-10, round seventeen): `origin/release/v0.43.0` at
+  `b276778485`, in local merge `d5e7f423c7`. That merge was made by an earlier
+  session, recorded in no packet document, and NEVER GATED: it left
+  `tests/freehold_capture_contract.test.ts` red on three stale source digests.
+  Audited at round seventeen and otherwise clean. The newest release branch is
+  the version-newest one, which is what `resolveSelectBase` sorts by, so
+  `v0.42.1` and `v0.42.2` are later in TIME and are not the integration base.
 - Push policy: the branch stays local until Fernando says to push. Pushes go to `origin`,
   never a fork. A PR is opened only by a wave close phase (20, 27, 33, 39 and 44: one PR
   per wave under D12, owned for every wave), after the whole-feature matrix, and only
@@ -40,20 +47,41 @@ tier-0 Inn Room landing on a real house, reproduced three times and pinned as it
 behaves. The gate was GREEN at `57ca95cb29`, which was the point: a green suite
 was never the question here.
 
-**THE RULINGS ARE EXECUTED, 2026-09-10, tip `0be2f181e2`, LOCAL.** All four plus
-the section 8a login budget gate, plus C23 scoped and the offline identity
-divergence accepted. The EIGHTH path is CLOSED (the identity is installed on the
-absent arm, and a row is no longer created for a record no install could name);
-C1, C22 and V6 close with it. Two fresh review rounds ran, 66 findings, all
-applied, and TWO of the second round's three blockers were defects the first had
-introduced. The verdict stays FAIL for one reason: the last fix round has not
-been read by anyone who did not write it. `server/game.ts` is at 9907 and
-`server/freehold_persist.ts` at 2243, both LOWERED, six extractions, no ceiling
-raised. THE DIFF BASE HAS MOVED to `origin/release/v0.43.0` and no sync was
-performed because the tip was pinned: the next session owes the merge-forward
-before anything else. Full detail, every finding and every measurement:
-[the findings ledger](qa/persistence-2026-09-08/findings.md), rounds FIFTEEN and
-SIXTEEN.
+**THE RULINGS ARE EXECUTED, 2026-09-10, and the unreviewed tail has since been
+READ.** All four rulings plus the section 8a login budget gate, plus C23 scoped
+and the offline identity divergence accepted. C1, C22 and V6 closed with the
+EIGHTH path.
+
+**ROUND SEVENTEEN, 2026-09-10, LOCAL.** The sync this paragraph used to say was
+owed had already been made, in merge `d5e7f423c7` off
+`origin/release/v0.43.0`, and it was NEVER GATED: it left
+`tests/freehold_capture_contract.test.ts` RED on three stale source digests,
+which are re-minted. A release-merge audit over it found nothing else (i18n
+bundles fresh by regeneration, all 21 monolith rows exact, no legacy-arm
+divergence, no stale db mock, and the merge touched no freehold code at all).
+Six fresh lanes then read `c8bb3d3f31..HEAD`. They found a NINTH path to the one
+invariant, reproduced against the real store: the ordering refusal that closed
+the eighth reads the LIVE RECORD, so a login refused on the whole-preload budget
+could have its in-flight read land BEFORE the record is seeded, mint anyway, and
+leave the seal inert by value equality for that entry's life. Closed by giving
+the store the fact it lacked, which of its loads a caller has abandoned. The read
+of THAT fix found it write-blocked an account whose sibling character was still
+waiting on the same single-flight read, which is seventeen for seventeen.
+
+Fourteen further findings applied, from a guild-book revert that could throw out
+of leave()'s `finally` and skip every re-enterability registration, to three
+unreached conjuncts of the write seal, to an operator gauge caveat stated
+backwards. `server/game.ts` is at 9907 unchanged and
+`server/freehold_persist.ts` at 2215, LOWERED twice more, eight extractions
+total, no ceiling raised.
+
+THE VERDICT IS STILL FAIL, and now on an OPEN DEFECT rather than on the record:
+the store's test harness lets `serialize` and `liveRev` contradict `hasLive`, so
+five seal cases prove their claims through a state the server cannot produce.
+Its repair is a deliberate harness rewrite, measured at forty-plus cases, and it
+is the next session's first piece of work. Full detail, every finding and every
+measurement: [the findings ledger](qa/persistence-2026-09-08/findings.md), round
+SEVENTEEN.
 
 Its implementation-round review is closed. Planning for 07 was settled long before this; BUILT is the new
 fact, and the two words are not interchangeable in this ledger.
