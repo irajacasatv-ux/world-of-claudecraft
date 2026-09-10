@@ -8,7 +8,9 @@
 // Vitest drives the whole store with no database and no GameServer. The
 // composition root reaches the live store through registerFreeholdPersistStore
 // and freeholdPersistIdle (the server/unstuck_records.ts shape), never by
-// reaching into the coordinator.
+// reaching into the coordinator. The bindings themselves, and therefore every
+// SQL import, live in server/freehold_persist_wiring.ts: this file names its
+// ports and nothing else supplies them.
 //
 // TWO INVARIANTS A FUTURE READER MUST NOT BREAK.
 //
@@ -31,7 +33,6 @@
 //    by AbortSignal.timeout), and a refused permit is a REFUSAL, never a
 //    fall-through to doing the work unadmitted.
 
-import { FREEHOLD_TIER_IDS } from '../src/sim/content/freehold';
 import { mergeFreeholdKeyReadyAt } from '../src/sim/freehold/hearth_key';
 import { boundedFreeholdDetail, freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
 import {
@@ -40,9 +41,7 @@ import {
   type FreeholdWriteRefusalOptions,
   freeholdStateFromPersisted,
   freeholdWriteRefusal,
-  normalizeFreehold,
   type PersistedFreehold,
-  persistedFreeholdFromState,
 } from '../src/sim/freehold/persisted';
 // BY PATH, like the persistence leaf and the hearth clock above, and for the
 // same reason those two give in src/sim/freehold/index.ts: this module is the
@@ -50,26 +49,16 @@ import {
 // pulling the directory's whole public surface into a server graph. Named here
 // because these three ARE on the barrel, so without a reason a later reader
 // cannot tell the deliberate exception from drift.
-import {
-  loadFreehold,
-  PENDING_FREEHOLD_PLOT_ID,
-  serializeFreehold,
-} from '../src/sim/freehold/state';
-import { FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
+import { loadFreehold, PENDING_FREEHOLD_PLOT_ID } from '../src/sim/freehold/state';
 import type { SimContext } from '../src/sim/sim_context';
-import { pool, runWithStatementTimeout } from './db';
 import {
   FREEHOLD_PRIMARY_PLOT_INDEX,
   type FreeholdRowLoad,
   type FreeholdUpsert,
   type FreeholdUpsertResult,
-  freeholdForAccount,
-  mintFreeholdPlotId,
-  upsertFreehold,
 } from './freehold_db';
-import { type FreeholdHearthLoad, loadFreeholdHearth } from './freehold_hearth_db';
+import type { FreeholdHearthLoad } from './freehold_hearth_db';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
-import { createKeyedSerialWriter } from './serial_writer';
 
 /** How long the shutdown drain waits for running and pending writes before it
  *  gives up and answers false. Finite by contract: a drain that can block
@@ -313,6 +302,32 @@ export interface LoadedFreehold {
 export interface FreeholdPersistPorts {
   readRow(accountId: number, maxOwnedBytes: number): Promise<FreeholdRowLoad>;
   readHearth(accountId: number): Promise<FreeholdHearthLoad>;
+  /**
+   * BOTH login reads on ONE checked-out client, when the host can offer it.
+   *
+   * The two above are the fallback and the shape a Vitest drives; this is the
+   * shape a pool wants. Bounding each read on its own means a transaction each
+   * (connect, BEGIN, SET LOCAL, the statement, COMMIT), so a handshake pays
+   * eight round trips and holds two clients across four statements apiece for
+   * two small reads. Sharing one transaction pays five and holds one, and it is
+   * also what lets a future change cap the pair against the handshake's
+   * remaining budget rather than each half separately.
+   *
+   * A host that does not supply it gets the two ports in sequence, unbounded,
+   * which is what every test does.
+   */
+  readDurables?(
+    accountId: number,
+    maxOwnedBytes: number,
+  ): Promise<{
+    row: FreeholdRowLoad;
+    /** A THROWN clock read is a VALUE here, not a rejection, so the row beside
+     *  it still lands. Sharing a transaction must not make a hearth fault hold
+     *  the plot: the two are separate durable facts and the clock failing open
+     *  while the plot fails closed is a deliberate asymmetry carried as a named
+     *  gate, not something a round-trip saving may quietly change. */
+    hearth: FreeholdHearthLoad | { readonly kind: 'threw'; readonly error: unknown };
+  }>;
   writeRow(input: FreeholdUpsert): Promise<FreeholdUpsertResult>;
   /** normalizeFreehold bound to the realm's live tier and visit-policy sets. */
   normalize(raw: unknown): FreeholdLoadResult;
@@ -892,26 +907,52 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     };
   }
 
-  async function readHearth(accountId: number): Promise<{ readyAtMs: number; revision: string }> {
+  /** Normalize one hearth answer, or the absence of one. Total: a clock this
+   *  store cannot read starts COLD rather than faulting the plot load beside it,
+   *  which is a deliberate asymmetry carried as a named gate. */
+  function normalizeHearth(load: FreeholdHearthLoad): { readyAtMs: number; revision: string } {
+    if (load.kind === 'state') {
+      const readyAtMs = Number(load.state.readyAtMs);
+      return {
+        readyAtMs: Number.isFinite(readyAtMs) && readyAtMs > 0 ? readyAtMs : 0,
+        revision: load.state.revision,
+      };
+    }
+    if (load.kind === 'unsupported') {
+      ports.warn(`freehold hearth clock unsupported (${load.detail}); the cooldown starts cold`);
+    }
+    return { readyAtMs: 0, revision: ABSENT_HEARTH_REVISION };
+  }
+
+  const coldHearth = (err: unknown): { readyAtMs: number; revision: string } => {
+    ports.error(
+      'freehold hearth clock read failed; the cooldown starts cold:',
+      boundedDatabaseError(err),
+    );
+    return { readyAtMs: 0, revision: ABSENT_HEARTH_REVISION };
+  };
+
+  /** The two login reads, on one client when the host offers one. The row half
+   *  is allowed to throw, because loadOnce turns that into a HOLD; the clock
+   *  half is not, because a clock this store cannot read starts cold. */
+  async function readLoginPair(
+    accountId: number,
+  ): Promise<{ rowLoad: FreeholdRowLoad; hearth: { readyAtMs: number; revision: string } }> {
+    if (ports.readDurables) {
+      const both = await ports.readDurables(accountId, FREEHOLD_MAX_STORED_BYTES);
+      return {
+        rowLoad: both.row,
+        hearth:
+          both.hearth.kind === 'threw'
+            ? coldHearth(both.hearth.error)
+            : normalizeHearth(both.hearth),
+      };
+    }
+    const rowLoad = await ports.readRow(accountId, FREEHOLD_MAX_STORED_BYTES);
     try {
-      const load = await ports.readHearth(accountId);
-      if (load.kind === 'state') {
-        const readyAtMs = Number(load.state.readyAtMs);
-        return {
-          readyAtMs: Number.isFinite(readyAtMs) && readyAtMs > 0 ? readyAtMs : 0,
-          revision: load.state.revision,
-        };
-      }
-      if (load.kind === 'unsupported') {
-        ports.warn(`freehold hearth clock unsupported (${load.detail}); the cooldown starts cold`);
-      }
-      return { readyAtMs: 0, revision: ABSENT_HEARTH_REVISION };
+      return { rowLoad, hearth: normalizeHearth(await ports.readHearth(accountId)) };
     } catch (err) {
-      ports.error(
-        'freehold hearth clock read failed; the cooldown starts cold:',
-        boundedDatabaseError(err),
-      );
-      return { readyAtMs: 0, revision: ABSENT_HEARTH_REVISION };
+      return { rowLoad, hearth: coldHearth(err) };
     }
   }
 
@@ -959,8 +1000,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // text PostgreSQL renders back out of jsonb, which is wider than the JSON
     // that went in. Handing it FREEHOLD_MAX_OWNED_BYTES would refuse the
     // maximal record this realm is allowed to write.
-    const rowLoad = await ports.readRow(accountId, FREEHOLD_MAX_STORED_BYTES);
-    const hearth = await readHearth(accountId);
+    const { rowLoad, hearth } = await readLoginPair(accountId);
     const entry = ensureEntry(ownerKey, accountId);
     // Remembered on the entry, not only returned: every later replay of this
     // entry has to answer with the same clock, and none of them reads again.
@@ -2276,68 +2316,4 @@ export function installLoadedFreehold(
     return;
   }
   loadFreehold(ctx, ownerKey, freeholdStateFromPersisted(loaded.state, ownerKey));
-}
-
-/**
- * The realm's store, composed. This factory exists so the coordinator's
- * constructor stays two lines: every port below is a closure over the live sim,
- * the shared background gate and the pool, and none of it belongs in a file at
- * its line ceiling. The store itself never sees any of these.
- *
- * The gate is optional exactly as it is for the guild bank lazy loader: a host
- * without one runs unadmitted rather than reaching for a global, and the bound
- * on the permit wait lives in the store.
- */
-/** The realm's live tier and visit-policy vocabulary. Both sides of the
- *  writable-implies-readable property read it from here. */
-const REALM_IDENTITY_SETS = {
-  validTierIds: FREEHOLD_TIER_IDS as ReadonlySet<string>,
-  validVisitPolicies: FREEHOLD_VISIT_POLICIES,
-};
-
-export function createGameFreeholdPersistStore(deps: {
-  readonly sim: { readonly ctx: SimContext };
-  readonly backgroundDbGate?: {
-    acquire(signal?: AbortSignal): Promise<{ release(): void } | null>;
-  };
-}): FreeholdPersistStore {
-  const writer = createKeyedSerialWriter<string>();
-  const gate = deps.backgroundDbGate;
-  return createFreeholdPersistStore({
-    // BOTH LOGIN READS ARE BOUNDED, through the one seam that can lower the
-    // pool's own statement timeout. The store's permit bound is deliberately
-    // short and would otherwise sit in front of a statement three times longer
-    // than itself. See FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS for the
-    // residual this does NOT close.
-    readRow: (accountId, maxOwnedBytes) =>
-      runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, (query) =>
-        freeholdForAccount({ query }, accountId, maxOwnedBytes),
-      ),
-    readHearth: (accountId) =>
-      runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, (query) =>
-        loadFreeholdHearth({ query }, accountId),
-      ),
-    writeRow: (input) => upsertFreehold(pool, input),
-    // ONE declaration of the realm's identity sets, consumed by BOTH sides.
-    // Declaring them twice is how a load that refuses a tier and a save that
-    // accepts it come to disagree.
-    normalize: (raw) => normalizeFreehold(raw, REALM_IDENTITY_SETS),
-    identitySets: () => REALM_IDENTITY_SETS,
-    serialize: (ownerKey) => {
-      const state = serializeFreehold(deps.sim.ctx, ownerKey);
-      return state === null ? null : persistedFreeholdFromState(state);
-    },
-    hasLive: (ownerKey) => deps.sim.ctx.freeholds.has(ownerKey),
-    enabled: () => deps.sim.ctx.freeholdsEnabled,
-    liveRev: (ownerKey) => deps.sim.ctx.freeholds.get(ownerKey)?.rev ?? null,
-    mintPlotId: () => mintFreeholdPlotId(),
-    // No gate means no admission control on this host, not an unbounded wait.
-    acquirePermit: gate
-      ? (signal) => gate.acquire(signal)
-      : () => Promise.resolve({ release: () => {} }),
-    enqueue: (key, signal, write) => writer.enqueueCancellable(key, signal, write),
-    nowMs: Date.now,
-    warn: (message) => console.warn(message),
-    error: (message, err) => console.error(message, ...(err === undefined ? [] : [err])),
-  });
 }

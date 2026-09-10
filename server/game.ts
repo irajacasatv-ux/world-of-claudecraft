@@ -244,12 +244,12 @@ import { buildEventPidIndex, forEachSelectedEventIndex } from './event_pid_index
 import { appendFarmPlotsWire, dispatchFarmingCommand } from './farming_commands';
 import { fishingBandLabel, isKoi, isRodFeeRecipe } from './fishing_telemetry';
 import {
-  createGameFreeholdPersistStore,
   type FreeholdPersistStore,
   installLoadedFreehold,
   type LoadedFreehold,
   registerFreeholdPersistStore,
 } from './freehold_persist';
+import { createGameFreeholdPersistStore } from './freehold_persist_wiring';
 import {
   bindFreeholdOnJoin,
   flushFreeholdBinding,
@@ -3788,10 +3788,8 @@ export class GameServer {
     } finally {
       // ON EVERY EXIT, INCLUDING A THROW: all three callers fire leave() with no
       // catch, so a rejection above used to skip these three lines forever. The
-      // flush is CAUGHT like the lease release below it.
-      await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey).catch((err) =>
-        console.error('freehold leave flush failed:', err),
-      );
+      // flush swallows its own rejection, in the module that owns the pairing.
+      await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
       // Release the per-character load lease so a fresh login (here or on another
       // process) can reload the character without waiting out the TTL. Order
       // matters: only after the leave save has awaited above, so the lease
@@ -3828,11 +3826,11 @@ export class GameServer {
     );
   }
 
-  /** Undo this session's own guild-book work: two leave-path callers. */
+  /** Undo this session's own guild-book work: two leave-path callers. No empty
+   *  check, because the callee loops the ids it is handed: a second guard here
+   *  only invites the two to disagree. */
   private reconcileOwnGuildBooks(session: ClientSession): void {
-    if (session.dirtyGuildBanks.size > 0) {
-      this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
-    }
+    this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
   }
 
   /** Everything a leaving session settles before its three releases. */
@@ -3899,9 +3897,7 @@ export class GameServer {
       `bank ledger projection failed for character ${session.characterId} (${session.name}); quarantining the live session:`,
       error,
     );
-    if (session.dirtyGuildBanks.size > 0) {
-      this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
-    }
+    this.reconcileOwnGuildBooks(session);
     queueMicrotask(() => {
       if (!session.left) {
         void this.kickSession(session, 'character state could not be saved', 'bank ledger failure');
@@ -3920,9 +3916,7 @@ export class GameServer {
     console.error(
       `bank ledger growth ceiling refused ${error.attemptedRows} rows for character ${session.characterId} (${session.name}) at ${error.committedRows}/${error.hardLimitRows}; quarantining the live session`,
     );
-    if (session.dirtyGuildBanks.size > 0) {
-      this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
-    }
+    this.reconcileOwnGuildBooks(session);
     queueMicrotask(() => {
       if (!session.left) {
         void this.kickSession(session, 'character state could not be saved', 'bank ledger full');
@@ -4418,7 +4412,7 @@ export class GameServer {
     const session = this.sessionByCharacterId(characterId);
     if (!session || session.pid !== pid) return;
     session.escrowQuarantined = true;
-    this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
+    this.reconcileOwnGuildBooks(session);
     if (!session.left) {
       void this.kickSession(session, 'character taken over', `${surface} ${kind}`);
     }
