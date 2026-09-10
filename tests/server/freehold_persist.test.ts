@@ -21,6 +21,7 @@ import type {
   FreeholdUpsertResult,
 } from '../../server/freehold_db';
 import type { FreeholdHearthLoad } from '../../server/freehold_hearth_db';
+import { readLoginDurables } from '../../server/freehold_hearth_load';
 import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
@@ -1918,8 +1919,14 @@ describe('a write may only carry the record this entry actually loaded', () => {
     }
     // ...and the SEAL still reads the LIVE record, which is the whole point of
     // keeping two names: comparing the document against entry.state would be
-    // comparing a value with itself.
-    expect(body).toContain('persisted.plotId !== entry.state.plotId');
+    // comparing a value with itself, because `document` carries entry.plotId by
+    // construction. The seal moved to server/freehold_write_seal.ts, so what is
+    // pinned here is WHICH VALUE runWrite hands it; the comparison itself is
+    // pinned in that module's own suite.
+    expect(body).toContain('seedWouldLandOnRealRow(persisted, entry)');
+    expect(body).not.toContain('seedWouldLandOnRealRow(document');
+    const seal = stripComments(readFileSync('server/freehold_write_seal.ts', 'utf8'));
+    expect(seal).toContain('persisted.plotId !== entry.state.plotId');
   });
 
   it('still writes the record it DID load, so the seal is not just a stopped writer', async () => {
@@ -4108,7 +4115,15 @@ describe('the coordinator side of the wiring (source pins)', () => {
     expect(guarded).toBeGreaterThan(addPlayer);
     expect(closed).toBeGreaterThan(guarded);
     expect(finallyRelease).toBeGreaterThan(closed);
-    expect(body.slice(closed, finallyRelease)).toContain('finally');
+    // INSIDE THE FINALLY BLOCK, read the same way as the catch above. A
+    // contains-'finally' test is satisfied by a release moved out past the
+    // block's closing brace, which is the identical hole this case already
+    // closes one line up for the catch: from `finally {` to the release there
+    // is no closing brace, so the release is still inside it.
+    const finallyAt = body.indexOf('finally {', closed);
+    expect(finallyAt).toBeGreaterThan(closed);
+    expect(finallyAt).toBeLessThan(finallyRelease);
+    expect(body.slice(finallyAt + 'finally {'.length, finallyRelease)).not.toContain('}');
     // The record the seed inserted is taken back out with it, or nothing evicts it.
     expect(body.slice(finallyRelease)).toContain('this.sim.removePlayer(pid)');
     expect(body.indexOf('this.clients.set(pid, session)')).toBeLessThan(closed);
@@ -4177,6 +4192,48 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // And inside this process's lease window: once the lease drops, a
     // replacement process can load the same account's plot and write it.
     expect(leaseRelease).toBeGreaterThan(plotFlush);
+  });
+
+  it('gives the four session REGISTRATIONS back on every exit, not at the end of the settlement', () => {
+    // THE HOLE THE THREE RELEASES ABOVE DID NOT COVER. The settlement's own tail
+    // still held four registrations, so a rejection anywhere above them (a final
+    // save that exhausts its five attempts, then a guild-book revert that
+    // faults) skipped all four while the finally released the freehold
+    // reference, the lease and the sim entity. The character was then gone from
+    // `clients` and from the sim while `sessionsByCharacterId` still mapped it:
+    // planJoin answered 'character already in world' for every later login for
+    // the life of the process, takeOverCharacter reported success and changed
+    // nothing, and every whisper, mail and party lookup kept resolving to the
+    // dead session and sending into a closed socket.
+    const body = methodBody(GAME, '  async leave(session: ClientSession, _reason: string)');
+    const settlement = methodBody(GAME, '  private async settleLeavingSession(');
+    const guard = body.indexOf('} finally {');
+    expect(guard).toBeGreaterThan(-1);
+    for (const registration of [
+      'this.sessionsByCharacterId.delete(session.characterId)',
+      'this.guildBookHolders.dropSession(session)',
+      'session.bankLedgerJournal.outbox.discard()',
+      'storageRecovery.offline(session.characterId)',
+    ]) {
+      const at = body.indexOf(registration);
+      expect(at, registration).toBeGreaterThan(guard);
+      // AND NOWHERE ELSE. Left in the settlement as well, the throw path is
+      // fixed and the healthy path runs each of them twice.
+      expect(settlement, registration).not.toContain(registration);
+    }
+    // BEFORE the flush, the lease release and removePlayer, all of which await:
+    // the registrations are what makes the character re-enterable, and holding
+    // them behind a durable write is how a slow database becomes a locked-out
+    // player.
+    expect(body.indexOf('this.sessionsByCharacterId.delete(session.characterId)')).toBeLessThan(
+      body.indexOf('flushFreeholdBinding(this.freeholdPersist,'),
+    );
+    // IDENTITY-GUARDED. A same-account character swap sets the new session
+    // before the old one's fire-and-forget leave arrives here, so an unguarded
+    // delete evicts the live session's own registration.
+    expect(body).toContain(
+      'if (this.sessionsByCharacterId.get(session.characterId) === session) {',
+    );
   });
 
   it('registers the store once and tears its timers down with the coordinator', () => {
@@ -4348,52 +4405,116 @@ describe('the composition root that binds the combined port (source pins)', () =
     return WIRING.slice(at, stop);
   };
 
-  it('puts BOTH login statements inside ONE bounded transaction', () => {
+  it('binds BOTH login statements to ONE bounded transaction, through the policy', () => {
     const durables = binding('readDurables', 'writeRow').replace(/\s+/g, ' ');
     // ONE wrapper for the pair, not one per read: two wrappers is the defect
     // this replaced, and it costs four times the round trips on the login path.
     expect(durables.split('runWithStatementTimeout(').length - 1).toBe(1);
     expect(durables).toContain('FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS');
+    // THROUGH THE POLICY MODULE, which is what makes the fail-open/fail-closed
+    // rule executable at all: the closures in this file bind the real pool at
+    // module scope, so nothing imports them and a mutant that deleted the clock
+    // swallow left the whole suite green. The behaviour cases below drive
+    // readLoginDurables directly; this pin is only that the binding uses it.
+    expect(durables).toContain('readLoginDurables<FreeholdQueryable>(');
     // BOTH on the transaction's own `query`, never on the pool: a statement sent
     // to `pool` runs on a different client and escapes the bound entirely.
-    expect(durables).toContain('freeholdForAccount({ query }');
-    expect(durables).toContain('loadFreeholdHearth({ query }');
+    expect(durables).toContain('run({ query })');
+    expect(durables).toContain('freeholdForAccount(db,');
+    expect(durables).toContain('loadFreeholdHearth(db,');
     expect(durables).not.toContain('freeholdForAccount(pool');
     expect(durables).not.toContain('loadFreeholdHearth(pool');
   });
 
-  it('swallows the CLOCK read and never the ROW read, across the WHOLE transaction', () => {
-    const durables = binding('readDurables', 'writeRow').replace(/\s+/g, ' ');
-    // THE CLOCK FAILS OPEN, and the guard has to be around the transaction, not
-    // around the clock's own promise. An inner catch cannot see the COMMIT that
-    // runWithStatementTimeout issues afterwards, so a clock fault that KILLS the
-    // connection made COMMIT reject, the port reject, and loadOnce answer a
-    // write-blocking hold on the house for a fault in the clock. The row is
-    // captured as it is read and any later rejection with a row in hand is
-    // answered as a thrown CLOCK.
-    expect(durables).toContain('let row: FreeholdRowLoad | undefined');
-    expect(durables).toContain('row = await freeholdForAccount({ query }');
-    expect(durables).toContain("return { row, hearth: { kind: 'threw' as const, error } }");
-    // THE PLOT FAILS CLOSED. With no row in hand the rejection is rethrown, so
-    // loadOnce still turns an unreadable row into a hold and nothing is written
-    // over a row this host could not read. Reading the rethrow itself, because
-    // that one line is the whole difference between the two policies.
-    expect(durables).toContain('if (row === undefined) throw error');
-    // And the inner catch is on the CLOCK read alone. Sliced to the hearth
-    // expression rather than to the next brace, so a catch attached to a later
-    // port cannot satisfy this.
-    const hearthAt = durables.indexOf('loadFreeholdHearth({ query }');
-    const clockOnly = durables.slice(hearthAt, durables.indexOf('};', hearthAt));
-    // Matched in PIECES rather than as one literal: the collapsed text carries
-    // the trailing comma of biome's multi-line form, so a reformat that fits the
-    // object on one line would red this pin without changing any behaviour.
-    expect(clockOnly).toContain('.catch(');
-    expect(clockOnly).toContain('(error: unknown)');
-    expect(clockOnly).toContain("kind: 'threw' as const");
-    // The ROW read is NOT caught inside the transaction: its rejection must
-    // reach the outer guard, which decides by whether a row was captured.
-    const rowAt = durables.indexOf('row = await freeholdForAccount({ query }');
-    expect(durables.slice(rowAt, durables.indexOf(';', rowAt))).not.toContain('.catch');
+  it('EXECUTES the login policy: both reads answer, the clock lands with the row', async () => {
+    // The first case that runs this code at all. Every earlier pin over the
+    // combined port was source text, because the composition root binds the
+    // real pool at module scope and nothing imports it.
+    const seen: string[] = [];
+    const got = await readLoginDurables<'db'>(
+      async (run) => await run('db'),
+      async (db) => {
+        seen.push(`row:${db}`);
+        return { kind: 'row', row: rowFixture() };
+      },
+      async (db) => {
+        seen.push(`hearth:${db}`);
+        return { kind: 'state', state: { readyAtMs: '90000', revision: '4' } };
+      },
+    );
+    expect(seen).toEqual(['row:db', 'hearth:db']);
+    expect(got.row.kind).toBe('row');
+    expect(got.hearth).toEqual({ kind: 'state', state: { readyAtMs: '90000', revision: '4' } });
+  });
+
+  it('EXECUTES the login policy: the CLOCK fails open and the row still lands', async () => {
+    const boom = new Error('hearth read failed');
+    const got = await readLoginDurables<'db'>(
+      async (run) => await run('db'),
+      async () => ({ kind: 'row', row: rowFixture() }),
+      async () => {
+        throw boom;
+      },
+    );
+    expect(got.row.kind).toBe('row');
+    expect(got.hearth).toEqual({ kind: 'threw', error: boom });
+  });
+
+  it('EXECUTES the login policy: a COMMIT fault keeps the clock it already read', async () => {
+    // THE REGRESSION THIS CASE EXISTS FOR. The guard used to capture the ROW
+    // alone, so a transaction that rejected AFTER both statements had answered
+    // rebuilt the clock half from the outer error and reported `threw`, which
+    // the store normalizes to the COLD clock, which reads as READY. The store
+    // then remembers that zero on the entry and replays it to every later
+    // character of the account for the rest of the session without reading
+    // again. A clock that was READ is not an unreadable clock.
+    const commitFault = new Error('connection terminated');
+    const got = await readLoginDurables<'db'>(
+      async (run) => {
+        const answered = await run('db');
+        void answered;
+        throw commitFault;
+      },
+      async () => ({ kind: 'row', row: rowFixture() }),
+      async () => ({
+        kind: 'state',
+        state: { readyAtMs: '90000', revision: '4' },
+      }),
+    );
+    expect(got.row.kind).toBe('row');
+    // The clock it read, NOT { kind: 'threw' }.
+    expect(got.hearth).toEqual({ kind: 'state', state: { readyAtMs: '90000', revision: '4' } });
+  });
+
+  it('EXECUTES the login policy: the PLOT fails closed when no row was captured', async () => {
+    // The other half of the asymmetry, and the one line that decides it. With
+    // no row in hand the rejection is rethrown, so loadOnce turns it into a
+    // HOLD and nothing is written over a row this host could not read.
+    const rowFault = new Error('row read failed');
+    await expect(
+      readLoginDurables<'db'>(
+        async (run) => await run('db'),
+        async () => {
+          throw rowFault;
+        },
+        async () => ({ kind: 'absent' }),
+      ),
+    ).rejects.toBe(rowFault);
+  });
+
+  it('EXECUTES the login policy: a transaction that fails BEFORE the row rethrows', async () => {
+    // BEGIN, SET LOCAL or the pool checkout itself. No statement ran, so there
+    // is no row and no clock, and the plot must still fail closed.
+    const connectFault = new Error('pool checkout timed out');
+    await expect(
+      readLoginDurables<'db'>(
+        async () => {
+          throw connectFault;
+        },
+        async () => ({ kind: 'row', row: rowFixture() }),
+        async () => ({ kind: 'absent' }),
+      ),
+    ).rejects.toBe(connectFault);
   });
 
   it('keeps the two-port fallback BOUNDED beside it, on the same constant', () => {
@@ -4436,6 +4557,80 @@ describe('the gaps a mutation pass over the store found', () => {
     h.store.retain(OWNER_KEY, ACCOUNT_ID);
     await tick(20);
     expect(h.calls).toEqual([]);
+  });
+
+  it('a rejoin that takes back a capture takes the entry out of the LEAVER subset too', async () => {
+    // THE SUBSET OUTLIVING ITS SUPERSET. `retain` used to clear the capture with
+    // two inline lines, doing the gauge and the null and leaving the entry in
+    // `deferredLeavers`, which exists only so `pumpLoop` can find a deferred
+    // LEAVER. A rejoin inside the deferral window then parked a CAPTURELESS
+    // entry at the head of that set: `nextDeferred` returned it on every
+    // admission and `pumpLoop` priced it at the NON-leaving cap, so the two
+    // reserved slots never reached the genuine leavers queued behind it. That is
+    // the starvation the reserve was rebuilt to end.
+    const gates: Array<Deferred<FreeholdUpsertResult>> = [];
+    let rejoinerLive = false;
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      hasLive: (key) => key === OWNER_KEY && rejoinerLive,
+      writeRow: async () => {
+        const gate = deferred<FreeholdUpsertResult>();
+        gates.push(gate);
+        return await gate.promise;
+      },
+    });
+    const dirtyLeaver = async (key: string, accountId: number): Promise<void> => {
+      h.store.retain(key, accountId);
+      await h.store.preload(accountId);
+      h.store.markDirty(key);
+      void h.store.flushAndRelease(key);
+      await tick(20);
+    };
+    // Fill the ordinary cap, queue four behind it, then let two leavers take the
+    // whole reserve, so every later leaver has to come through the pump.
+    for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 4; i++) {
+      const key = `account:${OTHER_ACCOUNT_ID + i}`;
+      h.store.retain(key, OTHER_ACCOUNT_ID + i);
+      await h.store.preload(OTHER_ACCOUNT_ID + i);
+      h.store.markDirty(key);
+      h.store.save(key);
+    }
+    await tick(20);
+    for (let i = 0; i < FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE; i++) {
+      await dirtyLeaver(`account:${OTHER_ACCOUNT_ID + 500 + i}`, OTHER_ACCOUNT_ID + 500 + i);
+    }
+    const leavingCap = FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE;
+    expect(h.store.stats().activeWrites).toBe(leavingCap);
+
+    // THE REJOINER. It leaves dirty, is deferred with a capture, and comes
+    // straight back: its live record now carries the captured revision, so
+    // retain hands the capture back.
+    // Counted as a DELTA: the two reserve leavers above are still holding their
+    // own captures, because a capture is released when its write settles and
+    // theirs are gated open.
+    const heldBefore = h.store.stats().leaveCaptures;
+    await dirtyLeaver(OWNER_KEY, ACCOUNT_ID);
+    expect(h.store.stats().leaveCaptures).toBe(heldBefore + 1);
+    rejoinerLive = true;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    expect(h.store.stats().leaveCaptures).toBe(heldBefore);
+
+    // A GENUINE leaver behind it, also deferred and still holding its capture.
+    const laterKey = `account:${OTHER_ACCOUNT_ID + 900}`;
+    await dirtyLeaver(laterKey, OTHER_ACCOUNT_ID + 900);
+    expect(h.store.stats().leaveCaptures).toBe(heldBefore + 1);
+
+    // One slot frees. The pump must reach the entry that still holds a capture,
+    // at the LEAVING cap; with the rejoiner still in the subset it answered
+    // first, was priced at the non-leaving cap, and nothing launched at all.
+    const before = h.writes.length;
+    gates[0].resolve({ kind: 'updated', durableRev: '9' });
+    await tick(40);
+    const launched = h.writes.slice(before).map((write) => write.accountId);
+    expect(launched).toContain(OTHER_ACCOUNT_ID + 900);
+    expect(launched).not.toContain(ACCOUNT_ID);
+    for (const gate of gates) gate.resolve({ kind: 'updated', durableRev: '9' });
+    await tick(40);
   });
 
   it('a DEFERRED leaver waits, and the pump then prefers it over the queue', async () => {
@@ -4563,11 +4758,27 @@ describe('the gaps a mutation pass over the store found', () => {
     // advances rather than whatever a real clock happened to do: 40 ms inside
     // the codec (the serialize call sits in it) and 700 ms inside the statement.
     let h!: Harness;
+    let docSize: 'small' | 'first' | 'large' = 'first';
+    const sized = (): PersistedFreehold =>
+      docSize === 'small'
+        ? persistedFixture({ layout: [], trophies: [] })
+        : docSize === 'large'
+          ? persistedFixture({
+              layout: Array.from({ length: 12 }, (_, i) => ({
+                placementId: i + 1,
+                itemId: 'oak_chair',
+                x: 1.5,
+                y: 0,
+                z: -2.25,
+                yaw: 0,
+              })),
+            })
+          : persistedFixture();
     h = harness({
       rowLoad: { kind: 'row', row: rowFixture() },
       serialize: () => {
         h.setNow(10_040);
-        return persistedFixture();
+        return sized();
       },
       writeRow: async () => {
         h.setNow(10_740);
@@ -4588,16 +4799,35 @@ describe('the gaps a mutation pass over the store found', () => {
     // greater-than-or-equal-to-zero assertion is true of a deleted accumulation.
     expect(after.codecMsTotal - afterLoad.codecMsTotal).toBe(40);
     expect(after.writeMsTotal - afterLoad.writeMsTotal).toBe(700);
-    // The high-water mark is a MARK, not the total: a second, larger write moves
-    // both, and a smaller one after it moves only the total.
+    // The high-water mark is a MARK, not the total and not the LAST SAMPLE. The
+    // second write here used to be the same size as the first, so `mark ===
+    // first` was equally true of a gauge holding the last sample; the two are
+    // only separable by a write that is SMALLER. A third, larger one then
+    // proves the mark still climbs, so it is not simply the first sample.
     expect(after.maxWriteBytes).toBe(after.writeBytesTotal);
     const first = after.maxWriteBytes;
+    expect(first).toBeGreaterThan(0);
+
+    docSize = 'small';
     h.store.markDirty(OWNER_KEY);
     h.store.save(OWNER_KEY);
     await tick(30);
     const twice = h.store.stats();
-    expect(twice.writeBytesTotal).toBe(first * 2);
+    const smaller = twice.writeBytesTotal - first;
+    expect(smaller).toBeGreaterThan(0);
+    expect(smaller).toBeLessThan(first);
+    // A last-sample gauge would read `smaller` here.
     expect(twice.maxWriteBytes).toBe(first);
+
+    docSize = 'large';
+    h.store.markDirty(OWNER_KEY);
+    h.store.save(OWNER_KEY);
+    await tick(30);
+    const thrice = h.store.stats();
+    const larger = thrice.writeBytesTotal - twice.writeBytesTotal;
+    expect(larger).toBeGreaterThan(first);
+    // And a first-sample gauge would still read `first` here.
+    expect(thrice.maxWriteBytes).toBe(larger);
   });
 
   it('stops owing a write that has no record and no capture, instead of re-arming forever', async () => {

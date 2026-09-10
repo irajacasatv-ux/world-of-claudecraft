@@ -613,10 +613,20 @@ describe('every durable field write bumps the record revision', () => {
     // EVERY .ts FILE IN THE DIRECTORY is represented, which a numeric floor
     // cannot say: a floor of 40 against 43 tolerated losing three single-export
     // files outright.
+    // LISTED THE WAY THE WALK WALKS, recursively. The walk above was widened to
+    // recurse in this same range while this listing stayed flat, so the moment a
+    // module lands under a subdirectory the two disagree and the disagreement
+    // reads as a missing file rather than as a stale pin.
     const scanned = new Set([...bodies.keys()].map((key) => key.split(':')[0]));
-    const onDisk = readdirSync(join(__dirname, '..', 'src', 'sim', 'freehold'))
-      .filter((name) => name.endsWith('.ts'))
-      .sort();
+    const listTs = (root: string, prefix = ''): string[] =>
+      readdirSync(root, { withFileTypes: true }).flatMap((entry) =>
+        entry.isDirectory()
+          ? listTs(join(root, entry.name), `${prefix}${entry.name}/`)
+          : entry.name.endsWith('.ts')
+            ? [`${prefix}${entry.name}`]
+            : [],
+      );
+    const onDisk = listTs(join(__dirname, '..', 'src', 'sim', 'freehold')).sort();
     expect([...scanned].sort()).toEqual(onDisk);
     expect(onDisk.length).toBeGreaterThan(10);
     expect(bodies.size).toBeGreaterThanOrEqual(40);
@@ -634,8 +644,15 @@ describe('every durable field write bumps the record revision', () => {
     // exemption; the record map, which the whole write seal reasons about, had
     // none, so a `ctx.freeholds.set(key, { ...record, layout: [] })` added in
     // sim.ts was invisible to every scan in the tree.
-    const roots = ['server', 'src/sim', 'src/net', 'src/game', 'src/ui', 'src/render', 'headless'];
+    // THE WHOLE OF src/, not seven hand-listed roots. The list omitted
+    // src/world_api, src/editor, src/admin, src/guide and src/main.ts itself,
+    // and the claim it enforces is "the ONLY file", not "the only file in seven
+    // directories": the seam interface and the editor's viewport both hold a
+    // SimContext, so either could set the map and no scan in the tree would see
+    // it. `src` is walked whole and every root the claim covers is named.
+    const roots = ['server', 'src', 'headless', 'bot'];
     const offenders: string[] = [];
+    const SOLE_WRITER = /freeholds\s*\.\s*(?:set|delete|clear)\s*\(/;
     const walk = (root: string): void => {
       for (const entry of readdirSync(root, { withFileTypes: true })) {
         const full = join(root, entry.name);
@@ -646,16 +663,22 @@ describe('every durable field write bumps the record revision', () => {
         if (!entry.name.endsWith('.ts')) continue;
         if (full.endsWith(join('src', 'sim', 'freehold', 'state.ts'))) continue;
         const src = stripComments(readFileSync(full, 'utf8'));
-        if (/freeholds\s*\.\s*(?:set|delete|clear)\s*\(/.test(src)) offenders.push(full);
+        if (SOLE_WRITER.test(src)) offenders.push(full);
       }
     };
     for (const root of roots) walk(join(__dirname, '..', root));
     expect(offenders).toEqual([]);
-    // ANTI-VACUITY: the exempt file really does carry all three writers, so a
-    // scan that stopped matching would red here rather than pass empty.
+    // ANTI-VACUITY, THROUGH THE SCAN'S OWN PREDICATE. The control used to assert
+    // two LITERALS while the scan used a regex, so a regex that stopped matching
+    // anything passed the offender list empty and the control went green
+    // regardless: it controlled the file's contents, not the detector. Running
+    // SOLE_WRITER over the exempt file is what makes it a control.
     const owner = stripComments(
       readFileSync(join(__dirname, '..', 'src', 'sim', 'freehold', 'state.ts'), 'utf8'),
     );
+    expect(SOLE_WRITER.test(owner)).toBe(true);
+    // And the walker really walked: the exempt file is the one path it skipped,
+    // so it has to have been visited to be skipped.
     expect(owner.split('ctx.freeholds.set(').length - 1).toBe(2);
     expect(owner.split('ctx.freeholds.delete(').length - 1).toBe(1);
   });

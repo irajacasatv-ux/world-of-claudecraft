@@ -65,6 +65,7 @@ import {
   normalizeHearthLoad,
 } from './freehold_hearth_load';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
+import { seedWouldLandOnRealRow } from './freehold_write_seal';
 
 /** How long the shutdown drain waits for running and pending writes before it
  *  gives up and answers false. Finite by contract: a drain that can block
@@ -303,6 +304,15 @@ export interface LoadedFreehold {
 
 /** Every side effect the store has. Nothing here touches a pool, a Sim or a
  *  session directly, which is what lets one Vitest drive the whole lifecycle. */
+/** What the combined login port answers for the CLOCK half: a durable load, or
+ *  a thrown read carried across as a VALUE. Named rather than spelled inline so
+ *  the composition root can hold one as it reads it: capturing only the row and
+ *  rebuilding this from the outer error discarded a clock that had already been
+ *  read successfully. */
+export type FreeholdHearthAnswer =
+  | FreeholdHearthLoad
+  | { readonly kind: 'threw'; readonly error: unknown };
+
 export interface FreeholdPersistPorts {
   readRow(accountId: number, maxOwnedBytes: number): Promise<FreeholdRowLoad>;
   readHearth(accountId: number): Promise<FreeholdHearthLoad>;
@@ -330,7 +340,7 @@ export interface FreeholdPersistPorts {
      *  the plot: the two are separate durable facts and the clock failing open
      *  while the plot fails closed is a deliberate asymmetry carried as a named
      *  gate, not something a round-trip saving may quietly change. */
-    hearth: FreeholdHearthLoad | { readonly kind: 'threw'; readonly error: unknown };
+    hearth: FreeholdHearthAnswer;
   }>;
   writeRow(input: FreeholdUpsert): Promise<FreeholdUpsertResult>;
   /** normalizeFreehold bound to the realm's live tier and visit-policy sets. */
@@ -1046,9 +1056,16 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           // Two different measures, named as such: past the on-disk pre-gate
           // the stored text was never rendered, so reporting a text length
           // there would be a number nothing took.
-          detail: rowLoad.detoastRefused
-            ? `${rowLoad.diskBytes} on-disk bytes past the pre-gate, so the ${rowLoad.limit} byte stored limit was never measured`
-            : `${rowLoad.bytes} owned bytes over the ${rowLoad.limit} byte limit`,
+          // THROUGH THE BOUND, like its unadmitted sibling ten lines below and
+          // for the same reason: this detail is built HERE from row-derived
+          // columns, never by the sim's reporter, so nothing else stands
+          // between it and an operator log. Both shapes are named in
+          // KNOWN_DETAILS, so a real measurement still prints.
+          detail: boundedFreeholdDetail(
+            rowLoad.detoastRefused
+              ? `${rowLoad.diskBytes} on-disk bytes past the pre-gate, so the ${rowLoad.limit} byte stored limit was never measured`
+              : `${rowLoad.bytes} owned bytes over the ${rowLoad.limit} byte limit`,
+          ),
           plotIndex: rowLoad.plotIndex,
           durableRev: rowLoad.durableRev,
         },
@@ -1245,7 +1262,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // advances at commit. The capture is the previous session's last edits,
       // still unwritten; replaying the committed state instead would show the
       // returning player a house missing everything they did before logging
-      // out, and would then overwrite the capture on the next sweep. Handing it
+      // out, and would then overwrite the capture on the next sweep.
       // Handing it over does NOT release it. `retain` is the confirmation and
       // releases it there, and only when the live record actually carries it;
       // see offerCapture for the five handshake exits that make releasing here
@@ -1326,7 +1343,13 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     }
     counters.writeFailures++;
     entry.quiesced = true;
-    const detail = result.kind === 'missing' ? 'the row vanished' : result.detail;
+    // THE SAME BOUND the load path applies. This detail comes out of
+    // server/freehold_db.ts, which is outside this file, so the channel rule
+    // holds here too: both conflict literals and the missing-row literal are
+    // named in KNOWN_DETAILS.
+    const detail = boundedFreeholdDetail(
+      result.kind === 'missing' ? 'the row vanished' : result.detail,
+    );
     ports.error(
       `freehold plot index ${entry.plotIndex} write refused (${result.kind}): ${detail}; no further writes go out for this owner`,
     );
@@ -1395,165 +1418,20 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         entry.dirtySinceMs = isDirty(entry) ? snapshotAtMs : 0;
         return false;
       }
-      // IDENTITY, not just presence. A live record still carrying the unassigned
-      // plot id has never been loaded from a row nor minted one: it is a fresh
-      // seed by construction. Writing it over a row that HAS a durable revision
-      // erases tier, layout, trophies, condition and visit policy, and because
-      // the compare-and-swap deliberately never touches plot_id, the loss leaves
-      // the identity intact and is invisible in the key.
+      // THE SEAL, in server/freehold_write_seal.ts. It is a pure predicate over
+      // the LIVE document and the entry's committed state, so it lives in a
+      // named module a Vitest can drive with three literals rather than as a
+      // hundred and sixty lines inside this method. Four rounds each tried to
+      // close the last path to a seeded default by adding a clause to it.
       //
-      // The window is real: a leave drops the store entry while the sim record
-      // is still live, so a rejoin landing in between reads the row, learns a
-      // durable revision, and is then handed a freshly seeded default when the
-      // old session's removePlayer finally evicts. Refusing preserves the row,
-      // at the cost of one session played on a default record with no writes.
-      //
-      // THREE TESTS, because identity alone has a blind window. A brand-new
-      // account's record legitimately carries the stand-in identity for its
-      // whole first session, and so does a freshly seeded default, so between
-      // that account's first insert and its first reload the two are
-      // indistinguishable by name.
-      const standInSeed = persisted.plotId === PENDING_FREEHOLD_PLOT_ID;
-      // The second test refuses an UNTOUCHED seed without needing a name: a
-      // PRISTINE default carries no information at all, so refusing to write
-      // one over a row can never lose anything, and an entry that knows more
-      // than a pristine default is an entry whose record has diverged from one.
-      //
-      // MEASURED, so nobody has to guess what it is still for: while the entry
-      // loaded a ROW the name comparison above catches every reseed first, so
-      // this arm is dead there and removing it leaves the suite green. For an
-      // entry that MINTED its own row it is the opposite: see the OPEN GATE
-      // below, where the name comparison cannot fire at all and this arm plus
-      // the revision test are the only things standing.
-      //
-      // IT IS KEPT BECAUSE THE NAME COMPARISON IS EXACTLY WHAT A FUTURE ROUND
-      // WILL NARROW. Round nine exempted the stand-in from it to stop a healthy
-      // fresh account being quiesced, and in that shape this arm and the one
-      // below were the only things left standing between a seeded default and a
-      // real house. The gate that fix is carried under will narrow it again.
-      // This arm also reads the CONTENT directly, so unlike the revision test
-      // below it survives a future writer that adds a furnishing and forgets to
-      // bump the revision.
-      const pristineSeed =
-        standInSeed &&
-        persisted.rev === 0 &&
-        persisted.layout.length === 0 &&
-        persisted.trophies.length === 0;
-      // TOTAL over the persisted shape, and expressed against `persisted`
-      // rather than against the sim's default constants. This arm is only ever
-      // read when `pristineSeed` holds, so `persisted` IS the pristine default
-      // standing in front of the entry, and "knows more" is exactly "differs
-      // from it in any field a row carries". Enumerating rev, layout and
-      // trophies alone left tier, condition and visit policy out, which made
-      // the arm silently depend on every tier change also bumping the revision:
-      // true today, and a property enforced in another file.
-      const entryKnowsMore =
-        entry.state !== null &&
-        (entry.state.rev > 0 ||
-          entry.state.layout.length > 0 ||
-          entry.state.trophies.length > 0 ||
-          entry.state.tier !== persisted.tier ||
-          entry.state.condition !== persisted.condition ||
-          entry.state.visitPolicy !== persisted.visitPolicy);
-      // The third test closes the REST of it, and it is the one the other two
-      // miss. A seed stops being pristine the instant the returning player
-      // touches it: one tier grant, or one furnishing once that writer lands,
-      // and the record is a stand-in identity at revision one standing against
-      // an entry that committed revision seven. Both other tests pass, the
-      // empty default is compare-and-swapped over the real house, and because
-      // the swap never touches plot_id the loss is invisible in the key.
-      //
-      // A REGRESSED REVISION IS THE DISCRIMINATOR, and it is decidable where
-      // "newer" is not. Every sanctioned writer of a live record only ever
-      // increments its revision (the coupling is pinned by a source scan in
-      // tests/freehold_module.test.ts), and every install this store offers a
-      // rejoin carries at least the revision the entry last committed, so a
-      // live record BELOW that has to be a different record. It is checked only
-      // under the stand-in identity because a record carrying any other name is
-      // already refused by the first test.
-      //
-      // WHICH DIMENSIONS A TEST CAN ISOLATE, measured rather than assumed. For a
-      // ROW-LOADED entry only the identity and revision dimensions can be killed
-      // by a behaviour case; the pristine arm and its layout, trophies, tier,
-      // condition and visit-policy dimensions cannot, because the name
-      // comparison catches every reseed there first. They are kept for totality
-      // over the persisted shape and listed here rather than pinned by a case
-      // that reaches them through a different arm. A case that passes for the
-      // wrong reason is the failure this packet has already recorded twice, and
-      // it recorded it a third time on the case that named the caught-up seed.
-      const revisionRegressed = entry.state !== null && persisted.rev < entry.state.rev;
-      // THE FIRST TEST JUDGES A NAME ONLY WHEN THERE IS ONE, and this is the
-      // correction that lets the other two carry the stand-in case alone.
-      //
-      // A bare `persisted.plotId !== entry.state.plotId` quiesced a healthy
-      // fresh account for the rest of its session, which is the Y1 failure
-      // seen from the other end. Nothing teaches a live record its minted name,
-      // so a first-session record carries the stand-in for as long as it lives;
-      // but if that account's store entry is dropped and RE-READ from the row
-      // it just inserted (retain's lost-entry reload, or a second character
-      // joining on preload's already-live-but-unloaded arm), `entry.state`
-      // comes back carrying the ROW's minted name while the same live record
-      // still carries the stand-in. The names differ, nothing is wrong, and the
-      // account was write-blocked with a misleading "the live record is not the
-      // record this entry loaded".
-      //
-      // A STAND-IN IS THE ABSENCE OF A NAME, not a different one, so it is
-      // judged by CONTINUITY instead: pristine-and-the-entry-knows-more, or a
-      // regressed revision. A record carrying any OTHER name is a different
-      // record by construction and is still refused outright.
-      // ANY NAME THAT IS NOT THE ONE THIS ENTRY LOADED, stand-in included.
-      //
-      // AND THIS TEST IS NOT TOTAL. It is total for an entry that loaded a ROW,
-      // whose cached name is the row's minted id while a freshly seeded default
-      // carries the stand-in. It is INERT for an entry that MINTED its own row:
-      // `applyWriteResult` caches the identity the LIVE RECORD carried, nothing
-      // teaches a live record its minted name, so that entry's cached name IS
-      // the stand-in and a reseeded default carries the same literal. The two
-      // are equal, this comparison is false by value equality, and the two
-      // continuity tests below are the whole seal. Both are revision-shaped, so
-      // a reseeded default whose revision has CAUGHT UP satisfies neither and
-      // the empty tier-0 default lands on the house. That is the EIGHTH path,
-      // reproduced against this store and pinned AS IT BEHAVES in a case named
-      // KNOWN DEFECT, and it is carried as an open gate in
-      // docs/freeholds/persistence-rollout-contract.md section 8a. Its fix is
-      // the same design decision the paragraph below already owes: teach the
-      // live record its minted identity AT INSTALL, on the ABSENT arm only,
-      // which makes this comparison total for every entry class. Do not close it
-      // by adding a fourth clause here; four rounds have each tried that.
-      //
-      // ROUND NINE EXEMPTED THE STAND-IN HERE AND IT WAS REVERTED, because the
-      // exemption is a data-loss hole: for an entry that loaded a ROW, its
-      // cached name is the row's, a freshly seeded default carries the stand-in,
-      // and skipping the comparison left only the continuity tests below. Those
-      // catch a seed whose revision is BELOW the entry's, and a returning player
-      // needs only `entry.state.rev + 1` edits inside one sweep interval to
-      // carry it above, at which point the empty tier-0 default is
-      // compare-and-swapped over the house. Executed against the real store both
-      // ways: refused without the exemption, written with it.
-      //
-      // The exemption existed to stop a healthy fresh account being quiesced
-      // when its entry re-reads the row it inserted (the live record still
-      // carries the stand-in while the re-read entry now holds the row's name).
-      // That failure is real and is carried as a named gate rather than paid for
-      // in data loss: refusing a write costs one session's edits, admitting a
-      // seed costs the house. Fail closed. The gate's actual fix is to teach the
-      // live record its minted identity at INSTALL, which is a design decision
-      // for the maintainer, not a fourth heuristic in this expression.
-      //
-      // GUARDED ON ITS OWN, not by the chain below: hoisting this to a name
-      // takes it out from behind `entry.state !== null`, and an entry with no
-      // cached state is every account's very first write.
-      const foreignIdentity = entry.state !== null && persisted.plotId !== entry.state.plotId;
-      // `entry.durableRev !== null` is EQUAL to `entry.state !== null` by
-      // today's arithmetic, not by declaration: all three writers of
-      // `entry.state` set `entry.durableRev` in the same statement (classify's
-      // row arm, classify's absent arm and applyWriteResult). A mutation pass
-      // confirms it, so no behaviour test can isolate it. It is kept because it
-      // says what the guard MEANS, which is that a row exists to lose.
-      const seededOverReal =
-        entry.durableRev !== null &&
-        entry.state !== null &&
-        (foreignIdentity || (pristineSeed && entryKnowsMore) || (standInSeed && revisionRegressed));
+      // `persisted`, NOT the `document` built below. The seal's whole subject is
+      // the identity the LIVE RECORD carries, because that is what tells a
+      // reseeded default from the record the entry loaded; `document` carries
+      // `entry.plotId` by construction, so handing it here would compare the
+      // entry's own identity with itself and the comparison would be dead. The
+      // writable-implies-readable refusal below is the one that reads
+      // `document`, because its subject is what lands on disk.
+      const seededOverReal = seedWouldLandOnRealRow(persisted, entry);
       if (seededOverReal) {
         counters.writeFailures++;
         entry.quiesced = true;
@@ -1919,85 +1797,97 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     async flushAndRelease(ownerKey: string): Promise<void> {
       const entry = entries.get(ownerKey);
       if (!entry) return;
-      // A held entry flushes NOTHING. The leave path still drops its
-      // reference, so the entry can be evicted and re-read on a later join.
-      // The SAME dirty test the periodic sweep uses, not a weaker one: a tier
-      // change made since the last sweep bumps only the record's revision, so
-      // an isDirty-only check here would drop the whole last window of edits at
-      // logout, which is precisely when there is no next sweep to catch them.
-      const moved = noteRevisionMoved(entry);
-      if (!blocked(entry) && (moved || isDirty(entry) || entry.running || entry.pending)) {
-        // arm() directly rather than save(), so a closed intake (a shutdown
-        // already under way) still lets a leaving session write out its last
-        // edits. A clean entry is left alone: rewriting an unchanged document
-        // on every logout would burn a durable revision per leave.
-        // CAPTURED BEFORE THE WAIT, because the write's precondition is that the
-        // sim record still exists and this is the only window where that holds.
-        // A deferred write, or one whose deadline expires below, runs AFTER
-        // removePlayer has evicted the record, and would then serialize to null
-        // and write nothing at all: the leaving session's last edits would be
-        // silently gone. One clone per dirty logout buys that back.
-        // Released BEFORE reassigning: a second leave over a surviving capture
-        // holds one document and used to count two, and the gauge that is this
-        // retention's only stated bound then ratcheted upward and never read
-        // zero again.
-        // ONLY WHEN THERE IS SOMETHING TO REPLACE IT WITH. A null answer means
-        // the record is already gone, which is the exact window the capture
-        // exists for, so overwriting with it would discard the very edits it
-        // holds. Released before reassigning, because a second leave over a
-        // surviving capture holds one document and used to count two.
-        const captured = ports.serialize(ownerKey);
-        if (captured !== null) {
-          if (entry.leaveDocument !== null) leaveCaptures--;
-          entry.leaveDocument = captured;
-          leaveCaptures++;
-        }
-        // LEAVING, so it may borrow the reserve: this write is the last chance
-        // for these edits, and every background write it would otherwise queue
-        // behind has a next sweep to catch it.
-        arm(entry, true);
-        // The capture may have been taken after an earlier arm already deferred
-        // this entry, so the leaver subset is reconciled here as well as at the
-        // deferral itself.
-        if (entry.leaveDocument !== null && deferredWrites.has(entry)) {
-          deferredLeavers.add(entry);
-        }
-        // BOUNDED. Past the deadline this stops WAITING, never the write: the
-        // write is queued and keeps running, the entry stays until it settles,
-        // and the shutdown drain still waits for it. A logout that inherited
-        // the background write's full budget would back up GameServer.leave
-        // under gate saturation and release character leases late.
-        let expired = false;
-        let onExpiry!: () => void;
-        const expiry = new Promise<void>((resolve) => {
-          onExpiry = resolve;
-        });
-        const cancelDeadline = scheduleDeadline(() => {
-          expired = true;
-          onExpiry();
-        }, FREEHOLD_PERSIST_LEAVE_FLUSH_MS);
-        try {
-          for (let pass = 0; pass < FREEHOLD_PERSIST_FLUSH_MAX_PASSES && !expired; pass++) {
-            const chain = entry.chain;
-            // A DEFERRED entry has no chain and is still owed a write, so a
-            // null chain alone does not mean there is nothing to wait for.
-            // Treating it that way returned a mass disconnect's every logout in
-            // milliseconds, spending none of the budget the deadline exists to
-            // bound and leaving every entry resident.
-            if (chain === null && !deferredWrites.has(entry)) break;
-            const settled =
-              chain?.catch(() => undefined) ??
-              new Promise<void>((resolve) => {
-                entry.settleWaiters.push(resolve);
-              });
-            await Promise.race([settled, expiry]);
+      try {
+        // A held entry flushes NOTHING. The leave path still drops its
+        // reference, so the entry can be evicted and re-read on a later join.
+        // The SAME dirty test the periodic sweep uses, not a weaker one: a tier
+        // change made since the last sweep bumps only the record's revision, so
+        // an isDirty-only check here would drop the whole last window of edits at
+        // logout, which is precisely when there is no next sweep to catch them.
+        const moved = noteRevisionMoved(entry);
+        if (!blocked(entry) && (moved || isDirty(entry) || entry.running || entry.pending)) {
+          // arm() directly rather than save(), so a closed intake (a shutdown
+          // already under way) still lets a leaving session write out its last
+          // edits. A clean entry is left alone: rewriting an unchanged document
+          // on every logout would burn a durable revision per leave.
+          // CAPTURED BEFORE THE WAIT, because the write's precondition is that the
+          // sim record still exists and this is the only window where that holds.
+          // A deferred write, or one whose deadline expires below, runs AFTER
+          // removePlayer has evicted the record, and would then serialize to null
+          // and write nothing at all: the leaving session's last edits would be
+          // silently gone. One clone per dirty logout buys that back.
+          // Released BEFORE reassigning: a second leave over a surviving capture
+          // holds one document and used to count two, and the gauge that is this
+          // retention's only stated bound then ratcheted upward and never read
+          // zero again.
+          // ONLY WHEN THERE IS SOMETHING TO REPLACE IT WITH. A null answer means
+          // the record is already gone, which is the exact window the capture
+          // exists for, so overwriting with it would discard the very edits it
+          // holds. Released before reassigning, because a second leave over a
+          // surviving capture holds one document and used to count two.
+          const captured = ports.serialize(ownerKey);
+          if (captured !== null) {
+            if (entry.leaveDocument !== null) leaveCaptures--;
+            entry.leaveDocument = captured;
+            leaveCaptures++;
           }
-        } finally {
-          cancelDeadline();
+          // LEAVING, so it may borrow the reserve: this write is the last chance
+          // for these edits, and every background write it would otherwise queue
+          // behind has a next sweep to catch it.
+          arm(entry, true);
+          // The capture may have been taken after an earlier arm already deferred
+          // this entry, so the leaver subset is reconciled here as well as at the
+          // deferral itself.
+          if (entry.leaveDocument !== null && deferredWrites.has(entry)) {
+            deferredLeavers.add(entry);
+          }
+          // BOUNDED. Past the deadline this stops WAITING, never the write: the
+          // write is queued and keeps running, the entry stays until it settles,
+          // and the shutdown drain still waits for it. A logout that inherited
+          // the background write's full budget would back up GameServer.leave
+          // under gate saturation and release character leases late.
+          let expired = false;
+          let onExpiry!: () => void;
+          const expiry = new Promise<void>((resolve) => {
+            onExpiry = resolve;
+          });
+          const cancelDeadline = scheduleDeadline(() => {
+            expired = true;
+            onExpiry();
+          }, FREEHOLD_PERSIST_LEAVE_FLUSH_MS);
+          try {
+            for (let pass = 0; pass < FREEHOLD_PERSIST_FLUSH_MAX_PASSES && !expired; pass++) {
+              const chain = entry.chain;
+              // A DEFERRED entry has no chain and is still owed a write, so a
+              // null chain alone does not mean there is nothing to wait for.
+              // Treating it that way returned a mass disconnect's every logout in
+              // milliseconds, spending none of the budget the deadline exists to
+              // bound and leaving every entry resident.
+              if (chain === null && !deferredWrites.has(entry)) break;
+              const settled =
+                chain?.catch(() => undefined) ??
+                new Promise<void>((resolve) => {
+                  entry.settleWaiters.push(resolve);
+                });
+              await Promise.race([settled, expiry]);
+            }
+          } finally {
+            cancelDeadline();
+          }
         }
+      } finally {
+        // THE RELEASE IS THE HALF THAT MUST NOT BE SKIPPED, so it sits in a
+        // finally rather than after the flush above. Everything in that flush can
+        // throw: the injected scheduleDeadline (idle() already guards the
+        // identical call explicitly), the serialize port, the enqueue port. A
+        // throw there left the reference held for the life of the process, so
+        // maybeRemove returned early forever, the orphan sweep reset its count on
+        // every pass and the account's parsed record was never collected. Its one
+        // production caller swallows the rejection, which is what made that leak
+        // silent.
+        entry.refs = Math.max(0, entry.refs - 1);
+        maybeRemove(entry);
       }
-      entry.refs = Math.max(0, entry.refs - 1);
-      maybeRemove(entry);
     },
 
     // Synchronous by contract: the server fires a leave for the old character
@@ -2031,9 +1921,18 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // one account always carry the same identity (the stand-in for a fresh
       // account, the row's minted id for a loaded one). An identity compare
       // separates nothing this one does not.
+      //
+      // THROUGH releaseCapture, never inline. The two lines this used to spell
+      // out did the gauge and the null and left the entry in `deferredLeavers`,
+      // whose whole purpose is to let `pumpLoop` find a deferred LEAVER: a
+      // rejoin inside the deferral window then left a CAPTURELESS entry at the
+      // head of that set, `nextDeferred` returned it on every admission, and
+      // `pumpLoop` priced it at the NON-leaving cap, so the two reserved slots
+      // never reached the real leavers queued behind it. That is the exact
+      // starvation 23d2e6741a was written to end, and it also falsified
+      // `undefer`'s "the subset can never outlive its superset".
       if (entry.leaveDocument !== null && ports.liveRev(ownerKey) === entry.leaveDocument.rev) {
-        leaveCaptures--;
-        entry.leaveDocument = null;
+        releaseCapture(entry);
       }
       // AN UNLOADED ENTRY HERE IS A LOST ONE. retain runs at the end of a
       // handshake whose preload already ran, so the store should have a loaded

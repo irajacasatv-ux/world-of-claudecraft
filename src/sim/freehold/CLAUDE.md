@@ -284,16 +284,22 @@ carries an opaque plot id only.
   sim package at all. Runtime consumers use the barrel, including `sim.ts`,
   recipe acquisition and profession training/crafting, the Heroic Quartermaster
   and the pure presentation consumers of `isFreeholdCraftAvailable`.
-  TWO STATED EXCEPTIONS, so they read as decisions rather than as drift.
-  FIRST, `server/freehold_persist.ts` imports `persisted.ts`, `hearth_key.ts`,
-  `state.ts`, `load_report.ts` and `FREEHOLD_VISIT_POLICIES` from `./types` BY
-  PATH. It is the server-side durable consumer of leaves whose vocabulary
-  nothing else wants, and `FREEHOLD_VISIT_POLICIES` is deliberately off the
-  barrel for that reason: putting a server-facing durable vocabulary on the
-  surface every UI and sim caller reads, for one consumer, is the cost the rule
-  above exists to avoid. `server/freehold_wire.ts` reaches `gate_rules.ts` the
-  same way, for the one item id its dark-realm and jail gates key on, which the
-  sim dispatches on by use type rather than by id.
+  TWO STATED EXCEPTIONS, so they read as decisions rather than as drift, and the
+  list under each is EXHAUSTIVE: an importer added without a line here is drift
+  by definition. FIRST, the SERVER's durable and gate consumers.
+  `server/freehold_persist.ts` imports `persisted.ts`, `hearth_key.ts`,
+  `state.ts` and `load_report.ts` BY PATH; `server/freehold_persist_wiring.ts`,
+  the composition root beside it, imports `persisted.ts`, `state.ts` and
+  `FREEHOLD_VISIT_POLICIES` from `./types` the same way, because binding the
+  store's ports is exactly the same consumer split across two files. These are
+  the server-side durable consumers of leaves whose vocabulary nothing else
+  wants, and `FREEHOLD_VISIT_POLICIES` is deliberately off the barrel for that
+  reason: putting a server-facing durable vocabulary on the surface every UI and
+  sim caller reads, for one consumer, is the cost the rule above exists to
+  avoid. `server/freehold_wire.ts` and `server/game.ts` reach `gate_rules.ts`
+  the same way, for the one item id the dark-realm gate, the jail gate and the
+  coordinator's dispatch key on, which the sim dispatches on by use type rather
+  than by id.
   SECOND, four CLIENT modules import `gate_rules.ts` by path for its value
   constants: `src/ui/hud/housing/gate_prompt_controller.ts`,
   `src/ui/hud/housing/hearth_key_tooltip.ts`, `src/game/nearby_interaction.ts`
