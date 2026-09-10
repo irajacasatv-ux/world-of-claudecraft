@@ -1517,3 +1517,46 @@ Four more over the seal's own new suite, each arm in turn, all killed:
 dropped (1), `foreignIdentity` dropped (2). And two survivors from the earlier
 composition-root pass were closed and re-killed: a live-identity binding replaced
 by a constant, and the clock read's inner catch removed.
+
+## THE VALIDATION ROUNDS FIFTEEN AND SIXTEEN REST ON
+
+At tip `0be2f181e2`, ten commits on `07521507d6`, with `TEST_DATABASE_URL` armed
+from the main checkout's `DATABASE_URL`. THIS BRANCH IS LOCAL: nothing was
+pushed, no pull request was opened and nothing was merged.
+
+- `node scripts/gate_select.mjs` exit 0, PASS, ALL 12 STEPS GREEN. The planner
+  FELL BACK to the full suite on a 1,742-path diff, so this is the deeper check
+  rather than the selective one.
+- Full suite: 4,219 test files passed and 1 skipped of 4,220; 63,729 tests
+  passed, 2 expected-fail, 28 skipped.
+- Real-browser suite: 51 files, 429 tests, all passed. It rewrote three PNGs
+  under `docs/screenshots/`, restored with `git checkout --` and NOT committed.
+- `npx tsc --noEmit` exit 0 throughout.
+- The two `.pg` suites, run BOTH WAYS at this tip to prove the arming rather than
+  assert it: 34 passed with the variable set, the same 34 skipped with it unset.
+- Mutation: eighteen mutants across five passes, each against a proved control
+  whose full `Tests N passed (N)` line is quoted in its round's section. Sixteen
+  died on the first pass; TWO SURVIVED, both over the composition root and the
+  login policy, and both were closed and re-killed. Every guard these two rounds
+  added or changed was mutated in both directions where a one-way pin would be
+  satisfied by a constant.
+- The three PostgreSQL 16 transaction probes are described where they are used
+  (the login bound in section 8a of the contract): SET LOCAL does not bound
+  COMMIT, a session-level `statement_timeout` does not bound COMMIT either, and
+  the driver's `query_timeout` does.
+
+TWO THINGS THIS VALIDATION DOES NOT COVER, stated rather than implied.
+
+THE DIFF BASE HAS MOVED AGAIN. The gate reports `origin/release/v0.43.0` as the
+integration base; the last recorded sync on this branch was `release/v0.42.0`.
+NO SYNC WAS PERFORMED in these rounds, because the tip was pinned. The next
+session owes the merge-forward that `state.md` requires at every phase start, and
+every count in this section is against the unsynced tree.
+
+AND THE VERDICT IS STILL FAIL, on the record rather than on an open defect. Every
+finding either round produced is applied, both blocking sets are closed, and the
+gate is green. What is not established is that round sixteen's own fix round is
+clean: it has not been read by anyone who did not write it. Sixteen rounds have
+run and fourteen introduced a defect worse than one they closed, so the honest
+prior for the next reader is that this one is wrong too. A green gate is where
+that reading starts.

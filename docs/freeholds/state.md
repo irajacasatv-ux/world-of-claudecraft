@@ -32,13 +32,28 @@ Only what the next session needs. Update at the end of every phase and QA.
 ## Current phase
 
 07 (bounded persistence and stable plot identity) is **BUILT, local, and its paired
-QA FAILED**, 2026-09-10. The QA ran to completion, applied every finding it could,
-and returns FAIL on ONE blocking item whose fix is a ruling this packet reserved:
-the EIGHTH path to an empty tier-0 Inn Room landing on a real house, reproduced
-three times and pinned as it behaves. Four rulings are owed before 07 can close,
-and 07a must not start on top of an open data-loss path. The gate is GREEN at
-`57ca95cb29` (all 12 steps, PostgreSQL armed), which is the point: a green suite
+QA FAILED**, 2026-09-10, AND THE FOUR RULINGS HAVE SINCE BEEN EXECUTED, which is
+recorded below rather than by editing this paragraph away. The QA ran to
+completion, applied every finding it could, and returned FAIL on ONE blocking
+item whose fix was a ruling this packet reserved: the EIGHTH path to an empty
+tier-0 Inn Room landing on a real house, reproduced three times and pinned as it
+behaves. The gate was GREEN at `57ca95cb29`, which was the point: a green suite
 was never the question here.
+
+**THE RULINGS ARE EXECUTED, 2026-09-10, tip `0be2f181e2`, LOCAL.** All four plus
+the section 8a login budget gate, plus C23 scoped and the offline identity
+divergence accepted. The EIGHTH path is CLOSED (the identity is installed on the
+absent arm, and a row is no longer created for a record no install could name);
+C1, C22 and V6 close with it. Two fresh review rounds ran, 66 findings, all
+applied, and TWO of the second round's three blockers were defects the first had
+introduced. The verdict stays FAIL for one reason: the last fix round has not
+been read by anyone who did not write it. `server/game.ts` is at 9907 and
+`server/freehold_persist.ts` at 2243, both LOWERED, six extractions, no ceiling
+raised. THE DIFF BASE HAS MOVED to `origin/release/v0.43.0` and no sync was
+performed because the tip was pinned: the next session owes the merge-forward
+before anything else. Full detail, every finding and every measurement:
+[the findings ledger](qa/persistence-2026-09-08/findings.md), rounds FIFTEEN and
+SIXTEEN.
 
 Its implementation-round review is closed. Planning for 07 was settled long before this; BUILT is the new
 fact, and the two words are not interchangeable in this ledger.
