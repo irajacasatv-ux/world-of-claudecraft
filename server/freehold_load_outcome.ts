@@ -9,7 +9,9 @@
 // statement on a login path for nothing. A CAPACITY cause can answer differently
 // on the next read, so its hold is repairable. One kind is neither, and says so.
 
+import { boundedFreeholdDetail } from '../src/sim/freehold/load_report';
 import type { PersistedFreehold } from '../src/sim/freehold/persisted';
+import { FREEHOLD_PRIMARY_PLOT_INDEX } from './freehold_db';
 
 /**
  * Every reason a durable load can refuse, as a VALUE so a consumer can walk it.
@@ -100,4 +102,88 @@ export interface LoadedFreehold {
   readonly hearthReadyAtMs: number;
   readonly hearthRevision: string;
   readonly hold: FreeholdRecoveryHold | null;
+}
+
+/** The durable revision a recovery hold reports when there is no row to name
+ *  one. Its own constant rather than the hearth clock's ABSENT_HEARTH_REVISION,
+ *  which shares the value but names a different counter: this is the PLOT's
+ *  compare-and-swap fence. Dev-channel only, but a field named for the wrong
+ *  counter is how a later reader learns the wrong model. */
+export const FREEHOLD_ABSENT_DURABLE_REV = '0';
+
+/**
+ * The answer the whole-preload cap produces, and the ONE hold in this store that
+ * leaves the entry untouched. The read it gave up waiting for is still in flight
+ * behind a single-flight slot; marking the entry held would overwrite whatever
+ * that read then learns, and the honest answer is that this LOGIN got nothing,
+ * not that the account is unreadable. It books its own kind so an operator can
+ * tell a login that ran out of budget from one that lost a permit.
+ *
+ * PURE, and out here with the rest of the vocabulary rather than inside the
+ * store: it is a LoadedFreehold constructor, which is this module's subject, and
+ * the store keeps the two things that are actually its own, the counters and the
+ * operator line.
+ */
+export function freeholdBudgetRefusal(
+  accountId: number,
+  budgetMs: number,
+  /** The COLD clock, handed in rather than imported: ABSENT_HEARTH_REVISION and
+   *  FREEHOLD_ABSENT_DURABLE_REV share a value and name different counters, and
+   *  importing the hearth module here would close a cycle through the store. */
+  hearth: { readonly readyAtMs: number; readonly revision: string },
+): LoadedFreehold {
+  const detail = boundedFreeholdDetail(`no durable answer within ${budgetMs} ms`);
+  return {
+    accountId,
+    plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
+    plotId: '',
+    durableRev: null,
+    state: null,
+    hearthReadyAtMs: hearth.readyAtMs,
+    hearthRevision: hearth.revision,
+    hold: {
+      kind: 'no_budget',
+      detail,
+      plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
+      durableRev: FREEHOLD_ABSENT_DURABLE_REV,
+    },
+  };
+}
+
+/** What a REPLAY of a store entry answers with: the entry's own knowledge, plus
+ *  whichever document the caller decided this reader may see.
+ *
+ *  Declared structurally rather than over the store's entry type, so this module
+ *  stays free of the store, and it is the LoadedFreehold constructor for the
+ *  replay arms exactly as freeholdBudgetRefusal is for the cap. */
+export interface FreeholdEntrySnapshot {
+  readonly accountId: number;
+  readonly plotIndex: number;
+  readonly plotId: string;
+  readonly durableRev: string | null;
+  readonly hearthReadyAtMs: number;
+  readonly hearthRevision: string;
+  readonly hold: FreeholdRecoveryHold | null;
+}
+
+/** Project one entry into the answer the join path consumes.
+ *
+ *  THE CLOCK IS THE ENTRY'S, never a hard-coded cold one. These are the replay
+ *  arms: they issue no read, so reporting 0 would tell a second character of the
+ *  same account that the shared Hearth cooldown is ready when the read that took
+ *  it said otherwise. */
+export function freeholdSnapshotOf(
+  entry: FreeholdEntrySnapshot,
+  state: PersistedFreehold | null,
+): LoadedFreehold {
+  return {
+    accountId: entry.accountId,
+    plotIndex: entry.plotIndex,
+    plotId: entry.plotId,
+    durableRev: entry.durableRev,
+    state,
+    hearthReadyAtMs: entry.hearthReadyAtMs,
+    hearthRevision: entry.hearthRevision,
+    hold: entry.hold,
+  };
 }

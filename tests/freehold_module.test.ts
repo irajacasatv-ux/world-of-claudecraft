@@ -27,6 +27,7 @@ import { Sim } from '../src/sim/sim';
 import type { SimContext } from '../src/sim/sim_context';
 import type { SimEvent } from '../src/sim/types';
 import { stripComments } from './helpers/strip_comments';
+import { tsFilesUnder } from './helpers/ts_files_under';
 
 const makeSim = () => new Sim({ seed: 1, playerClass: 'warrior' });
 // A source-free event the drain control queues by hand; emit pushes it as is.
@@ -797,6 +798,25 @@ describe('src/sim/freehold/ source scan', () => {
       'state.ts',
       'types.ts',
     ]);
+  });
+
+  it('names every server file that reaches these leaves BY PATH, in CLAUDE.md', () => {
+    // The directory's own rule says the exception list is EXHAUSTIVE and that an
+    // importer added without a line there is drift by definition, and a prose
+    // list with nothing behind it is exactly the claim this packet has shipped
+    // wider than its evidence before: it was stale against three importers that
+    // three separate extractions added, each of which inherited the exception
+    // rather than creating one. DERIVED from the tree, so the next extraction
+    // reds this instead of going unnoticed.
+    const guide = readFileSync(join(dir, 'CLAUDE.md'), 'utf8');
+    const importers = tsFilesUnder(join(__dirname, '..', 'server'))
+      .filter(({ full }) => /from '[./]*\/src\/sim\/freehold\//.test(readFileSync(full, 'utf8')))
+      .map(({ file }) => `server/${file}`)
+      .sort();
+    // Anti-vacuity: a walker that found nothing would pass this loop empty.
+    expect(importers).toContain('server/freehold_persist.ts');
+    expect(importers.length).toBeGreaterThan(5);
+    for (const importer of importers) expect(guide, importer).toContain(`\`${importer}\``);
   });
 
   it('carries no store or ledger-service vocabulary in any file, comments included', () => {

@@ -303,19 +303,29 @@ carries an opaque plot id only.
   TWO STATED EXCEPTIONS, so they read as decisions rather than as drift, and the
   list under each is EXHAUSTIVE: an importer added without a line here is drift
   by definition. FIRST, the SERVER's durable and gate consumers.
-  `server/freehold_persist.ts` imports `persisted.ts`, `hearth_key.ts`,
-  `state.ts` and `load_report.ts` BY PATH; `server/freehold_persist_wiring.ts`,
-  the composition root beside it, imports `persisted.ts`, `state.ts` and
-  `FREEHOLD_VISIT_POLICIES` from `./types` the same way, because binding the
-  store's ports is exactly the same consumer split across two files. These are
-  the server-side durable consumers of leaves whose vocabulary nothing else
-  wants, and `FREEHOLD_VISIT_POLICIES` is deliberately off the barrel for that
-  reason: putting a server-facing durable vocabulary on the surface every UI and
-  sim caller reads, for one consumer, is the cost the rule above exists to
-  avoid. `server/freehold_wire.ts` and `server/game.ts` reach `gate_rules.ts`
-  the same way, for the one item id the dark-realm gate, the jail gate and the
-  coordinator's dispatch key on, which the sim dispatches on by use type rather
-  than by id.
+  SIX server files reach these leaves by path, and they are ONE consumer split
+  across six files as the store was extracted, not six decisions:
+  `server/freehold_persist.ts` (`persisted.ts`, `hearth_key.ts`, `state.ts`,
+  `load_report.ts`, `types.ts`), `server/freehold_persist_wiring.ts`, the
+  composition root beside it (`persisted.ts`, `state.ts` and
+  `FREEHOLD_VISIT_POLICIES` from `./types`), and the four modules that came off
+  the store: `server/freehold_install.ts` (`hearth_key.ts`, `persisted.ts`,
+  `state.ts`, `types.ts`), `server/freehold_write_seal.ts` (`persisted.ts`,
+  `state.ts`), `server/freehold_load_outcome.ts` (`load_report.ts`,
+  `persisted.ts`) and `server/freehold_wire.ts` (`gate_rules.ts`, `types.ts`).
+  An extraction inherits the exception rather than creating one, which is why
+  they are listed together; `server/freehold_revision_probe.ts` deliberately
+  imports NOTHING from the sim, which is what makes it three integers and a
+  boolean. The list is pinned in `tests/freehold_module.test.ts` so it cannot go
+  stale the next time a module comes off. These are the server-side durable
+  consumers of leaves whose vocabulary nothing else wants, and
+  `FREEHOLD_VISIT_POLICIES` is deliberately off the barrel for that reason:
+  putting a server-facing durable vocabulary on the surface every UI and sim
+  caller reads, for one consumer, is the cost the rule above exists to avoid.
+  `server/game.ts` is the SEVENTH by-path importer and a different case: it
+  reaches `gate_rules.ts` only, as `server/freehold_wire.ts` does, for the one
+  item id the dark-realm gate, the jail gate and the coordinator's dispatch key
+  on, which the sim dispatches on by use type rather than by id.
   SECOND, four CLIENT modules import `gate_rules.ts` by path for its value
   constants: `src/ui/hud/housing/gate_prompt_controller.ts`,
   `src/ui/hud/housing/hearth_key_tooltip.ts`, `src/game/nearby_interaction.ts`

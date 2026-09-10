@@ -522,19 +522,31 @@ describe('freehold persist constants', () => {
   });
 
   it('keeps every clock and timer behind a port, in EVERY file the store split into', () => {
-    // ACROSS THE WHOLE STORE, not one file. Three modules came off this file and
-    // each of them is driveable from a Vitest for exactly this reason; a scan
-    // pinned to SOURCE_PATH would have let a fresh clock or timer land in any of
-    // them. The composition root is deliberately NOT on this list: binding
-    // Date.now to the store's nowMs port is its whole job.
+    // ACROSS THE WHOLE STORE, not one file. Six modules have come off this file
+    // and each is driveable from a Vitest for exactly this reason; a scan pinned
+    // to SOURCE_PATH would have let a fresh clock or timer land in any of them.
+    //
+    // DERIVED FROM THE STORE'S OWN IMPORTS, never re-typed. A hand-written list
+    // is a scan that goes stale the next time a module comes off, and it goes
+    // stale SILENTLY: every entry still exists, so the anti-staleness floor
+    // below reads clean while the new sibling is unscanned. That is exactly what
+    // happened when the revision probe was extracted, so the list is computed.
+    // The composition root is deliberately absent and cannot appear here,
+    // because the store does not import it: binding Date.now to the store's
+    // nowMs port is that file's whole job.
     const files = [
       SOURCE_PATH,
-      'server/freehold_write_seal.ts',
-      'server/freehold_install.ts',
-      'server/freehold_persist_registry.ts',
-      'server/freehold_hearth_load.ts',
-      'server/freehold_load_outcome.ts',
+      ...[...readFileSync(SOURCE_PATH, 'utf8').matchAll(/from '\.\/(freehold_[a-z_]+)'/g)]
+        .map((match) => `server/${match[1]}.ts`)
+        .filter((path, index, all) => all.indexOf(path) === index)
+        .sort(),
     ];
+    // The derivation itself is pinned, so a regex that stopped matching would
+    // scan one file and still pass: it must find the siblings that exist today.
+    expect(files).toContain('server/freehold_write_seal.ts');
+    expect(files).toContain('server/freehold_load_outcome.ts');
+    expect(files).toContain('server/freehold_revision_probe.ts');
+    expect(files.length).toBeGreaterThan(5);
     let timers = 0;
     for (const file of files) {
       const source = stripComments(readFileSync(file, 'utf8'));
@@ -543,8 +555,8 @@ describe('freehold persist constants', () => {
       expect(source, file).not.toMatch(/performance\.now\(/);
       timers += (source.match(/setTimeout\(/g) ?? []).length;
     }
-    // The one sanctioned timer in all five is the module-edge default deadline
-    // scheduler, and it lives in the store itself.
+    // The one sanctioned timer across all of them is the module-edge default
+    // deadline scheduler, and it lives in the store itself.
     expect(timers).toBe(1);
     expect(stripComments(readFileSync(SOURCE_PATH, 'utf8'))).toContain(
       'const realScheduleDeadline',
@@ -4063,6 +4075,97 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(replay.state?.rev).toBe(5);
   });
 
+  it('refuses to NAME a row when the login that asked for the read gave up on it', async () => {
+    // THE NINTH PATH, reproduced against the store before it was closed. The
+    // unnamed-record refusal reads the LIVE RECORD, so it can only fire once
+    // something has been seeded, and that made it depend on WHEN the read
+    // landed. This refusal leaves its read in flight by design, and the
+    // handshake still has a lease acquire and a character reload to run on the
+    // same saturated pool: the read lands in THAT window, before addPlayer
+    // seeds anything, so livePlotId answers null rather than the stand-in.
+    //
+    // What that produced, measured: entry loaded and unheld, holding
+    // `plot:minted1`, a row INSERTED under that name, writeFailures 0 and
+    // quiesced 0, while the record addPlayer seeded a moment later carried the
+    // stand-in. applyWriteResult then caches the RECORD's stand-in, so the
+    // seal's name comparison is inert BY VALUE EQUALITY for the life of that
+    // entry, which is the eighth path arrived at from a third side.
+    const gate = deferred<FreeholdRowLoad>();
+    let seeded = false;
+    const h = harness({
+      readRow: async () => await gate.promise,
+      hasLive: () => seeded,
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+    });
+    const loading = h.store.preload(ACCOUNT_ID);
+    await tick(20);
+    fireBudget(h);
+    expect((await loading).hold?.kind).toBe('no_budget');
+
+    // The read lands while the handshake is still below the budget refusal and
+    // above the seed. NOTHING is live yet.
+    gate.resolve({ kind: 'absent' });
+    await tick(30);
+
+    // Only now does the join reach addPlayer, and it seeds the STAND-IN because
+    // installLoadedFreehold returned early on the no_budget hold.
+    seeded = true;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+
+    // THE ENTRY IS HELD, not writable: it never minted a name, so no row can be
+    // created under one the record will never learn.
+    const replay = await h.store.preload(ACCOUNT_ID);
+    expect(replay.hold?.kind).toBe('unnamed_record');
+    expect(replay.plotId).toBe('');
+    expect(h.store.stats().held).toBe(1);
+    // TERMINAL, so `loaded` stays set and both halves of blocked() refuse.
+    expect(h.store.stats().loaded).toBe(1);
+
+    // AND NO ROW IS CREATED, which is the thing that cannot be undone. Two
+    // sweeps, because one arming is satisfied by a guard that only refuses once.
+    h.store.saveAllDirty();
+    await tick(40);
+    h.store.saveAllDirty();
+    await tick(40);
+    expect(h.writeCount()).toBe(0);
+    expect(h.warnings.some((line) => line.includes('unnamed_record'))).toBe(true);
+    expect(h.warnings.some((line) => line.includes('already given up'))).toBe(true);
+  });
+
+  it('still names a row for a login that WAITED for its own read', async () => {
+    // The anti-vacuity arm, and the one that keeps the refusal above from being
+    // satisfied by a constant: the ordinary absent-row login mints, because its
+    // answer IS installed. Without it, refusing every absent load would pass.
+    const h = harness({ rowLoad: { kind: 'absent' } });
+    const answer = await h.store.preload(ACCOUNT_ID);
+    expect(answer.hold).toBeNull();
+    expect(answer.plotId).toBe(MINTED_PLOT_ID);
+  });
+
+  it('clears the abandonment with the read, so the NEXT login is not refused', async () => {
+    // An abandonment that outlived its own read would refuse a perfectly
+    // ordinary later load for the same account, which is a housing outage
+    // manufactured by the guard against one.
+    const gate = deferred<FreeholdRowLoad>();
+    const h = harness({ readRow: async () => await gate.promise });
+    const loading = h.store.preload(ACCOUNT_ID);
+    await tick(20);
+    fireBudget(h);
+    expect((await loading).hold?.kind).toBe('no_budget');
+    gate.resolve({ kind: 'absent' });
+    await tick(30);
+
+    // A FRESH entry, as the next login builds after the held one is collected.
+    await h.store.flushAndRelease(OWNER_KEY);
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.store.stats().entries).toBe(0);
+    const second = await h.store.preload(ACCOUNT_ID);
+    expect(second.hold).toBeNull();
+    expect(second.plotId).not.toBe('');
+  });
+
   it('runs the load UNCAPPED rather than refusing it when the timer cannot be armed', async () => {
     // A scheduler that will not schedule must not refuse a login: the behaviour
     // that predates the cap is the safe fallback, and it says so on the error
@@ -4814,9 +4917,15 @@ describe('the coordinator side of the wiring (source pins)', () => {
     // them without reverting its unflushed ops strands uncommitted money deltas
     // on the live book: no mark for the disband guard, no session for the settle
     // gate, and the next officer's op serializes that book and commits them.
+    // BOTH drops, which is what the sentence above claims: asserting only the
+    // holder index left the OTHER one, the character map, free to move above the
+    // revert, and that is the index whose ordering the money argument is about.
     const revert = body.indexOf('this.reconcileOwnGuildBooks(session)');
     expect(revert).toBeGreaterThan(guard);
     expect(revert).toBeLessThan(body.indexOf('this.guildBookHolders.dropSession(session)'));
+    expect(revert).toBeLessThan(
+      body.indexOf('if (stillMine) this.sessionsByCharacterId.delete(session.characterId);'),
+    );
     // AND NOWHERE ELSE ON THE LEAVE PATH: left in the settlement as well, the
     // throw path is fixed and the healthy path reverts twice.
     expect(settlement).not.toContain('this.reconcileOwnGuildBooks(session)');

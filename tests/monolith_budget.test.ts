@@ -1530,8 +1530,18 @@ const MONOLITHS: MonolithRow[] = [
     // by a FOURTH extraction, the load-outcome vocabulary to
     // server/freehold_load_outcome.ts, which the metric series walks and the
     // join path installs and neither of which wants the store.
+    // LOWERED AGAIN, 2243 -> 2228, by the review of THAT round, which found the
+    // refusal above was not total: it reads the LIVE RECORD, so it could only
+    // fire once something had been seeded, and a login refused on the whole
+    // preload budget leaves its read in flight to land BEFORE the seed. Closing
+    // that (the store now knows which loads its caller abandoned) is paid by a
+    // FIFTH and SIXTH extraction: the sweep's dirty decision to
+    // server/freehold_revision_probe.ts, three integers in and a boolean out
+    // with no store and no ports, and two more LoadedFreehold constructors (the
+    // budget refusal and the replay projection) to the load-outcome vocabulary
+    // that already owns that shape. Net 15 under the row despite the new guard.
     file: 'server/freehold_persist.ts',
-    ceiling: 2243,
+    ceiling: 2228,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {

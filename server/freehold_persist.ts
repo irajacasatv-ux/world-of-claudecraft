@@ -75,10 +75,14 @@ import {
   normalizeHearthLoad,
 } from './freehold_hearth_load';
 import {
+  FREEHOLD_ABSENT_DURABLE_REV,
   FREEHOLD_RETRYABLE_HOLD_KINDS,
   type FreeholdRecoveryHold,
+  freeholdBudgetRefusal,
   type LoadedFreehold,
+  freeholdSnapshotOf as snapshotOf,
 } from './freehold_load_outcome';
+import { freeholdRevisionMoved } from './freehold_revision_probe';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
 import { seedWouldLandOnRealRow } from './freehold_write_seal';
 
@@ -234,13 +238,6 @@ export const FREEHOLD_PERSIST_MAX_ACTIVE_WRITES = 4;
 export const FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES = 8;
 export const FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE = 2;
 
-/** The durable revision a recovery hold reports when there is no row to name
- *  one. Its own constant rather than the hearth clock's ABSENT_HEARTH_REVISION,
- *  which shares the value but names a different counter: this is the PLOT's
- *  compare-and-swap fence. Dev-channel only, but a field named for the wrong
- *  counter is how a later reader learns the wrong model. */
-export const FREEHOLD_ABSENT_DURABLE_REV = '0';
-
 /**
  * How long GameServer.leave waits for a leaving session's last durable write
  * before it stops blocking on it.
@@ -314,6 +311,7 @@ export const FREEHOLD_PERSIST_FLUSH_MAX_PASSES = 4;
 // repointed at a dozen call sites, because the store IS where a reader looks for
 // them and a type-only hop costs nothing at runtime.
 export {
+  FREEHOLD_ABSENT_DURABLE_REV,
   FREEHOLD_LOAD_FAILURE_KINDS,
   FREEHOLD_RETRYABLE_HOLD_KINDS,
   type FreeholdRecoveryHold,
@@ -608,6 +606,14 @@ function boundedDatabaseError(err: unknown): Record<string, unknown> {
 export function createFreeholdPersistStore(ports: FreeholdPersistPorts): FreeholdPersistStore {
   const entries = new Map<string, FreeholdPersistEntry>();
   const inFlightLoads = new Map<number, Promise<LoadedFreehold>>();
+  /** Accounts whose LOGIN gave up on the read that is still running for them.
+   *  The whole-preload cap answers `no_budget` and deliberately leaves the read
+   *  in flight to fill the entry, but the answer that read produces reaches NO
+   *  install: `installLoadedFreehold` already returned early on the budget hold.
+   *  classify's absent arm needs that fact, and nothing else in the store can
+   *  tell an abandoned load from an ordinary one. Keyed by account and cleared
+   *  when the load settles, so it can never outlive the read it describes. */
+  const abandonedLoads = new Set<number>();
   /** Owners that wanted a write while the local write cap was full. They stay
    *  DIRTY, so nothing is lost: they are launched as slots free, and by the
    *  next sweep if the process is still up. Insertion-ordered, so the owner
@@ -679,15 +685,19 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     entry.dirtyGeneration > entry.committedGeneration;
 
   /**
-   * The periodic sweep's own dirty detector, so a record that moved without a
+   * The periodic sweep's dirty detector, so a record that moved without a
    * markDirty call still reaches the row. The live record carries its own
    * revision and every sanctioned writer bumps it (setFreeholdTier is the one
    * that exists today, and the development grant reaches the record through
-   * it), so a live revision that has left the last written one behind IS the
-   * edit. Callers that want promptness still call markDirty; this closes the
-   * gap for a writer that has no server-side hook.
+   * it). Callers that want promptness still call markDirty; this closes the gap
+   * for a writer that has no server-side hook.
    *
-   * It reads ONE INTEGER per loaded owner, never a clone. That is not a
+   * The DECISION and every arm of it are in server/freehold_revision_probe.ts.
+   * What stays here belongs to the store: the blocked check in front (a blocked
+   * entry must not write, so knowing it moved buys nothing) and the generation
+   * and age stamp behind.
+   *
+   * It reads ONE INTEGER per loaded owner, never a clone. Not a
    * micro-optimization: this runs synchronously inside the 20 Hz loop body
    * (runPeriodicSaveFlush is documented as having to return synchronously), so
    * cloning every loaded record here would put O(owners x layout rows) of
@@ -695,34 +705,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    * approved 420-row ceiling, the clone shape cost tens of milliseconds per
    * sweep at five thousand owners against a fifty millisecond tick budget.
    * serialize() stays inside runWrite, where the result is the thing written.
-   *
-   * A blocked entry is never probed: it must not write, so knowing it moved
-   * buys nothing. A revision that went BACKWARDS is treated as movement too,
-   * because a live record that is not the one this entry committed is exactly
-   * the state worth looking at.
-   *
-   * DETECTION IS NOT ADMISSION, and this is the whole reason both exist. This
-   * probe says a backwards revision is a CHANGE worth looking at; the write
-   * seal in runWrite then decides whether that record may LAND, and it says no
-   * for every entry class. An earlier version of this comment said a record
-   * carrying a real plot name still goes backwards onto the row, deliberately,
-   * and that rule is RETIRED rather than quietly dropped: a live revision below
-   * the entry's last committed one means the live record is not the record that
-   * commit came from, since every install a rejoin is offered carries at least
-   * the committed revision and every sanctioned mutator only increments. Writing
-   * it would also walk the client-facing wire counter backwards permanently,
-   * which is the exact harm the loader's own wire_rev_shape hold exists to
-   * prevent on the read side. So the probe arms and the seal refuses.
    */
   const noteRevisionMoved = (entry: FreeholdPersistEntry): boolean => {
     if (blocked(entry)) return false;
-    const liveRev = ports.liveRev(entry.ownerKey);
-    if (liveRev === null) return false;
-    if (entry.state !== null && liveRev === entry.state.rev) return false;
-    // entry.state only advances at COMMIT, so while a write is in flight it
-    // still names the pre-edit revision and every sweep would re-detect the
-    // same edit. Compare against what the running write is actually carrying.
-    if (entry.running && entry.snapshotRev !== null && liveRev === entry.snapshotRev) return false;
+    if (!freeholdRevisionMoved(ports.liveRev(entry.ownerKey), entry)) return false;
     entry.dirtyGeneration++;
     if (entry.dirtySinceMs === 0) entry.dirtySinceMs = ports.nowMs();
     return true;
@@ -899,26 +885,6 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     }
   }
 
-  function snapshotOf(
-    entry: FreeholdPersistEntry,
-    state: PersistedFreehold | null,
-  ): LoadedFreehold {
-    return {
-      accountId: entry.accountId,
-      plotIndex: entry.plotIndex,
-      plotId: entry.plotId,
-      durableRev: entry.durableRev,
-      state,
-      // The clock this entry LEARNED, never a hard-coded cold one. These are
-      // the replay arms: they issue no read, so reporting 0 here would tell a
-      // second character of the same account that the shared Hearth cooldown is
-      // ready when the read that took it said otherwise.
-      hearthReadyAtMs: entry.hearthReadyAtMs,
-      hearthRevision: entry.hearthRevision,
-      hold: entry.hold,
-    };
-  }
-
   function holdResult(
     entry: FreeholdPersistEntry,
     hold: FreeholdRecoveryHold,
@@ -1055,6 +1021,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // that went in. Handing it FREEHOLD_MAX_OWNED_BYTES would refuse the
     // maximal record this realm is allowed to write.
     const { rowLoad, hearth } = await readLoginPair(accountId);
+    // SAMPLED HERE, after the read and before anything is decided: this is the
+    // instant the answer's fate is fixed. See the absent arm below.
+    const abandoned = abandonedLoads.has(accountId);
     const entry = ensureEntry(ownerKey, accountId);
     // Remembered on the entry, not only returned: every later replay of this
     // entry has to answer with the same clock, and none of them reads again.
@@ -1104,13 +1073,35 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // and harmless: there is no row, so nothing is preserved or lost by
       // refusing. The NEXT login builds a fresh entry whose install runs before
       // the seed, and it is named from the start.
+      //
+      // AND THE SAME REFUSAL WHEN THERE IS NO RECORD YET BUT NOBODY IS LEFT TO
+      // INSTALL ONE. The test above reads the LIVE RECORD, so it only fires once
+      // something has been seeded, and that made it depend on WHEN this load
+      // landed. A login refused on the whole-preload budget leaves its read in
+      // flight by design, and the handshake still has its lease acquire and its
+      // character reload to run: on the same saturated pool that produced the
+      // overrun, that read can land BEFORE addPlayer seeds anything. `livePlotId`
+      // then answers null rather than the stand-in, the test above cannot fire,
+      // this arm mints, and `installLoadedFreehold` returns early on the budget
+      // hold a moment later while `ensureFreeholdRecord` seeds the stand-in. The
+      // entry is left writable holding a name its record can never learn, which
+      // is the state this whole refusal exists to prevent, reached by ordering
+      // instead of by seeding. Reproduced against the real store.
+      //
+      // An ABANDONED load is exactly "no install will run for this answer", so
+      // the two cases are one rule: mint only for a record this store can name.
+      // A live record that carries a REAL name is unaffected either way, because
+      // the arm below adopts it rather than minting.
       const liveName = ports.livePlotId(ownerKey);
-      if (liveName === PENDING_FREEHOLD_PLOT_ID) {
+      if (liveName === PENDING_FREEHOLD_PLOT_ID || (liveName === null && abandoned)) {
         return holdResult(
           entry,
           {
             kind: 'unnamed_record',
-            detail: 'the live record was seeded before this load landed',
+            detail:
+              liveName === null
+                ? 'the login that asked for this load had already given up on it'
+                : 'the live record was seeded before this load landed',
             plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
             durableRev: FREEHOLD_ABSENT_DURABLE_REV,
           },
@@ -1363,37 +1354,20 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     return loaded;
   }
 
-  /** The refusal the whole-preload cap produces, and the ONE hold in this store
-   *  that leaves the entry untouched. The read it gave up waiting for is still
-   *  in flight behind a single-flight slot; marking the entry held here would
-   *  overwrite whatever that read then learns, and the honest answer is that
-   *  this LOGIN got nothing, not that the account is unreadable. It books its
-   *  own kind so an operator can tell a login that ran out of budget from one
-   *  that lost a permit. */
+  /** Book the whole-preload cap's refusal and answer it. The SHAPE is in
+   *  server/freehold_load_outcome.ts with the reasoning for every field; the
+   *  counters and the operator line are the store's own. */
   function budgetRefusal(accountId: number): LoadedFreehold {
     counters.loadFailures++;
     counters.loadFailuresByKind.no_budget = (counters.loadFailuresByKind.no_budget ?? 0) + 1;
-    const detail = boundedFreeholdDetail(
-      `no durable answer within ${FREEHOLD_PERSIST_LOGIN_BUDGET_MS} ms`,
-    );
+    const answer = freeholdBudgetRefusal(accountId, FREEHOLD_PERSIST_LOGIN_BUDGET_MS, {
+      readyAtMs: 0,
+      revision: ABSENT_HEARTH_REVISION,
+    });
     ports.warn(
-      `freehold plot index ${FREEHOLD_PRIMARY_PLOT_INDEX} held (no_budget): ${detail}; the durable row is left untouched`,
+      `freehold plot index ${answer.plotIndex} held (no_budget): ${answer.hold?.detail}; the durable row is left untouched`,
     );
-    return {
-      accountId,
-      plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
-      plotId: '',
-      durableRev: null,
-      state: null,
-      hearthReadyAtMs: 0,
-      hearthRevision: ABSENT_HEARTH_REVISION,
-      hold: {
-        kind: 'no_budget',
-        detail,
-        plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
-        durableRev: FREEHOLD_ABSENT_DURABLE_REV,
-      },
-    };
+    return answer;
   }
 
   /**
@@ -1430,6 +1404,13 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const answer = await Promise.race([load, overrun]);
       if (answer === 'no-budget') {
         void load.catch(() => undefined);
+        // THE READ OUTLIVES ITS CALLER, and classify has to know. Marked only
+        // on the arm that gives up, and only while that read is still running:
+        // `beginLoad` clears it when the load settles, so it can never describe
+        // a later load. Safe against the interleaving where both settle
+        // together, because a load that has already answered has already run
+        // classify, and `Promise.race` then answers with it rather than here.
+        abandonedLoads.add(accountId);
         return budgetRefusal(accountId);
       }
       return answer;
@@ -1451,6 +1432,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     let tracked!: Promise<LoadedFreehold>;
     tracked = loadOnce(accountId, ownerKey).finally(() => {
       if (inFlightLoads.get(accountId) === tracked) inFlightLoads.delete(accountId);
+      // Cleared with the slot it qualifies, and identity-guarded the same way:
+      // an abandonment that outlived its own read would refuse the NEXT login's
+      // perfectly ordinary load.
+      abandonedLoads.delete(accountId);
     });
     inFlightLoads.set(accountId, tracked);
     return tracked;
