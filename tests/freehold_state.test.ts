@@ -954,14 +954,71 @@ describe('freeholdWriteRefusal: the save path refuses exactly what the load path
     expect(norm(JSON.parse(JSON.stringify(state)), maximalOpts).kind).toBe('loaded');
   });
 
+  /**
+   * A record BETWEEN the two ceilings: over `FREEHOLD_MAX_OWNED_BYTES`, under
+   * `FREEHOLD_MAX_STORED_BYTES`, and legal by every other predicate.
+   *
+   * It exists because AN IDENTIFIER IS BOUNDED BY LENGTH, NOT BY BYTES:
+   * `boundedId` measures `String.length` (UTF-16 code units) and neither
+   * `itemId` nor `trophyId` carries a charset rule, so a 64-character id of
+   * two-byte characters passes every row predicate at twice the bytes. That is
+   * exactly what the measured byte ceiling is for, and it is the ONLY way to
+   * reach the byte gate at all: with plain ASCII ids every field is already at
+   * its maximum in the maximal fixture, so no all-ASCII document can exceed the
+   * ceiling without failing a row or id predicate first.
+   */
+  const betweenTheCeilingsState = (): PersistedFreehold => {
+    const state = maximalState();
+    const wide = 'é'.repeat(32); // 64 code units, 64 characters, 128 UTF-8 bytes
+    expect(wide).toHaveLength(FREEHOLD_MAX_ID_LENGTH);
+    const layout = state.layout.map((row, index) => (index < 40 ? { ...row, itemId: wide } : row));
+    return { ...state, layout };
+  };
+
+  it('builds a record that really does sit between the two ceilings', () => {
+    // ANTI-VACUITY for the fixture below: if it landed under the canonical
+    // ceiling, or over the stored one, the two cases after it would prove
+    // nothing about which ceiling the default is.
+    const bytes = persistedFreeholdBytes(betweenTheCeilingsState());
+    expect(bytes).toBeGreaterThan(FREEHOLD_MAX_OWNED_BYTES);
+    expect(bytes).toBeLessThanOrEqual(FREEHOLD_MAX_STORED_BYTES);
+  });
+
   it('defaults to the canonical ceiling, not the stored one', () => {
     // Passing the wider stored bound here would let the save path emit a record
     // the loader refuses, which is the exact inversion this function prevents.
+    // ASSERTED ON A DOCUMENT THAT DISCRIMINATES: every assertion here used to
+    // use a record under BOTH ceilings, so swapping the default to the stored
+    // bound left the case green.
     const state = maximalState();
     const bytes = persistedFreeholdBytes(state);
     expect(freeholdWriteRefusal({ ...state, condition: 100 })).toBeNull();
     expect(bytes).toBeLessThanOrEqual(FREEHOLD_MAX_OWNED_BYTES);
     expect(freeholdWriteRefusal(state, { maxOwnedBytes: FREEHOLD_MAX_OWNED_BYTES })).toBeNull();
+
+    const between = betweenTheCeilingsState();
+    const refusal = freeholdWriteRefusal(between, maximalOpts);
+    expect(refusal?.kind).toBe('oversize');
+    expect(refusal).toMatchObject({ limit: FREEHOLD_MAX_OWNED_BYTES });
+    // And it IS admitted at the stored bound, which is what makes the case
+    // above a discrimination rather than a restatement.
+    expect(
+      freeholdWriteRefusal(between, { ...maximalOpts, maxOwnedBytes: FREEHOLD_MAX_STORED_BYTES }),
+    ).toBeNull();
+  });
+
+  it('the LOADER defaults to the canonical ceiling too', () => {
+    // The production loader is called with no `maxOwnedBytes`
+    // (server/freehold_persist.ts binds only the identity sets) and the SQL
+    // pre-gate admits up to the wider stored bound, so this default is the only
+    // thing standing between an over-canonical row and a record this realm
+    // could write and never read back.
+    const between = betweenTheCeilingsState();
+    const raw = JSON.parse(JSON.stringify(between));
+    expect(norm(raw, maximalOpts).kind).toBe('oversize');
+    expect(norm(raw, { ...maximalOpts, maxOwnedBytes: FREEHOLD_MAX_STORED_BYTES }).kind).toBe(
+      'loaded',
+    );
   });
 });
 

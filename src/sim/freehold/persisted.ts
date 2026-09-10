@@ -305,11 +305,17 @@ function onlyKnownFields(value: Record<string, unknown>, known: ReadonlySet<stri
  * This is a CODEC rule, not a gameplay one, and it is the rule that keeps the
  * two places this record is measured in agreement. The durable store renders
  * JSON numbers as `numeric` and prints them in full positional form, so an
- * exponential double expands enormously on the way to disk: 5e-324 is fourteen
- * bytes of JSON text and three hundred and thirty five bytes stored, and
- * -1.7976931348623157e308 is twenty four bytes of JSON and three hundred and
- * ten stored. Measured whole, the worst exponential record is 98734 bytes of
- * canonical JSON and 584380 bytes stored, a factor of nearly six.
+ * exponential double expands enormously on the way to disk: 5e-324 is six bytes
+ * of JSON text and three hundred and twenty six bytes stored, a factor of
+ * fifty-four ON ONE VALUE, and -1.7976931348623157e308 is twenty four bytes of
+ * JSON and three hundred and ten stored. Measured whole, the worst exponential
+ * record is 98734 bytes of canonical JSON and 584380 bytes stored, a factor of
+ * nearly six: a WHOLE-RECORD ratio, diluted by every key, separator and string
+ * that does not expand, and not the same claim as the per-value one above.
+ * Re-measured against PostgreSQL 16 rather than restated: an earlier version of
+ * this block said fourteen bytes and three hundred and thirty five, and both
+ * halves were wrong while the same file's other docblock carried the measured
+ * pair.
  *
  * That divergence is what would let a record pass the content ceiling on the
  * way in and fail the storage bound on the way back, permanently, so refusing
