@@ -80,6 +80,10 @@ const KNOWN_DETAILS: readonly RegExp[] = [
   /^the minted plot identity is already in use by another row$/,
   /^insert conflicted but no row was present to diagnose$/,
   /^the row vanished$/,
+  // The whole-preload cap's own refusal, from server/freehold_persist.ts, which
+  // reaches the warn port without passing through this reporter like the four
+  // above it.
+  /^no durable answer within \d{1,10} ms$/,
   /^repaired:(?:condition|rev|version)(?:,(?:condition|rev|version)){0,2}$/,
   // A record version, the one number that reaches a detail as text. Narrowed to
   // what the producer can actually emit: normalizeFreehold reports a version

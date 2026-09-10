@@ -11,7 +11,7 @@
 
 import { Registry } from 'prom-client';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { freeholdPersistStats } from '../../server/freehold_persist';
+import { freeholdPersistStats } from '../../server/freehold_persist_registry';
 import type { GameStateSource } from '../../server/http/game_metrics';
 import {
   registerGameStateMetrics,

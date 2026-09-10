@@ -57,10 +57,11 @@ export function createGameFreeholdPersistStore(deps: {
     // The two-port fallback: unused on THIS host, because readDurables below is
     // bound and the store prefers it, but still BOUNDED. Extracting this file
     // dropped these two wrappers and left the pair on the pool's 15,000 ms
-    // session default against a 10,000 ms handshake; that was a regression, not
-    // a decision, and a reviewer caught the header claiming otherwise. Kept
-    // because the ports are the store's declared surface and a host without a
-    // transaction seam still needs them.
+    // session default; that was a regression, not a decision, and a reviewer
+    // caught the header claiming otherwise. Kept because the ports are the
+    // store's declared surface and a host without a transaction seam still
+    // needs them. The WHOLE preload's own cap sits above both shapes, in the
+    // store (FREEHOLD_PERSIST_LOGIN_BUDGET_MS).
     readRow: (accountId, maxOwnedBytes) =>
       runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, (query) =>
         freeholdForAccount({ query }, accountId, maxOwnedBytes),

@@ -10,7 +10,7 @@
 
 import { Registry } from 'prom-client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { freeholdPersistStats } from '../server/freehold_persist';
+import { freeholdPersistStats } from '../server/freehold_persist_registry';
 
 // Mock the db layer so no Postgres is needed (mirrors tests/snapshots.test.ts).
 vi.mock('../server/db', () => ({

@@ -109,28 +109,73 @@ export const FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS = 5_000;
  * the runWithStatementTimeout seam in server/db.ts.
  *
  * Without it both reads inherit the pool's DB_STATEMENT_TIMEOUT_MS of 15,000,
- * three times the permit bound above, on a handshake whose own budget is
- * AUTH_TIMEOUT_MS = 10,000 (server/ws_auth.ts) and which has already spent from
- * it on auth, moderation, cosmetics, the character read and the bank bonus. In
- * health these two statements are sub-millisecond; a sick database is exactly
- * when the difference binds, and the handshake is the one place a slow read is
- * paid by a player rather than by a sweep.
+ * three times the permit bound above. In health these two statements are
+ * sub-millisecond; a sick database is exactly when the difference binds, and
+ * the handshake is the one place a slow read is paid by a player rather than by
+ * a sweep.
  *
  * PER STATEMENT, AND IT DOES NOT COVER THE WHOLE TRANSACTION. The combined port
  * (readDurables, in server/freehold_persist_wiring.ts) puts both reads on ONE
  * checked-out client, which is the real saving. But SET LOCAL bounds each
  * statement separately (measured: two 300 ms sleeps under a 400 ms bound both ran,
- * 612 ms elapsed), AND BEGIN and SET LOCAL both run BEFORE the lowered bound is in
- * force, so each of those and the trailing COMMIT is bounded only by the pool
- * session default. A floor on the worst case is 5,000 (DB_POOL_CONNECT_TIMEOUT_MS)
- * + 2 x 15,000 (DB_STATEMENT_TIMEOUT_MS) + 3 x 2,000 = 41,000 ms against a 10,000
- * ms handshake. Two transactions were about 78,000, so this roughly halves it and
- * is worth keeping. An earlier version said 9,000 and called it a margin; it
- * omitted five statements, as did the 19,000 before it. NOTHING here bounds the
- * login: that needs a cap on the WHOLE preload against the handshake's remaining
- * budget, which does not exist. Section 8a's gate stays open, undiminished.
+ * 612 ms elapsed), and BEGIN and SET LOCAL both run BEFORE the lowered bound is
+ * in force, so both answer to the pool session default.
+ *
+ * AND COMMIT ANSWERS TO NEITHER SERVER-SIDE BOUND, which every earlier version
+ * of this docblock got wrong in the same direction. Measured on PostgreSQL 16
+ * with a deferred constraint trigger putting two seconds of work inside the
+ * commit itself: under `SET LOCAL statement_timeout = 300` the COMMIT ran
+ * 2,008 ms and COMMITTED. Its only ceiling is the driver's own query_timeout,
+ * DB_QUERY_TIMEOUT_MS, measured to reject a COMMIT at its deadline. So the floor
+ * on the worst case is 5,000 (DB_POOL_CONNECT_TIMEOUT_MS) + 2 x 15,000
+ * (DB_STATEMENT_TIMEOUT_MS, for BEGIN and SET LOCAL) + 2 x 2,000 (the two reads)
+ * + 65,000 (DB_QUERY_TIMEOUT_MS, for COMMIT) = 104,000 ms, not the 41,000 this
+ * paragraph published, nor the 9,000 or the 19,000 before that.
+ *
+ * WHICH IS WHY THE WHOLE PRELOAD IS CAPPED, not the statements alone: see
+ * FREEHOLD_PERSIST_LOGIN_BUDGET_MS below.
  */
 export const FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS = 2_000;
+
+/**
+ * THE CAP ON THE WHOLE PRELOAD, which is the gate section 8a of the rollout
+ * contract carried open and which the statement bound above narrows without
+ * closing.
+ *
+ * WHAT IT BOUNDS. Every step of a login-path load has a bound of its own (the
+ * local admission cap answers at once, the permit wait is 5,000, each read is
+ * 2,000) and the SUM of them had none, because the steps the store does not
+ * own answer to the pool: a pool checkout, BEGIN, SET LOCAL and a COMMIT that
+ * neither server-side timeout covers add up to a measured floor of 104,000 ms.
+ * A login that spends that long does not fail: it keeps running, and the socket
+ * behind it can die meanwhile. The chain then acquires a character lease and
+ * joins anyway, and the mid-handshake death re-check hands the session it just
+ * created to socketClosed, leaving a linkdead ghost holding a realm slot and
+ * that lease for the whole grace window while the player's every re-login is
+ * refused as already in world.
+ *
+ * WHY IT IS A CONSTANT AND NOT "THE HANDSHAKE'S REMAINING BUDGET", which is how
+ * the gate was written and which rests on a premise that is FALSE. AUTH_TIMEOUT_MS
+ * (server/ws_auth.ts, 10,000 ms) is cleared synchronously by the first-frame
+ * handler BEFORE authenticateWebSocket runs, and that file says so: it bounds
+ * upgrade-to-first-frame only, never the handshake's database work. There is no
+ * remaining budget to read, so nothing is threaded from the handshake. What is
+ * borrowed is the MAGNITUDE: 10,000 ms is the wait the product already treats as
+ * the most a connecting player should spend, and a housing read has no claim on
+ * more than that. Stated as a deliberate ceiling rather than dressed up as a
+ * derivation.
+ *
+ * WHAT IT COSTS WHEN IT FIRES. The login is NOT refused: refusing a login over a
+ * durable housing read reverses a decision this packet has already taken and
+ * pinned (server/ws_auth.ts catches that read for exactly this reason, and a
+ * test proves a thrown read joins with nothing installed). The PRELOAD is
+ * refused instead, with a hold, so the player joins on the sim's default record
+ * and no write goes out for that account. The refusal deliberately does NOT
+ * touch the store entry: the read it gave up waiting for is still in flight
+ * behind a single-flight slot, and letting it finish and fill the entry is
+ * strictly better than marking the entry held over a read that then succeeds.
+ */
+export const FREEHOLD_PERSIST_LOGIN_BUDGET_MS = 10_000;
 
 /** Local concurrency cap on durable loads, applied BEFORE the shared permit
  *  (the guild-bank lazy loader's admission cap). Past the cap a load is
@@ -268,6 +313,20 @@ export const FREEHOLD_PERSIST_FLUSH_MAX_PASSES = 4;
  * shape), so a widened producer cannot grow the series set on its own and a
  * kind that has never fired reads zero rather than being absent.
  */
+/** The load-failure kinds a LATER READ CAN CHANGE THE ANSWER TO, and so the ones
+ *  whose hold is repairable rather than terminal. All three are admission
+ *  causes: the store's own cap was full, no background permit arrived inside the
+ *  login bound, or the read threw. The four kinds NOT here (`unadmitted`,
+ *  `unsupported`, `malformed`, `oversize`) are data causes, where the same row
+ *  produces the same answer every time and replaying the hold is the honest
+ *  outcome. Derived from the list below rather than re-typed, so a kind cannot
+ *  be added to one and forgotten in the other. */
+export const FREEHOLD_RETRYABLE_HOLD_KINDS: ReadonlySet<string> = new Set([
+  'cap_full',
+  'no_permit',
+  'read_threw',
+]);
+
 export const FREEHOLD_LOAD_FAILURE_KINDS = [
   'unsupported',
   'malformed',
@@ -284,6 +343,10 @@ export const FREEHOLD_LOAD_FAILURE_KINDS = [
   'cap_full',
   'no_permit',
   'read_threw',
+  // The WHOLE-PRELOAD cap: every step answered inside its own bound and the sum
+  // of them did not, so an operator seeing this is seeing a login that ran past
+  // FREEHOLD_PERSIST_LOGIN_BUDGET_MS rather than any one step timing out.
+  'no_budget',
 ] as const;
 
 /** Why an account's durable row must not be written this session. `kind` is the
@@ -333,9 +396,9 @@ export interface FreeholdPersistPorts {
    * shape a pool wants. Bounding each read on its own means a transaction each
    * (connect, BEGIN, SET LOCAL, the statement, COMMIT), so a handshake pays
    * eight round trips and holds two clients across four statements apiece for
-   * two small reads. Sharing one transaction pays five and holds one, and it is
-   * also what lets a future change cap the pair against the handshake's
-   * remaining budget rather than each half separately.
+   * two small reads. Sharing one transaction pays five and holds one. The cap on
+   * the WHOLE preload lives above both port shapes, in this store: see
+   * FREEHOLD_PERSIST_LOGIN_BUDGET_MS.
    *
    * A host that does not supply it gets the two ports in sequence, unbounded,
    * which is what every test does.
@@ -916,7 +979,22 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     hold: FreeholdRecoveryHold,
     hearth: { readyAtMs: number; revision: string },
   ): LoadedFreehold {
-    entry.loaded = true;
+    // LOADED ONLY FOR A DATA CAUSE, which is what makes a hold TERMINAL.
+    // `entry.loaded` is what preload's replay arms and retain's lost-entry
+    // repair consult, so setting it for every kind meant an account refused by
+    // a CAPACITY blip replayed that refusal for the life of the entry: measured
+    // with the shared gate saturated, eight of eight logins at one join per
+    // second were refused and a lone re-join for a refused account still
+    // replayed the hold, so a momentary stall became a session-long housing
+    // outage. The four fixture classes in the rollout contract sanction a
+    // terminal hold for a DATA cause, where a repeat read cannot change the
+    // answer, and none of them sanctions one for a capacity cause.
+    //
+    // IT STAYS WRITE-BLOCKED WHILE UNREPAIRED, which is the caveat that makes
+    // this safe: `blocked()` is `!loaded || isHeld`, so an entry with no
+    // `loaded` and a hold is blocked by BOTH halves, and nothing writes for it
+    // until a later read actually succeeds and clears the hold.
+    entry.loaded = !FREEHOLD_RETRYABLE_HOLD_KINDS.has(hold.kind);
     entry.hold = hold;
     entry.plotIndex = hold.plotIndex;
     counters.loadFailures++;
@@ -1256,7 +1334,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   // then releases. Making the function async turns it into a rejection the catch
   // can see. Unreachable today (accounts.id is INT4 and the handshake refuses a
   // malformed id first), which is why it is a shape fix rather than a defect.
-  async function preload(accountId: number): Promise<LoadedFreehold> {
+  async function preloadWithin(accountId: number): Promise<LoadedFreehold> {
     const ownerKey = freeholdOwnerKeyForAccount(accountId);
     const entry = entries.get(ownerKey);
     // A second character of the same account is joining: the live record is
@@ -1311,6 +1389,75 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     const touched = entries.get(ownerKey);
     if (touched) touched.orphanPasses = 0;
     return loaded;
+  }
+
+  /** The refusal the whole-preload cap produces, and the ONE hold in this store
+   *  that leaves the entry untouched. The read it gave up waiting for is still
+   *  in flight behind a single-flight slot; marking the entry held here would
+   *  overwrite whatever that read then learns, and the honest answer is that
+   *  this LOGIN got nothing, not that the account is unreadable. It books its
+   *  own kind so an operator can tell a login that ran out of budget from one
+   *  that lost a permit. */
+  function budgetRefusal(accountId: number): LoadedFreehold {
+    counters.loadFailures++;
+    counters.loadFailuresByKind.no_budget = (counters.loadFailuresByKind.no_budget ?? 0) + 1;
+    const detail = boundedFreeholdDetail(
+      `no durable answer within ${FREEHOLD_PERSIST_LOGIN_BUDGET_MS} ms`,
+    );
+    ports.warn(
+      `freehold plot index ${FREEHOLD_PRIMARY_PLOT_INDEX} held (no_budget): ${detail}; the durable row is left untouched`,
+    );
+    return {
+      accountId,
+      plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
+      plotId: '',
+      durableRev: null,
+      state: null,
+      hearthReadyAtMs: 0,
+      hearthRevision: ABSENT_HEARTH_REVISION,
+      hold: {
+        kind: 'no_budget',
+        detail,
+        plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
+        durableRev: FREEHOLD_ABSENT_DURABLE_REV,
+      },
+    };
+  }
+
+  /**
+   * The join path's read, CAPPED. See FREEHOLD_PERSIST_LOGIN_BUDGET_MS for what
+   * this bounds and why the bound is a constant rather than a share of a
+   * handshake deadline that does not exist.
+   *
+   * ASYNC, and it must stay so: freeholdOwnerKeyForAccount throws on a
+   * non-positive or non-safe account id and retain's repair reload calls this
+   * fire-and-forget behind a `.catch`, so a synchronous throw would walk past
+   * that catch after retain had already taken a reference nothing then releases.
+   */
+  async function preload(accountId: number): Promise<LoadedFreehold> {
+    let expired!: () => void;
+    const overrun = new Promise<'no-budget'>((resolve) => {
+      expired = () => resolve('no-budget');
+    });
+    let cancel: (() => void) | null = null;
+    try {
+      cancel = scheduleDeadline(expired, FREEHOLD_PERSIST_LOGIN_BUDGET_MS);
+    } catch (err) {
+      // A scheduler that will not schedule must not refuse the login: run
+      // uncapped and say so, which is the behaviour that predates this cap.
+      ports.error('freehold login budget could not be scheduled; the load runs uncapped:', err);
+      return await preloadWithin(accountId);
+    }
+    try {
+      const answer = await Promise.race([preloadWithin(accountId), overrun]);
+      return answer === 'no-budget' ? budgetRefusal(accountId) : answer;
+    } finally {
+      try {
+        cancel();
+      } catch {
+        /* a timer that will not cancel must never fault a login */
+      }
+    }
   }
 
   /** The single-flight durable read. Two joins of one account collapse onto one
@@ -2104,193 +2251,11 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     },
   };
 }
-
-let registered: FreeholdPersistStore | null = null;
-
-/** The composition root's handle on the live store, so shutdown can drain
- *  without reaching into GameServer (the server/unstuck_records.ts shape).
- *  Passing null unregisters, which is what a test teardown does. */
-export function registerFreeholdPersistStore(store: FreeholdPersistStore | null): void {
-  registered = store;
-}
-
-/** The composition root's fresh-join read (server/ws_auth.ts, beside the bank
- *  bonus). Never rejects: with no store registered it answers a HOLD, so the
- *  join installs nothing and writes nothing rather than seeding a default over
- *  a row it could not read. */
-export async function freeholdPreloadForAccount(accountId: number): Promise<LoadedFreehold> {
-  const store = registered;
-  if (store) return await store.preload(accountId);
-  return freeholdPreloadUnavailable(accountId, 'no persistence store is registered on this host');
-}
-
-/**
- * The answer for a join that must not touch durable housing at all: a dark
- * realm, or a host with no store. It is a HOLD rather than an absence, so
- * installLoadedFreehold installs nothing and every later write for that account
- * is blocked. Answering absence here would be the dangerous shape: the sim
- * seeds a free default record for anyone who holds none, and an absence would
- * invite the store to mint an identity and persist that empty Inn Room over a
- * row this host never read.
- */
-export function freeholdPreloadUnavailable(accountId: number, detail: string): LoadedFreehold {
-  return {
-    accountId,
-    plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
-    plotId: '',
-    durableRev: null,
-    state: null,
-    hearthReadyAtMs: 0,
-    // THROUGH THE CONSTANTS, not two bare zeroes. This file argues at length
-    // that the plot fence and the hearth counter are different counters that
-    // share a value, and spelling either as a literal here is how a later reader
-    // learns they are one.
-    hearthRevision: ABSENT_HEARTH_REVISION,
-    hold: {
-      kind: 'unadmitted',
-      detail,
-      plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
-      durableRev: FREEHOLD_ABSENT_DURABLE_REV,
-    },
-  };
-}
-
-/** The scrape-safe counters, for the game-state metrics source. Zeroes when no
- *  store is registered, which is the honest reading of "nothing is loaded". */
-export function freeholdPersistStats(): FreeholdPersistStats {
-  return (
-    registered?.stats() ?? {
-      entries: 0,
-      loaded: 0,
-      dirty: 0,
-      running: 0,
-      pending: 0,
-      held: 0,
-      quiesced: 0,
-      loads: 0,
-      loadFailures: 0,
-      loadFailuresByKind: {},
-      writes: 0,
-      writeFailures: 0,
-      staleWrites: 0,
-      permitWaitMsTotal: 0,
-      queueWaitMsTotal: 0,
-      writeMsTotal: 0,
-      codecMsTotal: 0,
-      loadMsTotal: 0,
-      oldestDirtyAgeMs: 0,
-      writeBytesTotal: 0,
-      maxWriteBytes: 0,
-      writesWithoutRecord: 0,
-      preGateRefusals: 0,
-      deferredWrites: 0,
-      activeWrites: 0,
-      leaveCaptures: 0,
-    }
-  );
-}
-
-/** Drain the registered store, if there is one. Never throws and never hangs:
- *  no store is a drained store. */
-export async function freeholdPersistIdle(
-  deadlineMs: number = FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS,
-): Promise<boolean> {
-  const store = registered;
-  if (!store) return true;
-  try {
-    return await store.idle(deadlineMs);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Install one account's durable answer into the sim. PURE and SYNCHRONOUS, and
- * it MUST run BEFORE the sim seeds its default record for this account:
- * loadFreehold is load-once, so a call made after the seed is silently
- * discarded and the owner's real plot never reaches the live map. Nothing
- * happens for an absent load (there is no durable row, so the seeded default
- * IS the record) or a held one (invariant 1: install nothing, write nothing).
- */
-export function installLoadedFreehold(
-  ctx: SimContext,
-  accountId: number,
-  loaded: LoadedFreehold | undefined,
-): void {
-  // A STRUCTURAL guard, not a type assertion. This value arrives on a spread
-  // meta bag that crosses a module boundary, and every field below is read
-  // straight into sim state; a bag that lost its shape would install a record
-  // with undefined fields rather than refusing.
-  if (!loaded || typeof loaded !== 'object') return;
-  // AND IT HAS TO NAME THIS ACCOUNT. LoadedFreehold carries accountId precisely
-  // so the answer names its subject, and this is the one field the structural
-  // guard above skipped. If a bag ever crossed with another account's answer,
-  // that account's house and Hearth clock would install under this owner key,
-  // and the store's seal cannot catch it because the seal compares identities,
-  // not accounts. The blast radius would be two houses.
-  if (loaded.accountId !== accountId) return;
-  const ownerKey = freeholdOwnerKeyForAccount(accountId);
-  // The CLOCK FIRST, and unconditionally. It is a separate durable fact from
-  // the plot: an account whose plot row is held, or absent entirely, still has
-  // a Hearth cooldown, and dropping it because the plot could not be installed
-  // hands that account a free travel on every login. The forward-only merge
-  // itself belongs to the sim, which owns the Map.
-  // INDEPENDENTLY guarded, because they are independent durable facts: a bag
-  // that lost its clock must still install the plot, and vice versa. Coupling
-  // them means one malformed field costs the owner both.
-  if (typeof loaded.hearthReadyAtMs === 'number') {
-    mergeFreeholdKeyReadyAt(ctx, ownerKey, loaded.hearthReadyAtMs);
-  }
-  // THE ABSENT ARM: no hold, no state, no durable row. The sim's default record
-  // IS the truth for this account, but the store has already MINTED the identity
-  // the row it is about to insert will carry, and nothing else ever teaches a
-  // live record its own name. Installing a default that carries it here, through
-  // the same load-once path a row install uses, is what makes the record and the
-  // row answer to one identity from the FIRST session rather than from the
-  // second.
-  //
-  // WHAT IT CLOSES. The write seal's name comparison was INERT for an entry that
-  // minted its own row: `applyWriteResult` caches the identity the live record
-  // carried, that identity was the stand-in, and a freshly seeded default
-  // carries the same literal, so the two were equal by value and the comparison
-  // could not fire. The two continuity arms were then the whole seal and both
-  // are revision-shaped, so a reseeded default whose revision had caught up
-  // satisfied neither and an empty tier-0 Inn Room was compare-and-swapped over
-  // a real house with plot_id untouched and no counter moving. That was the
-  // EIGHTH distinct path to violating this subsystem's one invariant. It also
-  // closes the mirror of it, where the same account's entry re-read the row it
-  // had just inserted and the two names then differed for the opposite reason.
-  //
-  // ON THE ABSENT ARM ONLY, and that is the whole difference between the safe
-  // form and the unsafe one. Stamping the minted identity onto whatever record
-  // is already live bypasses load-once and rewrites a freshly SEEDED default's
-  // identity to the minted name, which kills the name comparison and, through
-  // the stand-in test, both continuity arms with it: a new path to the same
-  // loss. loadFreehold is load-once and honors the dark-realm flag, so a record
-  // that already exists is returned untouched and a dark realm installs nothing;
-  // addPlayer's ensureFreeholdRecord then finds this record and leaves it alone.
-  //
-  // THE IDENTITY IS CHECKED, because it crosses the same spread bag every other
-  // field here does and because an identity the wire refuses would make every
-  // later build-presence frame fail at the type boundary with no diagnostic.
-  // An unchecked one is simply not installed, and the account falls back to the
-  // stand-in exactly as it did before this arm existed.
-  if (loaded.hold === null && loaded.state === null && loaded.durableRev === null) {
-    if (freeholdPlotIdAdmitted(loaded.plotId)) {
-      loadFreehold(ctx, ownerKey, defaultFreeholdState(ownerKey, asFreeholdPlotId(loaded.plotId)));
-    }
-    return;
-  }
-  if (loaded.hold !== null || loaded.state === null) return;
-  if (typeof loaded.state !== 'object') {
-    // A skip here means addPlayer seeds a default while the store's entry still
-    // believes it loaded a real row, which used to be how a default reached the
-    // row. It no longer is: runWrite's identity seal refuses to write a record
-    // still carrying the unassigned plot id over a row that HAS a durable
-    // revision, so the row survives and the account is write-blocked instead.
-    // A throw here would refuse the login for a case the real store cannot
-    // produce, which is a worse trade than one held session.
-    return;
-  }
-  loadFreehold(ctx, ownerKey, freeholdStateFromPersisted(loaded.state, ownerKey));
-}
+// TWO THINGS THAT USED TO SIT HERE AND DO NOT NEED THIS FILE'S PRIVATE STATE.
+// The process-wide registry (registerFreeholdPersistStore and the three
+// functions that answer safely with no store registered) moved WHOLE to
+// server/freehold_persist_registry.ts, and installLoadedFreehold moved to
+// server/freehold_install.ts. It never
+// needed anything in this file: it is a pure function over a SimContext and one
+// load answer, and its ABSENT arm is the front half of the write seal's
+// argument rather than a detail of the store's lifecycle.

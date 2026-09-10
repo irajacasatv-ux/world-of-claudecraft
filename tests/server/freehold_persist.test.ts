@@ -14,6 +14,7 @@
 
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createBackgroundDbGate } from '../../server/background_db_gate';
 import type {
   FreeholdRow,
   FreeholdRowLoad,
@@ -22,6 +23,7 @@ import type {
 } from '../../server/freehold_db';
 import type { FreeholdHearthLoad } from '../../server/freehold_hearth_db';
 import { readLoginDurables } from '../../server/freehold_hearth_load';
+import { installLoadedFreehold } from '../../server/freehold_install';
 import {
   createFreeholdPersistStore,
   FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
@@ -29,6 +31,7 @@ import {
   FREEHOLD_PERSIST_LEAVE_FLUSH_MS,
   FREEHOLD_PERSIST_LEAVE_WRITE_RESERVE,
   FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS,
+  FREEHOLD_PERSIST_LOGIN_BUDGET_MS,
   FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS,
   FREEHOLD_PERSIST_MAX_ACTIVE_LOADS,
   FREEHOLD_PERSIST_MAX_ACTIVE_WRITES,
@@ -39,11 +42,12 @@ import {
   FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS,
   type FreeholdPersistPorts,
   type FreeholdPersistStore,
-  freeholdPersistIdle,
-  installLoadedFreehold,
   type LoadedFreehold,
-  registerFreeholdPersistStore,
 } from '../../server/freehold_persist';
+import {
+  freeholdPersistIdle,
+  registerFreeholdPersistStore,
+} from '../../server/freehold_persist_registry';
 import { createKeyedSerialWriter } from '../../server/serial_writer';
 import {
   FREEHOLD_MAX_LAYOUT_ROWS,
@@ -70,6 +74,12 @@ const ROW_PLOT_ID = 'plot:rowfixture91';
 // fixture's, for the cases that model an entry re-reading the row it wrote.
 const MINTED_PLOT_ID = 'plot:minted1';
 const OTHER_ACCOUNT_ID = 604_513;
+/** The shipped pool size the realm runs with (DB_POOL_MAX_CLIENTS_DEFAULT in
+ *  server/db.ts), spelled here rather than imported, because that module opens a
+ *  real Pool at module scope and this suite's whole point is that it drives the
+ *  store with no database. Read as a source literal below, so the two cannot
+ *  drift apart silently. */
+const DEFAULT_DB_POOL_MAX_CLIENTS = 10;
 const OTHER_OWNER_KEY = `account:${OTHER_ACCOUNT_ID}`;
 
 interface Deferred<T> {
@@ -171,6 +181,9 @@ interface HarnessOptions {
    *  driving the fallback; the cases that pass it are the only coverage the
    *  production arm has. */
   readDurables?: FreeholdPersistPorts['readDurables'];
+  /** Override the deadline scheduler, for the one case that models a host whose
+   *  timers refuse to arm. */
+  scheduleDeadline?: FreeholdPersistPorts['scheduleDeadline'];
 }
 
 interface DeadlineJob {
@@ -347,6 +360,7 @@ function harness(options: HarnessOptions = {}) {
       errors.push(err === undefined ? message : `${message} ${JSON.stringify(err)}`);
     },
     scheduleDeadline(callback: () => void, ms: number): () => void {
+      if (options.scheduleDeadline) return options.scheduleDeadline(callback, ms);
       const job: DeadlineJob = {
         ms,
         // Recorded, so "the deadline never fired" is a fact a case can assert
@@ -3758,6 +3772,204 @@ describe('an abandoned preload does not leak an entry', () => {
   });
 });
 
+describe('the two admission caps sum past the shared gate, and that is the accepted answer', () => {
+  it('never holds more PERMITS than the gate grants, however far its own caps sum past it', async () => {
+    // RULING 4, pinned against the answer that was taken. The load cap (4) and
+    // the write cap (4) are independent counters against a gate whose capacity
+    // is smaller, so the store's own demand can exceed the gate's supply: 8 in
+    // steady state and 12 during a drain, against 7. Sharing ONE budget between
+    // them was considered and rejected, because it couples a player's login read
+    // to a sweep's writes, which is the coupling the two constants were split to
+    // avoid. What bounds real concurrency is the GATE, not the caps, and this
+    // case is the executed proof of that rather than an argument for it.
+    //
+    // Driven through the REAL createBackgroundDbGate, not a fake, because the
+    // claim is about how this store composes with the one gate the realm shares.
+    // Cross-pinned against server/db.ts, because a pool size copied by hand is a
+    // number that goes stale the moment the real one moves.
+    expect(readFileSync('server/db.ts', 'utf8')).toContain(
+      `const DB_POOL_MAX_CLIENTS_DEFAULT = ${DEFAULT_DB_POOL_MAX_CLIENTS};`,
+    );
+    const gate = createBackgroundDbGate(DEFAULT_DB_POOL_MAX_CLIENTS);
+    const capacity = gate.stats().max;
+    // The overcommit is the premise, so it is asserted rather than assumed: both
+    // the steady-state demand and the drain demand exceed the supply.
+    expect(FREEHOLD_PERSIST_MAX_ACTIVE_LOADS + FREEHOLD_PERSIST_MAX_ACTIVE_WRITES).toBeGreaterThan(
+      capacity,
+    );
+    expect(
+      FREEHOLD_PERSIST_MAX_ACTIVE_LOADS + FREEHOLD_PERSIST_DRAIN_MAX_ACTIVE_WRITES,
+    ).toBeGreaterThan(capacity);
+
+    // BOTH KINDS OF WORK PARK while holding their permits, which is the only
+    // state in which the two caps can be demanding at once.
+    const releaseReads: Array<() => void> = [];
+    const releaseWrites: Array<() => void> = [];
+    let peakPermits = 0;
+    const h = harness({
+      readRow: () =>
+        new Promise<FreeholdRowLoad>((resolve) => {
+          releaseReads.push(() => resolve({ kind: 'row', row: rowFixture() }));
+        }),
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+      // These entries load a ROW, so their live records carry the row's
+      // identity; the harness cannot infer that from a readRow FUNCTION the way
+      // it does from a rowLoad value.
+      livePlotId: ROW_PLOT_ID,
+      acquirePermit: async (signal) => {
+        const permit = await gate.acquire(signal);
+        if (permit === null) return null;
+        peakPermits = Math.max(peakPermits, gate.stats().inFlight);
+        return permit;
+      },
+      writeRow: () =>
+        new Promise<FreeholdUpsertResult>((resolve) => {
+          releaseWrites.push(() => resolve({ kind: 'updated', durableRev: '9' }));
+        }),
+    });
+
+    // A set of owners already loaded and dirty, so their writes can fill the
+    // write cap; then a burst of fresh logins, whose reads fill the load cap.
+    const writers: string[] = [];
+    for (let i = 0; i < FREEHOLD_PERSIST_MAX_ACTIVE_WRITES + 2; i++) {
+      const accountId = OTHER_ACCOUNT_ID + i;
+      const key = `account:${accountId}`;
+      writers.push(key);
+      h.store.retain(key, accountId);
+      const loading = h.store.preload(accountId);
+      await tick(10);
+      releaseReads.shift()?.();
+      await loading;
+      h.store.markDirty(key);
+    }
+    h.store.saveAllDirty();
+    await tick(40);
+    expect(h.store.stats().activeWrites).toBe(FREEHOLD_PERSIST_MAX_ACTIVE_WRITES);
+
+    const logins = Array.from({ length: FREEHOLD_PERSIST_MAX_ACTIVE_LOADS + 3 }, (_, i) =>
+      h.store.preload(OTHER_ACCOUNT_ID + 900 + i),
+    );
+    await tick(60);
+
+    // THE BOUND THAT HOLDS: the gate never grants more than its capacity, so no
+    // number of housing producers can put more clients on the pool than the
+    // realm budgeted for every named producer together.
+    expect(peakPermits).toBeLessThanOrEqual(capacity);
+    expect(gate.stats().inFlight).toBeLessThanOrEqual(capacity);
+    // AND HOUSING REALLY DID SATURATE IT, which is what makes the sentence above
+    // load bearing instead of vacuous: the surplus waited for a permit rather
+    // than running anyway, and it is housing holding every one of them.
+    expect(gate.stats().inFlight).toBe(capacity);
+    expect(gate.stats().waiting).toBeGreaterThan(0);
+
+    // Let everything finish: releasing the parked work frees permits, which
+    // admits the queued work, which parks in turn, so this drains in passes
+    // rather than in one sweep.
+    for (let pass = 0; pass < 20; pass++) {
+      while (releaseReads.length > 0) releaseReads.shift()?.();
+      while (releaseWrites.length > 0) releaseWrites.shift()?.();
+      await tick(40);
+    }
+    await Promise.all(logins.map((login) => login.catch(() => undefined)));
+  });
+});
+
+describe('the WHOLE preload is capped against the login budget', () => {
+  /** Fire EVERY armed budget deadline, not the first: retain's repair reload is
+   *  a preload of its own and arms one beside the case's explicit call, so
+   *  firing only the first leaves the other caller parked on the same gated
+   *  read. */
+  const fireBudget = (h: Harness): void => {
+    const armed = h.deadlines.filter(
+      (deadline) => deadline.ms === FREEHOLD_PERSIST_LOGIN_BUDGET_MS && !deadline.cancelled,
+    );
+    expect(armed.length, 'a login budget deadline must be armed').toBeGreaterThan(0);
+    for (const job of armed) job.fire();
+  };
+
+  it('arms ONE deadline for the whole load, at the budget, and cancels it on the answer', async () => {
+    // Every STEP of a login-path load has a bound of its own and the SUM of
+    // them had none: the pool checkout, BEGIN, SET LOCAL and a COMMIT that
+    // neither server-side timeout covers answer to the pool, for a measured
+    // floor of 104,000 ms. This is the cap on the whole thing.
+    const h = harness({ rowLoad: { kind: 'row', row: rowFixture() } });
+    await h.store.preload(ACCOUNT_ID);
+    const budget = h.deadlines.filter((job) => job.ms === FREEHOLD_PERSIST_LOGIN_BUDGET_MS);
+    expect(budget).toHaveLength(1);
+    expect(budget[0]?.cancelled).toBe(true);
+    expect(budget[0]?.fired).toBe(false);
+    expect(FREEHOLD_PERSIST_LOGIN_BUDGET_MS).toBe(10_000);
+  });
+
+  it('refuses the LOAD, not the login, when the budget runs out', async () => {
+    // The player joins, on the sim's default record, and no write goes out for
+    // that account. Refusing the LOGIN over a durable housing read reverses a
+    // decision this packet has already taken and pinned.
+    const gate = deferred<FreeholdRowLoad>();
+    const h = harness({ readRow: async () => await gate.promise });
+    const loading = h.store.preload(ACCOUNT_ID);
+    await tick(20);
+    fireBudget(h);
+    const answer = await loading;
+    expect(answer.hold?.kind).toBe('no_budget');
+    expect(answer.state).toBeNull();
+    // The DURABLE ROW IS LEFT UNTOUCHED, which is what a hold means here:
+    // installLoadedFreehold installs nothing for it and every write is blocked.
+    expect(answer.durableRev).toBeNull();
+    expect(h.store.stats().loadFailuresByKind).toEqual({ no_budget: 1 });
+    expect(h.warnings.some((line) => line.includes('no_budget'))).toBe(true);
+    // The detail rides the same bound every other housing log line does.
+    expect(h.warnings.some((line) => line.includes('unclassified'))).toBe(false);
+    gate.resolve({ kind: 'absent' });
+    await tick(20);
+  });
+
+  it('leaves the ENTRY alone, so the read it gave up on still fills it', async () => {
+    // THE ONE HOLD IN THIS STORE THAT DOES NOT TOUCH THE ENTRY. The read is
+    // still in flight behind a single-flight slot; marking the entry held would
+    // overwrite whatever that read then learns, and the honest answer is that
+    // this LOGIN got nothing, not that the account is unreadable.
+    const gate = deferred<FreeholdRowLoad>();
+    const h = harness({
+      readRow: async () => await gate.promise,
+      normalized: { kind: 'loaded', state: persistedFixture({ rev: 5 }), repaired: [] },
+    });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    const loading = h.store.preload(ACCOUNT_ID);
+    await tick(20);
+    fireBudget(h);
+    expect((await loading).hold?.kind).toBe('no_budget');
+    // Nothing held, nothing loaded, because the refusal wrote nothing at all.
+    expect(h.store.stats().held).toBe(0);
+
+    // The read lands afterwards and the entry becomes writable, exactly as it
+    // would have if the login had waited.
+    gate.resolve({ kind: 'row', row: rowFixture() });
+    await tick(30);
+    expect(h.store.stats().loaded).toBe(1);
+    expect(h.store.stats().held).toBe(0);
+    const replay = await h.store.preload(ACCOUNT_ID);
+    expect(replay.hold).toBeNull();
+    expect(replay.state?.rev).toBe(5);
+  });
+
+  it('runs the load UNCAPPED rather than refusing it when the timer cannot be armed', async () => {
+    // A scheduler that will not schedule must not refuse a login: the behaviour
+    // that predates the cap is the safe fallback, and it says so on the error
+    // port rather than failing silently.
+    const h = harness({
+      rowLoad: { kind: 'row', row: rowFixture() },
+      scheduleDeadline: () => {
+        throw new Error('no timers');
+      },
+    });
+    const answer = await h.store.preload(ACCOUNT_ID);
+    expect(answer.hold).toBeNull();
+    expect(answer.state).not.toBeNull();
+    expect(h.errors.some((line) => line.includes('uncapped'))).toBe(true);
+  });
+});
+
 describe('the bounded drain', () => {
   it('drains a write in flight and cancels its deadline', async () => {
     const gate = deferred<FreeholdUpsertResult>();
@@ -3774,9 +3986,21 @@ describe('the bounded drain', () => {
     gate.resolve({ kind: 'updated', durableRev: '3' });
     await idle;
     expect(drained).toBe(true);
-    expect(h.deadlines).toHaveLength(1);
-    expect(h.deadlines[0]?.cancelled).toBe(true);
-    expect(h.deadlines[0]?.ms).toBe(5_000);
+    // THE DRAIN'S OWN deadline, selected by its duration rather than by being
+    // the only one: the login-path load in loadedStore schedules the whole
+    // preload cap beside it, and both are cancelled.
+    const drainDeadlines = h.deadlines.filter((job) => job.ms === 5_000);
+    expect(drainDeadlines).toHaveLength(1);
+    expect(drainDeadlines[0]?.cancelled).toBe(true);
+    // AND NOTHING WAS LEFT ARMED. A deadline that fires after its own work has
+    // settled is how a cancelled timer becomes a false not-drained answer.
+    expect(h.deadlines.every((job) => job.cancelled || job.fired)).toBe(true);
+    // The preload's cap is the other one, cancelled the moment the load landed.
+    const budgetDeadlines = h.deadlines.filter(
+      (job) => job.ms === FREEHOLD_PERSIST_LOGIN_BUDGET_MS,
+    );
+    expect(budgetDeadlines).toHaveLength(1);
+    expect(budgetDeadlines[0]?.cancelled).toBe(true);
   });
 
   it('flushes what is dirty before it waits', async () => {
@@ -4721,8 +4945,7 @@ describe('the composition root that binds the combined port (source pins)', () =
     // The pair every behaviour case in this file drives, and the store's declared
     // surface for a host with no transaction seam. Extracting the composition
     // root DROPPED both wrappers and left the pair on the pool's 15,000 ms
-    // session default against a 10,000 ms handshake, while the file header
-    // claimed the move changed nothing. Dead on this host, because readDurables
+    // session default, while the file header claimed the move changed nothing. Dead on this host, because readDurables
     // is bound and the store prefers it, and pinned anyway: a fallback whose
     // bound silently differs from the real path is worse than no fallback.
     for (const [key, next] of [
@@ -4738,21 +4961,66 @@ describe('the composition root that binds the combined port (source pins)', () =
 });
 
 describe('the gaps a mutation pass over the store found', () => {
-  it('a HOLD marks the entry loaded, which is what makes it terminal', async () => {
-    // MUTATION GAP. Removing `entry.loaded = true` from holdResult left 507
-    // tests green: `blocked()` answers true either way, so no behaviour changed
-    // in any existing case. The measure and the repair arm do change, and this
-    // is the surface the carried gate on capacity refusals would move, so the
-    // current behaviour is pinned rather than left for that change to discover.
-    const h = harness({ acquirePermit: async () => null });
+  it('an ADMISSION hold is repairable: not loaded, still write-blocked, and re-read', async () => {
+    // RULING 2. `entry.loaded` is what preload's replay arms and retain's
+    // lost-entry repair consult, and holdResult used to set it for every kind,
+    // so an account refused by a CAPACITY blip replayed that refusal for the
+    // life of the entry: measured with the shared gate saturated, eight of eight
+    // logins at one join per second were refused and a lone re-join for a
+    // refused account still replayed the hold. The four fixture classes sanction
+    // a terminal hold for a DATA cause, where a repeat read cannot change the
+    // answer, and none of them sanctions one for a capacity cause.
+    let refuse = true;
+    const h = harness({
+      acquirePermit: async () => (refuse ? null : { release: () => {} }),
+      rowLoad: { kind: 'row', row: rowFixture() },
+    });
     h.store.retain(OWNER_KEY, ACCOUNT_ID);
     const loaded = await h.store.preload(ACCOUNT_ID);
     expect(loaded.hold?.kind).toBe('no_permit');
-    // LOADED, and held. `loaded` is what retain's lost-entry repair consults, so
-    // an admission refusal is TERMINAL for the life of the entry: a later retain
-    // will not re-read it.
-    expect(h.store.stats().loaded).toBe(1);
+    // NOT loaded, and held. The gauge tells an operator how many entries can
+    // actually write, so counting a refused one there was a second thing wrong.
+    expect(h.store.stats().loaded).toBe(0);
     expect(h.store.stats().held).toBe(1);
+
+    // STILL WRITE-BLOCKED while it is unrepaired, which is the caveat that makes
+    // the change safe: `blocked()` is `!loaded || isHeld`, so both halves refuse
+    // and no write goes out for this owner in the meantime.
+    h.store.markDirty(OWNER_KEY);
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.writeCount()).toBe(0);
+
+    // AND RE-READ on the next join, rather than replaying the refusal.
+    refuse = false;
+    h.calls.length = 0;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    await tick(30);
+    expect(h.calls).toContain('readRow');
+    expect(h.store.stats().loaded).toBe(1);
+    expect(h.store.stats().held).toBe(0);
+  });
+
+  it('a DATA hold stays TERMINAL, because a repeat read cannot change the answer', async () => {
+    // The contrast arm, and the reason ruling 2 is about admission causes alone.
+    // An unreadable row reads the same way every time: re-reading it spends a
+    // permit and a statement on the login path for an answer that cannot move.
+    const h = harness({
+      rowLoad: {
+        kind: 'oversize',
+        plotIndex: 0,
+        plotId: ROW_PLOT_ID,
+        durableRev: '4',
+        bytes: 200_000,
+        limit: 100_000,
+        detoastRefused: false,
+        diskBytes: 200_000,
+      },
+    });
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    const loaded = await h.store.preload(ACCOUNT_ID);
+    expect(loaded.hold?.kind).toBe('oversize');
+    expect(h.store.stats().loaded).toBe(1);
     h.calls.length = 0;
     h.store.retain(OWNER_KEY, ACCOUNT_ID);
     await tick(20);

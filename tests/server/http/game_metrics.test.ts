@@ -20,10 +20,8 @@ import {
   ROD_FEE_RECIPE_IDS,
   rodFeeForRecipe,
 } from '../../../server/fishing_telemetry';
-import {
-  FREEHOLD_LOAD_FAILURE_KINDS,
-  freeholdPersistStats,
-} from '../../../server/freehold_persist';
+import { FREEHOLD_LOAD_FAILURE_KINDS } from '../../../server/freehold_persist';
+import { freeholdPersistStats } from '../../../server/freehold_persist_registry';
 import {
   type GameStateSource,
   registerGameStateMetrics,

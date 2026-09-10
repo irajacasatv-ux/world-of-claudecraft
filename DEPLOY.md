@@ -792,13 +792,23 @@ For off-box safety, sync the directory to S3 occasionally:
   refusals, the permit and queue waits, the statement durations those waits
   exclude, total bytes written, `pre_gate_refusals` (rows refused on their
   on-disk size before anything was rendered) and `writes_without_record`.
-  `woc_freehold_load_failures_total` splits load failures by `kind`, and read
-  that split as four DISTINCT diagnoses rather than one label. `unadmitted` is
-  now the row-level stranded slot ALONE, which is a data incident; `cap_full` is
-  a login storm filling the store's own admission cap, `no_permit` is pool or
-  gate saturation, and `read_threw` is a database fault. A host with no store
-  answers the `unadmitted` hold SHAPE but books no counter at all, so it never
-  reaches this series. Six of these series are worth an alert. `writes_without_record` counts a write that held a
+  `woc_freehold_load_failures_total` splits load failures by `kind`, and every
+  one of the EIGHT kinds is its own diagnosis rather than one label. FOUR are
+  DATA incidents, where the same row answers the same way every time and the
+  hold is terminal for the session: `unadmitted` is the row-level stranded slot,
+  `unsupported` a row in a shape this build cannot read, `malformed` a row whose
+  values do not survive validation, and `oversize` one past a byte ceiling. FOUR
+  are CAPACITY causes, where a later read can answer differently and the hold is
+  repairable: `cap_full` is a login storm filling the store's own admission cap,
+  `no_permit` is pool or gate saturation, `read_threw` is a database fault, and
+  `no_budget` is a login whose WHOLE durable read ran past its budget while every
+  individual step stayed inside its own bound. A host with no store answers the
+  `unadmitted` hold SHAPE but books no counter at all, so it never reaches this
+  series. Read the two groups differently: a sustained data-kind rate is rows to
+  investigate, a sustained capacity-kind rate is a realm to give more headroom. The series worth an alert are named one
+  by one below rather than counted, because a bare count is a number a later
+  edit makes wrong without touching anything it describes.
+  `writes_without_record` counts a write that held a
   background permit with no document to send and issued no statement at all,
   which is the terminal state of every way this store has ever lost a save; it
   should be flat at zero, and any sustained increase means edits are being
@@ -810,13 +820,19 @@ For off-box safety, sync the directory to S3 occasionally:
   writable-implies-readable refusal, and a run of thrown writes. `held` counts
   entries under ANY recovery hold, DATA or CAPACITY: read
   `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
-  read from a login storm that filled the admission cap. A growing `oldest_dirty_age_ms`
+  read from a login storm that filled the admission cap. `loaded` and `held`
+  no longer sum to `entries` for a capacity hold: an admission-class refusal
+  leaves the entry UNLOADED on purpose, so a later join re-reads it instead of
+  replaying the refusal, and it stays write-blocked until one succeeds. A growing `oldest_dirty_age_ms`
   means edits are not reaching disk. `deferred_writes` and `permit_wait_ms` are
   the two LEADING indicators of the capacity gates section 8a carries: a
   deferred set that does not return to zero between sweeps means the store's own
   write admission cap is the bottleneck and entry collection is suspended while
   it lasts, and a climbing permit wait means the shared background gate is
-  saturated, which is what turns a login into a session-long housing hold. Every
+  saturated. A saturated gate no longer turns a login into a SESSION-LONG
+  housing hold: an admission-class refusal is repairable and the next join
+  re-reads it. What it still costs is one login's worth of housing, so a
+  sustained climb is a realm that needs headroom rather than an incident. Every
   measure on all three families is a count, a byte total or a millisecond total:
   no account id, owner key or plot id reaches any series. `codec_ms` is the
   serialize, the clone and the write refusal's own walk, all of it unyielding

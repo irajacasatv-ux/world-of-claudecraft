@@ -10,7 +10,7 @@
 // woc_*/http_* names asserted here.
 
 import { describe, expect, it } from 'vitest';
-import { freeholdPersistStats } from '../../../server/freehold_persist';
+import { freeholdPersistStats } from '../../../server/freehold_persist_registry';
 import {
   registerBusinessMetrics,
   WOC_PLAYER_ACCOUNTS_CREATED,

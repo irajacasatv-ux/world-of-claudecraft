@@ -14,8 +14,8 @@
 // sites.
 
 import type { SimContext } from '../src/sim/sim_context';
-import type { FreeholdPersistStore } from './freehold_persist';
-import { installLoadedFreehold, type LoadedFreehold } from './freehold_persist';
+import { installLoadedFreehold } from './freehold_install';
+import type { FreeholdPersistStore, LoadedFreehold } from './freehold_persist';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
 
 /** The store surface this binding needs. Narrower than FreeholdPersistStore on

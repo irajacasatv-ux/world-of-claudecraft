@@ -243,12 +243,8 @@ import { assembleEventsFrame, filterRoutableEvents, serializeEventFragments } fr
 import { buildEventPidIndex, forEachSelectedEventIndex } from './event_pid_index';
 import { appendFarmPlotsWire, dispatchFarmingCommand } from './farming_commands';
 import { fishingBandLabel, isKoi, isRodFeeRecipe } from './fishing_telemetry';
-import {
-  type FreeholdPersistStore,
-  installLoadedFreehold,
-  type LoadedFreehold,
-  registerFreeholdPersistStore,
-} from './freehold_persist';
+import type { FreeholdPersistStore, LoadedFreehold } from './freehold_persist';
+import { registerFreeholdPersistStore } from './freehold_persist_registry';
 import { createGameFreeholdPersistStore } from './freehold_persist_wiring';
 import {
   bindFreeholdOnJoin,

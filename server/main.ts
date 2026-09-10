@@ -258,13 +258,13 @@ import { pruneDiscordOAuthStates, pruneDiscordPendingLogins } from './discord_db
 import { emailAccountCreated } from './email';
 import { stopEpicMirror } from './epic/mirror';
 import { freeholdsEnabled } from './freehold_config';
+import { FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS } from './freehold_persist';
 import {
-  FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS,
   freeholdPersistIdle,
   freeholdPersistStats,
   freeholdPreloadForAccount,
   freeholdPreloadUnavailable,
-} from './freehold_persist';
+} from './freehold_persist_registry';
 import { GameServer } from './game';
 import {
   closeGeneralChatQuotaPool,

@@ -1478,8 +1478,17 @@ const MONOLITHS: MonolithRow[] = [
     // reconcile guard now route through the one private method that already
     // existed for it, whose own empty check was redundant with the loop it
     // calls. Six under the inherited ceiling, two under this packet's own floor.
+    // LOWERED AGAIN, 9914 -> 9907, at the rulings round that followed. The
+    // leaving session's four registrations moved from the END of the settlement
+    // into leave()'s finally, because a rejection above them left
+    // sessionsByCharacterId still mapping the character and every later login
+    // was refused as already in world for the life of the process. That growth
+    // is paid by moving revertOwnGuildBookOps WHOLE to
+    // server/guild_book_holders.ts, beside the holder index it maintains, where
+    // a Vitest can drive it with neither a GameServer nor a Sim; the registry
+    // handle moved to server/freehold_persist_registry.ts with it.
     // Measured with wc -l < server/game.ts after biome. Exact count, zero slack.
-    ceiling: 9914,
+    ceiling: 9907,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -1500,8 +1509,18 @@ const MONOLITHS: MonolithRow[] = [
     // supplies them, which is what lets a Vitest drive the whole lifecycle with
     // no database. Net 24 under the row's opening count despite 70 lines of new
     // logic. Measured with wc -l after biome. Exact count, zero slack.
+    // LOWERED AGAIN, 2319 -> 2261, at the rulings round that followed, which
+    // added the identity install, the repairable admission hold and the cap on
+    // the WHOLE login read. THREE extractions pay for them, none of which needed
+    // this file's private state: the write SEAL to
+    // server/freehold_write_seal.ts, where a Vitest drives every arm of the
+    // predicate the one invariant rests on with three literals instead of a
+    // store; the SIM INSTALL to server/freehold_install.ts, a pure function over
+    // a SimContext and one load answer; and the process-wide REGISTRY handle to
+    // server/freehold_persist_registry.ts, a module variable and four total
+    // functions over it. Net 58 under the row despite the new logic.
     file: 'server/freehold_persist.ts',
-    ceiling: 2319,
+    ceiling: 2261,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {
