@@ -893,6 +893,37 @@ lets a Vitest drive the whole lifecycle with no database and no GameServer. Its
 row drops 2343 to 2319, twenty-four under its opening count despite seventy lines
 of new logic.
 
+## WHAT ROUND THIRTEEN DID NOT GET, AND WHY THAT MATTERS
+
+ROUND THIRTEEN'S OWN FIX IS UNREVIEWED BY A FRESH READER. Four fresh lanes were
+dispatched over it and all four went idle without their reports reaching this
+session; one of them had already delivered findings earlier in the same session,
+so the channel worked and then stopped. Nothing was received and nothing is
+claimed. Two of the three findings this round closed came from a lane whose
+earlier output DID arrive and was truncated mid-list, and its remaining item was
+requested three times and never landed, so an unknown number of findings against
+round twelve are still outstanding.
+
+WHY THAT IS NOT A FORMALITY HERE. Eleven of the thirteen rounds introduced a
+defect worse than one they closed, and not one of those was caught by the round's
+own green tests. Round thirteen's own X5 and X6 were found by this session
+attacking its own change and by a mutant, not by the suite, which was green
+throughout. The gate is green at this tip and that is where a reader should
+start, not stop.
+
+WHAT THIS ROUND SELF-CHECKED INSTEAD, stated so a later reader knows the
+substitution was made and what it is worth. The guild-book routing is the highest
+risk change in the round, because it touches money-conservation paths: five call
+sites now share one private method whose own empty guard was deleted, and the
+equivalence rests on `revertOwnGuildBookOps` iterating the ids it is handed, so an
+empty set performs no revert, no `guildBookHolders.resync` and no `reconcile`
+counter, exactly as the deleted guard ensured. That is a code reading plus a green
+money-conservation property sweep inside the full suite. It is NOT a fresh
+reviewer, and it is NOT a mutation over that path.
+
+THE NEXT SESSION'S FIRST TASK is a fresh read of `dd4c869a2b..HEAD` by someone who
+did not write it, with the guild-book routing and the combined login port first.
+
 ## THE VALIDATION THIS VERDICT RESTS ON
 
 At tip `29b1f85307`, with `TEST_DATABASE_URL` armed from the main checkout.
