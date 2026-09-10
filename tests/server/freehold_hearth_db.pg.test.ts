@@ -154,10 +154,28 @@ d('account_freehold_hearth against real PostgreSQL', () => {
   it("runs entirely inside its private schema, never the caller's default", async () => {
     const where = await pool.query('SELECT current_schema() AS s');
     expect(where.rows[0].s).toBe(SCHEMA);
+    // SCOPED TO THIS SCHEMA, the way the plot suite beside it already is. An
+    // unfiltered catalog query asserts that NO other schema holds a table of
+    // this name, which is false on the documented recipe: TEST_DATABASE_URL is
+    // pointed at a database that already carries the game schema, so `public`
+    // holds one legitimately, and any concurrent tenant holds one too. It went
+    // red on exactly that, in a full-suite run where another suite applied the
+    // real schema first.
     const owner = await pool.query(
-      "SELECT schemaname FROM pg_tables WHERE tablename = 'account_freehold_hearth'",
+      `SELECT schemaname FROM pg_tables
+        WHERE tablename = 'account_freehold_hearth' AND schemaname = current_schema()`,
     );
     expect(owner.rows.map((r: { schemaname: string }) => r.schemaname)).toEqual([SCHEMA]);
+    // ANTI-VACUITY for the filter: the unqualified name this suite's own pool
+    // resolves must be the private one, which is the property `current_schema()`
+    // filtering could otherwise hide.
+    const resolved = await pool.query(
+      `SELECT n.nspname AS schema
+         FROM pg_class c
+         JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE c.oid = to_regclass('account_freehold_hearth')`,
+    );
+    expect(resolved.rows[0].schema).toBe(SCHEMA);
   });
 
   it('applies a third time with no error, and installs exactly one index', async () => {
