@@ -68,9 +68,22 @@ unreviewed code; its findings are folded in below rather than kept apart.
 - S8  preload's replay arm tested `hold === null` instead of `blocked()`, so a quiesced entry
       replayed a stale house as current.  FIXED in bd22f1aa78.
 - S9  load_report.ts had no production caller and the server hand-built its own details,
-      routing around the only bound on what may reach a log.  FIXED in e23d2a906e: every
-      detail comes from the reporter, and its second, uncalled log helper is deleted rather
-      than left as a way past the bound.
+      routing around the only bound on what may reach a log.  FIXED in e23d2a906e: the
+      reporter gained its production caller and its second, uncalled log helper was deleted
+      rather than left as a way past the bound.
+      THE CLOSURE OVERSTATED ITSELF, corrected here rather than quietly amended. "Every
+      detail comes from the reporter" was true of the two normalize arms of `classify` and
+      of nothing else: the oversize byte prose, the SQL reader's unadmitted detail, the
+      `wire_rev_shape` literal, the three `refuse()` details, the hearth read's detail, the
+      upsert result's detail and `freeholdWriteRefusal`'s refusal detail all reached the
+      warn and error ports built OUTSIDE the reporter and untested against its shape bound.
+      Nothing leaked, because every one of those producers is a compile-time literal, a
+      module constant or a number this process computed, but the entry in KNOWN_DETAILS
+      written for the save path had no traffic at all. CLOSED PROPERLY at the persistence
+      QA: the bound is exported as `boundedFreeholdDetail` and applied at the two sites
+      whose producer lives outside the store, the SQL reader's stranded-slot shape is named
+      in the vocabulary, and a case proves an unrecognized detail is replaced rather than
+      printed.
 - S10 `FREEHOLD_VISIT_POLICIES` duplicated the union with no compile-time link.  FIXED in
       e23d2a906e: both are derived from one list.
 - S11 a server module was a second writer of `ctx.freeholdKeyReadyAtMs`.  FIXED in e23d2a906e:
@@ -630,3 +643,93 @@ class the round existed to close. Eight of nine became nine of ten.
   an adversarial concurrent-preload case), and `runWrite`'s post-queue re-check (including
   a written attempt that failed to reach it). The orphan-sweep reset ruling was reached the
   same way, by two failed attempts to build the case.
+
+## ROUND ELEVEN: THE PAIRED QA, WHICH FOUND THE EIGHTH PATH
+
+Eleven reviewers reported (three independent readers plus migration-safety,
+database-performance, privacy-security, server-hot-path, architecture, cross-platform-sync,
+frontend-seam and test-coverage; the qa-checklist gate did not return). Two mutation passes
+ran over the store, 40 mutants and then 13, each with a no-op control that proved the tests
+executed. The eighth path was found by the correctness reader, confirmed by an adversarial
+verifier that reproduced it independently, and reproduced a THIRD time by this session's own
+probe written from scratch against `createFreeholdPersistStore`.
+
+- Q1 BLOCKING, NOT FIXED, RULING OWED. THE EIGHTH PATH. For an entry that MINTED its own
+  row, the seal's name comparison is inert BY VALUE EQUALITY: `applyWriteResult` caches the
+  identity the LIVE RECORD carried, nothing teaches a live record its minted name, so that
+  entry's cached name IS the stand-in and a reseeded default carries the same literal. The
+  two continuity arms are then the whole seal and both are revision-shaped, so a reseed
+  whose revision has CAUGHT UP satisfies neither. Measured: a row holding tier cottage, one
+  furnishing, one trophy, condition 91 and policy friends at wire revision 7 was
+  compare-and-swapped to an empty Inn Room at wire revision 8 and again at 9, `quiesced` 0,
+  `write_failures` 0, no error line, `plot_id` untouched; controls at revision 0 and 5 both
+  refused. U1's revert was reasoned entirely about entries that loaded a ROW and never
+  considered the entry U3 deliberately created. PINNED AS IT BEHAVES in two KNOWN DEFECT
+  cases plus a contrast arm proving a row-loaded entry still refuses the identical reseed.
+  The interim guard the reader proposed (judging the stand-in case by content instead of by
+  revision) was REFUTED here: it write-blocks the one live-record mutator this release ships,
+  because a `/dev` tier grant on a fresh empty account is a stand-in record with an empty
+  layout whose tier differs from the entry's, which is the Y1 failure class again. The fix
+  is the design decision C1 already owes, in the SAFE form the parity reader specified.
+- Q2 SHOULD-FIX, applied. `drainCheck` was a THIRD "owes durable work" predicate and omitted
+  the dirty clause, so the drain answered DRAINED with an entry left dirty and unblocked by
+  the null-permit arm. Split into two questions rather than unified into one: what is still
+  MOVING decides when to stop waiting, what is still UNWRITTEN decides the answer. It now
+  resolves at once and answers false.
+- Q3 SHOULD-FIX, applied. `pumpLoop` admitted a deferred entry at the NON-leaving cap in
+  insertion order, so the leave reserve bought nothing past the first two leavers and a
+  deferred leaver queued behind every background write. It now prefers a deferred entry
+  holding a capture and admits it at the leaving cap. (C6's mechanism, found by the hot-path
+  reader.)
+- Q4 SHOULD-FIX, applied. `server/game.ts`'s leave ran its three release lines outside any
+  guard while all three callers fire it with no catch, so a rejection anywhere in the
+  settlement skipped the store release, the lease release and `removePlayer` permanently.
+  The join's guard covered `addPlayer` alone while a dozen throwable calls sat between the
+  seed and `clients.set`. Both are guarded now, PAID FOR BY EXTRACTION: the leave save and
+  its retry policy and the contests a leaver forfeits moved to
+  `server/leave_character_save.ts`, the join binding to
+  `server/freehold_session_binding.ts`, and the coordinator's ceiling was LOWERED to 9916.
+- Q5 SHOULD-FIX, applied. The revision-coupling scan the write seal rests on missed every
+  mutator shape the next writer will use: an in-place row edit, an indexed write, a compound
+  assignment, unshift, sort, reverse, fill, a length truncation and `Object.assign`. Its bump
+  matcher accepted `const rev = state.rev` and `state.rev = 0`. Its walk saw `export function`
+  only and sliced bodies from the first export, so a module head was in no body. `plotId`,
+  the field the named next change writes, was not in its field list. All widened, the
+  CONSTRUCTORS exemption is now pinned rather than asserted, and `bodyOf` is keyed by
+  `file:name`. Proved by planting the natural `moveFurnishing` body: the scan goes red.
+- Q6 SHOULD-FIX, applied. `boundedDetail` was not the bound on log content: seven of nine
+  producers reached the ports without it, and the ledger recorded S9 as closed. See the
+  corrected S9 entry above.
+- Q7 SHOULD-FIX, applied. Three server predicates keyed the Hearth Key by a re-typed
+  `'hearth_key'` literal while the sim dispatches on `use.type === 'freeholdEnter'`, so a
+  second item carrying that use type would pass the dark-realm gate and the jail gate. All
+  three now use `HEARTH_KEY_ITEM_ID`.
+- Q8 SHOULD-FIX, applied. The account read measured and shipped the unadmitted second row in
+  full; the export read had neither a LIMIT nor a byte gate. Both bounded, the export widened
+  rather than copied, and proved against real PostgreSQL.
+- Q9 SHOULD-FIX, applied. Four inert or gameable pins: the dark-realm wiring pin passed with
+  the two ternary arms SWAPPED (executed against the real text); the drain cap was referenced
+  by no test at all; the four millisecond totals were asserted only as `>= 0`, which every
+  accumulation already guarantees; and the general stored-margin pin computed its wrapper
+  from the MAXIMAL record, proving a 231-byte margin where the real worst case is 55.
+- Q10 SHOULD-FIX, applied. The load-failure kinds, the login statement bound, the two gauge
+  docblocks, `writes_without_record`'s own description, the `scheduleDeadline` "ONE timer"
+  claim, preload's handover comment (which contradicted `offerCapture`'s), the stand-in
+  docblock in `state.ts`, the drain-cap block that argued from the figures it contradicts,
+  the metrics memo's 0.3 ms figure (about five times high), the `sim_context.ts` note telling
+  a persistence loader to register a retention prune the pins FORBID, and the schema
+  idempotence denylist that could not see an unguarded CREATE TABLE. All corrected.
+- Q11 NITS, applied: `preload` is async so its synchronous throw is catchable; `ensureEntry`
+  refuses an owner key and an account id that name different accounts; `installLoadedFreehold`
+  refuses an answer that names another account; every preload arm resets the orphan grace;
+  both removal paths release a retained capture and its accounting; the `persisted === null`
+  arm stops owing the write; the shadowed `live` local is renamed; the two absent revisions go
+  through their named constants; `mergeFreeholdKeyReadyAt` honors the dark-realm flag; the two
+  bare-named housing cores are registered; the by-path import exceptions are recorded in both
+  directory CLAUDE.md files; and the one en dash this branch added is gone.
+- Q12 RULINGS RE-TESTED BY MUTATION, all six still hold: `owesWork`'s three redundant clauses,
+  `runWrite`'s post-queue re-check, the mint-once guard, the orphan-sweep reset, and the
+  seal's pristine arm and its non-revision dimensions. ONE RULING BROKE: "dead while the name
+  comparison is TOTAL" rests on a premise that is false for a minted-row entry, which is Q1.
+  A seventh clause was ruled rather than pinned: `entry.durableRev !== null` is equal to
+  `entry.state !== null` by today's arithmetic, because all three writers set both together.

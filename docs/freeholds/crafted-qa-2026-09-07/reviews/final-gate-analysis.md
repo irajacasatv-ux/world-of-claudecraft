@@ -19,7 +19,7 @@ Independent revision enumeration using the shared walk's path rules:
 
 `git show` JSON comparison proves the merged weight table equals incoming 54ce808436's table exactly. The merge combined 59 additional suites; the two new guide/market suites brought the total difference to 61. The original table's ten entries absent from incoming are retired unrelated files, not missing feature measurements, so restoring the old table would be incorrect.
 
-A bounded read-only calculation through the actual `walkShardTestFiles`, `partitionForCi`, `weightForTestFile`, and `assertPartitionCompleteness` gives `{ok:true}`, eight nonempty packs of 500–502 suites, and measured worst/median ratio **1.0**. The defect is precise: insufficient measured inventory.
+A bounded read-only calculation through the actual `walkShardTestFiles`, `partitionForCi`, `weightForTestFile`, and `assertPartitionCompleteness` gives `{ok:true}`, eight nonempty packs of 500 to 502 suites, and measured worst/median ratio **1.0**. The defect is precise: insufficient measured inventory.
 
 **Repair:** keep the 94% assertion, partition strategy, balance bar, and fallback policy unchanged. Measure the currently missing population with actual green run evidence and pass those measurements through the owning `--carry-local` generator. The coordinator chose all 279 missing files rather than only the mathematical minimum 39; this preserves complete provenance for the backlog and avoids arbitrary threshold selection.
 

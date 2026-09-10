@@ -794,21 +794,33 @@ For off-box safety, sync the directory to S3 occasionally:
   on-disk size before anything was rendered) and `writes_without_record`.
   `woc_freehold_load_failures_total` splits load failures by `kind`, and read
   that split with one caveat: `unadmitted` currently carries FOUR different
-  causes, a full local admission cap, a missing background permit, a thrown
-  read, and a host with no store, alongside the genuinely row-level stranded
-  slot, so a spike there is not yet a diagnosis on its own. Separating them is a
-  named gate in docs/freeholds/persistence-rollout-contract.md section 8a. Four
-  of these are worth an alert. `writes_without_record` counts a write that reached
-  the statement with no document to send, which is the terminal state of every
-  way this store has ever lost a save; it should be flat at zero, and any
-  sustained increase means edits are being dropped silently. A rising `quiesced` means the
-  durable revision moved under this realm, which on a single-realm deployment
-  should be impossible and on a multi-realm one means two processes are writing
-  the same rows. A rising `held` means accounts whose rows this build cannot
-  read, which is the recovery contract's case. A growing `oldest_dirty_age_ms`
-  means edits are not reaching disk. Every measure on all three families is a
-  count, a byte total or a millisecond total: no account id, owner key or plot
-  id reaches any series.
+  causes, three from the store's own refusal (a full local admission cap, a
+  missing background permit and a thrown read) alongside the genuinely row-level
+  stranded slot, so a spike there is not yet a diagnosis on its own. A host with
+  no store answers the same hold kind but books no counter at all, so it never
+  reaches this series. Separating the four is a named gate in
+  docs/freeholds/persistence-rollout-contract.md section 8a. Six of these series
+  are worth an alert. `writes_without_record` counts a write that held a
+  background permit with no document to send and issued no statement at all,
+  which is the terminal state of every way this store has ever lost a save; it
+  should be flat at zero, and any sustained increase means edits are being
+  dropped silently. `quiesced` has FIVE producers and only one of them is the
+  compare-and-swap fence, so read it against `stale_writes` and `write_failures`
+  rather than alone: `stale_writes` is the fence (on a single-realm deployment
+  that should be impossible, and on a multi-realm one it means two processes are
+  writing the same rows), and the rest of `write_failures` is the write seal, the
+  writable-implies-readable refusal, and a run of thrown writes. `held` counts
+  entries under ANY recovery hold, DATA or CAPACITY: read
+  `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
+  read from a login storm that filled the admission cap. A growing `oldest_dirty_age_ms`
+  means edits are not reaching disk. `deferred_writes` and `permit_wait_ms` are
+  the two LEADING indicators of the three capacity gates section 8a carries: a
+  deferred set that does not return to zero between sweeps means the store's own
+  write admission cap is the bottleneck and entry collection is suspended while
+  it lasts, and a climbing permit wait means the shared background gate is
+  saturated, which is what turns a login into a session-long housing hold. Every
+  measure on all three families is a count, a byte total or a millisecond total:
+  no account id, owner key or plot id reaches any series.
 - `FREEHOLDS_ENABLED` defaults off, is read live as the strict '1', and
   production never enables it before the release gates in
   docs/freeholds/state.md "Tracked release and handoff gates" are signed
@@ -832,6 +844,27 @@ For off-box safety, sync the directory to S3 occasionally:
   leaves the rows intact but unmaintained and unexported, so turn the flag OFF
   before rolling back: docs/freeholds/persistence-rollout-contract.md is the
   capability and quiescence contract.
+- KEEP-FOREVER bounds the ROW COUNT, not the physical size. The plot save is a
+  compare-and-swap UPDATE that rewrites both content columns every time, so each
+  save writes a fresh TOAST chunk set and orphans the previous one until
+  autovacuum. Measured on PostgreSQL 16 against an incompressible maximal legal
+  record: 35,936 to 36,224 bytes of WAL per save in steady state, 70,200 on the
+  first save after a checkpoint, and 208 kB of TOAST relation for ONE row after
+  seven saves. An empty layout costs 88 to 208 bytes per save steady state. At
+  the thirty-second sweep that is roughly 36 kB of WAL and the same order of dead
+  TOAST per actively editing owner per sweep, on a box where PostgreSQL shares
+  four cores with the game loop. The heap update is HOT, so there is no index
+  amplification; the cost is entirely TOAST plus WAL. Watch the
+  `account_freeholds` TOAST table's autovacuum at a realistic editing rate before
+  housing is enabled for a large realm.
+- The FIRST boot after deploying a build that carries these two tables briefly
+  blocks writes to `accounts`. Creating a table with a foreign key takes
+  ShareRowExclusive on the parent, which conflicts with RowExclusive, and
+  `ensureSchema` holds it inside the boot transaction (which runs at
+  `statement_timeout` 0) until that transaction commits, after the market and
+  mail backfills. Measured: applying both fragments takes the lock; re-applying
+  when the tables already exist takes no lock on `accounts` at all, so this is a
+  one-time event at the deploy that first creates them.
 - **Community test profile**: on a disposable public test realm, set
   `PROVISION_TEST_ACCOUNTS=1` in the host `.env`, then restart the game
   container. The flag gives newly created accounts nine level-20 characters,
