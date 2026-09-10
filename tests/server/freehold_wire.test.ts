@@ -938,9 +938,18 @@ describe('the owner key: minted server-side from the session account (D15)', () 
     // failure release all need the same value; what must not change is where
     // that value comes from. A key read off a meta field a client-supplied join
     // payload could shape would let a caller claim another account's house.
-    const derive = 'const freeholdOwnerKey = freeholdOwnerKeyForAccount(accountId);';
-    expect(src.split(derive).length - 1, 'derived exactly once, from accountId').toBe(1);
+    // THE DERIVATION MOVED, not the rule. server/freehold_session_binding.ts
+    // computes it, from the join's own accountId, and hands it back so the join
+    // has exactly one value; game.ts no longer spells the deriver at all, and
+    // the leave path READS the key off the session rather than re-deriving it.
+    const binding = codeOnly(repoFile('server/freehold_session_binding.ts'));
+    expect(
+      binding.split('freeholdOwnerKeyForAccount(accountId)').length - 1,
+      'derived exactly once, from accountId',
+    ).toBe(1);
+    expect(src.split('freeholdOwnerKeyForAccount(').length - 1, 'never derived in game.ts').toBe(0);
 
+    const derive = 'const freeholdOwnerKey = bindFreeholdOnJoin(';
     const joinBody = methodBody(src, '  join(');
     const derived = joinBody.indexOf(derive);
     const call = joinBody.indexOf('this.sim.addPlayer(');
@@ -952,16 +961,27 @@ describe('the owner key: minted server-side from the session account (D15)', () 
       'freeholdOwnerKey,',
     );
     expect(src.replace(/\s+/g, ' ')).toContain(
-      "import { dispatchFreeholdCommand, freeholdOwnerKeyForAccount, refusedFreeholdCommand, refusedJailedTravelCommand, } from './freehold_wire';",
+      "import { dispatchFreeholdCommand, refusedFreeholdCommand, refusedJailedTravelCommand, } from './freehold_wire';",
     );
     // NO OTHER SPELLING of the stamp: a second, differently keyed one would let
     // two call sites disagree about who owns the plot. The only other use of
     // the deriver in this file is the leave path, which keys on the SESSION's
     // account rather than a join parameter, and is named here so it cannot be
     // mistaken for a second stamp.
-    expect(src.split('freeholdOwnerKey:').length - 1, 'no property-form stamp').toBe(0);
-    expect(src.split('freeholdOwnerKeyForAccount(').length - 1, 'two call sites only').toBe(2);
-    expect(src).toContain('freeholdOwnerKeyForAccount(session.accountId)');
+    // The ONE property-form use is the session field the join stamps and the
+    // leave path reads back, which is the SAME value rather than a second stamp:
+    // it is assigned by shorthand from the one local above.
+    expect(src.split('freeholdOwnerKey:').length - 1, 'one property-form use').toBe(1);
+    expect(src).toContain('readonly freeholdOwnerKey: string;');
+    expect(src).toContain('const freeholdOwnerKey = session.freeholdOwnerKey;');
+    // ZERO in the coordinator now: the deriver lives in the binding module and
+    // the leave path reads the key the join stamped.
+    expect(src.split('freeholdOwnerKeyForAccount(').length - 1, 'no call sites here').toBe(0);
+    expect(
+      binding.split('freeholdOwnerKeyForAccount(').length - 1,
+      'one call site, in the binding',
+    ).toBe(1);
+    expect(src).toContain('const freeholdOwnerKey = session.freeholdOwnerKey;');
   });
 
   it('the stamped key is the session account, observed live: one account, two characters, one key', () => {

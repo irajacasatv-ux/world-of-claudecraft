@@ -29,6 +29,13 @@
 // field on the wire is ignored, and the sim resolves the owner from the
 // stamped meta alone.
 
+// BY PATH, and for the same reason server/freehold_persist.ts reaches its
+// leaves that way: the server needs one constant, not the directory's whole
+// public surface. The id is shared rather than re-typed because the SERVER gates
+// on the item id while the SIM dispatches on `use.type === 'freeholdEnter'`, so
+// a second item carrying that use type would slip past a re-typed literal in the
+// dark-realm gate and the jail gate alike.
+import { HEARTH_KEY_ITEM_ID } from '../src/sim/freehold/gate_rules';
 import type { FreeholdVisitPolicy } from '../src/sim/freehold/types';
 import type { Sim } from '../src/sim/sim';
 import type { CommandName } from '../src/world_api';
@@ -67,7 +74,7 @@ export function refusedFreeholdCommand(frame: unknown, env?: NodeJS.ProcessEnv):
   const cmd = msg ? msg.cmd : frame;
   return (
     typeof cmd === 'string' &&
-    (FREEHOLD_CMD_SET.has(cmd) || (cmd === 'use' && msg?.item === 'hearth_key')) &&
+    (FREEHOLD_CMD_SET.has(cmd) || (cmd === 'use' && msg?.item === HEARTH_KEY_ITEM_ID)) &&
     !freeholdsEnabled(env ?? process.env)
   );
 }
@@ -91,7 +98,7 @@ const JAILED_BLOCKED_COMMANDS = new Set<string>([
 export function refusedJailedTravelCommand(msg: Record<string, unknown>): boolean {
   return (
     typeof msg.cmd === 'string' &&
-    (JAILED_BLOCKED_COMMANDS.has(msg.cmd) || (msg.cmd === 'use' && msg.item === 'hearth_key'))
+    (JAILED_BLOCKED_COMMANDS.has(msg.cmd) || (msg.cmd === 'use' && msg.item === HEARTH_KEY_ITEM_ID))
   );
 }
 

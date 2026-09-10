@@ -19,6 +19,7 @@ import { MECH_CHROMAS } from '../src/sim/content/skins';
 import { DELVES, DUNGEON_X_THRESHOLD, ITEMS, isBgPos, MOBS, zoneAt } from '../src/sim/data';
 import { devTierIndexForMergedPrs } from '../src/sim/dev_tier';
 import { parseRelayCommand } from '../src/sim/discord_relay';
+import { HEARTH_KEY_ITEM_ID } from '../src/sim/freehold/gate_rules';
 import type { GuildBankOpDelta } from '../src/sim/guild_bank';
 import { parseItemCopyAnchor } from '../src/sim/item_copy_anchor';
 import { itemInstancePayloadsEqual } from '../src/sim/item_instance_merge';
@@ -250,8 +251,12 @@ import {
   registerFreeholdPersistStore,
 } from './freehold_persist';
 import {
+  bindFreeholdOnJoin,
+  flushFreeholdBinding,
+  releaseFreeholdBinding,
+} from './freehold_session_binding';
+import {
   dispatchFreeholdCommand,
-  freeholdOwnerKeyForAccount,
   refusedFreeholdCommand,
   refusedJailedTravelCommand,
 } from './freehold_wire';
@@ -324,6 +329,7 @@ import {
 import { IpBlockList } from './ip_block';
 import { loadActiveBlockedIps } from './ip_block_db';
 import { keepaliveSweepDelayed, shouldReapSession, WS_KEEPALIVE_PING_MS } from './keepalive_sweep';
+import { resolveLeavingContests, saveLeavingCharacter } from './leave_character_save';
 import { LINKDEAD_GRACE_MS, planJoin } from './linkdead';
 import {
   consumeListReadToken,
@@ -494,9 +500,6 @@ const SAVE_CONCURRENCY = 4;
 // Valid lockpicking action enums accepted from the client (anti-cheat: reject
 // anything else before it reaches the Sim).
 const LOCKPICK_ACTIONS = new Set<PickAction>(['hardSet', 'set', 'steady', 'ease', 'drop', 'abort']);
-const LEAVE_SAVE_MAX_ATTEMPTS = 5;
-const LEAVE_SAVE_RETRY_BASE_MS = 250;
-const LEAVE_SAVE_RETRY_MAX_MS = 4000;
 // Queue depth past which the shared market serial writer warns (rate-limited
 // to once a minute): the observable form of the accepted dirty-book-autosave
 // coupling documented at the writer's declaration.
@@ -780,6 +783,9 @@ const DAILY_REWARD_ACTIVITY_MS = 60_000;
 const RELAY_COOLDOWN_MS = 8_000; // min gap between a player's "!" community posts
 
 export interface ClientSession extends MovementInputSessionState, HotbarLayoutState {
+  /** The housing store key this session retained at join, computed ONCE: a
+   *  teardown-time re-derivation puts its throw above both releases. */
+  readonly freeholdOwnerKey: string;
   ws: WebSocket;
   accountId: number;
   accountCosmetics: AccountCosmetics;
@@ -3196,14 +3202,13 @@ export class GameServer {
     for (const s of linkdeadOthers) {
       void this.leave(s, 'replaced by a new character login');
     }
-    // The durable record goes in through the ONE load path BEFORE addPlayer's
-    // seed: loadFreehold and ensureFreeholdRecord are both load-once, so a load
-    // after the seed is a silent no-op that discards the owner's real plot. The
-    // retain is synchronous here so a same-account character swap (the
-    // fire-and-forget leave above) cannot drop the entry under the new session.
-    const freeholdOwnerKey = freeholdOwnerKeyForAccount(accountId);
-    installLoadedFreehold(this.sim.ctx, accountId, meta.freehold);
-    this.freeholdPersist.retain(freeholdOwnerKey, accountId);
+    // Install, then retain; the order and its reasons are in the binding module.
+    const freeholdOwnerKey = bindFreeholdOnJoin(
+      this.freeholdPersist,
+      this.sim.ctx,
+      accountId,
+      meta.freehold,
+    );
     let pid: number;
     try {
       pid = this.sim.addPlayer(cls, name, {
@@ -3219,209 +3224,225 @@ export class GameServer {
       // throw here means there is no session to leave, so the reference would
       // be held for the life of the process and the entry could never be
       // collected. Release it and let the failure propagate unchanged.
-      void this.freeholdPersist.flushAndRelease(freeholdOwnerKey);
+      releaseFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
       throw err;
     }
-    const player = this.sim.entities.get(pid);
-    if (player) {
-      player.petSpecialCommandsSupported = meta.petSpecialWireVersion === PET_SPECIAL_WIRE_VERSION;
-    }
-    if (meta.petSpecialWireVersion !== PET_SPECIAL_WIRE_VERSION) {
-      for (const entity of this.sim.entities.values()) {
-        if (entity.ownerId === pid) entity.petAutoSkill = false;
-      }
-    }
-    if (isGm) {
-      // GM characters: invulnerable, and always at the level cap (the row is
-      // created without state, so the first join levels them up)
-      this.sim.setGm(pid);
-      const e = this.sim.entities.get(pid);
-      if (e && e.level < 20) this.sim.setPlayerLevel(20, pid);
-    }
-    // PBE only (PBE_BOOST_ACCOUNTS=1): top the character up to the current
-    // boost kit once per BOOST_KIT_VERSION (true-BiS gear for every spec, BiS
-    // bags, riding, attunement), so a roster created before the boost existed,
-    // or before a kit revision, re-kits at its next login. The stamp rides the
-    // character state and persists through the normal save path. Never
-    // allowed to fail the join.
-    if (pbeBoostEnabled()) {
-      try {
-        if (applyBoostKitToPlayer(this.sim, pid)) {
-          console.log(`pbe boost kit topped up: ${name} (character ${characterId})`);
-        }
-      } catch (err) {
-        console.error('pbe boost kit top-up failed:', err);
-      }
-    }
-    const accountCosmetics = reconcileWornMechChromaForJoin({
-      accountCosmetics: meta.accountCosmetics ?? EMPTY_ACCOUNT_COSMETICS,
-      catalog: player?.skinCatalog,
-      skin: player?.skin ?? 0,
-      remember: (cosmetics) => this.cosmetics.remember(accountId, cosmetics),
-      grant: (chromaId) => grantAccountMechChroma(accountId, chromaId),
-      updateLive: (cosmetics) => this.cosmetics.updateLive(accountId, cosmetics),
-    });
-    this.cosmetics.applyQuestLockouts(pid, accountCosmetics);
-    // Seed the account-wide weapon-skin loadout onto the fresh sim entity so the
-    // applied skin shows from the first snapshot (owned skins only).
-    this.sim.setWeaponSkinLoadout(pid, ownedWeaponSkinLoadout(accountCosmetics));
-    // The worn mount skin rides the character save, ownership rides the
-    // account: a saved skin the account does not own comes off here (never
-    // healed into ownership; server/mount_skin_reconcile.ts).
-    if (!wornMountSkinAllowed(accountCosmetics, this.sim.meta(pid)?.mountSkinId)) {
-      this.sim.setMountSkin(pid, null);
-    }
-    const sessionIp = meta.ip ?? '';
-    const initialLevel = this.sim.entities.get(pid)?.level ?? state?.level ?? 1;
-    const botTrackingContext = this.botDetector.createTrackingContext(
-      { accountId, characterId, name, ip: sessionIp },
-      meta,
-    );
+    // THE WHOLE WINDOW, not addPlayer alone: a throw anywhere before
+    // `clients.set` leaks the reference (see the binding module). Hoisted.
     let session!: ClientSession;
-    const bankLedgerJournal = createBankLedgerSessionJournal(
-      { realm: REALM, characterId, accountId },
-      {
-        onProjectionFailure: (error, surface) =>
-          this.quarantineBankLedgerProjection(session, error, surface),
-        onReservationFailure: (error) =>
-          console.error(
-            `bank ledger reservation failed for character ${characterId} (${name}):`,
-            error,
-          ),
-        onHighWater: () => this.scheduleBankLedgerHighWaterSave(session),
-      },
-    );
-    const bankVaultLedgerGuard = this.bankVaultLedgerGuardCoordinator.createRuntime(
-      accountId,
-      bankLedgerJournal.admission,
-      (_reason, refusedAtSec) => {
-        gameMetricsCounters().wsMessageDropped('bank_vault');
-        if (tallyDrop(session.msgRate, refusedAtSec) === 'kick') {
-          gameMetricsCounters().wsRateKick();
-          void this.kickSession(session, MSG_RATE_KICK_REASON, 'message flood');
+    let initialLevel = 1;
+    let joined = false;
+    try {
+      const player = this.sim.entities.get(pid);
+      if (player) {
+        player.petSpecialCommandsSupported =
+          meta.petSpecialWireVersion === PET_SPECIAL_WIRE_VERSION;
+      }
+      if (meta.petSpecialWireVersion !== PET_SPECIAL_WIRE_VERSION) {
+        for (const entity of this.sim.entities.values()) {
+          if (entity.ownerId === pid) entity.petAutoSkill = false;
         }
-      },
-    );
-    session = {
-      ws,
-      accountId,
-      accountCosmetics,
-      // Loaded right below by refreshAccountFlair; an account with no flair (every
-      // ordinary player) keeps these empty values and never touches the wire.
-      accountFlair: EMPTY_ACCOUNT_FLAIR,
-      chatFlair: undefined,
-      // Latched by the join restore / a live apply, never seeded true here: the
-      // account row has not been read yet at this point.
-      cheaterMarked: false,
-      characterId,
-      pid,
-      name,
-      lastSave: Date.now(),
-      alive: true,
-      joinedAt: Date.now(),
-      dbSessionId: null,
-      metricsMaxLevel: initialLevel,
-      // The PERSISTED level, not initialLevel: a GM or PBE join-time level raise has
-      // already moved the entity but not the row, so seeding from the loaded blob
-      // lets the first save report that move to the change feed.
-      lastPersistedLevel: state?.level ?? 1,
-      left: false,
-      linkdead: false,
-      graceUntil: 0,
-      awaitingPong: false,
-      chatTokens: CHAT_RATE_BURST,
-      chatLastRefill: Date.now() / 1000,
-      chatLastRateError: 0,
-      chatRateViolations: 0,
-      chatCooldownUntil: 0,
-      chatChannelSequence: 0,
-      generalChatRateLimit: meta.generalChatRateLimit ?? null,
-      msgRate: createMsgRateBucket(Date.now() / 1000),
-      msgLanes: createMsgLanes(Date.now() / 1000),
-      listReadGuard: createListReadGuard(Date.now() / 1000),
-      guildBankOpGuard: createGuildBankOpGuard(Date.now() / 1000),
-      guildBankLogReadGuard: createGuildBankLogReadGuard(Date.now() / 1000),
-      cosmeticOpGuard: createCosmeticOpGuard(Date.now() / 1000),
-      chatMutedUntil: meta.mutedUntil ? new Date(meta.mutedUntil).getTime() : null,
-      chatMuteReason: meta.reason ?? '',
-      chatStrikes: meta.chatStrikes ?? 0,
-      blockedIds: new Set(),
-      blockListLoaded: false,
-      guildStampSeq: 0,
-      dirtyGuildBanks: new Map(),
-      pendingStorageAppliedEffects: [],
-      bankLedgerJournal,
-      bankVaultLedgerGuard,
-      bankLedgerSaveScheduled: false,
-      unflushedGuildBankOps: new Map(),
-      guildBankDeficitSkips: new Map(),
-      guildBookFlushInFlight: false,
-      guildBookFlushRearm: false,
-      escrowQuarantined: false,
-      inFlightGuildBankOps: new Map(),
-      ignoredIds: new Set(),
-      lastWhisperFrom: null,
-      rememberedChat: { channel: 'say' },
-      lastInputSeq: 0,
-      dungeonEntryFacing: entryFacing.forEntity(player, meta.dungeonEntryFacingWireVersion),
-      lastInputAt: this.sim.time,
-      ...createMovementInputSessionState(meta.movementWireVersion),
-      lastSent: {},
-      needsVarkhulPortalReplay: false,
-      timerWireVersion:
-        meta.timerWireVersion === STABLE_TIMER_WIRE_VERSION ? STABLE_TIMER_WIRE_VERSION : 1,
-      petSpecialWireVersion:
-        meta.petSpecialWireVersion === PET_SPECIAL_WIRE_VERSION ? PET_SPECIAL_WIRE_VERSION : 0,
-      timerWireCache: new StableSelfTimerWireCache(),
-      lastArenaWireTick: -ARENA_WIRE_INTERVAL_TICKS,
-      lastBgWireTick: -BG_WIRE_INTERVAL_TICKS,
-      lastDfWireTick: -DF_WIRE_INTERVAL_TICKS,
-      lastMarketWireTick: -MARKET_WIRE_INTERVAL_TICKS,
-      lastMarketBrowseRev: null,
-      lastMarketQueryRef: null,
-      lastSellPriceItemIdRef: null,
-      lastMarketRebuildTick: 0,
-      lastCorderWireTick: -CORDER_WIRE_INTERVAL_TICKS,
-      lastCorderBoardRev: null,
-      lastCorderRebuildTick: 0,
-      lastMailWireTick: -MAIL_WIRE_INTERVAL_TICKS,
-      lastMailRev: null,
-      lastMailRebuildTick: 0,
-      lastBankWirePid: null,
-      lastBankWireRev: null,
-      lastBankWirePrice: null,
-      lastVaultWirePid: null,
-      lastVaultWireRev: null,
-      lastCvaultWirePid: null,
-      lastCvaultWireRev: null,
-      lastCvaultWireBlocked: null,
-      selfHeavyDirty: true,
-      lastWireRev: -1,
-      sentEnts: new Map(),
-      ip: sessionIp,
-      userAgent: meta.userAgent ?? '',
-      fbp: meta.fbp ?? '',
-      fbc: meta.fbc ?? '',
-      sourceUrl: meta.sourceUrl ?? '',
-      isAdmin: meta.isAdmin ?? false,
-      // Permissions come only from the explicit set main.ts computes from the
-      // account's roles; no is_admin fallback (fail closed, matching
-      // staff_db.effectiveAdminRoles). A staff member with zero permissions has
-      // no in-game moderation commands.
-      adminPermissions: new Set(meta.adminPermissions ?? []),
-      clientSeed: meta.clientSeed ?? '',
-      leaseNonce: meta.leaseNonce,
-      botTrackingContext,
-      pendingDeedRecords: [],
-      spectating: null,
-      jailed: state?.jail ?? null,
-      jailVisit: null,
-      // Re-validate the stored layout (untrusted at rest) before it can wire out.
-      ...hotbarLayoutState(meta.hotbarLayout, this.hotbarLayouts.pending(characterId)),
-    };
-    if (session.jailed) this.teleportJailedSession(session);
-    this.ipSessionCounts.set(sessionIp, (this.ipSessionCounts.get(sessionIp) ?? 0) + 1);
-    this.clients.set(pid, session);
+      }
+      if (isGm) {
+        // GM characters: invulnerable, and always at the level cap (the row is
+        // created without state, so the first join levels them up)
+        this.sim.setGm(pid);
+        const e = this.sim.entities.get(pid);
+        if (e && e.level < 20) this.sim.setPlayerLevel(20, pid);
+      }
+      // PBE only (PBE_BOOST_ACCOUNTS=1): top the character up to the current
+      // boost kit once per BOOST_KIT_VERSION (true-BiS gear for every spec, BiS
+      // bags, riding, attunement), so a roster created before the boost existed,
+      // or before a kit revision, re-kits at its next login. The stamp rides the
+      // character state and persists through the normal save path. Never
+      // allowed to fail the join.
+      if (pbeBoostEnabled()) {
+        try {
+          if (applyBoostKitToPlayer(this.sim, pid)) {
+            console.log(`pbe boost kit topped up: ${name} (character ${characterId})`);
+          }
+        } catch (err) {
+          console.error('pbe boost kit top-up failed:', err);
+        }
+      }
+      const accountCosmetics = reconcileWornMechChromaForJoin({
+        accountCosmetics: meta.accountCosmetics ?? EMPTY_ACCOUNT_COSMETICS,
+        catalog: player?.skinCatalog,
+        skin: player?.skin ?? 0,
+        remember: (cosmetics) => this.cosmetics.remember(accountId, cosmetics),
+        grant: (chromaId) => grantAccountMechChroma(accountId, chromaId),
+        updateLive: (cosmetics) => this.cosmetics.updateLive(accountId, cosmetics),
+      });
+      this.cosmetics.applyQuestLockouts(pid, accountCosmetics);
+      // Seed the account-wide weapon-skin loadout onto the fresh sim entity so the
+      // applied skin shows from the first snapshot (owned skins only).
+      this.sim.setWeaponSkinLoadout(pid, ownedWeaponSkinLoadout(accountCosmetics));
+      // The worn mount skin rides the character save, ownership rides the
+      // account: a saved skin the account does not own comes off here (never
+      // healed into ownership; server/mount_skin_reconcile.ts).
+      if (!wornMountSkinAllowed(accountCosmetics, this.sim.meta(pid)?.mountSkinId)) {
+        this.sim.setMountSkin(pid, null);
+      }
+      const sessionIp = meta.ip ?? '';
+      initialLevel = this.sim.entities.get(pid)?.level ?? state?.level ?? 1;
+      const botTrackingContext = this.botDetector.createTrackingContext(
+        { accountId, characterId, name, ip: sessionIp },
+        meta,
+      );
+      const bankLedgerJournal = createBankLedgerSessionJournal(
+        { realm: REALM, characterId, accountId },
+        {
+          onProjectionFailure: (error, surface) =>
+            this.quarantineBankLedgerProjection(session, error, surface),
+          onReservationFailure: (error) =>
+            console.error(
+              `bank ledger reservation failed for character ${characterId} (${name}):`,
+              error,
+            ),
+          onHighWater: () => this.scheduleBankLedgerHighWaterSave(session),
+        },
+      );
+      const bankVaultLedgerGuard = this.bankVaultLedgerGuardCoordinator.createRuntime(
+        accountId,
+        bankLedgerJournal.admission,
+        (_reason, refusedAtSec) => {
+          gameMetricsCounters().wsMessageDropped('bank_vault');
+          if (tallyDrop(session.msgRate, refusedAtSec) === 'kick') {
+            gameMetricsCounters().wsRateKick();
+            void this.kickSession(session, MSG_RATE_KICK_REASON, 'message flood');
+          }
+        },
+      );
+      session = {
+        freeholdOwnerKey,
+        ws,
+        accountId,
+        accountCosmetics,
+        // Loaded right below by refreshAccountFlair; an account with no flair (every
+        // ordinary player) keeps these empty values and never touches the wire.
+        accountFlair: EMPTY_ACCOUNT_FLAIR,
+        chatFlair: undefined,
+        // Latched by the join restore / a live apply, never seeded true here: the
+        // account row has not been read yet at this point.
+        cheaterMarked: false,
+        characterId,
+        pid,
+        name,
+        lastSave: Date.now(),
+        alive: true,
+        joinedAt: Date.now(),
+        dbSessionId: null,
+        metricsMaxLevel: initialLevel,
+        // The PERSISTED level, not initialLevel: a GM or PBE join-time level raise has
+        // already moved the entity but not the row, so seeding from the loaded blob
+        // lets the first save report that move to the change feed.
+        lastPersistedLevel: state?.level ?? 1,
+        left: false,
+        linkdead: false,
+        graceUntil: 0,
+        awaitingPong: false,
+        chatTokens: CHAT_RATE_BURST,
+        chatLastRefill: Date.now() / 1000,
+        chatLastRateError: 0,
+        chatRateViolations: 0,
+        chatCooldownUntil: 0,
+        chatChannelSequence: 0,
+        generalChatRateLimit: meta.generalChatRateLimit ?? null,
+        msgRate: createMsgRateBucket(Date.now() / 1000),
+        msgLanes: createMsgLanes(Date.now() / 1000),
+        listReadGuard: createListReadGuard(Date.now() / 1000),
+        guildBankOpGuard: createGuildBankOpGuard(Date.now() / 1000),
+        guildBankLogReadGuard: createGuildBankLogReadGuard(Date.now() / 1000),
+        cosmeticOpGuard: createCosmeticOpGuard(Date.now() / 1000),
+        chatMutedUntil: meta.mutedUntil ? new Date(meta.mutedUntil).getTime() : null,
+        chatMuteReason: meta.reason ?? '',
+        chatStrikes: meta.chatStrikes ?? 0,
+        blockedIds: new Set(),
+        blockListLoaded: false,
+        guildStampSeq: 0,
+        dirtyGuildBanks: new Map(),
+        pendingStorageAppliedEffects: [],
+        bankLedgerJournal,
+        bankVaultLedgerGuard,
+        bankLedgerSaveScheduled: false,
+        unflushedGuildBankOps: new Map(),
+        guildBankDeficitSkips: new Map(),
+        guildBookFlushInFlight: false,
+        guildBookFlushRearm: false,
+        escrowQuarantined: false,
+        inFlightGuildBankOps: new Map(),
+        ignoredIds: new Set(),
+        lastWhisperFrom: null,
+        rememberedChat: { channel: 'say' },
+        lastInputSeq: 0,
+        dungeonEntryFacing: entryFacing.forEntity(player, meta.dungeonEntryFacingWireVersion),
+        lastInputAt: this.sim.time,
+        ...createMovementInputSessionState(meta.movementWireVersion),
+        lastSent: {},
+        needsVarkhulPortalReplay: false,
+        timerWireVersion:
+          meta.timerWireVersion === STABLE_TIMER_WIRE_VERSION ? STABLE_TIMER_WIRE_VERSION : 1,
+        petSpecialWireVersion:
+          meta.petSpecialWireVersion === PET_SPECIAL_WIRE_VERSION ? PET_SPECIAL_WIRE_VERSION : 0,
+        timerWireCache: new StableSelfTimerWireCache(),
+        lastArenaWireTick: -ARENA_WIRE_INTERVAL_TICKS,
+        lastBgWireTick: -BG_WIRE_INTERVAL_TICKS,
+        lastDfWireTick: -DF_WIRE_INTERVAL_TICKS,
+        lastMarketWireTick: -MARKET_WIRE_INTERVAL_TICKS,
+        lastMarketBrowseRev: null,
+        lastMarketQueryRef: null,
+        lastSellPriceItemIdRef: null,
+        lastMarketRebuildTick: 0,
+        lastCorderWireTick: -CORDER_WIRE_INTERVAL_TICKS,
+        lastCorderBoardRev: null,
+        lastCorderRebuildTick: 0,
+        lastMailWireTick: -MAIL_WIRE_INTERVAL_TICKS,
+        lastMailRev: null,
+        lastMailRebuildTick: 0,
+        lastBankWirePid: null,
+        lastBankWireRev: null,
+        lastBankWirePrice: null,
+        lastVaultWirePid: null,
+        lastVaultWireRev: null,
+        lastCvaultWirePid: null,
+        lastCvaultWireRev: null,
+        lastCvaultWireBlocked: null,
+        selfHeavyDirty: true,
+        lastWireRev: -1,
+        sentEnts: new Map(),
+        ip: sessionIp,
+        userAgent: meta.userAgent ?? '',
+        fbp: meta.fbp ?? '',
+        fbc: meta.fbc ?? '',
+        sourceUrl: meta.sourceUrl ?? '',
+        isAdmin: meta.isAdmin ?? false,
+        // Permissions come only from the explicit set main.ts computes from the
+        // account's roles; no is_admin fallback (fail closed, matching
+        // staff_db.effectiveAdminRoles). A staff member with zero permissions has
+        // no in-game moderation commands.
+        adminPermissions: new Set(meta.adminPermissions ?? []),
+        clientSeed: meta.clientSeed ?? '',
+        leaseNonce: meta.leaseNonce,
+        botTrackingContext,
+        pendingDeedRecords: [],
+        spectating: null,
+        jailed: state?.jail ?? null,
+        jailVisit: null,
+        // Re-validate the stored layout (untrusted at rest) before it can wire out.
+        ...hotbarLayoutState(meta.hotbarLayout, this.hotbarLayouts.pending(characterId)),
+      };
+      if (session.jailed) this.teleportJailedSession(session);
+      this.ipSessionCounts.set(sessionIp, (this.ipSessionCounts.get(sessionIp) ?? 0) + 1);
+      this.clients.set(pid, session);
+      joined = true; // From here a leave can run and owns the release.
+    } finally {
+      // Nothing else pairs the retain or evicts the seeded record. removePlayer
+      // is idempotent and reaches releaseFreeholdOnLeave.
+      if (!joined) {
+        releaseFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
+        this.sim.removePlayer(pid);
+      }
+    }
     this.sessionsByCharacterId.set(characterId, session);
     this.peakOnline = Math.max(this.peakOnline, this.clients.size);
     void this.recordOnlineSnapshot();
@@ -3759,6 +3780,50 @@ export class GameServer {
 
   async leave(session: ClientSession, _reason: string): Promise<void> {
     if (session.left || !this.clients.has(session.pid)) return;
+    // Read, never re-derived: a derivation here throws above both releases.
+    const freeholdOwnerKey = session.freeholdOwnerKey;
+    try {
+      await this.settleLeavingSession(session);
+    } finally {
+      // ON EVERY EXIT, INCLUDING A THROW: all three callers fire leave() with no
+      // catch, so a rejection above used to skip these three lines forever.
+      await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
+      // Release the per-character load lease so a fresh login (here or on another
+      // process) can reload the character without waiting out the TTL. Order
+      // matters: only after the leave save has awaited above, so the lease
+      // outlives the atomic leave-flush. Awaiting it (unlike the fire-and-forget
+      // closePlaySession) makes the sequential takeover path prompt: takeOverCharacter
+      // awaits leave(), so this DELETE lands before the client's rejoin re-acquires.
+      // The grace-expiry sweep instead calls leave() fire-and-forget, so a reconnect
+      // CAN interleave; the NONCE fence covers that, the reconnect's acquire re-stamps
+      // the row with a new nonce and this DELETE, carrying the session's own (now
+      // stale) nonce, matches nothing, so it never eats the live session's re-acquired
+      // lease. The fence only sees fresh acquires, so planJoin refuses to RESUME a
+      // session whose left flag is already set (the resume arm never re-acquires);
+      // the refused client retries into the fresh-acquire arm once this teardown
+      // finishes. The holder guard keeps a cross-process reclaim untouched; an
+      // unreleased lease self-expires after a crash.
+      await releaseCharacterLease(session.characterId, session.leaseNonce).catch((err) =>
+        console.error('lease release failed:', err),
+      );
+      this.sim.removePlayer(session.pid);
+    }
+    // Departures are no longer broadcast to the realm: the leaving player has
+    // already disconnected, so there is no one to show their own notice to.
+  }
+
+  /** Undo the guild-book work this session owns, when it has one. Two callers
+   *  on the leave path: the exhausted-retry arm of the save, and the teardown
+   *  after it. */
+  private reconcileOwnGuildBooks(session: ClientSession): void {
+    if (session.dirtyGuildBanks.size > 0) {
+      this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
+    }
+  }
+
+  /** Everything a leaving session settles BEFORE its resources are released,
+   *  so leave() can run its three release lines in a `finally`. */
+  private async settleLeavingSession(session: ClientSession): Promise<void> {
     if (session.spectating) this.exitSpectate(session, false);
     if (session.jailVisit) this.exitJailVisit(session, false);
     this.cancelAndRecordUnstuck(session);
@@ -3784,22 +3849,7 @@ export class GameServer {
         console.error('failed to close play session:', err),
       );
     }
-    // Arena forfeit accounting also resolves before persistence. This keeps the
-    // remaining player's win/honor durable if both combatants disconnect close
-    // together; removePlayer repeats the idempotent cleanup after the save.
-    this.sim.arenaResolveDesertion(session.pid);
-    // Card Duel: drop the queue slot and forfeit any live match on disconnect,
-    // same idempotent-before-persistence shape as the two lines above.
-    this.sim.leaveCardMinigameEntirely(session.pid);
-    // Thornhollow Fields desertion also resolves before the leave save so the leaver's
-    // recorded loss and rating delta are in the persisted state (idempotent;
-    // removePlayer repeats it harmlessly).
-    this.sim.bgResolveDesertion(session.pid);
-    // Freeze reward eligibility and reconcile pending loot before the leave
-    // snapshot. saveCharacterOnLeave awaits the database; without this
-    // synchronous prefix, a roll or boss death can mutate the character after
-    // serialization and removePlayer then discards that unsaved reward.
-    this.sim.preparePlayerLeave(session.pid);
+    resolveLeavingContests(this.sim, session.pid);
     // A guild-create settlement may own an atomic post-charge transaction.
     // Cancel it only while it is still queued and uncharged; once started,
     // durability must reach a real commit/rollback/ambiguity verdict.
@@ -3807,79 +3857,22 @@ export class GameServer {
     // Let its commit/refund/ambiguity arm finish before the final snapshot;
     // otherwise teardown could race the durable guild and fee verdict.
     await session.guildCreateSettlement;
-    await this.saveCharacterOnLeave(session);
+    // The final character AND Market save, retried (leave_character_save.ts).
+    await saveLeavingCharacter({
+      name: session.name,
+      save: () => this.saveCharacter(session, { withMarket: true, final: true }),
+      reconcileGuildBooks: () => this.reconcileOwnGuildBooks(session),
+      delay,
+      error: (message, err) => console.error(message, err),
+    });
     // Whatever book work this session still holds can never commit now: it has
-    // no save left. Undo the part whose character half never landed, and
-    // record the part whose character half did (an escrow deficit that ran out
-    // of saves to retry on). The exhausted-retry arm inside saveCharacterOnLeave
-    // already cleared its own marks, so this is a no-op there.
-    if (session.dirtyGuildBanks.size > 0) {
-      this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
-    }
+    // no save left. saveLeavingCharacter's exhausted-retry arm already cleared
+    // its own marks, so this is a no-op there.
+    this.reconcileOwnGuildBooks(session);
     session.bankLedgerJournal.outbox.discard();
     this.sessionsByCharacterId.delete(session.characterId);
     this.guildBookHolders.dropSession(session);
     storageRecovery.offline(session.characterId);
-    // Flush this account's plot while the record is still live: removePlayer
-    // below evicts it once the last session sharing the owner key leaves, and
-    // serializeFreehold then answers null. Before the lease release for the
-    // same reason the lease sits below the character flush.
-    await this.freeholdPersist.flushAndRelease(freeholdOwnerKeyForAccount(session.accountId));
-    // Release the per-character load lease so a fresh login (here or on another
-    // process) can reload the character without waiting out the TTL. Order
-    // matters: only after saveCharacterOnLeave has awaited above, so the lease
-    // outlives the atomic leave-flush. Awaiting it (unlike the fire-and-forget
-    // closePlaySession) makes the sequential takeover path prompt: takeOverCharacter
-    // awaits leave(), so this DELETE lands before the client's rejoin re-acquires.
-    // The grace-expiry sweep instead calls leave() fire-and-forget, so a reconnect
-    // CAN interleave; the NONCE fence covers that, the reconnect's acquire re-stamps
-    // the row with a new nonce and this DELETE, carrying the session's own (now
-    // stale) nonce, matches nothing, so it never eats the live session's re-acquired
-    // lease. The fence only sees fresh acquires, so planJoin refuses to RESUME a
-    // session whose left flag is already set (the resume arm never re-acquires);
-    // the refused client retries into the fresh-acquire arm once this teardown
-    // finishes. The holder guard keeps a cross-process reclaim untouched; an
-    // unreleased lease self-expires after a crash.
-    await releaseCharacterLease(session.characterId, session.leaseNonce).catch((err) =>
-      console.error('lease release failed:', err),
-    );
-    this.sim.removePlayer(session.pid);
-    // Departures are no longer broadcast to the realm — the leaving player has
-    // already disconnected, so there is no one to show their own notice to.
-  }
-
-  private async saveCharacterOnLeave(session: ClientSession): Promise<void> {
-    for (let attempt = 1; attempt <= LEAVE_SAVE_MAX_ATTEMPTS; attempt++) {
-      try {
-        // Flush the character AND the World Market together: a Market escrow
-        // straddles both (item out of bags, into a listing), and the autosave
-        // timer only persists the market every 30s. Without this, a crash right
-        // after the leave-flush of bags would tear the escrow in half (item lost
-        // or duplicated). saveCharacter(withMarket) writes both in one transaction.
-        await this.saveCharacter(session, { withMarket: true, final: true });
-        return;
-      } catch (err) {
-        if (attempt === LEAVE_SAVE_MAX_ATTEMPTS) {
-          console.error(`save on leave failed after ${attempt} attempts for ${session.name}:`, err);
-          // This session will never save again, so any guild books it
-          // dirtied are permanently unflushable: the live book is ahead of
-          // durable truth with no session left to converge it, and the
-          // disband guard (which scans session marks) loses sight of it the
-          // moment this session tears down. Reconcile now, exactly like the
-          // fence-out arm (Guild Bank Phase 3 QA).
-          if (session.dirtyGuildBanks.size > 0) {
-            this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
-          }
-          return;
-        }
-        const retryMs = Math.min(
-          LEAVE_SAVE_RETRY_BASE_MS * 2 ** (attempt - 1),
-          LEAVE_SAVE_RETRY_MAX_MS,
-        );
-        console.error(`save on leave failed for ${session.name}; retrying in ${retryMs}ms:`, err);
-        await delay(retryMs);
-      }
-    }
   }
 
   /** A post-mutation ledger projection failure makes the live character
@@ -6045,7 +6038,10 @@ export class GameServer {
     // straight back, ruining the match for everyone else in it.
     if (session.jailed && refusedJailedTravelCommand(msg)) {
       if (msg.cmd === 'unstuck') this.sendUnstuckBlocked(session, 'jailed');
-      else if (msg.cmd === 'freehold_enter' || (msg.cmd === 'use' && msg.item === 'hearth_key'))
+      else if (
+        msg.cmd === 'freehold_enter' ||
+        (msg.cmd === 'use' && msg.item === HEARTH_KEY_ITEM_ID)
+      )
         this.send(session, {
           t: 'events',
           list: [{ type: 'freeholdDenied', pid: session.pid, reason: 'busy' }],

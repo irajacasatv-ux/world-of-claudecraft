@@ -1457,9 +1457,31 @@ const MONOLITHS: MonolithRow[] = [
     // source, paying for the durable install, the store retain and release, and
     // the housing sweep's tick-profiler sample. The four names other modules
     // already imported from here are re-exported so no call site moved.
+    // LOWERED 9920 -> 9916 at the persistence QA: the leave-path save and its
+    // retry policy, and the contests a leaver forfeits, moved WHOLE to
+    // server/leave_character_save.ts, and the join's install-then-retain binding
+    // to server/freehold_session_binding.ts. Both paid for the two guards that
+    // round added: the join now releases its store reference and removes the
+    // seeded player on a throw anywhere before `clients.set`, not on an
+    // addPlayer throw alone, and the leave runs its store release, lease release
+    // and removePlayer in a `finally` so a rejection in the settlement cannot
+    // skip all three for the life of the process.
     // Measured with wc -l < server/game.ts after biome. Exact count, zero slack.
-    ceiling: 9920,
+    ceiling: 9916,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
+  },
+  {
+    // NEWLY TRACKED at the persistence QA, at its exact measured count. It is
+    // larger than eight files already on this list and was on none of them, so
+    // a monolith that formed on this branch could grow without limit. Admitting
+    // a file at its current size only TIGHTENS the ratchet: it grants no slack
+    // and forbids the next line. Whether the file should be SPLIT, and where, is
+    // a maintainer decision recorded in
+    // docs/freeholds/persistence-rollout-contract.md section 8a; this row only
+    // stops it growing while that is decided.
+    file: 'server/freehold_persist.ts',
+    ceiling: 2295,
+    seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {
     file: 'src/net/online.ts',
