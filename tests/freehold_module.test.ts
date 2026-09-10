@@ -534,7 +534,10 @@ describe('every durable field write bumps the record revision', () => {
     const bodies = exportedBodies();
     // The directory, not one file: the count is well past state.ts's own, and
     // the reserved furnishing writers in commands.ts are inside it.
-    expect(bodies.size).toBeGreaterThanOrEqual(20);
+    // Tight enough to notice the scan silently losing a file: the directory
+    // exports 43 bodies today, and a bound of 20 would survive losing half of
+    // them. The two key pins below are the real control; this is the coarse one.
+    expect(bodies.size).toBeGreaterThanOrEqual(40);
     expect(bodies.has('state.ts:setFreeholdTier')).toBe(true);
     expect(bodies.has('commands.ts:placeFurnishing')).toBe(true);
     expect(bodyOf('setFreeholdTier')).toContain('state.tier = tier');

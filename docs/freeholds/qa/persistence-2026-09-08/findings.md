@@ -553,3 +553,80 @@ dispatched to find a defect rather than to confirm the work, and it found two.
   * `entry.state` is a SECOND full copy of every online owner's house and a leaving owner
     briefly holds a third, measured at 10,051 bytes per copy at the shipped ceiling and
     69,452 at the approved one. Only the capture is documented today.
+
+## ROUND TEN: THE VERIFICATION SESSION'S OWN FIX ROUND WAS REVIEWED, AND IT HAD DONE IT AGAIN
+
+Round nine was dispatched to two FRESH reviewers on the standing assumption that a fix
+round is unreviewed code. Both found real defects in it, and one of them was the same
+class the round existed to close. Eight of nine became nine of ten.
+
+- U1 BLOCKING (correctness), found by the fresh architecture review with an executed A/B
+  against the baseline. Round nine's stand-in EXEMPTION was a data-loss hole of its own.
+  Skipping the name comparison for a record carrying the stand-in identity left only the
+  continuity tests, and those catch a seed whose revision is BELOW the entry's. A
+  returning player needs only `entry.state.rev + 1` edits inside one sweep interval to
+  carry it above, at which point nothing refuses: measured, a row at wire revision 2
+  holding a chair and a trophy, against a fresh default at revision 3, was written as
+  `layoutJson '[]'` at `wireRev` 3 with `quiesced: 0` and no error. THE SAME SCENARIO AT
+  THE BASELINE REFUSED IT, so this was a regression round nine introduced, not a hole it
+  inherited. Round nine's own new case models one edit on the seed, which is the regressed
+  side; it never models the seed catching up.
+  REVERTED rather than patched a fourth time. The name comparison is total again, and the
+  case the reviewer executed is now pinned, along with the revert itself in both
+  directions: re-applying the exemption fails two cases, and re-applying the identity
+  simplification below fails nine.
+- U2 SHOULD-FIX (correctness), same review. Round nine's removal of the entry's second
+  cached identity was NOT unobservable: `entry.state` is also what `offerCapture` hands a
+  rejoin, and `installLoadedFreehold` sets the live record's identity from that document,
+  so caching the row's name there teaches the sim a different name on every replay.
+  Measured A/B on one fresh account: the replay handed the sim `plot:minted1` at HEAD and
+  `plot:unassigned` at the baseline. That is a cross-host behaviour change wearing a
+  simplification's clothes, and two comments landed asserting it was not observable.
+  REVERTED, with the reason recorded where the field is assigned.
+- U3 THE TRADE, recorded because it is a decision and not an oversight. Reverting the
+  exemption REOPENS V2, the fresh account whose entry re-reads its own row and is
+  write-blocked for the session. That is the honest trade: refusing a write costs one
+  session's edits, admitting a seed costs the house, and the row survives either way.
+  V2 is now PINNED AS IT BEHAVES, in a case named KNOWN DEFECT, so a future fix flips a
+  red test rather than discovering the behaviour. It is carried as a named gate, and its
+  actual fix is to teach the live record its minted identity AT INSTALL. That is a design
+  decision for the maintainer: it is what `stampFreeholdPlotId` did, W4 showed stamping at
+  COMMIT time is wrong, and stamping at install is a different change with a different
+  argument. It is not a fourth heuristic in one boolean expression, which is what the last
+  four rounds have each tried.
+- U4 SHOULD-FIX, applied. Round nine ruled the pristine arm and its non-revision
+  dimensions unpinnable on the premise that no sanctioned writer produces content at
+  revision zero. The premise was wrong twice over: `entry.state` on that path comes from a
+  durable ROW, which is untrusted external input, and tier, condition and visit policy are
+  not content at all, so a default change makes a rev-zero difference ordinary. The
+  correct statement, which is what the source now carries, is that they are dead while the
+  name comparison is TOTAL and become load-bearing the moment it is narrowed, which is
+  exactly what round nine did.
+- U5 SHOULD-FIX, applied, found by the fresh test audit. A case added in round nine
+  modelled an impossible state: its row reader answered `absent` unconditionally, so after
+  a confirmed insert the store re-read the same account, found no row, fenced insert-only a
+  SECOND time and minted two identities for one account. With `entry.durableRev` null the
+  seal is structurally disarmed, so the case could never reach the arm it was named for.
+  The reader now returns the inserted row, and the case is retitled to the capture claim
+  its first half actually proves.
+- U6 SHOULD-FIX, applied. The leave-capture case pinned the GAUGE and not the retained
+  DOCUMENT, and the two are separable: a second leave that kept the stale capture reads
+  one on the gauge at every assertion while discarding the second session's edits. A
+  sibling case now asserts the write carries the SECOND session's revision.
+- U7 SHOULD-FIX, applied. Two guards this session added had no test at all: the hearth
+  account-id refusal at both entry points (removing both left 208 tests green) and the
+  scrape memo's source key. Both are pinned now, the memo with the two-registry case the
+  reviewer wrote.
+- U8 NITS, applied. A "positive control" added this session controlled nothing (it
+  appended a literal containing the token it then searched for, so it was true for any
+  input) and is replaced by an assertion on the emitted line count; the widened directory
+  scan's size floor was 20 against an actual 43, loose enough to survive losing half the
+  directory; the hearth guard was inserted between another function's docblock and its
+  function; and the directory CLAUDE.md's barrel rule did not mention the by-path
+  exception this session widened.
+- U9 RULINGS VERIFIED, by the reviewers rather than by their author. Every "no behaviour
+  test can isolate this" claim round nine added was independently re-tested and holds:
+  `owesWork`'s three redundant clauses (clause by clause), the mint-once guard (including
+  an adversarial concurrent-preload case), and `runWrite`'s post-queue re-check (including
+  a written attempt that failed to reach it). The orphan-sweep reset ruling was reached the
+  same way, by two failed attempts to build the case.

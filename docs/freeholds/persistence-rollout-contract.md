@@ -486,6 +486,21 @@ distinct from the sim's live one, and a dirty leaver briefly holds a third. Meas
 10,051 bytes per copy at the shipped ceiling and 69,452 at the approved one. Only the leave
 capture is documented today, and the second copy is the larger standing cost.
 
+A FRESH ACCOUNT WHOSE ENTRY RE-READS ITS OWN ROW IS WRITE-BLOCKED for the rest of that
+session, and this one is a deliberate trade rather than an unexamined gap. Nothing teaches
+a live record its minted public identity, so a first-session record carries the stand-in
+for as long as it lives; if that account's store entry is dropped and re-read from the row
+it just inserted (the lost-entry reload, or a second character joining), the entry now
+holds the row's name while the record still holds the stand-in, the write seal sees two
+different names and refuses. Exempting the stand-in from that comparison was tried and
+REVERTED: it admits a seeded default over a real house as soon as the returning player's
+edits carry its revision past the entry's, which costs the house rather than one session's
+edits. The row survives either way, and the case is pinned as it behaves so a fix flips a
+red test. THE FIX IS A DESIGN DECISION, not a fourth clause in that expression: teach the
+live record its minted identity AT INSTALL, where the store already knows it. Stamping at
+COMMIT time was tried in an earlier round and is wrong for a different reason, recorded as
+W4 in the findings ledger.
+
 A held row still has NO PLAYER-FACING SURFACE, which section 4 already records; every item
 above makes a hold more reachable, so that gap and these are one obligation.
 

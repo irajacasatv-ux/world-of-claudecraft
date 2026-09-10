@@ -2161,6 +2161,27 @@ describe('the housing persistence families', () => {
     expect(reads).toBe(2);
   });
 
+  it('memoizes per SOURCE, so two registries never serve each other numbers', async () => {
+    // The scrape memo is module-global. Keyed on nothing, two registries built
+    // over different sources and scraped inside one microtask would have served
+    // the first source's numbers to the second. One process has one registry,
+    // so this is a test-only hazard, which is exactly the class of change a
+    // test should hold rather than a docblock.
+    const first = new Registry();
+    const second = new Registry();
+    registerGameStateMetrics(
+      first,
+      stubSource({ freeholdPersist: () => ({ ...stats, entries: 111 }) }),
+    );
+    registerGameStateMetrics(
+      second,
+      stubSource({ freeholdPersist: () => ({ ...stats, entries: 222 }) }),
+    );
+    const [a, b] = await Promise.all([first.metrics(), second.metrics()]);
+    expect(labelled(a, WOC_FREEHOLD_PERSIST, 'entries')).toBe('111');
+    expect(labelled(b, WOC_FREEHOLD_PERSIST, 'entries')).toBe('222');
+  });
+
   it('re-reads the store at every scrape rather than sampling once', async () => {
     // A collect() that captured its numbers at registration would freeze the
     // whole family at boot, which is worse than not having it.
@@ -2194,14 +2215,12 @@ describe('the housing persistence families', () => {
     const leakyLines = (await leaky.metrics())
       .split('\n')
       .filter((line) => line.startsWith(WOC_FREEHOLD_LOAD_FAILURES_TOTAL));
-    // THE POSITIVE CONTROL is now on the SCAN rather than on the producer,
-    // because no producer can put an identity on a series any more: the same
-    // predicate, applied to a line that does carry one, must answer true.
-    expect(
-      [...leakyLines, `${WOC_FREEHOLD_LOAD_FAILURES_TOTAL}{kind="account:1234"} 5`].some((line) =>
-        line.includes('account:'),
-      ),
-    ).toBe(true);
+    // ANTI-VACUITY FIRST, and it is the line count rather than a predicate
+    // applied to a literal this test supplies: an earlier version appended a
+    // line carrying `account:` and asserted the predicate saw it, which is true
+    // for any input and controlled nothing. The family must actually have
+    // emitted its whole fixed vocabulary here.
+    expect(leakyLines).toHaveLength(FREEHOLD_LOAD_FAILURE_KINDS.length);
     expect(leakyLines.some((line) => line.includes('account:'))).toBe(false);
     // Every kind, every scrape, and the legitimate one still carries its count.
     for (const kind of FREEHOLD_LOAD_FAILURE_KINDS) {

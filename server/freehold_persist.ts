@@ -1091,25 +1091,34 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     generation: number,
     snapshotAtMs: number,
     written: PersistedFreehold,
+    /** The identity the LIVE RECORD carried when this write sampled it. */
+    persistedPlotId: string,
   ): boolean {
     if (result.kind === 'inserted' || result.kind === 'updated') {
       counters.writes++;
       entry.durableRev = result.durableRev;
-      // THE DOCUMENT AS SENT, identity included, so `entry.state` means
-      // exactly what its declaration says: the state known to match the durable
-      // row. ONE identity is cached, the row's.
+      // THE ENTRY REMEMBERS THE RECORD'S IDENTITY, NOT THE ROW'S. Two different
+      // identities are in play and each belongs where it is: the ROW receives
+      // `entry.plotId`, because that is its durable public name, while the
+      // entry's cached state keeps the identity the LIVE RECORD carried,
+      // because the only thing that state is compared against is a live record.
       //
-      // It used to cache the LIVE RECORD's identity instead, because the seal
-      // compared the two names directly and a fresh account's record carries
-      // the stand-in for its whole first session, so caching the row's name
-      // refused that account's own record on its second write. The seal no
-      // longer compares names for a stand-in record at all (it judges those by
-      // continuity), which removes the reason for the second identity: with the
-      // exemption in place, caching the record's name instead of the row's is
-      // no longer observable by any test, and an axis nothing can distinguish
-      // is an axis a later reader will reason from wrongly. Removed rather than
-      // left as unfalsifiable machinery.
-      entry.state = { ...written };
+      // That is what lets the seal below tell "this is the record I have been
+      // writing" from "this is a default somebody seeded", without the store
+      // ever having to write an identity into the sim. A fresh account's record
+      // legitimately carries the pending stand-in for its whole first session,
+      // and a stand-in is indistinguishable from a fresh seed by identity
+      // alone, so an entry that remembered the ROW's name instead would refuse
+      // its own record on the second write of every new account.
+      //
+      // A ROUND NINE EDIT REMOVED THIS and was reverted. With the seal's
+      // stand-in exemption in place the two looked equivalent, and they are
+      // not: `entry.state` is also what `offerCapture` hands a rejoin, and
+      // `installLoadedFreehold` sets the live record's identity from that
+      // document, so caching the row's name here TEACHES the sim a different
+      // name on every replay. That is a cross-host behaviour change wearing a
+      // simplification's clothes.
+      entry.state = { ...written, plotId: persistedPlotId };
       entry.writeErrors = 0;
       if (entry.committedGeneration < generation) entry.committedGeneration = generation;
       // Every edit that survived this write arrived at or after the snapshot,
@@ -1206,14 +1215,20 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // one over a row can never lose anything, and an entry that knows more
       // than a pristine default is an entry whose record has diverged from one.
       //
-      // MEASURED, so nobody has to guess what it is still for: for every state
-      // the sim can currently produce it is SUBSUMED by the third test below,
-      // and removing it leaves the suite green. It is kept because the two are
-      // not independent in the way that matters. Both lean on every content
-      // writer bumping the record revision; the third test reads only that
-      // revision, so a writer that adds a furnishing and forgets the bump is
-      // invisible to it, while this one sees the content directly. It is the
-      // net under the one coupling the third test cannot check for itself.
+      // MEASURED, so nobody has to guess what it is still for: while the name
+      // comparison above is TOTAL it is dead, and removing it leaves the suite
+      // green. Every reseed standing over a row-loaded entry is caught by the
+      // name, and a fresh account's entry cannot hold content at revision zero
+      // because every content writer bumps the revision.
+      //
+      // IT IS KEPT BECAUSE THE NAME COMPARISON IS EXACTLY WHAT A FUTURE ROUND
+      // WILL NARROW. Round nine exempted the stand-in from it to stop a healthy
+      // fresh account being quiesced, and in that shape this arm and the one
+      // below were the only things left standing between a seeded default and a
+      // real house. The gate that fix is carried under will narrow it again.
+      // This arm also reads the CONTENT directly, so unlike the revision test
+      // below it survives a future writer that adds a furnishing and forgets to
+      // bump the revision.
       const pristineSeed =
         standInSeed &&
         persisted.rev === 0 &&
@@ -1253,15 +1268,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // already refused by the first test.
       //
       // WHICH DIMENSIONS A TEST CAN ISOLATE, measured rather than assumed. Only
-      // the identity and revision dimensions of the two tests above can be
-      // killed by a behaviour case; the layout, trophies, tier, condition and
-      // visit-policy dimensions cannot, because reaching them needs a record
-      // that carries content at revision zero and no sanctioned writer produces
-      // one (every writer of a live record bumps its revision). They are kept
-      // for TOTALITY over the persisted shape, so this seal stops depending on
-      // that coupling holding in a file it does not own, and they are listed
-      // here rather than pinned by a case that models a state the sim cannot
-      // reach. That is the failure this packet already recorded once.
+      // the identity and revision dimensions can be killed by a behaviour case
+      // in the CURRENT shape; the pristine arm and its layout, trophies, tier,
+      // condition and visit-policy dimensions cannot, because the total name
+      // comparison catches every reseed first. They become load-bearing the
+      // moment that comparison is narrowed, which is what the carried gate on
+      // the fresh-account quiesce will do, so they are kept for totality over
+      // the persisted shape and listed here rather than pinned by a case that
+      // reaches them through a different arm. A case that passes for the wrong
+      // reason is the failure this packet has already recorded twice.
       const revisionRegressed = entry.state !== null && persisted.rev < entry.state.rev;
       // THE FIRST TEST JUDGES A NAME ONLY WHEN THERE IS ONE, and this is the
       // correction that lets the other two carry the stand-in case alone.
@@ -1282,15 +1297,31 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // judged by CONTINUITY instead: pristine-and-the-entry-knows-more, or a
       // regressed revision. A record carrying any OTHER name is a different
       // record by construction and is still refused outright.
-      // GUARDED ON ITS OWN, not by the chain below. This clause used to live
-      // inside `seededOverReal`'s `&&` chain, behind `entry.state !== null`;
-      // hoisting it to a name took it out from behind that guard, and an entry
-      // with no cached state (every account's very first write) would have
-      // dereferenced null. It does not today only because such a record always
-      // carries the stand-in name and `!standInSeed` short-circuits first,
-      // which is a coincidence of another rule rather than a guard.
-      const foreignIdentity =
-        entry.state !== null && !standInSeed && persisted.plotId !== entry.state.plotId;
+      // ANY NAME THAT IS NOT THE ONE THIS ENTRY LOADED, stand-in included.
+      //
+      // ROUND NINE EXEMPTED THE STAND-IN HERE AND IT WAS REVERTED, because the
+      // exemption is a data-loss hole: for an entry that loaded a ROW, its
+      // cached name is the row's, a freshly seeded default carries the stand-in,
+      // and skipping the comparison left only the continuity tests below. Those
+      // catch a seed whose revision is BELOW the entry's, and a returning player
+      // needs only `entry.state.rev + 1` edits inside one sweep interval to
+      // carry it above, at which point the empty tier-0 default is
+      // compare-and-swapped over the house. Executed against the real store both
+      // ways: refused without the exemption, written with it.
+      //
+      // The exemption existed to stop a healthy fresh account being quiesced
+      // when its entry re-reads the row it inserted (the live record still
+      // carries the stand-in while the re-read entry now holds the row's name).
+      // That failure is real and is carried as a named gate rather than paid for
+      // in data loss: refusing a write costs one session's edits, admitting a
+      // seed costs the house. Fail closed. The gate's actual fix is to teach the
+      // live record its minted identity at INSTALL, which is a design decision
+      // for the maintainer, not a fourth heuristic in this expression.
+      //
+      // GUARDED ON ITS OWN, not by the chain below: hoisting this to a name
+      // takes it out from behind `entry.state !== null`, and an entry with no
+      // cached state is every account's very first write.
+      const foreignIdentity = entry.state !== null && persisted.plotId !== entry.state.plotId;
       const seededOverReal =
         entry.durableRev !== null &&
         entry.state !== null &&
@@ -1357,7 +1388,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         expectedDurableRev: entry.durableRev,
       });
       counters.writeMsTotal += Math.max(0, ports.nowMs() - writeStartMs);
-      return applyWriteResult(entry, result, generation, snapshotAtMs, document);
+      return applyWriteResult(entry, result, generation, snapshotAtMs, document, persisted.plotId);
     } finally {
       permit.release();
     }

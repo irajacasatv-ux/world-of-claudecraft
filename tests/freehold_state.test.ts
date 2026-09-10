@@ -969,7 +969,14 @@ describe('freeholdWriteRefusal: the save path refuses exactly what the load path
    */
   const betweenTheCeilingsState = (): PersistedFreehold => {
     const state = maximalState();
-    const wide = 'é'.repeat(32); // 64 code units, 64 characters, 128 UTF-8 bytes
+    // AN EXPLICIT ESCAPE, precomposed, so the fixture's size cannot change
+    // with the file's Unicode normalization. Written as a literal accented
+    // character this was the DECOMPOSED form (U+0065 U+0301), which is 64
+    // code units but only 96 UTF-8 bytes, and any tool that normalized the
+    // source would have halved it to 32 code units and moved the fixture out
+    // of the window it exists to occupy. U+00E9 is one code unit and two
+    // UTF-8 bytes, so 64 of them are 64 code units and 128 bytes.
+    const wide = '\u00e9'.repeat(FREEHOLD_MAX_ID_LENGTH);
     expect(wide).toHaveLength(FREEHOLD_MAX_ID_LENGTH);
     const layout = state.layout.map((row, index) => (index < 40 ? { ...row, itemId: wide } : row));
     return { ...state, layout };

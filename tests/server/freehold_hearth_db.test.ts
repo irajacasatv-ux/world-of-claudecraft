@@ -555,3 +555,32 @@ describe('freeholdHearthForExport', () => {
     expect(await freeholdHearthForExport(client as unknown as Pool, ACCOUNT_ID)).toBeNull();
   });
 });
+
+describe('the account id is refused before a byte reaches the database', () => {
+  // The same structural refusal the plot module runs on every entry point, and
+  // the reason it matters here: a malformed value sent anyway raises 22P02 and
+  // aborts the CALLER's whole transaction, and the 07a admission participant
+  // will call the advance from inside one. Untested, both guards could be
+  // deleted with the whole suite still green.
+  for (const bad of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+    it(`refuses ${String(bad)} on the read`, async () => {
+      const { client, calls } = makeClient([]);
+      await expect(loadFreeholdHearth(client, bad)).rejects.toThrow(/positive safe integer/);
+      // Nothing was sent, which is the whole point of refusing here.
+      expect(calls).toEqual([]);
+    });
+
+    it(`refuses ${String(bad)} on the advance`, async () => {
+      const { client, calls } = makeClient([]);
+      await expect(advanceFreeholdHearthOnClient(client, bad, COOLDOWN_MS)).rejects.toThrow(
+        /positive safe integer/,
+      );
+      expect(calls).toEqual([]);
+    });
+  }
+
+  it('still admits a legitimate account id (the contrast arm)', async () => {
+    const { client } = makeClient([{ rows: [] }]);
+    expect(await loadFreeholdHearth(client, ACCOUNT_ID)).toEqual({ kind: 'absent' });
+  });
+});

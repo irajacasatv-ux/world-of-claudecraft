@@ -118,6 +118,22 @@ export type FreeholdHearthLoad =
   | { readonly kind: 'state'; readonly state: FreeholdHearthState }
   | { readonly kind: 'unsupported'; readonly detail: string };
 
+/** The same structural refusal server/freehold_db.ts runs on every entry point,
+ *  and for the same reason: a non-integer sent anyway raises 22P02 and aborts
+ *  the CALLER's whole transaction, where a throw here costs it nothing it had
+ *  not already broken. Unreachable from today's one production caller, which
+ *  builds an owner key from the id first, and load-bearing for the 07a
+ *  admission participant, which will run inside someone else's transaction.
+ *  NOTE the class change it makes: a non-positive id used to run the query and
+ *  answer `absent`, which reads as READY; it now throws, and loadOnce converts
+ *  that into an unadmitted HOLD, so such an account is write-blocked rather
+ *  than handed a free travel. */
+function requireHearthAccountId(accountId: number): void {
+  if (!Number.isSafeInteger(accountId) || accountId <= 0) {
+    throw new RangeError('freehold hearth accountId must be a positive safe integer');
+  }
+}
+
 /** One indexed primary-key read, and a READ ONLY one: a missing row is
  *  'absent' (ABSENT_FREEHOLD_HEARTH, ready at revision zero) and is NEVER
  *  created here. A row whose counters do not read back as non-negative BIGINT
@@ -215,18 +231,6 @@ export const FREEHOLD_HEARTH_ADVANCE_SQL = `UPDATE account_freehold_hearth
  * initialization, locking read of the counters plus the single epoch, then
  * either a refusal that writes NOTHING or the monotone update.
  */
-/** The same structural refusal server/freehold_db.ts runs on every entry point,
- *  and for the same reason: a non-integer sent anyway raises 22P02 and aborts
- *  the CALLER's whole transaction, where a throw here costs it nothing it had
- *  not already broken. Unreachable from today's one production caller, which
- *  builds an owner key from the id first, and load-bearing for the 07a
- *  admission participant, which will run inside someone else's transaction. */
-function requireHearthAccountId(accountId: number): void {
-  if (!Number.isSafeInteger(accountId) || accountId <= 0) {
-    throw new RangeError('freehold hearth accountId must be a positive safe integer');
-  }
-}
-
 export async function advanceFreeholdHearthOnClient(
   client: FreeholdQueryable,
   accountId: number,
