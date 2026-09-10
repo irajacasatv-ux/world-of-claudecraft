@@ -50,7 +50,14 @@ import type { FreeholdQueryable } from './freehold_db';
 
 /** Absent means READY, with the zero revision: an account that has never
  *  travelled has no row, and lazily writing one from a plain read would turn
- *  every status poll into a write. The one writer is the entry transaction. */
+ *  every status poll into a write. The one writer is the entry transaction.
+ *
+ *  NO PRODUCTION READER, and exported on purpose: `loadFreeholdHearth` answers
+ *  the `absent` KIND rather than this value, and server/freehold_persist.ts
+ *  duplicates the revision as a literal so a fake port bag needs no database
+ *  module in its runtime graph. This is the DECLARATION of what absence means,
+ *  which the pg suite asserts against, and the place a later reader learns that
+ *  absent is ready rather than unknown. */
 export const ABSENT_FREEHOLD_HEARTH: FreeholdHearthState = { readyAtMs: '0', revision: '0' };
 
 /** A decimal, non-negative, canonically formatted BIGINT as PostgreSQL renders
@@ -188,7 +195,18 @@ export type FreeholdHearthAdvance =
  *  SHARE on this same parent row, and FOR UPDATE here would block that save
  *  into its own lock timeout (the measured character_delete_db.ts finding).
  *  Two hearth entries still serialize, because KEY SHARE is not the lock that
- *  orders them: the FOR UPDATE row lock in step 3 is. */
+ *  orders them: the FOR UPDATE row lock in step 3 is.
+ *
+ *  WHAT IT DOES BLOCK, measured rather than assumed, and the ordering rule the
+ *  07a caller owes because of it. A transaction holding this lock does NOT block
+ *  a concurrent FOR KEY SHARE (character save, character delete, bank ledger) or
+ *  FOR NO KEY UPDATE (bank ledger save effects, general chat quota), and DOES
+ *  block FOR UPDATE on the same account row for the life of the entry
+ *  transaction: character_create_db.ts, maps_db.ts (twice), staff_db.ts and
+ *  user_assets_db.ts each take that. There is no cycle among the four statements
+ *  here, but the caller must take THIS lock before any lock those paths take
+ *  first, and must not touch maps, user_assets, character creation or the admin
+ *  roles after it, or the pair deadlocks. */
 export const FREEHOLD_HEARTH_ACCOUNT_LOCK_SQL =
   'SELECT id FROM accounts WHERE id = $1 FOR KEY SHARE';
 

@@ -86,6 +86,16 @@ export const FREEHOLD_MAX_TROPHY_ROWS = 32;
  *  it, so anything longer has no legal writer. */
 export const FREEHOLD_MAX_ID_LENGTH = 64;
 
+/** The visit policy is the ONE identity whose stored column is narrower than
+ *  FREEHOLD_MAX_ID_LENGTH: server/freehold_db.ts bounds it at 32 characters and
+ *  refuses a longer one structurally, before a byte reaches PostgreSQL. Held
+ *  here as its own literal so the write refusal below applies the bound the
+ *  COLUMN has rather than the bound identities share. Without it a policy id
+ *  past 32 would be admitted by both the loader and the writer, and then throw
+ *  out of requireUpsertInput on every save until the owner quiesced on a run of
+ *  thrown writes, which reads as a database fault rather than as a refusal. */
+export const FREEHOLD_MAX_VISIT_POLICY_LENGTH = 32;
+
 /**
  * The UTF-8 byte ceiling for ONE durable record, MEASURED rather than chosen.
  *
@@ -689,9 +699,19 @@ export interface FreeholdWriteRefusalOptions {
  * write-blocked forever, from a row this very realm produced.
  *
  * WRITABLE IMPLIES READABLE is the whole rule, and it only holds if both sides
- * check the same three things in the same order: rows before bytes, so a
- * record that is both too long and too big reports the cause a writer can act
- * on. The ordering is the same one normalizeFreehold applies.
+ * check the same things: rows before bytes, so a record that is both too long
+ * and too big reports the cause a writer can act on, and the same row
+ * predicates rather than a smaller set of them.
+ *
+ * THE TWO ORDERS ARE NOT IDENTICAL, and saying they were made this docblock a
+ * claim rather than a description. normalizeFreehold judges the container shape,
+ * then the version, then the field names, then the plot id, then the two content
+ * identities, then the row-count ceilings, then the rows, then the scalars, then
+ * the bytes. This function judges the row-count ceilings first (it is handed a
+ * built document, so there is no container to judge), then the rows, then the
+ * plot id, the version, the identities and the scalars, then the bytes. What
+ * matters is that the ADMITTED SET is the same and that bytes come last on both
+ * sides; the sequence differs because the two are given different inputs.
  */
 export function freeholdWriteRefusal(
   persisted: PersistedFreehold,
@@ -736,7 +756,8 @@ export function freeholdWriteRefusal(
     return { kind: 'unsupported', detail: 'tier:not_admitted' };
   }
   if (
-    !boundedId(persisted.visitPolicy) ||
+    typeof persisted.visitPolicy !== 'string' ||
+    persisted.visitPolicy.length > FREEHOLD_MAX_VISIT_POLICY_LENGTH ||
     (opts.validVisitPolicies && !opts.validVisitPolicies.has(persisted.visitPolicy))
   ) {
     return { kind: 'unsupported', detail: 'visit_policy:not_admitted' };

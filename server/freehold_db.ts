@@ -75,9 +75,15 @@ export const FREEHOLD_TIER_COLUMN_MAX_LENGTH = 64;
  * parameterized expression, which is the only thing the gate can actually read:
  *  - the maximal legal record's two content columns measure 2,199 bytes on
  *    disk, because its worst-case ids repeat and pglz compresses them 48x;
- *  - a genuinely INCOMPRESSIBLE legal record measures 32,827 bytes on disk;
+ *  - one genuinely INCOMPRESSIBLE legal record measured 32,827 bytes on disk.
+ *    That is ONE SAMPLE, not a bound: the figure moves with the identifiers the
+ *    fixture uses, and independent re-measurements of the same shape have landed
+ *    at 32,565 and at 35,523. Read it as the order of magnitude an incompressible
+ *    row takes, never as a ceiling;
  *  - the theoretical ceiling for any legal row is its UNCOMPRESSED datum size,
- *    97,932 bytes, since TOAST compression can only shrink it.
+ *    97,932 bytes, which is HEADER-INCLUSIVE (pg_column_size on an unstored
+ *    expression reports the datum, so it carries the four-byte varlena header
+ *    per column), since TOAST compression can only shrink it.
  * So 131072 sits above the largest on-disk size a legal row can ever take, with
  * a third of that again as margin, and no legal row is ever refused unmeasured.
  *
@@ -301,8 +307,24 @@ export type FreeholdRowLoad =
 // single render at 4.88 MB of text. The barrier makes it 13.7 ms, one render,
 // and it is exactly the residual the pre-gate above exists to bound.
 //
+// AND ONLY THE ADMITTED SLOT IS MEASURED OR RETURNED. The LIMIT admits two rows
+// so a stranded slot is SEEN rather than read as absence, but the caller reads
+// content from the primary row alone and takes only plot_id and durable_rev from
+// a stranded one. Measured, rendering the second row cost 0.50 ms against
+// 0.76 ms at two legal rows (167,678 layout bytes crossing the wire, half of
+// them discarded) and 16.9 ms against 34.1 ms at two hyper-compressible rows
+// under the pre-gate, all of it paid while holding one background permit and one
+// pool client. The plot_index test nulls the measure for a stranded row, which
+// nulls both content CASEs with it.
+//
 // The explicit LIMIT is the last part of the same promise: a corrupted account
-// can never turn one boot read into an unbounded scan.
+// can never turn one boot read into an unbounded scan. Read it as the
+// INDEX-ORDERED PLAN's bound rather than the LIMIT's own: plot_index carries
+// CHECK (>= 0), so the admitted slot is the minimum possible value and always
+// sorts into the first two rows. At a cardinality small enough for the planner
+// to pick a sequential scan plus a Sort, the LATERAL runs once per matching row
+// before the LIMIT applies, which is harmless because such a table also has few
+// rows per account.
 const FREEHOLD_ACCOUNT_READ_SQL = `SELECT f.plot_index,
        f.plot_id,
        f.schema_version,
@@ -321,6 +343,7 @@ const FREEHOLD_ACCOUNT_READ_SQL = `SELECT f.plot_index,
     SELECT disk_bytes, owned_bytes FROM (
       SELECT d.disk_bytes,
              CASE
+               WHEN f.plot_index <> ${FREEHOLD_PRIMARY_PLOT_INDEX} THEN NULL
                WHEN d.disk_bytes > ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL
                ELSE COALESCE(octet_length(f.layout::text), 0)
                   + COALESCE(octet_length(f.trophies::text), 0)
@@ -690,21 +713,56 @@ export function mintFreeholdPlotId(randomHex: () => string = defaultPlotIdHex): 
   return plotId;
 }
 
+/** The row bound on the subject-access read, WIDENED rather than copied from the
+ *  account read's LIMIT of 2. The export must render every plot the owner has,
+ *  including slots this build does not admit, so a bound calibrated to the
+ *  admitted slot would omit exactly the rows recovery exists for. Twenty is far
+ *  above every approved per-account plot ladder and still turns a corrupted
+ *  account into a bounded read. */
+export const FREEHOLD_EXPORT_ROW_LIMIT = 20;
+
+/** The per-row ON-DISK pre-gate for the export, the same measure and the same
+ *  reason as FREEHOLD_STORED_DETOAST_GATE_BYTES on the account read: a row too
+ *  large to render is reported by its identity and its size rather than
+ *  detoasted into the request path. The export runs on one pool client on a
+ *  request, so an unbounded render there is the same hazard the account read's
+ *  own bound is justified against in this file. */
+export const FREEHOLD_EXPORT_DETOAST_GATE_BYTES = FREEHOLD_STORED_DETOAST_GATE_BYTES;
+
 /** The subject-access read (exportAccountData): every persisted plot row this
  *  account owns, in stable plot_index order, or an empty array when it owns
  *  none. Keep-forever rows, so this is the owner's ONLY readback of them:
  *  unsupported and oversized owned content rides out AS STORED, in its original
- *  durable columns, and no row is ever normalized away or omitted. */
+ *  durable columns, and no row is ever normalized away or omitted.
+ *
+ *  BOUNDED IN BOTH DIRECTIONS. It was the one read in this file with neither a
+ *  LIMIT nor a byte gate, while the account read's LIMIT of 2 is justified in
+ *  this same file against exactly that hazard, and it is the read that runs on a
+ *  request path. A row past the pre-gate keeps its identity, its revisions and
+ *  every scalar column, and reports its on-disk size in place of content, so an
+ *  operator can see the row exists and how large it is; nothing is omitted and
+ *  nothing is normalized. */
 export async function freeholdsForExport(
   db: Pool,
   accountId: number,
 ): Promise<Record<string, unknown>[]> {
   const res = await db.query(
     `SELECT plot_index, plot_id, schema_version, durable_rev, wire_rev, tier,
-            layout, trophies, condition, visit_policy, upkeep_binding,
-            upkeep_checkpoint, upkeep_credit, created_at, updated_at
-       FROM account_freeholds WHERE account_id = $1
-      ORDER BY plot_index`,
+            condition, visit_policy, upkeep_binding,
+            upkeep_checkpoint, upkeep_credit, created_at, updated_at,
+            b.disk_bytes,
+            CASE WHEN b.disk_bytes <= ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES}
+                 THEN f.layout ELSE NULL END AS layout,
+            CASE WHEN b.disk_bytes <= ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES}
+                 THEN f.trophies ELSE NULL END AS trophies
+       FROM account_freeholds f
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(pg_column_size(f.layout), 0)
+              + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes
+       ) b ON true
+      WHERE f.account_id = $1
+      ORDER BY f.plot_index
+      LIMIT ${FREEHOLD_EXPORT_ROW_LIMIT}`,
     [accountId],
   );
   return res.rows;

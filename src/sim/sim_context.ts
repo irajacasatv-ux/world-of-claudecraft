@@ -414,21 +414,30 @@ export interface SimContextPrimitives {
   nextCommissionOrderId: number;
   // Freehold records: owner key -> live FreeholdState (freehold/state.ts owns
   // the ONE load path, the seed, the snapshot and the evict; the server feeds
-  // it per realm in 07). Sim-owned Map mutated in place, never reassigned, so a
+  // it per realm). Sim-owned Map mutated in place, never reassigned, so a
   // live read-only view like guildBanks. Seeded at addPlayer on a LIT host
   // (every joining owner's default Inn Room record, evicted when the last
   // same-key session leaves); empty on a dark host, where the inserters insert
-  // nothing. Persistence is later work.
+  // nothing. Persistence HAS LANDED: server/freehold_persist.ts installs a
+  // durable record through loadFreehold before the seed.
   // DETERMINISM: a Map iterates in INSERTION order, and the insertion order is
   // host-dependent (the server inserts per account login arrival, the offline
   // world inserts one record, the env whatever it seeds). Any sim code that
   // iterates this map must therefore sort by owner key first; relying on Map
   // order would fork the three hosts on one seed.
-  // RETENTION: the join seed pairs with releaseFreeholdOnLeave today. A
-  // persistence loader (07) pairs its loadFreehold with evictFreehold at
-  // account or character unload IN THE SAME change, and registers the table's
-  // prune in server/retention_sweep.ts with the DDL. This map grows per owner
-  // and nothing sweeps it otherwise.
+  // RETENTION: the join seed pairs with releaseFreeholdOnLeave, which evicts
+  // when the last session sharing an owner key leaves. That is the ONLY evictor
+  // and it keys on the leaver's own owner key, so any future path that loads a
+  // record for an owner who is not a live player (a visitor holding an offline
+  // owner's plot) owes an evictor of its own or this map grows per visited owner
+  // for the process lifetime.
+  // THE DURABLE TABLES ARE KEEP-FOREVER and deliberately absent from
+  // server/retention_sweep.ts: a plot row IS a player's built home and the
+  // hearth row is the shared-account travel cooldown authority, so a prune arm
+  // for either would delete a house or hand out a free travel. That absence is
+  // PINNED by tests/server/main_retention_wiring.test.ts, so a loader that
+  // registered a prune would red it. An earlier version of this note told the
+  // loader to do exactly that.
   readonly freeholds: Map<string, FreeholdState>;
 }
 

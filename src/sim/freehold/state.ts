@@ -25,12 +25,19 @@ import {
   type FreeholdView,
 } from './types';
 
-/** The in-memory stand-in plot identity every record carries until a later
- *  change assigns stable public identity. A fixed literal: it never contains
- *  the owner key or an account id (the brand in types.ts keeps a plain string,
- *  and so an owner key, from reaching a plot id by assignment; the constructor
- *  itself is a convention, as types.ts says), and it stays inside the charset
- *  server/freehold_wire.ts admits. */
+/** The in-memory stand-in plot identity a FRESHLY SEEDED record carries. A
+ *  record installed from a durable row carries the ROW's minted id instead
+ *  (freeholdStateFromPersisted, then loadFreehold below), so this is no longer
+ *  what every record answers to: it is what a record answers to when nothing
+ *  durable has been installed over it, which on the server is a fresh account's
+ *  whole first session and on the offline and headless hosts is always. That
+ *  split IS the write seal's stand-in case in server/freehold_persist.ts, and
+ *  the gap it leaves is carried in
+ *  docs/freeholds/persistence-rollout-contract.md section 8a. A fixed literal:
+ *  it never contains the owner key or an account id (the brand in types.ts keeps
+ *  a plain string, and so an owner key, from reaching a plot id by assignment;
+ *  the constructor itself is a convention, as types.ts says), and it stays
+ *  inside the charset server/freehold_wire.ts admits. */
 export const PENDING_FREEHOLD_PLOT_ID: FreeholdPlotId = asFreeholdPlotId('plot:unassigned');
 
 /** The ONE writer of the host-stamped owner key on PlayerMeta (the
@@ -50,7 +57,10 @@ export function applyFreeholdOwnerStamp(meta: { freeholdOwnerKey?: string }, key
 /** Every account's default record: the free tier-0 Inn Room with nothing
  *  placed, full condition, unstamped day counters, no prepaid weeks, closed to
  *  visitors, not decorating, at revision 0. 05 hands one to every account that
- *  owns no plot yet; 07 persists it without changing its identity. */
+ *  owns no plot yet. 07 persists it under a freshly MINTED plot id that the
+ *  store holds and the live record never learns, so the row's identity and the
+ *  record's differ for that account's first session; see
+ *  PENDING_FREEHOLD_PLOT_ID above. */
 export function defaultFreeholdState(ownerKey: string, plotId: FreeholdPlotId): FreeholdState {
   return {
     ownerKey,
@@ -195,8 +205,9 @@ export function seedFreeholdOnJoin(
  *  record, so every leave walks the roster once, O(players) per leave (about
  *  16 us at 5000, measured), spread across the server leave's own awaits
  *  rather than landing on one tick. An owner-key to live-session-count index
- *  kept by these same two hooks would make the evict O(1); it is named work
- *  for the persistence slice, which reshapes both hooks anyway. */
+ *  kept by these same two hooks would make the evict O(1). It was named as work
+ *  for the persistence slice; that slice has landed and did not reshape either
+ *  hook, so the walk stands and the index is unclaimed work. */
 export function releaseFreeholdOnLeave(ctx: SimContext, pid: number): void {
   if (ctx.freeholds.size === 0) return;
   const meta = ctx.players.get(pid);
