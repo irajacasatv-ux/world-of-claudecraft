@@ -509,6 +509,29 @@ describe('every durable field write bumps the record revision', () => {
   // and that is exactly its shape.
   const DURABLE_ROW_FIELDS = ['x', 'y', 'z', 'yaw', 'itemId', 'placementId', 'plinth', 'trophyId'];
 
+  // ONE DEFINITION, used by the scan below AND by the control table beside it.
+  // Declaring the predicates twice made the control a test of its own copy: an
+  // edit that narrowed the real detector would leave the table green, which is
+  // the exact failure the table exists to prevent.
+  const ARRAY_MUTATORS = String.raw`\.(?:push|splice|pop|shift|unshift|sort|reverse|fill|copyWithin)\(`;
+  /** True when a body writes a field a durable row carries, by any shape. */
+  const writesDurableField = (body: string): boolean =>
+    DURABLE_FIELDS.some((field) =>
+      new RegExp(
+        String.raw`\.${field}\s*(?:=[^=]|[-+*/]=|${ARRAY_MUTATORS}|\[[^\]]*\]\s*=[^=])`,
+      ).test(body),
+    ) ||
+    // A row reached THROUGH one of the two arrays, then written.
+    (/\.(?:layout|trophies)\b/.test(body) &&
+      DURABLE_ROW_FIELDS.some((field) =>
+        new RegExp(String.raw`\.${field}\s*(?:=[^=]|[-+*/]=)`).test(body),
+      )) ||
+    /Object\.assign\(\s*(?:state|record|live|plot)\b/.test(body);
+  /** True when a body ADVANCES a record's revision, rather than merely assigning
+   *  something called rev. */
+  const advancesRevision = (body: string): boolean =>
+    /\.rev\s*(?:\+\+|\+= 1|= [^=;]*\.rev\s*\+)/.test(body);
+
   /**
    * Exported function bodies across the WHOLE directory, comments stripped,
    * keyed by `file:name`.
@@ -672,26 +695,11 @@ describe('every durable field write bumps the record revision', () => {
       // sort, reverse, fill, a length truncation and Object.assign onto the
       // record. `moveFurnishing`, reserved in commands.ts, is the first of those
       // and the seal's third arm rests on this coupling.
-      const arrayMutators = String.raw`\.(?:push|splice|pop|shift|unshift|sort|reverse|fill|copyWithin)\(`;
-      const writesDurable =
-        DURABLE_FIELDS.some((field) =>
-          new RegExp(
-            String.raw`\.${field}\s*(?:=[^=]|[-+*/]=|${arrayMutators}|\[[^\]]*\]\s*=[^=])`,
-          ).test(body),
-        ) ||
-        // A row reached THROUGH one of the two arrays, then written.
-        (/\.(?:layout|trophies)\b/.test(body) &&
-          DURABLE_ROW_FIELDS.some((field) =>
-            new RegExp(String.raw`\.${field}\s*(?:=[^=]|[-+*/]=)`).test(body),
-          )) ||
-        /Object\.assign\(\s*(?:state|record|live|plot)\b/.test(body);
-      if (!writesDurable) continue;
+      if (!writesDurableField(body)) continue;
       // AN ADVANCE, not any assignment. `= ` alone was satisfied by
       // `const rev = state.rev`, by `state.rev = 0` and by any local named rev,
       // so a mutator that RESET the revision passed the coupling pin.
-      expect(body, `${name} writes a durable field`).toMatch(
-        /\.rev\s*(?:\+\+|\+= 1|= [^=;]*\.rev\s*\+)/,
-      );
+      expect(advancesRevision(body), `${name} writes a durable field`).toBe(true);
     }
   });
 
@@ -706,20 +714,11 @@ describe('every durable field write bumps the record revision', () => {
     // than trusted. Every DETECTED shape below wrote a durable field and read as
     // CLEAN under the old predicate, and the two REFUSED bumps below satisfied
     // the old `= ` matcher.
-    const arrayMutators = String.raw`\.(?:push|splice|pop|shift|unshift|sort|reverse|fill|copyWithin)\(`;
-    const detects = (body: string): boolean =>
-      DURABLE_FIELDS.some((field) =>
-        new RegExp(
-          String.raw`\.${field}\s*(?:=[^=]|[-+*/]=|${arrayMutators}|\[[^\]]*\]\s*=[^=])`,
-        ).test(body),
-      ) ||
-      (/\.(?:layout|trophies)\b/.test(body) &&
-        DURABLE_ROW_FIELDS.some((field) =>
-          new RegExp(String.raw`\.${field}\s*(?:=[^=]|[-+*/]=)`).test(body),
-        )) ||
-      /Object\.assign\(\s*(?:state|record|live|plot)\b/.test(body);
-    const advances = (body: string): boolean =>
-      /\.rev\s*(?:\+\+|\+= 1|= [^=;]*\.rev\s*\+)/.test(body);
+    // THE SCAN'S OWN PREDICATES, not a second copy of them. A control table that
+    // declares its own regexes tests the table, and a narrowing edit to the real
+    // detector leaves it green.
+    const detects = writesDurableField;
+    const advances = advancesRevision;
 
     for (const body of [
       'const row = state.layout.find((r) => r.placementId === id); row.x = x; row.yaw = yaw;',

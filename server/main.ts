@@ -4312,11 +4312,16 @@ export async function startServer(): Promise<http.Server> {
     // GameServer.stop() earlier in this closure cannot refuse the enqueue above.
     const freeholdsDrained = await freeholdPersistIdle(FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS);
     if (!freeholdsDrained) {
-      // TWO CAUSES, one answer. False means either the deadline expired with
-      // work still in flight, or the drain finished at once and found an owner
-      // still dirty and unblocked with nobody left to re-arm it (a write that
-      // failed without quiescing). Both mean edits did not reach disk.
-      console.warn('freehold persistence drain did not complete: edits may be unwritten');
+      // THREE CAUSES, one answer, and the message must not name only the first.
+      // False means the deadline expired with work still in flight, OR the drain
+      // finished at once and found an owner still dirty and unblocked with
+      // nobody left to re-arm it (a write that failed without quiescing), OR the
+      // drain itself threw and freeholdPersistIdle absorbed it. All three mean
+      // edits did not reach disk; only the first is a slow database or an
+      // undersized deadline.
+      console.warn(
+        'freehold persistence drain did not complete (deadline, an unwritten entry, or a thrown drain): edits may be unwritten',
+      );
     }
     // Stop accepted /unstuck report intake and drain only to a finite deadline.
     // Per-query timeouts bound an active write; deadline expiry aborts retry
