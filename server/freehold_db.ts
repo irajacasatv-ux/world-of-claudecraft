@@ -731,17 +731,27 @@ export const FREEHOLD_EXPORT_DETOAST_GATE_BYTES = FREEHOLD_STORED_DETOAST_GATE_B
 
 /** The subject-access read (exportAccountData): every persisted plot row this
  *  account owns, in stable plot_index order, or an empty array when it owns
- *  none. Keep-forever rows, so this is the owner's ONLY readback of them:
- *  unsupported and oversized owned content rides out AS STORED, in its original
- *  durable columns, and no row is ever normalized away or omitted.
+ *  none. Keep-forever rows, so this is the owner's ONLY readback of them, and
+ *  unsupported content rides out AS STORED in its original durable columns:
+ *  nothing here normalizes a row.
  *
- *  BOUNDED IN BOTH DIRECTIONS. It was the one read in this file with neither a
- *  LIMIT nor a byte gate, while the account read's LIMIT of 2 is justified in
- *  this same file against exactly that hazard, and it is the read that runs on a
- *  request path. A row past the pre-gate keeps its identity, its revisions and
- *  every scalar column, and reports its on-disk size in place of content, so an
- *  operator can see the row exists and how large it is; nothing is omitted and
- *  nothing is normalized. */
+ *  BOUNDED IN BOTH DIRECTIONS, AND THE BOUNDS ARE VISIBLE IN THE ANSWER. It was
+ *  the one read in this file with neither a LIMIT nor a byte gate, while the
+ *  account read's `LIMIT 2` is justified in this same file against exactly that
+ *  hazard, and it is the read that runs on a REQUEST. Two things it therefore
+ *  does NOT promise, stated rather than implied:
+ *   * past FREEHOLD_EXPORT_ROW_LIMIT rows the answer is TRUNCATED. The limit is
+ *     twenty against an approved ladder of at most two plots, so no shipped
+ *     account can reach it, and a row count equal to the limit is the signal
+ *     that one might have.
+ *   * a row past the on-disk pre-gate comes back with `layout` and `trophies`
+ *     NULL and its measured `disk_bytes` in their place. The row itself, its
+ *     identity, both revisions and every scalar column are present, so the owner
+ *     can see the plot exists and how large its content is; the content itself
+ *     is not rendered into the request path.
+ *  Whether a truncated or content-suppressed export owes the payload an explicit
+ *  marker beyond `disk_bytes` is a subject-access question this file does not
+ *  answer; it is carried in the rollout contract. */
 export async function freeholdsForExport(
   db: Pool,
   accountId: number,

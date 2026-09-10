@@ -793,14 +793,12 @@ For off-box safety, sync the directory to S3 occasionally:
   exclude, total bytes written, `pre_gate_refusals` (rows refused on their
   on-disk size before anything was rendered) and `writes_without_record`.
   `woc_freehold_load_failures_total` splits load failures by `kind`, and read
-  that split with one caveat: `unadmitted` currently carries FOUR different
-  causes, three from the store's own refusal (a full local admission cap, a
-  missing background permit and a thrown read) alongside the genuinely row-level
-  stranded slot, so a spike there is not yet a diagnosis on its own. A host with
-  no store answers the same hold kind but books no counter at all, so it never
-  reaches this series. Separating the four is a named gate in
-  docs/freeholds/persistence-rollout-contract.md section 8a. Six of these series
-  are worth an alert. `writes_without_record` counts a write that held a
+  that split as four DISTINCT diagnoses rather than one label. `unadmitted` is
+  now the row-level stranded slot ALONE, which is a data incident; `cap_full` is
+  a login storm filling the store's own admission cap, `no_permit` is pool or
+  gate saturation, and `read_threw` is a database fault. A host with no store
+  answers the `unadmitted` hold SHAPE but books no counter at all, so it never
+  reaches this series. Six of these series are worth an alert. `writes_without_record` counts a write that held a
   background permit with no document to send and issued no statement at all,
   which is the terminal state of every way this store has ever lost a save; it
   should be flat at zero, and any sustained increase means edits are being
@@ -814,13 +812,17 @@ For off-box safety, sync the directory to S3 occasionally:
   `woc_freehold_load_failures_total` by `kind` to tell a row this build cannot
   read from a login storm that filled the admission cap. A growing `oldest_dirty_age_ms`
   means edits are not reaching disk. `deferred_writes` and `permit_wait_ms` are
-  the two LEADING indicators of the three capacity gates section 8a carries: a
+  the two LEADING indicators of the capacity gates section 8a carries: a
   deferred set that does not return to zero between sweeps means the store's own
   write admission cap is the bottleneck and entry collection is suspended while
   it lasts, and a climbing permit wait means the shared background gate is
   saturated, which is what turns a login into a session-long housing hold. Every
   measure on all three families is a count, a byte total or a millisecond total:
-  no account id, owner key or plot id reaches any series.
+  no account id, owner key or plot id reaches any series. `codec_ms` is the
+  serialize, the clone and the write refusal's own walk, all of it unyielding
+  synchronous time between the permit and the statement that `write_ms` does not
+  bracket: read the two together to tell a slow database from a store spending
+  its budget before it ever sends a statement.
 - `FREEHOLDS_ENABLED` defaults off, is read live as the strict '1', and
   production never enables it before the release gates in
   docs/freeholds/state.md "Tracked release and handoff gates" are signed

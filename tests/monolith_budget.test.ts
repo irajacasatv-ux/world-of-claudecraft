@@ -1457,17 +1457,18 @@ const MONOLITHS: MonolithRow[] = [
     // source, paying for the durable install, the store retain and release, and
     // the housing sweep's tick-profiler sample. The four names other modules
     // already imported from here are re-exported so no call site moved.
-    // LOWERED 9920 -> 9916 at the persistence QA: the leave-path save and its
-    // retry policy, and the contests a leaver forfeits, moved WHOLE to
+    // HELD at 9920 through the persistence QA, which is the point of the rule.
+    // That round added three guards: the join releases its store reference, its
+    // bot tracking context and the seeded player on a throw anywhere before
+    // `clients.set` rather than on an addPlayer throw alone, and the leave runs
+    // its store release, lease release and removePlayer in a `finally` so a
+    // rejection in the settlement cannot skip all three for the life of the
+    // process. Every line of that was paid for by moving the leave-path save
+    // with its retry policy and the contests a leaver forfeits WHOLE to
     // server/leave_character_save.ts, and the join's install-then-retain binding
-    // to server/freehold_session_binding.ts. Both paid for the two guards that
-    // round added: the join now releases its store reference and removes the
-    // seeded player on a throw anywhere before `clients.set`, not on an
-    // addPlayer throw alone, and the leave runs its store release, lease release
-    // and removePlayer in a `finally` so a rejection in the settlement cannot
-    // skip all three for the life of the process.
+    // to server/freehold_session_binding.ts. The ceiling was NOT raised.
     // Measured with wc -l < server/game.ts after biome. Exact count, zero slack.
-    ceiling: 9916,
+    ceiling: 9920,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {

@@ -783,8 +783,7 @@ const DAILY_REWARD_ACTIVITY_MS = 60_000;
 const RELAY_COOLDOWN_MS = 8_000; // min gap between a player's "!" community posts
 
 export interface ClientSession extends MovementInputSessionState, HotbarLayoutState {
-  /** The housing store key this session retained at join, computed ONCE: a
-   *  teardown-time re-derivation puts its throw above both releases. */
+  /** The housing store key retained at join, computed ONCE. */
   readonly freeholdOwnerKey: string;
   ws: WebSocket;
   accountId: number;
@@ -1438,10 +1437,6 @@ interface SnapshotAnchor {
 
 function logSocialErr(err: unknown): void {
   console.error('social command failed:', err);
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class GameServer {
@@ -3202,7 +3197,7 @@ export class GameServer {
     for (const s of linkdeadOthers) {
       void this.leave(s, 'replaced by a new character login');
     }
-    // Install, then retain; the order and its reasons are in the binding module.
+    // Install, then retain; the order and its reasons live in the binding module.
     const freeholdOwnerKey = bindFreeholdOnJoin(
       this.freeholdPersist,
       this.sim.ctx,
@@ -3227,11 +3222,13 @@ export class GameServer {
       releaseFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
       throw err;
     }
-    // THE WHOLE WINDOW, not addPlayer alone: a throw anywhere before
-    // `clients.set` leaks the reference (see the binding module). Hoisted.
+    // THE WHOLE WINDOW, not addPlayer alone: a throw before `clients.set` leaks
+    // the reference and the tracking context, whose pairs live in a leave a
+    // failed join never reaches. Hoisted for the guard.
     let session!: ClientSession;
     let initialLevel = 1;
     let joined = false;
+    let botTrackingContext: BotTrackingContext | null = null;
     try {
       const player = this.sim.entities.get(pid);
       if (player) {
@@ -3285,7 +3282,7 @@ export class GameServer {
       }
       const sessionIp = meta.ip ?? '';
       initialLevel = this.sim.entities.get(pid)?.level ?? state?.level ?? 1;
-      const botTrackingContext = this.botDetector.createTrackingContext(
+      botTrackingContext = this.botDetector.createTrackingContext(
         { accountId, characterId, name, ip: sessionIp },
         meta,
       );
@@ -3436,10 +3433,10 @@ export class GameServer {
       this.clients.set(pid, session);
       joined = true; // From here a leave can run and owns the release.
     } finally {
-      // Nothing else pairs the retain or evicts the seeded record. removePlayer
-      // is idempotent and reaches releaseFreeholdOnLeave.
       if (!joined) {
+        // removePlayer is idempotent and reaches releaseFreeholdOnLeave.
         releaseFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
+        if (botTrackingContext) this.botDetector.releaseTrackingContext(botTrackingContext);
         this.sim.removePlayer(pid);
       }
     }
@@ -3786,8 +3783,12 @@ export class GameServer {
       await this.settleLeavingSession(session);
     } finally {
       // ON EVERY EXIT, INCLUDING A THROW: all three callers fire leave() with no
-      // catch, so a rejection above used to skip these three lines forever.
-      await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey);
+      // catch, so a rejection above used to skip these three lines forever. The
+      // flush is CAUGHT like the lease release: a throw there must not take the
+      // other two down with it.
+      await flushFreeholdBinding(this.freeholdPersist, freeholdOwnerKey).catch((err) =>
+        console.error('freehold leave flush failed:', err),
+      );
       // Release the per-character load lease so a fresh login (here or on another
       // process) can reload the character without waiting out the TTL. Order
       // matters: only after the leave save has awaited above, so the lease
@@ -3812,17 +3813,27 @@ export class GameServer {
     // already disconnected, so there is no one to show their own notice to.
   }
 
-  /** Undo the guild-book work this session owns, when it has one. Two callers
-   *  on the leave path: the exhausted-retry arm of the save, and the teardown
-   *  after it. */
+  /** The final character AND World Market save, retried; the policy is
+   *  server/leave_character_save.ts, and two suites drive this method directly.
+   *  withMarket because a Market escrow STRADDLES the two while the autosave
+   *  persists the market only every thirty seconds. */
+  private async saveCharacterOnLeave(session: ClientSession): Promise<void> {
+    await saveLeavingCharacter(
+      session.name,
+      () => this.saveCharacter(session, { withMarket: true, final: true }),
+      () => this.reconcileOwnGuildBooks(session),
+    );
+  }
+
+  /** Undo this session's own guild-book work: two leave-path callers. */
   private reconcileOwnGuildBooks(session: ClientSession): void {
     if (session.dirtyGuildBanks.size > 0) {
       this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
     }
   }
 
-  /** Everything a leaving session settles BEFORE its resources are released,
-   *  so leave() can run its three release lines in a `finally`. */
+  /** Everything a leaving session settles BEFORE its releases, so leave() runs
+   *  its three release lines in a `finally`. */
   private async settleLeavingSession(session: ClientSession): Promise<void> {
     if (session.spectating) this.exitSpectate(session, false);
     if (session.jailVisit) this.exitJailVisit(session, false);
@@ -3857,14 +3868,7 @@ export class GameServer {
     // Let its commit/refund/ambiguity arm finish before the final snapshot;
     // otherwise teardown could race the durable guild and fee verdict.
     await session.guildCreateSettlement;
-    // The final character AND Market save, retried (leave_character_save.ts).
-    await saveLeavingCharacter({
-      name: session.name,
-      save: () => this.saveCharacter(session, { withMarket: true, final: true }),
-      reconcileGuildBooks: () => this.reconcileOwnGuildBooks(session),
-      delay,
-      error: (message, err) => console.error(message, err),
-    });
+    await this.saveCharacterOnLeave(session);
     // Whatever book work this session still holds can never commit now: it has
     // no save left. saveLeavingCharacter's exhausted-retry arm already cleared
     // its own marks, so this is a no-op there.

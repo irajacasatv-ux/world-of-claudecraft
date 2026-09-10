@@ -12,6 +12,8 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   FREEHOLD_ACCOUNT_PLOT_READ_LIMIT,
+  FREEHOLD_EXPORT_DETOAST_GATE_BYTES,
+  FREEHOLD_EXPORT_ROW_LIMIT,
   FREEHOLD_PLOT_ID_MAX_LEN,
   FREEHOLD_PLOT_ID_PREFIX,
   FREEHOLD_PLOT_ID_RE,
@@ -22,6 +24,7 @@ import {
   type FreeholdUpsert,
   freeholdForAccount,
   freeholdSchema,
+  freeholdsForExport,
   mintFreeholdPlotId,
   upsertFreehold,
 } from '../../server/freehold_db';
@@ -257,6 +260,13 @@ describe('the account read', () => {
       'COALESCE(pg_column_size(f.layout), 0) + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes',
     );
     expect(folded).toContain(`> ${FREEHOLD_STORED_DETOAST_GATE_BYTES} THEN NULL`);
+    // AND ONLY THE ADMITTED SLOT IS MEASURED. The LIMIT admits two rows so a
+    // stranded slot is SEEN rather than read as absence, but the caller reads
+    // content from the primary row alone: rendering the second one shipped its
+    // whole layout across the wire to be discarded, and doubled the render on a
+    // hyper-compressible pair. Nulling the measure outside the slot nulls both
+    // content CASEs with it.
+    expect(folded).toContain(`WHEN f.plot_index <> ${FREEHOLD_PRIMARY_PLOT_INDEX} THEN NULL`);
     // The gate sits above the UNCOMPRESSED datum size of the maximal legal
     // record (97932 bytes), which is the theoretical ceiling for any legal
     // row's on-disk size because TOAST compression can only shrink it. So no
@@ -646,5 +656,58 @@ describe('mintFreeholdPlotId', () => {
     // The length arm, on a charset-legal id: 70 hex characters plus the prefix
     // is past both the wire ceiling and the DDL's plot_id CHECK.
     expect(() => mintFreeholdPlotId(() => 'a'.repeat(70))).toThrow(/opaque plot id charset/);
+  });
+});
+
+describe('the subject-access export statement', () => {
+  it('carries both bounds in the statement, not only in the docblock', async () => {
+    // The one statement this round rewrote by hand was the one with no text
+    // assertion: its only coverage was the real-PostgreSQL suite, which skips
+    // wherever no database is armed. The account read has had this arm since it
+    // was written; the export had none.
+    const cap = makeCapture([{ rows: [] }]);
+    await freeholdsForExport(cap.db as never, 7);
+    expect(cap.calls).toHaveLength(1);
+    const folded = fold(codeOnly(cap.calls[0].text));
+    expect(cap.calls[0].values).toEqual([7]);
+    // The ROW bound, widened rather than copied from the account read's, so a
+    // slot this build does not admit is still exported.
+    expect(folded).toContain(`LIMIT ${FREEHOLD_EXPORT_ROW_LIMIT}`);
+    expect(FREEHOLD_EXPORT_ROW_LIMIT).toBeGreaterThan(FREEHOLD_ACCOUNT_PLOT_READ_LIMIT);
+    // The BYTE bound, the same on-disk pre-gate the account read uses: the
+    // measure never detoasts, and past it both content columns come back NULL
+    // while every scalar column and the measured size survive.
+    expect(folded).toContain(
+      'COALESCE(pg_column_size(f.layout), 0) + COALESCE(pg_column_size(f.trophies), 0) AS disk_bytes',
+    );
+    expect(folded).toContain(
+      `CASE WHEN b.disk_bytes <= ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES} THEN f.layout ELSE NULL END AS layout`,
+    );
+    expect(folded).toContain(
+      `CASE WHEN b.disk_bytes <= ${FREEHOLD_EXPORT_DETOAST_GATE_BYTES} THEN f.trophies ELSE NULL END AS trophies`,
+    );
+    // Stable order, and the account scoped by a bound parameter rather than by
+    // interpolation.
+    expect(folded).toContain('WHERE f.account_id = $1');
+    expect(folded).toContain('ORDER BY f.plot_index');
+    // Every column an owner is entitled to is still named, so a bound cannot
+    // quietly become an omission.
+    for (const column of [
+      'plot_index',
+      'plot_id',
+      'schema_version',
+      'durable_rev',
+      'wire_rev',
+      'tier',
+      'condition',
+      'visit_policy',
+      'upkeep_binding',
+      'upkeep_checkpoint',
+      'upkeep_credit',
+      'created_at',
+      'updated_at',
+    ]) {
+      expect(folded, column).toContain(column);
+    }
   });
 });

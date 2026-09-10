@@ -3958,6 +3958,41 @@ describe('installLoadedFreehold', () => {
     expect(ctx.freeholds.get(OWNER_KEY)?.plotId).toBe('plot:unassigned');
   });
 
+  it('installs no hearth clock on a dark host either', () => {
+    // The record inserters honor the flag MECHANICALLY, and the durable clock is
+    // the third writer of sim-owned housing state fed from a durable read. Its
+    // dark-host guarantee used to be a property of two facts in other files: the
+    // composition root gates the preload, and the unavailable answer carries a
+    // zero clock the forward-only merge already refuses. Neither is this
+    // module's, so the guard is here and this is what proves it.
+    const ctx = fakeCtx(false);
+    installLoadedFreehold(ctx, ACCOUNT_ID, {
+      accountId: ACCOUNT_ID,
+      plotIndex: 0,
+      plotId: ROW_PLOT_ID,
+      durableRev: '7',
+      state: persistedFixture(),
+      hearthReadyAtMs: 9_000,
+      hearthRevision: '3',
+      hold: null,
+    });
+    expect(ctx.freeholds.size).toBe(0);
+    expect(ctx.freeholdKeyReadyAtMs.size).toBe(0);
+    // The LIT contrast, so this is not a stopped installer.
+    const lit = fakeCtx(true);
+    installLoadedFreehold(lit, ACCOUNT_ID, {
+      accountId: ACCOUNT_ID,
+      plotIndex: 0,
+      plotId: ROW_PLOT_ID,
+      durableRev: '7',
+      state: persistedFixture(),
+      hearthReadyAtMs: 9_000,
+      hearthRevision: '3',
+      hold: null,
+    });
+    expect(lit.freeholdKeyReadyAtMs.get(OWNER_KEY)).toBe(9_000);
+  });
+
   it('installs nothing on a dark host', () => {
     const ctx = fakeCtx(false);
     installLoadedFreehold(ctx, ACCOUNT_ID, loadedFixture());
@@ -4062,7 +4097,7 @@ describe('the coordinator side of the wiring (source pins)', () => {
     const removePlayer = body.indexOf('this.sim.removePlayer(');
     const leaseRelease = body.indexOf('releaseCharacterLease(');
     const settlement = methodBody(GAME, '  private async settleLeavingSession(');
-    const characterSave = settlement.indexOf('await saveLeavingCharacter({');
+    const characterSave = settlement.indexOf('await this.saveCharacterOnLeave(session)');
     expect(characterSave).toBeGreaterThan(-1);
     expect(settle).toBeGreaterThan(-1);
     expect(guard).toBeGreaterThan(settle);

@@ -211,7 +211,8 @@ directly and leave the coordinator a thin consumer.
 - **The monolith ratchet.** The known-large logic files (the four sanctioned coordinators
   `src/ui/hud.ts`, `src/sim/sim.ts`, `src/main.ts`, `src/render/renderer.ts`, plus the
   monoliths that formed since: `server/game.ts`, `src/sim/world.ts`, `src/net/online.ts`,
-  `src/game/music.ts`, `src/render/foliage.ts`, `src/sim/colliders.ts`, `server/db.ts`)
+  `src/game/music.ts`, `src/render/foliage.ts`, `src/sim/colliders.ts`, `server/db.ts`,
+  `server/freehold_persist.ts`)
   are ACTIVE extraction targets: never GROW one, and do not split one just to hit a line
   count. `tests/monolith_budget.test.ts` pins a line-count ceiling per file and fails any
   change that grows one past it; the fix is extraction behind the file's seam, and after
