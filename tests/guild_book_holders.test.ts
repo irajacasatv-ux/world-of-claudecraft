@@ -11,6 +11,7 @@ import {
   requestGuildBookFlush,
   revertOwnGuildBookOps,
 } from '../server/guild_book_holders';
+import { gameMetricsCounters, setGameMetricsCounters } from '../server/http/game_signals';
 import { type GuildBankOpDelta, guildBankDeltaIdentityKey } from '../src/sim/guild_bank';
 
 const delta = (partial: Partial<GuildBankOpDelta> & { op: GuildBankOpDelta['op'] }) => ({
@@ -289,6 +290,10 @@ describe('requestGuildBookFlush: one in flight, one re-arm', () => {
 });
 
 describe('revertOwnGuildBookOps, the coordinator method this module now owns', () => {
+  // Captured before any case swaps it: the sink is a process-wide slot, so a
+  // case that installed a faulting one and did not put this back would leak the
+  // fault into every later suite in the same worker.
+  const realCounters = gameMetricsCounters();
   // IT HAD NO TEST AT ALL while it lived on the coordinator: five call sites,
   // two of them inside a leaving session's teardown, replaying money deltas
   // backward onto a live book. It is here so a Vitest can drive it with neither
@@ -390,5 +395,54 @@ describe('revertOwnGuildBookOps, the coordinator method this module now owns', (
     expect(dead.dirtyGuildBanks.size).toBe(0);
     expect(errors).toHaveBeenCalledTimes(1);
     errors.mockRestore();
+  });
+
+  it.each([
+    ['the holder resync', 'resync'],
+    ['the incident counter', 'counter'],
+  ])('never throws when %s faults either, and still undoes the rest', (_label, site) => {
+    // THE OTHER TWO STATEMENTS ON THIS PATH. The guard used to wrap the sim call
+    // alone, so a fault in either of these aborted the loop and threw, and this
+    // is now the FIRST statement of leave()'s finally: the throw would skip both
+    // index drops, the outbox discard, the lease release and removePlayer, which
+    // is the character lockout the round before this one closed. The counter
+    // sink is a process-wide mutable slot nothing here owns, so its faulting is
+    // a configuration away rather than a code change.
+    const index = new GuildBookHolderIndex<FakeSession>();
+    const dead = session('officer');
+    for (const guildId of [7, 9]) {
+      dead.dirtyGuildBanks.set(guildId, 1);
+      dead.unflushedGuildBankOps.set(guildId, [deposit('ore', guildId)]);
+    }
+    let calls = 0;
+    if (site === 'resync') {
+      vi.spyOn(index, 'resync').mockImplementation(() => {
+        calls += 1;
+        if (calls === 1) throw new Error('resync faulted');
+      });
+    } else {
+      setGameMetricsCounters({
+        ...gameMetricsCounters(),
+        guildBankIncident: () => {
+          calls += 1;
+          if (calls === 1) throw new Error('counter sink faulted');
+        },
+      });
+    }
+    const sim = revertSim();
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    expect(() => revertOwnGuildBookOps(index, sim, dead, [7, 9])).not.toThrow();
+
+    // The FIRST guild faulted and the SECOND was still undone, which is the
+    // header's promise and the half a bare not-to-throw would miss.
+    expect(sim.reverted.map((entry) => entry.guildId)).toEqual([9]);
+    // Every guild's marks are cleared either way: they are deleted above the
+    // guard, so a fault can never leave the disband guard watching a dead one.
+    expect(dead.dirtyGuildBanks.size).toBe(0);
+    expect(errors).toHaveBeenCalledTimes(1);
+    errors.mockRestore();
+    vi.restoreAllMocks();
+    setGameMetricsCounters(realCounters);
   });
 });

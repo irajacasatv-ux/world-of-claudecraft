@@ -3861,10 +3861,10 @@ export class GameServer {
     );
   }
 
-  /** Undo this session's own guild-book work. FIVE callers: leave()'s finally,
-   *  the leave save's exhausted-retry arm, the ledger-projection quarantine, the
-   *  fence-out and the takeover sweep. No empty check, because the callee loops
-   *  the ids it is handed, which is what makes the finally's call idempotent. */
+  /** Undo this session's own guild-book work. FIVE callers of THIS wrapper: leave()'s
+   *  finally, the leave save's exhausted-retry arm, both ledger quarantines and
+   *  `escrowSessionLost`. NOT the fence-out, which calls the module directly with its own
+   *  ids. No empty check: the callee loops what it is handed, so this is idempotent. */
   private reconcileOwnGuildBooks(session: ClientSession): void {
     this.revertOwnGuildBookOps(session, [...session.dirtyGuildBanks.keys()]);
   }
@@ -5590,12 +5590,12 @@ export class GameServer {
     return result;
   }
 
-  // Force-disconnect the live session (if any) for a character the requesting
-  // account owns, so a fresh login can take its place. Awaits leave() so the
-  // departing session's state is saved and the sessionsByCharacterId slot is
-  // freed before the caller re-enters — otherwise the new login would race the
-  // old save (clobbering progress) or be rejected with "character already in
-  // world". Idempotent: a no-op (returns 'not-online') when nobody is online.
+  // Force-disconnect the live session (if any) for a character the requesting account owns, so a
+  // fresh login can take its place. Awaits leave(), so the departing state is saved and the
+  // sessionsByCharacterId slot freed before the caller re-enters; otherwise the new login races
+  // the old save or is refused as already in world. Idempotent: 'not-online' when nobody is
+  // online. ONE RESIDUAL, transient rather than a lifetime lockout: leave() short-circuits on an
+  // already-left session, so a mid-teardown call answers 'taken-over' before the slot is freed.
   async takeOverCharacter(
     accountId: number,
     characterId: number,

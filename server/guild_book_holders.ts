@@ -288,10 +288,14 @@ export interface GuildBookRevertSim {
  *
  * NEVER THROWS, and that is load-bearing rather than tidy. Two of its callers
  * run inside a leaving session's teardown, one of them from inside a catch, and
- * a throw there skipped the registrations that make the character re-enterable.
- * A guild whose backward replay faults is logged and the remaining guilds are
- * still undone, because stopping at the first fault would strand the rest of
- * this session's book work with no session left to converge it.
+ * it is now the FIRST statement of leave()'s finally, so a throw here would skip
+ * every registration that makes the character re-enterable as well as the lease
+ * release and removePlayer. A guild whose replay faults is logged and the
+ * remaining guilds are still undone, because stopping at the first fault would
+ * strand the rest of this session's book work with no session left to converge
+ * it. The guard covers the WHOLE per-guild body rather than the sim call alone:
+ * the holder resync and the process-wide counter sink are on this path too, and
+ * neither is owned here.
  */
 export function revertOwnGuildBookOps<S extends GuildBookRevertSession>(
   index: GuildBookHolderIndex<S>,
@@ -300,20 +304,29 @@ export function revertOwnGuildBookOps<S extends GuildBookRevertSession>(
   guildIds: readonly number[],
 ): void {
   for (const guildId of guildIds) {
+    // THE WHOLE BODY, not the sim call alone. The header promises this never
+    // throws and that a faulting guild leaves the rest undone, and a try around
+    // one of four statements delivered neither: `index.resync` and the counter
+    // sink both sit on this path, the counter sink is a process-wide mutable
+    // slot that nothing here owns, and a throw from either aborted the loop and
+    // then, because leave()'s finally calls this FIRST, skipped every
+    // registration that makes the character re-enterable. That is the
+    // round-fifteen lockout reached through the round-sixteen fix. The maps are
+    // cleared before anything that can fault, so a guild is never revisited.
     const log = dead.unflushedGuildBankOps.get(guildId) ?? [];
     dead.dirtyGuildBanks.delete(guildId);
     dead.unflushedGuildBankOps.delete(guildId);
     dead.guildBankDeficitSkips.delete(guildId);
-    index.resync(dead);
-    if (log.length === 0) continue;
-    // Counted per GUILD, the unit the remedy applies to: reaching this at all
-    // means a session that can never commit again held unflushed book ops, the
-    // shape the Phase 3 QA dupe lived in. This is the ONE reconcile site under
-    // the escrow root fix, so the counter lives here rather than at five call
-    // sites. A guild whose log is already empty is a bookkeeping no-op, not an
-    // incident, and is not counted.
-    gameMetricsCounters().guildBankIncident('reconcile');
     try {
+      index.resync(dead);
+      if (log.length === 0) continue;
+      // Counted per GUILD, the unit the remedy applies to: reaching this at all
+      // means a session that can never commit again held unflushed book ops,
+      // the shape the Phase 3 QA dupe lived in. This is the ONE reconcile site
+      // under the escrow root fix, so the counter lives here rather than at
+      // five call sites. A guild whose log is already empty is a bookkeeping
+      // no-op, not an incident, and is not counted.
+      gameMetricsCounters().guildBankIncident('reconcile');
       sim.revertGuildBankDeltas(guildId, log);
     } catch (err) {
       console.error(`guild book revert failed for guild ${guildId}; its ops stay live:`, err);
