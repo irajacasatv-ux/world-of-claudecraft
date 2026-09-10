@@ -2056,6 +2056,7 @@ describe('the housing persistence families', () => {
     permitWaitMsTotal: 31,
     queueWaitMsTotal: 32,
     writeMsTotal: 33,
+    codecMsTotal: 0,
     loadMsTotal: 34,
     oldestDirtyAgeMs: 41,
     writeBytesTotal: 51,

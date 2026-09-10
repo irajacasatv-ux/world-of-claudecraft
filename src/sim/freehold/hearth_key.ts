@@ -53,6 +53,13 @@ export function mergeFreeholdKeyReadyAt(
   ownerKey: string,
   readyAtMs: number,
 ): void {
+  // THE FLAG, MECHANICALLY, the way the two record inserters in state.ts honor
+  // it. This is the third writer of sim-owned housing state fed from a durable
+  // read, and it was the only one whose dark-host guarantee was a property of
+  // two facts in other files (the composition root gates the preload, and the
+  // unavailable answer carries a zero clock the guard below catches) rather
+  // than of this module.
+  if (!ctx.freeholdsEnabled) return;
   if (!Number.isFinite(readyAtMs) || readyAtMs <= 0) return;
   const liveReadyAtMs = ctx.freeholdKeyReadyAtMs.get(ownerKey) ?? 0;
   if (readyAtMs > liveReadyAtMs) ctx.freeholdKeyReadyAtMs.set(ownerKey, readyAtMs);

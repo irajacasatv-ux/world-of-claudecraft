@@ -33,7 +33,7 @@
 
 import { FREEHOLD_TIER_IDS } from '../src/sim/content/freehold';
 import { mergeFreeholdKeyReadyAt } from '../src/sim/freehold/hearth_key';
-import { freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
+import { boundedFreeholdDetail, freeholdLoadDiagnostic } from '../src/sim/freehold/load_report';
 import {
   FREEHOLD_MAX_STORED_BYTES,
   type FreeholdLoadResult,
@@ -57,7 +57,7 @@ import {
 } from '../src/sim/freehold/state';
 import { FREEHOLD_VISIT_POLICIES } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
-import { pool } from './db';
+import { pool, runWithStatementTimeout } from './db';
 import {
   FREEHOLD_PRIMARY_PLOT_INDEX,
   type FreeholdRowLoad,
@@ -98,6 +98,30 @@ export const FREEHOLD_PERSIST_WRITE_PERMIT_WAIT_MS = 15_000;
  */
 export const FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS = 5_000;
 
+/**
+ * The SERVER-SIDE statement bound on the two login-path reads, applied through
+ * the runWithStatementTimeout seam in server/db.ts.
+ *
+ * Without it both reads inherit the pool's DB_STATEMENT_TIMEOUT_MS of 15,000,
+ * three times the permit bound above, on a handshake whose own budget is
+ * AUTH_TIMEOUT_MS = 10,000 (server/ws_auth.ts) and which has already spent from
+ * it on auth, moderation, cosmetics, the character read and the bank bonus. In
+ * health these two statements are sub-millisecond; a sick database is exactly
+ * when the difference binds, and the handshake is the one place a slow read is
+ * paid by a player rather than by a sweep.
+ *
+ * THE RESIDUAL IS STATED RATHER THAN CLOSED. Each read still pays its own pool
+ * checkout (DB_POOL_CONNECT_TIMEOUT_MS, 5,000) and they run in sequence under
+ * one permit, so the worst case is 5,000 + 2 x (5,000 + 2,000) = 19,000 ms
+ * against a 10,000 ms handshake. Past the auth timer the socket is closed while
+ * this chain keeps running, takes a character lease and joins, which is carried
+ * as a named gate in docs/freeholds/persistence-rollout-contract.md section 8a.
+ * Closing it needs both reads on ONE checked-out client and a cap on the whole
+ * preload against the handshake's remaining budget, which is a port-shape change
+ * rather than a constant.
+ */
+export const FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS = 2_000;
+
 /** Local concurrency cap on durable loads, applied BEFORE the shared permit
  *  (the guild-bank lazy loader's admission cap). Past the cap a load is
  *  refused rather than queued: a local waiter list would be the unbounded
@@ -132,11 +156,14 @@ export const FREEHOLD_PERSIST_MAX_ACTIVE_WRITES = 4;
  * The drain is the one moment nothing else contends for the gate, and the two
  * constants have to be read as a PAIR: at four concurrent writes and a ten
  * millisecond statement, FREEHOLD_PERSIST_SHUTDOWN_DRAIN_MS covers about four
- * thousand owners. Measured, a thousand dirty owners drained in 2.9 seconds and
- * five thousand did not finish, leaving 1,584 owners' edits unwritten. Raising
- * the cap for the drain alone is what makes the deadline cover the realm rather
- * than a quarter of it; the shared gate's own capacity of seven still bounds
- * what actually reaches the database.
+ * thousand owners. Measured at that cap, a thousand dirty owners drained in
+ * 2.9 seconds and five thousand did not finish, leaving 1,584 owners' edits
+ * unwritten; re-measured at the raised cap, five thousand drained in 6,944 ms,
+ * inside the deadline. That second number is the one this constant stands on and
+ * it was missing here, so the block argued from the figures it contradicts.
+ * The shared gate's own capacity of seven still bounds what actually reaches the
+ * database, so at the default pool the eighth slot can only ever be parked on a
+ * permit wait: `active_writes` reads eight while seven are working.
  *
  * The leave reserve is smaller and for a different reason: a leaving session's
  * write is the LAST chance for that owner's edits, and without a reserve it
@@ -241,7 +268,18 @@ export const FREEHOLD_LOAD_FAILURE_KINDS = [
   'unsupported',
   'malformed',
   'oversize',
+  // The genuinely ROW-LEVEL cause: the SQL reader saw rows for this account and
+  // none of them sits in the admitted slot. It is a data incident.
   'unadmitted',
+  // The three ADMISSION causes, split out because the metric's own help text
+  // promises an operator four different responses and one label cannot give
+  // them: a full local cap is a login-storm capacity signal, a missing permit is
+  // pool or gate saturation, and a thrown read is a database fault. A host with
+  // no store answers the same hold SHAPE but books no counter at all, so it is
+  // deliberately absent from this list.
+  'cap_full',
+  'no_permit',
+  'read_threw',
 ] as const;
 
 /** Why an account's durable row must not be written this session. `kind` is the
@@ -302,9 +340,10 @@ export interface FreeholdPersistPorts {
   nowMs(): number;
   warn(message: string): void;
   error(message: string, err?: unknown): void;
-  /** The ONE timer the store owns: the shutdown drain deadline. Injected so
-   *  tests drive it without a wall clock; the module-edge default below is the
-   *  only setTimeout in this file. */
+  /** BOTH deadlines the store owns: the shutdown drain's, and the per-leave
+   *  flush bound inside flushAndRelease, which fires far more often (one per
+   *  dirty logout). Injected so tests drive them without a wall clock; the
+   *  module-edge default below is the only setTimeout in this file. */
   scheduleDeadline?(callback: () => void, ms: number): () => void;
 }
 
@@ -324,12 +363,19 @@ export interface FreeholdPersistStats {
   readonly dirty: number;
   readonly running: number;
   readonly pending: number;
-  /** Entries held by a RECOVERY hold: a row this build could not interpret. */
+  /** Entries held by ANY recovery hold, DATA or CAPACITY. A row this build could
+   *  not interpret is one cause; a full local admission cap, a missing
+   *  background permit and a thrown read are the others, and they mean opposite
+   *  things to an operator. Read `loadFailuresByKind` to tell them apart. */
   readonly held: number;
-  /** Entries quiesced by a durable answer no repeat can fix, which is the one
-   *  condition the compare-and-swap fence exists to detect. Kept apart from
-   *  `held` because a rising quiesce count means a second writer is touching
-   *  these rows, and merging the two hides exactly that. */
+  /** Entries quiesced by an answer no repeat of the same payload can fix. FIVE
+   *  producers, and only the first is the compare-and-swap fence: a stale CAS, a
+   *  missing or conflicting row, the write seal refusing a record that is not
+   *  the one this entry loaded, the writable-implies-readable refusal, and a run
+   *  of thrown writes inside the error window. Read it against `staleWrites` and
+   *  `writeFailures` rather than alone, because only `staleWrites` means a
+   *  second writer is touching these rows. Kept apart from `held` because the
+   *  two are counted independently and must never be summed. */
   readonly quiesced: number;
   readonly loads: number;
   readonly loadFailures: number;
@@ -341,12 +387,17 @@ export interface FreeholdPersistStats {
   readonly permitWaitMsTotal: number;
   readonly queueWaitMsTotal: number;
   readonly writeMsTotal: number;
+  /** Serialization, cloning and the write refusal's own walk: the synchronous
+   *  work between the permit and the statement, which `write_ms` deliberately
+   *  does not bracket. */
+  readonly codecMsTotal: number;
   readonly loadMsTotal: number;
   readonly oldestDirtyAgeMs: number;
   readonly writeBytesTotal: number;
   readonly maxWriteBytes: number;
-  /** Writes that reached the statement with no document to send: the terminal
-   *  state of every lost-save path this store has had. */
+  /** Writes that held a background permit with no document to send. No
+   *  statement is issued: the arm returns before the row is ever touched. The
+   *  terminal state of every lost-save path this store has had. */
   readonly writesWithoutRecord: number;
   /** Oversize refusals taken on the ON-DISK pre-gate, where no text length was
    *  measured, as opposed to the measured byte bound. */
@@ -380,7 +431,9 @@ export interface FreeholdPersistStore {
    *  deadline. True when drained, false at the deadline. Never throws. */
   idle(deadlineMs: number): Promise<boolean>;
   stats(): FreeholdPersistStats;
-  /** Cancel the store's own timer. Does NOT close intake. */
+  /** Settle any outstanding drain as NOT drained, which cancels that drain's
+   *  deadline. Does NOT close intake, and does not cancel a leave-flush deadline
+   *  already armed: those are bounded at two seconds and cancel themselves. */
   stop(): void;
 }
 
@@ -531,16 +584,25 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // that has become slow is pinning a gate permit AND a pool client, and
     // without these it is visible only indirectly, as OTHER work's waits rising.
     writeMsTotal: 0,
+    // The CODEC, beside the statement rather than inside it. Every save
+    // serializes the document twice (once for the refusal's byte measure and
+    // once for the two content columns) and clones it twice before that, and
+    // none of it reached a counter while `write_ms` bracketed only the
+    // statement. Measured at 0.198 ms per save at the 420-row ceiling, of which
+    // the refusal walk is 74 percent, and it is UNYIELDING synchronous time
+    // between the permit and the statement, so it escapes the tick profiler's
+    // save lap as well.
+    codecMsTotal: 0,
     loadMsTotal: 0,
     // A TOTAL plus a high-water mark rather than a last-sample gauge: at a
     // thousand owners a scrape samples one arbitrary write, which says nothing
     // about the size distribution or about growth toward the byte ceiling.
     writeBytesTotal: 0,
     maxWriteBytes: 0,
-    // The terminal state of every lost-save path: a write that reached the
-    // statement with no document to send. It used to be silent, which is why
-    // three separate versions of that bug had to be found by reading rather
-    // than by watching.
+    // The terminal state of every lost-save path: a write that held a permit
+    // with no document to send, and issued no statement at all. It used to be
+    // silent, which is why three separate versions of that bug had to be found
+    // by reading rather than by watching.
     writesWithoutRecord: 0,
     // Which arm of the oversize refusal fired. The on-disk pre-gate and the
     // measured byte bound mean different things to an operator: one says the
@@ -609,6 +671,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   const live = (entry: FreeholdPersistEntry): boolean => entries.get(entry.ownerKey) === entry;
 
   function ensureEntry(ownerKey: string, accountId: number): FreeholdPersistEntry {
+    // ONE ACCOUNT, not two. The row is selected by `entry.accountId` while the
+    // document comes from `ports.serialize(entry.ownerKey)`, so a mismatched
+    // pair would compare-and-swap one account's house onto another's row, and
+    // because the swap never touches plot_id the loss would be invisible in the
+    // key. Every caller today derives both from one authenticated account id, so
+    // this is the check that keeps that a property rather than a convention.
+    if (accountId > 0 && ownerKey !== freeholdOwnerKeyForAccount(accountId)) {
+      throw new Error('freehold owner key and account id name different accounts');
+    }
     const existing = entries.get(ownerKey);
     if (existing) {
       if (accountId > 0) existing.accountId = accountId;
@@ -646,9 +717,6 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     return created;
   }
 
-  // Removal needs all three at once: no live reference, nothing running, and
-  // nothing pending. Any one of them alone keeps the entry, which is what lets
-  // a visitor hold an offline owner's plot loaded.
   /**
    * ONE predicate for "this entry still owes durable work", shared by BOTH
    * removal paths. They used to differ: maybeRemove checked the deferred set
@@ -685,10 +753,31 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     entry.pending ||
     deferredWrites.has(entry) ||
     (isDirty(entry) && !blocked(entry));
+  // NOT a clause of its own for the retained leave document, deliberately, and
+  // the reason is worth writing down because it is the shape of a defect this
+  // packet has already made once. `settle` clears the capture only when the
+  // entry NO LONGER owes work, so a `leaveDocument !== null` clause here would
+  // make the capture its own reason to be kept and it could never be released.
+  // The accounting gap it was reaching for is closed at the two DELETE sites
+  // instead, through releaseCapture below.
+
+  /** Drop a retained leave document and its accounting together. `leave_captures`
+   *  is the ONLY published bound on that retention, and a bound that can only
+   *  climb is not one: an entry deleted while it still held a capture would take
+   *  the document with it and leave the gauge one higher forever. Called from
+   *  both delete sites, so no removal path can abandon either half. */
+  function releaseCapture(entry: FreeholdPersistEntry): void {
+    if (entry.leaveDocument === null) return;
+    leaveCaptures--;
+    entry.leaveDocument = null;
+  }
 
   function maybeRemove(entry: FreeholdPersistEntry): void {
     if (entry.refs > 0 || owesWork(entry)) return;
-    if (live(entry)) entries.delete(entry.ownerKey);
+    if (live(entry)) {
+      releaseCapture(entry);
+      entries.delete(entry.ownerKey);
+    }
   }
 
   /**
@@ -726,7 +815,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // cannot drift: a constant the implementation never reads is a comment
       // wearing an export's clothes.
       if (entry.orphanPasses < FREEHOLD_PERSIST_ORPHAN_SWEEP_PASSES) continue;
-      if (live(entry)) entries.delete(entry.ownerKey);
+      if (live(entry)) {
+        releaseCapture(entry);
+        entries.delete(entry.ownerKey);
+      }
     }
   }
 
@@ -759,11 +851,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     entry.hold = hold;
     entry.plotIndex = hold.plotIndex;
     counters.loadFailures++;
-    // Per KIND, because the four causes demand four different operator
-    // responses: unreadable rows are a data incident, a full admission cap is
-    // a login-storm capacity signal, a missing permit is pool saturation, and
-    // a thrown read is a database fault. One conflated number names none of
-    // them.
+    // Per KIND, because the causes demand different operator responses:
+    // unreadable rows and a stranded plot slot are data incidents, a full
+    // admission cap is a login-storm capacity signal, a missing permit is pool
+    // saturation, and a thrown read is a database fault. They were one label
+    // once; the metric's own help text promised the discrimination the label
+    // could not give.
     counters.loadFailuresByKind[hold.kind] = (counters.loadFailuresByKind[hold.kind] ?? 0) + 1;
     ports.warn(
       `freehold plot index ${hold.plotIndex} held (${hold.kind}): ${hold.detail}; the durable row is left untouched`,
@@ -909,7 +1002,10 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         entry,
         {
           kind: 'unadmitted',
-          detail: rowLoad.detail,
+          // THROUGH THE BOUND, because this detail is built in another module
+          // from a row's own plot_index. The reporter is not the only route to a
+          // log, so the bound is applied where the producer is outside this file.
+          detail: boundedFreeholdDetail(rowLoad.detail),
           plotIndex: rowLoad.plotIndex,
           durableRev: rowLoad.durableRev,
         },
@@ -979,12 +1075,20 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     );
   }
 
-  function refuse(accountId: number, ownerKey: string, detail: string): LoadedFreehold {
+  function refuse(
+    accountId: number,
+    ownerKey: string,
+    // The CAUSE, not the class. Every one of these is an admission refusal, and
+    // an operator's response to each is different, so they must not share the
+    // row-level label.
+    kind: 'cap_full' | 'no_permit' | 'read_threw',
+    detail: string,
+  ): LoadedFreehold {
     const entry = ensureEntry(ownerKey, accountId);
     return holdResult(
       entry,
       {
-        kind: 'unadmitted',
+        kind,
         detail,
         plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
         durableRev: FREEHOLD_ABSENT_DURABLE_REV,
@@ -996,7 +1100,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
   async function loadOnce(accountId: number, ownerKey: string): Promise<LoadedFreehold> {
     counters.loads++;
     if (activeLoads >= FREEHOLD_PERSIST_MAX_ACTIVE_LOADS) {
-      return refuse(accountId, ownerKey, 'the local load admission cap is full');
+      return refuse(accountId, ownerKey, 'cap_full', 'the local load admission cap is full');
     }
     activeLoads++;
     try {
@@ -1011,6 +1115,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         return refuse(
           accountId,
           ownerKey,
+          'no_permit',
           `no background permit within ${FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS} ms`,
         );
       }
@@ -1023,13 +1128,21 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       }
     } catch (err) {
       ports.error('freehold durable load failed; the account is held:', boundedDatabaseError(err));
-      return refuse(accountId, ownerKey, 'the durable load threw');
+      return refuse(accountId, ownerKey, 'read_threw', 'the durable load threw');
     } finally {
       activeLoads--;
     }
   }
 
-  function preload(accountId: number): Promise<LoadedFreehold> {
+  // ASYNC on purpose, even though every return below is already a promise.
+  // `freeholdOwnerKeyForAccount` THROWS on a non-positive or non-safe account
+  // id, and `retain`'s repair reload calls this fire-and-forget behind a
+  // `.catch`. A synchronous throw walks straight past that catch, out of
+  // GameServer.join, after retain has already taken a reference that no path
+  // then releases. Making the function async turns it into a rejection the catch
+  // can see. Unreachable today (accounts.id is INT4 and the handshake refuses a
+  // malformed id first), which is why it is a shape fix rather than a defect.
+  async function preload(accountId: number): Promise<LoadedFreehold> {
     const ownerKey = freeholdOwnerKeyForAccount(accountId);
     const entry = entries.get(ownerKey);
     // A second character of the same account is joining: the live record is
@@ -1038,7 +1151,13 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     if (ports.hasLive(ownerKey)) {
       if (entry?.loaded) {
         entry.accountId = accountId;
-        return Promise.resolve(snapshotOf(entry, null));
+        // THE GRACE COUNTS FROM THE LAST TOUCH, not from the last retain. The
+        // mark-and-sweep exists because preload resolves before the join calls
+        // retain, so an entry legitimately sits at zero references for the width
+        // of a handshake; without this reset a handshake wider than one sweep
+        // interval loses its entry anyway and the session is write-blocked.
+        entry.orphanPasses = 0;
+        return snapshotOf(entry, null);
       }
       // The live record is still the truth and must not be overwritten by a
       // read, so the answer below carries no state either way. But WITHOUT the
@@ -1046,13 +1165,17 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // an entry that never loaded is write-blocked for the whole session: the
       // owner would play, furnish, and have every edit discarded at logout with
       // nothing reported. So read, then answer with no state.
-      return beginLoad(accountId, ownerKey).then((loaded) => ({ ...loaded, state: null }));
+      const loaded = await beginLoad(accountId, ownerKey);
+      const touched = entries.get(ownerKey);
+      if (touched) touched.orphanPasses = 0;
+      return { ...loaded, state: null };
     }
     // Load-once, like loadFreehold: a re-preload replays what the entry knows
     // (so a rejoin after the sim evicted the record re-installs the real
     // house) and never mints a second plot id or reads the row twice.
     if (entry?.loaded) {
       entry.accountId = accountId;
+      entry.orphanPasses = 0;
       // blocked(), not `hold === null`. A QUIESCED entry has no hold and yet is
       // exactly the entry whose knowledge is known to be stale: the durable
       // revision moved under this realm, which is what the fence exists to
@@ -1064,11 +1187,16 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // still unwritten; replaying the committed state instead would show the
       // returning player a house missing everything they did before logging
       // out, and would then overwrite the capture on the next sweep. Handing it
-      // over is also what RELEASES it: once a live record carries those edits,
-      // the write path must prefer that record and nothing else.
-      return Promise.resolve(snapshotOf(entry, blocked(entry) ? null : offerCapture(entry)));
+      // Handing it over does NOT release it. `retain` is the confirmation and
+      // releases it there, and only when the live record actually carries it;
+      // see offerCapture for the five handshake exits that make releasing here
+      // a lost-save path of its own.
+      return snapshotOf(entry, blocked(entry) ? null : offerCapture(entry));
     }
-    return beginLoad(accountId, ownerKey);
+    const loaded = await beginLoad(accountId, ownerKey);
+    const touched = entries.get(ownerKey);
+    if (touched) touched.orphanPasses = 0;
+    return loaded;
   }
 
   /** The single-flight durable read. Two joins of one account collapse onto one
@@ -1168,9 +1296,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // closure and adjacent, so the committed generation describes exactly
       // the document that goes to the row.
       const snapshotAtMs = ports.nowMs();
+      // The codec measure OPENS here, at the first clone, and closes after the
+      // second serialization: everything between the permit and the statement.
+      const codecStartMs = snapshotAtMs;
       const generation = entry.dirtyGeneration;
       entry.snapshotGeneration = generation;
-      const live = ports.serialize(entry.ownerKey);
+      const liveRecord = ports.serialize(entry.ownerKey);
       // THE LIVE RECORD WINS WHENEVER ONE EXISTS. The capture stands in only
       // for the window where there is none, which is what it was taken for: a
       // leave, then eviction, then this write.
@@ -1183,12 +1314,26 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // the bug it was meant to fix. The leaver's edits are preserved a level
       // up instead, by handing the capture to the rejoin (see preload), so by
       // the time a live record exists again it already carries them.
-      const persisted = live ?? entry.leaveDocument;
+      const persisted = liveRecord ?? entry.leaveDocument;
       if (persisted !== null) entry.snapshotRev = persisted.rev;
       // No live record and nothing captured. Writing here would put a default
       // over a real row, which is invariant 1.
       if (persisted === null) {
         counters.writesWithoutRecord++;
+        // AND STOP OWING THE WRITE. Nothing here can ever be written: there is
+        // no record and no capture, so every later sweep would re-arm the same
+        // empty write, spend a permit on it and count it again, forever, and
+        // `owesWork` would keep the entry resident for the life of the process.
+        // Advancing the committed generation is safe because it discards no
+        // edit: the edits are already gone with the record, and a rejoin
+        // re-dirties the entry through the revision probe the moment a live
+        // record exists again. NO PRODUCTION SEQUENCE reaches this arm in this
+        // release (markDirty has no production caller, the revision probe cannot
+        // dirty an entry with no record, and GameServer.leave always flushes
+        // while the record is still live), so this is a bound on a state the
+        // furnishing writer will make reachable rather than a live repair.
+        if (entry.committedGeneration < generation) entry.committedGeneration = generation;
+        entry.dirtySinceMs = isDirty(entry) ? snapshotAtMs : 0;
         return false;
       }
       // IDENTITY, not just presence. A live record still carrying the unassigned
@@ -1215,11 +1360,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // one over a row can never lose anything, and an entry that knows more
       // than a pristine default is an entry whose record has diverged from one.
       //
-      // MEASURED, so nobody has to guess what it is still for: while the name
-      // comparison above is TOTAL it is dead, and removing it leaves the suite
-      // green. Every reseed standing over a row-loaded entry is caught by the
-      // name, and a fresh account's entry cannot hold content at revision zero
-      // because every content writer bumps the revision.
+      // MEASURED, so nobody has to guess what it is still for: while the entry
+      // loaded a ROW the name comparison above catches every reseed first, so
+      // this arm is dead there and removing it leaves the suite green. For an
+      // entry that MINTED its own row it is the opposite: see the OPEN GATE
+      // below, where the name comparison cannot fire at all and this arm plus
+      // the revision test are the only things standing.
       //
       // IT IS KEPT BECAUSE THE NAME COMPARISON IS EXACTLY WHAT A FUTURE ROUND
       // WILL NARROW. Round nine exempted the stand-in from it to stop a healthy
@@ -1267,16 +1413,15 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // under the stand-in identity because a record carrying any other name is
       // already refused by the first test.
       //
-      // WHICH DIMENSIONS A TEST CAN ISOLATE, measured rather than assumed. Only
-      // the identity and revision dimensions can be killed by a behaviour case
-      // in the CURRENT shape; the pristine arm and its layout, trophies, tier,
-      // condition and visit-policy dimensions cannot, because the total name
-      // comparison catches every reseed first. They become load-bearing the
-      // moment that comparison is narrowed, which is what the carried gate on
-      // the fresh-account quiesce will do, so they are kept for totality over
-      // the persisted shape and listed here rather than pinned by a case that
-      // reaches them through a different arm. A case that passes for the wrong
-      // reason is the failure this packet has already recorded twice.
+      // WHICH DIMENSIONS A TEST CAN ISOLATE, measured rather than assumed. For a
+      // ROW-LOADED entry only the identity and revision dimensions can be killed
+      // by a behaviour case; the pristine arm and its layout, trophies, tier,
+      // condition and visit-policy dimensions cannot, because the name
+      // comparison catches every reseed there first. They are kept for totality
+      // over the persisted shape and listed here rather than pinned by a case
+      // that reaches them through a different arm. A case that passes for the
+      // wrong reason is the failure this packet has already recorded twice, and
+      // it recorded it a third time on the case that named the caught-up seed.
       const revisionRegressed = entry.state !== null && persisted.rev < entry.state.rev;
       // THE FIRST TEST JUDGES A NAME ONLY WHEN THERE IS ONE, and this is the
       // correction that lets the other two carry the stand-in case alone.
@@ -1298,6 +1443,24 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // regressed revision. A record carrying any OTHER name is a different
       // record by construction and is still refused outright.
       // ANY NAME THAT IS NOT THE ONE THIS ENTRY LOADED, stand-in included.
+      //
+      // AND THIS TEST IS NOT TOTAL. It is total for an entry that loaded a ROW,
+      // whose cached name is the row's minted id while a freshly seeded default
+      // carries the stand-in. It is INERT for an entry that MINTED its own row:
+      // `applyWriteResult` caches the identity the LIVE RECORD carried, nothing
+      // teaches a live record its minted name, so that entry's cached name IS
+      // the stand-in and a reseeded default carries the same literal. The two
+      // are equal, this comparison is false by value equality, and the two
+      // continuity tests below are the whole seal. Both are revision-shaped, so
+      // a reseeded default whose revision has CAUGHT UP satisfies neither and
+      // the empty tier-0 default lands on the house. That is the EIGHTH path,
+      // reproduced against this store and pinned AS IT BEHAVES in a case named
+      // KNOWN DEFECT, and it is carried as an open gate in
+      // docs/freeholds/persistence-rollout-contract.md section 8a. Its fix is
+      // the same design decision the paragraph below already owes: teach the
+      // live record its minted identity AT INSTALL, on the ABSENT arm only,
+      // which makes this comparison total for every entry class. Do not close it
+      // by adding a fourth clause here; four rounds have each tried that.
       //
       // ROUND NINE EXEMPTED THE STAND-IN HERE AND IT WAS REVERTED, because the
       // exemption is a data-loss hole: for an entry that loaded a ROW, its
@@ -1322,6 +1485,12 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // takes it out from behind `entry.state !== null`, and an entry with no
       // cached state is every account's very first write.
       const foreignIdentity = entry.state !== null && persisted.plotId !== entry.state.plotId;
+      // `entry.durableRev !== null` is EQUAL to `entry.state !== null` by
+      // today's arithmetic, not by declaration: all three writers of
+      // `entry.state` set `entry.durableRev` in the same statement (classify's
+      // row arm, classify's absent arm and applyWriteResult). A mutation pass
+      // confirms it, so no behaviour test can isolate it. It is kept because it
+      // says what the guard MEANS, which is that a row exists to lose.
       const seededOverReal =
         entry.durableRev !== null &&
         entry.state !== null &&
@@ -1358,7 +1527,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
               ? `${refusal.bytes} bytes past the limit of ${refusal.limit}`
               : refusal.kind === 'layout_over_ceiling' || refusal.kind === 'trophies_over_ceiling'
                 ? `${refusal.rows} rows past the limit of ${refusal.limit}`
-                : refusal.detail;
+                : boundedFreeholdDetail(refusal.detail);
           ports.error(
             `freehold plot index ${entry.plotIndex} write refused (${refusal.kind}): ${measure}; no further writes go out for this owner`,
           );
@@ -1368,6 +1537,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const layoutJson = JSON.stringify(document.layout);
       const trophiesJson = JSON.stringify(document.trophies);
       const writeBytes = Buffer.byteLength(layoutJson) + Buffer.byteLength(trophiesJson);
+      counters.codecMsTotal += Math.max(0, ports.nowMs() - codecStartMs);
       counters.writeBytesTotal += writeBytes;
       if (writeBytes > counters.maxWriteBytes) counters.maxWriteBytes = writeBytes;
       const writeStartMs = ports.nowMs();
@@ -1448,10 +1618,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // evicted, and the leaving session's edits were gone for good. Gate
     // saturation produces both that timeout and the deferral the capture exists
     // for, so the two arms are adjacent rather than exotic.
-    if (!owesWork(entry) && entry.leaveDocument !== null) {
-      leaveCaptures--;
-      entry.leaveDocument = null;
-    }
+    if (!owesWork(entry)) releaseCapture(entry);
     pumpDeferredWrites();
     maybeRemove(entry);
     drainCheck();
@@ -1553,10 +1720,29 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     }
   }
 
+  /** The first deferred entry holding a LEAVE CAPTURE, or the first entry at
+   *  all. A leaver's write is the last chance for those edits, and every
+   *  background write it would otherwise queue behind has a next sweep to catch
+   *  it, so insertion order is the wrong order for it. Without this the reserve
+   *  bought nothing past the first two leavers: `arm` admits a leaver at
+   *  writeCap(true), but a leaver that missed that window lands in the deferred
+   *  set and the pump then re-admits it at writeCap(false), behind every
+   *  background write already queued. */
+  function nextDeferred(): FreeholdPersistEntry | undefined {
+    let first: FreeholdPersistEntry | undefined;
+    for (const entry of deferredWrites) {
+      if (first === undefined) first = entry;
+      if (entry.leaveDocument !== null) return entry;
+    }
+    return first;
+  }
+
   function pumpLoop(): void {
-    while (activeWrites < writeCap(false) && deferredWrites.size > 0) {
-      const next = deferredWrites.values().next().value;
+    while (deferredWrites.size > 0) {
+      const next = nextDeferred();
       if (next === undefined) return;
+      // The leaver may borrow the reserve here exactly as `arm` lets it.
+      if (activeWrites >= writeCap(next.leaveDocument !== null)) return;
       deferredWrites.delete(next);
       // The wait may have outlived the reason for the write: the entry could
       // have been evicted, held or quiesced since it was deferred.
@@ -1605,7 +1791,19 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     for (const entry of entries.values()) {
       if (entry.running || entry.pending) return;
     }
-    for (const waiter of [...drainWaiters]) waiter.finish(true);
+    // TWO DIFFERENT QUESTIONS, and answering them with one predicate is what
+    // made this a false success. "Is anything still moving" decides when to stop
+    // WAITING, and the three states above are all of it. "Did everything land"
+    // decides what to ANSWER, and it is not the same set: runWrite's null-permit
+    // arm returns false WITHOUT quiescing, and settle re-arms only on `pending
+    // || (committed && dirty)`, so an entry can sit unblocked, still dirty, not
+    // running, not pending and not deferred, with nobody left to re-arm it.
+    // Waiting longer buys nothing there, which is why this resolves at once
+    // rather than burning the deadline; but answering TRUE would report a clean
+    // drain over an owner's unwritten edits, on the one signal an operator has
+    // that a restart was safe.
+    const unwritten = [...entries.values()].some((entry) => isDirty(entry) && !blocked(entry));
+    for (const waiter of [...drainWaiters]) waiter.finish(!unwritten);
   }
 
   return {
@@ -1861,6 +2059,7 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
         permitWaitMsTotal: counters.permitWaitMsTotal,
         queueWaitMsTotal: counters.queueWaitMsTotal,
         writeMsTotal: counters.writeMsTotal,
+        codecMsTotal: counters.codecMsTotal,
         loadMsTotal: counters.loadMsTotal,
         oldestDirtyAgeMs: oldestDirtyAtMs === 0 ? 0 : Math.max(0, ports.nowMs() - oldestDirtyAtMs),
         writeBytesTotal: counters.writeBytesTotal,
@@ -1917,12 +2116,16 @@ export function freeholdPreloadUnavailable(accountId: number, detail: string): L
     durableRev: null,
     state: null,
     hearthReadyAtMs: 0,
-    hearthRevision: '0',
+    // THROUGH THE CONSTANTS, not two bare zeroes. This file argues at length
+    // that the plot fence and the hearth counter are different counters that
+    // share a value, and spelling either as a literal here is how a later reader
+    // learns they are one.
+    hearthRevision: ABSENT_HEARTH_REVISION,
     hold: {
       kind: 'unadmitted',
       detail,
       plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
-      durableRev: '0',
+      durableRev: FREEHOLD_ABSENT_DURABLE_REV,
     },
   };
 }
@@ -1948,6 +2151,7 @@ export function freeholdPersistStats(): FreeholdPersistStats {
       permitWaitMsTotal: 0,
       queueWaitMsTotal: 0,
       writeMsTotal: 0,
+      codecMsTotal: 0,
       loadMsTotal: 0,
       oldestDirtyAgeMs: 0,
       writeBytesTotal: 0,
@@ -1993,6 +2197,13 @@ export function installLoadedFreehold(
   // straight into sim state; a bag that lost its shape would install a record
   // with undefined fields rather than refusing.
   if (!loaded || typeof loaded !== 'object') return;
+  // AND IT HAS TO NAME THIS ACCOUNT. LoadedFreehold carries accountId precisely
+  // so the answer names its subject, and this is the one field the structural
+  // guard above skipped. If a bag ever crossed with another account's answer,
+  // that account's house and Hearth clock would install under this owner key,
+  // and the store's seal cannot catch it because the seal compares identities,
+  // not accounts. The blast radius would be two houses.
+  if (loaded.accountId !== accountId) return;
   const ownerKey = freeholdOwnerKeyForAccount(accountId);
   // The CLOCK FIRST, and unconditionally. It is a separate durable fact from
   // the plot: an account whose plot row is held, or absent entirely, still has
@@ -2045,8 +2256,19 @@ export function createGameFreeholdPersistStore(deps: {
   const writer = createKeyedSerialWriter<string>();
   const gate = deps.backgroundDbGate;
   return createFreeholdPersistStore({
-    readRow: (accountId, maxOwnedBytes) => freeholdForAccount(pool, accountId, maxOwnedBytes),
-    readHearth: (accountId) => loadFreeholdHearth(pool, accountId),
+    // BOTH LOGIN READS ARE BOUNDED, through the one seam that can lower the
+    // pool's own statement timeout. The store's permit bound is deliberately
+    // short and would otherwise sit in front of a statement three times longer
+    // than itself. See FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS for the
+    // residual this does NOT close.
+    readRow: (accountId, maxOwnedBytes) =>
+      runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, (query) =>
+        freeholdForAccount({ query }, accountId, maxOwnedBytes),
+      ),
+    readHearth: (accountId) =>
+      runWithStatementTimeout(FREEHOLD_PERSIST_LOGIN_STATEMENT_TIMEOUT_MS, (query) =>
+        loadFreeholdHearth({ query }, accountId),
+      ),
     writeRow: (input) => upsertFreehold(pool, input),
     // ONE declaration of the realm's identity sets, consumed by BOTH sides.
     // Declaring them twice is how a load that refuses a tier and a save that

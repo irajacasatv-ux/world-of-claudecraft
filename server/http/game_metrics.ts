@@ -555,8 +555,10 @@ export interface GameStateSource {
  * ONE housing read per scrape, shared by the three families that need it.
  * `freeholdPersist()` walks every entry and allocates a stats object with a
  * copy of the by-kind tally, and prom-client calls each family's collect()
- * separately, so the unmemoized form did that three times per `/metrics` hit
- * (measured about 0.3 ms at five thousand entries). The memo is cleared on a
+ * separately, so the unmemoized form did that three times per `/metrics` hit.
+ * Re-measured rather than restated: one walk costs 0.018 ms at five thousand
+ * entries and 0.055 ms at twenty thousand, so the unmemoized form was about
+ * 0.055 ms at five thousand rather than the 0.3 ms this block used to claim. The memo is cleared on a
  * microtask: every collect() in one pass is synchronous, so the window is
  * exactly one scrape and no value can go stale between scrapes.
  */
@@ -747,11 +749,18 @@ export function registerGameStateMetrics(
       // write that has become slow pins a gate permit AND a pool client, and
       // without this it shows up only as OTHER work's waits rising.
       this.inc({ measure: 'write_ms' }, state.writeMsTotal);
+      // The CODEC, which write_ms deliberately does not bracket: serializing,
+      // cloning and the write refusal's own walk, all of it unyielding
+      // synchronous time between the permit and the statement. Read it against
+      // write_ms to tell a slow database from a store spending its budget before
+      // it ever sends one.
+      this.inc({ measure: 'codec_ms' }, state.codecMsTotal);
       this.inc({ measure: 'load_ms' }, state.loadMsTotal);
       this.inc({ measure: 'write_bytes' }, state.writeBytesTotal);
-      // ALERT ON THIS ONE. A write that reached the statement with no document
-      // to send is the terminal state of every lost-save path this store has
-      // had, and each of those was found by reading rather than by watching.
+      // ALERT ON THIS ONE. A write that held a permit with no document to send,
+      // and issued no statement at all, is the terminal state of every lost-save
+      // path this store has had, and each of those was found by reading rather
+      // than by watching.
       this.inc({ measure: 'writes_without_record' }, state.writesWithoutRecord);
       // Which arm of the oversize refusal fired: the on-disk pre-gate, where no
       // text length was ever measured, or the measured byte bound.
