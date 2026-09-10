@@ -792,8 +792,13 @@ For off-box safety, sync the directory to S3 occasionally:
   refusals, the permit and queue waits, the statement durations those waits
   exclude, total bytes written, `pre_gate_refusals` (rows refused on their
   on-disk size before anything was rendered) and `writes_without_record`.
-  `woc_freehold_load_failures_total` splits load failures by `kind`. Four of
-  these are worth an alert. `writes_without_record` counts a write that reached
+  `woc_freehold_load_failures_total` splits load failures by `kind`, and read
+  that split with one caveat: `unadmitted` currently carries FOUR different
+  causes, a full local admission cap, a missing background permit, a thrown
+  read, and a host with no store, alongside the genuinely row-level stranded
+  slot, so a spike there is not yet a diagnosis on its own. Separating them is a
+  named gate in docs/freeholds/persistence-rollout-contract.md section 8a. Four
+  of these are worth an alert. `writes_without_record` counts a write that reached
   the statement with no document to send, which is the terminal state of every
   way this store has ever lost a save; it should be flat at zero, and any
   sustained increase means edits are being dropped silently. A rising `quiesced` means the

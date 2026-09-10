@@ -3,11 +3,17 @@
 Status key: FIXED (with the commit that did it) / RULED (reviewed, no change warranted,
 with the reason).
 
-THE ROUND IS NOT CLOSED. Six fix rounds have run and FIVE of the six introduced a defect
-worse than one they closed, each caught by a fresh reviewer and never by the round's own
-green tests. The sixth, `45f7d41508`, has not been reviewed by anyone. An earlier version
-of this line declared the round closed after the third; that was wrong three times over
-and is corrected here rather than quietly amended.
+THE ROUND IS NOT CLOSED. NINE fix rounds have now run and EIGHT of the nine introduced a
+defect worse than one they closed, each caught by a fresh reviewer and never by the
+round's own green tests. An earlier version of this line declared the round closed after
+the third; that was wrong three times over. A later version said six rounds with the sixth
+unreviewed; that was true when written and went stale within two commits. Both are
+corrected here rather than quietly amended.
+
+READ THE ROUNDS SEVEN, EIGHT AND NINE SECTION BEFORE ANY OTHER PART OF THIS FILE. Rounds
+seven and eight reverted a mechanism that Y1, Z6 and W4 below still describe as the live
+fix, and round nine replaced the seal those three argue about. Those three entries are
+HISTORY, and each now carries a pointer saying so.
 
 Nine reviewers were dispatched and nine reported: migration-safety, database-performance,
 privacy-security, server-hot-path, architecture, cross-platform-sync, test-coverage,
@@ -229,11 +235,15 @@ worse than the one it closed. That is the reason the rule exists.
   next save and every later edit of that first session was dropped with a misleading
   "the live record is not the record this entry loaded". Found by the implementer and
   confirmed independently by a reviewer reproducing it against the same commit.
-  FIXED across 23ffc92983 (the identity seal) and 2f298c24a1 (the sim-side stamp and its
-  tests) by the correction both arrived at: the entry records the document as ACTUALLY
-  WRITTEN, and a new sanctioned sim writer `stampFreeholdPlotId` teaches the
+  FIXED AT THE TIME across 23ffc92983 (the identity seal) and 2f298c24a1 (the sim-side
+  stamp and its tests) by the correction both arrived at: the entry records the document as
+  ACTUALLY WRITTEN, and a new sanctioned sim writer `stampFreeholdPlotId` teaches the
   live record the same identity, so the row, the entry and the record agree from the
-  first insert. The seal's standalone stand-in clause is gone.
+  first insert.
+  HISTORY, NOT CURRENT. `stampFreeholdPlotId` was deleted in round seven (4733572c0a),
+  because W4 showed the stamp lands on whatever record exists at COMMIT time. Y1's own
+  failure then came back on a different path and is closed differently in round nine; see
+  V2 below.
 - Y2 SHOULD-FIX (hot path). The shutdown drain's deadline had never been derived against
   the write cap: at four concurrent writes and a ten millisecond statement it covers
   about four thousand owners, and five thousand dirty owners left 1,584 unwritten.
@@ -310,7 +320,11 @@ was reviewed on that assumption. It had.
   update three literals, and the loader would then mark every newly minted id malformed
   and write-block the account. FIXED, with refusal cases so the pin is not vacuous.
   The same reviewer's other finding, the minted id never reaching the live record, was
-  already closed by stampFreeholdPlotId.
+  closed AT THE TIME by stampFreeholdPlotId.
+  HISTORY, NOT CURRENT: that stamp was deleted in round seven, so a fresh account's live
+  record carries the stand-in for its whole first session again. Round nine makes that
+  legal rather than reversing it, and the residual (the live plot identity differs between
+  two sessions of one account for timing reasons alone) is carried as V6 below.
 - Z7 NITS, all applied: a byte-ceiling comment called a measurement on one fixture a
   theoretical ceiling; an assertion that could never fail (a newline sought in
   whitespace-collapsed text) became an occurrence count; the pre-gate expression was
@@ -357,9 +371,11 @@ before it, with an executed proof rather than an argument.
   seeds a default; stamping there gives the empty default the row's durable identity, which is
   the only discriminator the write seal has. The seal then stops firing and the next sweep
   writes an empty tier-0 Inn Room over a real house, with the plot identity unchanged and
-  every counter reading healthy. FIXED in 45f7d41508 by stamping only a document that came
-  from the live record. The reviewer's alternative guard was rejected on their own advice: it
-  closes this path but would quiesce a healthy brand-new account.
+  every counter reading healthy. FIXED AT THE TIME in 45f7d41508 by stamping only a document
+  that came from the live record. The reviewer's alternative guard was rejected on their own
+  advice: it closes this path but would quiesce a healthy brand-new account.
+  HISTORY, NOT CURRENT: rounds seven and eight removed the stamp altogether and replaced it
+  with a pristine-record test, and round nine replaced that in turn. See V1 and V2.
 - W5 SHOULD-FIX, round four. `leave_captures` never returned to zero, because a second leave
   over a surviving capture held one document and counted two. It is the only stated bound on a
   measured 66 MiB retention, and a bound that cannot read zero is not one. FIXED.
@@ -377,3 +393,163 @@ before it, with an executed proof rather than an argument.
   disagree, where the server reads one map). A green suite proved nothing here on five
   separate occasions. Every guard in this subsystem is now mutation-checked in both
   directions, and the ones no behaviour test can isolate say so instead of pretending.
+
+## ROUNDS SEVEN, EIGHT AND NINE
+
+Rounds seven (`4733572c0a`) and eight (`7269da3a5d`) landed after the section above was
+written and were not folded into it, which is why three entries there described a deleted
+function as the live fix. Round nine is a VERIFICATION session's own fix round: it was
+dispatched to find a defect rather than to confirm the work, and it found two.
+
+- V0 PROCESS, recorded first because it is what the rest of this section rests on.
+  Round seven deleted `stampFreeholdPlotId` and the `stampPlotId` port; round eight added
+  the pristine-record test. Neither round updated this ledger, so Y1, Z6 and W4 asserted a
+  reverted mechanism for two commits, and the header still said six rounds with the sixth
+  unreviewed while the tip carried eight. For a packet whose control mechanism IS a record
+  that is corrected rather than quietly amended, that is the failure the record exists to
+  prevent. Independently reported by the architecture reviewer in round nine.
+
+- V1 BLOCKING (correctness), round nine, the SEVENTH distinct path to an empty default
+  landing on a real house. Round eight's pristine test closes the blind window only while
+  the reseeded record is UNTOUCHED. A seed stops being pristine the instant the returning
+  player does anything: one tier grant today, one furnishing once that writer lands. The
+  record is then a stand-in identity at revision one standing against an entry that
+  committed revision seven, both of the seal's tests pass, and the empty default is
+  compare-and-swapped over the real house with `plot_id` untouched and no counter moving.
+  REPRODUCED against the real store before the fix: three writes where two were correct,
+  the third carrying `layoutJson` `[]` at `wireRev` 1 against `expectedDurableRev` 2, over
+  a row holding a cottage with a furnishing, a trophy, condition 91 and policy friends at
+  revision 7. No error line, no counter.
+  FIXED in 9468d374d9 by a third test: under the stand-in identity, a live revision
+  strictly BELOW the entry's last committed one is a different record. That is decidable
+  where "newer" is not, because every sanctioned writer only increments and every install
+  the store offers a rejoin carries at least the committed revision.
+  Reachability today is dev-grant-only, because `setFreeholdTier` is the one live-record
+  mutator this release ships. It becomes ordinary the moment the furnishing writer lands,
+  and the code comment claimed the window was closed.
+
+- V2 BLOCKING (correctness), round nine, the MIRROR of V1 and a live defect of its own.
+  Since round seven deleted the stamp, nothing teaches a live record its minted name, so a
+  first-session record carries the stand-in for as long as it lives. If that account's
+  store entry is dropped and RE-READ from the row it just inserted (`retain`'s lost-entry
+  reload after an orphan sweep or a same-account leave, or a second character joining on
+  `preload`'s already-live-but-unloaded arm), `entry.state` comes back holding the ROW's
+  minted name while the same live record still holds the stand-in. The names differ, the
+  seal fires, and the account is write-blocked for the rest of its session with a
+  misleading "the live record is not the record this entry loaded". This is Y1's own
+  failure, moved from the commit path to the row-read path by round seven.
+  Found by the test-coverage reviewer and REPRODUCED independently against the real store
+  (`quiesced: 1`, one error line, every later edit discarded).
+  FIXED in 9468d374d9: a stand-in is the ABSENCE of a name, not a different one, so the
+  name comparison is skipped for it and continuity decides instead. A record carrying any
+  other name is still refused outright.
+
+- V3 SHOULD-FIX (correctness), round nine's own change, caught by its own control. Hoisting
+  the identity comparison out of `seededOverReal`'s `&&` chain into a named constant took
+  it out from behind `entry.state !== null`, so an entry with no cached state would have
+  dereferenced null on every account's first write. It did not fire only because such a
+  record always carries the stand-in and the other conjunct short-circuits first, which is
+  a coincidence of another rule rather than a guard. Found by a no-op mutation control
+  whose 36 unexplained failures did not match the mutant applied. FIXED in the same commit.
+  Recorded because the control is the only reason it was seen.
+
+- V4 SHOULD-FIX (correctness), round nine. The shutdown drain armed on `isDirty` alone,
+  while the periodic sweep and the leave flush both probe the live revision first, and the
+  revision probe is the ONLY dirty detector with a production caller in this release. The
+  drain therefore could not see an edit at all. It was correct only by the shutdown
+  ORDERING in `server/main.ts`, which is a property of another file. Found independently by
+  the database-performance reviewer (P2-6). FIXED in 9468d374d9, one expression, pinned.
+
+- V5 SHOULD-FIX (simplification with a correctness edge), round nine. Once V2's exemption
+  landed, `applyWriteResult`'s second cached identity became unobservable: caching the live
+  record's name instead of the row's no longer changes any outcome, and a mutation pass
+  confirms it (the mutant that swaps them survives the whole suite). The dual-identity
+  model is what rounds six, seven and eight fought over, and an axis no test can
+  distinguish is one a later reader reasons from wrongly. REMOVED in 9468d374d9: the entry
+  caches one identity, the document as sent.
+
+- V6 SHOULD-FIX, carried NOT fixed, and named rather than deferred anonymously. A fresh
+  account's live plot identity is the stand-in for its whole first session and the row's
+  minted id afterwards, so the same account's live record answers to two different names
+  across two sessions for timing reasons alone. The wire is dark, `freeholdDescriptorFor`
+  has no production caller, and `account_freeholds` declares a UNIQUE `plot_id` precisely
+  because a client echoes it back, so 08a inherits this. Owed by the release that publishes
+  the descriptor.
+
+- V7 SHOULD-FIX, applied. The revision-coupling source scan that BOTH the sweep and now the
+  seal depend on read only `state.ts`, while the eight bodies reserved for the furnishing
+  writers sit in `commands.ts`. A mutator landing where the next one is going to land bumped
+  no revision and was invisible to the only detector this release ships. Widened to the
+  directory in e70164a57c and proved by planting one.
+
+- V8 SHOULD-FIX, applied. Neither byte ceiling's DEFAULT was pinned: every assertion in the
+  case that names them used a document under both ceilings, so swapping the writer's or the
+  loader's default to the wider stored bound left the suite green. The loader's default is
+  the only thing between an over-canonical row and a record this realm could write and never
+  read back. Pinned in 8ad29098f4 against a record that sits between the two ceilings, which
+  is constructible only because an identifier is bounded by LENGTH and not by bytes.
+
+- V9 NITS, applied: the by-kind metric keyed its series on the producer's own map rather
+  than a declared vocabulary (so an identity-keyed tally reached the scrape) and its scrape
+  memo was keyed on nothing; the hearth module skipped the account-id guard its sibling
+  runs on every entry point; the exponent docblock in `persisted.ts` carried a measurement
+  that contradicted the same file's other docblock, and the wrong one was the one the
+  re-measure commit missed; the visit-policy vocabulary was on the directory barrel with no
+  barrel consumer; the by-path imports of `state.ts` carried no reason; DEPLOY.md and
+  `.env.example` said the account cascade was the only removal path without saying that the
+  player-facing account removal is a soft delete that fires no cascade, and neither warned
+  that a dev tier grant is now durable.
+
+- V10 TEST QUALITY, applied. Three cases were inert for their own claims and a mutation
+  pass proved it: the fresh-account capture case asserted only on a store that had attempted
+  nothing (both mutants it was written against left it green), the queued-then-held case
+  named `runWrite`'s post-queue re-check while actually pinning `settle`'s re-arm gate, and
+  the two ceiling-default cases are V8. The first two are repaired or retitled to what they
+  actually prove.
+
+- V11 RULED, no change, each verified by mutation rather than asserted. Three clauses of
+  `owesWork` (`running`, `pending`, the deferred set) are redundant under today's arming
+  rules, not one as the comment claimed. `runWrite`'s post-queue `blocked()` re-check is
+  the middle of three layers of one gate and nothing outside a write result can block an
+  entry, so no behaviour test isolates it; removing ALL THREE layers does fail the suite,
+  and each of the outer two is now pinned on its own. The mint-once guard on the absent
+  arm cannot be reached twice for one entry. The layout, trophies, tier, condition and
+  visit-policy dimensions of the seal's second test need a record carrying content at
+  revision zero, which no sanctioned writer produces; they are kept for totality over the
+  persisted shape and are the net under the one coupling the third test cannot check for
+  itself. Every one of these now says so in the source instead of reading as a live guard.
+
+- V12 CARRIED, NOT FIXED, and each named with its reviewer and its measurement. These are
+  behaviour or policy changes to a bounded store, in a file where eight of nine rounds
+  introduced a defect, and they are recorded in the rollout contract as named release gates
+  rather than attempted at the end of a verification session:
+  * an admission-class load refusal (the local cap full, or no permit inside the login
+    bound) is recorded as a TERMINAL hold, so a capacity blip becomes a session-long
+    housing outage for that account and `retain`'s repair arm cannot reach it, because
+    `holdResult` has already set `loaded`. Measured by the database reviewer: with the
+    shared gate saturated, 8 of 8 logins at 1 join/s were refused, and a lone re-join for a
+    refused account still replayed the hold.
+  * the load cap (4) and the write cap (4) are independent and sum past the shared gate's
+    capacity of 7; the store was measured holding 7 of 7 permits with other named producers
+    queued behind it.
+  * a dirty entry with no live record and no capture re-arms every sweep forever and is
+    never collected (12 sweeps, 12 permits, `writesWithoutRecord` 1 to 13). No production
+    sequence reaching that state was named by anyone.
+  * under a sustained permit refusal the entry map's stated TIME bound does not apply at
+    all, because `owesWork` is what suspends it; measured at 96 MiB per 5,000 owners at the
+    shipped ceiling and 660 MiB at the approved one.
+  * the leave reserve is two slots in total rather than two per leaver: with 296 background
+    writes deferred, 98 of 100 simultaneous leave flushes hit the full 2,000 ms deadline
+    with the write unlanded.
+  * the login read path inherits the 15,000 ms pool statement timeout, three times the
+    deliberately short permit bound, on a handshake with no deadline of its own.
+  * the subject-access export read carries no LIMIT and no byte gate, while the account
+    read's `LIMIT 2` is justified against exactly that hazard.
+  * four distinct load-failure causes all report `unadmitted`, which is the discrimination
+    the metric's own help text promises.
+  * the write path serializes each document twice (the refusal's byte measure, then the two
+    columns), measured at 0.225 ms per save at the 420-row ceiling, and none of that codec
+    cost reaches a counter.
+  * `entry.state` is a SECOND full copy of every online owner's house and a leaving owner
+    briefly holds a third, measured at 10,051 bytes per copy at the shipped ceiling and
+    69,452 at the approved one. Only the capture is documented today.

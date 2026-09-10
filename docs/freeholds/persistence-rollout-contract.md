@@ -422,6 +422,73 @@ rows must go, that is a restore-from-backup decision with a named owner, not a r
 step. The table and column names above are owned by `FREEHOLD_SCHEMA` and
 `FREEHOLD_HEARTH_SCHEMA`; a rename there updates this block in the same change.
 
+## 8a. Named gates this contract carries UNCLOSED
+
+Every item here is a MEASURED finding from the review rounds this artifact went through,
+left open on purpose rather than fixed at the end of a verification session, and each is a
+gate on housing activation rather than a note. None is anonymous: each names what was
+measured and who measured it, and the full detail is in
+[the findings ledger](qa/persistence-2026-09-08/findings.md) under V12. Nothing here is a
+signature and nothing here grants activation.
+
+CAPACITY REFUSALS ARE TERMINAL, and they must not be. A load refused because the local
+admission cap was full, or because no background permit arrived inside the login bound, is
+recorded with `entry.loaded` set, so it replays for the life of the entry and `retain`'s
+lost-entry repair arm cannot reach it. A capacity blip therefore becomes a session-long
+housing outage for that account, and a hold has no player-facing surface in this release.
+Measured with the shared gate saturated: 8 of 8 logins at 1 join/s refused, and a lone
+re-join for a refused account still replayed the hold. The four fixture classes in
+section 4 justify a terminal hold for a DATA cause; none of them sanctions one for a
+capacity cause, and this contract does not.
+
+THE TWO ADMISSION CAPS SUM PAST THE SHARED GATE. The load cap of four and the write cap of
+four are independent counters against a gate whose capacity is seven, and the store was
+measured holding all seven while other named producers queued. The write cap's own
+rationale says the surplus waits in a bounded set this store owns; that is true of writes
+and not of loads, which queue on the shared gate.
+
+RETENTION UNDER A STALLED GATE IS UNBOUNDED. The `entries` map's stated limit is a TIME
+bound, join rate times grace period. That describes the healthy path only: a write that
+never gets a permit returns without quiescing, so the entry stays dirty, `owesWork` keeps
+it, and neither removal path can collect it. Measured at 96 MiB per five thousand owners at
+the shipped tier ceiling and 660 MiB at the approved one, with the leave capture on top.
+The same shape produces an entry that re-arms every sweep forever with nothing to write
+(twelve sweeps, twelve permits, `writes_without_record` climbing); no production sequence
+reaching that state has been named.
+
+THE LEAVE RESERVE IS TWO SLOTS IN TOTAL, not two per leaver. With 296 background writes
+deferred, 98 of 100 simultaneous leave flushes hit the full `FREEHOLD_PERSIST_LEAVE_FLUSH_MS`
+deadline with the write unlanded. Nothing is lost while the process lives, but every leave
+adds its full bound to `GameServer.leave`, which is what releases the character lease.
+
+THE LOGIN READ'S DOMINANT BOUND IS UNSTATED. `FREEHOLD_PERSIST_LOAD_PERMIT_WAIT_MS` is
+deliberately short, and neither login-path query uses the statement-timeout seam, so both
+inherit the 15,000 ms pool bound on a handshake that has no deadline of its own. In health
+these statements are sub-millisecond; a sick database is exactly when this binds.
+
+THE EXPORT READ IS UNBOUNDED. `freeholdsForExport` selects both content columns for every
+row with no LIMIT and no byte gate, while the account read's `LIMIT 2` is justified in this
+same contract against exactly that hazard. It is the owner's only readback, so the bound
+has to be widened rather than copied.
+
+THE FOUR LOAD-FAILURE CAUSES ARE ONE LABEL. `refuse()` reports `unadmitted` for a full
+admission cap, a missing permit, a thrown read and a host with no store, alongside the
+genuinely row-level stranded-slot cause. That is precisely the discrimination the metric's
+own help text promises an operator, and only the free-text detail separates them.
+
+THE WRITE PATH'S CODEC COST IS UNMEASURED AND PAID TWICE. Each save serializes the document
+once for the refusal's byte measure and again for the two content columns, measured at
+0.225 ms per save at the 420-row ceiling, and `write_ms` brackets only the statement, so
+none of it reaches a counter.
+
+THE STORE HOLDS A SECOND COPY OF EVERY ONLINE OWNER'S HOUSE. `entry.state` is a full record
+distinct from the sim's live one, and a dirty leaver briefly holds a third. Measured at
+10,051 bytes per copy at the shipped ceiling and 69,452 at the approved one. Only the leave
+capture is documented today, and the second copy is the larger standing cost.
+
+A held row still has NO PLAYER-FACING SURFACE, which section 4 already records; every item
+above makes a hold more reachable, so that gap and these are one obligation.
+
 ## 9. Cross-links
 
 Outbound, the documents this contract depends on:

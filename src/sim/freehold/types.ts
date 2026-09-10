@@ -23,6 +23,19 @@ declare const freeholdPlotIdBrand: unique symbol;
  * OWNER KEY is the identity every sim rule uses. Two plots differing only in
  * this string must behave identically, which is what makes it safe to generate,
  * safe to show and safe to change.
+ *
+ * OWED WORK, named here because the wire contract and the sim contract disagree
+ * and only the sim half is true today. Nothing teaches a LIVE record its minted
+ * public identity: the store mints one, writes it to the row, and leaves the
+ * record carrying PENDING_FREEHOLD_PLOT_ID for the whole of a fresh account's
+ * first session, so the same account's live record answers to the stand-in in
+ * one session and to the minted id in the next, for timing reasons alone. That
+ * is harmless while nothing publishes the descriptor (the wire is dark and
+ * `freeholdDescriptorFor` has no production caller), and it is not harmless
+ * afterwards: `account_freeholds` declares a UNIQUE `plot_id` precisely because
+ * a client echoes it back, and every fresh account's live record currently
+ * answers to the same stand-in. The release that publishes the descriptor owes
+ * the assignment. See the persistence rollout contract's carried gates.
  */
 export type FreeholdPlotId = string & { readonly [freeholdPlotIdBrand]: true };
 
