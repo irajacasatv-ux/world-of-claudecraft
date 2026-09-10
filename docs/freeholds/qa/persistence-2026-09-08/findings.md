@@ -3,12 +3,19 @@
 Status key: FIXED (with the commit that did it) / RULED (reviewed, no change warranted,
 with the reason).
 
-THE ROUND IS NOT CLOSED. NINE fix rounds have now run and EIGHT of the nine introduced a
-defect worse than one they closed, each caught by a fresh reviewer and never by the
-round's own green tests. An earlier version of this line declared the round closed after
-the third; that was wrong three times over. A later version said six rounds with the sixth
-unreviewed; that was true when written and went stale within two commits. Both are
-corrected here rather than quietly amended.
+THE ROUND IS NOT CLOSED, AND THE VERDICT IS FAIL. THIRTEEN fix rounds have now run and
+ELEVEN of the thirteen introduced a defect worse than one they closed, each caught by a
+fresh reviewer, by the gate, or by a mutant, and NEVER by the round's own green tests.
+Round thirteen is itself no exception: three of its six findings were defects the twelfth
+round's own fix introduced or left, and two more were found only by mutating code no test
+imported. An earlier version of this line declared the round closed after the third; that
+was wrong three times over. A later version said six rounds with the sixth unreviewed, and
+a later one said nine; each was true when written and went stale within two commits. All
+are corrected here rather than quietly amended.
+
+THE COUNT THAT MATTERS IS NOT THE ROUND COUNT. It is that no round has yet been read by a
+fresh pair of eyes and found clean, so the correct prior for the next reader is that this
+one is wrong too.
 
 READ THE ROUNDS SEVEN, EIGHT AND NINE SECTION BEFORE ANY OTHER PART OF THIS FILE. Rounds
 seven and eight reverted a mechanism that Y1, Z6 and W4 below still describe as the live
@@ -18,7 +25,8 @@ HISTORY, and each now carries a pointer saying so.
 Nine reviewers were dispatched and nine reported: migration-safety, database-performance,
 privacy-security, server-hot-path, architecture, cross-platform-sync, test-coverage,
 frontend-seam and qa-checklist. EIGHT of them left a report file in this directory; the
-qa-checklist gate reported inline across two chunks and has no file.
+qa-checklist gate reported inline across two chunks and has no file. Three further FRESH
+lanes then read the fix rounds themselves, one per round from eleven on.
 A SECOND, FRESH review lane then read the fix round itself, because a fix round is
 unreviewed code; its findings are folded in below rather than kept apart.
 
@@ -884,6 +892,34 @@ file now names its ports and nothing supplies them, which is the property that
 lets a Vitest drive the whole lifecycle with no database and no GameServer. Its
 row drops 2343 to 2319, twenty-four under its opening count despite seventy lines
 of new logic.
+
+## THE VALIDATION THIS VERDICT RESTS ON
+
+At tip `29b1f85307`, with `TEST_DATABASE_URL` armed from the main checkout.
+
+- `node scripts/gate_select.mjs` exit 0, PASS, all 12 steps green. The planner FELL
+  BACK to the full suite on a 1,733-path diff, so this is the deeper check rather
+  than the selective one.
+- Full suite: 4,218 test files passed and 1 skipped of 4,219; 63,685 tests passed,
+  2 expected-fail, 28 skipped; 750.58 s.
+- Real-browser suite: 51 files, 429 tests, all passed. It rewrote four PNGs under
+  `docs/screenshots/`, restored with `git checkout --` and NOT committed.
+- `npx tsc --noEmit` exit 0. `npm run ci:changed` exit 0 over 640 files, warnings
+  only, which is the documented pre-existing debt and not this branch's.
+- The two `.pg` suites, run BOTH WAYS to prove the arming rather than assert it:
+  33 passed with the variable set, the same 33 skipped with it unset.
+- Four mutants over `server/freehold_persist_wiring.ts`, each against a proved
+  control of `Tests 183 passed (183)`, all KILLED. One earlier attempt at the third
+  did not apply; its unmutated run is NOT counted as a result and it was re-run.
+- Transaction semantics measured against the dev database rather than reasoned
+  about: a second statement failing under a caught handler leaves the first
+  statement's already-returned rows intact and the trailing COMMIT answers a
+  ROLLBACK tag without throwing, for SQLSTATE 42P01 and 57014 alike; and SET LOCAL
+  bounds each statement separately, two 300 ms sleeps under a 400 ms bound both
+  completing in 612 ms.
+
+A GREEN GATE IS WHERE THIS ROUND STARTED, not where it finished. The gate was green
+at round twelve's tip too, and round thirteen still found six things.
 
 ## THE FOUR RULINGS THIS QA OWES THE MAINTAINER, with the evidence and a recommendation
 
