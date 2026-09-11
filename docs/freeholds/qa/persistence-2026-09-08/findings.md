@@ -1563,6 +1563,63 @@ run and fourteen introduced a defect worse than one they closed, so the honest
 prior for the next reader is that this one is wrong too. A green gate is where
 that reading starts.
 
+## THE VALIDATION ROUND SEVENTEEN RESTS ON
+
+At tip `046008c59d`, fifteen commits on the release-sync merge `d5e7f423c7`, with
+`TEST_DATABASE_URL` armed from the main checkout's `DATABASE_URL`. THIS BRANCH IS
+LOCAL: nothing was pushed, no pull request was opened and nothing was merged.
+
+- `npx tsc --noEmit` exit 0 throughout.
+- `npm run ci:changed` exit 0 (824 warnings, 17 infos, ZERO errors; warnings are
+  not the bar and the whole-repo red is pre-existing debt).
+- `node scripts/gate_select.mjs`, THREE RUNS, and the first two each caught a real
+  defect the ungated sync had left behind rather than anything this round wrote.
+  Run 1 FAILED at `biome (changed files)` on ONE error: a format diff in
+  `scripts/pr_shot_targets.mjs`, the release's own new capture target, which the
+  merge took unformatted and which makes `ci:changed` refuse the entire changed
+  set. Run 2 was abandoned mid-suite when the read of the fix round landed. Run 3
+  reached the end.
+- RUN 3, the full one. The planner FELL BACK to the full suite on a 1,744-path
+  diff, so this is the deeper check rather than the selective one. Diff base
+  resolved as `origin/release/v0.43.0`, which is the integration base the gate
+  sorts to. Every step green through the malware scan and biome. FULL SUITE
+  PASSED: 4,225 test files passed and 1 skipped of 4,226; 63,821 tests passed, 2
+  expected-fail, 28 skipped.
+- IT THEN FAILED AT `browser regressions`, exit 1, on ONE test of 443:
+  `tests/browser/post_grade_fxaa.browser.test.ts`, "softens a diagonal edge and
+  leaves every flat fragment byte-identical", `Error: Test timed out in 15000ms`.
+  DIAGNOSED RATHER THAN ASSERTED, because a browser failure on a persistence
+  round is exactly the shape that deserves suspicion. The test ran 19,231 ms
+  against a 15,000 ms bound, a 28 percent overrun, on a machine whose load
+  average was 117 at the time (a second session was saturating it). This round
+  touches NO render code at all: `git diff --name-only` over the whole range
+  matches nothing under `src/render/`, `src/game/`, or any shader, FXAA or grade
+  path. Re-run ALONE on the same tree it passes, 2 tests, 449 ms of test time
+  against the same 15,000 ms bound, a 34x margin. It is a contention timeout, not
+  a regression.
+- The two `.pg` suites, run BOTH WAYS at this tip to prove the arming rather than
+  assert it: 34 passed with the variable set, the same 34 skipped with it unset.
+- The browser step rewrote seven PNGs under `docs/screenshots/`, restored with
+  `git checkout --` and NOT committed. The tree is clean.
+- All 21 monolith rows measure EXACTLY at their ceilings with zero slack and none
+  raised. `server/game.ts` 9907, `server/db.ts` 4605,
+  `server/freehold_persist.ts` 2193, LOWERED four times across the round
+  (2243 to 2228 to 2215 to 2210 to 2193) against eight extractions.
+- No em dash, en dash or emoji on any line the round added, checked by a
+  byte-level scan over the whole diff.
+
+WHAT THIS VALIDATION DOES NOT COVER, stated rather than implied. The gate's own
+verdict is FAIL, on a step this round can show is environmental; a run on a quiet
+machine is owed before anyone calls the gate green, and nobody should take this
+paragraph as that run.
+
+AND THE VERDICT IS FAIL ON ITS OWN MERITS, independent of the gate. The store's
+test harness still lets `serialize` and `liveRev` contradict `hasLive`. Part of
+it is closed here and the general repair is a deliberate harness rewrite measured
+at forty-plus cases. That is the next session's first work, and the honest prior
+for whoever does it is the one this round earned: it found TWO new paths to the
+one invariant, and its own repair for the first opened the second.
+
 ## ROUND SEVENTEEN: THE UNREVIEWED TAIL WAS READ, AND IT HAD DONE IT AGAIN
 
 Six fresh lanes read `c8bb3d3f31..HEAD` with `5c7e3566ff` first, plus a

@@ -90,6 +90,17 @@ backwards, to two guards of this round's own that narrowed what they replaced.
 `server/game.ts` is at 9907 unchanged and `server/freehold_persist.ts` at 2193,
 LOWERED four times, no ceiling raised.
 
+THE GATE RAN THREE TIMES and the first two each caught a defect the ungated sync
+had left, not one this round wrote: three stale capture digests, then a format
+diff in the release's own new capture target that made `ci:changed` refuse the
+whole changed set. Run three cleared every step and the FULL SUITE PASSED, 4,225
+files and 63,821 tests, then failed at `browser regressions` on ONE test of 443,
+a real-driver FXAA case that timed out at 15,000 ms. Diagnosed rather than
+waved through: it ran 19,231 ms under a load average of 117, this round touches
+no render code at all, and re-run alone on the same tree it passes in 449 ms of
+test time. A run on a quiet machine is still owed before anyone calls the gate
+green.
+
 THE VERDICT IS STILL FAIL, and now on an OPEN DEFECT rather than on the record:
 the store's test harness lets `serialize` and `liveRev` contradict `hasLive`, so
 cases can still model a liveness state the server cannot produce. Part of it was
