@@ -1651,7 +1651,69 @@ seed is byte-equal to a fresh generator run and those five dungeons carry
   login has gone. Exact rather than conservative, because classify runs inside
   the load promise, before any surviving waiter's own race has resolved.
 
-### THE WRITE-SIDE GUARD: RECOMMENDED, NOT TAKEN, AND ESCALATED
+### THE TENTH PATH, AND THE FIX FOR THE NINTH IS WHAT OPENED IT
+
+- Q20 BLOCKING (identity), found by the read of the fix round and REPRODUCED
+  against the store. The sibling exemption Q2 added is the precondition. Two
+  characters of one account ride ONE single-flight read, and `no_budget` is the
+  ONLY kind that leaves a sibling with a clean answer, because every other hold
+  goes through `holdResult` onto the shared entry and both installs then return
+  early. So the sibling keeps the mint alive at classify; the REFUSED login
+  reaches `addPlayer` FIRST, because it stopped waiting earlier and is therefore
+  always ahead in the pipeline, and seeds the stand-in; and the sibling's own
+  install, which would have named the record, is silently discarded by
+  `loadFreehold`'s load-once guard (`if (ctx.freeholds.has(ownerKey)) return`).
+  The entry is left `loaded`, unheld, `durableRev` null and holding `plot:minted1`
+  while the live record carries the stand-in. Measured: a row INSERTED under
+  `plot:minted1`, `write_failures` 0, `quiesced` 0, after which
+  `applyWriteResult` caches the record's stand-in and `foreignIdentity` is
+  `PENDING !== PENDING` for the life of that entry. The eighth path's terminal
+  state, reached through the ninth path's own repair.
+
+WHY THE LOAD-SIDE TEST CANNOT CLOSE IT, and the reason is general rather than
+incidental: the fact it samples (is anyone still waiting) is not the fact that
+matters (will an install actually reach the record). A waiter's install is
+discarded whenever the abandoned login's own `addPlayer` seeds first, and the
+abandoned login is ahead by construction. Any ordering test has this shape.
+
+### THE WRITE-SIDE GUARD: NOW TAKEN, AND WHY IT WAS NOT SOONER
+
+THE FIX IS `insertWouldMintAnUnnamedRow`: the FIRST row for an entry may only be
+created for a record that already carries the identity that row will be created
+under. Judged at the instant the row would be created, so no ordering can matter.
+It is strictly additive to `seedWouldLandOnRealRow`, whose whole body sits behind
+`entry.durableRev !== null`, so the two can never disagree about a document.
+
+AND THE WAITER MACHINERY IS RETIRED RATHER THAN REPAIRED A THIRD TIME. Both of
+its forms carried a defect (an account flag write-blocked a healthy sibling; a
+waiter count opened Q20) and neither was ever sufficient. The load-side ordering
+test keeps only its stand-in arm, which is cheaper and diagnoses better, and its
+own comment now states plainly that it is NOT total and where totality lives.
+`server/freehold_load_waiters.ts` and its suite are deleted; the store's ceiling
+falls to 2193.
+
+WHAT IT COST, and this is the reason the earlier round escalated it rather than
+taking it. The guard refuses the first insert for any entry whose live record
+carries the stand-in, and FIVE store-level seal cases built exactly that state to
+reach `pristineSeed` and its content dimensions. That state is what the install
+fix removed, and a separate reader found the same five modelling it
+independently, so the cases are repaired rather than the guard weakened: each
+carries the INSTALLED identity until its own reseed, as production does. The
+consequence is honest and worth stating, because it is a real reduction in
+defence in depth: `pristineSeed` and its layout, trophies, tier, condition and
+visit-policy dimensions are now unreachable through the store for EVERY entry
+class, not only for row-loaded ones. They remain driven decisively, with literals
+and their own mutants, in `tests/server/freehold_write_seal.test.ts`, which needs
+no store at all.
+
+ONE MORE HARNESS DEFECT CAME OUT WITH IT. The default live identity was GLOBAL,
+answering the last id minted by anyone, so a case driving two accounts handed the
+first owner's record the second owner's identity, which no realm can produce and
+which the new refusal correctly rejects. It is per owner now, attributed through
+the account whose row read is in flight, which is exact because `classify` mints
+between its own read and its own assignment.
+
+### THE WRITE-SIDE GUARD AS IT WAS ESCALATED (superseded, kept for the record)
 
 The order-independent statement of the same invariant is a WRITE-side refusal:
 `entry.durableRev === null && persisted.plotId !== entry.plotId` means the first
@@ -1663,8 +1725,9 @@ adopted the live record's identity, so the two are equal by construction, and th
 next login heals it because `preload` replays that same minted `plotId` with
 `state` and `durableRev` both null, which is `installLoadedFreehold`'s absent arm.
 
-IT WAS NOT TAKEN, and the reason is a decision about what the seal is FOR rather
-than a doubt about the guard. It refuses the FIRST insert for any entry whose
+IT WAS NOT TAKEN AT FIRST, and the reason is a decision about what the seal is
+FOR rather than a doubt about the guard. Q20 settled it: the cost below is real
+and it is smaller than a tenth path. It refuses the FIRST insert for any entry whose
 live record carries the stand-in, and that is the exact state five store-level
 seal cases build, so it makes `pristineSeed` and its content dimensions
 unreachable for every entry class rather than only for row-loaded ones. The
@@ -1904,3 +1967,12 @@ re-confirmed. Each pass ran against a no-op control first and the control's full
   `types.ts` it does not import (1 failed), and omitting a `state.ts` it does
   (1 failed). Both directions, because a one-way pin here is satisfied by an
   empty list, which is how its first cut passed.
+- The INSERT refusal, three mutants against a proved control of
+  `Tests 224 passed (224)`: the guard disabled (2 failed, the ninth and tenth
+  path pins), the predicate inverted so it admits a mismatch and refuses a match
+  (37 failed), and the `durableRev === null` gate dropped, which SURVIVES. That
+  survivor is absorbed rather than a gap and is recorded in the source: once a
+  row exists the seal reaches the same verdict by a different field, and the only
+  way the two could disagree is the state this arm stops from ever getting a row.
+- The load-side stand-in arm, one mutant, KILLED (1 failed), so retiring the
+  waiter machinery did not leave it unpinned.

@@ -68,18 +68,29 @@ the store the fact it lacked, which of its loads a caller has abandoned. The rea
 of THAT fix found it write-blocked an account whose sibling character was still
 waiting on the same single-flight read, which is seventeen for seventeen.
 
-Fourteen further findings applied, from a guild-book revert that could throw out
+Then a seventh lane read THAT fix round and found a TENTH path, which the fix for
+the ninth had opened: two characters of one account ride one single-flight read,
+`no_budget` is the only kind that leaves a sibling with a clean answer, and the
+refused login seeds the stand-in before the sibling's install can name the
+record, which `loadFreehold` then discards as load-once. The invariant is closed
+ORDER-INDEPENDENTLY now, at the instant the row would be created, and the
+ordering machinery is retired rather than repaired a third time.
+
+Eighteen further findings applied, from a guild-book revert that could throw out
 of leave()'s `finally` and skip every re-enterability registration, to three
 unreached conjuncts of the write seal, to an operator gauge caveat stated
-backwards. `server/game.ts` is at 9907 unchanged and
-`server/freehold_persist.ts` at 2215, LOWERED twice more, eight extractions
-total, no ceiling raised.
+backwards, to two guards of this round's own that narrowed what they replaced.
+`server/game.ts` is at 9907 unchanged and `server/freehold_persist.ts` at 2193,
+LOWERED four times, no ceiling raised.
 
 THE VERDICT IS STILL FAIL, and now on an OPEN DEFECT rather than on the record:
 the store's test harness lets `serialize` and `liveRev` contradict `hasLive`, so
-five seal cases prove their claims through a state the server cannot produce.
-Its repair is a deliberate harness rewrite, measured at forty-plus cases, and it
-is the next session's first piece of work. Full detail, every finding and every
+cases can still model a liveness state the server cannot produce. Part of it was
+closed here (the five seal cases that did so, and the global mint identity), but
+the general fix is a deliberate harness rewrite, measured at forty-plus cases,
+and it is the next session's first piece of work. The honest prior for that
+reader is the one this ledger has earned: this round found two new paths to the
+one invariant and its own repairs opened one of them. Full detail, every finding and every
 measurement: [the findings ledger](qa/persistence-2026-09-08/findings.md), round
 SEVENTEEN.
 
