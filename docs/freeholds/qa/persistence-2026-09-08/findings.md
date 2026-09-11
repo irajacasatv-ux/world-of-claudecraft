@@ -1813,6 +1813,62 @@ so it can be attacked rather than trusted:
 The arm is a bound on a state the furnishing writer will make reachable, exactly
 as its own comment says, and the pin is the right shape for that.
 
+### AND THIS ROUND'S OWN FIX ROUND WAS READ, WHICH IS WHERE THREE MORE CAME FROM
+
+A seventh lane read `d5e7f423c7..HEAD` on the standing assumption that a fix
+round is unreviewed code. It found four defects and THREE OF THEM WERE IN THE
+FIXES FOR THE OTHER LANES' FINDINGS, which is the pattern one level down: not
+"the round introduced a defect" but "the round's repairs each narrowed what they
+replaced".
+
+- Q15 SHOULD-FIX. The clock and timer scan was re-derived FROM THE STORE'S
+  IMPORTS, and that is the stale-list trap one level down: it silently dropped
+  `server/freehold_install.ts`, which performs the hearth-clock merge and is
+  precisely where a `Date.now` is a behaviour bug, and which THIS ROUND EDITED,
+  plus `server/freehold_persist_registry.ts`. Both were on the hand-typed list it
+  replaced. An import-derived list also cannot see a module extracted from a
+  SIBLING rather than from the store, which is reachable the moment the
+  load-outcome module splits again. Derived from the DIRECTORY now, with the
+  composition root excluded as a named decision (binding `Date.now` to the
+  store's `nowMs` port is its whole job) and both dropped files pinned by name.
+- Q16 SHOULD-FIX, and it is TWO defects in one pin. The by-path importer pin
+  checked file NAMES and never the leaf lists beside them, so the same commit
+  that added it credited the store with a `types.ts` import it does not have (the
+  claim was true when written and the round's own orphaned-import cleanup
+  falsified it). Worse, the first repair for that was ITSELF VACUOUS: it searched
+  the WHOLE guide, found each file's earliest mention, which is ordinary prose
+  hundreds of characters from any list, and skipped every importer as list-less,
+  so it passed over exactly the claim it was written for. Scoped to the exception
+  paragraph now, with a count of how many lists it actually compared, and killed
+  by mutants in BOTH directions: a leaf credited but not imported, and a leaf
+  imported but omitted.
+- Q17 SHOULD-FIX. The guild-book incident counter sat ABOVE the revert inside the
+  widened try, with the ops log already deleted above the guard, so the faulting
+  sink the round's OWN new case installs discarded that guild's money revert
+  permanently. Only one of the two can be lost there and the money is not it: the
+  revert runs first, and the two cases assert each site's real outcome rather
+  than one shared answer.
+- Q18 NIT. The waiter registry's header claimed `abandoned` false means an
+  install is left. What it knows is that NOBODY IS WAITING, which is narrower:
+  `retain`'s lost-entry repair waits there too and discards its own result.
+  Counting it is still correct, because that repair runs on a join whose next
+  replay installs the entry's identity, and the narrower claim is what is
+  written now.
+- Q19 REFUTED, and judged here rather than dropped. "The round's two new modules
+  ship with no tests in the commit", read off `git status` as untracked. They are
+  tracked, at `2f71cdf9ee`; the lane started before that commit and read the
+  pre-commit tree. Recorded because a refuted finding from a reader this useful
+  is worth the line.
+
+WHAT THAT LANE COULD NOT BREAK, listed so nobody pays for it twice: the waiter
+count across every exit of `preload` (the uncapped fallback, a throwing
+scheduler, two accounts, the drain, a throwing owner key), which floors and
+deletes at zero so the map cannot grow; the five extracted functions as
+field-for-field moves with no dropped counter and no changed default; the three
+new seal cases, each reaching the conjunct its comment names and no other; and
+the typed terminal set, which is a real compile error because the kind list is
+`as const`.
+
 ### THE MUTATION PASS
 
 Every guard added or changed was mutated on disk, its owning suite run, the RED
@@ -1842,3 +1898,9 @@ re-confirmed. Each pass ran against a no-op control first and the control's full
   absorbed dimension recorded above rather than a gap left open).
 - A type mutant rather than a test mutant, for Q12: a one-character typo in the
   terminal set now fails `npx tsc --noEmit`, measured both ways.
+- The directory-derived clock scan, one mutant, KILLED: narrowing the filter back
+  to the store file alone reds on the named `server/freehold_install.ts`.
+- The by-path leaf pin, two mutants, BOTH KILLED: crediting the store with a
+  `types.ts` it does not import (1 failed), and omitting a `state.ts` it does
+  (1 failed). Both directions, because a one-way pin here is satisfied by an
+  empty list, which is how its first cut passed.
