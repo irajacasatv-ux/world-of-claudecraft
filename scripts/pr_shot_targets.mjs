@@ -9092,7 +9092,12 @@ export const TARGETS = [
     // variants then click Expand roster and clip the prompt stack (the price there
     // is the coin-icon readout with bare digits).
     variants: [
-      { key: 'desktop', charName: 'Rueweaver', charClass: 'paladin', beforeLoad: seedLowGraphicsPreset },
+      {
+        key: 'desktop',
+        charName: 'Rueweaver',
+        charClass: 'paladin',
+        beforeLoad: seedLowGraphicsPreset,
+      },
       {
         key: 'desktop-confirm',
         charName: 'Rueweaver',

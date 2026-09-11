@@ -522,9 +522,11 @@ describe('freehold persist constants', () => {
   });
 
   it('keeps every clock and timer behind a port, in EVERY file the store split into', () => {
-    // ACROSS THE WHOLE STORE, not one file. Six modules have come off this file
-    // and each is driveable from a Vitest for exactly this reason; a scan pinned
-    // to SOURCE_PATH would have let a fresh clock or timer land in any of them.
+    // ACROSS THE WHOLE STORE, not one file. Several modules have come off this
+    // file and each is driveable from a Vitest for exactly this reason; a scan
+    // pinned to SOURCE_PATH would have let a fresh clock or timer land in any of
+    // them. Count-free on purpose: two separate rounds left a number here that
+    // the next extraction falsified.
     //
     // DERIVED FROM THE STORE'S OWN IMPORTS, never re-typed. A hand-written list
     // is a scan that goes stale the next time a module comes off, and it goes

@@ -55,11 +55,6 @@ import {
   loadFreehold,
   PENDING_FREEHOLD_PLOT_ID,
 } from '../src/sim/freehold/state';
-// The one sanctioned plot-identity constructor, imported for the one place this
-// module builds a live record: the absent arm's default carries the identity the
-// row will be inserted under, and that value crossed a module boundary as a
-// plain string.
-import { asFreeholdPlotId } from '../src/sim/freehold/types';
 import type { SimContext } from '../src/sim/sim_context';
 import {
   FREEHOLD_PRIMARY_PLOT_INDEX,

@@ -1547,8 +1547,11 @@ const MONOLITHS: MonolithRow[] = [
     // one of them overran. Paid by a SEVENTH and EIGHTH extraction, the waiter
     // registry to server/freehold_load_waiters.ts and the hold answer plus its
     // terminal test to the load-outcome vocabulary.
+    // And 2215 -> 2210 with the import the eighth extraction orphaned: the
+    // absent arm no longer builds the record, so the plot-identity constructor
+    // it reached for went with it. A ratchet row follows the file down.
     file: 'server/freehold_persist.ts',
-    ceiling: 2215,
+    ceiling: 2210,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {
