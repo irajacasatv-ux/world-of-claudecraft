@@ -4161,6 +4161,52 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(h.errors.filter((line) => line.includes('refused (unnamed)'))).toHaveLength(1);
   });
 
+  it('costs ONE session, not an account: the refused entry is collected and re-reads clean', async () => {
+    // THE PROPERTY THAT MAKES THE REFUSAL SAFE, and the one a reader should
+    // check before accepting it. Quiescing is terminal FOR THAT ENTRY, so if the
+    // entry outlived the session the account would be write-blocked forever,
+    // which is a worse outcome than the path being closed.
+    const gate = deferred<FreeholdRowLoad>();
+    let seeded = false;
+    const h = harness({
+      readRow: async () => await gate.promise,
+      hasLive: () => seeded,
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+    });
+    const loading = h.store.preload(ACCOUNT_ID);
+    await tick(20);
+    fireBudget(h);
+    expect((await loading).hold?.kind).toBe('no_budget');
+    gate.resolve({ kind: 'absent' });
+    await tick(30);
+    seeded = true;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.store.saveAllDirty();
+    await tick(40);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.writeCount()).toBe(0);
+
+    // The session leaves. A quiesced entry is BLOCKED, so its dirty clause stops
+    // counting and it owes nothing: both removal paths may collect it.
+    seeded = false;
+    await h.store.flushAndRelease(OWNER_KEY);
+    h.store.saveAllDirty();
+    h.store.saveAllDirty();
+    await tick(30);
+    expect(h.store.stats().entries).toBe(0);
+
+    // The next login builds a fresh entry and reads clean. NO ROW was ever
+    // created, so the row arm is not involved: the absent arm mints again, and
+    // this time the answer carries no hold, so installLoadedFreehold names the
+    // record before addPlayer can seed one.
+    const second = await h.store.preload(ACCOUNT_ID);
+    expect(second.hold).toBeNull();
+    expect(second.state).toBeNull();
+    expect(second.durableRev).toBeNull();
+    expect(second.plotId).not.toBe('');
+    expect(h.store.stats().quiesced).toBe(0);
+  });
+
   it('still names a row when a SIBLING login is still waiting on the same read', async () => {
     // `beginLoad` is single-flight, so two characters of one account ride ONE
     // read. The refusal above is a property of the CALLER, not of the read, and
