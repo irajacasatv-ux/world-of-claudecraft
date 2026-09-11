@@ -1585,7 +1585,15 @@ LOCAL: nothing was pushed, no pull request was opened and nothing was merged.
   sorts to. Every step green through the malware scan and biome. FULL SUITE
   PASSED: 4,225 test files passed and 1 skipped of 4,226; 63,821 tests passed, 2
   expected-fail, 28 skipped.
-- IT THEN FAILED AT `browser regressions`, exit 1, on ONE test of 443:
+- RUN 4, ON A QUIET MACHINE, and this is the one that settles it: `GATE_EXIT=0`,
+  `PASS: all 12 steps green (vitest workers: 8)`. Same tip, same armed database.
+  Full suite 4,225 files passed and 1 skipped of 4,226; 63,821 tests passed, 2
+  expected-fail, 28 skipped. BROWSER REGRESSIONS 52 files and 443 tests, ALL
+  PASSED, which is the step run 3 failed. Malware scan PASS (9,082 files, 457
+  flags, 0 high after priors). Typecheck, the env, server and bot builds and the
+  client bundle all green. The browser step rewrote six PNGs under
+  `docs/screenshots/`, restored with `git checkout --` and NOT committed.
+- RUN 3 HAD FAILED AT `browser regressions`, exit 1, on ONE test of 443:
   `tests/browser/post_grade_fxaa.browser.test.ts`, "softens a diagonal edge and
   leaves every flat fragment byte-identical", `Error: Test timed out in 15000ms`.
   DIAGNOSED RATHER THAN ASSERTED, because a browser failure on a persistence
@@ -1608,10 +1616,9 @@ LOCAL: nothing was pushed, no pull request was opened and nothing was merged.
 - No em dash, en dash or emoji on any line the round added, checked by a
   byte-level scan over the whole diff.
 
-WHAT THIS VALIDATION DOES NOT COVER, stated rather than implied. The gate's own
-verdict is FAIL, on a step this round can show is environmental; a run on a quiet
-machine is owed before anyone calls the gate green, and nobody should take this
-paragraph as that run.
+THE QUIET RUN WAS OWED AND HAS SINCE BEEN MADE. Run 4 above is it, and the gate
+PASSES: the contention diagnosis is confirmed by the step passing rather than by
+the argument for it. Nothing about the gate is outstanding.
 
 AND THE VERDICT IS FAIL ON ITS OWN MERITS, independent of the gate. The store's
 test harness still lets `serialize` and `liveRev` contradict `hasLive`. Part of
