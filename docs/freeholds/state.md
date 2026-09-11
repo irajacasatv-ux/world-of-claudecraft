@@ -76,7 +76,14 @@ record, which `loadFreehold` then discards as load-once. The invariant is closed
 ORDER-INDEPENDENTLY now, at the instant the row would be created, and the
 ordering machinery is retired rather than repaired a third time.
 
-Eighteen further findings applied, from a guild-book revert that could throw out
+A read of THAT fix found no eleventh path and no healthy account write-blocked by
+it, which is the first clean answer this store's identity logic has returned, and
+four claims to weaken: three of the repaired seal cases refuse through a different
+arm than their comments named, and the new refusal costs one LOGOUT rather than
+one session, because a sibling character still online keeps the poisoned record
+alive.
+
+Twenty-two further findings applied, from a guild-book revert that could throw out
 of leave()'s `finally` and skip every re-enterability registration, to three
 unreached conjuncts of the write seal, to an operator gauge caveat stated
 backwards, to two guards of this round's own that narrowed what they replaced.

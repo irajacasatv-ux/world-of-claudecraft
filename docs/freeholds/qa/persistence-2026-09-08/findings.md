@@ -1932,6 +1932,43 @@ new seal cases, each reaching the conjunct its comment names and no other; and
 the typed terminal set, which is a real compile error because the kind list is
 `as const`.
 
+### AND THE TENTH PATH'S FIX WAS READ TOO, WHICH IS WHERE THE LAST FOUR CAME FROM
+
+An eighth lane read `0077f6018f` and what followed it. IT FOUND NO ELEVENTH PATH
+and no healthy account write-blocked by the new refusal, which is the first time
+in this ledger a reader has come back from the store's identity logic with
+neither. What it did find is four claims the round made that the code does not
+support, three of them about the round's own repairs.
+
+- Q21 SHOULD-FIX. THREE of the five repaired seal cases refuse through the
+  IDENTITY arm now, not the arms their comments name. Once the record carries its
+  installed name, `applyWriteResult` caches that name, so a reseeded default
+  differs by name and `foreignIdentity` short-circuits everything after it.
+  Measured against the real predicate with BOTH continuity arms neutralised. The
+  two anti-vacuity cases were worse than mislabelled: one claimed a record
+  identical to a pristine seed while its own fixture makes `standInSeed` false,
+  and the other was titled for a stand-in record it no longer carries. All five
+  are renamed and re-commented to the outcome they still prove, each pointing at
+  the seal's own suite for the dimension it used to claim.
+- Q22 SHOULD-FIX. The seal's own justification for keeping the pristine arm was
+  false in the same way, and it contradicted this ledger: it said the arm is dead
+  for a ROW-LOADED entry but the only thing standing for an entry that MINTED its
+  own row, where the name comparison cannot fire at all. Both halves are the same
+  half now. The file says so, and the dangling "see the OPEN GATE below" goes
+  with it.
+- Q23 NIT. The per-owner mint attribution is exact for SEQUENTIAL loads only. One
+  variable set when a read starts and read when the mint happens would
+  misattribute across two overlapping accounts, which is the defect it replaced
+  one level up. Unreachable by any case today, and stated rather than closed.
+- Q24 SHOULD-FIX, and it is a correction to this round's own new pin. The insert
+  refusal costs one LOGOUT, not one session. The poisoned record is evicted by
+  `removePlayer` only when the LAST session sharing the owner key leaves, so
+  while a sibling character is still online the record outlives the entry and
+  each new login's classify sees the stand-in and takes the terminal hold again.
+  Bounded either way, never unbounded, and the weaker claim is the true one. The
+  case also drove its leave in the reverse of production order, which was
+  harmless here and is corrected.
+
 ### THE MUTATION PASS
 
 Every guard added or changed was mutated on disk, its owning suite run, the RED
