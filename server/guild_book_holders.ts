@@ -320,6 +320,13 @@ export function revertOwnGuildBookOps<S extends GuildBookRevertSession>(
     try {
       index.resync(dead);
       if (log.length === 0) continue;
+      // THE REVERT BEFORE THE COUNTER, because the ops log is already deleted
+      // above and only one of these two can be lost. With the counter first, a
+      // faulting sink (a process-wide slot nothing here owns) discarded that
+      // guild's money revert permanently and left the deltas live with no log to
+      // retry from; with the revert first, the same fault costs one telemetry
+      // sample and the operator still gets the error line from the catch.
+      sim.revertGuildBankDeltas(guildId, log);
       // Counted per GUILD, the unit the remedy applies to: reaching this at all
       // means a session that can never commit again held unflushed book ops,
       // the shape the Phase 3 QA dupe lived in. This is the ONE reconcile site
@@ -327,7 +334,6 @@ export function revertOwnGuildBookOps<S extends GuildBookRevertSession>(
       // five call sites. A guild whose log is already empty is a bookkeeping
       // no-op, not an incident, and is not counted.
       gameMetricsCounters().guildBankIncident('reconcile');
-      sim.revertGuildBankDeltas(guildId, log);
     } catch (err) {
       console.error(`guild book revert failed for guild ${guildId}; its ops stay live:`, err);
     }

@@ -306,7 +306,7 @@ carries an opaque plot id only.
   SIX server files reach these leaves by path, and they are ONE consumer split
   across six files as the store was extracted, not six decisions:
   `server/freehold_persist.ts` (`persisted.ts`, `hearth_key.ts`, `state.ts`,
-  `load_report.ts`, `types.ts`), `server/freehold_persist_wiring.ts`, the
+  `load_report.ts`), `server/freehold_persist_wiring.ts`, the
   composition root beside it (`persisted.ts`, `state.ts` and
   `FREEHOLD_VISIT_POLICIES` from `./types`), and the four modules that came off
   the store: `server/freehold_install.ts` (`hearth_key.ts`, `persisted.ts`,

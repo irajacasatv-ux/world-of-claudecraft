@@ -817,6 +817,56 @@ describe('src/sim/freehold/ source scan', () => {
     expect(importers).toContain('server/freehold_persist.ts');
     expect(importers.length).toBeGreaterThan(5);
     for (const importer of importers) expect(guide, importer).toContain(`\`${importer}\``);
+
+    // AND THE LEAF LIST BESIDE EACH NAME, because naming the file was the half
+    // that passed while the prose beside it was wrong: the round that added this
+    // pin also credited the store with a `types.ts` import it does not have, and
+    // a name-only check is blind to exactly that.
+    //
+    // SCOPED TO THE EXCEPTION PARAGRAPH, which the first cut of this was not: it
+    // searched the WHOLE guide, found each file's earliest mention (which is
+    // ordinary prose hundreds of characters from any list), and skipped it as
+    // list-less. Every importer was silently exempt and the pin passed over the
+    // false claim it was written for. The window is asserted below so a rewrite
+    // that moves the paragraph reds instead of emptying the check.
+    const first = guide.indexOf('FIRST, the SERVER');
+    const second = guide.indexOf('SECOND, four CLIENT modules');
+    expect(first, 'the server exception paragraph must be findable').toBeGreaterThan(-1);
+    expect(second).toBeGreaterThan(first);
+    const paragraph = guide.slice(first, second);
+    let checked = 0;
+    for (const importer of importers) {
+      const at = paragraph.indexOf(`\`${importer}\``);
+      if (at < 0) continue;
+      const open = paragraph.indexOf('(', at);
+      // `server/game.ts` is described in prose because it reaches one leaf, so a
+      // list that is not adjacent belongs to a LATER importer and is not its own.
+      if (open < 0 || open - at > `\`${importer}\``.length + 2) continue;
+      const close = paragraph.indexOf(')', open);
+      const claimed = new Set(
+        [...paragraph.slice(open, close).matchAll(/`([a-z_]+)\.ts`/g)].map((m) => m[1]),
+      );
+      const real = new Set(
+        [
+          ...readFileSync(importer, 'utf8').matchAll(
+            /from '[./]*\/src\/sim\/freehold\/([a-z_]+)'/g,
+          ),
+        ].map((m) => m[1]),
+      );
+      for (const leaf of claimed)
+        expect([...real], `${importer} is credited with ${leaf}.ts it does not import`).toContain(
+          leaf,
+        );
+      for (const leaf of real)
+        expect([...claimed], `${importer} imports ${leaf}.ts and the guide omits it`).toContain(
+          leaf,
+        );
+      checked += 1;
+    }
+    // AND IT ACTUALLY CHECKED SOMETHING. Every guard above is a `continue`, so
+    // without this the whole loop is one silent skip away from vacuous, which is
+    // how its first cut passed over the defect it exists for.
+    expect(checked, 'no importer leaf list was compared').toBeGreaterThan(4);
   });
 
   it('carries no store or ledger-service vocabulary in any file, comments included', () => {

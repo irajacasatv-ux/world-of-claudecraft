@@ -434,9 +434,14 @@ describe('revertOwnGuildBookOps, the coordinator method this module now owns', (
 
     expect(() => revertOwnGuildBookOps(index, sim, dead, [7, 9])).not.toThrow();
 
-    // The FIRST guild faulted and the SECOND was still undone, which is the
-    // header's promise and the half a bare not-to-throw would miss.
-    expect(sim.reverted.map((entry) => entry.guildId)).toEqual([9]);
+    // THE SECOND GUILD IS ALWAYS UNDONE, which is the header's promise and the
+    // half a bare not-to-throw would miss. What differs is guild 7, and the
+    // difference is the ORDER inside the try: the resync runs before the revert,
+    // so its fault costs that guild's revert; the counter runs AFTER it, so its
+    // fault costs one telemetry sample and the money is still undone. Only one
+    // of the two can be lost, because the ops log is deleted above the guard,
+    // and the money is the one that must not be.
+    expect(sim.reverted.map((entry) => entry.guildId)).toEqual(site === 'resync' ? [9] : [7, 9]);
     // Every guild's marks are cleared either way: they are deleted above the
     // guard, so a fault can never leave the disband guard watching a dead one.
     expect(dead.dirtyGuildBanks.size).toBe(0);

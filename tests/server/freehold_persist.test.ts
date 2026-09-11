@@ -12,7 +12,7 @@
 //    no matter how many marks arrive, and must clear ONLY the generation the
 //    write actually committed.
 
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createBackgroundDbGate } from '../../server/background_db_gate';
 import type {
@@ -528,27 +528,42 @@ describe('freehold persist constants', () => {
     // them. Count-free on purpose: two separate rounds left a number here that
     // the next extraction falsified.
     //
-    // DERIVED FROM THE STORE'S OWN IMPORTS, never re-typed. A hand-written list
-    // is a scan that goes stale the next time a module comes off, and it goes
-    // stale SILENTLY: every entry still exists, so the anti-staleness floor
-    // below reads clean while the new sibling is unscanned. That is exactly what
-    // happened when the revision probe was extracted, so the list is computed.
-    // The composition root is deliberately absent and cannot appear here,
-    // because the store does not import it: binding Date.now to the store's
-    // nowMs port is that file's whole job.
-    const files = [
+    // DERIVED FROM THE DIRECTORY, never re-typed and never from the store's own
+    // imports. A hand-written list goes stale the next time a module comes off,
+    // and it goes stale SILENTLY, because every entry still exists and the
+    // anti-staleness floor below reads clean; that is exactly what happened when
+    // the revision probe was extracted. An IMPORT-derived list is the same trap
+    // one level down: it drops any sibling the store does not import itself
+    // (server/freehold_install.ts, which performs the hearth-clock merge and is
+    // precisely where a Date.now is a behaviour bug, and
+    // server/freehold_persist_registry.ts), and it cannot see a module extracted
+    // from a sibling rather than from the store. The directory can see all of
+    // them.
+    //
+    // ONE EXCLUSION, and it is a decision rather than an omission: the
+    // composition root binds Date.now to the store's nowMs port, which is its
+    // whole job.
+    const COMPOSITION_ROOT = 'server/freehold_persist_wiring.ts';
+    const files = readdirSync('server')
+      .filter((name) => /^freehold_[a-z_]+\.ts$/.test(name))
+      .map((name) => `server/${name}`)
+      .filter((path) => path !== COMPOSITION_ROOT)
+      .sort();
+    // The derivation is pinned, so a filter that stopped matching would scan an
+    // empty list and still pass. Both files an import-derived list LOST are
+    // named, so narrowing it that way again reds here.
+    for (const required of [
       SOURCE_PATH,
-      ...[...readFileSync(SOURCE_PATH, 'utf8').matchAll(/from '\.\/(freehold_[a-z_]+)'/g)]
-        .map((match) => `server/${match[1]}.ts`)
-        .filter((path, index, all) => all.indexOf(path) === index)
-        .sort(),
-    ];
-    // The derivation itself is pinned, so a regex that stopped matching would
-    // scan one file and still pass: it must find the siblings that exist today.
-    expect(files).toContain('server/freehold_write_seal.ts');
-    expect(files).toContain('server/freehold_load_outcome.ts');
-    expect(files).toContain('server/freehold_revision_probe.ts');
-    expect(files.length).toBeGreaterThan(5);
+      'server/freehold_install.ts',
+      'server/freehold_persist_registry.ts',
+      'server/freehold_write_seal.ts',
+      'server/freehold_load_outcome.ts',
+      'server/freehold_load_waiters.ts',
+      'server/freehold_revision_probe.ts',
+      'server/freehold_hearth_load.ts',
+    ])
+      expect(files, required).toContain(required);
+    expect(files).not.toContain(COMPOSITION_ROOT);
     let timers = 0;
     for (const file of files) {
       const source = stripComments(readFileSync(file, 'utf8'));

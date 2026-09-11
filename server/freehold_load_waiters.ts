@@ -8,6 +8,13 @@
 // already returned early on that hold, so the answer that read produces reaches
 // no install and must not mint a name the sim will never learn.
 //
+// WHAT IT ANSWERS IS "nobody is waiting", NOT "no install will run", and the two
+// are not the same: `retain`'s lost-entry repair waits here too and discards its
+// own result. That is the honest weaker fact and it is the one the store needs,
+// because a repair's join installs the entry's identity through its next replay
+// anyway. Stated because the stronger claim is the kind this packet has shipped
+// wider than its evidence before.
+//
 // A COUNT, NOT A FLAG. A first version marked the ACCOUNT abandoned, which
 // write-blocked an account for its whole session whenever two of its characters
 // joined together and only one overran: the other was still there to install the
@@ -23,7 +30,15 @@ export interface FreeholdLoadWaiters {
   arrived(accountId: number): void;
   /** One login has stopped waiting, on ANY exit it has. */
   left(accountId: number): void;
-  /** True when nobody is waiting, so no install will consume this answer. */
+  /** True when NOBODY IS WAITING on this account's read.
+   *
+   *  That is the fact, and it is narrower than "no install will consume this
+   *  answer": `retain`'s lost-entry repair also waits here and discards its
+   *  result on purpose, so a waiter can exist with no install behind it. Counting
+   *  it is still correct, because that repair runs on a join whose own replay
+   *  installs the entry's identity on the next `preload`, which is the outcome
+   *  the repair exists to restore. The store uses this only to decide whether to
+   *  MINT, never to decide whether to write. */
   abandoned(accountId: number): boolean;
 }
 
