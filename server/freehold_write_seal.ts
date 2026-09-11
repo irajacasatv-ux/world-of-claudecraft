@@ -59,12 +59,18 @@ export function seedWouldLandOnRealRow(
   // one over a row can never lose anything, and an entry that knows more
   // than a pristine default is an entry whose record has diverged from one.
   //
-  // MEASURED, so nobody has to guess what it is still for: while the entry
-  // loaded a ROW the name comparison above catches every reseed first, so
-  // this arm is dead there and removing it leaves the suite green. For an
-  // entry that MINTED its own row it is the opposite: see the OPEN GATE
-  // below, where the name comparison cannot fire at all and this arm plus
-  // the revision test are the only things standing.
+  // MEASURED, and the measurement has MOVED, which is worth saying plainly
+  // because an earlier version of this paragraph is now false. It used to
+  // read: dead for a ROW-LOADED entry, because the name comparison catches
+  // every reseed there first, but the only thing standing for an entry that
+  // MINTED its own row, where that comparison could not fire at all. Both
+  // halves of that are now the same half. `installLoadedFreehold` names the
+  // minted record and `insertWouldMintAnUnnamedRow` refuses to create a row
+  // for one it did not name, so `entry.state.plotId` IS the minted id and the
+  // name comparison fires first for every entry class. This arm and its
+  // content dimensions are unreachable THROUGH THE STORE now, not only for
+  // row-loaded entries, and they are driven with literals and their own
+  // mutants in tests/server/freehold_write_seal.test.ts instead.
   //
   // IT IS KEPT BECAUSE THE NAME COMPARISON IS EXACTLY WHAT A FUTURE ROUND
   // WILL NARROW. Round nine exempted the stand-in from it to stop a healthy
@@ -143,11 +149,12 @@ export function seedWouldLandOnRealRow(
   // already about to be collected. It was reachable for a stand-in-named entry
   // before this change and is reachable for every entry class after it.
   //
-  // WHICH DIMENSIONS A TEST CAN ISOLATE, measured rather than assumed. For a
-  // ROW-LOADED entry only the identity and revision dimensions can be killed
-  // by a behaviour case; the pristine arm and its layout, trophies, tier,
-  // condition and visit-policy dimensions cannot, because the name
-  // comparison catches every reseed there first. They are kept for totality
+  // WHICH DIMENSIONS A TEST CAN ISOLATE, measured rather than assumed. For
+  // EVERY entry class now, not only a row-loaded one, only the identity and
+  // revision dimensions can be killed by a behaviour case through the store;
+  // the pristine arm and its layout, trophies, tier, condition and
+  // visit-policy dimensions cannot, because the name comparison catches every
+  // reseed first. They are kept for totality
   // over the persisted shape and listed here rather than pinned by a case
   // that reaches them through a different arm. A case that passes for the
   // wrong reason is the failure this packet has already recorded twice, and

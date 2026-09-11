@@ -253,9 +253,17 @@ function harness(options: HarnessOptions = {}) {
   // PER OWNER, because a realm's records are. The default used to answer the
   // LAST id minted by anyone, so a case driving two accounts handed the first
   // owner's record the second owner's identity: a state no realm can produce,
-  // and one the write path's insert refusal correctly rejects. The mint is
-  // attributed to the account whose row read is in flight, which is exact,
-  // because `classify` mints between its own read and its own assignment.
+  // and one the write path's insert refusal correctly rejects.
+  //
+  // ATTRIBUTED THROUGH THE ACCOUNT WHOSE ROW READ IS IN FLIGHT, and that is
+  // exact FOR SEQUENTIAL LOADS ONLY, which is what every case here drives.
+  // `mintingFor` is one variable set when a read starts and read when the mint
+  // happens, which is after both that load's reads resolve, so two loads for
+  // DIFFERENT accounts overlapping would attribute the first one's mint to the
+  // second. That is the same defect this replaced, one level up. No case reaches
+  // it (the concurrent multi-account cases pin `livePlotId` to a constant), so
+  // it is stated rather than closed: a case that interleaves two accounts'
+  // reads owes a per-account attribution first.
   const livePlotIdNow = (ownerKey: string): string => {
     if (typeof options.livePlotId === 'function') return options.livePlotId(ownerKey);
     if (options.livePlotId !== undefined) return options.livePlotId;
@@ -2671,12 +2679,17 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().dirty).toBe(1);
   });
 
-  it('refuses a pristine seed over a FRESH account that has since furnished', async () => {
-    // The blind window identity alone cannot close. A brand-new account's
-    // record carries the stand-in name for its whole first session, and so does
-    // a freshly seeded default, so between that account's first insert and its
-    // first reload the two have the same name. What separates them is that a
-    // pristine default knows NOTHING: no revision, no layout, no trophies.
+  it('refuses a reseeded default over a FRESH account that has since furnished', async () => {
+    // WHICH ARM REFUSES HERE HAS CHANGED, and the case is renamed rather than
+    // left claiming the old one. It used to model the blind window where a fresh
+    // account's record and a freshly seeded default shared the stand-in name, so
+    // only the pristine arm could separate them. `installLoadedFreehold` names
+    // the minted record now, so the entry's cached identity is the minted id and
+    // the reseeded default's is the stand-in: the NAME comparison refuses first
+    // and short-circuits the rest. What this case still proves at the store
+    // level is the outcome, that a reseed over a furnished account is refused
+    // and the owner quiesces. The pristine arm itself is driven with literals in
+    // tests/server/freehold_write_seal.test.ts, which needs no store.
     let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
@@ -2706,11 +2719,13 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().quiesced).toBe(1);
   });
 
-  it('refuses a pristine seed over an account that differs ONLY by revision', async () => {
-    // The revision half of "knows more", on its own. An account can have moved
-    // its record without placing anything (a tier grant bumps the revision and
-    // touches no row), so a test that only ever differs by CONTENT would leave
-    // that account unprotected.
+  it('refuses a reseeded default over an account that differs ONLY by revision', async () => {
+    // The revision half of "knows more" used to be what this isolated. It is not
+    // any more, for the reason the case above gives: the name comparison refuses
+    // first for every entry class. Kept for the OUTCOME, that an account which
+    // moved its record without placing anything (a tier grant bumps the revision
+    // and touches no row) is still protected from a reseed. The dimension itself
+    // is driven in tests/server/freehold_write_seal.test.ts.
     let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
@@ -2765,11 +2780,15 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.store.stats().quiesced).toBe(0);
   });
 
-  it('still writes a fresh account whose record is LEGITIMATELY still empty', async () => {
-    // The anti-vacuity arm, and the reason the test is "knows more" rather than
-    // "is a default". An account that has written once and changed nothing has
-    // a record identical to a pristine seed, and writing it loses nothing, so
-    // refusing there would quiesce a healthy account for no gain.
+  it('still writes a fresh account whose OWN record is legitimately still empty', async () => {
+    // THE ANTI-VACUITY ARM, and what it controls has changed with the fixture.
+    // It used to model a record identical to a pristine seed, which needed the
+    // stand-in name; the record carries its INSTALLED name now, so `standInSeed`
+    // is false and the pristine arm is never reached at all. What it still
+    // controls, and the reason it is not deleted, is that neither the identity
+    // arm nor the insert refusal fires on an account whose own empty record is
+    // exactly what it committed: writing it loses nothing, and refusing would
+    // quiesce a healthy owner for no gain.
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
       livePlotId: MINTED_PLOT_ID,
@@ -2799,10 +2818,11 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // committed revision seven, both other tests pass, and the empty default is
     // compare-and-swapped over the real house with plot_id untouched.
     //
-    // What separates them is that the revision REGRESSED. Every sanctioned
-    // writer only increments, and every install this store offers a rejoin
-    // carries at least the revision the entry last committed, so a stand-in
-    // record below that has to be a different record.
+    // What SEPARATED them was the regressed revision, and since the install fix
+    // the name comparison refuses first here too. The regression discriminator
+    // is pinned on its own, with literals and its own mutants, in
+    // tests/server/freehold_write_seal.test.ts; what this case proves is the
+    // outcome, that a touched reseed never lands on the row.
     let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
@@ -3166,11 +3186,14 @@ describe('a leaving session never loses its last edits to a queue', () => {
     expect(h.errors[0]).toContain('identity');
   });
 
-  it('still writes a stand-in record whose revision only CLIMBS', async () => {
-    // The anti-vacuity arm for the regression test, and the reason it compares
+  it('still writes a NAMED record whose revision only CLIMBS', async () => {
+    // THE ANTI-VACUITY ARM for the regression test: the reason it compares
     // against the entry's own committed revision rather than refusing every
-    // stand-in record. A brand-new account edits its house all session under
-    // the stand-in name, and every one of those writes must land.
+    // climb. A brand-new account edits its house all session under the name its
+    // install gave the record, and every one of those writes must land. The
+    // fixture carried the STAND-IN when it was written, which is the state the
+    // install fix removed; it carries the installed name now, and the title says
+    // so rather than describing a record no online host produces.
     let rev = 3;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
@@ -4161,11 +4184,20 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(h.errors.filter((line) => line.includes('refused (unnamed)'))).toHaveLength(1);
   });
 
-  it('costs ONE session, not an account: the refused entry is collected and re-reads clean', async () => {
+  it('costs one LOGOUT, not an account: the refused entry is collected and re-reads clean', async () => {
     // THE PROPERTY THAT MAKES THE REFUSAL SAFE, and the one a reader should
     // check before accepting it. Quiescing is terminal FOR THAT ENTRY, so if the
-    // entry outlived the session the account would be write-blocked forever,
-    // which is a worse outcome than the path being closed.
+    // entry outlived the account the owner would be write-blocked forever, which
+    // is a worse outcome than the path being closed.
+    //
+    // WHAT IT IS BOUNDED BY IS THE LOGOUT, not the session, and the weaker claim
+    // is the true one. The poisoned RECORD is evicted by `removePlayer` only
+    // when the last session sharing the owner key leaves, so while another
+    // character of the same account is still online the record survives the
+    // entry, and each new login's classify sees the stand-in and takes the
+    // TERMINAL `unnamed_record` hold again. Bounded, never unbounded, because the
+    // account fully logging out clears it; an earlier version of this case said
+    // "one session", which is stronger than the code supports.
     const gate = deferred<FreeholdRowLoad>();
     let seeded = false;
     const h = harness({
@@ -4186,10 +4218,12 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(h.store.stats().quiesced).toBe(1);
     expect(h.writeCount()).toBe(0);
 
-    // The session leaves. A quiesced entry is BLOCKED, so its dirty clause stops
-    // counting and it owes nothing: both removal paths may collect it.
-    seeded = false;
+    // The LAST session of the account leaves, in production order: the leave
+    // flush runs while the record is still live and `removePlayer` evicts it
+    // afterwards. A quiesced entry is BLOCKED, so its dirty clause stops counting
+    // and it owes nothing: both removal paths may collect it.
     await h.store.flushAndRelease(OWNER_KEY);
+    seeded = false;
     h.store.saveAllDirty();
     h.store.saveAllDirty();
     await tick(30);
