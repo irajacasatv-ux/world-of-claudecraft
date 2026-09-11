@@ -78,10 +78,9 @@ import {
   type LoadedFreehold,
   freeholdSnapshotOf as snapshotOf,
 } from './freehold_load_outcome';
-import { createFreeholdLoadWaiters } from './freehold_load_waiters';
 import { freeholdRevisionMoved } from './freehold_revision_probe';
 import { freeholdOwnerKeyForAccount } from './freehold_wire';
-import { seedWouldLandOnRealRow } from './freehold_write_seal';
+import { insertWouldMintAnUnnamedRow, seedWouldLandOnRealRow } from './freehold_write_seal';
 
 /** How long the shutdown drain waits for running and pending writes before it
  *  gives up and answers false. Finite by contract: a drain that can block
@@ -603,10 +602,6 @@ function boundedDatabaseError(err: unknown): Record<string, unknown> {
 export function createFreeholdPersistStore(ports: FreeholdPersistPorts): FreeholdPersistStore {
   const entries = new Map<string, FreeholdPersistEntry>();
   const inFlightLoads = new Map<number, Promise<LoadedFreehold>>();
-  /** Which logins are still waiting on an account's single-flight read, in
-   *  server/freehold_load_waiters.ts with the whole reason attached. classify's
-   *  absent arm asks it whether any install is left to consume its answer. */
-  const loadWaiters = createFreeholdLoadWaiters();
   /** Owners that wanted a write while the local write cap was full. They stay
    *  DIRTY, so nothing is lost: they are launched as slots free, and by the
    *  next sweep if the process is still up. Insertion-ordered, so the owner
@@ -990,9 +985,6 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
     // that went in. Handing it FREEHOLD_MAX_OWNED_BYTES would refuse the
     // maximal record this realm is allowed to write.
     const { rowLoad, hearth } = await readLoginPair(accountId);
-    // SAMPLED HERE, after the read and before anything is decided: this is the
-    // instant the answer's fate is fixed. See the absent arm below.
-    const abandoned = loadWaiters.abandoned(accountId);
     const entry = ensureEntry(ownerKey, accountId);
     // Remembered on the entry, not only returned: every later replay of this
     // entry has to answer with the same clock, and none of them reads again.
@@ -1048,34 +1040,26 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       // builds a fresh entry whose install runs before the seed, and it is named
       // from the start.
       //
-      // AND THE SAME REFUSAL WHEN THERE IS NO RECORD YET BUT NOBODY IS LEFT TO
-      // INSTALL ONE. The test above reads the LIVE RECORD, so it only fires once
-      // something has been seeded, and that made it depend on WHEN this load
-      // landed. A login refused on the whole-preload budget leaves its read in
-      // flight by design, and the handshake still has its lease acquire and its
-      // character reload to run: on the same saturated pool that produced the
-      // overrun, that read can land BEFORE addPlayer seeds anything. `livePlotId`
-      // then answers null rather than the stand-in, the test above cannot fire,
-      // this arm mints, and `installLoadedFreehold` returns early on the budget
-      // hold a moment later while `ensureFreeholdRecord` seeds the stand-in. The
-      // entry is left writable holding a name its record can never learn, which
-      // is the state this whole refusal exists to prevent, reached by ordering
-      // instead of by seeding. Reproduced against the real store.
-      //
-      // An ABANDONED load is exactly "no install will run for this answer", so
-      // the two cases are one rule: mint only for a record this store can name.
-      // A live record that carries a REAL name is unaffected either way, because
-      // the arm below adopts it rather than minting.
+      // AND IT IS NOT TOTAL, which is stated here rather than left for the next
+      // reader to find the hard way: this test reads the LIVE RECORD, so it can
+      // only fire once something has been SEEDED, and two orderings put the mint
+      // before the seed. A login refused on the whole-preload budget leaves its
+      // read in flight by design and that read can land before `addPlayer` runs;
+      // and a sibling character of the same account riding the same
+      // single-flight read can carry the mint past this point while the refused
+      // login seeds first. Both were reproduced against the real store. What
+      // makes the invariant total is the ORDER-INDEPENDENT half, in
+      // `insertWouldMintAnUnnamedRow`: the identity is compared at the moment the
+      // row would be created, where no ordering can matter. This arm stays
+      // because refusing at LOAD time is cheaper and diagnoses better, never
+      // because it is sufficient.
       const liveName = ports.livePlotId(ownerKey);
-      if (liveName === PENDING_FREEHOLD_PLOT_ID || (liveName === null && abandoned)) {
+      if (liveName === PENDING_FREEHOLD_PLOT_ID) {
         return holdResult(
           entry,
           {
             kind: 'unnamed_record',
-            detail:
-              liveName === null
-                ? 'the login that asked for this load had already given up on it'
-                : 'the live record was seeded before this load landed',
+            detail: 'the live record was seeded before this load landed',
             plotIndex: FREEHOLD_PRIMARY_PLOT_INDEX,
             durableRev: FREEHOLD_ABSENT_DURABLE_REV,
           },
@@ -1355,19 +1339,6 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
    * that catch after retain had already taken a reference nothing then releases.
    */
   async function preload(accountId: number): Promise<LoadedFreehold> {
-    // REGISTERED FIRST AND RELEASED ON EVERY EXIT, including the uncapped
-    // fallback and any throw: this is the login classify asks about, and a
-    // count that leaked would refuse nothing while a count that never
-    // decremented would refuse everything.
-    loadWaiters.arrived(accountId);
-    try {
-      return await preloadCapped(accountId);
-    } finally {
-      loadWaiters.left(accountId);
-    }
-  }
-
-  async function preloadCapped(accountId: number): Promise<LoadedFreehold> {
     let expired!: () => void;
     const overrun = new Promise<'no-budget'>((resolve) => {
       expired = () => resolve('no-budget');
@@ -1391,12 +1362,9 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
       const answer = await Promise.race([load, overrun]);
       if (answer === 'no-budget') {
         void load.catch(() => undefined);
-        // THE READ OUTLIVES THIS CALLER. Nothing is marked here: returning is
-        // what tells classify, because the `finally` above drops this login's
-        // waiter and classify refuses only when the LAST one has gone. A flag
-        // set here instead write-blocked an account for its whole session
-        // whenever a sibling character joined on the same read and did not
-        // overrun, with that sibling's install standing right there.
+        // THE READ OUTLIVES THIS CALLER and is left running on purpose, to fill
+        // the entry. What that costs is recorded on classify's absent arm and
+        // bounded by the insert refusal in server/freehold_write_seal.ts.
         return budgetRefusal(accountId);
       }
       return answer;
@@ -1573,6 +1541,21 @@ export function createFreeholdPersistStore(ports: FreeholdPersistPorts): Freehol
           entry.quiesceWarned = true;
           ports.error(
             `freehold plot index ${entry.plotIndex} write refused (identity): the live record is not the record this entry loaded, so no further writes go out for this owner`,
+          );
+        }
+        return false;
+      }
+      // WRITABLE IMPLIES NAMEABLE, the order-independent half of the
+      // unnamed-record refusal; the two ordering paths that defeat the load-side
+      // form, and why this one cannot be defeated the same way, are in the
+      // predicate's own header.
+      if (insertWouldMintAnUnnamedRow(persisted, entry)) {
+        counters.writeFailures++;
+        entry.quiesced = true;
+        if (!entry.quiesceWarned) {
+          entry.quiesceWarned = true;
+          ports.error(
+            `freehold plot index ${entry.plotIndex} write refused (unnamed): the live record does not carry the identity this row would be created under, so no row is created and no further writes go out for this owner`,
           );
         }
         return false;

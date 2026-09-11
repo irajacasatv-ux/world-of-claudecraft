@@ -181,7 +181,7 @@ interface HarnessOptions {
   /** Override the LIVE record's plot identity, for the cases that model a
    *  record the store did not install: a fresh seed standing where a loaded
    *  house used to be. */
-  livePlotId?: string | (() => string);
+  livePlotId?: string | ((ownerKey: string) => string);
   acquirePermit?: (signal: AbortSignal) => Promise<{ release(): void } | null>;
   enqueue?: <T>(key: string, signal: AbortSignal, write: () => Promise<T>) => Promise<T>;
   /** The COMBINED login port, which the real server binds and the two-port pair
@@ -249,15 +249,25 @@ function harness(options: HarnessOptions = {}) {
   // first session rather than the stand-in. The stand-in is what a record seeded
   // WITHOUT an install carries (addPlayer's ensureFreeholdRecord after an
   // eviction), which is the case every seal test overrides `livePlotId` to model.
-  const livePlotIdNow = (): string => {
-    if (typeof options.livePlotId === 'function') return options.livePlotId();
+  //
+  // PER OWNER, because a realm's records are. The default used to answer the
+  // LAST id minted by anyone, so a case driving two accounts handed the first
+  // owner's record the second owner's identity: a state no realm can produce,
+  // and one the write path's insert refusal correctly rejects. The mint is
+  // attributed to the account whose row read is in flight, which is exact,
+  // because `classify` mints between its own read and its own assignment.
+  const livePlotIdNow = (ownerKey: string): string => {
+    if (typeof options.livePlotId === 'function') return options.livePlotId(ownerKey);
     if (options.livePlotId !== undefined) return options.livePlotId;
     if (options.rowLoad?.kind === 'row') return options.rowLoad.row.plotId;
-    return minted > 0 ? `plot:minted${minted}` : PENDING_FREEHOLD_PLOT_ID;
+    return mintedByOwner.get(ownerKey) ?? PENDING_FREEHOLD_PLOT_ID;
   };
   const fifo = createKeyedSerialWriter<string>();
   let nowMs = 10_000;
   let minted = 0;
+  /** The owner whose row read is in flight, so a mint can be attributed. */
+  let mintingFor = '';
+  const mintedByOwner = new Map<string, string>();
 
   const readRow =
     options.readRow ??
@@ -274,6 +284,7 @@ function harness(options: HarnessOptions = {}) {
     async readRow(accountId: number, maxOwnedBytes: number): Promise<FreeholdRowLoad> {
       calls.push('readRow');
       ownedBytesSeen.push(maxOwnedBytes);
+      mintingFor = `account:${accountId}`;
       return await readRow(accountId, maxOwnedBytes);
     },
     async readHearth(accountId: number): Promise<FreeholdHearthLoad> {
@@ -312,7 +323,7 @@ function harness(options: HarnessOptions = {}) {
       const doc = serialize(ownerKey);
       // The identity is the LIVE RECORD's, never the fixture's: a case that
       // wants to model a mismatched record says so by overriding the port.
-      return doc === null ? null : { ...doc, plotId: livePlotIdNow() };
+      return doc === null ? null : { ...doc, plotId: livePlotIdNow(ownerKey) };
     },
     livePlotId(ownerKey: string): string | null {
       // BOUND TO hasLive, STRICTLY, because production reads both off ONE map
@@ -325,7 +336,7 @@ function harness(options: HarnessOptions = {}) {
       // The default is FALSE, like hasLive's, so a case that wants a live
       // identity says `hasLive: () => true` and means it.
       if (!(options.hasLive ? options.hasLive(ownerKey) : false)) return null;
-      return serialize(ownerKey) === null ? null : livePlotIdNow();
+      return serialize(ownerKey) === null ? null : livePlotIdNow(ownerKey);
     },
     liveRev(ownerKey: string): number | null {
       calls.push('liveRev');
@@ -344,7 +355,9 @@ function harness(options: HarnessOptions = {}) {
     },
     mintPlotId(): string {
       minted += 1;
-      return `plot:minted${minted}`;
+      const id = `plot:minted${minted}`;
+      if (mintingFor !== '') mintedByOwner.set(mintingFor, id);
+      return id;
     },
     async acquirePermit(signal: AbortSignal): Promise<{ release(): void } | null> {
       calls.push('permit');
@@ -558,7 +571,6 @@ describe('freehold persist constants', () => {
       'server/freehold_persist_registry.ts',
       'server/freehold_write_seal.ts',
       'server/freehold_load_outcome.ts',
-      'server/freehold_load_waiters.ts',
       'server/freehold_revision_probe.ts',
       'server/freehold_hearth_load.ts',
     ])
@@ -2668,7 +2680,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
     let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : MINTED_PLOT_ID),
       serialize: () =>
         seeded
           ? persistedFixture({ layout: [], trophies: [], rev: 0 })
@@ -2702,7 +2714,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
     let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : MINTED_PLOT_ID),
       serialize: () => persistedFixture({ layout: [], trophies: [], rev: seeded ? 0 : 3 }),
       writeRow: async (input) => ({
         kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
@@ -2760,7 +2772,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
     // refusing there would quiesce a healthy account for no gain.
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      livePlotId: MINTED_PLOT_ID,
       serialize: () => persistedFixture({ layout: [], trophies: [], rev: 0 }),
       writeRow: async (input) => ({
         kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
@@ -2794,7 +2806,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
     let seeded = false;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      livePlotId: () => (seeded ? PENDING_FREEHOLD_PLOT_ID : MINTED_PLOT_ID),
       serialize: () =>
         seeded
           ? // The fresh default, then ONE edit on top of it: not pristine any more.
@@ -3162,7 +3174,7 @@ describe('a leaving session never loses its last edits to a queue', () => {
     let rev = 3;
     const h = await loadedStore({
       rowLoad: { kind: 'absent' },
-      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+      livePlotId: MINTED_PLOT_ID,
       serialize: () => persistedFixture({ rev }),
       writeRow: async (input) => ({
         kind: input.expectedDurableRev === null ? 'inserted' : 'updated',
@@ -4092,21 +4104,25 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect(replay.state?.rev).toBe(5);
   });
 
-  it('refuses to NAME a row when the login that asked for the read gave up on it', async () => {
+  it('creates NO row for a record the refused login is about to seed', async () => {
     // THE NINTH PATH, reproduced against the store before it was closed. The
-    // unnamed-record refusal reads the LIVE RECORD, so it can only fire once
-    // something has been seeded, and that made it depend on WHEN the read
-    // landed. This refusal leaves its read in flight by design, and the
-    // handshake still has a lease acquire and a character reload to run on the
-    // same saturated pool: the read lands in THAT window, before addPlayer
-    // seeds anything, so livePlotId answers null rather than the stand-in.
+    // load-side ordering refusal reads the LIVE RECORD, so it can only fire once
+    // something has been seeded. This refusal leaves its read in flight by
+    // design, and the handshake still has a lease acquire and a character reload
+    // to run on the same saturated pool: the read lands in THAT window, before
+    // addPlayer seeds anything, so livePlotId answers null rather than the
+    // stand-in and the absent arm mints.
     //
-    // What that produced, measured: entry loaded and unheld, holding
+    // What that produced, measured: entry loaded and unheld holding
     // `plot:minted1`, a row INSERTED under that name, writeFailures 0 and
     // quiesced 0, while the record addPlayer seeded a moment later carried the
     // stand-in. applyWriteResult then caches the RECORD's stand-in, so the
     // seal's name comparison is inert BY VALUE EQUALITY for the life of that
     // entry, which is the eighth path arrived at from a third side.
+    //
+    // IT IS PINNED ON THE OUTCOME, not on the mechanism: what must not happen is
+    // that a row is created under a name its record can never learn, and the
+    // guard that delivers that is order-independent.
     const gate = deferred<FreeholdRowLoad>();
     let seeded = false;
     const h = harness({
@@ -4120,33 +4136,29 @@ describe('the WHOLE preload is capped against the login budget', () => {
     expect((await loading).hold?.kind).toBe('no_budget');
 
     // The read lands while the handshake is still below the budget refusal and
-    // above the seed. NOTHING is live yet.
+    // above the seed. NOTHING is live yet, so the load-side test cannot fire.
     gate.resolve({ kind: 'absent' });
     await tick(30);
+    const replay = await h.store.preload(ACCOUNT_ID);
+    expect(replay.hold).toBeNull();
+    expect(replay.plotId).toBe(MINTED_PLOT_ID);
 
     // Only now does the join reach addPlayer, and it seeds the STAND-IN because
     // installLoadedFreehold returned early on the no_budget hold.
     seeded = true;
     h.store.retain(OWNER_KEY, ACCOUNT_ID);
 
-    // THE ENTRY IS HELD, not writable: it never minted a name, so no row can be
-    // created under one the record will never learn.
-    const replay = await h.store.preload(ACCOUNT_ID);
-    expect(replay.hold?.kind).toBe('unnamed_record');
-    expect(replay.plotId).toBe('');
-    expect(h.store.stats().held).toBe(1);
-    // TERMINAL, so `loaded` stays set and both halves of blocked() refuse.
-    expect(h.store.stats().loaded).toBe(1);
-
-    // AND NO ROW IS CREATED, which is the thing that cannot be undone. Two
-    // sweeps, because one arming is satisfied by a guard that only refuses once.
+    // Two sweeps, because a guard that refuses once is satisfied by a constant.
     h.store.saveAllDirty();
     await tick(40);
     h.store.saveAllDirty();
     await tick(40);
     expect(h.writeCount()).toBe(0);
-    expect(h.warnings.some((line) => line.includes('unnamed_record'))).toBe(true);
-    expect(h.warnings.some((line) => line.includes('already given up'))).toBe(true);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors.some((line) => line.includes('refused (unnamed)'))).toBe(true);
+    // ONE line, not one per sweep: an operator log that repeats every thirty
+    // seconds for the life of a process is noise, not a diagnosis.
+    expect(h.errors.filter((line) => line.includes('refused (unnamed)'))).toHaveLength(1);
   });
 
   it('still names a row when a SIBLING login is still waiting on the same read', async () => {
@@ -4159,7 +4171,12 @@ describe('the WHOLE preload is capped against the login budget', () => {
     // and it is exact rather than conservative because classify runs inside the
     // load promise, before any surviving waiter's own race has resolved.
     const gate = deferred<FreeholdRowLoad>();
-    const h = harness({ readRow: async () => await gate.promise });
+    let seeded = false;
+    const h = harness({
+      readRow: async () => await gate.promise,
+      hasLive: () => seeded,
+      livePlotId: PENDING_FREEHOLD_PLOT_ID,
+    });
     const first = h.store.preload(ACCOUNT_ID);
     const second = h.store.preload(ACCOUNT_ID);
     await tick(20);
@@ -4175,6 +4192,28 @@ describe('the WHOLE preload is capped against the login budget', () => {
     const answer = await second;
     expect(answer.hold).toBeNull();
     expect(answer.plotId).toBe(MINTED_PLOT_ID);
+
+    // AND THE MINT IS NOT WHERE THIS CASE STOPS, which is the defect its first
+    // version had. Asserting the mint and going home is what let the TENTH path
+    // through: the REFUSED login reaches addPlayer first, because it stopped
+    // waiting earlier and is always ahead in the pipeline, and seeds the
+    // stand-in; the sibling's own install is then silently discarded by
+    // loadFreehold's load-once guard, and the entry is left writable holding a
+    // name its record can never learn. Reproduced against the store before the
+    // insert refusal existed: a row inserted under plot:minted1 with
+    // write_failures 0 and quiesced 0, after which applyWriteResult caches the
+    // record's stand-in and the seal's name comparison is inert by value
+    // equality for the life of that entry.
+    seeded = true;
+    h.store.retain(OWNER_KEY, ACCOUNT_ID);
+    h.store.saveAllDirty();
+    await tick(40);
+    // NO ROW IS CREATED, which is the thing that cannot be undone. The refusal
+    // is order-independent, so which login reached the sim first cannot matter.
+    expect(h.writeCount()).toBe(0);
+    expect(h.store.stats().writeFailures).toBe(1);
+    expect(h.store.stats().quiesced).toBe(1);
+    expect(h.errors.some((line) => line.includes('refused (unnamed)'))).toBe(true);
   });
 
   it('still names a row for a login that WAITED for its own read', async () => {

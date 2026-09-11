@@ -225,3 +225,73 @@ export function seedWouldLandOnRealRow(
     (foreignIdentity || (pristineSeed && entryKnowsMore) || revisionRegressed);
   return seededOverReal;
 }
+
+/** What the INSERT refusal needs: the identity this entry will create its row
+ *  under. Separate from FreeholdSealEntry because the two refusals judge
+ *  different facts, and one interface carrying both would let a caller satisfy
+ *  one guard with the other's field. */
+export interface FreeholdInsertEntry {
+  /** Null until a row exists. This refusal is about the FIRST row only. */
+  readonly durableRev: string | null;
+  /** The identity the row will carry: minted by the store's absent arm, or
+   *  adopted from the live record there. */
+  readonly plotId: string;
+}
+
+/**
+ * True when creating this entry's FIRST durable row would name it something the
+ * record being written does not carry. The caller refuses the write and
+ * quiesces the owner; no row is created.
+ *
+ * WRITABLE IMPLIES NAMEABLE, and this is the ORDER-INDEPENDENT half of the
+ * unnamed-record refusal. `classify`'s absent arm refuses to mint for a record
+ * that is already seeded with the stand-in, and it refuses when no login is left
+ * to install one, but BOTH of those sample a moment. Two ordering paths defeat
+ * them, and each was reproduced against the real store before this arm existed.
+ *
+ * THE FIRST is a login refused on the whole-preload budget: its read stays in
+ * flight by design and can land before `addPlayer` seeds anything, so
+ * `livePlotId` answers null rather than the stand-in.
+ *
+ * THE SECOND is the exemption written for the first. Two characters of one
+ * account ride ONE single-flight read; `no_budget` is the only kind that leaves
+ * a sibling with a clean answer, because every other hold lands on the shared
+ * entry. So the sibling keeps the mint alive, the REFUSED login reaches
+ * `addPlayer` first (it stopped waiting earlier, so it is always ahead in the
+ * pipeline) and seeds the stand-in, and the sibling's own install is then
+ * silently discarded by `loadFreehold`'s load-once guard. The entry is left
+ * writable holding a name its record can never learn.
+ *
+ * Judged HERE the ordering cannot matter, because the identity is compared at
+ * the moment the row would be created. It is strictly additive to
+ * `seedWouldLandOnRealRow`, whose whole body is behind `entry.durableRev !==
+ * null`, so the two can never disagree about a document.
+ *
+ * IT CANNOT FIRE ON A HEALTHY PATH: the absent arm installs `entry.plotId` INTO
+ * the record through the load-once path, or ADOPTS the live record's identity
+ * when there is one, and the row arm never leaves `durableRev` null. What it
+ * costs when it does fire is one session's edits, which is what any hold costs,
+ * and no durable row is lost because there is none yet.
+ *
+ * @param persisted the document AS SENT, so the identity judged is the one the
+ *   row would be created under rather than the one a capture happens to carry.
+ */
+export function insertWouldMintAnUnnamedRow(
+  persisted: PersistedFreehold,
+  entry: FreeholdInsertEntry,
+): boolean {
+  // THE `durableRev === null` GATE IS ABSORBED on today's paths, measured rather
+  // than assumed: dropping it leaves both this file's suite and the store's
+  // green. The reason is that the two refusals reach the same verdict on the
+  // UPDATE path by different fields. Once a row exists, `entry.state.plotId` is
+  // the identity the live record carried at the last commit, so a reseeded
+  // default fires `foreignIdentity` above; and the only way `entry.plotId` could
+  // disagree with it is the state THIS arm stops from ever getting a row. The
+  // gate is kept because the two predicates are about different things (this one
+  // judges the ROW's name, that one the RECORD's), so a future narrowing of the
+  // seal would make the difference live, and because a guard that fires on every
+  // write is a guard whose cost nobody has measured. Named here rather than
+  // pinned by a case that would reach it through the other refusal, which is the
+  // vacuous pin this packet keeps producing.
+  return entry.durableRev === null && persisted.plotId !== entry.plotId;
+}

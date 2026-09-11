@@ -1550,8 +1550,15 @@ const MONOLITHS: MonolithRow[] = [
     // And 2215 -> 2210 with the import the eighth extraction orphaned: the
     // absent arm no longer builds the record, so the plot-identity constructor
     // it reached for went with it. A ratchet row follows the file down.
+    // LOWERED AGAIN, 2210 -> 2193, when the TENTH path retired the machinery the
+    // ninth's fix had added. The load-side ordering test samples a moment, and
+    // two orderings put the mint before the seed; the order-independent half in
+    // server/freehold_write_seal.ts settles it at the instant the row would be
+    // created, so the waiter registry and its sampling came out entirely rather
+    // than being repaired a third time. Removing a mechanism is the cheapest way
+    // to pay a ratchet and the only one that also removes its failure modes.
     file: 'server/freehold_persist.ts',
-    ceiling: 2210,
+    ceiling: 2193,
     seam: 'a sibling server module behind the store ports; see server/CLAUDE.md',
   },
   {
