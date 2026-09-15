@@ -6732,6 +6732,7 @@
       "styleReference": "the buddy's own shipped in-game model, not the existing painted WebP catalog",
       "provenanceRecord": "scripts/assets/render_buddy_item_icons.mjs",
       "itemIds": [
+        "whistle_sapling",
         "whistle_ember_fox",
         "whistle_moss_hare",
         "whistle_frog",

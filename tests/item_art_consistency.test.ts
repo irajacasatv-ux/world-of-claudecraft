@@ -839,8 +839,10 @@ describe('item-art consistency accepted-art provenance', () => {
     // (14 base pieces + their 14 auto-generated heroic variants) = 1,299. The
     // OSSBrain PR #3781 reconcile's two disjoint reins item definitions
     // (reins_goblin_rocket_sled, reins_rallycart_rxt) add two more: 1,301.
-    // The buddy companion merge adds 32 whistles + 2 charm looks: 1,335.
-    expect(Object.keys(ITEMS)).toHaveLength(1335);
+    // The buddy companion merge adds 32 whistles + 2 charm looks: 1,335, and
+    // the Horse companion's whistle (art pending, BUDDY_ART_PENDING_ITEM_IDS)
+    // one more: 1,336; the Sapling whistle brings the total to 1,337.
+    expect(Object.keys(ITEMS)).toHaveLength(1337);
     expect(Object.values(verdict.auditScope.groups).reduce((sum, count) => sum + count, 0)).toBe(
       1255,
     );
@@ -995,11 +997,13 @@ describe('item-art consistency accepted-art provenance', () => {
     // (nythraxis-gap-weapon-renders-2026-09-04 + roots-bramblehide-icons-2026-09-07)
     // = 1,281. The OSSBrain PR #3781 reconcile's two disjoint reins owners
     // (reins_goblin_rocket_sled, reins_rallycart_rxt) add two more: 1,283.
-    // + the buddy merge's 31 rendered whistles and 2 charm dyes: 1,316.
-    expect(new Set(currentOwnerIds).size).toBe(1316);
-    expect(shippingIds).toHaveLength(1316);
-    // The buddy companion merge adds 32 whistles + 2 charm looks: 1,335.
-    expect(Object.keys(ITEMS)).toHaveLength(1335);
+    // + the buddy merge's 31 rendered whistles and 2 charm dyes: 1,316; Sapling adds one.
+    expect(new Set(currentOwnerIds).size).toBe(1317);
+    expect(shippingIds).toHaveLength(1317);
+    // The buddy companion merge adds 32 whistles + 2 charm looks: 1,335, and
+    // the Horse companion's whistle (art pending, BUDDY_ART_PENDING_ITEM_IDS)
+    // one more: 1,336; the Sapling whistle brings the total to 1,337.
+    expect(Object.keys(ITEMS)).toHaveLength(1337);
 
     const datedVerdict = readJson<FinalAuditVerdict>(CURRENT_VERDICT_PATH);
     const oldPassIds = sorted(datedVerdict.visualVerdict.passIds);
@@ -1024,7 +1028,7 @@ describe('item-art consistency accepted-art provenance', () => {
           ].includes(batchId),
       )
       .flatMap(({ itemIds }) => itemIds);
-    expect(releaseBatchIds).toHaveLength(58);
+    expect(releaseBatchIds).toHaveLength(59);
     // The OSSBrain PR #3781 reconcile's two reins owners are additive beyond
     // this whole historical chain too, the same way the Field Kit is.
     expect(
@@ -1255,14 +1259,14 @@ describe('item-art consistency accepted-art provenance', () => {
     // (+25) = 753. OSSBrain PR #3781 reconcile adds its own two disjoint
     // batches (goblin-rocket-sled-icon-2026-08-12,
     // rallycart-rxt-icon-2026-08-20), one id each: 753 + 2 = 755.
-    // The buddy merge's 31 whistle renders + 2 charm dyes: 755 + 33 = 788.
-    expect(priorGeneratedIds).toHaveLength(788);
+    // The buddy merge and Sapling add 32 whistle renders + 2 charm dyes.
+    expect(priorGeneratedIds).toHaveLength(789);
     const allCurrentOwnerIds = [
       ...mapping.entries.map(({ itemId }) => itemId),
       ...mapping.generatedBatches.flatMap(({ itemIds }) => itemIds),
     ];
-    expect(allCurrentOwnerIds).toHaveLength(1316);
-    expect(new Set(allCurrentOwnerIds).size).toBe(1316);
+    expect(allCurrentOwnerIds).toHaveLength(1317);
+    expect(new Set(allCurrentOwnerIds).size).toBe(1317);
     expect({
       entries: mapping.entries.length,
       priorGenerated: priorGeneratedIds.length,
@@ -1271,7 +1275,7 @@ describe('item-art consistency accepted-art provenance', () => {
       crucibleProfessions: crucibleBatch?.itemIds.length,
     }).toEqual({
       entries: 43,
-      priorGenerated: 788,
+      priorGenerated: 789,
       historicalAudit: 274,
       masterwroughtCompletion: 165,
       crucibleProfessions: 46,
@@ -1321,7 +1325,7 @@ describe('item-art consistency accepted-art provenance', () => {
           ['buddy-whistle-icons-2026-08-28', 'buddy-charm-icons-2026-09-09'].includes(batchId),
       )
       .flatMap(({ itemIds }) => itemIds);
-    expect(buddyBatchIdsForCatalog).toHaveLength(33);
+    expect(buddyBatchIdsForCatalog).toHaveLength(34);
     expect(
       sorted([
         ...historicalVerdict.visualVerdict.passIds.filter(
@@ -1475,10 +1479,10 @@ describe('item-art consistency accepted-art provenance', () => {
     // Matches the mapping-owner sum above: 43 entries + 755 prior-generated
     // batch ids + 274 historical-audit batch ids + 165 Masterwrought-completion
     // batch ids + 46 Crucible-professions batch ids = 1283, + the buddy merge's
-    // 33 rendered whistle and charm icons = 1316.
-    if (ownerIds.length !== 1316)
-      violations.push(`mapping owner count: ${ownerIds.length} != 1316`);
-    if (fileIds.length !== 1316) violations.push(`shipping WebP count: ${fileIds.length} != 1316`);
+    // 34 rendered whistle and charm icons = 1317.
+    if (ownerIds.length !== 1317)
+      violations.push(`mapping owner count: ${ownerIds.length} != 1317`);
+    if (fileIds.length !== 1317) violations.push(`shipping WebP count: ${fileIds.length} != 1317`);
     for (const id of ids) {
       const ownerCount = ownerCountById.get(id) ?? 0;
       if (ownerCount !== 1) violations.push(`${id}: current owner count ${ownerCount} != 1`);

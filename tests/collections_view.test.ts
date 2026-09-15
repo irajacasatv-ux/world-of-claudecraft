@@ -177,6 +177,7 @@ describe('collections view model', () => {
     expect(buddyKindOf('frostfire')).toBe('elemental');
     expect(buddyKindOf('forgemaw')).toBe('elemental');
     expect(buddyKindOf('phantom')).toBe('elemental');
+    expect(buddyKindOf('sapling')).toBe('elemental');
     // The fishing catch takes no override: it is a beast by its own family,
     // which is the default path this list exists to keep honest.
     expect(buddyKindOf('crystal_tide')).toBe('beast');
@@ -192,6 +193,7 @@ describe('collections view model', () => {
         'frostfire',
         'kekius',
         'rocky',
+        'sapling',
         'solbot',
         'triple_t',
         'trollface',

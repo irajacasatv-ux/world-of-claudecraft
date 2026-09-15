@@ -129,6 +129,10 @@ export const BUDDY_MOBS: Record<string, MobTemplate> = {
   // brown as the mob its rig came from.
   [buddyTemplateId('stag')]: buddyTemplate('stag', 'Stag', 'beast', 0xb98a4e),
   [buddyTemplateId('alpaca')]: buddyTemplate('alpaca', 'Alpaca', 'beast', 0xe8dcc6),
+  // The horse ships its own GLB with a baked coat (public/models/buddies/),
+  // so the color is inert here like every other dedicated-rig buddy.
+  [buddyTemplateId('horse')]: buddyTemplate('horse', 'Horse', 'beast', 0xffffff),
+  [buddyTemplateId('sapling')]: buddyTemplate('sapling', 'Sapling', 'elemental', 0xffffff),
   [buddyTemplateId('bull')]: buddyTemplate('bull', 'Bull', 'beast', 0x6b4a37),
   [buddyTemplateId('spider')]: buddyTemplate('spider', 'Spider', 'spider', 0x4a3d63),
   [buddyTemplateId('raptor')]: buddyTemplate('raptor', 'Raptor', 'reptile', 0x5f8a4a),

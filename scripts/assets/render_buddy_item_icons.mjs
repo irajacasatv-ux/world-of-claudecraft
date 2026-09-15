@@ -24,6 +24,7 @@ const TMP_DIR = path.join(ROOT, 'tmp/buddy_icons');
 mkdirSync(TMP_DIR, { recursive: true });
 
 export const BUDDY_ICON_BATCH = [
+  { itemId: 'whistle_sapling', glb: 'public/models/buddies/sapling.glb' },
   { itemId: 'whistle_ember_fox', glb: 'public/models/creatures/fox.glb', tint: [0xd9, 0x66, 0x2b] },
   { itemId: 'whistle_moss_hare', glb: 'public/models/creatures/fox.glb', tint: [0x6f, 0x8f, 0x5a] },
   { itemId: 'whistle_frog', glb: 'public/models/buddies/frog.glb' },

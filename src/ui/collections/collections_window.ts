@@ -141,6 +141,8 @@ const BUDDY_LORE: Readonly<Record<string, TranslationKey>> = {
   penny_goldspark: 'hudChrome.collections.buddyLore.penny_goldspark',
   stag: 'hudChrome.collections.buddyLore.stag',
   alpaca: 'hudChrome.collections.buddyLore.alpaca',
+  horse: 'hudChrome.collections.buddyLore.horse',
+  sapling: 'hudChrome.collections.buddyLore.sapling',
   bull: 'hudChrome.collections.buddyLore.bull',
   spider: 'hudChrome.collections.buddyLore.spider',
   raptor: 'hudChrome.collections.buddyLore.raptor',

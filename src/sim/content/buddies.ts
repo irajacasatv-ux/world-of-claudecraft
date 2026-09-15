@@ -45,6 +45,8 @@ export type BuddyKey =
   | 'penny_goldspark'
   | 'stag'
   | 'alpaca'
+  | 'horse'
+  | 'sapling'
   | 'bull'
   | 'spider'
   | 'raptor'
@@ -193,6 +195,21 @@ export const BUDDIES: Record<BuddyKey, BuddyDef> = {
     key: 'alpaca',
     name: 'Alpaca',
   },
+  // common. The one beast here with its OWN rig rather than a borrowed mob
+  // body: a low-poly pony generated for the roster (public/models/buddies/
+  // horse.glb, scripts/asset_pipeline creature lane, gaits authored locally
+  // by scripts/bake_buddy_horse_gaits.mjs). No source yet, like the phoenix
+  // below: the Hunting window reports it UNOBTAINABLE until one is authored.
+  horse: {
+    key: 'horse',
+    name: 'Horse',
+  },
+  // A dedicated woodland rig with an authored waddle. No acquisition source yet.
+  sapling: {
+    key: 'sapling',
+    name: 'Sapling',
+    kind: 'elemental',
+  },
   bull: {
     key: 'bull',
     name: 'Bull',
@@ -252,13 +269,16 @@ export const BUDDIES: Record<BuddyKey, BuddyDef> = {
 };
 
 // Enumerated art debt (the src/ui/icons.ts ITEM_ART_PENDING ledger): the
-// Emberfall Phoenix whistle has no committed icon yet. Its icon renders from
-// the phoenix GLB like every other whistle (scripts/assets/
+// Emberfall Phoenix and Horse whistles have no committed icon yet. Their icons
+// render from the buddy GLB like every other whistle (scripts/assets/
 // render_buddy_item_icons.mjs), but that lane needs KTX-Software's `ktx` on
-// PATH to decompress the model first, which the machine that authored the
-// phoenix did not have. Empty this list in the same change that commits the
-// render; tests/item_icons.test.ts pins the membership.
-export const BUDDY_ART_PENDING_ITEM_IDS: readonly string[] = ['whistle_emberfall_phoenix'];
+// PATH to decompress the roster's models first, which the machines that
+// authored these two did not have. Empty this list in the same change that
+// commits the renders; tests/item_icons.test.ts pins the membership.
+export const BUDDY_ART_PENDING_ITEM_IDS: readonly string[] = [
+  'whistle_emberfall_phoenix',
+  'whistle_horse',
+];
 
 /** Catalog order: declaration order. */
 export const BUDDY_KEYS = Object.keys(BUDDIES) as readonly BuddyKey[];

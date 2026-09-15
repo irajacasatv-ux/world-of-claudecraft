@@ -5691,6 +5691,8 @@ export const hudChromeStrings = {
       penny_goldspark: 'Tiny tools clink in a pocket that is not yours.',
       stag: 'A shadow with antlers falls across your path.',
       alpaca: 'Something woolly and unhurried has decided to come along.',
+      horse: 'Hooves keep an easy, patient beat somewhere behind you.',
+      sapling: 'Little roots patter behind you, stirring the fallen leaves.',
       bull: 'A low huff of breath stirs the dust behind you.',
       spider: 'A thread of silk brushes your shoulder.',
       raptor: 'Quick claws tick over stone at your heels.',
@@ -5793,6 +5795,10 @@ export const hudChromeStrings = {
       stag: 'Evergarden bloodline, bred down from the great stags the wardens once rode. It still lowers its head at a raised hand, from a habit older than the animal.',
       alpaca:
         'The Galecrest herds keep them for wool and for temper: nothing stays calmer in a storm. This one will spit at exactly one person per journey.',
+      horse:
+        'Vale pony stock, bred small for the orchard lanes and never told it is not a warhorse. It keeps pace at your shoulder and will follow anyone who once fed it an apple.',
+      sapling:
+        'A young tree with a smile in its bark and a curious purple gaze. Its roots carry it in a cheerful waddle wherever you wander.',
       bull: 'A Vale bull the size of a dog, which is the only reason anyone agreed to keep one indoors. The temperament did not scale down with the rest.',
       spider:
         'A Wraithwood weaver, palm-sized, that redecorates any pack it is carried in. The webbing is stronger than the thread it replaces.',

@@ -15704,6 +15704,13 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'crucibleShop.balanceEntry': '{name} x{count}',
   'entities.mobs.buddy_alpaca.name':
     '羊駝',
+  'entities.mobs.buddy_sapling.name': '小樹苗',
+  'entities.items.whistle_sapling.name': '小樹苗的哨子',
+  'hudChrome.collections.presence.sapling': '細小的樹根在你身後輕快地踏過，撥動了落葉。',
+  'hudChrome.collections.buddyLore.sapling':
+    '一株樹皮上帶著笑容、紫色眼睛裡滿是好奇的小樹。無論你走到哪裡，牠都會邁著樹根，歡快地搖搖擺擺跟上。',
+  'entities.mobs.buddy_horse.name':
+    '馬',
   'entities.mobs.buddy_ansem.name':
     '安塞姆',
   'entities.mobs.buddy_crimson_claw_crab.name':
@@ -15756,6 +15763,8 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
     '阿隆的哨子',
   'entities.items.whistle_alpaca.name':
     '羊駝的哨子',
+  'entities.items.whistle_horse.name':
+    '馬的哨子',
   'entities.items.whistle_ansem.name':
     '安塞姆的哨子',
   'entities.items.whistle_bull.name':
@@ -15924,6 +15933,8 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
     '一位旅人的吉祥物，來自任何地圖都不肯承認的道路，總在計畫出岔子的地方現身。牠看著，牠點頭，然後什麼忙也不幫。',
   'hudChrome.collections.buddyLore.alpaca':
     '疾風崖的牧群養牠們既為羊毛，也為脾氣：暴風雨裡沒有比牠更鎮定的。這一隻每趟旅程恰好會朝一個人吐口水。',
+  'hudChrome.collections.buddyLore.horse':
+    '東溪谷矮馬血統，為果園小徑特意培育得矮小，也從沒人告訴牠自己不是戰馬。牠在你肩旁保持步調，誰曾餵過牠一個蘋果，牠就會跟誰走。',
   'hudChrome.collections.buddyLore.ansem':
     '牠談論門扉與黑暗，再問就不肯多說了。夜綻花野的信徒聲稱牠屬於他們；可每逢他們舉行儀式，牠就溜走了。',
   'hudChrome.collections.buddyLore.bull':
@@ -16015,6 +16026,7 @@ export const zh_TW: Partial<Record<TranslationKey, string>> = {
   'hudChrome.collections.presence.penny_goldspark': '不屬於你的口袋裡，小工具叮噹作響。',
   'hudChrome.collections.presence.stag': '一道長著鹿角的影子橫過你的路。',
   'hudChrome.collections.presence.alpaca': '有個毛茸茸、不慌不忙的傢伙決定跟你走。',
+  'hudChrome.collections.presence.horse': '身後某處，馬蹄正踏著從容而耐心的節拍。',
   'hudChrome.collections.presence.bull': '一聲低沉的喘息揚起了你身後的塵土。',
   'hudChrome.collections.presence.spider': '一縷蛛絲拂過你的肩膀。',
   'hudChrome.collections.presence.raptor': '你腳跟後有敏捷的爪子在石頭上嗒嗒作響。',

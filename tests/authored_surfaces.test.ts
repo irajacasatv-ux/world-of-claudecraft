@@ -119,6 +119,7 @@ const LEGACY_POLISHED_HELD_MODELS = new Set([
 
 /** The creature and mount defs whose authored atlas showed the low-tier film. */
 const AUTHORED_ATLAS_DEFS = [
+  'buddy_sapling',
   'mob_wolf',
   'greyjaw',
   'mob_ogre',

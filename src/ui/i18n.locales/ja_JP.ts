@@ -16520,6 +16520,13 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'crucibleShop.balanceEntry': '{name} x{count}',
   'entities.mobs.buddy_alpaca.name':
     'アルパカ',
+  'entities.mobs.buddy_sapling.name': '若木',
+  'entities.items.whistle_sapling.name': '若木の笛',
+  'hudChrome.collections.presence.sapling': '小さな根が後ろで軽い足音を立て、落ち葉を揺らす。',
+  'hudChrome.collections.buddyLore.sapling':
+    '樹皮に笑顔を浮かべ、好奇心に満ちた紫の瞳を持つ若木。根を足にして楽しげによちよちと歩き、どこへでもついてくる。',
+  'entities.mobs.buddy_horse.name':
+    '馬',
   'entities.mobs.buddy_ansem.name':
     'アンセム',
   'entities.mobs.buddy_crimson_claw_crab.name':
@@ -16572,6 +16579,8 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
     'アロンの笛',
   'entities.items.whistle_alpaca.name':
     'アルパカの笛',
+  'entities.items.whistle_horse.name':
+    '馬の笛',
   'entities.items.whistle_ansem.name':
     'アンセムの笛',
   'entities.items.whistle_bull.name':
@@ -16740,6 +16749,8 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
     'どの地図も認めない道から来た旅人のマスコット。計画が狂っている場所に必ず現れる。見て、うなずいて、助けは一切しない。',
   'hudChrome.collections.buddyLore.alpaca':
     'ゲイルクレストの群れは羊毛と気性のために飼っている。嵐の中でこれほど落ち着いた家畜はいない。この個体は道中きっかり一人に唾を吐く。',
+  'hudChrome.collections.buddyLore.horse':
+    'イーストブルック渓谷のポニーの血統で、果樹園の小道向けに小さく育てられ、自分が軍馬ではないとは一度も教えられていない。あなたの肩の横で歩調を合わせ、一度でもリンゴをくれた相手なら誰にでもついていく。',
   'hudChrome.collections.buddyLore.ansem':
     '扉と闇について語るが、それ以上は決して口を割らない。ナイトブルームの信徒は自分たちのものだと言い張るが、儀式のたびにどこかへ行ってしまう。',
   'hudChrome.collections.buddyLore.bull':
@@ -16831,6 +16842,7 @@ export const ja_JP: Partial<Record<TranslationKey, string>> = {
   'hudChrome.collections.presence.penny_goldspark': '自分のものではないポケットで、小さな道具がかちゃかちゃ鳴る。',
   'hudChrome.collections.presence.stag': '角のある影が、あなたの道に落ちる。',
   'hudChrome.collections.presence.alpaca': '毛むくじゃらで急がない何かが、一緒に来ることに決めたようだ。',
+  'hudChrome.collections.presence.horse': 'どこか後ろで、蹄がゆったりと辛抱強い拍子を刻んでいる。',
   'hudChrome.collections.presence.bull': '低い鼻息が、あなたの後ろの土埃を舞い上げる。',
   'hudChrome.collections.presence.spider': '一筋の糸があなたの肩をかすめる。',
   'hudChrome.collections.presence.raptor': 'すばやい爪が、あなたのかかとのそばで石を鳴らす。',

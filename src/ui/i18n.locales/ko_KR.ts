@@ -16485,6 +16485,13 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'crucibleShop.balanceEntry': '{name} x{count}',
   'entities.mobs.buddy_alpaca.name':
     '알파카',
+  'entities.mobs.buddy_sapling.name': '어린 나무',
+  'entities.items.whistle_sapling.name': '어린 나무의 호루라기',
+  'hudChrome.collections.presence.sapling': '작은 뿌리들이 뒤에서 종종걸음을 치며 낙엽을 흩뜨립니다.',
+  'hudChrome.collections.buddyLore.sapling':
+    '나무껍질에 미소를 띠고 호기심 가득한 보랏빛 눈을 가진 어린 나무입니다. 뿌리로 즐겁게 뒤뚱거리며 어디든 당신을 따라갑니다.',
+  'entities.mobs.buddy_horse.name':
+    '말',
   'entities.mobs.buddy_ansem.name':
     '안셈',
   'entities.mobs.buddy_crimson_claw_crab.name':
@@ -16537,6 +16544,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
     '알론의 호루라기',
   'entities.items.whistle_alpaca.name':
     '알파카의 호루라기',
+  'entities.items.whistle_horse.name':
+    '말의 호루라기',
   'entities.items.whistle_ansem.name':
     '안셈의 호루라기',
   'entities.items.whistle_bull.name':
@@ -16705,6 +16714,8 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
     '어떤 지도에도 없는 길에서 온 여행자의 마스코트로, 일이 틀어지는 곳이면 어디든 나타난다. 지켜보고, 고개를 끄덕이고, 도움은 전혀 주지 않는다.',
   'hudChrome.collections.buddyLore.alpaca':
     '게일크레스트의 무리는 털과 성정 때문에 이들을 기른다. 폭풍 속에서 이보다 침착한 짐승은 없다. 이 녀석은 여정마다 정확히 한 사람에게 침을 뱉는다.',
+  'hudChrome.collections.buddyLore.horse':
+    '이스트브룩 골짜기 조랑말 혈통으로, 과수원 길에 맞게 작게 길러졌고 자기가 군마가 아니라는 말은 한 번도 들어 본 적이 없다. 당신의 어깨 옆에서 보조를 맞추며, 한 번이라도 사과를 준 사람이라면 누구든 따라간다.',
   'hudChrome.collections.buddyLore.ansem':
     '문과 어둠에 대해 말하지만 그 이상은 결코 말하지 않는다. 밤꽃 평원의 신도들은 자기네 것이라 주장하지만, 의식을 치를 때마다 어디론가 사라진다.',
   'hudChrome.collections.buddyLore.bull':
@@ -16796,6 +16807,7 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'hudChrome.collections.presence.penny_goldspark': '당신 것이 아닌 주머니에서 작은 도구들이 짤랑거립니다.',
   'hudChrome.collections.presence.stag': '뿔 달린 그림자가 당신의 길 위에 드리웁니다.',
   'hudChrome.collections.presence.alpaca': '털북숭이에 느긋한 무언가가 함께 가기로 했습니다.',
+  'hudChrome.collections.presence.horse': '어딘가 뒤에서 발굽이 느긋하고 끈기 있는 박자를 맞춥니다.',
   'hudChrome.collections.presence.bull': '낮은 콧김이 당신 뒤의 먼지를 일으킵니다.',
   'hudChrome.collections.presence.spider': '거미줄 한 가닥이 당신의 어깨를 스칩니다.',
   'hudChrome.collections.presence.raptor': '재빠른 발톱이 당신 뒤꿈치의 돌 위를 톡톡 두드립니다.',

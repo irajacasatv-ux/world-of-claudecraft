@@ -16802,6 +16802,13 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'crucibleShop.balanceEntry': '{name} x{count}',
   'entities.mobs.buddy_alpaca.name':
     'Альпака',
+  'entities.mobs.buddy_sapling.name': 'Деревце',
+  'entities.items.whistle_sapling.name': 'Свисток: Деревце',
+  'hudChrome.collections.presence.sapling': 'Позади топают маленькие корни, вороша опавшую листву.',
+  'hudChrome.collections.buddyLore.sapling':
+    'Молодое деревце с улыбкой на коре и любопытными фиолетовыми глазами. Его корни весело несут его вперевалку, куда бы вы ни отправились.',
+  'entities.mobs.buddy_horse.name':
+    'Лошадь',
   'entities.mobs.buddy_ansem.name':
     'Ансем',
   'entities.mobs.buddy_crimson_claw_crab.name':
@@ -16854,6 +16861,8 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
     'Свисток: Алон',
   'entities.items.whistle_alpaca.name':
     'Свисток: Альпака',
+  'entities.items.whistle_horse.name':
+    'Свисток: Лошадь',
   'entities.items.whistle_ansem.name':
     'Свисток: Ансем',
   'entities.items.whistle_bull.name':
@@ -17022,6 +17031,8 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
     'Талисман путников с дороги, которую не признаёт ни одна карта; появляется везде, где план идёт наперекосяк. Смотрит, одобряет и не помогает совершенно ничем.',
   'hudChrome.collections.buddyLore.alpaca':
     'В стадах Гейлкреста их держат ради шерсти и нрава: в бурю никто не сохраняет такого спокойствия. Этот плюётся ровно в одного человека за поездку.',
+  'hudChrome.collections.buddyLore.horse':
+    'Пони из Истврукской долины, выведенный мелким для садовых дорожек, и никто так и не сказал ему, что он не боевой конь. Держится у вашего плеча и пойдёт за любым, кто хоть раз угостил его яблоком.',
   'hudChrome.collections.buddyLore.ansem':
     'Говорит о дверях и о тьме и больше ни слова не скажет ни о том, ни о другом. Культисты Ночецветья зовут его своим, а он уходит всякий раз, когда они начинают обряд.',
   'hudChrome.collections.buddyLore.bull':
@@ -17113,6 +17124,7 @@ export const ru_RU: Partial<Record<TranslationKey, string>> = {
   'hudChrome.collections.presence.penny_goldspark': 'В чужом кармане позвякивают крошечные инструменты.',
   'hudChrome.collections.presence.stag': 'На вашу тропу ложится тень с рогами.',
   'hudChrome.collections.presence.alpaca': 'Что-то шерстистое и неторопливое решило пойти с вами.',
+  'hudChrome.collections.presence.horse': 'Где-то позади копыта отбивают неспешный, терпеливый ритм.',
   'hudChrome.collections.presence.bull': 'Низкое фырканье поднимает пыль у вас за спиной.',
   'hudChrome.collections.presence.spider': 'Шелковая нить касается вашего плеча.',
   'hudChrome.collections.presence.raptor': 'Быстрые когти постукивают по камню у ваших пят.',

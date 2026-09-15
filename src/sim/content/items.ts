@@ -662,6 +662,24 @@ export const BASE_ITEMS: Record<string, ItemDef> = {
     quality: 'common',
     sellValue: 50_000, // 5g, the flat vendor price every whistle takes
   },
+  whistle_horse: {
+    id: 'whistle_horse',
+    name: 'Horse Whistle',
+    kind: 'buddy',
+    buddy: 'horse',
+    soulbound: true,
+    quality: 'common',
+    sellValue: 50_000, // 5g, the flat vendor price every whistle takes
+  },
+  whistle_sapling: {
+    id: 'whistle_sapling',
+    name: 'Sapling Whistle',
+    kind: 'buddy',
+    buddy: 'sapling',
+    soulbound: true,
+    quality: 'common',
+    sellValue: 50_000,
+  },
   whistle_bull: {
     id: 'whistle_bull',
     name: 'Bull Whistle',

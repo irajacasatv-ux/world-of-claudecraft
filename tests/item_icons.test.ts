@@ -375,13 +375,13 @@ describe('item webp icons', () => {
     // src/sim/content/ignivar_loot.ts / zone3.ts), so the ledger is back to the EMPTY
     // set: no artless item can hide behind an open wave, and the next commissioned wave
     // re-pins its exact membership here when it stages.
-    // The buddy merge leaves ONE enumerated debt: the Emberfall Phoenix
-    // whistle (content/buddies.ts BUDDY_ART_PENDING_ITEM_IDS), whose GLB render
-    // lane needs KTX-Software on the authoring machine.
+    // The buddy merge leaves TWO enumerated debts: the Emberfall Phoenix and
+    // Horse whistles (content/buddies.ts BUDDY_ART_PENDING_ITEM_IDS), whose GLB
+    // render lane needs KTX-Software on the authoring machine.
     expect(
       [...ITEM_ART_PENDING].sort(),
       'art debt is enumerated and re-pinned deliberately, never grown quietly',
-    ).toEqual(['whistle_emberfall_phoenix']);
+    ).toEqual(['whistle_emberfall_phoenix', 'whistle_horse']);
     // And the inverse: an id with committed art must still win the static url.
     expect(itemImageUrl('linen_pouch')).toBe('/ui/items/linen_pouch.webp');
   });

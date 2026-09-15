@@ -268,6 +268,8 @@ const MOB_IDS = [
   'buddy_penny_goldspark',
   'buddy_stag',
   'buddy_alpaca',
+  'buddy_horse',
+  'buddy_sapling',
   'buddy_bull',
   'buddy_spider',
   'buddy_raptor',

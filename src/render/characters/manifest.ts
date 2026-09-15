@@ -2497,6 +2497,30 @@ export const VISUALS: Record<string, VisualDef> = {
     tint: 'entity',
     tintStrength: 0.3,
   },
+  // common, and the one beast in this tier with its own rig: a low-poly pony
+  // generated for the roster (asset_pipeline creature lane, Tripo quadruped
+  // auto-rig) whose Idle/Walk gaits are authored locally against the bind
+  // pose by scripts/bake_buddy_horse_gaits.mjs, the mount-gait technique,
+  // because the quadruped retarget preset animates only a few joints. Baked
+  // chestnut coat, so `tint: 'cosmetic'` like the other dedicated rigs: the
+  // authored look holds until a buddy cosmetic dyes the entity. Height sits
+  // with the stag/tiger at the top of the pet band (the shared BUDDY_SCALE
+  // in content/buddy_mobs.ts multiplies it, same as every buddy).
+  buddy_horse: {
+    url: `${BUDDIES_DIR}/horse.glb`,
+    height: 0.75,
+    clips: BUDDY_CLIPS,
+    tint: 'cosmetic',
+    tintStrength: 0.5,
+  },
+  buddy_sapling: {
+    url: `${BUDDIES_DIR}/sapling.glb`,
+    height: 0.75,
+    clips: { ...BUDDY_CLIPS, run: 'Run' },
+    authoredAtlas: true,
+    tint: 'cosmetic',
+    tintStrength: 0.5,
+  },
   buddy_bull: {
     url: `${CREATURES}/bull.glb`,
     // the bull rig ships no plain Idle: grazing IS its idle (see mob_bull).
@@ -4030,6 +4054,8 @@ const MOB_KEYS: Record<string, string> = {
   buddy_penny_goldspark: 'buddy_penny_goldspark',
   buddy_stag: 'buddy_stag',
   buddy_alpaca: 'buddy_alpaca',
+  buddy_horse: 'buddy_horse',
+  buddy_sapling: 'buddy_sapling',
   buddy_bull: 'buddy_bull',
   buddy_spider: 'buddy_spider',
   buddy_raptor: 'buddy_raptor',
