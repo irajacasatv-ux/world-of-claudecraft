@@ -132,9 +132,16 @@ const build = await buildItemArtAudit({
     // Phoenix whistle is the one enumerated debt (content/buddies.ts
     // BUDDY_ART_PENDING_ITEM_IDS). Measured with `node scripts/item_art_audit.mjs
     // --verify-only` on the merged tree.
-    catalogCount: 1316,
-    liveItemCount: 1334,
-    pendingArtCount: 1,
+    // release/v0.44.0 merge of feature/buddy-companions-v43: the Horse and
+    // Sapling whistles (the branch's own work-in-progress commit) join the
+    // live catalog (1334 + 2 = 1336 minus whistle_horse, now enumerated as
+    // art debt beside the phoenix = 1335 live, 1317 with rendered art, 2
+    // pending).
+    // Measured with `node scripts/item_art_audit.mjs --verify-only` on the
+    // merged tree.
+    catalogCount: 1317,
+    liveItemCount: 1335,
+    pendingArtCount: 2,
     generatedHeroicDefinitions: 78,
     heroicDefinitionsWithOwnWebp: 59,
     heroicWeaponArtAliases: 19,

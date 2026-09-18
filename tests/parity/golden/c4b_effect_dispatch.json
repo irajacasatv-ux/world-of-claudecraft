@@ -34,7 +34,7 @@
       "tick": 5,
       "time": 0.25,
       "nextId": 1013,
-      "state": "041f7c69",
+      "state": "be18aec0",
       "events": "891b4619",
       "rng": {
         "draws": 2,
@@ -45,7 +45,7 @@
       "tick": 10,
       "time": 0.5,
       "nextId": 1013,
-      "state": "1e0de9b2",
+      "state": "0bbeeb95",
       "events": "741638a5",
       "rng": {
         "draws": 2,
@@ -56,7 +56,7 @@
       "tick": 15,
       "time": 0.75,
       "nextId": 1013,
-      "state": "cc024398",
+      "state": "2664bba3",
       "events": "741638a5",
       "rng": {
         "draws": 2,
@@ -67,7 +67,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 1013,
-      "state": "79f3aa2d",
+      "state": "f07ff314",
       "events": "36cf65da",
       "rng": {
         "draws": 2,
@@ -78,7 +78,7 @@
       "tick": 25,
       "time": 1.25,
       "nextId": 1013,
-      "state": "359946a1",
+      "state": "def2e876",
       "events": "741638a5",
       "rng": {
         "draws": 2,
@@ -89,7 +89,7 @@
       "tick": 30,
       "time": 1.5,
       "nextId": 1013,
-      "state": "0708de94",
+      "state": "3f1b1615",
       "events": "63142d0e",
       "rng": {
         "draws": 2,
@@ -100,7 +100,7 @@
       "tick": 34,
       "time": 1.7,
       "nextId": 1013,
-      "state": "c212b5ba",
+      "state": "d106ed01",
       "events": "ac05480f",
       "rng": {
         "draws": 4,
@@ -838,7 +838,7 @@
             "armor": 133,
             "int": 82,
             "spi": 60,
-            "sta": 33,
+            "sta": 52,
             "str": 10
           },
           "templateId": "mage",
@@ -897,7 +897,7 @@
             "armor": 370,
             "int": 11,
             "spi": 12,
-            "sta": 36,
+            "sta": 55,
             "str": 36
           },
           "templateId": "rogue",
@@ -1058,7 +1058,7 @@
             "armor": 130,
             "int": 79,
             "spi": 59,
-            "sta": 34,
+            "sta": 53,
             "str": 11
           },
           "targetId": 1012,
@@ -1150,7 +1150,7 @@
       "tick": 35,
       "time": 1.75,
       "nextId": 1013,
-      "state": "a3db40b1",
+      "state": "edc90420",
       "events": "b8b404b7",
       "rng": {
         "draws": 4,
@@ -1161,7 +1161,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 1013,
-      "state": "abe49a5f",
+      "state": "5e5ef6de",
       "events": "741638a5",
       "rng": {
         "draws": 4,
@@ -1172,7 +1172,7 @@
       "tick": 45,
       "time": 2.25,
       "nextId": 1013,
-      "state": "924449b4",
+      "state": "5e653e75",
       "events": "741638a5",
       "rng": {
         "draws": 48,
@@ -1183,7 +1183,7 @@
       "tick": 50,
       "time": 2.5,
       "nextId": 1013,
-      "state": "179fa7b7",
+      "state": "82cd282e",
       "events": "741638a5",
       "rng": {
         "draws": 80,
@@ -1194,7 +1194,7 @@
       "tick": 55,
       "time": 2.75,
       "nextId": 1013,
-      "state": "60dad733",
+      "state": "512ba0f0",
       "events": "741638a5",
       "rng": {
         "draws": 113,
@@ -1205,7 +1205,7 @@
       "tick": 60,
       "time": 3,
       "nextId": 1013,
-      "state": "0e108b1a",
+      "state": "1306baf5",
       "events": "741638a5",
       "rng": {
         "draws": 137,
@@ -1216,7 +1216,7 @@
       "tick": 65,
       "time": 3.25,
       "nextId": 1013,
-      "state": "219580f0",
+      "state": "5416db73",
       "events": "741638a5",
       "rng": {
         "draws": 176,
@@ -1227,7 +1227,7 @@
       "tick": 70,
       "time": 3.5,
       "nextId": 1013,
-      "state": "c67e9c25",
+      "state": "ade2fd82",
       "events": "741638a5",
       "rng": {
         "draws": 221,
@@ -1238,7 +1238,7 @@
       "tick": 75,
       "time": 3.75,
       "nextId": 1013,
-      "state": "10db9368",
+      "state": "8e768b2b",
       "events": "741638a5",
       "rng": {
         "draws": 268,
@@ -1249,7 +1249,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 1013,
-      "state": "19b3fdc2",
+      "state": "2ca0a06d",
       "events": "741638a5",
       "rng": {
         "draws": 306,
@@ -1260,7 +1260,7 @@
       "tick": 85,
       "time": 4.25,
       "nextId": 1013,
-      "state": "a1126d24",
+      "state": "0790461f",
       "events": "741638a5",
       "rng": {
         "draws": 355,
@@ -1271,7 +1271,7 @@
       "tick": 90,
       "time": 4.5,
       "nextId": 1013,
-      "state": "ac4352df",
+      "state": "5bf7d9e8",
       "events": "741638a5",
       "rng": {
         "draws": 402,
@@ -1282,7 +1282,7 @@
       "tick": 95,
       "time": 4.75,
       "nextId": 1013,
-      "state": "de1f7b25",
+      "state": "1041f994",
       "events": "741638a5",
       "rng": {
         "draws": 455,
@@ -1293,7 +1293,7 @@
       "tick": 100,
       "time": 5,
       "nextId": 1013,
-      "state": "548e6751",
+      "state": "d202bfe2",
       "events": "741638a5",
       "rng": {
         "draws": 514,
@@ -1304,7 +1304,7 @@
       "tick": 105,
       "time": 5.25,
       "nextId": 1013,
-      "state": "0d4acabc",
+      "state": "5b45bd4d",
       "events": "741638a5",
       "rng": {
         "draws": 566,
@@ -1315,7 +1315,7 @@
       "tick": 110,
       "time": 5.5,
       "nextId": 1013,
-      "state": "5b21cc71",
+      "state": "eafbbc54",
       "events": "741638a5",
       "rng": {
         "draws": 608,
@@ -1326,7 +1326,7 @@
       "tick": 115,
       "time": 5.75,
       "nextId": 1013,
-      "state": "d8dd10df",
+      "state": "618c2f4a",
       "events": "741638a5",
       "rng": {
         "draws": 661,
@@ -1337,7 +1337,7 @@
       "tick": 120,
       "time": 6,
       "nextId": 1013,
-      "state": "af708076",
+      "state": "3b33400f",
       "events": "741638a5",
       "rng": {
         "draws": 717,
@@ -1348,7 +1348,7 @@
       "tick": 125,
       "time": 6.25,
       "nextId": 1013,
-      "state": "a890997f",
+      "state": "dbb269b0",
       "events": "741638a5",
       "rng": {
         "draws": 777,
@@ -1359,7 +1359,7 @@
       "tick": 130,
       "time": 6.5,
       "nextId": 1013,
-      "state": "f3799170",
+      "state": "f0b0988d",
       "events": "741638a5",
       "rng": {
         "draws": 828,
@@ -1370,7 +1370,7 @@
       "tick": 135,
       "time": 6.75,
       "nextId": 1014,
-      "state": "301f837d",
+      "state": "91fa4934",
       "events": "29c5e73b",
       "rng": {
         "draws": 885,
@@ -1381,7 +1381,7 @@
       "tick": 135,
       "time": 6.75,
       "nextId": 1014,
-      "state": "301f837d",
+      "state": "91fa4934",
       "events": "741638a5",
       "rng": {
         "draws": 885,
@@ -2119,7 +2119,7 @@
             "armor": 133,
             "int": 82,
             "spi": 60,
-            "sta": 33,
+            "sta": 52,
             "str": 10
           },
           "templateId": "mage",
@@ -2178,7 +2178,7 @@
             "armor": 370,
             "int": 11,
             "spi": 12,
-            "sta": 36,
+            "sta": 55,
             "str": 36
           },
           "templateId": "rogue",
@@ -2339,7 +2339,7 @@
             "armor": 130,
             "int": 79,
             "spi": 59,
-            "sta": 34,
+            "sta": 53,
             "str": 11
           },
           "targetId": 1012,
@@ -2417,7 +2417,7 @@
       "tick": 135,
       "time": 6.75,
       "nextId": 1015,
-      "state": "d1fcd339",
+      "state": "af78abcc",
       "events": "74ad731e",
       "rng": {
         "draws": 886,
@@ -3158,7 +3158,7 @@
             "armor": 133,
             "int": 82,
             "spi": 60,
-            "sta": 33,
+            "sta": 52,
             "str": 10
           },
           "templateId": "mage",
@@ -3217,7 +3217,7 @@
             "armor": 370,
             "int": 11,
             "spi": 12,
-            "sta": 36,
+            "sta": 55,
             "str": 36
           },
           "templateId": "rogue",
@@ -3378,7 +3378,7 @@
             "armor": 130,
             "int": 79,
             "spi": 59,
-            "sta": 34,
+            "sta": 53,
             "str": 11
           },
           "targetId": 1012,
@@ -3522,7 +3522,7 @@
       "tick": 135,
       "time": 6.75,
       "nextId": 1017,
-      "state": "45420433",
+      "state": "f3455632",
       "events": "a88c5f55",
       "rng": {
         "draws": 888,
@@ -4237,13 +4237,13 @@
           "fallStartY": -2.994172,
           "gcdRemaining": 1.5,
           "healPower": 41,
-          "hp": 418,
+          "hp": 665,
           "id": 1007,
           "inCombat": true,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",
-          "maxHp": 418,
+          "maxHp": 665,
           "maxResource": 1581,
           "moveSpeed": 7,
           "onGround": true,
@@ -4268,7 +4268,7 @@
             "armor": 133,
             "int": 82,
             "spi": 60,
-            "sta": 33,
+            "sta": 52,
             "str": 10
           },
           "templateId": "mage",
@@ -4327,7 +4327,7 @@
             "armor": 370,
             "int": 11,
             "spi": 12,
-            "sta": 36,
+            "sta": 55,
             "str": 36
           },
           "templateId": "rogue",
@@ -4488,7 +4488,7 @@
             "armor": 130,
             "int": 79,
             "spi": 59,
-            "sta": 34,
+            "sta": 53,
             "str": 11
           },
           "targetId": 1012,
@@ -4740,7 +4740,7 @@
       "tick": 135,
       "time": 6.75,
       "nextId": 1018,
-      "state": "ab0c11e0",
+      "state": "e3f16ea1",
       "events": "f61a67c4",
       "rng": {
         "draws": 893,
@@ -5459,13 +5459,13 @@
           "fallStartY": -2.994172,
           "gcdRemaining": 1.5,
           "healPower": 41,
-          "hp": 418,
+          "hp": 665,
           "id": 1007,
           "inCombat": true,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",
-          "maxHp": 418,
+          "maxHp": 665,
           "maxResource": 1581,
           "moveSpeed": 7,
           "onGround": true,
@@ -5490,7 +5490,7 @@
             "armor": 133,
             "int": 82,
             "spi": 60,
-            "sta": 33,
+            "sta": 52,
             "str": 10
           },
           "templateId": "mage",
@@ -5556,7 +5556,7 @@
             "armor": 370,
             "int": 11,
             "spi": 12,
-            "sta": 36,
+            "sta": 55,
             "str": 36
           },
           "targetId": 1017,
@@ -5718,7 +5718,7 @@
             "armor": 130,
             "int": 79,
             "spi": 59,
-            "sta": 34,
+            "sta": 53,
             "str": 11
           },
           "targetId": 1012,
@@ -6035,7 +6035,7 @@
       "tick": 135,
       "time": 6.75,
       "nextId": 1019,
-      "state": "8b1dda08",
+      "state": "0784e245",
       "events": "5b66e08c",
       "rng": {
         "draws": 894,
@@ -6758,13 +6758,13 @@
           "fallStartY": -2.994172,
           "gcdRemaining": 1.5,
           "healPower": 41,
-          "hp": 418,
+          "hp": 665,
           "id": 1007,
           "inCombat": true,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",
-          "maxHp": 418,
+          "maxHp": 665,
           "maxResource": 1581,
           "moveSpeed": 7,
           "onGround": true,
@@ -6789,7 +6789,7 @@
             "armor": 133,
             "int": 82,
             "spi": 60,
-            "sta": 33,
+            "sta": 52,
             "str": 10
           },
           "templateId": "mage",
@@ -6855,7 +6855,7 @@
             "armor": 370,
             "int": 11,
             "spi": 12,
-            "sta": 36,
+            "sta": 55,
             "str": 36
           },
           "targetId": 1017,
@@ -7050,7 +7050,7 @@
             "armor": 130,
             "int": 79,
             "spi": 59,
-            "sta": 34,
+            "sta": 53,
             "str": 11
           },
           "targetId": 1012,
@@ -7418,8 +7418,8 @@
       "tick": 135,
       "time": 6.75,
       "nextId": 1020,
-      "state": "a72c8dd4",
-      "events": "034160e5",
+      "state": "e7af837c",
+      "events": "69c43081",
       "rng": {
         "draws": 894,
         "digest": "56ec9ce1"
@@ -8141,13 +8141,13 @@
           "fallStartY": -2.994172,
           "gcdRemaining": 1.5,
           "healPower": 41,
-          "hp": 418,
+          "hp": 665,
           "id": 1007,
           "inCombat": true,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",
-          "maxHp": 418,
+          "maxHp": 665,
           "maxResource": 1581,
           "moveSpeed": 7,
           "onGround": true,
@@ -8172,7 +8172,7 @@
             "armor": 133,
             "int": 82,
             "spi": 60,
-            "sta": 33,
+            "sta": 52,
             "str": 10
           },
           "templateId": "mage",
@@ -8238,7 +8238,7 @@
             "armor": 370,
             "int": 11,
             "spi": 12,
-            "sta": 36,
+            "sta": 55,
             "str": 36
           },
           "targetId": 1017,
@@ -8344,10 +8344,20 @@
           "attackPower": 116,
           "auras": [
             {
+              "duration": 3,
+              "id": "loping_stride",
+              "kind": "buff_speed",
+              "name": "Loping Stride",
+              "remaining": 3,
+              "school": "nature",
+              "sourceId": 1010,
+              "value": 1.6
+            },
+            {
               "duration": 3600,
               "id": "cat_form",
               "kind": "form_cat",
-              "name": "Wolf Form",
+              "name": "Cat Form",
               "remaining": 3600,
               "school": "physical",
               "sourceId": 1010,
@@ -8379,6 +8389,12 @@
             "z": -45
           },
           "potionCooldownUntil": -1,
+          "procState": {
+            "counters": {},
+            "icds": {
+              "dru_loping_stride": 20
+            }
+          },
           "resource": 100,
           "resourceType": "energy",
           "savedMana": 1043,
@@ -8447,7 +8463,7 @@
             "armor": 130,
             "int": 79,
             "spi": 59,
-            "sta": 34,
+            "sta": 53,
             "str": 11
           },
           "targetId": 1012,
@@ -8856,8 +8872,8 @@
       "tick": 135,
       "time": 6.75,
       "nextId": 1020,
-      "state": "555c60c2",
-      "events": "96e5d864",
+      "state": "a848e880",
+      "events": "2ce1839a",
       "rng": {
         "draws": 894,
         "digest": "56ec9ce1"
@@ -9579,13 +9595,13 @@
           "fallStartY": -2.994172,
           "gcdRemaining": 1.5,
           "healPower": 41,
-          "hp": 418,
+          "hp": 665,
           "id": 1007,
           "inCombat": true,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",
-          "maxHp": 418,
+          "maxHp": 665,
           "maxResource": 1581,
           "moveSpeed": 7,
           "onGround": true,
@@ -9610,7 +9626,7 @@
             "armor": 133,
             "int": 82,
             "spi": 60,
-            "sta": 33,
+            "sta": 52,
             "str": 10
           },
           "templateId": "mage",
@@ -9676,7 +9692,7 @@
             "armor": 370,
             "int": 11,
             "spi": 12,
-            "sta": 36,
+            "sta": 55,
             "str": 36
           },
           "targetId": 1017,
@@ -9782,6 +9798,16 @@
           "attackPower": 68,
           "auras": [
             {
+              "duration": 3,
+              "id": "loping_stride",
+              "kind": "buff_speed",
+              "name": "Loping Stride",
+              "remaining": 3,
+              "school": "nature",
+              "sourceId": 1010,
+              "value": 1.6
+            },
+            {
               "duration": 12,
               "id": "rejuvenation",
               "kind": "hot",
@@ -9819,6 +9845,12 @@
             "z": -45
           },
           "potionCooldownUntil": -1,
+          "procState": {
+            "counters": {},
+            "icds": {
+              "dru_loping_stride": 20
+            }
+          },
           "resource": 963,
           "resourceType": "mana",
           "savedMana": 1043,
@@ -9887,7 +9919,7 @@
             "armor": 130,
             "int": 79,
             "spi": 59,
-            "sta": 34,
+            "sta": 53,
             "str": 11
           },
           "targetId": 1012,
@@ -10296,7 +10328,7 @@
       "tick": 135,
       "time": 6.75,
       "nextId": 1020,
-      "state": "555c60c2",
+      "state": "a848e880",
       "events": "741638a5",
       "rng": {
         "draws": 894,
@@ -11019,13 +11051,13 @@
           "fallStartY": -2.994172,
           "gcdRemaining": 1.5,
           "healPower": 41,
-          "hp": 418,
+          "hp": 665,
           "id": 1007,
           "inCombat": true,
           "kind": "player",
           "level": 20,
           "lootFfaTimer": "Infinity",
-          "maxHp": 418,
+          "maxHp": 665,
           "maxResource": 1581,
           "moveSpeed": 7,
           "onGround": true,
@@ -11050,7 +11082,7 @@
             "armor": 133,
             "int": 82,
             "spi": 60,
-            "sta": 33,
+            "sta": 52,
             "str": 10
           },
           "templateId": "mage",
@@ -11116,7 +11148,7 @@
             "armor": 370,
             "int": 11,
             "spi": 12,
-            "sta": 36,
+            "sta": 55,
             "str": 36
           },
           "targetId": 1017,
@@ -11222,6 +11254,16 @@
           "attackPower": 68,
           "auras": [
             {
+              "duration": 3,
+              "id": "loping_stride",
+              "kind": "buff_speed",
+              "name": "Loping Stride",
+              "remaining": 3,
+              "school": "nature",
+              "sourceId": 1010,
+              "value": 1.6
+            },
+            {
               "duration": 12,
               "id": "rejuvenation",
               "kind": "hot",
@@ -11259,6 +11301,12 @@
             "z": -45
           },
           "potionCooldownUntil": -1,
+          "procState": {
+            "counters": {},
+            "icds": {
+              "dru_loping_stride": 20
+            }
+          },
           "resource": 963,
           "resourceType": "mana",
           "savedMana": 1043,
@@ -11327,7 +11375,7 @@
             "armor": 130,
             "int": 79,
             "spi": 59,
-            "sta": 34,
+            "sta": 53,
             "str": 11
           },
           "targetId": 1012,

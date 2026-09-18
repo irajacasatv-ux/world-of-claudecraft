@@ -2172,11 +2172,16 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         fieldBytes(s2, key as keyof typeof fixtureBaseline) - value,
       ]),
     );
+    // Re-pinned 2026-09-11 with the stamina baseline model: a masterwork or
+    // Perfecting bake on a caster piece now carries its Stamina growth beside
+    // Intellect and Spirit (tierDeltaStats, item_budget.ts), so every baked
+    // copy in the maximal bags and bank is a few bytes longer and the
+    // equipped-instance delta shrinks by the same shape.
     expect(fixtureDelta).toEqual({
       equipment: 115,
-      equipmentInstance: -10,
-      inventory: 16320,
-      bank: 35904,
+      equipmentInstance: -17,
+      inventory: 16400,
+      bank: 36080,
       vendorBuyback: 756,
       // + 26 bytes: the trained recipe_charm_stag_acorn id joins the retained
       // list (the buddy merge).
@@ -2319,8 +2324,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // 21 characters as `"<id>",` in the sorted array (26 + 24 bytes). MEASURED,
     // not inferred, same as every other row this equation names.
     expect(counterfactualBytes - 156144).toBe(
-      // Plus 801 for the buddy merge, MEASURED per key on the settled fixture:
-      // 672 for the 32 whistle and 2 charm item ids joining
+      // Plus 835 for the buddy merge, MEASURED per key on the settled fixture:
+      // 706 for the 34 whistle (the Horse and Sapling joined the 32) and 2
+      // charm item ids joining
       // deedStats.itemsDiscovered (each `"<id>",` in the sorted array, id
       // length + 3, summed off the catalog), and 129 for the new top-level
       // `buddies` field this fixture arms (118 bytes of value plus the 11 of
@@ -2330,7 +2336,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         1548 +
         50 +
         49 +
-        672 +
+        706 +
         129,
     );
     const forgeBaseline = {
@@ -2354,9 +2360,10 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       // point: the +50 hub practice quest delta above, on top of the prior +50
       // this row already carried.
       // The buddy merge on the same reference point: knownRecipes +26 (the
-      // trained recipe_charm_stag_acorn id) and deedStats +672 (the 32 whistle
-      // and 2 charm ids in itemsDiscovered), both measured above.
-    ).toEqual({ questsDone: 100, knownRecipes: 56, deeds: 32, deedStats: 693, reliquary: 80 });
+      // trained recipe_charm_stag_acorn id) and deedStats +706 (the 34 whistle
+      // and 2 charm ids in itemsDiscovered, the Horse and Sapling whistles
+      // joining on the release/v0.44.0 merge), both measured above.
+    ).toEqual({ questsDone: 100, knownRecipes: 56, deeds: 32, deedStats: 727, reliquary: 80 });
     // Removing field_kit AND the Bramblehide release content reproduces the
     // pre-field-kit, pre-Bramblehide baseline WITH the hammer content still
     // applied: 3884 alone measured 209,261 here (hammer content absent); the
@@ -2369,11 +2376,10 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     expect(
       Buffer.byteLength(JSON.stringify(preReleaseCounterfactual), 'utf8'),
       'field_kit and the Bramblehide release content removed, must reproduce the recorded pre-field-kit Crucible+hammer baseline',
-      // RE-MEASURED at 210,351 on the buddy merge: the +827 is the same three
-      // buddy terms attributed above (672 itemsDiscovered ids, 129 for the
-      // `buddies` field, 26 for the trained charm recipe id), none of which
-      // field_kit or the Bramblehide removal touches.
-    ).toBe(210351);
+      // RE-MEASURED on the release/v0.44.0 merge of the buddy branch: the
+      // release's 209,773 plus the 861 buddy bytes (706 itemsDiscovered ids,
+      // 129 for the `buddies` field, 26 for the trained charm recipe id).
+    ).toBe(210634);
     // Removing ONLY field_kit (the Bramblehide release content and the two
     // dev-mount reins items still present, current staged tree) reproduces
     // 209,524 plus the 1,548-byte Bramblehide delta plus the 49-byte
@@ -2384,8 +2390,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     expect(
       counterfactualBytes,
       'field_kit removed, must reproduce the current staged Crucible+hammer+Bramblehide+dev-mount baseline',
-      // RE-MEASURED at 211,948 on the buddy merge (+827, the three buddy terms).
-    ).toBe(211948);
+      // RE-MEASURED on the release/v0.44.0 merge (+861, the buddy terms).
+    ).toBe(212231);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
@@ -2408,7 +2414,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         return [field, bytes - Buffer.byteLength(JSON.stringify(stripped), 'utf8')];
       }),
     );
-    expect(metadataDelta).toEqual({ perfectingBonus: 11880, perfectingBound: 5934 });
+    expect(metadataDelta).toEqual({ perfectingBonus: 11872, perfectingBound: 5934 });
     // Combined fixture (Crucible baseline + hammer recipe/proof content +
     // field_kit + the Bramblehide/Nythgap release content, commit
     // 0ca3d01a60), measured after this release merge's settle: 211,034
@@ -2424,15 +2430,25 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // shared 211,034). Re-based per the standing rule (floor measurement
     // minus 380, edge measurement plus one, band width unchanged at 381):
     // 210,753..211,134.
-    // RE-BASED on the buddy companion merge (feature/buddy-companions-v43):
-    // 211,960 bytes measured, exactly +827 over the 211,133 the previous
-    // band centred on. The movers are the three buddy terms attributed in
-    // the equation above: 672 in deedStats.itemsDiscovered (32 whistle + 2
-    // charm ids), 129 for the new top-level `buddies` collection field, and
-    // 26 in knownRecipes for the trained charm recipe id. Floor at
-    // measurement minus 380, edge at measurement plus one, per the rule.
-    expect(bytes, reMint).toBeGreaterThan(211580);
-    expect(bytes, reMint).toBeLessThan(211961);
+    //
+    // RE-BASED 2026-09-11 for the stamina baseline model (item_budget.ts,
+    // PR 3993): 211,382 bytes, +249 over the 211,133 above. What moved it: a
+    // masterwork or Perfecting bake on a caster piece now carries its Stamina
+    // growth beside Intellect and Spirit (tierDeltaStats), so every baked copy
+    // in the maximal bags and bank is a few bytes longer (the fixtureDelta
+    // block above records the same shape: inventory +80, bank +176,
+    // equipped-instance delta -7), while the Perfecting bonus metadata lost
+    // the zero-valued Spirit keys the old normaliser wrote (-8). Re-based per
+    // the standing rule (floor measurement minus 380, edge measurement plus
+    // one, band width unchanged at 381): 211,002..211,383.
+    //
+    // RE-BASED on the release/v0.44.0 merge of feature/buddy-companions-v43:
+    // 212,243 bytes, +861 over the 211,382 above (the buddy terms: 706 in
+    // deedStats.itemsDiscovered for 34 whistle and 2 charm ids, 129 for the
+    // top-level `buddies` field, 26 in knownRecipes for the charm recipe).
+    // Floor at measurement minus 380, edge at measurement plus one.
+    expect(bytes, reMint).toBeGreaterThan(211863);
+    expect(bytes, reMint).toBeLessThan(212244);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was

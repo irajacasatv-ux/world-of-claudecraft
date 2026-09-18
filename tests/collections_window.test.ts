@@ -82,7 +82,7 @@ describe('collections_window: WCAG chrome and window contract', () => {
   });
 
   it('ships the window root and a micro-menu launcher beside the PvP icon', () => {
-    expect(html).toContain('<div id="collections-window" class="window panel"></div>');
+    expect(html).toContain('<div id="collections-window" class="window panel ui-window"></div>');
     expect(html).toContain('id="mm-collections"');
     // Beside the PvP (G) button, which is what the launcher row promises.
     expect(html.indexOf('id="mm-collections"')).toBeGreaterThan(html.indexOf('id="mm-arena"'));

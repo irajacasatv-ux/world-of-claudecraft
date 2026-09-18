@@ -334,6 +334,13 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'the unspent-talent-points glow on the desktop and mobile talent buttons',
   },
   {
+    call: 'this.microMenuStatePainter.paint',
+    band: 'medium',
+    gate: '',
+    surface: 'chrome',
+    why: "the micro-menu rail's open-window ring and unspent-point badge; every write goes through the elided facet, so a steady rail costs no DOM mutation",
+  },
+  {
     call: 'this.isInTown',
     band: 'slow',
     gate: '',
@@ -563,7 +570,7 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'the target name color (staff role, else hostile/friendly)',
   },
   {
-    call: 'this.updateTargetDiscordLine',
+    call: 'this.targetDiscord.update',
     band: 'frame',
     gate: "target && target.kind !== 'object'",
     surface: 'chrome',
@@ -1195,11 +1202,11 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     why: 'the minimap clock text, value-diffed',
   },
   {
-    call: 'this.updateDayNightDial',
+    call: 'this.dayNightDial.paint',
     band: 'fast',
     gate: '',
     surface: 'chrome',
-    why: 'the decorative day/night ring beside the minimap, repainted from the same world clock',
+    why: 'the decorative day/night ring beside the minimap; the canvas painter self-throttles to ~1Hz off the passed clock',
   },
   {
     call: 'this.updateMinimapCoords',
@@ -1427,6 +1434,13 @@ const HUD_UPDATE_DRIVES: readonly DriveRow[] = [
     gate: '',
     surface: 'chrome',
     why: 'the always-on gathering goal tracker (Intentional Gathering PR4, not gated on a window): a projection change has no dedicated event, so it rides the same slow poll; the module itself signature-gates the rebuild so an unchanged goal touches no DOM (a chrome row carries no guard field, same as updateDeedTracker/updateReliquaryTracker beside it)',
+  },
+  {
+    call: 'this.updateRecipeTracker',
+    band: 'slow',
+    gate: '',
+    surface: 'chrome',
+    why: 'the always-on pinned-recipe tracker (not gated on a window): reagents arrive from gathering and loot with no craft event to repaint on',
   },
   {
     call: 'this.trackerStackAnchor.apply',
@@ -1787,9 +1801,12 @@ describe('Hud.update() drives exactly the registered set, on the registered band
       // chrome 88 -> 89 at the aura-tracks sync (PR #3925): this branch adds
       // the aura tracks' one chrome call on top of the release's 88; the
       // release's window 48 carries over untouched.
+      // chrome 90 -> 91: the always-on pinned-recipe tracker
+      // (recipe_tracker_view.ts + recipe_tracker_painter.ts), the Reliquary
+      // tracker's exact slow-band row shape.
       // window 49 -> 50 on the buddy merge: the Hunting pane
       // (collectionsWindow.render) behind its own signature.
-    ).toEqual({ window: 50, chrome: 89, none: 17 });
+    ).toEqual({ window: 50, chrome: 91, none: 17 });
     const windows = HUD_UPDATE_DRIVES.filter((r) => r.surface === 'window');
     expect(windows.map((r) => r.call)).toContain('this.spellbookWindow.tickOpen');
     expect(windows.map((r) => r.call)).toContain('this.refreshOpenTownFocusIfChanged');

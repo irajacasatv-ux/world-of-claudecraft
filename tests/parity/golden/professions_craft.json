@@ -505,8 +505,8 @@
       "tick": 0,
       "time": 0,
       "nextId": 1007,
-      "state": "2c12e067",
-      "events": "be8af4e6",
+      "state": "1b6ebe5a",
+      "events": "8c1e21cf",
       "rng": {
         "draws": 2,
         "digest": "58bf8a9e"
@@ -626,7 +626,8 @@
                   "masterwork": true,
                   "stats": {
                     "int": 1,
-                    "spi": 1
+                    "spi": 1,
+                    "sta": 1
                   }
                 },
                 "signer": "Adventurer"
@@ -757,7 +758,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 1007,
-      "state": "3c46c6a2",
+      "state": "5f6e9aeb",
       "events": "81bf50b3",
       "rng": {
         "draws": 3,
@@ -878,7 +879,8 @@
                   "masterwork": true,
                   "stats": {
                     "int": 1,
-                    "spi": 1
+                    "spi": 1,
+                    "sta": 1
                   }
                 },
                 "signer": "Adventurer"
@@ -1007,7 +1009,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 1007,
-      "state": "aebe9bd7",
+      "state": "d5bcef20",
       "events": "f76603c0",
       "rng": {
         "draws": 4,
@@ -1139,7 +1141,8 @@
                   "masterwork": true,
                   "stats": {
                     "int": 1,
-                    "spi": 1
+                    "spi": 1,
+                    "sta": 1
                   }
                 },
                 "signer": "Adventurer"
@@ -1301,7 +1304,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 1007,
-      "state": "21e060ee",
+      "state": "078ba90b",
       "events": "38d6648f",
       "rng": {
         "draws": 4,
@@ -1433,7 +1436,8 @@
                   "masterwork": true,
                   "stats": {
                     "int": 1,
-                    "spi": 1
+                    "spi": 1,
+                    "sta": 1
                   }
                 },
                 "signer": "Adventurer"
@@ -1592,7 +1596,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 1007,
-      "state": "4cf48088",
+      "state": "2668f921",
       "events": "1e2f0587",
       "rng": {
         "draws": 4,
@@ -1724,7 +1728,8 @@
                   "masterwork": true,
                   "stats": {
                     "int": 1,
-                    "spi": 1
+                    "spi": 1,
+                    "sta": 1
                   }
                 },
                 "signer": "Adventurer"
@@ -1918,7 +1923,7 @@
       "tick": 0,
       "time": 0,
       "nextId": 1007,
-      "state": "4cf48088",
+      "state": "2668f921",
       "events": "741638a5",
       "rng": {
         "draws": 4,
@@ -2050,7 +2055,8 @@
                   "masterwork": true,
                   "stats": {
                     "int": 1,
-                    "spi": 1
+                    "spi": 1,
+                    "sta": 1
                   }
                 },
                 "signer": "Adventurer"

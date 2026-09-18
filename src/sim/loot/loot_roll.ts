@@ -364,6 +364,17 @@ export function rollLoot(
   // rides the boss death site instead (src/sim/buddy_drops.ts, content/
   // buddy_sources.ts), so no kill anywhere draws for one here.
   if (copper > 0 || items.length > 0) {
+    // A soulbound drop pins its bind-on-pickup trade group NOW, from the
+    // kill-time `eligible` set, so a member who disconnects before the roll
+    // resolves still counts (killSnapshotEligibility prefers this snapshot).
+    if (items.some((slot) => ITEMS[slot.itemId]?.soulbound)) {
+      mob.lootPartyTradeEligibility = {
+        names: eligible.map((candidate) => candidate.name),
+        characterIds: eligible.flatMap((candidate) =>
+          candidate.characterId === undefined ? [] : [candidate.characterId],
+        ),
+      };
+    }
     mob.loot = { copper, items };
     mob.lootable = true;
     // start the owner-lock countdown: after LOOT_FFA_DELAY the tap opens to all.
@@ -521,6 +532,12 @@ export function killSnapshotEligibility(
   ctx: SimContext,
   mob: Entity,
 ): { names: string[]; characterIds: number[] } {
+  if (mob.lootPartyTradeEligibility) {
+    return {
+      names: [...mob.lootPartyTradeEligibility.names],
+      characterIds: [...mob.lootPartyTradeEligibility.characterIds],
+    };
+  }
   if (!mob.lootRecipientIds || mob.lootRecipientIds.length === 0) {
     return { names: [], characterIds: [] };
   }

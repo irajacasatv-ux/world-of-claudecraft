@@ -317,6 +317,7 @@ export function pickUpObject(
       ctx.emit({
         type: 'noticeboard',
         noticeboardId: noticeboardDef.templateId,
+        boardId: noticeboardDef.id,
         state: 'listings',
         listings,
         pid: meta.entityId,
@@ -325,6 +326,7 @@ export function pickUpObject(
       ctx.emit({
         type: 'noticeboard',
         noticeboardId: noticeboardDef.templateId,
+        boardId: noticeboardDef.id,
         state: 'empty',
         pid: meta.entityId,
       });

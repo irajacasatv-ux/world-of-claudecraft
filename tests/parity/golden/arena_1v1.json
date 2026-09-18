@@ -29,7 +29,7 @@
       "tick": 25,
       "time": 1.25,
       "nextId": 1008,
-      "state": "31f03653",
+      "state": "aae79037",
       "events": "bb8af97a",
       "rng": {
         "draws": 0,
@@ -40,7 +40,7 @@
       "tick": 50,
       "time": 2.5,
       "nextId": 1008,
-      "state": "28093b20",
+      "state": "8e494a6c",
       "events": "e3796e7e",
       "rng": {
         "draws": 70,
@@ -51,7 +51,7 @@
       "tick": 75,
       "time": 3.75,
       "nextId": 1008,
-      "state": "70c1d5ee",
+      "state": "857fc212",
       "events": "32c6eb3c",
       "rng": {
         "draws": 292,
@@ -62,7 +62,7 @@
       "tick": 100,
       "time": 5,
       "nextId": 1008,
-      "state": "26dee8d9",
+      "state": "cc742b35",
       "events": "cf5d7986",
       "rng": {
         "draws": 530,
@@ -73,8 +73,8 @@
       "tick": 125,
       "time": 6.25,
       "nextId": 1008,
-      "state": "1c226f56",
-      "events": "be055a41",
+      "state": "ce16fdaa",
+      "events": "a75de131",
       "rng": {
         "draws": 781,
         "digest": "bba8277e"
@@ -84,7 +84,7 @@
       "tick": 142,
       "time": 7.1,
       "nextId": 1008,
-      "state": "c9a4f8db",
+      "state": "cff6e36f",
       "events": "741638a5",
       "rng": {
         "draws": 959,
@@ -121,7 +121,7 @@
           "craftSkills": {},
           "deedStats": {
             "counters": {
-              "damageDealt": 308
+              "damageDealt": 490
             },
             "dungeonClears": {},
             "itemsDiscovered": [
@@ -401,7 +401,7 @@
           "kind": "player",
           "level": 15,
           "lootFfaTimer": "Infinity",
-          "maxHp": 308,
+          "maxHp": 490,
           "maxResource": 1161,
           "moveSpeed": 7,
           "onGround": true,
@@ -425,7 +425,7 @@
             "armor": 113,
             "int": 67,
             "spi": 50,
-            "sta": 28,
+            "sta": 42,
             "str": 10
           },
           "templateId": "mage",

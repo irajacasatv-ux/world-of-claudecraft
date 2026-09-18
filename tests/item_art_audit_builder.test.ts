@@ -846,31 +846,36 @@ describe('item-art audit builder', () => {
     // from `node scripts/item_art_audit.mjs --verify-only` run on the merged
     // tree, not invented or derived from either parent.
     // PR3941: measured again after retiring the five premium reins.
+    // release/v0.44.0 merge of feature/buddy-companions-v43: the 34 buddy
+    // whistles and two charm looks over the release's 1283 / 1301, minus the
+    // two enumerated as art debt (whistle_emberfall_phoenix, whistle_horse):
+    // 1317 / 1335, two more sheet pages and groups. Measured directly from
+    // `node scripts/item_art_audit.mjs --verify-only` on the merged tree.
     expect(verified).toMatchObject({
       catalogPath: 'tmp/imagegen/item-art-consistency/final-audit/catalog.json',
-      catalogSha256: '74bd65a9b0efd433b12c9bf0cdaa509eeac3e4986edb8878e8f069f4e24088f0',
-      catalogBytes: 699134,
+      catalogSha256: 'b80ea9e85bb5307d2ea6b0debeb49ed8dcab9887971785aa5860f20ef170c3cd',
+      catalogBytes: 718162,
       rendererFingerprint: '41f5404c4d6d9643c8f03b9d88a8546e44564cc03a1baabdd4a72cb9258a2da7',
-      catalogCount: 1283,
-      liveItemCount: 1301,
+      catalogCount: 1317,
+      liveItemCount: 1335,
       generatedHeroicDefinitions: 78,
       heroicDefinitionsWithOwnWebp: 59,
       heroicWeaponArtAliases: 19,
-      groupCount: 25,
-      sheetPageCount: 31,
-      sheetCount: 248,
+      groupCount: 27,
+      sheetPageCount: 33,
+      sheetCount: 264,
       sheetModeCounts: {
-        '128-color': 31,
-        '40-color': 31,
-        '28-color': 31,
-        '22-color': 31,
-        '28-grayscale': 31,
-        '64-circle': 31,
-        'small-multiview': 31,
-        identity: 31,
+        '128-color': 33,
+        '40-color': 33,
+        '28-color': 33,
+        '22-color': 33,
+        '28-grayscale': 33,
+        '64-circle': 33,
+        'small-multiview': 33,
+        identity: 33,
       },
       sheetSetSha256: null,
-      shippingCatalogSha256: 'aaa08264b12c4be606ab2ffd06a573c7cf24a78c440bc2198b9f18b16e8062de',
+      shippingCatalogSha256: '3e7242236f9107df1d4ddd2232435a16c8a1d1c3b7eddfda7c8f7fda17e83a0f',
       machineChecksPassed: true,
       verdict: null,
     });

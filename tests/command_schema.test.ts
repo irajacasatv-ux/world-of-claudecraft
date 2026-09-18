@@ -166,11 +166,16 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // 220+14+1=235, dispatch-only 13+0+1=14), NOT a suite run, which the NOTE
 // above explicitly warns against trusting: confirm with
 // `npx vitest run tests/command_schema.test.ts` before merge lands.
+// +1 send / +1 dispatch for the Social window's Who tab (`who`: a structured
+// realm roster answered by the `who` frame; the chat /who stays as it was).
+// Market Sweep composes on top of it with `market_sweep_quote` and
+// `market_sweep`, both client-sent and server-dispatched.
 // Re-measured on the buddy merge (feature/buddy-companions-v43): the four
 // buddy commands (buddy_toggle, buddy_summon, buddy_cosmetic, buddy_autoloot)
-// each have a client send and a dispatch, so +4 on both axes.
-const EXPECTED_SEND_COUNT = 226;
-const EXPECTED_DISPATCH_COUNT = 240;
+// each have a client send and a dispatch, so +4 on both axes over the
+// release/v0.44.0 base (225 / 239).
+const EXPECTED_SEND_COUNT = 229;
+const EXPECTED_DISPATCH_COUNT = 243;
 const EXPECTED_DISPATCH_ONLY_COUNT = 14;
 
 // The chat sub-channel routing switch (server/game.ts `switch

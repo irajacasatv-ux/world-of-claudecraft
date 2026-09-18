@@ -1997,7 +1997,7 @@
       "tick": 40,
       "time": 2,
       "nextId": 1015,
-      "state": "3281fa87",
+      "state": "c1bf425d",
       "events": "8404a59d",
       "rng": {
         "draws": 0,
@@ -2328,7 +2328,7 @@
             "armor": 98,
             "int": 55,
             "spi": 43,
-            "sta": 26,
+            "sta": 37,
             "str": 11
           },
           "templateId": "warlock",
@@ -2386,7 +2386,7 @@
       "tick": 60,
       "time": 3,
       "nextId": 1015,
-      "state": "df147550",
+      "state": "bb7a5406",
       "events": "600405a2",
       "rng": {
         "draws": 151,
@@ -2397,7 +2397,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 1015,
-      "state": "c2ae1203",
+      "state": "7a24177d",
       "events": "932090ca",
       "rng": {
         "draws": 286,
@@ -2408,7 +2408,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 1015,
-      "state": "c2ae1203",
+      "state": "7a24177d",
       "events": "741638a5",
       "rng": {
         "draws": 286,
@@ -2759,7 +2759,7 @@
             "armor": 98,
             "int": 55,
             "spi": 43,
-            "sta": 26,
+            "sta": 37,
             "str": 11
           },
           "templateId": "warlock",
@@ -2817,7 +2817,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 1017,
-      "state": "6f3398a0",
+      "state": "ce7b9126",
       "events": "5e924158",
       "rng": {
         "draws": 286,
@@ -3168,7 +3168,7 @@
             "armor": 98,
             "int": 55,
             "spi": 43,
-            "sta": 26,
+            "sta": 37,
             "str": 11
           },
           "templateId": "warlock",
@@ -3227,7 +3227,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 1019,
-      "state": "fecfda72",
+      "state": "cfdb23c8",
       "events": "2639ec89",
       "rng": {
         "draws": 286,
@@ -3578,7 +3578,7 @@
             "armor": 98,
             "int": 55,
             "spi": 43,
-            "sta": 26,
+            "sta": 37,
             "str": 11
           },
           "templateId": "warlock",
@@ -3644,7 +3644,7 @@
       "tick": 80,
       "time": 4,
       "nextId": 1019,
-      "state": "fecfda72",
+      "state": "cfdb23c8",
       "events": "741638a5",
       "rng": {
         "draws": 286,
@@ -3995,7 +3995,7 @@
             "armor": 98,
             "int": 55,
             "spi": 43,
-            "sta": 26,
+            "sta": 37,
             "str": 11
           },
           "templateId": "warlock",

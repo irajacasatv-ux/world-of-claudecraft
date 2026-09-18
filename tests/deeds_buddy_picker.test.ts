@@ -48,6 +48,9 @@ function makeWindow(state: WorldState): Harness {
     world: () =>
       ({
         deedsEarned: new Map(),
+        // The account-wide Book (release/v0.44.0): no other character on this
+        // account has earned anything in the fixture.
+        accountDeeds: new Map(),
         deedStats: stats,
         renown: 0,
         activeTitle: null,

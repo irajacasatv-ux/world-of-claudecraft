@@ -95,6 +95,7 @@ export const IWORLD_MEMBERS = [
   // --- core world / player roster + economy reads (data) ---
   { name: 'cfg', kind: 'data' },
   { name: 'entities', kind: 'data' },
+  { name: 'entityRosterVersion', kind: 'data' },
   { name: 'playerId', kind: 'data' },
   { name: 'player', kind: 'data' },
   { name: 'moveInput', kind: 'data' },
@@ -259,6 +260,8 @@ export const IWORLD_MEMBERS = [
   { name: 'accountAdmin', kind: 'data' },
   { name: 'spectating', kind: 'data' },
   { name: 'socialInfo', kind: 'data' },
+  { name: 'whoInfo', kind: 'data' },
+  { name: 'whoRequest', kind: 'method' },
   // --- social graph commands + async search ---
   { name: 'friendAdd', kind: 'method' },
   { name: 'friendRemove', kind: 'method' },
@@ -304,6 +307,8 @@ export const IWORLD_MEMBERS = [
   { name: 'marketList', kind: 'method' },
   { name: 'marketListInstance', kind: 'method' },
   { name: 'marketBuy', kind: 'method' },
+  { name: 'marketSweepQuote', kind: 'method' },
+  { name: 'marketSweep', kind: 'method' },
   { name: 'marketCancel', kind: 'method' },
   { name: 'marketCollect', kind: 'method' },
   // --- Ravenpost mail reads + commands ---
@@ -499,6 +504,7 @@ export const IWORLD_MEMBERS = [
   // --- the Book of Deeds (IWorldDeeds): earned/stats/renown/title/border
   // reads + the two cosmetic selection commands ---
   { name: 'deedsEarned', kind: 'data' },
+  { name: 'accountDeeds', kind: 'data' },
   { name: 'deedStats', kind: 'data' },
   { name: 'renown', kind: 'data' },
   { name: 'activeTitle', kind: 'data' },
@@ -514,6 +520,7 @@ export const IWORLD_MEMBERS = [
   { name: 'reliquaryMarks', kind: 'data' },
   { name: 'reliquaryRecent', kind: 'data' },
   { name: 'reliquaryObtainCounts', kind: 'data' },
+  { name: 'reliquaryAccountFinds', kind: 'data' },
   { name: 'reliquaryPageCompletion', kind: 'method' },
   { name: 'reliquaryCatalogCompletion', kind: 'method' },
   { name: 'reliquaryCuratorRank', kind: 'method' },
@@ -864,13 +871,16 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // reconciled by arithmetic in the diff. Run `npx vitest run
     // tests/world_api_parity.test.ts` before merge lands to confirm the
     // facet-file exhaustiveness checks (AssertNever) also pass on the fully
-    // resolved production tree.
+    // resolved production tree. The merged tree carries the Market Sweep
+    // methods, the Who tab data and method, CPU-hygiene entityRosterVersion,
+    // and the account-wide Book of Deeds / Reliquary read halves. Counted
+    // directly off the resolved IWORLD_MEMBERS literal.
     // The buddy merge (feature/buddy-companions-v43) adds the IWorldBuddies
-    // facet: eight methods (four read-returning), no data members: 379
-    // members, 103 data, 276 method, read off the merged member table.
-    expect(IWORLD_MEMBERS.length).toBe(379);
-    expect(DATA_MEMBERS.length).toBe(103);
-    expect(METHOD_MEMBERS.length).toBe(276);
+    // facet: eight methods (four read-returning), no data members: 386
+    // members, 107 data, 279 method, read off the merged member table.
+    expect(IWORLD_MEMBERS.length).toBe(386);
+    expect(DATA_MEMBERS.length).toBe(107);
+    expect(METHOD_MEMBERS.length).toBe(279);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -888,6 +898,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'acceptQuest',
       'accountAdmin',
       'accountCosmetics',
+      'accountDeeds',
       'accountFlair',
       'activeBorder',
       'activeConsecrations',
@@ -1010,6 +1021,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'enterDelve',
       'enterDungeon',
       'entities',
+      'entityRosterVersion',
       'equipBag',
       'equipBuddyCosmetic',
       'equipItem',
@@ -1103,6 +1115,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketListInstance',
       'marketSearch',
       'marketSellPriceCheck',
+      'marketSweep',
+      'marketSweepQuote',
       'mountLessonActive',
       'mountRaceCancel',
       'mountRaceStart',
@@ -1158,6 +1172,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'recipeList',
       'releaseEmpoweredAbility',
       'releaseSpirit',
+      'reliquaryAccountFinds',
       'reliquaryCatalogCompletion',
       'reliquaryCuratorRank',
       'reliquaryFirstFind',
@@ -1259,6 +1274,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'vaultInfo',
       'vaultWithdraw',
       'vendorBuyback',
+      'whoInfo',
+      'whoRequest',
       'xp',
     ]);
   });
@@ -1267,6 +1284,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     expect(DATA_MEMBERS.map((m) => m.name).sort()).toEqual([
       'accountAdmin',
       'accountCosmetics',
+      'accountDeeds',
       'activeBorder',
       'activeConsecrations',
       'activeFrostRings',
@@ -1310,6 +1328,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'dungeonFinderBoard',
       'dungeonFinderInfo',
       'entities',
+      'entityRosterVersion',
       'equipment',
       'equipmentInstances',
       'farmPatches',
@@ -1347,6 +1366,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'questsDone',
       'realm',
       'recipeList',
+      'reliquaryAccountFinds',
       'reliquaryFirstFind',
       'reliquaryMarks',
       'reliquaryObtainCounts',
@@ -1367,6 +1387,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'unlockedMilestones',
       'vaultInfo',
       'vendorBuyback',
+      'whoInfo',
       'xp',
     ]);
   });
@@ -1526,6 +1547,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketListInstance',
       'marketSearch',
       'marketSellPriceCheck',
+      'marketSweep',
+      'marketSweepQuote',
       'mountLessonActive',
       'mountRaceCancel',
       'mountRaceStart',
@@ -1649,6 +1672,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'vaultDeposit',
       'vaultDepositAll',
       'vaultWithdraw',
+      'whoRequest',
     ]);
   });
 });
@@ -1733,6 +1757,7 @@ type AssertNever<T extends never> = T;
 const FACET_ENTITY_ROSTER = [
   'cfg',
   'entities',
+  'entityRosterVersion',
   'playerId',
   'player',
   'moveInput',
@@ -1998,6 +2023,8 @@ type _ExhaustCardMinigame = AssertNever<
 
 const FACET_SOCIAL_GRAPH = [
   'socialInfo',
+  'whoInfo',
+  'whoRequest',
   'friendAdd',
   'friendRemove',
   'blockAdd',
@@ -2038,6 +2065,8 @@ const FACET_MARKET = [
   'marketList',
   'marketListInstance',
   'marketBuy',
+  'marketSweepQuote',
+  'marketSweep',
   'marketCancel',
   'marketCollect',
 ] as const satisfies readonly (keyof IWorldMarket)[];
@@ -2226,6 +2255,7 @@ type _ExhaustProfessions = AssertNever<
 
 const FACET_DEEDS = [
   'deedsEarned',
+  'accountDeeds',
   'deedStats',
   'renown',
   'activeTitle',
@@ -2243,6 +2273,7 @@ const FACET_RELIQUARY = [
   'reliquaryMarks',
   'reliquaryRecent',
   'reliquaryObtainCounts',
+  'reliquaryAccountFinds',
   'reliquaryPageCompletion',
   'reliquaryCatalogCompletion',
   'reliquaryCuratorRank',
@@ -2401,17 +2432,10 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    // Mirrors the IWORLD_MEMBERS.length pin above (370), counted directly off
-    // the resolved literal now that src/world_api/inventory.ts,
-    // src/world_api/professions.ts, and src/world_api/combat.ts are resolved:
-    // the merge carries the professions activeMobileStationCrafts rename plus
-    // the release's four Nythraxis data readouts and the resolvedAbility
-    // method common to both parents. Run `npx vitest run
-    // tests/world_api_parity.test.ts` before merge lands to confirm the
-    // facet arrays actually reconstruct IWORLD_MEMBERS with no gaps or
-    // collisions; this pin and the one above must always agree.
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(379);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(379);
+    // Mirrors the IWORLD_MEMBERS.length pin above; this pin and the one above
+    // must always agree.
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(386);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(386);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);
