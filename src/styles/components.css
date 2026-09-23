@@ -20699,12 +20699,6 @@
     outline-offset: -2px;
     border-color: var(--color-border-focus);
   }
-  #freehold-gate-window [aria-selected="true"] {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    border-color: var(--gold);
-    color: var(--gold);
-  }
   .fh-gate-status {
     margin: 0;
     min-height: 1.2em;

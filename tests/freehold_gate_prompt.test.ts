@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FocusManager } from '../src/ui/focus_manager';
 import {
@@ -53,6 +54,26 @@ beforeEach(() => {
   document.body.innerHTML = '';
 });
 describe('Freehold gate dialog', () => {
+  it('renders its tabs on the library tab primitive, 40 px tall, with no local selected look', () => {
+    const f = fixture();
+    f.prompt.open();
+    const tabs = [...f.root.querySelectorAll<HTMLElement>('[role="tab"]')];
+    expect(tabs.map((tab) => tab.id)).toEqual(['gate-own-tab', 'gate-visit-tab']);
+    for (const tab of tabs) {
+      expect(tab.classList.contains('ui-tab'), tab.id).toBe(true);
+      expect(tab.parentElement?.classList.contains('ui-tabs'), tab.id).toBe(true);
+    }
+    // The library owns the selected state (library.css .ui-tab[aria-selected]);
+    // a later-layer gate rule restyling it would override that primitive, and
+    // the gate's own floor keeps its buttons, the tabs included, at 40 px.
+    const css = readFileSync('src/styles/components.css', 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\s+/g, ' ');
+    expect(css).not.toMatch(/#freehold-gate-window[^{]*\[aria-selected/);
+    expect(css).toMatch(
+      /#freehold-gate-window button,[^{]*\{ min-height: 40px; min-width: 40px; \}/,
+    );
+  });
   it('dark hosts never open or create a prompt', () => {
     const f = fixture(false);
     f.prompt.open();
