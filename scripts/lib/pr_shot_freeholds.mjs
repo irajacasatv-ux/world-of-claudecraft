@@ -13,7 +13,7 @@ import {
   settleFreeholdCaptureNotices,
   settleFreeholdCaptureOverlays,
 } from './freehold_capture_notices.mjs';
-import { freeholdGateDrawnProbe } from './freehold_gate_probe.mjs';
+import { FREEHOLD_GATE_PROBE_POINTS, freeholdGateDrawnProbe } from './freehold_gate_probe.mjs';
 
 // The authored gate site as the measurements record states it.
 const GATE_RECORD = path.join(
@@ -166,7 +166,9 @@ export const freeholdReviewTargets = [
     });
     // Whether the arch is actually on screen (freehold_gate_probe.mjs), kept with
     // its per-point record so a refusal names what hid which point.
-    const gateProbe = await page.evaluate(freeholdGateDrawnProbe);
+    const gateProbe = await page.evaluate(freeholdGateDrawnProbe, {
+      points: FREEHOLD_GATE_PROBE_POINTS,
+    });
     evidence.gateDrawn = gateProbe.drawn;
     evidence.gateProbe = gateProbe;
     if (evidence.viewport.width !== variant.width || evidence.viewport.height !== variant.height)

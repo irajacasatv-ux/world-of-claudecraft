@@ -6,10 +6,16 @@ export interface FreeholdGateProbePoint {
   occludedBy: string | null;
   coveredBy: string | null;
 }
-export function freeholdGateDrawnProbe(env?: {
-  game: unknown;
-  document: unknown;
-  getComputedStyle: (element: never, pseudo?: string) => Record<string, string>;
-  innerWidth: number;
-  innerHeight: number;
+export const FREEHOLD_GATE_PROBE_POINTS: readonly (readonly [
+  FreeholdGateProbePoint['label'],
+  number,
+  number,
+])[];
+export function freeholdGateDrawnProbe(env: {
+  points: readonly (readonly [string, number, number])[];
+  game?: unknown;
+  document?: unknown;
+  getComputedStyle?: (element: never, pseudo?: string) => Record<string, string>;
+  innerWidth?: number;
+  innerHeight?: number;
 }): { drawn: boolean; reason: string | null; points: FreeholdGateProbePoint[] };
