@@ -70,6 +70,7 @@ const sourcePaths = [
   'src/render/foliage_core.ts',
   'src/styles/library.css',
   'scripts/lib/freehold_receipt_guards.mjs',
+  'scripts/lib/freehold_capture_census.mjs',
 ];
 const runtimePaths = [
   'src',

@@ -9,6 +9,7 @@ import {
   sailToFreeholdTown,
   walkToFreeholdGate,
 } from '../freehold_interior_route.mjs';
+import { FREEHOLD_TRANSIENT_HUD, freeholdCaptureCensus } from './freehold_capture_census.mjs';
 import {
   settleFreeholdCaptureNotices,
   settleFreeholdCaptureOverlays,
@@ -100,11 +101,15 @@ export const freeholdReviewTargets = [
       const [x, z] = JSON.parse(fs.readFileSync(GATE_RECORD, 'utf8')).gate.position;
       await approachFreeholdGateSite(page, { x, z });
     } else {
-      // Arrival overlays land on the sim's own timers after the town landing;
-      // clearing them at the stance, before the press, keeps the prompt's own
-      // focus (a dismissal after it opens moves focus off the selected tab).
+      // The GPU notices and the arrival overlays land on their own timers after
+      // the town landing. Both are cleared at the stance, before the press: a
+      // real click on a dismiss control after the prompt opens takes the
+      // prompt's focus with it, off the selected tab.
       ({ settled: preSettle } = await walkToFreeholdGate(page, {
-        beforePress: (p) => settleFreeholdCaptureOverlays(p),
+        beforePress: async (p) => ({
+          notices: await settleFreeholdCaptureNotices(p, variant.mobile),
+          overlays: await settleFreeholdCaptureOverlays(p),
+        }),
       }));
       if (scene !== 'gate-own-prompt') {
         await confirmFreeholdGate(page);
@@ -129,10 +134,10 @@ export const freeholdReviewTargets = [
         }),
       { timeout: 15000 },
     );
-    const { noticeResolution, dismissedIds: dismissedNotices } = await settleFreeholdCaptureNotices(
-      page,
-      variant.mobile,
-    );
+    // The baseline arm opens no prompt, so its notices settle here; the after
+    // arm settled them at the stance.
+    const { noticeResolution, dismissedIds: dismissedNotices } =
+      preSettle?.notices ?? (await settleFreeholdCaptureNotices(page, variant.mobile));
     // The arrival overlays (tutorial card, ferry note) ride their own timers and
     // can land after the notices settle, so this runs last before the frame.
     const { dismissedOverlays, passes: overlaySettlePasses } =
@@ -142,8 +147,6 @@ export const freeholdReviewTargets = [
       const p = g.sim.player;
       const gl = g.renderer.webgl.getContext();
       const debug = gl.getExtension('WEBGL_debug_renderer_info');
-      const dialog = document.getElementById('freehold-gate-window');
-      const shown = dialog && getComputedStyle(dialog).display !== 'none';
       return {
         viewport: { width: innerWidth, height: innerHeight, dpr: devicePixelRatio },
         gpuRenderer: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : null,
@@ -159,68 +162,14 @@ export const freeholdReviewTargets = [
         settings: JSON.parse(localStorage.getItem('woc_settings') ?? '{}'),
         theme: JSON.parse(localStorage.getItem('woc_theme') ?? '{}'),
         player: { pos: { ...p.pos }, facing: p.facing, entrySeq: p.dungeonEntrySeq ?? 0 },
-
-        promptVisible: Boolean(shown),
-        controls: shown
-          ? [...dialog.querySelectorAll('button,input,select')]
-              .map((control) => {
-                const box = control.getBoundingClientRect();
-                // On top: what the frame shows at the control's centre is the
-                // control (or its own content), not something laid over it.
-                const hit = document.elementFromPoint(
-                  box.left + box.width / 2,
-                  box.top + box.height / 2,
-                );
-                return {
-                  key: control.getAttribute('data-focus-key'),
-                  tag: control.tagName.toLowerCase(),
-                  width: box.width,
-                  height: box.height,
-                  fontSize: Number.parseFloat(getComputedStyle(control).fontSize),
-                  onTop: hit === control || control.contains(hit),
-                };
-              })
-              .filter((control) => control.width > 0 && control.height > 0)
-          : [],
-        focusKey: document.activeElement?.getAttribute('data-focus-key') ?? null,
-        focusId: document.activeElement?.id || null,
-        // Transient HUD that can land over any frame: a message or banner
-        // counts once it holds content, the rest once it shows at all.
-        transientOverlays: [
-          ['error-msg', true],
-          ['quest-banner', true],
-          ['raid-warning-banner', true],
-          ['tooltip', true],
-          ['low-health-vignette', false],
-          ['death-overlay', false],
-          ['ready-check-leader-window', false],
-          ['dfinder-proposal-popup', true],
-          ['bg-proposal-popup', true],
-          ['entry-guard-banner', false],
-          ['discord-cta-banner', false],
-          ['desktop-update-toast', false],
-        ]
-          .filter(([id, needsContent]) => {
-            const element = document.getElementById(id);
-            if (!element?.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }))
-              return false;
-            const box = element.getBoundingClientRect();
-            if (box.width === 0 || box.height === 0) return false;
-            return (
-              !needsContent || element.textContent.trim() !== '' || element.children.length > 0
-            );
-          })
-          .map(([id]) => id),
-        promptFitsViewport:
-          !shown ||
-          (() => {
-            const box = dialog.getBoundingClientRect();
-            return (
-              box.left >= 0 && box.top >= 0 && box.right <= innerWidth && box.bottom <= innerHeight
-            );
-          })(),
       };
     });
+    // The prompt's controls, focus and fit, and the transient HUD census
+    // (freehold_capture_census.mjs).
+    Object.assign(
+      evidence,
+      await page.evaluate(freeholdCaptureCensus, { transient: FREEHOLD_TRANSIENT_HUD }),
+    );
     // Whether the arch is actually on screen (freehold_gate_probe.mjs), kept with
     // its per-point record so a refusal names what hid which point.
     const gateProbe = await page.evaluate(freeholdGateDrawnProbe, {
