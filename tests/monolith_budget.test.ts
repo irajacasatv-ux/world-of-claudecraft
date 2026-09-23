@@ -1658,7 +1658,13 @@ const MONOLITHS: MonolithRow[] = [
     // RESOLVED for the Freeholds sync of release/v0.44.0 (tip 56525e0343).
     // Newline counts: base 10095, Freeholds 9907 (-188), incoming 9979 (-116);
     // wc -l on the merged tree measures 9790. Exact merged count, zero slack.
-    ceiling: 9790,
+    // LOWERED 9979 -> 9965 by the craft_roll_events change: the ftue_events
+    // quest/death record arms of the event drain moved to
+    // server/event_record_observers.ts (which also hosts the new craftRoll
+    // arm), so the audit landed as a net shrink. Exact count, zero slack.
+    // RESOLVED again for the Freeholds sync of release/v0.44.0 at fc86d90234:
+    // Freeholds 9790 and incoming 9965 (-14 from 9979) merge to 9776 by wc -l.
+    ceiling: 9776,
     seam: 'a sibling server module; see the hot-path seams in server/CLAUDE.md',
   },
   {
@@ -2056,7 +2062,11 @@ const MONOLITHS: MonolithRow[] = [
     // wc -l on the merged tree measures 4513. Exact merged count, zero slack.
     // Both parents moved the client perf rows to server/client_perf_reports_db.ts;
     // the merged tree keeps the release's re-export block, so no caller re-points.
-    ceiling: 4513,
+    // RE-PINNED at the Freeholds sync of release/v0.44.0 at fc86d90234. Parent
+    // pins: Freeholds 4513, the release 4641 over a 4512-line file (+17, the
+    // craft_roll_events export read). wc -l on the merged tree measures 4530,
+    // under the release's own pin. Exact merged count, zero slack.
+    ceiling: 4530,
     seam: 'a domain <domain>_db.ts module with its own *_SCHEMA (server/CLAUDE.md)',
   },
   {
