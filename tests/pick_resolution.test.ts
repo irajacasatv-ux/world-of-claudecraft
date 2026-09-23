@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { resolveDirectPickEntityId } from '../src/render/pick_resolution';
+import { FREEHOLD_GATE_TEMPLATE_ID } from '../src/sim/freehold/gate_rules';
 
 type TestPickEntity = {
   id: number;
   kind: 'mob' | 'object' | 'player' | 'npc';
   dead: boolean;
   lootable: boolean;
+  templateId: string;
 };
 
 function entities(
@@ -14,6 +16,7 @@ function entities(
     kind: TestPickEntity['kind'];
     dead?: boolean;
     lootable?: boolean;
+    templateId?: string;
   }>,
 ): Map<number, TestPickEntity> {
   return new Map(
@@ -22,6 +25,7 @@ function entities(
       {
         dead: false,
         lootable: false,
+        templateId: 'test',
         ...e,
       },
     ]),
@@ -206,6 +210,32 @@ describe('resolveDirectPickEntityId', () => {
         { id: 15, kind: 'npc', dead: false },
       ]);
       expect(resolveDirectPickEntityId([10, 15], map)).toBe(10); // unchanged
+    });
+  });
+
+  describe('the Freehold Gate (spawned lootable:false for its whole lifetime)', () => {
+    const GATE = { id: 30, kind: 'object' as const, templateId: FREEHOLD_GATE_TEMPLATE_ID };
+
+    it('picks the gate when the ray hits it alone', () => {
+      expect(resolveDirectPickEntityId([30], entities([GATE]))).toBe(30);
+    });
+
+    it('keeps a live character in front of the gate: the nearest live hit wins', () => {
+      const map = entities([{ id: 12, kind: 'mob' }, GATE]);
+      expect(resolveDirectPickEntityId([12, 30], map)).toBe(12);
+    });
+
+    it('picks the gate standing in front of a character, like any other object', () => {
+      const map = entities([GATE, { id: 12, kind: 'mob' }]);
+      expect(resolveDirectPickEntityId([30, 12], map)).toBe(30);
+    });
+
+    it('still drops the whole hit list for an ordinary non-lootable object', () => {
+      const map = entities([
+        { id: 31, kind: 'object' },
+        { id: 12, kind: 'mob' },
+      ]);
+      expect(resolveDirectPickEntityId([31, 12], map)).toBeNull();
     });
   });
 });

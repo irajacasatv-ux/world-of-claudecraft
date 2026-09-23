@@ -1,6 +1,7 @@
+import { FREEHOLD_GATE_TEMPLATE_ID } from '../sim/freehold/gate_rules';
 import type { Entity } from '../sim/types';
 
-type PickEntity = Pick<Entity, 'id' | 'kind' | 'dead' | 'lootable'>;
+type PickEntity = Pick<Entity, 'id' | 'kind' | 'dead' | 'lootable' | 'templateId'>;
 
 function lootableCorpse(e: PickEntity): boolean {
   return e.kind === 'mob' && e.dead && e.lootable;
@@ -27,7 +28,10 @@ export function resolveDirectPickEntityId(
     seen.add(id);
     const e = entities.get(id);
     if (!e) continue;
-    if (e.kind === 'object' && !e.lootable) return null;
+    // The Freehold Gate is lootable:false for its whole lifetime but is a real
+    // click target (interactions.ts opens its prompt), so it picks like any object.
+    if (e.kind === 'object' && !e.lootable && e.templateId !== FREEHOLD_GATE_TEMPLATE_ID)
+      return null;
     if (e.kind === 'mob' && e.dead && !e.lootable) continue;
     ordered.push(e);
   }

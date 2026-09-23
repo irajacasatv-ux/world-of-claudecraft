@@ -12,6 +12,7 @@ import {
 } from '../src/render/entity_view_policy_core';
 import type { QuestObjectGate } from '../src/render/quest_object_gate_core';
 import { DUNGEONS, instanceOrigin } from '../src/sim/data';
+import { FREEHOLD_GATE_TEMPLATE_ID } from '../src/sim/freehold/gate_rules';
 import type { Entity, QuestProgress } from '../src/sim/types';
 
 function entity(id: number, kind: Entity['kind'], overrides: Partial<Entity> = {}): Entity {
@@ -80,6 +81,19 @@ describe('entity view candidate priority', () => {
       const prop = entity(3, 'object', { templateId, lootable: false });
       expect(entityViewCandidatePriority(prop, player, 10_000)).toBe(2);
     }
+  });
+
+  it('keeps the always-non-lootable Freehold Gate in the interactive object tier', () => {
+    // The gate spawns lootable:false for its whole lifetime (world_object_bootstrap.ts)
+    // and every leave or rejoin lands four yards from it, so it must not stream
+    // in last (tier 7) behind the town's NPC backlog on a saturated view pool.
+    const gate = entity(3, 'object', { templateId: FREEHOLD_GATE_TEMPLATE_ID, lootable: false });
+    expect(entityViewCandidatePriority(gate, player, 10_000)).toBe(2);
+    const namesake = entity(4, 'object', {
+      templateId: `${FREEHOLD_GATE_TEMPLATE_ID}_x`,
+      lootable: false,
+    });
+    expect(entityViewCandidatePriority(namesake, player, 10_000)).toBe(7);
   });
 
   it('is distance-cull exempt for a heroic Nythraxis wardstone, lootable or not', () => {
