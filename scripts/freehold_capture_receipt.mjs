@@ -5,7 +5,12 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FREEHOLD_GATE_STANCE, freeholdInteriorPerfFailures } from './freehold_interior_route.mjs';
+import {
+  FREEHOLD_GATE_STANCE,
+  FREEHOLD_ROUTE_TOLERANCE,
+  freeholdInteriorPerfFailures,
+} from './freehold_interior_route.mjs';
+import { baselineRuntimeRefusal, outputPlacementRefusal } from './lib/freehold_receipt_guards.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const baselineCommit = '654071354172b3e252cfc03a1e85efde2daddaa6';
@@ -62,6 +67,9 @@ const sourcePaths = [
   'src/render/prewarm_policy.ts',
   'docs/freeholds/art/space-measurements.json',
   'scripts/lib/freehold_gate_probe.mjs',
+  'src/render/foliage_core.ts',
+  'src/styles/library.css',
+  'scripts/lib/freehold_receipt_guards.mjs',
 ];
 const runtimePaths = [
   'src',
@@ -150,7 +158,6 @@ try {
     );
     requireEvidence(Array.isArray(manifest.errors), `${side}: missing producer errors array`);
     manifests[side] = manifest;
-    const used = new Set();
     for (const target of targets) {
       for (const [variant, [width, height]] of Object.entries(views)) {
         const suffix = `${target}-${variant}.png`;
@@ -160,7 +167,6 @@ try {
             new RegExp(`^\\d+-${suffix.replace('.', '\\.')}$`).test(file),
         );
         requireEvidence(matches.length === 1, `${side}: expected one producer image for ${suffix}`);
-        used.add(matches[0]);
         const png = fs.readFileSync(path.join(directory, matches[0]));
         const sidecarName = `evidence-${target}-${variant}.json`;
         const sidecar = read(path.join(directory, sidecarName));
@@ -189,6 +195,8 @@ try {
             /swiftshader/i.test(evidence.gpuRenderer) &&
             evidence.gpuNoticeVisible === false &&
             evidence.promptFitsViewport === true &&
+            Array.isArray(evidence.transientOverlays) &&
+            evidence.transientOverlays.length === 0 &&
             Array.isArray(evidence.dismissedOverlays) &&
             Number.isInteger(evidence.overlaySettlePasses) &&
             evidence.overlaySettlePasses >= 3,
@@ -197,8 +205,10 @@ try {
         if (target === 'freehold-gate') {
           const pos = evidence.player?.pos ?? {};
           const turn = Math.PI - evidence.player?.facing;
+          // The tour holds the stance to its route tolerance (holdFreeholdGateStance),
+          // which keeps the gate inside its press reach.
           requireEvidence(
-            Math.hypot(pos.x - gateStance.x, pos.z - gateStance.z) < 1.5 &&
+            Math.hypot(pos.x - gateStance.x, pos.z - gateStance.z) <= FREEHOLD_ROUTE_TOLERANCE &&
               Math.abs(Math.atan2(Math.sin(turn), Math.cos(turn))) <= 0.12 &&
               (side === 'before' || evidence.gateDrawn === true),
             `${side}: gate frame is off the gate stance, unsquared, or undrawn in ${sidecarName}`,
@@ -216,11 +226,23 @@ try {
             `before: baseline frame is not on the overworld in ${sidecarName}`,
           );
         else if (target === 'freehold-gate')
+          // Usable: every control at least 40 px, uncovered, and on a touch
+          // variant every text entry at the 16 px floor that stops iOS zooming;
+          // focus on the selected tab, where the prompt puts it on open.
           requireEvidence(
             evidence.promptVisible === true &&
               Array.isArray(evidence.controls) &&
               evidence.controls.length > 3 &&
-              evidence.controls.every((control) => control.width >= 40 && control.height >= 40),
+              evidence.controls.every(
+                (control) =>
+                  control.width >= 40 &&
+                  control.height >= 40 &&
+                  control.onTop === true &&
+                  (variant === 'desktop' ||
+                    !['input', 'select', 'textarea'].includes(control.tag) ||
+                    control.fontSize >= 16),
+              ) &&
+              evidence.focusId === 'gate-own-tab',
             `after: gate frame has no usable prompt in ${sidecarName}`,
           );
         else
@@ -251,7 +273,6 @@ try {
         });
       }
     }
-    requireEvidence(used.size === 9, `${side}: duplicate producer captures`);
     preserve(`${side}-manifest`, producer);
   }
 
@@ -285,20 +306,26 @@ try {
 
   const baselineRoot = path.resolve(options['baseline-root']);
   const baselineHead = git(baselineRoot, 'rev-parse', 'HEAD');
-  requireEvidence(
-    baselineHead === baselineCommit,
-    'Baseline runtime HEAD does not match the declared release',
-  );
+  const headRefusal = baselineRuntimeRefusal({
+    head: baselineHead,
+    expected: baselineCommit,
+    applicationDiff: [],
+    applicationUntracked: [],
+  });
+  requireEvidence(!headRefusal, headRefusal);
   const applicationDiff = lines(
     git(baselineRoot, 'diff', '--name-only', baselineCommit, '--', ...runtimePaths),
   );
   const applicationUntracked = lines(
     git(baselineRoot, 'ls-files', '--others', '--exclude-standard', '--', ...runtimePaths),
   );
-  requireEvidence(
-    applicationDiff.length === 0 && applicationUntracked.length === 0,
-    'Baseline runtime has application changes; only the current capture harness may differ',
-  );
+  const runtimeRefusal = baselineRuntimeRefusal({
+    head: baselineHead,
+    expected: baselineCommit,
+    applicationDiff,
+    applicationUntracked,
+  });
+  requireEvidence(!runtimeRefusal, runtimeRefusal);
   const sourceInputs = sourcePaths.map((file) => ({
     path: file,
     sha256: sha256(fs.readFileSync(path.join(root, file))),
@@ -352,16 +379,14 @@ try {
   };
   // Validate every input before changing existing evidence. Producer buffers are never mutated.
   const output = path.resolve(options.output);
-  requireEvidence(
-    ![options.before, options.after].some((input) => path.resolve(input) === output),
-    'Output directory must differ from both producer directories',
-  );
-  requireEvidence(
-    ![...pending.keys(), 'acceptance.json'].some(
-      (file) => path.join(output, file) === path.resolve(options.performance),
-    ),
-    'Output must not overwrite the performance producer',
-  );
+  const placementRefusal = outputPlacementRefusal({
+    output,
+    before: path.resolve(options.before),
+    after: path.resolve(options.after),
+    performance: path.resolve(options.performance),
+    files: [...pending.keys(), 'acceptance.json'],
+  });
+  requireEvidence(!placementRefusal, placementRefusal);
   const acceptanceBytes = formatted(acceptance);
   fs.mkdirSync(output, { recursive: true });
   for (const [file, bytes] of pending) fs.writeFileSync(path.join(output, file), bytes);

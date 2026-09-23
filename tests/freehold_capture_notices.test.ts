@@ -135,6 +135,7 @@ type OverlayScene = {
   note?: 'guidance' | 'close' | 'bare';
   noteVis?: Visibility;
   professions?: 'close' | 'bare';
+  professionsVis?: Visibility;
 };
 function overlayPage(schedule: OverlayScene[]) {
   // One scene per pass: an overlay can arrive late, on the sim's own timer.
@@ -186,6 +187,7 @@ function overlayPage(schedule: OverlayScene[]) {
         };
       if (id === 'profession-tutorial' && scene.professions)
         return {
+          vis: scene.professionsVis,
           querySelector: (inner: string) =>
             asks(inner, '[data-close]') && scene.professions === 'close'
               ? control('professions-close', () => (scene.professions = undefined), 'data-close')
@@ -210,6 +212,18 @@ function overlayPage(schedule: OverlayScene[]) {
 }
 
 describe('Freehold capture overlay settlement', () => {
+  it.each<Visibility>(['display-none', 'visibility-hidden'])(
+    'leaves a note and a professions tutorial alone while %s',
+    async (vis) => {
+      const f = overlayPage([
+        { note: 'close', noteVis: vis, professions: 'close', professionsVis: vis },
+      ]);
+      const result = await settleFreeholdCaptureOverlays(f.page, { pollMs: 0 });
+      expect(result.dismissedOverlays).toEqual([]);
+      expect(f.clicks).toEqual([]);
+    },
+  );
+
   it('declines a late ferry guidance note, never accepting it, then waits out three quiet passes', async () => {
     const f = overlayPage([{}, { note: 'guidance' }]);
     const result = await settleFreeholdCaptureOverlays(f.page, { pollMs: 0 });

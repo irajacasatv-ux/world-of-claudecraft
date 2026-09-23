@@ -17,60 +17,17 @@ import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { FREEHOLD_GATE_INTERACT_RANGE } from '../src/sim/freehold/gate_rules';
 import { FERRY_BELL_TOWN_LANDING } from '../src/sim/interactions/ferry_bell';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import {
+  cleanFreeholdPerfSamples,
+  FIRST_DRAW_KINDS,
+  type FreeholdPerfSampleFixture,
+  gateFirstDraw,
+  perfBoundary,
+} from './helpers/freehold_perf_samples';
 
-const boundary = (frames: number) => ({
-  frames,
-  atMs: frames * 20,
-  calls: 10,
-  room: { x: 20000, z: 0 },
-  gpuCounts: { 'live-program': 0, 'attach-watchdog': 0, 'gate-timeout': 0 },
-  instrumentationActive: true,
-  graphicsPreset: 1,
-  rendererTier: 'low',
-});
-
-const FIRST_DRAW_KINDS = [
-  'live-program',
-  'attach-watchdog',
-  'gate-timeout',
-  'reveal-watchdog',
-  'touch-unproven',
-] as const;
-const zeros = () => Object.fromEntries(FIRST_DRAW_KINDS.map((kind) => [kind, 0]));
-/** The gate's first draw: no view on the island, compiled and revealed at the end. */
-const firstDraw = () => ({
-  begin: { atMs: 1, gateView: false, compilePending: null, visible: null, counts: zeros() },
-  end: { atMs: 9, gateView: true, compilePending: false, visible: true, counts: zeros() },
-});
-
-type Sample =
-  ReturnType<typeof boundary> extends infer B
-    ? {
-        label: string;
-        sampleEvidence: { begin: B; end: B };
-        arrival: Record<string, unknown> & {
-          gpuBefore: Record<string, number>;
-          gpuAfter: Record<string, number>;
-          gpuDelta: Record<string, number>;
-        };
-        gateFirstDraw?: ReturnType<typeof firstDraw>;
-      }
-    : never;
-const clean = (): Sample[] =>
-  ['freehold-inn-room', 'freehold-cottage'].map((label) => ({
-    label,
-    sampleEvidence: { begin: boundary(10), end: boundary(20) },
-    arrival: {
-      entryAtMs: 0,
-      gpuBefore: { ...boundary(0).gpuCounts },
-      gpuAfter: { ...boundary(0).gpuCounts },
-      gpuDelta: { ...boundary(0).gpuCounts },
-    },
-    ...(label === 'freehold-inn-room' ? { gateFirstDraw: firstDraw() } : {}),
-  }));
 /** A Cottage sample whose counters all stand where the inn sample ended. */
-function cottageAfter(counts: Record<string, number>): Sample {
-  const cottage = clean()[1];
+function cottageAfter(counts: Record<string, number>): FreeholdPerfSampleFixture {
+  const cottage = cleanFreeholdPerfSamples()[1];
   for (const edge of [cottage.sampleEvidence.begin, cottage.sampleEvidence.end])
     edge.gpuCounts = { ...counts } as typeof edge.gpuCounts;
   cottage.arrival.gpuBefore = { ...counts };
@@ -80,13 +37,13 @@ function cottageAfter(counts: Record<string, number>): Sample {
 
 describe('accepted home reveal perf evidence', () => {
   it('requires clean samples from both distinct home destinations', () => {
-    expect(freeholdInteriorPerfFailures(clean())).toEqual([]);
-    expect(freeholdInteriorPerfFailures(clean().slice(0, 1))).toEqual([
+    expect(freeholdInteriorPerfFailures(cleanFreeholdPerfSamples())).toEqual([]);
+    expect(freeholdInteriorPerfFailures(cleanFreeholdPerfSamples().slice(0, 1))).toEqual([
       'Missing accepted interior sample: freehold-cottage',
     ]);
   });
   it('rejects cold live links and watchdog escapes independently', () => {
-    const samples = clean();
+    const samples = cleanFreeholdPerfSamples();
     samples[0].sampleEvidence.end.gpuCounts['live-program'] = 2;
     samples[0].arrival.gpuAfter['live-program'] = 2;
     samples[0].arrival.gpuDelta['live-program'] = 2;
@@ -100,9 +57,9 @@ describe('accepted home reveal perf evidence', () => {
     ]);
   });
   it('does not treat absent telemetry as a passing zero', () => {
-    expect(freeholdInteriorPerfFailures([{ label: 'freehold-inn-room' }, clean()[1]])).not.toEqual(
-      [],
-    );
+    expect(
+      freeholdInteriorPerfFailures([{ label: 'freehold-inn-room' }, cleanFreeholdPerfSamples()[1]]),
+    ).not.toEqual([]);
   });
 });
 
@@ -112,7 +69,7 @@ it.each([false, true])(
     const counters = { 'live-program': 4, 'attach-watchdog': 0, 'gate-timeout': 0 };
     let frames = 10;
     const page = {
-      evaluate: async () => ({ ...boundary(frames++), gpuCounts: { ...counters } }),
+      evaluate: async () => ({ ...perfBoundary(frames++), gpuCounts: { ...counters } }),
     } as unknown as Page;
     const arrival = {
       x: 10000,
@@ -135,7 +92,7 @@ it.each([false, true])(
         return { label };
       },
     );
-    const inn = { ...sample, gateFirstDraw: firstDraw() };
+    const inn = { ...sample, gateFirstDraw: gateFirstDraw() };
     expect(freeholdInteriorPerfFailures([inn, cottageAfter({ ...counters })])).toEqual(
       lateProgram ? ['freehold-inn-room: live-program delta 1, expected zero'] : [],
     );
@@ -144,7 +101,7 @@ it.each([false, true])(
 );
 
 it('rejects zero rendered frames despite clean event counters', () => {
-  const samples = clean();
+  const samples = cleanFreeholdPerfSamples();
   samples[0].sampleEvidence.end.frames = samples[0].sampleEvidence.begin.frames;
   expect(freeholdInteriorPerfFailures(samples)).toEqual([
     'freehold-inn-room: missing rendered room progress',
@@ -152,7 +109,7 @@ it('rejects zero rendered frames despite clean event counters', () => {
 });
 
 it('rejects unavailable instrumentation and non-finite sample counters', () => {
-  const samples = clean();
+  const samples = cleanFreeholdPerfSamples();
   samples[0].sampleEvidence.begin.instrumentationActive = false;
   samples[1].sampleEvidence.end.gpuCounts['live-program'] = Number.NaN;
   expect(freeholdInteriorPerfFailures(samples)).toEqual([
@@ -162,7 +119,7 @@ it('rejects unavailable instrumentation and non-finite sample counters', () => {
 });
 
 it('rejects an isolated gate timeout with otherwise complete draw evidence', () => {
-  const samples = clean();
+  const samples = cleanFreeholdPerfSamples();
   samples[1].sampleEvidence.end.gpuCounts['gate-timeout'] = 1;
   samples[1].arrival.gpuAfter['gate-timeout'] = 1;
   samples[1].arrival.gpuDelta['gate-timeout'] = 1;
@@ -185,7 +142,7 @@ it.each([
   ['end', 'room', { x: 20001, z: 0 }],
   ['end', 'room', { x: 20000, z: 1 }],
 ] as const)('rejects independently invalid %s.%s evidence (%s)', (edge, field, value) => {
-  const samples = clean();
+  const samples = cleanFreeholdPerfSamples();
   Object.assign(samples[0].sampleEvidence[edge], { [field]: value });
   expect(freeholdInteriorPerfFailures(samples)).toEqual([
     'freehold-inn-room: missing rendered room progress',
@@ -193,7 +150,7 @@ it.each([
 });
 
 it('derives acceptance from raw entry-through-end counters despite a stale zero delta', () => {
-  const samples = clean();
+  const samples = cleanFreeholdPerfSamples();
   samples[0].sampleEvidence.end.gpuCounts['live-program']++;
   expect(freeholdInteriorPerfFailures(samples)).toEqual(
     expect.arrayContaining([expect.stringContaining('live-program delta 1, expected zero')]),
@@ -213,7 +170,7 @@ it.each([
     { 'live-program': Number.POSITIVE_INFINITY, 'attach-watchdog': 0, 'gate-timeout': 0 },
   ],
 ] as const)('rejects invalid or contradictory arrival %s (%s)', (field, value) => {
-  const samples = clean();
+  const samples = cleanFreeholdPerfSamples();
   Object.assign(samples[0].arrival, { [field]: value });
   expect(freeholdInteriorPerfFailures(samples)).not.toEqual([]);
 });
@@ -221,12 +178,12 @@ it.each([
 it.each(['live-program', 'attach-watchdog', 'gate-timeout'] as const)(
   'rejects %s counters that decrease between entry and either sample boundary',
   (kind) => {
-    const entryRegresses = clean();
+    const entryRegresses = cleanFreeholdPerfSamples();
     entryRegresses[0].arrival.gpuBefore[kind] = 1;
     entryRegresses[0].arrival.gpuAfter[kind] = 1;
     entryRegresses[0].sampleEvidence.end.gpuCounts[kind] = 1;
     expect(freeholdInteriorPerfFailures(entryRegresses)).not.toEqual([]);
-    const sampleRegresses = clean();
+    const sampleRegresses = cleanFreeholdPerfSamples();
     sampleRegresses[0].sampleEvidence.begin.gpuCounts[kind] = 1;
     expect(freeholdInteriorPerfFailures(sampleRegresses)).not.toEqual([]);
   },
@@ -241,7 +198,7 @@ it.each([
   ['begin', 'rendererTier', 'high'],
   ['end', 'rendererTier', undefined],
 ] as const)('rejects invalid effective room evidence %s.%s (%s)', (edge, field, value) => {
-  const samples = clean();
+  const samples = cleanFreeholdPerfSamples();
   Object.assign(samples[0].sampleEvidence[edge], { [field]: value });
   expect(freeholdInteriorPerfFailures(samples)).not.toEqual([]);
 });
@@ -325,10 +282,10 @@ it('leaves through the physical exit with read-only __game observations', async 
 
 describe("the gate's first-draw window and the leave back to it", () => {
   it('passes a clean window from the island to the reveal', () => {
-    expect(freeholdInteriorPerfFailures(clean())).toEqual([]);
+    expect(freeholdInteriorPerfFailures(cleanFreeholdPerfSamples())).toEqual([]);
   });
 
-  type FirstDraw = ReturnType<typeof firstDraw>;
+  type FirstDraw = ReturnType<typeof gateFirstDraw>;
   it.each<[string, (d: FirstDraw) => FirstDraw | undefined]>([
     ['missing entirely', () => undefined],
     [
@@ -341,15 +298,15 @@ describe("the gate's first-draw window and the leave back to it", () => {
     ['an end no later than its begin', (d) => ({ ...d, end: { ...d.end, atMs: 1 } })],
     ['a begin with no clock', (d) => ({ ...d, begin: { ...d.begin, atMs: Number.NaN } })],
   ])('refuses a window with %s', (_, edit) => {
-    const samples = clean();
-    samples[0].gateFirstDraw = edit(firstDraw());
+    const samples = cleanFreeholdPerfSamples();
+    samples[0].gateFirstDraw = edit(gateFirstDraw());
     expect(freeholdInteriorPerfFailures(samples)).toEqual([
       'gate first draw: missing window from before the view to its reveal',
     ]);
   });
 
   it.each(FIRST_DRAW_KINDS)('refuses a %s escape during the first draw', (kind) => {
-    const samples = clean();
+    const samples = cleanFreeholdPerfSamples();
     samples[0].gateFirstDraw!.end.counts[kind] = 1;
     expect(freeholdInteriorPerfFailures(samples)).toEqual([
       `gate first draw: ${kind} delta 1, expected zero`,
@@ -363,7 +320,7 @@ describe("the gate's first-draw window and the leave back to it", () => {
   it.each(['live-program', 'attach-watchdog', 'gate-timeout'] as const)(
     'refuses a %s escape between the inn sample and the Cottage entry',
     (kind) => {
-      const samples = clean();
+      const samples = cleanFreeholdPerfSamples();
       const counts = { ...samples[0].sampleEvidence.end.gpuCounts, [kind]: 1 };
       samples[1] = cottageAfter(counts);
       expect(freeholdInteriorPerfFailures(samples)).toEqual([
