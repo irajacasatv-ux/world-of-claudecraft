@@ -45,7 +45,7 @@ Only what the next session needs. Update at the end of every phase and QA.
 
 **THE V0.44.0 SYNC IS CLOSED, 2026-09-23, LOCAL.** The gate stands at
 `(-38.65,-103.75)` clear of every press, draws and picks on a lit host, and the capture
-evidence was re-shot and re-sealed over it; 474 unmeasured test files carried at the median of three local runs armed against Postgres (`7cf74b411d`; table coverage 1.0, 4,538 of 4,538, against the 0.918 floor); the armed gate recorded in the ledger. Four coverage
+evidence was re-shot and re-sealed over it; 474 unmeasured test files carried at the median of three local runs armed against Postgres (`7cf74b411d`; table coverage 1.0, 4,538 of 4,538, against the 0.918 floor); the armed gate green on every step but `sfx:check` and 22 audio tests, which fail only because this macOS 27 host has no Rosetta for the bundled x86_64 ffprobe. Four coverage
 reviewers and three fresh reads of the fix rounds found no blocking defect; every finding
 is applied or recorded with its reason in [the ledger](qa/persistence-2026-09-08/findings.md),
 THE OWED LIST WORKED THROUGH. 07's verdict is still FAIL, on the open harness-fidelity
@@ -54,7 +54,7 @@ rewrite; (2) `Sim.addPlayer` atomicity, widened by `seedAccountLedgerSelf`; (3) 
 on the cross-realm account ledger against dark realms (D85); (4) the phase 17 re-plan onto
 the account ledger; (5) a new release sync if `release/**` moves; (6) FERNANDO: confirm the
 chosen margins that placed the gate at `(-38.65,-103.75)` rather than the nearer
-`(-37,-103.5)`.
+`(-37,-103.5)`; (7) install Rosetta (or gate elsewhere) to run the gate as written.
 
 07 (bounded persistence and stable plot identity) is **BUILT, local, and its paired
 QA FAILED**, 2026-09-10, AND THE FOUR RULINGS HAVE SINCE BEEN EXECUTED, which is

@@ -2295,7 +2295,26 @@ point-side threshold), and each then died.
 - The terrain corpus tail: 2 of 2 on Linux x86_64 glibc 2.36 (`node:26-bookworm` under
   `--platform linux/amd64`), beside the aarch64 run each re-mint recorded.
 - The shard weights: 474 unmeasured test files carried at the median of three local runs armed against Postgres (`7cf74b411d`; table coverage 1.0, 4,538 of 4,538, against the 0.918 floor).
-- The gate: the armed `node scripts/gate_select.mjs` runs on the tree that records this section; its outcome is the next entry.
+- The gate: the gate AS WRITTEN cannot pass on this host. Its first step's `sfx:check`
+  spawns ffprobe-static's darwin/arm64 binary, which is an x86_64 Mach-O, and this
+  macOS 27 machine has no Rosetta (spawn error -86; `arch -x86_64` refuses too); the
+  conformance paths refuse operator overrides by design. This branch changes nothing
+  `sfx:check` reads (no path under `public/audio/sfx` or the conformance code among the
+  1,801 changed). So every other step of the gate's own list was run from its own step
+  builder, armed with `TEST_DATABASE_URL` alone: the dependency-sync preflight, the
+  generators, i18n and manifest freshness, the malware scan, biome on the changed files,
+  browser regressions (53 files, 452 tests), typecheck and the env, server, bot and
+  client builds, all green. The full suite (the planner fell back on the 1,801-path
+  diff) at `3646254bb9`: 4,548 files and 68,154 tests passed, 2 expected failures, 28
+  skips, and 22 tests in six audio files failed, every one on that same spawn error -86
+  (`raid_boss_voice_assets`, `sfx_conform`, `sfx_export_core`, `sfx_ffmpeg_paths`,
+  `sfx_studio`, `sfx_studio_server_security`). It also caught one real red, fixed in
+  `3646254bb9`: the screenshot-reference corpus floor pinned at the sync merge (10,853)
+  was never that merge's own count (10,709 by `git ls-tree`), so `ci_workflow` had been
+  red on every tree since the merge; it now sits at the 10,729 this tree measures, where
+  one file fewer reds it. The browser step rewrote 21 PNGs under `docs/screenshots/`
+  (none in the re-captured set); they were restored, not committed. `tsc --noEmit` exit
+  0; `npm run ci:changed` after the last commit is the final entry of this session.
 
 ### RECORDED, NOT APPLIED, EACH WITH ITS REASON
 
@@ -2361,3 +2380,7 @@ bind table; the check is hardening against a foreign store).
 5. A new release sync, if `release/**` moves again.
 6. FERNANDO: confirm the chosen margins that placed the gate at `(-38.65,-103.75)` rather
    than the nearer `(-37,-103.5)`.
+7. The gate as written needs Rosetta on this macOS 27 host (the bundled "arm64" ffprobe
+   is x86_64): `softwareupdate --install-rosetta --agree-to-license`, then re-run
+   `node scripts/gate_select.mjs` armed to close the `sfx:check` step and the 22 audio
+   tests, which every branch on this machine now fails the same way.
