@@ -63,6 +63,7 @@ const sourcePaths = [
   'src/render/entity_view_policy_core.ts',
   'src/render/prewarm_policy.ts',
   'docs/freeholds/art/space-measurements.json',
+  'scripts/lib/freehold_gate_probe.mjs',
 ];
 const digest = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -140,6 +141,7 @@ describe('Freehold functional capture evidence', () => {
           // The arrival-overlay settle ran for this frame (an empty list means it
           // found none across its quiet passes, not that it was skipped).
           expect(Array.isArray(evidence.dismissedOverlays), name).toBe(true);
+          expect(Number.isInteger(evidence.overlaySettlePasses), name).toBe(true);
           expect(evidence.overlaySettlePasses, name).toBeGreaterThanOrEqual(3);
           expect(['boot-notice', 'performance-notice', 'prior-performance-dismissal']).toContain(
             evidence.noticeResolution,
@@ -206,6 +208,12 @@ describe('Freehold capture receipt refusal', () => {
   const site = JSON.parse(readFileSync('docs/freeholds/art/space-measurements.json', 'utf8')).gate
     .position as [number, number];
   const stance = { x: site[0] + FREEHOLD_GATE_STANCE.dx, z: site[1] + FREEHOLD_GATE_STANCE.dz };
+  const arrival = JSON.parse(readFileSync('docs/freeholds/art/space-measurements.json', 'utf8'))
+    .arrival as Record<string, [number, number]>;
+  const roomOf: Record<string, string> = {
+    'freehold-inn': 'freehold_inn_room',
+    'freehold-cottage': 'freehold_cottage',
+  };
   type Evidence = Record<string, unknown> & {
     player: { pos: { x: number; z: number }; facing: number; entrySeq: number };
   };
@@ -257,7 +265,11 @@ describe('Freehold capture receipt refusal', () => {
                 }))
               : [],
           player: room
-            ? { pos: { x: 119200, z: -1254 }, facing: 0, entrySeq: 1 }
+            ? {
+                pos: { x: arrival[roomOf[target]][0], z: arrival[roomOf[target]][1] },
+                facing: 0,
+                entrySeq: 1,
+              }
             : { pos: { ...stance }, facing: Math.PI, entrySeq: 0 },
           gateDrawn: gateFrame && side === 'after',
         };
@@ -301,15 +313,33 @@ describe('Freehold capture receipt refusal', () => {
     'after gate control under 40 px': 'after: gate frame has no usable prompt',
     'unresolved notice': 'unresolved GPU notice',
     'baseline frame inside a room': 'before: baseline frame is not on the overworld',
+    'baseline frame with the prompt shown': 'before: baseline frame is not on the overworld',
+    'gate frame exactly 1.5 yd off the stance': 'gate frame is off the gate stance',
+    'gate frame turned 0.1201 rad': 'gate frame is off the gate stance',
+    'three gate controls': 'after: gate frame has no usable prompt',
+    'gate control under 40 px wide': 'after: gate frame has no usable prompt',
+    'gate controls not a list': 'after: gate frame has no usable prompt',
     'unsettled room arrival': 'after: interior frame is not a settled room arrival',
+    'room arrival turned': 'after: interior frame is not a settled room arrival',
+    'room arrival off its point': 'after: interior frame is not a settled room arrival',
+    'room arrival in the other room': 'after: interior frame is not a settled room arrival',
+    'room arrival with the prompt shown': 'after: interior frame is not a settled room arrival',
   };
-  // Inside the tolerances: 1.4 yd off the stance, 0.11 rad off -z.
-  const NEAR_MISSES = ['gate frame 1.4 yd off the stance', 'gate frame turned 0.11 rad'];
+  // Inside the tolerances: 1.4 yd off the stance, and 0.11 and 0.1199 rad off
+  // -z. The 0.12 rad bound itself is not representable after Math.PI - x, so it
+  // is bracketed by 0.1199 (clears) and 0.1201 (refused).
+  const NEAR_MISSES = [
+    'gate frame 1.4 yd off the stance',
+    'gate frame turned 0.11 rad',
+    'gate frame turned 0.1199 rad',
+  ];
   function edits(defect: string) {
     return {
       before: (name: string, e: Evidence) => {
         if (defect === 'baseline frame inside a room' && name === 'freehold-inn-desktop')
           e.player.pos.x = 119200;
+        if (defect === 'baseline frame with the prompt shown' && name === 'freehold-inn-desktop')
+          e.promptVisible = true;
         if (name !== 'freehold-gate-desktop') return;
         if (defect === 'wrong low preset')
           (e.settings as { graphicsPreset: number }).graphicsPreset = 2;
@@ -318,19 +348,32 @@ describe('Freehold capture receipt refusal', () => {
         if (defect === 'missing settle record') delete e.overlaySettlePasses;
         if (defect === 'gate frame 1.6 yd off the stance') e.player.pos.x += 1.6;
         if (defect === 'gate frame 1.4 yd off the stance') e.player.pos.x += 1.4;
+        if (defect === 'gate frame exactly 1.5 yd off the stance') e.player.pos.x += 1.5;
+        if (defect === 'gate frame turned 0.1199 rad') e.player.facing = Math.PI - 0.1199;
+        if (defect === 'gate frame turned 0.1201 rad') e.player.facing = Math.PI - 0.1201;
         if (defect === 'gate frame turned 0.13 rad') e.player.facing = Math.PI - 0.13;
         if (defect === 'gate frame turned 0.11 rad') e.player.facing = Math.PI - 0.11;
         if (defect === 'unresolved notice') e.noticeResolution = 'none';
       },
       after: (name: string, e: Evidence) => {
-        if (defect === 'unsettled room arrival' && name === 'freehold-inn-desktop')
-          e.player.entrySeq = 0;
+        if (name === 'freehold-inn-desktop') {
+          if (defect === 'unsettled room arrival') e.player.entrySeq = 0;
+          if (defect === 'room arrival turned') e.player.facing = 0.1;
+          if (defect === 'room arrival off its point') e.player.pos.x += 0.001;
+          if (defect === 'room arrival in the other room')
+            e.player.pos = { x: arrival.freehold_cottage[0], z: arrival.freehold_cottage[1] };
+          if (defect === 'room arrival with the prompt shown') e.promptVisible = true;
+        }
         if (name !== 'freehold-gate-desktop') return;
         if (defect === 'undrawn after gate frame') e.gateDrawn = false;
         if (defect === 'after gate frame with no gateDrawn') delete e.gateDrawn;
         if (defect === 'after gate frame with no prompt') e.promptVisible = false;
         if (defect === 'after gate control under 40 px')
           (e.controls as { height: number }[])[0].height = 39;
+        if (defect === 'gate control under 40 px wide')
+          (e.controls as { width: number }[])[0].width = 39;
+        if (defect === 'three gate controls') e.controls = (e.controls as unknown[]).slice(0, 3);
+        if (defect === 'gate controls not a list') e.controls = { length: 4 };
       },
     };
   }

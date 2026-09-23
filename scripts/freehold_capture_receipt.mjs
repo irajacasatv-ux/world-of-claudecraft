@@ -61,6 +61,7 @@ const sourcePaths = [
   'src/render/entity_view_policy_core.ts',
   'src/render/prewarm_policy.ts',
   'docs/freeholds/art/space-measurements.json',
+  'scripts/lib/freehold_gate_probe.mjs',
 ];
 const runtimePaths = [
   'src',
@@ -115,8 +116,14 @@ try {
   // The authored gate site, as the measurements record states it (pinned equal to
   // EASTBROOK_LAYOUT by tests/freehold_layouts.test.ts, and sealed below), and the
   // tour's stance off it.
-  const gateSite = read(path.join(root, 'docs/freeholds/art/space-measurements.json')).value.gate
-    .position;
+  const measured = read(path.join(root, 'docs/freeholds/art/space-measurements.json')).value;
+  const gateSite = measured.gate.position;
+  // Each room's arrival point (slot-0 origin plus the shared entry), pinned to
+  // DUNGEONS and instanceOrigin by the same test.
+  const arrivalOf = {
+    'freehold-inn': measured.arrival.freehold_inn_room,
+    'freehold-cottage': measured.arrival.freehold_cottage,
+  };
   const gateStance = {
     x: gateSite[0] + FREEHOLD_GATE_STANCE.dx,
     z: gateSite[1] + FREEHOLD_GATE_STANCE.dz,
@@ -221,7 +228,8 @@ try {
             evidence.promptVisible === false &&
               evidence.player?.entrySeq > 0 &&
               evidence.player?.facing === 0 &&
-              evidence.player?.pos?.x > 10000,
+              Math.abs(evidence.player?.pos?.x - arrivalOf[target][0]) < 0.0005 &&
+              Math.abs(evidence.player?.pos?.z - arrivalOf[target][1]) < 0.0005,
             `after: interior frame is not a settled room arrival in ${sidecarName}`,
           );
         requireEvidence(

@@ -93,6 +93,13 @@ describe('measured freehold rooms', () => {
     expect(measured.gate.position).toEqual([gate.position.x, gate.position.z]);
     expect(measured.gate.facing).toBe(gate.facing);
     expect(measured.gate.return).toEqual([gate.position.x, gate.position.z - 4]);
+    // Each room's arrival point (its slot-0 origin plus the shared entry), which
+    // the capture receipt holds interior frames to.
+    for (const home of homes) {
+      const def = DUNGEONS[home.id];
+      const origin = instanceOrigin(def.index, 0);
+      expect(measured.arrival[home.id]).toEqual([origin.x + def.entry.x, origin.z + def.entry.z]);
+    }
     for (const home of homes) {
       const rooms = home.layout.rooms!;
       expect(rooms.map(({ id: _id, ...bounds }) => bounds)).toEqual([

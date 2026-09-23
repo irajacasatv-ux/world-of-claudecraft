@@ -475,6 +475,10 @@
     "collisionClass": "walk_through_service",
     "returnDerivation": "Existing shared dungeon return subtracts4 Z; no custom leaveOffset."
   },
+  "arrival": {
+    "freehold_inn_room": [119200, -1254],
+    "freehold_cottage": [119800, -1254]
+  },
   "precision": {
     "floorHorizontalError": 0,
     "modelArithmetic": "IEEE754 doubles; tests tolerate1e-6 for Float32 render geometry bounds, never use tolerance to legalize placement."
