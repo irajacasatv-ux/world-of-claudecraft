@@ -75,6 +75,20 @@ const sourcePaths = [
   'src/styles/library.css',
   'scripts/lib/freehold_receipt_guards.mjs',
   'scripts/lib/freehold_capture_census.mjs',
+  'src/render/foliage.ts',
+  'src/sim/world_object_bootstrap.ts',
+  'src/game/nearby_interaction_core.ts',
+  'src/game/interactions.ts',
+  'src/styles/base.css',
+  'src/styles/tokens.css',
+  'scripts/lib/gpu_notice_suppress.mjs',
+  'scripts/lib/pr_shot_entry_opts.mjs',
+  'scripts/browser_path.mjs',
+  'scripts/browser_path_resolve.mjs',
+  'scripts/perf_tour_entry_options.mjs',
+  'scripts/lib/pr_shot_masterwrought.mjs',
+  'src/game/camera_follow.ts',
+  'src/game/offline_world_config.ts',
 ];
 const digest = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -237,6 +251,39 @@ describe('Freehold functional capture evidence', () => {
     );
     for (const input of acceptance.sourceInputs)
       expect(digest(readFileSync(input.path)), input.path).toBe(input.sha256);
+  });
+
+  it('seals the whole local import closure of the harness, as the receipt lists it', () => {
+    // The receipt's own list is this mirror, entry for entry.
+    const receipt = readFileSync('scripts/freehold_capture_receipt.mjs', 'utf8');
+    const listed = /const sourcePaths = \[([\s\S]*?)\];/.exec(receipt)?.[1] ?? '';
+    expect([...listed.matchAll(/'([^']+)'/g)].map((m) => m[1])).toEqual(sourcePaths);
+    // Every script the capture, the perf tour and the receipt load, derived
+    // from their imports rather than kept by hand.
+    const code = (file: string) =>
+      readFileSync(file, 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    const closure = new Set<string>();
+    const pending = [
+      'scripts/pr_screenshots.mjs',
+      'scripts/perf_tour.mjs',
+      'scripts/freehold_capture_receipt.mjs',
+    ];
+    while (pending.length > 0) {
+      const file = pending.pop() as string;
+      if (closure.has(file)) continue;
+      closure.add(file);
+      for (const [, spec] of code(file).matchAll(
+        /(?:from|import\()\s*['"](\.{1,2}\/[^'"]+)['"]/g,
+      )) {
+        const next = join(file, '..', spec).replace(/\\/g, '/');
+        expect(existsSync(next), `${file} imports ${spec}`).toBe(true);
+        pending.push(next);
+      }
+    }
+    expect(closure.size).toBeGreaterThanOrEqual(17);
+    for (const file of closure) expect(sourcePaths, file).toContain(file);
   });
 });
 
@@ -420,6 +467,9 @@ describe('Freehold capture receipt refusal', () => {
     'missing settle record': 'obscured or mismatched capture',
     'gate frame 0.71 yd off the stance': 'gate frame is off the gate stance',
     'gate frame 1.4 yd off the stance': 'gate frame is off the gate stance',
+    'gate frame 0.71 yd off the stance along z': 'gate frame is off the gate stance',
+    'baseline inn frame 0.71 yd off the stance': 'before: baseline frame is off the gate stance',
+    'baseline cottage frame turned 0.13 rad': 'before: baseline frame is off the gate stance',
     'gate frame turned 0.13 rad': 'gate frame is off the gate stance',
     'gate frame turned -0.13 rad': 'gate frame is off the gate stance',
     'gate frame turned 0.1201 rad': 'gate frame is off the gate stance',
@@ -439,8 +489,8 @@ describe('Freehold capture receipt refusal', () => {
     'baseline frame with a stance settle': 'before: missing or misplaced stance settle',
     'camera record missing': 'before: camera is not behind the player',
     'room camera turned': 'after: camera is not behind the player',
-    'baseline frame inside a room': 'before: baseline frame is not on the overworld',
-    'baseline frame with the prompt shown': 'before: baseline frame is not on the overworld',
+    'baseline frame inside a room': 'before: baseline frame is off the gate stance',
+    'baseline frame with the prompt shown': 'before: baseline frame shows a prompt',
     'after gate frame with no prompt': 'after: gate frame has no usable prompt',
     'after gate control under 40 px': 'after: gate frame has no usable prompt',
     'gate control under 40 px wide': 'after: gate frame has no usable prompt',
@@ -448,6 +498,8 @@ describe('Freehold capture receipt refusal', () => {
     'gate controls not a list': 'after: gate frame has no usable prompt',
     'gate control laid over': 'after: gate frame has no usable prompt',
     'touch entry under 16 px': 'after: gate frame has no usable prompt',
+    'touch text input under 16 px': 'after: gate frame has no usable prompt',
+    'touch text area under 16 px': 'after: gate frame has no usable prompt',
     'focus off the selected tab': 'after: gate frame has no usable prompt',
     'unsettled room arrival': 'after: interior frame is not a settled room arrival',
     'room arrival turned': 'after: interior frame is not a settled room arrival',
@@ -473,6 +525,10 @@ describe('Freehold capture receipt refusal', () => {
   // Inside every tolerance: 1.4 yd was once accepted and is not now; these are.
   const NEAR_MISSES = [
     'gate frame 0.69 yd off the stance',
+    'gate frame 0.69 yd off the stance along z',
+    'baseline inn frame 0.69 yd off the stance',
+    'touch text input at 16 px',
+    'touch text area at 16 px',
     'gate frame turned 0.11 rad',
     'gate frame turned 0.1199 rad',
     'gate frame wrapped past -PI',
@@ -488,14 +544,24 @@ describe('Freehold capture receipt refusal', () => {
           e.player.pos.x = 119200;
         if (defect === 'baseline frame with the prompt shown' && name === 'freehold-inn-desktop')
           e.promptVisible = true;
+        const baselineOff = /^baseline inn frame ([\d.]+) yd off the stance$/.exec(defect);
+        if (baselineOff && name === 'freehold-inn-tablet') e.player.pos.x += Number(baselineOff[1]);
+        if (
+          defect === 'baseline cottage frame turned 0.13 rad' &&
+          name === 'freehold-cottage-compact'
+        ) {
+          e.player.facing = Math.PI - 0.13;
+          (e.camera as { inputYaw: number }).inputYaw = e.player.facing;
+        }
         if (name !== 'freehold-gate-desktop') return;
         if (defect === 'wrong low preset')
           (e.settings as { graphicsPreset: number }).graphicsPreset = 2;
         if (defect === 'under three settle passes') e.overlaySettlePasses = 2;
         if (defect === 'fractional settle passes') e.overlaySettlePasses = 3.5;
         if (defect === 'missing settle record') delete e.overlaySettlePasses;
-        const off = /^gate frame ([\d.]+) yd off the stance$/.exec(defect);
-        if (off) e.player.pos.x += Number(off[1]);
+        const off = /^gate frame ([\d.]+) yd off the stance( along z)?$/.exec(defect);
+        if (off && off[2]) e.player.pos.z += Number(off[1]);
+        else if (off) e.player.pos.x += Number(off[1]);
         // The camera turns with the player (the hold settles it behind), so
         // these rows move only the facing conjunct.
         const turned = /^gate frame turned (-?[\d.]+) rad$/.exec(defect);
@@ -556,6 +622,18 @@ describe('Freehold capture receipt refusal', () => {
         const controls = e.controls as Control[];
         if (name === 'freehold-gate-compact' && defect === 'touch entry under 16 px')
           controls[2].fontSize = 15;
+        // The prompt ships a select only; each other text-entry tag the floor
+        // names gets its own row, so dropping one from the list is caught.
+        const entry = /^touch text (input|area) (under|at) 16 px$/.exec(defect);
+        if (name === 'freehold-gate-compact' && entry)
+          controls.push({
+            key: 'gate-note',
+            tag: entry[1] === 'input' ? 'input' : 'textarea',
+            width: 40,
+            height: 40,
+            fontSize: entry[2] === 'under' ? 15 : 16,
+            onTop: true,
+          });
         if (name !== 'freehold-gate-desktop') return;
         if (defect === 'undrawn after gate frame') e.gateDrawn = false;
         if (defect === 'after gate frame with no gateDrawn') delete e.gateDrawn;
@@ -705,5 +783,34 @@ describe('Freehold capture receipt placement guards', () => {
     expect(outputPlacementRefusal({ ...place, performance: '/evidence/performance.json' })).toBe(
       'Output must not overwrite the performance producer',
     );
+  });
+
+  it('feeds both guards what it read, and writes nothing before they clear', () => {
+    // The synthetic sets stop at the release HEAD check (no checkout here sits
+    // at the release commit), so the receipt's second baseline call and its
+    // placement call are held on its own source, comments stripped.
+    const flat = readFileSync('scripts/freehold_capture_receipt.mjs', 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1')
+      .replace(/\s+/g, ' ');
+    const steps = [
+      "const baselineRoot = path.resolve(options['baseline-root']);",
+      "const baselineHead = git(baselineRoot, 'rev-parse', 'HEAD');",
+      "const applicationDiff = lines( git(baselineRoot, 'diff', '--name-only', baselineCommit, '--', ...runtimePaths), );",
+      "const applicationUntracked = lines( git(baselineRoot, 'ls-files', '--others', '--exclude-standard', '--', ...runtimePaths), );",
+      'const runtimeRefusal = baselineRuntimeRefusal({ head: baselineHead, expected: baselineCommit, applicationDiff, applicationUntracked, });',
+      'requireEvidence(!runtimeRefusal, runtimeRefusal);',
+      'const output = path.resolve(options.output);',
+      "const placementRefusal = outputPlacementRefusal({ output, before: path.resolve(options.before), after: path.resolve(options.after), performance: path.resolve(options.performance), files: [...pending.keys(), 'acceptance.json'], });",
+      'requireEvidence(!placementRefusal, placementRefusal);',
+    ];
+    let at = -1;
+    for (const step of steps) {
+      const next = flat.indexOf(step, at + 1);
+      expect(next, step).toBeGreaterThan(at);
+      at = next;
+    }
+    const firstWrite = flat.search(/\bfs\.(write|mkdir|copy|rm|rename|unlink|append)\w*\(/);
+    expect(firstWrite).toBeGreaterThan(at);
   });
 });

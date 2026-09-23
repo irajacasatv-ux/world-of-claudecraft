@@ -72,6 +72,20 @@ const sourcePaths = [
   'src/styles/library.css',
   'scripts/lib/freehold_receipt_guards.mjs',
   'scripts/lib/freehold_capture_census.mjs',
+  'src/render/foliage.ts',
+  'src/sim/world_object_bootstrap.ts',
+  'src/game/nearby_interaction_core.ts',
+  'src/game/interactions.ts',
+  'src/styles/base.css',
+  'src/styles/tokens.css',
+  'scripts/lib/gpu_notice_suppress.mjs',
+  'scripts/lib/pr_shot_entry_opts.mjs',
+  'scripts/browser_path.mjs',
+  'scripts/browser_path_resolve.mjs',
+  'scripts/perf_tour_entry_options.mjs',
+  'scripts/lib/pr_shot_masterwrought.mjs',
+  'src/game/camera_follow.ts',
+  'src/game/offline_world_config.ts',
 ];
 const runtimePaths = [
   'src',
@@ -204,7 +218,10 @@ try {
             evidence.overlaySettlePasses >= 3,
           `${side}: obscured or mismatched capture ${sidecarName}`,
         );
-        if (target === 'freehold-gate') {
+        // Every gate frame holds the stance, and so does every baseline frame:
+        // the release has no room, so each before scene stands where the after
+        // gate frame stands.
+        if (target === 'freehold-gate' || side === 'before') {
           const pos = evidence.player?.pos ?? {};
           const turn = Math.PI - evidence.player?.facing;
           // The tour holds the stance to its route tolerance (holdFreeholdGateStance),
@@ -213,7 +230,7 @@ try {
             Math.hypot(pos.x - gateStance.x, pos.z - gateStance.z) <= FREEHOLD_ROUTE_TOLERANCE &&
               Math.abs(Math.atan2(Math.sin(turn), Math.cos(turn))) <= 0.12 &&
               (side === 'before' || evidence.gateDrawn === true),
-            `${side}: gate frame is off the gate stance, unsquared, or undrawn in ${sidecarName}`,
+            `${side}: ${target === 'freehold-gate' ? 'gate' : 'baseline'} frame is off the gate stance, unsquared, or undrawn in ${sidecarName}`,
           );
         }
         // The follow camera's yaw sits behind the player (the stance hold
@@ -228,7 +245,11 @@ try {
           `${side}: camera is not behind the player in ${sidecarName}`,
         );
         // The after arm settles the GPU notices and the arrival overlays at the
-        // stance before the press; the baseline arm opens no prompt.
+        // stance before the press; the baseline arm opens no prompt. The frame's
+        // notice resolution must be the stance settle's own: the harness copies
+        // it today, so this refuses a harness that settles the notices again
+        // after the press (the defect that took the prompt's focus) and records
+        // that later pass instead.
         requireEvidence(
           side === 'before'
             ? evidence.preSettle === null
@@ -244,10 +265,11 @@ try {
           ),
           `${side}: unresolved GPU notice in ${sidecarName}`,
         );
+        // A baseline frame is on the overworld by the stance check above.
         if (side === 'before')
           requireEvidence(
-            evidence.promptVisible === false && evidence.player?.pos?.x < 10000,
-            `before: baseline frame is not on the overworld in ${sidecarName}`,
+            evidence.promptVisible === false,
+            `before: baseline frame shows a prompt in ${sidecarName}`,
           );
         else if (target === 'freehold-gate')
           // Usable: every control at least 40 px, uncovered, and on a touch
