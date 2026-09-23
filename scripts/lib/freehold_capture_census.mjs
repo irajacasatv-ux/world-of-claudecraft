@@ -1,6 +1,9 @@
 /** Transient HUD that can land over any Freehold capture frame, as
  * [selector, counts only once it holds content]. A message or banner shell
  * rests empty and counts once filled; the rest count once they show at all.
+ * The arrival overlays the capture settles (the tutorial and popup cards, the
+ * ferry note, the professions tutorial) are listed too, so one that lands
+ * after the settle's last quiet pass is refused rather than photographed.
  * Passed to the census as `env.transient` (a page-shipped function cannot
  * close over a module constant). */
 export const FREEHOLD_TRANSIENT_HUD = Object.freeze([
@@ -20,6 +23,9 @@ export const FREEHOLD_TRANSIENT_HUD = Object.freeze([
   Object.freeze(['#entry-guard-banner', false]),
   Object.freeze(['#discord-cta-banner', false]),
   Object.freeze(['#desktop-update-toast', false]),
+  Object.freeze(['.tut-card', false]),
+  Object.freeze(['#tutorial-greeting', false]),
+  Object.freeze(['#profession-tutorial', false]),
 ]);
 
 /** The DOM half of one Freehold capture frame's evidence: the gate prompt's

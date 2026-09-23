@@ -250,6 +250,9 @@ describe('freeholdCaptureCensus: transient HUD', () => {
       ['#entry-guard-banner', false],
       ['#discord-cta-banner', false],
       ['#desktop-update-toast', false],
+      ['.tut-card', false],
+      ['#tutorial-greeting', false],
+      ['#profession-tutorial', false],
     ]);
   });
 
@@ -268,11 +271,18 @@ describe('freeholdCaptureCensus: transient HUD', () => {
     const fctPainter = readFileSync('src/ui/fct_painter.ts', 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    const classes = FREEHOLD_TRANSIENT_HUD.filter(([selector]) => selector.startsWith('.'));
+    expect(classes.map(([selector]) => selector)).toEqual(['.fct', '.tut-card']);
     for (const [selector] of FREEHOLD_TRANSIENT_HUD) {
       const name = selector.slice(1);
-      if (selector.startsWith('.')) {
-        // The one class: the floating combat text painter's own base class.
+      if (selector === '.fct') {
+        // The floating combat text painter's own base class.
         expect(fctPainter, selector).toContain(`const FCT_BASE_CLASS = '${name}';`);
+        continue;
+      }
+      if (selector.startsWith('.')) {
+        // A card class a UI module stamps as the first class of its root.
+        expect(ui, selector).toMatch(new RegExp(`className = '${name}[ ']`));
         continue;
       }
       const there =

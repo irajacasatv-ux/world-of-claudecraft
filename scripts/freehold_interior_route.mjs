@@ -184,18 +184,28 @@ export const FREEHOLD_CAMERA_BEHIND_TOLERANCE = 0.1;
  * held together are NOT used: they are movement input with a zero vector
  * (cast_move_gate.ts hasMovementInput), the path the sim's finite-pose guard
  * catches. That holds only with Mouse Camera, mouselook and attack-move all
- * off (the defaults, which the tour never changes): Mouse Camera or mouselook
- * turn the pair into strafes, the same zero vector, and attack-move takes
- * KeyA, leaving Turn Right alone. Observation only; returns whether the
- * camera came round in time. */
+ * off and A and D on Turn Left and Turn Right (the defaults, which the tour
+ * never changes): Mouse Camera or mouselook turn the pair into strafes, the
+ * same zero vector, attack-move takes KeyA, leaving Turn Right alone, and a
+ * rebound key sends something else. So it refuses, before any key goes down,
+ * unless all of that holds. Observation only; returns whether the camera came
+ * round in time. */
 async function settleFreeholdCamera(page, { timeoutMs = 20000 } = {}) {
-  const modes = await page.evaluate(() => {
+  const blockers = await page.evaluate(() => {
     const input = window.__game.input;
-    return [input.isMouseCameraMode(), input.isMouselookActive(), input.isAttackMoveEnabled()];
+    // Input keeps its bindings private; a missing lookup reads as unbound.
+    const heldAction = (code) => input.keybinds?.heldActionForCode?.(code) ?? null;
+    return [
+      input.isMouseCameraMode(),
+      input.isMouselookActive(),
+      input.isAttackMoveEnabled(),
+      heldAction('KeyA') !== 'turnLeft',
+      heldAction('KeyD') !== 'turnRight',
+    ];
   });
-  if (modes.some(Boolean))
+  if (blockers.some(Boolean))
     throw new Error(
-      'Freehold tour camera settle needs Mouse Camera, mouselook and attack-move off',
+      'Freehold tour camera settle needs Mouse Camera, mouselook and attack-move off, and A and D on Turn Left and Turn Right',
     );
   const off = async () =>
     page.evaluate(() => {
@@ -223,8 +233,9 @@ async function settleFreeholdCamera(page, { timeoutMs = 20000 } = {}) {
 
 /** Walk onto the stance, square up on -z (heading PI), bring the camera round
  * behind in place, then re-check the settled pose and the camera. Under load a walk can
- * carry past its stop by more than the route tolerance (1.28 yd once, against
- * the receipt's 1.5 yd bound), so it re-walks until the pose holds, or throws. */
+ * carry past its stop by more than the route tolerance (1.28 yd once), and the
+ * receipt holds every gate frame to that same tolerance, so it re-walks until
+ * the pose holds, or throws. */
 export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}) {
   if (!Number.isInteger(attempts) || attempts < 1)
     throw new Error(`Freehold tour stance attempts must be a positive integer, not ${attempts}`);
@@ -380,9 +391,11 @@ export async function leaveFreeholdThroughExit(page) {
 
 /** After a leave, back inside the gate's reach and open its prompt. The leave
  * holds the walk key until it sees the arrival, so under load the player can
- * land at the drop and walk on past the 5 yd reach before the key comes up;
- * the walk back heads for 3 yd south of the arch (between the drop and the
- * arch) and stops within the route tolerance of it, well inside the reach. */
+ * land at the drop and walk on past the 5 yd reach before the key comes up.
+ * From over 4.5 yd out (half a yard inside the reach, for the same late key-up
+ * on the way back) it walks to 3 yd south of the arch, between the drop and
+ * the arch, and stops within the route tolerance of that point, inside the
+ * reach; from 4.5 yd or nearer it presses where it stands. */
 export async function reopenFreeholdGate(page) {
   await waitForFreeholdMovementReady(page);
   const gate = await page.evaluate(() => {
@@ -524,7 +537,7 @@ export function freeholdInteriorPerfFailures(samples) {
       !(first.end.atMs > first.begin.atMs)
     )
       failures.push('island to gate reveal: missing window from before the view to its reveal');
-    else
+    else {
       for (const kind of FIRST_DRAW_CHECKS) {
         const [from, to] = [first.begin.counts?.[kind], first.end.counts?.[kind]];
         if (!counter(from) || !counter(to))
@@ -532,6 +545,16 @@ export function freeholdInteriorPerfFailures(samples) {
         else if (to !== from)
           failures.push(`island to gate reveal: ${kind} delta ${to - from}, expected zero`);
       }
+      // And on from the reveal to the gate confirmation, where the inn's own
+      // window takes over: the prompt, its settle and the press sit here.
+      for (const kind of GPU_CHECKS) {
+        const [from, to] = [first.end.counts?.[kind], inn.arrival?.gpuBefore?.[kind]];
+        if (!counter(from) || !counter(to))
+          failures.push(`gate reveal to inn entry: missing finite ${kind} counters`);
+        else if (to !== from)
+          failures.push(`gate reveal to inn entry: ${kind} delta ${to - from}, expected zero`);
+      }
+    }
   }
   // The leave and the walk back to the gate: from the inn sample's end to the
   // Cottage entry (the gate's view is rebuilt on the leave arrival).
@@ -541,7 +564,9 @@ export function freeholdInteriorPerfFailures(samples) {
         inn.sampleEvidence?.end?.gpuCounts?.[kind],
         cottage.arrival?.gpuBefore?.[kind],
       ];
-      if (counter(from) && counter(to) && to !== from)
+      if (!counter(from) || !counter(to))
+        failures.push(`leave to cottage: missing finite ${kind} counters`);
+      else if (to !== from)
         failures.push(`leave to cottage: ${kind} delta ${to - from}, expected zero`);
     }
   for (const label of ['freehold-inn-room', 'freehold-cottage']) {

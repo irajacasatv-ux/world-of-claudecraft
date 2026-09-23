@@ -95,7 +95,11 @@ it.each([false, true])(
         return { label };
       },
     );
-    const inn = { ...sample, gateFirstDraw: gateFirstDraw() };
+    // The world carried its four programs through the gate's first draw too.
+    const firstDraw = gateFirstDraw();
+    for (const edge of [firstDraw.begin, firstDraw.end])
+      Object.assign(edge.counts, arrival.gpuBefore);
+    const inn = { ...sample, gateFirstDraw: firstDraw };
     expect(freeholdInteriorPerfFailures([inn, cottageAfter({ ...counters })])).toEqual(
       lateProgram ? ['freehold-inn-room: live-program delta 1, expected zero'] : [],
     );
@@ -308,20 +312,58 @@ describe("the gate's first-draw window and the leave back to it", () => {
     ]);
   });
 
+  const GPU_KINDS = ['live-program', 'attach-watchdog', 'gate-timeout'] as const;
+  type GpuKind = (typeof GPU_KINDS)[number];
+  const isGpuKind = (kind: string): kind is GpuKind =>
+    (GPU_KINDS as readonly string[]).includes(kind);
+  /** Every counter from the inn entry on stands at `value`, as a real run
+   * that escaped once before the entry would carry it forward. */
+  const carryFromEntry = (samples: FreeholdPerfSampleFixture[], kind: GpuKind, value: number) => {
+    const inn = samples[0];
+    inn.arrival.gpuBefore[kind] = value;
+    inn.arrival.gpuAfter[kind] = value;
+    for (const edge of [inn.sampleEvidence.begin, inn.sampleEvidence.end])
+      edge.gpuCounts[kind] = value;
+    samples[1] = cottageAfter(inn.sampleEvidence.end.gpuCounts);
+  };
+
   it.each(FIRST_DRAW_KINDS)(
     'refuses a %s escape between the island and the gate reveal',
     (kind) => {
       const samples = cleanFreeholdPerfSamples();
       samples[0].gateFirstDraw!.end.counts[kind] = 1;
+      if (isGpuKind(kind)) carryFromEntry(samples, kind, 1);
       expect(freeholdInteriorPerfFailures(samples)).toEqual([
         `island to gate reveal: ${kind} delta 1, expected zero`,
       ]);
       samples[0].gateFirstDraw!.end.counts[kind] = Number.NaN;
-      expect(freeholdInteriorPerfFailures(samples)).toEqual([
+      expect(freeholdInteriorPerfFailures(samples)).toContain(
         `island to gate reveal: missing finite ${kind} counters`,
-      ]);
+      );
     },
   );
+
+  it.each(GPU_KINDS)('refuses a %s escape between the gate reveal and the inn entry', (kind) => {
+    // The prompt, its settle and the press: after the first-draw window ends
+    // and before the inn's own window begins.
+    const samples = cleanFreeholdPerfSamples();
+    carryFromEntry(samples, kind, 1);
+    expect(freeholdInteriorPerfFailures(samples)).toEqual([
+      `gate reveal to inn entry: ${kind} delta 1, expected zero`,
+    ]);
+    samples[0].arrival.gpuBefore[kind] = Number.NaN;
+    expect(freeholdInteriorPerfFailures(samples)).toContain(
+      `gate reveal to inn entry: missing finite ${kind} counters`,
+    );
+  });
+
+  it.each(GPU_KINDS)('refuses a leave window whose %s counter is not a count', (kind) => {
+    const samples = cleanFreeholdPerfSamples();
+    samples[1].arrival.gpuBefore[kind] = Number.NaN;
+    expect(freeholdInteriorPerfFailures(samples)).toContain(
+      `leave to cottage: missing finite ${kind} counters`,
+    );
+  });
 
   it.each(['live-program', 'attach-watchdog', 'gate-timeout'] as const)(
     'refuses a %s escape between the inn sample and the Cottage entry',
@@ -404,6 +446,10 @@ function kinematicPage(
     mouseCamera?: boolean;
     mouselook?: boolean;
     attackMove?: boolean;
+    // What each key is bound to (the defaults unless overridden), or no
+    // binding lookup on the input at all.
+    binds?: Record<string, string | null>;
+    noKeybinds?: boolean;
     noGate?: boolean;
   },
 ) {
@@ -418,6 +464,16 @@ function kinematicPage(
     isMouseCameraMode: () => motion.mouseCamera === true,
     isMouselookActive: () => motion.mouselook === true,
     isAttackMoveEnabled: () => motion.attackMove === true,
+    ...(motion.noKeybinds
+      ? {}
+      : {
+          keybinds: {
+            heldActionForCode: (code: string) => {
+              const binds = { KeyA: 'turnLeft', KeyD: 'turnRight', ...motion.binds };
+              return binds[code as keyof typeof binds] ?? null;
+            },
+          },
+        }),
   };
   // Which page.evaluate call each synthetic key event rode in.
   let evaluateCall = 0;
@@ -716,12 +772,15 @@ describe('holding the gate stance', () => {
     ['Mouse Camera', { mouseCamera: true }],
     ['mouselook', { mouselook: true }],
     ['attack-move', { attackMove: true }],
-  ] as const)('refuses to settle with %s on, before any key goes down', async (_, mode) => {
+    ['A rebound to strafe', { binds: { KeyA: 'strafeLeft' } }],
+    ['D unbound', { binds: { KeyD: null } }],
+    ['no binding lookup', { noKeybinds: true }],
+  ] as const)('refuses to settle with %s, before any key goes down', async (_, mode) => {
     vi.useFakeTimers();
     const { page, player, events, held } = kinematicPage(stance, { cameraOffset: 2.47, ...mode });
     player.pos = { x: stance.x, y: 0, z: stance.z };
     await expect(onFakeClock(() => holdFreeholdGateStance(page, stance))).rejects.toThrow(
-      /needs Mouse Camera, mouselook and attack-move off/,
+      /needs Mouse Camera, mouselook and attack-move off, and A and D on Turn Left and Turn Right/,
     );
     expect(events.filter((event) => event.startsWith('synthetic:'))).toEqual([]);
     expect([...held]).toEqual([]);
@@ -864,7 +923,9 @@ describe('reopening the gate after a leave', () => {
     expect(player.pos.z).toBeLessThan(site.z);
   });
 
-  it.each([5.05, 5.3])('walks back from %s yd, just past the reach', async (away) => {
+  // Past the 4.5 yd walk-back line, 0.4 yd of margin under the 5 yd reach
+  // included: that margin is what absorbs a late key-up.
+  it.each([4.6, 5.05, 5.3])('walks back from %s yd, past the walk-back line', async (away) => {
     vi.useFakeTimers();
     const { page, events, player } = kinematicPage(stance, {});
     player.pos = { x: site.x, y: 0, z: site.z - away };

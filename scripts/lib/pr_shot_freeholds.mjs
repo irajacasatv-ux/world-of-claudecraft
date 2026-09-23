@@ -65,8 +65,9 @@ export const freeholdReviewTargets = [
   label: `Freehold ${scene}`,
   scene,
   // Everything that decides what these frames show: the housing UI and sim,
-  // whether and where the arch draws (the visibility, pick, rank, prewarm and
-  // grass cores, the arch body, the layout site), and this harness itself.
+  // whether and where the arch draws (the visibility, pick, rank and prewarm
+  // cores, the grass ring and its core, the arch body, the gate's spawn and
+  // press path, the layout site), and this harness with its shared entry.
   // The shared stylesheets stay on the generic HUD fallback by policy
   // (tests/pr_shot_targets.test.ts); the receipt's seal still covers them.
   when: [
@@ -83,7 +84,11 @@ export const freeholdReviewTargets = [
     'render/prewarm_policy.ts',
     'render/entity_view_policy_core.ts',
     'render/foliage_core.ts',
+    'render/foliage.ts',
     'sim/eastbrook_layout.ts',
+    'sim/world_object_bootstrap.ts',
+    'game/interactions.ts',
+    'scripts/enter_offline_game.mjs',
     'scripts/freehold_',
     'scripts/lib/freehold_',
     'scripts/lib/pr_shot_freeholds.mjs',

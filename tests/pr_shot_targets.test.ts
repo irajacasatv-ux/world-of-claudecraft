@@ -1231,9 +1231,16 @@ describe('Freehold producer screenshot selection', () => {
     'src/render/prewarm_policy.ts',
     'src/render/entity_view_policy_core.ts',
     'src/render/foliage_core.ts',
+    'src/render/foliage.ts',
     'src/sim/eastbrook_layout.ts',
+    'src/sim/world_object_bootstrap.ts',
+    'src/game/interactions.ts',
+    'src/game/nearby_interaction_core.ts',
+    'scripts/enter_offline_game.mjs',
     'scripts/freehold_interior_route.mjs',
+    'scripts/freehold_capture_receipt.mjs',
     'scripts/lib/freehold_gate_probe.mjs',
+    'scripts/lib/freehold_capture_census.mjs',
     'scripts/lib/pr_shot_freeholds.mjs',
   ])('selects all three scenes and nine view variants for isolated %s changes', (path) => {
     const plan = classifyDiff([path]);
