@@ -44,6 +44,10 @@ export function walkFreeholdRouteTo(
   },
 ): Promise<FreeholdTourPose>;
 export function sailToFreeholdTown(page: Page): Promise<void>;
+export function approachFreeholdGateSite(
+  page: Page,
+  site: { x: number; z: number },
+): Promise<FreeholdTourPose>;
 export function walkToFreeholdGate(page: Page): Promise<{ x: number; z: number }>;
 export function confirmFreeholdGate(page: Page): Promise<FreeholdTourArrival>;
 export function leaveFreeholdThroughExit(page: Page): Promise<void>;

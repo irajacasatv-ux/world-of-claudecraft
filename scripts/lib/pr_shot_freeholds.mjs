@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
+  approachFreeholdGateSite,
   changeFreeholdToCottage,
   confirmFreeholdGate,
   leaveFreeholdThroughExit,
   sailToFreeholdTown,
-  walkFreeholdRouteTo,
   walkToFreeholdGate,
 } from '../freehold_interior_route.mjs';
 import {
@@ -67,13 +67,12 @@ export const freeholdReviewTargets = [
   async capture(page, variant) {
     if (process.env.PR_SHOTS_FREEHOLD_BASELINE === '1') {
       await sailToFreeholdTown(page);
-      // The release baseline has neither gate nor room. Walk the same north
-      // approach to the gate site (EASTBROOK_LAYOUT.services.freeholdGate,
-      // (-28,-82)) and stand where the after frame stands, so the missing
-      // prior surface is explicit in the evidence record.
-      await walkFreeholdRouteTo(page, 0, -88);
-      await walkFreeholdRouteTo(page, -28, -76);
-      await walkFreeholdRouteTo(page, -28, -81);
+      // The release baseline has neither gate nor room. Walk the after frame's
+      // own approach to the gate site (EASTBROOK_LAYOUT.services.freeholdGate;
+      // tests/freehold_capture_contract.test.ts holds both frames to it) and
+      // stand where the after frame stands, so the missing prior surface is
+      // explicit in the evidence record.
+      await approachFreeholdGateSite(page, { x: -37, z: -103.5 });
     } else {
       await walkToFreeholdGate(page);
       if (scene !== 'gate-own-prompt') {

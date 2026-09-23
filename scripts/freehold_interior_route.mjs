@@ -126,6 +126,17 @@ export async function sailToFreeholdTown(page) {
   await dismissEntryOverlays(page);
 }
 
+/** From the town landing to one yard short of a gate site: down the east road
+ * to the site's side of it, then along z. The arch opens along z (facing 0), so
+ * the last leg faces it square and the camera behind the player sees it face-on.
+ * Shared by the capture's baseline arm, whose release has no gate entity. */
+export async function approachFreeholdGateSite(page, site) {
+  await walkFreeholdRouteTo(page, 0, -88);
+  await walkFreeholdRouteTo(page, -20, -101);
+  await walkFreeholdRouteTo(page, site.x, site.z + 6);
+  return walkFreeholdRouteTo(page, site.x, site.z + 1);
+}
+
 export async function walkToFreeholdGate(page) {
   await sailToFreeholdTown(page);
   const gate = await page.evaluate(() => {
@@ -135,11 +146,7 @@ export async function walkToFreeholdGate(page) {
     return null;
   });
   if (!gate) throw new Error('Freehold tour requires an enabled gate at boot');
-  await walkFreeholdRouteTo(page, 0, -88);
-  // Approach from the north: the arch opens along z (facing 0), so the last leg
-  // faces it square and the camera behind the player sees it face-on.
-  await walkFreeholdRouteTo(page, gate.x, gate.z + 6);
-  await walkFreeholdRouteTo(page, gate.x, gate.z + 1);
+  await approachFreeholdGateSite(page, gate);
   await page.keyboard.press('f');
   await page.waitForSelector(ENTER, { visible: true, timeout: 10000 });
   return gate;
