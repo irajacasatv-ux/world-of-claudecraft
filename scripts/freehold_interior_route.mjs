@@ -3,6 +3,8 @@ import { dismissEntryOverlays } from './enter_offline_game.mjs';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const GPU_CHECKS = ['live-program', 'attach-watchdog', 'gate-timeout'];
+/** The gate's own first draw also must not escape its reveal or touch proof. */
+const FIRST_DRAW_CHECKS = [...GPU_CHECKS, 'reveal-watchdog', 'touch-unproven'];
 const ENTER = '#freehold-gate-window [data-focus-key="gate-enter"]';
 
 async function playerPose(page) {
@@ -140,18 +142,29 @@ export async function sailToFreeholdTown(page) {
  * reads face-on right of centre, clear of the compact prompt's top-left anchor. */
 export const FREEHOLD_GATE_STANCE = Object.freeze({ dx: -4, dz: 1 });
 
-/** From the town landing to the gate stance: along the east road on legs that
- * stay 1.2 yd clear of every collider on the test seeds (a straight cut from
- * (0,-88) grazed the civic benches and only finished by sliding), then along z.
- * The arch opens along z (facing 0), so the last leg faces it square. Shared by
- * the capture's baseline arm, whose release has no gate entity. */
-export async function approachFreeholdGateSite(page, site) {
+/** From the town landing to the gate stance: along the east road on fixed
+ * legs, then along z on the stance's own x, so the last leg faces the arch
+ * square (it opens along z, facing 0). A straight cut from (0,-88) grazed the
+ * civic benches and only finished by sliding; tests/freehold_interior_route
+ * holds every leg clear of colliders on the test seeds. */
+export function freeholdGateApproachLegs(site) {
   const x = site.x + FREEHOLD_GATE_STANCE.dx;
-  await walkFreeholdRouteTo(page, 0, -88);
-  await walkFreeholdRouteTo(page, -19, -97);
-  await walkFreeholdRouteTo(page, -30, -100);
-  await walkFreeholdRouteTo(page, x, site.z + 6);
-  return holdFreeholdGateStance(page, { x, z: site.z + FREEHOLD_GATE_STANCE.dz });
+  return [
+    { x: 0, z: -88 },
+    { x: -19, z: -97 },
+    { x: -30, z: -100 },
+    { x, z: site.z + 6 },
+    { x, z: site.z + FREEHOLD_GATE_STANCE.dz },
+  ];
+}
+
+/** Walk the approach legs and hold the stance. Shared by the capture's
+ * baseline arm, whose release has no gate entity. */
+export async function approachFreeholdGateSite(page, site) {
+  const legs = freeholdGateApproachLegs(site);
+  const stance = legs.pop();
+  for (const leg of legs) await walkFreeholdRouteTo(page, leg.x, leg.z);
+  return holdFreeholdGateStance(page, stance);
 }
 
 /** Walk onto the stance, square up on -z (heading PI) so every viewport's
@@ -159,6 +172,8 @@ export async function approachFreeholdGateSite(page, site) {
  * carry past its stop by more than the route tolerance (1.28 yd once, against
  * the receipt's 1.5 yd bound), so it re-walks until the pose holds, or throws. */
 export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}) {
+  if (!Number.isInteger(attempts) || attempts < 1)
+    throw new Error(`Freehold tour stance attempts must be a positive integer, not ${attempts}`);
   for (let attempt = 1; ; attempt++) {
     await walkFreeholdRouteTo(page, stance.x, stance.z);
     const started = Date.now();
@@ -170,13 +185,39 @@ export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}
     }
     await waitForFreeholdMovementReady(page);
     const pose = await playerPose(page);
-    if (Math.hypot(pose.x - stance.x, pose.z - stance.z) <= FREEHOLD_ROUTE_TOLERANCE) return pose;
+    if (
+      Math.hypot(pose.x - stance.x, pose.z - stance.z) <= FREEHOLD_ROUTE_TOLERANCE &&
+      Math.abs(headingDifference(Math.PI, pose.facing)) <= 0.12
+    )
+      return pose;
     if (attempt >= attempts)
-      throw new Error(`Freehold tour could not hold the gate stance at ${JSON.stringify(pose)}`);
+      throw new Error(
+        `Freehold tour could not hold the gate stance after ${attempts} attempts at ${JSON.stringify(pose)}`,
+      );
   }
 }
 
+/** The gate view's state and the GPU event counters, for the first-draw window. */
+async function gateFirstDrawMark(page) {
+  return page.evaluate(() => {
+    const g = window.__game;
+    const gate = [...g.sim.entities.values()].find((e) => e.templateId === 'freehold_gate');
+    const view = gate ? g.renderer.views.get(gate.id) : undefined;
+    return {
+      atMs: performance.now(),
+      gateView: Boolean(view),
+      compilePending: view ? view.compilePending : null,
+      visible: view ? view.group.visible : null,
+      counts: { ...g.renderer.perfStats().gpuPrep.events.counts },
+    };
+  });
+}
+
+/** Sail in, walk to the stance and open the prompt. The first-draw window runs
+ * from the island (the gate's view does not exist yet) until the view has
+ * compiled and revealed, so it spans the gate's own first draw. */
 export async function walkToFreeholdGate(page) {
+  const begin = await gateFirstDrawMark(page);
   await sailToFreeholdTown(page);
   const gate = await page.evaluate(() => {
     for (const e of window.__game.sim.entities.values()) {
@@ -186,9 +227,19 @@ export async function walkToFreeholdGate(page) {
   });
   if (!gate) throw new Error('Freehold tour requires an enabled gate at boot');
   await approachFreeholdGateSite(page, gate);
+  await page.waitForFunction(
+    () => {
+      const g = window.__game;
+      const e = [...g.sim.entities.values()].find((x) => x.templateId === 'freehold_gate');
+      const view = e ? g.renderer.views.get(e.id) : undefined;
+      return Boolean(view && !view.compilePending && view.group.visible);
+    },
+    { timeout: 60000 },
+  );
+  const firstDraw = { begin, end: await gateFirstDrawMark(page) };
   await page.keyboard.press('f');
   await page.waitForSelector(ENTER, { visible: true, timeout: 10000 });
-  return gate;
+  return { ...gate, firstDraw };
 }
 
 export async function confirmFreeholdGate(page) {
@@ -272,9 +323,21 @@ export async function changeFreeholdToCottage(page) {
     await page.tap('#mobile-menu-chat');
   } else await page.keyboard.press('Enter');
   await page.waitForSelector('#chat-input', { visible: true });
-  await page.type('#chat-input', '/dev freehold cottage');
+  const command = '/dev freehold cottage';
+  await page.type('#chat-input', command);
+  // Under load a keystroke can land late: send only the whole command, then
+  // wait for the sim's own record to take the tier (observed, never written).
+  await page.waitForFunction(
+    (text) => document.querySelector('#chat-input')?.value === text,
+    { timeout: 10000 },
+    command,
+  );
   await page.keyboard.press('Enter');
   await page.waitForSelector('#chat-input', { hidden: true });
+  await page.waitForFunction(
+    () => [...window.__game.sim.freeholds.values()].some((record) => record.tier === 'cottage'),
+    { timeout: 10000 },
+  );
   if (
     mobile &&
     (await page.evaluate(() =>
@@ -332,12 +395,15 @@ export async function sampleFreeholdInterior(page, label, arrival, sample) {
 /** Callbacks let each screenshot target capture exactly one functional moment. */
 export async function runFreeholdInteriorRoute(page, hooks = {}) {
   const samples = [];
-  await walkToFreeholdGate(page);
+  const approach = await walkToFreeholdGate(page);
   await hooks.onGatePrompt?.(page);
   const inn = await confirmFreeholdGate(page);
   await sleep(1200);
   if (hooks.sample)
-    samples.push(await sampleFreeholdInterior(page, 'freehold-inn-room', inn, hooks.sample));
+    samples.push({
+      ...(await sampleFreeholdInterior(page, 'freehold-inn-room', inn, hooks.sample)),
+      gateFirstDraw: approach.firstDraw,
+    });
   await hooks.afterInn?.(page, inn);
   await changeFreeholdToCottage(page);
   await leaveFreeholdThroughExit(page);
@@ -358,6 +424,41 @@ export function freeholdInteriorPerfFailures(samples) {
   const failures = [];
   const counter = (value) => Number.isSafeInteger(value) && value >= 0;
   const finiteRoom = (room) => room && Number.isFinite(room.x) && Number.isFinite(room.z);
+  const inn = samples.find((sample) => sample.label === 'freehold-inn-room');
+  const cottage = samples.find((sample) => sample.label === 'freehold-cottage');
+  // The gate's own first draw: absent on the island, compiled and revealed at
+  // the end, with no escape of any kind in between.
+  const first = inn?.gateFirstDraw;
+  if (inn) {
+    if (
+      first?.begin?.gateView !== false ||
+      first?.end?.gateView !== true ||
+      first.end.compilePending !== false ||
+      first.end.visible !== true ||
+      !Number.isFinite(first.begin.atMs) ||
+      !(first.end.atMs > first.begin.atMs)
+    )
+      failures.push('gate first draw: missing window from before the view to its reveal');
+    else
+      for (const kind of FIRST_DRAW_CHECKS) {
+        const [from, to] = [first.begin.counts?.[kind], first.end.counts?.[kind]];
+        if (!counter(from) || !counter(to))
+          failures.push(`gate first draw: missing finite ${kind} counters`);
+        else if (to !== from)
+          failures.push(`gate first draw: ${kind} delta ${to - from}, expected zero`);
+      }
+  }
+  // The leave and the walk back to the gate: from the inn sample's end to the
+  // Cottage entry (the gate's view is rebuilt on the leave arrival).
+  if (inn && cottage)
+    for (const kind of GPU_CHECKS) {
+      const [from, to] = [
+        inn.sampleEvidence?.end?.gpuCounts?.[kind],
+        cottage.arrival?.gpuBefore?.[kind],
+      ];
+      if (counter(from) && counter(to) && to !== from)
+        failures.push(`leave to cottage: ${kind} delta ${to - from}, expected zero`);
+    }
   for (const label of ['freehold-inn-room', 'freehold-cottage']) {
     const found = samples.find((sample) => sample.label === label);
     if (!found) {

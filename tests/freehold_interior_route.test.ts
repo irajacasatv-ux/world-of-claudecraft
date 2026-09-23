@@ -1,16 +1,22 @@
 import { runInNewContext } from 'node:vm';
 import type { Page } from 'puppeteer-core';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  changeFreeholdToCottage,
   FREEHOLD_GATE_STANCE,
   FREEHOLD_ROUTE_TOLERANCE,
+  freeholdGateApproachLegs,
   freeholdInteriorPerfFailures,
   holdFreeholdGateStance,
   leaveFreeholdThroughExit,
   sampleFreeholdInterior,
   walkFreeholdRouteTo,
 } from '../scripts/freehold_interior_route.mjs';
+import { isBlocked } from '../src/sim/colliders';
+import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { FREEHOLD_GATE_INTERACT_RANGE } from '../src/sim/freehold/gate_rules';
+import { FERRY_BELL_TOWN_LANDING } from '../src/sim/interactions/ferry_bell';
+import { WORLD_SEED } from '../src/sim/world_seed';
 
 const boundary = (frames: number) => ({
   frames,
@@ -23,7 +29,34 @@ const boundary = (frames: number) => ({
   rendererTier: 'low',
 });
 
-const clean = () =>
+const FIRST_DRAW_KINDS = [
+  'live-program',
+  'attach-watchdog',
+  'gate-timeout',
+  'reveal-watchdog',
+  'touch-unproven',
+] as const;
+const zeros = () => Object.fromEntries(FIRST_DRAW_KINDS.map((kind) => [kind, 0]));
+/** The gate's first draw: no view on the island, compiled and revealed at the end. */
+const firstDraw = () => ({
+  begin: { atMs: 1, gateView: false, compilePending: null, visible: null, counts: zeros() },
+  end: { atMs: 9, gateView: true, compilePending: false, visible: true, counts: zeros() },
+});
+
+type Sample =
+  ReturnType<typeof boundary> extends infer B
+    ? {
+        label: string;
+        sampleEvidence: { begin: B; end: B };
+        arrival: Record<string, unknown> & {
+          gpuBefore: Record<string, number>;
+          gpuAfter: Record<string, number>;
+          gpuDelta: Record<string, number>;
+        };
+        gateFirstDraw?: ReturnType<typeof firstDraw>;
+      }
+    : never;
+const clean = (): Sample[] =>
   ['freehold-inn-room', 'freehold-cottage'].map((label) => ({
     label,
     sampleEvidence: { begin: boundary(10), end: boundary(20) },
@@ -33,7 +66,17 @@ const clean = () =>
       gpuAfter: { ...boundary(0).gpuCounts },
       gpuDelta: { ...boundary(0).gpuCounts },
     },
+    ...(label === 'freehold-inn-room' ? { gateFirstDraw: firstDraw() } : {}),
   }));
+/** A Cottage sample whose counters all stand where the inn sample ended. */
+function cottageAfter(counts: Record<string, number>): Sample {
+  const cottage = clean()[1];
+  for (const edge of [cottage.sampleEvidence.begin, cottage.sampleEvidence.end])
+    edge.gpuCounts = { ...counts } as typeof edge.gpuCounts;
+  cottage.arrival.gpuBefore = { ...counts };
+  cottage.arrival.gpuAfter = { ...counts };
+  return cottage;
+}
 
 describe('accepted home reveal perf evidence', () => {
   it('requires clean samples from both distinct home destinations', () => {
@@ -47,6 +90,7 @@ describe('accepted home reveal perf evidence', () => {
     samples[0].sampleEvidence.end.gpuCounts['live-program'] = 2;
     samples[0].arrival.gpuAfter['live-program'] = 2;
     samples[0].arrival.gpuDelta['live-program'] = 2;
+    samples[1] = cottageAfter(samples[0].sampleEvidence.end.gpuCounts);
     samples[1].sampleEvidence.end.gpuCounts['attach-watchdog'] = 1;
     samples[1].arrival.gpuAfter['attach-watchdog'] = 1;
     samples[1].arrival.gpuDelta['attach-watchdog'] = 1;
@@ -91,7 +135,8 @@ it.each([false, true])(
         return { label };
       },
     );
-    expect(freeholdInteriorPerfFailures([sample, clean()[1]])).toEqual(
+    const inn = { ...sample, gateFirstDraw: firstDraw() };
+    expect(freeholdInteriorPerfFailures([inn, cottageAfter({ ...counters })])).toEqual(
       lateProgram ? ['freehold-inn-room: live-program delta 1, expected zero'] : [],
     );
     expect(arrival.gpuDelta['live-program']).toBe(0);
@@ -278,6 +323,88 @@ it('leaves through the physical exit with read-only __game observations', async 
   expect(events).toContain('up:w');
 });
 
+describe("the gate's first-draw window and the leave back to it", () => {
+  it('passes a clean window from the island to the reveal', () => {
+    expect(freeholdInteriorPerfFailures(clean())).toEqual([]);
+  });
+
+  type FirstDraw = ReturnType<typeof firstDraw>;
+  it.each<[string, (d: FirstDraw) => FirstDraw | undefined]>([
+    ['missing entirely', () => undefined],
+    [
+      'a view already there on the island',
+      (d) => ({ ...d, begin: { ...d.begin, gateView: true } }),
+    ],
+    ['no view at the end', (d) => ({ ...d, end: { ...d.end, gateView: false } })],
+    ['still compiling at the end', (d) => ({ ...d, end: { ...d.end, compilePending: true } })],
+    ['hidden at the end', (d) => ({ ...d, end: { ...d.end, visible: false } })],
+    ['an end no later than its begin', (d) => ({ ...d, end: { ...d.end, atMs: 1 } })],
+    ['a begin with no clock', (d) => ({ ...d, begin: { ...d.begin, atMs: Number.NaN } })],
+  ])('refuses a window with %s', (_, edit) => {
+    const samples = clean();
+    samples[0].gateFirstDraw = edit(firstDraw());
+    expect(freeholdInteriorPerfFailures(samples)).toEqual([
+      'gate first draw: missing window from before the view to its reveal',
+    ]);
+  });
+
+  it.each(FIRST_DRAW_KINDS)('refuses a %s escape during the first draw', (kind) => {
+    const samples = clean();
+    samples[0].gateFirstDraw!.end.counts[kind] = 1;
+    expect(freeholdInteriorPerfFailures(samples)).toEqual([
+      `gate first draw: ${kind} delta 1, expected zero`,
+    ]);
+    samples[0].gateFirstDraw!.end.counts[kind] = Number.NaN;
+    expect(freeholdInteriorPerfFailures(samples)).toEqual([
+      `gate first draw: missing finite ${kind} counters`,
+    ]);
+  });
+
+  it.each(['live-program', 'attach-watchdog', 'gate-timeout'] as const)(
+    'refuses a %s escape between the inn sample and the Cottage entry',
+    (kind) => {
+      const samples = clean();
+      const counts = { ...samples[0].sampleEvidence.end.gpuCounts, [kind]: 1 };
+      samples[1] = cottageAfter(counts);
+      expect(freeholdInteriorPerfFailures(samples)).toEqual([
+        `leave to cottage: ${kind} delta 1, expected zero`,
+      ]);
+    },
+  );
+});
+
+it('pins the capture stance literally, a yard short of the arch and four to its west', () => {
+  expect(FREEHOLD_GATE_STANCE).toEqual({ dx: -4, dz: 1 });
+});
+
+const APPROACH_CLEARANCE = 1.2;
+
+it('walks legs that stay clear of every collider on the test seeds, ending on the stance', () => {
+  const site = EASTBROOK_LAYOUT.services.freeholdGate.position;
+  const legs = freeholdGateApproachLegs(site);
+  expect(legs.at(-1)).toEqual({
+    x: site.x + FREEHOLD_GATE_STANCE.dx,
+    z: site.z + FREEHOLD_GATE_STANCE.dz,
+  });
+  const path = [{ x: FERRY_BELL_TOWN_LANDING.x, z: FERRY_BELL_TOWN_LANDING.z }, ...legs];
+  let samples = 0;
+  for (const seed of [1, 7, 42, 99, 1032, 1337, WORLD_SEED, 2_147_483_647])
+    for (let i = 0; i + 1 < path.length; i++) {
+      const [a, b] = [path[i], path[i + 1]];
+      const steps = Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / 0.25);
+      for (let k = 0; k <= steps; k++) {
+        const x = a.x + ((b.x - a.x) * k) / steps;
+        const z = a.z + ((b.z - a.z) * k) / steps;
+        samples++;
+        expect(
+          isBlocked(seed, x, z, APPROACH_CLEARANCE),
+          `seed ${seed} leg ${i} at ${x},${z}`,
+        ).toBe(false);
+      }
+    }
+  expect(samples).toBeGreaterThan(8 * 200);
+});
+
 it('holds the capture stance inside the gate reach, walk tolerance included', () => {
   // walkFreeholdRouteTo stops within its default tolerance of the target, so
   // the stance plus that tolerance must still reach the gate.
@@ -288,16 +415,23 @@ it('holds the capture stance inside the gate reach, walk tolerance included', ()
 });
 
 /** A player that moves only while keys are held, at run speed and turn rate
- * over wall time, and that carries `carry` yd past its stop on the first
- * `carries` walk-key releases near the stance: the key-up latency a loaded
- * machine adds. */
-function kinematicPage(stance: { x: number; z: number }, carry: number, carries: number) {
+ * over the (faked) wall clock, advancing one sim tick per read. A walk-key
+ * release near the stance can carry the player on to `carry` yd PAST the
+ * stance along its heading, and a turn release can carry the facing `spin`
+ * rad on, each landing TWO ticks later: the lag a loaded machine adds between
+ * a key-up and the sim settling. */
+function kinematicPage(
+  stance: { x: number; z: number },
+  motion: { carry?: number; carries?: number; spin?: number; spins?: number },
+) {
   const events: string[] = [];
   const player = { pos: { x: stance.x, y: 0, z: stance.z + 5 }, facing: Math.PI, dead: false };
   const held = new Set<string>();
   let last = Date.now();
   let tick = 0;
-  let left = carries;
+  let carries = motion.carries ?? 0;
+  let spins = motion.spins ?? 0;
+  const pending: { atTick: number; apply: () => void }[] = [];
   const advance = () => {
     const dt = (Date.now() - last) / 1000;
     last = Date.now();
@@ -315,7 +449,12 @@ function kinematicPage(stance: { x: number; z: number }, carry: number, carries:
     },
     get tickCount() {
       advance();
-      return tick++;
+      tick++;
+      for (const due of pending.filter((p) => p.atTick <= tick)) {
+        due.apply();
+        pending.splice(pending.indexOf(due), 1);
+      }
+      return tick;
     },
   };
   const context = { window: { __game: { sim } }, document: { querySelector: () => null } };
@@ -340,43 +479,193 @@ function kinematicPage(stance: { x: number; z: number }, carry: number, carries:
       up: async (key: string) => {
         advance();
         events.push(`up:${key}`);
-        if (key === 'w' && held.has('w') && left > 0) {
-          if (Math.hypot(player.pos.x - stance.x, player.pos.z - stance.z) < 1) {
-            left--;
-            player.pos.x += Math.sin(player.facing) * carry;
-            player.pos.z += Math.cos(player.facing) * carry;
-          }
+        const near = Math.hypot(player.pos.x - stance.x, player.pos.z - stance.z) < 1;
+        if (key === 'w' && held.has('w') && near && carries > 0) {
+          carries--;
+          const [dx, dz] = [Math.sin(player.facing), Math.cos(player.facing)];
+          pending.push({
+            atTick: tick + 2,
+            apply: () => {
+              player.pos.x = stance.x + dx * (motion.carry ?? 0);
+              player.pos.z = stance.z + dz * (motion.carry ?? 0);
+            },
+          });
+        }
+        // A turn spin lands only after the release that squared the player, so
+        // the squaring loop has already stopped reading when it arrives.
+        const squared =
+          Math.abs(
+            Math.atan2(Math.sin(Math.PI - player.facing), Math.cos(Math.PI - player.facing)),
+          ) <= 0.12;
+        if ((key === 'a' || key === 'd') && held.has(key) && near && squared && spins > 0) {
+          spins--;
+          pending.push({
+            atTick: tick + 2,
+            apply: () => {
+              player.facing += motion.spin ?? 0;
+            },
+          });
         }
         held.delete(key);
       },
     },
   } as unknown as Page;
-  return { page, events, player };
+  const settleTicks = () => {
+    for (let i = 0; i < 4; i++) void sim.tickCount;
+  };
+  return { page, events, player, held, settleTicks };
+}
+
+/** Drive a route promise on the faked clock, so CPU contention cannot stretch
+ * a sleep into a different walk. */
+async function onFakeClock<T>(start: () => Promise<T>): Promise<T> {
+  let outcome: { value?: T; error?: unknown } | null = null;
+  start().then(
+    (value) => {
+      outcome = { value };
+    },
+    (error) => {
+      outcome = { error };
+    },
+  );
+  for (let i = 0; i < 200_000 && !outcome; i++) await vi.advanceTimersByTimeAsync(5);
+  const settled = outcome as { value?: T; error?: unknown } | null;
+  if (!settled) throw new Error('the route never settled');
+  if ('error' in settled) throw settled.error;
+  return settled.value as T;
 }
 
 describe('holding the gate stance', () => {
-  const stance = { x: -42.65, z: -102.75 };
-
-  it('re-walks a stop that carried past the stance and returns the settled pose', async () => {
-    const { page, events, player } = kinematicPage(stance, 2, 1);
-    const pose = await holdFreeholdGateStance(page, stance);
-    expect(events.filter((event) => event === 'down:w').length).toBeGreaterThan(1);
-    expect(Math.hypot(pose.x - stance.x, pose.z - stance.z)).toBeLessThanOrEqual(
-      FREEHOLD_ROUTE_TOLERANCE,
-    );
-    expect(
-      Math.abs(Math.atan2(Math.sin(Math.PI - pose.facing), Math.cos(Math.PI - pose.facing))),
-    ).toBeLessThanOrEqual(0.12);
-    // The pose returned is the player as it stands, not a mid-walk sample.
-    expect(pose.x).toBe(player.pos.x);
-    expect(pose.z).toBe(player.pos.z);
+  // The live stance, read from the layout.
+  const site = EASTBROOK_LAYOUT.services.freeholdGate.position;
+  const stance = { x: site.x + FREEHOLD_GATE_STANCE.dx, z: site.z + FREEHOLD_GATE_STANCE.dz };
+  const facingOff = (facing: number) =>
+    Math.abs(Math.atan2(Math.sin(Math.PI - facing), Math.cos(Math.PI - facing)));
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  it('throws rather than return a pose off the stance', async () => {
-    const { page, events } = kinematicPage(stance, 2, Number.POSITIVE_INFINITY);
-    await expect(holdFreeholdGateStance(page, stance)).rejects.toThrow(
-      /could not hold the gate stance/,
+  // 1.1 yd sits past the hold's 0.7 yd bound yet inside the receipt's 1.5.
+  it.each([2, 1.1])(
+    're-walks a stop that carried on to %s yd past the stance, seen only after the settle',
+    async (carry) => {
+      vi.useFakeTimers();
+      const { page, events, player, held, settleTicks } = kinematicPage(stance, {
+        carry,
+        carries: 1,
+      });
+      const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
+      expect(events.filter((event) => event === 'down:w').length).toBeGreaterThan(1);
+      // The pose returned is the player as it stands, and nothing lands later.
+      expect(pose.x).toBe(player.pos.x);
+      expect(pose.z).toBe(player.pos.z);
+      settleTicks();
+      expect(Math.hypot(player.pos.x - stance.x, player.pos.z - stance.z)).toBeLessThanOrEqual(
+        FREEHOLD_ROUTE_TOLERANCE,
+      );
+      expect(facingOff(player.facing)).toBeLessThanOrEqual(0.12);
+      expect([...held]).toEqual([]);
+    },
+  );
+
+  it('re-squares a facing that turned on after the stop', async () => {
+    vi.useFakeTimers();
+    const { page, player, held, settleTicks } = kinematicPage(stance, { spin: 0.3, spins: 1 });
+    // Start on the stance, turned away, so the first squaring turn ends near it.
+    player.pos = { x: stance.x, y: 0, z: stance.z };
+    player.facing = Math.PI - 1;
+    const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
+    expect(facingOff(pose.facing)).toBeLessThanOrEqual(0.12);
+    settleTicks();
+    expect(facingOff(player.facing)).toBeLessThanOrEqual(0.12);
+    expect([...held]).toEqual([]);
+  });
+
+  it('throws after exactly its attempts rather than return a pose off the stance', async () => {
+    vi.useFakeTimers();
+    const { page, held } = kinematicPage(stance, {
+      carry: 2,
+      carries: Number.POSITIVE_INFINITY,
+    });
+    await expect(onFakeClock(() => holdFreeholdGateStance(page, stance))).rejects.toThrow(
+      /could not hold the gate stance after 3 attempts/,
     );
-    expect(events.filter((event) => event === 'down:w').length).toBeGreaterThanOrEqual(3);
+    expect([...held]).toEqual([]);
+  });
+
+  it.each([0, -1, 1.5, Number.NaN])('refuses %s attempts', async (attempts) => {
+    const { page } = kinematicPage(stance, {});
+    await expect(holdFreeholdGateStance(page, stance, { attempts })).rejects.toThrow(
+      /attempts must be a positive integer/,
+    );
+  });
+});
+
+describe('switching the tour to the Cottage', () => {
+  // A desktop page with a chat box: Enter opens it, typing fills it (or drops
+  // the first keystroke, as a loaded machine can), and Enter submits it; the
+  // sim takes the tier only for the whole command, and only if the grant lands.
+  function chatPage(options: { dropFirstKey?: boolean; grantLands?: boolean }) {
+    const state = { open: false, typed: '', tier: 'inn_room', enters: 0 };
+    const context = () => ({
+      document: {
+        body: { classList: { contains: () => false } },
+        querySelector: () => ({ value: state.typed }),
+        getElementById: () => null,
+      },
+      window: { __game: { sim: { freeholds: new Map([['acct', { tier: state.tier }]]) } } },
+    });
+    const run = (fn: (...args: never[]) => unknown, args: unknown[]) =>
+      runInNewContext(`(${fn.toString()})(...args)`, { ...context(), args });
+    const page = {
+      evaluate: async (fn: (...args: never[]) => unknown, ...args: unknown[]) => run(fn, args),
+      waitForFunction: async (
+        fn: (...args: never[]) => unknown,
+        _options: unknown,
+        ...args: unknown[]
+      ) => {
+        for (let attempt = 0; attempt < 10; attempt++) if (run(fn, args)) return;
+        throw new Error('condition did not become ready');
+      },
+      waitForSelector: async () => {},
+      type: async (_selector: string, text: string) => {
+        state.typed = options.dropFirstKey ? text.slice(1) : text;
+      },
+      keyboard: {
+        press: async (key: string) => {
+          if (key !== 'Enter') return;
+          state.enters++;
+          if (!state.open) {
+            state.open = true;
+            return;
+          }
+          if (state.typed === '/dev freehold cottage' && options.grantLands !== false)
+            state.tier = 'cottage';
+          state.open = false;
+          state.typed = '';
+        },
+      },
+    } as unknown as Page;
+    return { page, state };
+  }
+
+  it('sends the whole command and waits for the sim to take the tier', async () => {
+    const { page, state } = chatPage({});
+    await changeFreeholdToCottage(page);
+    expect(state.tier).toBe('cottage');
+    expect(state.enters).toBe(2);
+  });
+
+  it('never submits a command a keystroke went missing from', async () => {
+    const { page, state } = chatPage({ dropFirstKey: true });
+    await expect(changeFreeholdToCottage(page)).rejects.toThrow(/did not become ready/);
+    expect(state.enters).toBe(1);
+    expect(state.tier).toBe('inn_room');
+  });
+
+  it('refuses to go on until the grant has landed', async () => {
+    const { page, state } = chatPage({ grantLands: false });
+    await expect(changeFreeholdToCottage(page)).rejects.toThrow(/did not become ready/);
+    expect(state.enters).toBe(2);
   });
 });

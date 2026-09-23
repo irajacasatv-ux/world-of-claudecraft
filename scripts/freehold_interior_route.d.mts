@@ -33,6 +33,10 @@ export interface FreeholdPerfSample {
     gpuAfter?: Record<string, number>;
     gpuDelta?: Record<string, number>;
   };
+  gateFirstDraw?: {
+    begin?: Partial<FreeholdGateFirstDrawMark>;
+    end?: Partial<FreeholdGateFirstDrawMark>;
+  };
 }
 export function walkFreeholdRouteTo(
   page: Page,
@@ -55,7 +59,22 @@ export function holdFreeholdGateStance(
   stance: { x: number; z: number },
   options?: { attempts?: number },
 ): Promise<FreeholdTourPose>;
-export function walkToFreeholdGate(page: Page): Promise<{ x: number; z: number }>;
+export interface FreeholdGateFirstDrawMark {
+  atMs: number;
+  gateView: boolean;
+  compilePending: boolean | null;
+  visible: boolean | null;
+  counts: Record<string, number>;
+}
+export function freeholdGateApproachLegs(site: {
+  x: number;
+  z: number;
+}): { x: number; z: number }[];
+export function walkToFreeholdGate(page: Page): Promise<{
+  x: number;
+  z: number;
+  firstDraw: { begin: FreeholdGateFirstDrawMark; end: FreeholdGateFirstDrawMark };
+}>;
 export function confirmFreeholdGate(page: Page): Promise<FreeholdTourArrival>;
 export function leaveFreeholdThroughExit(page: Page): Promise<void>;
 export function changeFreeholdToCottage(page: Page): Promise<void>;
