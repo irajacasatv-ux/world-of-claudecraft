@@ -20,7 +20,7 @@
 import puppeteer from 'puppeteer-core';
 
 import { BROWSER_PATH } from './browser_path.mjs';
-import { enterOfflineGame } from './enter_offline_game.mjs';
+import { enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 
 const BASE = (process.env.GAME_URL ?? 'http://localhost:5173') + '/';
 const CHAR_NAME = 'Proberton';
@@ -156,10 +156,11 @@ for (const profile of PROFILES) {
   // rather than on a claim. A coordinate is exactly the kind of literal this file
   // already refuses for item ids: a wrong one is silent.
   //
-  // The greeting modal is dismissed by its own button. The Proving Shore tutorial
+  // The greeting modal is dismissed by its own declining control (GREETING_DECLINE;
+  // its `.cd-ok` is the accept-guidance button on the ferry note). The Proving Shore tutorial
   // is compulsory and has no skip, so the old `.tut-skip` hook no longer exists;
   // the modal is a real overlay and would otherwise swallow the interact tap.
-  const staged = await page.evaluate(() => {
+  const staged = await page.evaluate((decline) => {
     const sim = window.__game.sim;
     const p = sim.player;
     p.maxHp = 99999;
@@ -177,15 +178,11 @@ for (const profile of PROFILES) {
       p.pos.y = banker.pos.y ?? 1.5;
       p.pos.z = banker.pos.z + 1.5;
     }
-    for (const sel of ['#tutorial-greeting .cd-ok', '#tutorial-greeting button', '.tut-skip']) {
-      const el = document.querySelector(sel);
-      if (el) {
-        el.click();
-        break;
-      }
-    }
+    const greeting = document.getElementById('tutorial-greeting')?.querySelector(decline);
+    const el = greeting ?? document.querySelector('.tut-skip');
+    el?.click();
     return { foundBanker: !!banker, at: banker ? { x: banker.pos.x, z: banker.pos.z } : null };
-  });
+  }, GREETING_DECLINE);
   check(
     `${profile.name} banker located in the live world`,
     staged.foundBanker,

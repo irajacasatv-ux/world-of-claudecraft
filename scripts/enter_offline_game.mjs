@@ -89,6 +89,14 @@ export async function enterOfflineGame(page, opts = {}) {
   return gameBooted;
 }
 
+/** The declining control of a spawn greeting: the ferry note's guidance
+ * variant declines through [data-guidance="off"], a plain note closes through
+ * [data-close], the play/skip variant skips through [data-skip]. The three never
+ * share one greeting, so a selector list finds the one that is there. Scripts
+ * pass it into page.evaluate as an argument; never click a greeting's first or
+ * last button, because on the ferry note those accept golden guidance. */
+export const GREETING_DECLINE = '[data-guidance="off"], [data-close], [data-skip]';
+
 /** One in-page pass over the entry overlays: reports which are up, and closes
  * the spawn greetings (#tutorial-greeting, #profession-tutorial) through their
  * DECLINING control. The ferry note's guidance variant has no close button, and

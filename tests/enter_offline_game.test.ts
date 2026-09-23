@@ -2,8 +2,10 @@
 // control it clicks on each spawn greeting. The ferry note's guidance variant
 // leads with "Turn guidance on", so a first-button click accepted golden
 // guidance for every capture that rode the bell; the pass must always decline.
+
+import { Window } from 'happy-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { entryOverlayPass } from '../scripts/enter_offline_game.mjs';
+import { entryOverlayPass, GREETING_DECLINE } from '../scripts/enter_offline_game.mjs';
 
 type Control = 'guidance-on' | 'guidance-off' | 'close' | 'play' | 'skip';
 const SELECTOR: Record<Control, string> = {
@@ -83,5 +85,29 @@ describe('entryOverlayPass', () => {
     const clicks = stage({ 'tutorial-greeting': ['guidance-on', 'guidance-off'] }, 'none');
     expect(entryOverlayPass().greetingUp).toBe(false);
     expect(clicks).toEqual([]);
+  });
+});
+
+describe('GREETING_DECLINE', () => {
+  // The same markup the HUD renders (tutorial_greeting_window.ts and
+  // profession_tutorial_window.ts): the selector list finds each form's
+  // declining control, and never the accept button that leads the guidance form.
+  it('finds the declining control of every greeting form', () => {
+    const document = new Window().document;
+    const forms: [string, string][] = [
+      [
+        '<button data-guidance="on" class="cd-ok">on</button><button data-guidance="off">off</button>',
+        'off',
+      ],
+      ['<button class="btn cd-ok" data-close>close</button>', 'close'],
+      ['<button data-play>play</button><button data-skip>skip</button>', 'skip'],
+      ['<button class="x-btn" data-close>x</button><button data-close>ok</button>', 'x'],
+    ];
+    expect(GREETING_DECLINE).toBe('[data-guidance="off"], [data-close], [data-skip]');
+    for (const [markup, expected] of forms) {
+      document.body.innerHTML = `<div id="tutorial-greeting">${markup}</div>`;
+      const found = document.getElementById('tutorial-greeting')?.querySelector(GREETING_DECLINE);
+      expect(found?.textContent, markup).toBe(expected);
+    }
   });
 });

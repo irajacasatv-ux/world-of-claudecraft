@@ -6,7 +6,7 @@
 // Adding coverage is one entry here, not a new script. Keep recipes offline-only (they
 // drive window.__game directly: sim.addItem, hud.toggleBags/toggleMap, sim.player.pos).
 
-import { dismissEntryOverlays, entryOverlayPass } from './enter_offline_game.mjs';
+import { dismissEntryOverlays, entryOverlayPass, GREETING_DECLINE } from './enter_offline_game.mjs';
 import { freeholdReviewTargets } from './lib/pr_shot_freeholds.mjs';
 import { masterwroughtReviewTargets } from './lib/pr_shot_masterwrought.mjs';
 
@@ -388,18 +388,15 @@ async function openMarketBrowse(page) {
 // Open the Esc game menu at its root. The window is force-hidden first so the
 // toggle is deterministic regardless of prior state, the same trick the bags
 // target uses, and the one-shot tutorial greeting (Ferryman Odo) is dismissed by
-// its own button, the way a player does, so it never sits over the clip.
+// its own declining control (GREETING_DECLINE), the way a player does, so it
+// never sits over the clip.
 async function openGameMenu(page) {
-  await page.evaluate(() => {
-    document
-      .querySelector(
-        '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
-      )
-      ?.click();
+  await page.evaluate((decline) => {
+    document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
     const el = document.querySelector('#options-menu');
     if (el) el.style.display = 'none';
     window.__game?.hud?.toggleOptionsMenu?.();
-  });
+  }, GREETING_DECLINE);
   await wait(400);
   return pollForSize(page, '#options-menu .opt-list');
 }
@@ -629,7 +626,8 @@ export async function seedLowGraphicsPreset(page) {
 /** Dismiss the tutorial-island greeting dialog if it has spawned: standalone
  *  pages enter at The Proving Shore, where Ferryman Odo's greeting pops a few
  *  beats after entry and would overlap (or swallow the clicks of) any staged
- *  window shot. Click its own confirm so the dismissal is the real path. */
+ *  window shot. Decline it through its own control (entryOverlayPass), so the
+ *  dismissal is the real path and never accepts golden guidance. */
 async function dismissTutorialGreeting(page) {
   await page.evaluate(entryOverlayPass);
   await page.evaluate(() => {
@@ -748,14 +746,11 @@ const RECIPE_TRACKER_PINS = 3;
  *  recipes through the window's own pin chips: the real path, storage and
  *  tracker repaint included, never the view core. Leaves the window open. */
 async function pinRecipeTrackerRecipes(page) {
-  await page.evaluate(() => {
+  await page.evaluate((decline) => {
     document.querySelector('#gpu-notice')?.remove();
     // The island's greeting note would sit over both the window and the
     // strip; dismiss it through its own control.
-    document
-      .getElementById('tutorial-greeting')
-      ?.querySelector('[data-close], [data-skip]')
-      ?.click();
+    document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
     const sim = window.__game?.sim;
     for (const [id, n] of [
       ['linen_scrap', 3],
@@ -769,7 +764,7 @@ async function pinRecipeTrackerRecipes(page) {
     const el = document.querySelector('#crafting-window');
     if (el) el.style.display = 'none';
     window.__game?.hud?.toggleCrafting?.();
-  });
+  }, GREETING_DECLINE);
   const open = await pollForSize(page, '#crafting-window');
   if (!open) throw new Error('crafting window did not open');
   const pinned = await page.evaluate((limit) => {
@@ -991,10 +986,10 @@ async function sweepOverlays(page, passes = 8) {
   for (let i = 0; i < passes; i++) {
     await dismissEntryOverlays(page);
     await page
-      .evaluate(() => {
+      .evaluate((decline) => {
         const visible = (el) => !!el && getComputedStyle(el).display !== 'none' && !el.hidden;
         const greeting = document.getElementById('tutorial-greeting');
-        if (visible(greeting)) greeting.querySelector('[data-close], [data-skip]')?.click();
+        if (visible(greeting)) greeting.querySelector(decline)?.click();
         for (const id of ['gpu-notice', 'perf-nudge']) {
           const notice = document.getElementById(id);
           if (!visible(notice)) continue;
@@ -1002,7 +997,7 @@ async function sweepOverlays(page, passes = 8) {
           notice.hidden = true;
           notice.style.display = 'none';
         }
-      })
+      }, GREETING_DECLINE)
       .catch(() => {});
     await wait(250);
   }
@@ -2197,12 +2192,12 @@ export const TARGETS = [
       if (!opened.ok) return { skip: opened.reason };
       // The first-spawn greeting (#tutorial-greeting, Ferryman Odo) is a
       // window on top of the spawn: close it the way a player does, then open.
-      await page.evaluate(() => {
+      await page.evaluate((decline) => {
         const greeting = document.getElementById('tutorial-greeting');
         if (greeting instanceof HTMLElement && getComputedStyle(greeting).display !== 'none') {
-          [...greeting.querySelectorAll('button')].at(-1)?.click();
+          greeting.querySelector(decline)?.click();
         }
-      });
+      }, GREETING_DECLINE);
       await wait(400);
       await page.evaluate(() => {
         window.__game?.hud?.toggleCosmetics?.();
@@ -2414,15 +2409,11 @@ export const TARGETS = [
       // over it; sweep its confirm through the settle window (the
       // professions target's idiom) so the frame shows the board alone.
       for (let i = 0; i < 6; i++) {
-        await page.evaluate(() => {
-          document
-            .querySelector(
-              '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
-            )
-            ?.click();
+        await page.evaluate((decline) => {
+          document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
           document.querySelector('#tutorial-greeting')?.remove();
           document.querySelector('.tut-skip')?.click();
-        });
+        }, GREETING_DECLINE);
         await wait(400);
       }
       return { clip: '#guild-board-window' };
@@ -3873,19 +3864,15 @@ export const TARGETS = [
       // and an earlier cut cleared it only on the world plates and shipped an
       // options plate with two of the new rows hidden behind it.
       for (let attempt = 0; attempt < 4; attempt++) {
-        const cleared = await page.evaluate(() => {
+        const cleared = await page.evaluate((decline) => {
           document.querySelector('button.tut-skip')?.click();
-          document
-            .querySelector(
-              '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
-            )
-            ?.click();
+          document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
           const up = (sel) => {
             const el = document.querySelector(sel);
             return !!el && getComputedStyle(el).display !== 'none';
           };
           return !up('#tutorial-greeting') && !up('.tut-card');
-        });
+        }, GREETING_DECLINE);
         if (cleared) break;
         await wait(600);
       }
@@ -3930,19 +3917,15 @@ export const TARGETS = [
       await awaitWorldPainted(page);
       // The teleport can advance the tutorial a step, so sweep once more.
       for (let attempt = 0; attempt < 3; attempt++) {
-        const cleared = await page.evaluate(() => {
+        const cleared = await page.evaluate((decline) => {
           document.querySelector('button.tut-skip')?.click();
-          document
-            .querySelector(
-              '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
-            )
-            ?.click();
+          document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
           const up = (sel) => {
             const el = document.querySelector(sel);
             return !!el && getComputedStyle(el).display !== 'none';
           };
           return !up('#tutorial-greeting') && !up('.tut-card');
-        });
+        }, GREETING_DECLINE);
         if (cleared) break;
         await wait(600);
       }
@@ -4105,18 +4088,18 @@ export const TARGETS = [
       { key: 'mobile', mobile: true, beforeLoad: advancedLowMixSeed },
     ],
     async capture(page) {
-      await page.evaluate(() => {
+      await page.evaluate((decline) => {
         // The Proving Shore greeting note would overlap the panel.
         const greeting = document.getElementById('tutorial-greeting');
         if (greeting) {
-          greeting.querySelector('[data-close], [data-skip], button')?.click();
+          greeting.querySelector(decline)?.click();
           greeting.hidden = true;
           greeting.style.display = 'none';
         }
         const el = document.querySelector('#options-menu');
         if (el) el.style.display = 'none';
         window.__game?.hud?.toggleOptionsMenu?.();
-      });
+      }, GREETING_DECLINE);
       await wait(400);
       await page.evaluate(() => {
         document.querySelector('#options-menu .opt-btn[data-menu-action="graphics"]')?.click();
@@ -4185,16 +4168,12 @@ export const TARGETS = [
     when: ['ui/options_window'],
     variants: [{ key: 'desktop' }],
     async capture(page) {
-      await page.evaluate(() => {
-        document
-          .querySelector(
-            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
-          )
-          ?.click();
+      await page.evaluate((decline) => {
+        document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
         const el = document.querySelector('#options-menu');
         if (el) el.style.display = 'none';
         window.__game?.hud?.toggleOptionsMenu?.();
-      });
+      }, GREETING_DECLINE);
       await wait(400);
       await page.evaluate(() => {
         document.querySelector('#options-menu .opt-btn[data-menu-action="keybinds"]')?.click();
@@ -4211,16 +4190,12 @@ export const TARGETS = [
     variants: [{ key: 'desktop' }],
     async capture(page) {
       await stageWheelBinds(page);
-      await page.evaluate(() => {
-        document
-          .querySelector(
-            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
-          )
-          ?.click();
+      await page.evaluate((decline) => {
+        document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
         const el = document.querySelector('#options-menu');
         if (el) el.style.display = 'none';
         window.__game?.hud?.toggleOptionsMenu?.();
-      });
+      }, GREETING_DECLINE);
       await wait(400);
       await page.evaluate(() => {
         document.querySelector('#options-menu .opt-btn[data-menu-action="keybinds"]')?.click();
@@ -4236,13 +4211,9 @@ export const TARGETS = [
     variants: [{ key: 'desktop' }],
     async capture(page) {
       await stageWheelBinds(page);
-      await page.evaluate(() => {
-        document
-          .querySelector(
-            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
-          )
-          ?.click();
-      });
+      await page.evaluate((decline) => {
+        document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
+      }, GREETING_DECLINE);
       // The per-frame ActionBarPainter rewrites the keycaps on the next update().
       await wait(600);
       return { clip: '#actionbar' };
@@ -4257,16 +4228,12 @@ export const TARGETS = [
     when: ['game/keybinds', 'ui/keybind_action_names_core'],
     variants: [{ key: 'desktop' }, { key: 'mobile', mobile: true }],
     async capture(page) {
-      await page.evaluate(() => {
-        document
-          .querySelector(
-            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
-          )
-          ?.click();
+      await page.evaluate((decline) => {
+        document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
         const el = document.querySelector('#options-menu');
         if (el) el.style.display = 'none';
         window.__game?.hud?.toggleOptionsMenu?.();
-      });
+      }, GREETING_DECLINE);
       await wait(400);
       await page.evaluate(() => {
         document.querySelector('#options-menu .opt-btn[data-menu-action="keybinds"]')?.click();
@@ -4930,15 +4897,15 @@ export const TARGETS = [
       // shared entry helper owns. It can arrive after the banker teleport and
       // cover the Vault while every underlying DOM geometry check still looks
       // healthy, so dismiss it at the last responsible moment.
-      const dismissedGreeting = await page.evaluate(() => {
+      const dismissedGreeting = await page.evaluate((decline) => {
         const greeting = document.getElementById('tutorial-greeting');
         if (!(greeting instanceof HTMLElement) || getComputedStyle(greeting).display === 'none') {
           return false;
         }
-        const close = [...greeting.querySelectorAll('button')].at(-1);
+        const close = greeting.querySelector(decline);
         close?.click();
         return true;
-      });
+      }, GREETING_DECLINE);
       if (dismissedGreeting) await wait(400);
       const geometry = await page.evaluate(
         ({ touch, isLocked, fine, forcedColors }) => {
@@ -5122,15 +5089,15 @@ export const TARGETS = [
       // arrive after the banker teleport and cover the pane while every
       // underlying DOM geometry check still looks healthy, so dismiss it at
       // the last responsible moment, before the deposit-all click.
-      const dismissedGreeting = await page.evaluate(() => {
+      const dismissedGreeting = await page.evaluate((decline) => {
         const greeting = document.getElementById('tutorial-greeting');
         if (!(greeting instanceof HTMLElement) || getComputedStyle(greeting).display === 'none') {
           return false;
         }
-        const close = [...greeting.querySelectorAll('button')].at(-1);
+        const close = greeting.querySelector(decline);
         close?.click();
         return true;
-      });
+      }, GREETING_DECLINE);
       if (dismissedGreeting) await wait(400);
       const depositReady = await pollForSize(page, '#bank-window .vault-deposit-all');
       if (!depositReady) throw new Error('deposit-all button did not render');
@@ -10193,11 +10160,11 @@ export const TARGETS = [
       // through their real buttons so they cannot cover the settings evidence.
       await pollForSize(page, '#tutorial-greeting', 32, 250);
       for (let i = 0; i < 3; i++) {
-        await page.evaluate(() => {
+        await page.evaluate((decline) => {
           const greeting = document.querySelector('#tutorial-greeting');
-          const close = greeting?.querySelector('[data-close], [data-skip]');
+          const close = greeting?.querySelector(decline);
           if (close instanceof HTMLElement) close.click();
-        });
+        }, GREETING_DECLINE);
         await wait(300);
       }
       await page.evaluate(() => {
@@ -17468,16 +17435,16 @@ export const TARGETS = [
       { key: 'catalogue-mobile', charClass: 'warrior', charName: 'Thorgar', mobile: true },
     ],
     async capture(page, variant) {
-      await page.evaluate(() => {
+      await page.evaluate((decline) => {
         document.querySelector('.camera-prompt-confirm')?.click();
         document.querySelector('.tut-skip')?.click();
         document.querySelector('.gpu-notice-dismiss')?.click();
         // A fresh offline character can also fire the once-ever Proving Shore
-        // spawn greeting (tutorial_greeting_window.ts, #tutorial-greeting); its
-        // first button dismisses either the two-choice greeting or a one-button
-        // note variant.
-        document.getElementById('tutorial-greeting')?.querySelector('button')?.click();
-      });
+        // spawn greeting (tutorial_greeting_window.ts, #tutorial-greeting);
+        // decline it, never click its first button (on the ferry note that
+        // accepts golden guidance).
+        document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
+      }, GREETING_DECLINE);
       await wait(300);
       await page.evaluate(() => window.__game?.hud.toggleDungeonFinder());
       const open = await pollForSize(page, '#dungeon-finder-window .df-row', 20, 300);
@@ -18753,11 +18720,11 @@ export const TARGETS = [
       if (!staged.ok) return { skip: staged.reason };
       await awaitVeilSettled(page);
       await dismissEntryOverlays(page);
-      const dismissed = await page.evaluate(() => {
+      const dismissed = await page.evaluate((decline) => {
         let any = false;
         const greeting = document.getElementById('tutorial-greeting');
         if (greeting instanceof HTMLElement && getComputedStyle(greeting).display !== 'none') {
-          [...greeting.querySelectorAll('button')].at(-1)?.click();
+          greeting.querySelector(decline)?.click();
           any = true;
         }
         const skip = document.querySelector('.tut-skip');
@@ -18766,7 +18733,7 @@ export const TARGETS = [
           any = true;
         }
         return any;
-      });
+      }, GREETING_DECLINE);
       if (dismissed) await wait(400);
       // Staging teleported and opened a window: the veil may rise again.
       await awaitVeilSettled(page);
@@ -18796,60 +18763,59 @@ export const TARGETS = [
       { key: 'landing-parapet', x: 504.4, z: 2238.2, facing: Math.PI / 2, dist: 7, pitch: 0.55 },
     ],
     async capture(page, variant) {
-      const placed = await page.evaluate(({ x, z, facing, dist, pitch }) => {
-        const g = window.__game;
-        if (!g?.sim?.player) return { ok: false, reason: 'offline world is unavailable' };
-        g.sim.setPlayerLevel(20); // the Drakelands' own level band; no roadside decision
-        const p = g.sim.player;
-        const idle = {
-          forward: false,
-          back: false,
-          turnLeft: false,
-          turnRight: false,
-          strafeLeft: false,
-          strafeRight: false,
-          jump: false,
-        };
-        p.pos.x = x;
-        p.pos.z = z;
-        p.pos.y = g.sim.groundPos(x, z).y + 2;
-        p.prevPos = { ...p.pos };
-        p.fallStartY = p.pos.y;
-        p.facing = facing;
-        p.prevFacing = facing;
-        p.vy = 0;
-        p.onGround = false;
-        g.sim.rebucket(p);
-        // Settle the drop through the sim's own motion; pin fallStartY so the
-        // teleport never counts as a fall.
-        for (let i = 0; i < 120 && !p.onGround; i++) {
+      const placed = await page.evaluate(
+        ({ x, z, facing, dist, pitch, decline }) => {
+          const g = window.__game;
+          if (!g?.sim?.player) return { ok: false, reason: 'offline world is unavailable' };
+          g.sim.setPlayerLevel(20); // the Drakelands' own level band; no roadside decision
+          const p = g.sim.player;
+          const idle = {
+            forward: false,
+            back: false,
+            turnLeft: false,
+            turnRight: false,
+            strafeLeft: false,
+            strafeRight: false,
+            jump: false,
+          };
+          p.pos.x = x;
+          p.pos.z = z;
+          p.pos.y = g.sim.groundPos(x, z).y + 2;
+          p.prevPos = { ...p.pos };
           p.fallStartY = p.pos.y;
-          Object.assign(g.sim.moveInput, idle);
-          g.sim.tick();
-        }
-        // A spawn-side NPC dialog and the zone banners would sit across the
-        // keep; the shot is evidence about the world, so hide them.
-        document
-          .querySelector(
-            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
-          )
-          ?.click();
-        for (const id of [
-          'tutorial-greeting',
-          'quest-dialog',
-          'banner',
-          'subzone-banner',
-          'quest-banner',
-        ]) {
-          const el = document.getElementById(id);
-          if (el) el.style.display = 'none';
-        }
-        // Chase camera behind the player, looking the way they face.
-        g.input.camYaw = facing + Math.PI;
-        g.input.camDist = dist;
-        g.input.camPitch = pitch;
-        return { ok: true, y: +p.pos.y.toFixed(2), onGround: p.onGround };
-      }, variant);
+          p.facing = facing;
+          p.prevFacing = facing;
+          p.vy = 0;
+          p.onGround = false;
+          g.sim.rebucket(p);
+          // Settle the drop through the sim's own motion; pin fallStartY so the
+          // teleport never counts as a fall.
+          for (let i = 0; i < 120 && !p.onGround; i++) {
+            p.fallStartY = p.pos.y;
+            Object.assign(g.sim.moveInput, idle);
+            g.sim.tick();
+          }
+          // A spawn-side NPC dialog and the zone banners would sit across the
+          // keep; the shot is evidence about the world, so hide them.
+          document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
+          for (const id of [
+            'tutorial-greeting',
+            'quest-dialog',
+            'banner',
+            'subzone-banner',
+            'quest-banner',
+          ]) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+          }
+          // Chase camera behind the player, looking the way they face.
+          g.input.camYaw = facing + Math.PI;
+          g.input.camDist = dist;
+          g.input.camPitch = pitch;
+          return { ok: true, y: +p.pos.y.toFixed(2), onGround: p.onGround };
+        },
+        { ...variant, decline: GREETING_DECLINE },
+      );
       if (!placed.ok) return { skip: placed.reason };
       // A far teleport streams new chunks and can raise the loading veil again.
       await awaitWorldPainted(page);

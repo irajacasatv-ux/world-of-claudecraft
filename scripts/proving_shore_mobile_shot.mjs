@@ -5,7 +5,7 @@
 
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH as EDGE } from './browser_path.mjs';
-import { enterOfflineGame } from './enter_offline_game.mjs';
+import { enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 
 const URL = process.env.GAME_URL ?? 'http://localhost:5173';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -63,9 +63,9 @@ await page.waitForFunction(
 );
 // Close Odo's note so the arrival view and the coach card carry the frame.
 await sleep(1500);
-await page.evaluate(() => {
-  document.getElementById('tutorial-greeting')?.querySelector('button')?.click();
-});
+await page.evaluate((decline) => {
+  document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
+}, GREETING_DECLINE);
 // Let the banner fade and the terrain stream in under software GL, and
 // clear any late-arriving GPU notice before the shutter.
 await sleep(9000);

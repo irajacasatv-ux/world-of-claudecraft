@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH as EDGE } from './browser_path.mjs';
-import { enterOfflineGame } from './enter_offline_game.mjs';
+import { enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 
 // gfx=high on purpose: the night light field (the lanterns' ground light)
 // rides standard materials, which SwiftShader's auto-detect would refuse.
@@ -51,9 +51,15 @@ await page.waitForFunction(
 await sleep(2500);
 // Odo's arrival note reuses the greeting shell and can open a beat late;
 // close whatever note is up, then take the run so the card engages.
-await page.evaluate(() => document.querySelector('#tutorial-greeting button')?.click());
+await page.evaluate(
+  (decline) => document.getElementById('tutorial-greeting')?.querySelector(decline)?.click(),
+  GREETING_DECLINE,
+);
 await sleep(1500);
-await page.evaluate(() => document.querySelector('#tutorial-greeting button')?.click());
+await page.evaluate(
+  (decline) => document.getElementById('tutorial-greeting')?.querySelector(decline)?.click(),
+  GREETING_DECLINE,
+);
 await page.evaluate(() => window.__game.sim.acceptQuest('q_ps_the_gauntlet'));
 
 // Force night through real chat (the streetlamp_night_shots.mjs recipe).

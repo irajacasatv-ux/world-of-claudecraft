@@ -17,6 +17,7 @@ import fs from 'node:fs';
 import pg from 'pg';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH } from './browser_path.mjs';
+import { GREETING_DECLINE } from './enter_offline_game.mjs';
 import { assertLoopbackDatabaseUrl, assertLoopbackUrl } from './lib/loopback_guard.mjs';
 
 const GAME_URL = process.env.GAME_URL ?? 'http://localhost:5195';
@@ -256,11 +257,11 @@ async function enter(page, user, charName) {
   });
   await sleep(2500);
   // New characters land on the Proving Shore with the greeting dialog up;
-  // click its own confirm so the close path runs (a blind Escape would open
+  // click its own declining control so the close path runs (a blind Escape would open
   // the game menu instead whenever the greeting is not up).
-  await page.evaluate(() => {
-    document.getElementById('tutorial-greeting')?.querySelector('button')?.click();
-  });
+  await page.evaluate((decline) => {
+    document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
+  }, GREETING_DECLINE);
   await sleep(800);
   // The world must still be live (a crash-guard reload would strand the run on
   // the home screen with __game gone).

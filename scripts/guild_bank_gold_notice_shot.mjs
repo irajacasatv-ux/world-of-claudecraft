@@ -16,6 +16,7 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH } from './browser_path.mjs';
+import { GREETING_DECLINE } from './enter_offline_game.mjs';
 import { suppressGpuNotice } from './lib/gpu_notice_suppress.mjs';
 
 const GAME_URL = process.env.GAME_URL ?? 'http://localhost:5173';
@@ -199,7 +200,10 @@ async function loginAndEnter(page, username, charName, cls, { mobile = false }) 
   await sleep(1200);
   await page.evaluate(() => document.querySelector('button.tut-skip')?.click()).catch(() => {});
   await page
-    .evaluate(() => document.querySelector('#tutorial-greeting button')?.click())
+    .evaluate(
+      (decline) => document.getElementById('tutorial-greeting')?.querySelector(decline)?.click(),
+      GREETING_DECLINE,
+    )
     .catch(() => {});
   await dismissCameraPrompt(page);
 }

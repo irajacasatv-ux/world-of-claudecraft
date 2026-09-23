@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH as EDGE } from './browser_path.mjs';
-import { enterOfflineGame } from './enter_offline_game.mjs';
+import { enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 
 const URL = process.env.GAME_URL ?? 'http://localhost:5173';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -87,10 +87,10 @@ const shot = async (name) => {
   // Odo's note and the zone banner both re-arm as the teleports cross the
   // strait, and either would sit across the subject. Clear the note, then let
   // the banner finish its fade before the shutter.
-  await page.evaluate(() => {
+  await page.evaluate((decline) => {
     const note = document.getElementById('tutorial-greeting');
-    note?.querySelector('button')?.click();
-  });
+    note?.querySelector(decline)?.click();
+  }, GREETING_DECLINE);
   await sleep(4000);
   await page.screenshot({ path: `tmp/proving-shore-${name}.png` });
   console.log('shot', name);
