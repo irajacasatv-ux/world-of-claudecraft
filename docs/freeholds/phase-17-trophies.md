@@ -189,7 +189,18 @@ Deliverables (at most five):
    no ITEMS, price, drop, buff, bag, mail, trade, bank or market path. Homesteader deeds,
    wiki/guide and fingerprint obligations land together; trophy records get no
    Reliquary item page.
-2. Shared account sources, eligibility and truthful provenance. trophy_eligibility.ts is pure
+2. Shared account sources, eligibility and truthful provenance.
+   PREMISE CHANGED at the release/v0.44.0 sync (2026-09-22), NOT YET RE-PLANNED. The
+   release shipped an account ledger that already carries most of the sources this item
+   plans to load: `meta.accountLedger` (`src/sim/account_ledger.ts`) holds deed, relic,
+   mark and mount earners with character id, name, class and day; `loadAccountLedger`
+   reads it eagerly on every fresh join (`server/ws_auth.ts`); `account_relic_finds`
+   stores an unknown day as NULL; and `AccountLedgerService` fans a new earn out to the
+   account's live siblings. Building `ctx.freeholdAccountSources` as written would stand
+   a second projection beside it with a different load policy and keying. Owed before
+   this phase starts: re-plan these sources onto the ledger and scope a new loader to
+   only what the ledger lacks (Perfected, weapon skins, sets, curator rank, titles).
+   trophy_eligibility.ts is pure
    over bounded authoritative account projections, not only the entering character.
    trophies.ts syncs after join retro, on first entry and through batched source-change
    invalidation while already home, with zero per-tick scan and zero Rng. Persist

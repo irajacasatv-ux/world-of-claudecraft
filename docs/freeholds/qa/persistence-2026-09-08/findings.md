@@ -2077,3 +2077,60 @@ re-confirmed. Each pass ran against a no-op control first and the control's full
   way the two could disagree is the state this arm stops from ever getting a row.
 - The load-side stand-in arm, one mutant, KILLED (1 failed), so retiring the
   waiter machinery did not leave it unpinned.
+
+## THE RELEASE/V0.44.0 SYNC, 2026-09-22, AND WHAT IT LEFT OWED
+
+Merge `ffa7ac5ffb` takes `origin/release/v0.44.0` at `56525e0343` (877 commits; 221
+files changed on both sides, 80 conflicted). Every conflict was resolved by hand against
+both parents; i18n, wiki and MediaWiki artifacts were regenerated; the terrain corpus was
+re-minted with the release body kept byte for byte and this packet's 811-record tail
+byte-identical; the Eastbrook polish provenance was re-minted by its own script. Two
+double extractions collapsed onto the release's module (client perf rows, `anchorFields`).
+
+THE AUDIT: five fresh read-only lanes (sim/render/net; UI/scripts/docs; server with its
+endpoints, bindings and plan premises; auto-merged test pins; a re-read of every hand
+resolution). Applied in the merge: the furnishing guards ported onto the release's
+`auto_equip.ts` and `nearby_interaction_core.ts`, and mirrored onto its new paths (the
+Sales History quality frame on both hosts, the sell-confirm threshold, the chat link and
+Exchange loot-quality badges, the vendor role classifier, `perfectedLineBudgets`, the
+party-trade def gate on the furnishing card); the Who tab keeps `freehold` (with a
+compile-time exhaustiveness check) and serves the RELAY zone realm-wide; the join tail's
+relic key walk now runs inside its own guard (`reconcileJoinedAccountRelics`); the gate
+prompt tabs moved onto the library `.ui-tab` primitive; every stale pin re-measured on the
+merged tree, each against the release commit that moved it.
+
+REVIEWED, NO CHANGE, WITH THE REASON: the Sales History quality FILTER matches the stored
+column (unreachable, every furnishing listing is stamped at creation and none has
+shipped); the map Dungeons filter does not hide the gate (it is a navigation marker like
+the release's delve and rift entrances); the loot window, loot roll, vault and rift forge
+badge reads (a furnishing never drops as loot and cannot enter the vault or forge); the
+release GameServer db mocks lack `runWithStatementTimeout` (no test reaches it today).
+
+OWED, IN ORDER, FOR THE NEXT SESSION:
+1. MOVE THE GATE (ruled 2026-09-22). The release moved Apothecary Lin 4.24 yd from the gate
+   at (-14,-92), and the interact ladder ranks objects above NPCs, so on a lit host the gate
+   steals Lin's press. Chosen site (-28,-82): 12.4 yd from the nearest NPC (clear of the
+   gate's 5 yd reach plus the 6 yd NPC reach), about 12 yd from the Eastbrook Inn, flat, dry,
+   off roads, with the drop (-28,-86) unblocked and zero depenetration on seeds 1, 7, 42,
+   99, 1032, 1337. The single source is `EASTBROOK_LAYOUT.services.freeholdGate`; the literal
+   (-14,-92)/(-14,-96) sites are `tests/freehold_dungeon_defs.test.ts` (94, 110, 270),
+   `tests/freehold_instance.test.ts:622`, `tests/freehold_instance_online.test.ts:76`,
+   `tests/server/freehold_wire.test.ts` (705, 1055) and `tests/parity/scenarios.ts`
+   (3229, 3241). Add a clearance pin (every NPC over 11 yd from the gate). Re-mint the
+   `freehold_claim` golden, the terrain tail (prove the prefix and 811 again, then validate
+   on Linux in Docker), and the Eastbrook polish provenance (`eastbrook_layout.ts` is an input).
+2. RE-HASH THE CAPTURE FINGERPRINTS (ruled 2026-09-22) in
+   `docs/screenshots/freehold-interiors-2026-09-08/acceptance.json`, after the gate move,
+   and record in `docs/freeholds/interiors-implementation-evidence.md` that the captures
+   predate the v0.44.0 restyle, the gate tabs change and the gate move, so a RE-SHOOT IS
+   OWED before this evidence is relied on.
+3. Re-run `node scripts/ci_shard_weights_harvest.mjs --carry-local-missing --runs 3` on a
+   quiet machine (coverage 0.897 against the 0.918 floor; it refuses while any suite is
+   red, which is why it stopped at the capture contract) and commit the table alone.
+4. The armed gate, then `npm run ci:changed` after the LAST commit.
+5. Rulings or plans still open: `Sim.addPlayer` is not atomic and the release widened it
+   (`seedAccountLedgerSelf` runs after `addEntity` and the freehold seed, and the join's
+   catch only releases the binding); the release's account ledger is cross-realm, so a
+   character on a dark realm (D85) can show Hearth relics and earn cosmetic Reliquary deeds
+   from lit-realm finds; phase 17 needs its re-plan onto the ledger (recorded there and in
+   D48).

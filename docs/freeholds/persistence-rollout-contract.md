@@ -447,6 +447,17 @@ later read actually succeeds. One consequence for an operator, recorded in
 DEPLOY.md as well: `loaded` and `held` no longer sum to `entries` for a capacity
 hold.
 
+A NEW LOGIN READ AHEAD OF THE PRELOAD, from the release/v0.44.0 sync. The
+release's account ledger adds two direct pool queries per fresh login
+(`loadAccountLedger` in `server/account_ledger_db.ts`, called from
+`server/ws_auth.ts` before the housing preload). They bypass the background gate,
+carry no row limit and run on the pool's default statement timeout. They do not
+spend the housing budget and nothing new sits between the preload and
+`bindFreeholdOnJoin`, so the window the identity gate rests on is unchanged. What
+does change: under the saturated pool this section measured, those two reads queue
+for the same clients, so a `no_budget` hold at login is more likely than the figures
+below were measured with. Not re-measured at the sync; no code change follows.
+
 THE TWO ADMISSION CAPS SUM PAST THE SHARED GATE. ACCEPTED, with the arithmetic,
 rather than shared. The load cap of four and the write cap of four are
 independent counters against a gate whose capacity is seven on the shipped pool
