@@ -3,6 +3,7 @@ import type { Page } from 'puppeteer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   changeFreeholdToCottage,
+  FREEHOLD_CAMERA_BEHIND_TOLERANCE,
   FREEHOLD_GATE_STANCE,
   FREEHOLD_ROUTE_TOLERANCE,
   freeholdGateApproachLegs,
@@ -384,10 +385,22 @@ it('holds the capture stance inside the gate reach, walk tolerance included', ()
  * a key-up and the sim settling. */
 function kinematicPage(
   stance: { x: number; z: number },
-  motion: { carry?: number; carries?: number; spin?: number; spins?: number },
+  motion: {
+    carry?: number;
+    carries?: number;
+    spin?: number;
+    spins?: number;
+    // The follow camera: where it starts relative to the player's facing, and
+    // whether an orbit holds it (camera_follow.ts: no follow while orbiting).
+    cameraOffset?: number;
+    orbitStuck?: boolean;
+  },
 ) {
   const events: string[] = [];
   const player = { pos: { x: stance.x, y: 0, z: stance.z + 5 }, facing: Math.PI, dead: false };
+  // Turning in place carries the camera round with the player; walking
+  // settles it behind (straight onto the facing, in this fake).
+  const input = { camYaw: Math.PI + (motion.cameraOffset ?? 0) };
   const held = new Set<string>();
   let last = Date.now();
   let tick = 0;
@@ -397,11 +410,13 @@ function kinematicPage(
   const advance = () => {
     const dt = (Date.now() - last) / 1000;
     last = Date.now();
-    if (held.has('a')) player.facing += Math.PI * dt;
-    if (held.has('d')) player.facing -= Math.PI * dt;
+    const turn = (held.has('a') ? Math.PI * dt : 0) - (held.has('d') ? Math.PI * dt : 0);
+    player.facing += turn;
+    if (!motion.orbitStuck) input.camYaw += turn;
     if (held.has('w')) {
       player.pos.x += Math.sin(player.facing) * 7 * dt;
       player.pos.z += Math.cos(player.facing) * 7 * dt;
+      if (!motion.orbitStuck) input.camYaw = player.facing;
     }
   };
   const sim = {
@@ -419,7 +434,10 @@ function kinematicPage(
       return tick;
     },
   };
-  const context = { window: { __game: { sim } }, document: { querySelector: () => null } };
+  const context = {
+    window: { __game: { sim, input } },
+    document: { querySelector: () => null },
+  };
   const run = (fn: (...args: never[]) => unknown, args: unknown[]) =>
     runInNewContext(`(${fn.toString()})(...args)`, { ...context, args });
   const page = {
@@ -475,7 +493,7 @@ function kinematicPage(
   const settleTicks = () => {
     for (let i = 0; i < 4; i++) void sim.tickCount;
   };
-  return { page, events, player, held, settleTicks };
+  return { page, events, player, held, settleTicks, input };
 }
 
 /** Drive a route promise on the faked clock, so CPU contention cannot stretch
@@ -540,6 +558,36 @@ describe('holding the gate stance', () => {
     expect(facingOff(pose.facing)).toBeLessThanOrEqual(0.12);
     settleTicks();
     expect(facingOff(player.facing)).toBeLessThanOrEqual(0.12);
+    expect([...held]).toEqual([]);
+  });
+
+  it('walks out and back in when the camera sits round in front on the stance', async () => {
+    vi.useFakeTimers();
+    const { page, player, input } = kinematicPage(stance, { cameraOffset: 2.47 });
+    // Already on the stance, squared, with the camera swung round: the frame
+    // the before tablet once caught.
+    player.pos = { x: stance.x, y: 0, z: stance.z };
+    let furthest = player.pos.z;
+    const watch = setInterval(() => {
+      furthest = Math.max(furthest, player.pos.z);
+    }, 5);
+    const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
+    clearInterval(watch);
+    expect(furthest).toBeGreaterThan(stance.z + 4);
+    expect(
+      Math.abs(
+        Math.atan2(Math.sin(input.camYaw - pose.facing), Math.cos(input.camYaw - pose.facing)),
+      ),
+    ).toBeLessThanOrEqual(FREEHOLD_CAMERA_BEHIND_TOLERANCE);
+    expect(pose.cameraYaw).toBe(input.camYaw);
+  });
+
+  it('throws rather than hold a stance its camera never comes round to', async () => {
+    vi.useFakeTimers();
+    const { page, held } = kinematicPage(stance, { cameraOffset: 2.47, orbitStuck: true });
+    await expect(onFakeClock(() => holdFreeholdGateStance(page, stance))).rejects.toThrow(
+      /could not hold the gate stance after 3 attempts/,
+    );
     expect([...held]).toEqual([]);
   });
 

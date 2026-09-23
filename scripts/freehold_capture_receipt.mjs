@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  FREEHOLD_CAMERA_BEHIND_TOLERANCE,
   FREEHOLD_GATE_STANCE,
   FREEHOLD_ROUTE_TOLERANCE,
   freeholdInteriorPerfFailures,
@@ -215,6 +216,15 @@ try {
             `${side}: gate frame is off the gate stance, unsquared, or undrawn in ${sidecarName}`,
           );
         }
+        // The follow camera sits behind the player (the stance hold waits for
+        // it; a room arrival sets it), so every frame looks where the player does.
+        const cameraTurn = evidence.camera?.inputYaw - evidence.player?.facing;
+        requireEvidence(
+          Number.isFinite(cameraTurn) &&
+            Math.abs(Math.atan2(Math.sin(cameraTurn), Math.cos(cameraTurn))) <=
+              FREEHOLD_CAMERA_BEHIND_TOLERANCE,
+          `${side}: camera is not behind the player in ${sidecarName}`,
+        );
         requireEvidence(
           ['boot-notice', 'performance-notice', 'prior-performance-dismissal'].includes(
             evidence.noticeResolution,

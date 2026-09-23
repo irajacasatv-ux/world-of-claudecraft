@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  FREEHOLD_CAMERA_BEHIND_TOLERANCE,
   FREEHOLD_GATE_STANCE,
   FREEHOLD_ROUTE_TOLERANCE,
   freeholdInteriorPerfFailures,
@@ -159,6 +160,13 @@ describe('Freehold functional capture evidence', () => {
           );
           expect(evidence.promptFitsViewport).toBe(true);
           expect(evidence.transientOverlays, name).toEqual([]);
+          // The camera looks where the player does (the before tablet once did
+          // not, swung round in front of the stance).
+          const cameraTurn = evidence.camera.inputYaw - evidence.player.facing;
+          expect(
+            Math.abs(Math.atan2(Math.sin(cameraTurn), Math.cos(cameraTurn))),
+            `${name} camera behind`,
+          ).toBeLessThanOrEqual(FREEHOLD_CAMERA_BEHIND_TOLERANCE);
           // The after arm settles the GPU notices and the arrival overlays at
           // the gate stance, before the press (a dismissal after the prompt
           // opens takes its focus); the baseline arm opens no prompt.
@@ -322,6 +330,7 @@ describe('Freehold capture receipt refusal', () => {
                 entrySeq: 1,
               }
             : { pos: { ...stance }, facing: Math.PI, entrySeq: 0 },
+          camera: { inputYaw: room ? 0 : Math.PI },
           gateDrawn: prompt,
         };
         edit?.(`${target}-${view}`, evidence);
@@ -403,6 +412,10 @@ describe('Freehold capture receipt refusal', () => {
     'undrawn after gate frame': 'after: gate frame is off the gate stance, unsquared, or undrawn',
     'after gate frame with no gateDrawn': 'after: gate frame is off the gate stance',
     'unresolved notice': 'unresolved GPU notice',
+    'camera round in front': 'before: camera is not behind the player',
+    'camera 0.71 rad off': 'before: camera is not behind the player',
+    'camera record missing': 'before: camera is not behind the player',
+    'room camera turned': 'after: camera is not behind the player',
     'baseline frame inside a room': 'before: baseline frame is not on the overworld',
     'baseline frame with the prompt shown': 'before: baseline frame is not on the overworld',
     'after gate frame with no prompt': 'after: gate frame has no usable prompt',
@@ -442,6 +455,7 @@ describe('Freehold capture receipt refusal', () => {
     'gate frame wrapped past -PI',
     'room arrival 0.0004 off its point',
     'performance-notice resolution',
+    'camera 0.69 rad off',
     'prior-performance-dismissal resolution',
   ];
   function edits(defect: string) {
@@ -463,6 +477,11 @@ describe('Freehold capture receipt refusal', () => {
         if (turned) e.player.facing = Math.PI - Number(turned[1]);
         if (defect === 'gate frame wrapped past -PI') e.player.facing = -Math.PI + 0.05;
         if (defect === 'unresolved notice') e.noticeResolution = 'none';
+        const camera = e.camera as { inputYaw: number };
+        if (defect === 'camera round in front') camera.inputYaw = Math.PI + 2.47;
+        if (defect === 'camera 0.71 rad off') camera.inputYaw = Math.PI - 0.71;
+        if (defect === 'camera 0.69 rad off') camera.inputYaw = Math.PI - 0.69;
+        if (defect === 'camera record missing') delete e.camera;
         if (defect === 'performance-notice resolution') e.noticeResolution = 'performance-notice';
         if (defect === 'prior-performance-dismissal resolution')
           e.noticeResolution = 'prior-performance-dismissal';
@@ -497,6 +516,7 @@ describe('Freehold capture receipt refusal', () => {
             e.player.pos = { x: arrival.freehold_cottage[0], z: arrival.freehold_cottage[1] };
           if (defect === 'room arrival with the prompt shown') e.promptVisible = true;
           if (defect === 'after sidecar marked baseline') e.baseline = true;
+          if (defect === 'room camera turned') (e.camera as { inputYaw: number }).inputYaw = 1;
         }
         const controls = e.controls as Control[];
         if (name === 'freehold-gate-compact' && defect === 'touch entry under 16 px')

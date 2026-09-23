@@ -168,8 +168,14 @@ export async function approachFreeholdGateSite(page, site) {
   return holdFreeholdGateStance(page, stance);
 }
 
+/** How far the follow camera's yaw may sit from the player's facing at the
+ * stance. The chase camera settles behind the player only while walking
+ * (src/game/camera_follow.ts), so a frame can otherwise open with it swung
+ * round in front, the site out of view. */
+export const FREEHOLD_CAMERA_BEHIND_TOLERANCE = 0.7;
+
 /** Walk onto the stance, square up on -z (heading PI) so every viewport's
- * camera settles alike, then re-check the settled pose. Under load a walk can
+ * camera settles alike, then re-check the settled pose and the camera. Under load a walk can
  * carry past its stop by more than the route tolerance (1.28 yd once, against
  * the receipt's 1.5 yd bound), so it re-walks until the pose holds, or throws. */
 export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}) {
@@ -186,15 +192,21 @@ export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}
     }
     await waitForFreeholdMovementReady(page);
     const pose = await playerPose(page);
-    if (
+    const cameraYaw = await page.evaluate(() => window.__game.input.camYaw);
+    const held =
       Math.hypot(pose.x - stance.x, pose.z - stance.z) <= FREEHOLD_ROUTE_TOLERANCE &&
-      Math.abs(headingDifference(Math.PI, pose.facing)) <= 0.12
-    )
-      return pose;
+      Math.abs(headingDifference(Math.PI, pose.facing)) <= 0.12;
+    const cameraBehind =
+      Math.abs(headingDifference(pose.facing, cameraYaw)) <= FREEHOLD_CAMERA_BEHIND_TOLERANCE;
+    if (held && cameraBehind) return { ...pose, cameraYaw };
     if (attempt >= attempts)
       throw new Error(
-        `Freehold tour could not hold the gate stance after ${attempts} attempts at ${JSON.stringify(pose)}`,
+        `Freehold tour could not hold the gate stance after ${attempts} attempts at ${JSON.stringify({ ...pose, cameraYaw })}`,
       );
+    // On the stance with the camera round in front: walk back up the approach's
+    // last leg (5 yd north, held clear of colliders) so the next walk in lets
+    // the camera settle behind.
+    if (held) await walkFreeholdRouteTo(page, stance.x, stance.z + 5);
   }
 }
 
