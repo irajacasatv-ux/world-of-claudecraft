@@ -222,6 +222,7 @@ try {
         const cameraTurn = evidence.camera?.inputYaw - evidence.player?.facing;
         requireEvidence(
           typeof evidence.camera?.inputYaw === 'number' &&
+            typeof evidence.player?.facing === 'number' &&
             Math.abs(Math.atan2(Math.sin(cameraTurn), Math.cos(cameraTurn))) <=
               FREEHOLD_CAMERA_BEHIND_TOLERANCE,
           `${side}: camera is not behind the player in ${sidecarName}`,

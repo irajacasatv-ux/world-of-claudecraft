@@ -162,6 +162,8 @@ describe('Freehold functional capture evidence', () => {
           expect(evidence.transientOverlays, name).toEqual([]);
           // The camera looks where the player does (the before tablet once did
           // not, swung round in front of the stance).
+          expect(typeof evidence.camera.inputYaw, name).toBe('number');
+          expect(typeof evidence.player.facing, name).toBe('number');
           const cameraTurn = evidence.camera.inputYaw - evidence.player.facing;
           expect(
             Math.abs(Math.atan2(Math.sin(cameraTurn), Math.cos(cameraTurn))),
@@ -172,8 +174,10 @@ describe('Freehold functional capture evidence', () => {
           // opens takes its focus); the baseline arm opens no prompt.
           if (side === 'after') {
             expect(evidence.preSettle.overlays.passes, name).toBeGreaterThanOrEqual(3);
-            expect(['boot-notice', 'performance-notice', 'prior-performance-dismissal']).toContain(
-              evidence.preSettle.notices.noticeResolution,
+            expect(Array.isArray(evidence.preSettle.overlays.dismissedOverlays), name).toBe(true);
+            // The frame's own notice record is the one the stance settle made.
+            expect(evidence.preSettle.notices.noticeResolution, name).toBe(
+              evidence.noticeResolution,
             );
           } else expect(evidence.preSettle, name).toBeNull();
           expect(bytes.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
@@ -220,6 +224,8 @@ describe('Freehold functional capture evidence', () => {
             expect(evidence.player.pos.x).toBeCloseTo(origin.x + def.entry.x, 3);
             expect(evidence.player.pos.z).toBeCloseTo(origin.z + def.entry.z, 3);
             expect(evidence.player.facing).toBe(0);
+            // The room arrival snaps the camera onto the facing exactly.
+            expect(evidence.camera.inputYaw, name).toBe(0);
           }
         }
     expect(acceptance.captures.map((entry: { file: string }) => entry.file).sort()).toEqual(
@@ -422,6 +428,10 @@ describe('Freehold capture receipt refusal', () => {
     'camera round in front': 'before: camera is not behind the player',
     'camera 0.11 rad off': 'before: camera is not behind the player',
     'camera yaw as a string': 'before: camera is not behind the player',
+    'facing as a string': 'before: camera is not behind the player',
+    'stance settle for another notice': 'after: missing or misplaced stance settle',
+    'stance settle dismissals not a list': 'after: missing or misplaced stance settle',
+    'stance settle with fractional passes': 'after: missing or misplaced stance settle',
     'room camera a hair off': 'after: interior frame is not a settled room arrival',
     'after frame without its stance settle': 'after: missing or misplaced stance settle',
     'stance settle with two quiet passes': 'after: missing or misplaced stance settle',
@@ -497,6 +507,8 @@ describe('Freehold capture receipt refusal', () => {
         if (defect === 'camera round in front') camera.inputYaw = Math.PI + 2.47;
         if (defect === 'camera 0.11 rad off') camera.inputYaw = Math.PI - 0.11;
         if (defect === 'camera 0.09 rad off') camera.inputYaw = Math.PI - 0.09;
+        if (defect === 'facing as a string')
+          (e.player as unknown as { facing: unknown }).facing = String(Math.PI);
         if (defect === 'camera yaw as a string')
           (camera as { inputYaw: unknown }).inputYaw = String(Math.PI);
         if (defect === 'baseline frame with a stance settle')
@@ -554,8 +566,17 @@ describe('Freehold capture receipt refusal', () => {
         if (defect === 'gate control laid over') controls[3].onTop = false;
         if (defect === 'focus off the selected tab') e.focusId = 'gate-enter';
         if (defect === 'after frame without its stance settle') e.preSettle = null;
-        if (defect === 'stance settle with two quiet passes')
-          (e.preSettle as { overlays: { passes: number } }).overlays.passes = 2;
+        type Settle = {
+          notices: { noticeResolution: string };
+          overlays: { passes: number; dismissedOverlays: unknown };
+        };
+        const settle = e.preSettle as Settle;
+        if (defect === 'stance settle with two quiet passes') settle.overlays.passes = 2;
+        if (defect === 'stance settle with fractional passes') settle.overlays.passes = 3.5;
+        if (defect === 'stance settle dismissals not a list')
+          settle.overlays.dismissedOverlays = 'tut-card';
+        if (defect === 'stance settle for another notice')
+          settle.notices.noticeResolution = 'performance-notice';
       },
       performance: (p: Performance) => {
         const desktop = p.results[0];

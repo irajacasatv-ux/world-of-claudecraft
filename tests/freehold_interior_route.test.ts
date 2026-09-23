@@ -394,22 +394,31 @@ function kinematicPage(
     carries?: number;
     spin?: number;
     spins?: number;
-    // Where the camera starts relative to the facing, and whether an orbit
-    // holds it (camera_follow.ts: no follow while orbiting).
+    // The starting facing, where the camera starts relative to it, whether an
+    // orbit holds it (camera_follow.ts: no follow while orbiting), and a
+    // one-off knock to the camera the first time the settle keys come up.
+    facing?: number;
     cameraOffset?: number;
     orbitStuck?: boolean;
+    cameraKick?: number;
   },
 ) {
   const events: string[] = [];
-  const player = { pos: { x: stance.x, y: 0, z: stance.z + 5 }, facing: Math.PI, dead: false };
-  const input = { camYaw: Math.PI + (motion.cameraOffset ?? 0) };
+  const player = {
+    pos: { x: stance.x, y: 0, z: stance.z + 5 },
+    facing: motion.facing ?? Math.PI,
+    dead: false,
+  };
+  const input = { camYaw: player.facing + (motion.cameraOffset ?? 0) };
+  let kick = motion.cameraKick ?? 0;
   const held = new Set<string>();
   let last = Date.now();
   let tick = 0;
   let carries = motion.carries ?? 0;
   let spins = motion.spins ?? 0;
   let walkedFrom: { x: number; z: number } | null = null;
-  let lastInterpFacing: number | null = player.facing;
+  // Lazy, as src/main.ts starts it.
+  let lastInterpFacing: number | null = null;
   let simTime = 0;
   let frameTime = 0;
   const SIM_DT = 1 / 20;
@@ -479,9 +488,30 @@ function kinematicPage(
       return tick;
     },
   };
+  // The settle's synthetic key events, dispatched on window in one task.
+  class KeyboardEvent {
+    constructor(
+      public type: string,
+      public init: { code: string },
+    ) {}
+  }
+  const dispatchEvent = (event: KeyboardEvent) => {
+    advance();
+    const key = event.init.code.slice(3).toLowerCase();
+    events.push(`synthetic:${event.type}:${key}`);
+    if (event.type === 'keydown') held.add(key);
+    else {
+      held.delete(key);
+      if (key === 'd' && kick !== 0) {
+        input.camYaw += kick;
+        kick = 0;
+      }
+    }
+  };
   const context = {
-    window: { __game: { sim, input } },
+    window: { __game: { sim, input }, dispatchEvent },
     document: { querySelector: () => null },
+    KeyboardEvent,
   };
   const run = (fn: (...args: never[]) => unknown, args: unknown[]) =>
     runInNewContext(`(${fn.toString()})(...args)`, { ...context, args });
@@ -619,6 +649,9 @@ describe('holding the gate stance', () => {
     expect([...held]).toEqual([]);
   });
 
+  const cameraOff = (yaw: number, facing: number) =>
+    Math.abs(Math.atan2(Math.sin(yaw - facing), Math.cos(yaw - facing)));
+
   it('brings a camera swung round in front back behind in place, neither moving nor turning', async () => {
     vi.useFakeTimers();
     const { page, events, player, input } = kinematicPage(stance, { cameraOffset: 2.47 });
@@ -626,37 +659,51 @@ describe('holding the gate stance', () => {
     // the before tablet once caught.
     player.pos = { x: stance.x, y: 0, z: stance.z };
     const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
-    expect(pose.x).toBe(stance.x);
-    expect(pose.z).toBe(stance.z);
-    expect(pose.facing).toBe(Math.PI);
-    expect(events).toContain('down:s');
-    expect(events.some((event) => event === 'down:a' || event === 'down:d')).toBe(false);
-    expect(
-      Math.abs(
-        Math.atan2(Math.sin(input.camYaw - pose.facing), Math.cos(input.camYaw - pose.facing)),
-      ),
-    ).toBeLessThanOrEqual(FREEHOLD_CAMERA_BEHIND_TOLERANCE);
+    expect([pose.x, pose.z, pose.facing]).toEqual([stance.x, stance.z, Math.PI]);
+    // Both turn keys land together and lift together; nothing walks or turns.
+    expect(events.filter((event) => event.startsWith('synthetic:'))).toEqual([
+      'synthetic:keydown:a',
+      'synthetic:keydown:d',
+      'synthetic:keyup:a',
+      'synthetic:keyup:d',
+    ]);
+    expect(events.some((event) => /^(down|press):/.test(event))).toBe(false);
+    expect(cameraOff(input.camYaw, pose.facing)).toBeLessThanOrEqual(
+      FREEHOLD_CAMERA_BEHIND_TOLERANCE / 2,
+    );
   });
 
-  it('ends with the camera behind after a big turn a slow frame rate lets it lag', async () => {
+  it('settles a camera a big turn left behind at a slow frame rate', async () => {
     vi.useFakeTimers();
-    const { page, player, input } = kinematicPage(stance, {});
-    // Facing away from the stance: the walk turns about PI, which at 5 frames
-    // a second leaves the camera well behind the turn.
-    player.facing = 0;
+    // Facing away from the stance with the camera behind: the walk turns about
+    // PI, which at 5 frames a second leaves the camera well behind the turn.
+    const { page, events, input } = kinematicPage(stance, { facing: 0 });
     const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
-    expect(
-      Math.abs(
-        Math.atan2(Math.sin(input.camYaw - pose.facing), Math.cos(input.camYaw - pose.facing)),
-      ),
-    ).toBeLessThanOrEqual(FREEHOLD_CAMERA_BEHIND_TOLERANCE);
+    expect(events).toContain('synthetic:keydown:a');
+    expect(cameraOff(input.camYaw, pose.facing)).toBeLessThanOrEqual(
+      FREEHOLD_CAMERA_BEHIND_TOLERANCE,
+    );
   });
 
-  it('throws rather than hold a stance its camera never comes round to', async () => {
+  it('settles again when the camera is knocked off after the first settle', async () => {
+    vi.useFakeTimers();
+    const { page, events, player, input } = kinematicPage(stance, {
+      cameraOffset: 2.47,
+      cameraKick: 0.5,
+    });
+    player.pos = { x: stance.x, y: 0, z: stance.z };
+    const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
+    expect(events.filter((event) => event === 'synthetic:keydown:a')).toHaveLength(2);
+    expect(cameraOff(input.camYaw, pose.facing)).toBeLessThanOrEqual(
+      FREEHOLD_CAMERA_BEHIND_TOLERANCE,
+    );
+  });
+
+  it('throws after its attempts when an orbit never lets the camera come round', async () => {
     vi.useFakeTimers();
     const { page, held } = kinematicPage(stance, { cameraOffset: 2.47, orbitStuck: true });
     await expect(onFakeClock(() => holdFreeholdGateStance(page, stance))).rejects.toThrow(
-      /camera never came round behind the player/,
+      /after 3 attempts.*"cameraSettled":false/,
     );
     expect([...held]).toEqual([]);
   });

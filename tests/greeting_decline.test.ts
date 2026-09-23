@@ -100,7 +100,9 @@ describe('every capture script declines through GREETING_DECLINE', () => {
   // limits: a greeting reached through a variable assigned in an EARLIER
   // statement is not traced, and `decline` is trusted to be the argument the
   // evaluate call passes (the line scan above counts GREETING_DECLINE uses).
-  const SELECTOR = String.raw`(?:decline|GREETING_DECLINE|(['"\x60])(?:(?!\1).)*?(?:\[data-close\]|\[data-guidance=\\?["']?off)(?:(?!\1).)*?\1|(['"\x60])#profession-tutorial \.cd-ok\2)`;
+  // A literal must END on the declining control, so `:not([data-close])` or a
+  // descendant of it is not an exemption.
+  const SELECTOR = String.raw`(?:decline|GREETING_DECLINE|(['"\x60])(?:(?!\1).)*?(?:\[data-close\]|\[data-guidance=\\?["']?off\\?["']?\])\1|(['"\x60])#profession-tutorial \.cd-ok\2)`;
   const DECLINING_CLICK = new RegExp(
     String.raw`querySelector\(\s*${SELECTOR}\s*\)\s*\??\.\s*(?:click\(\s*\)|dispatchEvent\()`,
     'g',
@@ -219,7 +221,9 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     // Puppeteer's own tap or click on a greeting selector.
     "await page.tap('#tutorial-greeting .ui-btn--gold')",
     "await page.click('#tutorial-greeting .ui-btn')",
-    // A negated declining selector lands on the accepting control.
+    // A negated declining selector lands on the accepting control, in the
+    // page or through puppeteer.
+    "document.querySelector('#tutorial-greeting .ui-btn--gold:not([data-close])')?.click()",
     "await page.tap('#tutorial-greeting .ui-btn--gold:not([data-close])')",
     // Wrapped over lines, as the formatter lays it out.
     "document\n  .getElementById('tutorial-greeting')\n  ?.querySelector('.ui-btn--gold')\n  ?.click()",

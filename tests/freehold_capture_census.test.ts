@@ -265,7 +265,9 @@ describe('freeholdCaptureCensus: transient HUD', () => {
           .replace(/(^|[^:])\/\/.*$/gm, '$1'),
       )
       .join('\n');
-    const fctPainter = readFileSync('src/ui/fct_painter.ts', 'utf8');
+    const fctPainter = readFileSync('src/ui/fct_painter.ts', 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
     for (const [selector] of FREEHOLD_TRANSIENT_HUD) {
       const name = selector.slice(1);
       if (selector.startsWith('.')) {

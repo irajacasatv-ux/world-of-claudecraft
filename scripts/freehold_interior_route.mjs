@@ -176,28 +176,36 @@ export const FREEHOLD_CAMERA_BEHIND_TOLERANCE = 0.1;
  * be trusted to carry it: src/game/camera_follow.ts caps all automatic camera
  * motion per frame (MAX_AUTO_YAW_SPEED), so at a software renderer's frame
  * rate a keyboard turn outruns the camera and leaves it swung round in front.
- * W and S held together cancel in the sim (player_motion.ts) yet still count
- * as settle input (cameraFollowShouldSettle), so the camera eases onto the
- * facing while the player neither moves nor turns. Observation only. */
+ * Turn Left and Turn Right held together cancel in the sim (player_motion.ts
+ * applies both in one tick) and are not movement input, yet still count as
+ * settle input (cameraFollowShouldSettle), so the camera eases onto the facing
+ * while the player neither moves nor turns. Both keys are dispatched in ONE
+ * page task, so no frame can sample one without the other. Forward and back
+ * held together are NOT used: they are movement input with a zero vector
+ * (cast_move_gate.ts hasMovementInput), the path the sim's finite-pose guard
+ * catches. Observation only; returns whether the camera came round in time. */
 async function settleFreeholdCamera(page, { timeoutMs = 20000 } = {}) {
   const off = async () =>
     page.evaluate(() => {
       const d = window.__game.input.camYaw - window.__game.sim.player.facing;
       return Math.abs(Math.atan2(Math.sin(d), Math.cos(d)));
     });
-  if ((await off()) <= FREEHOLD_CAMERA_BEHIND_TOLERANCE / 2) return;
-  await page.keyboard.down('w');
-  await page.keyboard.down('s');
+  if ((await off()) <= FREEHOLD_CAMERA_BEHIND_TOLERANCE / 2) return true;
+  const turnKeys = (type) =>
+    page.evaluate((kind) => {
+      for (const code of ['KeyA', 'KeyD'])
+        window.dispatchEvent(new KeyboardEvent(kind, { code, key: code.slice(3).toLowerCase() }));
+    }, type);
+  await turnKeys('keydown');
   try {
     const started = Date.now();
     while ((await off()) > FREEHOLD_CAMERA_BEHIND_TOLERANCE / 2) {
-      if (Date.now() - started > timeoutMs)
-        throw new Error('Freehold tour camera never came round behind the player');
+      if (Date.now() - started > timeoutMs) return false;
       await sleep(50);
     }
+    return true;
   } finally {
-    await page.keyboard.up('s');
-    await page.keyboard.up('w');
+    await turnKeys('keyup');
   }
 }
 
@@ -217,7 +225,7 @@ export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}
       if (Date.now() - started > 10000) throw new Error('Freehold tour could not face the gate');
       await turnFreeholdRoute(page, difference);
     }
-    await settleFreeholdCamera(page);
+    const cameraSettled = await settleFreeholdCamera(page);
     await waitForFreeholdMovementReady(page);
     const pose = await playerPose(page);
     const cameraYaw = await page.evaluate(() => window.__game.input.camYaw);
@@ -229,7 +237,7 @@ export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}
     if (held && cameraBehind) return { ...pose, cameraYaw };
     if (attempt >= attempts)
       throw new Error(
-        `Freehold tour could not hold the gate stance after ${attempts} attempts at ${JSON.stringify({ ...pose, cameraYaw })}`,
+        `Freehold tour could not hold the gate stance after ${attempts} attempts at ${JSON.stringify({ ...pose, cameraYaw, cameraSettled })}`,
       );
   }
 }
