@@ -22,7 +22,7 @@ import {
 import { isBlocked } from '../src/sim/colliders';
 import { FARM_PATCHES } from '../src/sim/content/farm_patches';
 import { FREEHOLD_FURNISHER_NPC_ID } from '../src/sim/content/freehold';
-import { ESCORTS, GATHER_NODES, NPCS, PROPS } from '../src/sim/data';
+import { DUNGEONS, ESCORTS, GATHER_NODES, NPCS, PORTALS, PROPS } from '../src/sim/data';
 import { distancePointToObb, EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import {
   FREEHOLD_GATE_INTERACT_RANGE,
@@ -30,7 +30,7 @@ import {
 } from '../src/sim/freehold/gate_rules';
 import { Sim } from '../src/sim/sim';
 import { type Entity, INTERACT_RANGE } from '../src/sim/types';
-import { roadDistance } from '../src/sim/world';
+import { groundHeight, isInWaterBody, roadDistance, WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
 
 type P = { x: number; z: number };
@@ -102,9 +102,57 @@ describe('the Freehold Gate site', () => {
     for (const seed of SEEDS) {
       expect(isBlocked(seed, GATE.x, GATE.z, 3.5), `seed ${seed}`).toBe(false);
     }
-    // A leaving player lands at least 2 yd from every building footprint.
+    // A leaving player lands at least 2 yd from every building footprint, and
+    // 4.5 yd off the road centre.
     const gaps = EASTBROOK_LAYOUT.buildings.map((b) => distancePointToObb(drop, b.footprint));
     expect(Math.min(...gaps)).toBeGreaterThanOrEqual(2);
+    expect(roadDistance(drop.x, drop.z)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('keeps the arch on flat, dry ground on every seed', () => {
+    const drop = { x: GATE.x, z: GATE.z - 4 };
+    for (const point of [GATE, drop]) expect(isInWaterBody(point.x, point.z)).toBe(false);
+    for (const seed of SEEDS) {
+      const h = groundHeight(GATE.x, GATE.z, seed);
+      expect(h - WATER_LEVEL, `seed ${seed} gate freeboard`).toBeGreaterThanOrEqual(1.5);
+      expect(
+        groundHeight(drop.x, drop.z, seed) - WATER_LEVEL,
+        `seed ${seed} drop`,
+      ).toBeGreaterThanOrEqual(1.5);
+      // Ground within 4 yd of the arch stays within half a yard of its base.
+      let spread = 0;
+      for (const r of [1, 2, 3, 4])
+        for (let k = 0; k < 16; k++) {
+          const a = (k / 16) * Math.PI * 2;
+          spread = Math.max(
+            spread,
+            Math.abs(groundHeight(GATE.x + Math.cos(a) * r, GATE.z + Math.sin(a) * r, seed) - h),
+          );
+        }
+      expect(spread, `seed ${seed} slope`).toBeLessThanOrEqual(0.5);
+    }
+  });
+
+  it('stands well clear of doors, portals, delve markers and escort routes', () => {
+    const doors = Object.values(DUNGEONS)
+      .filter((d) => d.overworldDoor !== false)
+      .map((d) => d.doorPos);
+    const portals = PORTALS.flatMap((p) => [p.a, p.b]);
+    const markers = PROPS.delveMarkers ?? [];
+    expect(doors.length * portals.length * markers.length).toBeGreaterThan(0);
+    for (const at of [...doors, ...portals, ...markers]) expect(dist(at, GATE)).toBeGreaterThan(15);
+    const segment = (a: P, b: P) => {
+      const vx = b.x - a.x;
+      const vz = b.z - a.z;
+      const ll = vx * vx + vz * vz;
+      const t = ll ? Math.max(0, Math.min(1, ((GATE.x - a.x) * vx + (GATE.z - a.z) * vz) / ll)) : 0;
+      return Math.hypot(GATE.x - (a.x + vx * t), GATE.z - (a.z + vz * t));
+    };
+    for (const escort of Object.values(ESCORTS)) {
+      const line = [escort.start, ...escort.waypoints];
+      for (let i = 0; i + 1 < line.length; i++)
+        expect(segment(line[i], line[i + 1]), escort.id).toBeGreaterThan(12);
+    }
   });
 
   it('holds every NPC (authored and live, the lit-only furnisher included) over 11 yd away', () => {
