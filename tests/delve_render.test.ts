@@ -19,6 +19,8 @@ import {
   polygonWallSegments,
 } from '../src/sim/delve_litany_layout';
 import { DUNGEON_WALK_HALF_X } from '../src/sim/dungeon_layout';
+import { FREEHOLD_GATE_TEMPLATE_ID } from '../src/sim/freehold/gate_rules';
+import { Sim } from '../src/sim/sim';
 
 const FOUR_MODULE_RUN: DelveModuleId[] = [
   'reliquary_sunken_ossuary',
@@ -238,6 +240,31 @@ describe('buildDelveInteractable', () => {
       ),
     ).toBe(true);
     expect(group.visible).toBe(true);
+  });
+
+  it('draws the always-non-lootable Freehold Gate the lit host spawns', () => {
+    // Regression: the gate spawns lootable:false for its whole lifetime (it is
+    // entered through its own prompt, never the generic pickUpObject scan), and
+    // this gate runs for every 'object'-kind view, so without its own arm the
+    // arch was hidden on every frame of every lit host. Drive the entity the
+    // real bootstrap spawns, not a hand-built fixture.
+    const sim = new Sim({
+      seed: 1,
+      playerClass: 'warrior',
+      noPlayer: true,
+      freeholdsEnabled: true,
+    });
+    const gate = [...sim.entities.values()].find((e) => e.templateId === FREEHOLD_GATE_TEMPLATE_ID);
+    expect(gate?.kind).toBe('object');
+    expect(gate?.lootable).toBe(false);
+    expect(delveInteractableVisible(FREEHOLD_GATE_TEMPLATE_ID, false)).toBe(true);
+    const group = new THREE.Group();
+    expect(syncDelveInteractableVisibility(group, gate!, new Map(), false)).toBe(true);
+    expect(group.visible).toBe(true);
+    // The compile gate still holds it back until its shaders are ready.
+    expect(syncDelveInteractableVisibility(group, gate!, new Map(), true)).toBe(false);
+    // Only the exact template: a near-namesake stays on the ordinary rule.
+    expect(delveInteractableVisible(`${FREEHOLD_GATE_TEMPLATE_ID}_x`, false)).toBe(false);
   });
 
   it('keeps an object view hidden until async shader compilation completes', () => {
