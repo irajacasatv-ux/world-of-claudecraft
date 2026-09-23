@@ -19,6 +19,7 @@ import {
   EASTBROOK_NOTICEBOARD_TEMPLATE_ID,
   type NoticeboardDef,
 } from '../src/sim/types';
+import { doorArchTriangles } from './helpers/door_arch_glb';
 
 const PADDING = 0.35;
 const BOUNDARY_EPSILON = 0.01;
@@ -74,6 +75,24 @@ describe('the Freehold Gate grass exclusion', () => {
       z: (site?.z ?? 0) + FREEHOLD_GATE_STANCE.dz,
     };
     expect(insideEastbrookGrassExclusion(arch, stance.x, stance.z, PADDING)).toBe(false);
+  });
+
+  it('covers every tuft that could overlap the GLB arch the browser draws', async () => {
+    // Its ground course: every vertex within 0.4 yd of the ground, as turned
+    // by door_portal.ts. Measured: x within 1.85, z within 0.56 of the centre.
+    const ground = (await doorArchTriangles())
+      .flatMap((t) => [t.a, t.b, t.c])
+      .filter((p) => p.y < 0.4);
+    expect(ground.length).toBeGreaterThan(100);
+    const [minX, maxX] = [Math.min(...ground.map((p) => p.x)), Math.max(...ground.map((p) => p.x))];
+    const [minZ, maxZ] = [Math.min(...ground.map((p) => p.z)), Math.max(...ground.map((p) => p.z))];
+    const arch = lit().filter((exclusion) => exclusion.id === 'freehold_gate');
+    for (const x of [minX - PADDING, maxX + PADDING])
+      for (const z of [minZ - PADDING, maxZ + PADDING])
+        expect(
+          insideEastbrookGrassExclusion(arch, (site?.x ?? 0) + x, (site?.z ?? 0) + z, PADDING),
+          `${x},${z}`,
+        ).toBe(true);
   });
 
   it('reaches the grass ring only through the lit host flag', () => {

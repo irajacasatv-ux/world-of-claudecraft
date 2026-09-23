@@ -13,6 +13,7 @@ import {
   freeholdGateDrawnProbe,
 } from '../scripts/lib/freehold_gate_probe.mjs';
 import { buildStaticDoorBody } from '../src/render/door_portal';
+import { archHit, doorArchTriangles } from './helpers/door_arch_glb';
 
 class Vec3 {
   constructor(
@@ -428,6 +429,18 @@ describe('freeholdGateDrawnProbe: the sample points sit on the real arch', () =>
       expect(hits(side, up).length, label).toBeGreaterThan(0);
     // The control: beside the arch, past its outer edge, nothing is hit.
     expect(hits(2.6, 1)).toEqual([]);
+  });
+});
+
+describe('freeholdGateDrawnProbe: the sample points sit on the arch the browser draws', () => {
+  // The door-arch GLB, read from disk and turned as door_portal.ts turns it.
+  it('hits the GLB arch at every sample point, and neither its open passage nor beside it', async () => {
+    const triangles = await doorArchTriangles();
+    expect(triangles.length).toBeGreaterThan(1000);
+    for (const [label, side, up] of FREEHOLD_GATE_PROBE_POINTS)
+      expect(archHit(triangles, side, up), label).toBe(true);
+    expect(archHit(triangles, 0, 1)).toBe(false);
+    expect(archHit(triangles, 2.6, 1)).toBe(false);
   });
 });
 

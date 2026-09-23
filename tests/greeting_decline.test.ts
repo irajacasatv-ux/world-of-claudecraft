@@ -82,9 +82,11 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     /\[data-guidance=\\?["']?on/,
     /\[data-guidance\]/,
     /\[data-skip\]/,
+    // A bare accept class: `.cd-ok` is also the generic confirm dialog's, so a
+    // script confirming an unrelated dialog scopes it (`#that-dialog .cd-ok`).
     /querySelector\(\s*['"`]\.(?:cd-ok|ui-btn--gold)['"`]\s*\)/,
     new RegExp(String.raw`${RECEIVER}\.querySelector(?:All)?\(\s*['"][^'"]*(?:\bbutton\b|\.cd-ok)`),
-    new RegExp(String.raw`${RECEIVER}\.(?:first|last)ElementChild\??\.click\(`),
+    new RegExp(String.raw`${RECEIVER}\.(?:first|last)ElementChild\??\.(?:click|dispatchEvent)\(`),
     /getElementById\(\s*['"]tutorial-greeting['"]\s*\)\??\.(?:first|last)ElementChild/,
     /getElementById\(\s*['"]tutorial-greeting['"]\s*\)\??\.querySelector(?:All)?\(\s*['"][^'"]*(?:\bbutton\b|\.cd-ok)/,
   ];
@@ -94,11 +96,13 @@ describe('every capture script declines through GREETING_DECLINE', () => {
   // decline, or `#profession-tutorial .cd-ok`, which carries data-close
   // (pinned on the rendered markup above). Another control that happens to
   // close (the tutorial's .x-btn) is refused too: the rule admits only the
-  // named declining selectors. Known limit: a greeting reached through a
-  // variable assigned in an EARLIER statement is not traced.
+  // named declining selectors. A dispatched event counts as a click. Known
+  // limits: a greeting reached through a variable assigned in an EARLIER
+  // statement is not traced, and `decline` is trusted to be the argument the
+  // evaluate call passes (the line scan above counts GREETING_DECLINE uses).
   const SELECTOR = String.raw`(?:decline|GREETING_DECLINE|(['"\x60])(?:(?!\1).)*?(?:\[data-close\]|\[data-guidance=\\?["']?off)(?:(?!\1).)*?\1|(['"\x60])#profession-tutorial \.cd-ok\2)`;
   const DECLINING_CLICK = new RegExp(
-    String.raw`querySelector\(\s*${SELECTOR}\s*\)\s*\??\.\s*click\(`,
+    String.raw`querySelector\(\s*${SELECTOR}\s*\)\s*\??\.\s*(?:click|dispatchEvent)\(`,
     'g',
   );
   /** Statements (split on `;`) that name a greeting and click anything but a
@@ -107,7 +111,7 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     const hits: string[] = [];
     for (const statement of code.split(';')) {
       if (!/tutorial-greeting|profession-tutorial/.test(statement)) continue;
-      const clicks = statement.match(/\.click\(/g)?.length ?? 0;
+      const clicks = statement.match(/\.(?:click|dispatchEvent)\(/g)?.length ?? 0;
       if (clicks === 0) continue;
       const declining = statement.match(DECLINING_CLICK)?.length ?? 0;
       if (declining < clicks) hits.push(statement.trim());
@@ -168,6 +172,7 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     "document.querySelector('.cd-ok')?.click()",
     "document.querySelector('.ui-btn--gold')?.click()",
     'greeting.firstElementChild?.click()',
+    "greeting.lastElementChild.dispatchEvent(new MouseEvent('click'))",
     "document.getElementById('tutorial-greeting')?.lastElementChild?.click()",
     "note?.querySelector('.cd-actions button')?.click()",
     "document.getElementById('tutorial-greeting')?.querySelector('.cd-ok')?.click()",
@@ -194,6 +199,8 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     "document.getElementById('profession-tutorial')?.querySelector('.x-btn')?.click()",
     // One declining click does not excuse a second, accepting one.
     "document.getElementById('tutorial-greeting')?.querySelector(decline)?.click(), document.querySelector('#tutorial-greeting .ui-btn')?.click()",
+    // A dispatched click is a click.
+    "document.getElementById('tutorial-greeting')?.querySelector('.ui-btn')?.dispatchEvent(new MouseEvent('click'))",
     // Wrapped over lines, as the formatter lays it out.
     "document\n  .getElementById('tutorial-greeting')\n  ?.querySelector('.ui-btn--gold')\n  ?.click()",
   ])('the statement rule catches %s', (code) => {
