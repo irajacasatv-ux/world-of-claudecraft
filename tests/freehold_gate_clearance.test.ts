@@ -254,7 +254,7 @@ describe('the Freehold Gate site', () => {
     expect(nearest).toBeCloseTo(12.185, 3);
   });
 
-  it('keeps every NPC where it spawned through a minute of a running lit realm', () => {
+  it('keeps the closest NPC at its spawn distance through a minute of a running lit realm', () => {
     // No town NPC wanders today (measured: none moves in 1200 ticks), so the
     // closest stays Cook Marlow's spawn 12.185 yd off. Pinned exactly on
     // purpose: an NPC given a route or a wander near the gate reds this and is

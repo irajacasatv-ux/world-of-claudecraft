@@ -1421,7 +1421,8 @@ it('takes the lit flag the renderer hands the grass ring from each hello, and dr
   // renderer.ts builds foliage from cfg.freeholdsEnabled (tests/foliage_core.test.ts),
   // once, when it is constructed after world entry; online, only the hello sets
   // the flag. A later hello that flips it does not rebuild an already built
-  // ring (a recorded known limit), but the next renderer built reads it right.
+  // ring (a known limit, recorded in docs/freeholds/qa/persistence-2026-09-08/
+  // findings.md), but the next renderer built reads it right.
   const client = bareClient(1);
   const hello = (extra: Record<string, unknown>) =>
     (client as unknown as { onMessage(raw: string): void }).onMessage(

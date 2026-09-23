@@ -69,10 +69,12 @@ export const freeholdReviewTargets = [
   // (the visibility, pick, rank and prewarm cores, the grass ring and its core,
   // the arch body, the gate's spawn, the offline host flag and the press path,
   // the layout site), the chase camera the stance settles, and this harness
-  // with its shared entry. The receipt's seal is broader on purpose: it lists
-  // every input a frame depends on, so the committed evidence reads stale the
-  // moment any of them changes. The shared stylesheets and the shared capture
-  // plumbing stay on their own selection by policy (tests/pr_shot_targets.test.ts).
+  // with its shared entry. The two lists differ on purpose: this one is what a
+  // diff re-shoots on, broad over the housing surfaces; the receipt's seal is a
+  // curated list of the inputs that decide what the committed frames show, so
+  // the evidence reads stale the moment one of them changes. The shared
+  // stylesheets and capture plumbing stay on their own selection by policy
+  // (tests/pr_shot_targets.test.ts).
   when: [
     'ui/hud/housing/',
     'freehold/',

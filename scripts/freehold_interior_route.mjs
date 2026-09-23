@@ -203,8 +203,8 @@ export const FREEHOLD_HELD_ACTIONS = Object.freeze([
  * never changes): Mouse Camera or mouselook turn the pair into strafes, the
  * same zero vector, attack-move takes KeyA, leaving Turn Right alone, and a
  * key rebound or shared with another held action sends that action too. So
- * it refuses, before any key goes down, unless all of that holds. Observation only; returns whether the camera came
- * round in time. */
+ * it refuses, before any key goes down, unless all of that holds. Observation
+ * only; returns whether the camera came round in time. */
 async function settleFreeholdCamera(page, { timeoutMs = 20000 } = {}) {
   const blockers = await page.evaluate((held) => {
     const input = window.__game.input;

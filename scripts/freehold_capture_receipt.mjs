@@ -249,8 +249,9 @@ try {
         // notice resolution must be the one the stance settle recorded. That
         // proves the record's source, not which pass dismissed what: a second
         // settle after the press resolves the same way (the resolution follows
-        // which notice mounted), so a dismissal after the press is refused by
-        // the gate frame's focus check instead.
+        // which notice mounted). A dismissal after the press that takes the
+        // prompt's focus is refused by the gate frame's focus check; one that
+        // leaves the focus where it was is not visible to this receipt.
         requireEvidence(
           side === 'before'
             ? evidence.preSettle === null

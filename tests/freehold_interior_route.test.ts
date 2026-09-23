@@ -781,6 +781,9 @@ describe('holding the gate stance', () => {
     ['attack-move', { attackMove: true }],
     ['A rebound to strafe', { binds: { turnLeft: ['ArrowLeft'], strafeLeft: ['KeyA'] } }],
     ['D unbound', { binds: { turnRight: ['ArrowRight'] } }],
+    // The shipped Keybinds class keeps a held code on one action (bind strips
+    // it elsewhere; a stored blob keeps the first claimant, modifiers dropped),
+    // so these two arise only from a foreign or hand-edited store: refused anyway.
     ['A shared with a strafe', { binds: { strafeLeft: ['KeyQ', 'KeyA'] } }],
     ['Shift+D on jump', { binds: { jump: ['Space', 'Shift+KeyD'] } }],
     ['no binding lookup', { noKeybinds: true }],
