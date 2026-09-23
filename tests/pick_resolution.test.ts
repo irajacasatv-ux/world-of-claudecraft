@@ -214,7 +214,12 @@ describe('resolveDirectPickEntityId', () => {
   });
 
   describe('the Freehold Gate (spawned lootable:false for its whole lifetime)', () => {
-    const GATE = { id: 30, kind: 'object' as const, templateId: FREEHOLD_GATE_TEMPLATE_ID };
+    // The literal id, so renaming the constant cannot carry this fixture with it.
+    const GATE = { id: 30, kind: 'object' as const, templateId: 'freehold_gate' };
+
+    it('reads the same template id the sim spawns the gate with', () => {
+      expect(FREEHOLD_GATE_TEMPLATE_ID).toBe('freehold_gate');
+    });
 
     it('picks the gate when the ray hits it alone', () => {
       expect(resolveDirectPickEntityId([30], entities([GATE]))).toBe(30);
@@ -228,6 +233,19 @@ describe('resolveDirectPickEntityId', () => {
     it('picks the gate standing in front of a character, like any other object', () => {
       const map = entities([GATE, { id: 12, kind: 'mob' }]);
       expect(resolveDirectPickEntityId([30, 12], map)).toBe(30);
+    });
+
+    it('picks the gate standing in front of an ordinary non-lootable object', () => {
+      const map = entities([GATE, { id: 31, kind: 'object' }]);
+      expect(resolveDirectPickEntityId([30, 31], map)).toBe(30);
+    });
+
+    it('grants the exemption to the exact template only, not a namesake', () => {
+      const map = entities([
+        { id: 32, kind: 'object', templateId: 'freehold_gate_x' },
+        { id: 12, kind: 'mob' },
+      ]);
+      expect(resolveDirectPickEntityId([32, 12], map)).toBeNull();
     });
 
     it('still drops the whole hit list for an ordinary non-lootable object', () => {

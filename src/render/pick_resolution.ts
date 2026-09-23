@@ -29,9 +29,11 @@ export function resolveDirectPickEntityId(
     const e = entities.get(id);
     if (!e) continue;
     // The Freehold Gate is lootable:false for its whole lifetime but is a real
-    // click target (interactions.ts opens its prompt), so it picks like any object.
-    if (e.kind === 'object' && !e.lootable && e.templateId !== FREEHOLD_GATE_TEMPLATE_ID)
-      return null;
+    // click target (interactions.ts opens its prompt), so it picks like any
+    // object: leading the ray it is the pick, whatever stands behind it.
+    const gate = e.kind === 'object' && e.templateId === FREEHOLD_GATE_TEMPLATE_ID;
+    if (gate && ordered.length === 0) return e.id;
+    if (e.kind === 'object' && !e.lootable && !gate) return null;
     if (e.kind === 'mob' && e.dead && !e.lootable) continue;
     ordered.push(e);
   }

@@ -71,7 +71,7 @@ import {
   freeholdOwnerKeyForAccount,
   refusedFreeholdCommand,
 } from '../../server/freehold_wire';
-import { GameServer } from '../../server/game';
+import { GameServer, wireEntity } from '../../server/game';
 import {
   HEAVY_SELF_ARM_MARKED_CMDS,
   HEAVY_SELF_CMDS,
@@ -81,6 +81,8 @@ import {
 import { noopGameMetricsCounters, setGameMetricsCounters } from '../../server/http/game_signals';
 import { refusedRiftForgeCommand } from '../../server/rift_forge_gate';
 import { buildRealmSimConfig } from '../../server/sim_boot_config';
+import { delveInteractableVisible } from '../../src/render/delve_interactable_visibility_core';
+import { resolveDirectPickEntityId } from '../../src/render/pick_resolution';
 import { bagCapacity } from '../../src/sim/bags';
 import { ITEMS } from '../../src/sim/data';
 import { EASTBROOK_LAYOUT } from '../../src/sim/eastbrook_layout';
@@ -1390,6 +1392,29 @@ describe('Freehold Gate inventory change drives heavy self snapshots', () => {
       expect(lastSnap(fc.sent).self.inv).toBeUndefined();
     },
   );
+});
+
+it('mirrors the gate online with the fields the render cores read, so it draws and picks', () => {
+  vi.stubEnv('FREEHOLDS_ENABLED', '1');
+  const { server, pid } = housingSession();
+  const gate = [...server.sim.entities.values()].find((e) => e.templateId === 'freehold_gate')!;
+  // The server's own serializer, then the client mirror, as a lit realm ships it.
+  const wire = wireEntity(gate);
+  const client = bareClient(pid, {
+    cfg: { seed: 42, playerClass: 'warrior', freeholdsEnabled: true },
+  });
+  (client as unknown as { applySnapshot(value: unknown): void }).applySnapshot({
+    t: 'snap',
+    tick: 1,
+    time: 1,
+    self: { id: pid, k: 'player', tid: 'warrior', nm: 'Fen', lv: 1, x: 0, y: 0, z: 0, f: 0 },
+    ents: [{ ...wire, id: gate.id }],
+  });
+  const mirrored = client.entities.get(gate.id)!;
+  expect(mirrored.templateId).toBe('freehold_gate');
+  expect(mirrored.lootable).toBe(false);
+  expect(delveInteractableVisible(mirrored.templateId, mirrored.lootable)).toBe(true);
+  expect(resolveDirectPickEntityId([gate.id], client.entities)).toBe(gate.id);
 });
 
 it('silently sheds a live gate command and recovers only after a fresh user confirmation', () => {

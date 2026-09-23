@@ -915,6 +915,9 @@ const RENDER_PURE_CORES = [
   'src/render/link_rate_budget.ts',
   'src/render/prewarm_compile_lifecycle.ts',
   'src/render/prewarm_policy.ts',
+  // Same reason: the click-pick resolver (which hit a click lands on), pure
+  // over entity fields, now reading the Freehold Gate's template id.
+  'src/render/pick_resolution.ts',
   // Same reason, one seam over: the per-interior encounter prewarm's decision
   // layer (which interior warms what, the kill switch, the live-queue verdict).
   'src/render/interior_encounter_prewarm.ts',
@@ -1033,6 +1036,7 @@ const BARE_NAMED = [
   'src/render/prewarm_compile_lifecycle.ts',
   'src/render/prewarm_pass.ts',
   'src/render/interior_encounter_prewarm.ts',
+  'src/render/pick_resolution.ts',
   'src/render/prewarm_policy.ts',
   'src/render/prewarm_resume.ts',
   'src/render/renderer_extensions.ts',
@@ -2102,6 +2106,7 @@ const EXPECTED_BARE_NAMED = [
   'src/render/frame_present.ts',
   'src/render/interior_encounter_prewarm.ts',
   'src/render/link_rate_budget.ts',
+  'src/render/pick_resolution.ts',
   'src/render/preview_prewarm_lane.ts',
   'src/render/prewarm_compile_lifecycle.ts',
   'src/render/prewarm_pass.ts',
