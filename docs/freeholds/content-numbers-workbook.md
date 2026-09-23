@@ -437,7 +437,12 @@ off (-14,-92) at the v0.44.0 sync, when Apothecary Lin moved within 4.24 yards
 of it; the first replacement, (-28,-82), took the press of two Eastbrook garden
 beds, and the second, (-37,-103.5), dropped a leaving player 1.17 yards from a
 house corner. The existing shared 4 yard south return inset lands at (-39,-108).
-No custom leave offset is introduced. The gate is a walk-through service marker. The closed ornamental
+No custom leave offset is introduced. One limit is known and pinned: the gate is
+inside the 26 yard Eastbrook town circle but the return point is 0.25 yards
+outside it, so Town Focus refuses until the player's first step. A 0.05 yard
+search found a narrow band that puts the return inside, for example (-38.7,-104),
+but only at the other rules' thresholds; a leave offset cannot move the return
+alone, because the saved-inside rejoin ignores leaveOffset. The gate is a walk-through service marker. The closed ornamental
 door is backed by the south structural wall, so no aperture permits walking into
 unfloored space. Its fixed swing reservation and the complete protected corridor
 remain unavailable to future mutable furnishings.

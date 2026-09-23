@@ -34,10 +34,13 @@ import {
   withRestoredPrewarmState,
 } from '../src/render/prewarm_policy';
 import { PREWARM_SUBMIT_LANE_MAX_MS } from '../src/render/prewarm_submit_stop_core';
+import { DUNGEONS, instanceOrigin } from '../src/sim/data';
+import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import {
   FREEHOLD_GATE_INTERACT_RANGE,
   FREEHOLD_GATE_TEMPLATE_ID,
 } from '../src/sim/freehold/gate_rules';
+import { resolveSavedPosExit } from '../src/sim/saved_pos_exit';
 import { codeWithoutLineComments } from './helpers/code_without_line_comments';
 
 // The real desktop constants (renderer.ts), injected so the test pins the actual
@@ -1493,6 +1496,25 @@ describe('mandatory interaction-landmark prewarm', () => {
     expect(edge.mandatory.map((entity) => entity.id)).toEqual([50]);
     const beyond = partitionMandatoryLandmarkCandidates([gate], { x: 0, z: -5.01 });
     expect(beyond.mandatory).toEqual([]);
+    // The real site: a live leave (detachFromDungeon) and a saved-inside rejoin
+    // (resolveSavedPosExit) both land inside the gate's reach, so both arrivals
+    // wait for its view.
+    const site = EASTBROOK_LAYOUT.services.freeholdGate.position;
+    const real = { ...gate, pos: { ...site } };
+    for (const id of ['freehold_inn_room', 'freehold_cottage']) {
+      const def = DUNGEONS[id];
+      const leave = def.leaveOffset ?? { x: 0, z: -4 };
+      const drop = { x: def.doorPos.x + leave.x, z: def.doorPos.z + leave.z };
+      const inside = instanceOrigin(def.index, 0);
+      const rejoin = resolveSavedPosExit({ x: inside.x, z: inside.z }).pos!;
+      for (const arrival of [drop, rejoin]) {
+        const arrived = partitionMandatoryLandmarkCandidates([real], arrival);
+        expect(
+          arrived.mandatory.map((entity) => entity.id),
+          `${id} ${arrival.x},${arrival.z}`,
+        ).toEqual([50]);
+      }
+    }
     const nearSq = NEARBY_LANDMARK_STREAM_RADIUS * NEARBY_LANDMARK_STREAM_RADIUS;
     expect(interactionLandmarkViewPriority(FREEHOLD_GATE_TEMPLATE_ID, nearSq)).toBe(0.5);
     expect(interactionLandmarkViewPriority(FREEHOLD_GATE_TEMPLATE_ID, nearSq + 1)).toBe(1.5);

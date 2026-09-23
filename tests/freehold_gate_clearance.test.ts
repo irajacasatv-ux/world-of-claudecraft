@@ -22,6 +22,7 @@ import {
 import { isBlocked } from '../src/sim/colliders';
 import { FARM_PATCHES } from '../src/sim/content/farm_patches';
 import { FREEHOLD_FURNISHER_NPC_ID } from '../src/sim/content/freehold';
+import { ZONE1_ZONE } from '../src/sim/content/zone1';
 import { DUNGEONS, ESCORTS, GATHER_NODES, NPCS, PORTALS, PROPS } from '../src/sim/data';
 import { distancePointToObb, EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import {
@@ -148,11 +149,30 @@ describe('the Freehold Gate site', () => {
       const t = ll ? Math.max(0, Math.min(1, ((GATE.x - a.x) * vx + (GATE.z - a.z) * vz) / ll)) : 0;
       return Math.hypot(GATE.x - (a.x + vx * t), GATE.z - (a.z + vz * t));
     };
+    let segments = 0;
     for (const escort of Object.values(ESCORTS)) {
       const line = [escort.start, ...escort.waypoints];
-      for (let i = 0; i + 1 < line.length; i++)
+      for (let i = 0; i + 1 < line.length; i++) {
+        segments++;
         expect(segment(line[i], line[i + 1]), escort.id).toBeGreaterThan(12);
+      }
     }
+    expect(segments).toBeGreaterThan(0);
+  });
+
+  it('records the one known limit: the drop sits just outside the Eastbrook town circle', () => {
+    // The gate is inside the 26 yd town circle (isInTownZone), the drop 4 yd
+    // along -z is 0.25 yd outside it, so Town Focus answers not_in_town until
+    // the player's first step. A 0.05 yd search found a band of cells that
+    // puts the drop inside, e.g. (-38.7,-104) with the drop 0.037 yd in, but
+    // only at the other rules' thresholds (3.5 to 3.55 yd collider-free against
+    // this site's 3.8); a leave offset cannot move the drop alone, because the
+    // saved-inside rejoin ignores leaveOffset (src/sim/saved_pos_exit.ts). This
+    // pin makes any change to the trade visible.
+    const hub = ZONE1_ZONE.hub;
+    expect(hub).toMatchObject({ x: -14, z: -100, radius: 26 });
+    expect(dist(GATE, hub)).toBeLessThanOrEqual(hub.radius);
+    expect(dist({ x: GATE.x, z: GATE.z - 4 }, hub)).toBeCloseTo(26.249, 3);
   });
 
   it('holds every NPC (authored and live, the lit-only furnisher included) over 11 yd away', () => {
