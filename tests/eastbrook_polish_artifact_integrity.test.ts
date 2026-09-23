@@ -1389,7 +1389,8 @@ const ACCEPTED_POLISH_V2_METADATA_SHA256 =
   // leaves) matches neither parent. No capture was retaken.
   // Re-minted for the devalue audit floor: pnpm-lock.yaml moved (devalue 5.8.1 to 5.9.4), no renderer input changed. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0: the merged renderer and layout leaves match neither parent. No capture was retaken.
-  'b10788a05b886fdf6035ac32166ac6d68f406b914a5064f39a7fafdb7b574f33';
+  // Re-minted for the Freehold Gate move to (-28,-82): the eastbrook_layout.ts leaf moved. No capture was retaken.
+  '6d4955ac12c05060829c7519545fde0cefe845837d9a30137269c70bda54dbdd';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the Frame Rate Limit: the renderer leaf gained the chosen-cadence feeds (frame load readings, governor signals). No capture was retaken.
   // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
@@ -1402,7 +1403,8 @@ const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // leaves) matches neither parent. No capture was retaken.
   // Re-minted for the devalue audit floor: pnpm-lock.yaml moved (devalue 5.8.1 to 5.9.4), no renderer input changed. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0: the merged renderer and layout leaves match neither parent. No capture was retaken.
-  'ddf276128f1c196af4911ff184f1e8f5b63f4a60b200e848162de8d49b25c80c';
+  // Re-minted for the Freehold Gate move to (-28,-82): the eastbrook_layout.ts leaf moved. No capture was retaken.
+  '2b6c2c4b73ea35768191066e1ad7a3b26b3f830bd50d7d3eb74c37ea68e5a40b';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2783,7 +2785,9 @@ describe('Eastbrook polish performance and contact evidence', () => {
       // parents' provenance inputs. Historical performance values are unchanged.
       // Freeholds sync of release/v0.44.0: recomputed LAST again over the
       // re-swept evidence. No capture was retaken.
-    ).toBe('055652d34ad76f3ade7559fe0aad71101b782ac346914b10cb30c8f17ac0e896');
+      // Freehold Gate move to (-28,-82): recomputed LAST again over the
+      // re-swept evidence. No capture was retaken.
+    ).toBe('43b330eebafe2f8d90ef14f5063faf86b21b96105a53c16e0307e15c72cca152');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {
