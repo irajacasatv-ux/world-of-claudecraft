@@ -2134,3 +2134,230 @@ OWED, IN ORDER, FOR THE NEXT SESSION:
    character on a dark realm (D85) can show Hearth relics and earn cosmetic Reliquary deeds
    from lit-realm finds; phase 17 needs its re-plan onto the ledger (recorded there and in
    D48).
+
+## THE OWED LIST WORKED THROUGH, 2026-09-22 TO 23: THE GATE MOVE, THE RE-SHOOT, THE GATE
+
+Everything the previous section left owed is either DONE below or named in the open list at
+the end of this section. Commits `190329610f..HEAD`, all local.
+
+### A SECOND SYNC FIRST
+
+`release/v0.44.0` moved on by five commits (the craft-roll audit, PR #4165) after
+`ffa7ac5ffb`, so merge `190329610f` takes it at `fc86d90234`. Two conflicts, both unions:
+the account export keeps both the housing loaders and the new craft-roll read, and the
+monolith rows take the exact merged counts, `server/game.ts` at 9776 and `server/db.ts`
+at 4530. The db.ts row RISES from this branch's 4513 by the release's own +17 (its
+craft-roll export read), and stays under the release's own 4641 pin; it is recorded here
+because a ceiling that moves up is a maintainer's call to see.
+
+### THE GATE MOVED FOUR TIMES, AND WHY THE RULED SITE WAS NOT THE LAST
+
+The ruled site `(-28,-82)` cleared every NPC by 12.37 yd, but stood 4.47 and 5.00 yd
+from two garden beds, and the press ladder ranks objects above beds, so it took their
+press (`742523fbc4`). `(-37,-103.5)` then passed every press but dropped a leaving
+player 1.17 yd from a house corner and cleared the road and a streetlamp by a hair.
+`(-39,-104)` added real margins and landed a leaving player 0.25 yd OUTSIDE the
+Eastbrook town circle, where Town Focus refuses. The gate now stands at
+`(-38.65,-103.75)`, facing 0, with its drop 4 yd south at `(-38.65,-107.75)` through
+`DUNGEON_DOOR_RETURN_INSET`, both in town. `docs/freeholds/content-numbers-workbook.md`
+separates the rules into RULED (the NPC press), ENFORCED (every press rung, dry flat
+ground on all eight seeds, the town circle) and CHOSEN (three margins picked for this
+site: drop to building 2 yd, drop to road 5.5 yd, 3.5 yd of collider-free ground). Without
+the chosen margins `(-37,-103.5)` would stand nearer the ruled point; FERNANDO, that is
+the one place this move went past the ruling's letter, and it is his to confirm.
+`tests/freehold_gate_clearance.test.ts` pins every rule through the real ladder, the real
+colliders (measured two ways, because `isBlocked` reads one cell and is complete only to
+0.8 yd, and squares an OBB's corners) and the real leave and rejoin points.
+
+Each move re-minted the `freehold_claim` golden (only position-derived fields, the POI
+visit marks and, after the copy change, the events digest moved; ticks, draws and the draw
+digest are byte-identical), the terrain corpus tail (the 152,181-record body
+byte-identical, the tail still 811 records, only its 50 door-stencil records changed,
+validated on Linux aarch64 AND, at the end, on Linux x86_64 glibc 2.36 in
+`node:26-bookworm`: 2 of 2) and the Eastbrook polish provenance by its own script.
+
+### THE GATE DID NOT DRAW ON A LIT HOST, AND FOUR RENDER RULES WERE WHY
+
+Found only because the re-shoot looked at the frames: the arch spawns
+`lootable:false`, and the per-frame object visibility gate hid every non-lootable object
+outside the delve, rift and battleground families (`7e49b9fec1`); a direct pick dropped
+the whole hit list on it, and dropped it again when an ordinary prop stood behind it
+(`02661857ed`, `9f65cfad2a`); the view pool ranked it last, behind every town NPC within
+45 yd, though every leave lands 4 yd from it (`02661857ed`, then `c9b15ef50d`: the
+mailbox and noticeboard landmark path); and town grass tufts grew through its plinths
+(`7afac8b0c1`), with the clearing then limited to hosts that light freeholds
+(`1c17e99834`). Each rule has an exact-template arm pinned against the entity the real
+bootstrap spawns, and an online case drives the server's wire through the client mirror.
+
+### THE PROMPT'S TABS WEAR THE LIBRARY LOOK
+
+A later-layer gate rule in `src/styles/components.css` still painted the selected tab gold
+with an underline over the `.ui-tab` primitive the sync moved the tabs onto. It is removed
+and `tests/freehold_gate_prompt.test.ts` holds the tabs on the primitive with no local
+selected rule and the 40 px floor.
+
+### THE LEAVE LINES SAID QUAY
+
+Both rooms' leave lines still said the player steps back onto the quay. The English and its
+five non-Latin fills now say town, the resolved tables are regenerated, and the golden's
+events digest follows.
+
+### THE RE-SHOOT, AND WHAT IT CAUGHT IN ITS OWN HARNESS
+
+All 18 images, both producer manifests and the performance record were re-shot on
+2026-09-23, TWICE: first at `ba8460e32f` (`aadff20b9f`), then, because the review rounds
+below changed sealed inputs, again at `1c536218af` (`8618300332`), which is the record
+now. The receipt seals 67 source inputs, 17 of them harness files (the harness's whole
+local import closure, derived and pinned). Every image was read by eye, both times. The
+trees, stances, cameras, diagnostics and counters are in
+`docs/freeholds/interiors-implementation-evidence.md`, last section. The harness grew a
+receipt that refuses a frame on every conjunct it checks (each with its own refusal row
+and near miss), a raycast probe that meets the arch's own mesh at three points with
+nothing in front, a DOM census (controls on top, focus, transient HUD and arrival
+overlays), and one shared greeting-decline selector with a scan over `scripts/` (the old
+entry pass clicked a greeting's first button, which ACCEPTED the ferry guidance note).
+
+Harness defects the capture exposed, each fixed test-first: dismissals after the prompt
+opened took its focus; the chase camera could open a frame swung round in front of the
+player (a walk-out retry failed at a software frame rate because `camera_follow.ts` caps
+automatic yaw per frame, a W+S hold hit the sim's zero-vector path, and the settle now
+holds Turn Left + Turn Right in one page task and refuses under Mouse Camera, mouselook or
+attack-move); a leave carried the player past the gate's reach before the reopening press;
+and the Cottage switch raced its own keystrokes under load (the perf tour failed that way
+twice before the fix).
+
+### THE COVERAGE REVIEW, AND TWO FIX ROUNDS READ FRESH
+
+Four fresh COVERAGE reviewers read `190329610f..551e6493be`: qa-checklist,
+test-coverage-auditor, frontend-seam-reviewer and a fresh general reviewer. None
+found a blocking defect. Their should-fix findings: the capture seal missed
+inputs that change the frames (six harness scripts the capture loads, the grass
+ring's own file, the gate's spawn and press path, the offline host flag and the
+chase camera); the gate prompt's selected tab lost its only non-color cue under
+forced colors; the receipt's second baseline check and its placement check were
+reached by no test; a gate frame off the stance along z alone was accepted
+(stance z-term mutant survived); and the evidence doc and this packet's rows
+carried claims the committed records contradict. ONE finding was refuted: the
+frontend lane said nothing drives the online mirror through the gate's draw and
+pick cores, but `tests/server/freehold_wire.test.ts` does, from the server's own
+wire.
+
+Applied in `9a7c42a8aa..7b6e10ba35`, each mutation-checked: every bloom now keeps
+out of the town grass exclusions (a new behavioural suite found two meadow
+flowers inside the gate's circle on a lit host, which the old tuft-only check
+could not see); a forced-colors underline for the library's selected tab; the
+probe must meet the arch's own mesh at each point; the seal derives and covers
+the harness import closure and holds every baseline frame to the stance (the
+dead overworld conjunct went with it); the camera settle checks the key
+bindings; the perf tour checks the stretch from the gate's reveal to the inn
+entry and fails the leave window closed; the census refuses an arrival overlay
+landing after the last settle pass; the capture target follows the files that
+decide the grass and the press; and the clearance, turn-pair, hello-flag and
+importer pins. The two recorded sealed-comment nits were carried in the same
+round, and two pre-existing em dashes in `src/game/interactions.ts` (now sealed)
+were removed.
+
+A fresh reader of THAT round found no blocking defect and nine findings, all
+applied in `004049c1ce..e6df007602`: the settle read only the first held action
+on a key, so a layout that also bound A to a strafe passed (it now requires each
+key to drive exactly one held action, over a list pinned to the bind table); the
+receipt comment claimed a check its notice equality cannot make (reworded: the
+gate frame's focus check is what refuses a dismissal after the press); the
+running-realm NPC case asserted movement that does not happen (it now pins the
+measured closest spawn exactly); the Evergarden bed pass was the one bloom pass
+left unchecked; every bloom read all 124 exclusions (each chunk now tests its
+own exact short list); the forced-colors cue is now proved from the computed
+style in Chromium; a stale comment, the `when` list's stated purpose, and an
+optimistic hello-test comment.
+
+A third fresh reader, of THAT round, found the one real defect in it: the chunk short
+list reached 3 yd, but a four-rep bloom strays up to 2.65 yd on each axis, 3.75 on the
+diagonal, so a corner bloom could miss an exclusion the list had dropped (latent: zero
+disagreements measured over the built-in world), and nothing pinned the reach. Fixed in
+`77afa71a35` by removing the dependency rather than tuning the number: a point beyond the
+reach reads the whole list, so the test is exact everywhere and the reach sets only
+speed. The same reader corrected four comments that claimed more than their checks
+(`1c536218af`). A fourth, final reader proved the exactness (the containment bound for a
+turned box, both boundary comparisons, one million randomized points with zero
+mismatches) and found only comment nits and one uncovered boundary, all applied in
+`01518e8eaf`; its should-fix, a test comment citing this ledger for the reconnect grass
+limit before this ledger recorded it, is closed by the RECORDED section below.
+
+Every fix in the three rounds was mutation-checked; the survivors each earned a case
+(the stance z-term, an in-reach reopen, the anchored-bloom padding band, the importer
+comment strip, a turned box's padded corner, the always-whole-list fast path and the
+point-side threshold), and each then died.
+
+### THE MEASUREMENTS
+
+- The capture: 18 frames and the performance record, final set `8618300332`, every
+  number in `docs/freeholds/interiors-implementation-evidence.md` (last section).
+- The terrain corpus tail: 2 of 2 on Linux x86_64 glibc 2.36 (`node:26-bookworm` under
+  `--platform linux/amd64`), beside the aarch64 run each re-mint recorded.
+- The shard weights: 474 unmeasured test files carried at the median of three local runs armed against Postgres (`7cf74b411d`; table coverage 1.0, 4,538 of 4,538, against the 0.918 floor).
+- The gate: the armed `node scripts/gate_select.mjs` runs on the tree that records this section; its outcome is the next entry.
+
+### RECORDED, NOT APPLIED, EACH WITH ITS REASON
+
+Kept out of the capture seal, by the rule the `when` list now states (the seal is
+the curated inputs that decide what the committed frames show): `src/game/input.ts`,
+`src/game/keybinds.ts` and `src/sim/player_motion.ts` decide only whether the camera
+settle can run, and the settle refuses unless its preconditions hold while every
+frame's record proves its outcome (stance, facing, camera); `src/sim/data.ts` merges
+the gate site, which is sealed at its source (`src/sim/eastbrook_layout.ts`) and
+whose merge `tests/freehold_layouts.test.ts` pins. Sealing those large, churning
+files would mark the evidence stale at nearly every release for no frame change.
+
+Measured, not enforced: the reveal soft-deadline and submit-stop counters did not
+move in either first-draw window, but the perf check enforces only live-program,
+attach-watchdog, gate-timeout, reveal-watchdog and touch-unproven; adding the two
+would harden a software-renderer tour without a ruling. touch-unproven already
+stands at 1 before the window on both profiles, so the check proves no NEW one.
+
+Known limits, stated where they live: the procedural arch fallback's passage
+triangulates filled (the browser draws the GLB; the probe and the grass circle
+are measured against it), and on that fallback a click through the arch now picks
+the gate, since the gate became pickable; the blade-grass carpet above the medium
+tier is not cleared; the grass ring is built once per renderer, so a reconnect
+whose hello flips the freeholds flag does not rebuild it (the next renderer
+reads it right); the no-parallel-compile residual and the landmark entry cost on
+constrained devices are unmeasured; the SwiftShader capture is visibility
+evidence, not GPU cost; the polish seal does not include the visibility or
+foliage cores; `door_portal`'s material name is untested; the golden lost its
+POI visit marks because the drop lies outside both visit radii; the gate's tabs
+sit on the library look without a `.ui-panel` under them, so their open bottom
+edge floats (cosmetic, visible in the frames); `delve_interactable_visibility_core`
+now decides visibility for every object view, not only delve ones (a rename is a
+follow-up across its importers); the Evergarden bed pass's exclusion check is
+latent (no shipped exclusion overlaps a garden bed, so no test can fail on its
+revert; a source pin holds it); an older client shows the new leave line in
+English until it updates (deploy timing).
+
+Pre-existing or out of scope: `saved_pos_exit`'s `leaveOffset` bug in other
+dungeons; the literal `'freehold_gate'` in UI modules this packet did not touch.
+
+History, not fixable in place: some commits in the range are red between (the
+committed-evidence pin is red from each sealed-input change until the next
+receipt; bisect across them with care). Commit bodies that overclaimed or
+mislabelled are corrected here rather than rewritten: `ca325559eb`, `5cc9d3986b`,
+`742523fbc4` (counted two garden beds where four stood within the 10 yd sum),
+`2e31fbb91b` (type), `d69ce0fd43`, `a11c1446ad`, `1ef85c2d3c`, `ba8460e32f`,
+`004049c1ce` ("answers exactly" held only within 3 yd until `77afa71a35`), and
+`c162e730be` (the shared-key layout it says walked cannot be held by the shipped
+bind table; the check is hardening against a foreign store).
+
+### STILL OPEN, IN ORDER
+
+1. THE 07 HARNESS-FIDELITY REWRITE, which is why 07's QA verdict is still FAIL: the store's
+   test harness lets `serialize` and `liveRev` contradict `hasLive`, so cases can model a
+   liveness state the server cannot produce (ROUND SEVENTEEN).
+2. `Sim.addPlayer` is not atomic, and the release widened it: `seedAccountLedgerSelf`
+   runs after `addEntity` and the freehold seed, and the join's catch only releases the
+   binding.
+3. The release's account ledger is cross-realm, so a character on a dark realm (D85) can
+   show Hearth relics and earn cosmetic Reliquary deeds from lit-realm finds: a ruling.
+4. Phase 17 needs its re-plan onto the account ledger (recorded in `phase-17-trophies.md`
+   and D48).
+5. A new release sync, if `release/**` moves again.
+6. FERNANDO: confirm the chosen margins that placed the gate at `(-38.65,-103.75)` rather
+   than the nearer `(-37,-103.5)`.
