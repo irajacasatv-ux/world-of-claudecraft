@@ -879,10 +879,11 @@ describe('reopening the gate after a leave', () => {
     await expect(reopenFreeholdGate(page)).rejects.toThrow(/lost the gate/);
   });
 
-  it('presses at once from the drop itself', async () => {
+  // The drop, and a leave that stopped just inside the 4.5 yd walk-back line.
+  it.each([4, 4.4])('presses at once from %s yd, already in reach', async (away) => {
     vi.useFakeTimers();
     const { page, events, player } = kinematicPage(stance, {});
-    player.pos = { x: site.x, y: 0, z: site.z - 4 };
+    player.pos = { x: site.x, y: 0, z: site.z - away };
     await onFakeClock(() => reopenFreeholdGate(page));
     expect(events).toEqual(['press:f']);
   });
