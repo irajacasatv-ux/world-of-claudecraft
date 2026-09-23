@@ -558,8 +558,8 @@ const ROCK_SNOWLINE_Y = 34; // terrain snow tint starts at h~34 (terrain.ts)
 const GRASS_MAX_SLOPE = 0.62;
 const GRASS_SLOPE_EPS = 1.2;
 const GRASS_BUILDING_PADDING = 0.35;
-// The farthest a bloom lands off its tuft: four reps at (1.4 + 3 x 1.3) / 2 = 2.65.
-const GRASS_BLOOM_STRAY = 3;
+// Blooms stray up to (1.4 + 3 x 1.3) / 2 = 2.65 yd per axis off a tuft, 3.75 diagonally.
+const GRASS_BLOOM_STRAY = 3.75;
 
 export interface FoliageView {
   group: THREE.Group;

@@ -468,12 +468,12 @@ describe('a streamed chunk exclusion test', () => {
         },
   );
 
-  it('answers as the whole list does for every point within reach of the chunk', () => {
+  it('answers as the whole list does for every point, near the chunk or strayed past its reach', () => {
     const test = grassExclusionTestNear(exclusions, box, 0.35, 3);
     let inside = 0;
     for (let i = 0; i < 20_000; i++) {
-      const x = between(box.minX - 3, box.maxX + 3);
-      const z = between(box.minZ - 3, box.maxZ + 3);
+      const x = between(box.minX - 12, box.maxX + 12);
+      const z = between(box.minZ - 12, box.maxZ + 12);
       const whole = insideEastbrookGrassExclusion(exclusions, x, z, 0.35);
       if (whole) inside++;
       expect(test(x, z), `${x}, ${z}`).toBe(whole);
@@ -499,6 +499,34 @@ describe('a streamed chunk exclusion test', () => {
     expect(grassExclusionTestNear([edge(-4.36)], box, 0.35, 3).near).toEqual([]);
     expect(grassExclusionTestNear([edge(-4.34)], box, 0.35, 3).near).toHaveLength(1);
     expect(grassExclusionTestNear([], box, 0.35, 3)(1, 1)).toBe(false);
+  });
+
+  it('never touches an out-of-reach exclusion for a point inside the chunk', () => {
+    let reads = 0;
+    const far = new Proxy<EastbrookGrassExclusion>(
+      { kind: 'circle', id: 'far', x: -30, z: 24, radius: 1 },
+      {
+        get(target, key) {
+          reads++;
+          return target[key as keyof typeof target];
+        },
+      },
+    );
+    const nearBy: EastbrookGrassExclusion = { kind: 'circle', id: 'by', x: 10, z: 10, radius: 1 };
+    const test = grassExclusionTestNear([far, nearBy], box, 0.35, 3);
+    reads = 0;
+    expect(test(10, 10)).toBe(true);
+    expect(test(40, 40)).toBe(false);
+    expect(reads).toBe(0);
+  });
+
+  it('reads the whole list for a point strayed past the reach', () => {
+    // Off the short list (9 yd west, out of reach), yet the point sits in it.
+    const far: EastbrookGrassExclusion = { kind: 'circle', id: 'far', x: -9, z: 24, radius: 1 };
+    const test = grassExclusionTestNear([far], box, 0.35, 3);
+    expect(test.near).toEqual([]);
+    expect(test(-9, 24)).toBe(true);
+    expect(test(-9, 30)).toBe(false);
   });
 
   it('keeps a turned box whose padded corner alone reaches the chunk', () => {

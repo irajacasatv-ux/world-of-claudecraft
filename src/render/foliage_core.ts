@@ -263,11 +263,13 @@ export function eastbrookGrassExclusions(
 }
 
 /**
- * A streamed chunk's exclusion test: the same answer as
- * insideEastbrookGrassExclusion for any point within `reach` of the chunk's
- * box, reading only the exclusions whose padded footprint comes that close, so
- * a tuft or bloom checks the few near it rather than every one in the world.
- * The short list rides on the test as `near`.
+ * A streamed chunk's exclusion test, answering exactly as
+ * insideEastbrookGrassExclusion does for every point. A point within `reach`
+ * of the chunk's box reads only the exclusions whose padded footprint comes
+ * that close, so a tuft or bloom checks the few near it rather than every one
+ * in the world; a point farther out (a bloom strayed past the reach) reads the
+ * whole list, so `reach` sets only how often that slower path runs. The short
+ * list rides on the test as `near`.
  */
 export function grassExclusionTestNear(
   exclusions: readonly EastbrookGrassExclusion[],
@@ -284,8 +286,12 @@ export function grassExclusionTestNear(
     const dz = Math.max(box.minZ - exclusion.z, 0, exclusion.z - box.maxZ);
     return Math.hypot(dx, dz) < extent + reach;
   });
-  const test = (x: number, z: number) =>
-    near.length > 0 && insideEastbrookGrassExclusion(near, x, z, padding);
+  const test = (x: number, z: number) => {
+    const dx = Math.max(box.minX - x, 0, x - box.maxX);
+    const dz = Math.max(box.minZ - z, 0, z - box.maxZ);
+    const list = dx * dx + dz * dz <= reach * reach ? near : exclusions;
+    return list.length > 0 && insideEastbrookGrassExclusion(list, x, z, padding);
+  };
   return Object.assign(test, { near });
 }
 
