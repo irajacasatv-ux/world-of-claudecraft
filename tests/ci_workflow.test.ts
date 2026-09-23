@@ -536,10 +536,11 @@ describe('CI workflow parity', () => {
         `unexpected tracked paths are missing from the screenshot-reference corpus: ${missing.join(', ')}`,
       ).toEqual([]);
       const corpus = corpusCandidates.filter((file) => existsSync(join(repoRoot, file)));
-      // The release/v0.44.0 sync merge has 10,853 reference-bearing files
-      // (2026-09-22; 9,404 at snapshot ea3b62fad1, 2026-09-07).
+      // 10,729 reference-bearing files at the v0.44.0 sync close (2026-09-23;
+      // 9,404 at snapshot ea3b62fad1, 2026-09-07). The 10,853 pinned at the sync
+      // merge was never that merge's own count, which is 10,709 by `git ls-tree`.
       // An emptied or truncated enumeration must not green the coupling.
-      expect(corpus.length).toBeGreaterThanOrEqual(10_853);
+      expect(corpus.length).toBeGreaterThanOrEqual(10_729);
       for (const file of corpus) {
         const source = readFileSync(join(repoRoot, file), 'utf8');
         for (const match of source.matchAll(/docs\/screenshots\/([A-Za-z0-9._-]+)/g)) {
