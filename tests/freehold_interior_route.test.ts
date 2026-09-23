@@ -5,6 +5,7 @@ import {
   changeFreeholdToCottage,
   FREEHOLD_CAMERA_BEHIND_TOLERANCE,
   FREEHOLD_GATE_STANCE,
+  FREEHOLD_HELD_ACTIONS,
   FREEHOLD_ROUTE_TOLERANCE,
   freeholdGateApproachLegs,
   freeholdInteriorPerfFailures,
@@ -15,6 +16,7 @@ import {
   walkFreeholdRouteTo,
 } from '../scripts/freehold_interior_route.mjs';
 import { cameraFollowShouldSettle, updateFollowCameraYaw } from '../src/game/camera_follow';
+import { BIND_ACTIONS } from '../src/game/keybinds';
 import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { FREEHOLD_GATE_INTERACT_RANGE } from '../src/sim/freehold/gate_rules';
 import { FERRY_BELL_TOWN_LANDING } from '../src/sim/interactions/ferry_bell';
@@ -378,6 +380,13 @@ describe("the gate's first-draw window and the leave back to it", () => {
   );
 });
 
+it('names every held bind action for the camera settle, as the bind table declares them', () => {
+  expect(FREEHOLD_HELD_ACTIONS).toEqual(
+    BIND_ACTIONS.filter((action) => action.kind === 'held').map((action) => action.id),
+  );
+  expect(FREEHOLD_HELD_ACTIONS).toContain('turnLeft');
+});
+
 it('pins the capture stance literally, a yard short of the arch and four to its west', () => {
   expect(FREEHOLD_GATE_STANCE).toEqual({ dx: -4, dz: 1 });
 });
@@ -446,9 +455,9 @@ function kinematicPage(
     mouseCamera?: boolean;
     mouselook?: boolean;
     attackMove?: boolean;
-    // What each key is bound to (the defaults unless overridden), or no
-    // binding lookup on the input at all.
-    binds?: Record<string, string | null>;
+    // Each held action's combos (the shipped defaults unless overridden),
+    // or no binding lookup on the input at all.
+    binds?: Record<string, readonly string[]>;
     noKeybinds?: boolean;
     noGate?: boolean;
   },
@@ -468,10 +477,8 @@ function kinematicPage(
       ? {}
       : {
           keybinds: {
-            heldActionForCode: (code: string) => {
-              const binds = { KeyA: 'turnLeft', KeyD: 'turnRight', ...motion.binds };
-              return binds[code as keyof typeof binds] ?? null;
-            },
+            codesForAction: (id: string) =>
+              motion.binds?.[id] ?? BIND_ACTIONS.find((action) => action.id === id)?.defaults ?? [],
           },
         }),
   };
@@ -772,8 +779,10 @@ describe('holding the gate stance', () => {
     ['Mouse Camera', { mouseCamera: true }],
     ['mouselook', { mouselook: true }],
     ['attack-move', { attackMove: true }],
-    ['A rebound to strafe', { binds: { KeyA: 'strafeLeft' } }],
-    ['D unbound', { binds: { KeyD: null } }],
+    ['A rebound to strafe', { binds: { turnLeft: ['ArrowLeft'], strafeLeft: ['KeyA'] } }],
+    ['D unbound', { binds: { turnRight: ['ArrowRight'] } }],
+    ['A shared with a strafe', { binds: { strafeLeft: ['KeyQ', 'KeyA'] } }],
+    ['Shift+D on jump', { binds: { jump: ['Space', 'Shift+KeyD'] } }],
     ['no binding lookup', { noKeybinds: true }],
   ] as const)('refuses to settle with %s, before any key goes down', async (_, mode) => {
     vi.useFakeTimers();

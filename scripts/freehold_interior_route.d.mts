@@ -50,6 +50,7 @@ export function walkFreeholdRouteTo(
 export function sailToFreeholdTown(page: Page): Promise<void>;
 export const FREEHOLD_ROUTE_TOLERANCE: number;
 export const FREEHOLD_CAMERA_BEHIND_TOLERANCE: number;
+export const FREEHOLD_HELD_ACTIONS: readonly string[];
 export const FREEHOLD_GATE_STANCE: Readonly<{ dx: number; dz: number }>;
 export function approachFreeholdGateSite(
   page: Page,

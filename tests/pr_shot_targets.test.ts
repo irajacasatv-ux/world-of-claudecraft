@@ -1234,6 +1234,8 @@ describe('Freehold producer screenshot selection', () => {
     'src/render/foliage.ts',
     'src/sim/eastbrook_layout.ts',
     'src/sim/world_object_bootstrap.ts',
+    'src/game/offline_world_config.ts',
+    'src/game/camera_follow.ts',
     'src/game/interactions.ts',
     'src/game/nearby_interaction_core.ts',
     'scripts/enter_offline_game.mjs',

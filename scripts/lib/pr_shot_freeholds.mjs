@@ -64,12 +64,15 @@ export const freeholdReviewTargets = [
   key,
   label: `Freehold ${scene}`,
   scene,
-  // Everything that decides what these frames show: the housing UI and sim,
-  // whether and where the arch draws (the visibility, pick, rank and prewarm
-  // cores, the grass ring and its core, the arch body, the gate's spawn and
-  // press path, the layout site), and this harness with its shared entry.
-  // The shared stylesheets stay on the generic HUD fallback by policy
-  // (tests/pr_shot_targets.test.ts); the receipt's seal still covers them.
+  // The files whose change is about these frames, so a diff touching one
+  // re-shoots them: the housing UI and sim, whether and where the arch draws
+  // (the visibility, pick, rank and prewarm cores, the grass ring and its core,
+  // the arch body, the gate's spawn, the offline host flag and the press path,
+  // the layout site), the chase camera the stance settles, and this harness
+  // with its shared entry. The receipt's seal is broader on purpose: it lists
+  // every input a frame depends on, so the committed evidence reads stale the
+  // moment any of them changes. The shared stylesheets and the shared capture
+  // plumbing stay on their own selection by policy (tests/pr_shot_targets.test.ts).
   when: [
     'ui/hud/housing/',
     'freehold/',
@@ -87,6 +90,8 @@ export const freeholdReviewTargets = [
     'render/foliage.ts',
     'sim/eastbrook_layout.ts',
     'sim/world_object_bootstrap.ts',
+    'game/offline_world_config.ts',
+    'game/camera_follow.ts',
     'game/interactions.ts',
     'scripts/enter_offline_game.mjs',
     'scripts/freehold_',

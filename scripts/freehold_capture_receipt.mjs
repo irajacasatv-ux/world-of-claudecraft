@@ -246,10 +246,11 @@ try {
         );
         // The after arm settles the GPU notices and the arrival overlays at the
         // stance before the press; the baseline arm opens no prompt. The frame's
-        // notice resolution must be the stance settle's own: the harness copies
-        // it today, so this refuses a harness that settles the notices again
-        // after the press (the defect that took the prompt's focus) and records
-        // that later pass instead.
+        // notice resolution must be the one the stance settle recorded. That
+        // proves the record's source, not which pass dismissed what: a second
+        // settle after the press resolves the same way (the resolution follows
+        // which notice mounted), so a dismissal after the press is refused by
+        // the gate frame's focus check instead.
         requireEvidence(
           side === 'before'
             ? evidence.preSettle === null

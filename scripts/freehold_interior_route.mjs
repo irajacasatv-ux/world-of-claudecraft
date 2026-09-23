@@ -172,6 +172,21 @@ export async function approachFreeholdGateSite(page, site) {
  * stance, so matched before and after frames look the same way. */
 export const FREEHOLD_CAMERA_BEHIND_TOLERANCE = 0.1;
 
+/** Every held bind action (src/game/keybinds.ts BIND_ACTIONS of kind 'held'),
+ * pinned to that table by tests/freehold_interior_route.test.ts. The camera
+ * settle refuses unless A and D each drive exactly one of them, the turn. */
+export const FREEHOLD_HELD_ACTIONS = Object.freeze([
+  'forward',
+  'back',
+  'turnLeft',
+  'turnRight',
+  'strafeLeft',
+  'strafeRight',
+  'jump',
+  'dive',
+  'emoteWheel',
+]);
+
 /** Bring the follow camera round behind the player in place. Turning cannot
  * be trusted to carry it: src/game/camera_follow.ts caps all automatic camera
  * motion per frame (MAX_AUTO_YAW_SPEED), so at a software renderer's frame
@@ -187,22 +202,29 @@ export const FREEHOLD_CAMERA_BEHIND_TOLERANCE = 0.1;
  * off and A and D on Turn Left and Turn Right (the defaults, which the tour
  * never changes): Mouse Camera or mouselook turn the pair into strafes, the
  * same zero vector, attack-move takes KeyA, leaving Turn Right alone, and a
- * rebound key sends something else. So it refuses, before any key goes down,
- * unless all of that holds. Observation only; returns whether the camera came
+ * key rebound or shared with another held action sends that action too. So
+ * it refuses, before any key goes down, unless all of that holds. Observation only; returns whether the camera came
  * round in time. */
 async function settleFreeholdCamera(page, { timeoutMs = 20000 } = {}) {
-  const blockers = await page.evaluate(() => {
+  const blockers = await page.evaluate((held) => {
     const input = window.__game.input;
-    // Input keeps its bindings private; a missing lookup reads as unbound.
-    const heldAction = (code) => input.keybinds?.heldActionForCode?.(code) ?? null;
+    // Input keeps its bindings private; a missing lookup reads as unbound. A
+    // held key polls by its code, whatever modifiers its combo names.
+    const driving = (code) =>
+      held.filter((id) =>
+        (input.keybinds?.codesForAction?.(id) ?? []).some(
+          (combo) => combo.slice(combo.lastIndexOf('+') + 1) === code,
+        ),
+      );
+    const only = (code, id) => driving(code).join() === id;
     return [
       input.isMouseCameraMode(),
       input.isMouselookActive(),
       input.isAttackMoveEnabled(),
-      heldAction('KeyA') !== 'turnLeft',
-      heldAction('KeyD') !== 'turnRight',
+      !only('KeyA', 'turnLeft'),
+      !only('KeyD', 'turnRight'),
     ];
-  });
+  }, FREEHOLD_HELD_ACTIONS);
   if (blockers.some(Boolean))
     throw new Error(
       'Freehold tour camera settle needs Mouse Camera, mouselook and attack-move off, and A and D on Turn Left and Turn Right',
@@ -234,8 +256,8 @@ async function settleFreeholdCamera(page, { timeoutMs = 20000 } = {}) {
 /** Walk onto the stance, square up on -z (heading PI), bring the camera round
  * behind in place, then re-check the settled pose and the camera. Under load a walk can
  * carry past its stop by more than the route tolerance (1.28 yd once), and the
- * receipt holds every gate frame to that same tolerance, so it re-walks until
- * the pose holds, or throws. */
+ * receipt holds every gate and baseline frame to that same tolerance, so it
+ * re-walks until the pose holds, or throws. */
 export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}) {
   if (!Number.isInteger(attempts) || attempts < 1)
     throw new Error(`Freehold tour stance attempts must be a positive integer, not ${attempts}`);
