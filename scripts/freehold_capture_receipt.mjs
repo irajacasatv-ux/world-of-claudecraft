@@ -198,6 +198,33 @@ try {
           );
         }
         requireEvidence(
+          ['boot-notice', 'performance-notice', 'prior-performance-dismissal'].includes(
+            evidence.noticeResolution,
+          ),
+          `${side}: unresolved GPU notice in ${sidecarName}`,
+        );
+        if (side === 'before')
+          requireEvidence(
+            evidence.promptVisible === false && evidence.player?.pos?.x < 10000,
+            `before: baseline frame is not on the overworld in ${sidecarName}`,
+          );
+        else if (target === 'freehold-gate')
+          requireEvidence(
+            evidence.promptVisible === true &&
+              Array.isArray(evidence.controls) &&
+              evidence.controls.length > 3 &&
+              evidence.controls.every((control) => control.width >= 40 && control.height >= 40),
+            `after: gate frame has no usable prompt in ${sidecarName}`,
+          );
+        else
+          requireEvidence(
+            evidence.promptVisible === false &&
+              evidence.player?.entrySeq > 0 &&
+              evidence.player?.facing === 0 &&
+              evidence.player?.pos?.x > 10000,
+            `after: interior frame is not a settled room arrival in ${sidecarName}`,
+          );
+        requireEvidence(
           png.length >= 24 &&
             png.subarray(0, 8).toString('hex') === '89504e470d0a1a0a' &&
             png.readUInt32BE(16) === width * evidence.viewport.dpr &&

@@ -200,14 +200,14 @@ describe('Freehold functional capture evidence', () => {
 
 describe('Freehold capture receipt refusal', () => {
   // A synthetic producer set: the receipt reads only a PNG's signature and IHDR
-  // size, so a 24-byte stub stands in for each frame. Each defect below breaks
+  // size, so a 33-byte stub (signature plus IHDR header) stands in for each frame. Each defect below breaks
   // exactly one field of one frame, and the valid set is proven to clear every
   // evidence check first, so each refusal is for the defect it names.
   const site = JSON.parse(readFileSync('docs/freeholds/art/space-measurements.json', 'utf8')).gate
     .position as [number, number];
   const stance = { x: site[0] + FREEHOLD_GATE_STANCE.dx, z: site[1] + FREEHOLD_GATE_STANCE.dz };
   type Evidence = Record<string, unknown> & {
-    player: { pos: { x: number; z: number }; facing: number };
+    player: { pos: { x: number; z: number }; facing: number; entrySeq: number };
   };
   function png(width: number, height: number): Buffer {
     const bytes = Buffer.alloc(33);
@@ -232,6 +232,7 @@ describe('Freehold capture receipt refusal', () => {
         captured.push(file);
         writeFileSync(join(dir, file), png(width * dpr, height * dpr));
         const gateFrame = target === 'freehold-gate';
+        const room = side === 'after' && !gateFrame;
         const evidence: Evidence = {
           target,
           variant: view,
@@ -245,9 +246,19 @@ describe('Freehold capture receipt refusal', () => {
           promptFitsViewport: true,
           dismissedOverlays: [],
           overlaySettlePasses: 3,
-          player: gateFrame
-            ? { pos: { ...stance }, facing: Math.PI }
-            : { pos: { x: 119200, z: -1254 }, facing: 0 },
+          noticeResolution: 'boot-notice',
+          promptVisible: gateFrame && side === 'after',
+          controls:
+            gateFrame && side === 'after'
+              ? ['gate-tab-own', 'gate-tab-friend', 'gate-enter', 'gate-close'].map((key) => ({
+                  key,
+                  width: 40,
+                  height: 40,
+                }))
+              : [],
+          player: room
+            ? { pos: { x: 119200, z: -1254 }, facing: 0, entrySeq: 1 }
+            : { pos: { ...stance }, facing: Math.PI, entrySeq: 0 },
           gateDrawn: gateFrame && side === 'after',
         };
         edit?.(`${target}-${view}`, evidence);
@@ -280,28 +291,69 @@ describe('Freehold capture receipt refusal', () => {
     'duplicate image': 'expected one producer image',
     'wrong low preset': 'low graphics proof missing',
     'under three settle passes': 'obscured or mismatched capture',
+    'fractional settle passes': 'obscured or mismatched capture',
     'missing settle record': 'obscured or mismatched capture',
-    'off-stance gate frame': 'gate frame is off the gate stance',
-    'unsquared gate frame': 'gate frame is off the gate stance',
+    'gate frame 1.6 yd off the stance': 'gate frame is off the gate stance',
+    'gate frame turned 0.13 rad': 'gate frame is off the gate stance',
     'undrawn after gate frame': 'after: gate frame is off the gate stance, unsquared, or undrawn',
+    'after gate frame with no gateDrawn': 'after: gate frame is off the gate stance',
+    'after gate frame with no prompt': 'after: gate frame has no usable prompt',
+    'after gate control under 40 px': 'after: gate frame has no usable prompt',
+    'unresolved notice': 'unresolved GPU notice',
+    'baseline frame inside a room': 'before: baseline frame is not on the overworld',
+    'unsettled room arrival': 'after: interior frame is not a settled room arrival',
   };
+  // Inside the tolerances: 1.4 yd off the stance, 0.11 rad off -z.
+  const NEAR_MISSES = ['gate frame 1.4 yd off the stance', 'gate frame turned 0.11 rad'];
+  function edits(defect: string) {
+    return {
+      before: (name: string, e: Evidence) => {
+        if (defect === 'baseline frame inside a room' && name === 'freehold-inn-desktop')
+          e.player.pos.x = 119200;
+        if (name !== 'freehold-gate-desktop') return;
+        if (defect === 'wrong low preset')
+          (e.settings as { graphicsPreset: number }).graphicsPreset = 2;
+        if (defect === 'under three settle passes') e.overlaySettlePasses = 2;
+        if (defect === 'fractional settle passes') e.overlaySettlePasses = 3.5;
+        if (defect === 'missing settle record') delete e.overlaySettlePasses;
+        if (defect === 'gate frame 1.6 yd off the stance') e.player.pos.x += 1.6;
+        if (defect === 'gate frame 1.4 yd off the stance') e.player.pos.x += 1.4;
+        if (defect === 'gate frame turned 0.13 rad') e.player.facing = Math.PI - 0.13;
+        if (defect === 'gate frame turned 0.11 rad') e.player.facing = Math.PI - 0.11;
+        if (defect === 'unresolved notice') e.noticeResolution = 'none';
+      },
+      after: (name: string, e: Evidence) => {
+        if (defect === 'unsettled room arrival' && name === 'freehold-inn-desktop')
+          e.player.entrySeq = 0;
+        if (name !== 'freehold-gate-desktop') return;
+        if (defect === 'undrawn after gate frame') e.gateDrawn = false;
+        if (defect === 'after gate frame with no gateDrawn') delete e.gateDrawn;
+        if (defect === 'after gate frame with no prompt') e.promptVisible = false;
+        if (defect === 'after gate control under 40 px')
+          (e.controls as { height: number }[])[0].height = 39;
+      },
+    };
+  }
 
-  it('clears every evidence check for a valid synthetic set (the positive control)', () => {
-    const root = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
-    try {
-      const [before, after] = [join(root, 'before'), join(root, 'after')];
-      for (const dir of [before, after]) mkdirSync(dir);
-      stage(before, 'before');
-      stage(after, 'after');
-      const result = receipt(before, after, join(root, 'receipt'));
-      // It stops only at the absent performance producer, past every frame.
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain('performance.json');
-      for (const message of Object.values(REFUSALS)) expect(result.stderr).not.toContain(message);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
+  it.each(['a valid synthetic set (the positive control)', ...NEAR_MISSES])(
+    'clears every evidence check for %s',
+    (defect) => {
+      const root = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
+      try {
+        const [before, after] = [join(root, 'before'), join(root, 'after')];
+        for (const dir of [before, after]) mkdirSync(dir);
+        stage(before, 'before', edits(defect).before);
+        stage(after, 'after', edits(defect).after);
+        const result = receipt(before, after, join(root, 'receipt'));
+        // It stops only at the absent performance producer, past every frame.
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('performance.json');
+        for (const message of Object.values(REFUSALS)) expect(result.stderr).not.toContain(message);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+  );
 
   it.each(Object.keys(REFUSALS))('refuses %s before publishing any evidence', (defect) => {
     const root = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
@@ -309,20 +361,8 @@ describe('Freehold capture receipt refusal', () => {
     try {
       const [before, after] = [join(root, 'before'), join(root, 'after')];
       for (const dir of [before, after]) mkdirSync(dir);
-      const beforeEdit = (name: string, e: Evidence) => {
-        if (name !== 'freehold-gate-desktop') return;
-        if (defect === 'wrong low preset')
-          (e.settings as { graphicsPreset: number }).graphicsPreset = 2;
-        if (defect === 'under three settle passes') e.overlaySettlePasses = 2;
-        if (defect === 'missing settle record') delete e.overlaySettlePasses;
-        if (defect === 'off-stance gate frame') e.player.pos.x += 3;
-        if (defect === 'unsquared gate frame') e.player.facing = Math.PI - 0.3;
-      };
-      const captured = stage(before, 'before', beforeEdit);
-      stage(after, 'after', (name, e) => {
-        if (defect === 'undrawn after gate frame' && name === 'freehold-gate-desktop')
-          e.gateDrawn = false;
-      });
+      const captured = stage(before, 'before', edits(defect).before);
+      stage(after, 'after', edits(defect).after);
       if (defect === 'missing image' || defect === 'duplicate image') {
         if (defect === 'missing image') captured.pop();
         else captured[1] = captured[0];

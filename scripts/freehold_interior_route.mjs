@@ -51,8 +51,16 @@ function headingDifference(target, facing) {
   return Math.atan2(Math.sin(target - facing), Math.cos(target - facing));
 }
 
+/** How close a route walk stops to its target, in yards. */
+export const FREEHOLD_ROUTE_TOLERANCE = 0.7;
+
 /** Walk through browser key events. Position and facing are observation-only. */
-export async function walkFreeholdRouteTo(page, x, z, { tolerance = 0.7, timeoutMs = 45000 } = {}) {
+export async function walkFreeholdRouteTo(
+  page,
+  x,
+  z,
+  { tolerance = FREEHOLD_ROUTE_TOLERANCE, timeoutMs = 45000 } = {},
+) {
   await waitForFreeholdMovementReady(page);
   const started = Date.now();
   let previous = await playerPose(page);

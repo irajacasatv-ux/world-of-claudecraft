@@ -3,6 +3,7 @@ import type { Page } from 'puppeteer-core';
 import { describe, expect, it } from 'vitest';
 import {
   FREEHOLD_GATE_STANCE,
+  FREEHOLD_ROUTE_TOLERANCE,
   freeholdInteriorPerfFailures,
   leaveFreeholdThroughExit,
   sampleFreeholdInterior,
@@ -277,9 +278,10 @@ it('leaves through the physical exit with read-only __game observations', async 
 });
 
 it('holds the capture stance inside the gate reach, walk tolerance included', () => {
-  // walkFreeholdRouteTo stops within 0.7 yd of its target, so the stance plus
-  // that tolerance must still reach the gate, or the press opens nothing.
+  // walkFreeholdRouteTo stops within its default tolerance of the target, so
+  // the stance plus that tolerance must still reach the gate.
   const offset = Math.hypot(FREEHOLD_GATE_STANCE.dx, FREEHOLD_GATE_STANCE.dz);
   expect(offset).toBeCloseTo(4.123, 3);
-  expect(offset + 0.7).toBeLessThan(FREEHOLD_GATE_INTERACT_RANGE);
+  expect(FREEHOLD_ROUTE_TOLERANCE).toBe(0.7);
+  expect(offset + FREEHOLD_ROUTE_TOLERANCE).toBeLessThan(FREEHOLD_GATE_INTERACT_RANGE);
 });
