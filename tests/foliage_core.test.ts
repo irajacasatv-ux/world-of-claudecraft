@@ -106,7 +106,7 @@ describe('the Freehold Gate grass exclusion', () => {
       'this.foliage = buildFoliage(this.sim.cfg.seed, this.webgl, !!this.sim.cfg.freeholdsEnabled);',
     );
     const foliage = code('src/render/foliage.ts');
-    expect(foliage).toContain(': buildGrassRing(group, seed, undefined, lit);');
+    expect(foliage).toContain(': buildGrassRing(group, seed, undefined, freeholdsLit);');
     expect(foliage).toContain(
       'freeholdGateLit ? (activeContent.services?.freeholdGate ?? null) : null,',
     );

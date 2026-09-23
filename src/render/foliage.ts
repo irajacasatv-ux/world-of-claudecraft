@@ -3043,10 +3043,9 @@ function buildGrassRing(
         // Dawnhold's bailey is paved wall to wall: no tuft, and so no flower
         // anchor either (the anchors above are what bloom the garden pass)
         if (tuftBiome === 'garden' && inDawnholdBailey(x, z, 0.5)) continue;
-        // the Willowfen grows no grass blades: each would-be tuft stays an
-        // unseen flower anchor (the bloom pass below), so the fen floor
-        // reads as open flower fields instead (density 0 would kill the
-        // anchors too, the frost/garden idiom, which is not what fen wants)
+        // the Willowfen grows no grass blades: each would-be tuft stays an unseen flower
+        // anchor (the bloom pass below), so the fen floor reads as open flower fields instead
+        // (density 0 would kill the anchors too, the frost/garden idiom, not what fen wants)
         const fenTuft = tuftBiome === 'fen';
         if (!fenTuft) {
           // r is the density hash, so it only ever reaches the density cap:
@@ -3085,10 +3084,9 @@ function buildGrassRing(
           const mdz = z - mw.z;
           return mdx * mdx + mdz * mdz < mw.r * mw.r;
         });
-        // meadows bloom harder than hash fields: their ground carries fewer
-        // grass tufts (each tuft is a flower anchor), so density compensates
-        // the fen's field cells run broader and bloom harder: with its grass
-        // gone, the flowers alone carry the ground cover
+        // meadows bloom harder than hash fields: their ground carries fewer grass tufts (each
+        // tuft is a flower anchor), so density compensates; the fen's field cells run broader
+        // and bloom harder: with its grass gone, the flowers alone carry the ground cover
         const inField = fieldChunk && fieldCell < (fenTuft ? 0.68 : 0.42);
         // the downs ringing the stable paddock bloom into full flower fields
         const stableBloom = tuftBiome === 'gale' && stableMeadowBand(x, z);
@@ -3115,7 +3113,9 @@ function buildGrassRing(
             const fh = terrainHeight(fx, fz, seed);
             if (foliageShoreSkip(fx, fz, fh, seed)) continue;
             if (tooSteep(fx, fz, seed) || roadDistance(fx, fz) < 3.2) continue;
-            // a band-edge bloom must not stray into the worked yard
+            // a bloom strays off its tuft: keep it out of the town exclusions and the worked yard
+            if (insideEastbrookGrassExclusion(townExclusions, fx, fz, GRASS_BUILDING_PADDING))
+              continue;
             if (tuftBiome === 'gale' && inStableYard(fx, fz)) continue;
             if (tuftBiome === 'garden' && inDawnholdBailey(fx, fz, 0.5)) continue;
             const fs = 0.55 + hashAt(i + rep, j + rep, 9) * 0.5;
@@ -3133,11 +3133,10 @@ function buildGrassRing(
       yield; // one grid row per sub-unit: the budget gates between rows
     }
 
-    // Authored meadows also bloom independent of grass anchors: the scrubby
-    // basin shore carries few tufts (each tuft is a flower anchor above), so
-    // a direct grid pass keeps the drifts solid on bare ground too. The
-    // Drakelands' fields take a second jittered sample per cell: with the
-    // ember ground bare of grass, one sample reads gappy, not a field.
+    // Authored meadows also bloom independent of grass anchors: the scrubby basin shore
+    // carries few tufts (each tuft is a flower anchor above), so a direct grid pass keeps the
+    // drifts solid on bare ground too, clear of the town exclusions like every anchored bloom.
+    // The Drakelands' fields take a second jittered sample per cell: one reads gappy there.
     const meadowReps = chunkBiome === 'ember' ? 2 : 1;
     for (const mw of meadowsInChunk) {
       for (let i = i0; i <= i1 && fn < flowerCap; i++) {
@@ -3153,6 +3152,8 @@ function buildGrassRing(
             const fh = terrainHeight(fx, fz, seed);
             if (foliageShoreSkip(fx, fz, fh, seed)) continue;
             if (tooSteep(fx, fz, seed) || roadDistance(fx, fz) < 3.2) continue;
+            if (insideEastbrookGrassExclusion(townExclusions, fx, fz, GRASS_BUILDING_PADDING))
+              continue;
             const fs = 0.55 + hashAt(i + rep, j, 17) * 0.5;
             q.setFromAxisAngle(up, hashAt(i, j + rep, 18) * 12.4);
             m.compose(v.set(fx, fh, fz), q, sv.set(fs, fs, fs));
@@ -3166,10 +3167,9 @@ function buildGrassRing(
         yield; // one meadow grid row per sub-unit
       }
     }
-    // The Evergarden: no grass anchors exist (mown lawn), so the parterre
-    // beds and walk ribbons plant directly from the authored plan. Beds get
-    // a third jittered sample per grid cell so the compact plantings read
-    // lush and full; meadows stay at two (airy by design).
+    // The Evergarden: no grass anchors exist (mown lawn), so the parterre beds and walk
+    // ribbons plant directly from the authored plan. Beds get a third jittered sample per
+    // grid cell so the compact plantings read lush and full; meadows stay at two (airy).
     if (chunkBiome === 'garden') {
       for (let i = i0; i <= i1 && fn < flowerCap; i++) {
         for (let j = j0; j <= j1 && fn < flowerCap; j++) {
@@ -3570,7 +3570,11 @@ export const foliageDressingInternalsForTest = { generateDressing, dressStep };
 // Entry point
 // ---------------------------------------------------------------------------
 
-export function buildFoliage(seed: number, webgl?: THREE.WebGLRenderer, lit = false): FoliageView {
+export function buildFoliage(
+  seed: number,
+  webgl?: THREE.WebGLRenderer,
+  freeholdsLit = false,
+): FoliageView {
   const group = new THREE.Group();
   group.name = 'foliage';
   const bucketMeshes: BucketMesh[] = [];
@@ -3592,9 +3596,8 @@ export function buildFoliage(seed: number, webgl?: THREE.WebGLRenderer, lit = fa
   const modelVisibleTrianglesByLod: Record<string, number> = {};
   let modelDraws = 0;
   let modelTriangles = 0;
-  // Reused by the per-frame bucket cull below. Allocating this input inside the
-  // loop generated one short-lived object per foliage bucket per frame (well
-  // over 100 MB of garbage in a 12-second gameplay sample).
+  // Reused by the per-frame bucket cull below: allocating it in the loop made one object per
+  // foliage bucket per frame (well over 100 MB of garbage in a 12-second gameplay sample).
   const bucketWindow: BucketWindowInput = {
     centerDist: 0,
     radius: 0,
@@ -3620,10 +3623,9 @@ export function buildFoliage(seed: number, webgl?: THREE.WebGLRenderer, lit = fa
     atmosFogFar: 0,
     dists: lodDists(),
   };
-  // Light-space form of the renderer's shadow volume, and the camera-relative
-  // collapse window, rebuilt each frame, plus the copies the last repack was
-  // keyed on. `shadowPackSerial` advances only when one of them really moves,
-  // so a stationary player and camera repack nothing.
+  // Light-space form of the renderer's shadow volume and the camera-relative collapse window,
+  // rebuilt each frame, plus the copies the last repack was keyed on. `shadowPackSerial`
+  // advances only when one of them really moves, so a still player and camera repack nothing.
   const shadowBasis = createShadowVolumeBasis();
   const packedBasis = createShadowVolumeBasis();
   const collapseProbe = createCollapseProbe();
@@ -3642,17 +3644,15 @@ export function buildFoliage(seed: number, webgl?: THREE.WebGLRenderer, lit = fa
   const session = webgl ? createImpostorSession() : null;
   buildTrees(group, seed, bucketMeshes, treeHideables, session);
   buildDressing(group, seed, bucketMeshes, session);
-  // The sprite swap law engages only once sprite meshes really exist: if the
-  // bake throws (a grown kit overflowing the atlas, a lost context) the far
-  // field falls back to the lean law instead of collapsing real trees with
-  // nothing behind them. World entry survives either way.
+  // The sprite swap law engages only once sprite meshes really exist: if the bake throws (a
+  // grown kit overflowing the atlas, a lost context) the far field falls back to the lean law
+  // instead of collapsing real trees with nothing behind them. World entry survives either way.
   let spritesLive = false;
   if (session && webgl) {
     try {
-      // Village buildings and skyline decor join the same atlas: the far
-      // field shows civilization, not just forest. Placement math comes
-      // from props.ts (collectBuildingImpostors) so a sprite is always the
-      // asset the near view really renders.
+      // Village buildings and skyline decor join the same atlas: the far field shows
+      // civilization, not just forest. Placement math comes from props.ts
+      // (collectBuildingImpostors), so a sprite is always the asset the near view renders.
       const buildings = collectBuildingImpostors(seed);
       const buildingRows = new Map<string, number>();
       for (const src of buildings.sources) {
@@ -3749,7 +3749,7 @@ export function buildFoliage(seed: number, webgl?: THREE.WebGLRenderer, lit = fa
           return emptyGrassStats(false, 0, out);
         },
       }
-    : buildGrassRing(group, seed, undefined, lit);
+    : buildGrassRing(group, seed, undefined, freeholdsLit);
   freezeStaticMatrices(group);
   return {
     group,
