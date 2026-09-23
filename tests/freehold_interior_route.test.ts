@@ -402,6 +402,8 @@ function kinematicPage(
     orbitStuck?: boolean;
     cameraKick?: number;
     mouseCamera?: boolean;
+    mouselook?: boolean;
+    attackMove?: boolean;
     noGate?: boolean;
   },
 ) {
@@ -414,8 +416,8 @@ function kinematicPage(
   const input = {
     camYaw: player.facing + (motion.cameraOffset ?? 0),
     isMouseCameraMode: () => motion.mouseCamera === true,
-    isMouselookActive: () => false,
-    isAttackMoveEnabled: () => false,
+    isMouselookActive: () => motion.mouselook === true,
+    isAttackMoveEnabled: () => motion.attackMove === true,
   };
   // Which page.evaluate call each synthetic key event rode in.
   let evaluateCall = 0;
@@ -710,13 +712,19 @@ describe('holding the gate stance', () => {
     expect(events.filter((event) => event.startsWith('synthetic:'))).toEqual([]);
   });
 
-  it('refuses to settle with Mouse Camera on, where the turn keys strafe', async () => {
+  it.each([
+    ['Mouse Camera', { mouseCamera: true }],
+    ['mouselook', { mouselook: true }],
+    ['attack-move', { attackMove: true }],
+  ] as const)('refuses to settle with %s on, before any key goes down', async (_, mode) => {
     vi.useFakeTimers();
-    const { page, player } = kinematicPage(stance, { cameraOffset: 2.47, mouseCamera: true });
+    const { page, player, events, held } = kinematicPage(stance, { cameraOffset: 2.47, ...mode });
     player.pos = { x: stance.x, y: 0, z: stance.z };
     await expect(onFakeClock(() => holdFreeholdGateStance(page, stance))).rejects.toThrow(
       /needs Mouse Camera, mouselook and attack-move off/,
     );
+    expect(events.filter((event) => event.startsWith('synthetic:'))).toEqual([]);
+    expect([...held]).toEqual([]);
   });
 
   it('settles again when the camera is knocked off after the first settle', async () => {
@@ -856,10 +864,10 @@ describe('reopening the gate after a leave', () => {
     expect(player.pos.z).toBeLessThan(site.z);
   });
 
-  it('walks back from just past the reach, where a press would open nothing', async () => {
+  it.each([5.05, 5.3])('walks back from %s yd, just past the reach', async (away) => {
     vi.useFakeTimers();
     const { page, events, player } = kinematicPage(stance, {});
-    player.pos = { x: site.x, y: 0, z: site.z - 5.3 };
+    player.pos = { x: site.x, y: 0, z: site.z - away };
     await onFakeClock(() => reopenFreeholdGate(page));
     expect(events).toContain('down:w');
     expect(events.at(-1)).toBe('press:f');
