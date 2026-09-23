@@ -17,8 +17,10 @@
       ]
     },
     "overlays": {
-      "dismissedOverlays": [],
-      "passes": 3
+      "dismissedOverlays": [
+        "tutorial-greeting:guidance-off"
+      ],
+      "passes": 4
     }
   },
   "viewport": {
@@ -31,17 +33,17 @@
   "rendererTier": "low",
   "camera": {
     "position": [
-      -41.52295880880171,
-      5.270922484194701,
-      -91.42189796514184
+      -42.9991205549972,
+      5.248995414193855,
+      -92.0095724936812
     ],
     "quaternion": [
-      -0.15914379599654307,
-      0.046181391129791256,
-      0.007452727996527565,
-      0.9861465348286419
+      -0.15925326164918707,
+      -0.02818564141467183,
+      -0.004548583611975767,
+      0.9868248470013631
     ],
-    "inputYaw": -3.0480007292961435
+    "inputYaw": -3.19870102652052
   },
   "settings": {
     "cameraSpeed": 0.7,
@@ -202,11 +204,11 @@
   },
   "player": {
     "pos": {
-      "x": -42.58744735818034,
-      "y": -0.5038790107311919,
-      "z": -102.76225134819941
+      "x": -42.34896298190001,
+      "y": -0.5258033146176737,
+      "z": -103.38182318581971
     },
-    "facing": -3.0691148575128553,
+    "facing": 3.0569908169872413,
     "entrySeq": 0
   },
   "promptVisible": true,
@@ -263,25 +265,28 @@
     "points": [
       {
         "label": "plinth-left",
-        "sx": 938.3095426593446,
-        "sy": 496.4612583993981,
+        "sx": 920.3443824281989,
+        "sy": 501.8333299558617,
         "onScreen": true,
+        "archAtPoint": true,
         "occludedBy": null,
         "coveredBy": null
       },
       {
         "label": "plinth-right",
-        "sx": 1148.152833049913,
-        "sy": 503.65808441449917,
+        "sx": 1122.568153267765,
+        "sy": 497.4298347617607,
         "onScreen": true,
+        "archAtPoint": true,
         "occludedBy": null,
         "coveredBy": null
       },
       {
         "label": "keystone",
-        "sx": 1064.544851804707,
-        "sy": 285.63557342961013,
+        "sx": 1042.9438625832674,
+        "sy": 284.43909861931536,
         "onScreen": true,
+        "archAtPoint": true,
         "occludedBy": null,
         "coveredBy": null
       }

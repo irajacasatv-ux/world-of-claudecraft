@@ -9,7 +9,7 @@
       },
       {
         "path": "scripts/lib/pr_shot_freeholds.mjs",
-        "sha256": "36dd78220a6aaf1d6553b8521ac1d7ffbed1d502590e42674326dfd80ce1e445"
+        "sha256": "7d930cb73e9ed923fa63c46c082de027d8a378b42650d685469cf0bcc6abde48"
       },
       {
         "path": "scripts/pr_shot_targets.mjs",
@@ -21,7 +21,7 @@
       },
       {
         "path": "scripts/freehold_interior_route.mjs",
-        "sha256": "5de6a9455f7bd74e54765170a14ba09ecd72d2e4de5491e3e57647950bc02200"
+        "sha256": "41f13c3cf6253c89c1fa577ba22686cc300ffd69ac418c16a2c19804df35467b"
       },
       {
         "path": "scripts/perf_tour.mjs",
@@ -29,7 +29,7 @@
       },
       {
         "path": "scripts/freehold_capture_receipt.mjs",
-        "sha256": "d672895a7285c633d979eb9bbf2ab2c0b57835fb5f57b1624add21c954d43740"
+        "sha256": "03de01ea99840fb33e10363966b8b4dc60be36c3b33a9c9dda00a9afd87a58c8"
       },
       {
         "path": "scripts/enter_offline_game.mjs",
@@ -37,7 +37,7 @@
       },
       {
         "path": "scripts/lib/freehold_gate_probe.mjs",
-        "sha256": "a84d269f2397edbfaf2ae1b1f3e3c95c7ff70c6978181f96eff40a78b34597c9"
+        "sha256": "2f417cbd333e6022b8a484dd53d91cef8818ac1cff481624cc9eca4e146f0fb8"
       },
       {
         "path": "scripts/lib/freehold_receipt_guards.mjs",
@@ -45,7 +45,31 @@
       },
       {
         "path": "scripts/lib/freehold_capture_census.mjs",
-        "sha256": "9f5be8769e5d146293f16a4fb881738256d50525a9496577608ecfc74283173e"
+        "sha256": "e9bac64ef67139d516cef85883ab8addabd07ab9a51333e775dc3657a484b09d"
+      },
+      {
+        "path": "scripts/lib/gpu_notice_suppress.mjs",
+        "sha256": "c30b9126ca770c2f12db5b4abe3819861ac80d3d6000ce6cced824caa66ba08c"
+      },
+      {
+        "path": "scripts/lib/pr_shot_entry_opts.mjs",
+        "sha256": "1321c1cf7c64193182acd36008a6e61757624ac65c7091bb8b1a828a8c0f4ecd"
+      },
+      {
+        "path": "scripts/browser_path.mjs",
+        "sha256": "851e74e30d21ec6381cc1c584655b804b17b62fbcc71c5463d96067b8f5a2b64"
+      },
+      {
+        "path": "scripts/browser_path_resolve.mjs",
+        "sha256": "465f51f18e1f7bcc576e4f5852332b95a73f5add20d5e8b3360bdd0b9a26822f"
+      },
+      {
+        "path": "scripts/perf_tour_entry_options.mjs",
+        "sha256": "46f75132ef59b58a1fc1cf00706991c9ff2663bfc165e5e8bb6ad0847d8ced3a"
+      },
+      {
+        "path": "scripts/lib/pr_shot_masterwrought.mjs",
+        "sha256": "a52e2548eabbbe56feed9a4e6a79c0e5f45f60e8ae3a2defb0f4695f43838506"
       }
     ],
     "applicationDiff": [],
@@ -55,7 +79,7 @@
     "observation": "Verified when this receipt was generated, after capture producers completed.",
     "current": {
       "root": "/Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds",
-      "head": "0147a7b9da670f772dc53e558f175a0a7909c801",
+      "head": "01518e8eaf676fe310ad6ab8e9af9f63f032ef79",
       "status": []
     },
     "baselineRuntime": {
@@ -203,7 +227,7 @@
     },
     {
       "path": "scripts/lib/pr_shot_freeholds.mjs",
-      "sha256": "36dd78220a6aaf1d6553b8521ac1d7ffbed1d502590e42674326dfd80ce1e445"
+      "sha256": "7d930cb73e9ed923fa63c46c082de027d8a378b42650d685469cf0bcc6abde48"
     },
     {
       "path": "scripts/pr_shot_targets.mjs",
@@ -215,7 +239,7 @@
     },
     {
       "path": "scripts/freehold_interior_route.mjs",
-      "sha256": "5de6a9455f7bd74e54765170a14ba09ecd72d2e4de5491e3e57647950bc02200"
+      "sha256": "41f13c3cf6253c89c1fa577ba22686cc300ffd69ac418c16a2c19804df35467b"
     },
     {
       "path": "scripts/perf_tour.mjs",
@@ -263,7 +287,7 @@
     },
     {
       "path": "scripts/freehold_capture_receipt.mjs",
-      "sha256": "d672895a7285c633d979eb9bbf2ab2c0b57835fb5f57b1624add21c954d43740"
+      "sha256": "03de01ea99840fb33e10363966b8b4dc60be36c3b33a9c9dda00a9afd87a58c8"
     },
     {
       "path": "src/render/delve_interactable_visibility_core.ts",
@@ -291,11 +315,11 @@
     },
     {
       "path": "scripts/lib/freehold_gate_probe.mjs",
-      "sha256": "a84d269f2397edbfaf2ae1b1f3e3c95c7ff70c6978181f96eff40a78b34597c9"
+      "sha256": "2f417cbd333e6022b8a484dd53d91cef8818ac1cff481624cc9eca4e146f0fb8"
     },
     {
       "path": "src/render/foliage_core.ts",
-      "sha256": "c1b91734d1cd9d3a3e2125727430040e432759e176644631c38f2647c5e9ec57"
+      "sha256": "847a7666d7acf2fcfa81f2d22bebd9400624b64e224d5ea10ac90341fac2b87b"
     },
     {
       "path": "src/styles/library.css",
@@ -307,121 +331,177 @@
     },
     {
       "path": "scripts/lib/freehold_capture_census.mjs",
-      "sha256": "9f5be8769e5d146293f16a4fb881738256d50525a9496577608ecfc74283173e"
+      "sha256": "e9bac64ef67139d516cef85883ab8addabd07ab9a51333e775dc3657a484b09d"
+    },
+    {
+      "path": "src/render/foliage.ts",
+      "sha256": "182f65cf86207fbbc481a64d4ff909d98ba818d2d1d9f757edc1808aaf4d5c0d"
+    },
+    {
+      "path": "src/sim/world_object_bootstrap.ts",
+      "sha256": "72255605afae64a4d8202d226867ce8299ba70309ccba94c384d25a00a5db905"
+    },
+    {
+      "path": "src/game/nearby_interaction_core.ts",
+      "sha256": "923ab4bcc7e39c6381944a0ea3e7c0cd45e65c5e227aa490588fb6db7f2c51f7"
+    },
+    {
+      "path": "src/game/interactions.ts",
+      "sha256": "b824b01688b9ea4b0a2370b35b6bfbc452bcd08a6c764fbf0d4563ab978a1473"
+    },
+    {
+      "path": "src/styles/base.css",
+      "sha256": "f3b454831fe3670d2136d1d74a462f45d559f2be4e1321c7c408c60edaec01e7"
+    },
+    {
+      "path": "src/styles/tokens.css",
+      "sha256": "ea19f52d64ff7195e50480498ba7c17cfb5c9e3bae33119b7a4d11c548654356"
+    },
+    {
+      "path": "scripts/lib/gpu_notice_suppress.mjs",
+      "sha256": "c30b9126ca770c2f12db5b4abe3819861ac80d3d6000ce6cced824caa66ba08c"
+    },
+    {
+      "path": "scripts/lib/pr_shot_entry_opts.mjs",
+      "sha256": "1321c1cf7c64193182acd36008a6e61757624ac65c7091bb8b1a828a8c0f4ecd"
+    },
+    {
+      "path": "scripts/browser_path.mjs",
+      "sha256": "851e74e30d21ec6381cc1c584655b804b17b62fbcc71c5463d96067b8f5a2b64"
+    },
+    {
+      "path": "scripts/browser_path_resolve.mjs",
+      "sha256": "465f51f18e1f7bcc576e4f5852332b95a73f5add20d5e8b3360bdd0b9a26822f"
+    },
+    {
+      "path": "scripts/perf_tour_entry_options.mjs",
+      "sha256": "46f75132ef59b58a1fc1cf00706991c9ff2663bfc165e5e8bb6ad0847d8ced3a"
+    },
+    {
+      "path": "scripts/lib/pr_shot_masterwrought.mjs",
+      "sha256": "a52e2548eabbbe56feed9a4e6a79c0e5f45f60e8ae3a2defb0f4695f43838506"
+    },
+    {
+      "path": "src/game/camera_follow.ts",
+      "sha256": "4447d1057684f8cf007f1ab191362dfbab2aa075995ac5ac86872d895f1f96c9"
+    },
+    {
+      "path": "src/game/offline_world_config.ts",
+      "sha256": "e64644032af9fa8756342793702a9c8bf12ac7f94d240f3a27daf61698a74b30"
     }
   ],
   "performance": {
     "file": "performance.json",
-    "sha256": "6c1d63c0725e35a408c36cec5dc7e0a2ed6793f42e092979a4bbf6581e13705f"
+    "sha256": "8846bc44b1f178535ea7fb7917e396717d74d46901ee98b391c1176983117d3b"
   },
   "captures": [
     {
       "file": "before-freehold-gate-desktop.png",
-      "sha256": "6c3e6155b08fbce57d73113ac360a5273f7e7518b94fb4baa9a39c6e333ec7da",
+      "sha256": "be51ed1879e626574af444b499fbd97a8e4577fcd2cc5ad87db908e00dadc734",
       "evidence": "before-evidence-freehold-gate-desktop.json",
-      "evidenceSha256": "bc6808b7dc201e9f1c00024f43a76e436de192e2f48714feb65beffda616c1f4"
+      "evidenceSha256": "3dd92c57305f78beba6ade473c1aa81a4786643bb12f845f412dbb8e7fd13904"
     },
     {
       "file": "before-freehold-gate-compact.png",
-      "sha256": "8dc309c48f952e4a281facf8d71fe8b3e19e8fd84768bf0d39fee6d91bd42ff9",
+      "sha256": "da9966632d7722a036db924baa46662583e1412148e4f5cd32232f5382d62571",
       "evidence": "before-evidence-freehold-gate-compact.json",
-      "evidenceSha256": "8a1516b568941d6df145591b582e36f943c94119a300cb0417a2200cc06fa29b"
+      "evidenceSha256": "756570e00897078054a79e1a3bf332a7ff82e14c23039775f32bf6f2805994bd"
     },
     {
       "file": "before-freehold-gate-tablet.png",
-      "sha256": "fa000356249b2161b477b8fb5f407511cac7e59ca6e12d7958234c393f83b51d",
+      "sha256": "501ea4039d8df173327dac9c1c7ecc02ea070c6cf3357ee95316906b25a48a6a",
       "evidence": "before-evidence-freehold-gate-tablet.json",
-      "evidenceSha256": "8a3b11a741a86b98690f6a2c0eb5ea8e3ab5698f4fc3ab7194e036f40a985086"
+      "evidenceSha256": "9bace95860117ff366b21984fb0602b709972b4cd82c2f75229439f49ab22c4b"
     },
     {
       "file": "before-freehold-inn-desktop.png",
-      "sha256": "54588080424b3ecb4ab7ff09568d46bad81f72b27dca7c1c2f0e2711d31da71d",
+      "sha256": "fa28c8cf74cd6705ec864fe98ffe4bce8943d44daa40389c7d285bcd7b3cbae6",
       "evidence": "before-evidence-freehold-inn-desktop.json",
-      "evidenceSha256": "653fa00caef47a3aa82b7aabdce8f85b38d8b822dcff9cab969428a8e3690478"
+      "evidenceSha256": "e4edee0b1f1addbe54aba490776997542046bd1465e271c5b955fa0820905fab"
     },
     {
       "file": "before-freehold-inn-compact.png",
-      "sha256": "f4d93beea4feae89bff88c748607384b558ec75a82448f0fa449183224f2b418",
+      "sha256": "0a88105c07a9db882ca2209b10ca9dde68594ee383d34ab8ecb00ea7ddaed7d9",
       "evidence": "before-evidence-freehold-inn-compact.json",
-      "evidenceSha256": "13aca6ce98a2bf3c673060ae0f17cd2e214a31ac9cbdeb781ef8d7453da0fcd3"
+      "evidenceSha256": "18b4c0b1314cd4d1a69f59a1370f9825edf3c8e5f1bac30a4352974caa2b758c"
     },
     {
       "file": "before-freehold-inn-tablet.png",
-      "sha256": "13d392f5aee0dcb9e793504badaba8605283fc7f379f996b75e4ce17b6abd159",
+      "sha256": "070672f6a89ecf8b5c7597b2cc95a4606153b11bf2f3a6de32d89f6fa3101b1b",
       "evidence": "before-evidence-freehold-inn-tablet.json",
-      "evidenceSha256": "c7918617ba729a184fbd84c01934f47ee135b80d6052d70fea76b6e09329a5a2"
+      "evidenceSha256": "53523ba4dd7140c72f3395af3c3e5f01b7ece508fc2af8cbf0d82eacc87d984a"
     },
     {
       "file": "before-freehold-cottage-desktop.png",
-      "sha256": "ab600291494606ec28afd1f40b5d8a8799bebc1b6ae04dea2859bca40a88cf03",
+      "sha256": "92929fa53ca0de67a3eb3abc99373308f14a2a3a43dceac1e5b910ff37dfa85a",
       "evidence": "before-evidence-freehold-cottage-desktop.json",
-      "evidenceSha256": "5a3db52f9853acb73f4c4abc6476cb726b82b624ab313f5e8b300bf91000e602"
+      "evidenceSha256": "0938eb5860b4c867050f9c71dd69af8dd261b84e245e61bdc044ef540784c154"
     },
     {
       "file": "before-freehold-cottage-compact.png",
-      "sha256": "a0b68d42946549124b1dcbf4459c0bcee8590ed25aa8e9892392c968dc694fbe",
+      "sha256": "3f13f8ac60414e36c943c60fc8eb694c07f516e006f2cc44bef785ca2e6be6f2",
       "evidence": "before-evidence-freehold-cottage-compact.json",
-      "evidenceSha256": "c1dea3d231fb154b05b29ef7453a185f596cf50a1bd08b7951ca150631c039d6"
+      "evidenceSha256": "8bc6f5e4fd5dfbe8fad7900c17fa346dea14bd8aa338dbaf27397b9736811076"
     },
     {
       "file": "before-freehold-cottage-tablet.png",
-      "sha256": "c403f55fbefb0e590d571437c886692a2bde00ad4cc9f0c72c381371993a8e4e",
+      "sha256": "7bdff4e5c5967cf9630d755bdffed4aa5bfd16edf7140cf3f3a5819fd28b7a85",
       "evidence": "before-evidence-freehold-cottage-tablet.json",
-      "evidenceSha256": "d1703d14e228d7279ce8c4bd21e46f1cedbd7128a333fc230e16ed45aeed1230"
+      "evidenceSha256": "5a688dca76e724964eca499f358144579dc28690779fda8aa868119b48a3438d"
     },
     {
       "file": "after-freehold-gate-desktop.png",
-      "sha256": "c93094208ddd87640d9c567c3e18d555566b6f6498f04da29dbf7a92f647667e",
+      "sha256": "c348954d091f86f1918f5d0e8738bbd7b29095346769246c2bf2ef6f9648913c",
       "evidence": "after-evidence-freehold-gate-desktop.json",
-      "evidenceSha256": "9816a0b746c3b491ee6da826f5a07224a7e3c0d15903970cbade38ee2196b392"
+      "evidenceSha256": "4daa862efb76ed5aadee09f9168f3ccfb3ed7d41289bf283e133a24e0337aa64"
     },
     {
       "file": "after-freehold-gate-compact.png",
-      "sha256": "4a28f375f78feb7729e34fa593ad83667dc9a448892e7371c62f973148f58fca",
+      "sha256": "cb2937ee392ba6c7488096e6cd0d9f640cb72ed7b1f58d057742c90fbd7bbe5c",
       "evidence": "after-evidence-freehold-gate-compact.json",
-      "evidenceSha256": "063fe21b72ecf6898b400e6674bef222729d79fc8764dce35458befb9ae12f19"
+      "evidenceSha256": "ec2ef64a93750338f8b174cc41e149f48419e290489f5731783d15e47ea87af3"
     },
     {
       "file": "after-freehold-gate-tablet.png",
-      "sha256": "ce18b7549e8f2792e5a521939945d50b1562a70e11ece7fa5c6dd124f1a131f9",
+      "sha256": "9e34fde07fe67ead34eb056158da73db628ea25a4a66c2fdd491213a1a177b5f",
       "evidence": "after-evidence-freehold-gate-tablet.json",
-      "evidenceSha256": "a3ef67807bd684cd7f5d30e7ae04f3adc2d5cb2eccfe83bea921c2995ad33fe6"
+      "evidenceSha256": "3c9fb5c893ffafd9bd70b27c11b9dd43e2aa7dab21d8084a53023928b3173197"
     },
     {
       "file": "after-freehold-inn-desktop.png",
-      "sha256": "cc3062db6085b3733097a6c414f9fd841551df5e5e15592d721e775e5c7b43f7",
+      "sha256": "3ada58d0417e42e0b7d5c0f4ca7f2cc5dd73ed52eb963b0c4fb959c302bfd14f",
       "evidence": "after-evidence-freehold-inn-desktop.json",
-      "evidenceSha256": "9c37f6e6d5b396cd2b873e1781ed7ce0c5c15196bf6f9c269e204513d90bc94e"
+      "evidenceSha256": "c71c2e99699ffc100ca342b4ab3f455e9b2a12f52292f944aa336c6d68180dc7"
     },
     {
       "file": "after-freehold-inn-compact.png",
-      "sha256": "0e9ad63d6c3d73893e6298a3f59cdc15c09d53cd259d771e26e258c2bc0906c2",
+      "sha256": "c05365af4a14ba5f0bf600f53bc1cf25eb014275272f483940f8e911cca2ebce",
       "evidence": "after-evidence-freehold-inn-compact.json",
-      "evidenceSha256": "d4faa001af1b24ab2a089b8cd3a30323decb8e99c317299c1a92407d0fe8c4bd"
+      "evidenceSha256": "bd2ffbbbf1ecce5d2cb9debded428d14e389df0a6b2117ac9a201ddea7a4e3c1"
     },
     {
       "file": "after-freehold-inn-tablet.png",
-      "sha256": "8744dce3f51ed7938bc659a123083289738904837e17986a82633befa51ca17b",
+      "sha256": "240f2a5954f8e731313f35c14cd66b91c3043cf0cdba287684c7c619fb87943d",
       "evidence": "after-evidence-freehold-inn-tablet.json",
-      "evidenceSha256": "8618fdc19e70ad4b145124aa63ddc232a5ea5526b9db4efab411af3a2ebf4375"
+      "evidenceSha256": "71d8be2310c38ce43d574b4f92f0466eb7cb7bb7d5aaa9e3feb580fe9e7f5438"
     },
     {
       "file": "after-freehold-cottage-desktop.png",
-      "sha256": "bd312e0aec553c53974c6d49be6051fce6ca432554b77535ed4f99c0c30286dc",
+      "sha256": "8af7df110732a9eb0382bb71bc605836fbc80971ec6f3e5259f39be30611ca41",
       "evidence": "after-evidence-freehold-cottage-desktop.json",
-      "evidenceSha256": "42d202a3921574a110e5205a0c87da90def3bee2a593736b8fc6e7b759f3b8a0"
+      "evidenceSha256": "fb878a993a210871211812db1920d79d68aa76df6ffda07b8639af1ff82932f7"
     },
     {
       "file": "after-freehold-cottage-compact.png",
-      "sha256": "89f7562e4bb3d5db11458518076a59b74bed78fecdd2b0882b67f20c3e8ba6bf",
+      "sha256": "8b4511ebc209475233495778187b27a1b0948494f333788e6d8eae14e0b008f8",
       "evidence": "after-evidence-freehold-cottage-compact.json",
-      "evidenceSha256": "f52e6e011276900ed3d6445f5892cf9a0b617f074d8ac529b9cc95317a13f202"
+      "evidenceSha256": "1170f53780dfcc55d9131f1fafef5117b9089d12cb4de7bccb1170dfb76ac819"
     },
     {
       "file": "after-freehold-cottage-tablet.png",
-      "sha256": "51dee369fbf08f983a1a20f525f5b7333897a747210fd3c985acb4e0edf1cdf2",
+      "sha256": "39f169d3365c9dd08ab35a8c0cc0afd4416a44a16e5169d5e037599ab22d807f",
       "evidence": "after-evidence-freehold-cottage-tablet.json",
-      "evidenceSha256": "d700e762a73edf615a2d91ce32041f720a680ace44a4d78fc984c48771d7059d"
+      "evidenceSha256": "12b7ac588a1680c2d96ee64429601c2b4e6c96246f6fd859442bb20185605301"
     }
   ],
   "rawFiles": [
@@ -437,7 +517,7 @@
     },
     {
       "file": "performance.raw.json",
-      "sha256": "fb4a417ea015082b8e981bb3a26cbd115bf86c53802a8a0b189b253247d96880",
+      "sha256": "bf5a19fa09925105eb03288e56657051a93e8448c701798f388e8ad2fc594dc4",
       "formattedFile": "performance.json"
     }
   ]
