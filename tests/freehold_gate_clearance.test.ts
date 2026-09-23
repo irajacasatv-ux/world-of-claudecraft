@@ -20,7 +20,7 @@ import {
   type NearbyInteractionCandidate,
   resolveNearbyInteractionCandidate,
 } from '../src/game/nearby_interaction_core';
-import { isBlocked } from '../src/sim/colliders';
+import { isBlocked, queryOpenWorldColliders, supportHeightAt } from '../src/sim/colliders';
 import { FARM_PATCHES } from '../src/sim/content/farm_patches';
 import { FREEHOLD_FURNISHER_NPC_ID } from '../src/sim/content/freehold';
 import { ZONE1_ZONE } from '../src/sim/content/zone1';
@@ -95,6 +95,9 @@ beforeAll(() => {
 describe('the Freehold Gate site', () => {
   it('stands at its measured site, spawned there on every lit seed', () => {
     expect(GATE).toEqual({ x: -38.65, z: -103.75 });
+    // Facing 0: the arch opens along z, so the drop, the capture stance and the
+    // probe's face-on view all assume it.
+    expect(EASTBROOK_LAYOUT.services.freeholdGate.facing).toBe(0);
     for (const sim of sims) {
       const spawned = [...sim.entities.values()].find(
         (e) => e.templateId === FREEHOLD_GATE_TEMPLATE_ID,
@@ -113,12 +116,36 @@ describe('the Freehold Gate site', () => {
   it('keeps the margins that chose the site: off the road, collider-free, drop clear of buildings', () => {
     // The world's own "off road" placement threshold is roadDistance >= 5; the
     // site keeps half a yard more, and 3.5 yd of collider-free ground (the
-    // arch's plinths stand 1.7 either side; the eastbrook_home_market house is
-    // the nearest solid, blocking from 3.53 yd on every seed here).
+    // arch's plinths stand 1.7 either side). The nearest solid is the
+    // eastbrook_home_market house's collider, which blocks from 3.53 yd on
+    // every seed here (its layout footprint is farther, 4.75 yd).
     expect(roadDistance(GATE.x, GATE.z)).toBeGreaterThanOrEqual(5.5);
     const drop = DROP;
+    const house = EASTBROOK_LAYOUT.buildings.find((b) => b.id === 'eastbrook_home_market');
+    expect(house).toBeDefined();
     for (const seed of SEEDS) {
       expect(isBlocked(seed, GATE.x, GATE.z, 3.5), `seed ${seed}`).toBe(false);
+      // The positive control: a tenth of a yard more reaches the house.
+      expect(isBlocked(seed, GATE.x, GATE.z, 3.6), `seed ${seed} at 3.6`).toBe(true);
+      const near = queryOpenWorldColliders(
+        seed,
+        GATE.x - 5,
+        GATE.z - 8,
+        GATE.x + 6,
+        GATE.z + 5,
+        [],
+      );
+      expect(
+        near.some(
+          (c) => c.type === 'obb' && c.x === house?.position.x && c.z === house?.position.z,
+        ),
+        `seed ${seed} house collider`,
+      ).toBe(true);
+      // No deck stands over the drop, so the leave's deck seat (supportHeightAt,
+      // as dungeons.ts applies it) keeps the player on the ground there.
+      expect(supportHeightAt(seed, drop.x, drop.z, 0.5, Number.POSITIVE_INFINITY)).toBe(
+        Number.NEGATIVE_INFINITY,
+      );
     }
     // A leaving player lands at least 2 yd from every building footprint, and
     // 4.5 yd off the road centre.
@@ -189,6 +216,7 @@ describe('the Freehold Gate site', () => {
       const def = DUNGEONS[id];
       const leave = def.leaveOffset ?? { x: 0, z: -DUNGEON_DOOR_RETURN_INSET };
       const drop = { x: def.doorPos.x + leave.x, z: def.doorPos.z + leave.z };
+      expect(def.leaveOffset).toBeUndefined();
       expect(drop).toEqual(DROP);
       const inside = instanceOrigin(def.index, 0);
       const rejoin = resolveSavedPosExit({ x: inside.x, z: inside.z }).pos!;
@@ -197,7 +225,8 @@ describe('the Freehold Gate site', () => {
         expect(isInTownZone(at, zoneAt(at.x, at.z)), `${id} ${at.x},${at.z}`).toBe(true);
       }
     }
-    // The return's margin inside the circle, measured: 0.16 yd.
+    // The return's margin inside the circle, measured: 0.16 yd. Pinned to the
+    // measurement on purpose, so a hub retune that eats it fails loudly.
     const hub = ZONE1_ZONE.hub;
     expect(hub.radius - dist(DROP, hub)).toBeCloseTo(0.1605, 3);
   });
@@ -214,7 +243,8 @@ describe('the Freehold Gate site', () => {
       ...liveNpcs.map((e) => ({ id: e.templateId, d: dist(e.pos, GATE) })),
     ].filter((row) => row.d <= NPC_CLEARANCE);
     expect(near).toEqual([]);
-    // Nearest today, measured: Cook Marlow at 12.19 yd.
+    // Nearest today, measured: Cook Marlow at 12.19 yd. Pinned on purpose, so an
+    // NPC moving toward the gate is reviewed even while it clears 11 yd.
     const nearest = Math.min(...authored.map((n) => dist(n.pos, GATE)));
     expect(nearest).toBeCloseTo(12.185, 3);
   });
@@ -233,7 +263,8 @@ describe('the Freehold Gate site', () => {
   });
 
   it('holds every other object beyond both reaches, and every delve marker beyond an NPC reach', () => {
-    expect(liveObjects.length).toBeGreaterThan(20);
+    // 362 measured across both lit seeds.
+    expect(liveObjects.length).toBeGreaterThan(340);
     for (const object of liveObjects) {
       const clearance = object.templateId.startsWith('delve_')
         ? NPC_CLEARANCE
@@ -249,7 +280,9 @@ describe('the Freehold Gate site', () => {
 describe('the Freehold Gate through the real press ladder', () => {
   // The local world: the gate plus the nearest live NPCs and objects, every
   // garden bed and every gather node, so the ladder resolves each point
-  // against the same competitors it meets in town.
+  // against the same competitors it meets in town. K bounds only which
+  // competitors the ladder cases load; the distance cases above hold EVERY
+  // NPC, object, bed, node and escort post, so do not relax those for this.
   const K = 4;
   const nearestOf = <T>(items: T[], at: (item: T) => P) =>
     [...items].sort((a, b) => dist(at(a), GATE) - dist(at(b), GATE)).slice(0, K);
@@ -340,8 +373,10 @@ describe('the Freehold Gate through the real press ladder', () => {
     }
     // Non-vacuous PER GROUP: each group's discs really answered presses (a world
     // that lost its beds or nodes would otherwise skip every such point).
+    // Measured: npc 7162, object 4108, bed 5028, node 4980.
+    const floor: Record<Group, number> = { npc: 7000, object: 4000, bed: 4900, node: 4850 };
     for (const group of Object.keys(answered) as Group[])
-      expect(answered[group], group).toBeGreaterThan(3000);
+      expect(answered[group], group).toBeGreaterThan(floor[group]);
   });
 
   it('answers the gate, and nothing else, everywhere inside its own reach', () => {
@@ -350,7 +385,7 @@ describe('the Freehold Gate through the real press ladder', () => {
       ...nearestOf(realmObjects, (e) => e.pos),
     ];
     const points = disc(GATE, FREEHOLD_GATE_INTERACT_RANGE);
-    expect(points.length).toBeGreaterThan(1000);
+    expect(points.length).toBe(1257);
     for (const point of points) {
       // No standing point the gate reaches reaches anything else: without the
       // gate the press finds nothing there, so the gate can shadow no one and

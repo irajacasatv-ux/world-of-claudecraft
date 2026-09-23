@@ -18,6 +18,7 @@ import {
   FREEHOLD_INN_ROOM_DUNGEON_ID,
 } from '../src/sim/content/freehold';
 import { DUNGEON_LIST, DUNGEONS, dungeonAt, instanceOriginX } from '../src/sim/data';
+import { DUNGEON_DOOR_RETURN_INSET } from '../src/sim/instances/dungeons';
 import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { Sim } from '../src/sim/sim';
 import { dungeonsReadout } from '../src/sim/social/chat_readouts';
@@ -99,8 +100,8 @@ describe('freehold dungeon defs: registry shape', () => {
     expect(DUNGEONS.freehold_cottage.name).toBe('Cottage');
   });
 
-  it('drops a leaving player on clear quay ground: unblocked, with zero depenetration, on every test seed', () => {
-    // The drop is doorPos plus the shared 4 yd door inset (no leaveOffset;
+  it('drops a leaving player on clear ground: unblocked, with zero depenetration, on every test seed', () => {
+    // The drop is doorPos plus the shared door inset (no leaveOffset;
     // the saved-inside rejoin in sim.ts applies the same inset). The
     // literal, then the proof: isBlocked false AND resolvePosition moves the
     // body nowhere, at the real player radius, across the test seeds, the
@@ -110,7 +111,7 @@ describe('freehold dungeon defs: registry shape', () => {
     // tests/freehold_gate_clearance.test.ts.
     for (const def of [DUNGEONS.freehold_inn_room, DUNGEONS.freehold_cottage]) {
       expect(def.leaveOffset).toBeUndefined();
-      const drop = { x: def.doorPos.x, z: def.doorPos.z - 4 };
+      const drop = { x: def.doorPos.x, z: def.doorPos.z - DUNGEON_DOOR_RETURN_INSET };
       expect(drop).toEqual({ x: -38.65, z: -107.75 });
       for (const seed of [1, 7, 42, 99, 1032, 1337, WORLD_SEED, 2_147_483_647]) {
         expect(isBlocked(seed, drop.x, drop.z, PLAYER_BODY_RADIUS), `${def.id} seed ${seed}`).toBe(

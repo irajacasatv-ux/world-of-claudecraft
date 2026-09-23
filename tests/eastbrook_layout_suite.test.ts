@@ -13,6 +13,7 @@ import {
   REMOVED_EASTBROOK_PLACEMENTS,
   samplePolyline,
 } from '../src/sim/eastbrook_layout';
+import { DUNGEON_DOOR_RETURN_INSET } from '../src/sim/instances/dungeons';
 
 const PLAYER_RADIUS = 0.5;
 const MAX_MOVER_RADIUS = 0.8;
@@ -1408,7 +1409,7 @@ describe('layout clearance and service anchors', () => {
         id: 'freehold_gate:drop',
         position: {
           x: EASTBROOK_LAYOUT.services.freeholdGate.position.x,
-          z: EASTBROOK_LAYOUT.services.freeholdGate.position.z - 4,
+          z: EASTBROOK_LAYOUT.services.freeholdGate.position.z - DUNGEON_DOOR_RETURN_INSET,
         },
         bodyRadius: 2,
       },

@@ -25,6 +25,7 @@ import {
 } from '../src/sim/dungeon_floor';
 import { dawnholdKeepLiftAt, lastKeepLiftAt, layoutColliders } from '../src/sim/dungeon_layout';
 import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
+import { DUNGEON_DOOR_RETURN_INSET } from '../src/sim/instances/dungeons';
 import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { authoredWallSegments, inAnyRoom } from '../src/sim/rift/authored';
 import { wildheartFieldHeight } from '../src/sim/wildheart_field';
@@ -92,7 +93,10 @@ describe('measured freehold rooms', () => {
     const gate = EASTBROOK_LAYOUT.services.freeholdGate;
     expect(measured.gate.position).toEqual([gate.position.x, gate.position.z]);
     expect(measured.gate.facing).toBe(gate.facing);
-    expect(measured.gate.return).toEqual([gate.position.x, gate.position.z - 4]);
+    expect(measured.gate.return).toEqual([
+      gate.position.x,
+      gate.position.z - DUNGEON_DOOR_RETURN_INSET,
+    ]);
     // Each room's arrival point (its slot-0 origin plus the shared entry), which
     // the capture receipt holds interior frames to.
     for (const home of homes) {
