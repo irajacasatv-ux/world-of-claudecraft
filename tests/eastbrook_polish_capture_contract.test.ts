@@ -699,7 +699,8 @@ const PINNED_POLISH_COMPOSITE_FINGERPRINT =
   // Re-minted for the second Freehold Gate move, to (-37,-103.5): the eastbrook_layout.ts leaf moved. No capture was retaken.
   // Re-minted for the third Freehold Gate move, to (-39,-104): the eastbrook_layout.ts leaf moved. No capture was retaken.
   // Re-minted for the Freehold Gate view rank: the entityViewPolicy and viewPriorityPolicy leaves moved. No capture was retaken.
-  'd0c175ff3095051365787dca34a4cc45045da588a9fffe16c89b6a6990741fa1';
+  // Re-minted for the fourth Freehold Gate move, to (-38.65,-103.75): the eastbrook_layout.ts leaf moved. No capture was retaken.
+  'f3d4a3991f4e73e87af6fe1ccb661901e4241078d8a5eb6dd6964731c2ed8e66';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [
