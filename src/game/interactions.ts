@@ -242,7 +242,7 @@ export function handlePickedEntity(
 
   if (button === 2) {
     const d = dist2d(world.player.pos, e.pos);
-    // players: right-click only targets — the interaction menu lives on the
+    // players: right-click only targets; the interaction menu lives on the
     // target portrait (right-click it), like classic-MMO unit frames
     if (e.kind === 'object') {
       if (
@@ -382,7 +382,7 @@ export function handlePickedEntity(
         return true;
       }
     } else if (e.kind === 'npc') {
-      // left-click talks too — Mac trackpads make right-click a chore;
+      // left-click talks too: Mac trackpads make right-click a chore;
       // out of range it just targets (no error spam while exploring)
       const d = dist2d(world.player.pos, e.pos);
       // A ghost's left-click on the Pale Keeper talks to it as well: the raise is
