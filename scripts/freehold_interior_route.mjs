@@ -126,15 +126,33 @@ export async function sailToFreeholdTown(page) {
   await dismissEntryOverlays(page);
 }
 
-/** From the town landing to one yard short of a gate site: down the east road
- * to the site's side of it, then along z. The arch opens along z (facing 0), so
- * the last leg faces it square and the camera behind the player sees it face-on.
- * Shared by the capture's baseline arm, whose release has no gate entity. */
+/** Where the tour stands to press the gate, relative to its site: a yard short
+ * of it along z and 4 yd off its axis toward -x (4.12 yd away, inside the 5 yd
+ * reach), squared to face -z, so with the camera behind the player the arch
+ * reads face-on right of centre, clear of the compact prompt's top-left anchor. */
+export const FREEHOLD_GATE_STANCE = Object.freeze({ dx: -4, dz: 1 });
+
+/** From the town landing to the gate stance: along the east road on legs that
+ * stay 1.2 yd clear of every collider on the test seeds (a straight cut from
+ * (0,-88) grazed the civic benches and only finished by sliding), then along z.
+ * The arch opens along z (facing 0), so the last leg faces it square. Shared by
+ * the capture's baseline arm, whose release has no gate entity. */
 export async function approachFreeholdGateSite(page, site) {
+  const x = site.x + FREEHOLD_GATE_STANCE.dx;
   await walkFreeholdRouteTo(page, 0, -88);
-  await walkFreeholdRouteTo(page, -20, -101);
-  await walkFreeholdRouteTo(page, site.x, site.z + 6);
-  return walkFreeholdRouteTo(page, site.x, site.z + 1);
+  await walkFreeholdRouteTo(page, -19, -97);
+  await walkFreeholdRouteTo(page, -30, -100);
+  await walkFreeholdRouteTo(page, x, site.z + 6);
+  const pose = await walkFreeholdRouteTo(page, x, site.z + FREEHOLD_GATE_STANCE.dz);
+  // Square up on -z (heading PI) so every viewport's camera settles alike.
+  const started = Date.now();
+  while (true) {
+    const difference = headingDifference(Math.PI, (await playerPose(page)).facing);
+    if (Math.abs(difference) <= 0.12) break;
+    if (Date.now() - started > 10000) throw new Error('Freehold tour could not face the gate');
+    await turnFreeholdRoute(page, difference);
+  }
+  return pose;
 }
 
 export async function walkToFreeholdGate(page) {

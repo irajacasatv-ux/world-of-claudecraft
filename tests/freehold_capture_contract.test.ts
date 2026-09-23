@@ -11,7 +11,10 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { freeholdInteriorPerfFailures } from '../scripts/freehold_interior_route.mjs';
+import {
+  FREEHOLD_GATE_STANCE,
+  freeholdInteriorPerfFailures,
+} from '../scripts/freehold_interior_route.mjs';
 import { DUNGEONS, instanceOrigin } from '../src/sim/data';
 import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 
@@ -62,6 +65,9 @@ const sourcePaths = [
   'src/ui/hud/action_bar/action_bar_controller.ts',
   'scripts/freehold_capture_receipt.mjs',
   'src/render/delve_interactable_visibility_core.ts',
+  'scripts/enter_offline_game.mjs',
+  'src/sim/freehold/gate_rules.ts',
+  'src/render/entity_view_policy_core.ts',
 ];
 const digest = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -139,6 +145,7 @@ describe('Freehold functional capture evidence', () => {
           // The arrival-overlay settle ran for this frame (an empty list means it
           // found none across its quiet passes, not that it was skipped).
           expect(Array.isArray(evidence.dismissedOverlays), name).toBe(true);
+          expect(evidence.overlaySettlePasses, name).toBeGreaterThanOrEqual(3);
           expect(['boot-notice', 'performance-notice', 'prior-performance-dismissal']).toContain(
             evidence.noticeResolution,
           );
@@ -149,20 +156,26 @@ describe('Freehold functional capture evidence', () => {
             height * evidence.viewport.dpr,
           ]);
           if (target === 'freehold-gate') {
-            // Both gate frames stand at the CURRENT site, one yard north of it,
+            // Both gate frames stand at the tour's stance off the CURRENT site,
             // so a moved gate reds this contract until the frames are re-shot.
             const gate = EASTBROOK_LAYOUT.services.freeholdGate.position;
             const off = Math.hypot(
-              evidence.player.pos.x - gate.x,
-              evidence.player.pos.z - gate.z - 1,
+              evidence.player.pos.x - (gate.x + FREEHOLD_GATE_STANCE.dx),
+              evidence.player.pos.z - (gate.z + FREEHOLD_GATE_STANCE.dz),
             );
             expect(off, `${name} stands at the gate`).toBeLessThan(1.5);
+            // Squared on -z, so the arch reads face-on.
+            const turn = Math.PI - evidence.player.facing;
+            expect(Math.abs(Math.atan2(Math.sin(turn), Math.cos(turn))), name).toBeLessThanOrEqual(
+              0.12,
+            );
           }
           if (side === 'before') {
             expect(evidence.promptVisible).toBe(false);
             expect(evidence.player.pos.x).toBeLessThan(10000);
           } else if (target === 'freehold-gate') {
             expect(evidence.promptVisible).toBe(true);
+            expect(evidence.gateDrawn, `${name} drew the arch`).toBe(true);
             expect(evidence.controls.length).toBeGreaterThan(3);
             for (const control of evidence.controls) {
               expect(control.width).toBeGreaterThanOrEqual(40);

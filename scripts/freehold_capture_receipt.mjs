@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { freeholdInteriorPerfFailures } from './freehold_interior_route.mjs';
+import { FREEHOLD_GATE_STANCE, freeholdInteriorPerfFailures } from './freehold_interior_route.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const baselineCommit = '654071354172b3e252cfc03a1e85efde2daddaa6';
@@ -56,6 +56,9 @@ const sourcePaths = [
   'src/ui/hud/action_bar/action_bar_controller.ts',
   'scripts/freehold_capture_receipt.mjs',
   'src/render/delve_interactable_visibility_core.ts',
+  'scripts/enter_offline_game.mjs',
+  'src/sim/freehold/gate_rules.ts',
+  'src/render/entity_view_policy_core.ts',
 ];
 const runtimePaths = [
   'src',
@@ -70,6 +73,15 @@ const runtimePaths = [
   'vite.config.ts',
 ];
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+// The authored gate site, as the measurements record states it (pinned equal to
+// EASTBROOK_LAYOUT by tests/freehold_layouts.test.ts), and the tour's stance off it.
+const gateSite = JSON.parse(
+  fs.readFileSync(path.join(root, 'docs/freeholds/art/space-measurements.json'), 'utf8'),
+).gate.position;
+const gateStance = {
+  x: gateSite[0] + FREEHOLD_GATE_STANCE.dx,
+  z: gateSite[1] + FREEHOLD_GATE_STANCE.dz,
+};
 // The evidence directory is excluded from Biome scans. Use an in-root JSON stdin
 // path so normalized copies follow the repository formatter without touching raw producers.
 const formatted = (value) =>
@@ -168,9 +180,21 @@ try {
             /swiftshader/i.test(evidence.gpuRenderer) &&
             evidence.gpuNoticeVisible === false &&
             evidence.promptFitsViewport === true &&
-            Array.isArray(evidence.dismissedOverlays),
+            Array.isArray(evidence.dismissedOverlays) &&
+            Number.isInteger(evidence.overlaySettlePasses) &&
+            evidence.overlaySettlePasses >= 3,
           `${side}: obscured or mismatched capture ${sidecarName}`,
         );
+        if (target === 'freehold-gate') {
+          const pos = evidence.player?.pos ?? {};
+          const turn = Math.PI - evidence.player?.facing;
+          requireEvidence(
+            Math.hypot(pos.x - gateStance.x, pos.z - gateStance.z) < 1.5 &&
+              Math.abs(Math.atan2(Math.sin(turn), Math.cos(turn))) <= 0.12 &&
+              (side === 'before' || evidence.gateDrawn === true),
+            `${side}: gate frame is off the gate stance, unsquared, or undrawn in ${sidecarName}`,
+          );
+        }
         requireEvidence(
           png.length >= 24 &&
             png.subarray(0, 8).toString('hex') === '89504e470d0a1a0a' &&
@@ -273,7 +297,7 @@ try {
       performance: path.resolve(options.performance),
     },
     notes: [
-      'Before captures show the real release-baseline quay, which has neither a Freehold Gate nor the authored rooms.',
+      'Before captures stand at the gate stance on the real release baseline, which has neither a Freehold Gate nor the authored rooms.',
       'Both sides are produced by the current capture harness against their separate running applications.',
       'Source identities are receipt-time checks, not a claim that the producers recorded Git state at capture time.',
       'Raw manifests and performance records are retained byte-for-byte, including every diagnostic array.',

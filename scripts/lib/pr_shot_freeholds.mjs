@@ -72,7 +72,7 @@ export const freeholdReviewTargets = [
       // tests/freehold_capture_contract.test.ts holds both frames to it) and
       // stand where the after frame stands, so the missing prior surface is
       // explicit in the evidence record.
-      await approachFreeholdGateSite(page, { x: -37, z: -103.5 });
+      await approachFreeholdGateSite(page, { x: -39, z: -104 });
     } else {
       await walkToFreeholdGate(page);
       if (scene !== 'gate-own-prompt') {
@@ -104,7 +104,8 @@ export const freeholdReviewTargets = [
     );
     // The arrival overlays (tutorial card, ferry note) ride their own timers and
     // can land after the notices settle, so this runs last before the frame.
-    const { dismissedOverlays } = await settleFreeholdCaptureOverlays(page);
+    const { dismissedOverlays, passes: overlaySettlePasses } =
+      await settleFreeholdCaptureOverlays(page);
     const evidence = await page.evaluate(() => {
       const g = window.__game;
       const p = g.sim.player;
@@ -127,6 +128,23 @@ export const freeholdReviewTargets = [
         settings: JSON.parse(localStorage.getItem('woc_settings') ?? '{}'),
         theme: JSON.parse(localStorage.getItem('woc_theme') ?? '{}'),
         player: { pos: { ...p.pos }, facing: p.facing, entrySeq: p.dungeonEntrySeq ?? 0 },
+        // Whether the gate's own view drew this frame: its whole ancestor chain
+        // visible and its mid-height inside the camera frustum. A press opens
+        // the prompt whether or not the arch renders, so the prompt alone
+        // cannot prove the arch is on screen.
+        gateDrawn: (() => {
+          const gate = [...g.sim.entities.values()].find((e) => e.templateId === 'freehold_gate');
+          const view = gate ? g.renderer.views.get(gate.id) : null;
+          if (!view) return false;
+          for (let node = view.group; node; node = node.parent) if (!node.visible) return false;
+          const camera = g.renderer.camera;
+          camera.updateMatrixWorld();
+          const ndc = camera.position
+            .clone()
+            .set(gate.pos.x, gate.pos.y + 2, gate.pos.z)
+            .project(camera);
+          return Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1 && ndc.z >= -1 && ndc.z <= 1;
+        })(),
         promptVisible: Boolean(shown),
         controls: shown
           ? [...dialog.querySelectorAll('button,input,select')]
@@ -161,6 +179,12 @@ export const freeholdReviewTargets = [
     if (!/swiftshader/i.test(evidence.gpuRenderer ?? ''))
       throw new Error('Freehold capture backend does not match the software capture runner');
     if (evidence.gpuNoticeVisible) throw new Error('GPU notice obscures the Freehold capture');
+    if (
+      key === 'freehold-gate' &&
+      process.env.PR_SHOTS_FREEHOLD_BASELINE !== '1' &&
+      !evidence.gateDrawn
+    )
+      throw new Error('The Freehold Gate did not draw in the gate frame');
     if (!evidence.promptFitsViewport) throw new Error('Freehold prompt escapes its viewport');
     if (evidence.controls.some((control) => control.width < 40 || control.height < 40))
       throw new Error('Freehold prompt has a control smaller than 40 pixels');
@@ -177,6 +201,7 @@ export const freeholdReviewTargets = [
           noticeResolution,
           dismissedNotices,
           dismissedOverlays,
+          overlaySettlePasses,
           ...evidence,
         },
         null,

@@ -89,45 +89,56 @@ export async function enterOfflineGame(page, opts = {}) {
   return gameBooted;
 }
 
+/** One in-page pass over the entry overlays: reports which are up, and closes
+ * the spawn greetings (#tutorial-greeting, #profession-tutorial) through their
+ * DECLINING control. The ferry note's guidance variant has no close button, and
+ * its first button is "Turn guidance on", so this never clicks a greeting's
+ * first button: it prefers [data-guidance="off"], then [data-close], then
+ * [data-skip], and leaves a greeting with none of them up for the caller to
+ * report. Self-contained so page.evaluate can ship it as-is. */
+export function entryOverlayPass() {
+  const visible = (el) => !!el && getComputedStyle(el).display !== 'none';
+  const introLogo = document.getElementById('intro-logo');
+  const skipBtn = [...document.querySelectorAll('button.tut-skip')][0];
+  // The tutorial-island greeting (Ferryman Odo) rides the sim's 1 Hz
+  // sweep and pops a beat after the Proving Shore spawn
+  // (release/v0.41.0 moved fresh entries there), so it can surface
+  // AFTER a single poll would have returned; dismiss it through its
+  // own declining control like the other overlays, and the loop below holds a
+  // minimum number of polls so a not-yet-spawned greeting is still
+  // caught.
+  let greetingUp = false;
+  for (const id of ['tutorial-greeting', 'profession-tutorial']) {
+    const popup = document.getElementById(id);
+    if (popup && visible(popup)) {
+      greetingUp = true;
+      const decline =
+        popup.querySelector('[data-guidance="off"]') ??
+        popup.querySelector('[data-close]') ??
+        popup.querySelector('[data-skip]');
+      decline?.click();
+    }
+  }
+  return {
+    introUp: visible(introLogo) || document.getElementById('ui')?.style.display === 'none',
+    tutorialUp: visible(skipBtn),
+    cameraPromptUp: visible(document.querySelector('.camera-prompt-backdrop')),
+    greetingUp,
+  };
+}
+
 // Skip the first-spawn intro cinematic (Escape is its documented skip gesture), click any
 // "skip tutorial" button, and confirm the camera-mode-choice prompt. Polls a few rounds
 // since the intro cinematic's own listeners can attach a beat after the world boots.
 export async function dismissEntryOverlays(page) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   for (let i = 0; i < 5; i++) {
-    const state = await page
-      .evaluate(() => {
-        const visible = (el) => !!el && getComputedStyle(el).display !== 'none';
-        const introLogo = document.getElementById('intro-logo');
-        const skipBtn = [...document.querySelectorAll('button.tut-skip')][0];
-        // The tutorial-island greeting (Ferryman Odo) rides the sim's 1 Hz
-        // sweep and pops a beat after the Proving Shore spawn
-        // (release/v0.41.0 moved fresh entries there), so it can surface
-        // AFTER a single poll would have returned; dismiss it through its
-        // own confirm like the other overlays, and the loop below holds a
-        // minimum number of polls so a not-yet-spawned greeting is still
-        // caught.
-        let greetingUp = false;
-        for (const id of ['tutorial-greeting', 'profession-tutorial']) {
-          const popup = document.getElementById(id);
-          if (popup && visible(popup)) {
-            greetingUp = true;
-            popup.querySelector('button')?.click();
-          }
-        }
-        return {
-          introUp: visible(introLogo) || document.getElementById('ui')?.style.display === 'none',
-          tutorialUp: visible(skipBtn),
-          cameraPromptUp: visible(document.querySelector('.camera-prompt-backdrop')),
-          greetingUp,
-        };
-      })
-      .catch(() => ({
-        introUp: false,
-        tutorialUp: false,
-        cameraPromptUp: false,
-        greetingUp: false,
-      }));
+    const state = await page.evaluate(entryOverlayPass).catch(() => ({
+      introUp: false,
+      tutorialUp: false,
+      cameraPromptUp: false,
+      greetingUp: false,
+    }));
     // Hold at least three polls (~1.2s): the spawn greeting arrives on the
     // sim's own timer and a first quiet poll proves nothing about it.
     if (i >= 2 && !state.introUp && !state.tutorialUp && !state.cameraPromptUp && !state.greetingUp)
@@ -135,17 +146,6 @@ export async function dismissEntryOverlays(page) {
     if (state.introUp) await page.keyboard.press('Escape').catch(() => {});
     if (state.tutorialUp) {
       await page.evaluate(() => document.querySelector('button.tut-skip')?.click()).catch(() => {});
-    }
-    // The spawn greeting one-shot (#tutorial-greeting): close the note variant,
-    // else decline the play/skip variant, so no capture carries the modal.
-    if (state.greetingUp) {
-      await page
-        .evaluate(() => {
-          const root = document.getElementById('tutorial-greeting');
-          const btn = root?.querySelector('[data-close]') ?? root?.querySelector('[data-skip]');
-          if (btn) btn.click();
-        })
-        .catch(() => {});
     }
     if (state.cameraPromptUp) {
       await page
