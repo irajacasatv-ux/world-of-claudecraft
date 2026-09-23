@@ -55,28 +55,26 @@ console.log('offline boot:', booted);
 if (!booted) throw new Error('offline world did not boot');
 await page.evaluate(() => document.querySelector('.gpu-notice-dismiss')?.click());
 
-// The greeting sweeps on the 1 Hz mail-phase cadence, so the dialog appears
-// within the first second or two of the world running.
+// The greeting sweeps on the 1 Hz mail-phase cadence, so the automatic ferry
+// and Odo's arrival note land within the first second or two of the world.
 await page.waitForFunction(() => !!document.getElementById('tutorial-greeting'), {
   timeout: 15000,
   polling: 200,
 });
-const dialogText = await page.evaluate(
+const noteText = await page.evaluate(
   () => document.getElementById('tutorial-greeting')?.innerText.replace(/\s+/g, ' ') ?? '',
 );
-console.log('greeting dialog:', dialogText.slice(0, 140));
-if (!/Proving Shore/.test(dialogText)) throw new Error('greeting dialog missing island copy');
+console.log('greeting note:', noteText.slice(0, 140));
+if (!/Proving Shore/.test(noteText)) throw new Error('greeting note missing island copy');
 await page.screenshot({ path: 'tmp/tutorial-greeting.png' });
 
-const before = await page.evaluate(() => {
+const atGreeting = await page.evaluate(() => {
   const sim = window.__game.sim;
   return { ...sim.entities.get(sim.playerId).pos };
 });
 
-// The ferry is a sim-side teleport: wait for the player to stand on the
-// island column (x < -180). The dialog element cannot be required gone:
-// Odo's welcome note reuses the same #tutorial-greeting shell and opens
-// within a frame of arrival, so the empty gap is never observable.
+// The ferry is a sim-side teleport that has already run by the time the note
+// opens: confirm the player stands on the island column (x < -180).
 await page.waitForFunction(
   () => {
     const sim = window.__game.sim;
@@ -104,7 +102,7 @@ const after = await page.evaluate(() => {
     greetingLatched: sim.players.get(sim.playerId).tutorialGreetingSent,
   };
 });
-console.log('before ferry:', before, 'after ferry:', after.pos);
+console.log('at greeting:', atGreeting, 'on island:', after.pos);
 console.log('first island quest:', after.questState, 'one-shot latched:', after.greetingLatched);
 if (after.questState !== 'available') throw new Error('welcome quest not available on arrival');
 if (!after.greetingLatched) throw new Error('greeting one-shot did not latch');
