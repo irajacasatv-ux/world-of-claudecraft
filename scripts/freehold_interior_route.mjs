@@ -215,8 +215,11 @@ async function gateFirstDrawMark(page) {
 
 /** Sail in, walk to the stance and open the prompt. The first-draw window runs
  * from the island (the gate's view does not exist yet) until the view has
- * compiled and revealed, so it spans the gate's own first draw. */
-export async function walkToFreeholdGate(page) {
+ * compiled and revealed, so it spans the gate's own first draw. `beforePress`
+ * runs at the stance just before the press: a capture settles the arrival
+ * overlays there, because dismissing one after the prompt opens takes the
+ * prompt's focus with it. */
+export async function walkToFreeholdGate(page, { beforePress } = {}) {
   const begin = await gateFirstDrawMark(page);
   await sailToFreeholdTown(page);
   const gate = await page.evaluate(() => {
@@ -237,9 +240,10 @@ export async function walkToFreeholdGate(page) {
     { timeout: 60000 },
   );
   const firstDraw = { begin, end: await gateFirstDrawMark(page) };
+  const settled = await beforePress?.(page);
   await page.keyboard.press('f');
   await page.waitForSelector(ENTER, { visible: true, timeout: 10000 });
-  return { ...gate, firstDraw };
+  return { ...gate, firstDraw, settled };
 }
 
 export async function confirmFreeholdGate(page) {

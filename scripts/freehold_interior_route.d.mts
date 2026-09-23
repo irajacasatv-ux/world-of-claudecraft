@@ -70,10 +70,14 @@ export function freeholdGateApproachLegs(site: {
   x: number;
   z: number;
 }): { x: number; z: number }[];
-export function walkToFreeholdGate(page: Page): Promise<{
+export function walkToFreeholdGate<T = undefined>(
+  page: Page,
+  hooks?: { beforePress?: (page: Page) => Promise<T> },
+): Promise<{
   x: number;
   z: number;
   firstDraw: { begin: FreeholdGateFirstDrawMark; end: FreeholdGateFirstDrawMark };
+  settled: T | undefined;
 }>;
 export function confirmFreeholdGate(page: Page): Promise<FreeholdTourArrival>;
 export function leaveFreeholdThroughExit(page: Page): Promise<void>;

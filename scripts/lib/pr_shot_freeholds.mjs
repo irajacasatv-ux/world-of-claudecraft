@@ -88,6 +88,7 @@ export const freeholdReviewTargets = [
   ],
   variants,
   async capture(page, variant) {
+    let preSettle = null;
     if (process.env.PR_SHOTS_FREEHOLD_BASELINE === '1') {
       await sailToFreeholdTown(page);
       // The release baseline has neither gate nor room. Walk the after frame's
@@ -99,7 +100,12 @@ export const freeholdReviewTargets = [
       const [x, z] = JSON.parse(fs.readFileSync(GATE_RECORD, 'utf8')).gate.position;
       await approachFreeholdGateSite(page, { x, z });
     } else {
-      await walkToFreeholdGate(page);
+      // Arrival overlays land on the sim's own timers after the town landing;
+      // clearing them at the stance, before the press, keeps the prompt's own
+      // focus (a dismissal after it opens moves focus off the selected tab).
+      ({ settled: preSettle } = await walkToFreeholdGate(page, {
+        beforePress: (p) => settleFreeholdCaptureOverlays(p),
+      }));
       if (scene !== 'gate-own-prompt') {
         await confirmFreeholdGate(page);
         if (scene === 'cottage-safe-landing') {
@@ -258,6 +264,7 @@ export const freeholdReviewTargets = [
           dismissedNotices,
           dismissedOverlays,
           overlaySettlePasses,
+          preSettle,
           ...evidence,
         },
         null,
