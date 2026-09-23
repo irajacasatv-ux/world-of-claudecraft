@@ -173,6 +173,7 @@ describe('Freehold functional capture evidence', () => {
           // the gate stance, before the press (a dismissal after the prompt
           // opens takes its focus); the baseline arm opens no prompt.
           if (side === 'after') {
+            expect(Number.isInteger(evidence.preSettle.overlays.passes), name).toBe(true);
             expect(evidence.preSettle.overlays.passes, name).toBeGreaterThanOrEqual(3);
             expect(Array.isArray(evidence.preSettle.overlays.dismissedOverlays), name).toBe(true);
             // The frame's own notice record is the one the stance settle made.

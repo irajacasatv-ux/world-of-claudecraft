@@ -183,8 +183,20 @@ export const FREEHOLD_CAMERA_BEHIND_TOLERANCE = 0.1;
  * page task, so no frame can sample one without the other. Forward and back
  * held together are NOT used: they are movement input with a zero vector
  * (cast_move_gate.ts hasMovementInput), the path the sim's finite-pose guard
- * catches. Observation only; returns whether the camera came round in time. */
+ * catches. That holds only with Mouse Camera, mouselook and attack-move all
+ * off (the defaults, which the tour never changes): Mouse Camera or mouselook
+ * turn the pair into strafes, the same zero vector, and attack-move takes
+ * KeyA, leaving Turn Right alone. Observation only; returns whether the
+ * camera came round in time. */
 async function settleFreeholdCamera(page, { timeoutMs = 20000 } = {}) {
+  const modes = await page.evaluate(() => {
+    const input = window.__game.input;
+    return [input.isMouseCameraMode(), input.isMouselookActive(), input.isAttackMoveEnabled()];
+  });
+  if (modes.some(Boolean))
+    throw new Error(
+      'Freehold tour camera settle needs Mouse Camera, mouselook and attack-move off',
+    );
   const off = async () =>
     page.evaluate(() => {
       const d = window.__game.input.camYaw - window.__game.sim.player.facing;
@@ -369,7 +381,8 @@ export async function leaveFreeholdThroughExit(page) {
 /** After a leave, back inside the gate's reach and open its prompt. The leave
  * holds the walk key until it sees the arrival, so under load the player can
  * land at the drop and walk on past the 5 yd reach before the key comes up;
- * the walk back stops 3 yd south of the arch, between the drop and the arch. */
+ * the walk back heads for 3 yd south of the arch (between the drop and the
+ * arch) and stops within the route tolerance of it, well inside the reach. */
 export async function reopenFreeholdGate(page) {
   await waitForFreeholdMovementReady(page);
   const gate = await page.evaluate(() => {
@@ -380,7 +393,7 @@ export async function reopenFreeholdGate(page) {
   if (!gate) throw new Error('Freehold tour lost the gate after leaving a home');
   const pose = await playerPose(page);
   if (Math.hypot(pose.x - gate.x, pose.z - gate.z) > 4.5)
-    await walkFreeholdRouteTo(page, gate.x, gate.z - 3, { tolerance: 0.5 });
+    await walkFreeholdRouteTo(page, gate.x, gate.z - 3);
   await page.keyboard.press('f');
   await page.waitForSelector(ENTER, { visible: true, timeout: 10000 });
 }

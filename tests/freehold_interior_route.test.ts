@@ -401,6 +401,8 @@ function kinematicPage(
     cameraOffset?: number;
     orbitStuck?: boolean;
     cameraKick?: number;
+    mouseCamera?: boolean;
+    noGate?: boolean;
   },
 ) {
   const events: string[] = [];
@@ -409,7 +411,14 @@ function kinematicPage(
     facing: motion.facing ?? Math.PI,
     dead: false,
   };
-  const input = { camYaw: player.facing + (motion.cameraOffset ?? 0) };
+  const input = {
+    camYaw: player.facing + (motion.cameraOffset ?? 0),
+    isMouseCameraMode: () => motion.mouseCamera === true,
+    isMouselookActive: () => false,
+    isAttackMoveEnabled: () => false,
+  };
+  // Which page.evaluate call each synthetic key event rode in.
+  let evaluateCall = 0;
   let kick = motion.cameraKick ?? 0;
   const held = new Set<string>();
   let last = Date.now();
@@ -473,7 +482,7 @@ function kinematicPage(
   };
   let promptOpen = false;
   const sim = {
-    entities: new Map([[9, gate]]),
+    entities: new Map(motion.noGate ? [] : [[9, gate]]),
     get player() {
       advance();
       return player;
@@ -498,7 +507,7 @@ function kinematicPage(
   const dispatchEvent = (event: KeyboardEvent) => {
     advance();
     const key = event.init.code.slice(3).toLowerCase();
-    events.push(`synthetic:${event.type}:${key}`);
+    events.push(`synthetic:${event.type}:${key}@${evaluateCall}`);
     if (event.type === 'keydown') held.add(key);
     else {
       held.delete(key);
@@ -516,7 +525,10 @@ function kinematicPage(
   const run = (fn: (...args: never[]) => unknown, args: unknown[]) =>
     runInNewContext(`(${fn.toString()})(...args)`, { ...context, args });
   const page = {
-    evaluate: async (fn: (...args: never[]) => unknown, ...args: unknown[]) => run(fn, args),
+    evaluate: async (fn: (...args: never[]) => unknown, ...args: unknown[]) => {
+      evaluateCall++;
+      return run(fn, args);
+    },
     waitForFunction: async (
       fn: (...args: never[]) => unknown,
       _options: unknown,
@@ -533,7 +545,7 @@ function kinematicPage(
         advance();
         const reach = Math.hypot(player.pos.x - gate.pos.x, player.pos.z - gate.pos.z);
         events.push(`press:${key}`);
-        if (key === 'f' && reach <= 5) promptOpen = true;
+        if (key === 'f' && reach <= FREEHOLD_GATE_INTERACT_RANGE) promptOpen = true;
       },
       down: async (key: string) => {
         advance();
@@ -661,12 +673,17 @@ describe('holding the gate stance', () => {
     const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
     expect([pose.x, pose.z, pose.facing]).toEqual([stance.x, stance.z, Math.PI]);
     // Both turn keys land together and lift together; nothing walks or turns.
-    expect(events.filter((event) => event.startsWith('synthetic:'))).toEqual([
+    const synthetic = events.filter((event) => event.startsWith('synthetic:'));
+    expect(synthetic.map((event) => event.replace(/@\d+$/, ''))).toEqual([
       'synthetic:keydown:a',
       'synthetic:keydown:d',
       'synthetic:keyup:a',
       'synthetic:keyup:d',
     ]);
+    // Each pair rode ONE page task, so no frame can sample one key alone.
+    const call = (event: string) => event.split('@')[1];
+    expect(call(synthetic[0])).toBe(call(synthetic[1]));
+    expect(call(synthetic[2])).toBe(call(synthetic[3]));
     expect(events.some((event) => /^(down|press):/.test(event))).toBe(false);
     expect(cameraOff(input.camYaw, pose.facing)).toBeLessThanOrEqual(
       FREEHOLD_CAMERA_BEHIND_TOLERANCE / 2,
@@ -679,9 +696,26 @@ describe('holding the gate stance', () => {
     // PI, which at 5 frames a second leaves the camera well behind the turn.
     const { page, events, input } = kinematicPage(stance, { facing: 0 });
     const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
-    expect(events).toContain('synthetic:keydown:a');
+    expect(events.some((event) => event.startsWith('synthetic:keydown:a'))).toBe(true);
     expect(cameraOff(input.camYaw, pose.facing)).toBeLessThanOrEqual(
       FREEHOLD_CAMERA_BEHIND_TOLERANCE,
+    );
+  });
+
+  it('presses nothing when the camera already sits behind', async () => {
+    vi.useFakeTimers();
+    const { page, events, player } = kinematicPage(stance, { cameraOffset: 0.01 });
+    player.pos = { x: stance.x, y: 0, z: stance.z };
+    await onFakeClock(() => holdFreeholdGateStance(page, stance));
+    expect(events.filter((event) => event.startsWith('synthetic:'))).toEqual([]);
+  });
+
+  it('refuses to settle with Mouse Camera on, where the turn keys strafe', async () => {
+    vi.useFakeTimers();
+    const { page, player } = kinematicPage(stance, { cameraOffset: 2.47, mouseCamera: true });
+    player.pos = { x: stance.x, y: 0, z: stance.z };
+    await expect(onFakeClock(() => holdFreeholdGateStance(page, stance))).rejects.toThrow(
+      /needs Mouse Camera, mouselook and attack-move off/,
     );
   });
 
@@ -693,7 +727,7 @@ describe('holding the gate stance', () => {
     });
     player.pos = { x: stance.x, y: 0, z: stance.z };
     const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
-    expect(events.filter((event) => event === 'synthetic:keydown:a')).toHaveLength(2);
+    expect(events.filter((event) => event.startsWith('synthetic:keydown:a'))).toHaveLength(2);
     expect(cameraOff(input.camYaw, pose.facing)).toBeLessThanOrEqual(
       FREEHOLD_CAMERA_BEHIND_TOLERANCE,
     );
@@ -701,10 +735,15 @@ describe('holding the gate stance', () => {
 
   it('throws after its attempts when an orbit never lets the camera come round', async () => {
     vi.useFakeTimers();
-    const { page, held } = kinematicPage(stance, { cameraOffset: 2.47, orbitStuck: true });
+    const { page, events, held } = kinematicPage(stance, {
+      cameraOffset: 2.47,
+      orbitStuck: true,
+    });
     await expect(onFakeClock(() => holdFreeholdGateStance(page, stance))).rejects.toThrow(
       /after 3 attempts.*"cameraSettled":false/,
     );
+    // Each attempt really settled again: a failed settle is not a terminal throw.
+    expect(events.filter((event) => event.startsWith('synthetic:keydown:a'))).toHaveLength(3);
     expect([...held]).toEqual([]);
   });
 
@@ -813,6 +852,23 @@ describe('reopening the gate after a leave', () => {
     expect(events).toContain('down:w');
     expect(events.at(-1)).toBe('press:f');
     expect(Math.hypot(player.pos.x - site.x, player.pos.z - site.z)).toBeLessThanOrEqual(5);
+    // Back up the line it came, still south of the arch.
+    expect(player.pos.z).toBeLessThan(site.z);
+  });
+
+  it('walks back from just past the reach, where a press would open nothing', async () => {
+    vi.useFakeTimers();
+    const { page, events, player } = kinematicPage(stance, {});
+    player.pos = { x: site.x, y: 0, z: site.z - 5.3 };
+    await onFakeClock(() => reopenFreeholdGate(page));
+    expect(events).toContain('down:w');
+    expect(events.at(-1)).toBe('press:f');
+  });
+
+  it('throws when the gate is gone after a leave', async () => {
+    const { page, player } = kinematicPage(stance, { noGate: true });
+    player.pos = { x: site.x, y: 0, z: site.z - 4 };
+    await expect(reopenFreeholdGate(page)).rejects.toThrow(/lost the gate/);
   });
 
   it('presses at once from the drop itself', async () => {
