@@ -431,7 +431,7 @@ record does not claim an authored roof mesh.
 | Camera navigation volume | X -7 to 7, Z -7 to 11, Y 0 to 16 | X -11 to 11, Z -7 to 15, Y 0 to 16 |
 
 The gate is (-38.65,-103.75), facing 0, off the east road across from the inn
-door. It moved off (-14,-92) at the v0.44.0 sync, when Apothecary Lin moved
+door. It moved off (-14,-92) after the v0.44.0 sync, which put Apothecary Lin
 within 4.24 yards of it; the ruling named (-28,-82) and said to take the nearest
 site that holds if that one did not. The rules the site answers to come in three
 kinds, and only the first two are more than a choice:
@@ -450,10 +450,10 @@ kinds, and only the first two are more than a choice:
 (-28,-82) failed the press rule (two garden beds). (-37,-103.5) passed the
 first two kinds but dropped a leaving player 1.17 yards from a house corner,
 against the chosen 2 yard margin. (-39,-104) dropped them 0.25 yards outside the
-town circle. The site is the nearest passing cell a 0.05 yard grid search found
-under all three kinds; measured 2026-09-22, the search (a session tool, not
-committed) passed 19 cells and refused the rest for the town circle (1,061),
-a building margin (803), the road (341) and the collider radius (277). Without
+town circle. The site is the nearest passing cell that a 0.05 yard grid search
+found under all three kinds, run 2026-09-22 as a session tool that is not
+committed, so its counts are not repeated here; the pinned facts below are what
+stands. Without
 the chosen margins (-37,-103.5), 23.31 yards from (-28,-82) against this site's
 24.22, would stand; that trade is recorded for the maintainer. This cell has
 road 5.53 against 5.5, 3.5 yards collider-free against 3.5, and its return 0.16
