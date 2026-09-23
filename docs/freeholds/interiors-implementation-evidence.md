@@ -7,6 +7,10 @@ The baseline includes the completed release merge and its audit fixes.
 Status: implementation complete and ready within the requested scope. All 12 shared-gate stages passed with Postgres enabled.
 This receipt does not sign the separate follow-on QA packet or later delivery gates.
 
+The capture set, the performance record and the seals were RE-SHOT on 2026-09-23, after
+the `release/v0.44.0` sync and the gate move; the current record is the last section,
+"The 2026-09-23 re-shoot". Capture and performance statements before it are history.
+
 ## Delivered behavior
 
 - Inn Room and Cottage use measured shared layout data, derived wall and decor colliders,
@@ -32,6 +36,8 @@ This receipt does not sign the separate follow-on QA packet or later delivery ga
   742 shots, including 339 Wave A shots.
 
 ## GPU evidence
+
+(The 2026-09-08 run, superseded by the 2026-09-23 re-shoot at the end of this record.)
 
 Command:
 
@@ -177,3 +183,102 @@ The raw screenshot records retain 123 baseline console diagnostics (102 inherite
 messages and 21 local API HTTP 502 responses), and 23 after diagnostics, all local API HTTP
 502 responses. Neither run contains a target failure or page exception. These offline capture
 records do not certify live backend availability.
+
+## The 2026-09-23 re-shoot (after the v0.44.0 sync and the gate move)
+
+All 18 images, all 18 sidecars, both producer manifests and the performance record
+were re-shot on 2026-09-23, and the receipt was regenerated over them. Every capture,
+performance and seal statement above this section describes the superseded 2026-09-08
+set and is kept as history.
+
+Why the set was owed: the `release/v0.44.0` sync moved the gate prompt's tabs onto the
+library `.ui-tab` primitive (and a later-layer rule that overrode its selected look was
+removed), the gate moved from `(-14,-92)` to `(-38.65,-103.75)`, and the capture harness
+was reworked around both.
+
+What was re-shot, and against which trees:
+
+- One chain ran all three legs, starting at `ba8460e32f` with a clean tree: the nine
+  after frames (this worktree, served by its own Vite on 5173), then the GPU performance
+  tour, then the nine before frames (the release baseline checkout
+  `codex-freeholds06-before` at `654071354172b3e252cfc03a1e85efde2daddaa6`, served on
+  5174, driven by this worktree's harness). One commit landed during the before leg,
+  `0147a7b9da`, which changes only `tests/freehold_interior_route.test.ts`; no sealed
+  input moved.
+- The receipt ran at `0147a7b9da` with a clean tree. It seals 53 source inputs and 11
+  harness files. The baseline checkout's application paths match its commit exactly; its
+  status still lists the harness copies the 2026-09-08 capture left there, which are
+  recorded in the receipt and were not used by this run.
+
+What the receipt holds every frame to (`scripts/freehold_capture_receipt.mjs`, with a
+refusal row per condition in `tests/freehold_capture_contract.test.ts`): the declared
+viewport; the low preset with the device default applied and the low renderer tier; the
+classic theme; the SwiftShader backend; no GPU notice and a resolved notice path; the
+prompt inside the viewport; no transient HUD (error text, banners, tooltip, loot rolls,
+floating combat text, vignette, popups, toasts); at least three quiet overlay-settle
+passes; and the follow camera's input yaw within 0.1 rad of the player's facing. Gate
+frames also stand within the 0.7 yd route tolerance of the stance and face the gate to
+within 0.12 rad. After gate frames also show the prompt with every control at least
+40 px and uncovered at its centre, every text entry at 16 px on the touch variants, focus
+on the selected tab, the arch reported drawn by the gate probe, and a recorded stance
+settle before the press. Room frames also stand on the room's arrival point with facing
+0 and camera yaw exactly 0. Before frames must show no prompt, on the overworld, with no
+stance settle.
+
+Measured, from the committed records:
+
+- After gate frames: 0.04, 0.06 and 0.14 yd from the stance (compact, desktop, tablet);
+  camera yaw 0.031, 0.021 and 0.038 rad off the facing; focus on `gate-own-tab`; five
+  controls, all on top; the arch drawn.
+- After room frames: the Inn Room at `(119200,-1254)` and the Cottage at `(119800,-1254)`
+  on every variant, facing 0 and camera yaw 0.
+- Before frames: all nine stand 0.06 to 0.59 yd from the stance, camera yaw 0.024 to
+  0.043 rad off the facing, no prompt, no transient HUD, three settle passes each.
+- Diagnostics: after, 28 local API HTTP 502 responses; before, 130 (102 inherited
+  preload messages and 28 local API HTTP 502 responses). Neither run has a target failure
+  or page exception. These offline records do not certify live backend availability.
+- Performance (`bench_freehold_interiors`, real GPU, headed, low preset; the desktop
+  profile at 1600 by 900 and the mobile profile at 844 by 390): `errors` and
+  `budgetFailures` are empty on both. Each room sample spans about 1.2 s:
+
+  | Profile | Inn rendered frames / draw calls | Cottage rendered frames / draw calls |
+  |---|---:|---:|
+  | Desktop | 146 / 33 | 146 / 28 |
+  | Mobile | 147 / 33 | 146 / 28 |
+
+  From the island (no gate view yet) to the gate view's reveal, 16,761.5 ms on desktop
+  and 16,782.5 ms on mobile, the reveal-watchdog, soft-deadline, attach-watchdog,
+  gate-timeout, submit-stop, live-program and touch-unproven counters did not move. The
+  live-program, attach-watchdog and gate-timeout counters also did not move from each
+  gate confirmation through its room sample, nor from the inn sample's end to the
+  Cottage entry.
+- Visual review: all 18 images were read by eye. The arch stands at the new site in all
+  three after gate frames, beside the prompt, and the same stance in the before frames
+  shows the empty lawn between the two cottages. The prompt is legible, with the library
+  tab look and the selected tab outlined. The Inn Room shows its bed and hearth and the
+  Cottage its hearth, from the arrival point facing north. No overlay covers any frame.
+
+Harness defects the re-shoot exposed, each fixed and pinned before the final chain: a
+tutorial card or GPU notice dismissed after the prompt opened took the prompt's focus
+(both now settle at the stance before the press); the chase camera could open a frame
+swung round in front of the player (the stance hold now settles it in place on paired
+turn keys, and refuses to under Mouse Camera, mouselook or attack-move); a leave could
+carry the player past the gate's reach before the reopening press (the reopen now walks
+back into reach); and the Cottage switch raced its own keystrokes under load (it now
+waits for the sim record's tier). Earlier performance tours failed that last way; the
+final tour passed on its first attempt, at a one-minute load average of 6.38 when it
+finished.
+
+Limits: the SwiftShader frames are evidence of what the frames show, not of GPU
+preparation cost; the gate probe and the census state their own known limits in their
+headers; the performance tour runs only the low preset.
+
+The re-shoot's commands, in chain order (the before leg against the baseline's Vite on
+5174; `SHOTS_DIR` under the gitignored `tmp/`):
+
+```sh
+DIFF_FILE=<diff> SHOTS_DIR=tmp/fh_capture/after NAV_TIMEOUT_MS=180000 ENTRY_SELECTOR_TIMEOUT_MS=180000 node scripts/pr_screenshots.mjs
+PERF_SCENARIO=bench_freehold_interiors PERF_GPU=1 PERF_PRESET=low PERF_OUT=tmp/fh_capture/performance.json node scripts/perf_tour.mjs
+PR_SHOTS_FREEHOLD_BASELINE=1 GAME_URL=http://127.0.0.1:5174 DIFF_FILE=<diff> SHOTS_DIR=tmp/fh_capture/before NAV_TIMEOUT_MS=180000 ENTRY_SELECTOR_TIMEOUT_MS=180000 node scripts/pr_screenshots.mjs
+node scripts/freehold_capture_receipt.mjs --before tmp/fh_capture/before --after tmp/fh_capture/after --performance tmp/fh_capture/performance.json --output docs/screenshots/freehold-interiors-2026-09-08 --baseline-root <codex-freeholds06-before> --baseline-url http://127.0.0.1:5174
+npx vitest run tests/freehold_capture_contract.test.ts tests/freehold_interior_route.test.ts tests/pr_shot_targets.test.ts --maxWorkers=2
