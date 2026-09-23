@@ -50,6 +50,11 @@ export function approachFreeholdGateSite(
   page: Page,
   site: { x: number; z: number },
 ): Promise<FreeholdTourPose>;
+export function holdFreeholdGateStance(
+  page: Page,
+  stance: { x: number; z: number },
+  options?: { attempts?: number },
+): Promise<FreeholdTourPose>;
 export function walkToFreeholdGate(page: Page): Promise<{ x: number; z: number }>;
 export function confirmFreeholdGate(page: Page): Promise<FreeholdTourArrival>;
 export function leaveFreeholdThroughExit(page: Page): Promise<void>;

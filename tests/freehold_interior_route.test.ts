@@ -5,6 +5,7 @@ import {
   FREEHOLD_GATE_STANCE,
   FREEHOLD_ROUTE_TOLERANCE,
   freeholdInteriorPerfFailures,
+  holdFreeholdGateStance,
   leaveFreeholdThroughExit,
   sampleFreeholdInterior,
   walkFreeholdRouteTo,
@@ -284,4 +285,98 @@ it('holds the capture stance inside the gate reach, walk tolerance included', ()
   expect(offset).toBeCloseTo(4.123, 3);
   expect(FREEHOLD_ROUTE_TOLERANCE).toBe(0.7);
   expect(offset + FREEHOLD_ROUTE_TOLERANCE).toBeLessThan(FREEHOLD_GATE_INTERACT_RANGE);
+});
+
+/** A player that moves only while keys are held, at run speed and turn rate
+ * over wall time, and that carries `carry` yd past its stop on the first
+ * `carries` walk-key releases near the stance: the key-up latency a loaded
+ * machine adds. */
+function kinematicPage(stance: { x: number; z: number }, carry: number, carries: number) {
+  const events: string[] = [];
+  const player = { pos: { x: stance.x, y: 0, z: stance.z + 5 }, facing: Math.PI, dead: false };
+  const held = new Set<string>();
+  let last = Date.now();
+  let tick = 0;
+  let left = carries;
+  const advance = () => {
+    const dt = (Date.now() - last) / 1000;
+    last = Date.now();
+    if (held.has('a')) player.facing += Math.PI * dt;
+    if (held.has('d')) player.facing -= Math.PI * dt;
+    if (held.has('w')) {
+      player.pos.x += Math.sin(player.facing) * 7 * dt;
+      player.pos.z += Math.cos(player.facing) * 7 * dt;
+    }
+  };
+  const sim = {
+    get player() {
+      advance();
+      return player;
+    },
+    get tickCount() {
+      advance();
+      return tick++;
+    },
+  };
+  const context = { window: { __game: { sim } }, document: { querySelector: () => null } };
+  const run = (fn: (...args: never[]) => unknown, args: unknown[]) =>
+    runInNewContext(`(${fn.toString()})(...args)`, { ...context, args });
+  const page = {
+    evaluate: async (fn: (...args: never[]) => unknown, ...args: unknown[]) => run(fn, args),
+    waitForFunction: async (
+      fn: (...args: never[]) => unknown,
+      _options: unknown,
+      ...args: unknown[]
+    ) => {
+      for (let attempt = 0; attempt < 10; attempt++) if (run(fn, args)) return;
+      throw new Error('condition did not become ready');
+    },
+    keyboard: {
+      down: async (key: string) => {
+        advance();
+        events.push(`down:${key}`);
+        held.add(key);
+      },
+      up: async (key: string) => {
+        advance();
+        events.push(`up:${key}`);
+        if (key === 'w' && held.has('w') && left > 0) {
+          if (Math.hypot(player.pos.x - stance.x, player.pos.z - stance.z) < 1) {
+            left--;
+            player.pos.x += Math.sin(player.facing) * carry;
+            player.pos.z += Math.cos(player.facing) * carry;
+          }
+        }
+        held.delete(key);
+      },
+    },
+  } as unknown as Page;
+  return { page, events, player };
+}
+
+describe('holding the gate stance', () => {
+  const stance = { x: -42.65, z: -102.75 };
+
+  it('re-walks a stop that carried past the stance and returns the settled pose', async () => {
+    const { page, events, player } = kinematicPage(stance, 2, 1);
+    const pose = await holdFreeholdGateStance(page, stance);
+    expect(events.filter((event) => event === 'down:w').length).toBeGreaterThan(1);
+    expect(Math.hypot(pose.x - stance.x, pose.z - stance.z)).toBeLessThanOrEqual(
+      FREEHOLD_ROUTE_TOLERANCE,
+    );
+    expect(
+      Math.abs(Math.atan2(Math.sin(Math.PI - pose.facing), Math.cos(Math.PI - pose.facing))),
+    ).toBeLessThanOrEqual(0.12);
+    // The pose returned is the player as it stands, not a mid-walk sample.
+    expect(pose.x).toBe(player.pos.x);
+    expect(pose.z).toBe(player.pos.z);
+  });
+
+  it('throws rather than return a pose off the stance', async () => {
+    const { page, events } = kinematicPage(stance, 2, Number.POSITIVE_INFINITY);
+    await expect(holdFreeholdGateStance(page, stance)).rejects.toThrow(
+      /could not hold the gate stance/,
+    );
+    expect(events.filter((event) => event === 'down:w').length).toBeGreaterThanOrEqual(3);
+  });
 });

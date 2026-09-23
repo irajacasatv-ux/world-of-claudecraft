@@ -151,16 +151,29 @@ export async function approachFreeholdGateSite(page, site) {
   await walkFreeholdRouteTo(page, -19, -97);
   await walkFreeholdRouteTo(page, -30, -100);
   await walkFreeholdRouteTo(page, x, site.z + 6);
-  const pose = await walkFreeholdRouteTo(page, x, site.z + FREEHOLD_GATE_STANCE.dz);
-  // Square up on -z (heading PI) so every viewport's camera settles alike.
-  const started = Date.now();
-  while (true) {
-    const difference = headingDifference(Math.PI, (await playerPose(page)).facing);
-    if (Math.abs(difference) <= 0.12) break;
-    if (Date.now() - started > 10000) throw new Error('Freehold tour could not face the gate');
-    await turnFreeholdRoute(page, difference);
+  return holdFreeholdGateStance(page, { x, z: site.z + FREEHOLD_GATE_STANCE.dz });
+}
+
+/** Walk onto the stance, square up on -z (heading PI) so every viewport's
+ * camera settles alike, then re-check the settled pose. Under load a walk can
+ * carry past its stop by more than the route tolerance (1.28 yd once, against
+ * the receipt's 1.5 yd bound), so it re-walks until the pose holds, or throws. */
+export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}) {
+  for (let attempt = 1; ; attempt++) {
+    await walkFreeholdRouteTo(page, stance.x, stance.z);
+    const started = Date.now();
+    while (true) {
+      const difference = headingDifference(Math.PI, (await playerPose(page)).facing);
+      if (Math.abs(difference) <= 0.12) break;
+      if (Date.now() - started > 10000) throw new Error('Freehold tour could not face the gate');
+      await turnFreeholdRoute(page, difference);
+    }
+    await waitForFreeholdMovementReady(page);
+    const pose = await playerPose(page);
+    if (Math.hypot(pose.x - stance.x, pose.z - stance.z) <= FREEHOLD_ROUTE_TOLERANCE) return pose;
+    if (attempt >= attempts)
+      throw new Error(`Freehold tour could not hold the gate stance at ${JSON.stringify(pose)}`);
   }
-  return pose;
 }
 
 export async function walkToFreeholdGate(page) {
