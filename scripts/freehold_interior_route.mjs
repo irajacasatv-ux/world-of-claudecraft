@@ -136,6 +136,9 @@ export async function walkToFreeholdGate(page) {
   });
   if (!gate) throw new Error('Freehold tour requires an enabled gate at boot');
   await walkFreeholdRouteTo(page, 0, -88);
+  // Approach from the north: the arch opens along z (facing 0), so the last leg
+  // faces it square and the camera behind the player sees it face-on.
+  await walkFreeholdRouteTo(page, gate.x, gate.z + 6);
   await walkFreeholdRouteTo(page, gate.x, gate.z + 1);
   await page.keyboard.press('f');
   await page.waitForSelector(ENTER, { visible: true, timeout: 10000 });

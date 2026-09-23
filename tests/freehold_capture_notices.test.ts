@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { settleFreeholdCaptureNotices } from '../scripts/lib/freehold_capture_notices.mjs';
+import {
+  settleFreeholdCaptureNotices,
+  settleFreeholdCaptureOverlays,
+} from '../scripts/lib/freehold_capture_notices.mjs';
 
 type Scene = {
   boot?: 'visible' | 'hidden';
@@ -121,5 +124,104 @@ describe('Freehold capture notice settlement', () => {
     const f = fakePage();
     await expect(settleFreeholdCaptureNotices(f.page, true)).rejects.toBe(f.timeout);
     expect(f.actions).toEqual(['wait']);
+  });
+});
+
+type OverlayScene = {
+  card?: boolean;
+  note?: 'guidance' | 'close' | 'bare';
+  camera?: boolean;
+};
+function overlayPage(schedule: OverlayScene[]) {
+  // One scene per pass: an overlay can arrive late, on the sim's own timer.
+  let pass = 0;
+  const clicks: string[] = [];
+  let scene: OverlayScene = {};
+  const control = (name: string, onClick: () => void) => ({
+    click: () => {
+      clicks.push(name);
+      onClick();
+    },
+  });
+  vi.stubGlobal('getComputedStyle', () => ({ display: 'block', visibility: 'visible' }));
+  vi.stubGlobal('document', {
+    querySelector: (selector: string) => {
+      if (selector === '.tut-card' && scene.card)
+        return {
+          querySelector: (inner: string) =>
+            inner === '.tut-skip' ? control('tut-skip', () => (scene.card = false)) : null,
+        };
+      if (selector === '.camera-prompt-backdrop' && scene.camera) return {};
+      if (selector === '.camera-prompt-confirm' && scene.camera)
+        return control('camera-confirm', () => (scene.camera = false));
+      return null;
+    },
+    getElementById: (id: string) =>
+      id === 'tutorial-greeting' && scene.note
+        ? {
+            querySelector: (inner: string) => {
+              if (inner === '[data-guidance="off"]' && scene.note === 'guidance')
+                return control('guidance-off', () => (scene.note = undefined));
+              if (inner === '[data-close]' && scene.note === 'close')
+                return control('note-close', () => (scene.note = undefined));
+              return null;
+            },
+          }
+        : null,
+  });
+  const page = {
+    evaluate: vi.fn(async (fn: () => string[]) => {
+      scene = { ...scene, ...(schedule[pass] ?? {}) };
+      pass++;
+      return fn();
+    }),
+  };
+  return {
+    page: page as unknown as Parameters<typeof settleFreeholdCaptureOverlays>[0],
+    clicks,
+    passes: () => pass,
+  };
+}
+
+describe('Freehold capture overlay settlement', () => {
+  it('declines a late ferry guidance note, never accepting it, then waits out three quiet passes', async () => {
+    const f = overlayPage([{}, { note: 'guidance' }]);
+    const result = await settleFreeholdCaptureOverlays(f.page, { pollMs: 0 });
+    expect(result).toEqual({ dismissedOverlays: ['tutorial-greeting:guidance-off'] });
+    expect(f.clicks).toEqual(['guidance-off']);
+    // Pass 1 quiet, pass 2 dismisses (resets the count), passes 3 to 5 quiet.
+    expect(f.passes()).toBe(5);
+  });
+  it('skips the tutorial card and closes the plain note and the camera prompt', async () => {
+    const f = overlayPage([{ card: true, note: 'close', camera: true }]);
+    const result = await settleFreeholdCaptureOverlays(f.page, { pollMs: 0 });
+    expect(result.dismissedOverlays).toEqual([
+      'tutorial-card',
+      'tutorial-greeting:close',
+      'camera-prompt',
+    ]);
+    expect(f.clicks).toEqual(['tut-skip', 'note-close', 'camera-confirm']);
+    expect(f.passes()).toBe(4);
+  });
+  it('returns nothing dismissed only after three consecutive quiet passes', async () => {
+    const f = overlayPage([]);
+    expect(await settleFreeholdCaptureOverlays(f.page, { pollMs: 0 })).toEqual({
+      dismissedOverlays: [],
+    });
+    expect(f.passes()).toBe(3);
+  });
+  it('refuses a note with no locale-independent control rather than shooting it', async () => {
+    const f = overlayPage([{ note: 'bare' }]);
+    await expect(settleFreeholdCaptureOverlays(f.page, { pollMs: 0 })).rejects.toThrow(
+      'no locale-independent control',
+    );
+    expect(f.clicks).toEqual([]);
+  });
+  it('throws when an overlay keeps returning instead of settling', async () => {
+    const f = overlayPage(Array.from({ length: 10 }, () => ({ card: true })));
+    await expect(
+      settleFreeholdCaptureOverlays(f.page, { pollMs: 0, maxPasses: 10 }),
+    ).rejects.toThrow('did not settle');
+    expect(f.passes()).toBe(10);
   });
 });

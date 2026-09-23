@@ -8,7 +8,10 @@ import {
   walkFreeholdRouteTo,
   walkToFreeholdGate,
 } from '../freehold_interior_route.mjs';
-import { settleFreeholdCaptureNotices } from './freehold_capture_notices.mjs';
+import {
+  settleFreeholdCaptureNotices,
+  settleFreeholdCaptureOverlays,
+} from './freehold_capture_notices.mjs';
 
 async function prepare(page, width, height, mobile) {
   await page.setViewport({
@@ -64,10 +67,13 @@ export const freeholdReviewTargets = [
   async capture(page, variant) {
     if (process.env.PR_SHOTS_FREEHOLD_BASELINE === '1') {
       await sailToFreeholdTown(page);
-      // The release baseline has neither gate nor room. Show its real quay,
-      // which makes the missing prior surface explicit in the evidence record.
+      // The release baseline has neither gate nor room. Walk the same north
+      // approach to the gate site (EASTBROOK_LAYOUT.services.freeholdGate,
+      // (-28,-82)) and stand where the after frame stands, so the missing
+      // prior surface is explicit in the evidence record.
       await walkFreeholdRouteTo(page, 0, -88);
-      await walkFreeholdRouteTo(page, -14, -91);
+      await walkFreeholdRouteTo(page, -28, -76);
+      await walkFreeholdRouteTo(page, -28, -81);
     } else {
       await walkToFreeholdGate(page);
       if (scene !== 'gate-own-prompt') {
@@ -97,6 +103,9 @@ export const freeholdReviewTargets = [
       page,
       variant.mobile,
     );
+    // The arrival overlays (tutorial card, ferry note) ride their own timers and
+    // can land after the notices settle, so this runs last before the frame.
+    const { dismissedOverlays } = await settleFreeholdCaptureOverlays(page);
     const evidence = await page.evaluate(() => {
       const g = window.__game;
       const p = g.sim.player;
@@ -168,6 +177,7 @@ export const freeholdReviewTargets = [
           baseline: process.env.PR_SHOTS_FREEHOLD_BASELINE === '1',
           noticeResolution,
           dismissedNotices,
+          dismissedOverlays,
           ...evidence,
         },
         null,

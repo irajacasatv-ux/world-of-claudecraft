@@ -13,6 +13,7 @@ import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { freeholdInteriorPerfFailures } from '../scripts/freehold_interior_route.mjs';
 import { DUNGEONS, instanceOrigin } from '../src/sim/data';
+import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 
 const ROOT = 'docs/screenshots/freehold-interiors-2026-09-08/';
 const views = { desktop: [1600, 900], compact: [874, 402], tablet: [1180, 820] } as const;
@@ -60,6 +61,7 @@ const sourcePaths = [
   'src/ui/panel_key_guard.ts',
   'src/ui/hud/action_bar/action_bar_controller.ts',
   'scripts/freehold_capture_receipt.mjs',
+  'src/render/delve_interactable_visibility_core.ts',
 ];
 const digest = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -134,6 +136,9 @@ describe('Freehold functional capture evidence', () => {
           expect(evidence.rendererTier).toBe('low');
           expect(evidence.gpuRenderer).toMatch(/swiftshader/i);
           expect(evidence.gpuNoticeVisible).toBe(false);
+          // The arrival-overlay settle ran for this frame (an empty list means it
+          // found none across its quiet passes, not that it was skipped).
+          expect(Array.isArray(evidence.dismissedOverlays), name).toBe(true);
           expect(['boot-notice', 'performance-notice', 'prior-performance-dismissal']).toContain(
             evidence.noticeResolution,
           );
@@ -143,6 +148,16 @@ describe('Freehold functional capture evidence', () => {
             width * evidence.viewport.dpr,
             height * evidence.viewport.dpr,
           ]);
+          if (target === 'freehold-gate') {
+            // Both gate frames stand at the CURRENT site, one yard north of it,
+            // so a moved gate reds this contract until the frames are re-shot.
+            const gate = EASTBROOK_LAYOUT.services.freeholdGate.position;
+            const off = Math.hypot(
+              evidence.player.pos.x - gate.x,
+              evidence.player.pos.z - gate.z - 1,
+            );
+            expect(off, `${name} stands at the gate`).toBeLessThan(1.5);
+          }
           if (side === 'before') {
             expect(evidence.promptVisible).toBe(false);
             expect(evidence.player.pos.x).toBeLessThan(10000);

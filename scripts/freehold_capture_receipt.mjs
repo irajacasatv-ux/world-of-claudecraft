@@ -55,6 +55,7 @@ const sourcePaths = [
   'src/ui/panel_key_guard.ts',
   'src/ui/hud/action_bar/action_bar_controller.ts',
   'scripts/freehold_capture_receipt.mjs',
+  'src/render/delve_interactable_visibility_core.ts',
 ];
 const runtimePaths = [
   'src',
@@ -166,7 +167,8 @@ try {
           evidence.theme?.preset === 'classic' &&
             /swiftshader/i.test(evidence.gpuRenderer) &&
             evidence.gpuNoticeVisible === false &&
-            evidence.promptFitsViewport === true,
+            evidence.promptFitsViewport === true &&
+            Array.isArray(evidence.dismissedOverlays),
           `${side}: obscured or mismatched capture ${sidecarName}`,
         );
         requireEvidence(
