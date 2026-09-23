@@ -251,7 +251,7 @@ try {
         // settle after the press resolves the same way (the resolution follows
         // which notice mounted). A dismissal after the press that takes the
         // prompt's focus is refused by the gate frame's focus check; one that
-        // leaves the focus where it was is not visible to this receipt.
+        // leaves the focus where it was is not refused by this receipt.
         requireEvidence(
           side === 'before'
             ? evidence.preSettle === null

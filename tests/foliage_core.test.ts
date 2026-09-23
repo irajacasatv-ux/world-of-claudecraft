@@ -520,6 +520,21 @@ describe('a streamed chunk exclusion test', () => {
     expect(reads).toBe(0);
   });
 
+  it('switches to the whole list exactly at the reach', () => {
+    // Dropped from the short list (see the boundary above), yet it holds a point
+    // 3.05 yd off the box, just past the 3 yd reach: only the whole list says so.
+    const edge: EastbrookGrassExclusion = {
+      kind: 'circle',
+      id: 'edge',
+      x: -4.36,
+      z: 24,
+      radius: 1,
+    };
+    const test = grassExclusionTestNear([edge], box, 0.35, 3);
+    expect(test.near).toEqual([]);
+    expect(test(-3.05, 24)).toBe(true);
+  });
+
   it('reads the whole list for a point strayed past the reach', () => {
     // Off the short list (9 yd west, out of reach), yet the point sits in it.
     const far: EastbrookGrassExclusion = { kind: 'circle', id: 'far', x: -9, z: 24, radius: 1 };
