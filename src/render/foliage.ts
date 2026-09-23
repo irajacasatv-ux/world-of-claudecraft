@@ -2700,9 +2700,9 @@ function emptyGrassStats(
 function buildGrassRing(
   parent: THREE.Group,
   seed: number,
-  // Injected so tests can drive the build budget with a fake clock; production
-  // always uses the real frame clock via the default.
+  // Injected so tests drive the build budget with a fake clock (default: frame clock).
   now: () => number = () => performance.now(),
+  freeholdGateLit = false,
 ): GrassRing {
   const baseRadius = GFX.grassRadius;
   const step = GFX.grassStep;
@@ -2711,14 +2711,14 @@ function buildGrassRing(
   const chunkHalfDiag = Math.SQRT2 * GRASS_CHUNK_SIZE * 0.5;
   const buildBudgetMs = GRASS_CHUNK_BUILD_BUDGET_MS;
   const cacheLimit = GFX.leanFoliage ? GRASS_CHUNK_CACHE_LIMIT_LOW : GRASS_CHUNK_CACHE_LIMIT_HIGH;
-  // Snapshot the active world's town exclusions once. The canonical Eastbrook
-  // layout is included only for the built-in world; editor/custom maps never
-  // inherit its fixed coordinates.
+  // Snapshot the active world's town exclusions once: the canonical layouts only
+  // for the built-in world, and the Freehold Gate's site only on a lit host.
   const activeContent = getActiveWorldContent();
   const townExclusions = eastbrookGrassExclusions(
     activeContent.props.buildings,
     activeContent === BUILTIN_WORLD,
     activeContent.services?.noticeboards ?? [],
+    freeholdGateLit ? (activeContent.services?.freeholdGate ?? null) : null,
   );
 
   // high tier reads as a lush meadow: wider tufts with more blades; low keeps
@@ -3570,7 +3570,7 @@ export const foliageDressingInternalsForTest = { generateDressing, dressStep };
 // Entry point
 // ---------------------------------------------------------------------------
 
-export function buildFoliage(seed: number, webgl?: THREE.WebGLRenderer): FoliageView {
+export function buildFoliage(seed: number, webgl?: THREE.WebGLRenderer, lit = false): FoliageView {
   const group = new THREE.Group();
   group.name = 'foliage';
   const bucketMeshes: BucketMesh[] = [];
@@ -3749,7 +3749,7 @@ export function buildFoliage(seed: number, webgl?: THREE.WebGLRenderer): Foliage
           return emptyGrassStats(false, 0, out);
         },
       }
-    : buildGrassRing(group, seed);
+    : buildGrassRing(group, seed, undefined, lit);
   freezeStaticMatrices(group);
   return {
     group,

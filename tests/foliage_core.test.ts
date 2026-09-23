@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
+import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
+import { FREEHOLD_GATE_STANCE } from '../scripts/freehold_interior_route.mjs';
+import { buildStaticDoorBody } from '../src/render/door_portal';
 import {
   eastbrookGrassExclusions,
+  FREEHOLD_GATE_GRASS_RADIUS,
   insideDressingExclusion,
   insideEastbrookGrassExclusion,
   insideGrassHubExclusion,
@@ -19,6 +23,75 @@ import {
 const PADDING = 0.35;
 const BOUNDARY_EPSILON = 0.01;
 const BUILTIN_NOTICEBOARDS = BUILTIN_WORLD.services?.noticeboards ?? [];
+
+describe('the Freehold Gate grass exclusion', () => {
+  const site = BUILTIN_WORLD.services?.freeholdGate;
+  const lit = () =>
+    eastbrookGrassExclusions(PROPS.buildings, true, BUILTIN_NOTICEBOARDS, site ?? null);
+
+  it('keeps a dark realm grassed where no arch stands, and adds one circle on a lit host', () => {
+    const dark = eastbrookGrassExclusions(PROPS.buildings, true, BUILTIN_NOTICEBOARDS);
+    expect(dark.some((exclusion) => exclusion.id === 'freehold_gate')).toBe(false);
+    expect(site).toEqual({ ...EASTBROOK_LAYOUT.services.freeholdGate.position, facing: 0 });
+    expect(lit()).toHaveLength(dark.length + 1);
+    expect(lit().find((exclusion) => exclusion.id === 'freehold_gate')).toEqual({
+      kind: 'circle',
+      id: 'freehold_gate',
+      x: site?.x,
+      z: site?.z,
+      radius: 2.6,
+    });
+    expect(FREEHOLD_GATE_GRASS_RADIUS).toBe(2.6);
+  });
+
+  it('honours a custom world that places its own gate', () => {
+    expect(eastbrookGrassExclusions([], false, [], { x: 10, z: 20 })).toEqual([
+      { kind: 'circle', id: 'freehold_gate', x: 10, z: 20, radius: FREEHOLD_GATE_GRASS_RADIUS },
+    ]);
+  });
+
+  it('covers every tuft that could overlap the real arch or its plinths, and not the stance', () => {
+    // The arch body the renderer draws (the procedural fallback in Node): the
+    // arch and its two plinths stand on the ground. A tuft within PADDING of
+    // any of their footprints would poke through, so every such point must be
+    // excluded.
+    const body = buildStaticDoorBody();
+    body.updateMatrixWorld(true);
+    const grounded = body.children
+      .filter((child): child is THREE.Mesh => (child as THREE.Mesh).isMesh === true)
+      .map((mesh) => new THREE.Box3().setFromObject(mesh))
+      .filter((box) => box.min.y <= 0.01);
+    expect(grounded).toHaveLength(3);
+    const arch = lit().filter((exclusion) => exclusion.id === 'freehold_gate');
+    for (const box of grounded)
+      for (const x of [box.min.x - PADDING, box.max.x + PADDING])
+        for (const z of [box.min.z - PADDING, box.max.z + PADDING])
+          expect(
+            insideEastbrookGrassExclusion(arch, (site?.x ?? 0) + x, (site?.z ?? 0) + z, PADDING),
+          ).toBe(true);
+    const stance = {
+      x: (site?.x ?? 0) + FREEHOLD_GATE_STANCE.dx,
+      z: (site?.z ?? 0) + FREEHOLD_GATE_STANCE.dz,
+    };
+    expect(insideEastbrookGrassExclusion(arch, stance.x, stance.z, PADDING)).toBe(false);
+  });
+
+  it('reaches the grass ring only through the lit host flag', () => {
+    const code = (path: string) =>
+      readFileSync(path, 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/(^|[^:])\/\/.*$/gm, '$1')
+        .replace(/\s+/g, ' ');
+    expect(code('src/render/renderer.ts')).toContain(
+      'this.foliage = buildFoliage(this.sim.cfg.seed, this.webgl, !!this.sim.cfg.freeholdsEnabled);',
+    );
+    const foliage = code('src/render/foliage.ts');
+    expect(foliage).toContain(': buildGrassRing(group, seed, undefined, lit);');
+    expect(foliage).toContain(
+      'freeholdGateLit ? (activeContent.services?.freeholdGate ?? null) : null,',
+    );
+  });
+});
 
 describe('Eastbrook town grass exclusion', () => {
   it('snapshots every built-in town footprint, service apron, civic prop, and wall chord', () => {
@@ -51,8 +124,8 @@ describe('Eastbrook town grass exclusion', () => {
     // and reading-spot exclusions add two more on top.
     // The 13 town guild boards (content/noticeboards.ts, one per hub
     // settlement) each add a footprint and a reading-spot exclusion: 26 more.
-    // The Freehold Gate's arch footprint adds one circle (124).
-    expect(exclusions).toHaveLength(124);
+    // The Freehold Gate's arch adds its circle only on a lit host (below).
+    expect(exclusions).toHaveLength(123);
     expect(exclusions.some((item) => item.id.startsWith('eastbrook_grand_armoury'))).toBe(false);
     for (const building of [
       ...EASTBROOK_LAYOUT.preservedBuildings,
@@ -114,20 +187,6 @@ describe('Eastbrook town grass exclusion', () => {
       kind: 'circle',
       radius: 3.19,
     });
-    // The Freehold Gate's arch: both plinths (1.7 either side of the site at
-    // facing 0) sit well inside it, and the capture stance 4.1 yd out does not.
-    const gate = EASTBROOK_LAYOUT.services.freeholdGate.position;
-    expect(byId.get('eastbrook_freehold_gate')).toEqual({
-      kind: 'circle',
-      id: 'eastbrook_freehold_gate',
-      x: gate.x,
-      z: gate.z,
-      radius: 2.6,
-    });
-    for (const side of [-1.7, 1.7])
-      expect(insideEastbrookGrassExclusion(exclusions, gate.x + side, gate.z, PADDING)).toBe(true);
-    const arch = exclusions.filter((exclusion) => exclusion.id === 'eastbrook_freehold_gate');
-    expect(insideEastbrookGrassExclusion(arch, gate.x - 4, gate.z + 1, PADDING)).toBe(false);
     expect(byId.get('eastbrook_noticeboard')).toMatchObject({
       kind: 'obb',
       halfWidth: 1.2,

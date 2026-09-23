@@ -64,7 +64,7 @@ describe('foliage GPU optimization production wiring', () => {
     expect(foliage).toMatch(/parent\.add\(im\);\s+freezeStaticMatrices\(im\);/);
     expect(foliage).toMatch(/parent\.add\(fm\);\s+freezeStaticMatrices\(fm\);/);
     expect(foliage).toMatch(
-      /: buildGrassRing\(group, seed\);\s+freezeStaticMatrices\(group\);\s+return \{/,
+      /: buildGrassRing\(group, seed, undefined, lit\);\s+freezeStaticMatrices\(group\);\s+return \{/,
     );
   });
 

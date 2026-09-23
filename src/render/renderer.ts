@@ -2484,7 +2484,7 @@ export class Renderer {
     this.waterView.setWavesEnabled(this.waterRipplesEnabled);
     bd('water');
 
-    this.foliage = buildFoliage(this.sim.cfg.seed, this.webgl);
+    this.foliage = buildFoliage(this.sim.cfg.seed, this.webgl, !!this.sim.cfg.freeholdsEnabled);
     setRenderCategory(this.foliage.group, 'foliage');
     this.scene.add(this.foliage.group);
     bd('foliage');

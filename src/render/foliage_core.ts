@@ -79,16 +79,24 @@ function buildingObb(building: BuildingDef): EastbrookGrassExclusion {
   };
 }
 
+/** How far from the Freehold Gate's centre its arch keeps tufts off: past the
+ *  outer corners of its two plinths (tests/foliage_core.test.ts measures them
+ *  on the real arch body). */
+export const FREEHOLD_GATE_GRASS_RADIUS = 2.6;
+
 /**
  * Snapshot the geometry that must remain grass-free. Built-in towns use their
  * canonical layouts (including walls, civic furniture, repeated boardwalks,
  * and service aprons), while custom worlds only honor landmarks explicitly
  * present in their own prop table and never inherit fixed world coordinates.
+ * The Freehold Gate's site is passed only when the host lights housing, since
+ * the arch spawns only then: a dark realm keeps its grass there.
  */
 export function eastbrookGrassExclusions(
   buildings: readonly BuildingDef[],
   builtInWorld: boolean,
   noticeboards: readonly NoticeboardDef[] = [],
+  freeholdGate: { x: number; z: number } | null = null,
 ): EastbrookGrassExclusion[] {
   const exclusions: EastbrookGrassExclusion[] = builtInWorld
     ? []
@@ -115,16 +123,6 @@ export function eastbrookGrassExclusions(
       x: well.position.x,
       z: well.position.z,
       radius: well.radius,
-    });
-    // The Freehold Gate's arch (plinths 1.7 either side of its centre): tuft
-    // cards would otherwise poke through the plinth bases.
-    const gate = EASTBROOK_LAYOUT.services.freeholdGate.position;
-    exclusions.push({
-      kind: 'circle',
-      id: 'eastbrook_freehold_gate',
-      x: gate.x,
-      z: gate.z,
-      radius: 2.6,
     });
     for (const bench of EASTBROOK_LAYOUT.civic.benches) {
       exclusions.push(layoutObb(bench.id, bench.footprint));
@@ -249,6 +247,16 @@ export function eastbrookGrassExclusions(
       x: board.frontStandingPoint.x,
       z: board.frontStandingPoint.z,
       radius: 1.2,
+    });
+  }
+  // The lit gate's arch: tuft cards would otherwise poke through its plinths.
+  if (freeholdGate) {
+    exclusions.push({
+      kind: 'circle',
+      id: 'freehold_gate',
+      x: freeholdGate.x,
+      z: freeholdGate.z,
+      radius: FREEHOLD_GATE_GRASS_RADIUS,
     });
   }
   return exclusions;
