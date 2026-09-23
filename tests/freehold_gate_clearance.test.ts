@@ -1,17 +1,16 @@
-// The Freehold Gate's press clearance (EASTBROOK_LAYOUT.services.freeholdGate).
-// The press ladder (src/game/nearby_interaction_core.ts) ranks corpse, delve,
-// OBJECT (the gate is one), npc, escort start, gather node, feast, garden bed,
-// then the harvest choice, so a standing point inside the gate's reach AND
-// another interactable's reach hands the press to whichever ranks higher. Two
-// sites failed this: (-14,-92) sat 4.24 yd from Apothecary Lin once v0.44.0
-// moved her, and (-28,-82) cleared every NPC but took the press of two Eastbrook
-// garden beds; a third, (-37,-103.5), passed the presses but dropped a leaving
-// player 1.17 yd from a house corner, and a fourth, (-39,-104), 0.25 yd outside
-// the Eastbrook town circle. This suite holds every fixed interactable
-// beyond the SUM of the two reaches, pins the site margins that chose it, then
-// proves the presses through the real ladder in both directions: every point an
-// interactable answers answers the same with the gate added, and every point the
-// gate reaches answers the gate and nothing else without it.
+// The Freehold Gate's press clearance (EASTBROOK_LAYOUT.services.freeholdGate). The press ladder
+// (src/game/nearby_interaction_core.ts) ranks corpse, delve, OBJECT (the gate is one), npc, escort
+// start, gather node, feast, garden bed, then the harvest choice, so a standing point inside the
+// gate's reach AND another interactable's reach hands the press to whichever ranks higher. Two
+// sites failed this: (-14,-92) sat 4.24 yd from Apothecary Lin once v0.44.0 moved her, and
+// (-28,-82) cleared every NPC but stood inside the press reach of two Eastbrook garden beds (4.47
+// and 5.00 yd) and within the 10 yd sum of two more (9.22 and 9.49 yd); a third, (-37,-103.5),
+// passed the presses but dropped a leaving player 1.17 yd from a house corner, and a fourth,
+// (-39,-104), 0.25 yd outside the Eastbrook town circle. This suite holds every fixed interactable
+// beyond the SUM of the two reaches, pins the site margins that chose it, then proves the presses
+// through the real ladder in both directions: every point an interactable answers answers the same
+// with the gate added, and every point the gate reaches answers the gate and nothing else without
+// it.
 import { beforeAll, describe, expect, it } from 'vitest';
 import { ESCORT_POST_RADIUS } from '../src/game/escort_interact';
 import { objectInteractionRange } from '../src/game/interactions';
@@ -255,6 +254,26 @@ describe('the Freehold Gate site', () => {
     expect(nearest).toBeCloseTo(12.185, 3);
   });
 
+  it('keeps every NPC over 11 yd away as the town runs, not only where it spawns', () => {
+    // A fresh lit realm run for a minute: wanderers and routines move NPCs
+    // after spawn, which the spawn-time case above cannot see.
+    const sim = new Sim({
+      seed: WORLD_SEED,
+      playerClass: 'warrior',
+      noPlayer: true,
+      freeholdsEnabled: true,
+    });
+    let closest = Number.POSITIVE_INFINITY;
+    for (let tick = 0; tick < 20 * 60; tick++) {
+      sim.tick();
+      if (tick % 20 !== 0) continue;
+      for (const e of sim.entities.values())
+        if (e.kind === 'npc') closest = Math.min(closest, dist(e.pos, GATE));
+    }
+    expect(closest).toBeGreaterThan(NPC_CLEARANCE);
+    expect(closest).toBeLessThan(Number.POSITIVE_INFINITY);
+  });
+
   it('holds every garden bed and gather node over 10 yd away, and every escort post over 13', () => {
     const beds = FARM_PATCHES.flatMap((p) => p.beds);
     expect(beds.length).toBeGreaterThan(0);
@@ -276,6 +295,10 @@ describe('the Freehold Gate site', () => {
         ? NPC_CLEARANCE
         : FREEHOLD_GATE_INTERACT_RANGE + objectInteractionRange(object);
       expect(dist(object.pos, GATE), object.templateId).toBeGreaterThan(clearance);
+      // The layout's comment says over 10 yd from every object, which the
+      // 4 yd noticeboard and monument reaches alone would not require.
+      if (!object.templateId.startsWith('delve_'))
+        expect(dist(object.pos, GATE), object.templateId).toBeGreaterThan(BED_OR_NODE_CLEARANCE);
     }
     const markers = PROPS.delveMarkers ?? [];
     expect(markers.length).toBeGreaterThan(0);

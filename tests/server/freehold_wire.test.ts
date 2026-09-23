@@ -1417,6 +1417,23 @@ it('mirrors the gate online with the fields the render cores read, so it draws a
   expect(resolveDirectPickEntityId([gate.id], client.entities)).toBe(gate.id);
 });
 
+it('takes the lit flag the renderer hands the grass ring from each hello, and drops it on a dark one', () => {
+  // renderer.ts builds foliage from cfg.freeholdsEnabled (tests/foliage_core.test.ts);
+  // online, only the hello sets it, so a reconnect to a dark realm must clear it.
+  const client = bareClient(1);
+  const hello = (extra: Record<string, unknown>) =>
+    (client as unknown as { onMessage(raw: string): void }).onMessage(
+      JSON.stringify({ t: 'hello', pid: 1, seed: 20061, ...extra }),
+    );
+  hello({ freeholdsEnabled: true });
+  expect(client.cfg.freeholdsEnabled).toBe(true);
+  hello({ freeholdsEnabled: false });
+  expect(Boolean(client.cfg.freeholdsEnabled)).toBe(false);
+  hello({ freeholdsEnabled: true });
+  hello({});
+  expect(Boolean(client.cfg.freeholdsEnabled)).toBe(false);
+});
+
 it('silently sheds a live gate command and recovers only after a fresh user confirmation', () => {
   vi.stubEnv('FREEHOLDS_ENABLED', '1');
   const window = new Window();

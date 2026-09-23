@@ -197,6 +197,18 @@ describe('player motion kernel parity with the live Sim', () => {
     runParity(sim, mi({ turnRight: true }), 20 * 2, 'turnRight in place');
   });
 
+  it('holds Turn Left and Turn Right together as no turn and no step', () => {
+    // The Freehold capture settles the chase camera on exactly this pair
+    // (scripts/freehold_interior_route.mjs), in the offline world.
+    const sim = makeSim();
+    teleport(sim, 0, -40);
+    sim.player.facing = 0.7;
+    const { x, z } = sim.player.pos;
+    runParity(sim, mi({ turnLeft: true, turnRight: true }), 20 * 2, 'both turn keys');
+    expect(sim.player.facing).toBeCloseTo(0.7, 9);
+    expect([sim.player.pos.x, sim.player.pos.z]).toEqual([x, z]);
+  });
+
   it('applies the backpedal multiplier identically', () => {
     const sim = makeSim();
     teleport(sim, 0, -40);

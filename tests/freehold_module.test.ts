@@ -810,11 +810,19 @@ describe('src/sim/freehold/ source scan', () => {
     expect(end).toBeGreaterThan(start);
     const paragraph = guide.slice(start, end);
     const src = join(__dirname, '..', 'src');
+    // Either quote, an optional extension, a static or dynamic import; a
+    // commented-out import is no importer.
+    const reaches = /(?:from|import\()\s*(['"])[./]*\/sim\/freehold\/gate_rules(?:\.[jt]s)?\1/;
+    const importsGateRules = (text: string) =>
+      reaches.test(text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1'));
+    expect(importsGateRules(`import { x } from "../sim/freehold/gate_rules.ts";`)).toBe(true);
+    expect(importsGateRules(`await import('../../sim/freehold/gate_rules')`)).toBe(true);
+    expect(importsGateRules(`// import { x } from '../sim/freehold/gate_rules';`)).toBe(false);
+    expect(importsGateRules(`/* import { x } from '../sim/freehold/gate_rules'; */`)).toBe(false);
+    expect(importsGateRules(`from '../sim/freehold/gate_rules_extra'`)).toBe(false);
     const importers = tsFilesUnder(src)
       .filter(({ file }) => !file.startsWith('sim/'))
-      .filter(({ full }) =>
-        /from '[./]*\/sim\/freehold\/gate_rules'/.test(readFileSync(full, 'utf8')),
-      )
+      .filter(({ full }) => importsGateRules(readFileSync(full, 'utf8')))
       .map(({ file }) => `src/${file}`)
       .sort();
     expect(importers).toContain('src/render/pick_resolution.ts');

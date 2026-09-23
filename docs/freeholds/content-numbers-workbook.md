@@ -447,22 +447,23 @@ kinds, and only the first two are more than a choice:
   yards of collider-free ground round the arch, and a return at least 2 yards
   from any building, so a leaving player is never set down against a wall.
 
-(-28,-82) failed the press rule (two garden beds). (-37,-103.5) passed the
-first two kinds but dropped a leaving player 1.17 yards from a house corner,
-against the chosen 2 yard margin. (-39,-104) dropped them 0.25 yards outside the
-town circle. The site is the nearest passing cell that a 0.05 yard grid search
-found under all three kinds, run 2026-09-22 as a session tool that is not
-committed, so its counts are not repeated here; the pinned facts below are what
-stands. Without
-the chosen margins (-37,-103.5), 23.31 yards from (-28,-82) against this site's
-24.22, would stand; that trade is recorded for the maintainer. This cell has
-road 5.53 against 5.5, 3.5 yards collider-free against 3.5, and its return 0.16
-yards inside the circle, the widest of the band; all three are pinned. The
-existing shared 4 yard south return inset lands at (-38.65,-107.75).
-No custom leave offset is introduced. The gate is a walk-through service marker. The closed ornamental
-door is backed by the south structural wall, so no aperture permits walking into
-unfloored space. Its fixed swing reservation and the complete protected corridor
-remain unavailable to future mutable furnishings.
+(-28,-82) failed the press rule: two garden beds stood within the gate's own
+reach (4.47 and 5.00 yards) and two more within the 10-yard sum (9.22 and 9.49).
+(-37,-103.5) passed the first two kinds but dropped a leaving player 1.17 yards
+from a house corner, against the chosen 2 yard margin. (-39,-104) dropped them
+0.25 yards outside the town circle. The site is the nearest passing cell that a
+0.05 yard grid search found under all three kinds, run 2026-09-22 as a session
+tool that is not committed, so its counts are not repeated here; the pinned
+facts below are what stands. Without the chosen margins (-37,-103.5), 23.31
+yards from (-28,-82) against this site's 24.22, would stand; that trade is
+recorded for the maintainer. This cell has road 5.53 against 5.5, 3.5 yards
+collider-free against 3.5, and its return 0.16 yards inside the circle, the
+widest of the band; all three are pinned. The existing shared 4 yard south
+return inset lands at (-38.65,-107.75). No custom leave offset is introduced.
+The gate is a walk-through service marker. The closed ornamental door is backed
+by the south structural wall, so no aperture permits walking into unfloored
+space. Its fixed swing reservation and the complete protected corridor remain
+unavailable to future mutable furnishings.
 
 The procedural model source is `src/render/freehold/model_spec_core.ts`; its
 pre-runtime source hash and every box part are retained in the measurement artifact.
