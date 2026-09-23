@@ -102,16 +102,25 @@ describe('every capture script declines through GREETING_DECLINE', () => {
   // evaluate call passes (the line scan above counts GREETING_DECLINE uses).
   const SELECTOR = String.raw`(?:decline|GREETING_DECLINE|(['"\x60])(?:(?!\1).)*?(?:\[data-close\]|\[data-guidance=\\?["']?off)(?:(?!\1).)*?\1|(['"\x60])#profession-tutorial \.cd-ok\2)`;
   const DECLINING_CLICK = new RegExp(
-    String.raw`querySelector\(\s*${SELECTOR}\s*\)\s*\??\.\s*(?:click|dispatchEvent)\(`,
+    String.raw`querySelector\(\s*${SELECTOR}\s*\)\s*\??\.\s*(?:click\(\s*\)|dispatchEvent\()`,
     'g',
   );
+  /** A literal greeting selector that lands on a declining control. */
+  const DECLINING_LITERAL =
+    /\[data-close\]|\[data-guidance=\\?["']?off|^#profession-tutorial \.cd-ok$/;
   /** Statements (split on `;`) that name a greeting and click anything but a
-   *  declining selector. */
+   *  declining selector, in the page or through puppeteer's own click or tap
+   *  on a greeting selector. */
   function statementHits(code: string): string[] {
     const hits: string[] = [];
     for (const statement of code.split(';')) {
+      for (const [, , selector] of statement.matchAll(
+        /\.(?:tap|click)\(\s*(['"`])(#(?:tutorial-greeting|profession-tutorial)(?:(?!\1).)*)\1/g,
+      ))
+        if (!DECLINING_LITERAL.test(selector)) hits.push(statement.trim());
       if (!/tutorial-greeting|profession-tutorial/.test(statement)) continue;
-      const clicks = statement.match(/\.(?:click|dispatchEvent)\(/g)?.length ?? 0;
+      // In the page a click takes no argument; puppeteer's takes a selector.
+      const clicks = statement.match(/\.click\(\s*\)|\.dispatchEvent\(/g)?.length ?? 0;
       if (clicks === 0) continue;
       const declining = statement.match(DECLINING_CLICK)?.length ?? 0;
       if (declining < clicks) hits.push(statement.trim());
@@ -153,7 +162,10 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     for (const { file, full } of files) {
       const code = codeOf(full).join('\n');
       for (const statement of code.split(';'))
-        if (/tutorial-greeting|profession-tutorial/.test(statement) && /\.click\(/.test(statement))
+        if (
+          /tutorial-greeting|profession-tutorial/.test(statement) &&
+          /\.(?:click|dispatchEvent|tap)\(/.test(statement)
+        )
           clicked++;
       for (const hit of statementHits(code)) hits.push(`scripts/${file}: ${hit}`);
     }
@@ -201,6 +213,9 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     "document.getElementById('tutorial-greeting')?.querySelector(decline)?.click(), document.querySelector('#tutorial-greeting .ui-btn')?.click()",
     // A dispatched click is a click.
     "document.getElementById('tutorial-greeting')?.querySelector('.ui-btn')?.dispatchEvent(new MouseEvent('click'))",
+    // Puppeteer's own tap or click on a greeting selector.
+    "await page.tap('#tutorial-greeting .ui-btn--gold')",
+    "await page.click('#tutorial-greeting .ui-btn')",
     // Wrapped over lines, as the formatter lays it out.
     "document\n  .getElementById('tutorial-greeting')\n  ?.querySelector('.ui-btn--gold')\n  ?.click()",
   ])('the statement rule catches %s', (code) => {
@@ -213,6 +228,7 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     'document.querySelector(\'#tutorial-greeting [data-guidance="off"]\')?.click()',
     "document.querySelector('#tutorial-greeting [data-close]')?.click()",
     "document.querySelector('#profession-tutorial .cd-ok')?.click()",
+    "await page.tap('#tutorial-greeting [data-close]')",
     // Not a greeting statement, and a greeting statement with no click.
     "document.querySelector('.tut-skip')?.click()",
     "document.getElementById('tutorial-greeting')?.remove()",

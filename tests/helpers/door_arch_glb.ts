@@ -8,8 +8,10 @@ import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
 import { MeshoptDecoder } from 'meshoptimizer';
 import * as THREE from 'three';
+import { doorPortalPreloadInternalsForTest } from '../../src/render/door_portal';
 
-export const DOOR_ARCH_GLB = 'public/models/props/dungeon_door_arch.glb';
+/** The file door_portal.ts loads, served from public/. */
+export const DOOR_ARCH_GLB = `public${doorPortalPreloadInternalsForTest.doorArchAssetUrl}`;
 
 export async function doorArchTriangles(): Promise<THREE.Triangle[]> {
   await MeshoptDecoder.ready;
@@ -18,7 +20,8 @@ export async function doorArchTriangles(): Promise<THREE.Triangle[]> {
     .registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
   const doc = await io.readBinary(new Uint8Array(readFileSync(DOOR_ARCH_GLB)));
   // door_portal.ts: "The GLB opening faces its local X axis ... rotate the
-  // authored geometry into place once" (scene.rotation.y = PI / 2).
+  // authored geometry into place once" (scene.rotation.y = PI / 2, pinned by
+  // tests/freehold_gate_probe.test.ts against that source).
   const turn = new THREE.Matrix4().makeRotationY(Math.PI / 2);
   const triangles: THREE.Triangle[] = [];
   for (const node of doc.getRoot().listNodes()) {
@@ -43,9 +46,18 @@ export async function doorArchTriangles(): Promise<THREE.Triangle[]> {
   return triangles;
 }
 
-/** Whether a ray from +z far out along (x, y) toward -z crosses the arch. */
-export function archHit(triangles: readonly THREE.Triangle[], x: number, y: number): boolean {
-  const ray = new THREE.Ray(new THREE.Vector3(x, y, 50), new THREE.Vector3(0, 0, -1));
+/** Whether a ray along z through (x, y) crosses the arch: from the front
+ *  (+z toward -z) by default, or from behind. */
+export function archHit(
+  triangles: readonly THREE.Triangle[],
+  x: number,
+  y: number,
+  fromBehind = false,
+): boolean {
+  const ray = new THREE.Ray(
+    new THREE.Vector3(x, y, fromBehind ? -50 : 50),
+    new THREE.Vector3(0, 0, fromBehind ? 1 : -1),
+  );
   const target = new THREE.Vector3();
   return triangles.some((t) => ray.intersectTriangle(t.a, t.b, t.c, false, target) !== null);
 }

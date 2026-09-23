@@ -159,6 +159,15 @@ describe('Freehold functional capture evidence', () => {
           );
           expect(evidence.promptFitsViewport).toBe(true);
           expect(evidence.transientOverlays, name).toEqual([]);
+          // The after arm settles the GPU notices and the arrival overlays at
+          // the gate stance, before the press (a dismissal after the prompt
+          // opens takes its focus); the baseline arm opens no prompt.
+          if (side === 'after') {
+            expect(evidence.preSettle.overlays.passes, name).toBeGreaterThanOrEqual(3);
+            expect(evidence.preSettle.notices.noticeResolution, name).toBe(
+              evidence.noticeResolution,
+            );
+          } else expect(evidence.preSettle, name).toBeNull();
           expect(bytes.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
           expect([bytes.readUInt32BE(16), bytes.readUInt32BE(20)]).toEqual([
             width * evidence.viewport.dpr,

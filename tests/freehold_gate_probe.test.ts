@@ -6,6 +6,7 @@
 // and nearer than its `far`, and fake DOM elements. By default the gate sits
 // at the origin facing 0, so the sample points land on screen at plinth-left
 // (415, 450), plinth-right (585, 450) and the keystone (500, 275).
+import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import {
@@ -13,7 +14,7 @@ import {
   freeholdGateDrawnProbe,
 } from '../scripts/lib/freehold_gate_probe.mjs';
 import { buildStaticDoorBody } from '../src/render/door_portal';
-import { archHit, doorArchTriangles } from './helpers/door_arch_glb';
+import { archHit, DOOR_ARCH_GLB, doorArchTriangles } from './helpers/door_arch_glb';
 
 class Vec3 {
   constructor(
@@ -434,11 +435,21 @@ describe('freeholdGateDrawnProbe: the sample points sit on the real arch', () =>
 
 describe('freeholdGateDrawnProbe: the sample points sit on the arch the browser draws', () => {
   // The door-arch GLB, read from disk and turned as door_portal.ts turns it.
+  it('reads the file and the quarter turn door_portal.ts applies at load', () => {
+    const code = readFileSync('src/render/door_portal.ts', 'utf8').replace(/\s+/g, ' ');
+    const load = code.slice(code.indexOf('loadGltf(DOOR_ARCH_ASSET_URL)'));
+    expect(load.slice(0, 600)).toContain('scene.rotation.y = Math.PI / 2;');
+    expect(DOOR_ARCH_GLB).toBe('public/models/props/dungeon_door_arch.glb');
+  });
+
   it('hits the GLB arch at every sample point, and neither its open passage nor beside it', async () => {
     const triangles = await doorArchTriangles();
     expect(triangles.length).toBeGreaterThan(1000);
+    // Hit from both faces, so the point lies within the column's depth, not
+    // beside a surface that only one side of it meets.
     for (const [label, side, up] of FREEHOLD_GATE_PROBE_POINTS)
-      expect(archHit(triangles, side, up), label).toBe(true);
+      for (const fromBehind of [false, true])
+        expect(archHit(triangles, side, up, fromBehind), `${label} ${fromBehind}`).toBe(true);
     expect(archHit(triangles, 0, 1)).toBe(false);
     expect(archHit(triangles, 2.6, 1)).toBe(false);
   });

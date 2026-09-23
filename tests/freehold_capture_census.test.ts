@@ -2,11 +2,13 @@
 // through its `env` seam with a fake document: the gate prompt's controls and
 // what the frame shows at each one's centre, focus, the viewport fit, and the
 // transient HUD list.
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   FREEHOLD_TRANSIENT_HUD,
   freeholdCaptureCensus,
 } from '../scripts/lib/freehold_capture_census.mjs';
+import { sourceFilesUnder } from './helpers/source_files_under';
 
 type Box = { left: number; top: number; width: number; height: number };
 type FakeNode = {
@@ -18,6 +20,8 @@ type FakeNode = {
   text?: string;
   children?: FakeNode[];
   hidden?: boolean;
+  // Faded to opacity 0: hidden only to a check that asks about opacity.
+  faded?: boolean;
   display?: string;
 };
 
@@ -33,7 +37,8 @@ function fake(node: FakeNode) {
       right: node.box.left + node.box.width,
       bottom: node.box.top + node.box.height,
     }),
-    checkVisibility: () => !node.hidden,
+    checkVisibility: (options: { checkOpacity?: boolean } = {}) =>
+      !node.hidden && !(node.faded && options.checkOpacity === true),
     contains: (other: unknown) =>
       other === element || (node.children ?? []).includes(other as never),
     node,
@@ -213,6 +218,12 @@ describe('freeholdCaptureCensus: transient HUD', () => {
     expect(census({ transient: { '#error-msg': [flat] } }).transientOverlays).toEqual([]);
   });
 
+  it('takes a shell faded to opacity 0 as hidden, text and all', () => {
+    // Banners rest at opacity 0 with their last text kept.
+    const faded = shell('Eastbrook Vale', { faded: true });
+    expect(census({ transient: { '#banner': [faded] } }).transientOverlays).toEqual([]);
+  });
+
   it('counts a layer that needs no content as soon as any match shows', () => {
     expect(census({ transient: { '#low-health-vignette': [shell()] } }).transientOverlays).toEqual([
       '#low-health-vignette',
@@ -221,24 +232,45 @@ describe('freeholdCaptureCensus: transient HUD', () => {
     expect(census({ transient: { '.fct': numbers } }).transientOverlays).toEqual(['.fct']);
   });
 
-  it('watches every transient layer the HUD paints over the world', () => {
-    expect(FREEHOLD_TRANSIENT_HUD.map(([selector]) => selector)).toEqual([
-      '#error-msg',
-      '#quest-banner',
-      '#raid-warning-banner',
-      '#banner',
-      '#subzone-banner',
-      '#tooltip',
-      '#loot-rolls',
-      '.fct',
-      '#low-health-vignette',
-      '#death-overlay',
-      '#ready-check-leader-window',
-      '#dfinder-proposal-popup',
-      '#bg-proposal-popup',
-      '#entry-guard-banner',
-      '#discord-cta-banner',
-      '#desktop-update-toast',
+  it('watches every transient layer the HUD paints over the world, each as a shell or not', () => {
+    expect(FREEHOLD_TRANSIENT_HUD).toEqual([
+      ['#error-msg', true],
+      ['#quest-banner', true],
+      ['#raid-warning-banner', true],
+      ['#banner', true],
+      ['#subzone-banner', true],
+      ['#tooltip', true],
+      ['#loot-rolls', true],
+      ['.fct', false],
+      ['#low-health-vignette', false],
+      ['#death-overlay', false],
+      ['#ready-check-leader-window', false],
+      ['#dfinder-proposal-popup', true],
+      ['#bg-proposal-popup', true],
+      ['#entry-guard-banner', false],
+      ['#discord-cta-banner', false],
+      ['#desktop-update-toast', false],
     ]);
+  });
+
+  it('names only layers the game still paints', () => {
+    // Each id is in the page shell or set by a UI module; the class is the
+    // floating combat text's own.
+    const shell = readFileSync('index.html', 'utf8');
+    const ui = sourceFilesUnder('src/ui')
+      .map(({ full }) => readFileSync(full, 'utf8'))
+      .join('\n');
+    for (const [selector] of FREEHOLD_TRANSIENT_HUD) {
+      const name = selector.slice(1);
+      if (selector.startsWith('.')) {
+        expect(ui, selector).toMatch(new RegExp(`['"]${name}['"]`));
+        continue;
+      }
+      const there =
+        shell.includes(`id="${name}"`) ||
+        ui.includes(`id = '${name}'`) ||
+        ui.includes(`id="${name}"`);
+      expect(there, selector).toBe(true);
+    }
   });
 });

@@ -78,11 +78,12 @@ describe('the Freehold Gate grass exclusion', () => {
   });
 
   it('covers every tuft that could overlap the GLB arch the browser draws', async () => {
-    // Its ground course: every vertex within 0.4 yd of the ground, as turned
-    // by door_portal.ts. Measured: x within 1.85, z within 0.56 of the centre.
+    // Everything a tuft card could reach up to: every vertex within 1 yd of the
+    // ground, as turned by door_portal.ts (measured: x within 1.85, z within
+    // 0.56 of the centre).
     const ground = (await doorArchTriangles())
       .flatMap((t) => [t.a, t.b, t.c])
-      .filter((p) => p.y < 0.4);
+      .filter((p) => p.y < 1);
     expect(ground.length).toBeGreaterThan(100);
     const [minX, maxX] = [Math.min(...ground.map((p) => p.x)), Math.max(...ground.map((p) => p.x))];
     const [minZ, maxZ] = [Math.min(...ground.map((p) => p.z)), Math.max(...ground.map((p) => p.z))];

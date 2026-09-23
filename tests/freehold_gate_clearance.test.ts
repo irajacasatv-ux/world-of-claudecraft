@@ -120,9 +120,11 @@ describe('the Freehold Gate site', () => {
     // site keeps half a yard more. Its collider-free ground, two views of it:
     // the movement engine's (isBlocked, whose box push-out squares an OBB's
     // corners) keeps 3.5 yd round the arch free on every seed, and 3.6 yd
-    // reaches the eastbrook_home_market collider and nothing else; the gate
-    // sits over 3.6 yd inside its 16 yd collider cell, so that single-cell
-    // read is complete here. The Euclidean view, read over a cell range, keeps
+    // reaches the eastbrook_home_market collider and nothing else (proved over
+    // a cell range below). The single-cell isBlocked read is complete here
+    // too: a rotated box's square-cornered push-out reaches up to r * sqrt(2)
+    // past its bounds, and the gate sits more than that inside its 16 yd
+    // cell. The Euclidean view, read over a cell range, keeps
     // every collider at least 4.5 yd off (measured: 4.57 to a seed-scattered
     // circle on seed 1032, and 4.75 to the house and a streetlamp elsewhere).
     expect(roadDistance(GATE.x, GATE.z)).toBeGreaterThanOrEqual(5.5);
@@ -133,7 +135,7 @@ describe('the Freehold Gate site', () => {
     const cellEdge = Math.min(
       ...[GATE.x, GATE.z].flatMap((v) => [inCell(v), GRID_CELL - inCell(v)]),
     );
-    expect(cellEdge).toBeGreaterThanOrEqual(3.6);
+    expect(cellEdge).toBeGreaterThanOrEqual(3.6 * Math.SQRT2);
     for (const seed of SEEDS) {
       expect(isBlocked(seed, GATE.x, GATE.z, 3.5), `seed ${seed}`).toBe(false);
       expect(isBlocked(seed, GATE.x, GATE.z, 3.6), `seed ${seed} at 3.6`).toBe(true);
