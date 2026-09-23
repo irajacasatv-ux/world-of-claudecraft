@@ -254,9 +254,11 @@ describe('the Freehold Gate site', () => {
     expect(nearest).toBeCloseTo(12.185, 3);
   });
 
-  it('keeps every NPC over 11 yd away as the town runs, not only where it spawns', () => {
-    // A fresh lit realm run for a minute: wanderers and routines move NPCs
-    // after spawn, which the spawn-time case above cannot see.
+  it('keeps every NPC where it spawned through a minute of a running lit realm', () => {
+    // No town NPC wanders today (measured: none moves in 1200 ticks), so the
+    // closest stays Cook Marlow's spawn 12.185 yd off. Pinned exactly on
+    // purpose: an NPC given a route or a wander near the gate reds this and is
+    // reviewed against the 11 yd clearance, which the spawn-time case cannot see.
     const sim = new Sim({
       seed: WORLD_SEED,
       playerClass: 'warrior',
@@ -271,7 +273,7 @@ describe('the Freehold Gate site', () => {
         if (e.kind === 'npc') closest = Math.min(closest, dist(e.pos, GATE));
     }
     expect(closest).toBeGreaterThan(NPC_CLEARANCE);
-    expect(closest).toBeLessThan(Number.POSITIVE_INFINITY);
+    expect(closest).toBeCloseTo(12.185, 3);
   });
 
   it('holds every garden bed and gather node over 10 yd away, and every escort post over 13', () => {

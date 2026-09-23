@@ -455,6 +455,12 @@ describe('Freehold gate native input and cancellation', () => {
       const style = getComputedStyle(control('enter'));
       expect(style.outlineStyle).not.toBe('none');
       expect(Number.parseFloat(style.outlineWidth)).toBeGreaterThan(0);
+      // The selected tab keeps a non-color cue: the forced palette strips the
+      // library's fill and text color, so base.css underlines it, and no later
+      // rule may take that back.
+      expect(control('own').getAttribute('aria-selected')).toBe('true');
+      expect(getComputedStyle(control('own')).textDecorationLine).toBe('underline');
+      expect(getComputedStyle(control('visit')).textDecorationLine).toBe('none');
       await capturePresentation('forced-colors');
       await userEvent.keyboard('[Escape]');
       expect(f.prompt.isOpen).toBe(false);

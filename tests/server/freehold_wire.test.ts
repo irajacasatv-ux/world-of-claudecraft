@@ -1418,8 +1418,10 @@ it('mirrors the gate online with the fields the render cores read, so it draws a
 });
 
 it('takes the lit flag the renderer hands the grass ring from each hello, and drops it on a dark one', () => {
-  // renderer.ts builds foliage from cfg.freeholdsEnabled (tests/foliage_core.test.ts);
-  // online, only the hello sets it, so a reconnect to a dark realm must clear it.
+  // renderer.ts builds foliage from cfg.freeholdsEnabled (tests/foliage_core.test.ts),
+  // once, when it is constructed after world entry; online, only the hello sets
+  // the flag. A later hello that flips it does not rebuild an already built
+  // ring (a recorded known limit), but the next renderer built reads it right.
   const client = bareClient(1);
   const hello = (extra: Record<string, unknown>) =>
     (client as unknown as { onMessage(raw: string): void }).onMessage(
