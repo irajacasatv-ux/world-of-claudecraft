@@ -430,9 +430,10 @@ record does not claim an authored roof mesh.
 | Closed door panel / reserved swing box | center (0,-6.9), 2.4 wide; X -1.2 to 1.2, Z -7 to -4.6 | same |
 | Camera navigation volume | X -7 to 7, Z -7 to 11, Y 0 to 16 | X -11 to 11, Z -7 to 15, Y 0 to 16 |
 
-The gate is (-14,-92), facing 0. The existing shared 4 yard south return inset
-lands at (-14,-96), north of the blocked mailbox surround. No custom leave offset
-is introduced. The gate is a walk-through service marker. The closed ornamental
+The gate is (-28,-82), facing 0, beside the Eastbrook Inn and more than 11 yards
+from every NPC (it moved off (-14,-92) at the v0.44.0 sync, when Apothecary Lin
+moved within 4.24 yards of it). The existing shared 4 yard south return inset
+lands at (-28,-86). No custom leave offset is introduced. The gate is a walk-through service marker. The closed ornamental
 door is backed by the south structural wall, so no aperture permits walking into
 unfloored space. Its fixed swing reservation and the complete protected corridor
 remain unavailable to future mutable furnishings.

@@ -73,10 +73,10 @@ import { type FakeClient, fakeWs } from './helpers/bare_client';
 const INN_ROOM_BAND = { min: 118900, max: 119500 } as const;
 const COTTAGE_BAND = { min: 119500, max: 120100 } as const;
 // Leaving sets the player down outside the Eastbrook gate: the def's doorPos
-// { x: -14, z: -92 } plus the default 4 yd door inset (the record declares no
-// leaveOffset), so { x: -14, z: -96 } on the open quay (standability is pinned
-// in tests/freehold_dungeon_defs.test.ts).
-const GATE_DROP = { x: -14, z: -96 } as const;
+// { x: -28, z: -82 } plus the default 4 yd door inset (the record declares no
+// leaveOffset), so { x: -28, z: -86 } on open ground beside the inn
+// (standability is pinned in tests/freehold_dungeon_defs.test.ts).
+const GATE_DROP = { x: -28, z: -86 } as const;
 
 // process.env is safe to flip here because vitest's default forks pool gives
 // each test file its own process and files in one fork run sequentially.

@@ -469,9 +469,9 @@
     }
   },
   "gate": {
-    "position": [-14, -92],
+    "position": [-28, -82],
     "facing": 0,
-    "return": [-14, -96],
+    "return": [-28, -86],
     "collisionClass": "walk_through_service",
     "returnDerivation": "Existing shared dungeon return subtracts4 Z; no custom leaveOffset."
   },

@@ -83,6 +83,7 @@ import { refusedRiftForgeCommand } from '../../server/rift_forge_gate';
 import { buildRealmSimConfig } from '../../server/sim_boot_config';
 import { bagCapacity } from '../../src/sim/bags';
 import { ITEMS } from '../../src/sim/data';
+import { EASTBROOK_LAYOUT } from '../../src/sim/eastbrook_layout';
 import { isInJailCage } from '../../src/sim/jail';
 import { Sim } from '../../src/sim/sim';
 import { inertVaultConsumptionAdmission } from '../../src/sim/sim_context';
@@ -98,6 +99,9 @@ type HousingCommand = (typeof FREEHOLD_WIRE_COMMANDS)[number];
 function codeOnly(src: string): string {
   return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 }
+
+// The authored gate site, read from its one source so a move re-pins nothing here.
+const GATE = EASTBROOK_LAYOUT.services.freeholdGate.position;
 
 function repoFile(rel: string): string {
   return readFileSync(new URL(`../../${rel}`, import.meta.url), 'utf8');
@@ -702,7 +706,7 @@ describe('the realm Sim boot config maps FREEHOLDS_ENABLED to SimConfig.freehold
       const gate = [...sim.entities.values()].find((e) => e.templateId === 'freehold_gate');
       expect(Boolean(gate)).toBe(flag === '1');
       const player = sim.entities.get(pid)!;
-      player.pos = gate ? { ...gate.pos } : sim.groundPos(-14, -92);
+      player.pos = gate ? { ...gate.pos } : sim.groundPos(GATE.x, GATE.z);
       const before = { ...player.pos };
       expect(sim.countItem('hearth_key', pid)).toBe(0);
       sim.drainEvents();
@@ -1052,7 +1056,7 @@ describe('freeholds wire: the two lit arms read nothing off the frame', () => {
     expect(p.pos).toEqual(before);
     expect(server.sim.drainEvents()).toEqual([]);
     expect(draws).toBe(0);
-    p.pos = server.sim.ctx.groundPos(-14, -92);
+    p.pos = server.sim.ctx.groundPos(GATE.x, GATE.z);
     // The positive control that the four "nothing" reads above can move: the
     // live enter arm through the same session claims a slot and moves the
     // player into the Inn Room band (instanceOriginX(15) = 119200, +/- 300).

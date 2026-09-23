@@ -6,9 +6,11 @@
 // band math both ids resolve through, the entry point on the protected home floor,
 // the English catalog rows that derive from the defs plus their five non-Latin
 // fills (M16), the fresh-Sim boot shape (no door entity, 24 unclaimed slots per
-// id on a lit AND a dark host), and the `/dungeons` readout exclusion.
+// id on a lit AND a dark host), the `/dungeons` readout exclusion, and the
+// gate's clearance from every NPC press.
 // `npcs` is deliberately NOT pinned empty: later work adds a room NPC.
 import { beforeAll, describe, expect, it } from 'vitest';
+import { resolveNearbyInteractionCandidate } from '../src/game/nearby_interaction_core';
 import { isBlocked, resolvePosition } from '../src/sim/colliders';
 import { FINDER_ACTIVITIES } from '../src/sim/content/dungeon_finder';
 import {
@@ -16,10 +18,13 @@ import {
   FREEHOLD_DUNGEON_DEFS,
   FREEHOLD_INN_ROOM_DUNGEON_ID,
 } from '../src/sim/content/freehold';
-import { DUNGEON_LIST, DUNGEONS, dungeonAt, instanceOriginX } from '../src/sim/data';
+import { DUNGEON_LIST, DUNGEONS, dungeonAt, instanceOriginX, NPCS } from '../src/sim/data';
+import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
+import { FREEHOLD_GATE_INTERACT_RANGE } from '../src/sim/freehold/gate_rules';
 import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { Sim } from '../src/sim/sim';
 import { dungeonsReadout } from '../src/sim/social/chat_readouts';
+import { type Entity, INTERACT_RANGE } from '../src/sim/types';
 import { dungeonText } from '../src/ui/entity_display_core';
 import {
   entityTranslationFallbackLog,
@@ -91,7 +96,7 @@ describe('freehold dungeon defs: registry shape', () => {
       expect(def.tombDressing).toBeUndefined();
       expect(def.staticDoor).toBeUndefined();
       expect(def.leaveOffset).toBeUndefined();
-      expect(def.doorPos).toEqual({ x: -14, z: -92 });
+      expect(def.doorPos).toEqual({ x: -28, z: -82 });
     }
     expect(DUNGEONS.freehold_inn_room.name).toBe('Inn Room');
     expect(DUNGEONS.freehold_cottage.name).toBe('Cottage');
@@ -103,11 +108,12 @@ describe('freehold dungeon defs: registry shape', () => {
     // literal, then the proof: isBlocked false AND resolvePosition moves the
     // body nowhere, at the real player radius, across the world seeds the
     // suites and the client use. A door at z -96 failed this (its drop at
-    // z -100 sat inside the mailbox surround), which is why it moved.
+    // z -100 sat inside the mailbox surround), which is why it moved first;
+    // the second move, off (-14,-92), is the NPC clearance pin below.
     for (const def of [DUNGEONS.freehold_inn_room, DUNGEONS.freehold_cottage]) {
       expect(def.leaveOffset).toBeUndefined();
       const drop = { x: def.doorPos.x, z: def.doorPos.z - 4 };
-      expect(drop).toEqual({ x: -14, z: -96 });
+      expect(drop).toEqual({ x: -28, z: -86 });
       for (const seed of [1, 7, 42, 99, 1032, 1337]) {
         expect(isBlocked(seed, drop.x, drop.z, PLAYER_BODY_RADIUS), `${def.id} seed ${seed}`).toBe(
           false,
@@ -128,6 +134,74 @@ describe('freehold dungeon defs: registry shape', () => {
     for (const d of DUNGEON_LIST) {
       if (ROOM_IDS.includes(d.id as (typeof ROOM_IDS)[number])) continue;
       expect(d.claimKey, d.id).not.toBe('owner');
+    }
+  });
+});
+
+describe('freehold dungeon defs: the gate stands clear of every NPC press', () => {
+  // The press ladder (src/game/nearby_interaction_core.ts) ranks objects above
+  // NPCs, so a standing point inside BOTH reaches hands the NPC's press to the
+  // gate. The gate reaches FREEHOLD_GATE_INTERACT_RANGE (inclusive) and an NPC
+  // under INTERACT_RANGE + 1, so every NPC must stand more than their sum, 11
+  // yd, from the gate. v0.44.0 moved Apothecary Lin to 4.24 yd from the old
+  // site at (-14,-92), which is why the gate moved.
+  const GATE = EASTBROOK_LAYOUT.services.freeholdGate.position;
+  const CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE + 1;
+
+  it('keeps the clearance at 11 yd and the gate at its measured site', () => {
+    expect(CLEARANCE).toBe(11);
+    expect(GATE).toEqual({ x: -28, z: -82 });
+  });
+
+  it('holds every authored NPC, the lit-only furnisher included, over 11 yd away', () => {
+    const near = Object.values(NPCS)
+      .map((npc) => ({ id: npc.id, d: Math.hypot(npc.pos.x - GATE.x, npc.pos.z - GATE.z) }))
+      .filter((row) => row.d <= CLEARANCE);
+    expect(near).toEqual([]);
+    // Nearest today, measured: Trader Wilkes at 12.37 yd.
+    const nearest = Math.min(
+      ...Object.values(NPCS).map((npc) => Math.hypot(npc.pos.x - GATE.x, npc.pos.z - GATE.z)),
+    );
+    expect(nearest).toBeCloseTo(12.369, 3);
+  });
+
+  it('leaves no NPC pressable from any point the live gate reaches, through the real ladder', () => {
+    const sim = litSim();
+    const gate = [...sim.entities.values()].find((e) => e.templateId === 'freehold_gate');
+    expect(gate).toBeDefined();
+    expect({ x: gate!.pos.x, z: gate!.pos.z }).toEqual(GATE);
+    const npcs = [...sim.entities.values()].filter((e) => e.kind === 'npc');
+    expect(npcs.length).toBeGreaterThan(40);
+    for (const npc of npcs) {
+      const d = Math.hypot(npc.pos.x - GATE.x, npc.pos.z - GATE.z);
+      expect(d, npc.templateId).toBeGreaterThan(CLEARANCE);
+      // The point inside the gate's reach closest to this NPC: on the segment
+      // toward it, exactly FREEHOLD_GATE_INTERACT_RANGE out. With the gate
+      // absent, the ladder must find nothing to press there.
+      const t = FREEHOLD_GATE_INTERACT_RANGE / d;
+      const player = {
+        id: 1,
+        kind: 'player',
+        templateId: 'player',
+        pos: {
+          x: GATE.x + (npc.pos.x - GATE.x) * t,
+          y: npc.pos.y,
+          z: GATE.z + (npc.pos.z - GATE.z) * t,
+        },
+        dead: false,
+        ghost: false,
+      } as Entity;
+      const world = {
+        playerId: 1,
+        player,
+        entities: new Map<number, Entity>([
+          [1, player],
+          [npc.id, npc],
+        ]),
+        questLog: new Map(),
+        farmPatches: [],
+      };
+      expect(resolveNearbyInteractionCandidate(world), npc.templateId).toBeNull();
     }
   });
 });
@@ -267,7 +341,7 @@ describe('freehold dungeon defs: fresh Sim boot', () => {
       expect(doorDungeonIds).toContain('hollow_crypt');
       // No door stands at the planned gate spot either: the record's doorPos
       // is only where leaving drops the player.
-      expect(doors.some((d) => d.pos.x === -14 && d.pos.z === -92)).toBe(false);
+      expect(doors.some((d) => d.pos.x === -28 && d.pos.z === -82)).toBe(false);
     }
   });
 
