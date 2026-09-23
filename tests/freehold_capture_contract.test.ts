@@ -324,6 +324,24 @@ describe('Freehold capture receipt refusal', () => {
     'room arrival off its point': 'after: interior frame is not a settled room arrival',
     'room arrival in the other room': 'after: interior frame is not a settled room arrival',
     'room arrival with the prompt shown': 'after: interior frame is not a settled room arrival',
+    'room arrival off its z point': 'after: interior frame is not a settled room arrival',
+    'producer errors not a list': 'before: missing producer errors array',
+    'sidecar for another target': 'before: mismatched sidecar',
+    'sidecar for another view': 'before: mismatched sidecar',
+    'after sidecar marked baseline': 'after: mismatched sidecar',
+    'viewport width off': 'before: mismatched viewport',
+    'viewport height off': 'before: mismatched viewport',
+    'zero dpr': 'before: mismatched viewport',
+    'missing dpr': 'before: mismatched viewport',
+    'device default not applied': 'before: low graphics proof missing',
+    'renderer tier not low': 'before: low graphics proof missing',
+    'theme not classic': 'before: obscured or mismatched capture',
+    'hardware renderer': 'before: obscured or mismatched capture',
+    'gpu notice showing': 'before: obscured or mismatched capture',
+    'prompt past the viewport': 'before: obscured or mismatched capture',
+    'dismissed overlays not a list': 'before: obscured or mismatched capture',
+    'dpr disagreeing with the image': 'before: invalid PNG dimensions',
+    'image without a PNG signature': 'before: invalid PNG dimensions',
   };
   // Inside the tolerances: 1.4 yd off the stance, and 0.11 and 0.1199 rad off
   // -z. The 0.12 rad bound itself is not representable after Math.PI - x, so it
@@ -354,6 +372,22 @@ describe('Freehold capture receipt refusal', () => {
         if (defect === 'gate frame turned 0.13 rad') e.player.facing = Math.PI - 0.13;
         if (defect === 'gate frame turned 0.11 rad') e.player.facing = Math.PI - 0.11;
         if (defect === 'unresolved notice') e.noticeResolution = 'none';
+        if (defect === 'sidecar for another target') e.target = 'freehold-inn';
+        if (defect === 'sidecar for another view') e.variant = 'compact';
+        const viewport = e.viewport as { width: number; height: number; dpr?: number };
+        if (defect === 'viewport width off') viewport.width += 1;
+        if (defect === 'viewport height off') viewport.height -= 1;
+        if (defect === 'zero dpr') viewport.dpr = 0;
+        if (defect === 'missing dpr') delete viewport.dpr;
+        if (defect === 'dpr disagreeing with the image') viewport.dpr = 2;
+        const settings = e.settings as { graphicsDefaultApplied: boolean };
+        if (defect === 'device default not applied') settings.graphicsDefaultApplied = false;
+        if (defect === 'renderer tier not low') e.rendererTier = 'medium';
+        if (defect === 'theme not classic') e.theme = { preset: 'modern' };
+        if (defect === 'hardware renderer') e.gpuRenderer = 'ANGLE (Apple, Apple M3, OpenGL 4.1)';
+        if (defect === 'gpu notice showing') e.gpuNoticeVisible = true;
+        if (defect === 'prompt past the viewport') e.promptFitsViewport = false;
+        if (defect === 'dismissed overlays not a list') e.dismissedOverlays = 'tut-card';
       },
       after: (name: string, e: Evidence) => {
         if (name === 'freehold-inn-desktop') {
@@ -363,6 +397,8 @@ describe('Freehold capture receipt refusal', () => {
           if (defect === 'room arrival in the other room')
             e.player.pos = { x: arrival.freehold_cottage[0], z: arrival.freehold_cottage[1] };
           if (defect === 'room arrival with the prompt shown') e.promptVisible = true;
+          if (defect === 'room arrival off its z point') e.player.pos.z += 0.001;
+          if (defect === 'after sidecar marked baseline') e.baseline = true;
         }
         if (name !== 'freehold-gate-desktop') return;
         if (defect === 'undrawn after gate frame') e.gateDrawn = false;
@@ -410,6 +446,14 @@ describe('Freehold capture receipt refusal', () => {
         if (defect === 'missing image') captured.pop();
         else captured[1] = captured[0];
         writeFileSync(join(before, 'manifest.json'), JSON.stringify({ captured, errors: [] }));
+      }
+      if (defect === 'producer errors not a list')
+        writeFileSync(join(before, 'manifest.json'), JSON.stringify({ captured, errors: 0 }));
+      if (defect === 'image without a PNG signature') {
+        const first = join(before, captured[0]);
+        const bytes = readFileSync(first);
+        bytes[1] = 0x51;
+        writeFileSync(first, bytes);
       }
       const result = receipt(before, after, output);
       expect(result.status).toBe(1);
