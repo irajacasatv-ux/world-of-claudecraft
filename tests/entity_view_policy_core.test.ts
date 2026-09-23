@@ -83,12 +83,14 @@ describe('entity view candidate priority', () => {
     }
   });
 
-  it('keeps the always-non-lootable Freehold Gate in the interactive object tier', () => {
-    // The gate spawns lootable:false for its whole lifetime (world_object_bootstrap.ts)
-    // and every leave or rejoin lands four yards from it, so it must not stream
-    // in last (tier 7) behind the town's NPC backlog on a saturated view pool.
+  it('ranks the always-non-lootable Freehold Gate as a service landmark, never last', () => {
+    // The gate spawns lootable:false for its whole lifetime (world_object_bootstrap.ts),
+    // so on the object rule alone it would fall to the last tier (7). As a service
+    // landmark (prewarm_policy.ts) it streams ahead of the town's NPCs when near
+    // and keeps the landmark rank when far; a near-namesake stays an ordinary prop.
     const gate = entity(3, 'object', { templateId: FREEHOLD_GATE_TEMPLATE_ID, lootable: false });
-    expect(entityViewCandidatePriority(gate, player, 10_000)).toBe(2);
+    expect(entityViewCandidatePriority(gate, player, 0)).toBe(0.5);
+    expect(entityViewCandidatePriority(gate, player, 10_000)).toBe(1.5);
     const namesake = entity(4, 'object', {
       templateId: `${FREEHOLD_GATE_TEMPLATE_ID}_x`,
       lootable: false,

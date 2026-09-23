@@ -16,6 +16,10 @@
 // renderer.ts is the thin consumer that runs the manifest the policy describes.
 
 import { EASTBROOK_LAYOUT } from '../sim/eastbrook_layout';
+import {
+  FREEHOLD_GATE_INTERACT_RANGE,
+  FREEHOLD_GATE_TEMPLATE_ID,
+} from '../sim/freehold/gate_rules';
 import type { PrewarmSubmitStopVerdict } from './prewarm_submit_stop_core';
 
 /** Manifest entries a constrained device still runs; everything else is skipped. */
@@ -101,6 +105,8 @@ function authoredLandmarkInteractionRadius(templateId: string | null): number | 
   if (templateId === EASTBROOK_LAYOUT.services.noticeboard.templateId) {
     return EASTBROOK_LAYOUT.services.noticeboard.interactionRadius;
   }
+  // Every Freehold leave and saved-inside rejoin lands four yards from the gate.
+  if (templateId === FREEHOLD_GATE_TEMPLATE_ID) return FREEHOLD_GATE_INTERACT_RANGE;
   return null;
 }
 

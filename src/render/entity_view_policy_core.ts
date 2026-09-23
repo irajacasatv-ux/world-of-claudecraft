@@ -6,7 +6,6 @@
 // so the renderer's distance-cull exemption cannot drift from which objects are
 // actually interact-only raid/dungeon furniture; do not duplicate it here.
 
-import { FREEHOLD_GATE_TEMPLATE_ID } from '../sim/freehold/gate_rules';
 import { isInteractOnlyInstanceObject } from '../sim/quest_gated_entity';
 import { corpseHasDecayed } from '../sim/respawn_policy';
 import type { Entity, QuestProgress } from '../sim/types';
@@ -31,9 +30,9 @@ export function isPersistentPortalObject(entity: Entity): boolean {
  *  is never paid for the mobs/players/npcs this predicate is also asked about.
  *  Deliberately NOT folded into entityViewCandidatePriority's object tier below: that
  *  tier keys on `lootable` plus the always-non-lootable props the object-visibility
- *  gate draws anyway (portals, `bg_`, the Freehold Gate;
- *  delve_interactable_visibility_core.ts), so ranking here never promises a tier the
- *  pillar cannot actually render at. */
+ *  gate draws anyway (portals and `bg_`; the Freehold Gate ranks earlier as a service
+ *  landmark; delve_interactable_visibility_core.ts), so ranking here never promises a
+ *  tier the pillar cannot actually render at. */
 export function isDistanceCullExemptObject(entity: Entity): boolean {
   return (
     entity.kind === 'object' &&
@@ -71,14 +70,10 @@ export function entityViewCandidatePriority(entity: Entity, player: Entity, d2: 
   // bg_flag/bg_rune are always lootable:false (bg_flag_interact.ts) but a
   // carried flag's position is actionable info that must never lag behind on
   // a saturated view pool (the graphics-fairness invariant), so they keep the
-  // same priority tier an ordinary lootable object gets. The Freehold Gate is
-  // lootable:false too, and every leave or rejoin lands four yards from it.
+  // same priority tier an ordinary lootable object gets.
   if (
     entity.kind === 'object' &&
-    (entity.lootable ||
-      isPersistentPortalObject(entity) ||
-      entity.templateId?.startsWith('bg_') ||
-      entity.templateId === FREEHOLD_GATE_TEMPLATE_ID)
+    (entity.lootable || isPersistentPortalObject(entity) || entity.templateId?.startsWith('bg_'))
   )
     return 2;
   if (entity.kind === 'player') return 3;

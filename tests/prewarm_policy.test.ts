@@ -34,6 +34,10 @@ import {
   withRestoredPrewarmState,
 } from '../src/render/prewarm_policy';
 import { PREWARM_SUBMIT_LANE_MAX_MS } from '../src/render/prewarm_submit_stop_core';
+import {
+  FREEHOLD_GATE_INTERACT_RANGE,
+  FREEHOLD_GATE_TEMPLATE_ID,
+} from '../src/sim/freehold/gate_rules';
 import { codeWithoutLineComments } from './helpers/code_without_line_comments';
 
 // The real desktop constants (renderer.ts), injected so the test pins the actual
@@ -1468,6 +1472,30 @@ describe('mandatory interaction-landmark prewarm', () => {
     expect(interactionLandmarkViewPriority('noticeboard_eastbrook', nearSq + 1)).toBe(1.5);
     expect(interactionLandmarkViewPriority('ore_iron', 0)).toBeNull();
     expect(interactionLandmarkViewPriority(null, 0)).toBeNull();
+  });
+
+  it('treats the Freehold Gate as a service landmark within its own 5 yd reach', () => {
+    // Every leave and saved-inside rejoin lands four yards from the gate, so an
+    // arrival there waits for its view like the mailbox, and a nearby gate
+    // streams ahead of the town NPC backlog instead of after it.
+    const gate = {
+      id: 50,
+      kind: 'object',
+      templateId: FREEHOLD_GATE_TEMPLATE_ID,
+      pos: { x: 0, z: 0 },
+    };
+    const drop = partitionMandatoryLandmarkCandidates([gate], { x: 0, z: -4 });
+    expect(drop.mandatory.map((entity) => entity.id)).toEqual([50]);
+    const edge = partitionMandatoryLandmarkCandidates([gate], {
+      x: 0,
+      z: -FREEHOLD_GATE_INTERACT_RANGE,
+    });
+    expect(edge.mandatory.map((entity) => entity.id)).toEqual([50]);
+    const beyond = partitionMandatoryLandmarkCandidates([gate], { x: 0, z: -5.01 });
+    expect(beyond.mandatory).toEqual([]);
+    const nearSq = NEARBY_LANDMARK_STREAM_RADIUS * NEARBY_LANDMARK_STREAM_RADIUS;
+    expect(interactionLandmarkViewPriority(FREEHOLD_GATE_TEMPLATE_ID, nearSq)).toBe(0.5);
+    expect(interactionLandmarkViewPriority(FREEHOLD_GATE_TEMPLATE_ID, nearSq + 1)).toBe(1.5);
   });
 
   it('does not report ready while any mandatory view is absent or compile-pending', () => {
