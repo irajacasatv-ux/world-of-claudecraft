@@ -942,7 +942,7 @@
       "tick": 3,
       "time": 0.15,
       "nextId": 52,
-      "state": "034a05a6",
+      "state": "ad958bf6",
       "events": "ee843c4b",
       "rng": {
         "draws": 0,
@@ -1128,7 +1128,7 @@
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
-          "fallStartY": -0.740036,
+          "fallStartY": -0.219495,
           "fiveSecondRule": 99.15,
           "healPower": 5,
           "hp": 100,
@@ -1144,9 +1144,9 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": -14,
-            "y": -0.740036,
-            "z": -96
+            "x": -28,
+            "y": -0.219495,
+            "z": -86
           },
           "potionCooldownUntil": -1,
           "resourceType": "rage",
@@ -1179,7 +1179,7 @@
           "critChance": 0.056,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.056,
-          "fallStartY": -0.740036,
+          "fallStartY": -0.219495,
           "fiveSecondRule": 99.15,
           "healPower": 13,
           "hp": 54,
@@ -1194,9 +1194,9 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": -14,
-            "y": -0.740036,
-            "z": -96
+            "x": -28,
+            "y": -0.219495,
+            "z": -86
           },
           "potionCooldownUntil": -1,
           "resource": 195,
@@ -1265,7 +1265,7 @@
       "tick": 5,
       "time": 0.25,
       "nextId": 52,
-      "state": "26e9248b",
+      "state": "bdd997ff",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1276,7 +1276,7 @@
       "tick": 10,
       "time": 0.5,
       "nextId": 52,
-      "state": "49fc118a",
+      "state": "19846fda",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1287,7 +1287,7 @@
       "tick": 15,
       "time": 0.75,
       "nextId": 52,
-      "state": "0c551388",
+      "state": "7d2cd9f8",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1298,7 +1298,7 @@
       "tick": 20,
       "time": 1,
       "nextId": 52,
-      "state": "1ef8bc73",
+      "state": "36375bff",
       "events": "3daa87f3",
       "rng": {
         "draws": 0,
@@ -1309,7 +1309,7 @@
       "tick": 23,
       "time": 1.15,
       "nextId": 52,
-      "state": "d448a03b",
+      "state": "bd9d48cf",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1353,8 +1353,7 @@
               "worn_sword"
             ],
             "visited": [
-              "poi:eastbrook_vale:eastbrook",
-              "poi:eastbrook_vale:the_sowfield"
+              "poi:eastbrook_vale:eastbrook"
             ]
           },
           "delveClears": {},
@@ -1433,8 +1432,7 @@
               "spring_water"
             ],
             "visited": [
-              "poi:eastbrook_vale:eastbrook",
-              "poi:eastbrook_vale:the_sowfield"
+              "poi:eastbrook_vale:eastbrook"
             ]
           },
           "delveClears": {},
@@ -1503,7 +1501,7 @@
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
-          "fallStartY": -0.740036,
+          "fallStartY": -0.219495,
           "fiveSecondRule": 100.15,
           "healPower": 5,
           "hp": 100,
@@ -1519,9 +1517,9 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": -14,
-            "y": -0.740036,
-            "z": -96
+            "x": -28,
+            "y": -0.219495,
+            "z": -86
           },
           "potionCooldownUntil": -1,
           "resourceType": "rage",
@@ -1554,7 +1552,7 @@
           "critChance": 0.056,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.056,
-          "fallStartY": -0.740036,
+          "fallStartY": -0.219495,
           "fiveSecondRule": 100.15,
           "healPower": 13,
           "hp": 54,
@@ -1569,9 +1567,9 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": -14,
-            "y": -0.740036,
-            "z": -96
+            "x": -28,
+            "y": -0.219495,
+            "z": -86
           },
           "potionCooldownUntil": -1,
           "resource": 195,
@@ -1603,7 +1601,7 @@
       "tick": 23,
       "time": 1.15,
       "nextId": 52,
-      "state": "d448a03b",
+      "state": "bd9d48cf",
       "events": "741638a5",
       "rng": {
         "draws": 0,
@@ -1647,8 +1645,7 @@
               "worn_sword"
             ],
             "visited": [
-              "poi:eastbrook_vale:eastbrook",
-              "poi:eastbrook_vale:the_sowfield"
+              "poi:eastbrook_vale:eastbrook"
             ]
           },
           "delveClears": {},
@@ -1727,8 +1724,7 @@
               "spring_water"
             ],
             "visited": [
-              "poi:eastbrook_vale:eastbrook",
-              "poi:eastbrook_vale:the_sowfield"
+              "poi:eastbrook_vale:eastbrook"
             ]
           },
           "delveClears": {},
@@ -1797,7 +1793,7 @@
           "critChance": 0.06,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.06,
-          "fallStartY": -0.740036,
+          "fallStartY": -0.219495,
           "fiveSecondRule": 100.15,
           "healPower": 5,
           "hp": 100,
@@ -1813,9 +1809,9 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": -14,
-            "y": -0.740036,
-            "z": -96
+            "x": -28,
+            "y": -0.219495,
+            "z": -86
           },
           "potionCooldownUntil": -1,
           "resourceType": "rage",
@@ -1848,7 +1844,7 @@
           "critChance": 0.056,
           "detonateTimer": "Infinity",
           "dodgeChance": 0.056,
-          "fallStartY": -0.740036,
+          "fallStartY": -0.219495,
           "fiveSecondRule": 100.15,
           "healPower": 13,
           "hp": 54,
@@ -1863,9 +1859,9 @@
           "overpowerUntil": -1,
           "petMode": "defensive",
           "pos": {
-            "x": -14,
-            "y": -0.740036,
-            "z": -96
+            "x": -28,
+            "y": -0.219495,
+            "z": -86
           },
           "potionCooldownUntil": -1,
           "resource": 195,
