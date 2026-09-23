@@ -172,8 +172,8 @@ describe('Freehold functional capture evidence', () => {
           // opens takes its focus); the baseline arm opens no prompt.
           if (side === 'after') {
             expect(evidence.preSettle.overlays.passes, name).toBeGreaterThanOrEqual(3);
-            expect(evidence.preSettle.notices.noticeResolution, name).toBe(
-              evidence.noticeResolution,
+            expect(['boot-notice', 'performance-notice', 'prior-performance-dismissal']).toContain(
+              evidence.preSettle.notices.noticeResolution,
             );
           } else expect(evidence.preSettle, name).toBeNull();
           expect(bytes.subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
@@ -331,6 +331,13 @@ describe('Freehold capture receipt refusal', () => {
               }
             : { pos: { ...stance }, facing: Math.PI, entrySeq: 0 },
           camera: { inputYaw: room ? 0 : Math.PI },
+          preSettle:
+            side === 'after'
+              ? {
+                  notices: { noticeResolution: 'boot-notice' },
+                  overlays: { passes: 3, dismissedOverlays: [] },
+                }
+              : null,
           gateDrawn: prompt,
         };
         edit?.(`${target}-${view}`, evidence);
@@ -413,7 +420,12 @@ describe('Freehold capture receipt refusal', () => {
     'after gate frame with no gateDrawn': 'after: gate frame is off the gate stance',
     'unresolved notice': 'unresolved GPU notice',
     'camera round in front': 'before: camera is not behind the player',
-    'camera 0.71 rad off': 'before: camera is not behind the player',
+    'camera 0.11 rad off': 'before: camera is not behind the player',
+    'camera yaw as a string': 'before: camera is not behind the player',
+    'room camera a hair off': 'after: interior frame is not a settled room arrival',
+    'after frame without its stance settle': 'after: missing or misplaced stance settle',
+    'stance settle with two quiet passes': 'after: missing or misplaced stance settle',
+    'baseline frame with a stance settle': 'before: missing or misplaced stance settle',
     'camera record missing': 'before: camera is not behind the player',
     'room camera turned': 'after: camera is not behind the player',
     'baseline frame inside a room': 'before: baseline frame is not on the overworld',
@@ -455,7 +467,7 @@ describe('Freehold capture receipt refusal', () => {
     'gate frame wrapped past -PI',
     'room arrival 0.0004 off its point',
     'performance-notice resolution',
-    'camera 0.69 rad off',
+    'camera 0.09 rad off',
     'prior-performance-dismissal resolution',
   ];
   function edits(defect: string) {
@@ -473,14 +485,22 @@ describe('Freehold capture receipt refusal', () => {
         if (defect === 'missing settle record') delete e.overlaySettlePasses;
         const off = /^gate frame ([\d.]+) yd off the stance$/.exec(defect);
         if (off) e.player.pos.x += Number(off[1]);
+        // The camera turns with the player (the hold settles it behind), so
+        // these rows move only the facing conjunct.
         const turned = /^gate frame turned (-?[\d.]+) rad$/.exec(defect);
         if (turned) e.player.facing = Math.PI - Number(turned[1]);
         if (defect === 'gate frame wrapped past -PI') e.player.facing = -Math.PI + 0.05;
+        if (turned || defect === 'gate frame wrapped past -PI')
+          (e.camera as { inputYaw: number }).inputYaw = e.player.facing;
         if (defect === 'unresolved notice') e.noticeResolution = 'none';
         const camera = e.camera as { inputYaw: number };
         if (defect === 'camera round in front') camera.inputYaw = Math.PI + 2.47;
-        if (defect === 'camera 0.71 rad off') camera.inputYaw = Math.PI - 0.71;
-        if (defect === 'camera 0.69 rad off') camera.inputYaw = Math.PI - 0.69;
+        if (defect === 'camera 0.11 rad off') camera.inputYaw = Math.PI - 0.11;
+        if (defect === 'camera 0.09 rad off') camera.inputYaw = Math.PI - 0.09;
+        if (defect === 'camera yaw as a string')
+          (camera as { inputYaw: unknown }).inputYaw = String(Math.PI);
+        if (defect === 'baseline frame with a stance settle')
+          e.preSettle = { overlays: { passes: 3, dismissedOverlays: [] } };
         if (defect === 'camera record missing') delete e.camera;
         if (defect === 'performance-notice resolution') e.noticeResolution = 'performance-notice';
         if (defect === 'prior-performance-dismissal resolution')
@@ -517,6 +537,8 @@ describe('Freehold capture receipt refusal', () => {
           if (defect === 'room arrival with the prompt shown') e.promptVisible = true;
           if (defect === 'after sidecar marked baseline') e.baseline = true;
           if (defect === 'room camera turned') (e.camera as { inputYaw: number }).inputYaw = 1;
+          if (defect === 'room camera a hair off')
+            (e.camera as { inputYaw: number }).inputYaw = 0.01;
         }
         const controls = e.controls as Control[];
         if (name === 'freehold-gate-compact' && defect === 'touch entry under 16 px')
@@ -531,6 +553,9 @@ describe('Freehold capture receipt refusal', () => {
         if (defect === 'gate controls not a list') e.controls = { length: 5 };
         if (defect === 'gate control laid over') controls[3].onTop = false;
         if (defect === 'focus off the selected tab') e.focusId = 'gate-enter';
+        if (defect === 'after frame without its stance settle') e.preSettle = null;
+        if (defect === 'stance settle with two quiet passes')
+          (e.preSettle as { overlays: { passes: number } }).overlays.passes = 2;
       },
       performance: (p: Performance) => {
         const desktop = p.results[0];

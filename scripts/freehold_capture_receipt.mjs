@@ -216,14 +216,26 @@ try {
             `${side}: gate frame is off the gate stance, unsquared, or undrawn in ${sidecarName}`,
           );
         }
-        // The follow camera sits behind the player (the stance hold waits for
-        // it; a room arrival sets it), so every frame looks where the player does.
+        // The follow camera's yaw sits behind the player (the stance hold
+        // settles it in place; a room arrival snaps it), so matched frames look
+        // the same way. The recorded input yaw, not the drawn rotation.
         const cameraTurn = evidence.camera?.inputYaw - evidence.player?.facing;
         requireEvidence(
-          Number.isFinite(cameraTurn) &&
+          typeof evidence.camera?.inputYaw === 'number' &&
             Math.abs(Math.atan2(Math.sin(cameraTurn), Math.cos(cameraTurn))) <=
               FREEHOLD_CAMERA_BEHIND_TOLERANCE,
           `${side}: camera is not behind the player in ${sidecarName}`,
+        );
+        // The after arm settles the GPU notices and the arrival overlays at the
+        // stance before the press; the baseline arm opens no prompt.
+        requireEvidence(
+          side === 'before'
+            ? evidence.preSettle === null
+            : Number.isInteger(evidence.preSettle?.overlays?.passes) &&
+                evidence.preSettle.overlays.passes >= 3 &&
+                Array.isArray(evidence.preSettle.overlays.dismissedOverlays) &&
+                evidence.preSettle.notices?.noticeResolution === evidence.noticeResolution,
+          `${side}: missing or misplaced stance settle in ${sidecarName}`,
         );
         requireEvidence(
           ['boot-notice', 'performance-notice', 'prior-performance-dismissal'].includes(
@@ -261,6 +273,7 @@ try {
             evidence.promptVisible === false &&
               evidence.player?.entrySeq > 0 &&
               evidence.player?.facing === 0 &&
+              evidence.camera?.inputYaw === 0 &&
               Math.abs(evidence.player?.pos?.x - arrivalOf[target][0]) < 0.0005 &&
               Math.abs(evidence.player?.pos?.z - arrivalOf[target][1]) < 0.0005,
             `after: interior frame is not a settled room arrival in ${sidecarName}`,

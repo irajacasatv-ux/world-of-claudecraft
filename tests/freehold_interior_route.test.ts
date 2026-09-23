@@ -13,6 +13,7 @@ import {
   sampleFreeholdInterior,
   walkFreeholdRouteTo,
 } from '../scripts/freehold_interior_route.mjs';
+import { cameraFollowShouldSettle, updateFollowCameraYaw } from '../src/game/camera_follow';
 import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { FREEHOLD_GATE_INTERACT_RANGE } from '../src/sim/freehold/gate_rules';
 import { FERRY_BELL_TOWN_LANDING } from '../src/sim/interactions/ferry_bell';
@@ -377,12 +378,14 @@ it('holds the capture stance inside the gate reach, walk tolerance included', ()
   expect(offset + FREEHOLD_ROUTE_TOLERANCE).toBeLessThan(FREEHOLD_GATE_INTERACT_RANGE);
 });
 
-/** A player that moves only while keys are held, at run speed and turn rate
- * over the (faked) wall clock, advancing one sim tick per read. A walk-key
- * release near the stance can carry the player on to `carry` yd PAST the
- * stance along its heading, and a turn release can carry the facing `spin`
- * rad on, each landing TWO ticks later: the lag a loaded machine adds between
- * a key-up and the sim settling. */
+/** A player that moves only while keys are held, stepped at the sim's 20 Hz
+ * over the (faked) wall clock, and a follow camera driven by the REAL
+ * camera_follow.ts at a software renderer's 5 frames a second, so a turn
+ * outruns the camera as it does under SwiftShader. A walk-key release after
+ * real movement near the stance can carry the player on to `carry` yd PAST
+ * the stance along its heading, and a turn release can carry the facing
+ * `spin` rad on, each landing TWO ticks later: the lag a loaded machine adds
+ * between a key-up and the sim settling. */
 function kinematicPage(
   stance: { x: number; z: number },
   motion: {
@@ -390,33 +393,66 @@ function kinematicPage(
     carries?: number;
     spin?: number;
     spins?: number;
-    // The follow camera: where it starts relative to the player's facing, and
-    // whether an orbit holds it (camera_follow.ts: no follow while orbiting).
+    // Where the camera starts relative to the facing, and whether an orbit
+    // holds it (camera_follow.ts: no follow while orbiting).
     cameraOffset?: number;
     orbitStuck?: boolean;
   },
 ) {
   const events: string[] = [];
   const player = { pos: { x: stance.x, y: 0, z: stance.z + 5 }, facing: Math.PI, dead: false };
-  // Turning in place carries the camera round with the player; walking
-  // settles it behind (straight onto the facing, in this fake).
   const input = { camYaw: Math.PI + (motion.cameraOffset ?? 0) };
   const held = new Set<string>();
   let last = Date.now();
   let tick = 0;
   let carries = motion.carries ?? 0;
   let spins = motion.spins ?? 0;
+  let walkedFrom: { x: number; z: number } | null = null;
+  let lastInterpFacing: number | null = player.facing;
+  let simTime = 0;
+  let frameTime = 0;
+  const SIM_DT = 1 / 20;
+  const FRAME_DT = 1 / 5;
   const pending: { atTick: number; apply: () => void }[] = [];
+  const simStep = () => {
+    const turn = (held.has('a') ? 1 : 0) - (held.has('d') ? 1 : 0);
+    player.facing += turn * Math.PI * SIM_DT;
+    const forward = (held.has('w') ? 1 : 0) - (held.has('s') ? 1 : 0);
+    player.pos.x += Math.sin(player.facing) * 7 * forward * SIM_DT;
+    player.pos.z += Math.cos(player.facing) * 7 * forward * SIM_DT;
+  };
+  const cameraFrame = () => {
+    const keys = {
+      forward: held.has('w'),
+      back: held.has('s'),
+      turnLeft: held.has('a'),
+      turnRight: held.has('d'),
+      strafeLeft: false,
+      strafeRight: false,
+    };
+    const next = updateFollowCameraYaw({
+      camYaw: input.camYaw,
+      interpFacing: player.facing,
+      frameDt: FRAME_DT,
+      lastInterpFacing,
+      mouselook: false,
+      moving: cameraFollowShouldSettle(keys, false),
+      orbiting: motion.orbitStuck === true,
+    });
+    input.camYaw = next.camYaw;
+    lastInterpFacing = next.lastInterpFacing;
+  };
   const advance = () => {
-    const dt = (Date.now() - last) / 1000;
+    simTime += (Date.now() - last) / 1000;
     last = Date.now();
-    const turn = (held.has('a') ? Math.PI * dt : 0) - (held.has('d') ? Math.PI * dt : 0);
-    player.facing += turn;
-    if (!motion.orbitStuck) input.camYaw += turn;
-    if (held.has('w')) {
-      player.pos.x += Math.sin(player.facing) * 7 * dt;
-      player.pos.z += Math.cos(player.facing) * 7 * dt;
-      if (!motion.orbitStuck) input.camYaw = player.facing;
+    while (simTime >= SIM_DT) {
+      simTime -= SIM_DT;
+      simStep();
+      frameTime += SIM_DT;
+      if (frameTime >= FRAME_DT - 1e-9) {
+        frameTime -= FRAME_DT;
+        cameraFrame();
+      }
     }
   };
   const sim = {
@@ -454,13 +490,17 @@ function kinematicPage(
       down: async (key: string) => {
         advance();
         events.push(`down:${key}`);
+        if (key === 'w') walkedFrom = { x: player.pos.x, z: player.pos.z };
         held.add(key);
       },
       up: async (key: string) => {
         advance();
         events.push(`up:${key}`);
         const near = Math.hypot(player.pos.x - stance.x, player.pos.z - stance.z) < 1;
-        if (key === 'w' && held.has('w') && near && carries > 0) {
+        const walked =
+          walkedFrom !== null &&
+          Math.hypot(player.pos.x - walkedFrom.x, player.pos.z - walkedFrom.z) > 0.01;
+        if (key === 'w' && held.has('w') && walked && near && carries > 0) {
           carries--;
           const [dx, dz] = [Math.sin(player.facing), Math.cos(player.facing)];
           pending.push({
@@ -561,32 +601,44 @@ describe('holding the gate stance', () => {
     expect([...held]).toEqual([]);
   });
 
-  it('walks out and back in when the camera sits round in front on the stance', async () => {
+  it('brings a camera swung round in front back behind in place, neither moving nor turning', async () => {
     vi.useFakeTimers();
-    const { page, player, input } = kinematicPage(stance, { cameraOffset: 2.47 });
-    // Already on the stance, squared, with the camera swung round: the frame
+    const { page, events, player, input } = kinematicPage(stance, { cameraOffset: 2.47 });
+    // On the stance and squared, with the camera round in front: the frame
     // the before tablet once caught.
     player.pos = { x: stance.x, y: 0, z: stance.z };
-    let furthest = player.pos.z;
-    const watch = setInterval(() => {
-      furthest = Math.max(furthest, player.pos.z);
-    }, 5);
     const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
-    clearInterval(watch);
-    expect(furthest).toBeGreaterThan(stance.z + 4);
+    expect(pose.x).toBe(stance.x);
+    expect(pose.z).toBe(stance.z);
+    expect(pose.facing).toBe(Math.PI);
+    expect(events).toContain('down:s');
+    expect(events.some((event) => event === 'down:a' || event === 'down:d')).toBe(false);
     expect(
       Math.abs(
         Math.atan2(Math.sin(input.camYaw - pose.facing), Math.cos(input.camYaw - pose.facing)),
       ),
     ).toBeLessThanOrEqual(FREEHOLD_CAMERA_BEHIND_TOLERANCE);
-    expect(pose.cameraYaw).toBe(input.camYaw);
+  });
+
+  it('ends with the camera behind after a big turn a slow frame rate lets it lag', async () => {
+    vi.useFakeTimers();
+    const { page, player, input } = kinematicPage(stance, {});
+    // Facing away from the stance: the walk turns about PI, which at 5 frames
+    // a second leaves the camera well behind the turn.
+    player.facing = 0;
+    const pose = await onFakeClock(() => holdFreeholdGateStance(page, stance));
+    expect(
+      Math.abs(
+        Math.atan2(Math.sin(input.camYaw - pose.facing), Math.cos(input.camYaw - pose.facing)),
+      ),
+    ).toBeLessThanOrEqual(FREEHOLD_CAMERA_BEHIND_TOLERANCE);
   });
 
   it('throws rather than hold a stance its camera never comes round to', async () => {
     vi.useFakeTimers();
     const { page, held } = kinematicPage(stance, { cameraOffset: 2.47, orbitStuck: true });
     await expect(onFakeClock(() => holdFreeholdGateStance(page, stance))).rejects.toThrow(
-      /could not hold the gate stance after 3 attempts/,
+      /camera never came round behind the player/,
     );
     expect([...held]).toEqual([]);
   });

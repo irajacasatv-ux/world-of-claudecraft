@@ -46,6 +46,25 @@ export async function doorArchTriangles(): Promise<THREE.Triangle[]> {
   return triangles;
 }
 
+/** Whether (x, y, z) lies within the arch's stone along z: rays cast from the
+ *  point itself meet its surface both toward +z and toward -z, within a yard.
+ *  (Not crossing parity: the keystone and the arch are overlapping meshes.) */
+export function insideArch(
+  triangles: readonly THREE.Triangle[],
+  x: number,
+  y: number,
+  z = 0,
+): boolean {
+  const target = new THREE.Vector3();
+  return [1, -1].every((dir) => {
+    const ray = new THREE.Ray(new THREE.Vector3(x, y, z), new THREE.Vector3(0, 0, dir));
+    return triangles.some((t) => {
+      const hit = ray.intersectTriangle(t.a, t.b, t.c, false, target);
+      return hit !== null && Math.abs(hit.z - z) <= 1;
+    });
+  });
+}
+
 /** Whether a ray along z through (x, y) crosses the arch: from the front
  *  (+z toward -z) by default, or from behind. */
 export function archHit(

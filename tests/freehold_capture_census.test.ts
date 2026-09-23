@@ -256,14 +256,21 @@ describe('freeholdCaptureCensus: transient HUD', () => {
   it('names only layers the game still paints', () => {
     // Each id is in the page shell or set by a UI module; the class is the
     // floating combat text's own.
-    const shell = readFileSync('index.html', 'utf8');
+    const shell = readFileSync('index.html', 'utf8').replace(/<!--[\s\S]*?-->/g, '');
     const ui = sourceFilesUnder('src/ui')
-      .map(({ full }) => readFileSync(full, 'utf8'))
+      .filter(({ file }) => !file.includes('.generated'))
+      .map(({ full }) =>
+        readFileSync(full, 'utf8')
+          .replace(/\/\*[\s\S]*?\*\//g, '')
+          .replace(/(^|[^:])\/\/.*$/gm, '$1'),
+      )
       .join('\n');
+    const fctPainter = readFileSync('src/ui/fct_painter.ts', 'utf8');
     for (const [selector] of FREEHOLD_TRANSIENT_HUD) {
       const name = selector.slice(1);
       if (selector.startsWith('.')) {
-        expect(ui, selector).toMatch(new RegExp(`['"]${name}['"]`));
+        // The one class: the floating combat text painter's own base class.
+        expect(fctPainter, selector).toContain(`const FCT_BASE_CLASS = '${name}';`);
         continue;
       }
       const there =

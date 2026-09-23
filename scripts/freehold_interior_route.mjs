@@ -169,13 +169,40 @@ export async function approachFreeholdGateSite(page, site) {
 }
 
 /** How far the follow camera's yaw may sit from the player's facing at the
- * stance. The chase camera settles behind the player only while walking
- * (src/game/camera_follow.ts), so a frame can otherwise open with it swung
- * round in front, the site out of view. */
-export const FREEHOLD_CAMERA_BEHIND_TOLERANCE = 0.7;
+ * stance, so matched before and after frames look the same way. */
+export const FREEHOLD_CAMERA_BEHIND_TOLERANCE = 0.1;
 
-/** Walk onto the stance, square up on -z (heading PI) so every viewport's
- * camera settles alike, then re-check the settled pose and the camera. Under load a walk can
+/** Bring the follow camera round behind the player in place. Turning cannot
+ * be trusted to carry it: src/game/camera_follow.ts caps all automatic camera
+ * motion per frame (MAX_AUTO_YAW_SPEED), so at a software renderer's frame
+ * rate a keyboard turn outruns the camera and leaves it swung round in front.
+ * W and S held together cancel in the sim (player_motion.ts) yet still count
+ * as settle input (cameraFollowShouldSettle), so the camera eases onto the
+ * facing while the player neither moves nor turns. Observation only. */
+async function settleFreeholdCamera(page, { timeoutMs = 20000 } = {}) {
+  const off = async () =>
+    page.evaluate(() => {
+      const d = window.__game.input.camYaw - window.__game.sim.player.facing;
+      return Math.abs(Math.atan2(Math.sin(d), Math.cos(d)));
+    });
+  if ((await off()) <= FREEHOLD_CAMERA_BEHIND_TOLERANCE / 2) return;
+  await page.keyboard.down('w');
+  await page.keyboard.down('s');
+  try {
+    const started = Date.now();
+    while ((await off()) > FREEHOLD_CAMERA_BEHIND_TOLERANCE / 2) {
+      if (Date.now() - started > timeoutMs)
+        throw new Error('Freehold tour camera never came round behind the player');
+      await sleep(50);
+    }
+  } finally {
+    await page.keyboard.up('s');
+    await page.keyboard.up('w');
+  }
+}
+
+/** Walk onto the stance, square up on -z (heading PI), bring the camera round
+ * behind in place, then re-check the settled pose and the camera. Under load a walk can
  * carry past its stop by more than the route tolerance (1.28 yd once, against
  * the receipt's 1.5 yd bound), so it re-walks until the pose holds, or throws. */
 export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}) {
@@ -190,6 +217,7 @@ export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}
       if (Date.now() - started > 10000) throw new Error('Freehold tour could not face the gate');
       await turnFreeholdRoute(page, difference);
     }
+    await settleFreeholdCamera(page);
     await waitForFreeholdMovementReady(page);
     const pose = await playerPose(page);
     const cameraYaw = await page.evaluate(() => window.__game.input.camYaw);
@@ -203,10 +231,6 @@ export async function holdFreeholdGateStance(page, stance, { attempts = 3 } = {}
       throw new Error(
         `Freehold tour could not hold the gate stance after ${attempts} attempts at ${JSON.stringify({ ...pose, cameraYaw })}`,
       );
-    // On the stance with the camera round in front: walk back up the approach's
-    // last leg (5 yd north, held clear of colliders) so the next walk in lets
-    // the camera settle behind.
-    if (held) await walkFreeholdRouteTo(page, stance.x, stance.z + 5);
   }
 }
 
