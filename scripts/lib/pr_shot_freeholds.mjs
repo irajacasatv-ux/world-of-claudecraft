@@ -13,6 +13,7 @@ import {
   settleFreeholdCaptureNotices,
   settleFreeholdCaptureOverlays,
 } from './freehold_capture_notices.mjs';
+import { freeholdGateDrawnProbe } from './freehold_gate_probe.mjs';
 
 // The authored gate site as the measurements record states it.
 const GATE_RECORD = path.join(
@@ -137,81 +138,7 @@ export const freeholdReviewTargets = [
         settings: JSON.parse(localStorage.getItem('woc_settings') ?? '{}'),
         theme: JSON.parse(localStorage.getItem('woc_theme') ?? '{}'),
         player: { pos: { ...p.pos }, facing: p.facing, entrySeq: p.dungeonEntrySeq ?? 0 },
-        // Whether the arch is actually on screen this frame: the gate's view is
-        // attached to the scene with its whole chain visible, and both plinths
-        // and the keystone project inside the canvas with no painted DOM element
-        // (HUD, prompt, touch controls, even pointer-events:none overlays) over
-        // them. A press opens the prompt whether or not the arch renders, so the
-        // prompt alone cannot prove the arch is on screen.
-        gateDrawn: (() => {
-          const gate = [...g.sim.entities.values()].find((e) => e.templateId === 'freehold_gate');
-          const view = gate ? g.renderer.views.get(gate.id) : null;
-          if (!view) return false;
-          let node = view.group;
-          for (; node.parent; node = node.parent) if (!node.visible) return false;
-          if (node !== g.renderer.scene || !node.visible) return false;
-          const camera = g.renderer.camera;
-          camera.updateMatrixWorld();
-          const canvas = g.renderer.webgl.domElement;
-          const frame = canvas.getBoundingClientRect();
-          // Local arch points (plinths 1.7 either side, keystone 4.5 up), turned
-          // by the gate's facing about y.
-          const turn = gate.facing ?? 0;
-          const points = [
-            [-1.7, 1],
-            [1.7, 1],
-            [0, 4.5],
-          ].map(([side, up]) => [
-            gate.pos.x + side * Math.cos(turn),
-            gate.pos.y + up,
-            gate.pos.z - side * Math.sin(turn),
-          ]);
-          // A fill hides what is under it only when it is mostly opaque: the
-          // mobile window backdrop is a 0.55-alpha scrim that dims the world
-          // under a window without hiding it. Handles rgb(a), color(... / a)
-          // and transparent.
-          const opaque = (color) => {
-            if (color === 'transparent') return false;
-            const alpha =
-              /\/\s*([\d.]+)\s*\)$/.exec(color) ?? /rgba\([^)]*,\s*([\d.]+)\)$/.exec(color);
-            return !alpha || Number(alpha[1]) >= 0.75;
-          };
-          // Whether an element paints at a screen point. A 2D canvas overlay (the
-          // nameplate layer spans the whole screen) paints only where its own
-          // pixels do; any other canvas is taken as painted.
-          const paintsAt = (element, sx, sy) => {
-            if (element === canvas || element.contains(canvas)) return false;
-            if (!element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }))
-              return false;
-            const box = element.getBoundingClientRect();
-            if (!(sx >= box.left && sx <= box.right && sy >= box.top && sy <= box.bottom))
-              return false;
-            if (element.tagName === 'CANVAS') {
-              const context = element.getContext('2d');
-              if (!context || box.width === 0 || box.height === 0) return true;
-              const px = Math.floor(((sx - box.left) / box.width) * element.width);
-              const py = Math.floor(((sy - box.top) / box.height) * element.height);
-              return context.getImageData(px, py, 1, 1).data[3] > 0;
-            }
-            if (['IMG', 'SVG', 'svg', 'VIDEO'].includes(element.tagName)) return true;
-            const style = getComputedStyle(element);
-            if (opaque(style.backgroundColor) || style.backgroundImage !== 'none') return true;
-            if (Number.parseFloat(style.borderTopWidth) > 0 && opaque(style.borderTopColor))
-              return true;
-            return [...element.childNodes].some(
-              (child) => child.nodeType === 3 && child.textContent.trim() !== '',
-            );
-          };
-          const elements = [...document.body.querySelectorAll('*')];
-          return points.every(([x, y, z]) => {
-            const ndc = camera.position.clone().set(x, y, z).project(camera);
-            if (!(Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1 && ndc.z >= -1 && ndc.z <= 1))
-              return false;
-            const sx = frame.left + ((ndc.x + 1) / 2) * frame.width;
-            const sy = frame.top + ((1 - ndc.y) / 2) * frame.height;
-            return !elements.some((element) => paintsAt(element, sx, sy));
-          });
-        })(),
+
         promptVisible: Boolean(shown),
         controls: shown
           ? [...dialog.querySelectorAll('button,input,select')]
@@ -237,6 +164,11 @@ export const freeholdReviewTargets = [
           })(),
       };
     });
+    // Whether the arch is actually on screen (freehold_gate_probe.mjs), kept with
+    // its per-point record so a refusal names what hid which point.
+    const gateProbe = await page.evaluate(freeholdGateDrawnProbe);
+    evidence.gateDrawn = gateProbe.drawn;
+    evidence.gateProbe = gateProbe;
     if (evidence.viewport.width !== variant.width || evidence.viewport.height !== variant.height)
       throw new Error('Freehold capture viewport does not match its declared variant');
     if (evidence.settings.graphicsPreset !== 1 || evidence.settings.graphicsDefaultApplied !== true)
@@ -251,7 +183,7 @@ export const freeholdReviewTargets = [
       process.env.PR_SHOTS_FREEHOLD_BASELINE !== '1' &&
       !evidence.gateDrawn
     )
-      throw new Error('The Freehold Gate did not draw in the gate frame');
+      throw new Error(`The Freehold Gate did not draw in the gate frame (${gateProbe.reason})`);
     if (!evidence.promptFitsViewport) throw new Error('Freehold prompt escapes its viewport');
     if (evidence.controls.some((control) => control.width < 40 || control.height < 40))
       throw new Error('Freehold prompt has a control smaller than 40 pixels');
