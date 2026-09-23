@@ -16,14 +16,16 @@ export const FREEHOLD_GATE_PROBE_POINTS = Object.freeze([
  *
  * The arch counts as drawn when its view is attached to the scene with its
  * whole chain visible, and each sample point (turned by the gate's facing)
- * projects inside the canvas and the viewport, with no mesh between the camera
- * and the point and no opaque DOM paint over it. The raycast uses a PRIVATE
- * raycaster over the frame's visible meshes only (scene.traverseVisible, the
- * arch's own excluded), so the renderer's shared raycaster, which picking uses,
- * is never touched, and hidden subtrees are never walked. A mesh counts as in
- * front when any of its materials renders colour (a colorWrite:false shadow
- * proxy does not; neither does a mesh with no material) and is not mostly
- * clear. DOM paint means: a background or border fill of at least 0.75 alpha
+ * projects inside the canvas and the viewport, where a ray from the camera
+ * meets one of the arch's own visible meshes before it passes a yard beyond
+ * the point, with no other mesh between the camera and the point and no opaque
+ * DOM paint over it. The raycasts use a PRIVATE raycaster over the frame's
+ * visible meshes only (traverseVisible, the arch's own cast apart from the
+ * rest), so the renderer's shared raycaster, which picking uses, is never
+ * touched, and hidden subtrees are never walked. A mesh counts, as the arch
+ * or in front of it, when any of its materials renders colour (a
+ * colorWrite:false shadow proxy does not; neither does a mesh with no
+ * material) and is not mostly clear. DOM paint means: a background or border fill of at least 0.75 alpha
  * (a 0.55 scrim dims the world without hiding it), a background image, an
  * image, svg or video, a non-overlay canvas, a text run's own glyph boxes, or
  * a ::before/::after with content and a fill; the full-screen nameplate canvas
@@ -56,6 +58,19 @@ export function freeholdGateDrawnProbe(env) {
     for (let at = object; at; at = at.parent) if (at === view.group) return true;
     return false;
   };
+  const archMeshes = [];
+  view.group.traverseVisible((object) => {
+    if (object.isMesh) archMeshes.push(object);
+  });
+  if (archMeshes.length === 0) return refuse('gate view has no visible mesh');
+  const paintsColour = (object) =>
+    (Array.isArray(object.material) ? object.material : [object.material]).some(
+      (material) =>
+        material &&
+        material.visible !== false &&
+        material.colorWrite !== false &&
+        !(material.transparent && material.opacity < 0.5),
+    );
   const opaque = (color) => {
     if (!color || color === 'transparent') return false;
     const alpha = /\/\s*([\d.]+)\s*\)$/.exec(color) ?? /rgba\([^)]*,\s*([\d.]+)\)$/.exec(color);
@@ -139,25 +154,22 @@ export function freeholdGateDrawnProbe(env) {
       sx <= viewW &&
       sy >= 0 &&
       sy <= viewH;
+    let archAtPoint = false;
     let occludedBy = null;
     let coveredBy = null;
     if (onScreen) {
       const toPoint = target.clone().sub(camera.position);
       raycaster.set(camera.position, toPoint.clone().normalize());
       raycaster.near = 0;
+      // The point lies inside the arch body, so its front face is met first.
+      raycaster.far = toPoint.length() + 1;
+      archAtPoint = raycaster
+        .intersectObjects(archMeshes, false)
+        .some((hit) => paintsColour(hit.object));
       raycaster.far = Math.max(0, toPoint.length() - 0.05);
       for (const hit of raycaster.intersectObjects(meshes, false)) {
-        const object = hit.object;
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        const paintsColour = materials.some(
-          (material) =>
-            material &&
-            material.visible !== false &&
-            material.colorWrite !== false &&
-            !(material.transparent && material.opacity < 0.5),
-        );
-        if (!paintsColour) continue;
-        occludedBy = object.name || object.type;
+        if (!paintsColour(hit.object)) continue;
+        occludedBy = hit.object.name || hit.object.type;
         break;
       }
       for (const element of elements) {
@@ -165,14 +177,18 @@ export function freeholdGateDrawnProbe(env) {
         if (coveredBy) break;
       }
     }
-    return { label, sx, sy, onScreen, occludedBy, coveredBy };
+    return { label, sx, sy, onScreen, archAtPoint, occludedBy, coveredBy };
   });
-  const blocked = points.find((p) => !p.onScreen || p.occludedBy || p.coveredBy);
+  const blocked = points.find((p) => !p.onScreen || !p.archAtPoint || p.occludedBy || p.coveredBy);
+  const why = (p) =>
+    !p.onScreen
+      ? 'off screen'
+      : !p.archAtPoint
+        ? 'no arch at the point'
+        : (p.occludedBy ?? p.coveredBy);
   return {
     drawn: !blocked,
-    reason: blocked
-      ? `${blocked.label}: ${blocked.onScreen ? (blocked.occludedBy ?? blocked.coveredBy) : 'off screen'}`
-      : null,
+    reason: blocked ? `${blocked.label}: ${why(blocked)}` : null,
     points,
   };
 }

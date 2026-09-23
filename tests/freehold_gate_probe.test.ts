@@ -3,7 +3,8 @@
 // (y - oy)/10 about the gate, a scene tree walked by traverseVisible, a
 // recording raycaster class (the probe builds its own from the renderer's
 // constructor) that only returns planted hits among the objects it is given
-// and nearer than its `far`, and fake DOM elements. By default the gate sits
+// and nearer than its `far`, and fake DOM elements. By default the arch mesh
+// is planted 5 yd out on every ray, a face every point meets. The gate sits
 // at the origin facing 0, so the sample points land on screen at plinth-left
 // (415, 450), plinth-right (585, 450) and the keystone (500, 275).
 import { readFileSync } from 'node:fs';
@@ -137,24 +138,38 @@ function probe(
     innerHeight?: number;
     canvasInList?: boolean;
     points?: readonly (readonly [string, number, number])[] | null;
+    // Where every ray meets the arch mesh, or no plant on it at all.
+    archAt?: number | null;
+    archHidden?: boolean;
+    archMaterial?: unknown;
   } = {},
 ) {
   const scene = node('scene', { visible: options.sceneVisible ?? true });
   const holder = attach(scene, node('views'));
   const group = node('gate-view', { visible: options.viewVisible ?? true });
   if (options.attached !== false) attach(holder, group);
-  attach(group, mesh('arch'));
-  const planted = options.world?.({ scene, group }) ?? [];
-  const sceneWithWalk = Object.assign(scene, {
-    traverseVisible(visit: (object: Node) => void) {
-      const walk = (object: Node) => {
-        if (!object.visible) return;
-        visit(object);
-        for (const child of object.children) walk(child);
-      };
-      walk(scene);
-    },
-  });
+  const arch = attach(
+    group,
+    mesh('arch', {
+      visible: !options.archHidden,
+      ...(options.archMaterial === undefined ? {} : { material: options.archMaterial }),
+    }),
+  );
+  const archAt = options.archAt === undefined ? 5 : options.archAt;
+  const planted = [
+    ...(archAt === null ? [] : [{ object: arch, distance: archAt }]),
+    ...(options.world?.({ scene, group }) ?? []),
+  ];
+  const walkFrom = (root: Node) => (visit: (object: Node) => void) => {
+    const walk = (object: Node) => {
+      if (!object.visible) return;
+      visit(object);
+      for (const child of object.children) walk(child);
+    };
+    walk(root);
+  };
+  Object.assign(group, { traverseVisible: walkFrom(group) });
+  const sceneWithWalk = Object.assign(scene, { traverseVisible: walkFrom(scene) });
   const frame = options.canvasRect ?? rect(0, 0, 1000, 1000);
   const canvas = {
     tagName: 'CANVAS',
@@ -274,12 +289,17 @@ function probe(
     innerHeight: options.innerHeight ?? 1000,
   };
   const result = freeholdGateDrawnProbe(env);
-  return { result, shared, made, scene, group };
+  // Each point casts twice: at the arch's own meshes, then at everything else.
+  const casts = (recording: Recording | undefined) => ({
+    arch: (recording?.casts ?? []).filter((cast) => cast.objects.includes(arch)),
+    rest: (recording?.casts ?? []).filter((cast) => !cast.objects.includes(arch)),
+  });
+  return { result, shared, made, scene, group, arch, casts };
 }
 
 describe('freeholdGateDrawnProbe: geometry and the raycast', () => {
   it('draws on a clear frame, casting a private raycaster over the visible meshes only', () => {
-    const { result, shared, made, scene, group } = probe({
+    const { result, shared, made, scene, group, arch, casts } = probe({
       world: ({ scene }) => {
         const terrain = attach(scene, mesh('terrain'));
         const hiddenGroup = attach(scene, node('parked', { visible: false }));
@@ -302,40 +322,53 @@ describe('freeholdGateDrawnProbe: geometry and the raycast', () => {
     expect(shared.casts).toEqual([]);
     expect([shared.near, shared.far, shared.camera]).toEqual([0.1, 99, 'original']);
     expect(shared.ray).toMatchObject({ x: 7, y: 7, z: 7 });
-    // One cast per point: from the camera, toward the point, stopping 0.05 yd
-    // short of it, over exactly the visible meshes outside the arch, flat.
-    expect(own.casts).toHaveLength(3);
+    // Two casts per point, each from the camera toward the point, flat: one at
+    // the arch's own visible meshes reaching a yard past the point, then one
+    // stopping 0.05 yd short of it over exactly the visible meshes outside it.
+    expect(own.casts).toHaveLength(6);
+    const { arch: archCasts, rest } = casts(own);
+    expect(own.casts.map((cast) => (archCasts.includes(cast) ? 'arch' : 'rest'))).toEqual([
+      'arch',
+      'rest',
+      'arch',
+      'rest',
+      'arch',
+      'rest',
+    ]);
     const terrain = scene.children.find((child) => child.name === 'terrain');
     const targets = [
       [-1.7, 1, 0],
       [1.7, 1, 0],
       [0, 4.5, 0],
     ];
-    own.casts.forEach((cast, i) => {
-      const [x, y, z] = targets[i];
+    targets.forEach(([x, y, z], i) => {
       const along = new Vec3(x, y, z).sub(new Vec3(0, 2, 10));
       const unit = along.clone().normalize();
-      expect(cast.origin).toMatchObject({ x: 0, y: 2, z: 10 });
-      expect(cast.direction.x).toBeCloseTo(unit.x, 9);
-      expect(cast.direction.y).toBeCloseTo(unit.y, 9);
-      expect(cast.direction.z).toBeCloseTo(unit.z, 9);
-      expect(cast.far).toBeCloseTo(along.length() - 0.05, 9);
-      expect(cast.near).toBe(0);
-      expect(cast.objects).toEqual([terrain]);
-      expect(cast.recursive).toBe(false);
+      for (const cast of [archCasts[i], rest[i]]) {
+        expect(cast.origin).toMatchObject({ x: 0, y: 2, z: 10 });
+        expect(cast.direction.x).toBeCloseTo(unit.x, 9);
+        expect(cast.direction.y).toBeCloseTo(unit.y, 9);
+        expect(cast.direction.z).toBeCloseTo(unit.z, 9);
+        expect(cast.near).toBe(0);
+        expect(cast.recursive).toBe(false);
+      }
+      expect(archCasts[i].far).toBeCloseTo(along.length() + 1, 9);
+      expect(archCasts[i].objects).toEqual([arch]);
+      expect(rest[i].far).toBeCloseTo(along.length() - 0.05, 9);
+      expect(rest[i].objects).toEqual([terrain]);
     });
     expect(group.children.map((child) => child.name)).toEqual(['arch']);
   });
 
   it('turns the sample points by the gate facing at its real site, as three.js places them', () => {
     const gate = { x: -38.65, y: -0.79, z: -103.75, facing: 0.5 };
-    const { made } = probe({ gate });
+    const { made, casts: split } = probe({ gate });
     const arch = new THREE.Object3D();
     arch.position.set(gate.x, gate.y, gate.z);
     arch.rotation.y = gate.facing;
     arch.updateMatrixWorld(true);
     const camera = new Vec3(gate.x, gate.y + 2, gate.z + 10);
-    const casts = made[1].casts;
+    const casts = split(made[1]).rest;
     expect(casts).toHaveLength(3);
     FREEHOLD_GATE_PROBE_POINTS.forEach(([, side, up], i) => {
       const world = arch.localToWorld(new THREE.Vector3(side, up, 0));
@@ -353,6 +386,26 @@ describe('freeholdGateDrawnProbe: geometry and the raycast', () => {
     expect(probe({ viewVisible: false }).result.reason).toBe('gate view hidden');
     expect(probe({ attached: false }).result.reason).toBe('gate view not in the scene');
     expect(probe({ sceneVisible: false }).result.reason).toBe('gate view not in the scene');
+    expect(probe({ archHidden: true }).result.reason).toBe('gate view has no visible mesh');
+  });
+
+  it('refuses a point no colour-painting arch face meets by a yard past it', () => {
+    // No face on the ray at all: the view is up, its meshes are not there.
+    expect(probe({ archAt: null }).result.reason).toBe('plinth-left: no arch at the point');
+    // plinth-left sits 10.19 yd from the camera (the nearest point), so a
+    // face past 11.19 is not its arch, and one short of that is.
+    expect(probe({ archAt: 11.25 }).result.reason).toBe('plinth-left: no arch at the point');
+    expect(probe({ archAt: 11.15 }).result.drawn).toBe(true);
+    for (const material of [
+      { colorWrite: false },
+      { visible: false },
+      undefined,
+      { transparent: true, opacity: 0.4 },
+    ])
+      expect(
+        probe({ archMaterial: material ?? null }).result.reason,
+        JSON.stringify(material),
+      ).toBe('plinth-left: no arch at the point');
   });
 
   it.each([
@@ -398,8 +451,8 @@ describe('freeholdGateDrawnProbe: geometry and the raycast', () => {
     );
   });
 
-  it('never casts against the arch, a hidden subtree, or a non-mesh', () => {
-    const { result, made } = probe({
+  it('never casts the arch as an occluder, nor a hidden subtree or a non-mesh', () => {
+    const { result, made, casts, arch } = probe({
       world: ({ scene, group }) => {
         const own = attach(group, mesh('arch-part'));
         const hidden = attach(scene, node('parked', { visible: false }));
@@ -409,7 +462,14 @@ describe('freeholdGateDrawnProbe: geometry and the raycast', () => {
       },
     });
     expect(result.drawn).toBe(true);
-    for (const cast of made[1].casts) expect(cast.objects).toEqual([]);
+    const { arch: archCasts, rest } = casts(made[1]);
+    for (const cast of rest) expect(cast.objects).toEqual([]);
+    // The arch cast takes the arch's own visible meshes, the new part too.
+    for (const cast of archCasts)
+      expect(cast.objects.map((o) => (o as { name: string }).name)).toEqual([
+        arch.name,
+        'arch-part',
+      ]);
   });
 });
 

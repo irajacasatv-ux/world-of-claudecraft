@@ -3,6 +3,7 @@ export interface FreeholdGateProbePoint {
   sx: number;
   sy: number;
   onScreen: boolean;
+  archAtPoint: boolean;
   occludedBy: string | null;
   coveredBy: string | null;
 }
