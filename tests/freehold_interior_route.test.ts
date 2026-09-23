@@ -10,6 +10,7 @@ import {
   freeholdInteriorPerfFailures,
   holdFreeholdGateStance,
   leaveFreeholdThroughExit,
+  reopenFreeholdGate,
   sampleFreeholdInterior,
   walkFreeholdRouteTo,
 } from '../scripts/freehold_interior_route.mjs';
@@ -455,7 +456,15 @@ function kinematicPage(
       }
     }
   };
+  // The gate the stance is measured from, and whether its prompt opened: an F
+  // press opens it only within the 5 yd reach.
+  const gate = {
+    templateId: 'freehold_gate',
+    pos: { x: stance.x - FREEHOLD_GATE_STANCE.dx, z: stance.z - FREEHOLD_GATE_STANCE.dz },
+  };
+  let promptOpen = false;
   const sim = {
+    entities: new Map([[9, gate]]),
     get player() {
       advance();
       return player;
@@ -486,7 +495,16 @@ function kinematicPage(
       for (let attempt = 0; attempt < 10; attempt++) if (run(fn, args)) return;
       throw new Error('condition did not become ready');
     },
+    waitForSelector: async () => {
+      if (!promptOpen) throw new Error('the gate prompt never opened');
+    },
     keyboard: {
+      press: async (key: string) => {
+        advance();
+        const reach = Math.hypot(player.pos.x - gate.pos.x, player.pos.z - gate.pos.z);
+        events.push(`press:${key}`);
+        if (key === 'f' && reach <= 5) promptOpen = true;
+      },
       down: async (key: string) => {
         advance();
         events.push(`down:${key}`);
@@ -729,5 +747,32 @@ describe('switching the tour to the Cottage', () => {
     const { page, state } = chatPage({ grantLands: false });
     await expect(changeFreeholdToCottage(page)).rejects.toThrow(/did not become ready/);
     expect(state.enters).toBe(2);
+  });
+});
+
+describe('reopening the gate after a leave', () => {
+  const site = EASTBROOK_LAYOUT.services.freeholdGate.position;
+  const stance = { x: site.x + FREEHOLD_GATE_STANCE.dx, z: site.z + FREEHOLD_GATE_STANCE.dz };
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('walks back into reach when the leave carried the player on past the drop', async () => {
+    vi.useFakeTimers();
+    const { page, events, player } = kinematicPage(stance, {});
+    // The drop is 4 yd south of the arch; a late key-up walked on to 7.
+    player.pos = { x: site.x, y: 0, z: site.z - 7 };
+    await onFakeClock(() => reopenFreeholdGate(page));
+    expect(events).toContain('down:w');
+    expect(events.at(-1)).toBe('press:f');
+    expect(Math.hypot(player.pos.x - site.x, player.pos.z - site.z)).toBeLessThanOrEqual(5);
+  });
+
+  it('presses at once from the drop itself', async () => {
+    vi.useFakeTimers();
+    const { page, events, player } = kinematicPage(stance, {});
+    player.pos = { x: site.x, y: 0, z: site.z - 4 };
+    await onFakeClock(() => reopenFreeholdGate(page));
+    expect(events).toEqual(['press:f']);
   });
 });

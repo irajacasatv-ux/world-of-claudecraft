@@ -6,6 +6,7 @@ import {
   changeFreeholdToCottage,
   confirmFreeholdGate,
   leaveFreeholdThroughExit,
+  reopenFreeholdGate,
   sailToFreeholdTown,
   walkToFreeholdGate,
 } from '../freehold_interior_route.mjs';
@@ -116,10 +117,7 @@ export const freeholdReviewTargets = [
         if (scene === 'cottage-safe-landing') {
           await changeFreeholdToCottage(page);
           await leaveFreeholdThroughExit(page);
-          await page.keyboard.press('f');
-          await page.waitForSelector('#freehold-gate-window [data-focus-key="gate-enter"]', {
-            visible: true,
-          });
+          await reopenFreeholdGate(page);
           await confirmFreeholdGate(page);
         }
       }

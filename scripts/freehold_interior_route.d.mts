@@ -82,6 +82,7 @@ export function walkToFreeholdGate<T = undefined>(
 }>;
 export function confirmFreeholdGate(page: Page): Promise<FreeholdTourArrival>;
 export function leaveFreeholdThroughExit(page: Page): Promise<void>;
+export function reopenFreeholdGate(page: Page): Promise<void>;
 export function changeFreeholdToCottage(page: Page): Promise<void>;
 export function runFreeholdInteriorRoute(
   page: Page,

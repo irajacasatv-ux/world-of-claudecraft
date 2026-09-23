@@ -358,6 +358,25 @@ export async function leaveFreeholdThroughExit(page) {
   }
 }
 
+/** After a leave, back inside the gate's reach and open its prompt. The leave
+ * holds the walk key until it sees the arrival, so under load the player can
+ * land at the drop and walk on past the 5 yd reach before the key comes up;
+ * the walk back stops 3 yd south of the arch, between the drop and the arch. */
+export async function reopenFreeholdGate(page) {
+  await waitForFreeholdMovementReady(page);
+  const gate = await page.evaluate(() => {
+    for (const e of window.__game.sim.entities.values())
+      if (e.templateId === 'freehold_gate') return { x: e.pos.x, z: e.pos.z };
+    return null;
+  });
+  if (!gate) throw new Error('Freehold tour lost the gate after leaving a home');
+  const pose = await playerPose(page);
+  if (Math.hypot(pose.x - gate.x, pose.z - gate.z) > 4.5)
+    await walkFreeholdRouteTo(page, gate.x, gate.z - 3, { tolerance: 0.5 });
+  await page.keyboard.press('f');
+  await page.waitForSelector(ENTER, { visible: true, timeout: 10000 });
+}
+
 /** The chat form runs the existing loopback-authorized dev bridge. */
 export async function changeFreeholdToCottage(page) {
   const mobile = await page.evaluate(() => document.body.classList.contains('mobile-touch'));
@@ -451,8 +470,7 @@ export async function runFreeholdInteriorRoute(page, hooks = {}) {
   await hooks.afterInn?.(page, inn);
   await changeFreeholdToCottage(page);
   await leaveFreeholdThroughExit(page);
-  await page.keyboard.press('f');
-  await page.waitForSelector(ENTER, { visible: true, timeout: 10000 });
+  await reopenFreeholdGate(page);
   const cottage = await confirmFreeholdGate(page);
   if (Math.abs(cottage.x - inn.x) < 200)
     throw new Error('Freehold tour did not enter the Cottage band');
