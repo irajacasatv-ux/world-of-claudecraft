@@ -1,6 +1,7 @@
 import { performance } from 'node:perf_hooks';
 import { describe, expect, it } from 'vitest';
 import { DUNGEON_FLOOR_Y, DUNGEONS, instanceOrigin } from '../src/sim/data';
+import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import {
   instanceClaimHolds,
   instanceClaimIdAt,
@@ -222,7 +223,9 @@ describe('owner claim identity lookup', () => {
       },
     });
     const ctx = { instances: indexed } as SimContext;
-    expect(instanceClaimIdAt(ctx, { x: -14, y: 0, z: -92 })).toBeNull();
+    // The overworld gate site resolves no claim.
+    const gate = EASTBROOK_LAYOUT.services.freeholdGate.position;
+    expect(instanceClaimIdAt(ctx, { x: gate.x, y: 0, z: gate.z })).toBeNull();
     expect(claims).toHaveLength(48);
     for (const claim of claims) {
       const pos = positionAt(DUNGEONS[claim.dungeonId].index, claim.slot);

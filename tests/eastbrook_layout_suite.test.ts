@@ -1397,6 +1397,21 @@ describe('layout clearance and service anchors', () => {
         position: EASTBROOK_LAYOUT.services.graveyard.legacyReleasePoint,
         bodyRadius: 0.6,
       },
+      // The Freehold Gate's arch (plinths 1.7 either side of centre) and the
+      // drop 4 yd along -z where a leaving player lands.
+      {
+        id: 'freehold_gate',
+        position: EASTBROOK_LAYOUT.services.freeholdGate.position,
+        bodyRadius: 2.5,
+      },
+      {
+        id: 'freehold_gate:drop',
+        position: {
+          x: EASTBROOK_LAYOUT.services.freeholdGate.position.x,
+          z: EASTBROOK_LAYOUT.services.freeholdGate.position.z - 4,
+        },
+        bodyRadius: 0.6,
+      },
     ];
     for (const anchor of pointAnchors) {
       expect(

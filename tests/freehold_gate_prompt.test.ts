@@ -10,6 +10,10 @@ import type { GateLookupRequest, GateVisitCapability } from '../src/ui/hud/housi
 import type { IWorld } from '../src/world_api';
 import { bareClient } from './helpers/bare_client';
 
+// Every coordinate in this file is a self-consistent SYNTHETIC world (the gate's
+// first authored site, (-14,-92), kept as a stand-in): the prompt reads only the
+// fake world's gate and player, never EASTBROOK_LAYOUT, so the live site
+// (tests/freehold_gate_clearance.test.ts) is not pinned here.
 function fixture(enabled = true, friend?: FreeholdFriendAdapter) {
   document.body.innerHTML = '<button id="opener"></button><div id="gate"></div>';
   const root = document.getElementById('gate')!;

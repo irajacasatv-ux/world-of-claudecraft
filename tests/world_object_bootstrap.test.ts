@@ -36,6 +36,7 @@ describe('authored world object construction order', () => {
         ],
         services: {
           mailboxes: [{ x: 5, z: 6, facing: 1 }],
+          // An arbitrary custom-world site: a dark host spawns no gate anywhere.
           freeholdGate: { x: -14, z: -92 },
         },
       },

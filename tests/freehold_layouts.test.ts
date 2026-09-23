@@ -24,6 +24,7 @@ import {
   INTERIOR_LAYOUTS,
 } from '../src/sim/dungeon_floor';
 import { dawnholdKeepLiftAt, lastKeepLiftAt, layoutColliders } from '../src/sim/dungeon_layout';
+import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { PLAYER_BODY_RADIUS } from '../src/sim/pathfind';
 import { authoredWallSegments, inAnyRoom } from '../src/sim/rift/authored';
 import { wildheartFieldHeight } from '../src/sim/wildheart_field';
@@ -87,6 +88,11 @@ describe('measured freehold rooms', () => {
     expect(FREEHOLD_ENTRY).toEqual({ x: 0, z: -4 });
     expect(FREEHOLD_EXIT).toEqual({ x: 0, z: -6 });
     expect(FREEHOLD_ENTRY_FACING).toBe(0);
+    // The measurements record's gate block follows the one authored site.
+    const gate = EASTBROOK_LAYOUT.services.freeholdGate;
+    expect(measured.gate.position).toEqual([gate.position.x, gate.position.z]);
+    expect(measured.gate.facing).toBe(gate.facing);
+    expect(measured.gate.return).toEqual([gate.position.x, gate.position.z - 4]);
     for (const home of homes) {
       const rooms = home.layout.rooms!;
       expect(rooms.map(({ id: _id, ...bounds }) => bounds)).toEqual([

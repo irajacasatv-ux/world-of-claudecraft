@@ -1277,12 +1277,13 @@ const NOTICEBOARD_FRONT_STANDING_POINT = localToWorld(
 );
 
 const SERVICES = {
-  // The Freehold Gate stands on open ground beside the inn, more than 11 yd from
-  // every NPC: the press ladder ranks objects above NPCs, so a gate in reach of
-  // an NPC's press would take it (pinned in tests/freehold_dungeon_defs.test.ts).
-  // Facing 0 opens the arch along z, in line with the 4 yd drop at z - 4 that a
-  // leaving player lands on.
-  freeholdGate: { position: { x: -28, z: -82 }, facing: 0 },
+  // The Freehold Gate stands off the east road across from the inn door, where no
+  // standing point reaches both it and another press: over 11 yd from every NPC
+  // and over 10 yd from every garden bed, node and object (the press ladder ranks
+  // objects above NPCs and beds, so a gate in their reach takes their press;
+  // pinned in tests/freehold_gate_clearance.test.ts). Facing 0 opens the arch
+  // along z, in line with the 4 yd drop at z - 4 that a leaving player lands on.
+  freeholdGate: { position: { x: -37, z: -103.5 }, facing: 0 },
   playerStart: {
     id: 'eastbrook_player_start',
     position: { x: -94, z: -58 },
