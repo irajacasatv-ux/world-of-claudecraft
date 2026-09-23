@@ -116,6 +116,16 @@ export function eastbrookGrassExclusions(
       z: well.position.z,
       radius: well.radius,
     });
+    // The Freehold Gate's arch (plinths 1.7 either side of its centre): tuft
+    // cards would otherwise poke through the plinth bases.
+    const gate = EASTBROOK_LAYOUT.services.freeholdGate.position;
+    exclusions.push({
+      kind: 'circle',
+      id: 'eastbrook_freehold_gate',
+      x: gate.x,
+      z: gate.z,
+      radius: 2.6,
+    });
     for (const bench of EASTBROOK_LAYOUT.civic.benches) {
       exclusions.push(layoutObb(bench.id, bench.footprint));
     }

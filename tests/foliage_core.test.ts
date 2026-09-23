@@ -51,7 +51,8 @@ describe('Eastbrook town grass exclusion', () => {
     // and reading-spot exclusions add two more on top.
     // The 13 town guild boards (content/noticeboards.ts, one per hub
     // settlement) each add a footprint and a reading-spot exclusion: 26 more.
-    expect(exclusions).toHaveLength(123);
+    // The Freehold Gate's arch footprint adds one circle (124).
+    expect(exclusions).toHaveLength(124);
     expect(exclusions.some((item) => item.id.startsWith('eastbrook_grand_armoury'))).toBe(false);
     for (const building of [
       ...EASTBROOK_LAYOUT.preservedBuildings,
@@ -113,6 +114,20 @@ describe('Eastbrook town grass exclusion', () => {
       kind: 'circle',
       radius: 3.19,
     });
+    // The Freehold Gate's arch: both plinths (1.7 either side of the site at
+    // facing 0) sit well inside it, and the capture stance 4.1 yd out does not.
+    const gate = EASTBROOK_LAYOUT.services.freeholdGate.position;
+    expect(byId.get('eastbrook_freehold_gate')).toEqual({
+      kind: 'circle',
+      id: 'eastbrook_freehold_gate',
+      x: gate.x,
+      z: gate.z,
+      radius: 2.6,
+    });
+    for (const side of [-1.7, 1.7])
+      expect(insideEastbrookGrassExclusion(exclusions, gate.x + side, gate.z, PADDING)).toBe(true);
+    const arch = exclusions.filter((exclusion) => exclusion.id === 'eastbrook_freehold_gate');
+    expect(insideEastbrookGrassExclusion(arch, gate.x - 4, gate.z + 1, PADDING)).toBe(false);
     expect(byId.get('eastbrook_noticeboard')).toMatchObject({
       kind: 'obb',
       halfWidth: 1.2,
