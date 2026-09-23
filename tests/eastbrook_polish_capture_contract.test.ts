@@ -696,7 +696,8 @@ const PINNED_POLISH_COMPOSITE_FINGERPRINT =
   // Re-minted for the devalue audit floor: pnpm-lock.yaml moved (devalue 5.8.1 to 5.9.4), no renderer input changed. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0: the merged renderer and layout leaves match neither parent. No capture was retaken.
   // Re-minted for the Freehold Gate move to (-28,-82): the eastbrook_layout.ts leaf moved. No capture was retaken.
-  '2b6c2c4b73ea35768191066e1ad7a3b26b3f830bd50d7d3eb74c37ea68e5a40b';
+  // Re-minted for the second Freehold Gate move, to (-37,-103.5): the eastbrook_layout.ts leaf moved. No capture was retaken.
+  '06c4127051fa00c89de50bdec085e850f8bace6b723753f245f6bf96f40a19d5';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [

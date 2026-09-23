@@ -1390,7 +1390,8 @@ const ACCEPTED_POLISH_V2_METADATA_SHA256 =
   // Re-minted for the devalue audit floor: pnpm-lock.yaml moved (devalue 5.8.1 to 5.9.4), no renderer input changed. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0: the merged renderer and layout leaves match neither parent. No capture was retaken.
   // Re-minted for the Freehold Gate move to (-28,-82): the eastbrook_layout.ts leaf moved. No capture was retaken.
-  '6d4955ac12c05060829c7519545fde0cefe845837d9a30137269c70bda54dbdd';
+  // Re-minted for the second Freehold Gate move, to (-37,-103.5): the eastbrook_layout.ts leaf moved. No capture was retaken.
+  'b9a6f4970479d6f1a75535cec95573fbfffbdd94f92f8eedec46bdc15cd8bf2c';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the Frame Rate Limit: the renderer leaf gained the chosen-cadence feeds (frame load readings, governor signals). No capture was retaken.
   // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
@@ -1404,7 +1405,8 @@ const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the devalue audit floor: pnpm-lock.yaml moved (devalue 5.8.1 to 5.9.4), no renderer input changed. No capture was retaken.
   // Re-minted for the Freeholds sync of release/v0.44.0: the merged renderer and layout leaves match neither parent. No capture was retaken.
   // Re-minted for the Freehold Gate move to (-28,-82): the eastbrook_layout.ts leaf moved. No capture was retaken.
-  '2b6c2c4b73ea35768191066e1ad7a3b26b3f830bd50d7d3eb74c37ea68e5a40b';
+  // Re-minted for the second Freehold Gate move, to (-37,-103.5): the eastbrook_layout.ts leaf moved. No capture was retaken.
+  '06c4127051fa00c89de50bdec085e850f8bace6b723753f245f6bf96f40a19d5';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2787,7 +2789,9 @@ describe('Eastbrook polish performance and contact evidence', () => {
       // re-swept evidence. No capture was retaken.
       // Freehold Gate move to (-28,-82): recomputed LAST again over the
       // re-swept evidence. No capture was retaken.
-    ).toBe('43b330eebafe2f8d90ef14f5063faf86b21b96105a53c16e0307e15c72cca152');
+      // Second Freehold Gate move, to (-37,-103.5): recomputed LAST again over
+      // the re-swept evidence. No capture was retaken.
+    ).toBe('4b641301411d1e6f74da92c94f09f551b898d7b8e149ceb8b7b0d5b924e0931c');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {
