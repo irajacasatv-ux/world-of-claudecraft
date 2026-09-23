@@ -700,7 +700,8 @@ const PINNED_POLISH_COMPOSITE_FINGERPRINT =
   // Re-minted for the third Freehold Gate move, to (-39,-104): the eastbrook_layout.ts leaf moved. No capture was retaken.
   // Re-minted for the Freehold Gate view rank: the entityViewPolicy and viewPriorityPolicy leaves moved. No capture was retaken.
   // Re-minted for the fourth Freehold Gate move, to (-38.65,-103.75): the eastbrook_layout.ts leaf moved. No capture was retaken.
-  'f3d4a3991f4e73e87af6fe1ccb661901e4241078d8a5eb6dd6964731c2ed8e66';
+  // Re-minted for the lit-host gate grass: the renderer.ts leaf now passes cfg.freeholdsEnabled to buildFoliage. No capture was retaken.
+  '07192cbe6abc8a9e9e957b4ae05c3fdf33c6205d7b0d7b10b96ae5afd3a3b340';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [
