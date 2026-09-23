@@ -895,7 +895,7 @@ export function leaveDungeon(ctx: SimContext, pid?: number): boolean {
 
 // How far outside the door an exiting player is set down, so they do not land
 // inside the trigger volume they just came through.
-const DUNGEON_DOOR_RETURN_INSET = 4;
+export const DUNGEON_DOOR_RETURN_INSET = 4;
 
 /**
  * Detach a player from the dungeon instance they stand in WITHOUT moving them,

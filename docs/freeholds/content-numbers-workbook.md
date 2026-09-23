@@ -430,19 +430,22 @@ record does not claim an authored roof mesh.
 | Closed door panel / reserved swing box | center (0,-6.9), 2.4 wide; X -1.2 to 1.2, Z -7 to -4.6 | same |
 | Camera navigation volume | X -7 to 7, Z -7 to 11, Y 0 to 16 | X -11 to 11, Z -7 to 15, Y 0 to 16 |
 
-The gate is (-39,-104), facing 0, off the east road across from the inn door,
-more than 11 yards from every NPC and more than 10 from every garden bed, node
-and object, with its return point at least 2 yards from any building. It moved
-off (-14,-92) at the v0.44.0 sync, when Apothecary Lin moved within 4.24 yards
-of it; the first replacement, (-28,-82), took the press of two Eastbrook garden
-beds, and the second, (-37,-103.5), dropped a leaving player 1.17 yards from a
-house corner. The existing shared 4 yard south return inset lands at (-39,-108).
-No custom leave offset is introduced. One limit is known and pinned: the gate is
-inside the 26 yard Eastbrook town circle but the return point is 0.25 yards
-outside it, so Town Focus refuses until the player's first step. A 0.05 yard
-search found a narrow band that puts the return inside, for example (-38.7,-104),
-but only at the other rules' thresholds; a leave offset cannot move the return
-alone, because the saved-inside rejoin ignores leaveOffset. The gate is a walk-through service marker. The closed ornamental
+The gate is (-38.65,-103.75), facing 0, off the east road across from the inn
+door. No standing point reaches both it and another press: it is more than 11
+yards from every NPC and more than 10 from every garden bed, node and object.
+Its return point is at least 2 yards from any building, and the gate and its
+return are both inside the 26 yard Eastbrook town circle. It moved off (-14,-92)
+at the v0.44.0 sync, when Apothecary Lin moved within 4.24 yards of it. The
+first replacement, (-28,-82), took the press of two Eastbrook garden beds. The
+second, (-37,-103.5), dropped a leaving player 1.17 yards from a house corner.
+The third, (-39,-104), dropped them 0.25 yards outside the town circle, where
+Town Focus refuses. The site is the nearest cell to the ruled (-28,-82) that
+passes every rule. A 0.05 yard search found only a 19-cell band that keeps the
+return in town, and every cell in it sits at the threshold of some rule. This
+cell has road 5.53 against 5.5, 3.5 yards collider-free against 3.5, and its
+return 0.16 yards inside the circle, the widest of the band; all three are
+pinned. The existing shared 4 yard south return inset lands at (-38.65,-107.75).
+No custom leave offset is introduced. The gate is a walk-through service marker. The closed ornamental
 door is backed by the south structural wall, so no aperture permits walking into
 unfloored space. Its fixed swing reservation and the complete protected corridor
 remain unavailable to future mutable furnishings.

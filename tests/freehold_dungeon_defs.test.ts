@@ -93,7 +93,7 @@ describe('freehold dungeon defs: registry shape', () => {
       expect(def.tombDressing).toBeUndefined();
       expect(def.staticDoor).toBeUndefined();
       expect(def.leaveOffset).toBeUndefined();
-      expect(def.doorPos).toEqual({ x: -39, z: -104 });
+      expect(def.doorPos).toEqual({ x: -38.65, z: -103.75 });
     }
     expect(DUNGEONS.freehold_inn_room.name).toBe('Inn Room');
     expect(DUNGEONS.freehold_cottage.name).toBe('Cottage');
@@ -111,7 +111,7 @@ describe('freehold dungeon defs: registry shape', () => {
     for (const def of [DUNGEONS.freehold_inn_room, DUNGEONS.freehold_cottage]) {
       expect(def.leaveOffset).toBeUndefined();
       const drop = { x: def.doorPos.x, z: def.doorPos.z - 4 };
-      expect(drop).toEqual({ x: -39, z: -108 });
+      expect(drop).toEqual({ x: -38.65, z: -107.75 });
       for (const seed of [1, 7, 42, 99, 1032, 1337, WORLD_SEED, 2_147_483_647]) {
         expect(isBlocked(seed, drop.x, drop.z, PLAYER_BODY_RADIUS), `${def.id} seed ${seed}`).toBe(
           false,
@@ -271,7 +271,7 @@ describe('freehold dungeon defs: fresh Sim boot', () => {
       expect(doorDungeonIds).toContain('hollow_crypt');
       // No door stands at the planned gate spot either: the record's doorPos
       // is only where leaving drops the player.
-      expect(doors.some((d) => d.pos.x === -39 && d.pos.z === -104)).toBe(false);
+      expect(doors.some((d) => d.pos.x === -38.65 && d.pos.z === -103.75)).toBe(false);
     }
   });
 

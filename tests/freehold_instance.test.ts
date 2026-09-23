@@ -619,7 +619,7 @@ describe('leaving', () => {
     expect(e.pos.z).toBeCloseTo(INN.doorPos.z + drop.z, 6);
     // The literal, so a moved door or a new offset re-pins the standability
     // proof in tests/freehold_dungeon_defs.test.ts too.
-    expect({ x: e.pos.x, z: e.pos.z }).toEqual({ x: -39, z: -108 });
+    expect({ x: e.pos.x, z: e.pos.z }).toEqual({ x: -38.65, z: -107.75 });
     expect(dungeonAt(e.pos.x)).toBeNull();
     expect(textEvents(sim.drainEvents())).toEqual([
       { type: 'log', text: INN.leaveText, color: '#b9f', pid },

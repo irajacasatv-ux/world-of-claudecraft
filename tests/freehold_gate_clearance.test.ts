@@ -6,7 +6,8 @@
 // sites failed this: (-14,-92) sat 4.24 yd from Apothecary Lin once v0.44.0
 // moved her, and (-28,-82) cleared every NPC but took the press of two Eastbrook
 // garden beds; a third, (-37,-103.5), passed the presses but dropped a leaving
-// player 1.17 yd from a house corner. This suite holds every fixed interactable
+// player 1.17 yd from a house corner, and a fourth, (-39,-104), 0.25 yd outside
+// the Eastbrook town circle. This suite holds every fixed interactable
 // beyond the SUM of the two reaches, pins the site margins that chose it, then
 // proves the presses through the real ladder in both directions: every point an
 // interactable answers answers the same with the gate added, and every point the
@@ -23,12 +24,23 @@ import { isBlocked } from '../src/sim/colliders';
 import { FARM_PATCHES } from '../src/sim/content/farm_patches';
 import { FREEHOLD_FURNISHER_NPC_ID } from '../src/sim/content/freehold';
 import { ZONE1_ZONE } from '../src/sim/content/zone1';
-import { DUNGEONS, ESCORTS, GATHER_NODES, NPCS, PORTALS, PROPS } from '../src/sim/data';
+import {
+  DUNGEONS,
+  ESCORTS,
+  GATHER_NODES,
+  instanceOrigin,
+  NPCS,
+  PORTALS,
+  PROPS,
+} from '../src/sim/data';
 import { distancePointToObb, EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import {
   FREEHOLD_GATE_INTERACT_RANGE,
   FREEHOLD_GATE_TEMPLATE_ID,
 } from '../src/sim/freehold/gate_rules';
+import { DUNGEON_DOOR_RETURN_INSET } from '../src/sim/instances/dungeons';
+import { isInTownZone } from '../src/sim/professions/focus';
+import { resolveSavedPosExit } from '../src/sim/saved_pos_exit';
 import { Sim } from '../src/sim/sim';
 import { type Entity, INTERACT_RANGE } from '../src/sim/types';
 import { groundHeight, isInWaterBody, roadDistance, WATER_LEVEL } from '../src/sim/world';
@@ -78,7 +90,7 @@ beforeAll(() => {
 
 describe('the Freehold Gate site', () => {
   it('stands at its measured site, spawned there on every lit seed', () => {
-    expect(GATE).toEqual({ x: -39, z: -104 });
+    expect(GATE).toEqual({ x: -38.65, z: -103.75 });
     for (const sim of sims) {
       const spawned = [...sim.entities.values()].find(
         (e) => e.templateId === FREEHOLD_GATE_TEMPLATE_ID,
@@ -160,19 +172,25 @@ describe('the Freehold Gate site', () => {
     expect(segments).toBeGreaterThan(0);
   });
 
-  it('records the one known limit: the drop sits just outside the Eastbrook town circle', () => {
-    // The gate is inside the 26 yd town circle (isInTownZone), the drop 4 yd
-    // along -z is 0.25 yd outside it, so Town Focus answers not_in_town until
-    // the player's first step. A 0.05 yd search found a band of cells that
-    // puts the drop inside, e.g. (-38.7,-104) with the drop 0.037 yd in, but
-    // only at the other rules' thresholds (3.5 to 3.55 yd collider-free against
-    // this site's 3.8); a leave offset cannot move the drop alone, because the
-    // saved-inside rejoin ignores leaveOffset (src/sim/saved_pos_exit.ts). This
-    // pin makes any change to the trade visible.
+  it('keeps the gate, the live leave and the saved-inside rejoin inside the Eastbrook town circle', () => {
+    // Town Focus answers not_in_town outside the hub circle (isInTownZone), so a
+    // player who has just left their home must land inside it. The previous
+    // site, (-39,-104), dropped them 0.25 yd outside. Every arrival is driven
+    // through its own code: the leave inset and the saved-inside rejoin.
+    for (const id of ['freehold_inn_room', 'freehold_cottage']) {
+      const def = DUNGEONS[id];
+      const leave = def.leaveOffset ?? { x: 0, z: -DUNGEON_DOOR_RETURN_INSET };
+      const drop = { x: def.doorPos.x + leave.x, z: def.doorPos.z + leave.z };
+      const inside = instanceOrigin(def.index, 0);
+      const rejoin = resolveSavedPosExit({ x: inside.x, z: inside.z }).pos!;
+      for (const at of [GATE, drop, rejoin])
+        expect(isInTownZone(at, ZONE1_ZONE), `${id} ${at.x},${at.z}`).toBe(true);
+    }
+    // The return's margin inside the circle, measured: 0.16 yd.
     const hub = ZONE1_ZONE.hub;
-    expect(hub).toMatchObject({ x: -14, z: -100, radius: 26 });
-    expect(dist(GATE, hub)).toBeLessThanOrEqual(hub.radius);
-    expect(dist({ x: GATE.x, z: GATE.z - 4 }, hub)).toBeCloseTo(26.249, 3);
+    expect(
+      hub.radius - dist({ x: GATE.x, z: GATE.z - DUNGEON_DOOR_RETURN_INSET }, hub),
+    ).toBeCloseTo(0.1605, 3);
   });
 
   it('holds every NPC (authored and live, the lit-only furnisher included) over 11 yd away', () => {
@@ -187,9 +205,9 @@ describe('the Freehold Gate site', () => {
       ...liveNpcs.map((e) => ({ id: e.templateId, d: dist(e.pos, GATE) })),
     ].filter((row) => row.d <= NPC_CLEARANCE);
     expect(near).toEqual([]);
-    // Nearest today, measured: Cook Marlow at 12.31 yd.
+    // Nearest today, measured: Cook Marlow at 12.19 yd.
     const nearest = Math.min(...authored.map((n) => dist(n.pos, GATE)));
-    expect(nearest).toBeCloseTo(12.314, 3);
+    expect(nearest).toBeCloseTo(12.185, 3);
   });
 
   it('holds every garden bed and gather node over 10 yd away, and every escort post over 13', () => {

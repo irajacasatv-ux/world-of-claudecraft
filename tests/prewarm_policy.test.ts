@@ -40,6 +40,7 @@ import {
   FREEHOLD_GATE_INTERACT_RANGE,
   FREEHOLD_GATE_TEMPLATE_ID,
 } from '../src/sim/freehold/gate_rules';
+import { DUNGEON_DOOR_RETURN_INSET } from '../src/sim/instances/dungeons';
 import { resolveSavedPosExit } from '../src/sim/saved_pos_exit';
 import { codeWithoutLineComments } from './helpers/code_without_line_comments';
 
@@ -1503,7 +1504,7 @@ describe('mandatory interaction-landmark prewarm', () => {
     const real = { ...gate, pos: { ...site } };
     for (const id of ['freehold_inn_room', 'freehold_cottage']) {
       const def = DUNGEONS[id];
-      const leave = def.leaveOffset ?? { x: 0, z: -4 };
+      const leave = def.leaveOffset ?? { x: 0, z: -DUNGEON_DOOR_RETURN_INSET };
       const drop = { x: def.doorPos.x + leave.x, z: def.doorPos.z + leave.z };
       const inside = instanceOrigin(def.index, 0);
       const rejoin = resolveSavedPosExit({ x: inside.x, z: inside.z }).pos!;

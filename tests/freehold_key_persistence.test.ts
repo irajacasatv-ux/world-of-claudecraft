@@ -128,7 +128,7 @@ describe.each(['inn_room', 'cottage'] as const)('%s Hearth Key character JSON', 
     expect(keyRows(restored.sim.meta(restored.pid)!.inventory)).toEqual([
       { itemId: 'hearth_key', count: 1 },
     ]);
-    expect(player.pos).toEqual(restored.sim.groundPos(-39, -108));
+    expect(player.pos).toEqual(restored.sim.groundPos(-38.65, -107.75));
     expect(dungeonAt(player.pos.x)).toBeNull();
     expect(restored.sim.ctx.instanceClaimIdAt(player.pos)).toBeNull();
     expect(isBlocked(42, player.pos.x, player.pos.z, 0.5)).toBe(false);

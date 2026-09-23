@@ -5,7 +5,7 @@ import { FREEHOLD_ENTRY, FREEHOLD_EXIT } from './layouts';
 // Owner-keyed, combat-free rooms share the authored quay service. No ordinary
 // overworld door, finder activity or loot object is constructed for a home.
 // The shared exit and saved-inside rejoin inset is 4 yards south of this site,
-// on open ground at (-39,-108) off the east road, across from the inn door.
+// on open ground at (-38.65,-107.75) off the east road, across from the inn door.
 const FREEHOLD_GATE_DOOR_POS = EASTBROOK_LAYOUT.services.freeholdGate.position;
 
 export const FREEHOLD_INN_ROOM_DUNGEON_ID = 'freehold_inn_room';
