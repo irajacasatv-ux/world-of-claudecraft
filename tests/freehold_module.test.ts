@@ -800,6 +800,31 @@ describe('src/sim/freehold/ source scan', () => {
     ]);
   });
 
+  it('names every client file that reaches gate_rules.ts BY PATH, in CLAUDE.md', () => {
+    // The client half of the same exhaustive list: derived from every non-sim
+    // source under src/, so a new render or UI importer reds until it is named.
+    const guide = readFileSync(join(dir, 'CLAUDE.md'), 'utf8');
+    const start = guide.indexOf('SECOND, the CLIENT modules');
+    const end = guide.indexOf('- Design:', start);
+    expect(start, 'the client exception paragraph must be findable').toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const paragraph = guide.slice(start, end);
+    const src = join(__dirname, '..', 'src');
+    const importers = tsFilesUnder(src)
+      .filter(({ file }) => !file.startsWith('sim/'))
+      .filter(({ full }) =>
+        /from '[./]*\/sim\/freehold\/gate_rules'/.test(readFileSync(full, 'utf8')),
+      )
+      .map(({ file }) => `src/${file}`)
+      .sort();
+    expect(importers).toContain('src/render/pick_resolution.ts');
+    expect(importers.length).toBeGreaterThan(6);
+    for (const importer of importers) expect(paragraph, importer).toContain(`\`${importer}\``);
+    // And no name the tree no longer backs.
+    const named = [...paragraph.matchAll(/`(src\/(?!sim\/)[a-z_/]+\.ts)`/g)].map((m) => m[1]);
+    expect(named.sort()).toEqual(importers);
+  });
+
   it('names every server file that reaches these leaves BY PATH, in CLAUDE.md', () => {
     // The directory's own rule says the exception list is EXHAUSTIVE and that an
     // importer added without a line there is drift by definition, and a prose
@@ -830,7 +855,7 @@ describe('src/sim/freehold/ source scan', () => {
     // false claim it was written for. The window is asserted below so a rewrite
     // that moves the paragraph reds instead of emptying the check.
     const first = guide.indexOf('FIRST, the SERVER');
-    const second = guide.indexOf('SECOND, four CLIENT modules');
+    const second = guide.indexOf('SECOND, the CLIENT modules');
     expect(first, 'the server exception paragraph must be findable').toBeGreaterThan(-1);
     expect(second).toBeGreaterThan(first);
     const paragraph = guide.slice(first, second);

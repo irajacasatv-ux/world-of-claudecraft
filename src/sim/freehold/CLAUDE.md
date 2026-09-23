@@ -326,13 +326,17 @@ carries an opaque plot id only.
   reaches `gate_rules.ts` only, as `server/freehold_wire.ts` does, for the one
   item id the dark-realm gate, the jail gate and the coordinator's dispatch key
   on, which the sim dispatches on by use type rather than by id.
-  SECOND, four CLIENT modules import `gate_rules.ts` by path for its value
+  SECOND, the CLIENT modules import `gate_rules.ts` by path for its value
   constants: `src/ui/hud/housing/gate_prompt_controller.ts`,
-  `src/ui/hud/housing/hearth_key_tooltip.ts`, `src/game/nearby_interaction.ts`
-  and `src/game/interactions.ts`. Routing those through the barrel would pull
-  `commands.ts`, `instance.ts` and `persisted.ts` into the client bundle for a
-  handful of numbers, so `gate_rules.ts` is licensed here as a client-safe
-  leaf.
+  `src/ui/hud/housing/hearth_key_tooltip.ts`, `src/game/nearby_interaction.ts`,
+  `src/game/nearby_interaction_core.ts`, `src/game/interactions.ts`, and the
+  render cores that draw, pick and prewarm the gate:
+  `src/render/delve_interactable_visibility_core.ts`,
+  `src/render/pick_resolution.ts` and `src/render/prewarm_policy.ts`. Routing
+  those through the barrel would pull `commands.ts`, `instance.ts` and
+  `persisted.ts` into the client bundle for a handful of numbers, so
+  `gate_rules.ts` is licensed here as a client-safe leaf; the list is derived
+  and pinned by `tests/freehold_module.test.ts`.
 - Design: `docs/prd/woc/freeholds-and-guildhalls-research.md` (the research
   and the decision record it cites).
 - Cover changes in `tests/freehold_module.test.ts` (the dark-host pins: null
