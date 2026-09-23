@@ -2,11 +2,13 @@ import { runInNewContext } from 'node:vm';
 import type { Page } from 'puppeteer-core';
 import { describe, expect, it } from 'vitest';
 import {
+  FREEHOLD_GATE_STANCE,
   freeholdInteriorPerfFailures,
   leaveFreeholdThroughExit,
   sampleFreeholdInterior,
   walkFreeholdRouteTo,
 } from '../scripts/freehold_interior_route.mjs';
+import { FREEHOLD_GATE_INTERACT_RANGE } from '../src/sim/freehold/gate_rules';
 
 const boundary = (frames: number) => ({
   frames,
@@ -272,4 +274,12 @@ it('leaves through the physical exit with read-only __game observations', async 
   await leaveFreeholdThroughExit(page);
   expect(events).toContain('down:w');
   expect(events).toContain('up:w');
+});
+
+it('holds the capture stance inside the gate reach, walk tolerance included', () => {
+  // walkFreeholdRouteTo stops within 0.7 yd of its target, so the stance plus
+  // that tolerance must still reach the gate, or the press opens nothing.
+  const offset = Math.hypot(FREEHOLD_GATE_STANCE.dx, FREEHOLD_GATE_STANCE.dz);
+  expect(offset).toBeCloseTo(4.123, 3);
+  expect(offset + 0.7).toBeLessThan(FREEHOLD_GATE_INTERACT_RANGE);
 });

@@ -59,6 +59,8 @@ const sourcePaths = [
   'scripts/enter_offline_game.mjs',
   'src/sim/freehold/gate_rules.ts',
   'src/render/entity_view_policy_core.ts',
+  'src/render/prewarm_policy.ts',
+  'docs/freeholds/art/space-measurements.json',
 ];
 const runtimePaths = [
   'src',
@@ -73,15 +75,6 @@ const runtimePaths = [
   'vite.config.ts',
 ];
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
-// The authored gate site, as the measurements record states it (pinned equal to
-// EASTBROOK_LAYOUT by tests/freehold_layouts.test.ts), and the tour's stance off it.
-const gateSite = JSON.parse(
-  fs.readFileSync(path.join(root, 'docs/freeholds/art/space-measurements.json'), 'utf8'),
-).gate.position;
-const gateStance = {
-  x: gateSite[0] + FREEHOLD_GATE_STANCE.dx,
-  z: gateSite[1] + FREEHOLD_GATE_STANCE.dz,
-};
 // The evidence directory is excluded from Biome scans. Use an in-root JSON stdin
 // path so normalized copies follow the repository formatter without touching raw producers.
 const formatted = (value) =>
@@ -119,6 +112,15 @@ try {
   for (const name of allowed.filter((name) => name !== 'baseline-url'))
     requireEvidence(options[name], `Missing --${name}`);
 
+  // The authored gate site, as the measurements record states it (pinned equal to
+  // EASTBROOK_LAYOUT by tests/freehold_layouts.test.ts, and sealed below), and the
+  // tour's stance off it.
+  const gateSite = read(path.join(root, 'docs/freeholds/art/space-measurements.json')).value.gate
+    .position;
+  const gateStance = {
+    x: gateSite[0] + FREEHOLD_GATE_STANCE.dx,
+    z: gateSite[1] + FREEHOLD_GATE_STANCE.dz,
+  };
   const pending = new Map();
   const captures = [];
   const rawFiles = [];

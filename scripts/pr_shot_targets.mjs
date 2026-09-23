@@ -6,7 +6,7 @@
 // Adding coverage is one entry here, not a new script. Keep recipes offline-only (they
 // drive window.__game directly: sim.addItem, hud.toggleBags/toggleMap, sim.player.pos).
 
-import { dismissEntryOverlays } from './enter_offline_game.mjs';
+import { dismissEntryOverlays, entryOverlayPass } from './enter_offline_game.mjs';
 import { freeholdReviewTargets } from './lib/pr_shot_freeholds.mjs';
 import { masterwroughtReviewTargets } from './lib/pr_shot_masterwrought.mjs';
 
@@ -19,12 +19,13 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // The tutorial island's one-shot arrival greeting (#tutorial-greeting) spawns a
 // beat after the reveal and sits over every window; a panel shot taken under it
 // shows the greeting, not the panel. Wait for it briefly and dismiss it.
+// Both greeting helpers decline through the shared entry pass, never a
+// greeting's first button (on the ferry note that button accepts golden
+// guidance), then drop the node.
 async function dismissArrivalGreeting(page) {
   if (await pollForSize(page, '#tutorial-greeting', 4, 500)) {
-    await page.evaluate(() => {
-      document.querySelector('#tutorial-greeting button')?.click();
-      document.querySelector('#tutorial-greeting')?.remove();
-    });
+    await page.evaluate(entryOverlayPass);
+    await page.evaluate(() => document.querySelector('#tutorial-greeting')?.remove());
     await wait(200);
   }
 }
@@ -390,7 +391,11 @@ async function openMarketBrowse(page) {
 // its own button, the way a player does, so it never sits over the clip.
 async function openGameMenu(page) {
   await page.evaluate(() => {
-    document.querySelector('#tutorial-greeting button')?.click();
+    document
+      .querySelector(
+        '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
+      )
+      ?.click();
     const el = document.querySelector('#options-menu');
     if (el) el.style.display = 'none';
     window.__game?.hud?.toggleOptionsMenu?.();
@@ -626,12 +631,10 @@ export async function seedLowGraphicsPreset(page) {
  *  beats after entry and would overlap (or swallow the clicks of) any staged
  *  window shot. Click its own confirm so the dismissal is the real path. */
 async function dismissTutorialGreeting(page) {
+  await page.evaluate(entryOverlayPass);
   await page.evaluate(() => {
-    for (const id of ['tutorial-greeting', 'profession-tutorial']) {
-      const popup = document.getElementById(id);
-      popup?.querySelector('button')?.click();
-      popup?.remove();
-    }
+    for (const id of ['tutorial-greeting', 'profession-tutorial'])
+      document.getElementById(id)?.remove();
   });
   await wait(200);
 }
@@ -2412,7 +2415,11 @@ export const TARGETS = [
       // professions target's idiom) so the frame shows the board alone.
       for (let i = 0; i < 6; i++) {
         await page.evaluate(() => {
-          document.querySelector('#tutorial-greeting button')?.click();
+          document
+            .querySelector(
+              '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
+            )
+            ?.click();
           document.querySelector('#tutorial-greeting')?.remove();
           document.querySelector('.tut-skip')?.click();
         });
@@ -3868,7 +3875,11 @@ export const TARGETS = [
       for (let attempt = 0; attempt < 4; attempt++) {
         const cleared = await page.evaluate(() => {
           document.querySelector('button.tut-skip')?.click();
-          for (const btn of document.querySelectorAll('#tutorial-greeting button')) btn.click();
+          document
+            .querySelector(
+              '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
+            )
+            ?.click();
           const up = (sel) => {
             const el = document.querySelector(sel);
             return !!el && getComputedStyle(el).display !== 'none';
@@ -3921,7 +3932,11 @@ export const TARGETS = [
       for (let attempt = 0; attempt < 3; attempt++) {
         const cleared = await page.evaluate(() => {
           document.querySelector('button.tut-skip')?.click();
-          for (const btn of document.querySelectorAll('#tutorial-greeting button')) btn.click();
+          document
+            .querySelector(
+              '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
+            )
+            ?.click();
           const up = (sel) => {
             const el = document.querySelector(sel);
             return !!el && getComputedStyle(el).display !== 'none';
@@ -4171,7 +4186,11 @@ export const TARGETS = [
     variants: [{ key: 'desktop' }],
     async capture(page) {
       await page.evaluate(() => {
-        document.querySelector('#tutorial-greeting button')?.click();
+        document
+          .querySelector(
+            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
+          )
+          ?.click();
         const el = document.querySelector('#options-menu');
         if (el) el.style.display = 'none';
         window.__game?.hud?.toggleOptionsMenu?.();
@@ -4193,7 +4212,11 @@ export const TARGETS = [
     async capture(page) {
       await stageWheelBinds(page);
       await page.evaluate(() => {
-        document.querySelector('#tutorial-greeting button')?.click();
+        document
+          .querySelector(
+            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
+          )
+          ?.click();
         const el = document.querySelector('#options-menu');
         if (el) el.style.display = 'none';
         window.__game?.hud?.toggleOptionsMenu?.();
@@ -4214,7 +4237,11 @@ export const TARGETS = [
     async capture(page) {
       await stageWheelBinds(page);
       await page.evaluate(() => {
-        document.querySelector('#tutorial-greeting button')?.click();
+        document
+          .querySelector(
+            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
+          )
+          ?.click();
       });
       // The per-frame ActionBarPainter rewrites the keycaps on the next update().
       await wait(600);
@@ -4231,7 +4258,11 @@ export const TARGETS = [
     variants: [{ key: 'desktop' }, { key: 'mobile', mobile: true }],
     async capture(page) {
       await page.evaluate(() => {
-        document.querySelector('#tutorial-greeting button')?.click();
+        document
+          .querySelector(
+            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
+          )
+          ?.click();
         const el = document.querySelector('#options-menu');
         if (el) el.style.display = 'none';
         window.__game?.hud?.toggleOptionsMenu?.();
@@ -18798,7 +18829,11 @@ export const TARGETS = [
         }
         // A spawn-side NPC dialog and the zone banners would sit across the
         // keep; the shot is evidence about the world, so hide them.
-        document.querySelector('#tutorial-greeting button')?.click();
+        document
+          .querySelector(
+            '#tutorial-greeting [data-guidance="off"], #tutorial-greeting [data-close], #tutorial-greeting [data-skip]',
+          )
+          ?.click();
         for (const id of [
           'tutorial-greeting',
           'quest-dialog',

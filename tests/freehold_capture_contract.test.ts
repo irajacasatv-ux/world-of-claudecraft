@@ -1,13 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import {
-  copyFileSync,
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -68,6 +61,8 @@ const sourcePaths = [
   'scripts/enter_offline_game.mjs',
   'src/sim/freehold/gate_rules.ts',
   'src/render/entity_view_policy_core.ts',
+  'src/render/prewarm_policy.ts',
+  'docs/freeholds/art/space-measurements.json',
 ];
 const digest = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -204,57 +199,141 @@ describe('Freehold functional capture evidence', () => {
 });
 
 describe('Freehold capture receipt refusal', () => {
-  it.each(['missing image', 'duplicate image', 'wrong low preset'])(
-    'refuses %s before publishing any evidence',
-    (defect) => {
-      const input = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
-      const output = join(input, 'receipt');
-      try {
-        const names = targets.flatMap((target) =>
-          Object.keys(views).map((view) => `${target}-${view}.png`),
-        );
-        const captured = names.map(
-          (name, index) => `${String(index + 1).padStart(2, '0')}-${name}`,
-        );
-        if (defect === 'missing image') captured.pop();
-        if (defect === 'duplicate image') captured[1] = captured[0];
-        writeFileSync(join(input, 'manifest.json'), JSON.stringify({ captured, errors: [] }));
-        if (defect === 'wrong low preset') {
-          copyFileSync(resolve(ROOT, `before-${names[0]}`), join(input, captured[0]));
-          const sidecar = 'evidence-freehold-gate-desktop.json';
-          const evidence = JSON.parse(readFileSync(resolve(ROOT, `before-${sidecar}`), 'utf8'));
-          evidence.settings.graphicsPreset = 2;
-          writeFileSync(join(input, sidecar), JSON.stringify(evidence));
-        }
-        const result = spawnSync(
-          process.execPath,
-          [
-            'scripts/freehold_capture_receipt.mjs',
-            '--before',
-            input,
-            '--after',
-            input,
-            '--performance',
-            join(input, 'performance.json'),
-            '--output',
-            output,
-            '--baseline-root',
-            '.',
-          ],
-          { encoding: 'utf8' },
-        );
-        expect(result.status).toBe(1);
-        expect(result.stderr).toContain(
-          defect === 'missing image'
-            ? 'expected exactly nine producer captures'
-            : defect === 'duplicate image'
-              ? 'expected one producer image'
-              : 'low graphics proof missing',
-        );
-        expect(existsSync(output)).toBe(false);
-      } finally {
-        rmSync(input, { recursive: true, force: true });
+  // A synthetic producer set: the receipt reads only a PNG's signature and IHDR
+  // size, so a 24-byte stub stands in for each frame. Each defect below breaks
+  // exactly one field of one frame, and the valid set is proven to clear every
+  // evidence check first, so each refusal is for the defect it names.
+  const site = JSON.parse(readFileSync('docs/freeholds/art/space-measurements.json', 'utf8')).gate
+    .position as [number, number];
+  const stance = { x: site[0] + FREEHOLD_GATE_STANCE.dx, z: site[1] + FREEHOLD_GATE_STANCE.dz };
+  type Evidence = Record<string, unknown> & {
+    player: { pos: { x: number; z: number }; facing: number };
+  };
+  function png(width: number, height: number): Buffer {
+    const bytes = Buffer.alloc(33);
+    Buffer.from('89504e470d0a1a0a', 'hex').copy(bytes, 0);
+    bytes.writeUInt32BE(13, 8);
+    bytes.write('IHDR', 12, 'ascii');
+    bytes.writeUInt32BE(width, 16);
+    bytes.writeUInt32BE(height, 20);
+    return bytes;
+  }
+  function stage(
+    dir: string,
+    side: 'before' | 'after',
+    edit?: (name: string, e: Evidence) => void,
+  ) {
+    const captured: string[] = [];
+    let index = 1;
+    for (const target of targets)
+      for (const [view, [width, height]] of Object.entries(views)) {
+        const dpr = view === 'desktop' ? 1 : 2;
+        const file = `${String(index++).padStart(2, '0')}-${target}-${view}.png`;
+        captured.push(file);
+        writeFileSync(join(dir, file), png(width * dpr, height * dpr));
+        const gateFrame = target === 'freehold-gate';
+        const evidence: Evidence = {
+          target,
+          variant: view,
+          baseline: side === 'before',
+          viewport: { width, height, dpr },
+          settings: { graphicsPreset: 1, graphicsDefaultApplied: true },
+          rendererTier: 'low',
+          theme: { preset: 'classic' },
+          gpuRenderer: 'ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device))',
+          gpuNoticeVisible: false,
+          promptFitsViewport: true,
+          dismissedOverlays: [],
+          overlaySettlePasses: 3,
+          player: gateFrame
+            ? { pos: { ...stance }, facing: Math.PI }
+            : { pos: { x: 119200, z: -1254 }, facing: 0 },
+          gateDrawn: gateFrame && side === 'after',
+        };
+        edit?.(`${target}-${view}`, evidence);
+        writeFileSync(join(dir, `evidence-${target}-${view}.json`), JSON.stringify(evidence));
       }
-    },
-  );
+    writeFileSync(join(dir, 'manifest.json'), JSON.stringify({ captured, errors: [] }));
+    return captured;
+  }
+  function receipt(before: string, after: string, output: string) {
+    return spawnSync(
+      process.execPath,
+      [
+        'scripts/freehold_capture_receipt.mjs',
+        '--before',
+        before,
+        '--after',
+        after,
+        '--performance',
+        join(before, 'performance.json'),
+        '--output',
+        output,
+        '--baseline-root',
+        '.',
+      ],
+      { encoding: 'utf8' },
+    );
+  }
+  const REFUSALS: Record<string, string> = {
+    'missing image': 'expected exactly nine producer captures',
+    'duplicate image': 'expected one producer image',
+    'wrong low preset': 'low graphics proof missing',
+    'under three settle passes': 'obscured or mismatched capture',
+    'missing settle record': 'obscured or mismatched capture',
+    'off-stance gate frame': 'gate frame is off the gate stance',
+    'unsquared gate frame': 'gate frame is off the gate stance',
+    'undrawn after gate frame': 'after: gate frame is off the gate stance, unsquared, or undrawn',
+  };
+
+  it('clears every evidence check for a valid synthetic set (the positive control)', () => {
+    const root = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
+    try {
+      const [before, after] = [join(root, 'before'), join(root, 'after')];
+      for (const dir of [before, after]) mkdirSync(dir);
+      stage(before, 'before');
+      stage(after, 'after');
+      const result = receipt(before, after, join(root, 'receipt'));
+      // It stops only at the absent performance producer, past every frame.
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('performance.json');
+      for (const message of Object.values(REFUSALS)) expect(result.stderr).not.toContain(message);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it.each(Object.keys(REFUSALS))('refuses %s before publishing any evidence', (defect) => {
+    const root = mkdtempSync(join(tmpdir(), 'freehold-receipt-'));
+    const output = join(root, 'receipt');
+    try {
+      const [before, after] = [join(root, 'before'), join(root, 'after')];
+      for (const dir of [before, after]) mkdirSync(dir);
+      const beforeEdit = (name: string, e: Evidence) => {
+        if (name !== 'freehold-gate-desktop') return;
+        if (defect === 'wrong low preset')
+          (e.settings as { graphicsPreset: number }).graphicsPreset = 2;
+        if (defect === 'under three settle passes') e.overlaySettlePasses = 2;
+        if (defect === 'missing settle record') delete e.overlaySettlePasses;
+        if (defect === 'off-stance gate frame') e.player.pos.x += 3;
+        if (defect === 'unsquared gate frame') e.player.facing = Math.PI - 0.3;
+      };
+      const captured = stage(before, 'before', beforeEdit);
+      stage(after, 'after', (name, e) => {
+        if (defect === 'undrawn after gate frame' && name === 'freehold-gate-desktop')
+          e.gateDrawn = false;
+      });
+      if (defect === 'missing image' || defect === 'duplicate image') {
+        if (defect === 'missing image') captured.pop();
+        else captured[1] = captured[0];
+        writeFileSync(join(before, 'manifest.json'), JSON.stringify({ captured, errors: [] }));
+      }
+      const result = receipt(before, after, output);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(REFUSALS[defect]);
+      expect(existsSync(output)).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

@@ -14,7 +14,10 @@ const SELECTOR: Record<Control, string> = {
   skip: '[data-skip]',
 };
 
-function stage(popups: Partial<Record<'tutorial-greeting' | 'profession-tutorial', Control[]>>) {
+function stage(
+  popups: Partial<Record<'tutorial-greeting' | 'profession-tutorial', Control[]>>,
+  display = 'block',
+) {
   const clicks: string[] = [];
   const popup = (id: string, controls: Control[]) => ({
     // The first button in document order: what the old pass clicked.
@@ -24,7 +27,7 @@ function stage(popups: Partial<Record<'tutorial-greeting' | 'profession-tutorial
       return found ? { click: () => clicks.push(`${id}:${found}`) } : null;
     },
   });
-  vi.stubGlobal('getComputedStyle', () => ({ display: 'block' }));
+  vi.stubGlobal('getComputedStyle', () => ({ display }));
   vi.stubGlobal('document', {
     getElementById: (id: string) => {
       const controls = popups[id as keyof typeof popups];
@@ -73,6 +76,12 @@ describe('entryOverlayPass', () => {
       cameraPromptUp: false,
       greetingUp: false,
     });
+    expect(clicks).toEqual([]);
+  });
+
+  it('ignores a greeting that is present but display:none', () => {
+    const clicks = stage({ 'tutorial-greeting': ['guidance-on', 'guidance-off'] }, 'none');
+    expect(entryOverlayPass().greetingUp).toBe(false);
     expect(clicks).toEqual([]);
   });
 });

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   approachFreeholdGateSite,
   changeFreeholdToCottage,
@@ -12,6 +13,12 @@ import {
   settleFreeholdCaptureNotices,
   settleFreeholdCaptureOverlays,
 } from './freehold_capture_notices.mjs';
+
+// The authored gate site as the measurements record states it.
+const GATE_RECORD = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../../docs/freeholds/art/space-measurements.json',
+);
 
 async function prepare(page, width, height, mobile) {
   await page.setViewport({
@@ -68,11 +75,13 @@ export const freeholdReviewTargets = [
     if (process.env.PR_SHOTS_FREEHOLD_BASELINE === '1') {
       await sailToFreeholdTown(page);
       // The release baseline has neither gate nor room. Walk the after frame's
-      // own approach to the gate site (EASTBROOK_LAYOUT.services.freeholdGate;
-      // tests/freehold_capture_contract.test.ts holds both frames to it) and
+      // own approach to the gate site, read from the sealed measurements record
+      // (pinned equal to EASTBROOK_LAYOUT; the receipt and the capture contract
+      // hold both frames to it) and
       // stand where the after frame stands, so the missing prior surface is
       // explicit in the evidence record.
-      await approachFreeholdGateSite(page, { x: -39, z: -104 });
+      const [x, z] = JSON.parse(fs.readFileSync(GATE_RECORD, 'utf8')).gate.position;
+      await approachFreeholdGateSite(page, { x, z });
     } else {
       await walkToFreeholdGate(page);
       if (scene !== 'gate-own-prompt') {
@@ -129,9 +138,9 @@ export const freeholdReviewTargets = [
         theme: JSON.parse(localStorage.getItem('woc_theme') ?? '{}'),
         player: { pos: { ...p.pos }, facing: p.facing, entrySeq: p.dungeonEntrySeq ?? 0 },
         // Whether the gate's own view drew this frame: its whole ancestor chain
-        // visible and its mid-height inside the camera frustum. A press opens
-        // the prompt whether or not the arch renders, so the prompt alone
-        // cannot prove the arch is on screen.
+        // visible and its mid-height inside the camera frustum and clear of the
+        // prompt's box. A press opens the prompt whether or not the arch
+        // renders, so the prompt alone cannot prove the arch is on screen.
         gateDrawn: (() => {
           const gate = [...g.sim.entities.values()].find((e) => e.templateId === 'freehold_gate');
           const view = gate ? g.renderer.views.get(gate.id) : null;
@@ -143,7 +152,14 @@ export const freeholdReviewTargets = [
             .clone()
             .set(gate.pos.x, gate.pos.y + 2, gate.pos.z)
             .project(camera);
-          return Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1 && ndc.z >= -1 && ndc.z <= 1;
+          if (!(Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1 && ndc.z >= -1 && ndc.z <= 1))
+            return false;
+          // In view is not visible: the prompt must not cover that point either.
+          if (!shown) return true;
+          const box = dialog.getBoundingClientRect();
+          const sx = ((ndc.x + 1) / 2) * innerWidth;
+          const sy = ((1 - ndc.y) / 2) * innerHeight;
+          return !(sx >= box.left && sx <= box.right && sy >= box.top && sy <= box.bottom);
         })(),
         promptVisible: Boolean(shown),
         controls: shown
