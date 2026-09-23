@@ -35,7 +35,7 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH } from './browser_path.mjs';
-import { dismissEntryOverlays, enterOfflineGame } from './enter_offline_game.mjs';
+import { dismissEntryOverlays, enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 import { suppressGpuNotice } from './lib/gpu_notice_suppress.mjs';
 
 const GAME_URL = process.env.GAME_URL ?? 'http://localhost:5173';
@@ -322,13 +322,13 @@ async function awaitWorldPainted(page) {
  *  targeted #quest-dialog, which is a DIFFERENT window and left the greeting up
  *  in a capture that still exited 0 (Bank Storage phase 19). */
 async function dismissTutorialDialog(page) {
-  await page.evaluate(() => {
+  await page.evaluate((decline) => {
     const dlg = document.getElementById('tutorial-greeting');
     if (!dlg || getComputedStyle(dlg).display === 'none') return;
-    const btn = [...dlg.querySelectorAll('button')].at(-1);
+    const btn = dlg.querySelector(decline);
     if (btn) btn.click();
     else dlg.style.display = 'none';
-  });
+  }, GREETING_DECLINE);
   await new Promise((r) => setTimeout(r, 400));
 }
 

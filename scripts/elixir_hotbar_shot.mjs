@@ -13,7 +13,7 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH } from './browser_path.mjs';
-import { dismissEntryOverlays, enterOfflineGame } from './enter_offline_game.mjs';
+import { dismissEntryOverlays, enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 
 const URL = `${process.env.GAME_URL ?? 'http://localhost:5173'}/?gfx=low`;
 const OUT = process.env.SHOT_DIR ?? 'tmp';
@@ -28,10 +28,10 @@ async function sweepOverlays(page, passes = 8) {
   for (let i = 0; i < passes; i++) {
     await dismissEntryOverlays(page);
     await page
-      .evaluate(() => {
+      .evaluate((decline) => {
         const visible = (el) => !!el && getComputedStyle(el).display !== 'none' && !el.hidden;
         const greeting = document.getElementById('tutorial-greeting');
-        if (visible(greeting)) greeting.querySelector('[data-close], [data-skip]')?.click();
+        if (visible(greeting)) greeting.querySelector(decline)?.click();
         for (const id of ['gpu-notice', 'perf-nudge']) {
           const notice = document.getElementById(id);
           if (!visible(notice)) continue;
@@ -41,7 +41,7 @@ async function sweepOverlays(page, passes = 8) {
         }
         const banner = document.querySelector('#banner');
         if (banner) banner.style.opacity = '0';
-      })
+      }, GREETING_DECLINE)
       .catch(() => {});
     await sleep(250);
   }

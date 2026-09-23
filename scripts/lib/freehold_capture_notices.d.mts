@@ -11,7 +11,7 @@ export function settleFreeholdCaptureNotices(
   noticeResolution: FreeholdNoticeResolution;
   dismissedIds: string[];
 }>;
-export function freeholdOverlayPass(): string[];
+export function freeholdOverlayPass(decline: string): string[];
 export function settleFreeholdCaptureOverlays(
   page: Pick<Page, 'evaluate'>,
   options?: { quietPasses?: number; pollMs?: number; maxPasses?: number },

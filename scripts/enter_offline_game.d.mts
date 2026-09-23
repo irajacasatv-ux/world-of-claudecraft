@@ -10,7 +10,7 @@ export interface OfflineEntryOptions {
 
 export function enterOfflineGame(page: unknown, opts?: OfflineEntryOptions): Promise<boolean>;
 export const GREETING_DECLINE: string;
-export function entryOverlayPass(): {
+export function entryOverlayPass(decline: string): {
   introUp: boolean;
   tutorialUp: boolean;
   cameraPromptUp: boolean;

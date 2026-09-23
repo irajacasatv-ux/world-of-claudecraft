@@ -24,7 +24,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 // guidance), then drop the node.
 async function dismissArrivalGreeting(page) {
   if (await pollForSize(page, '#tutorial-greeting', 4, 500)) {
-    await page.evaluate(entryOverlayPass);
+    await page.evaluate(entryOverlayPass, GREETING_DECLINE);
     await page.evaluate(() => document.querySelector('#tutorial-greeting')?.remove());
     await wait(200);
   }
@@ -629,7 +629,7 @@ export async function seedLowGraphicsPreset(page) {
  *  window shot. Decline it through its own control (entryOverlayPass), so the
  *  dismissal is the real path and never accepts golden guidance. */
 async function dismissTutorialGreeting(page) {
-  await page.evaluate(entryOverlayPass);
+  await page.evaluate(entryOverlayPass, GREETING_DECLINE);
   await page.evaluate(() => {
     for (const id of ['tutorial-greeting', 'profession-tutorial'])
       document.getElementById(id)?.remove();

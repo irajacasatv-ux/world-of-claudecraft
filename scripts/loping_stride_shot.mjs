@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH } from './browser_path.mjs';
-import { enterOfflineGame } from './enter_offline_game.mjs';
+import { enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 
 const URL = process.env.GAME_URL ?? 'http://localhost:5173';
 const OUT_PREFIX = process.env.OUT_PREFIX ?? 'tmp/loping-stride';
@@ -39,13 +39,11 @@ await page.evaluateOnNewDocument(() => {
 
 await page.goto(URL, { waitUntil: 'networkidle0', timeout: 45000 });
 await enterOfflineGame(page, { charClass: 'druid', charName: 'Loper' });
-await page.evaluate(() => {
+await page.evaluate((decline) => {
   document.querySelector('.camera-prompt-confirm')?.click();
   document.querySelector('.tut-skip')?.click();
-  document
-    .querySelector('#tutorial-greeting [data-close], #tutorial-greeting [data-skip]')
-    ?.click();
-});
+  document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
+}, GREETING_DECLINE);
 await page.evaluate(() => {
   for (const b of document.querySelectorAll('button'))
     if (b.textContent?.trim() === 'Dismiss') b.click();

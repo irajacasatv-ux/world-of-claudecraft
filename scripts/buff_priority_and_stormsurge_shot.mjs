@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH } from './browser_path.mjs';
-import { enterOfflineGame } from './enter_offline_game.mjs';
+import { enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 
 const URL = process.env.GAME_URL ?? 'http://localhost:5173';
 const OUT_PREFIX = process.env.OUT_PREFIX ?? 'tmp/priority';
@@ -185,15 +185,13 @@ console.log('stormsurgeCheck', stormsurgeCheck);
 // Graphics, Interface, ...) opens Interface, defaulting to its 'general' tab;
 // INTERFACE_TAB_ORDER = ['general', 'frames', 'chat', 'combat'] puts Frames
 // at .opt-tab index 1.
-await page.evaluate(() => {
+await page.evaluate((decline) => {
   const g = window.__game;
   g.sim.entities.get(g.world.playerId).auras.length = 0;
   // Dismiss a tutorial NPC greeting if one popped (e.g. the Ferryman Odo
   // arrival note), so it does not overlap the options panel in the shot.
-  document
-    .querySelector('#tutorial-greeting [data-close], #tutorial-greeting [data-skip]')
-    ?.click();
-});
+  document.getElementById('tutorial-greeting')?.querySelector(decline)?.click();
+}, GREETING_DECLINE);
 await sleep(200);
 const framesTabClicked = await page.evaluate(() => {
   const hud = window.__game?.hud;

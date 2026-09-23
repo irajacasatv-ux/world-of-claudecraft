@@ -2,18 +2,17 @@
 // control it clicks on each spawn greeting. The ferry note's guidance variant
 // leads with "Turn guidance on", so a first-button click accepted golden
 // guidance for every capture that rode the bell; the pass must always decline.
+// The real markup is pinned in tests/greeting_decline.test.ts; this suite drives
+// the pass's own branches over a fake DOM.
 
-import { Window } from 'happy-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { entryOverlayPass, GREETING_DECLINE } from '../scripts/enter_offline_game.mjs';
 
-type Control = 'guidance-on' | 'guidance-off' | 'close' | 'play' | 'skip';
+type Control = 'guidance-on' | 'guidance-off' | 'close';
 const SELECTOR: Record<Control, string> = {
   'guidance-on': '[data-guidance="on"]',
   'guidance-off': '[data-guidance="off"]',
   close: '[data-close]',
-  play: '[data-play]',
-  skip: '[data-skip]',
 };
 
 function stage(
@@ -22,10 +21,12 @@ function stage(
 ) {
   const clicks: string[] = [];
   const popup = (id: string, controls: Control[]) => ({
-    // The first button in document order: what the old pass clicked.
+    // A selector list matches the first control in document order that any of
+    // its parts matches, the real querySelector rule; `button` matches the first
+    // control of all, which is what the old pass clicked.
     querySelector: (selector: string) => {
-      if (selector === 'button') return { click: () => clicks.push(`${id}:${controls[0]}`) };
-      const found = controls.find((c) => SELECTOR[c] === selector);
+      const parts = selector.split(',').map((part) => part.trim());
+      const found = controls.find((c) => parts.includes('button') || parts.includes(SELECTOR[c]));
       return found ? { click: () => clicks.push(`${id}:${found}`) } : null;
     },
   });
@@ -45,34 +46,31 @@ afterEach(() => vi.unstubAllGlobals());
 describe('entryOverlayPass', () => {
   it('declines the ferry guidance note even though "on" is its first button', () => {
     const clicks = stage({ 'tutorial-greeting': ['guidance-on', 'guidance-off'] });
-    expect(entryOverlayPass().greetingUp).toBe(true);
+    expect(entryOverlayPass(GREETING_DECLINE).greetingUp).toBe(true);
     expect(clicks).toEqual(['tutorial-greeting:guidance-off']);
   });
 
-  it('closes a plain note and skips, never plays, the play/skip variant', () => {
+  it('closes a plain note through its close control', () => {
     const plain = stage({ 'tutorial-greeting': ['close'] });
-    entryOverlayPass();
+    entryOverlayPass(GREETING_DECLINE);
     expect(plain).toEqual(['tutorial-greeting:close']);
-    const choice = stage({ 'tutorial-greeting': ['play', 'skip'] });
-    entryOverlayPass();
-    expect(choice).toEqual(['tutorial-greeting:skip']);
   });
 
   it('closes the professions tutorial through its close control', () => {
     const clicks = stage({ 'profession-tutorial': ['close'] });
-    entryOverlayPass();
+    entryOverlayPass(GREETING_DECLINE);
     expect(clicks).toEqual(['profession-tutorial:close']);
   });
 
   it('reports a greeting with no declining control as up, and clicks nothing on it', () => {
-    const clicks = stage({ 'tutorial-greeting': ['play'] });
-    expect(entryOverlayPass().greetingUp).toBe(true);
+    const clicks = stage({ 'tutorial-greeting': ['guidance-on'] });
+    expect(entryOverlayPass(GREETING_DECLINE).greetingUp).toBe(true);
     expect(clicks).toEqual([]);
   });
 
   it('reports nothing up and clicks nothing on a quiet screen', () => {
     const clicks = stage({});
-    expect(entryOverlayPass()).toEqual({
+    expect(entryOverlayPass(GREETING_DECLINE)).toEqual({
       introUp: false,
       tutorialUp: false,
       cameraPromptUp: false,
@@ -83,31 +81,7 @@ describe('entryOverlayPass', () => {
 
   it('ignores a greeting that is present but display:none', () => {
     const clicks = stage({ 'tutorial-greeting': ['guidance-on', 'guidance-off'] }, 'none');
-    expect(entryOverlayPass().greetingUp).toBe(false);
+    expect(entryOverlayPass(GREETING_DECLINE).greetingUp).toBe(false);
     expect(clicks).toEqual([]);
-  });
-});
-
-describe('GREETING_DECLINE', () => {
-  // The same markup the HUD renders (tutorial_greeting_window.ts and
-  // profession_tutorial_window.ts): the selector list finds each form's
-  // declining control, and never the accept button that leads the guidance form.
-  it('finds the declining control of every greeting form', () => {
-    const document = new Window().document;
-    const forms: [string, string][] = [
-      [
-        '<button data-guidance="on" class="cd-ok">on</button><button data-guidance="off">off</button>',
-        'off',
-      ],
-      ['<button class="btn cd-ok" data-close>close</button>', 'close'],
-      ['<button data-play>play</button><button data-skip>skip</button>', 'skip'],
-      ['<button class="x-btn" data-close>x</button><button data-close>ok</button>', 'x'],
-    ];
-    expect(GREETING_DECLINE).toBe('[data-guidance="off"], [data-close], [data-skip]');
-    for (const [markup, expected] of forms) {
-      document.body.innerHTML = `<div id="tutorial-greeting">${markup}</div>`;
-      const found = document.getElementById('tutorial-greeting')?.querySelector(GREETING_DECLINE);
-      expect(found?.textContent, markup).toBe(expected);
-    }
   });
 });

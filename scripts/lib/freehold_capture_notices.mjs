@@ -1,3 +1,5 @@
+import { GREETING_DECLINE } from '../enter_offline_game.mjs';
+
 /** Wait for the real software-rendering notice decision, then dismiss visible UI.
  * A preflight DOM check alone races the performance nudge's later first check.
  * @param {import('puppeteer-core').Page} page
@@ -30,16 +32,18 @@ export async function settleFreeholdCaptureNotices(page, mobile) {
 
 /** One in-page pass over the arrival overlays that can cover a Freehold frame:
  * every `.tut-card` (the New Adventurer card, and the noticeboard and realm
- * builder popups that reuse it) through its `.tut-skip`, the Eastbrook ferry
- * note (`#tutorial-greeting`, whose guidance variant is declined, never
- * accepted) and the professions tutorial (`#profession-tutorial`) through
- * their close controls. Located by id, class and data attribute only, never by
- * rendered text, so a localized run finds the same controls. An overlay that is
- * up with none of those controls reports `<name>:no-control` for the caller to
- * refuse. Runs in the page; returns what it found this pass.
+ * builder popups that reuse it) through its `.tut-skip`, and the Eastbrook
+ * ferry note (`#tutorial-greeting`) and the professions tutorial
+ * (`#profession-tutorial`) through their declining control, `decline`
+ * (GREETING_DECLINE from scripts/enter_offline_game.mjs, passed in because
+ * page.evaluate ships this function without its module). Located by id, class
+ * and data attribute only, never by rendered text. An overlay that is up with
+ * no such control reports `<name>:no-control` for the caller to refuse. Runs in
+ * the page; returns what it found this pass.
+ * @param {string} decline
  * @returns {string[]}
  */
-export function freeholdOverlayPass() {
+export function freeholdOverlayPass(decline) {
   const shown = (element) => {
     if (!element) return false;
     const style = getComputedStyle(element);
@@ -56,21 +60,21 @@ export function freeholdOverlayPass() {
   }
   const note = document.getElementById('tutorial-greeting');
   if (shown(note)) {
-    const decline = note.querySelector('[data-guidance="off"]');
-    const close = note.querySelector('[data-close]');
-    if (decline) {
-      decline.click();
-      found.push('tutorial-greeting:guidance-off');
-    } else if (close) {
-      close.click();
-      found.push('tutorial-greeting:close');
+    const control = note.querySelector(decline);
+    if (control) {
+      control.click();
+      found.push(
+        control.hasAttribute('data-guidance')
+          ? 'tutorial-greeting:guidance-off'
+          : 'tutorial-greeting:close',
+      );
     } else found.push('tutorial-greeting:no-control');
   }
   const professions = document.getElementById('profession-tutorial');
   if (shown(professions)) {
-    const close = professions.querySelector('[data-close]');
-    if (close) {
-      close.click();
+    const control = professions.querySelector(decline);
+    if (control) {
+      control.click();
       found.push('profession-tutorial');
     } else found.push('profession-tutorial:no-control');
   }
@@ -91,7 +95,7 @@ export async function settleFreeholdCaptureOverlays(
   const dismissedOverlays = [];
   let quiet = 0;
   for (let pass = 1; pass <= maxPasses; pass++) {
-    const found = await page.evaluate(freeholdOverlayPass);
+    const found = await page.evaluate(freeholdOverlayPass, GREETING_DECLINE);
     const stuck = found.filter((entry) => entry.endsWith(':no-control'));
     if (stuck.length > 0)
       throw new Error(`Freehold capture overlay has no locale-independent control: ${stuck}`);

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { GREETING_DECLINE } from '../scripts/enter_offline_game.mjs';
 import {
   settleFreeholdCaptureNotices,
   settleFreeholdCaptureOverlays,
@@ -140,12 +141,19 @@ function overlayPage(schedule: OverlayScene[]) {
   let pass = 0;
   const clicks: string[] = [];
   let scene: OverlayScene = {};
-  const control = (name: string, onClick: () => void) => ({
+  const control = (name: string, onClick: () => void, attribute?: string) => ({
     click: () => {
       clicks.push(name);
       onClick();
     },
+    hasAttribute: (a: string) => a === attribute,
   });
+  // The pass asks for the declining control through the shared selector list.
+  const asks = (selector: string, part: string) =>
+    selector
+      .split(',')
+      .map((p) => p.trim())
+      .includes(part);
   const styleOf = (vis: Visibility = 'shown') => ({
     display: vis === 'display-none' ? 'none' : 'block',
     visibility: vis === 'visibility-hidden' ? 'hidden' : 'visible',
@@ -169,28 +177,29 @@ function overlayPage(schedule: OverlayScene[]) {
         return {
           vis: scene.noteVis,
           querySelector: (inner: string) => {
-            if (inner === '[data-guidance="off"]' && scene.note === 'guidance')
-              return control('guidance-off', () => (scene.note = undefined));
-            if (inner === '[data-close]' && scene.note === 'close')
-              return control('note-close', () => (scene.note = undefined));
+            if (asks(inner, '[data-guidance="off"]') && scene.note === 'guidance')
+              return control('guidance-off', () => (scene.note = undefined), 'data-guidance');
+            if (asks(inner, '[data-close]') && scene.note === 'close')
+              return control('note-close', () => (scene.note = undefined), 'data-close');
             return null;
           },
         };
       if (id === 'profession-tutorial' && scene.professions)
         return {
           querySelector: (inner: string) =>
-            inner === '[data-close]' && scene.professions === 'close'
-              ? control('professions-close', () => (scene.professions = undefined))
+            asks(inner, '[data-close]') && scene.professions === 'close'
+              ? control('professions-close', () => (scene.professions = undefined), 'data-close')
               : null,
         };
       return null;
     },
   });
   const page = {
-    evaluate: vi.fn(async (fn: () => string[]) => {
+    evaluate: vi.fn(async (fn: (decline: string) => string[], decline: string) => {
+      expect(decline).toBe(GREETING_DECLINE);
       scene = { ...scene, ...(schedule[pass] ?? {}) };
       pass++;
-      return fn();
+      return fn(decline);
     }),
   };
   return {

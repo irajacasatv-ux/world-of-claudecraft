@@ -11,7 +11,7 @@
 import fs from 'node:fs';
 import puppeteer from 'puppeteer-core';
 import { BROWSER_PATH } from './browser_path.mjs';
-import { enterOfflineGame } from './enter_offline_game.mjs';
+import { enterOfflineGame, GREETING_DECLINE } from './enter_offline_game.mjs';
 
 const URL = process.env.GAME_URL ?? 'http://localhost:5199';
 const OUT = process.env.SHOT_PREFIX ?? 'tmp/stealth_horse';
@@ -30,7 +30,7 @@ page.on('pageerror', (e) => errors.push(`PAGEERROR: ${e.message}`));
 
 // Standing capture rule: seed the lowest graphics preset before boot (this is
 // a gameplay proof, not a graphics comparison).
-await page.evaluateOnNewDocument(() => {
+await page.evaluateOnNewDocument((decline) => {
   try {
     localStorage.setItem('woc_settings', JSON.stringify({ graphicsPreset: 1 }));
   } catch {
@@ -43,12 +43,10 @@ await page.evaluateOnNewDocument(() => {
   const closeIfPresent = () => {
     const el = document.getElementById('tutorial-greeting');
     if (!el) return;
-    el.querySelector('[data-close], [data-skip]')?.dispatchEvent(
-      new MouseEvent('click', { bubbles: true }),
-    );
+    el.querySelector(decline)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   };
   new MutationObserver(closeIfPresent).observe(document, { childList: true, subtree: true });
-});
+}, GREETING_DECLINE);
 
 // domcontentloaded, not networkidle0: the Vite dev client keeps an HMR
 // WebSocket open indefinitely, which can starve networkidle0 under load.
