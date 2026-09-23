@@ -3,7 +3,8 @@ import { dismissEntryOverlays } from './enter_offline_game.mjs';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const GPU_CHECKS = ['live-program', 'attach-watchdog', 'gate-timeout'];
-/** The gate's own first draw also must not escape its reveal or touch proof. */
+/** The island-to-gate window (the gate's first draw with the ferry landing and
+ * town arrival around it) also must not escape a reveal or a touch proof. */
 const FIRST_DRAW_CHECKS = [...GPU_CHECKS, 'reveal-watchdog', 'touch-unproven'];
 const ENTER = '#freehold-gate-window [data-focus-key="gate-enter"]';
 
@@ -214,8 +215,11 @@ async function gateFirstDrawMark(page) {
 }
 
 /** Sail in, walk to the stance and open the prompt. The first-draw window runs
- * from the island (the gate's view does not exist yet) until the view has
- * compiled and revealed, so it spans the gate's own first draw. `beforePress`
+ * from the island, where the gate's view does not exist yet, through the ferry
+ * landing, the town arrival and the walk, until the view has compiled and
+ * revealed. The view is created on the town arrival (the landing is inside its
+ * range), so no narrower window can hold the gate's first draw: it is judged
+ * together with the arrival around it. `beforePress`
  * runs at the stance just before the press: a capture settles the arrival
  * overlays there, because dismissing one after the prompt opens takes the
  * prompt's focus with it. */
@@ -430,8 +434,10 @@ export function freeholdInteriorPerfFailures(samples) {
   const finiteRoom = (room) => room && Number.isFinite(room.x) && Number.isFinite(room.z);
   const inn = samples.find((sample) => sample.label === 'freehold-inn-room');
   const cottage = samples.find((sample) => sample.label === 'freehold-cottage');
-  // The gate's own first draw: absent on the island, compiled and revealed at
-  // the end, with no escape of any kind in between.
+  // From the island to the gate's reveal: the view absent at the start,
+  // compiled and revealed at the end, and no escape of any kind in between
+  // (the ferry landing and town arrival included, since the view is created
+  // there).
   const first = inn?.gateFirstDraw;
   if (inn) {
     if (
@@ -442,14 +448,14 @@ export function freeholdInteriorPerfFailures(samples) {
       !Number.isFinite(first.begin.atMs) ||
       !(first.end.atMs > first.begin.atMs)
     )
-      failures.push('gate first draw: missing window from before the view to its reveal');
+      failures.push('island to gate reveal: missing window from before the view to its reveal');
     else
       for (const kind of FIRST_DRAW_CHECKS) {
         const [from, to] = [first.begin.counts?.[kind], first.end.counts?.[kind]];
         if (!counter(from) || !counter(to))
-          failures.push(`gate first draw: missing finite ${kind} counters`);
+          failures.push(`island to gate reveal: missing finite ${kind} counters`);
         else if (to !== from)
-          failures.push(`gate first draw: ${kind} delta ${to - from}, expected zero`);
+          failures.push(`island to gate reveal: ${kind} delta ${to - from}, expected zero`);
       }
   }
   // The leave and the walk back to the gate: from the inn sample's end to the
