@@ -5,6 +5,18 @@
   "baseline": false,
   "noticeResolution": "prior-performance-dismissal",
   "dismissedNotices": [],
+  "dismissedOverlays": [],
+  "overlaySettlePasses": 3,
+  "preSettle": {
+    "notices": {
+      "noticeResolution": "prior-performance-dismissal",
+      "dismissedIds": []
+    },
+    "overlays": {
+      "dismissedOverlays": [],
+      "passes": 3
+    }
+  },
   "viewport": {
     "width": 1180,
     "height": 820,
@@ -15,17 +27,17 @@
   "rendererTier": "low",
   "camera": {
     "position": [
-      -2.4861468856289033,
-      5.206393026719,
-      -90.17348616004429
+      -41.3926610797758,
+      5.276304665191168,
+      -91.29329072032091
     ],
     "quaternion": [
-      -0.11679125137586577,
-      0.6714667730484921,
-      0.10836094573617794,
-      0.7237057977749419
+      -0.1590757203910995,
+      0.05444746475461359,
+      0.008786702500498943,
+      0.9857246992051157
     ],
-    "inputYaw": -1.6456467561514667
+    "inputYaw": -3.0312328489939024
   },
   "settings": {
     "cameraSpeed": 0.7,
@@ -38,6 +50,7 @@
     "terrainDetail": 1,
     "foliageDensity": 1,
     "shaderWarm": 0,
+    "frameRateCap": 0,
     "gpuBackend": 0,
     "effectsQuality": 1,
     "shadowQuality": 1,
@@ -80,9 +93,9 @@
     "uiScale": 1,
     "playerFrameScale": 1,
     "targetFrameScale": 1,
-    "playerFrameWidth": 612,
+    "playerFrameWidth": 278,
     "playerFrameHeight": 15,
-    "targetFrameWidth": 190,
+    "targetFrameWidth": 278,
     "targetFrameHeight": 15,
     "playerFrameHealthText": 3,
     "targetFrameHealthText": 3,
@@ -93,7 +106,9 @@
     "partyFrameSpacing": 4,
     "partyFrameColumns": 1,
     "partyFrameHealthText": 1,
+    "confirmVendorSellMinQuality": 1,
     "partyFrameSort": 0,
+    "eastbrookGuidance": false,
     "buffsLeftToRight": false,
     "debuffsLeftToRight": false,
     "actionBar1Vertical": false,
@@ -160,6 +175,7 @@
     "questTrackerCollapsed": false,
     "deedTrackerCollapsed": false,
     "reliquaryTrackerCollapsed": false,
+    "recipeTrackerCollapsed": false,
     "showReliquaryTracker": true,
     "showItemLevel": false,
     "showSecondaryActionBar": false,
@@ -182,46 +198,89 @@
   },
   "player": {
     "pos": {
-      "x": -13.965126920426291,
-      "y": -0.5749281954886838,
-      "z": -91.03546587333356
+      "x": -42.64716699260919,
+      "y": -0.4984967522226035,
+      "z": -102.6143216669605
     },
-    "facing": -1.6553981633974484,
+    "facing": -3.0691148575128553,
     "entrySeq": 0
   },
   "promptVisible": true,
   "controls": [
     {
       "key": null,
+      "tag": "button",
       "width": 212,
       "height": 40,
-      "fontSize": 16
+      "fontSize": 12,
+      "onTop": true
     },
     {
       "key": null,
+      "tag": "button",
       "width": 212,
       "height": 40,
-      "fontSize": 16
+      "fontSize": 12,
+      "onTop": true
     },
     {
       "key": "gate-home",
+      "tag": "select",
       "width": 432,
       "height": 40,
-      "fontSize": 16
+      "fontSize": 16,
+      "onTop": true
     },
     {
       "key": "gate-enter",
+      "tag": "button",
       "width": 212,
       "height": 40,
-      "fontSize": 12.5
+      "fontSize": 12.5,
+      "onTop": true
     },
     {
       "key": "gate-close",
+      "tag": "button",
       "width": 212,
       "height": 40,
-      "fontSize": 12.5
+      "fontSize": 12.5,
+      "onTop": true
     }
   ],
   "focusKey": null,
-  "promptFitsViewport": true
+  "focusId": "gate-own-tab",
+  "promptFitsViewport": true,
+  "transientOverlays": [],
+  "gateDrawn": true,
+  "gateProbe": {
+    "drawn": true,
+    "reason": null,
+    "points": [
+      {
+        "label": "plinth-left",
+        "sx": 719.8387287766362,
+        "sy": 450.57192489403707,
+        "onScreen": true,
+        "occludedBy": null,
+        "coveredBy": null
+      },
+      {
+        "label": "plinth-right",
+        "sx": 910.6847358061233,
+        "sy": 458.2239866400089,
+        "onScreen": true,
+        "occludedBy": null,
+        "coveredBy": null
+      },
+      {
+        "label": "keystone",
+        "sx": 834.6890484271133,
+        "sy": 260.0730805938585,
+        "onScreen": true,
+        "occludedBy": null,
+        "coveredBy": null
+      }
+    ]
+  }
 }

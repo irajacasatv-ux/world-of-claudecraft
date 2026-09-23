@@ -18,7 +18,6 @@
     "CONSOLE(freehold-gate-desktop): character visual unavailable, skipping view (mob_training_dummy): Error: character asset not preloaded: models/creatures/training_dummy.glb",
     "CONSOLE(freehold-gate-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
     "CONSOLE(freehold-gate-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
-    "CONSOLE(freehold-gate-desktop): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
     "CONSOLE(freehold-gate-compact): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
     "CONSOLE(freehold-gate-compact): Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
     "CONSOLE(freehold-gate-compact): character visual unavailable, skipping view (skel_minion): Error: character asset not preloaded: models/chars/enemies/skeleton_minion.glb",

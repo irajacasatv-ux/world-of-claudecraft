@@ -5,6 +5,9 @@
   "baseline": true,
   "noticeResolution": "prior-performance-dismissal",
   "dismissedNotices": [],
+  "dismissedOverlays": [],
+  "overlaySettlePasses": 3,
+  "preSettle": null,
   "viewport": {
     "width": 874,
     "height": 402,
@@ -15,17 +18,17 @@
   "rendererTier": "low",
   "camera": {
     "position": [
-      -7.724112548180528,
-      5.210729558893861,
-      -100.22564754891604
+      -41.77352956222243,
+      5.2574089975052765,
+      -91.96498812551823
     ],
     "quaternion": [
-      -0.04840829510775446,
-      0.9405521340422173,
-      0.15178579618508475,
-      0.29996565168340783
+      -0.15913202398467302,
+      0.04771359104307456,
+      0.007699993592271764,
+      0.9860735886692203
     ],
-    "inputYaw": -0.6174551109673015
+    "inputYaw": -3.04489316622695
   },
   "settings": {
     "cameraSpeed": 0.7,
@@ -182,15 +185,23 @@
   },
   "player": {
     "pos": {
-      "x": -14.093521052663068,
-      "y": -0.5706893042414682,
-      "z": -90.91894851957764
+      "x": -42.87294851033079,
+      "y": -0.51744427530458,
+      "z": -103.29781387035473
     },
-    "facing": -1.6553981633974484,
+    "facing": -3.0691148575128553,
     "entrySeq": 0
   },
   "promptVisible": false,
   "controls": [],
   "focusKey": null,
-  "promptFitsViewport": true
+  "focusId": null,
+  "promptFitsViewport": true,
+  "transientOverlays": [],
+  "gateDrawn": false,
+  "gateProbe": {
+    "drawn": false,
+    "reason": "no gate entity",
+    "points": []
+  }
 }

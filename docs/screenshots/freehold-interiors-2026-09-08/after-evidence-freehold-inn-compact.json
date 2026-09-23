@@ -5,6 +5,18 @@
   "baseline": false,
   "noticeResolution": "prior-performance-dismissal",
   "dismissedNotices": [],
+  "dismissedOverlays": [],
+  "overlaySettlePasses": 3,
+  "preSettle": {
+    "notices": {
+      "noticeResolution": "prior-performance-dismissal",
+      "dismissedIds": []
+    },
+    "overlays": {
+      "dismissedOverlays": [],
+      "passes": 3
+    }
+  },
   "viewport": {
     "width": 874,
     "height": 402,
@@ -15,9 +27,9 @@
   "rendererTier": "low",
   "camera": {
     "position": [
-      119199.99546655879,
-      5.773452272607273,
-      -1265.3912184201527
+      119199.99999961125,
+      5.7747942547227655,
+      -1265.3908270749312
     ],
     "quaternion": [
       0,
@@ -38,6 +50,7 @@
     "terrainDetail": 1,
     "foliageDensity": 1,
     "shaderWarm": 0,
+    "frameRateCap": 0,
     "gpuBackend": 0,
     "effectsQuality": 1,
     "shadowQuality": 1,
@@ -80,9 +93,9 @@
     "uiScale": 1,
     "playerFrameScale": 1,
     "targetFrameScale": 1,
-    "playerFrameWidth": 612,
+    "playerFrameWidth": 278,
     "playerFrameHeight": 15,
-    "targetFrameWidth": 190,
+    "targetFrameWidth": 278,
     "targetFrameHeight": 15,
     "playerFrameHealthText": 3,
     "targetFrameHealthText": 3,
@@ -93,7 +106,9 @@
     "partyFrameSpacing": 4,
     "partyFrameColumns": 1,
     "partyFrameHealthText": 1,
+    "confirmVendorSellMinQuality": 1,
     "partyFrameSort": 0,
+    "eastbrookGuidance": false,
     "buffsLeftToRight": false,
     "debuffsLeftToRight": false,
     "actionBar1Vertical": false,
@@ -160,6 +175,7 @@
     "questTrackerCollapsed": false,
     "deedTrackerCollapsed": false,
     "reliquaryTrackerCollapsed": false,
+    "recipeTrackerCollapsed": false,
     "showReliquaryTracker": true,
     "showItemLevel": false,
     "showSecondaryActionBar": false,
@@ -192,5 +208,13 @@
   "promptVisible": false,
   "controls": [],
   "focusKey": null,
-  "promptFitsViewport": true
+  "focusId": null,
+  "promptFitsViewport": true,
+  "transientOverlays": [],
+  "gateDrawn": false,
+  "gateProbe": {
+    "drawn": false,
+    "reason": "no gate view",
+    "points": []
+  }
 }
