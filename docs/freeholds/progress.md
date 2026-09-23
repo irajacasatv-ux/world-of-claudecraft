@@ -656,7 +656,7 @@ paired QA PASS (the release sync `a461924855` plus `5f3fff5339..9b21dd61fc`, not
 Current supersession note (06 source implemented, verification pending): the historical
 05 crypt placeholders are now authored `inn_room`/`cottage` layouts. The gate uses the
 canonical Eastbrook service at the retained `(-14,-92)` position, with quay drop
-`(-14,-96)` (SUPERSEDED by the gate move after the v0.44.0 sync: now `(-38.65,-103.75)`, drop
+`(-14,-96)` (SUPERSEDED by the gate move after the v0.44.0 sync, 2026-09-22 to 23: now `(-38.65,-103.75)`, drop
 `(-38.65,-107.75)`; see the 07 release sync v0.44.0 row), explicit sim
 proximity/context confirmation and keyed feedback. The
 Hearth Key adds shared context refusals and the isolated account cooldown. Owner
