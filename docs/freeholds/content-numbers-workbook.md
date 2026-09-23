@@ -430,12 +430,14 @@ record does not claim an authored roof mesh.
 | Closed door panel / reserved swing box | center (0,-6.9), 2.4 wide; X -1.2 to 1.2, Z -7 to -4.6 | same |
 | Camera navigation volume | X -7 to 7, Z -7 to 11, Y 0 to 16 | X -11 to 11, Z -7 to 15, Y 0 to 16 |
 
-The gate is (-37,-103.5), facing 0, off the east road across from the inn door,
+The gate is (-39,-104), facing 0, off the east road across from the inn door,
 more than 11 yards from every NPC and more than 10 from every garden bed, node
-and object. It moved off (-14,-92) at the v0.44.0 sync, when Apothecary Lin moved
-within 4.24 yards of it; the first replacement, (-28,-82), took the press of two
-Eastbrook garden beds. The existing shared 4 yard south return inset lands at
-(-37,-107.5). No custom leave offset is introduced. The gate is a walk-through service marker. The closed ornamental
+and object, with its return point at least 2 yards from any building. It moved
+off (-14,-92) at the v0.44.0 sync, when Apothecary Lin moved within 4.24 yards
+of it; the first replacement, (-28,-82), took the press of two Eastbrook garden
+beds, and the second, (-37,-103.5), dropped a leaving player 1.17 yards from a
+house corner. The existing shared 4 yard south return inset lands at (-39,-108).
+No custom leave offset is introduced. The gate is a walk-through service marker. The closed ornamental
 door is backed by the south structural wall, so no aperture permits walking into
 unfloored space. Its fixed swing reservation and the complete protected corridor
 remain unavailable to future mutable furnishings.

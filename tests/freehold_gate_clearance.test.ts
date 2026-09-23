@@ -5,26 +5,32 @@
 // another interactable's reach hands the press to whichever ranks higher. Two
 // sites failed this: (-14,-92) sat 4.24 yd from Apothecary Lin once v0.44.0
 // moved her, and (-28,-82) cleared every NPC but took the press of two Eastbrook
-// garden beds. This suite holds every fixed interactable beyond the SUM of the
-// two reaches, then proves it through the real ladder in both directions: every
-// point an interactable answers answers the same with the gate added, and every
-// point the gate reaches answers the gate and nothing else without it.
+// garden beds; a third, (-37,-103.5), passed the presses but dropped a leaving
+// player 1.17 yd from a house corner. This suite holds every fixed interactable
+// beyond the SUM of the two reaches, pins the site margins that chose it, then
+// proves the presses through the real ladder in both directions: every point an
+// interactable answers answers the same with the gate added, and every point the
+// gate reaches answers the gate and nothing else without it.
 import { beforeAll, describe, expect, it } from 'vitest';
+import { ESCORT_POST_RADIUS } from '../src/game/escort_interact';
 import { objectInteractionRange } from '../src/game/interactions';
 import {
   type NearbyGatherNode,
   type NearbyInteractionCandidate,
   resolveNearbyInteractionCandidate,
 } from '../src/game/nearby_interaction_core';
+import { isBlocked } from '../src/sim/colliders';
 import { FARM_PATCHES } from '../src/sim/content/farm_patches';
+import { FREEHOLD_FURNISHER_NPC_ID } from '../src/sim/content/freehold';
 import { ESCORTS, GATHER_NODES, NPCS, PROPS } from '../src/sim/data';
-import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
+import { distancePointToObb, EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import {
   FREEHOLD_GATE_INTERACT_RANGE,
   FREEHOLD_GATE_TEMPLATE_ID,
 } from '../src/sim/freehold/gate_rules';
 import { Sim } from '../src/sim/sim';
 import { type Entity, INTERACT_RANGE } from '../src/sim/types';
+import { roadDistance } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
 
 type P = { x: number; z: number };
@@ -35,6 +41,10 @@ const dist = (a: P, b: P) => Math.hypot(a.x - b.x, a.z - b.z);
 // within its own objectInteractionRange. The gate reaches its range inclusive.
 const NPC_CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE + 1;
 const BED_OR_NODE_CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE;
+// An escortee answers the press anywhere within INTERACT_RANGE of it while it
+// stands within ESCORT_POST_RADIUS of its post (escort_interact.ts).
+const ESCORT_CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE + ESCORT_POST_RADIUS;
+const SEEDS = [1, 7, 42, 99, 1032, 1337, WORLD_SEED, 2_147_483_647];
 
 let sims: Sim[];
 // Live entities of BOTH lit seeds for the distance checks; entity ids repeat
@@ -67,7 +77,7 @@ beforeAll(() => {
 
 describe('the Freehold Gate site', () => {
   it('stands at its measured site, spawned there on every lit seed', () => {
-    expect(GATE).toEqual({ x: -37, z: -103.5 });
+    expect(GATE).toEqual({ x: -39, z: -104 });
     for (const sim of sims) {
       const spawned = [...sim.entities.values()].find(
         (e) => e.templateId === FREEHOLD_GATE_TEMPLATE_ID,
@@ -76,31 +86,55 @@ describe('the Freehold Gate site', () => {
     }
     expect(NPC_CLEARANCE).toBe(11);
     expect(BED_OR_NODE_CLEARANCE).toBe(10);
+    expect(ESCORT_CLEARANCE).toBe(13);
+    // The click range the prompt's pointer arm checks is the gate's own reach.
+    expect(objectInteractionRange({ templateId: FREEHOLD_GATE_TEMPLATE_ID })).toBe(
+      FREEHOLD_GATE_INTERACT_RANGE,
+    );
+  });
+
+  it('keeps the margins that chose the site: off the road, collider-free, drop clear of buildings', () => {
+    // The world's own "off road" placement threshold is roadDistance >= 5; the
+    // site keeps half a yard more, and 3.5 yd of collider-free ground (the
+    // arch's plinths stand 1.7 either side, a streetlamp is the nearest solid).
+    expect(roadDistance(GATE.x, GATE.z)).toBeGreaterThanOrEqual(5.5);
+    const drop = { x: GATE.x, z: GATE.z - 4 };
+    for (const seed of SEEDS) {
+      expect(isBlocked(seed, GATE.x, GATE.z, 3.5), `seed ${seed}`).toBe(false);
+    }
+    // A leaving player lands at least 2 yd from every building footprint.
+    const gaps = EASTBROOK_LAYOUT.buildings.map((b) => distancePointToObb(drop, b.footprint));
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(2);
   });
 
   it('holds every NPC (authored and live, the lit-only furnisher included) over 11 yd away', () => {
     const authored = Object.values(NPCS);
-    // Every authored NPC that spawns on a lit host is live on both seeds.
+    // Every authored NPC that spawns on a lit host is live on both seeds, the
+    // lit-only furnisher named directly (a count alone cannot prove it).
     const spawnable = authored.filter((n) => !n.dynamic).length;
     expect(liveNpcs.length).toBeGreaterThanOrEqual(2 * spawnable);
+    expect(liveNpcs.filter((e) => e.templateId === FREEHOLD_FURNISHER_NPC_ID)).toHaveLength(2);
     const near = [
       ...authored.map((n) => ({ id: n.id, d: dist(n.pos, GATE) })),
       ...liveNpcs.map((e) => ({ id: e.templateId, d: dist(e.pos, GATE) })),
     ].filter((row) => row.d <= NPC_CLEARANCE);
     expect(near).toEqual([]);
-    // Nearest today, measured: Fisherman Brandt at 12.01 yd.
+    // Nearest today, measured: Cook Marlow at 12.31 yd.
     const nearest = Math.min(...authored.map((n) => dist(n.pos, GATE)));
-    expect(nearest).toBeCloseTo(12.0104, 3);
+    expect(nearest).toBeCloseTo(12.314, 3);
   });
 
-  it('holds every garden bed, gather node and escort post over 10 yd away', () => {
+  it('holds every garden bed and gather node over 10 yd away, and every escort post over 13', () => {
     const beds = FARM_PATCHES.flatMap((p) => p.beds);
     expect(beds.length).toBeGreaterThan(0);
     for (const bed of beds) expect(dist(bed, GATE), bed.id).toBeGreaterThan(BED_OR_NODE_CLEARANCE);
+    expect(GATHER_NODES.length).toBeGreaterThan(0);
     for (const node of GATHER_NODES)
       expect(dist(node.pos, GATE), node.id).toBeGreaterThan(BED_OR_NODE_CLEARANCE);
-    for (const escort of Object.values(ESCORTS))
-      expect(dist(escort.start, GATE), escort.id).toBeGreaterThan(BED_OR_NODE_CLEARANCE);
+    const escorts = Object.values(ESCORTS);
+    expect(escorts.length).toBeGreaterThan(0);
+    for (const escort of escorts)
+      expect(dist(escort.start, GATE), escort.id).toBeGreaterThan(ESCORT_CLEARANCE);
   });
 
   it('holds every other object beyond both reaches, and every delve marker beyond an NPC reach', () => {
@@ -111,8 +145,9 @@ describe('the Freehold Gate site', () => {
         : FREEHOLD_GATE_INTERACT_RANGE + objectInteractionRange(object);
       expect(dist(object.pos, GATE), object.templateId).toBeGreaterThan(clearance);
     }
-    for (const marker of PROPS.delveMarkers ?? [])
-      expect(dist(marker, GATE)).toBeGreaterThan(NPC_CLEARANCE);
+    const markers = PROPS.delveMarkers ?? [];
+    expect(markers.length).toBeGreaterThan(0);
+    for (const marker of markers) expect(dist(marker, GATE)).toBeGreaterThan(NPC_CLEARANCE);
   });
 });
 
@@ -124,15 +159,22 @@ describe('the Freehold Gate through the real press ladder', () => {
   const nearestOf = <T>(items: T[], at: (item: T) => P) =>
     [...items].sort((a, b) => dist(at(a), GATE) - dist(at(b), GATE)).slice(0, K);
   const nodes: NearbyGatherNode[] = GATHER_NODES;
-  function press(point: P, withGate: boolean, locals: Entity[]): NearbyInteractionCandidate | null {
+  function press(
+    point: P,
+    withGate: boolean,
+    locals: Entity[],
+    // A released ghost whose corpse is bound to an owner room: the one dead
+    // player the gate still presents to (the corpse run).
+    ghost = false,
+  ): NearbyInteractionCandidate | null {
     const player = {
       id: 1,
       kind: 'player',
       templateId: 'player',
       pos: { x: point.x, y: 0, z: point.z },
-      dead: false,
-      ghost: false,
-      corpseInstanceId: null,
+      dead: ghost,
+      ghost,
+      corpseInstanceId: ghost ? 7 : null,
     } as unknown as Entity;
     const entities = new Map<number, Entity>([[player.id, player]]);
     for (const e of locals) entities.set(e.id, e);
@@ -168,25 +210,43 @@ describe('the Freehold Gate through the real press ladder', () => {
       (b) => b,
     );
     const nearNodes = nearestOf(GATHER_NODES, (n) => n.pos);
-    const targets: { label: string; at: P; reach: number }[] = [
-      ...npcs.map((e) => ({ label: e.templateId, at: e.pos, reach: INTERACT_RANGE + 1 })),
-      ...objects.map((e) => ({ label: e.templateId, at: e.pos, reach: objectInteractionRange(e) })),
-      ...beds.map((b) => ({ label: b.id, at: b, reach: INTERACT_RANGE })),
-      ...nearNodes.map((n) => ({ label: n.id, at: n.pos, reach: INTERACT_RANGE })),
+    type Group = 'npc' | 'object' | 'bed' | 'node';
+    const targets: { group: Group; label: string; at: P; reach: number }[] = [
+      ...npcs.map((e) => ({
+        group: 'npc' as const,
+        label: e.templateId,
+        at: e.pos,
+        reach: INTERACT_RANGE + 1,
+      })),
+      ...objects.map((e) => ({
+        group: 'object' as const,
+        label: e.templateId,
+        at: e.pos,
+        reach: objectInteractionRange(e),
+      })),
+      ...beds.map((b) => ({ group: 'bed' as const, label: b.id, at: b, reach: INTERACT_RANGE })),
+      ...nearNodes.map((n) => ({
+        group: 'node' as const,
+        label: n.id,
+        at: n.pos,
+        reach: INTERACT_RANGE,
+      })),
     ];
-    let answered = 0;
+    const answered: Record<Group, number> = { npc: 0, object: 0, bed: 0, node: 0 };
     for (const target of targets) {
       for (const point of disc(target.at, target.reach)) {
         const without = key(press(point, false, locals));
         if (without === 'none') continue;
-        answered++;
+        answered[target.group]++;
         expect(key(press(point, true, locals)), `${target.label} at ${point.x},${point.z}`).toBe(
           without,
         );
       }
     }
-    // Non-vacuous: the sampled discs really answered presses.
-    expect(answered).toBeGreaterThan(5000);
+    // Non-vacuous PER GROUP: each group's discs really answered presses (a world
+    // that lost its beds or nodes would otherwise skip every such point).
+    for (const group of Object.keys(answered) as Group[])
+      expect(answered[group], group).toBeGreaterThan(3000);
   });
 
   it('answers the gate, and nothing else, everywhere inside its own reach', () => {
@@ -199,9 +259,13 @@ describe('the Freehold Gate through the real press ladder', () => {
     for (const point of points) {
       // No standing point the gate reaches reaches anything else: without the
       // gate the press finds nothing there, so the gate can shadow no one and
-      // no higher rung can shadow it.
-      expect(key(press(point, false, locals)), `${point.x},${point.z} without`).toBe('none');
-      expect(key(press(point, true, locals)), `${point.x},${point.z}`).toBe(`object:${gate.id}`);
+      // no higher rung can shadow it. The same holds for a ghost on its
+      // corpse run, whose only other rung is a spirit healer.
+      for (const ghost of [false, true]) {
+        const at = `${point.x},${point.z}${ghost ? ' ghost' : ''}`;
+        expect(key(press(point, false, locals, ghost)), `${at} without`).toBe('none');
+        expect(key(press(point, true, locals, ghost)), at).toBe(`object:${gate.id}`);
+      }
     }
   });
 });
