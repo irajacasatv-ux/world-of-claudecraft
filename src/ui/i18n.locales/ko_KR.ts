@@ -16953,11 +16953,11 @@ export const ko_KR: Partial<Record<TranslationKey, string>> = {
   'worldContent.realmBuilderMonumentName': '왕국 건설자 기념비',
   'entities.dungeons.freehold_inn_room.name': '여관 객실',
   'entities.dungeons.freehold_inn_room.enterText': '여관 계단을 올라 자신의 방으로 들어갑니다.',
-  'entities.dungeons.freehold_inn_room.leaveText': '방문을 잠그고 다시 부두로 나옵니다.',
+  'entities.dungeons.freehold_inn_room.leaveText': '방문을 잠그고 다시 마을로 나옵니다.',
   'entities.dungeons.freehold_cottage.name': '오두막',
   'entities.dungeons.freehold_cottage.enterText':
     '정원 문을 밀어 열고 자신의 오두막으로 들어갑니다.',
-  'entities.dungeons.freehold_cottage.leaveText': '오두막 문의 빗장을 걸고 다시 부두로 돌아갑니다.',
+  'entities.dungeons.freehold_cottage.leaveText': '오두막 문의 빗장을 걸고 다시 마을로 돌아갑니다.',
   'hudChrome.talkingHead.label': '대화',
   'hudChrome.hubLesson.target': '먼저 허수아비를 대상으로 삼으세요.',
   'hudChrome.hubLesson.openWindow': '{meters}을(를) 여세요.',

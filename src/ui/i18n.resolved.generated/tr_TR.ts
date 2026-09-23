@@ -20958,12 +20958,12 @@ export const tr_TR: EnTranslations = {
       "freehold_inn_room": {
         "name": "Inn Room",
         "enterText": "You climb the inn stairs and let yourself into your room.",
-        "leaveText": "You lock the room behind you and step back out onto the quay."
+        "leaveText": "You lock the room behind you and step back out into town."
       },
       "freehold_cottage": {
         "name": "Cottage",
         "enterText": "You push open the garden gate and step into your own cottage.",
-        "leaveText": "You latch the cottage gate behind you and return to the quay."
+        "leaveText": "You latch the cottage gate behind you and return to town."
       },
       "drowned_temple": {
         "name": "Boğulmuş Tapınak",

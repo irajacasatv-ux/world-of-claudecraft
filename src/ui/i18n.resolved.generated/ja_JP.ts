@@ -20958,12 +20958,12 @@ export const ja_JP: EnTranslations = {
       "freehold_inn_room": {
         "name": "宿屋の部屋",
         "enterText": "宿屋の階段を上り、自分の部屋へ入った。",
-        "leaveText": "部屋に鍵をかけ、波止場へ戻った。"
+        "leaveText": "部屋に鍵をかけ、町へ戻った。"
       },
       "freehold_cottage": {
         "name": "コテージ",
         "enterText": "庭の門を押し開け、自分のコテージへ入った。",
-        "leaveText": "コテージの門に掛け金を下ろし、波止場へ戻った。"
+        "leaveText": "コテージの門に掛け金を下ろし、町へ戻った。"
       },
       "drowned_temple": {
         "name": "溺れし神殿",

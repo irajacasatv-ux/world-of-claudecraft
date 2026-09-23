@@ -2,7 +2,7 @@ import { EASTBROOK_LAYOUT } from '../../eastbrook_layout';
 import type { DungeonDef } from '../../types';
 import { FREEHOLD_ENTRY, FREEHOLD_EXIT } from './layouts';
 
-// Owner-keyed, combat-free rooms share the authored quay service. No ordinary
+// Owner-keyed, combat-free rooms share the authored Freehold Gate service. No ordinary
 // overworld door, finder activity or loot object is constructed for a home.
 // The shared exit and saved-inside rejoin inset is 4 yards south of this site,
 // on open ground at (-38.65,-107.75) off the east road, across from the inn door.
@@ -26,7 +26,7 @@ export const FREEHOLD_DUNGEON_DEFS: Record<string, DungeonDef> = {
     interior: 'inn_room',
     suggestedPlayers: 1,
     enterText: 'You climb the inn stairs and let yourself into your room.',
-    leaveText: 'You lock the room behind you and step back out onto the quay.',
+    leaveText: 'You lock the room behind you and step back out into town.',
   },
   [FREEHOLD_COTTAGE_DUNGEON_ID]: {
     id: FREEHOLD_COTTAGE_DUNGEON_ID,
@@ -42,6 +42,6 @@ export const FREEHOLD_DUNGEON_DEFS: Record<string, DungeonDef> = {
     interior: 'cottage',
     suggestedPlayers: 1,
     enterText: 'You push open the garden gate and step into your own cottage.',
-    leaveText: 'You latch the cottage gate behind you and return to the quay.',
+    leaveText: 'You latch the cottage gate behind you and return to town.',
   },
 };

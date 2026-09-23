@@ -20958,12 +20958,12 @@ export const zh_CN: EnTranslations = {
       "freehold_inn_room": {
         "name": "客栈客房",
         "enterText": "你登上客栈的楼梯，走进自己的房间。",
-        "leaveText": "你锁上房门，回到码头上。"
+        "leaveText": "你锁上房门，回到镇上。"
       },
       "freehold_cottage": {
         "name": "小屋",
         "enterText": "你推开花园的院门，走进自己的小屋。",
-        "leaveText": "你扣上小屋的院门，回到码头上。"
+        "leaveText": "你扣上小屋的院门，回到镇上。"
       },
       "drowned_temple": {
         "name": "溺亡神殿",
