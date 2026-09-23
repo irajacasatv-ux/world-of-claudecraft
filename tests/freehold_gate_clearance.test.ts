@@ -32,6 +32,7 @@ import {
   NPCS,
   PORTALS,
   PROPS,
+  zoneAt,
 } from '../src/sim/data';
 import { distancePointToObb, EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import {
@@ -58,6 +59,9 @@ const BED_OR_NODE_CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE;
 // stands within ESCORT_POST_RADIUS of its post (escort_interact.ts).
 const ESCORT_CLEARANCE = FREEHOLD_GATE_INTERACT_RANGE + INTERACT_RANGE + ESCORT_POST_RADIUS;
 const SEEDS = [1, 7, 42, 99, 1032, 1337, WORLD_SEED, 2_147_483_647];
+// Where a leaving player lands: neither room def sets a leaveOffset (the town
+// circle case below proves it per def), so the door inset applies.
+const DROP = { x: GATE.x, z: GATE.z - DUNGEON_DOOR_RETURN_INSET };
 
 let sims: Sim[];
 // Live entities of BOTH lit seeds for the distance checks; entity ids repeat
@@ -109,9 +113,10 @@ describe('the Freehold Gate site', () => {
   it('keeps the margins that chose the site: off the road, collider-free, drop clear of buildings', () => {
     // The world's own "off road" placement threshold is roadDistance >= 5; the
     // site keeps half a yard more, and 3.5 yd of collider-free ground (the
-    // arch's plinths stand 1.7 either side, a streetlamp is the nearest solid).
+    // arch's plinths stand 1.7 either side; the eastbrook_home_market house is
+    // the nearest solid, blocking from 3.53 yd on every seed here).
     expect(roadDistance(GATE.x, GATE.z)).toBeGreaterThanOrEqual(5.5);
-    const drop = { x: GATE.x, z: GATE.z - 4 };
+    const drop = DROP;
     for (const seed of SEEDS) {
       expect(isBlocked(seed, GATE.x, GATE.z, 3.5), `seed ${seed}`).toBe(false);
     }
@@ -123,7 +128,7 @@ describe('the Freehold Gate site', () => {
   });
 
   it('keeps the arch on flat, dry ground on every seed', () => {
-    const drop = { x: GATE.x, z: GATE.z - 4 };
+    const drop = DROP;
     for (const point of [GATE, drop]) expect(isInWaterBody(point.x, point.z)).toBe(false);
     for (const seed of SEEDS) {
       const h = groundHeight(GATE.x, GATE.z, seed);
@@ -173,24 +178,28 @@ describe('the Freehold Gate site', () => {
   });
 
   it('keeps the gate, the live leave and the saved-inside rejoin inside the Eastbrook town circle', () => {
-    // Town Focus answers not_in_town outside the hub circle (isInTownZone), so a
-    // player who has just left their home must land inside it. The previous
-    // site, (-39,-104), dropped them 0.25 yd outside. Every arrival is driven
-    // through its own code: the leave inset and the saved-inside rejoin.
+    // Town Focus answers not_in_town outside the hub circle, judged as
+    // setTownFocus does (isInTownZone over zoneAt), so a player who has just
+    // left their home must land inside it. The previous site, (-39,-104),
+    // dropped them 0.25 yd outside. The live leave drop is re-derived by the
+    // rule detachFromDungeon applies (leaveOffset, else the door inset; the
+    // online suite pins the landed point), and the saved-inside rejoin runs
+    // resolveSavedPosExit itself.
     for (const id of ['freehold_inn_room', 'freehold_cottage']) {
       const def = DUNGEONS[id];
       const leave = def.leaveOffset ?? { x: 0, z: -DUNGEON_DOOR_RETURN_INSET };
       const drop = { x: def.doorPos.x + leave.x, z: def.doorPos.z + leave.z };
+      expect(drop).toEqual(DROP);
       const inside = instanceOrigin(def.index, 0);
       const rejoin = resolveSavedPosExit({ x: inside.x, z: inside.z }).pos!;
-      for (const at of [GATE, drop, rejoin])
-        expect(isInTownZone(at, ZONE1_ZONE), `${id} ${at.x},${at.z}`).toBe(true);
+      for (const at of [GATE, drop, rejoin]) {
+        expect(zoneAt(at.x, at.z).id, `${id} ${at.x},${at.z}`).toBe(ZONE1_ZONE.id);
+        expect(isInTownZone(at, zoneAt(at.x, at.z)), `${id} ${at.x},${at.z}`).toBe(true);
+      }
     }
     // The return's margin inside the circle, measured: 0.16 yd.
     const hub = ZONE1_ZONE.hub;
-    expect(
-      hub.radius - dist({ x: GATE.x, z: GATE.z - DUNGEON_DOOR_RETURN_INSET }, hub),
-    ).toBeCloseTo(0.1605, 3);
+    expect(hub.radius - dist(DROP, hub)).toBeCloseTo(0.1605, 3);
   });
 
   it('holds every NPC (authored and live, the lit-only furnisher included) over 11 yd away', () => {
