@@ -1225,6 +1225,16 @@ describe('Freehold producer screenshot selection', () => {
     'src/render/dungeon_interior_resolver_core.ts',
     'src/render/dungeon_variant_core.ts',
     'src/render/ground_object.ts',
+    'src/render/door_portal.ts',
+    'src/render/delve_interactable_visibility_core.ts',
+    'src/render/pick_resolution.ts',
+    'src/render/prewarm_policy.ts',
+    'src/render/entity_view_policy_core.ts',
+    'src/render/foliage_core.ts',
+    'src/sim/eastbrook_layout.ts',
+    'scripts/freehold_interior_route.mjs',
+    'scripts/lib/freehold_gate_probe.mjs',
+    'scripts/lib/pr_shot_freeholds.mjs',
   ])('selects all three scenes and nine view variants for isolated %s changes', (path) => {
     const plan = classifyDiff([path]);
     const targets = plan.specific.filter((target: { key: string }) =>

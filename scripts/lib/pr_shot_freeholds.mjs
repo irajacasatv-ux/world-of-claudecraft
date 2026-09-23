@@ -62,6 +62,11 @@ export const freeholdReviewTargets = [
   key,
   label: `Freehold ${scene}`,
   scene,
+  // Everything that decides what these frames show: the housing UI and sim,
+  // whether and where the arch draws (the visibility, pick, rank, prewarm and
+  // grass cores, the arch body, the layout site), and this harness itself.
+  // The shared stylesheets stay on the generic HUD fallback by policy
+  // (tests/pr_shot_targets.test.ts); the receipt's seal still covers them.
   when: [
     'ui/hud/housing/',
     'freehold/',
@@ -70,6 +75,16 @@ export const freeholdReviewTargets = [
     'render/dungeon_interior_resolver_core.ts',
     'render/dungeon_variant_core.ts',
     'render/ground_object.ts',
+    'render/door_portal.ts',
+    'render/delve_interactable_visibility_core.ts',
+    'render/pick_resolution.ts',
+    'render/prewarm_policy.ts',
+    'render/entity_view_policy_core.ts',
+    'render/foliage_core.ts',
+    'sim/eastbrook_layout.ts',
+    'scripts/freehold_',
+    'scripts/lib/freehold_',
+    'scripts/lib/pr_shot_freeholds.mjs',
   ],
   variants,
   async capture(page, variant) {
@@ -144,16 +159,52 @@ export const freeholdReviewTargets = [
           ? [...dialog.querySelectorAll('button,input,select')]
               .map((control) => {
                 const box = control.getBoundingClientRect();
+                // On top: what the frame shows at the control's centre is the
+                // control (or its own content), not something laid over it.
+                const hit = document.elementFromPoint(
+                  box.left + box.width / 2,
+                  box.top + box.height / 2,
+                );
                 return {
                   key: control.getAttribute('data-focus-key'),
+                  tag: control.tagName.toLowerCase(),
                   width: box.width,
                   height: box.height,
                   fontSize: Number.parseFloat(getComputedStyle(control).fontSize),
+                  onTop: hit === control || control.contains(hit),
                 };
               })
               .filter((control) => control.width > 0 && control.height > 0)
           : [],
         focusKey: document.activeElement?.getAttribute('data-focus-key') ?? null,
+        focusId: document.activeElement?.id || null,
+        // Transient HUD that can land over any frame: a message or banner
+        // counts once it holds content, the rest once it shows at all.
+        transientOverlays: [
+          ['error-msg', true],
+          ['quest-banner', true],
+          ['raid-warning-banner', true],
+          ['tooltip', true],
+          ['low-health-vignette', false],
+          ['death-overlay', false],
+          ['ready-check-leader-window', false],
+          ['dfinder-proposal-popup', true],
+          ['bg-proposal-popup', true],
+          ['entry-guard-banner', false],
+          ['discord-cta-banner', false],
+          ['desktop-update-toast', false],
+        ]
+          .filter(([id, needsContent]) => {
+            const element = document.getElementById(id);
+            if (!element?.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }))
+              return false;
+            const box = element.getBoundingClientRect();
+            if (box.width === 0 || box.height === 0) return false;
+            return (
+              !needsContent || element.textContent.trim() !== '' || element.children.length > 0
+            );
+          })
+          .map(([id]) => id),
         promptFitsViewport:
           !shown ||
           (() => {
@@ -189,6 +240,10 @@ export const freeholdReviewTargets = [
     if (!evidence.promptFitsViewport) throw new Error('Freehold prompt escapes its viewport');
     if (evidence.controls.some((control) => control.width < 40 || control.height < 40))
       throw new Error('Freehold prompt has a control smaller than 40 pixels');
+    if (evidence.controls.some((control) => !control.onTop))
+      throw new Error('Something is laid over a Freehold prompt control');
+    if (evidence.transientOverlays.length > 0)
+      throw new Error(`Transient HUD over the Freehold capture: ${evidence.transientOverlays}`);
     const output = process.env.SHOTS_DIR ?? 'pr-shots';
     fs.mkdirSync(output, { recursive: true });
     fs.writeFileSync(
