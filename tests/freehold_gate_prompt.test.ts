@@ -10,6 +10,7 @@ import {
 import type { GateLookupRequest, GateVisitCapability } from '../src/ui/hud/housing/housing_view';
 import type { IWorld } from '../src/world_api';
 import { bareClient } from './helpers/bare_client';
+import { cssTreeUnder } from './helpers/css_tree_under';
 
 // Every coordinate in this file is a self-consistent SYNTHETIC world (the gate's
 // first authored site, (-14,-92), kept as a stand-in): the prompt reads only the
@@ -69,10 +70,60 @@ describe('Freehold gate dialog', () => {
     const css = readFileSync('src/styles/components.css', 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\s+/g, ' ');
-    expect(css).not.toMatch(/#freehold-gate-window[^{]*\[aria-selected/);
     expect(css).toMatch(
       /#freehold-gate-window button,[^{]*\{ min-height: 40px; min-width: 40px; \}/,
     );
+  });
+  it('leaves the selected tab to the library in every stylesheet, under every selector', () => {
+    // Every selector in every sheet, by the text before its brace: one that
+    // scopes to the gate prompt or its tabs must not also name a selected
+    // state, whether the painter's `on` class or the aria attribute.
+    const GATE = /#freehold-gate-window|\.fh-gate-tabs?(?![\w-])/;
+    const SELECTED = /\[aria-selected|\.(?:on|is-on|active|selected)(?![\w-])/;
+    const gateSelectors: string[] = [];
+    for (const { file, full } of cssTreeUnder('src/styles').files) {
+      const css = readFileSync(full, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const head of css.split('{').slice(0, -1)) {
+        const selector = head.slice(Math.max(head.lastIndexOf('}'), head.lastIndexOf(';')) + 1);
+        if (!GATE.test(selector)) continue;
+        gateSelectors.push(selector);
+        expect(SELECTED.test(selector), `${file}: ${selector.trim()}`).toBe(false);
+      }
+    }
+    // Positive control: the scan reads the gate's own rules (measured 8).
+    expect(gateSelectors.length).toBeGreaterThanOrEqual(8);
+    expect(SELECTED.test('#freehold-gate-window .fh-gate-tab.on')).toBe(true);
+    expect(SELECTED.test('.fh-gate-tabs [aria-selected="true"]')).toBe(true);
+    expect(SELECTED.test('#freehold-gate-window .btn')).toBe(false);
+    expect(GATE.test('.fh-gate-tabs button')).toBe(true);
+    expect(GATE.test('.fh-gate-tab-x')).toBe(false);
+  });
+  it('keeps the selected tab apart from the others under forced colors', () => {
+    // The library's selected look is a fill and a text color, both stripped by
+    // the forced palette; base.css underlines it there, in both selected forms,
+    // and no sheet takes the underline back off a tab.
+    const block = (css: string) => {
+      const at = css.indexOf('@media (forced-colors: active) {');
+      expect(at).toBeGreaterThan(-1);
+      let depth = 0;
+      for (let i = css.indexOf('{', at); i < css.length; i++) {
+        if (css[i] === '{') depth++;
+        if (css[i] === '}' && --depth === 0) return css.slice(at, i);
+      }
+      return '';
+    };
+    const base = readFileSync('src/styles/base.css', 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\s+/g, ' ');
+    expect(block(base)).toContain(
+      '.ui-tab[aria-selected="true"], .ui-tab.is-on { text-decoration: underline; }',
+    );
+    for (const { file, full } of cssTreeUnder('src/styles').files) {
+      const css = readFileSync(full, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+      for (const rule of css.matchAll(/([^{};]*\.ui-tab\b[^{]*)\{([^}]*)\}/g))
+        if (/text-decoration/.test(rule[2]))
+          expect(`${file}: ${rule[1].trim()}`).toMatch(/^base\.css: /);
+    }
   });
   it('dark hosts never open or create a prompt', () => {
     const f = fixture(false);

@@ -733,6 +733,14 @@
     .np-marker.cooldown {
       text-decoration: underline dotted;
     }
+    /* The library tab's selected look is a gradient fill and a text color, both
+       of which the forced palette strips, so every tab would read alike. Underline
+       the selected one as the non-color cue; nothing else sets text-decoration on
+       a tab, so this base-layer rule stands. Normal mode is unchanged. */
+    .ui-tab[aria-selected="true"],
+    .ui-tab.is-on {
+      text-decoration: underline;
+    }
     /* Cast progress is shown by the .fill gradient, which forced-colors strips, so the filled
        width that conveys cast / channel PROGRESS would vanish against the bar background. Pin
        the fill to the Highlight system color so progress stays visible across all three cast
