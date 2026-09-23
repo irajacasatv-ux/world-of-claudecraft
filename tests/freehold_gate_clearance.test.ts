@@ -20,7 +20,8 @@ import {
   type NearbyInteractionCandidate,
   resolveNearbyInteractionCandidate,
 } from '../src/game/nearby_interaction_core';
-import { isBlocked, queryOpenWorldColliders, supportHeightAt } from '../src/sim/colliders';
+import { GRID_CELL } from '../src/sim/collider_cells';
+import { isBlocked, supportHeightAt } from '../src/sim/colliders';
 import { FARM_PATCHES } from '../src/sim/content/farm_patches';
 import { FREEHOLD_FURNISHER_NPC_ID } from '../src/sim/content/freehold';
 import { ZONE1_ZONE } from '../src/sim/content/zone1';
@@ -46,6 +47,7 @@ import { Sim } from '../src/sim/sim';
 import { type Entity, INTERACT_RANGE } from '../src/sim/types';
 import { groundHeight, isInWaterBody, roadDistance, WATER_LEVEL } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { collidersWithin, pushOutReach } from './helpers/collider_gap';
 
 type P = { x: number; z: number };
 const GATE = EASTBROOK_LAYOUT.services.freeholdGate.position;
@@ -115,32 +117,34 @@ describe('the Freehold Gate site', () => {
 
   it('keeps the margins that chose the site: off the road, collider-free, drop clear of buildings', () => {
     // The world's own "off road" placement threshold is roadDistance >= 5; the
-    // site keeps half a yard more, and 3.5 yd of collider-free ground (the
-    // arch's plinths stand 1.7 either side). The nearest solid is the
-    // eastbrook_home_market house's collider, which blocks from 3.53 yd on
-    // every seed here (its layout footprint is farther, 4.75 yd).
+    // site keeps half a yard more. Its collider-free ground, two views of it:
+    // the movement engine's (isBlocked, whose box push-out squares an OBB's
+    // corners) keeps 3.5 yd round the arch free on every seed, and 3.6 yd
+    // reaches the eastbrook_home_market collider and nothing else; the gate
+    // sits over 3.6 yd inside its 16 yd collider cell, so that single-cell
+    // read is complete here. The Euclidean view, read over a cell range, keeps
+    // every collider at least 4.5 yd off (measured: 4.57 to a seed-scattered
+    // circle on seed 1032, and 4.75 to the house and a streetlamp elsewhere).
     expect(roadDistance(GATE.x, GATE.z)).toBeGreaterThanOrEqual(5.5);
     const drop = DROP;
     const house = EASTBROOK_LAYOUT.buildings.find((b) => b.id === 'eastbrook_home_market');
     expect(house).toBeDefined();
+    const inCell = (v: number) => v - Math.floor(v / GRID_CELL) * GRID_CELL;
+    const cellEdge = Math.min(
+      ...[GATE.x, GATE.z].flatMap((v) => [inCell(v), GRID_CELL - inCell(v)]),
+    );
+    expect(cellEdge).toBeGreaterThanOrEqual(3.6);
     for (const seed of SEEDS) {
       expect(isBlocked(seed, GATE.x, GATE.z, 3.5), `seed ${seed}`).toBe(false);
-      // The positive control: a tenth of a yard more reaches the house.
       expect(isBlocked(seed, GATE.x, GATE.z, 3.6), `seed ${seed} at 3.6`).toBe(true);
-      const near = queryOpenWorldColliders(
-        seed,
-        GATE.x - 5,
-        GATE.z - 8,
-        GATE.x + 6,
-        GATE.z + 5,
-        [],
-      );
+      const near = collidersWithin(seed, GATE.x, GATE.z, 6);
+      const reached = near.filter(({ collider }) => pushOutReach(collider, GATE.x, GATE.z) < 3.6);
       expect(
-        near.some(
-          (c) => c.type === 'obb' && c.x === house?.position.x && c.z === house?.position.z,
-        ),
-        `seed ${seed} house collider`,
-      ).toBe(true);
+        reached.map(({ collider }) => [collider.type, collider.x, collider.z]),
+        `seed ${seed} what 3.6 yd reaches`,
+      ).toEqual([['obb', house?.position.x, house?.position.z]]);
+      expect(pushOutReach(reached[0].collider, GATE.x, GATE.z)).toBeCloseTo(3.528, 3);
+      expect(near[0].gap, `seed ${seed} nearest Euclidean gap`).toBeGreaterThan(4.5);
       // No deck stands over the drop, so the leave's deck seat (supportHeightAt,
       // as dungeons.ts applies it) keeps the player on the ground there.
       expect(supportHeightAt(seed, drop.x, drop.z, 0.5, Number.POSITIVE_INFINITY)).toBe(

@@ -12,11 +12,11 @@ import {
   sampleFreeholdInterior,
   walkFreeholdRouteTo,
 } from '../scripts/freehold_interior_route.mjs';
-import { isBlocked } from '../src/sim/colliders';
 import { EASTBROOK_LAYOUT } from '../src/sim/eastbrook_layout';
 import { FREEHOLD_GATE_INTERACT_RANGE } from '../src/sim/freehold/gate_rules';
 import { FERRY_BELL_TOWN_LANDING } from '../src/sim/interactions/ferry_bell';
 import { WORLD_SEED } from '../src/sim/world_seed';
+import { collidersWithin } from './helpers/collider_gap';
 import {
   cleanFreeholdPerfSamples,
   FIRST_DRAW_KINDS,
@@ -301,21 +301,24 @@ describe("the gate's first-draw window and the leave back to it", () => {
     const samples = cleanFreeholdPerfSamples();
     samples[0].gateFirstDraw = edit(gateFirstDraw());
     expect(freeholdInteriorPerfFailures(samples)).toEqual([
-      'gate first draw: missing window from before the view to its reveal',
+      'island to gate reveal: missing window from before the view to its reveal',
     ]);
   });
 
-  it.each(FIRST_DRAW_KINDS)('refuses a %s escape during the first draw', (kind) => {
-    const samples = cleanFreeholdPerfSamples();
-    samples[0].gateFirstDraw!.end.counts[kind] = 1;
-    expect(freeholdInteriorPerfFailures(samples)).toEqual([
-      `gate first draw: ${kind} delta 1, expected zero`,
-    ]);
-    samples[0].gateFirstDraw!.end.counts[kind] = Number.NaN;
-    expect(freeholdInteriorPerfFailures(samples)).toEqual([
-      `gate first draw: missing finite ${kind} counters`,
-    ]);
-  });
+  it.each(FIRST_DRAW_KINDS)(
+    'refuses a %s escape between the island and the gate reveal',
+    (kind) => {
+      const samples = cleanFreeholdPerfSamples();
+      samples[0].gateFirstDraw!.end.counts[kind] = 1;
+      expect(freeholdInteriorPerfFailures(samples)).toEqual([
+        `island to gate reveal: ${kind} delta 1, expected zero`,
+      ]);
+      samples[0].gateFirstDraw!.end.counts[kind] = Number.NaN;
+      expect(freeholdInteriorPerfFailures(samples)).toEqual([
+        `island to gate reveal: missing finite ${kind} counters`,
+      ]);
+    },
+  );
 
   it.each(['live-program', 'attach-watchdog', 'gate-timeout'] as const)(
     'refuses a %s escape between the inn sample and the Cottage entry',
@@ -334,6 +337,8 @@ it('pins the capture stance literally, a yard short of the arch and four to its 
   expect(FREEHOLD_GATE_STANCE).toEqual({ dx: -4, dz: 1 });
 });
 
+// Euclidean clearance from every collider, read over a cell range (isBlocked's
+// single-cell read is complete only to MAX_BODY_RADIUS, 0.8).
 const APPROACH_CLEARANCE = 1.2;
 
 it('walks legs that stay clear of every collider on the test seeds, ending on the stance', () => {
@@ -354,9 +359,9 @@ it('walks legs that stay clear of every collider on the test seeds, ending on th
         const z = a.z + ((b.z - a.z) * k) / steps;
         samples++;
         expect(
-          isBlocked(seed, x, z, APPROACH_CLEARANCE),
+          collidersWithin(seed, x, z, APPROACH_CLEARANCE),
           `seed ${seed} leg ${i} at ${x},${z}`,
-        ).toBe(false);
+        ).toEqual([]);
       }
     }
   expect(samples).toBeGreaterThan(8 * 200);
