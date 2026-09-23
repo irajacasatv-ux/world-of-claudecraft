@@ -11,9 +11,13 @@
  * alpha (a 0.55 scrim dims the world without hiding it), an image, svg or video,
  * a non-overlay canvas, a text run's own glyph boxes, or a ::before/::after
  * with a fill; the full-screen nameplate canvas counts only where its pixels
- * are painted. Known limits, which the per-frame visual review owns: a
- * transparent gradient still counts as paint, and a clipped or faded ancestor
- * is not modelled, so both can only refuse a frame, never pass a bad one.
+ * are painted. A mesh counts as in front when any of its materials renders
+ * colour (a colorWrite:false shadow proxy does not) and is not mostly clear.
+ * Known limits, which the per-frame visual review owns. They can REFUSE a good
+ * frame: a transparent gradient counts as paint, a clipped or faded ancestor is
+ * not modelled. They can PASS a bad one: sprites, points and lines are not
+ * raycast, a pseudo-element drawn outside its host's box, box-shadow, outline
+ * and CSS filters are not modelled.
  * @param {object} [env]
  * @returns {{ drawn: boolean, reason: string | null, points: object[] }}
  */
@@ -100,7 +104,12 @@ export function freeholdGateDrawnProbe(env) {
   camera.updateMatrixWorld();
   const frame = canvas.getBoundingClientRect();
   const raycaster = g.renderer.raycaster;
-  const saved = { near: raycaster.near, far: raycaster.far, camera: raycaster.camera };
+  const saved = {
+    near: raycaster.near,
+    far: raycaster.far,
+    camera: raycaster.camera,
+    ray: raycaster.ray.clone(),
+  };
   const elements = [...doc.body.querySelectorAll('*')];
   const turn = gate.facing ?? 0;
   const points = [
@@ -134,12 +143,15 @@ export function freeholdGateDrawnProbe(env) {
       for (const hit of raycaster.intersectObjects(g.renderer.scene.children, true)) {
         const object = hit.object;
         if (!object.isMesh || inGate(object) || !shownChain(object)) continue;
-        const material = Array.isArray(object.material) ? object.material[0] : object.material;
-        if (
-          material &&
-          (material.visible === false || (material.transparent && material.opacity < 0.5))
-        )
-          continue;
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        const paintsColour = materials.some(
+          (material) =>
+            material &&
+            material.visible !== false &&
+            material.colorWrite !== false &&
+            !(material.transparent && material.opacity < 0.5),
+        );
+        if (!paintsColour) continue;
         occludedBy = object.name || object.type;
         break;
       }
@@ -153,6 +165,7 @@ export function freeholdGateDrawnProbe(env) {
   raycaster.near = saved.near;
   raycaster.far = saved.far;
   raycaster.camera = saved.camera;
+  raycaster.ray.copy(saved.ray);
   const blocked = points.find((p) => !p.onScreen || p.occludedBy || p.coveredBy);
   return {
     drawn: !blocked,

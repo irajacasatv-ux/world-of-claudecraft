@@ -1,8 +1,9 @@
 // The capture's arch-on-screen probe (scripts/lib/freehold_gate_probe.mjs),
-// driven through its `env` seam: a fake camera that projects x/10, y/10, a fake
-// raycaster that returns the hits a case plants, and fake DOM elements. The gate
-// sits at the origin facing 0, so its three sample points land on screen at
-// plinth-left (415, 450), plinth-right (585, 450) and the keystone (500, 275).
+// driven through its `env` seam: a fake camera that projects x/10, y/10, a
+// recording raycaster that only returns planted hits nearer than its `far`, and
+// fake DOM elements. The gate sits at the origin facing 0, so its three sample
+// points land on screen at plinth-left (415, 450), plinth-right (585, 450) and
+// the keystone (500, 275).
 import { describe, expect, it } from 'vitest';
 import { freeholdGateDrawnProbe } from '../scripts/lib/freehold_gate_probe.mjs';
 
@@ -14,6 +15,9 @@ class Vec3 {
   ) {}
   clone() {
     return new Vec3(this.x, this.y, this.z);
+  }
+  copy(v: Vec3) {
+    return this.set(v.x, v.y, v.z);
   }
   set(x: number, y: number, z: number) {
     this.x = x;
@@ -31,8 +35,8 @@ class Vec3 {
     const n = this.length() || 1;
     return this.set(this.x / n, this.y / n, this.z / n);
   }
-  project(camera: { offScreen?: boolean }) {
-    return this.set(camera.offScreen ? 3 : this.x / 10, this.y / 10, 0.5);
+  project(camera: { offScreen?: boolean; beyondFar?: boolean }) {
+    return this.set(camera.offScreen ? 3 : this.x / 10, this.y / 10, camera.beyondFar ? 1.5 : 0.5);
   }
 }
 
@@ -53,43 +57,72 @@ type FakeElement = {
   alpha?: number;
   classes?: string[];
   hidden?: boolean;
+  holdsCanvas?: boolean;
 };
+type Hit = { distance: number; object: Record<string, unknown> };
 const NONE = { backgroundColor: 'rgba(0, 0, 0, 0)', backgroundImage: 'none' };
+const OPAQUE = { backgroundColor: 'rgb(20, 20, 20)' };
 
 function probe(
   options: {
     elements?: FakeElement[];
-    hits?: object[];
+    // Hits planted along every ray, nearest first, keyed off the view group so
+    // a case can hang one under the arch itself.
+    hits?: (group: object) => Hit[];
     viewVisible?: boolean;
     attached?: boolean;
     offScreen?: boolean;
+    beyondFar?: boolean;
+    innerWidth?: number;
+    canvasInList?: boolean;
   } = {},
 ) {
-  const scene = { visible: true, parent: null, children: [] };
+  const scene = { visible: true, parent: null, children: ['terrain', 'props'] };
   const group = {
     visible: options.viewVisible ?? true,
     parent: options.attached === false ? null : scene,
   };
   const canvas = {
+    tagName: 'CANVAS',
+    id: 'game-canvas',
     getBoundingClientRect: () => ({ ...rect(0, 0, 1000, 1000), width: 1000, height: 1000 }),
   };
   const camera = {
     position: new Vec3(0, 2, 10),
     updateMatrixWorld() {},
     offScreen: options.offScreen,
+    beyondFar: options.beyondFar,
   };
+  const casts: { origin: Vec3; direction: Vec3; near: number; far: number; objects: unknown }[] =
+    [];
   const raycaster = {
     near: 0.1,
     far: 99,
     camera: 'original',
-    set() {},
-    intersectObjects: () => options.hits ?? [],
+    ray: new Vec3(7, 7, 7),
+    origin: new Vec3(),
+    direction: new Vec3(),
+    set(origin: Vec3, direction: Vec3) {
+      this.origin = origin.clone();
+      this.direction = direction.clone();
+      this.ray.set(-1, -1, -1);
+    },
+    intersectObjects(objects: unknown) {
+      casts.push({
+        origin: this.origin,
+        direction: this.direction,
+        near: this.near,
+        far: this.far,
+        objects,
+      });
+      return (options.hits?.(group) ?? []).filter((hit) => hit.distance <= this.far);
+    },
   };
-  const elements = (options.elements ?? []).map((e) => ({
+  const fakes = (options.elements ?? []).map((e) => ({
     tagName: e.tagName,
     id: e.id,
     classList: { contains: (c: string) => (e.classes ?? []).includes(c) },
-    contains: () => false,
+    contains: (other: unknown) => Boolean(e.holdsCanvas) && other === canvas,
     checkVisibility: () => !e.hidden,
     getBoundingClientRect: () => e.box,
     width: 1000,
@@ -98,6 +131,15 @@ function probe(
     childNodes: (e.text ?? []).map((r) => ({ nodeType: 3, textContent: 'label', rects: [r] })),
     fake: e,
   }));
+  // The game canvas itself, listed the way querySelectorAll('*') lists it.
+  Object.assign(canvas, {
+    classList: { contains: () => false },
+    contains: (other: unknown) => other === canvas,
+    checkVisibility: () => true,
+    childNodes: [],
+    fake: { tagName: 'CANVAS', id: 'game-canvas', box: rect(0, 0, 1000, 1000), style: OPAQUE },
+  });
+  const elements = options.canvasInList ? [canvas, ...fakes] : fakes;
   const env = {
     game: {
       sim: {
@@ -129,15 +171,24 @@ function probe(
       pseudo
         ? (element.fake.pseudo?.[pseudo] ?? { content: 'none', ...NONE })
         : { ...NONE, ...element.fake.style },
-    innerWidth: 1000,
+    innerWidth: options.innerWidth ?? 1000,
     innerHeight: 1000,
   };
-  return { result: freeholdGateDrawnProbe(env), raycaster };
+  return { result: freeholdGateDrawnProbe(env), raycaster, casts, scene };
 }
 
-describe('freeholdGateDrawnProbe', () => {
-  it('draws on a clear frame, puts every point where it projects, and restores the raycaster', () => {
-    const { result, raycaster } = probe();
+const mesh = (name: string, extra: Record<string, unknown> = {}) => ({
+  isMesh: true,
+  visible: true,
+  name,
+  material: {},
+  parent: null,
+  ...extra,
+});
+
+describe('freeholdGateDrawnProbe: geometry and the raycast', () => {
+  it('draws on a clear frame, casting from the camera to each point and restoring the raycaster', () => {
+    const { result, raycaster, casts, scene } = probe();
     expect(result.drawn).toBe(true);
     expect(result.reason).toBeNull();
     expect(result.points.map((p) => [p.label, Math.round(p.sx), Math.round(p.sy)])).toEqual([
@@ -145,38 +196,84 @@ describe('freeholdGateDrawnProbe', () => {
       ['plinth-right', 585, 450],
       ['keystone', 500, 275],
     ]);
+    // One cast per point: from the camera, toward the point, stopping 0.05 yd
+    // short of it, over the whole scene.
+    expect(casts).toHaveLength(3);
+    const targets = [
+      [-1.7, 1, 0],
+      [1.7, 1, 0],
+      [0, 4.5, 0],
+    ];
+    casts.forEach((cast, i) => {
+      const [x, y, z] = targets[i];
+      const along = new Vec3(x, y, z).sub(new Vec3(0, 2, 10));
+      const unit = along.clone().normalize();
+      expect(cast.origin).toMatchObject({ x: 0, y: 2, z: 10 });
+      expect(cast.direction.x).toBeCloseTo(unit.x, 9);
+      expect(cast.direction.y).toBeCloseTo(unit.y, 9);
+      expect(cast.direction.z).toBeCloseTo(unit.z, 9);
+      expect(cast.far).toBeCloseTo(along.length() - 0.05, 9);
+      expect(cast.near).toBe(0);
+      expect(cast.objects).toBe(scene.children);
+    });
     expect([raycaster.near, raycaster.far, raycaster.camera]).toEqual([0.1, 99, 'original']);
+    expect(raycaster.ray).toMatchObject({ x: 7, y: 7, z: 7 });
   });
 
-  it('refuses a hidden or detached view and an off-screen arch', () => {
+  it('refuses a hidden or detached view and a point off the screen, the viewport or the depth range', () => {
     expect(probe({ viewVisible: false }).result.reason).toBe('gate view hidden');
     expect(probe({ attached: false }).result.reason).toBe('gate view not in the scene');
     expect(probe({ offScreen: true }).result.reason).toBe('plinth-left: off screen');
+    expect(probe({ beyondFar: true }).result.reason).toBe('plinth-left: off screen');
+    // Inside the canvas but past the viewport's right edge (plinth-left at 415).
+    expect(probe({ innerWidth: 400 }).result.reason).toBe('plinth-left: off screen');
   });
 
-  it('refuses a visible mesh between the camera and a point, ignoring the arch itself and see-through ones', () => {
-    const wall = { object: { isMesh: true, visible: true, name: 'wall', material: {} } };
-    expect(probe({ hits: [wall] }).result.reason).toBe('plinth-left: wall');
-    const hidden = { object: { isMesh: true, visible: false, name: 'proxy', material: {} } };
-    const glass = {
-      object: {
-        isMesh: true,
-        visible: true,
-        name: 'glass',
-        material: { transparent: true, opacity: 0.3 },
+  it('refuses a colour-writing mesh in front, and only one nearer than the point', () => {
+    expect(probe({ hits: () => [{ distance: 3, object: mesh('wall') }] }).result.reason).toBe(
+      'plinth-left: wall',
+    );
+    // Terrain beyond the arch (farther than the point) is not in front of it.
+    expect(probe({ hits: () => [{ distance: 40, object: mesh('terrain') }] }).result.drawn).toBe(
+      true,
+    );
+  });
+
+  it('looks through the arch itself, hidden chains, clear and colourless materials', () => {
+    const hits = (group: object) => [
+      { distance: 1, object: mesh('arch', { parent: group }) },
+      { distance: 2, object: mesh('proxy', { visible: false }) },
+      {
+        distance: 2,
+        object: mesh('in-hidden-group', { parent: { visible: false, parent: null } }),
       },
+      { distance: 3, object: mesh('glass', { material: { transparent: true, opacity: 0.3 } }) },
+      { distance: 3, object: mesh('shadow-proxy', { material: { colorWrite: false } }) },
+      { distance: 3, object: mesh('invisible-material', { material: { visible: false } }) },
+      { distance: 3, object: { isMesh: false, visible: true, name: 'spark' } },
+    ];
+    expect(probe({ hits }).result.drawn).toBe(true);
+    const mixed = mesh('mixed', { material: [{ colorWrite: false }, {}] });
+    expect(probe({ hits: () => [{ distance: 3, object: mixed }] }).result.reason).toBe(
+      'plinth-left: mixed',
+    );
+  });
+});
+
+describe('freeholdGateDrawnProbe: DOM paint', () => {
+  it('ignores the game canvas and its ancestors', () => {
+    const shell = {
+      tagName: 'DIV',
+      id: 'app',
+      box: rect(0, 0, 1000, 1000),
+      style: OPAQUE,
+      holdsCanvas: true,
     };
-    const sprite = { object: { isMesh: false, visible: true, name: 'spark' } };
-    expect(probe({ hits: [hidden, glass, sprite] }).result.drawn).toBe(true);
+    expect(probe({ canvasInList: true, elements: [shell] }).result.drawn).toBe(true);
   });
 
   it('refuses an opaque panel over a point and passes a 0.55 scrim', () => {
-    const panel = {
-      tagName: 'DIV',
-      id: 'panel',
-      box: rect(450, 200, 550, 300),
-      style: { backgroundColor: 'rgb(20, 20, 20)' },
-    };
+    const panel = { tagName: 'DIV', id: 'panel', box: rect(450, 200, 550, 300), style: OPAQUE };
     expect(probe({ elements: [panel] }).result.reason).toBe('keystone: DIV#panel');
     const scrim = {
       tagName: 'DIV',
