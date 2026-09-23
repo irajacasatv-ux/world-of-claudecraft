@@ -431,20 +431,34 @@ record does not claim an authored roof mesh.
 | Camera navigation volume | X -7 to 7, Z -7 to 11, Y 0 to 16 | X -11 to 11, Z -7 to 15, Y 0 to 16 |
 
 The gate is (-38.65,-103.75), facing 0, off the east road across from the inn
-door. No standing point reaches both it and another press: it is more than 11
-yards from every NPC and more than 10 from every garden bed, node and object.
-Its return point is at least 2 yards from any building, and the gate and its
-return are both inside the 26 yard Eastbrook town circle. It moved off (-14,-92)
-at the v0.44.0 sync, when Apothecary Lin moved within 4.24 yards of it. The
-first replacement, (-28,-82), took the press of two Eastbrook garden beds. The
-second, (-37,-103.5), dropped a leaving player 1.17 yards from a house corner.
-The third, (-39,-104), dropped them 0.25 yards outside the town circle, where
-Town Focus refuses. The site is the nearest cell to the ruled (-28,-82) that
-passes every rule. A 0.05 yard search found only a 19-cell band that keeps the
-return in town, and every cell in it sits at the threshold of some rule. This
-cell has road 5.53 against 5.5, 3.5 yards collider-free against 3.5, and its
-return 0.16 yards inside the circle, the widest of the band; all three are
-pinned. The existing shared 4 yard south return inset lands at (-38.65,-107.75).
+door. It moved off (-14,-92) at the v0.44.0 sync, when Apothecary Lin moved
+within 4.24 yards of it; the ruling named (-28,-82) and said to take the nearest
+site that holds if that one did not. The rules the site answers to come in three
+kinds, and only the first two are more than a choice:
+- the ruling's own checks: over 11 yards from every NPC, flat, dry, off the
+  roads, and a return point that is unblocked with zero depenetration;
+- rules the game enforces: no standing point may reach both the gate and
+  another press (the ladder ranks objects above NPCs, beds and nodes), so it is
+  over 10 yards from every garden bed, node and object and over 13 from every
+  escort post; and the gate and its return sit inside the 26 yard Eastbrook town
+  circle, where Town Focus answers;
+- three margins chosen for this site, not taken from the ruling or the code:
+  road distance at least 5.5 (the world's own off-road threshold is 5), 3.5
+  yards of collider-free ground round the arch, and a return at least 2 yards
+  from any building, so a leaving player is never set down against a wall.
+
+(-28,-82) failed the press rule (two garden beds). (-37,-103.5) passed the
+first two kinds but dropped a leaving player 1.17 yards from a house corner,
+against the chosen 2 yard margin. (-39,-104) dropped them 0.25 yards outside the
+town circle. The site is the nearest passing cell a 0.05 yard grid search found
+under all three kinds; measured 2026-09-22, the search (a session tool, not
+committed) passed 19 cells and refused the rest for the town circle (1,061),
+a building margin (803), the road (341) and the collider radius (277). Without
+the chosen margins (-37,-103.5), 23.31 yards from (-28,-82) against this site's
+24.22, would stand; that trade is recorded for the maintainer. This cell has
+road 5.53 against 5.5, 3.5 yards collider-free against 3.5, and its return 0.16
+yards inside the circle, the widest of the band; all three are pinned. The
+existing shared 4 yard south return inset lands at (-38.65,-107.75).
 No custom leave offset is introduced. The gate is a walk-through service marker. The closed ornamental
 door is backed by the south structural wall, so no aperture permits walking into
 unfloored space. Its fixed swing reservation and the complete protected corridor

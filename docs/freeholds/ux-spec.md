@@ -432,7 +432,7 @@ merely walking near it never teleports. Gate choice offers the account's own
 home and friend-by-character-name. The free Inn Room is a normal destination and
 has no purchase nag at its door.
 
-Flow: interact at the Eastbrook quay gate, choose destination, activate entry,
+Flow: interact at the Eastbrook Freehold Gate, choose destination, activate entry,
 receive authoritative acceptance, prepare the destination behind the existing
 arrival curtain, reveal a safe doorway pose facing the hearth, apply the
 per-arrival presentation table below, and resume exploration. Returning outdoors
@@ -2266,7 +2266,7 @@ Each capture stages one real state through the movement/entry route and returns
 one region. The gate shows the own-home prompt without a proximity teleport;
 Inn/Cottage show the accepted authoritative safe landing and usable exit. The
 release baseline has no gate or owner room: `PR_SHOTS_FREEHOLD_BASELINE=1` captures
-its real quay for each prior state, explicitly recording the absent surface.
+its real gate site for each prior state, explicitly recording the absent surface.
 These LOW classic captures prove functional geometry, prompt and landing. They
 do not prove 09 day/night lighting, first-tier camera, welcome, sampled audio,
 placement UI or physical-device performance. Those later scenes remain separately
@@ -3045,7 +3045,7 @@ after-state is a failure.
 
 | Scenario target | Required visible state and assertion | Viewports | Primary owner |
 |---|---|---|---|
-| gate-own-prompt; inn-safe-landing; cottage-safe-landing | Real own-home prompt and authoritative safe room landing/exit; honest absent-surface quay baseline; no day/night or first-arrival presentation claim | All baseline | 06; freehold-gate/freehold-inn/freehold-cottage |
+| gate-own-prompt; inn-safe-landing; cottage-safe-landing | Real own-home prompt and authoritative safe room landing/exit; honest absent-surface gate-site baseline; no day/night or first-arrival presentation claim | All baseline | 06; freehold-gate/freehold-inn/freehold-cottage |
 | gate-own-choice; gate-friend-empty; gate-lookup-pending; gate-lookup-ready; gate-lookup-stale; gate-lookup-refused | Eastbrook semantic marker, real interact prompt, own/friend choice, no proximity teleport | All baseline | 06/18 |
 | arrival-inn | New accepted owner transition with committed fresh first-tier directive, safe reveal, truthful plinth, welcome and no automatic panel | All baseline | 06/09/19 |
 | arrival-cottage; arrival-ordinary-return; arrival-visitor | Cottage first-tier view requires fresh committed-winner directive; ordinary-return/visitor scenes have new ordinary welcome only and static camera | All baseline | 06/09/19 |
