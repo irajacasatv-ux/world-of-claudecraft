@@ -62,25 +62,42 @@ describe('GREETING_DECLINE on the rendered greetings', () => {
     const el = renderProfessionTutorial(buildProfessionTutorialModel(), { onClose });
     document.body.append(el);
     expect(el.querySelector(GREETING_DECLINE)?.hasAttribute('data-close')).toBe(true);
+    // The scan below admits `#profession-tutorial .cd-ok` because this is so.
+    expect(el.querySelector('.cd-ok')?.hasAttribute('data-close')).toBe(true);
     expect(freeholdOverlayPass(GREETING_DECLINE)).toEqual(['profession-tutorial']);
     expect(onClose).toHaveBeenCalled();
   });
 });
 
 describe('every capture script declines through GREETING_DECLINE', () => {
-  // A greeting cleared by its first, last or any button, by a stale play/skip
-  // selector, or by the accepting .cd-ok. Checked on code with comments removed
-  // line by line, so a comment that quotes a bad form is not a hit.
+  // A greeting cleared by its first, last or any button, by the guidance
+  // accept, by a retired play/skip selector, or by the ferry note's accepting
+  // .cd-ok. Checked on code with comments removed line by line, so a comment
+  // that quotes a bad form is not a hit.
+  const RECEIVER = String.raw`(?:greeting|dlg|note|popup)\??`;
   const BAD = [
     /#tutorial-greeting[^'"`]*\bbutton\b/,
-    /#tutorial-greeting \.cd-ok/,
-    /(?:greeting|dlg|note|popup)\??\.querySelector\(\s*['"]button['"]\s*\)/,
-    /(?:greeting|dlg|note|popup)\??\.querySelectorAll\(\s*['"]button['"]\s*\)/,
+    /#tutorial-greeting[^'"`]*\.cd-ok/,
+    /#tutorial-greeting[^'"`]*\[data-play\]/,
+    /\[data-guidance=\\?["']?on/,
     /\[data-skip\]/,
+    new RegExp(String.raw`${RECEIVER}\.querySelector(?:All)?\(\s*['"][^'"]*(?:\bbutton\b|\.cd-ok)`),
+    new RegExp(String.raw`${RECEIVER}\.(?:first|last)ElementChild`),
+    /getElementById\(\s*['"]tutorial-greeting['"]\s*\)\??\.(?:first|last)ElementChild/,
+    /getElementById\(\s*['"]tutorial-greeting['"]\s*\)\??\.querySelector(?:All)?\(\s*['"][^'"]*(?:\bbutton\b|\.cd-ok)/,
   ];
+  // A statement that names a greeting and clicks must click a declining
+  // control. `#profession-tutorial .cd-ok` is admitted because that control
+  // carries data-close (pinned on the rendered markup above).
+  const DECLINING =
+    /\bdecline\b|GREETING_DECLINE|\[data-close\]|\[data-guidance=\\?["']?off|#profession-tutorial \.cd-ok/;
   const files = sourceFilesUnder('scripts', { skipDirectories: ['node_modules'] }).filter((f) =>
     f.file.endsWith('.mjs'),
   );
+  const codeOf = (full: string) =>
+    readFileSync(full, 'utf8')
+      .split('\n')
+      .map((line) => line.replace(/^\s*(\/\/|\*).*$/, '').replace(/\s\/\/.*$/, ''));
 
   it('scans the whole scripts tree through the shared walker', () => {
     expect(files.length).toBeGreaterThan(100);
@@ -91,9 +108,7 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     const hits: string[] = [];
     let declines = 0;
     for (const { file, full } of files) {
-      const lines = readFileSync(full, 'utf8').split('\n');
-      lines.forEach((line, index) => {
-        const code = line.replace(/^\s*(\/\/|\*).*$/, '').replace(/\s\/\/.*$/, '');
+      codeOf(full).forEach((code, index) => {
         if (code.includes('GREETING_DECLINE')) declines++;
         if (BAD.some((pattern) => pattern.test(code))) hits.push(`scripts/${file}:${index + 1}`);
       });
@@ -101,5 +116,50 @@ describe('every capture script declines through GREETING_DECLINE', () => {
     expect(hits).toEqual([]);
     // Non-vacuous: the scripts really route through the shared selector.
     expect(declines).toBeGreaterThan(20);
+  });
+
+  it('finds no statement that names a greeting and clicks something else', () => {
+    const hits: string[] = [];
+    let clicked = 0;
+    for (const { file, full } of files) {
+      for (const statement of codeOf(full).join('\n').split(';')) {
+        if (!/tutorial-greeting|profession-tutorial/.test(statement)) continue;
+        if (!/\.click\(/.test(statement)) continue;
+        clicked++;
+        if (!DECLINING.test(statement)) hits.push(`scripts/${file}: ${statement.trim()}`);
+      }
+    }
+    expect(hits).toEqual([]);
+    expect(clicked).toBeGreaterThan(10);
+  });
+
+  it.each([
+    "document.querySelector('#tutorial-greeting [data-play]')?.click()",
+    "document.querySelector('#tutorial-greeting .ui-btn.cd-ok')?.click()",
+    'document.querySelector(\'[data-guidance="on"]\')?.click()',
+    'greeting.firstElementChild?.click()',
+    "document.getElementById('tutorial-greeting')?.lastElementChild?.click()",
+    "note?.querySelector('.cd-actions button')?.click()",
+    "document.getElementById('tutorial-greeting')?.querySelector('.cd-ok')?.click()",
+  ])('the line rules catch %s', (code) => {
+    expect(BAD.some((pattern) => pattern.test(code))).toBe(true);
+  });
+
+  it.each([
+    "document.getElementById('tutorial-greeting')?.querySelector(decline)?.click()",
+    "document.querySelector('#tutorial-greeting [data-close]')?.click()",
+    "document.querySelector('#profession-tutorial .cd-ok')?.click()",
+    "document.getElementById('tutorial-greeting')?.remove()",
+  ])('the line rules pass %s', (code) => {
+    expect(BAD.some((pattern) => pattern.test(code))).toBe(false);
+  });
+
+  it.each([
+    ["document.querySelector('#tutorial-greeting .ui-btn')?.click()", false],
+    ["document.getElementById('profession-tutorial')?.querySelector('.x-btn')?.click()", false],
+    ["document.getElementById('tutorial-greeting')?.querySelector(decline)?.click()", true],
+    ['document.querySelector(\'#tutorial-greeting [data-guidance="off"]\')?.click()', true],
+  ])('the statement rule judges %s as declining: %s', (statement, declining) => {
+    expect(DECLINING.test(statement)).toBe(declining);
   });
 });

@@ -40,7 +40,6 @@ await page.waitForFunction(() => !!document.getElementById('tutorial-greeting'),
   timeout: 15000,
   polling: 200,
 });
-await page.evaluate(() => document.querySelector('#tutorial-greeting [data-play]')?.click());
 await page.waitForFunction(
   () => {
     const sim = window.__game.sim;

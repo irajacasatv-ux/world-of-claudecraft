@@ -56,7 +56,6 @@ await page.waitForFunction(() => !!document.getElementById('tutorial-greeting'),
   timeout: 15000,
   polling: 200,
 });
-await page.evaluate(() => document.querySelector('#tutorial-greeting [data-play]')?.click());
 await page.waitForFunction(
   () => window.__game.sim.entities.get(window.__game.sim.playerId).pos.x < -180,
   { timeout: 15000, polling: 200 },

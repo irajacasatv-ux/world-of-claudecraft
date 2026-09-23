@@ -43,13 +43,12 @@ const booted = await enterOfflineGame(page, {
 });
 if (!booted) throw new Error('offline world did not boot');
 await page.evaluate(() => document.querySelector('.gpu-notice-dismiss')?.click());
-// The spawn greeting would sit over every shot; dismiss it and take the walk
-// to the island by hand instead.
+// The ferry to the island is automatic for a fresh character; wait for it,
+// then close Odo's arrival note, which would sit over every shot.
 await page.waitForFunction(() => !!document.getElementById('tutorial-greeting'), {
   timeout: 15000,
   polling: 200,
 });
-await page.evaluate(() => document.querySelector('#tutorial-greeting [data-play]')?.click());
 await page.waitForFunction(
   () => {
     const sim = window.__game.sim;

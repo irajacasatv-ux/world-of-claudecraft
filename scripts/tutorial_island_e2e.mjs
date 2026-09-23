@@ -1,7 +1,8 @@
 // Tutorial island E2E: boots a fresh offline character, waits for the spawn
-// greeting dialog (the tutorialGreeting event's modal), accepts the ferry,
-// and asserts the sim actually lands the player on the Proving Shore with
-// the on-rails chain's first quest available. Screenshots land in tmp/.
+// greeting (the ferry is automatic for a fresh character, so there is no
+// choice to accept), and asserts the sim lands the player on the Proving
+// Shore with the on-rails chain's first quest available. Screenshots land in
+// tmp/.
 // Needs the dev client running:  npm run dev
 //   GAME_URL=http://localhost:5173 node scripts/tutorial_island_e2e.mjs
 
@@ -70,9 +71,6 @@ await page.screenshot({ path: 'tmp/tutorial-greeting.png' });
 const before = await page.evaluate(() => {
   const sim = window.__game.sim;
   return { ...sim.entities.get(sim.playerId).pos };
-});
-await page.evaluate(() => {
-  document.querySelector('#tutorial-greeting [data-play]')?.click();
 });
 
 // The ferry is a sim-side teleport: wait for the player to stand on the
