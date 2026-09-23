@@ -8,9 +8,12 @@ afterEach(() => setActiveWorldContent(null));
 
 // These four pre-furnisher literals are from the existing terrain-height
 // golden corpus. Adding a required pad at (-66, -96) changed all four.
+// RE-MEASURED at the release/v0.44.0 sync: release 77fd08ab72 moved the Lin and
+// Redbrook NPC pads off the civic green, which moves the two seed-42 points;
+// the merged tree and the release's own tree measure the same heights here.
 const GOLDEN_POINTS = [
-  { seed: 42, x: -60, z: -96, height: -0.41517106585608576 },
-  { seed: 42, x: -66, z: -90, height: -0.43374254929874984 },
+  { seed: 42, x: -60, z: -96, height: -0.4346181985109496 },
+  { seed: 42, x: -66, z: -90, height: -0.4336767488652407 },
   {
     seed: 2_147_483_647,
     x: -60.863476185594166,

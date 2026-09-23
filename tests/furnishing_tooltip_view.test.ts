@@ -344,19 +344,29 @@ describe('furnishing tooltip composition', () => {
     ({ untilMs, duration }) => {
       const copy: ItemInstancePayload = { partyTrade: { untilMs, eligible: ['Maker'] } };
       const sentence = `You may trade this item to players who shared its drop for the next ${duration}.`;
-      const html = composedTooltip(furnishing, copy);
+      // The trade window qualifies a bind-on-pickup drop, so both cards are soulbound.
+      const html = composedTooltip({ ...furnishing, soulbound: true }, copy);
       expect(html).toContain(`${sentence}</div>`);
       expect(html).not.toContain('Equipping it ends the trade window.');
-      expect(composedTooltip(gear, copy)).toContain(
+      expect(composedTooltip({ ...gear, soulbound: true }, copy)).toContain(
         `${sentence} Equipping it ends the trade window.`,
       );
+      // A marker left on a drop that is no longer soulbound promises nothing, on
+      // either card (the gear card's def gate, mirrored on the furnishing card).
+      expect(composedTooltip(furnishing, copy)).not.toContain('You may trade this item');
+      expect(composedTooltip(gear, copy)).not.toContain('You may trade this item');
     },
   );
 
   it.each([0, -1])('expired furnishing party-trade deadline %s has no trade promise', (untilMs) => {
     const copy: ItemInstancePayload = { partyTrade: { untilMs, eligible: ['Maker'] } };
-    expect(composedTooltip(furnishing, copy)).not.toContain('You may trade this item');
-    expect(composedTooltip(gear, copy)).not.toContain('You may trade this item');
+    // Soulbound, so the def gate is open and the expired deadline alone refuses.
+    expect(composedTooltip({ ...furnishing, soulbound: true }, copy)).not.toContain(
+      'You may trade this item',
+    );
+    expect(composedTooltip({ ...gear, soulbound: true }, copy)).not.toContain(
+      'You may trade this item',
+    );
   });
 
   it('HUD retains authored furnishing rarity and vendor value with no invented placement metadata', () => {
@@ -707,6 +717,35 @@ describe('furnishing drops through the live HUD action-bar handlers', () => {
       root.remove();
       if (previousDef === undefined) delete ITEMS[FURNISHING.id];
       else ITEMS[FURNISHING.id] = previousDef;
+    }
+  });
+});
+
+describe('furnishing chat item links', () => {
+  function linkText(itemId: string, instance?: ItemInstancePayload): string {
+    const hud = Object.create(Hud.prototype) as {
+      attachTooltip: () => void;
+      appendChatItemLink(parent: HTMLElement, id: string, copy?: ItemInstancePayload): void;
+    };
+    hud.attachTooltip = () => {};
+    const parent = document.createElement('div');
+    hud.appendChatItemLink(parent, itemId, instance);
+    return parent.textContent ?? '';
+  }
+
+  it('never names a forged loot-quality tier on a furnishing link', () => {
+    const rolled: ItemInstancePayload = {
+      lootQuality: { version: 1, tier: 4, weights: [4, 900, 200, 6, 7] },
+    };
+    const previous = ITEMS[FURNISHING.id];
+    ITEMS[FURNISHING.id] = FURNISHING;
+    try {
+      expect(linkText(FURNISHING.id, rolled)).toBe(linkText(FURNISHING.id));
+      // Control: the same roll on real gear does change the link's name.
+      expect(linkText('worn_sword', rolled)).not.toBe(linkText('worn_sword'));
+    } finally {
+      if (previous === undefined) delete ITEMS[FURNISHING.id];
+      else ITEMS[FURNISHING.id] = previous;
     }
   });
 });

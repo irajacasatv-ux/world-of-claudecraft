@@ -414,7 +414,8 @@ describe.each(['offline', 'online'] as const)('furnishing tool command boundarie
       bedId: 'bed_eastbrook_1',
       cropId: 'vale_wheat',
     });
-    expect(h.world.player.castingAbility).toBe('farming');
+    // Planting is instant (release fc2c568f5c): no plant cast is left running.
+    expect(h.world.player.castingAbility).toBeNull();
     expect(h.world.drainEvents()).toContainEqual({
       type: 'farmPlanted',
       pid: h.pid,

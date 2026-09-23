@@ -32,6 +32,7 @@ import {
   resetItemLevelCache,
 } from '../src/sim/item_level';
 import { isStorableItemKind } from '../src/sim/item_storage_rules';
+import { QUALITY_RANK } from '../src/sim/loot_master';
 import { MAIL_DELIVERY_SECONDS } from '../src/sim/mail/post_office';
 import {
   defaultMarketQuery,
@@ -65,6 +66,7 @@ import {
   perfectingInfoFrom,
   resolvePerfectingAttempt,
 } from '../src/sim/professions/perfecting';
+import { perfectedLineBudgets } from '../src/sim/professions/perfecting_bonus';
 import {
   evaluateSalvageAdmission,
   isSalvageable,
@@ -112,6 +114,7 @@ import { marketNameColor } from '../src/ui/market_name_color';
 import { marketFilterMenus } from '../src/ui/market_view';
 import { MarketWindow } from '../src/ui/market_window';
 import { wocTradableSlot } from '../src/ui/trade_woc_view';
+import { vendorSaleNeedsConfirm } from '../src/ui/vendor_sell_confirm_policy';
 import { lockedOutRows, sellableRows } from '../src/ui/woc_market_view';
 import { FURNISHING } from './fixtures/furnishing_item';
 import { stripComments } from './helpers/strip_comments';
@@ -615,10 +618,24 @@ describe('furnishing refusal and power gates', () => {
       })?.itemId,
     ).toBe(GEAR.id);
   });
+  it('confirms a vendor sale at the authored furnishing quality, never a forged roll', () => {
+    // Threshold uncommon: an epic furnishing always confirms, whatever its copy says.
+    const policy = { enabled: true, minQualityRank: QUALITY_RANK.uncommon };
+    const epic = { kind: 'furnishing', quality: 'epic' } as const;
+    const forged = { rolled: { quality: 'common' } } as unknown as ItemInstancePayload;
+    expect(vendorSaleNeedsConfirm(epic, forged, undefined, policy)).toBe(true);
+    // Control: the same roll on real gear is read, so the gear sale is instant.
+    expect(
+      vendorSaleNeedsConfirm({ kind: 'armor', quality: 'epic' }, forged, undefined, policy),
+    ).toBe(false);
+  });
   it('cannot receive a Perfecting stat bonus from malformed power data', () => {
     const malformed = { ...FURNISHING, slot: 'helmet', stats: { str: 10 } } as unknown as ItemDef;
     expect(perfectedBonusStats(malformed, { level: 1 })).toBeNull();
     expect(perfectedBonusStats(GEAR, { level: 1 })?.str).toBeGreaterThan(0);
+    // The release's stamina-guard budgets carry the same furnishing guard.
+    expect(perfectedLineBudgets(malformed, { level: 1 })).toBeNull();
+    expect(perfectedLineBudgets(GEAR, { level: 1 })).not.toBeNull();
   });
   it.each([
     { shape: 'bagged', worn: false, replace: false },
@@ -1602,13 +1619,19 @@ describe('furnishing presentation and input', () => {
   });
   it('ordinary bag clicks invoke no command or repaint', () => {
     const call = vi.fn();
-    const fake = { bagMode: () => MODE, deps: { world: call, showError: call }, render: call };
     const run = BagsWindow.prototype as unknown as {
+      partyTradeWindowActive: (instance: unknown) => boolean;
       runBagAction: (
         item: ItemDef,
         slot: { itemId: string; count: number },
         ev: MouseEvent,
       ) => void;
+    };
+    const fake = {
+      bagMode: () => MODE,
+      deps: { world: call, showError: call },
+      render: call,
+      partyTradeWindowActive: run.partyTradeWindowActive,
     };
     run.runBagAction.call(fake, FURNISHING, { itemId: ID, count: 1 }, {} as MouseEvent);
     expect(call).not.toHaveBeenCalled();

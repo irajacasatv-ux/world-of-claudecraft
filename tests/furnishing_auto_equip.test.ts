@@ -77,6 +77,10 @@ const COPY: ItemInstancePayload = {
   signer: 'Auto Maker',
   rolled: { stats: { str: 9999, armor: 9999 } },
 };
+// A real worn copy with no rolled line: auto-equip compares resolved armor, which
+// counts a worn copy's rolled stats (src/sim/auto_equip.ts resolvedArmor), so the
+// real-gear rows below must not let COPY's forged 9999 decide the comparison.
+const WORN_COPY: ItemInstancePayload = { signer: 'Auto Maker' };
 const IDS = [FURNISHING.id, WORN_ID, ...ROWS.map((row) => row.def.id)];
 
 beforeEach(() => {
@@ -92,7 +96,12 @@ afterEach(() => {
   for (const id of IDS) delete ITEMS[id];
 });
 
-function world(slot: EquipSlot, itemId: string, playerClass: PlayerClass = 'warrior') {
+function world(
+  slot: EquipSlot,
+  itemId: string,
+  playerClass: PlayerClass = 'warrior',
+  copy: ItemInstancePayload = COPY,
+) {
   const sim = new Sim({
     seed: 737,
     playerClass,
@@ -102,7 +111,7 @@ function world(slot: EquipSlot, itemId: string, playerClass: PlayerClass = 'warr
   const meta = sim.meta(sim.playerId)!;
   meta.inventory.splice(0);
   meta.equipment = { [slot]: itemId };
-  meta.equipmentInstance = { [slot]: structuredClone(COPY) };
+  meta.equipmentInstance = { [slot]: structuredClone(copy) };
   recalcPlayerStats(sim.player, playerClass, meta.equipment, undefined, meta.equipmentInstance);
   meta.autoEquip = true;
   sim.drainEvents();
@@ -131,18 +140,18 @@ describe('furnishing does not suppress automatic gear upgrades', () => {
         row.def.kind === 'weapon'
           ? { ...row.def, id: WORN_ID, weapon: { min: amount, max: amount, speed: 2 } }
           : { ...row.def, id: WORN_ID, stats: { armor: amount } };
-      const sim = world(row.slot, WORN_ID);
+      const sim = world(row.slot, WORN_ID, 'warrior', WORN_COPY);
 
       sim.addItem(row.def.id, 1);
 
       if (amount >= 10) {
         expect(sim.equipment).toEqual({ [row.slot]: WORN_ID });
-        expect(sim.equipmentInstances[row.slot]).toEqual(COPY);
+        expect(sim.equipmentInstances[row.slot]).toEqual(WORN_COPY);
         expect(sim.inventory).toEqual([{ itemId: row.def.id, count: 1 }]);
       } else {
         expect(sim.equipment).toEqual({ [row.slot]: row.def.id });
         expect(sim.equipmentInstances[row.slot]).toBeUndefined();
-        expect(sim.inventory).toEqual([{ itemId: WORN_ID, count: 1, instance: COPY }]);
+        expect(sim.inventory).toEqual([{ itemId: WORN_ID, count: 1, instance: WORN_COPY }]);
       }
       expect(sim.drainEvents().filter((event) => event.type === 'error')).toEqual([]);
     }

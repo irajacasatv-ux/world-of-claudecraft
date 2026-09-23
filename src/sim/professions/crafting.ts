@@ -75,6 +75,7 @@ import { CRAFT_BATCH_MAX, CRAFT_GOLD_SINK_COPPER_PER_BUDGET } from '../content/p
 import { recipeById } from '../content/recipes';
 import { ITEMS } from '../data';
 import { isFreeholdCraftAvailable } from '../freehold';
+import { slotStatMultForItem } from '../item_budget';
 import { countUnlockedInSlots, removeUnlockedFromSlots } from '../item_lock';
 import { holdsMaterialSignature } from '../material_signatures';
 import {
@@ -169,6 +170,8 @@ export function craftBonusStatsFor(
     quality: def.quality,
     slot: def.slot,
     stats: def.stats,
+    slotStatMult: slotStatMultForItem(def),
+    twoHand: def.kind === 'weapon' && def.hand === 'twohand',
   });
 }
 

@@ -30,12 +30,32 @@ describe('wornItemCellParts', () => {
       expect(itemDisplayName(aliased)).toBe('Steel Side Table');
       expect(wornItemCellParts(aliased, copy)).toEqual({
         name: 'Steel Side Table',
+        ariaName: 'Steel Side Table',
+        qualityBadge: '',
+        qualityBadgeLabelled: '',
         quality: 'rare',
         color: '#0070dd',
       });
+      // A forged loot-quality roll never badges a furnishing; the same copy on
+      // real gear does, so the empty badge is the strip and not a dead channel.
+      const rolledCopy: ItemInstancePayload = {
+        ...copy,
+        lootQuality: { version: 1, tier: 4, weights: [4, 900, 200, 6, 7] },
+      };
+      expect(wornItemCellParts(aliased, rolledCopy)).toMatchObject({
+        ariaName: 'Steel Side Table',
+        qualityBadge: '',
+        qualityBadgeLabelled: '',
+      });
+      expect(wornItemCellParts(ITEMS[APEX_NECK], rolledCopy).qualityBadge).toContain(
+        'loot-quality-badge',
+      );
       expect(bagQualityKey(FURNISHING, copy)).toBe('rare');
       expect(wornItemCellParts(ITEMS[APEX_NECK], copy)).toEqual({
         name: 'Forbidden Crown',
+        ariaName: 'Forbidden Crown',
+        qualityBadge: '',
+        qualityBadgeLabelled: '',
         quality: 'legendary',
         color: '#ff8000',
       });
@@ -53,6 +73,9 @@ describe('wornItemCellParts', () => {
     for (const instance of [undefined, null, {}]) {
       expect(wornItemCellParts(def, instance)).toEqual({
         name: itemDisplayName(def),
+        ariaName: itemDisplayName(def),
+        qualityBadge: '',
+        qualityBadgeLabelled: '',
         quality: 'epic',
         color: QUALITY_COLOR.epic,
       });
@@ -68,6 +91,9 @@ describe('wornItemCellParts', () => {
     });
     expect(parts).toEqual({
       name: "Vel'tara's Oath",
+      ariaName: "Vel'tara's Oath",
+      qualityBadge: '',
+      qualityBadgeLabelled: '',
       quality: 'legendary',
       color: QUALITY_COLOR.legendary,
     });
@@ -79,6 +105,9 @@ describe('wornItemCellParts', () => {
     const def = ITEMS[APEX_NECK];
     expect(wornItemCellParts(def, { rolled: { quality: 'legendary' } })).toEqual({
       name: itemDisplayName(def),
+      ariaName: itemDisplayName(def),
+      qualityBadge: '',
+      qualityBadgeLabelled: '',
       quality: 'legendary',
       color: QUALITY_COLOR.legendary,
     });

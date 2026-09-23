@@ -163,6 +163,7 @@ const GUARDED_SCRIPTS = [
   'scripts/bank_guild_pane_seed.mjs',
   'scripts/admin_professions_shot.mjs',
   'scripts/catalog_program_census.mjs',
+  'scripts/charselect_zone_shot.mjs',
   'scripts/chat_mute_resume_shot.mjs',
   'scripts/geared_arrival_bench.mjs',
   'scripts/guild_pledge_shot.mjs',
@@ -199,6 +200,9 @@ const URL_GUARDED_SCRIPTS = [
   'scripts/crowd_fps_bench.mjs',
   'scripts/freehold_key_capture.mjs',
   'scripts/gpu_hitch_capture.mjs',
+  // The druid cat form acceptance drive: offline commands against a local Vite
+  // server, no database of its own.
+  'scripts/druid_cat_game_check.mjs',
 ] as const;
 
 // Full-line // comments are stripped before the scan: this file's own subject

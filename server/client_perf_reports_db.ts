@@ -1,30 +1,15 @@
-// Client performance telemetry: small, sanitized summaries from the browser.
-// Kept separate from play sessions because reports can come from offline
-// benchmark runs with no account, and one session may emit several samples.
+// Client perf telemetry rows: the insert behind POST /api/perf-report and the
+// nightly retention prune. Moved out of server/db.ts at the perf-report
+// fidelity change (the monolith ratchet: db.ts pays for growth by extraction,
+// server/CLAUDE.md module-first; server/character_lease_db.ts is the same
+// split). The table's DDL lives in server/client_perf_reports_schema.ts, and
+// the worst-10s concurrent index in server/client_perf_indexes.ts; this is
+// the query half, unchanged in behavior by the move.
 //
-// Moved WHOLE out of server/db.ts (the insert and the retention batch, bodies
-// unchanged) to heal the monolith ratchet. The rest of this domain already left
-// db.ts for the same reason: the table's DDL is client_perf_reports_schema.ts
-// and its CONCURRENTLY index is client_perf_indexes.ts, so telemetry accessors
-// were the last residue in a file chartered for core account, character, token
-// and world-state work (server/CLAUDE.md, Module-first).
-//
-// It imports `pool` back from ./db, the character_lease_db.ts and
-// character_create_db.ts shape: db.ts re-exports these names so no caller
-// re-points, and the binding is only ever dereferenced inside a function body,
-// never at module top level, so the cycle cannot observe a partly evaluated
-// module during boot.
+// db.ts keeps the exports so no caller re-points; the pool comes back from
+// db.ts the way every other *_db.ts module takes it.
 
 import { pool } from './db';
-
-// The worst-10s concurrent index (ruling R7). Defined in the dependency-free
-// client_perf_indexes.ts (the registry evaluates before this module's body;
-// see the note there) and re-exported here beside the table's accessors.
-export {
-  CLIENT_PERF_WORST10S_INDEX_SQL,
-  CLIENT_PERF_WORST10S_INVALID_INDEX_CHECK_SQL,
-  CLIENT_PERF_WORST10S_INVALID_INDEX_DROP_SQL,
-} from './client_perf_indexes';
 
 export interface ClientPerfReportInsert {
   schemaVersion: number;
@@ -40,6 +25,9 @@ export interface ClientPerfReportInsert {
   shaderWarmWorkerActive: boolean;
   shaderWarmRefusal: string;
   targetFps: number;
+  frameCapIntent: number;
+  cadenceDivisor: number;
+  refreshHz: number;
   renderScale: number;
   effectiveRenderScale: number;
   fpsAvg: number;
@@ -60,6 +48,7 @@ export interface ClientPerfReportInsert {
   deviceMemory: number | null;
   hardwareConcurrency: number;
   mobileTouch: boolean;
+  desktopShell: boolean;
   browserFamily: string;
   osFamily: string;
   glVendor: string;
@@ -78,6 +67,18 @@ export interface ClientPerfReportInsert {
   worst10sFrameP95Ms: number;
   suggestionIds: string[];
   rawSummary: Record<string, unknown>;
+  // "Host essentials", desktop shell only (server/perf_report_host.ts): null
+  // and '' are "no evidence", which is what every web and mobile row carries.
+  hostMemTotalMb: number | null;
+  hostMemFreeMb: number | null;
+  appWorkingSetMb: number | null;
+  appRendererWsMb: number | null;
+  appGpuWsMb: number | null;
+  hostOnBattery: boolean | null;
+  hostPowerPlan: string;
+  hostPowerMode: string;
+  hostHags: boolean | null;
+  hostGameMode: boolean | null;
 }
 
 export async function insertClientPerfReport(row: ClientPerfReportInsert): Promise<void> {
@@ -93,7 +94,11 @@ export async function insertClientPerfReport(row: ClientPerfReportInsert): Promi
        crowd_bucket, sim_entities, active_views, visible_views, worst_10s_frame_p95_ms,
        suggestion_ids, raw_summary,
        gl_renderer_raw, gl_model, gl_laptop, gpu_hp_adapter,
-       shader_warm_worker_active, shader_warm_refusal
+       shader_warm_worker_active, shader_warm_refusal,
+       desktop_shell,
+       frame_cap_intent, cadence_divisor, refresh_hz,
+       host_mem_total_mb, host_mem_free_mb, app_working_set_mb, app_renderer_ws_mb, app_gpu_ws_mb,
+       host_on_battery, host_power_plan, host_power_mode, host_hags, host_game_mode
      ) VALUES (
        $1, $2, $3, $4, $5, $6, $7,
        $8, $9, $10, $11, $12, $13,
@@ -102,7 +107,11 @@ export async function insertClientPerfReport(row: ClientPerfReportInsert): Promi
        $23, $24, $25, $26,
        $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38,
        $39, $40, $41, $42, $43,
-       $44, $45, $46, $47, $48, $49, $50, $51
+       $44, $45, $46, $47, $48, $49, $50, $51,
+       $52,
+       $53, $54, $55,
+       $56, $57, $58, $59, $60,
+       $61, $62, $63, $64, $65
      )`,
     [
       row.schemaVersion,
@@ -156,6 +165,23 @@ export async function insertClientPerfReport(row: ClientPerfReportInsert): Promi
       row.gpuHpAdapter,
       row.shaderWarmWorkerActive,
       row.shaderWarmRefusal,
+      row.desktopShell,
+      row.frameCapIntent,
+      row.cadenceDivisor,
+      row.refreshHz,
+      // Appended at the END of both lists, never interleaved: the positional
+      // $n numbering is what makes this statement correct, and inserting a
+      // column mid-list renumbers every parameter after it.
+      row.hostMemTotalMb,
+      row.hostMemFreeMb,
+      row.appWorkingSetMb,
+      row.appRendererWsMb,
+      row.appGpuWsMb,
+      row.hostOnBattery,
+      row.hostPowerPlan,
+      row.hostPowerMode,
+      row.hostHags,
+      row.hostGameMode,
     ],
   );
 }

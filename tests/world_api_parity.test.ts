@@ -95,6 +95,7 @@ export const IWORLD_MEMBERS = [
   // --- core world / player roster + economy reads (data) ---
   { name: 'cfg', kind: 'data' },
   { name: 'entities', kind: 'data' },
+  { name: 'entityRosterVersion', kind: 'data' },
   { name: 'playerId', kind: 'data' },
   { name: 'player', kind: 'data' },
   { name: 'moveInput', kind: 'data' },
@@ -259,6 +260,8 @@ export const IWORLD_MEMBERS = [
   { name: 'accountAdmin', kind: 'data' },
   { name: 'spectating', kind: 'data' },
   { name: 'socialInfo', kind: 'data' },
+  { name: 'whoInfo', kind: 'data' },
+  { name: 'whoRequest', kind: 'method' },
   // --- social graph commands + async search ---
   { name: 'friendAdd', kind: 'method' },
   { name: 'friendRemove', kind: 'method' },
@@ -304,6 +307,8 @@ export const IWORLD_MEMBERS = [
   { name: 'marketList', kind: 'method' },
   { name: 'marketListInstance', kind: 'method' },
   { name: 'marketBuy', kind: 'method' },
+  { name: 'marketSweepQuote', kind: 'method' },
+  { name: 'marketSweep', kind: 'method' },
   { name: 'marketCancel', kind: 'method' },
   { name: 'marketCollect', kind: 'method' },
   // --- Ravenpost mail reads + commands ---
@@ -490,6 +495,7 @@ export const IWORLD_MEMBERS = [
   // --- the Book of Deeds (IWorldDeeds): earned/stats/renown/title/border
   // reads + the two cosmetic selection commands ---
   { name: 'deedsEarned', kind: 'data' },
+  { name: 'accountDeeds', kind: 'data' },
   { name: 'deedStats', kind: 'data' },
   { name: 'renown', kind: 'data' },
   { name: 'activeTitle', kind: 'data' },
@@ -505,6 +511,7 @@ export const IWORLD_MEMBERS = [
   { name: 'reliquaryMarks', kind: 'data' },
   { name: 'reliquaryRecent', kind: 'data' },
   { name: 'reliquaryObtainCounts', kind: 'data' },
+  { name: 'reliquaryAccountFinds', kind: 'data' },
   { name: 'reliquaryPageCompletion', kind: 'method' },
   { name: 'reliquaryCatalogCompletion', kind: 'method' },
   { name: 'reliquaryCuratorRank', kind: 'method' },
@@ -831,9 +838,17 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // members, housing availability, and the release's ability resolution
     // and Nythraxis readouts plus mount-skin selection: 384 unique members,
     // counted from the table.
-    expect(IWORLD_MEMBERS.length).toBe(384);
-    expect(DATA_MEMBERS.length).toBe(105);
-    expect(METHOD_MEMBERS.length).toBe(279);
+    // THE RELEASE PARENT'S OWN HALF over the v0.43.0 to v0.44.0 span: it read
+    // 378/107/271 on its own, carrying the Market Sweep methods, the Who tab data
+    // and method, CPU-hygiene entityRosterVersion, and the account-wide Book of
+    // Deeds / Reliquary read halves.
+    // Freeholds sync of release/v0.44.0: ours 384/105/279 (the Freehold members
+    // over the v0.43.0 base 371/103/268), the release 378/107/271; per axis
+    // 371+13+7=391 members, 103+2+4=109 data, 268+11+3=282 methods, confirmed
+    // by a suite run on the merged table.
+    expect(IWORLD_MEMBERS.length).toBe(391);
+    expect(DATA_MEMBERS.length).toBe(109);
+    expect(METHOD_MEMBERS.length).toBe(282);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -851,6 +866,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'acceptQuest',
       'accountAdmin',
       'accountCosmetics',
+      'accountDeeds',
       'accountFlair',
       'activeBorder',
       'activeConsecrations',
@@ -973,6 +989,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'enterDelve',
       'enterDungeon',
       'entities',
+      'entityRosterVersion',
       'equipBag',
       'equipItem',
       'equipItemToSlot',
@@ -1068,6 +1085,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketListInstance',
       'marketSearch',
       'marketSellPriceCheck',
+      'marketSweep',
+      'marketSweepQuote',
       'mountLessonActive',
       'mountRaceCancel',
       'mountRaceStart',
@@ -1125,6 +1144,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'redoPlacement',
       'releaseEmpoweredAbility',
       'releaseSpirit',
+      'reliquaryAccountFinds',
       'reliquaryCatalogCompletion',
       'reliquaryCuratorRank',
       'reliquaryFirstFind',
@@ -1227,6 +1247,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'vaultInfo',
       'vaultWithdraw',
       'vendorBuyback',
+      'whoInfo',
+      'whoRequest',
       'xp',
     ]);
   });
@@ -1235,6 +1257,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     expect(DATA_MEMBERS.map((m) => m.name).sort()).toEqual([
       'accountAdmin',
       'accountCosmetics',
+      'accountDeeds',
       'activeBorder',
       'activeConsecrations',
       'activeFrostRings',
@@ -1278,6 +1301,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'dungeonFinderBoard',
       'dungeonFinderInfo',
       'entities',
+      'entityRosterVersion',
       'equipment',
       'equipmentInstances',
       'farmPatches',
@@ -1317,6 +1341,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'questsDone',
       'realm',
       'recipeList',
+      'reliquaryAccountFinds',
       'reliquaryFirstFind',
       'reliquaryMarks',
       'reliquaryObtainCounts',
@@ -1337,6 +1362,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'unlockedMilestones',
       'vaultInfo',
       'vendorBuyback',
+      'whoInfo',
       'xp',
     ]);
   });
@@ -1497,6 +1523,8 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'marketListInstance',
       'marketSearch',
       'marketSellPriceCheck',
+      'marketSweep',
+      'marketSweepQuote',
       'mountLessonActive',
       'mountRaceCancel',
       'mountRaceStart',
@@ -1622,6 +1650,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'vaultDeposit',
       'vaultDepositAll',
       'vaultWithdraw',
+      'whoRequest',
     ]);
   });
 });
@@ -1706,6 +1735,7 @@ type AssertNever<T extends never> = T;
 const FACET_ENTITY_ROSTER = [
   'cfg',
   'entities',
+  'entityRosterVersion',
   'playerId',
   'player',
   'moveInput',
@@ -1971,6 +2001,8 @@ type _ExhaustCardMinigame = AssertNever<
 
 const FACET_SOCIAL_GRAPH = [
   'socialInfo',
+  'whoInfo',
+  'whoRequest',
   'friendAdd',
   'friendRemove',
   'blockAdd',
@@ -2011,6 +2043,8 @@ const FACET_MARKET = [
   'marketList',
   'marketListInstance',
   'marketBuy',
+  'marketSweepQuote',
+  'marketSweep',
   'marketCancel',
   'marketCollect',
 ] as const satisfies readonly (keyof IWorldMarket)[];
@@ -2187,6 +2221,7 @@ type _ExhaustProfessions = AssertNever<
 
 const FACET_DEEDS = [
   'deedsEarned',
+  'accountDeeds',
   'deedStats',
   'renown',
   'activeTitle',
@@ -2204,6 +2239,7 @@ const FACET_RELIQUARY = [
   'reliquaryMarks',
   'reliquaryRecent',
   'reliquaryObtainCounts',
+  'reliquaryAccountFinds',
   'reliquaryPageCompletion',
   'reliquaryCatalogCompletion',
   'reliquaryCuratorRank',
@@ -2379,9 +2415,10 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
 
   it('the facet union equals the pinned IWORLD_MEMBERS set', () => {
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
-    // Literal union size, including both branches' additions.
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(384);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(384);
+    // Mirrors the IWORLD_MEMBERS.length pin above; this pin and the one above
+    // must always agree.
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(391);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(391);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

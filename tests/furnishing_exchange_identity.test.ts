@@ -229,6 +229,7 @@ function viewInput(rows: WocListingView[]): WocMarketViewInput {
       estimate: null,
       sales: null,
     },
+    history: { sales: [], hasMore: false, page: 0, loading: false, failed: false },
     activity: {
       listings: rows,
       bids: [],
@@ -311,6 +312,52 @@ describe('furnishing Exchange identity', () => {
       expect(h.listing.startCents).toBe(5000);
       expect(h.listing.sellerAccount).toBe(1);
     }
+  });
+
+  it('frames Sales History rows at authored furnishing quality with gear as control', () => {
+    const input = viewInput([]);
+    const sale = { priceCents: 100, sellerName: 'A', buyerName: 'B', atMs: NOW };
+    input.history = {
+      sales: [
+        { ...sale, id: 1, itemId: FURNISHING.id, quality: 'legendary' },
+        { ...sale, id: 2, itemId: GEAR.id, quality: 'legendary' },
+        { ...sale, id: 3, itemId: FURNISHING.id },
+      ],
+      hasMore: false,
+      page: 0,
+      loading: false,
+      failed: false,
+    };
+    const view = buildWocMarketView(input);
+    if (view.kind !== 'ready') throw new Error('missing ready market');
+    expect(view.history.rows.map((row) => row.quality)).toEqual(['rare', 'legendary', 'rare']);
+  });
+
+  it('frames realm Sales History wire rows at authored furnishing quality, gear as control', async () => {
+    const sale = { priceCents: 100, sellerName: 'A', buyerName: 'B', atMs: NOW, saleType: null };
+    const sales = [
+      { ...sale, id: 1, itemId: FURNISHING.id, quality: 'legendary' },
+      { ...sale, id: 2, itemId: GEAR.id, quality: 'legendary' },
+    ];
+    configureWocMarketRuntime({
+      service: {
+        realmSalesHistory: async () => ({ sales, hasMore: false, pageSize: 25 }),
+      } as unknown as WocMarketService,
+    });
+    const route = routes.find(
+      (row) => row.method === 'GET' && row.path === '/api/woc-market/sales',
+    );
+    expect(route).toBeDefined();
+    const ctx = fakeCtx({
+      method: 'GET',
+      url: '/api/woc-market/sales',
+      account: { accountId: 7, scope: 'read' },
+    });
+    await route!.handler(ctx);
+    const response = ctx.res as unknown as FakeRes;
+    expect(response.statusCode).toBe(200);
+    const result = JSON.parse(response.body).sales;
+    expect(result.map((row: { quality: string }) => row.quality)).toEqual(['rare', 'legendary']);
   });
 
   it('normalizes old listing wire quality while retaining raw copy identity and gear quality', async () => {

@@ -272,9 +272,8 @@ describe('furnishing equipment power isolation', () => {
       runWeaponProcs(sim.ctx, entity, entity, 'weaponHit', WEAPON.id, hand);
       expect(chance).toHaveBeenCalledTimes(2);
       expect(entity.auras.some((aura) => aura.id === 'furnishing_proc_control')).toBe(true);
-      expect(entity.auras.some((aura) => aura.id === `enchant_weapon_lastflame_zeal_${hand}`)).toBe(
-        true,
-      );
+      // One buff per wielder, keyed by the enchant alone (combat/equip_procs.ts).
+      expect(entity.auras.some((aura) => aura.id === 'enchant_weapon_lastflame_zeal')).toBe(true);
     },
   );
 });

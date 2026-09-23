@@ -1167,9 +1167,11 @@ describe('the professions blob growth bound (phase 16)', () => {
     // One quest recipe adds exactly 30 UTF-8 bytes to retained knowledge.
     // Crafted furnishings add 324 UTF-8 bytes in ten retained recipe ids.
     // Real settled measurement: 18,837 + 324 = 19,161; preserve the tracking width.
-    expect(bytes).toBe(19161);
-    expect(bytes).toBeGreaterThan(18781);
-    expect(bytes).toBeLessThan(19162);
+    // The release/v0.44.0 stamina baseline model shortens this fixture's baked
+    // equipped-instance payloads by 7 bytes: 19,161 - 7 = 19,154; same band width.
+    expect(bytes).toBe(19154);
+    expect(bytes).toBeGreaterThan(18774);
+    expect(bytes).toBeLessThan(19155);
     // Strictly dominated by the band's upper edge while the band holds:
     // kept as documentation that the structural ceiling also bounds this
     // state, never the live guard.
@@ -1954,8 +1956,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // professions arm pins, so the two measurements can never describe
     // different fixtures.
     const professions = professionsBytes(s2);
-    expect(professions).toBeGreaterThan(18781);
-    expect(professions).toBeLessThan(19162);
+    expect(professions).toBeGreaterThan(18774);
+    expect(professions).toBeLessThan(19155);
 
     // Every container really reached its ceiling through the load (the
     // `field in state` and non-empty pins above are the pattern): a load clamp
@@ -2190,7 +2192,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     const beforeHearthKeyBytes = Buffer.byteLength(JSON.stringify(beforeHearthKey), 'utf8');
     expect(bytes - beforeHearthKeyBytes).toBe(13);
     expect(fieldBytes(s2, 'deedStats') - fieldBytes(beforeHearthKey, 'deedStats')).toBe(13);
-    expect(beforeHearthKeyBytes).toBe(213319);
+    expect(beforeHearthKeyBytes).toBe(213568);
     const FREEHOLD_ROOM_IDS = ['freehold_inn_room', 'freehold_cottage'] as const;
     const withoutFreeholdRooms = structuredClone(beforeHearthKey);
     for (const id of FREEHOLD_ROOM_IDS) {
@@ -2225,7 +2227,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         freeholdRoomsDelta.deedStats +
         freeholdRoomsDelta.heroicDaily,
     ).toBe(beforeHearthKeyBytes - withoutFreeholdRoomsBytes);
-    expect(withoutFreeholdRoomsBytes).toBe(213105);
+    expect(withoutFreeholdRoomsBytes).toBe(213354);
     // Isolate the accepted crafted cohort before checking older catalog baselines.
     const craftedRecipeIds = FURNISHING_RECIPES.map((recipe) => recipe.id);
     const craftedItemIds = [
@@ -2261,9 +2263,9 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     );
     expect(craftedDelta).toEqual({ knownRecipes: 324, deedStats: 355, reliquary: 576 });
     const beforeCraftedBytes = Buffer.byteLength(JSON.stringify(beforeCrafted), 'utf8');
-    expect(beforeCraftedBytes).toBe(211850);
+    expect(beforeCraftedBytes).toBe(212099);
     expect(withoutFreeholdRoomsBytes - beforeCraftedBytes).toBe(1255);
-    expect(bytes).toBe(213332);
+    expect(bytes).toBe(213581);
     const fixtureBaseline = {
       equipment: 273,
       equipmentInstance: 1593,
@@ -2278,11 +2280,16 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         fieldBytes(beforeCrafted, key as keyof typeof fixtureBaseline) - value,
       ]),
     );
+    // Re-pinned 2026-09-11 with the stamina baseline model: a masterwork or
+    // Perfecting bake on a caster piece now carries its Stamina growth beside
+    // Intellect and Spirit (tierDeltaStats, item_budget.ts), so every baked
+    // copy in the maximal bags and bank is a few bytes longer and the
+    // equipped-instance delta shrinks by the same shape.
     expect(fixtureDelta).toEqual({
       equipment: 115,
-      equipmentInstance: -10,
-      inventory: 16320,
-      bank: 35904,
+      equipmentInstance: -17,
+      inventory: 16400,
+      bank: 36080,
       vendorBuyback: 756,
       knownRecipes: 62,
     });
@@ -2349,7 +2356,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     ).toBe(444);
     const beforeFurnishingsBytes = Buffer.byteLength(JSON.stringify(withoutFurnishings), 'utf8');
     expect(beforeCraftedBytes - beforeFurnishingsBytes).toBe(632);
-    expect(beforeFurnishingsBytes).toBe(211218);
+    expect(beforeFurnishingsBytes).toBe(211467);
     const withoutFurnishingsAndFieldKit: CharacterState = {
       ...withoutFurnishings,
       deedStats: {
@@ -2363,7 +2370,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
       JSON.stringify(withoutFurnishingsAndFieldKit),
       'utf8',
     );
-    expect(beforeHomesteaderBytes).toBe(211206);
+    expect(beforeHomesteaderBytes).toBe(211455);
     const withoutHomesteaderDeeds: CharacterState = {
       ...withoutFurnishingsAndFieldKit,
       deeds: { ...withoutFurnishingsAndFieldKit.deeds },
@@ -2382,8 +2389,8 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     }
     const historicalBytes = Buffer.byteLength(JSON.stringify(withoutHomesteaderDeeds), 'utf8');
     expect(beforeHomesteaderBytes - historicalBytes).toBe(85);
-    expect(counterfactualBytes).toBe(211838);
-    expect(beforeCraftedBytes).toBe(211850);
+    expect(counterfactualBytes).toBe(212087);
+    expect(beforeCraftedBytes).toBe(212099);
 
     // The one-time hammer recipe/proof content adds against the pre-hammer,
     // field-kit-excluded fixture (156144): the Crucible fixture-repair deltas
@@ -2513,18 +2520,19 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // baseline: 209,474 at the crafted-content close, 209,524 once the hub
     // training dummy and hub healing dummy PRs landed their two guided practice
     // quests (+50, attributed above; neither dummy nor its NPC touches any
-    // other field this fixture tracks).
+    // other field this fixture tracks), and 209,773 once the release's stamina
+    // bake (+249, attributed below) landed.
     expect(
       Buffer.byteLength(JSON.stringify(preReleaseCounterfactual), 'utf8'),
       'both branch additions removed, preserves the recorded Crucible+hammer baseline',
-    ).toBe(209524);
+    ).toBe(209773);
     // Packet additions and field_kit removed, retaining the Bramblehide release
     // content, the hub practice quests and the two dev-mount reins:
-    // 209,524 + 1,548 + 49 = 211,121.
+    // 209,773 + 1,548 + 49 = 211,370 (the release stamina bake adds 249 to both).
     expect(
       historicalBytes,
       'packet additions and field_kit removed, retains the Bramblehide release content',
-    ).toBe(211121);
+    ).toBe(211370);
     const priorContent = withoutCrucibleContent(s2);
     const contentDelta = Object.fromEntries(
       (['knownRecipes', 'deedStats', 'reliquary'] as const).map((key) => [
@@ -2547,7 +2555,7 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
         return [field, bytes - Buffer.byteLength(JSON.stringify(stripped), 'utf8')];
       }),
     );
-    expect(metadataDelta).toEqual({ perfectingBonus: 11880, perfectingBound: 5934 });
+    expect(metadataDelta).toEqual({ perfectingBonus: 11872, perfectingBound: 5934 });
     // Combined fixture (Crucible baseline + hammer recipe/proof content +
     // field_kit, both Hearth cohorts, Homesteader, Bramblehide/Nythgap and
     // the two owner-keyed freehold rooms), composed measurement: 213,220
@@ -2563,15 +2571,26 @@ describe('the whole-character gear-heavy maximal blob (Phase 18 U-MEASURE)', () 
     // measurement plus one); the warning threshold remains unchanged.
     // The Hearth Key discovery entry adds exactly 13 measured bytes to the
     // composed fixture. Rebase both edges together, keeping the same width.
-    expect(bytes, reMint).toBeGreaterThan(212952);
-    expect(bytes, reMint).toBeLessThan(213333);
+    // RE-BASED 2026-09-11 on the release side for the stamina baseline model
+    // (item_budget.ts, PR 3993): +249, because a masterwork or Perfecting bake
+    // on a caster piece now carries its Stamina growth beside Intellect and
+    // Spirit (tierDeltaStats), so every baked copy in the maximal bags and bank
+    // is a few bytes longer (the fixtureDelta block above records the shape:
+    // inventory +80, bank +176, equipped-instance delta -7), while the
+    // Perfecting bonus metadata lost the zero-valued Spirit keys the old
+    // normaliser wrote (-8, the perfectingBonus 11,872 above).
+    // RE-BASED at the Freeholds sync of release/v0.44.0 by that same +249, so
+    // 213,332 becomes 213,581 and every absolute figure in the isolation chain
+    // moves by the same 249.
+    expect(bytes, reMint).toBeGreaterThan(213201);
+    expect(bytes, reMint).toBeLessThan(213582);
 
     // The Crucible database review approved 229,376 bytes (224 KiB), the first
     // 32-KiB step above the corrected 209,261-byte pre-field-kit fixture it was
     // minted against (historical: that is the figure the threshold's own 32-KiB
     // step was derived from, not this arm's measurement). The previous
     // 163,840-byte threshold warned on this legal modeled state. Measured here,
-    // the combined fixture is 213,332 bytes, 16,044 below the threshold.
+    // the combined fixture is 213,581 bytes, 15,795 below the threshold.
     // A content change must be attributed and the narrow band re-measured,
     // never widened. This is warning-only; save-path tests prove oversized
     // saves stay whole.

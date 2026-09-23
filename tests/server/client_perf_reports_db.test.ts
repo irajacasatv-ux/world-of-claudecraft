@@ -1,6 +1,7 @@
 // server/client_perf_reports_db.ts: the client performance telemetry accessors,
 // moved whole out of server/db.ts to pay for the freehold persistence wiring
-// against the monolith ratchet. The behaviour is already covered where it was
+// against the monolith ratchet (the release made the same move; the v0.44.0
+// sync kept the release's copy, a superset carrying its new columns). The behaviour is already covered where it was
 // always covered (tests/db_retention_prune.test.ts drives the retention batch
 // and tests/perf_report.test.ts drives the insert, both through the db.ts
 // re-export, which is exactly the point of keeping that re-export). What is NEW
@@ -37,13 +38,19 @@ describe('the client-perf telemetry extraction', () => {
   });
 
   it('db.ts re-exports every moved name so no caller re-points', () => {
+    // Both parents made this extraction; the release/v0.44.0 sync kept the
+    // release's re-export block, which serves the index SQL from its
+    // dependency-free home and the accessors (and their row type) from the new
+    // module. Pinned in that exact shape.
     const db = codeOnly(read('server/db.ts')).replace(/\s+/g, ' ');
-    expect(db).toContain("export type { ClientPerfReportInsert } from './client_perf_reports_db';");
     for (const name of MOVED) {
       expect(db, `${name} must ride the db.ts re-export`).toContain(name);
     }
     expect(db).toContain(
-      `export { ${MOVED.join(', ')}, } from './client_perf_reports_db';`.replace(/\s+/g, ' '),
+      `export { ${MOVED.slice(0, 3).join(', ')}, } from './client_perf_indexes';`,
+    );
+    expect(db).toContain(
+      `export { type ClientPerfReportInsert, ${MOVED.slice(3).join(', ')}, } from './client_perf_reports_db';`,
     );
   });
 

@@ -24,8 +24,10 @@ export function gatePromptHtml(
     tabStripModel({
       ariaLabel: t('hudChrome.housing.gate.title'),
       panelId: 'gate-panel',
-      stripClass: 'fh-gate-tabs',
-      tabClass: 'fh-gate-tab soc-tab',
+      // The library tab primitive (library.css .ui-tabs/.ui-tab) owns the look;
+      // the release's interface pass left .soc-tab as social-window layout only.
+      stripClass: 'fh-gate-tabs ui-tabs',
+      tabClass: 'fh-gate-tab ui-tab',
       selectedClass: 'on',
       selected: draft.tab,
       tabs: [

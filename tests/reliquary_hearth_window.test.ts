@@ -53,6 +53,9 @@ function makeWindow() {
         reliquaryRecent: [],
         reliquaryFirstFind: {},
         reliquaryObtainCounts: {},
+        // The release's account ledger reads (src/ui/reliquary_window.ts).
+        accountDeeds: new Map(),
+        reliquaryAccountFinds: new Map(),
         ownedMounts: () => [],
         accountCosmetics: { weaponSkinIds: [] },
         deedsEarned: ownership.deedsEarned,

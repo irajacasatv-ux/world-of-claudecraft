@@ -3,6 +3,7 @@
 // these deltas into coloured tooltip lines; see Hud.itemCompareBlock.
 
 import { activeItemInstanceStats } from '../sim/item_instance_stats';
+import { lootQualityWeapon } from '../sim/loot_quality';
 import type { CoreStats, ItemDef, ItemInstancePayload } from '../sim/types';
 
 // Stable stat identifier; the HUD maps it to a localized label via t().
@@ -28,6 +29,7 @@ export type CompareStat =
 export function sameItemCopy(a?: ItemInstancePayload, b?: ItemInstancePayload): boolean {
   if (!a || !b) return a === b;
   return (
+    JSON.stringify(a.lootQuality ?? null) === JSON.stringify(b.lootQuality ?? null) &&
     JSON.stringify(a.rift ?? null) === JSON.stringify(b.rift ?? null) &&
     JSON.stringify(a.rolled ?? null) === JSON.stringify(b.rolled ?? null)
   );
@@ -45,7 +47,10 @@ export function shouldCompareCopies(
   worn?: ItemInstancePayload,
 ): boolean {
   if (hoveredId !== equippedId) return true;
-  return !!hovered?.rift && !sameItemCopy(hovered, worn);
+  return (
+    !!(hovered?.rift || worn?.rift || hovered?.lootQuality || worn?.lootQuality) &&
+    !sameItemCopy(hovered, worn)
+  );
 }
 
 export interface StatDelta {
@@ -59,7 +64,8 @@ function weaponDps(w: ItemDef['weapon']): number {
 }
 
 // The stats a copy can carry on top of its definition (rolled.stats keys):
-// weapon dps and the WARFARE pair are definition-only and read elsewhere.
+// weapon dps reads through lootQualityWeapon and the WARFARE pair through
+// warfareRating below, both per copy as well.
 type CopyStat = Exclude<CompareStat, 'dps' | 'warfare'>;
 
 // A stat as the wearer would feel it: the definition's line plus whatever the
@@ -76,7 +82,9 @@ function effectiveStat(
   key: CopyStat,
 ): number {
   if (!def) return 0;
-  const rolled = activeItemInstanceStats(instance)?.[key];
+  const rolled = activeItemInstanceStats(instance, def)?.[
+    key === 'healPower' ? 'healingPower' : key
+  ];
   const bonus = Number.isFinite(rolled) ? (rolled as number) : 0;
   const base =
     key === 'armor' ||
@@ -107,7 +115,9 @@ export function itemStatDeltas(
   if (item.kind === 'furnishing') return [];
   const equippedPower = equipped.kind === 'furnishing' ? undefined : equipped;
   const out: StatDelta[] = [];
-  const dpsDelta = weaponDps(item.weapon) - weaponDps(equippedPower?.weapon);
+  const dpsDelta =
+    weaponDps(lootQualityWeapon(item, itemInstance)) -
+    weaponDps(equippedPower ? lootQualityWeapon(equippedPower, equippedInstance) : undefined);
   if (Math.abs(dpsDelta) >= 0.05) out.push({ stat: 'dps', delta: dpsDelta, decimals: 1 });
 
   const stats: Array<keyof CoreStats & CompareStat> = ['armor', 'str', 'agi', 'sta', 'int', 'spi'];
@@ -117,9 +127,20 @@ export function itemStatDeltas(
     if (Math.abs(delta) >= 0.5) out.push({ stat: k, delta, decimals: 0 });
   }
 
-  const warfareRating = (def: ItemDef | undefined): number =>
-    Math.min(def?.pvpOffenseRating ?? 0, def?.pvpDefenseRating ?? 0);
-  const warfareDelta = warfareRating(item) - warfareRating(equippedPower);
+  // Warfare is the lower of the two PvP ratings, each read as the wearer would
+  // feel it (the definition plus the copy's resolved bonus, the same merge
+  // recalcPlayerStats applies), so a quality-rolled copy compares honestly.
+  const warfareRating = (def: ItemDef | undefined, instance?: ItemInstancePayload): number => {
+    if (!def) return 0;
+    const rolled = activeItemInstanceStats(instance, def);
+    const rating = (key: 'pvpOffenseRating' | 'pvpDefenseRating'): number => {
+      const bonus = rolled?.[key];
+      return (def[key] ?? 0) + (Number.isFinite(bonus) ? (bonus as number) : 0);
+    };
+    return Math.min(rating('pvpOffenseRating'), rating('pvpDefenseRating'));
+  };
+  const warfareDelta =
+    warfareRating(item, itemInstance) - warfareRating(equippedPower, equippedInstance);
   if (Math.abs(warfareDelta) >= 0.5) {
     out.push({ stat: 'warfare', delta: warfareDelta, decimals: 0 });
   }

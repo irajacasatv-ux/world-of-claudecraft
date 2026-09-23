@@ -102,8 +102,8 @@ external-write and audit-only boundaries. Reuse canonical contracts without copy
 runtime directives. Freeholds records Codex lessons in `docs/freeholds/state.md` "Gotchas".
 
 Registered roles cover sim architecture, host parity, persistence, database performance,
-security, test coverage, frontend, release malware and official documentation. The main
-agent owns integration and deterministic execution. Reviewers consume the assigned scope
+server hot path, security, test coverage, frontend, release malware and official
+documentation. The main agent owns integration and deterministic execution. Reviewers consume the assigned scope
 and evidence. An unresolved diff is a failed dispatch, not a clean review.
 
 Use every matching concern in `docs/qa-gate.md`. When its Codex column has no role, give a
@@ -116,6 +116,10 @@ reporting completion.
 again on the finished diff, including driver/dependency and PostgreSQL engine, resource,
 configuration and topology changes. The documentation role adds an optional credential-free
 OpenAI Docs MCP; it does not remove inherited MCP servers. Use only relevant read-only tools.
+
+`woc_server_hot_path` reviews per-tick, per-request, per-broadcast and recurring server work
+(a `selfWireJson` key or the `src/sim/` read it calls, an autosave, sweep or durability write,
+a `world_state` blob), the non-SQL budget beside the database role.
 
 ## Hooks, CI and validation
 

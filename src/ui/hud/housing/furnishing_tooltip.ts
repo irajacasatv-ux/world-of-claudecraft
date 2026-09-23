@@ -48,12 +48,14 @@ export function furnishingItemTooltip(
   );
   if (item.soulbound) {
     html += `<div class="tt-sub" style="color:var(--gold)">${esc(t('hudChrome.itemSoulbound'))}</div>`;
+    // Def-gated like the gear card (release 034ef032b0): a party-trade marker on
+    // a drop that is no longer bind-on-pickup promises nothing.
+    html += instancePartyTradeLine(
+      instance,
+      (untilMs) => world.partyTradeMsRemaining(untilMs),
+      item.kind,
+    );
   }
-  html += instancePartyTradeLine(
-    instance,
-    (untilMs) => world.partyTradeMsRemaining(untilMs),
-    item.kind,
-  );
   html += instanceLockLine(instance);
   html += furnishingTooltipLines(item, instance);
   html += vendorSellTooltipLine(item);

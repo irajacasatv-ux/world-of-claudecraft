@@ -533,7 +533,12 @@ describe('pledgePanelView (the officer Pledges tab)', () => {
     guild: {
       ...(SOCIAL.guild as GuildInfo),
       rank,
-      pledgeSettings: { enabled: false, minLevel: 20, note: 'serious guild' },
+      pledgeSettings: {
+        enabled: false,
+        minLevel: 20,
+        note: 'serious guild',
+        newPlayerFriendly: false,
+      },
       pledges: [
         { id: 21, name: 'Hopeful', cls: 'mage', level: 12, realm: 'Test', sinceMs: 5 },
         { id: 22, name: 'Eager', cls: 'rogue', level: 30, realm: 'Test', sinceMs: 9 },
@@ -545,7 +550,12 @@ describe('pledgePanelView (the officer Pledges tab)', () => {
     for (const rank of ['leader', 'officer'] as const) {
       const panel = pledgePanelView(withPledges(rank));
       expect(panel).not.toBeNull();
-      expect(panel?.settings).toEqual({ enabled: false, minLevel: 20, note: 'serious guild' });
+      expect(panel?.settings).toEqual({
+        enabled: false,
+        minLevel: 20,
+        note: 'serious guild',
+        newPlayerFriendly: false,
+      });
       expect(panel?.rows.map((r) => r.name)).toEqual(['Hopeful', 'Eager']);
       expect(panel?.rows[0]).toEqual({ name: 'Hopeful', cls: 'mage', level: 12, sinceMs: 5 });
     }

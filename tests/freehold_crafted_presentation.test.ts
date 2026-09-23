@@ -16,7 +16,7 @@ vi.mock('../server/db', () => ({
 
 import { GameServer } from '../server/game';
 import { buildWorldHello } from '../server/world_hello';
-import { anchorFields } from '../src/net/item_copy_anchor_wire';
+import { anchorFields } from '../src/net/anchor_fields';
 import { ClientWorld } from '../src/net/online';
 import { FURNISHING_RECIPES } from '../src/sim/content/freehold/furnishing_recipes';
 import { HEROIC_VENDOR_STOCK } from '../src/sim/content/heroic_vendor';

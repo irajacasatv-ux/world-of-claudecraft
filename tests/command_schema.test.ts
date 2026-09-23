@@ -141,10 +141,12 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // counts each move by one over the eighth composition; dispatch-only stays
 // 13. Set from a suite run on the merged tree, never by arithmetic in the
 // diff.
-// The combined universe preserves the Freehold commands and the release's
-// mount-skin selection pair. Counts re-derived from both source scans.
-const EXPECTED_SEND_COUNT = 232;
-const EXPECTED_DISPATCH_COUNT = 246;
+// RE-PINNED at the Freeholds sync of release/v0.44.0. BOTH parent pins for the
+// record: ours 232/246 (the Freehold commands over the v0.43.0 base), the
+// release 225/239 (the Who tab plus the two Market Sweep pairs), on the shared
+// base 222/236. Per axis: send 222+10+3=235, dispatch 236+10+3=249.
+const EXPECTED_SEND_COUNT = 235;
+const EXPECTED_DISPATCH_COUNT = 249;
 const EXPECTED_DISPATCH_ONLY_COUNT = 14;
 
 // The chat sub-channel routing switch (server/game.ts `switch

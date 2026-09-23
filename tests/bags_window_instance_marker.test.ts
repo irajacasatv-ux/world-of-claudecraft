@@ -77,6 +77,7 @@ function windowFor(
     closeBank: noop,
     onClosed: noop,
     addItemToTrade: noop,
+    tradeOfferHeadroom: () => 0,
     stageMarketSell: noop,
     stageMailParcel: noop,
     insertItemChatLink: noop,
@@ -90,7 +91,7 @@ function windowFor(
     clearActionDropTargets: noop,
     dragState: new ItemDragState(),
     isTouchHud: () => false,
-    confirmVendorSell: () => true,
+    sellConfirmPolicy: () => ({ enabled: true, minQualityRank: 1 }),
     markEquipDropTargets: noop,
     dropOnEquipSlot: noop,
     dropOnActionSlot: noop,
@@ -119,6 +120,7 @@ describe('bag_instance_glyph_view: kind priority', () => {
           perfected: true,
           rolled: { quality: 'legendary', masterwork: true, stats: { str: 100 } },
           enchant: 'enchant_chest_stamina',
+          lootQuality: { version: 1, tier: 4, weights: [4, 900, 200, 6, 7] },
         };
         const root = windowFor([{ itemId: FURNISHING.id, count: 1, instance: copy }]);
         const cell = root.querySelector('button.bag-item');
@@ -127,9 +129,11 @@ describe('bag_instance_glyph_view: kind priority', () => {
         );
         expect(cell?.querySelector(signed ? '.bi-glyph-signed' : '.bi-instance')).not.toBeNull();
         expect(cell?.querySelector('.bi-masterwork-seal, .bi-glyph-enchanted')).toBeNull();
+        expect(cell?.querySelector('.loot-quality-badge')).toBeNull();
         expect(iconCalls).toEqual([{ id: FURNISHING.id, quality: 'rare' }]);
         const gear = windowFor([{ itemId: 'worn_sword', count: 1, instance: copy }]);
         expect(gear.querySelector('.bi-masterwork-seal')).not.toBeNull();
+        expect(gear.querySelector('.loot-quality-badge')).not.toBeNull();
         expect(gear.querySelector('button.bag-item')?.getAttribute('aria-label')).toContain(
           'Forbidden Crown',
         );

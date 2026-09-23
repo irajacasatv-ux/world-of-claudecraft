@@ -6,6 +6,12 @@ export interface IWorldEntityRoster {
   // Presentation capability; absent is disabled and acquisition remains authoritative.
   cfg: { seed: number; playerClass: PlayerClass; world?: WorldContent; freeholdsEnabled?: boolean };
   entities: Map<number, Entity>;
+  // Bumped on EVERY entity add or drop in this world, never on a move or a
+  // stat change: a per-frame consumer that only needs to re-walk the roster
+  // when its membership changed (view candidates, party pets, rift ambience)
+  // compares this instead of walking every entity every frame. Monotonic
+  // within a session; the value itself carries no meaning.
+  entityRosterVersion: number;
   playerId: number;
   player: Entity;
   moveInput: MoveInput;

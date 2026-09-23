@@ -8,6 +8,7 @@ import {
 } from '../src/sim/colliders';
 import { BUILTIN_WORLD, NPCS, setActiveWorldContent } from '../src/sim/data';
 import { shouldSpawnSurfaceNpc } from '../src/sim/freehold';
+import { npcRoleFor, vendorRoleForStock } from '../src/sim/npc_role';
 import { Sim } from '../src/sim/sim';
 import { generateDecorations, groundHeight, roadDistance, waterLevel } from '../src/sim/world';
 import { WORLD_SEED } from '../src/sim/world_seed';
@@ -53,8 +54,14 @@ describe('authored furnisher construction and world geometry', () => {
     // after the player, so nextId and entityCount move by exactly three and
     // the position digest follows; primaryId, the merchant and banker ids and
     // the rng cursor are unchanged, which is what proves nothing else moved.
-    // Release 57a2ced3bd adds reserved-id Crucible Quartermaster Bronn. Removing
-    // only that row reproduces the previous position digest exactly.
+    // Release 57a2ced3bd adds reserved-id Crucible Quartermaster Bronn. At that
+    // landing, removing only that row reproduced the previous position digest.
+    // RE-MEASURED at the release/v0.44.0 sync (tip 56525e0343): the release's own
+    // tree measures this exact fingerprint (1031 entities, the same position
+    // digest and rng cursor), measured on both trees, so the dark merged world
+    // adds nothing of its own; the six new entities and the moved positions are
+    // the release's. The Bronn-excluded digest below is re-measured on that same
+    // merged world, so it no longer names the pre-Bronn release.
     const sim = new Sim({ seed: 1, playerClass: 'warrior' });
     expect({
       nextId: sim.nextId,
@@ -77,8 +84,8 @@ describe('authored furnisher construction and world geometry', () => {
       primaryId: 999,
       merchants: [1, 33],
       bankers: [9, 22, 34, 95],
-      entityCount: 1025,
-      positionHash: '242a9339ce170c9fe5cda8142ce1248efe9251fcc09f6294d493ce67d0209d3d',
+      entityCount: 1031,
+      positionHash: '96cd76326c03f0ca919d12cdefa4721da47d63807f04d89672ba52caff05a569',
       rngNext: 0.30275995447300375,
     });
     expect(sim.entities.get(1000000003)?.templateId).toBe('crucible_quartermaster');
@@ -94,7 +101,7 @@ describe('authored furnisher construction and world geometry', () => {
             hp: e.hp,
           })),
       ),
-    ).toBe('f35ecfebc49623b9e237b6cb1f39656ad56011e5aebd8a6159e9a96dde11e400');
+    ).toBe('29a4384f3153721144d9cc2eb8d9a26e005b025f38ca2a9785d157b7a44ace01');
     expect([...sim.entities.values()].some((e) => e.templateId === 'freehold_furnisher')).toBe(
       false,
     );
@@ -139,10 +146,14 @@ describe('authored furnisher construction and world geometry', () => {
         0.05,
       );
     }
-    const neighbors = Object.values(NPCS).filter((npc) => npc.id !== 'freehold_furnisher');
-    expect(
-      Math.min(...neighbors.map((npc) => Math.hypot(npc.pos.x - pos.x, npc.pos.z - pos.z))),
-    ).toBe(6);
+    // Release 77fd08ab72 moved Apothecary Lin (6 yd) and Marshal Redbrook (10 yd)
+    // onto the civic square stands, so the nearest neighbour is now Cook Marlow.
+    const neighbors = Object.values(NPCS)
+      .filter((npc) => npc.id !== 'freehold_furnisher')
+      .map((npc) => ({ id: npc.id, d: Math.hypot(npc.pos.x - pos.x, npc.pos.z - pos.z) }))
+      .sort((a, b) => a.d - b.d);
+    expect(neighbors[0].id).toBe('cook_marlow');
+    expect(neighbors[0].d).toBeCloseTo(23.676, 3);
   });
 
   it('adding the authored NPC does not alter static colliders, lamp sites or decoration output', () => {
@@ -173,5 +184,16 @@ describe('authored furnisher construction and world geometry', () => {
     const end = nextName === -1 ? source.length : nextName;
     expect(source.slice(start, end).match(/\bfreeholdsEnabled: true\b/g)).toHaveLength(1);
     expect(source.slice(0, start) + source.slice(end)).not.toMatch(/\bfreeholdsEnabled\b/);
+  });
+});
+
+describe('the furnisher nameplate role line', () => {
+  it('names no functional role, so the plate keeps the authored Household Goods title', () => {
+    expect(NPCS.freehold_furnisher.title).toBe('Household Goods');
+    expect(npcRoleFor(NPCS.freehold_furnisher)).toBeNull();
+    expect(vendorRoleForStock(['freehold_timber_bed'])).toBeNull();
+    // Control: furnishing stock beside real wares leaves the wares' role intact.
+    expect(vendorRoleForStock(['freehold_timber_bed', 'tough_jerky'])).toBe('foodVendor');
+    expect(vendorRoleForStock(['smithing_flux'])).toBe('generalGoods');
   });
 });

@@ -1362,13 +1362,47 @@ const ACCEPTED_POLISH_V2_METADATA_PATH = path.join(REPO_ROOT, POLISH_SEAL_PATH);
 // v0.42.0 dependency-floor bump (sharp, js-yaml, vitest): the lockfile is a
 // fingerprint input, so every shipping GLB was size-preserving re-minted and this
 // seal follows the swept evidence. No capture was retaken.
+// Handoff experiment: canonical runtime-input reseal for the NPC layout and
+// renderer wiring. Historical pixels, performance values and capture identity stay frozen.
+// Re-minted for the CPU-hygiene lot (renderer.ts consumer edits and the
+// view-candidate scan extraction): the composite first, then this metadata
+// seal from the swept file. No capture was retaken.
+// Re-minted again for the lot's review round (the shared liveViewCandidate
+// check moved the renderer leaf once more). No capture was retaken.
+// Re-minted for reconciling the latest v0.43.0 base: the release-side
+// CPU-hygiene renderer leaf and the druid Cat Form renderer leaf compose in
+// one tree. No capture was retaken.
 // Freeholds release/v0.43.0 sync: combine the branch's layout and renderer leaves
 // with the release's dependency and GLB fingerprints using the canonical remint.
 // Historical capture identity, pixels, framing and measurements remain unchanged.
+// Re-minted for the Freeholds sync of release/v0.44.0: the branch's layout and
+// renderer leaves compose with the release's. No capture was retaken.
 const ACCEPTED_POLISH_V2_METADATA_SHA256 =
-  '9f499ba1e66013ebb236d5a3a6ddbe8e2d1db986b06723ef6e616ae001f982c0';
+  // Re-minted for the Frame Rate Limit: the renderer leaf gained the chosen-cadence feeds (frame load readings, governor signals). No capture was retaken.
+  // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
+  // Re-minted for the v0.43.0 batch base merge (ossbrain-release/v0.43.0 taking
+  // the Eastbrook handoff): the merged renderer leaf, the moved NPC layout and
+  // the ground-sample leaves compose in one tree. No capture was retaken.
+  // Re-minted for the v0.42.2 hotfix line forward merge into release/v0.43.0:
+  // the merged renderer leaf (main's flanking-platform ground lift and
+  // plateau-aware ground cues over the release's CPU-hygiene and Cat Form
+  // leaves) matches neither parent. No capture was retaken.
+  // Re-minted for the devalue audit floor: pnpm-lock.yaml moved (devalue 5.8.1 to 5.9.4), no renderer input changed. No capture was retaken.
+  // Re-minted for the Freeholds sync of release/v0.44.0: the merged renderer and layout leaves match neither parent. No capture was retaken.
+  'b10788a05b886fdf6035ac32166ac6d68f406b914a5064f39a7fafdb7b574f33';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
-  '3d5043eeba987e05e6c9ba83fb5b4140014afc07826e60ff8a70bb18479cbf6a';
+  // Re-minted for the Frame Rate Limit: the renderer leaf gained the chosen-cadence feeds (frame load readings, governor signals). No capture was retaken.
+  // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
+  // Re-minted for the v0.43.0 batch base merge (ossbrain-release/v0.43.0 taking
+  // the Eastbrook handoff): the merged renderer leaf, the moved NPC layout and
+  // the ground-sample leaves compose in one tree. No capture was retaken.
+  // Re-minted for the v0.42.2 hotfix line forward merge into release/v0.43.0:
+  // the merged renderer leaf (main's flanking-platform ground lift and
+  // plateau-aware ground cues over the release's CPU-hygiene and Cat Form
+  // leaves) matches neither parent. No capture was retaken.
+  // Re-minted for the devalue audit floor: pnpm-lock.yaml moved (devalue 5.8.1 to 5.9.4), no renderer input changed. No capture was retaken.
+  // Re-minted for the Freeholds sync of release/v0.44.0: the merged renderer and layout leaves match neither parent. No capture was retaken.
+  'ddf276128f1c196af4911ff184f1e8f5b63f4a60b200e848162de8d49b25c80c';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2727,9 +2761,29 @@ describe('Eastbrook polish performance and contact evidence', () => {
       // canonical re-sealed evidence files. Capture pixels and scores did not change.
       // v0.42.0 dependency-floor bump: recomputed LAST over the swept evidence
       // after the lockfile-driven GLB re-mint. No capture was retaken.
+      // Re-minted for the CPU-hygiene lot: the composite first, then this
+      // second-order seal over the swept evidence bytes. No capture was retaken.
+      // Review round of the same lot: recomputed LAST again over the re-swept
+      // evidence. No capture was retaken.
+      // Druid Cat Form merge with release/v0.43.0: recomputed LAST again over
+      // the re-swept evidence. No capture was retaken.
+      // Latest v0.43.0 base reconciliation: recomputed LAST again over the
+      // re-swept evidence. No capture was retaken.
+      // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
+      // v0.43.0 batch base merge (ossbrain-release/v0.43.0 taking the Eastbrook
+      // handoff): recomputed LAST again over the re-swept evidence. No capture
+      // was retaken.
+      // v0.42.2 hotfix line forward merge into release/v0.43.0: recomputed LAST
+      // again over the re-swept evidence. No capture was retaken.
+      // Frame Rate Limit: recomputed LAST again over the re-swept evidence. No
+      // capture was retaken.
+      // devalue audit floor: recomputed LAST again over the re-swept evidence. No
+      // capture was retaken.
       // Freeholds release/v0.43.0 sync: recomputed LAST after combining both
       // parents' provenance inputs. Historical performance values are unchanged.
-    ).toBe('eabf167a1a3b008ce94cacb15edc4406a1fc9b203d6af03430ac7bdb477564ed');
+      // Freeholds sync of release/v0.44.0: recomputed LAST again over the
+      // re-swept evidence. No capture was retaken.
+    ).toBe('055652d34ad76f3ade7559fe0aad71101b782ac346914b10cb30c8f17ac0e896');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {
