@@ -4,8 +4,10 @@ import { describe, expect, it } from 'vitest';
 import { FREEHOLD_GATE_STANCE } from '../scripts/freehold_interior_route.mjs';
 import { buildStaticDoorBody } from '../src/render/door_portal';
 import {
+  type EastbrookGrassExclusion,
   eastbrookGrassExclusions,
   FREEHOLD_GATE_GRASS_RADIUS,
+  grassExclusionTestNear,
   insideDressingExclusion,
   insideEastbrookGrassExclusion,
   insideGrassHubExclusion,
@@ -427,8 +429,94 @@ describe('Eastbrook town grass exclusion', () => {
     expect(source).toContain(
       'insideDressingExclusion(activeContent.zones, activeContent.camps, x, z)',
     );
+    // Each chunk tests against its own short list of the snapshot, tufts and
+    // every bloom pass alike (behaviour: tests/foliage_freehold_gate_grass.test.ts).
     expect(source).toMatch(
-      /if \(insideEastbrookGrassExclusion\(townExclusions, x, z, GRASS_BUILDING_PADDING\)\)\s*continue;/,
+      /const excluded = grassExclusionTestNear\(\s*townExclusions,\s*\{ minX, maxX, minZ, maxZ \},\s*GRASS_BUILDING_PADDING,\s*GRASS_BLOOM_STRAY,\s*\);/,
     );
+    expect(source).toMatch(/if \(excluded\(x, z\)\) continue;/);
+    expect(source.match(/excluded\(fx, fz\)/g)).toHaveLength(3);
+  });
+});
+
+describe('a streamed chunk exclusion test', () => {
+  // A seeded walk, so the case set is the same on every run.
+  let state = 0x2f6b1a3d;
+  const next = () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 2 ** 32;
+  };
+  const between = (lo: number, hi: number) => lo + (hi - lo) * next();
+  const box = { minX: 0, maxX: 48, minZ: 0, maxZ: 48 };
+  const exclusions: EastbrookGrassExclusion[] = Array.from({ length: 80 }, (_, i) =>
+    i % 2 === 0
+      ? {
+          kind: 'circle',
+          id: `c${i}`,
+          x: between(-40, 88),
+          z: between(-40, 88),
+          radius: between(0.5, 6),
+        }
+      : {
+          kind: 'obb',
+          id: `o${i}`,
+          x: between(-40, 88),
+          z: between(-40, 88),
+          halfWidth: between(0.5, 6),
+          halfDepth: between(0.5, 6),
+          rotation: between(0, Math.PI),
+        },
+  );
+
+  it('answers as the whole list does for every point within reach of the chunk', () => {
+    const test = grassExclusionTestNear(exclusions, box, 0.35, 3);
+    let inside = 0;
+    for (let i = 0; i < 20_000; i++) {
+      const x = between(box.minX - 3, box.maxX + 3);
+      const z = between(box.minZ - 3, box.maxZ + 3);
+      const whole = insideEastbrookGrassExclusion(exclusions, x, z, 0.35);
+      if (whole) inside++;
+      expect(test(x, z), `${x}, ${z}`).toBe(whole);
+    }
+    // Both answers occur, so the agreement is not two constant functions.
+    expect(inside).toBeGreaterThan(100);
+    expect(inside).toBeLessThan(20_000);
+  });
+
+  it('consults only the exclusions that can reach it', () => {
+    const test = grassExclusionTestNear(exclusions, box, 0.35, 3);
+    expect(test.near.length).toBeGreaterThan(0);
+    expect(test.near.length).toBeLessThan(exclusions.length);
+    // A unit circle, padded to 1.35 yd, reaches 3 yd off the box's west edge
+    // from 4.35 yd out: just beyond that it is dropped, just within it is kept.
+    const edge = (x: number): EastbrookGrassExclusion => ({
+      kind: 'circle',
+      id: 'edge',
+      x,
+      z: 24,
+      radius: 1,
+    });
+    expect(grassExclusionTestNear([edge(-4.36)], box, 0.35, 3).near).toEqual([]);
+    expect(grassExclusionTestNear([edge(-4.34)], box, 0.35, 3).near).toHaveLength(1);
+    expect(grassExclusionTestNear([], box, 0.35, 3)(1, 1)).toBe(false);
+  });
+
+  it('keeps a turned box whose padded corner alone reaches the chunk', () => {
+    // A 2 by 2 yd box turned 45 degrees, its padded corner pointing east at the
+    // chunk: the corner tip sits 1.909 yd off its centre, so from 4.9 yd west of
+    // the chunk it reaches 2.99 yd off the chunk's edge, inside the 3 yd reach.
+    const turned: EastbrookGrassExclusion = {
+      kind: 'obb',
+      id: 'turned',
+      x: -4.9,
+      z: 24,
+      halfWidth: 1,
+      halfDepth: 1,
+      rotation: Math.PI / 4,
+    };
+    expect(insideEastbrookGrassExclusion([turned], -2.995, 24, 0.35)).toBe(true);
+    const test = grassExclusionTestNear([turned], box, 0.35, 3);
+    expect(test.near).toEqual([turned]);
+    expect(test(-2.995, 24)).toBe(true);
   });
 });

@@ -40,8 +40,8 @@ import {
 } from './foliage_collapse';
 import {
   eastbrookGrassExclusions,
+  grassExclusionTestNear,
   insideDressingExclusion,
-  insideEastbrookGrassExclusion,
   insideGrassHubExclusion,
 } from './foliage_core';
 import { survivesLeanDecimation } from './foliage_decimation_core';
@@ -558,6 +558,8 @@ const ROCK_SNOWLINE_Y = 34; // terrain snow tint starts at h~34 (terrain.ts)
 const GRASS_MAX_SLOPE = 0.62;
 const GRASS_SLOPE_EPS = 1.2;
 const GRASS_BUILDING_PADDING = 0.35;
+// The farthest a bloom lands off its tuft: four reps at (1.4 + 3 x 1.3) / 2 = 2.65.
+const GRASS_BLOOM_STRAY = 3;
 
 export interface FoliageView {
   group: THREE.Group;
@@ -2951,16 +2953,14 @@ function buildGrassRing(
     const dxs = Math.max(STABLE_PADDOCK.x1 - chunk.centerX, 0, chunk.centerX - STABLE_PADDOCK.x2);
     const dzs = Math.max(STABLE_PADDOCK.z1 - chunk.centerZ, 0, chunk.centerZ - STABLE_PADDOCK.z2);
     const stableBandChunk = chunkBiome === 'gale' && Math.hypot(dxs, dzs) < 18 + chunkHalfDiag;
-    // the Evergarden's parterre beds are dense solid plantings edge to edge,
-    // plus meadow drifts, so its chunks carry the largest flower buffer
-    // the Willowfen floor is all flower field (its grass is suppressed
-    // below), so its chunks carry a near-garden flower buffer
+    // the Evergarden's parterre beds are dense solid plantings edge to edge, plus meadow
+    // drifts, so its chunks carry the largest flower buffer; the Willowfen floor is all
+    // flower field (its grass is suppressed below): a near-garden flower buffer
     // the Drakelands' authored firebloom fields bloom on near-bare ground
     // (ember grass density is 0), so their chunks need a field-sized buffer
-    // authored flower meadows overlapping this chunk (flower_meadows_core
-    // owns the biome registry); resolved before the buffer so a meadow chunk
-    // gets a field-sized cap even in a sparse biome (the vale's 0.14 would
-    // clip the drifts)
+    // authored flower meadows overlapping this chunk (flower_meadows_core owns the biome
+    // registry); resolved before the buffer so a meadow chunk gets a field-sized cap even in
+    // a sparse biome (the vale's 0.14 would clip the drifts)
     const chunkMinX = chunk.cx * GRASS_CHUNK_SIZE;
     const chunkMinZ = chunk.cz * GRASS_CHUNK_SIZE;
     const meadowsInChunk = flowerMeadowsInChunk(
@@ -3001,6 +3001,12 @@ function buildGrassRing(
     const i1 = Math.ceil(maxX / step) + 1;
     const j0 = Math.floor(minZ / step) - 1;
     const j1 = Math.ceil(maxZ / step) + 1;
+    const excluded = grassExclusionTestNear(
+      townExclusions,
+      { minX, maxX, minZ, maxZ },
+      GRASS_BUILDING_PADDING,
+      GRASS_BLOOM_STRAY,
+    );
     yield; // setup (buffer allocation + chunk classification) is one sub-unit
 
     for (let i = i0; i <= i1 && n < chunkCap; i++) {
@@ -3015,16 +3021,14 @@ function buildGrassRing(
         if (Math.abs(x) > WORLD_MAX_X - 16 || z < WORLD_MIN_Z + 16 || z > WORLD_MAX_Z - 16)
           continue;
         const tuftBiome = zoneBiomeAt(x, z);
-        // the Evergarden lawn is mown bare, but around the plantings grass
-        // grows back the way a real bed does: through every parterre bed
-        // and slightly past its hedge line, and across the meadow patches a
-        // little beyond where the flowers stop
+        // the Evergarden lawn is mown bare, but around the plantings grass grows back the way
+        // a real bed does: through every parterre bed and slightly past its hedge line, and
+        // across the meadow patches a little beyond where the flowers stop
         const gardenBedTuft = tuftBiome === 'garden' && gardenLushGrassAt(x, z);
-        // Meadow patchiness: the same soil noise that darkens the ground
-        // palette decides where grass actually grows. Dense stands on the
-        // lush dark-green patches thin to near-bare yellowed ground between
-        // them, so the meadow reads as growth following the soil instead of
-        // a uniform scatter of models. Squaring hardens the patch edges.
+        // Meadow patchiness: the same soil noise that darkens the ground palette decides where
+        // grass actually grows. Dense stands on the lush dark-green patches thin to near-bare
+        // yellowed ground between them, so the meadow reads as growth following the soil
+        // instead of a uniform scatter of models. Squaring hardens the patch edges.
         const lushness = groundLushnessAt(x, z, seed);
         const density =
           (lush ? GRASS_DENSITY_HIGH : GRASS_DENSITY_LOW) *
@@ -3037,22 +3041,20 @@ function buildGrassRing(
         if (tooSteep(x, z, seed)) continue;
         if (insideGrassHubExclusion(activeContent.zones, x, z)) continue;
         if (roadDistance(x, z) < 3.2) continue;
-        if (insideEastbrookGrassExclusion(townExclusions, x, z, GRASS_BUILDING_PADDING)) continue;
+        if (excluded(x, z)) continue;
         // the stable yard is worked dirt; deck planks grow nothing through
         if (tuftBiome === 'gale' && (inStableYard(x, z) || onHarborDeck(x, z, seed))) continue;
-        // Dawnhold's bailey is paved wall to wall: no tuft, and so no flower
-        // anchor either (the anchors above are what bloom the garden pass)
+        // Dawnhold's bailey is paved wall to wall: no tuft, so no flower anchor either
         if (tuftBiome === 'garden' && inDawnholdBailey(x, z, 0.5)) continue;
         // the Willowfen grows no grass blades: each would-be tuft stays an unseen flower
         // anchor (the bloom pass below), so the fen floor reads as open flower fields instead
         // (density 0 would kill the anchors too, the frost/garden idiom, not what fen wants)
         const fenTuft = tuftBiome === 'fen';
         if (!fenTuft) {
-          // r is the density hash, so it only ever reaches the density cap:
-          // the lush scale tops out near 0.95 rather than sprouting monsters.
-          // Patch cores grow tall and patch edges stay short. With the sparse
-          // areas' accepted hashes skewing small, stragglers between patches
-          // come out smallest of all.
+          // r is the density hash, so it only ever reaches the density cap: the lush scale
+          // tops out near 0.95 rather than sprouting monsters. Patch cores grow tall and patch
+          // edges stay short. With the sparse areas' accepted hashes skewing small,
+          // stragglers between patches come out smallest of all.
           const s = ((lush ? 0.55 : 0.45) + r * (lush ? 0.8 : 1)) * (0.72 + lushness * 0.55);
           q.setFromAxisAngle(up, r * 12.4);
           m.compose(v.set(x, h, z), q, sv.set(s, s, s));
@@ -3114,8 +3116,7 @@ function buildGrassRing(
             if (foliageShoreSkip(fx, fz, fh, seed)) continue;
             if (tooSteep(fx, fz, seed) || roadDistance(fx, fz) < 3.2) continue;
             // a bloom strays off its tuft: keep it out of the town exclusions and the worked yard
-            if (insideEastbrookGrassExclusion(townExclusions, fx, fz, GRASS_BUILDING_PADDING))
-              continue;
+            if (excluded(fx, fz)) continue;
             if (tuftBiome === 'gale' && inStableYard(fx, fz)) continue;
             if (tuftBiome === 'garden' && inDawnholdBailey(fx, fz, 0.5)) continue;
             const fs = 0.55 + hashAt(i + rep, j + rep, 9) * 0.5;
@@ -3135,7 +3136,7 @@ function buildGrassRing(
 
     // Authored meadows also bloom independent of grass anchors: the scrubby basin shore
     // carries few tufts (each tuft is a flower anchor above), so a direct grid pass keeps the
-    // drifts solid on bare ground too, clear of the town exclusions like every anchored bloom.
+    // drifts solid on bare ground too, clear of the town exclusions like every other bloom.
     // The Drakelands' fields take a second jittered sample per cell: one reads gappy there.
     const meadowReps = chunkBiome === 'ember' ? 2 : 1;
     for (const mw of meadowsInChunk) {
@@ -3151,9 +3152,7 @@ function buildGrassRing(
             if (mdx * mdx + mdz * mdz >= mw.r * mw.r) continue;
             const fh = terrainHeight(fx, fz, seed);
             if (foliageShoreSkip(fx, fz, fh, seed)) continue;
-            if (tooSteep(fx, fz, seed) || roadDistance(fx, fz) < 3.2) continue;
-            if (insideEastbrookGrassExclusion(townExclusions, fx, fz, GRASS_BUILDING_PADDING))
-              continue;
+            if (tooSteep(fx, fz, seed) || roadDistance(fx, fz) < 3.2 || excluded(fx, fz)) continue;
             const fs = 0.55 + hashAt(i + rep, j, 17) * 0.5;
             q.setFromAxisAngle(up, hashAt(i, j + rep, 18) * 12.4);
             m.compose(v.set(fx, fh, fz), q, sv.set(fs, fs, fs));
@@ -3177,7 +3176,8 @@ function buildGrassRing(
             const fx = i * step + (hashAt(i + rep * 37, j, 15) - 0.5) * step * 1.5;
             const fz = j * step + (hashAt(i, j + rep * 37, 16) - 0.5) * step * 1.5;
             if (fx < minX || fx >= maxX || fz < minZ || fz >= maxZ) continue;
-            if (inDawnholdBailey(fx, fz, 0.5)) continue; // the paved parade ground
+            // the paved parade ground, and the town exclusions every bloom keeps out of
+            if (inDawnholdBailey(fx, fz, 0.5) || excluded(fx, fz)) continue;
             // beds and walk ribbons first, then the open-lawn meadow drifts
             let tint = parterreFlowerTintAt(fx, fz);
             if (tint < 0 && rep < 2) tint = gardenMeadowTintAt(fx, fz);
