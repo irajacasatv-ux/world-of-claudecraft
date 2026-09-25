@@ -129,9 +129,10 @@ export function seedWouldLandOnRealRow(
   // an OLDER house. While that session's capture is still unwritten (its
   // leave write waiting, refused a permit, thrown once, or deferred), the
   // store's next write carries the stale record, and no arm here refuses it
-  // unless that session committed earlier in its session: then a record below
-  // that commit is refused (and the leaver's later edits are lost, loudly) and
-  // one the joiner brings up to it passes. Once the capture has committed, a
+  // unless the entry knows a commit above the stale revision (the leaver's own
+  // mid-session save, or an earlier session's that the leaver's read learned):
+  // then a record below that commit is refused (and the leaver's later edits
+  // are lost, loudly) and one the joiner brings up to it is written, silently. Once the capture has committed, a
   // write that samples the record STRICTLY below the committed revision is
   // refused here, but a returning player who reaches that revision before a
   // write samples it carries it past every arm (pinned as it behaves in
