@@ -9,10 +9,10 @@
 // "never built" sentinel, every fragment empty, and a new object per call so
 // two timer-wire arms never alias), and the two JSON splicers, whose whole
 // point is to assemble a record byte-identical to a JSON.stringify of the
-// merged object without paying for that stringify on the broadcast hot path. The game.ts side is pinned too: the
-// coordinator imports every name and declares none of them any more, so a
-// merge resolution that re-inlines a copy, or restores the retired twin
-// module, reds here by name.
+// merged object without paying for that stringify on the broadcast hot path.
+// The game.ts side is pinned too: the coordinator imports every name and
+// declares none of them any more, so a merge resolution that re-inlines a
+// copy, or restores the retired twin module, reds here by name.
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
