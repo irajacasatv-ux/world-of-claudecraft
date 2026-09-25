@@ -16,10 +16,15 @@ import {
   instanceOrigin,
   ZONES,
 } from '../src/sim/data';
-import { WORLD_PVP_TOGGLE_COOLDOWN } from '../src/sim/pvp/world_pvp';
+import {
+  WORLD_PVP_SANCTUARY_LINE,
+  WORLD_PVP_TOGGLE_COOLDOWN,
+  worldPvpOnPlayerAided,
+  worldPvpOnPlayerDamaged,
+} from '../src/sim/pvp/world_pvp';
 import { worldPvpZonePolicyAt } from '../src/sim/pvp/world_pvp_zones';
 import { Sim } from '../src/sim/sim';
-import type { DungeonDef, Entity, WorldContent } from '../src/sim/types';
+import type { DungeonDef, Entity, SimEvent, WorldContent } from '../src/sim/types';
 import { isPvpHostilePlayer, type PvpHostileWorld } from '../src/ui/pvp_hostile_core';
 
 const OWNER_ROOMS = DUNGEON_LIST.filter((def) => def.claimKey === 'owner');
@@ -127,6 +132,47 @@ describe('two flagged players inside a freehold room (the sim hostility arm)', (
     standAt(a, roomSpot(dungeon), 0);
     standAt(b, roomSpot(dungeon), 2);
     expect(sim.isHostileTo(a, b)).toBe(true);
+  });
+});
+
+describe('the other readers of the ground agree inside a room', () => {
+  it('the self readout names the room a sanctuary', () => {
+    const { sim, a } = flaggedPair();
+    expect(sim.worldPvpInfoFor(a.id)?.zone).toBe('contested');
+    standAt(a, roomSpot(OWNER_ROOMS[0]));
+    expect(sim.worldPvpInfoFor(a.id)?.zone).toBe('sanctuary');
+  });
+
+  it('a flagged player arriving from contested ground hears the sanctuary line', () => {
+    const { sim, a } = flaggedPair();
+    for (let i = 0; i < 20; i++) sim.tick();
+    standAt(a, roomSpot(OWNER_ROOMS[0]));
+    const heard: string[] = [];
+    for (let i = 0; i < 20; i++) {
+      for (const ev of sim.tick() as SimEvent[]) {
+        if ((ev.type === 'log' || ev.type === 'error') && ev.pid === a.id) heard.push(ev.text);
+      }
+    }
+    expect(heard).toContain(WORLD_PVP_SANCTUARY_LINE);
+  });
+
+  it('aid given inside a room never flags the healer; the same aid outside does', () => {
+    for (const inRoom of [true, false]) {
+      const { sim, a, b } = flaggedPair();
+      const healerPid = sim.addPlayer('priest', 'Gimel');
+      sim.setPlayerLevel(20, healerPid);
+      const healer = ent(sim, healerPid);
+      standAt(healer, CONTESTED, 4);
+      // A world fight in progress on contested ground: the pair traded blows.
+      worldPvpOnPlayerDamaged(sim.ctx, b, a);
+      worldPvpOnPlayerDamaged(sim.ctx, a, b);
+      if (inRoom) {
+        standAt(a, roomSpot(OWNER_ROOMS[0]), 0);
+        standAt(healer, roomSpot(OWNER_ROOMS[0]), 2);
+      }
+      worldPvpOnPlayerAided(sim.ctx, a, healer);
+      expect(healer.pvpFlag === true, inRoom ? 'in room' : 'outside').toBe(!inRoom);
+    }
   });
 });
 
