@@ -12,7 +12,7 @@ placed-furnishing colliders per claim and per accepted layout change on the serv
 from the descriptor on the client, and pins that a placed table blocks movement
 identically on both hosts.
 
-Correction, 2026-09-25 (v0.44.0 re-sync): this file first planned to MOVE the region
+Correction, 2026-09-25 (stale since the first v0.44.0 sync, `ffa7ac5ffb`): this file first planned to MOVE the region
 block out of colliders.ts into a new src/sim/runtime_collider_regions.ts. The release
 had already moved it into src/sim/rift_regions.ts, so there is no block left to move
 and the colliders.ts ceiling that move lowered is not this phase's payment. The steps
@@ -42,7 +42,7 @@ STEP 0 - PRE-FLIGHT:
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
   release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
+  and merge it. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/.
 - Memory scan: MEMORY.md and entries on the monolith ratchet (colliders.ts is a ratchet

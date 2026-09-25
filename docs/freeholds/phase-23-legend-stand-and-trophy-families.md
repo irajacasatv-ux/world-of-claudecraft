@@ -187,7 +187,7 @@ STEP 0 - PRE-FLIGHT:
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
   release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
+  and merge it. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/.
 - If state.md "Push policy" records a stacked wave B branch, work on that branch instead
@@ -221,10 +221,10 @@ Spawn one Explore agent to read and summarize:
   first-clear and project rows belong to 31 and 32a/40), with mounts derived from MOUNTS and MOUNT_KEYS under the availability
   filter rather than any fixed mount count, the realm-rare marks, the live
   `RELIQUARY_SET_MEMBERS` sets (derive, never a literal) and the profession specimens
-- Warfare Season 2 (v0.44.0 re-sync): the Vanguard Gallery page is class-locked, so it
-  sits outside completion ('personal', docs/design/reliquary.md), and its 27
-  VANGUARD_ITEM_SETS (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are
-  class-locked. Whether class-locked sets and personal pages (Vanguard, plus the
+- Warfare Season 2 (v0.44.0 re-sync): the Vanguard Gallery page's items are
+  class-locked, so the page sits outside completion (`excludeFromCompletion:
+  'personal'`, docs/design/reliquary.md), and the VANGUARD_ITEM_SETS
+  (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are class-locked. Whether class-locked sets and personal pages (Vanguard, plus the
   existing Riftbound and Forgebreaker pages) are trophy sources is a RULING OWED at the
   phase 17 re-plan; this file follows that ruling, never its own
 - The Perfected legendary: src/sim/types.ts (the `perfected` stamp, the promotion, the

@@ -49,7 +49,7 @@ STEP 0 - PRE-FLIGHT:
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
   release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
+  and merge it. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/ (a lockfile change also moves every source fingerprint: see the gotcha below).
 - Confirm the art-brief.md section 8 reference inventory and its approval workflow
@@ -179,7 +179,8 @@ Deliverables (at most five):
    The typed public GameAudio arrival method and sanctioned sample pipeline belong
    to 06/09; this asset work consumes them and adds no private-method audio shortcut.
    A flagged player's arrival also carries the release's World PvP sanctuary line or
-   free-for-all leave line (src/sim/pvp/world_pvp.ts); expect it beside the welcome,
+   free-for-all leave line (src/sim/pvp/world_pvp.ts; never on a realm whose World PvP
+   switch is off); expect it beside the welcome,
    it is not a housing emit (phase-18-visiting.md).
 5. Registry/prewarm and evidence. Codex completes shipping artwork and replaces every
    shipped-ID stand-in via the existing

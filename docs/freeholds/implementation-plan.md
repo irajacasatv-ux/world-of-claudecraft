@@ -9,8 +9,8 @@ opened PR or merge. Follow the active harness's root instructions; this packet n
 
 1. Pre-flight: verify clean git status for a new implementation session and preserve
    unrelated work. Follow state.md "Worktree, base, and merge-forward": fetch origin
-   with prune; while PR #3872 is open merge origin/feature/masterwrought, otherwise
-   merge the newest origin/release/** and remove the dependency block. Never use main.
+   with prune and merge the newest origin/release/** (the version-newest one). Never
+   use main.
    Run release-merge-audit after a non-empty merge and frozen install if patches/ moved.
 2. Load context through agents: root/directory CLAUDE, state, progress, exact implementation
    and QA, UX, manifests and current source/test anchors. Scan MEMORY.md, the packet entry,

@@ -1370,7 +1370,10 @@ ambiguous commits, real PostgreSQL participants and exact no-leak capacity total
   arm and the client verdict (src/ui/pvp_hostile_core.ts) agree
   (tests/freehold_world_pvp_sanctuary.test.ts). Every new room def keeps
   `claimKey: 'owner'` or it loses the sanctuary. Honor gear's health bonus stays on in a
-  home (src/sim/pvp/vitality.ts, tests/freehold_pvp_vitality.test.ts).
+  home (src/sim/pvp/vitality.ts, tests/freehold_pvp_vitality.test.ts). Both rules read
+  one helper, `isOwnerClaimRoomAt` (src/sim/data.ts, tests/owner_claim_room_at.test.ts).
+  Those three suites pin the owner-room id list LITERALLY on purpose, so a new room def
+  red-lights all three until the same change extends each list.
 - Never a Perfecting keystone (`wyrmfall_core`, `sundered_essence`, `makers_ember`), a
   gear intermediate, or the quickening catalyst in any ledger, furnishing, or upgrade
   bill. Zero new farm beds. Recipes and their `stationType` gates unchanged.
@@ -1989,6 +1992,7 @@ question. Never present unsigned drafts as legal/platform/service acceptance.
 | Accepted development content; production calibration unsigned | content-trial-2026-09-07/acceptance.md and revalidation.md supersede the historical content-source-freeze-2026-09-07.md for development; CAL-LEDGER-A, CAL-VENDOR-A, CAL-DECOR-A/B and MEASURE-SPACE retain named final acceptance | Fernando accepted the measured trial on 2026-09-07. CONTENT/UPKEEP/ECONOMY QA still produce final Ledger calibration for Fernando/service approval; CONTENT/ART and ART/CORE retain final vendor, decor, room/model/LOW approval. Production remains disabled. |
 | Source calendar, lifecycle and rollout capability | persistence-rollout-contract.md EXISTS as of 07 and is **UNSIGNED**; lifecycle-policy-binding.md, lifecycle-db-contract.md and upkeep-calendar-db-contract.md are still owed by 07b/13a | Named service/operations/DB owners accept account source/reset-policy assignment, immutable history/finality, bounds, capable-release rollout/rollback and actual PG proof before upkeep activation. 07 supplies the capability and quiescence half with executed PostgreSQL proof and the measured bounds; publishing it is not signing it, and no owner has accepted it. `reset_policy_id` does not exist in code, so every 07 row is written `unbound_no_history` and a serving realm cannot infer a calendar from a row that never claimed one. |
 | Final assets and image replacement | art-brief.md/content-manifest.md and per-wave final-asset proof; final 44a icon/image replacement | Codex asset sessions use existing intake/provenance/export/compile/LOW/screenshot gates. No placeholder is counted as a final shipping asset; final 44a rechecks all feature-created icons/images before 44b. |
+| World PvP player copy names homes | `hudChrome.worldPvp.groundSanctuary` (src/ui/i18n.catalog/hud_chrome.ts) and the World PvP guide prose (src/ui/i18n.catalog/guide.ts) name only the Proving Shore and Eastbrook Vale as sanctuaries; a freehold room has been one since the v0.44.0 re-sync. Held back while housing is dark, because the live copy must not advertise an unlit feature | The phase that lights housing adds homes to both strings (English source, plus the five non-Latin fills if the value is wordy, M16) in the same change that lights it. |
 | Runtime safety and distribution | 01 strict live FREEHOLDS_ENABLED gate; 37 FREEHOLD_DEEDS_ENABLED (default off, requires freeholdsEnabled); 38 NEW allowSerializedCollectibles policy switch (default off, beside allowMounts/allowMechChromas in server/woc_market_routes.ts); 14 seven-distribution capability matrix; every priced implementation and QA | Packet owners prove dark route/command/catalog behavior, complete forbidden submodel absence and independently approved management flow before activation. |
 
 Final ordering is 44 implementation, 44 QA, 44a Codex artwork, 44a QA, 44b legal
@@ -1998,6 +2002,12 @@ message is performed in this documentation session.
 
 ## Gotchas (read before the matching phase)
 
+- Character blob headroom (v0.44.0 re-sync): the maximal character blob in
+  tests/professions_blob_growth.test.ts measures 227,099 bytes against
+  `CHARACTER_BLOB_WARN_BYTES` 229,376, so 2,277 bytes remain (Warfare Season 2 took
+  13,496 of the 15,795 there were, the Valestrider's reins id 22). The next housing
+  content wave that grows the blob (trophies, more furnishings or Reliquary pages)
+  forces a threshold decision; attribute and measure it, never widen the band.
 - Reliquary page order: pages the release appends go BEFORE the unreleased Hearth
   pages; at the v0.44.0 re-sync the tail is `professions_forgebreaker`,
   `conquerors_vanguard_gallery`, `hearth_basics`, `hearth_first_crafts`

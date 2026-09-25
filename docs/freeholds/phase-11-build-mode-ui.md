@@ -419,7 +419,7 @@ STEP 0 - PRE-FLIGHT:
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
   release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
+  and merge it. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/.
 - Memory scan: MEMORY.md and entries on the hud_update_drive registry (it pins Hud.update
@@ -689,8 +689,9 @@ INVARIANTS THIS PHASE MUST KEEP:
   per-frame painter registered in hud_update_drive and HOT_PAINTERS.
 - HUD frame coverage: every new HUD surface (the palette, the strip, the capacity meter,
   any build companion) states its classification in tests/hud_frame_coverage.test.ts
-  (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, or a UI_ROOT_TOUCHERS or
-  FRAME_EXEMPT entry with its reason; the src/ui/hud/housing/gate_prompt_controller.ts
+  (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, the default; a
+  `.window.panel`; or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry, with any root it
+  touches listed in UI_ROOT_TOUCHERS; the src/ui/hud/housing/gate_prompt_controller.ts
   UI_ROOT_TOUCHERS row is the precedent). The release's frame presets
   (src/ui/frame_presets_core.ts), frame menus and reset keys now ride a HUD_FRAME_SPECS
   row, so a standing surface registered there inherits them.

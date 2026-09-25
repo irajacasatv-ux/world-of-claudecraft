@@ -42,7 +42,7 @@ STEP 0 - PRE-FLIGHT:
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
   release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
+  and merge it. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/.
 - Memory scan: MEMORY.md and entries on the provisioner firewall, "one planner per file",

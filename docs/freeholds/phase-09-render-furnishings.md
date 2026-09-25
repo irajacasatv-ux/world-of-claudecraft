@@ -196,7 +196,7 @@ STEP 0 - PRE-FLIGHT:
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
   release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
+  and merge it. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/.
 - Gotchas scan (Codex has no Claude memory, AGENTS.md): read state.md "Gotchas" for
@@ -410,8 +410,9 @@ ARRIVAL PRESENTATION AND CAPTURE REFINEMENTS (approved D41 / R15):
 - Expect a release line beside the welcome (v0.44.0 re-sync): a room is a World PvP
   sanctuary, so a flagged player arriving home from contested ground hears "This is a
   sanctuary: World PvP is off here." (WORLD_PVP_SANCTUARY_LINE, src/sim/pvp/world_pvp.ts),
-  and a player arriving from free-for-all ground hears the free-for-all leave line.
-  Neither is a housing emit; the arrival flow neither suppresses nor duplicates it
+  and a player arriving from free-for-all ground hears the free-for-all leave line; on a
+  realm whose World PvP switch is off (`ctx.worldPvpDisabled`) neither fires. Neither is
+  a housing emit; the arrival flow neither suppresses nor duplicates it
   (phase-18-visiting.md records the rule).
 - The screenshot API is one capture/one image. Every baseline/transient/theme/motion/
   input/distribution/light case maps to a unique target+variant identity in ux-spec's

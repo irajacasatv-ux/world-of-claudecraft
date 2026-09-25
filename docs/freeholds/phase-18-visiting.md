@@ -115,7 +115,7 @@ STEP 0 - PRE-FLIGHT:
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
   release branch (`git branch -r | grep 'origin/release/' | sort -V |
   tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  merge it, and delete the dependency block from state.md. After any non-empty merge run
+  and merge it. After any non-empty merge run
   the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
   patches/.
 - Memory scan: MEMORY.md and entries on the server/tests gotcha cluster, the offline
@@ -307,7 +307,8 @@ sixth deliverable):
   (WORLD_PVP_SANCTUARY_LINE in src/sim/pvp/world_pvp.ts, from its zone pass); any
   player arriving from free-for-all ground hears the free-for-all leave line
   (WORLD_PVP_FFA_LEAVE_LINE) instead; a walk in through the Eastbrook gate (sanctuary to
-  sanctuary) hears neither. The D41 arrival flow (phases 09 and 19) should expect either
+  sanctuary) hears neither, and neither fires on a realm whose World PvP switch is off
+  (`ctx.worldPvpDisabled`, the zone pass does not run). The D41 arrival flow (phases 09 and 19) should expect either
   line beside its own welcome, and no housing code emits or suppresses it.
 
 INVARIANTS THIS PHASE MUST KEEP:
@@ -336,8 +337,9 @@ INVARIANTS THIS PHASE MUST KEEP:
   read through the housing facet, never a HudFeatures row (D91).
 - HUD frame coverage: every new HUD surface (the visit prompt, the Visitors tab host,
   any who-is-home line) states its classification in tests/hud_frame_coverage.test.ts
-  (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, or a UI_ROOT_TOUCHERS or
-  FRAME_EXEMPT entry with its reason; the src/ui/hud/housing/gate_prompt_controller.ts
+  (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, the default; a
+  `.window.panel`; or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry, with any root it
+  touches listed in UI_ROOT_TOUCHERS; the src/ui/hud/housing/gate_prompt_controller.ts
   UI_ROOT_TOUCHERS row is the precedent). The release's frame presets
   (src/ui/frame_presets_core.ts), frame menus and reset keys now ride a HUD_FRAME_SPECS
   row, so a standing surface registered there inherits them.

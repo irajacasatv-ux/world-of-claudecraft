@@ -3,7 +3,7 @@
 Audits `phase-10-furnishing-colliders.md`. Verdict goes in `progress.md` (row "10 QA").
 The next implementation phase never starts before this file has run.
 
-Correction, 2026-09-25 (v0.44.0 re-sync): the release already extracted the region
+Correction, 2026-09-25 (stale since the first v0.44.0 sync, `ffa7ac5ffb`): the release already extracted the region
 block out of `src/sim/colliders.ts` into `src/sim/rift_regions.ts` (colliders.ts
 re-exports its publish/token verbs), so the audited change generalises that module in
 place or renames it; there is no colliders.ts block to compare, and that ceiling is

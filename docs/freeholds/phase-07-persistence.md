@@ -20,7 +20,7 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify git status is clean; otherwise ask the user.
 - Sync per state.md "Worktree, base, and merge-forward": git fetch origin --prune;
   use the newest
-  origin/release/** and remove the dependency block. Run release-merge-audit after any
+  origin/release/**. Run release-merge-audit after any
   non-empty merge and pnpm install --frozen-lockfile when patches/ moved.
 - Memory scan: MEMORY.md, freeholds entry, test-pin traps, apply ALL findings, and
   review the review-fix round. Record changed seam/ceiling/base facts in state.md before

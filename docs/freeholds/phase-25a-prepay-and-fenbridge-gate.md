@@ -128,7 +128,7 @@ STEP 0 - PRE-FLIGHT:
   --short; if dirty, stop and ask before edits. Preserve unrelated work.
 - git fetch origin --prune, then sync per state.md "Worktree, base, and merge-forward":
   the newest origin/release/**
-  and remove the dependency block after merge. Run release-merge-audit after a nonempty
+ . Run release-merge-audit after a nonempty
   merge and pnpm install --frozen-lockfile if patches/ moved. Never use main.
 - Read root and applicable local CLAUDE.md in full, then state.md "Gotchas (read before
   the matching phase)" and the test-pin traps it records (Codex has no Claude memory
