@@ -48,10 +48,11 @@ players see an older house, write-blocked, so copy that assumes an empty house
 would be as wrong as copy that assumes an intact one. Some orders of the stale
 answer are refused by nothing and write silently (the twelfth path); no surface
 can see those, and the ruling owed on it decides whether any remain. A HELD
-login that joins after the same account's other session was evicted loses that
-session's waiting capture the same way, loudly: the held player sees the empty
-default the hold already explains, and the leaver's last edits are gone, which
-copy built only on the hold kind would not say.
+login (on capacity or a thrown read) that joins after the same account's other
+session was evicted loses that session's unwritten capture the same way, loudly:
+the held player sees the empty default the hold already explains, and the
+leaver's last edits are gone, which copy built only on the hold kind would not
+say.
 
 ## The rule this design is built under
 
