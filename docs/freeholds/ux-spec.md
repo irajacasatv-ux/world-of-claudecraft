@@ -398,17 +398,16 @@ internal fields and authority watermarks never enter player text or public rows.
 
 The account source reader is shared. File 17 owns NEW
 server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage and
-server/freehold_account_sources.ts::createFreeholdAccountSourceLoader; file 24
-extends its static farm extraction, bounded cache, admission and invalidation
-(premise changed at the v0.44.0 sync: the release's account ledger,
-src/sim/account_ledger.ts, now carries most of these sources; re-planned in
-phase-17-trophies.md item 2; farm plots are not in the ledger, so 24 keeps its farm
-source seam even if 17 drops its loader).
-There is no separate HUD poller. The internal account union distinguishes
-character and bed, but the public Kitchen Garden projection explicitly selects
-only opaque visualId, bedId, cropId, stage, status and truthful sourceFreshness.
-Never serialize raw source-character/account/realm identity, timestamps/countdowns,
-skill, survivalRoll, yieldSeed, hidden flags or the complete FarmPlotView.
+server/freehold_account_sources.ts::createFreeholdAccountSourceLoader; file 24 extends its
+static farm extraction, bounded cache, admission and invalidation (premise changed at the
+v0.44.0 sync: the release's account ledger, src/sim/account_ledger.ts, now carries most of
+these sources; re-planned in phase-17-trophies.md item 2; farm plots are not in the
+ledger, so 24 keeps its farm source seam even if 17 drops its loader). There is no
+separate HUD poller. The internal account union distinguishes character and bed, but the
+public Kitchen Garden projection explicitly selects only opaque visualId, bedId, cropId,
+stage, status and truthful sourceFreshness. Never serialize raw
+source-character/account/realm identity, timestamps/countdowns, skill, survivalRoll,
+yieldSeed, hidden flags or the complete FarmPlotView.
 
 The freshness discriminator distinguishes live, saved and unavailable sources.
 Only a current-generation local authoritative Sim farm-and-skill slice is live;

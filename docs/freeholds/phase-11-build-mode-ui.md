@@ -417,11 +417,10 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
-  release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  and merge it. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
+  release branch (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare
+  with `git rev-list --left-right --count HEAD...origin/release/<newest>`, and merge it.
+  After any non-empty merge run the release-merge-audit skill;
+  `pnpm install --frozen-lockfile` if the merge touched patches/.
 - Memory scan: MEMORY.md and entries on the hud_update_drive registry (it pins Hud.update
   calls BY NAME; a new *_painter.ts needs a HOT_PAINTERS entry), the window shell
   coordinate model, mobile orientation (landscape only in game), screenshots at the
@@ -562,56 +561,55 @@ Deliverables (at most five):
 3. Shared input and action strip. build_mode_painter.ts reuses ActionBarPainter;
    build_mode_wiring.ts is one bootstrap call and generalises existing placement pad
    hooks. The planned toggleBuildMode, rotateFurnishingLeft and rotateFurnishingRight
-   BindActions register with the pinned defaults 'Shift+KeyB', 'Comma' and 'Period'
-   (all unclaimed in BIND_ACTIONS today; every bare letter is taken), and NEW
-   undoPlacement and redoPlacement BindActions register with defaults ['Ctrl+KeyZ',
-   'Meta+KeyZ'] and ['Ctrl+Shift+KeyZ', 'Meta+Shift+KeyZ'] (two codes each, the seam's
-   maximum: makeCombo emits a separate Meta part for Cmd, so Cmd+Z never matches a
-   Ctrl-only default), all in a Housing category the options window lists through the
-   existing seam with BIND_CATEGORY_LABEL_KEYS and BIND_ACTION_LABEL_KEYS gaining the
-   six hudChrome.keybinds.* rows named in this file's key table (no English fallback
-   label); tests/keybinds.test.ts pins the five rows, all seven default codes and a
-   label key per action and for the category (U1 F5). Nudge follows the approved grid, yaw
-   the state.md lattice. Mouse picks and explicitly confirms. Touch drag moves the ghost; an
-   unambiguous Confirm/Rotate/Cancel strip commits instead of a drag-release or stray
-   tap. Each target is 40x40 minimum with all safe-area insets. Gamepad bumpers rotate,
-   d-pad nudges and confirm/cancel use the shared glyph and topmost navigation rules.
-   First Escape cancels selected placement, next exits build mode and restores focus;
-   another gameplay UI action cancels active placement before opening its surface.
-   NEW src/ui/hud/housing/build_input_core.ts classifies ordinary blocking window,
-   the release's HUD layout edit mode (src/ui/interface_unlock.ts; the frame menu takes
-   the right-click in edit mode, src/ui/frame_context_menu.ts), housing palette focus,
-   housing placement or normal world. The controller and
-   build_mode_wiring.ts compose this scoped input arbitration into BOTH the HUD
-   window-open projection and gamepad pointer-mode/activeRoot consumers. Existing
-   dpad_focus_nav prioritizes .window.panel; data-pad-nav-root alone is not an exception.
-   Preserve every unrelated window's shipped behavior. Ordinary modal/confirmation
-   always suspends housing input. Palette focus owns navigation/confirm; placement
-   with companion visible owns camera-relative ghost movement and bounded-camera
-   look, never avatar movement, casts, combat or trigger hotbar actions. While
-   placement owns pad input, build_mode_wiring.ts suspends exactly this set (U1 F4):
-   GAMEPAD_CYCLE_SET on RB (RB rotates clockwise instead), the LB slot (rotates
-   counterclockwise), 'jump' on Y, 'autorun' on L3, the bare d-pad focus navigation
-   (the d-pad nudges one cell) and every cross-hotbar trigger action; GAMEPAD_CYCLE_HUD
-   stays live only as the return-to-palette action. Housing pad verbs are a fixed
-   context overlay inside build_mode_wiring.ts on the ground-aim precedent (the
-   confirm, cancel and d-pad routing gamepad.ts already applies while aiming), not new
-   remappable GamepadActionIds; glyphs come from the active pad family. The existing
-   focus-navigation action returns to the selected palette cell; selection returns
-   to placement. Close/reconnect/authority loss/plot change release ownership once.
-   The undoPlacement/redoPlacement bindings dispatch only when build_input_core.ts
-   classifies the context as housing world; with the search field focused the chord
-   is not consumed and native text undo stays intact. Actual composed input tests keep
-   the palette visible, exercise ordinary modal override, prove no concurrent combat
-   dispatch, and assert that an RB press in placement rotates the ghost, never calls
-   toggleCrossHotbarSet and never casts.
-   Touch pointers use touch_router ownership: selected piece previews, empty world
-   drags camera, UI stays UI and pinch affects camera only. Reverse rotate and nudge
-   remain reachable through a tap-only action panel that is one
-   strip_gesture_controller instantiation with anchorRole 'toggle' honouring
+   BindActions register with the pinned defaults 'Shift+KeyB', 'Comma' and 'Period' (all
+   unclaimed in BIND_ACTIONS today; every bare letter is taken), and NEW undoPlacement and
+   redoPlacement BindActions register with defaults ['Ctrl+KeyZ', 'Meta+KeyZ'] and
+   ['Ctrl+Shift+KeyZ', 'Meta+Shift+KeyZ'] (two codes each, the seam's maximum: makeCombo
+   emits a separate Meta part for Cmd, so Cmd+Z never matches a Ctrl-only default), all in
+   a Housing category the options window lists through the existing seam with
+   BIND_CATEGORY_LABEL_KEYS and BIND_ACTION_LABEL_KEYS gaining the six
+   hudChrome.keybinds.* rows named in this file's key table (no English fallback label);
+   tests/keybinds.test.ts pins the five rows, all seven default codes and a label key per
+   action and for the category (U1 F5). Nudge follows the approved grid, yaw the state.md
+   lattice. Mouse picks and explicitly confirms. Touch drag moves the ghost; an
+   unambiguous Confirm/Rotate/Cancel strip commits instead of a drag-release or stray tap.
+   Each target is 40x40 minimum with all safe-area insets. Gamepad bumpers rotate, d-pad
+   nudges and confirm/cancel use the shared glyph and topmost navigation rules. First
+   Escape cancels selected placement, next exits build mode and restores focus; another
+   gameplay UI action cancels active placement before opening its surface. NEW
+   src/ui/hud/housing/build_input_core.ts classifies ordinary blocking window, the
+   release's HUD layout edit mode (src/ui/interface_unlock.ts; the frame menu takes the
+   right-click in edit mode, src/ui/frame_context_menu.ts), housing palette focus, housing
+   placement or normal world. The controller and build_mode_wiring.ts compose this scoped
+   input arbitration into BOTH the HUD window-open projection and gamepad
+   pointer-mode/activeRoot consumers. Existing dpad_focus_nav prioritizes .window.panel;
+   data-pad-nav-root alone is not an exception. Preserve every unrelated window's shipped
+   behavior. Ordinary modal/confirmation always suspends housing input. Palette focus owns
+   navigation/confirm; placement with companion visible owns camera-relative ghost
+   movement and bounded-camera look, never avatar movement, casts, combat or trigger
+   hotbar actions. While placement owns pad input, build_mode_wiring.ts suspends exactly
+   this set (U1 F4): GAMEPAD_CYCLE_SET on RB (RB rotates clockwise instead), the LB slot
+   (rotates counterclockwise), 'jump' on Y, 'autorun' on L3, the bare d-pad focus
+   navigation (the d-pad nudges one cell) and every cross-hotbar trigger action;
+   GAMEPAD_CYCLE_HUD stays live only as the return-to-palette action. Housing pad verbs
+   are a fixed context overlay inside build_mode_wiring.ts on the ground-aim precedent
+   (the confirm, cancel and d-pad routing gamepad.ts already applies while aiming), not
+   new remappable GamepadActionIds; glyphs come from the active pad family. The existing
+   focus-navigation action returns to the selected palette cell; selection returns to
+   placement. Close/reconnect/authority loss/plot change release ownership once. The
+   undoPlacement/redoPlacement bindings dispatch only when build_input_core.ts classifies
+   the context as housing world; with the search field focused the chord is not consumed
+   and native text undo stays intact. Actual composed input tests keep the palette
+   visible, exercise ordinary modal override, prove no concurrent combat dispatch, and
+   assert that an RB press in placement rotates the ghost, never calls
+   toggleCrossHotbarSet and never casts. Touch pointers use touch_router ownership:
+   selected piece previews, empty world drags camera, UI stays UI and pinch affects camera
+   only. Reverse rotate and nudge remain reachable through a tap-only action panel that is
+   one strip_gesture_controller instantiation with anchorRole 'toggle' honouring
    settings.touchTapMenus (src/ui/hud/CLAUDE.md "Tap mode is shared, never per menu"),
-   never a fourth tap dialect (U1 F14). Collection instructions use build.collectionHelp as the
-   grid's assistive description; both-axis linear roving is not a geometric-grid claim.
+   never a fourth tap dialect (U1 F14). Collection instructions use build.collectionHelp
+   as the grid's assistive description; both-axis linear roving is not a geometric-grid
+   claim.
 4. Shared presentation and accessibility. Implement the actual window/theme tokens
    under ux-spec.md's foundation readiness contract: record whether the coordinated
    DESIGN foundation has landed before consuming target-only tokens. No housing-local
@@ -688,14 +686,14 @@ INVARIANTS THIS PHASE MUST KEEP:
   ActionBarPainter, the bags grid); tap mode shared, never per menu; every polled or
   per-frame painter registered in hud_update_drive and HOT_PAINTERS.
 - HUD frame coverage: every new HUD surface (the palette, the strip, the capacity meter,
-  any build companion) states its classification in tests/hud_frame_coverage.test.ts
-  (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, the default; a
-  `.window.panel`; or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry; a frame row minted
-  at runtime is also listed in RUNTIME_MOUNTED_FRAME_IDS, and the module that mounts it
-  on the `#ui` root is listed in UI_ROOT_TOUCHERS, which names files; the src/ui/hud/housing/gate_prompt_controller.ts
-  UI_ROOT_TOUCHERS row is the precedent). The release's frame presets
-  (src/ui/frame_presets_core.ts), frame menus and reset keys now ride a HUD_FRAME_SPECS
-  row, so a standing surface registered there inherits them.
+  any build companion) states its classification in tests/hud_frame_coverage.test.ts (a
+  HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, the default; a `.window.panel`;
+  or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry; a frame row minted at runtime is also
+  listed in RUNTIME_MOUNTED_FRAME_IDS, and the module that mounts it on the `#ui` root is
+  listed in UI_ROOT_TOUCHERS, which names files; the
+  src/ui/hud/housing/gate_prompt_controller.ts UI_ROOT_TOUCHERS row is the precedent). The
+  release's frame presets (src/ui/frame_presets_core.ts), frame menus and reset keys now
+  ride a HUD_FRAME_SPECS row, so a standing surface registered there inherits them.
 - Monolith ratchet: src/ui/hud.ts and src/main.ts sit at ZERO slack; every delegate or
   wiring line is paid for by an extraction, then LOWER the ceiling; main.ts is a
   firewall (one call into the wiring sibling).
@@ -714,20 +712,10 @@ STEP 3 - VALIDATION + REVIEW DISPATCH:
 Required named reviewers for this file: cross-platform-sync, privacy-security-review,
 frontend-seam-reviewer, render-performance-reviewer, gate-integrity-reviewer,
 test-coverage-auditor, qa-checklist.
-- Run: `npx tsc --noEmit`; `npx vitest run tests/build_mode_view.test.ts
-  tests/build_mode_controller.test.ts tests/build_mode_painter.test.ts
-  tests/furnishing_palette_view.test.ts tests/build_mode_wiring.test.ts
-  tests/capacity_meter_view.test.ts tests/build_input_core.test.ts
-  tests/freehold_build_camera.test.ts tests/pr_shot_targets.test.ts
-  tests/housing_view.test.ts
-  tests/keybinds.test.ts tests/gamepad_bindings.test.ts tests/ground_aim_hud.test.ts
-  tests/ground_aim_lifecycle_wiring.test.ts tests/pad_ground_aim.test.ts
-  tests/architecture.test.ts tests/hud_update_drive.test.ts tests/hud_perf_budget.test.ts
-  tests/mobile_window_coverage.test.ts tests/mobile_window_transform.test.ts
-  tests/mobile_window_layout.test.ts tests/language_fanout_registry.test.ts
-  tests/hud_frame_coverage.test.ts
-  tests/renderer_compile_gate.test.ts tests/monolith_budget.test.ts`; `npm run i18n:gen`
-  then `npx vitest run tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`.
+- Run: `npx tsc --noEmit`;
+  `npx vitest run tests/build_mode_view.test.ts tests/build_mode_controller.test.ts tests/build_mode_painter.test.ts tests/furnishing_palette_view.test.ts tests/build_mode_wiring.test.ts tests/capacity_meter_view.test.ts tests/build_input_core.test.ts tests/freehold_build_camera.test.ts tests/pr_shot_targets.test.ts tests/housing_view.test.ts tests/keybinds.test.ts tests/gamepad_bindings.test.ts tests/ground_aim_hud.test.ts tests/ground_aim_lifecycle_wiring.test.ts tests/pad_ground_aim.test.ts tests/architecture.test.ts tests/hud_update_drive.test.ts tests/hud_perf_budget.test.ts tests/mobile_window_coverage.test.ts tests/mobile_window_transform.test.ts tests/mobile_window_layout.test.ts tests/language_fanout_registry.test.ts tests/hud_frame_coverage.test.ts tests/renderer_compile_gate.test.ts tests/monolith_budget.test.ts`;
+  `npm run i18n:gen` then
+  `npx vitest run tests/i18n_completeness.test.ts tests/localization_fixes.test.ts`.
 - With `npm run dev` running: `node scripts/pr_screenshots.mjs` (desktop, compact,
   tablet; lowest graphics preset seeded; Chromium with iOS-profile emulation for mobile) and
   `node scripts/mobile_input_zoom_check.mjs`; commit the shots under docs/screenshots/

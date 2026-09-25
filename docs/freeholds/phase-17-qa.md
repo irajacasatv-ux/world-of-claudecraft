@@ -280,42 +280,39 @@ Deliverables (at most five):
    gather_event:perfect_specimen => "Harvest a perfect specimen from a fallen creature to display this trophy.".
    These are keyed render results, not additional unkeyed player copy.
 5. Trophy proof and captures. Pin an alternate account character's existing source,
-   immediate new source while inside, relog idempotence, every source kind, honest
-   unknown date, hidden spoiler, provenance privacy, three/four-plinth limits,
-   no-item routes, the raw-command forgery arm (unearned, unknown and other-account
-   trophy ids) and the account weapon-skin fixture. The trophies-provenance-known
-   capture stages a deed source (deed rows and any relic/mark/mount ledger row with a
-   non-null `found_at` carry a known day: server/account_ledger_db.ts,
-   `AccountEarner.day` in src/sim/account_ledger.ts; replayed historical finds are NULL,
-   unknown); trophies-provenance-unknown stages a historical source with no known day
-   (a replayed find), never a faked date. Re-run strict
-   wire/parity/content/guide/ownership pins and bounded PG account hydration evidence. Add
-   the exact housing-trophies
-   helper entry below with desktop/compact/tablet owned/unearned/unknown/public
-   provenance and placement captures. Dispatch architecture, content,
-   cross-platform, frontend, render, privacy, migration, server-hot-path and
+   immediate new source while inside, relog idempotence, every source kind, honest unknown
+   date, hidden spoiler, provenance privacy, three/four-plinth limits, no-item routes, the
+   raw-command forgery arm (unearned, unknown and other-account trophy ids) and the
+   account weapon-skin fixture. The trophies-provenance-known capture stages a deed source
+   (deed rows and any relic/mark/mount ledger row with a non-null `found_at` carry a known
+   day: server/account_ledger_db.ts, `AccountEarner.day` in src/sim/account_ledger.ts;
+   replayed historical finds are NULL, unknown); trophies-provenance-unknown stages a
+   historical source with no known day (a replayed find), never a faked date. Re-run
+   strict wire/parity/content/guide/ownership pins and bounded PG account hydration
+   evidence. Add the exact housing-trophies helper entry below with desktop/compact/tablet
+   owned/unearned/unknown/public provenance and placement captures. Dispatch architecture,
+   content, cross-platform, frontend, render, privacy, migration, server-hot-path and
    before/final database reviewers.
 
 
-SHARED ACCOUNT SOURCE CONTRACT (deliverable 2; proof belongs to deliverable 5):
-(Premise changed at the v0.44.0 sync: the release's account ledger,
-src/sim/account_ledger.ts, now carries most of these sources; re-planned in
-phase-17-trophies.md item 2.)
-17 owns NEW server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage
-and server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. The DB
-module owns fixed, versioned, statically selected source projections and account-scoped
-character-ID keyset pages. Select only the exact trophy source fields admitted by the
-source manifest; 24 extends that same projection with normalized farm state and source
-farming proficiency. Weapon-skin ownership is an account row, not a character field:
-the loader reads account_weapon_cosmetics.skin_ids (server/db.ts) through the existing
-per-account weaponSkinIds merge in server/account_cosmetics_db.ts (loaded at join in
-server/ws_auth.ts), the skin grant path
-(server/claudium.ts noteWeaponSkinGrants) is its invalidation hook, and
-src/sim/reliquary.ts resolves weapon_skin relics through opts.weaponSkins, never a
-PlayerMeta field. No caller-supplied JSON paths, whole-character-state SELECT or
-listCharactersAllRealms scan is permitted. The per-realm character limit is not a
-limit for the account across all realms. Measure the candidate (account_id, id) access
-index against actual query plans, and use the concurrent-index seam if required.
+SHARED ACCOUNT SOURCE CONTRACT (deliverable 2; proof belongs to deliverable 5): (Premise
+changed at the v0.44.0 sync: the release's account ledger, src/sim/account_ledger.ts, now
+carries most of these sources; re-planned in phase-17-trophies.md item 2.) 17 owns NEW
+server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage and
+server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. The DB module owns
+fixed, versioned, statically selected source projections and account-scoped character-ID
+keyset pages. Select only the exact trophy source fields admitted by the source manifest;
+24 extends that same projection with normalized farm state and source farming proficiency.
+Weapon-skin ownership is an account row, not a character field: the loader reads
+account_weapon_cosmetics.skin_ids (server/db.ts) through the existing per-account
+weaponSkinIds merge in server/account_cosmetics_db.ts (loaded at join in
+server/ws_auth.ts), the skin grant path (server/claudium.ts noteWeaponSkinGrants) is its
+invalidation hook, and src/sim/reliquary.ts resolves weapon_skin relics through
+opts.weaponSkins, never a PlayerMeta field. No caller-supplied JSON paths,
+whole-character-state SELECT or listCharactersAllRealms scan is permitted. The per-realm
+character limit is not a limit for the account across all realms. Measure the candidate
+(account_id, id) access index against actual query plans, and use the concurrent-index
+seam if required.
 
 Record page rows/bytes, aggregate collection/string/encoded-byte limits, admission and
 connection deadlines, cache entries/bytes and refresh bounds in the approved

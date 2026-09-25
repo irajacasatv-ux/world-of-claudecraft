@@ -1366,15 +1366,15 @@ ambiguous commits, real PostgreSQL participants and exact no-leak capacity total
 - Never sell power: no amenity or furnishing changes a combat, progression, gathering, or
   drop number; the only buff in a house is a feast's Well Fed.
 - A home is never World PvP ground: `worldPvpZonePolicyAt`
-  (src/sim/pvp/world_pvp_zones.ts)
-  answers sanctuary for any owner-claimed room (`claimKey: 'owner'`), so the sim hostility
-  arm and the client verdict (src/ui/pvp_hostile_core.ts) agree
-  (tests/freehold_world_pvp_sanctuary.test.ts). Every new room def keeps
-  `claimKey: 'owner'` or it loses the sanctuary. Honor gear's health bonus stays on in a
-  home (src/sim/pvp/vitality.ts, tests/freehold_pvp_vitality.test.ts). Both rules read
-  one helper, `isOwnerClaimRoomAt` (src/sim/data.ts, tests/owner_claim_room_at.test.ts).
-  Those three suites pin the owner-room id list LITERALLY on purpose, so a new room def
-  red-lights all three until the same change extends each list.
+  (src/sim/pvp/world_pvp_zones.ts) answers sanctuary for any owner-claimed room
+  (`claimKey: 'owner'`), so the sim hostility arm and the client verdict
+  (src/ui/pvp_hostile_core.ts) agree (tests/freehold_world_pvp_sanctuary.test.ts). Every
+  new room def keeps `claimKey: 'owner'` or it loses the sanctuary. Honor gear's health
+  bonus stays on in a home (src/sim/pvp/vitality.ts, tests/freehold_pvp_vitality.test.ts).
+  Both rules read one helper, `isOwnerClaimRoomAt` (src/sim/data.ts,
+  tests/owner_claim_room_at.test.ts). Those three suites pin the owner-room id list
+  LITERALLY on purpose, so a new room def red-lights all three until the same change
+  extends each list.
 - Never a Perfecting keystone (`wyrmfall_core`, `sundered_essence`, `makers_ember`), a
   gear intermediate, or the quickening catalyst in any ledger, furnishing, or upgrade
   bill. Zero new farm beds. Recipes and their `stationType` gates unchanged.
@@ -1471,16 +1471,15 @@ ambiguous commits, real PostgreSQL participants and exact no-leak capacity total
   `ctx.freeholdAccountSources` (get(ownerKey) and invalidate(ownerKey, sourceKind) keyed
   on the D16 host-stamped owner key the sync holds through meta, never an account id; the
   server binding createFreeholdAccountSourceLoader resolves ownerKey to the account; the
-  offline and headless local-only binding returns an empty cross-character projection
-  with explicit status while the sync reads the local character's own surfaces from meta
-  per D19; premise changed at the v0.44.0 sync: the release's account ledger,
+  offline and headless local-only binding returns an empty cross-character projection with
+  explicit status while the sync reads the local character's own surfaces from meta per
+  D19; premise changed at the v0.44.0 sync: the release's account ledger,
   src/sim/account_ledger.ts, now carries most of these sources; re-planned in
-  phase-17-trophies.md item 2) appended to `CALLBACK_KEYS`, 18 appends
-  `freeholdVisitors`, 21 appends
-  `contributeUpgrade(slot, count, source)` and `finishUpgrade()`, 30a appends NEW
-  `guildHallBoards()` (next bullet), 34 appends `myWard` and `moveWard(wardId)`, 42 appends
-  `myFreeholds`; every other later member is named in its own phase file with the parity
-  pin updated in that same change.
+  phase-17-trophies.md item 2) appended to `CALLBACK_KEYS`, 18 appends `freeholdVisitors`,
+  21 appends `contributeUpgrade(slot, count, source)` and `finishUpgrade()`, 30a appends
+  NEW `guildHallBoards()` (next bullet), 34 appends `myWard` and `moveWard(wardId)`, 42
+  appends `myFreeholds`; every other later member is named in its own phase file with the
+  parity pin updated in that same change.
 - Hall boards read (30a): NEW `server/guild_hall_boards.ts::routes` (RouteDef
   GET /api/guilds/hall-boards, registered in `server/http/registry.ts` beside
   `guildRosterRoutes`, current-membership check on every call) mirrored by the NEW
@@ -2003,12 +2002,12 @@ message is performed in this documentation session.
 
 ## Gotchas (read before the matching phase)
 
-- Character blob headroom (figures as measured at the v0.44.0 re-sync; the live ones are
-  in the comments of tests/professions_blob_growth.test.ts): the maximal character blob
-  measured 227,099 bytes against `CHARACTER_BLOB_WARN_BYTES` 229,376, so 2,277 bytes
-  remained (Warfare Season 2 took 13,496 bytes of the 15,795 there were, the
-  Valestrider's reins id 22 bytes). The next housing
-  content wave that grows the blob (trophies, more furnishings or Reliquary pages)
+- Character blob headroom (as measured on 2026-09-25, at the v0.44.0 re-sync; the live
+  measurement is pinned in tests/professions_blob_growth.test.ts and the threshold is
+  `CHARACTER_BLOB_WARN_BYTES` in server/character_blob_size.ts): the maximal character blob
+  measured 227,099 bytes against 229,376, so 2,277 bytes remained (Warfare Season 2 took
+  13,496 bytes of the 15,795 there were, the Valestrider's reins id 22 bytes). The next
+  housing content wave that grows the blob (trophies, more furnishings or Reliquary pages)
   forces a threshold decision; attribute and measure it, never widen the band.
 - Reliquary page order: pages the release appends go BEFORE the unreleased Hearth
   pages; at the v0.44.0 re-sync the tail is `professions_forgebreaker`,
@@ -2089,69 +2088,67 @@ message is performed in this documentation session.
   `src/sim/types.ts`, not a monolith, but any `sim.ts` merge line still owes an extraction.
 - Locked during 01 (engineering, no product change): (a) the offline flag is gated like
   its two sibling live-world flags, `freeholdsEnabled: world === undefined` in
-  `src/main.ts`
-  (since moved to `src/game/offline_world_config.ts` `offlineWorldConfig`, which
-  `src/main.ts` calls), so the stock offline world is lit (D3) while custom editor
-  play-test maps and the editor
-  viewport (`src/editor/3d/viewport.ts`) boot dark; the headless env passes `true`.
-  (b) `SimConfig.freeholdsEnabled` on a realm is a BOOT SNAPSHOT of `FREEHOLDS_ENABLED`
-  (a running realm needs a restart); only the wire predicate and the status route read the
-  env live. (c) `freehold_enter` joined `JAILED_BLOCKED_COMMANDS` (a door step into instanced
-  space); `freehold_leave` is deliberately not jail-blocked. (d) GET `/api/freehold` mounts
-  a DEDICATED housing read limiter (`HOUSING_READ_POLICY`: IP-keyed, 60/min, tier-2 `none`
-  so an allowed request pays no pg UPSERT; `HOUSING_READ_MAX_PER_MINUTE` in
-  `server/ratelimit.ts`, pinned in `tests/server/tunables.test.ts`) AHEAD of the bearer guard
-  and keeps auth AHEAD of the flag check (the flag never leaks to an anonymous probe); every
-  later housing endpoint (15, 30a) follows that onion order. (e) `ctx.freeholdsEnabled` has zero production
+  `src/main.ts` (since moved to `src/game/offline_world_config.ts` `offlineWorldConfig`,
+  which `src/main.ts` calls), so the stock offline world is lit (D3) while custom editor
+  play-test maps and the editor viewport (`src/editor/3d/viewport.ts`) boot dark; the
+  headless env passes `true`. (b) `SimConfig.freeholdsEnabled` on a realm is a BOOT
+  SNAPSHOT of `FREEHOLDS_ENABLED` (a running realm needs a restart); only the wire
+  predicate and the status route read the env live. (c) `freehold_enter` joined
+  `JAILED_BLOCKED_COMMANDS` (a door step into instanced space); `freehold_leave` is
+  deliberately not jail-blocked. (d) GET `/api/freehold` mounts a DEDICATED housing read
+  limiter (`HOUSING_READ_POLICY`: IP-keyed, 60/min, tier-2 `none` so an allowed request
+  pays no pg UPSERT; `HOUSING_READ_MAX_PER_MINUTE` in `server/ratelimit.ts`, pinned in
+  `tests/server/tunables.test.ts`) AHEAD of the bearer guard and keeps auth AHEAD of the
+  flag check (the flag never leaks to an anonymous probe); every later housing endpoint
+  (15, 30a) follows that onion order. (e) `ctx.freeholdsEnabled` has zero production
   consumers until 03 (furnisher stock) and 06 (gate prompt, Hearth Key); the waiver is
   recorded beside the zero-consumer rule in `src/sim/CLAUDE.md`. (f) `ctx.freeholds` is
   owner-keyed: the first `loadFreehold` caller (05/07) pairs it with `evictFreehold` at
   account or character unload in the same change and registers the table prune in
   `server/retention_sweep.ts` with the DDL (07). (g) `freeholdTransitionId` is a
   ClientWorld-only mirror; its first consumer (08a) lands it on `IWorldHousing` and both
-  hosts with the parity pin. (h) the first behavioral read of `ctx.freeholdsEnabled` adds a
-  parity scenario booting the flag true (03). (i) the housing UI (11) gates its senders on a
-  server-advertised capability so a dark realm never burns a command-lane token per click.
-  (j) the real housing command bodies (08) re-validate the payload shape inside
-  `src/sim/freehold/` so the offline host enforces what `server/freehold_wire.ts` enforces.
-  (k) `FreeholdPlotId` is BRANDED (`src/sim/freehold/types.ts`), so a raw string, and in
-  particular a `FreeholdState.ownerKey`, cannot be assigned to a public `plotId`; the only
-  constructor is `asFreeholdPlotId`. 07's row mapper casts once at the database boundary.
-  (l) `ctx.freeholds` is a `Map`, so it walks in INSERTION order, which is host-dependent
-  once 07 feeds it. Sim code that iterates it MUST sort by owner key first or the three
-  hosts fork on one seed.
-  (m) `serializeFreehold` neutralizes `isDecorating` to false at the persistence boundary
-  (C03: ephemeral presence never saves), so 07 cannot forget to strip it.
-  (n) `ctx.freeholdsEnabled` is NOT re-checked in the sim command bodies, so
-  `refusedFreeholdCommand` in `server/game.ts` is the sole enforcement on the COMMAND WIRE
-  today (the REST status read gates itself in `server/freehold_routes.ts`).
-  Whoever lands the first real body (08) either opens it with a `ctx.freeholdsEnabled`
-  early return or records the ruling that the dispatch gate is the one gate.
-  (o) `ClientWorld.buildPresenceSeq` is advisory and monotonic-WITH-GAPS: it advances even
-  when the frame is dropped (spectating, closed socket), and no server-side ordering or
-  drop logic exists yet. C03 must never treat it as a dense counter.
-  (p) The five coined non-Latin renderings of "Freehold" are now locked in
-  `scripts/i18n_glossary.json` under the `housingSystem` category (ja and ru transliterate,
-  ko and both zh render the meaning; that split is the recorded ruling). Later housing
-  surfaces reuse those forms and never re-coin a per-surface variant.
-  (q) Three server-side throwaway Sims (`server/main.ts` initialCharacterState,
+  hosts with the parity pin. (h) the first behavioral read of `ctx.freeholdsEnabled` adds
+  a parity scenario booting the flag true (03). (i) the housing UI (11) gates its senders
+  on a server-advertised capability so a dark realm never burns a command-lane token per
+  click. (j) the real housing command bodies (08) re-validate the payload shape inside
+  `src/sim/freehold/` so the offline host enforces what `server/freehold_wire.ts`
+  enforces. (k) `FreeholdPlotId` is BRANDED (`src/sim/freehold/types.ts`), so a raw
+  string, and in particular a `FreeholdState.ownerKey`, cannot be assigned to a public
+  `plotId`; the only constructor is `asFreeholdPlotId`. 07's row mapper casts once at the
+  database boundary. (l) `ctx.freeholds` is a `Map`, so it walks in INSERTION order, which
+  is host-dependent once 07 feeds it. Sim code that iterates it MUST sort by owner key
+  first or the three hosts fork on one seed. (m) `serializeFreehold` neutralizes
+  `isDecorating` to false at the persistence boundary (C03: ephemeral presence never
+  saves), so 07 cannot forget to strip it. (n) `ctx.freeholdsEnabled` is NOT re-checked in
+  the sim command bodies, so `refusedFreeholdCommand` in `server/game.ts` is the sole
+  enforcement on the COMMAND WIRE today (the REST status read gates itself in
+  `server/freehold_routes.ts`). Whoever lands the first real body (08) either opens it
+  with a `ctx.freeholdsEnabled` early return or records the ruling that the dispatch gate
+  is the one gate. (o) `ClientWorld.buildPresenceSeq` is advisory and monotonic-WITH-GAPS:
+  it advances even when the frame is dropped (spectating, closed socket), and no
+  server-side ordering or drop logic exists yet. C03 must never treat it as a dense
+  counter. (p) The five coined non-Latin renderings of "Freehold" are now locked in
+  `scripts/i18n_glossary.json` under the `housingSystem` category (ja and ru
+  transliterate, ko and both zh render the meaning; that split is the recorded ruling).
+  Later housing surfaces reuse those forms and never re-coin a per-surface variant. (q)
+  Three server-side throwaway Sims (`server/main.ts` initialCharacterState,
   `server/pbe_boost.ts`, `server/community_test_accounts.ts`) construct without
   `freeholdsEnabled`, so they are dark even on a lit realm. Harmless while no housing
   behavior exists; it becomes a hazard at 05/07 if a fresh character's default freehold
   record is stamped at serialize-character time, because a boosted or provisioned
-  character would come out without one.
-  (r) The 01 commits are ONE ATOMIC UNIT: the facet commit imports the sim types and
-  appends the wire tokens before the module and the game.ts labels exist, so only the tip
-  typechecks. Do not bisect inside `4c982784ff..c946091c07`, which holds FIVE commits:
-  the four code commits plus the ledger commit that closes them.
-  (s) The `blank_entity.ts` extraction is a neutral-default entity FACTORY, not the
-  "decode block into a `src/net/*_wire.ts` sibling" the phase file named; the relief is
-  equivalent and the move is verbatim, but the substitution is deliberate. The fourth
-  extraction (`updateSeoMetadata` out of `src/main.ts`) is likewise unnamed in the phase
-  file and justified by the remeasure clause.
-  (t) `moveToward`'s doc comment lost an em dash during the otherwise verbatim move (the
-  repo forbids em dashes and a Stop hook blocks them), so a future auditor diffing the two
-  bodies will find one comment line that is not byte-identical. Everything executable is.
+  character would come out without one. (r) The 01 commits are ONE ATOMIC UNIT: the facet
+  commit imports the sim types and appends the wire tokens before the module and the
+  game.ts labels exist, so only the tip typechecks. Do not bisect inside
+  `4c982784ff..c946091c07`, which holds FIVE commits: the four code commits plus the
+  ledger commit that closes them. (s) The `blank_entity.ts` extraction is a
+  neutral-default entity FACTORY, not the "decode block into a `src/net/*_wire.ts`
+  sibling" the phase file named; the relief is equivalent and the move is verbatim, but
+  the substitution is deliberate. The fourth extraction (`updateSeoMetadata` out of
+  `src/main.ts`) is likewise unnamed in the phase file and justified by the remeasure
+  clause. (t) `moveToward`'s doc comment lost an em dash during the otherwise verbatim
+  move (the repo forbids em dashes and a Stop hook blocks them), so a future auditor
+  diffing the two bodies will find one comment line that is not byte-identical. Everything
+  executable is.
 
 Parity findings the reviewers raised that are LATENT today and owed by a named later phase:
 - THE DARK REFUSAL IS INVISIBLE ONLINE. All ten ClientWorld senders use `this.cmd({...})`,

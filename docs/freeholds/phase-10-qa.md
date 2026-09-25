@@ -4,11 +4,11 @@ Audits `phase-10-furnishing-colliders.md`. Verdict goes in `progress.md` (row "1
 The next implementation phase never starts before this file has run.
 
 Correction, 2026-09-25 (stale since the first v0.44.0 sync, `ffa7ac5ffb`): the release
-already extracted the region
-block out of `src/sim/colliders.ts` into `src/sim/rift_regions.ts` (colliders.ts
-re-exports its publish/token verbs), so the audited change generalises that module in
-place or renames it; there is no colliders.ts block to compare, and that ceiling is
-not the change's payment. The audit steps below are corrected to match.
+already extracted the region block out of `src/sim/colliders.ts` into
+`src/sim/rift_regions.ts` (colliders.ts re-exports its publish/token verbs), so the
+audited change generalises that module in place or renames it; there is no colliders.ts
+block to compare, and that ceiling is not the change's payment. The audit steps below are
+corrected to match.
 
 ### Starter Prompt
 ```
@@ -21,17 +21,16 @@ block for effort and fan-out; this prompt names no model.
 
 Goal: audit the Phase 10 diff for correctness against every deliverable and acceptance
 criterion in docs/freeholds/progress.md "10 Furnishing colliders", missing tests, dead
-code, the move-not-rewrite generalisation of src/sim/rift_regions.ts, determinism of
-the collider set, both hosts colliding identically, no per-tick publish, and the monolith
-ratchet; fix what the
-audit finds; record a verdict.
+code, the move-not-rewrite generalisation of src/sim/rift_regions.ts, determinism of the
+collider set, both hosts colliding identically, no per-tick publish, and the monolith
+ratchet; fix what the audit finds; record a verdict.
 
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
 - Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest
-  origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
+  origin/release/**; release-merge-audit after a non-empty merge; pnpm install
+  --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the forward-walk-inherits-reverse-gate
   entry, "review the review-fix round", "apply ALL findings".
 
@@ -48,34 +47,31 @@ Spawn one Explore agent to read and summarize:
   five rift suites (tests/rift_collider_cells.test.ts,
   tests/rift_collision_region_online.test.ts, tests/rift_sim.test.ts,
   tests/rift_wall_solidity.test.ts, tests/rift_wall_swept_collision.test.ts) with
-  `git diff <phase-start>..HEAD -- tests/rift_*` expected EMPTY, tests/sim_context.test.ts,
-  tests/monolith_budget.test.ts
-The agent returns: the promised-versus-delivered table per deliverable, the registry
-diff (any rift line that changed beyond an import path or a name alias), every reader
-site re-pointed at the generalised lookup and any left behind, every test added with what
-it
-asserts, the publish and clear call sites on both hosts, and any TODO, unused import, or
-alias that nothing calls.
+  `git diff <phase-start>..HEAD -- tests/rift_*` expected EMPTY,
+  tests/sim_context.test.ts, tests/monolith_budget.test.ts The agent returns: the
+  promised-versus-delivered table per deliverable, the registry diff (any rift line that
+  changed beyond an import path or a name alias), every reader site re-pointed at the
+  generalised lookup and any left behind, every test added with what it asserts, the
+  publish and clear call sites on both hosts, and any TODO, unused import, or alias that
+  nothing calls.
 
 STEP 2 - AUDIT (parallel Agent fan-out, three auditors, each writing its report to a
 file and replying with the path plus a short summary; prompt each for COVERAGE: report
 every issue including low-severity and uncertain ones; ranking happens later):
-- CORRECTNESS: every deliverable and acceptance criterion actually met; the
-  generalisation is move-not-rewrite (the rift bodies match; the rift aliases forward
-  with identical signatures; the O(1) candidate-origin derivation survives for the rift
-  band); the
-  freehold candidate origin derives from the claim's true instanceOriginOf and never
-  from a clamp that maps a neighbouring slot; every reader (movement, sight, pathing)
-  dispatches through the one lookup; publish fires on claim, on every accepted change,
-  and on free, and NEVER in a sweep; the client clears the previous region before
-  setting the new one and clears on session end; the owner and a guest collide
-  identically; a def with r: 0 publishes no circle; every claim holds its own collision
-  token on the InstanceSlot (the interface now in instance_slot.ts), allocated at claim
-  and released on free, and no freehold publish uses the host token as its identity;
-  the reader derives the one candidate origin under the host token (dungeonAt plus the
-  UNCLAMPED slot inverse, bounds-checked against the region) and honours the per-claim
-  ownership stamp on set and clear; self_motion_rift_lift.ts either needed no twin
-  (stated why) or got one.
+- CORRECTNESS: every deliverable and acceptance criterion actually met; the generalisation
+  is move-not-rewrite (the rift bodies match; the rift aliases forward with identical
+  signatures; the O(1) candidate-origin derivation survives for the rift band); the
+  freehold candidate origin derives from the claim's true instanceOriginOf and never from
+  a clamp that maps a neighbouring slot; every reader (movement, sight, pathing)
+  dispatches through the one lookup; publish fires on claim, on every accepted change, and
+  on free, and NEVER in a sweep; the client clears the previous region before setting the
+  new one and clears on session end; the owner and a guest collide identically; a def with
+  r: 0 publishes no circle; every claim holds its own collision token on the InstanceSlot
+  (the interface now in instance_slot.ts), allocated at claim and released on free, and no
+  freehold publish uses the host token as its identity; the reader derives the one
+  candidate origin under the host token (dungeonAt plus the UNCLAMPED slot inverse,
+  bounds-checked against the region) and honours the per-claim ownership stamp on set and
+  clear; self_motion_rift_lift.ts either needed no twin (stated why) or got one.
 - TEST COVERAGE: each claimed pin has a DECISIVE assertion that fails on regression (the
   equivalence pin drives positions BETWEEN thresholds on both sides of a wall and
   compares full answers, not booleans; the blocks-movement pin proves the same walk
@@ -94,15 +90,14 @@ every issue including low-severity and uncertain ones; ranking happens later):
 - DEAD CODE AND HYGIENE: unused imports and types, leftover TODOs, a rift-named helper
   left in the registry module or colliders.ts beside its alias, the architecture import
   invariant, the word "phase" in any code, comment, or commit message, em dashes or
-  emojis, generated files
-  hand-edited, src/sim/CLAUDE.md and src/sim/freehold/CLAUDE.md rows for the new
-  modules, the colliders.ts ceiling not raised and, if the diff added a line there,
-  lowered by an extraction (the release's region move is not this change's payment).
-Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the surfaces
-the diff touched (architecture-reviewer, cross-platform-sync, privacy-security-review,
-server-hot-path-reviewer for the per-claim registry read on the movement, sight and
-pathing hot paths, test-coverage-auditor), and finally qa-checklist (the completion
-gate), all for COVERAGE, all to files.
+  emojis, generated files hand-edited, src/sim/CLAUDE.md and src/sim/freehold/CLAUDE.md
+  rows for the new modules, the colliders.ts ceiling not raised and, if the diff added a
+  line there, lowered by an extraction (the release's region move is not this change's
+  payment). Then the dispatch reviewers per docs/freeholds/implementation-plan.md for the
+  surfaces the diff touched (architecture-reviewer, cross-platform-sync,
+  privacy-security-review, server-hot-path-reviewer for the per-claim registry read on the
+  movement, sight and pathing hot paths, test-coverage-auditor), and finally qa-checklist
+  (the completion gate), all for COVERAGE, all to files.
 
 SETTLED COVERAGE ADDITIONS:
 - The sibling/band resolver choice is closed. Exercise exact band/slot boundaries,

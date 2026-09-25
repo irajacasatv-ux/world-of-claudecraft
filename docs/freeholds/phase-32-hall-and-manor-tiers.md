@@ -185,21 +185,20 @@ Prompt in its returned acceptance table, including sole authority ownership, D9,
 history/finality and required Codex asset execution where applicable.
 
 STEP 2 - EXECUTE WITH EXPLICIT OWNERSHIP:
-- CONTENT/LAYOUT owner: append great_hall (2 rooms,120 decor,8 plinths,2 amenities),
-  manor and bastion (3 rooms,200 decor,14 plinths,3 amenities) from state Content numbers.
-  The visitor cap column (D77): manor 16 (state.md Visitors row); meeting_hall,
-  great_hall and bastion take the Fernando-signed hall-tier rows in
-  content-numbers-workbook.md, an unsigned release gate until signed, with the Cottage
-  row standing until then (D77); never an invented literal.
-  Use next verified free DungeonDef indexes, record them before touching consumers;
-  no guessed index literal. Layouts and lifts remain content, with the six interior
-  integration seams, empty spawns, owner claim, guideVisible false and no Finder row
-  (each room keeps `claimKey: 'owner'` and so the World PvP sanctuary, state.md
-  "Non-negotiables").
-  This file completes exact tier/bill/fee-ID rows in content-manifest.md and derived
-  quantities/rounding/reference/approval rows in content-numbers-workbook.md. Eligible
-  gather-tier-three node fine materials and separately sourced tier-four crop produce retain the exclusion firewall
-  and profession-independent acquisition. Service owns actual fee/quote values.
+- CONTENT/LAYOUT owner: append great_hall (2 rooms,120 decor,8 plinths,2 amenities), manor
+  and bastion (3 rooms,200 decor,14 plinths,3 amenities) from state Content numbers. The
+  visitor cap column (D77): manor 16 (state.md Visitors row); meeting_hall, great_hall and
+  bastion take the Fernando-signed hall-tier rows in content-numbers-workbook.md, an
+  unsigned release gate until signed, with the Cottage row standing until then (D77);
+  never an invented literal. Use next verified free DungeonDef indexes, record them before
+  touching consumers; no guessed index literal. Layouts and lifts remain content, with the
+  six interior integration seams, empty spawns, owner claim, guideVisible false and no
+  Finder row (each room keeps `claimKey: 'owner'` and so the World PvP sanctuary, state.md
+  "Non-negotiables"). This file completes exact tier/bill/fee-ID rows in
+  content-manifest.md and derived quantities/rounding/reference/approval rows in
+  content-numbers-workbook.md. Eligible gather-tier-three node fine materials and
+  separately sourced tier-four crop produce retain the exclusion firewall and
+  profession-independent acquisition. Service owns actual fee/quote values.
 - SIM/TRANSFER owner: generalize 21's project state behind a small tested module.
   Contributions accumulate permanently until approved bill and confirmed fee are both
   satisfied, whichever arrives last; completion is immediate, with no artificial

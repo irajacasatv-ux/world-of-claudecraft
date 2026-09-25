@@ -31,10 +31,9 @@ for the legal team; all earlier counsel/Terms/platform/service money gates still
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Worktree, base, and merge-forward" (merge
-  the newest origin/release/**;
-  release-merge-audit after a non-empty merge; pnpm install --frozen-lockfile if
-  patches/ moved).
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest
+  origin/release/**; release-merge-audit after a non-empty merge; pnpm install
+  --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, the Postgres and server/tests
   gotcha clusters, "review the review-fix round", "apply ALL findings".
 
@@ -70,52 +69,50 @@ STEP 2 - AUDIT (fresh parallel reviewers, COVERAGE, all findings to files):
 Deliverables (at most five):
 1. Extend the existing durable housing operation boundary. Phase 07a owns
    server/freehold_mutation.ts::commitFreeholdMutation and
-   server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation
-   (the freehold_operations and freehold_operation_receipts rows under
-   FREEHOLD_OPERATION_SCHEMA; 15 extends those rows, never a parallel table).
-   Extend those records for the service: bind immutable operationId/idempotency key,
-   account, opaque plotId, SKU, operation fingerprint (quoteId, catalogVersion, sku,
-   amount and currency), the protected opaque checkoutAuthorization reference the
-   service issued (stored and forwarded unchanged, never decoded, never logged or
-   exposed on any wire), expected durable revision and globally fenced owner
-   generation before repeated spend. Persist discoverable intent before service IO,
-   release DB clients/locks, then call the service. The extended rows inherit 07a's
-   D88 ON DELETE policy per row class: intent rows cascade only when no open operation
-   exists, applied tombstones keep a nonidentifying operation identity, and an open
-   Charter or Call operation blocks character or account deletion with 07a's
-   CharacterFreeholdOperationOpen refusal class in character_delete_db.ts (the
-   CharacterStoragePurchaseOpen guard shape). The
-   authoritative service outcome and target grant receipt commit atomically before
-   live mirrors acknowledge success. appliedPurchaseKeys may be a bounded live adjunct;
-   it is never replay authority. Retain compact durable identities unless a signed
-   service replay horizon permits proven safe tombstone/compaction. Do not copy the
-   storage purchase pending-row/ladder/queue subsystem or create a second housing
-   transaction framework.
-   Preserve 07a's real legacy transaction touch set/relative locks, bank-ledger
-   classifier before guild replay and existing storage/custody tail. Use its reviewed
-   housing composition hook before COMMIT with the concrete participant manifest and
-   disposable-PG proof. runFencedCharacterSave from
-   server/character_save_statement.ts owns pre-lock/nonce fencing; beginCharacterSaveTx
-   supplies deadlines, not that fence. Never replace this with an unchecked InitPlan
-   or an invented generic account/character/guild/receipt lock hierarchy.
-   Consume 13a's sole server/freehold_upkeep_ingress.ts calendar boundary and 13's safe
-   src/sim/freehold/state.ts projection. source calendarId/schemaVersion/resetPolicyId
-   and committed lifecycle/authority revisions retain original bill/receipt identity.
-   Every historical dependency of durable condition/bill/credit evaluation/consumption
-   must be irrevocably finalized; otherwise hold the affected local effect pending.
-   Buying future credits does not require future finality. The mutable covered tail is
-   never durable authority. The 07a effect transaction uses compatible calendar-head
-   FOR SHARE and lifecycle guards at the reviewed hook, rechecks finalized dependencies
-   and lower revision CAS, and preserves original-key recovery without another debit.
-   No second interval store, receipt journal, poll or calendar migration. 13a's guarded
-   process-generation/revision/digest install and exact current/superseded/conflicting
-   ACKs are the sole source of live calendar status. A confirmed payment keeps its
-   agreed recovery guarantee while local application waits for irrevocable facts.
-   Service responses must be authenticated and bounded-decoded with full original
-   operation fingerprint/effect validation. Malformed/nonterminal status is neither
-   a grant nor proof of no debit. Existing claudium_proxy.ts outgoing credential,
-   timeout and redirect refusal do not implement this NEW receipt/status protocol;
-   written signed acceptance is not cryptographic runtime response verification.
+   server/freehold_operation_db.ts::prepareFreeholdOperation/applyFreeholdOperation (the
+   freehold_operations and freehold_operation_receipts rows under
+   FREEHOLD_OPERATION_SCHEMA; 15 extends those rows, never a parallel table). Extend those
+   records for the service: bind immutable operationId/idempotency key, account, opaque
+   plotId, SKU, operation fingerprint (quoteId, catalogVersion, sku, amount and currency),
+   the protected opaque checkoutAuthorization reference the service issued (stored and
+   forwarded unchanged, never decoded, never logged or exposed on any wire), expected
+   durable revision and globally fenced owner generation before repeated spend. Persist
+   discoverable intent before service IO, release DB clients/locks, then call the service.
+   The extended rows inherit 07a's D88 ON DELETE policy per row class: intent rows cascade
+   only when no open operation exists, applied tombstones keep a nonidentifying operation
+   identity, and an open Charter or Call operation blocks character or account deletion
+   with 07a's CharacterFreeholdOperationOpen refusal class in character_delete_db.ts (the
+   CharacterStoragePurchaseOpen guard shape). The authoritative service outcome and target
+   grant receipt commit atomically before live mirrors acknowledge success.
+   appliedPurchaseKeys may be a bounded live adjunct; it is never replay authority. Retain
+   compact durable identities unless a signed service replay horizon permits proven safe
+   tombstone/compaction. Do not copy the storage purchase pending-row/ladder/queue
+   subsystem or create a second housing transaction framework. Preserve 07a's real legacy
+   transaction touch set/relative locks, bank-ledger classifier before guild replay and
+   existing storage/custody tail. Use its reviewed housing composition hook before COMMIT
+   with the concrete participant manifest and disposable-PG proof. runFencedCharacterSave
+   from server/character_save_statement.ts owns pre-lock/nonce fencing;
+   beginCharacterSaveTx supplies deadlines, not that fence. Never replace this with an
+   unchecked InitPlan or an invented generic account/character/guild/receipt lock
+   hierarchy. Consume 13a's sole server/freehold_upkeep_ingress.ts calendar boundary and
+   13's safe src/sim/freehold/state.ts projection. source
+   calendarId/schemaVersion/resetPolicyId and committed lifecycle/authority revisions
+   retain original bill/receipt identity. Every historical dependency of durable
+   condition/bill/credit evaluation/consumption must be irrevocably finalized; otherwise
+   hold the affected local effect pending. Buying future credits does not require future
+   finality. The mutable covered tail is never durable authority. The 07a effect
+   transaction uses compatible calendar-head FOR SHARE and lifecycle guards at the
+   reviewed hook, rechecks finalized dependencies and lower revision CAS, and preserves
+   original-key recovery without another debit. No second interval store, receipt journal,
+   poll or calendar migration. 13a's guarded process-generation/revision/digest install
+   and exact current/superseded/conflicting ACKs are the sole source of live calendar
+   status. A confirmed payment keeps its agreed recovery guarantee while local application
+   waits for irrevocable facts. Service responses must be authenticated and
+   bounded-decoded with full original operation fingerprint/effect validation.
+   Malformed/nonterminal status is neither a grant nor proof of no debit. Existing
+   claudium_proxy.ts outgoing credential, timeout and redirect refusal do not implement
+   this NEW receipt/status protocol; written signed acceptance is not cryptographic
+   runtime response verification.
 2. Confirmed grant core. NEW src/sim/freehold/grant.ts (the state.md module list's
    grant.ts) exports freeholdGrantCharter and freeholdGrantRepair.
    freeholdGrantCharter upgrades the existing Inn Room to

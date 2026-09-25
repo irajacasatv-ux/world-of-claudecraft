@@ -143,14 +143,12 @@ This is Phase 32 (QA): Great Hall, Manor and Bastion upgrade projects.
 Harness: Claude Code. Follow root CLAUDE.md working-style capability block;
 this prompt names no model. Goal: full COVERAGE, apply every finding and review fixes.
 
-STEP 0 - PRE-FLIGHT:
-Use the packet worktree and recorded wave C branch. git status --short must be
-clean before edits; otherwise stop and ask. Sync per state.md "Worktree, base, and
-merge-forward" with git fetch origin --prune, merge the newest origin/release/**. Run
-release-merge-audit after
-nonempty merge; pnpm install --frozen-lockfile if patches/ moved. Read applicable root/
-local guidance. Scan MEMORY.md, packet memory, test-pin traps, apply ALL findings and
-review the review-fix round.
+STEP 0 - PRE-FLIGHT: Use the packet worktree and recorded wave C branch. git status
+--short must be clean before edits; otherwise stop and ask. Sync per state.md "Worktree,
+base, and merge-forward" with git fetch origin --prune, merge the newest
+origin/release/**. Run release-merge-audit after nonempty merge; pnpm install
+--frozen-lockfile if patches/ moved. Read applicable root/ local guidance. Scan MEMORY.md,
+packet memory, test-pin traps, apply ALL findings and review the review-fix round.
 
 STEP 1 - LOAD THROUGH A READER:
 Have a fresh reader summarize phase-32-hall-and-manor-tiers.md, this file, state.md locked decisions/content

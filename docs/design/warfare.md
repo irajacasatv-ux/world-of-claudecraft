@@ -74,16 +74,15 @@ capped at +80 percent (`PVP_VITALITY_RATING_PER_PCT`, `PVP_VITALITY_CAP`; raised
 +50 for Warfare Season 2, which alone carries the rating past a Season 1 kit). A full
 11-slot kit alone (182 rating) gives about +30 percent and the seven-piece set
 (+120) lands at about +50 percent.
-
-Where it applies (`src/sim/pvp/vitality.ts`, safest-first): anywhere on the
-instance plane (dungeons, raids, delves, rift floors, any instance added later)
-it is OFF, unless the player is in a battleground or arena match or in a freehold
-room (a home, neither dungeon nor raid, so the owner rule's full wording in
-`src/sim/pvp/vitality.ts`, "it works in other contexts", keeps it ON there); everywhere else (the open world) it is ON. It is decided on the world
-PvP pass twice a second,
-also on a realm whose world PvP switch is off, and a player whose state flips is
-recalculated once with the health fraction preserved, so a switch never gains or
-loses health.
+Where it applies (`src/sim/pvp/vitality.ts`, safest-first): anywhere on the instance
+plane (dungeons, raids, delves, rift floors, any instance added later) it is OFF,
+unless the player is in a battleground or arena match or in a freehold room (a home
+is neither a dungeon nor a raid, and the owner rule as `src/sim/pvp/vitality.ts`
+quotes it in full, "it never works in dungeons or raids; it works in other
+contexts", keeps it ON there); everywhere else (the open world) it is ON. It is
+decided on the world PvP pass twice a second, also on a realm whose world PvP switch
+is off, and a player whose state flips is recalculated once with the health fraction
+preserved, so a switch never gains or loses health.
 
 What it does to the numbers, level 20, full honor kit, measured on the Sim
 (`tmp_pvp_stamina/` probes, 2026-09-24): a fire mage 1,265 to about 2,100 health

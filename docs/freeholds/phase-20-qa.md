@@ -113,11 +113,10 @@ for the legal team; all earlier counsel/Terms/platform/service money gates still
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Worktree, base, and merge-forward" (merge
-  the newest origin/release/**;
-  release-merge-audit after a non-empty merge; pnpm install --frozen-lockfile if patches/
-  moved). A non-empty merge after a PR was opened means the PR head moved: note it for
-  the CI re-check below (N/A when state.md records no push go).
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest
+  origin/release/**; release-merge-audit after a non-empty merge; pnpm install
+  --frozen-lockfile if patches/ moved). A non-empty merge after a PR was opened means the
+  PR head moved: note it for the CI re-check below (N/A when state.md records no push go).
 - Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
   "apply ALL findings", "CI is the gate", "PR merge needs approval", "never push to fork".
 

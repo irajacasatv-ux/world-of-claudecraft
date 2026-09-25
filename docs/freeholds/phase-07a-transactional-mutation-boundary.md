@@ -18,10 +18,9 @@ Goal: make durable plot ownership, exact-copy custody and repeatable operation r
 STEP 0 - PRE-FLIGHT:
 - Work in /Users/fernando/orca/workspaces/world-of-claudecraft/wocc-freeholds on
   feature/freeholds. Verify git status is clean; otherwise ask the user.
-- Sync per state.md "Worktree, base, and merge-forward": git fetch origin --prune;
-  use the newest
-  origin/release/**. Run release-merge-audit after any
-  non-empty merge and pnpm install --frozen-lockfile when patches/ moved.
+- Sync per state.md "Worktree, base, and merge-forward": git fetch origin --prune; use the
+  newest origin/release/**. Run release-merge-audit after any non-empty merge and pnpm
+  install --frozen-lockfile when patches/ moved.
 - Memory scan: MEMORY.md, freeholds entry, test-pin traps, apply ALL findings, and
   review the review-fix round. Record changed seam/ceiling/base facts in state.md before
   editing dependent code. Read each changed directory's CLAUDE.md.

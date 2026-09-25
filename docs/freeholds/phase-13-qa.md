@@ -31,10 +31,9 @@ for the legal team; all earlier counsel/Terms/platform/service money gates still
 STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
-- Sync the base per state.md "Worktree, base, and merge-forward" (merge
-  the newest origin/release/**;
-  release-merge-audit after a non-empty merge; pnpm install --frozen-lockfile if
-  patches/ moved).
+- Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest
+  origin/release/**; release-merge-audit after a non-empty merge; pnpm install
+  --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
   "apply ALL findings", the provisioner firewall and "one planner per file" entries.
 

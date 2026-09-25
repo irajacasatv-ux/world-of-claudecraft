@@ -47,11 +47,11 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
-  release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  and merge it. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/ (a lockfile change also moves every source fingerprint: see the gotcha below).
+  release branch (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare
+  with `git rev-list --left-right --count HEAD...origin/release/<newest>`, and merge it.
+  After any non-empty merge run the release-merge-audit skill;
+  `pnpm install --frozen-lockfile` if the merge touched patches/ (a lockfile change also
+  moves every source fingerprint: see the gotcha below).
 - Confirm the art-brief.md section 8 reference inventory and its approval workflow
   (19's art lead owns docs/freeholds/art/reference-manifest.md). Every reference board
   in that table is NEW output of THIS phase, not pre-existing input: generate any
@@ -147,41 +147,39 @@ Deliverables (at most five):
    completed design, distinct from a temporary placeholder.
 4. Codex Inn Room/Cottage dressing. Codex uses scripts/assets/freehold_dressing/ for the
    complete shell-linked hearth/door/strongbox/station/plinth/bed dressing with equal
-   material/art quality in both tiers, warm plaster/timber, quiet cool window edge,
-   clear arrival/circulation and meaningful display sightlines from ux-spec.md.
-   Measure authored grid/room bounds, model bounds/radii and protected door/arrival
-   paths into the content manifest before integration. Use the inherited interior
-   grade/daylight and sampled arrival cue from 06/09; no unsupported light/camera
-   literal. Three authored emitters is only a ceiling: the global sink may admit two
-   on iOS or fewer under pressure. LOW still shows all furnishings, ghost, blocked
-   reason and bounds; material/ambient/key fallback keeps the room readable.
-   Structural collision/arrival safety and prepared actionable representations
-   must be ready before reveal. Directional/hemi/spot/rect lighting stays boot-owned;
-   point-light allocation/retirement uses 09's scheduled budget/gates and actual global
-   sink, preserving LOW fairness. Baseline compact/tablet capture is Chromium with an
-   iOS profile, not Android, Safari or physical-device proof. Android claims require an
-   explicit userAgent/profile variant. Ordinary online arrival's additional cosmetic settle
-   wait stays zero; bounded offline wait does not guarantee all optional art. Late
-   optional cosmetics use prepared gate-owned stand-ins until final assets are ready;
-   do not confuse runtime preparation fallback with permission to ship placeholder art.
-   First confirmed Inn and first Cottage tier get the approved automatic/skippable
-   safe hearth view; ordinary return/visitor entry stay static. Movement/look/cancel
-   resumes input immediately while existing DIRECTOR_RELEASE_TIME blends camera offset
-   out safely; reduced motion starts no directive. Audio/copy dedupe by accepted entry
-   identity, never join time: consume a permitted fresh directive at most once.
-   Snapshot/resume/replay grants no new cue; commit-before-ACK loss may omit visible
-   or audio feedback for an accepted entry.
-   Consume 07c/08a's nullable freshArrivalPresentation exactly: acceptedTransitionId,
-   playWelcomeCue:true and firstTierViewEligible. Only that fresh directive can welcome;
-   only a true firstTierViewEligible grants the tier view. Positive historical
-   firstTierAtAdmission on snapshot/resume never grants a new cue/view. A committed
-   winning tier mark followed by lost ACK may skip presentation; do not replay it.
-   The typed public GameAudio arrival method and sanctioned sample pipeline belong
-   to 06/09; this asset work consumes them and adds no private-method audio shortcut.
-   A flagged player's arrival also carries the release's World PvP sanctuary line or
-   free-for-all leave line (src/sim/pvp/world_pvp.ts; never on a realm whose World PvP
-   switch is off); expect it beside the welcome,
-   it is not a housing emit (phase-18-visiting.md).
+   material/art quality in both tiers, warm plaster/timber, quiet cool window edge, clear
+   arrival/circulation and meaningful display sightlines from ux-spec.md. Measure authored
+   grid/room bounds, model bounds/radii and protected door/arrival paths into the content
+   manifest before integration. Use the inherited interior grade/daylight and sampled
+   arrival cue from 06/09; no unsupported light/camera literal. Three authored emitters is
+   only a ceiling: the global sink may admit two on iOS or fewer under pressure. LOW still
+   shows all furnishings, ghost, blocked reason and bounds; material/ambient/key fallback
+   keeps the room readable. Structural collision/arrival safety and prepared actionable
+   representations must be ready before reveal. Directional/hemi/spot/rect lighting stays
+   boot-owned; point-light allocation/retirement uses 09's scheduled budget/gates and
+   actual global sink, preserving LOW fairness. Baseline compact/tablet capture is
+   Chromium with an iOS profile, not Android, Safari or physical-device proof. Android
+   claims require an explicit userAgent/profile variant. Ordinary online arrival's
+   additional cosmetic settle wait stays zero; bounded offline wait does not guarantee all
+   optional art. Late optional cosmetics use prepared gate-owned stand-ins until final
+   assets are ready; do not confuse runtime preparation fallback with permission to ship
+   placeholder art. First confirmed Inn and first Cottage tier get the approved
+   automatic/skippable safe hearth view; ordinary return/visitor entry stay static.
+   Movement/look/cancel resumes input immediately while existing DIRECTOR_RELEASE_TIME
+   blends camera offset out safely; reduced motion starts no directive. Audio/copy dedupe
+   by accepted entry identity, never join time: consume a permitted fresh directive at
+   most once. Snapshot/resume/replay grants no new cue; commit-before-ACK loss may omit
+   visible or audio feedback for an accepted entry. Consume 07c/08a's nullable
+   freshArrivalPresentation exactly: acceptedTransitionId, playWelcomeCue:true and
+   firstTierViewEligible. Only that fresh directive can welcome; only a true
+   firstTierViewEligible grants the tier view. Positive historical firstTierAtAdmission on
+   snapshot/resume never grants a new cue/view. A committed winning tier mark followed by
+   lost ACK may skip presentation; do not replay it. The typed public GameAudio arrival
+   method and sanctioned sample pipeline belong to 06/09; this asset work consumes them
+   and adds no private-method audio shortcut. A flagged player's arrival also carries the
+   release's World PvP sanctuary line or free-for-all leave line
+   (src/sim/pvp/world_pvp.ts; never on a realm whose World PvP switch is off); expect it
+   beside the welcome, it is not a housing emit (phase-18-visiting.md).
 5. Registry/prewarm and evidence. Codex completes shipping artwork and replaces every
    shipped-ID stand-in via the existing
    src/render/freehold registry, registerDeferredPreload and gated_scene_attach;

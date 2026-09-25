@@ -153,29 +153,28 @@ The table names every channel now. The six patterns are the approved R12/R27
 roster choice, not a claim that the original proposal fixed six. Remaining Wave B
 recipes are trainer taught. No new acquisition gate may be improvised by 22.
 
-Wall, tabletop and fixed-ceiling items remain acquisition/placement gated until the
-25 advanced-editor acceptance passes; a player is never sold an unusable chandelier
-under a floor-only editor. A canary data record can exist with disabled acquisition.
-The cooking basket and marker tableau consume approved existing produce through
-ordinary Cooking recipes. They do not create beds, alter survival/growth, remotely
-harvest, or teach Farming. Kitchen Garden projection in 24 is separate from these
-inert owned copies. It extends 17's NEW
+Wall, tabletop and fixed-ceiling items remain acquisition/placement gated until the 25
+advanced-editor acceptance passes; a player is never sold an unusable chandelier under a
+floor-only editor. A canary data record can exist with disabled acquisition. The cooking
+basket and marker tableau consume approved existing produce through ordinary Cooking
+recipes. They do not create beds, alter survival/growth, remotely harvest, or teach
+Farming. Kitchen Garden projection in 24 is separate from these inert owned copies. It
+extends 17's NEW
 `server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage` and
-`server/freehold_account_sources.ts::createFreeholdAccountSourceLoader` to aggregate
-the account owner's farm sources through the same bounded cache and invalidation
-(premise changed at the v0.44.0 sync: the release's account ledger,
-`src/sim/account_ledger.ts`, now carries most of these sources; re-planned in
-`phase-17-trophies.md` item 2; farm plots are not in the ledger, so 24 keeps its farm
-source seam even if 17 drops its loader).
-Only a current-generation local authoritative farm-and-skill slice is live; it
-replaces the whole corresponding saved slice, including a confirmed empty slice.
-Remote/nonlocal committed snapshots remain explicitly saved even when the host
-farm clock derives their stage. Incomplete/unavailable sources never imply no farms,
-readiness or live changes. Public rows expose only opaque visual identity, bed/crop,
-stage/status and truthful source freshness, never source character/account/realm,
-hidden skill/survival inputs, raw timers/flags or whole farm views. The owner's
-Journal action stays current-character private; guests inspect the safe owner tableau.
-No new poller, farming identity, bed or timer prediction follows from this display.
+`server/freehold_account_sources.ts::createFreeholdAccountSourceLoader` to aggregate the
+account owner's farm sources through the same bounded cache and invalidation (premise
+changed at the v0.44.0 sync: the release's account ledger, `src/sim/account_ledger.ts`,
+now carries most of these sources; re-planned in `phase-17-trophies.md` item 2; farm plots
+are not in the ledger, so 24 keeps its farm source seam even if 17 drops its loader). Only
+a current-generation local authoritative farm-and-skill slice is live; it replaces the
+whole corresponding saved slice, including a confirmed empty slice. Remote/nonlocal
+committed snapshots remain explicitly saved even when the host farm clock derives their
+stage. Incomplete/unavailable sources never imply no farms, readiness or live changes.
+Public rows expose only opaque visual identity, bed/crop, stage/status and truthful source
+freshness, never source character/account/realm, hidden skill/survival inputs, raw
+timers/flags or whole farm views. The owner's Journal action stays current-character
+private; guests inspect the safe owner tableau. No new poller, farming identity, bed or
+timer prediction follows from this display.
 
 ## Trophy source completeness, identity and provenance
 

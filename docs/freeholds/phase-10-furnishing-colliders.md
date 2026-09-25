@@ -1,23 +1,22 @@
 # Phase 10: furnishing colliders (the generalised runtime region registry on both hosts)
 
-Wave A, the Cottage MVP. The spec is `progress.md` "10 Furnishing colliders"; the
-decision is `state.md` D17 (furnishings are walk-through until this phase, which
-generalises the runtime collider region registry beyond the rift band) and
-`state.md` D4 (runtime colliders regenerate from the descriptor on both hosts).
-This phase generalises the rift region registry, which the release already extracted
-out of `src/sim/colliders.ts` into `src/sim/rift_regions.ts` (colliders.ts re-exports its
-publish/token verbs), in place or under a rename, with the rift as its first client and
-NO behavior change, publishes the owner's
-placed-furnishing colliders per claim and per accepted layout change on the server and
-from the descriptor on the client, and pins that a placed table blocks movement
+Wave A, the Cottage MVP. The spec is `progress.md` "10 Furnishing colliders"; the decision
+is `state.md` D17 (furnishings are walk-through until this phase, which generalises the
+runtime collider region registry beyond the rift band) and `state.md` D4 (runtime
+colliders regenerate from the descriptor on both hosts). This phase generalises the rift
+region registry, which the release already extracted out of `src/sim/colliders.ts` into
+`src/sim/rift_regions.ts` (colliders.ts re-exports its publish/token verbs), in place or
+under a rename, with the rift as its first client and NO behavior change, publishes the
+owner's placed-furnishing colliders per claim and per accepted layout change on the server
+and from the descriptor on the client, and pins that a placed table blocks movement
 identically on both hosts.
 
 Correction, 2026-09-25 (stale since the first v0.44.0 sync, `ffa7ac5ffb`): this file first
-planned to MOVE the region
-block out of colliders.ts into a new src/sim/runtime_collider_regions.ts. The release
-had already moved it into src/sim/rift_regions.ts, so there is no block left to move
-and the colliders.ts ceiling that move lowered is not this phase's payment. The steps
-below are corrected to generalise that module in place or rename it.
+planned to MOVE the region block out of colliders.ts into a new
+src/sim/runtime_collider_regions.ts. The release had already moved it into
+src/sim/rift_regions.ts, so there is no block left to move and the colliders.ts ceiling
+that move lowered is not this phase's payment. The steps below are corrected to generalise
+that module in place or rename it.
 
 ### Starter Prompt
 ```
@@ -41,11 +40,10 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
-  release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  and merge it. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
+  release branch (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare
+  with `git rev-list --left-right --count HEAD...origin/release/<newest>`, and merge it.
+  After any non-empty merge run the release-merge-audit skill;
+  `pnpm install --frozen-lockfile` if the merge touched patches/.
 - Memory scan: MEMORY.md and entries on the monolith ratchet (colliders.ts is a ratchet
   target), move-not-rewrite extraction, the offline IWorld live-array aliasing, the
   forward walk inheriting a reverse gate (drive controls BETWEEN thresholds), test-pin
@@ -137,25 +135,22 @@ Sequenced fan-out, three slices; the REGISTRY slice lands and passes the five ri
 suites BEFORE the other two start (they consume its exports). Each agent gets ONLY the
 Explore summary and its own files; the coordinator edits tests/monolith_budget.test.ts
 last:
-- Agent REGISTRY: generalise src/sim/rift_regions.ts in place, or rename it (for
-  example to src/sim/runtime_collider_regions.ts) with the colliders.ts re-export path
-  kept; there is no region block left in colliders.ts to move. It gains
-  allocRuntimeCollisionToken, setRuntimeRegion(hostToken, ownerToken, ox,
-  oz, colliders, cellSize?), clearRuntimeRegion(hostToken, ownerToken, ox, oz) and
-  runtimeRegionAt(hostToken, x, z) with a band-aware candidate-origin derivation: the
-  host token is the map key, the ownerToken is stored on the region record and checked
-  on clear (the shape the SIM slice below consumes); the rift names
-  allocRiftCollisionToken, setRiftRegion, clearRiftRegion stay exported as thin
-  aliases that pass the rift token as both hostToken and ownerToken, so no caller
-  changes and no behavior changes; the colliders.ts readers re-pointed at the one
-  lookup, any line that adds to colliders.ts paid for by an extraction and a LOWERED
-  ceiling, tests/runtime_collider_regions.test.ts (an equivalence pin: for a
-  published rift floor every movement, sight, and pathing answer is byte-identical
-  before and after the generalisation, driven between thresholds, not at extremes; a
-  can-fail call counter proving exactly one candidate-origin derivation per freehold
-  lookup
-  with all 24 slots of indices 15 and 16 claimed; the five rift suites unchanged and
-  green).
+- Agent REGISTRY: generalise src/sim/rift_regions.ts in place, or rename it (for example
+  to src/sim/runtime_collider_regions.ts) with the colliders.ts re-export path kept; there
+  is no region block left in colliders.ts to move. It gains allocRuntimeCollisionToken,
+  setRuntimeRegion(hostToken, ownerToken, ox, oz, colliders, cellSize?),
+  clearRuntimeRegion(hostToken, ownerToken, ox, oz) and runtimeRegionAt(hostToken, x, z)
+  with a band-aware candidate-origin derivation: the host token is the map key, the
+  ownerToken is stored on the region record and checked on clear (the shape the SIM slice
+  below consumes); the rift names allocRiftCollisionToken, setRiftRegion, clearRiftRegion
+  stay exported as thin aliases that pass the rift token as both hostToken and ownerToken,
+  so no caller changes and no behavior changes; the colliders.ts readers re-pointed at the
+  one lookup, any line that adds to colliders.ts paid for by an extraction and a LOWERED
+  ceiling, tests/runtime_collider_regions.test.ts (an equivalence pin: for a published
+  rift floor every movement, sight, and pathing answer is byte-identical before and after
+  the generalisation, driven between thresholds, not at extremes; a can-fail call counter
+  proving exactly one candidate-origin derivation per freehold lookup with all 24 slots of
+  indices 15 and 16 claimed; the five rift suites unchanged and green).
 - Agent SIM: src/sim/freehold/colliders.ts (publishFreeholdColliders(ctx, inst, record)
   = authoredColliders(rooms, doors, ownerDecor, DUNGEON_WALL_HW) with ownerDecor built
   from the layout rows and each def's r, published at the claim's instanceOriginOf under

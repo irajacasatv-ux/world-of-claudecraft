@@ -190,9 +190,9 @@ STEP 0 - PRE-FLIGHT:
   the user. The untracked .env there is gitignored and DELIBERATE, but it does NOT carry
   TEST_DATABASE_URL: arm the PG suites explicitly from the main checkout's DATABASE_URL,
   as STEP 3 says. Do NOT push and do NOT open or merge a PR under any circumstances.
-- Follow state.md "Worktree, base, and merge-forward": fetch origin --prune; merge the
-  the newest release/**;
-  release-merge-audit after non-empty merge and frozen install if patches/ moved.
+- Follow state.md "Worktree, base, and merge-forward": fetch origin --prune; merge the the
+  newest release/**; release-merge-audit after non-empty merge and frozen install if
+  patches/ moved.
 - Read root/directory CLAUDE.md. Memory scan: MEMORY.md, freeholds entry, test-pin traps,
   apply ALL findings, review the review-fix round. Preserve unrelated work.
 

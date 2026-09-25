@@ -36,10 +36,9 @@ STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
 - Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest
-  origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved; a lockfile change
-  moves every source fingerprint, so re-run the asset pins FIRST and re-export with
-  --no-preview if they red).
+  origin/release/**; release-merge-audit after a non-empty merge; pnpm install
+  --frozen-lockfile if patches/ moved; a lockfile change moves every source fingerprint,
+  so re-run the asset pins FIRST and re-export with --no-preview if they red).
 - Gotchas scan (Codex has no Claude memory, AGENTS.md): read state.md "Gotchas" for
   the test-pin traps, the authored-art normalization pin trap, renderer.ts edits owing
   the Eastbrook re-mint, the measurement-record rule, the iOS UA locking the material

@@ -42,11 +42,10 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
-  release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  and merge it. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
+  release branch (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare
+  with `git rev-list --left-right --count HEAD...origin/release/<newest>`, and merge it.
+  After any non-empty merge run the release-merge-audit skill;
+  `pnpm install --frozen-lockfile` if the merge touched patches/.
 - Memory scan: MEMORY.md and entries on the vanilla frontend stack, src/main.ts as a
   firewall, the Electron desktop app and its capability probes, the woc marketplace
   hardening packet (the Exchange gate), source-scan traps (a scoped scan falling back to

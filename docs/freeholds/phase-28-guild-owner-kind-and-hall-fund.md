@@ -225,11 +225,10 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
-  release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  and merge it. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
+  release branch (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare
+  with `git rev-list --left-right --count HEAD...origin/release/<newest>`, and merge it.
+  After any non-empty merge run the release-merge-audit skill;
+  `pnpm install --frozen-lockfile` if the merge touched patches/.
 - If state.md "Push policy" records a stacked wave C branch, work on that branch instead
   of feature/freeholds; the merge-forward rule is unchanged.
 - Read state.md "Gotchas" for the monolith ratchet, the Postgres cluster, world_api
@@ -442,9 +441,8 @@ STEP 5 - ACCEPTANCE CRITERIA (do not mark complete until all check):
 - [ ] The Meeting Hall renders on proximity; the ghall key decodes strictly; the RL
   exclusion pin stays green.
 - [ ] Two flagged players in the Meeting Hall (two members, or a member and a flagged
-  public-policy guest) are not hostile, through the real sim hostility arm and the
-  client verdict (src/ui/pvp_hostile_core.ts): the hall is a World PvP sanctuary like
-  every
+  public-policy guest) are not hostile, through the real sim hostility arm and the client
+  verdict (src/ui/pvp_hostile_core.ts): the hall is a World PvP sanctuary like every
   owner-claimed room (tests/freehold_world_pvp_sanctuary.test.ts).
 - [ ] All STEP 3 suites green; the reviewers confirm ALL findings, including nits, are resolved and freshly reviewed; the ceilings did not
   rise; state.md records the verified implementation facts and accepted artifact rows.

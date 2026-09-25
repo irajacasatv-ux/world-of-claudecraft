@@ -184,8 +184,8 @@ STEP 0 - PRE-FLIGHT:
 - Work in the packet worktree named in docs/freeholds/state.md, on branch
   feature/freeholds. Verify `git status` is clean; if not, ask the user.
 - Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest
-  origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
+  origin/release/**; release-merge-audit after a non-empty merge; pnpm install
+  --frozen-lockfile if patches/ moved).
 - Gotchas scan (Codex has no Claude memory, AGENTS.md): read state.md "Gotchas" for
   the test-pin traps, the Eastbrook re-mint rule, the measurement-record rule (commit
   the series, not a summary), "review the review-fix round" and "apply ALL findings".

@@ -121,11 +121,10 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
-  release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  and merge it. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
+  release branch (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare
+  with `git rev-list --left-right --count HEAD...origin/release/<newest>`, and merge it.
+  After any non-empty merge run the release-merge-audit skill;
+  `pnpm install --frozen-lockfile` if the merge touched patches/.
 - Memory scan: MEMORY.md and entries on "CI is the gate", "never push to fork", "PR merge
   needs approval", "no sensitive material in the open repo" (sweep EVERY push), screenshots
   at lowest graphics, capture rigs never find by English text, "format pass != check
@@ -141,10 +140,10 @@ Spawn one Explore agent to read and summarize:
 - .github/PULL_REQUEST_TEMPLATE.md; .claude/skills/pr-screenshots/SKILL.md;
   scripts/pr_shot_targets.mjs (the housing targets Phases 11, 16, 17 and 18 added);
   docs/prd/woc/freehold-service-contract.md (Phase 15); .claude/skills/ci-triage/SKILL.md
-- The wave diff: `git log --oneline <base>..HEAD` and `git diff <base>..HEAD --stat`
-  where <base> is the merge-base with the base branch (the newest origin/release/**);
-  every test file the wave added
-  (`git diff <base>..HEAD --name-only -- tests/`); the docs/screenshots/ directory
+- The wave diff: `git log --oneline <base>..HEAD` and `git diff <base>..HEAD --stat` where
+  <base> is the merge-base with the base branch (the newest origin/release/**); every test
+  file the wave added (`git diff <base>..HEAD --name-only -- tests/`); the
+  docs/screenshots/ directory
 - The matrix row anchors: tests/world_api_parity.test.ts, tests/env_protocol.test.ts,
   tests/freehold_determinism.test.ts, tests/freehold_command_chain_online.test.ts,
   tests/snapshots.test.ts, tests/bandwidth.test.ts, tests/server/freehold_db.test.ts,

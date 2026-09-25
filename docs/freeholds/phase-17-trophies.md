@@ -102,11 +102,10 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
-  release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  and merge it. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
+  release branch (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare
+  with `git rev-list --left-right --count HEAD...origin/release/<newest>`, and merge it.
+  After any non-empty merge run the release-merge-audit skill;
+  `pnpm install --frozen-lockfile` if the merge touched patches/.
 - Memory scan: MEMORY.md and entries on the Reliquary packet and the Reliquary tracker,
   the achievements system design, the content and pins/content gotcha clusters, parity
   goldens, the monolith ratchet, test-pin traps.
@@ -146,8 +145,7 @@ Spawn one Explore agent to read and summarize:
   source-change/save/create/delete/session hooks and their literal pins
 - the join retro in src/sim/deeds_restore.ts `runBookOfDeedsJoinRetro` (seedItemDiscovery,
   retroFallbackGrants, evaluateDeedsFor with retro true, seedAccountLedgerSelf), called
-  from Sim.addPlayer, and the first-entry hook in
-  src/sim/freehold/instance.ts (Phase 05)
+  from Sim.addPlayer, and the first-entry hook in src/sim/freehold/instance.ts (Phase 05)
 - src/sim/freehold/ as Phases 01 to 16 left it (types.ts: the trophies field on the
   record from Phase 07; layout_core.ts: the plinth slot rules from Phase 08;
   placement.ts; state.ts: normalizeFreehold), src/sim/content/freehold/ (tiers.ts: the
@@ -163,15 +161,15 @@ Spawn one Explore agent to read and summarize:
   tests/parity/trace.ts and scenarios.ts, tests/monolith_budget.test.ts
 - src/ui/i18n.catalog/hud_chrome.ts (the housing namespace), src/ui/world_entity_i18n.ts
   (the deed and page name lookups the tooltip reuses), scripts/wiki/build_content.mjs
-  (what the wiki regen reads), root CLAUDE.md "New game content" bullet
-The agent returns: the exact ownership reads for each source kind and the character bundle
-(accountReliquaryOwnership) and the bounded account projection needed for all alts; the
-join retro insertion
-point and the first-entry hook; the plinth slot rules and how a plinth row differs from
-a furnishing row in the layout; the fhold and descriptor extension points; the tooltip
-core recipe and where the composer dispatches; the deeds count pins that will move and
-the Homesteader ids to append; the wiki regen and guide key obligations for a trophies
-table; the extraction that pays for any sim.ts, game.ts, or online.ts line.
+  (what the wiki regen reads), root CLAUDE.md "New game content" bullet The agent returns:
+  the exact ownership reads for each source kind and the character bundle
+  (accountReliquaryOwnership) and the bounded account projection needed for all alts; the
+  join retro insertion point and the first-entry hook; the plinth slot rules and how a
+  plinth row differs from a furnishing row in the layout; the fhold and descriptor
+  extension points; the tooltip core recipe and where the composer dispatches; the deeds
+  count pins that will move and the Homesteader ids to append; the wiki regen and guide
+  key obligations for a trophies table; the extraction that pays for any sim.ts, game.ts,
+  or online.ts line.
 
 STEP 2 - CHOOSE ORCHESTRATION + EXECUTE:
 Assign disjoint file ownership and integrate shared pins last.
@@ -180,82 +178,77 @@ NEW paths/symbols below are planned deliverables, not existing tree anchors.
 
 Deliverables (at most five):
 1. Source-complete trophy catalog. TROPHY_DEFS accounts for every promised deed,
-   individual Reliquary relic/item discovery, completed page, slain:* mark, owned
-   mount, set, curator rank, title-awarding deed, weapon-skin source and Perfected
-   source. Sweep actual source definitions rather than a remembered family list.
-   Warfare Season 2 (v0.44.0 re-sync): the Vanguard Gallery page's items are
-   class-locked, so the page sits outside completion (`excludeFromCompletion:
-   'personal'`, docs/design/reliquary.md), and the VANGUARD_ITEM_SETS
-   (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are class-locked.
-   Whether class-locked sets (a requireSet source) and personal pages (a
+   individual Reliquary relic/item discovery, completed page, slain:* mark, owned mount,
+   set, curator rank, title-awarding deed, weapon-skin source and Perfected source. Sweep
+   actual source definitions rather than a remembered family list. Warfare Season 2
+   (v0.44.0 re-sync): the Vanguard Gallery page's items are class-locked, so the page sits
+   outside completion (`excludeFromCompletion: 'personal'`, docs/design/reliquary.md), and
+   the VANGUARD_ITEM_SETS (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS)
+   are class-locked. Whether class-locked sets (a requireSet source) and personal pages (a
    requirePage source: Vanguard, plus the existing Riftbound and Forgebreaker pages) are
-   trophy sources is a RULING OWED at this file's re-plan.
-   Every qualifying source has a truthful generic family display in Wave A; 23 adds
-   bespoke Legend Stand, real weapon/armor/mount forms and silver/gilded finishes.
-   No single discovered relic silently requires full-page completion. Add explicit
-   source discriminants required by real ownership surfaces, frozen IDs and one
-   positive/negative resolution fixture per kind. Trophies remain cosmetic records:
-   no ITEMS, price, drop, buff, bag, mail, trade, bank or market path. Homesteader deeds,
-   wiki/guide and fingerprint obligations land together; trophy records get no
-   Reliquary item page.
-2. Shared account sources, eligibility and truthful provenance.
-   PREMISE CHANGED at the release/v0.44.0 sync (2026-09-22), NOT YET RE-PLANNED. The
-   release shipped an account ledger that already carries most of the sources this item
-   plans to load: `meta.accountLedger` (`src/sim/account_ledger.ts`) holds deed, relic,
-   mark and mount earners with character id, name, class and day; `loadAccountLedger`
-   reads it eagerly on every fresh join (`server/ws_auth.ts`); `account_relic_finds`
-   stores an unknown day as NULL; and `AccountLedgerService` fans a new earn out to the
-   account's live siblings. Building `ctx.freeholdAccountSources` as written would stand
-   a second projection beside it with a different load policy and keying. Owed before
-   this phase starts: re-plan these sources onto the ledger and scope a new loader to
-   only what the ledger lacks: Perfected copies and current possession across the
-   account's characters. The rest already arrives: weapon skins with
-   `AccountCosmetics.weaponSkinIds` at join (server/account_cosmetics_db.ts, loaded in
-   server/ws_auth.ts); titles (deed rewards) and Curator rank derive from
-   `meta.accountLedger` and `accountReliquaryOwnership` (src/sim/reliquary.ts). Set
-   membership derives from them ONLY for a set whose every member is a catalogued relic
-   (`isCataloguedRelicItem`); at the v0.44.0 re-sync many are not (the generated heroic
-   variants, and several authored sets whole), so those sets still need the possession
-   source. trophy_eligibility.ts is pure
-   over bounded authoritative account projections, not only the entering character.
-   trophies.ts syncs after join retro, on first entry and through batched source-change
-   invalidation while already home, with zero per-tick scan and zero Rng. Persist
-   immutable provenance: source kind/id, source character when known, original earned
-   day when known, and explicit unknown fields when historical data lacks them.
-   First-entry date must never masquerade as achievement date. The original earned
-   day is a utcDay stamp of when it happened (D84), never a resetDay key and never the
-   first-entry day. Retro grants emit
+   trophy sources is a RULING OWED at this file's re-plan. Every qualifying source has a
+   truthful generic family display in Wave A; 23 adds bespoke Legend Stand, real
+   weapon/armor/mount forms and silver/gilded finishes. No single discovered relic
+   silently requires full-page completion. Add explicit source discriminants required by
+   real ownership surfaces, frozen IDs and one positive/negative resolution fixture per
+   kind. Trophies remain cosmetic records: no ITEMS, price, drop, buff, bag, mail, trade,
+   bank or market path. Homesteader deeds, wiki/guide and fingerprint obligations land
+   together; trophy records get no Reliquary item page.
+2. Shared account sources, eligibility and truthful provenance. PREMISE CHANGED at the
+   release/v0.44.0 sync (2026-09-22), NOT YET RE-PLANNED. The release shipped an account
+   ledger that already carries most of the sources this item plans to load:
+   `meta.accountLedger` (`src/sim/account_ledger.ts`) holds deed, relic, mark and mount
+   earners with character id, name, class and day; `loadAccountLedger` reads it eagerly on
+   every fresh join (`server/ws_auth.ts`); `account_relic_finds` stores an unknown day as
+   NULL; and `AccountLedgerService` fans a new earn out to the account's live siblings.
+   Building `ctx.freeholdAccountSources` as written would stand a second projection beside
+   it with a different load policy and keying. Owed before this phase starts: re-plan
+   these sources onto the ledger and scope a new loader to only what the ledger lacks:
+   Perfected copies and current possession across the account's characters. The rest
+   already arrives: weapon skins with `AccountCosmetics.weaponSkinIds` at join
+   (server/account_cosmetics_db.ts, loaded in server/ws_auth.ts); titles (deed rewards)
+   and Curator rank derive from `meta.accountLedger` and `accountReliquaryOwnership`
+   (src/sim/reliquary.ts). Set membership derives from them ONLY for a set whose every
+   member is a catalogued relic (`isCataloguedRelicItem`); at the v0.44.0 re-sync many are
+   not (the generated heroic variants, and several authored sets whole), so those sets
+   still need the possession source. trophy_eligibility.ts is pure over bounded
+   authoritative account projections, not only the entering character. trophies.ts syncs
+   after join retro, on first entry and through batched source-change invalidation while
+   already home, with zero per-tick scan and zero Rng. Persist immutable provenance:
+   source kind/id, source character when known, original earned day when known, and
+   explicit unknown fields when historical data lacks them. First-entry date must never
+   masquerade as achievement date. The original earned day is a utcDay stamp of when it
+   happened (D84), never a resetDay key and never the first-entry day. Retro grants emit
    retro:true only for historical discoveries; new live grants are correctly distinct.
    Produce the exact shared account-source modules and full source/freshness contract
    below. Read/load work is lazy, bounded and admitted through 07; source collection,
-   ID/string and encoded-byte bounds preserve unsupported stored data. The sim reads
-   the projection through the NEW SimContext primitive ctx.freeholdAccountSources,
-   keyed the way D16 keys the live record: get(ownerKey) returns the current bounded
-   cross-character projection or an explicit incomplete status and
-   invalidate(ownerKey, sourceKind) coalesces a refresh, where ownerKey is the
-   host-stamped owner key the sync already holds through meta (the sim never holds
-   an account id). The server host binds it to createFreeholdAccountSourceLoader,
-   which resolves ownerKey to the account; the offline and headless hosts install a
-   local-only binding whose get returns an empty cross-character projection with
-   explicit status, and the local character's own ownership surfaces are read from
-   meta by the sync itself (D19). The key is appended to CALLBACK_KEYS and the fake
-   host in tests/sim_context.test.ts. Loader admission or budget exhaustion never refuses
-   GameServer.join, instance entry or a respawn (D83): the session publishes
-   regardless and the sync records explicit incomplete status.
-   The exhaustive semantic source-to-requirement fixture selects actual catalog
-   discriminants, not invented existing enums: deed/title uses trophies.requireDeed/
-   requireTitle; illuminated page requirePage; slain mark requireSlain; armor-set
-   completion requireSet; recorded acquisition requireItemAcquired; current possession
-   requireItemOwned; mount requireMount; curator rank requireRank; personally named
-   Perfected source requirePerfected. Every numeric requirement comes from live catalog.
-   Do not describe a non-deed predicate with a generic complete-deed sentence.
-   Original source date, source character, maker signature and custom item name are
-   distinct sanitized facts. Required unknown maker/name/history arms never borrow
-   the current character or reconciliation date. Authority supplies timestamp/calendar
-   identity; locale formats in the intended realm timezone. Possession-gated displays
-   become inactive/static silhouettes when the qualifying copy leaves, preserving
-   source history and public provenance. Acquisition unlocks do not accidentally gain
-   possession requirements. Item/weapon-skin source ownership remains truthful.
+   ID/string and encoded-byte bounds preserve unsupported stored data. The sim reads the
+   projection through the NEW SimContext primitive ctx.freeholdAccountSources, keyed the
+   way D16 keys the live record: get(ownerKey) returns the current bounded cross-character
+   projection or an explicit incomplete status and invalidate(ownerKey, sourceKind)
+   coalesces a refresh, where ownerKey is the host-stamped owner key the sync already
+   holds through meta (the sim never holds an account id). The server host binds it to
+   createFreeholdAccountSourceLoader, which resolves ownerKey to the account; the offline
+   and headless hosts install a local-only binding whose get returns an empty
+   cross-character projection with explicit status, and the local character's own
+   ownership surfaces are read from meta by the sync itself (D19). The key is appended to
+   CALLBACK_KEYS and the fake host in tests/sim_context.test.ts. Loader admission or
+   budget exhaustion never refuses GameServer.join, instance entry or a respawn (D83): the
+   session publishes regardless and the sync records explicit incomplete status. The
+   exhaustive semantic source-to-requirement fixture selects actual catalog discriminants,
+   not invented existing enums: deed/title uses trophies.requireDeed/ requireTitle;
+   illuminated page requirePage; slain mark requireSlain; armor-set completion requireSet;
+   recorded acquisition requireItemAcquired; current possession requireItemOwned; mount
+   requireMount; curator rank requireRank; personally named Perfected source
+   requirePerfected. Every numeric requirement comes from live catalog. Do not describe a
+   non-deed predicate with a generic complete-deed sentence. Original source date, source
+   character, maker signature and custom item name are distinct sanitized facts. Required
+   unknown maker/name/history arms never borrow the current character or reconciliation
+   date. Authority supplies timestamp/calendar identity; locale formats in the intended
+   realm timezone. Possession-gated displays become inactive/static silhouettes when the
+   qualifying copy leaves, preserving source history and public provenance. Acquisition
+   unlocks do not accidentally gain possession requirements. Item/weapon-skin source
+   ownership remains truthful.
 3. Record-only plinth placement and public projection. Plinths accept one qualified
    trophy record and cost no decor points; Inn Room has three and Cottage four from
    state.md, with previous placements carried over. Placement rides two NEW
@@ -348,39 +341,37 @@ Deliverables (at most five):
    gather_event:perfect_specimen => "Harvest a perfect specimen from a fallen creature to display this trophy.".
    These are keyed render results, not additional unkeyed player copy.
 5. Trophy proof and captures. Pin an alternate account character's existing source,
-   immediate new source while inside, relog idempotence, every source kind, honest
-   unknown date, hidden spoiler, provenance privacy, three/four-plinth limits,
-   no-item routes, the raw-command forgery arm (unearned, unknown and other-account
-   trophy ids) and the account weapon-skin fixture. The trophies-provenance-known
-   capture stages a deed source (deed rows and any relic/mark/mount ledger row with a
-   non-null `found_at` carry a known day: server/account_ledger_db.ts,
-   `AccountEarner.day` in src/sim/account_ledger.ts; replayed historical finds are NULL,
-   unknown); trophies-provenance-unknown stages a historical source with no known day
-   (a replayed find), never a faked date. Re-run strict
-   wire/parity/content/guide/ownership pins and bounded PG account hydration evidence. Add
-   the exact housing-trophies
-   helper entry below with desktop/compact/tablet owned/unearned/unknown/public
-   provenance and placement captures. Dispatch architecture, content,
-   cross-platform, frontend, render, privacy, migration, server-hot-path and
+   immediate new source while inside, relog idempotence, every source kind, honest unknown
+   date, hidden spoiler, provenance privacy, three/four-plinth limits, no-item routes, the
+   raw-command forgery arm (unearned, unknown and other-account trophy ids) and the
+   account weapon-skin fixture. The trophies-provenance-known capture stages a deed source
+   (deed rows and any relic/mark/mount ledger row with a non-null `found_at` carry a known
+   day: server/account_ledger_db.ts, `AccountEarner.day` in src/sim/account_ledger.ts;
+   replayed historical finds are NULL, unknown); trophies-provenance-unknown stages a
+   historical source with no known day (a replayed find), never a faked date. Re-run
+   strict wire/parity/content/guide/ownership pins and bounded PG account hydration
+   evidence. Add the exact housing-trophies helper entry below with desktop/compact/tablet
+   owned/unearned/unknown/public provenance and placement captures. Dispatch architecture,
+   content, cross-platform, frontend, render, privacy, migration, server-hot-path and
    before/final database reviewers.
 
 
-SHARED ACCOUNT SOURCE CONTRACT (deliverable 2; proof belongs to deliverable 5):
-17 owns NEW server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage
-and server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. The DB
-module owns fixed, versioned, statically selected source projections and account-scoped
-character-ID keyset pages. Select only the exact trophy source fields admitted by the
-source manifest; 24 extends that same projection with normalized farm state and source
-farming proficiency. Weapon-skin ownership is an account row, not a character field:
-the loader reads account_weapon_cosmetics.skin_ids (server/db.ts) through the existing
-per-account weaponSkinIds merge in server/account_cosmetics_db.ts (loaded at join in
-server/ws_auth.ts), the skin grant path
-(server/claudium.ts noteWeaponSkinGrants) is its invalidation hook, and
-src/sim/reliquary.ts resolves weapon_skin relics through opts.weaponSkins, never a
-PlayerMeta field. No caller-supplied JSON paths, whole-character-state SELECT or
-listCharactersAllRealms scan is permitted. The per-realm character limit is not a
-limit for the account across all realms. Measure the candidate (account_id, id) access
-index against actual query plans, and use the concurrent-index seam if required.
+SHARED ACCOUNT SOURCE CONTRACT (deliverable 2; proof belongs to deliverable 5): 17 owns
+NEW server/freehold_account_sources_db.ts::loadFreeholdAccountCharacterSourcePage and
+server/freehold_account_sources.ts::createFreeholdAccountSourceLoader. The DB module owns
+fixed, versioned, statically selected source projections and account-scoped character-ID
+keyset pages. Select only the exact trophy source fields admitted by the source manifest;
+24 extends that same projection with normalized farm state and source farming proficiency.
+Weapon-skin ownership is an account row, not a character field: the loader reads
+account_weapon_cosmetics.skin_ids (server/db.ts) through the existing per-account
+weaponSkinIds merge in server/account_cosmetics_db.ts (loaded at join in
+server/ws_auth.ts), the skin grant path (server/claudium.ts noteWeaponSkinGrants) is its
+invalidation hook, and src/sim/reliquary.ts resolves weapon_skin relics through
+opts.weaponSkins, never a PlayerMeta field. No caller-supplied JSON paths,
+whole-character-state SELECT or listCharactersAllRealms scan is permitted. The per-realm
+character limit is not a limit for the account across all realms. Measure the candidate
+(account_id, id) access index against actual query plans, and use the concurrent-index
+seam if required.
 
 Record page rows/bytes, aggregate collection/string/encoded-byte limits, admission and
 connection deadlines, cache entries/bytes and refresh bounds in the approved

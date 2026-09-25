@@ -185,11 +185,10 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
-  release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  and merge it. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
+  release branch (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare
+  with `git rev-list --left-right --count HEAD...origin/release/<newest>`, and merge it.
+  After any non-empty merge run the release-merge-audit skill;
+  `pnpm install --frozen-lockfile` if the merge touched patches/.
 - If state.md "Push policy" records a stacked wave B branch, work on that branch instead
   of feature/freeholds; the merge-forward rule is unchanged.
 - Gotcha scan (Codex carries no Claude memory): docs/freeholds/state.md "Gotchas (read
@@ -209,26 +208,26 @@ Spawn one Explore agent to read and summarize:
   prog_field_to_feast, col_deepest_cast, the four regional first-harvest deeds, every
   prog_grandmaster_<craft> deed of the ten-craft roster (engineering, alchemy, cooking,
   leatherworking, tailoring, enchanting, weaponcrafting, armorcrafting, jewelcrafting,
-  inscription), dgn_rift and dgn_rift_s_rank, the dungeonClears triggers for normal
-  and heroic clears, every boss and world-boss deed; DEED_ORDER), src/sim/deeds.ts
+  inscription), dgn_rift and dgn_rift_s_rank, the dungeonClears triggers for normal and
+  heroic clears, every boss and world-boss deed; DEED_ORDER), src/sim/deeds.ts
   (deedsEarned as the per-character utcDay stamp of each deed day, deedStats),
-  src/sim/reliquary.ts (accountReliquaryOwnership,
-  illuminatedPages, the Harvestmaster page id), src/sim/content/reliquary.ts
+  src/sim/reliquary.ts (accountReliquaryOwnership, illuminatedPages, the Harvestmaster
+  page id), src/sim/content/reliquary.ts
 - The rift S-rank record (grep the S-rank mark or stamp under src/sim/rift/), the
-  `slain:*` marks, mount possession, the live `RELIQUARY_SET_MEMBERS` armor sets (the
-  set ids), the complete promised family inventory: every row of content-manifest.md
+  `slain:*` marks, mount possession, the live `RELIQUARY_SET_MEMBERS` armor sets (the set
+  ids), the complete promised family inventory: every row of content-manifest.md
   "Specialized trophy model inventory for 23" whose owner column names 23 (the guild
   first-clear and project rows belong to 31 and 32a/40), with mounts derived from MOUNTS
-  and MOUNT_KEYS under the availability
-  filter rather than any fixed mount count, the realm-rare marks, the live
-  `RELIQUARY_SET_MEMBERS` sets (derive, never a literal) and the profession specimens
-- Warfare Season 2 (v0.44.0 re-sync): the Vanguard Gallery page's items are
-  class-locked, so the page sits outside completion (`excludeFromCompletion:
-  'personal'`, docs/design/reliquary.md), and the VANGUARD_ITEM_SETS
+  and MOUNT_KEYS under the availability filter rather than any fixed mount count, the
+  realm-rare marks, the live `RELIQUARY_SET_MEMBERS` sets (derive, never a literal) and
+  the profession specimens
+- Warfare Season 2 (v0.44.0 re-sync): the Vanguard Gallery page's items are class-locked,
+  so the page sits outside completion (`excludeFromCompletion: 'personal'`,
+  docs/design/reliquary.md), and the VANGUARD_ITEM_SETS
   (src/sim/content/vanguard_item_sets.ts, spread into ITEM_SETS) are class-locked. Whether
-  class-locked sets and personal pages (Vanguard, plus the
-  existing Riftbound and Forgebreaker pages) are trophy sources is a RULING OWED at the
-  phase 17 re-plan; this file follows that ruling, never its own
+  class-locked sets and personal pages (Vanguard, plus the existing Riftbound and
+  Forgebreaker pages) are trophy sources is a RULING OWED at the phase 17 re-plan; this
+  file follows that ruling, never its own
 - The Perfected legendary: src/sim/types.ts (the `perfected` stamp, the promotion, the
   player-chosen name field, the crafter signature `ItemInstancePayload.signer`),
   src/sim/professions/perfecting.ts (read only: the diff touches nothing under

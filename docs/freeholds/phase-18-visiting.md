@@ -113,11 +113,10 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds. Verify `git status` is clean; if not, ask the user (a concurrent
   session may share this checkout).
 - Sync the base: `git fetch origin --prune`. PR #3872 has merged, so discover the newest
-  release branch (`git branch -r | grep 'origin/release/' | sort -V |
-  tail -1`), compare with `git rev-list --left-right --count HEAD...origin/release/<newest>`,
-  and merge it. After any non-empty merge run
-  the release-merge-audit skill; `pnpm install --frozen-lockfile` if the merge touched
-  patches/.
+  release branch (`git branch -r | grep 'origin/release/' | sort -V | tail -1`), compare
+  with `git rev-list --left-right --count HEAD...origin/release/<newest>`, and merge it.
+  After any non-empty merge run the release-merge-audit skill;
+  `pnpm install --frozen-lockfile` if the merge touched patches/.
 - Memory scan: MEMORY.md and entries on the server/tests gotcha cluster, the offline
   IWorld live-array aliasing trap, parity goldens and META_EXCLUDE, the monolith
   ratchet, ALL_DELTA_KEYS conflicts, test-pin traps.
@@ -132,14 +131,14 @@ Spawn one Explore agent to read and summarize:
 - src/sim/freehold/instance.ts (Phase 05: freeholdKeyFor, the owner-keyed enterDungeon
   path, the emitters of the freeholdDenied reasons already appended; the append-only
   reason union itself lives on the freeholdDenied SimEvent in src/sim/types.ts:
-  no_freehold, locked, cooldown, visitors_full, not_friend, dead, combat, busy,
-  instanced, match), src/sim/freehold/placement.ts and
-  amenities.ts and ledger.ts (the owner-only gate each command already carries),
-  src/sim/freehold/state.ts and types.ts (the visit_policy field from Phase 07),
-  src/sim/instances/dungeons.ts (enterDungeon, the module-private instanceClaimContains
-  that this phase exports append-only, updateInstances, the enteredBy set: how it
-  accumulates and when it clears), the InstanceSlot interface (enteredBy, clearedBy) in
-  src/sim/instances/instance_slot.ts since 10 (re-exported as a type from src/sim/sim.ts)
+  no_freehold, locked, cooldown, visitors_full, not_friend, dead, combat, busy, instanced,
+  match), src/sim/freehold/placement.ts and amenities.ts and ledger.ts (the owner-only
+  gate each command already carries), src/sim/freehold/state.ts and types.ts (the
+  visit_policy field from Phase 07), src/sim/instances/dungeons.ts (enterDungeon, the
+  module-private instanceClaimContains that this phase exports append-only,
+  updateInstances, the enteredBy set: how it accumulates and when it clears), the
+  InstanceSlot interface (enteredBy, clearedBy) in src/sim/instances/instance_slot.ts
+  since 10 (re-exported as a type from src/sim/sim.ts)
 - the session-only stamp precedent: stampGuildMembership and PlayerMeta.guildMembership
   (grep in src/sim/ and server/game.ts), applyBankBonusStamp in src/sim/bank.ts, the
   META_EXCLUDE set in tests/parity/trace.ts
@@ -147,15 +146,14 @@ Spawn one Explore agent to read and summarize:
   character's outgoing list and SocialDb.whoFriended is the reverse lookup; friendAdd,
   friendRemove and blockAdd are the mutation sites where the D76 hook lands;
   SocialTransport; SocialSnapshot and FriendEntry), server/game.ts sendSocialSnapshot
-  (read only to confirm it is NOT the feed: snap.friends is the viewer's own outgoing
-  list and session.socialTrackedIds mixes friends AND guildmates), the block list on
-  the session (session.blockedIds and the ignore predicate in routeEvents),
+  (read only to confirm it is NOT the feed: snap.friends is the viewer's own outgoing list
+  and session.socialTrackedIds mixes friends AND guildmates), the block list on the
+  session (session.blockedIds and the ignore predicate in routeEvents),
   server/freehold_wire.ts (dispatchFreeholdCommand: where a visitor enter and
   set_visit_policy arrive), server/heavy_self.ts (HEAVY_SELF_EVENTS),
   JAILED_BLOCKED_COMMANDS in server/freehold_wire.ts (freehold_enter already listed by
-  Phase 05),
-  the command lane in dispatchMessage (classifyMsgLane: the rate limit a visit attempt
-  inherits)
+  Phase 05), the command lane in dispatchMessage (classifyMsgLane: the rate limit a visit
+  attempt inherits)
 - server/game.ts routeEvents and server/event_frame.ts (pid-scoped delivery;
   EVENT_RADIUS for pid-less events), src/net/online.ts (the freehold event mirrors
   Phase 08 added), src/net/freehold_snapshot_wire.ts, src/world_api/housing.ts
@@ -336,15 +334,15 @@ INVARIANTS THIS PHASE MUST KEEP:
   admission and cancellation bound work, events are pid-scoped.
 - Distribution: visiting is gated by the server entitlement (flag plus entitlement)
   read through the housing facet, never a HudFeatures row (D91).
-- HUD frame coverage: every new HUD surface (the visit prompt, the Visitors tab host,
-  any who-is-home line) states its classification in tests/hud_frame_coverage.test.ts
-  (a HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, the default; a
-  `.window.panel`; or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry; a frame row minted
-  at runtime is also listed in RUNTIME_MOUNTED_FRAME_IDS, and the module that mounts it
-  on the `#ui` root is listed in UI_ROOT_TOUCHERS, which names files; the src/ui/hud/housing/gate_prompt_controller.ts
-  UI_ROOT_TOUCHERS row is the precedent). The release's frame presets
-  (src/ui/frame_presets_core.ts), frame menus and reset keys now ride a HUD_FRAME_SPECS
-  row, so a standing surface registered there inherits them.
+- HUD frame coverage: every new HUD surface (the visit prompt, the Visitors tab host, any
+  who-is-home line) states its classification in tests/hud_frame_coverage.test.ts (a
+  HUD_FRAME_SPECS row in src/ui/interface_unlock_core.ts, the default; a `.window.panel`;
+  or a reasoned FRAME_EXEMPT or SELF_GOVERNED entry; a frame row minted at runtime is also
+  listed in RUNTIME_MOUNTED_FRAME_IDS, and the module that mounts it on the `#ui` root is
+  listed in UI_ROOT_TOUCHERS, which names files; the
+  src/ui/hud/housing/gate_prompt_controller.ts UI_ROOT_TOUCHERS row is the precedent). The
+  release's frame presets (src/ui/frame_presets_core.ts), frame menus and reset keys now
+  ride a HUD_FRAME_SPECS row, so a standing surface registered there inherits them.
 - i18n: the policy in docs/freeholds/implementation-plan.md; every deny and arrival is a
   text-free id-carrying SimEvent (D10); names cross as values.
 - Monolith: sim.ts, game.ts, and online.ts use the current verified

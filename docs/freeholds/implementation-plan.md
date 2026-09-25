@@ -8,9 +8,8 @@ The current settle-and-polish audit remains local and produces no implementation
 opened PR or merge. Follow the active harness's root instructions; this packet names no model.
 
 1. Pre-flight: verify clean git status for a new implementation session and preserve
-   unrelated work. Follow state.md "Worktree, base, and merge-forward": fetch origin
-   with prune and merge the newest origin/release/** (the version-newest one). Never
-   use main.
+   unrelated work. Follow state.md "Worktree, base, and merge-forward": fetch origin with
+   prune and merge the newest origin/release/** (the version-newest one). Never use main.
    Run release-merge-audit after a non-empty merge and frozen install if patches/ moved.
 2. Load context through agents: root/directory CLAUDE, state, progress, exact implementation
    and QA, UX, manifests and current source/test anchors. Scan MEMORY.md, the packet entry,

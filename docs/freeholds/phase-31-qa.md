@@ -474,8 +474,8 @@ STEP 0 - PRE-FLIGHT:
   feature/freeholds (or the stacked wave branch state.md records). Verify `git status`
   is clean; if not, ask the user.
 - Sync the base per state.md "Worktree, base, and merge-forward" (merge the newest
-  origin/release/**; release-merge-audit after a
-  non-empty merge; pnpm install --frozen-lockfile if patches/ moved).
+  origin/release/**; release-merge-audit after a non-empty merge; pnpm install
+  --frozen-lockfile if patches/ moved).
 - Memory scan: MEMORY.md, the test-pin traps catalog, "review the review-fix round",
   "apply ALL findings".
 
