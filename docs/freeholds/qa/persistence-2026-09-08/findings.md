@@ -2584,7 +2584,7 @@ the last commit is the final entry of this session.
 ## THE HARNESS-FIDELITY REWRITE, AND THE TWO PATHS IT FOUND, 2026-09-25
 
 Everything in this section is local; nothing was pushed. The work is
-`37e6ae6624..a0e9fff2bc` (the commits from `a8301e8798` on), plus the records commit
+`37e6ae6624..3686434478` (the commits from `a8301e8798` on), plus the records commit
 that follows it. The base did not move: `git fetch --prune origin` found
 `origin/release/v0.44.0` still at `ed69f62ef7`, the version-newest release branch and
 already merged, so no sync was owed.
@@ -2728,28 +2728,35 @@ it.
   install a rejoin is offered carries at least the committed revision; the seal, the
   probe, the contract and the phase 07 QA plan now state the hole beside the premise.
 - TWO ORDERS, both MEASURED and pinned as KNOWN DEFECT cases that a fix flips.
-  - THE UNWRITTEN ORDER (found by the fourth fresh read, widened by the fifth and sixth):
-    the other session's capture is still UNWRITTEN when the join lands, so the store still
+  - THE UNWRITTEN ORDER (found by the fourth fresh read, widened by the next three): the
+    other session's capture is still UNWRITTEN when the join lands, so the store still
     holds it. Its leave write may be waiting on a permit (the leave deadline is shorter
-    than the permit wait, so `removePlayer` evicts first), refused a permit or thrown once
-    (either keeps the entry dirty, so the join can land a whole sweep interval later, and
-    longer if the failures repeat), or deferred behind the active-write cap (launched the
-    moment a slot frees). The join installs the stale answer, `retain` keeps the capture
-    (the record does not carry it), and when the store's next write samples, the live
-    record outranks the capture. When the leaver committed NOTHING during its session, NO
-    EDIT IS NEEDED AND THERE IS NO WINDOW: a fresh account gets an EMPTY row inserted under
-    its minted name at wire revision 0; a row account gets its OLDER house written back
-    (the other session's revision-8 table never reaches the row). No quiesce, no failure,
-    no error line; the capture is released. When the leaver DID commit mid-session, the
-    stale record sits below that commit: the seal refuses the write and the leaver's later
-    edits are lost, LOUDLY, unless the joiner reaches that commit's revision before the
-    write samples, and then the stale house is written over the committed one too,
-    silently. Pinned: the waiting write for both account shapes; the refused permit, the
-    single throw and the deferred write for a fresh account; the mid-session commit, loud
-    and silent, for both shapes; and a further arm: a joiner who LEAVES before the write
-    samples, whose own leave flush replaces the capture with its stale record. That arm
-    matters to the fix: a mutant that makes the write prefer the capture flips every other
-    unwritten-order pin and leaves this one standing.
+    than the permit wait, so `removePlayer` evicts first), refused a permit or thrown
+    once (either keeps the entry dirty, so the join can land a whole sweep interval
+    later, and longer if the failures repeat), or deferred behind the active-write cap
+    (launched the moment a slot frees). The join installs the stale answer, `retain`
+    keeps the capture (the record does not carry it), and when the store's next write
+    samples, the live record outranks the capture. When the store's entry knows NO
+    commit above the stale revision (neither the leaver nor an earlier session saved
+    past it), NO EDIT IS NEEDED AND THERE IS NO WINDOW: a fresh account gets an EMPTY
+    row inserted under its minted name at wire revision 0; a row account gets its OLDER
+    house written back (the other session's revision-8 table never reaches the row). No
+    quiesce, no failure, no error line; the capture is released. When the entry DOES
+    know one (the leaver's own mid-session save, or an earlier session's that the
+    leaver's fresh read learned; what decides it is the commit, not who made it), the
+    stale record sits below it: the seal refuses the write and the leaver's later edits
+    are lost, LOUDLY, unless the joiner reaches that commit's revision before the write
+    samples, and then the stale house is written over the committed one too, silently.
+    Pinned: the waiting write for both account shapes; the refused permit, the single
+    throw and the deferred write for a fresh account; the known commit, loud and silent,
+    from both sources and for both shapes; and a further arm: a joiner who LEAVES before
+    the write samples, whose own leave flush replaces the capture with its stale record.
+    That arm matters to the fix: a mutant that makes the write prefer the capture flips
+    every other unwritten-order pin and leaves this one standing. UNPINNED, each on a
+    mechanism a pinned case already drives: the row-account shape of the refused,
+    thrown, deferred and joiner-leaves-first forms; the known-commit arm in its
+    non-waiting forms; and the held cost below for `cap_full`, `no_budget` and
+    non-waiting captures.
   - A KNOWN COST in the same order, loud rather than silent: a login HELD while nothing
     was live (on capacity, `no_permit`, `cap_full` or `no_budget`, or on a thrown read,
     `read_threw`, the likeliest hold in the very stall that slows a handshake) that joins
@@ -2819,7 +2826,7 @@ it.
   refused permit and the active-write cap extend it); this section called a killed
   mutant equivalent; state.md and progress.md claimed a gate and reads the tip had not
   had; the no-hold write-blocked group missed the players who see an OLDER house (the
-  refused twelfth-path install and a superseded capture). Nine nits: a round-two
+  refused twelfth-path install and a superseded capture). Ten nits: a round-two
   attribution, a commit range that dropped its first commit and named a moving `HEAD`,
   a pinned `AUTOSAVE_SECONDS` value, a wrong test path, the phase 07 QA plan still
   stating the old premise, count wording, a stale "two KNOWN DEFECT cases above"
@@ -2865,7 +2872,23 @@ it.
   line still read "open ... below ... see above"; three inline table literals beside the
   new `TABLE`; a fourth-read nit list that parsed wrongly; and the deferred form's timing.
   All applied in `6f2269c552`, `190b9b0b0f`, `a0e9fff2bc` and this section, each new arm
-  reproduced before it was pinned.
+  reproduced before it was pinned (though `6f2269c552`'s title, "every held cost",
+  overclaims as `0d5c2a726b`'s did: `cap_full`, `no_budget` and the non-waiting captures
+  stay unpinned).
+- THE SEVENTH READ covered `6df31d838a..a7f5470015`: nothing blocking, every new pin
+  decisive and producible, the counts and ranges confirmed. Three should-fix: the loud
+  or silent split is decided by a commit the entry KNOWS above the stale revision, not
+  by the leaver having saved mid-session, so an earlier session's save that the leaver's
+  fresh read learned reaches the same outcomes, unnamed and unpinned; progress.md and
+  state.md still claimed every arm pinned; the scope doc never got the known-commit arm
+  the commit body said it did. Seven nits: the seal mutant's kill on the deferred pin is
+  incidental; the fourth read's nit count; option (b)'s constraint still loose (no
+  synchronous replay exists, and a committed-revision check passes the unwritten
+  order); `6f2269c552`'s title; the contract never stating the silent sub-arm; an
+  overlong DEPLOY.md line; and two wording slips. All applied in `bc84cee7bb`,
+  `3686434478` and this section; the earlier-session arm was reproduced first. Reads
+  five, six and seven each found nothing blocking, which is the task's stop condition;
+  this last round's fixes were mutation-checked and gated but not read again.
 
 ### THE MUTATION PASS
 
@@ -2896,16 +2919,25 @@ restores through `git checkout` with retries, and asserts a clean tree.
   pin), and a seal that refuses an equal revision. The first pass's survivor that deleted
   the unloaded arm's mark is now KILLED by `926e280977`'s pin (deleting the override leaves
   the load's own `false`, so it was never equivalent).
-- The fifth read's fixes: one new mutant (a second leave keeping the first capture, which
-  flips the joiner-leaves-first pin and the re-capture case beside it) and five re-run
-  against the new pins, each new pin killed by at least one: the capture outranking the
-  record, settle never releasing a capture, a refused permit that quiesces, a probe that
-  calls an equal revision moved, and a seal that refuses an equal revision.
+- The fifth read's fixes: one new mutant (a second leave keeping the first capture,
+  which flips the joiner-leaves-first pin and the re-capture case in the capture block)
+  and five re-run against the new pins, each new pin killed by at least one: the capture
+  outranking the record, settle never releasing a capture, a refused permit that
+  quiesces, a probe that calls an equal revision moved, and a seal that refuses an equal
+  revision.
 - The sixth read's fixes: four re-run against the new pins, each killed by at least one:
   the capture outranking the record (the deferred pin, both mid-session arms, all four
-  held costs), a seal that refuses an equal revision (the deferred pin and the silent
-  mid-session arm), the seal's regressed arm off (the loud mid-session arm), and settle
-  never releasing a capture (the loud mid-session arm and the held costs).
+  held costs), a seal that refuses an equal revision (the silent mid-session arm; its
+  kill on the deferred pin is INCIDENTAL, through the cap-filling owners it refuses, since
+  the pin's own write is a first insert the seal never judges), the seal's regressed arm
+  off (the loud mid-session arm), and settle never releasing a capture (the loud
+  mid-session arm and the held costs).
+- The seventh read's fixes: the same four re-run against the earlier-session pins, each
+  killed on its claim: the capture outranking the record (all four), a seal that refuses
+  an equal revision (the silent arms), the seal's regressed arm off and settle never
+  releasing a capture (the loud arms). The runner and its logs are session scratch, not
+  committed, so these attributions are recorded here rather than reproducible from the
+  tree.
 - One mutant is killed without an assertion: the re-arm-on-failure mutant loops forever
   and crashes the vitest worker, so the suite goes red.
 
@@ -2919,8 +2951,9 @@ failures and 28 skips; browser regressions 56 files and 483 tests) and at `9102e
 (68,717 tests, the rest the same). And at `40a34720ef`, the last code commit: 68,721
 tests, the rest the same. And at `3bdf1aa229`, the last code commit of the fifth read's
 fixes: 68,729 tests, the rest the same. And at `a0e9fff2bc`, the last code commit of the
-sixth read's fixes: 68,737 tests, the rest the same. The browser step rewrote 21 PNGs
-under `docs/screenshots/` each time; they were restored, not committed.
+sixth read's fixes: 68,737 tests, the rest the same. And at `3686434478`, the last code
+commit of the seventh read's fixes: 68,741 tests, the rest the same. The browser step
+rewrote 21 PNGs under `docs/screenshots/` each time; they were restored, not committed.
 
 ### STILL OPEN, IN ORDER
 
@@ -2935,14 +2968,17 @@ under `docs/screenshots/` each time; they were restored, not committed.
    for its answer after the lease and character read. It keeps the edits: the entry is
    loaded and holds the capture, so the replay arm offers it (recovering the eleventh
    path's cost and the held login's too). Its constraint: the answer the join installs
-   has to be VALIDATED AGAINST THE ENTRY AT INSTALL TIME (re-ask until a synchronous
-   replay serves it, or check a committed revision or generation), not merely re-asked.
-   An answer from the already-live arm followed by the eviction reopens the eleventh
-   path's cost, and in the committed order the entry is collected, so the re-ask is a
-   durable read during which a sibling session can join, commit and be evicted again,
-   which a liveness re-check cannot see; that read can also be refused on capacity (a
-   write-blocked session, not a loss). It changes the join contract. RECOMMENDED: (b).
-   07's verdict stays FAIL until one is taken.
+   has to be VALIDATED AGAINST THE ENTRY AT INSTALL TIME, not merely re-asked. That
+   needs a new SYNCHRONOUS store call at the install, because `preload` is async even on
+   its replay arms and a sibling's `removePlayer` can run in that gap; and the check has
+   to count the outstanding capture or the dirty generation, as (a) does, because a
+   committed-revision check alone passes the unwritten order. An answer from the
+   already-live arm followed by the eviction reopens the eleventh path's cost, and in
+   the committed order the entry is collected, so the re-ask is a durable read during
+   which a sibling session can join, commit and be evicted again, which a liveness
+   re-check cannot see; that read can also be refused on capacity (a write-blocked
+   session, not a loss). It changes the join contract. RECOMMENDED: (b). 07's verdict
+   stays FAIL until one is taken.
 2. `Sim.addPlayer` atomicity (unchanged from the last section).
 3. D85, the cross-realm account ledger against dark realms (a ruling).
 4. The phase 17 re-plan onto the account ledger, with the trophy-source ruling.
