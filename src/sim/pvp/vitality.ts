@@ -7,13 +7,15 @@
 // The rule, safest-first: anything on the far-east instance plane is a PvE
 // instance (a dungeon, raid, delve, rift floor, or any instance added later)
 // and switches the bonus OFF, unless the player is in a battleground or arena
-// match, which are PvP. Everywhere else (the open world) it is ON. A player
+// match, which are PvP, or in a freehold room (an owner-claimed instance: a
+// home, neither dungeon nor raid, so "other contexts" keeps it ON there).
+// Everywhere else (the open world) it is ON. A player
 // whose state flips is recalculated once, and recalcPlayerStats preserves the
 // health fraction, so a switch can never gain or lose health.
 //
 // Host-agnostic: no rng, no wall clock; runs on the world PvP pass cadence.
 
-import { DUNGEON_X_THRESHOLD } from '../data';
+import { DUNGEON_X_THRESHOLD, dungeonAt } from '../data';
 import type { SimContext } from '../sim_context';
 import type { Entity } from '../types';
 
@@ -21,7 +23,7 @@ import type { Entity } from '../types';
 export function pvpVitalityAppliesTo(ctx: SimContext, e: Entity): boolean {
   if (e.kind !== 'player') return false;
   if (ctx.bgMatches.has(e.id) || ctx.arenaMatches.has(e.id)) return true;
-  return e.pos.x <= DUNGEON_X_THRESHOLD;
+  return e.pos.x <= DUNGEON_X_THRESHOLD || dungeonAt(e.pos.x)?.claimKey === 'owner';
 }
 
 /** Flip each player's Vitality switch to match their context, recalculating
