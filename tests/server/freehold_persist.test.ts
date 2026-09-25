@@ -3255,7 +3255,8 @@ describe('a join that lands after the eviction installs nothing from an answer r
     expect(h.writes.some((write) => write.accountId === ACCOUNT_ID)).toBe(false);
     h.join(answer);
     await tick(30);
-    // One slot frees; the pump prefers the leaver, which now samples Y.
+    // One slot frees and the leave reserve admits the deferred leaver, which
+    // now samples Y.
     gates[0].resolve({ kind: 'updated', durableRev: '9' });
     await tick(40);
     const mine = h.writes.filter((write) => write.accountId === ACCOUNT_ID);
@@ -3273,63 +3274,81 @@ describe('a join that lands after the eviction installs nothing from an answer r
     await tick(60);
   });
 
-  // The unwritten order when the leaver had COMMITTED during its session: its
-  // entry's committed revision is then above the stale record, so the seal
-  // refuses the waiting write (a loud loss of the leaver's later edits) unless
-  // the joiner reaches that revision before the write samples, and then the
-  // stale house is written over the committed one too, silently.
+  // The unwritten order when the store's entry KNOWS A COMMIT above the stale
+  // record: the leaver committed during its own session, or an EARLIER session
+  // of the account committed and left before the leaver logged in (the
+  // leaver's fresh read learned it). What decides it is that commit, not who
+  // made it. The seal refuses the waiting write (a loud loss of the leaver's
+  // later edits) unless the joiner reaches that revision before the write
+  // samples, and then the stale house is written over the committed one too,
+  // silently.
   const SHELF = { ...TABLE, placementId: 3, x: 1 };
-  for (const shape of ['ABSENT', 'ROW'] as const) {
-    for (const joinerEdits of [false, true]) {
-      const title = joinerEdits
-        ? `KNOWN DEFECT, the twelfth path: a joiner who reaches a mid-session commit before the waiting write samples writes a stale ${shape} answer over it`
-        : `KNOWN COST, the twelfth path: a leaver who committed mid-session loses its later edits, loudly, to a stale ${shape} answer`;
-      it(title, async () => {
-        let hold = false;
-        const permit = deferred<{ release(): void } | null>();
-        const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
-        const h = harness({
-          ...db,
-          acquirePermit: async () => (hold ? await permit.promise : { release: () => {} }),
-        });
-        const answer = await h.store.preload(ACCOUNT_ID);
-        await h.login();
-        const mid = shape === 'ROW' ? 6 : 1;
-        const midLayout = [...persistedFixture().layout, TABLE];
-        h.edit(OWNER_KEY, { layout: midLayout, rev: mid });
-        h.store.saveAllDirty();
-        await tick(30);
-        expect(h.writeCount()).toBe(1);
-        h.edit(OWNER_KEY, { layout: [...midLayout, SHELF], rev: mid + 2 });
-        hold = true;
-        const leaving = h.leave();
-        await tick(10);
-        h.deadlines.find((job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS)?.fire();
-        await leaving;
-        h.join(answer);
-        await tick(30);
-        const stale = shape === 'ROW' ? JSON.stringify(rowFixture().layout) : '[]';
-        if (joinerEdits) h.edit(OWNER_KEY, { rev: mid });
-        permit.resolve({ release: () => {} });
-        await tick(40);
-        const row = await db.readRow(ACCOUNT_ID);
-        const kept = row.kind === 'row' ? [JSON.stringify(row.row.layout), row.row.wireRev] : null;
-        if (joinerEdits) {
-          expect(h.writeCount()).toBe(2);
-          expect(h.writes[1].wireRev).toBe(mid);
-          expect(h.writes[1].layoutJson).toBe(stale);
-          expect(h.store.stats().quiesced).toBe(0);
-          expect(h.errors).toEqual([]);
-          expect(kept).toEqual([stale, String(mid)]);
-        } else {
+  for (const source of ['MID-SESSION', 'EARLIER-SESSION'] as const) {
+    for (const shape of ['ABSENT', 'ROW'] as const) {
+      for (const joinerEdits of [false, true]) {
+        const title = joinerEdits
+          ? `KNOWN DEFECT, the twelfth path: a joiner who reaches ${source === 'MID-SESSION' ? 'a' : 'an'} ${source} commit before the waiting write samples writes a stale ${shape} answer over it`
+          : `KNOWN COST, the twelfth path: a stale ${shape} answer below ${source === 'MID-SESSION' ? 'a' : 'an'} ${source} commit loses the leaver's later edits, loudly`;
+        it(title, async () => {
+          let hold = false;
+          const permit = deferred<{ release(): void } | null>();
+          const db = rowRemembered(shape === 'ROW' ? rowFixture() : null);
+          const h = harness({
+            ...db,
+            acquirePermit: async () => (hold ? await permit.promise : { release: () => {} }),
+          });
+          const answer = await h.store.preload(ACCOUNT_ID);
+          await h.login();
+          const mid = shape === 'ROW' ? 6 : 1;
+          const midLayout = [...persistedFixture().layout, TABLE];
+          h.edit(OWNER_KEY, { layout: midLayout, rev: mid });
+          if (source === 'MID-SESSION') {
+            h.store.saveAllDirty();
+            await tick(30);
+          } else {
+            // An earlier session commits and leaves, and the leaver logs in on a
+            // fresh read of that commit.
+            await h.leave();
+            await h.login();
+            expect(h.record()?.rev).toBe(mid);
+          }
           expect(h.writeCount()).toBe(1);
-          expect(h.store.stats().quiesced).toBe(1);
-          expect(h.errors).toHaveLength(1);
-          expect(h.errors[0]).toContain('write refused (identity)');
-          expect(h.store.stats().leaveCaptures).toBe(0);
-          expect(kept).toEqual([JSON.stringify(midLayout), String(mid)]);
-        }
-      });
+          h.edit(OWNER_KEY, { layout: [...midLayout, SHELF], rev: mid + 2 });
+          hold = true;
+          const leaving = h.leave();
+          await tick(10);
+          h.deadlines
+            .find(
+              (job) => job.ms === FREEHOLD_PERSIST_LEAVE_FLUSH_MS && !job.fired && !job.cancelled,
+            )
+            ?.fire();
+          await leaving;
+          h.join(answer);
+          await tick(30);
+          const stale = shape === 'ROW' ? JSON.stringify(rowFixture().layout) : '[]';
+          if (joinerEdits) h.edit(OWNER_KEY, { rev: mid });
+          permit.resolve({ release: () => {} });
+          await tick(40);
+          const row = await db.readRow(ACCOUNT_ID);
+          const kept =
+            row.kind === 'row' ? [JSON.stringify(row.row.layout), row.row.wireRev] : null;
+          if (joinerEdits) {
+            expect(h.writeCount()).toBe(2);
+            expect(h.writes[1].wireRev).toBe(mid);
+            expect(h.writes[1].layoutJson).toBe(stale);
+            expect(h.store.stats().quiesced).toBe(0);
+            expect(h.errors).toEqual([]);
+            expect(kept).toEqual([stale, String(mid)]);
+          } else {
+            expect(h.writeCount()).toBe(1);
+            expect(h.store.stats().quiesced).toBe(1);
+            expect(h.errors).toHaveLength(1);
+            expect(h.errors[0]).toContain('write refused (identity)');
+            expect(h.store.stats().leaveCaptures).toBe(0);
+            expect(kept).toEqual([JSON.stringify(midLayout), String(mid)]);
+          }
+        });
+      }
     }
   }
 
