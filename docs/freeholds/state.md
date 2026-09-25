@@ -66,18 +66,18 @@ leaver's later edits are lost loudly or, if the joiner reaches that commit first
 silently; once the capture has committed, a joiner who reaches the committed revision
 before a write samples the record overwrites the newer house. The arms are pinned as
 KNOWN DEFECT or KNOWN COST, and the ledger lists the few left unpinned (each on a
-mechanism a pinned case drives). A RULING IS OWED (recommended: the join re-asks the
-store after the lease and character read and validates the answer against the entry,
-capture included, through a new synchronous store call at the install, which also keeps
-the leaver's edits; a fail-closed staleness check would only make the losses loud).
-Seven fresh reads (the last three found nothing blocking), every finding applied or
-recorded; 218 mutants plus one type-level, every changed pin killed; the armed gate
-green on all 12 steps at `3686434478`. Open, in order: (1) the twelfth-path ruling; (2)
-`Sim.addPlayer` atomicity; (3) D85, the cross-realm account ledger against dark realms
-(a ruling); (4) the phase 17 re-plan onto the account ledger, with the trophy-source
-ruling; (5) a new release sync if `release/**` moves. Owed before 25a builds: the
-Fenbridge ruling. Detail: [the ledger](qa/persistence-2026-09-08/findings.md), THE
-HARNESS-FIDELITY REWRITE, AND THE TWO PATHS IT FOUND.
+mechanism a pinned case drives). FERNANDO RULED (b) on 2026-09-25 ("we want this to be
+perfect"): the join re-asks the store after the lease and character read and validates
+the answer against the entry, capture included, through a new synchronous store call at
+the install, which keeps the leaver's edits. Seven fresh reads (the last three found
+nothing blocking), every finding applied or recorded; 218 mutants plus one type-level,
+every changed pin killed; the armed gate green on all 12 steps at `3686434478`. Open, in
+order: (1) BUILD ruling (b) for the twelfth path; (2) `Sim.addPlayer` atomicity; (3)
+D85, the cross-realm account ledger against dark realms (a ruling); (4) the phase 17
+re-plan onto the account ledger, with the trophy-source ruling; (5) a new release sync
+if `release/**` moves. Owed before 25a builds: the Fenbridge ruling. Detail: [the
+ledger](qa/persistence-2026-09-08/findings.md), THE HARNESS-FIDELITY REWRITE, AND THE
+TWO PATHS IT FOUND.
 
 **THE V0.44.0 RE-SYNC IS CLOSED, 2026-09-25, LOCAL.** Merge `484cb61a46` takes
 `origin/release/v0.44.0` at `ed69f62ef7` (World PvP, King of the Hill, Warfare Season 2,

@@ -2977,8 +2977,9 @@ rewrote 21 PNGs under `docs/screenshots/` each time; they were restored, not com
    the committed order the entry is collected, so the re-ask is a durable read during
    which a sibling session can join, commit and be evicted again, which a liveness
    re-check cannot see; that read can also be refused on capacity (a write-blocked
-   session, not a loss). It changes the join contract. RECOMMENDED: (b). 07's verdict
-   stays FAIL until one is taken.
+   session, not a loss). It changes the join contract. RECOMMENDED: (b). RULED
+   2026-09-25 (Fernando): (b), "we want this to be perfect". 07's verdict stays FAIL
+   until (b) is built, reviewed and gated.
 2. `Sim.addPlayer` atomicity (unchanged from the last section).
 3. D85, the cross-realm account ledger against dark realms (a ruling).
 4. The phase 17 re-plan onto the account ledger, with the trophy-source ruling.
