@@ -701,7 +701,12 @@ const PINNED_POLISH_COMPOSITE_FINGERPRINT =
   // Re-minted for the Freehold Gate view rank: the entityViewPolicy and viewPriorityPolicy leaves moved. No capture was retaken.
   // Re-minted for the fourth Freehold Gate move, to (-38.65,-103.75): the eastbrook_layout.ts leaf moved. No capture was retaken.
   // Re-minted for the lit-host gate grass: the renderer.ts leaf now passes cfg.freeholdsEnabled to buildFoliage. No capture was retaken.
-  '07192cbe6abc8a9e9e957b4ae05c3fdf33c6205d7b0d7b10b96ae5afd3a3b340';
+  // Re-minted for the merge of release/v0.44.0 (PR 4132) into feature/world-pvp-flag: the
+  // merged renderer leaf matches neither parent. No capture was retaken.
+  // Re-minted for the merge of feature/world-pvp-flag (the PR 4146 review round) into feature/king-of-the-hill: the
+  // merged renderer leaf matches neither parent. No capture was retaken.
+  // Re-minted for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merged renderer leaf matches neither parent. No capture was retaken.
+  'd4e4b68da4b8583a26f5c3bb3a58ac21710e480b52eff46e9ee8f89ec6f44675';
 
 function validPolishAttributionTargets(): AttributionTargetFixture[] {
   return [

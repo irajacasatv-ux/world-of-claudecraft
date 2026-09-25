@@ -1,22 +1,25 @@
-// server/entity_wire_variant.ts: the per-entity wire-fragment cache shape and
-// its three pure helpers, extracted whole from server/game.ts to pay for the
-// freeholds owner-key join stamp. The extraction is verbatim, so this suite
-// guards the module at its OWN seam from here on: the fresh-variant literal
-// (every version counter at its "never built" sentinel, every fragment empty,
-// and a new object per call so two timer-wire arms never alias), and the two
-// JSON splicers, whose whole point is to assemble a record byte-identical to a
-// JSON.stringify of the merged object without paying for that stringify on
-// the broadcast hot path. The game.ts side is pinned too: the coordinator
-// imports all four names and declares none of them any more, so a merge
-// resolution that re-inlines a copy reds here by name.
-import { readFileSync } from 'node:fs';
+// server/entity_wire_cache.ts: the per-entity wire-fragment cache shapes and
+// their three pure helpers. This branch and the release each extracted the
+// same block out of server/game.ts (this branch to pay for the freeholds
+// owner-key join stamp, the release as a ratchet extraction), byte-identical;
+// the v0.44.0 re-sync collapsed the two onto the release's module and this
+// suite followed it, so it guards the module at its OWN seam: the
+// fresh-variant literal (every version counter at its "never built" sentinel,
+// every fragment empty, and a new object per call so two timer-wire arms never
+// alias), and the two JSON splicers, whose whole point is to assemble a record
+// byte-identical to a JSON.stringify of the merged object without paying for
+// that stringify on the broadcast hot path. The game.ts side is pinned too: the
+// coordinator imports every name and declares none of them any more, so a
+// merge resolution that re-inlines a copy, or restores the retired twin
+// module, reds here by name.
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   type EntityWireVariantCache,
   emptyWireVariant,
   fullEntityJson,
   liteEntityJson,
-} from '../../server/entity_wire_variant';
+} from '../../server/entity_wire_cache';
 
 /** Strip block and line comments (keeping a `://` in a URL intact) before a
  *  source scan counts anything, so prose describing a call cannot satisfy it. */
@@ -102,25 +105,41 @@ describe('the two JSON splicers', () => {
 });
 
 describe('the game.ts side of the extraction', () => {
-  it('imports all four names from ./entity_wire_variant and declares none of them itself', () => {
+  it('imports all six names from ./entity_wire_cache and declares none of them itself', () => {
     const game = codeOnly(
       readFileSync(new URL('../../server/game.ts', import.meta.url), 'utf8'),
     ).replace(/\s+/g, ' ');
     expect(game).toContain(
-      "import { type EntityWireVariantCache, emptyWireVariant, fullEntityJson, liteEntityJson, } from './entity_wire_variant';",
+      "import { type EntityWireCache, type EntityWireVariantCache, type EntityWireView, emptyWireVariant, fullEntityJson, liteEntityJson, } from './entity_wire_cache';",
     );
-    // The coordinator still consumes every one of them (a dead import would
-    // let a re-inlined copy hide beside it).
+    // The coordinator still consumes every helper (a dead import would let a
+    // re-inlined copy hide beside it).
     expect(game).toContain('legacy: emptyWireVariant()');
     expect(game).toContain('stable: emptyWireVariant()');
     expect(game).toContain('fullEntityJson(e.id, cache.idJson, variant.dynJson)');
     expect(game).toContain('liteEntityJson(e.id, variant.dynJson)');
-    expect(game).toContain('legacy: EntityWireVariantCache');
-    expect(game).toContain('stable: EntityWireVariantCache');
     // And declares none of them any more.
-    expect(game).not.toContain('interface EntityWireVariantCache');
-    expect(game).not.toContain('function emptyWireVariant');
-    expect(game).not.toContain('function fullEntityJson');
-    expect(game).not.toContain('function liteEntityJson');
+    for (const decl of [
+      'interface EntityWireVariantCache',
+      'interface EntityWireCache',
+      'interface EntityWireView',
+      'function emptyWireVariant',
+      'function fullEntityJson',
+      'function liteEntityJson',
+    ]) {
+      expect(game).not.toContain(decl);
+    }
+  });
+
+  it('the cache record holds one variant per timer-wire arm, typed by the module', () => {
+    const mod = codeOnly(
+      readFileSync(new URL('../../server/entity_wire_cache.ts', import.meta.url), 'utf8'),
+    ).replace(/\s+/g, ' ');
+    expect(mod).toContain('legacy: EntityWireVariantCache;');
+    expect(mod).toContain('stable: EntityWireVariantCache;');
+  });
+
+  it('the retired twin module stays retired (one home for the cache shapes)', () => {
+    expect(existsSync(new URL('../../server/entity_wire_variant.ts', import.meta.url))).toBe(false);
   });
 });

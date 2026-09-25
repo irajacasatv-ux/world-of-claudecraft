@@ -52,6 +52,11 @@ export const BG_RESPAWN_EVENT = 'respawn';
 // the same cadence and only re-sends when a listing actually changes.
 const DF_WIRE_HZ = 2;
 export const DF_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * DF_WIRE_HZ)));
+// World PvP `wpvp` self key (and the King of the Hill `hill` key, whose 60 s
+// contest bar and whole-minute clock tolerate half-second steps): 2 Hz; the
+// viewer's own pvp_flag command re-arms the gate so a press answers at once.
+const WPVP_WIRE_HZ = 2;
+export const WPVP_WIRE_INTERVAL_TICKS = Math.max(1, Math.round(1 / (DT * WPVP_WIRE_HZ)));
 // World Market browse readout cadence. The browse view is a filter + page over
 // the whole listing book, the single most expensive per-viewer read in
 // selfWireJson on a grown book, and nothing in it carries a sub-second clock,

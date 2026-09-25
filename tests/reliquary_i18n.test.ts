@@ -81,14 +81,14 @@ describe('reliquary_i18n English resolution', () => {
     // This count is the FILL TRIPWIRE: adding a catalog page must be accompanied
     // by a name row in every M16 locale chunk, so a new page cannot quietly
     // render English to a CJK or Cyrillic reader. Forty earlier pages
-    // include Bramblehide; Crucible, Forgebreaker and both Hearth pages
-    // add four more.
-    expect(pageCount).toBe(44);
-    expect(descCount).toBe(44);
-    expect(manifest.length).toBe(88);
+    // include Bramblehide; Crucible, Forgebreaker, the Warfare Season 2
+    // Vanguard Gallery and both Hearth pages add five more.
+    expect(pageCount).toBe(45);
+    expect(descCount).toBe(45);
+    expect(manifest.length).toBe(90);
     expect(manifest.length).toBe(pageCount + descCount);
-    expect(manifest.filter((row) => row.field === 'name').length).toBe(44);
-    expect(manifest.filter((row) => row.field === 'desc').length).toBe(44);
+    expect(manifest.filter((row) => row.field === 'name').length).toBe(45);
+    expect(manifest.filter((row) => row.field === 'desc').length).toBe(45);
     expect(manifest).toContainEqual({
       id: 'hearth_first_crafts',
       field: 'name',
@@ -191,9 +191,10 @@ describe('reliquary locale chunks (all shipped locales)', () => {
 
   it('carries only real catalog page ids, and no empty values', () => {
     for (const lang of tableLocales()) {
-      // Preserve the 40 original pages plus both profession pages in every
-      // locale. Release fill now includes all names and narrative descriptions.
-      // First Hearth Crafts also ships its name in every locale.
+      // Preserve the 40 original pages plus the Warfare Season 2 page, and both
+      // profession pages, in every locale. Release fill includes all names and
+      // narrative descriptions. First Hearth Crafts also ships its name in every
+      // locale.
       expect(
         tables[lang].hearth_first_crafts?.name?.trim().length,
         `${lang} crafted Hearth name`,
@@ -204,7 +205,7 @@ describe('reliquary locale chunks (all shipped locales)', () => {
             !NEW_PROFESSION_PAGES.has(id) && !M16_NEW_PAGES.has(id) && id !== 'hearth_first_crafts',
         ).length,
         `${lang} original row count`,
-      ).toBe(40);
+      ).toBe(41);
       for (const id of M16_NEW_PAGES) {
         expect(Object.hasOwn(tables[lang], id), `${lang}.${id}`).toBe(M16_LOCALES.has(lang));
       }

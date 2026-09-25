@@ -2689,8 +2689,9 @@ describe('Reliquary catalog index memo', () => {
     expect(first).not.toBe(RELIQUARY_PAGES);
     expect(Object.isFrozen(first)).toBe(true);
     // A hand-carried literal, not the production filter restated (which would
-    // prove nothing): 44 pages minus vault, riftbound and personal
-    // Forgebreaker flags. Both Hearth pages and Bramblehide count.
+    // prove nothing): 45 pages minus the vault, riftbound, personal
+    // Forgebreaker and personal Vanguard Gallery flags. Both Hearth pages and
+    // Bramblehide count.
     expect(first?.length).toBe(41);
     expect(first?.filter((page) => page.shelf === 'hearth').map((page) => page.id)).toEqual([
       'hearth_basics',

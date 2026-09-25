@@ -276,8 +276,12 @@ describe('refreshOpenCraftingIfReagentsChanged', () => {
         resyncAfterReconnect(): void;
         onInventoryChanged(): void;
       };
+      // The release's reconnect hook also resets the focus-target frames
+      // (Hud.resyncAfterReconnect), so the harness carries that member too.
+      const focusTargets = { reset: vi.fn() };
       Object.assign(hud, {
         marketWindow: { onReconnected: vi.fn() },
+        focusTargets,
         repaintOpenServiceWindows: vi.fn(),
         renderCharIfOpen: vi.fn(),
       });
@@ -308,6 +312,7 @@ describe('refreshOpenCraftingIfReagentsChanged', () => {
         ]),
       ).toBe(before);
       expect(hud.renderCrafting).toHaveBeenCalledTimes(1);
+      expect(focusTargets.reset).toHaveBeenCalledTimes(1);
       expect(displayed.at(-1)).toEqual(enabled ? ['recipe_freehold_weapon_rack'] : []);
       reconnectHud.onInventoryChanged();
       hud.refreshOpenCraftingIfReagentsChanged();

@@ -189,9 +189,11 @@ describe('profile page Reliquary pair + Curator rank lines', () => {
     // collide on a relic id. Re-confirm with
     // `npx vitest run tests/profile_page.test.ts` once the tree compiles.
     // Freeholds adds the Homesteader title and eighteen Hearth furnishings;
-    // the release converts five paid mounts into account cosmetics. Measured
-    // through the merged live catalog: 435 - 5 = 430 character relics.
-    expect(catalogTotal).toBe(430);
+    // the release converts five paid mounts into account cosmetics (435 - 5 =
+    // 430), then the Viridian Valestrider takes a horizons_mounts slot
+    // (RELIQUARY_HORIZON_MOUNTS, src/sim/content/reliquary.ts): 431. The Warfare
+    // Season 2 Vanguard Gallery is class-personal and sits outside completion.
+    expect(catalogTotal).toBe(431);
   });
 
   it('renders the owned/total pair and the English rank name for a ranked character', async () => {

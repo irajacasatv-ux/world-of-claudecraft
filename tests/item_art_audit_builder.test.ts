@@ -847,15 +847,18 @@ describe('item-art audit builder', () => {
     // tree, not invented or derived from either parent.
     // PR3941 plus Freeholds: measured again after retiring the five premium
     // reins, with all furnishing definitions retained on the merged tree.
-    // The Hearth Key adds one shipping icon and one live definition; catalog
-    // hashes and bytes below are remeasured by the same verify-only command.
+    // The Hearth Key adds one shipping icon and one live definition.
+    // Viridian Valestrider: measured again with its reins icon, and Warfare
+    // Season 2 with its four painted weapons: 1288 / 1306 on the release, 1310 /
+    // 1328 merged with the 22 Freeholds ids. Catalog hashes and bytes below are
+    // remeasured on the merged tree by the same verify-only command.
     expect(verified).toMatchObject({
       catalogPath: 'tmp/imagegen/item-art-consistency/final-audit/catalog.json',
-      catalogSha256: 'ea36cd4c751f14984ca4ee07ac821862e05352179b6152f5f3c72385950b80cb',
-      catalogBytes: 711586,
+      catalogSha256: '70a8e17b481bf7977092eb4d12b506fe8a1199b70bc9f19a628cdac63d076c88',
+      catalogBytes: 714240,
       rendererFingerprint: '41f5404c4d6d9643c8f03b9d88a8546e44564cc03a1baabdd4a72cb9258a2da7',
-      catalogCount: 1305,
-      liveItemCount: 1323,
+      catalogCount: 1310,
+      liveItemCount: 1328,
       generatedHeroicDefinitions: 78,
       heroicDefinitionsWithOwnWebp: 59,
       heroicWeaponArtAliases: 19,
@@ -873,7 +876,7 @@ describe('item-art audit builder', () => {
         identity: 32,
       },
       sheetSetSha256: null,
-      shippingCatalogSha256: '2f5175bf9a90d93425e0873a5ef62c7e5842916d00ebe977748112bdb4aab073',
+      shippingCatalogSha256: 'ffb53512bfd09cf71d81596abe116925b1305d8d61b87d80f757a8e17f4ed7d3',
       machineChecksPassed: true,
       verdict: null,
     });

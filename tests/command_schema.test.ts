@@ -145,8 +145,12 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 // record: ours 232/246 (the Freehold commands over the v0.43.0 base), the
 // release 225/239 (the Who tab plus the two Market Sweep pairs), on the shared
 // base 222/236. Per axis: send 222+10+3=235, dispatch 236+10+3=249.
-const EXPECTED_SEND_COUNT = 235;
-const EXPECTED_DISPATCH_COUNT = 249;
+// Freeholds re-sync of release/v0.44.0 at ed69f62ef7: World PvP adds pvp_flag
+// to both sets (sent by ClientWorld.setWorldPvpFlag, dispatched beside
+// bg_flag), the release's own 225/239 to 226/240; per axis 235+1=236 and
+// 249+1=250.
+const EXPECTED_SEND_COUNT = 236;
+const EXPECTED_DISPATCH_COUNT = 250;
 const EXPECTED_DISPATCH_ONLY_COUNT = 14;
 
 // The chat sub-channel routing switch (server/game.ts `switch

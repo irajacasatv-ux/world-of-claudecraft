@@ -868,7 +868,10 @@ describe('item-art consistency accepted-art provenance', () => {
     // PR #3781 reconcile's two disjoint reins item definitions
     // (reins_goblin_rocket_sled, reins_rallycart_rxt) add two more: 1,322.
     // The independent Hearth Key addition brings the live count to 1,323.
-    expect(Object.keys(ITEMS)).toHaveLength(1323);
+    // Warfare Season 2 (the release, after that) adds the Valestrider's reins and
+    // 139 honor items (27 five-piece spec sets plus four weapons,
+    // content/pvp_honor_season2.ts): 1,323 + 1 + 139 = 1,463.
+    expect(Object.keys(ITEMS)).toHaveLength(1463);
     expect(Object.values(verdict.auditScope.groups).reduce((sum, count) => sum + count, 0)).toBe(
       1255,
     );
@@ -1023,9 +1026,12 @@ describe('item-art consistency accepted-art provenance', () => {
     // + eight vendor furnishings + thirteen crafted-content icons = 1,302. The
     // OSSBrain PR #3781 reconcile's two disjoint reins owners
     // (reins_goblin_rocket_sled, reins_rallycart_rxt) add two more; the Hearth Key adds one: 1,305.
-    expect(new Set(currentOwnerIds).size).toBe(1305);
-    expect(shippingIds).toHaveLength(1305);
-    expect(Object.keys(ITEMS)).toHaveLength(1323);
+    // The Viridian Valestrider's reins and Warfare Season 2's four painted weapons
+    // (warfare-season2-weapons-2026-09-25) add five more owners: 1,310.
+    expect(new Set(currentOwnerIds).size).toBe(1310);
+    expect(shippingIds).toHaveLength(1310);
+    // Warfare Season 2 adds 139 honor items and the Valestrider one: 1,463.
+    expect(Object.keys(ITEMS)).toHaveLength(1463);
 
     const datedVerdict = readJson<FinalAuditVerdict>(CURRENT_VERDICT_PATH);
     const oldPassIds = sorted(datedVerdict.visualVerdict.passIds);
@@ -1060,6 +1066,12 @@ describe('item-art consistency accepted-art provenance', () => {
         ...CRAFTED_ITEM_IDS,
         'reins_goblin_rocket_sled',
         'reins_rallycart_rxt',
+        'reins_avian_strider',
+        // Warfare Season 2's painted weapons (warfare-season2-weapons-2026-09-25).
+        'vanguard_verdict_greatsword',
+        'vanguard_oath_blade',
+        'vanguard_fang_dagger',
+        'vanguard_warstaff',
       ]),
     ).toEqual(sorted(currentOwnerIds));
 
@@ -1211,7 +1223,7 @@ describe('item-art consistency accepted-art provenance', () => {
     ).toBeUndefined();
     // The completion wave consolidates 68 interim per-entry/SVG owners into
     // one generated batch. The surviving ordinary-art cohort stays explicit.
-    expect(mapping.entries).toHaveLength(43);
+    expect(mapping.entries).toHaveLength(44);
     expect(mapping.entries.every(({ license }) => Boolean(license))).toBe(true);
     // 24 base + this branch's 3 Masterwrought-completion batches (fine
     // materials, apex-flask, professions coverage) + the release's 2
@@ -1220,7 +1232,8 @@ describe('item-art consistency accepted-art provenance', () => {
     // disjoint batches (goblin-rocket-sled-icon-2026-08-12,
     // rallycart-rxt-icon-2026-08-20) = 33. The independent Hearth Key batch
     // (freehold-hearth-key-2026-09-08) brings the total to 34.
-    expect(mapping.generatedBatches).toHaveLength(34);
+    // Warfare Season 2 adds warfare-season2-weapons-2026-09-25 = 35.
+    expect(mapping.generatedBatches).toHaveLength(35);
     const batch = mapping.generatedBatches.find(({ batchId }) => batchId === BATCH_ID);
     expect(batch).toBeDefined();
     expect(batch).toMatchObject({
@@ -1297,14 +1310,16 @@ describe('item-art consistency accepted-art provenance', () => {
     // Nythraxis gap-fill weapon renders and 22 Bramblehide wave paintings
     // (+25) = 753. OSSBrain PR #3781 reconcile adds its own two disjoint
     // batches (goblin-rocket-sled-icon-2026-08-12,
-    // rallycart-rxt-icon-2026-08-20), one id each: 753 + 2 = 755.
-    expect(priorGeneratedIds).toHaveLength(755);
+    // rallycart-rxt-icon-2026-08-20), one id each: 753 + 2 = 755. Warfare
+    // Season 2's weapon batch (warfare-season2-weapons-2026-09-25) adds 4: 759.
+    expect(priorGeneratedIds).toHaveLength(759);
     const allCurrentOwnerIds = [
       ...mapping.entries.map(({ itemId }) => itemId),
       ...mapping.generatedBatches.flatMap(({ itemIds }) => itemIds),
     ];
-    expect(allCurrentOwnerIds).toHaveLength(1305);
-    expect(new Set(allCurrentOwnerIds).size).toBe(1305);
+    // +5: the Valestrider's reins and the Warfare Season 2 weapon batch.
+    expect(allCurrentOwnerIds).toHaveLength(1310);
+    expect(new Set(allCurrentOwnerIds).size).toBe(1310);
     expect({
       entries: mapping.entries.length,
       priorGenerated: priorGeneratedIds.length,
@@ -1317,8 +1332,8 @@ describe('item-art consistency accepted-art provenance', () => {
         ({ batchId }) => batchId === 'freehold-hearth-key-2026-09-08',
       )?.itemIds,
     }).toEqual({
-      entries: 43,
-      priorGenerated: 755,
+      entries: 44,
+      priorGenerated: 759,
       historicalAudit: 274,
       masterwroughtCompletion: 165,
       crucibleProfessions: 46,
@@ -1368,7 +1383,8 @@ describe('item-art consistency accepted-art provenance', () => {
           (id) =>
             !completionIdSet.has(id) &&
             id !== 'reins_goblin_rocket_sled' &&
-            id !== 'reins_rallycart_rxt',
+            id !== 'reins_rallycart_rxt' &&
+            id !== 'reins_avian_strider',
         ),
         ...(completionBatch?.itemIds ?? []),
         ...(crucibleBatch?.itemIds ?? []),
@@ -1387,6 +1403,12 @@ describe('item-art consistency accepted-art provenance', () => {
         ...CRAFTED_ITEM_IDS,
         'reins_goblin_rocket_sled',
         'reins_rallycart_rxt',
+        'reins_avian_strider',
+        // Warfare Season 2's painted weapons (warfare-season2-weapons-2026-09-25).
+        'vanguard_verdict_greatsword',
+        'vanguard_oath_blade',
+        'vanguard_fang_dagger',
+        'vanguard_warstaff',
       ]),
       'the dated catalog plus release batches, Field Kit, furnishings and the OSSBrain reins icons is the current catalog',
     ).toEqual(sorted(allCurrentOwnerIds));
@@ -1517,10 +1539,11 @@ describe('item-art consistency accepted-art provenance', () => {
     // Matches the mapping-owner sum above: 43 entries + 755 prior-generated
     // batch ids + 274 historical-audit batch ids + 165 Masterwrought-completion
     // batch ids + 46 Crucible-professions + 8 vendor + 13 crafted ids + 1 Hearth
-    // Key id = 1305. The 755 prior-generated ids already include the OSSBrain reins.
-    if (ownerIds.length !== 1305)
-      violations.push(`mapping owner count: ${ownerIds.length} != 1305`);
-    if (fileIds.length !== 1305) violations.push(`shipping WebP count: ${fileIds.length} != 1305`);
+    // Key id + the Valestrider's reins + 4 Warfare Season 2 weapons = 1310. The
+    // 755 prior-generated ids already include the OSSBrain reins.
+    if (ownerIds.length !== 1310)
+      violations.push(`mapping owner count: ${ownerIds.length} != 1310`);
+    if (fileIds.length !== 1310) violations.push(`shipping WebP count: ${fileIds.length} != 1310`);
     for (const id of ids) {
       const ownerCount = ownerCountById.get(id) ?? 0;
       if (ownerCount !== 1) violations.push(`${id}: current owner count ${ownerCount} != 1`);

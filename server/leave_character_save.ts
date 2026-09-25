@@ -9,9 +9,8 @@
 // The two real side effects are callbacks, so the coordinator keeps the save and
 // the reconciliation and this module keeps only the ordering and the backoff.
 
-/** The one sleep this module needs, local rather than imported: the coordinator
- *  keeps its own copy for other paths and a shared util for two lines would be
- *  a seam nobody asked for. */
+/** The one sleep this module needs, local rather than imported: a shared util
+ *  for two lines would be a seam nobody asked for. */
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

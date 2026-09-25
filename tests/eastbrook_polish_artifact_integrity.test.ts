@@ -1395,7 +1395,12 @@ const ACCEPTED_POLISH_V2_METADATA_SHA256 =
   // Re-minted for the Freehold Gate view rank: the entityViewPolicy and viewPriorityPolicy leaves moved. No capture was retaken.
   // Re-minted for the fourth Freehold Gate move, to (-38.65,-103.75): the eastbrook_layout.ts leaf moved. No capture was retaken.
   // Re-minted for the lit-host gate grass: the renderer.ts leaf now passes cfg.freeholdsEnabled to buildFoliage. No capture was retaken.
-  '1229478a12f5c5b3d127b170d128d3fbab6db7181745870793791a587e8e7f55';
+  // Re-minted for the merge of release/v0.44.0 (PR 4132) into feature/world-pvp-flag: the
+  // merged renderer leaf matches neither parent. No capture was retaken.
+  // Re-minted for the merge of feature/world-pvp-flag (the PR 4146 review round) into feature/king-of-the-hill: the
+  // merged renderer leaf matches neither parent. No capture was retaken.
+  // Re-minted for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merged renderer leaf matches neither parent. No capture was retaken.
+  '668126f40a4f5a546d79ba10081609e2eb80dcfcc245287471cea56114bb3efc';
 const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the Frame Rate Limit: the renderer leaf gained the chosen-cadence feeds (frame load readings, governor signals). No capture was retaken.
   // Re-minted for the Eastbrook handoff merge with release/v0.43.0: the merged renderer leaf and the moved NPC layout match neither parent. No capture was retaken.
@@ -1414,7 +1419,12 @@ const ACCEPTED_POLISH_V2_COMPOSITE_PROVENANCE =
   // Re-minted for the Freehold Gate view rank: the entityViewPolicy and viewPriorityPolicy leaves moved. No capture was retaken.
   // Re-minted for the fourth Freehold Gate move, to (-38.65,-103.75): the eastbrook_layout.ts leaf moved. No capture was retaken.
   // Re-minted for the lit-host gate grass: the renderer.ts leaf now passes cfg.freeholdsEnabled to buildFoliage. No capture was retaken.
-  '07192cbe6abc8a9e9e957b4ae05c3fdf33c6205d7b0d7b10b96ae5afd3a3b340';
+  // Re-minted for the merge of release/v0.44.0 (PR 4132) into feature/world-pvp-flag: the
+  // merged renderer leaf matches neither parent. No capture was retaken.
+  // Re-minted for the merge of feature/world-pvp-flag (the PR 4146 review round) into feature/king-of-the-hill: the
+  // merged renderer leaf matches neither parent. No capture was retaken.
+  // Re-minted for the Freeholds re-sync of release/v0.44.0 at ed69f62ef7: the merged renderer leaf matches neither parent. No capture was retaken.
+  'd4e4b68da4b8583a26f5c3bb3a58ac21710e480b52eff46e9ee8f89ec6f44675';
 const ACCEPTED_POLISH_V2_METADATA = readJsonFile<CaptureMetadata>(ACCEPTED_POLISH_V2_METADATA_PATH);
 const ACCEPTED_POLISH_V2_PROVENANCE = ACCEPTED_POLISH_V2_METADATA.polishProvenance;
 const ACCEPTED_POLISH_V2_TOWN_CONTRACT = ACCEPTED_POLISH_V2_METADATA.records[0]?.townContract;
@@ -2807,7 +2817,13 @@ describe('Eastbrook polish performance and contact evidence', () => {
       // over the re-swept evidence. No capture was retaken.
       // Lit-host gate grass (renderer.ts): recomputed LAST again over the
       // re-swept evidence. No capture was retaken.
-    ).toBe('5983ce8c03f321a7841856f6d49cec8e8d2154392f0269ecf340d1785b89af71');
+      // release/v0.44.0 merge into feature/world-pvp-flag: recomputed LAST again over the re-swept evidence. No
+      // capture was retaken.
+      // feature/world-pvp-flag (review round) merge into feature/king-of-the-hill: recomputed LAST again over the re-swept evidence. No
+      // capture was retaken.
+      // Freeholds re-sync of release/v0.44.0 at ed69f62ef7: recomputed LAST again
+      // over the re-swept evidence. No capture was retaken.
+    ).toBe('ab6dcc6d2d4430f2d3d48125d6107649d81f27d370c721458807437a4d653da1');
   });
 
   it('binds every historical after record to its accepted source and asset provenance', () => {

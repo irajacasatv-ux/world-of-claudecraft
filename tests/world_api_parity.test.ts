@@ -79,6 +79,7 @@ import type { IWorldTalents } from '../src/world_api/talents';
 import type { IWorldTargeting } from '../src/world_api/targeting';
 import type { IWorldTelemetry } from '../src/world_api/telemetry';
 import type { IWorldTrade } from '../src/world_api/trade';
+import type { IWorldWorldPvp } from '../src/world_api/world_pvp';
 import { expectScansOnlyThroughSharedWalkers } from './helpers/scan_guard_self_audit';
 import { tsFilesUnder } from './helpers/ts_files_under';
 
@@ -519,6 +520,7 @@ export const IWORLD_MEMBERS = [
   { name: 'reliquaryRarity', kind: 'method' },
   // IWorldActionBar: per-character action-bar layout persistence + login restore.
   { name: 'saveActionBarLayout', kind: 'method' },
+  { name: 'actionBarReadOnly', kind: 'data' },
   { name: 'takeActionBarLayoutRestore', kind: 'method' },
   // IWorldFarming: the static garden-bed geography plus the viewer's own plot
   // rows (both data), the growth phase's two plot mutations, and the knobs
@@ -558,6 +560,10 @@ export const IWORLD_MEMBERS = [
   { name: 'payLedger', kind: 'method' },
   { name: 'setVisitPolicy', kind: 'method' },
   { name: 'setFreeholdBuildPresence', kind: 'method' },
+  // IWorldWorldPvp (world_pvp.ts): the /pvp flag readout + raise/lower.
+  { name: 'worldPvpInfo', kind: 'data' },
+  { name: 'setWorldPvpFlag', kind: 'method' },
+  { name: 'hillInfo', kind: 'data' },
 ] as const satisfies readonly IWorldMember[];
 
 const DATA_MEMBERS = IWORLD_MEMBERS.filter((m) => m.kind === 'data');
@@ -846,9 +852,14 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
     // over the v0.43.0 base 371/103/268), the release 378/107/271; per axis
     // 371+13+7=391 members, 103+2+4=109 data, 268+11+3=282 methods, confirmed
     // by a suite run on the merged table.
-    expect(IWORLD_MEMBERS.length).toBe(391);
-    expect(DATA_MEMBERS.length).toBe(109);
-    expect(METHOD_MEMBERS.length).toBe(282);
+    // Freeholds re-sync of release/v0.44.0 at ed69f62ef7: ours 391/109/282, the
+    // release 382/110/272 (the 378/107/271 base plus one data member, then
+    // World PvP's worldPvpInfo data and setWorldPvpFlag method and King of the
+    // Hill's hillInfo data); per axis 391+4=395 members, 109+3=112 data,
+    // 282+1=283 methods, confirmed by a suite run on the merged table.
+    expect(IWORLD_MEMBERS.length).toBe(395);
+    expect(DATA_MEMBERS.length).toBe(112);
+    expect(METHOD_MEMBERS.length).toBe(283);
   });
   it('has no duplicate member names', () => {
     const names = IWORLD_MEMBERS.map((m) => m.name);
@@ -868,6 +879,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'accountCosmetics',
       'accountDeeds',
       'accountFlair',
+      'actionBarReadOnly',
       'activeBorder',
       'activeConsecrations',
       'activeFrostRings',
@@ -1041,6 +1053,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'harvestNode',
       'harvestPreference',
       'healPet',
+      'hillInfo',
       'hobbyCraft',
       'honor',
       'housingNowMs',
@@ -1196,6 +1209,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setStopAutoAttackOnTargetSwitch',
       'setTownFocus',
       'setVisitPolicy',
+      'setWorldPvpFlag',
       'slotToolEffect',
       'socialInfo',
       'socketRiftGem',
@@ -1249,6 +1263,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'vendorBuyback',
       'whoInfo',
       'whoRequest',
+      'worldPvpInfo',
       'xp',
     ]);
   });
@@ -1258,6 +1273,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'accountAdmin',
       'accountCosmetics',
       'accountDeeds',
+      'actionBarReadOnly',
       'activeBorder',
       'activeConsecrations',
       'activeFrostRings',
@@ -1310,6 +1326,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'gatheringProficiency',
       'guildBankInfo',
       'harvestPreference',
+      'hillInfo',
       'hobbyCraft',
       'honor',
       'inventory',
@@ -1363,6 +1380,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'vaultInfo',
       'vendorBuyback',
       'whoInfo',
+      'worldPvpInfo',
       'xp',
     ]);
   });
@@ -1611,6 +1629,7 @@ describe('IWORLD_MEMBERS is the pinned IWorld contract (anti-loosening)', () => 
       'setStopAutoAttackOnTargetSwitch',
       'setTownFocus',
       'setVisitPolicy',
+      'setWorldPvpFlag',
       'slotToolEffect',
       'socketRiftGem',
       'sortInventory',
@@ -2251,6 +2270,7 @@ type _ExhaustReliquary = AssertNever<
 >;
 
 const FACET_ACTION_BAR = [
+  'actionBarReadOnly',
   'saveActionBarLayout',
   'takeActionBarLayoutRestore',
 ] as const satisfies readonly (keyof IWorldActionBar)[];
@@ -2285,6 +2305,15 @@ const FACET_HOUSING = [
   'setFreeholdBuildPresence',
 ] as const satisfies readonly (keyof IWorldHousing)[];
 type _ExhaustHousing = AssertNever<Exclude<keyof IWorldHousing, (typeof FACET_HOUSING)[number]>>;
+
+const FACET_WORLD_PVP = [
+  'worldPvpInfo',
+  'setWorldPvpFlag',
+  'hillInfo',
+] as const satisfies readonly (keyof IWorldWorldPvp)[];
+type _ExhaustWorldPvp = AssertNever<
+  Exclude<keyof IWorldWorldPvp, (typeof FACET_WORLD_PVP)[number]>
+>;
 
 // The facet partition, keyed by facet for legible failure messages.
 const FACET_MEMBER_ARRAYS: Readonly<Record<string, readonly string[]>> = {
@@ -2322,6 +2351,7 @@ const FACET_MEMBER_ARRAYS: Readonly<Record<string, readonly string[]>> = {
   actionBar: FACET_ACTION_BAR,
   farming: FACET_FARMING,
   housing: FACET_HOUSING,
+  worldPvp: FACET_WORLD_PVP,
 };
 
 describe('W1: aggregate IWorld member set equals the disjoint union of the facets', () => {
@@ -2334,8 +2364,9 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
     // program's Vale Cup retirement, 32 total. The v0.41.0 sync carries both
     // arms (farming in, vale_cup out): 33 total, measured as the facet files
     // on disk minus appearance.ts (the sweep below). +1 housing facet on this
-    // branch: 34 total.
-    expect(Object.keys(FACET_MEMBER_ARRAYS).length).toBe(34);
+    // branch, and World PvP (the /pvp flag) adds its own facet, world_pvp.ts:
+    // 35 total.
+    expect(Object.keys(FACET_MEMBER_ARRAYS).length).toBe(35);
   });
 
   it('every facet FILE on disk is a FACET_MEMBER_ARRAYS key (none can go silently unpartitioned)', () => {
@@ -2417,8 +2448,9 @@ describe('W1: aggregate IWorld member set equals the disjoint union of the facet
     const union = Object.values(FACET_MEMBER_ARRAYS).flatMap((arr) => [...arr]);
     // Mirrors the IWORLD_MEMBERS.length pin above; this pin and the one above
     // must always agree.
-    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(391);
-    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(391);
+    // The release's 382 plus the thirteen Freehold members: 395.
+    expect(union.length, 'union size before dedup (catches a duplicated member)').toBe(395);
+    expect(new Set(union).size, 'union size after dedup (catches a duplicated member)').toBe(395);
     const sortedUnion = [...union].sort();
     const pinned = IWORLD_MEMBERS.map((m) => m.name).sort();
     expect(sortedUnion).toEqual(pinned);

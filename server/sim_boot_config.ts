@@ -33,6 +33,7 @@ export function buildRealmSimConfig(
     // D81: the realm derives the second housing dev permission from the same
     // env read; the offline host gets it from the dev-only loopback bridge.
     freeholdDevGrantEnabled: process.env.ALLOW_DEV_COMMANDS === '1',
+    worldPvpDisabled: process.env.WORLD_PVP_DISABLED === '1',
     // Thunzharr is up as soon as the realm boots; subsequent rises keep the
     // normal interval cadence (see src/sim/world_boss.ts).
     // Live realm: legacy fresh mainland rows get ferried through the Proving

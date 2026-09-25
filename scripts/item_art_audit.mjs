@@ -119,14 +119,17 @@ const build = await buildItemArtAudit({
     // 1071 / 1089 (its two disjoint reins items, reins_goblin_rocket_sled and
     // reins_rallycart_rxt, on the shared 1069 / 1087 base); both deltas are
     // additive over that shared base, so 1069 + 212 + 2 = 1283 and
-    // 1087 + 212 + 2 = 1301. The Freeholds branch adds its eight vendor and
-    // thirteen crafted furnishing ids on top, disjoint from every release id:
-    // 1283 + 21 = 1304 and 1301 + 21 = 1322. Verified with
+    // 1087 + 212 + 2 = 1301, plus the Viridian Valestrider's reins on both
+    // sides = 1284 / 1302. Warfare Season 2: the four painted weapons
+    // (warfare-season2-weapons-2026-09-25) make 1288 / 1306, and its 135 armor
+    // pieces ride ITEM_ART_PENDING until the art pass. The Freeholds branch adds
+    // its eight vendor and thirteen crafted furnishing ids and the permanent
+    // Hearth Key on top, disjoint from every release id, each with a shipping
+    // icon: 1288 + 22 = 1310 and 1306 + 22 = 1328. Verified with
     // `node scripts/item_art_audit.mjs --verify-only` against the merged tree.
-    // The permanent Hearth Key adds one shipping icon and one live definition.
-    catalogCount: 1305,
-    liveItemCount: 1323,
-    pendingArtCount: 0,
+    catalogCount: 1310,
+    liveItemCount: 1328,
+    pendingArtCount: 135,
     generatedHeroicDefinitions: 78,
     heroicDefinitionsWithOwnWebp: 59,
     heroicWeaponArtAliases: 19,
